@@ -71,7 +71,7 @@ textbox {
 /* textboxes --------------------------------------------------------------- */
 textbox:not([type="number"]) {
   min-height: 48px;
-  border: 3px solid #262629;
+  border: 2px solid #cacdd5;
   -moz-border-radius: 8px;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
@@ -162,23 +162,21 @@ dialog > .prompt-header > .button-checkbox {
 }
 
 button {
-  min-width: 48px !important; /* button size */
-  min-height: 48px !important; /* button size */
+  -moz-appearance: none;
+  min-width: 56px !important; /* button size */
+  min-height: 56px !important; /* button size */
   color: #000;
-  padding: 2px 4px;
-  border-width: 8px !important;
-  -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
-  background-color: transparent;
-  -moz-appearance: none !important;
-}
-
-button[type="checkbox"][checked="true"],
-button:not([disabled="true"]):hover:active {
-  -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
+  border-radius: 8px;
+  margin: 8px;
+  padding: 10px;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border: 1px solid #cacdd5;
 }
 
 button[disabled="true"] {
   color: #aaa !important;
+  border: 1px solid #cacdd5 !important;
 }
 
 button:focus > .button-box {
@@ -201,6 +199,7 @@ notification button {
   color: #fff !important;
   background: transparent !important;
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
+  border-radius: 8px;
 }
 
 /* notification background is too light for a white caption */
@@ -219,18 +218,28 @@ button.button-dark[disabled="true"] {
 }
 
 /* spinbuttons ------------------------------------------------------------- */
+spinbuttons {
+  border: none !important;
+}
+
 .numberbox-input-box {
   max-width: 128px;
-  border: 3px solid #262629;
+  border: 2px solid #cacdd5;
   border-right: 0px solid transparent;
-  -moz-border-radius-topleft: 8px;
-  -moz-border-radius-bottomleft: 8px;
+  border-radius: 8px 0px 0px 8px;
   -moz-border-top-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
 }
 
+.numberbox-input-box:-moz-locale-dir(rtl) {
+  border-radius: 0px 8px 8px 0px;
+  border-right: 2px solid #cacdd5;
+  border-left: 0px solid transparent;
+}
+
 .spinbuttons-box {
+  border: none !important;
   -moz-box-orient: horizontal !important;
   -moz-box-direction: reverse !important;
 }
@@ -240,24 +249,33 @@ button.button-dark[disabled="true"] {
   display: block;
 }
 
-.spinbuttons-up {
-  border-width: 8px;
-  -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat !important;
+.spinbuttons-up,
+.spinbuttons-down {
+  -moz-appearance: none !important;
+  min-width: 56px !important; /* button size */
+  min-height: 56px !important; /* button size */
+  color: #000;
+  margin: 8px;
+  padding: 10px;
+  border-radius: 0px;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border: 1px solid #cacdd5;
   list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
 }
 
-.spinbuttons-up:hover:active:not([disabled=true]) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat !important;
+.spinbuttons-up:hover:active:not([disabled=true]),
+.spinbuttons-down:hover:active:not([disabled=true]) {
+  background-image: url("chrome://browser/skin/images/toggle-on.png");
 }
 
-.spinbuttons-down {
-  border-width: 8px;
-  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat !important;
+.spinbuttons-up {
+  border-radius: 0px 8px 8px 0px;
   list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
 }
 
-.spinbuttons-down:hover:active:not([disabled=true]) {
-  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat !important;
+.spinbuttons-up:-moz-locale-dir(rtl) {
+  border-radius: 8px 0px 0px 8px;
 }
 
 /* toolbar buttons --------------------------------------------------------- */
@@ -345,15 +363,16 @@ radiogroup {
 }
 
 radio {
-  color: #767973;
-  min-width: 48px !important; /* button size */
-  min-height: 48px !important;
-  padding: 2px !important;
-  margin: 0;
-  border-width: 8px;
-  -moz-box-align: center;
   -moz-appearance: none;
-  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat;
+  min-width: 56px !important; /* button size */
+  min-height: 56px !important; /* button size */
+  color: #000;
+  padding: 10px;
+  margin: 0px;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border-top: 1px solid #cacdd5;
+  border-bottom: 1px solid #cacdd5;
 }
 
 radio .radio-icon, radio .radio-check {
@@ -362,53 +381,30 @@ radio .radio-icon, radio .radio-check {
 
 radio:not([disabled=true]):hover:active,
 radio[selected] {
-  color: #000;
-  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat;
+  color: white;
+  background-image: url("chrome://browser/skin/images/toggle-on.png");
 }
 
 radio:first-child {
-  -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
+  border-left: 1px solid #cacdd5;
+  border-radius: 8px 0px 0px 8px;
 }
 
 radio:first-child:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
-}
-
-radio:not([disabled=true]):first-child:hover:active,
-radio:first-child[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
-}
-
-radio:not([disabled=true]):first-child:hover:active:-moz-locale-dir(rtl),
-radio:first-child[selected]:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
+  border-left: none;
+  border-right: 1px solid #cacdd5;
+  border-radius: 0px 8px 8px 0px;
 }
 
 radio:last-child {
-  -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
+  border-right: 1px solid #cacdd5;
+  border-radius: 0px 8px 8px 0px;
 }
 
 radio:last-child:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
-}
-
-radio:not([disabled=true]):last-child:hover:active,
-radio:last-child[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
-}
-
-radio:not([disabled=true]):last-child:hover:active:-moz-locale-dir(rtl),
-radio:last-child[selected]:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
-}
-
-radio:first-child:last-child {
-  -moz-border-image: url("chrome://browser/skin/images/toggleboth-inactive-64.png") 8 repeat repeat;
-}
-
-radio:not([disabled=true]):first-child:last-child:hover:active,
-radio:first-child:last-child[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggleboth-active-64.png") 8 repeat repeat;
+  border-right: none;
+  border-left: 1px solid #cacdd5;
+  border-radius: 8px 0px 0px 8px;
 }
 
 /* checkbox radios --------------------------------------------------------- */
@@ -416,36 +412,20 @@ checkbox {
   margin: 1px 5px 2px 5px; /* match platform style for buttons */
 }
 
-radio.checkbox-radio-on {
-  -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-64.png") 8 repeat repeat;
+radio.checkbox-radio-on:not([selected]) {
+  border-right: 1px solid #cacdd5;
 }
 
-radio.checkbox-radio-on:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-rtl-64.png") 8 repeat repeat;
+radio.checkbox-radio-on:not([selected]):-moz-locale-dir(rtl) {
+  border-left: none;
+  border-left: 1px solid #cacdd5;
 }
 
-radio.checkbox-radio-on[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggleon-active-64.png") 8 repeat repeat;
-}
-
-radio.checkbox-radio-on[selected]:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleon-active-rtl-64.png") 8 repeat repeat;
-}
-
-radio.checkbox-radio-off {
-  -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat;
-}
-
-radio.checkbox-radio-off:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-rtl-64.png") 8 repeat repeat;
-}
-
-radio.checkbox-radio-off[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat;
-}
-
-radio.checkbox-radio-off[selected]:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-rtl-64.png") 8 repeat repeat;
+radio.checkbox-radio-off[selected],
+radio.checkbox-radio-off:hover:active {
+  background-image: url("chrome://browser/skin/images/toggle-off.png");
+  color: black;
+  background-repeat: repeat-x;
 }
 
 radio.checkbox-radio-on:not([selected]) .radio-label-box,
@@ -553,7 +533,7 @@ richlistitem[selected="true"] {
   background-color: white;
 }
 
-richlistitem::hover:active:not([selected="true"]):not([nohighlight="true"]) {
+richlistitem:hover:active:not([selected="true"]):not([nohighlight="true"]) {
   background-color: #8db8d8;
 }
 
@@ -612,21 +592,21 @@ colorpicker > vbox {
 }
 
 menulist {
-  min-width: 48px !important; /* button size */
-  min-height: 48px !important; /* button size */
-  color: #000;
-  padding: 2px;
-  border-width: 8px !important;
-  -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
-}
-
-menulist:not([disabled="true"]):hover:active {
-  -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
+  min-width: 56px !important; /* button size */
+  min-height: 56px !important; /* button size */
+  color: #000;
+  border-radius: 8px;
+  margin: 8px;
+  padding: 10px;
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  border: 1px solid #cacdd5;
 }
 
 menulist[disabled="true"] {
   color: #aaa !important;
+  border: 1px solid #cacdd5 !important;
 }
 
 menulist.button-dark {
@@ -644,28 +624,20 @@ menulist.button-dark[disabled="true"] {
 }
 
 menulist > dropmarker {
-  height: 30px;
-  width: 38px;
+  height: 42px;
+  width: 42px;
   margin-left: 5px;
   background-color: transparent; /* for windows */
   border: none;                  /* for windows */
   -moz-box-align: center;
   -moz-box-pack: center;
-  list-style-image: url("chrome://browser/skin/images/dropmarker-30.png");
+  list-style-image: url("chrome://browser/skin/images/dropmarker-hdpi.png");
   -moz-image-region: auto;
   display: block;
 }
 
-menulist > dropmarker:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/images/dropmarker-rtl-30.png");
-}
-
 menulist[disabled="true"] > dropmarker {
-  list-style-image: url("chrome://browser/skin/images/dropmarker-disabled-30.png");
-}
-
-menulist[disabled="true"] > dropmarker:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/images/dropmarker-disabled-rtl-30.png");
+  opacity: 0.5;
 }
 
 /* progressmeter ----------------------------------------------------------- */
