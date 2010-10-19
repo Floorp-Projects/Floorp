@@ -97,6 +97,7 @@
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"
 #include "nsIContentUtils.h"
+#include "ThirdPartyUtil.h"
 #include "mozilla/Services.h"
 
 #include "nsIEventListenerService.h"
@@ -331,6 +332,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
     defined(android)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
 
 //-----------------------------------------------------------------------------
 
@@ -883,6 +885,7 @@ NS_DEFINE_NAMED_CID(NS_PRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SYSTEMPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
+NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
 
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
@@ -1039,6 +1042,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
     defined(android)
   { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
 #endif
+  { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { NULL }
 };
 
@@ -1184,6 +1188,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
     defined(android)
   { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
 #endif
+  { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NULL }
 };
 

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is third party utility code.
  *
  * The Initial Developer of the Original Code is
- * The Mozilla Foundation <http://www.mozilla.org/>.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Daniel Witte <dwitte@mozilla.com>
+ *   Daniel Witte (dwitte@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,40 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_CookieServiceParent_h
-#define mozilla_net_CookieServiceParent_h
+#ifndef ThirdPartyUtil_h__
+#define ThirdPartyUtil_h__
 
-#include "mozilla/net/PCookieServiceParent.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "mozIThirdPartyUtil.h"
+#include "nsIEffectiveTLDService.h"
 
-class nsCookieService;
-class nsIIOService;
+class nsIURI;
+class nsIChannel;
+class nsIDOMWindow;
 
-namespace mozilla {
-namespace net {
-
-class CookieServiceParent : public PCookieServiceParent
+class ThirdPartyUtil : public mozIThirdPartyUtil
 {
 public:
-  CookieServiceParent();
-  virtual ~CookieServiceParent();
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZITHIRDPARTYUTIL
 
-protected:
-  virtual bool RecvGetCookieString(const IPC::URI& aHost,
-                                   const bool& aIsForeign,
-                                   const bool& aFromHttp,
-                                   nsCString* aResult);
+  nsresult Init();
 
-  virtual bool RecvSetCookieString(const IPC::URI& aHost,
-                                   const bool& aIsForeign,
-                                   const nsCString& aCookieString,
-                                   const nsCString& aServerTime,
-                                   const bool& aFromHttp);
+private:
+  nsresult GetBaseDomain(nsIURI* aHostURI, nsCString& aBaseDomain);
+  nsresult IsThirdPartyInternal(const nsCString& aFirstDomain,
+    nsIURI* aSecondURI, PRBool* aResult);
+  static already_AddRefed<nsIURI> GetURIFromWindow(nsIDOMWindow* aWin);
 
-  nsRefPtr<nsCookieService> mCookieService;
+  nsCOMPtr<nsIEffectiveTLDService> mTLDService;
 };
 
-}
-}
-
-#endif // mozilla_net_CookieServiceParent_h
+#endif
 
