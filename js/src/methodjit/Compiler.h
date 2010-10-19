@@ -107,11 +107,14 @@ class Compiler : public BaseCompiler
     };
     
     struct TraceGenInfo {
+        bool initialized;
         Label stubEntry;
         DataLabelPtr addrLabel;
         jsbytecode *jumpTarget;
         Jump traceHint;
         MaybeJump slowTraceHint;
+
+        TraceGenInfo() : initialized(false) {}
     };
 
     /* InlineFrameAssembler wants to see this. */
