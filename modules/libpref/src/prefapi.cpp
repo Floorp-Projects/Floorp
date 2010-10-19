@@ -37,6 +37,7 @@
 
 #include "prefapi.h"
 #include "prefapi_private_data.h"
+#include "PrefTuple.h"
 #include "prefread.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -310,6 +311,24 @@ PREF_SetBoolPref(const char *pref_name, PRBool value, PRBool set_default)
     return pref_HashPref(pref_name, pref, PREF_BOOL, set_default);
 }
 
+nsresult
+pref_SetPrefTuple(const PrefTuple &aPref, PRBool set_default)
+{
+    switch (aPref.type) {
+        case PrefTuple::PREF_STRING:
+            return PREF_SetCharPref(aPref.key.get(), aPref.stringVal.get(), set_default);
+
+        case PrefTuple::PREF_INT:
+            return PREF_SetIntPref(aPref.key.get(), aPref.intVal, set_default);
+
+        case PrefTuple::PREF_BOOL:
+            return PREF_SetBoolPref(aPref.key.get(), aPref.boolVal, set_default);
+    }
+
+    NS_NOTREACHED("Unknown type");
+    return NS_ERROR_INVALID_ARG;
+}
+
 PLDHashOperator
 pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
@@ -366,6 +385,49 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 
     return PL_DHASH_NEXT;
 }
+
+PLDHashOperator
+pref_MirrorPrefs(PLDHashTable *table,
+                 PLDHashEntryHdr *heh,
+                 PRUint32 i,
+                 void *arg)
+{
+    if (heh) {
+        PrefHashEntry *entry = static_cast<PrefHashEntry *>(heh);
+        PrefTuple *newEntry =
+            static_cast<nsTArray<PrefTuple> *>(arg)->AppendElement();
+
+        pref_GetTupleFromEntry(entry, newEntry);
+    }
+    return PL_DHASH_NEXT;
+}
+
+void
+pref_GetTupleFromEntry(PrefHashEntry *aHashEntry, PrefTuple *aTuple)
+{
+    aTuple->key = aHashEntry->key;
+
+    PrefValue *value = PREF_HAS_USER_VALUE(aHashEntry) ?
+        &(aHashEntry->userPref) : &(aHashEntry->defaultPref);
+
+    switch (aHashEntry->flags & PREF_VALUETYPE_MASK) {
+        case PREF_STRING:
+            aTuple->stringVal = value->stringVal;
+            aTuple->type = PrefTuple::PREF_STRING;
+            return;
+
+        case PREF_INT:
+            aTuple->intVal = value->intVal;
+            aTuple->type = PrefTuple::PREF_INT;
+            return;
+
+        case PREF_BOOL:
+            aTuple->boolVal = !!value->boolVal;
+            aTuple->type = PrefTuple::PREF_BOOL;
+            return;
+    }
+}
+
 
 int
 pref_CompareStrings(const void *v1, const void *v2, void *unused)
