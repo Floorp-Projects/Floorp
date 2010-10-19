@@ -122,7 +122,7 @@ toolbarbutton.urlbar-button {
   color: #000;
   border-radius: 8px;
   margin: 8px;
-  background-image: url("chrome://browser/skin/images/urlbar-bg.png");
+  background-image: url("chrome://browser/skin/images/button-bg.png");
 }
 
 #urlbar-container[mode="edit"] > #identity-box {
@@ -1073,12 +1073,20 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 /* Preferences window   ---------------------------------------------------- */
+.setting {
+  padding-left: 10px;
+  border-bottom: 1px solid #cacdd5;
+}
+
 .settings-title {
-  font-weight: bold;
   color: black;
-  background-color: lightgray;
+  font-size: smaller;
+  background-color: transparent;
   margin: 0;
-  padding: 2px;
+  padding: 5px 10px;
+  background-image: url("chrome://browser/skin/images/settings-header-bg.png");
+  background-repeat: repeat-x;
+  background-size: auto 100%;
 }
 
 /* XXX should be a richlistitem */
@@ -1267,19 +1275,19 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 #form-helper-autofill > .autorepeatbutton-down {
-  list-style-image: url(images/arrowright-16.png);
+  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
 }
 
 #form-helper-autofill > .autorepeatbutton-down:-moz-locale-dir(rtl) {
-  list-style-image: url(images/arrowleft-16.png);
+  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
 }
 
 #form-helper-autofill > .autorepeatbutton-up {
-  list-style-image: url(images/arrowleft-16.png);
+  list-style-image: url("chrome://browser/skin/images/arrowleft-16.png");
 }
 
 #form-helper-autofill > .autorepeatbutton-up:-moz-locale-dir(rtl) {
-  list-style-image: url(images/arrowright-16.png);
+  list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
 }
 
 /* force the autorepeat buttons to create a 'padding' when collapsed */
@@ -1305,7 +1313,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
   -moz-border-end: none;
 }
 
-.form-helper-autofill-label::hover:active {
+.form-helper-autofill-label:hover:active {
   background-color: #8db8d8;
 }
 
