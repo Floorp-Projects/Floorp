@@ -551,7 +551,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             scriptTICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
             scriptTICs[i].jumpTarget = fullCode.locationOf(jumpMap[offs]);
             scriptTICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
-            scriptTICs[i].traceData = NULL;
 #ifdef DEBUG
             scriptTICs[i].jumpTargetPC = traceICs[i].jumpTarget;
 #endif
@@ -594,7 +593,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             JS_ASSERT(scriptPICs[i].shapeGuard == masm.distanceOf(pics[i].shapeGuard) -
                                          masm.distanceOf(pics[i].fastPathStart));
             scriptPICs[i].shapeRegHasBaseShape = true;
-            scriptPICs[i].pc = pics[i].pc;
 
 # if defined JS_CPU_X64
             memcpy(&scriptPICs[i].labels, &pics[i].labels, sizeof(PICLabels));
@@ -2785,8 +2783,6 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 
     PICGenInfo pic(ic::PICInfo::CALL, true);
 
-    pic.pc = PC;
-
     /* Guard that the type is an object. */
     pic.typeReg = frame.copyTypeIntoReg(top);
 
@@ -2960,7 +2956,6 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     JS_ASSERT(top->isTypeKnown());
     JS_ASSERT(top->getKnownType() == JSVAL_TYPE_OBJECT);
 
-    pic.pc = PC;
     pic.fastPathStart = masm.label();
     pic.hasTypeCheck = false;
     pic.typeReg = Registers::ReturnReg;
