@@ -305,6 +305,7 @@ toolbarbutton.button-control {
   background-color: transparent !important;
   -moz-box-align: center;
   -moz-box-pack: center;
+  height: 82px;
 }
 
 toolbarbutton.button-control[disabled="true"] {
@@ -312,8 +313,7 @@ toolbarbutton.button-control[disabled="true"] {
 }
 
 toolbarbutton.button-control:not([disabled="true"]):hover:active {
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.1) 0px -3px 6px, inset rgba(0, 0, 0, 0.2) 0px 3px 6px;
-  background-color: rgba(0,0,0,0.2);
+  background-image: url("chrome://browser/skin/images/sidebarbutton-active-hdpi.png");
   border-top: none;
 }
 
@@ -919,6 +919,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 #newtab-button {
   -moz-box-flex: 1;
   list-style-image: url("images/newtab-default-64.png");
+  height: 82px;
 }
 
 /* bookmark editor   ------------------------------------------------------- */
