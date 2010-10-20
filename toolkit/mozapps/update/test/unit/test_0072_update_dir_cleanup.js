@@ -5,6 +5,9 @@
 /* General Update Directory Cleanup Tests - Bug 539717 */
 
 function run_test() {
+  do_test_pending();
+  do_register_cleanup(end_test);
+
   removeUpdateDirsAndFiles();
   setUpdateChannel();
 
@@ -18,17 +21,21 @@ function run_test() {
   standardInit();
 
   var dir = getUpdatesDir();
-  dump("Testing: " + dir.path + " exists\n");
   dir.append("0");
+  logTestInfo("testing " + dir.path + " should exist");
   do_check_true(dir.exists());
 
   var statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
-  dump("Testing: " + statusFile.path + " does not exist\n");
+  logTestInfo("testing " + statusFile.path + " should not exist");
   do_check_false(statusFile.exists());
 
   do_check_eq(gUpdateManager.activeUpdate, null);
   do_check_eq(gUpdateManager.updateCount, 0);
 
+  do_test_finished();
+}
+
+function end_test() {
   cleanUp();
 }

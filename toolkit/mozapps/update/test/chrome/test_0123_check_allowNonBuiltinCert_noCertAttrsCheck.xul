@@ -31,7 +31,7 @@ const TESTS = [ {
 Components.utils.import("resource://gre/modules/CertUtils.jsm");
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   Services.prefs.setCharPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME,
                              "Invalid Attribute Name");
@@ -42,8 +42,8 @@ function runTest() {
   let url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
             getVersionParams();
   gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
+  debugDump("setting default pref " + PREF_APP_UPDATE_URL + " to " + url);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
-  debugDump("Default Update URL: " + url);
 
   gUP.checkForUpdates();
 }

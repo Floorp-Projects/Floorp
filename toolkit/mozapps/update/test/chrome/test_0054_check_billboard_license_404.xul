@@ -40,12 +40,11 @@ const TESTS = [ {
 } ];
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   let url = URL_UPDATE + "?billboard404=1&license404=1&showDetails=1" +
             getVersionParams();
   setUpdateURLOverride(url);
-  debugDump("Update URL: " + url);
 
   gUP.checkForUpdates();
 }

@@ -52,6 +52,11 @@ var gUpdates;
 var gStatusCode;
 var gStatusText;
 
+// Set to true to log additional information for debugging. To log additional
+// information for an individual test set DEBUG_AUS_TEST to true in the test's
+// run_test function.
+var DEBUG_AUS_TEST = true;
+
 #include ../shared.js
 
 /**
@@ -121,13 +126,15 @@ function pathHandler(metadata, response) {
 /**
  * Launches the updater binary to apply a mar file using the current working
  * directory for the location to apply the mar.
- * @param   aUpdatesDir
- *          The directory to copy the update mar, binary, etc.
  * @param   aUpdater
  *          The updater binary binary to copy to aUpdatesDir.
+ * @param   aUpdatesDir
+ *          The directory to copy the update mar, binary, etc.
+ * @param   aApplyToDir
+ *          The directory where the update will be applied.
  * @returns The exit value returned from the updater binary.
  */
-function runUpdate(aUpdatesDir, aUpdater) {
+function runUpdate(aUpdater, aUpdatesDir, aApplyToDir) {
   // Copy the updater binary to the update directory so the updater.ini is not
   // in the same directory as it is. This prevents the PostUpdate executable
   // which is defined in the updater.ini from launching and the updater ui from
@@ -147,14 +154,14 @@ function runUpdate(aUpdatesDir, aUpdater) {
   if (/ /.test(updatesDirPath))
     updatesDirPath = '"' + updatesDirPath + '"';
 
-  var cwdPath = do_get_file("/", true).path;
-  if (/ /.test(cwdPath))
-    cwdPath = '"' + cwdPath + '"';
+  var applyToPath = aApplyToDir.path;
+  if (/ /.test(applyToPath))
+    applyToPath = '"' + applyToPath + '"';
 
   var process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
-  var args = [updatesDirPath, cwdPath];
+  var args = [updatesDirPath, applyToPath];
   process.run(true, args, args.length);
   return process.exitValue;
 }
@@ -243,28 +250,28 @@ xhr.prototype = {
 
 /* Update check listener */
 const updateCheckListener = {
-  onProgress: function(request, position, totalSize) {
+  onProgress: function UCL_onProgress(request, position, totalSize) {
   },
 
-  onCheckComplete: function(request, updates, updateCount) {
+  onCheckComplete: function UCL_onCheckComplete(request, updates, updateCount) {
     gRequestURL = request.channel.originalURI.spec;
     gUpdateCount = updateCount;
     gUpdates = updates;
-    dump("onError: url = " + gRequestURL + ", " +
-         "request.status = " + request.status + ", " +
-         "update.statusText = " + request.statusText + ", " +
-         "updateCount = " + updateCount + "\n");
+    logTestInfo("onError: url = " + gRequestURL + ", " +
+                "request.status = " + request.status + ", " +
+                "update.statusText = " + request.statusText + ", " +
+                "updateCount = " + updateCount);
     // Use a timeout to allow the XHR to complete
     do_timeout(0, gCheckFunc);
   },
 
-  onError: function(request, update) {
+  onError: function UCL_onError(request, update) {
     gRequestURL = request.channel.originalURI.spec;
     gStatusCode = request.status;
     gStatusText = update.statusText;
-    dump("onError: url = " + gRequestURL + ", " +
-         "request.status = " + gStatusCode + ", " +
-         "update.statusText = " + gStatusText + "\n");
+    logTestInfo("onError: url = " + gRequestURL + ", " +
+                "request.status = " + gStatusCode + ", " +
+                "update.statusText = " + gStatusText);
     // Use a timeout to allow the XHR to complete
     do_timeout(0, gCheckFunc);
   },
@@ -358,7 +365,7 @@ function createAppInfo(id, name, version, platformVersion) {
 // application directory. This will reroute it back to the one in the
 // application directory.
 var gDirProvider = {
-  getFile: function(prop, persistent) {
+  getFile: function DP_getFile(prop, persistent) {
     persistent.value = true;
     if (prop == XRE_UPDATE_ROOT_DIR)
       return getCurrentProcessDir();
@@ -377,10 +384,24 @@ const INSTALL_LOCALE = "@AB_CD@";
 
 // These are placed at the end so they don't mess up line numbering
 
+const APP_BIN_NAME = "@MOZ_APP_NAME@";
+
+#ifdef XP_UNIX
+const APP_BIN_SUFFIX = "-bin";
+#else
+const APP_BIN_SUFFIX = "@BIN_SUFFIX@";
+#endif
+
 #ifdef XP_WIN
 const IS_WIN = true;
 #else
 const IS_WIN = false;
+#endif
+
+#ifdef WINCE
+const IS_WINCE = true;
+#else
+const IS_WINCE = false;
 #endif
 
 #ifdef XP_OS2
@@ -393,4 +414,16 @@ const IS_OS2 = false;
 const IS_MACOSX = true;
 #else
 const IS_MACOSX = false;
+#endif
+
+#ifdef XP_UNIX
+const IS_UNIX = true;
+#else
+const IS_UNIX = false;
+#endif
+
+#ifdef ANDROID
+const IS_ANDROID = true;
+#else
+const IS_ANDROID = false;
 #endif

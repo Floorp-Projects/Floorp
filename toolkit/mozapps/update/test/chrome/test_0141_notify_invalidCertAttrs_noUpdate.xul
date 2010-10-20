@@ -30,15 +30,15 @@ const TESTS = [ {
 } ];
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   Services.prefs.setCharPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME,
                              "Invalid Attribute Name");
 
   let url = "https://example.com/" + URL_PATH + "/update.sjs?noUpdates=1";
   gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
+  debugDump("setting default pref " + PREF_APP_UPDATE_URL + " to " + url);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
-  debugDump("Default Update URL: " + url);
 
   errorsPrefObserver.init(PREF_APP_UPDATE_CERT_ERRORS,
                           PREF_APP_UPDATE_CERT_MAXERRORS);
