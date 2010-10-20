@@ -909,7 +909,7 @@ mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
 }
 #else
 uintN
-mjit::GetCallsitePolymorphism(JSScript *script, jsbytecode *pc)
+mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
 {
     return 1;
 }

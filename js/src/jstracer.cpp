@@ -16885,10 +16885,10 @@ LookupOrAddProfile(JSContext *cx, TraceMonitor *tm, void** traceData, uintN *tra
     }
 #else
     LoopProfileMap &table = *tm->loopProfiles;
+    jsbytecode* pc = cx->regs->pc;
     if (LoopProfileMap::AddPtr p = table.lookupForAdd(pc)) {
         prof = p->value;
     } else {
-        jsbytecode* pc = cx->regs->pc;
         jsbytecode* bottom = GetLoopBottom(cx);
         if (!bottom)
             return NULL;
