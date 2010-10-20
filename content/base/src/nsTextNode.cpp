@@ -238,7 +238,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fprintf(out, "Text@%p", static_cast<const void*>(this));
-  fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
+  fprintf(out, " intrinsicstate=[%11x]", IntrinsicState().GetInternalValue());
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
