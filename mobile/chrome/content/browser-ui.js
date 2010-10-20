@@ -2629,7 +2629,6 @@ var SharingUI = {
   ]
 };
 
-
 var BadgeHandlers = {
   _handlers: [
     {

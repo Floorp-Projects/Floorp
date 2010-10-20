@@ -1253,13 +1253,19 @@ const BrowserSearch = {
     popup.anchorTo(document.getElementById("tool-search"));
 
     document.getElementById("urlbar-icons").setAttribute("open", "true");
+    window.addEventListener("resize", this, true);
     BrowserUI.pushPopup(this, [popup, this._button]);
   },
 
   hide: function bs_hide() {
     this._popup.hidden = true;
     document.getElementById("urlbar-icons").removeAttribute("open");
+    window.removeEventListener("resize", this, true);
     BrowserUI.popPopup();
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    this._popup.anchorTo(document.getElementById("tool-search"));
   },
 
   observe: function bs_observe(aSubject, aTopic, aData) {

@@ -183,6 +183,10 @@ button:focus > .button-box {
   border: 1px solid transparent;
 }
 
+button:not([disabled]):hover:active {
+  background-image: url("chrome://browser/skin/images/toggle-off.png");
+}
+
 /* Override GTK2 system setting */
 .button-icon {
   display: -moz-initial !important;
@@ -578,13 +582,14 @@ colorpicker > vbox {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-weight: normal;
   font-size: 24px !important;
+  background-color: none !important;
 }
 
 menulist {
   -moz-appearance: none !important;
   min-width: 56px !important; /* button size */
   min-height: 56px !important; /* button size */
-  color: #000;
+  color: #000 !important;
   border-radius: 8px;
   margin: 8px;
   padding: 10px;
@@ -596,6 +601,10 @@ menulist {
 menulist[disabled="true"] {
   color: #aaa !important;
   border: 1px solid #cacdd5 !important;
+}
+
+menulist:not([disabled="true"]):hover:active {
+  background-image: url("chrome://browser/skin/images/toggle-off.png");
 }
 
 menulist.button-dark {
