@@ -187,7 +187,7 @@ protected:
    * The intrinsic state of the element.
    * @see nsIContent::IntrinsicState()
    */
-  PRInt32 mIntrinsicState;
+  PRUint64 mIntrinsicState;
 
   // Temporary owner used by GetAttrNameAt
   nsAttrName mTmpAttrName;

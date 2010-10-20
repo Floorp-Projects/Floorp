@@ -232,7 +232,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 }
 
 NS_IMETHODIMP
-inDOMUtils::SetContentState(nsIDOMElement *aElement, PRInt32 aState)
+inDOMUtils::SetContentState(nsIDOMElement *aElement, PRUint64 aState)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   
@@ -241,14 +241,14 @@ inDOMUtils::SetContentState(nsIDOMElement *aElement, PRInt32 aState)
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
   
-    return esm->SetContentState(content, aState);
+    return esm->SetContentState(content, (PRInt32)aState);
   }
   
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
+inDOMUtils::GetContentState(nsIDOMElement *aElement, PRUint64* aState)
 {
   *aState = 0;
 
