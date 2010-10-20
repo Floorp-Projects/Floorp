@@ -72,6 +72,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_log_node_classes.js \
 	browser_webconsole_network_panel.js \
+	browser_webconsole_jsterm.js \
 	browser_webconsole_null_and_undefined_output.js \
 	browser_webconsole_output_order.js \
 	browser_webconsole_property_panel.js \
