@@ -2935,6 +2935,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             if (par)
               activeContent = par;
           }
+          SetGlobalActiveContent(this, activeContent);
         }
       }
       else {
@@ -2942,7 +2943,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // any of our own processing of a drag. Workaround for bug 43258.
         StopTrackingDragGesture();
       }
-      SetGlobalActiveContent(this, activeContent);
     }
     break;
   case NS_MOUSE_BUTTON_UP:

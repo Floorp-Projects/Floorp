@@ -47,7 +47,7 @@
 #include "nsFormSubmission.h"
 #include "nsFormSubmissionConstants.h"
 #include "nsIURL.h"
-
+#include "nsEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIEventStateManager.h"
@@ -436,8 +436,12 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
             if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                   nsMouseEvent::eLeftButton) {
-              aVisitor.mPresContext->EventStateManager()->
-                SetContentState(this, NS_EVENT_STATE_ACTIVE);
+              if (NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
+                nsIEventStateManager* esm =
+                  aVisitor.mPresContext->EventStateManager();
+                nsEventStateManager::SetGlobalActiveContent(
+                  static_cast<nsEventStateManager*>(esm), this);
+              }
               nsIFocusManager* fm = nsFocusManager::GetFocusManager();
               if (fm)
                 fm->SetFocus(this, nsIFocusManager::FLAG_BYMOUSE |
