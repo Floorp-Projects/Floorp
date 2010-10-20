@@ -1016,6 +1016,9 @@ pageaction {
 .prompt-button {
   margin: 0;
   -moz-border-image: none !important;
+  border-radius: 0;
+  margin: 0;
+  background: transparent;
 }
 
 .prompt-button > .button-box {
