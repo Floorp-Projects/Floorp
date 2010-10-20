@@ -67,6 +67,7 @@ IPDLDIRS =  \
   netwerk/protocol/http  \
   netwerk/protocol/wyciwyg \
   netwerk/cookie  \
+  uriloader/prefetch  \
   $(NULL)
 ##-----------------------------------------------------------------------------
 
