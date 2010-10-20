@@ -61,7 +61,12 @@ namespace nanojit
 #if defined(NJ_USE_UINT32_REGISTER)
     #define REGNUM(r) (r)
 
-#elif defined(DEBUG)
+#elif defined(DEBUG) || defined(__SUNPRO_CC)
+    // Always use struct declaration for 'Register' with
+    // Solaris Studio C++ compiler, because it has a bug:
+    // Scalar type can not be initialized by '{1}'.
+    // See bug 603560.
+
     struct Register {
         uint32_t n;     // the register number
     };

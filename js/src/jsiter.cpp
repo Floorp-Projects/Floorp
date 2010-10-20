@@ -1272,7 +1272,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     if (!cx->ensureGeneratorStackSpace())
         return JS_FALSE;
 
-    JS_ASSERT(gen->state ==  JSGEN_NEWBORN || gen->state == JSGEN_OPEN);
+    JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_OPEN);
     switch (op) {
       case JSGENOP_NEXT:
       case JSGENOP_SEND:

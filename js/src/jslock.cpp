@@ -431,7 +431,7 @@ WillDeadlock(JSContext *ownercx, JSThread *thread)
 
      for (;;) {
         JS_ASSERT(ownercx->thread);
-        JS_ASSERT(ownercx->thread->data.requestDepth);
+        JS_ASSERT(ownercx->thread->requestDepth);
         JSTitle *title = ownercx->thread->titleToShare;
         if (!title || !title->ownercx) {
             /*
@@ -538,7 +538,7 @@ static JSBool
 ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT_IF(!cx->thread->data.requestDepth, cx->thread == rt->gcThread && rt->gcRunning);
+    JS_ASSERT_IF(!cx->thread->requestDepth, cx->thread == rt->gcThread && rt->gcRunning);
 
     JS_RUNTIME_METER(rt, claimAttempts);
     AutoLockGC lock(rt);
@@ -565,13 +565,13 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         bool canClaim;
         if (title->u.link) {
             JS_ASSERT(js_ValidContextPointer(rt, ownercx));
-            JS_ASSERT(ownercx->thread->data.requestDepth);
+            JS_ASSERT(ownercx->thread->requestDepth);
             JS_ASSERT(!rt->gcRunning);
             canClaim = (ownercx->thread == cx->thread);
         } else {
             canClaim = (!js_ValidContextPointer(rt, ownercx) ||
                         !ownercx->thread ||
-                        !ownercx->thread->data.requestDepth ||
+                        !ownercx->thread->requestDepth ||
                         cx->thread == ownercx->thread  ||
                         cx->thread == rt->gcThread ||
                         ownercx->thread->gcWaiting);
@@ -617,7 +617,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * But before waiting, we force the operation callback for that other
          * thread so it can quickly suspend.
          */
-        JS_THREAD_DATA(ownercx)->triggerOperationCallback(rt);
+        JS_THREAD_DATA(ownercx)->triggerOperationCallback();
 
         JS_ASSERT(!cx->thread->titleToShare);
         cx->thread->titleToShare = title;

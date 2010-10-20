@@ -5152,6 +5152,23 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
+js::GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp)
+{
+    JSProperty *prop;
+    JSObject *obj2;
+    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
+        return false;
+
+    if (!prop) {
+        *vp = def;
+        return true;
+    }
+
+    obj2->dropProperty(cx, prop);
+    return js_GetProperty(cx, obj2, id, vp);
+}
+
+JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 {
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
@@ -5626,9 +5643,10 @@ namespace js {
  * TODO: a per-thread shape-based cache would be faster and simpler.
  */
 static JS_ALWAYS_INLINE bool
-StringMethodIsNative(JSContext *cx, JSObject *obj, jsid methodid, Native native)
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *classp, jsid methodid,
+                    Native native)
 {
-    JS_ASSERT(obj->getClass() == &js_StringClass);
+    JS_ASSERT(obj->getClass() == classp);
 
     JS_LOCK_OBJ(cx, obj);
     JSObject *lockedobj = obj;
@@ -5638,7 +5656,7 @@ StringMethodIsNative(JSContext *cx, JSObject *obj, jsid methodid, Native native)
     if (!shape) {
         pobj = obj->getProto();
 
-        if (pobj && pobj->getClass() == &js_StringClass) {
+        if (pobj && pobj->getClass() == classp) {
             JS_UNLOCK_OBJ(cx, obj);
             JS_LOCK_OBJ(cx, pobj);
             lockedobj = pobj;
@@ -5671,7 +5689,8 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
     if (hint == JSTYPE_STRING) {
         /* Optimize (new String(...)).toString(). */
         if (obj->getClass() == &js_StringClass &&
-            StringMethodIsNative(cx, obj,
+            ClassMethodIsNative(cx, obj,
+                                 &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
                                  js_str_toString)) {
             *vp = obj->getPrimitiveThis();
@@ -5686,10 +5705,15 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
         }
     } else {
         /* Optimize (new String(...)).valueOf(). */
-        if (obj->getClass() == &js_StringClass &&
-            StringMethodIsNative(cx, obj,
+        Class *clasp = obj->getClass();
+        if ((clasp == &js_StringClass &&
+             ClassMethodIsNative(cx, obj, &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
-                                 js_str_toString)) {
+                                 js_str_toString)) ||
+            (clasp == &js_NumberClass &&
+             ClassMethodIsNative(cx, obj, &js_NumberClass,
+                                 ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
+                                 js_num_valueOf))) {
             *vp = obj->getPrimitiveThis();
             return true;
         }
@@ -6570,6 +6594,7 @@ js_DumpObject(JSObject *obj)
     if (flags & JSObject::METHOD_BARRIER) fprintf(stderr, " method_barrier");
     if (flags & JSObject::INDEXED) fprintf(stderr, " indexed");
     if (flags & JSObject::OWN_SHAPE) fprintf(stderr, " own_shape");
+    if (flags & JSObject::HAS_EQUALITY) fprintf(stderr, " has_equality");
 
     bool anyFlags = flags != 0;
     if (obj->isNative()) {

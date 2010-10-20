@@ -1392,30 +1392,44 @@ FrameState::allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc)
 }
 
 void
-FrameState::ensureFullRegs(FrameEntry *fe)
+FrameState::ensureFullRegs(FrameEntry *fe, MaybeRegisterID *type, MaybeRegisterID *data)
 {
-    FrameEntry *backing = fe;
-    if (fe->isCopy())
-        backing = fe->copyOf();
+    fe = fe->isCopy() ? fe->copyOf() : fe;
 
+    JS_ASSERT(!data->isSet() && !type->isSet());
     if (!fe->type.inMemory()) {
-        if (fe->data.inRegister())
+        if (fe->type.inRegister())
+            *type = fe->type.reg();
+        if (fe->data.isConstant())
             return;
+        if (fe->data.inRegister()) {
+            *data = fe->data.reg();
+            return;
+        }
         if (fe->type.inRegister())
             pinReg(fe->type.reg());
-        if (fe->data.inMemory())
-            tempRegForData(fe);
+        *data = tempRegForData(fe);
         if (fe->type.inRegister())
             unpinReg(fe->type.reg());
     } else if (!fe->data.inMemory()) {
-        if (fe->type.inRegister())
+        if (fe->data.inRegister())
+            *data = fe->data.reg();
+        if (fe->type.isConstant())
             return;
+        if (fe->type.inRegister()) {
+            *type = fe->type.reg();
+            return;
+        }
         if (fe->data.inRegister())
             pinReg(fe->data.reg());
-        if (fe->type.inMemory())
-            tempRegForType(fe);
+        *type = tempRegForType(fe);
         if (fe->data.inRegister())
             unpinReg(fe->data.reg());
+    } else {
+        *data = tempRegForData(fe);
+        pinReg(data->reg());
+        *type = tempRegForType(fe);
+        unpinReg(data->reg());
     }
 }
 

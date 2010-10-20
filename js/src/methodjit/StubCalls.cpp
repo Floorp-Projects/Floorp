@@ -99,6 +99,15 @@ stubs::BindName(VMFrame &f)
     f.regs.sp[-1].setObject(*obj);
 }
 
+void JS_FASTCALL
+stubs::BindNameNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = js_FindIdentifierBase(f.cx, &f.fp()->scopeChain(), ATOM_TO_JSID(atom));
+    if (!obj)
+        THROW();
+    f.regs.sp[0].setObject(*obj);
+}
+
 JSObject * JS_FASTCALL
 stubs::BindGlobalName(VMFrame &f)
 {
@@ -2065,6 +2074,20 @@ void JS_FASTCALL
 stubs::GetProp(VMFrame &f)
 {
     if (!InlineGetProp(f))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::GetPropNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+
+    Value *vp = &f.regs.sp[-1];
+    JSObject *obj = ValueToObject(cx, vp);
+    if (!obj)
+        THROW();
+
+    if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
         THROW();
 }
 
