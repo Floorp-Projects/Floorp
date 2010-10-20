@@ -826,41 +826,86 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
 
     case 3:
       {
+        // Add the creationTime column to the table, and create a unique index
+        // on (name, host, path). Before we do this, we have to purge the table
+        // of expired cookies such that we know that the (name, host, path)
+        // index is truly unique -- otherwise we can't create the index. Note
+        // that we can't just execute a statement to delete all rows where the
+        // expiry column is in the past -- doing so would rely on the clock
+        // (both now and when previous cookies were set) being monotonic.
+
+        // Select the whole table, and order by the fields we're interested in.
+        // This means we can simply do a linear traversal of the results and
+        // check for duplicates as we go.
+        nsCOMPtr<mozIStorageStatement> select;
+        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT id, name, host, path FROM moz_cookies "
+            "ORDER BY name ASC, host ASC, path ASC, expiry ASC"),
+          getter_AddRefs(select));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<mozIStorageStatement> deleteExpired;
+        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
+          "DELETE FROM moz_cookies WHERE id = :id"),
+          getter_AddRefs(deleteExpired));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Read the first row.
+        PRBool hasResult;
+        rv = select->ExecuteStep(&hasResult);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (hasResult) {
+          nsCString name1, host1, path1;
+          PRInt64 id1 = select->AsInt64(0);
+          select->GetUTF8String(1, name1);
+          select->GetUTF8String(2, host1);
+          select->GetUTF8String(3, path1);
+
+          nsCString name2, host2, path2;
+          while (1) {
+            // Read the second row.
+            rv = select->ExecuteStep(&hasResult);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (!hasResult)
+              break;
+
+            PRInt64 id2 = select->AsInt64(0);
+            select->GetUTF8String(1, name2);
+            select->GetUTF8String(2, host2);
+            select->GetUTF8String(3, path2);
+
+            // If the two rows match in (name, host, path), we know the earlier
+            // row has an earlier expiry time. Delete it.
+            if (name1 == name2 && host1 == host2 && path1 == path2) {
+              mozStorageStatementScoper scoper(deleteExpired);
+
+              rv = deleteExpired->BindInt64ByName(NS_LITERAL_CSTRING("id"), id1);
+              NS_ASSERT_SUCCESS(rv);
+
+              rv = deleteExpired->ExecuteStep(&hasResult);
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
+
+            // Make the second row the first for the next iteration.
+            name1 = name2;
+            host1 = host2;
+            path1 = path2;
+            id1 = id2;
+          }
+        }
+
         // Add the creationTime column to the table.
         rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE moz_cookies ADD creationTime INTEGER"));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // Read in the rowids from the database...
-        nsCOMPtr<mozIStorageStatement> select;
-        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT id FROM moz_cookies"), getter_AddRefs(select));
+        // Copy the id of each row into the new creationTime column.
+        rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "UPDATE moz_cookies SET creationTime = "
+            "(SELECT id WHERE id = moz_cookies.id)"));
         NS_ENSURE_SUCCESS(rv, rv);
-
-        // ... and use them to generate the creationTime.
-        nsCOMPtr<mozIStorageStatement> update;
-        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-          "UPDATE moz_cookies SET creationTime = :id WHERE id = :id"),
-          getter_AddRefs(update));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        PRBool hasResult;
-        while (1) {
-          rv = select->ExecuteStep(&hasResult);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          if (!hasResult)
-            break;
-
-          mozStorageStatementScoper scoper(update);
-
-          PRInt64 id = select->AsInt64(0);
-          rv = update->BindInt64ByName(NS_LITERAL_CSTRING("id"), id);
-          NS_ASSERT_SUCCESS(rv);
-
-          rv = update->ExecuteStep(&hasResult);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
 
         // Create a unique index on (name, host, path) to allow fast lookup.
         rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
