@@ -44,6 +44,7 @@ include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PContentPermissionRequest;
 include protocol PRenderFrame;
+include protocol POfflineCacheUpdate;
 
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
@@ -73,6 +74,7 @@ rpc protocol PBrowser
     manages PDocumentRendererNativeID;
     manages PContentPermissionRequest;
     manages PRenderFrame;
+    manages POfflineCacheUpdate;
 
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
@@ -186,6 +188,33 @@ parent:
      * the page that is currently loaded in the <browser>.
      */
     async PRenderFrame();
+
+    /** 
+     * Starts an offline application cache update.
+     * @param manifestURI
+     *   URI of the manifest to fetch, the application cache group ID
+     * @param documentURI
+     *   URI of the document that referred the manifest
+     * @param clientID
+     *   The group cache version identifier to use
+     * @param stickDocument
+     *   True if the update was initiated by a document load that referred
+     *   a manifest.
+     *   False if the update was initiated by applicationCache.update() call.
+     *
+     *   Tells the update to carry the documentURI to a potential separate 
+     *   update of implicit (master) items.
+     *
+     *   Why this argument? If the document was not found in an offline cache 
+     *   before load and refers a manifest and this manifest itself has not 
+     *   been changed since the last fetch, we will not do the application 
+     *   cache group update. But we must cache the document (identified by the
+     *   documentURI). This argument will ensure that a previously uncached 
+     *   document will get cached and that we don't re-cache a document that 
+     *   has already been cached (stickDocument=false).
+     */
+    POfflineCacheUpdate(URI manifestURI, URI documentURI, nsCString clientID,
+                        bool stickDocument);
 
     __delete__();
 
