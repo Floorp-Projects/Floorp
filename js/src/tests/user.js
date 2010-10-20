@@ -31,7 +31,5 @@ user_pref("javascript.options.tracejit.chrome", true);
 user_pref("javascript.options.tracejit.content", true);
 user_pref("javascript.options.methodjit.chrome", false);
 user_pref("javascript.options.methodjit.content", true);
-user_pref("javascript.options.jitprofiling.chrome", false);
-user_pref("javascript.options.jitprofiling.content", true);
 user_pref("javascript.options.strict", false);
 user_pref("javascript.options.werror", false);
