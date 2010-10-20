@@ -189,22 +189,11 @@ button:focus > .button-box {
 }
 
 /* dark buttons ------------------------------------------------------------ */
-/*
-  we set notification buttons here as well, since the style can't be set in
-  scoped CSS file, like notification.css, when the buttons are added later
-*/
-
-button.button-dark,
-notification button {
+button.button-dark {
   color: #fff !important;
   background: transparent !important;
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
   border-radius: 8px;
-}
-
-/* notification background is too light for a white caption */
-notification button {
-  color: #000 !important;
 }
 
 button.button-dark[type="checkbox"][checked="true"],
