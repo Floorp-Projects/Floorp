@@ -2968,7 +2968,7 @@ HUD_SERVICE.prototype =
     }
 
     let _browser = gBrowser.
-      getBrowserForDocument(aContentWindow.top.document.wrappedJSObject);
+      getBrowserForDocument(aContentWindow.top.document);
     let nBox = gBrowser.getNotificationBox(_browser);
     let nBoxId = nBox.getAttribute("id");
     let hudId = "hud_" + nBoxId;
