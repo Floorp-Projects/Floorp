@@ -748,7 +748,7 @@ placeitem[src=""] .bookmark-item-container > image {
   content: attr(tags);
   font-size: 18px !important;
   font-weight: lighter;
-  margin: 2px 0 4px 0px;
+  margin: 2px 0 4px 0;
   -moz-margin-start: 8px;
   -moz-padding-end: 32px;
 }
@@ -782,7 +782,7 @@ autocompleteresult[class="history-item-title"],
 autocompleteresult[class="remotetabs-item-title"] {
   -moz-box-pack: center;
   background-color: #E9E9E9;
-  min-height: 0px;
+  min-height: 0;
 }
 
 autocompleteresult[class="history-item-title"] .bookmark-item-url,
@@ -1210,6 +1210,11 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 /* navigator popup -------------------------------------------------------------- */
+#content-navigator {
+  padding: 0;
+  background-color: #5e6166;
+}
+
 #content-navigator,
 #content-navigator > #select-container > #select-spacer,
 #content-navigator > #select-container > #select-container-inner > #select-buttons {
@@ -1237,10 +1242,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 
 #content-navigator > #select-container > #select-container-inner {
   border-width: 0;
-  -moz-border-radius-topleft: 8px;
-  -moz-border-radius-topright: 8px;
-  -moz-border-radius-bottomright: 0;
-  -moz-border-radius-bottomleft: 0;
+  border-radius: 8px 8px 0 0;
   padding: 8px 4px 8px 4px;
   -moz-box-flex: 0;
 }
@@ -1263,54 +1265,55 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 .content-navigator-box {
-  padding: 2px 0; /* half row size */
+  padding: 0;
 }
 
 #content-navigator > hbox > .content-navigator-item {
-  margin: 2px 8px; /* half row size & core spacing */
+  margin: 0;
 }
 
 /* XXX this should go with the final Android theme */
 #content-navigator > hbox > toolbarbutton {
-  padding: 0 !important;
-  border: none !important;
-  min-width: 0 !important; /* the image drives the size */
-  min-height: 0 !important; /* the image drives the size */
+  border-left: 1px solid rgba(255,255,255,0.2);
+  border-right: 1px solid rgba(0,0,0,0.2);
+  background-color: transparent;
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 #content-navigator > hbox > .previous-button {
-  height: 64px;
   -moz-margin-end: 0;
-  list-style-image: url("chrome://browser/skin/images/previous-default-64.png");
-}
-
-#content-navigator > hbox > .previous-button:not([disabled="true"]):hover:active {
-  list-style-image: url("chrome://browser/skin/images/previous-active-64.png");
-}
-
-#content-navigator > hbox > .previous-button[disabled="true"] {
-  list-style-image: url("chrome://browser/skin/images/previous-disabled-64.png");
+  list-style-image: url("chrome://browser/skin/images/previous-hdpi.png");
 }
 
 #content-navigator > hbox > .next-button {
-  height: 64px;
   -moz-margin-start: 0;
-  list-style-image: url("chrome://browser/skin/images/next-default-64.png");
+  list-style-image: url("chrome://browser/skin/images/next-hdpi.png");
 }
 
-#content-navigator > hbox > .next-button:not([disabled="true"]):hover:active {
-  list-style-image: url("chrome://browser/skin/images/next-active-64.png");
+#content-navigator > hbox > toolbarbutton:not([disabled="true"]):hover:active {
+  background-color: #3d3f42;
 }
 
-#content-navigator > hbox > .next-button[disabled="true"] {
-  list-style-image: url("chrome://browser/skin/images/next-disabled-64.png");
+#content-navigator > hbox > toolbarbutton[disabled="true"] {
+  opacity: 0.5;
+}
+
+#form-helper-autofill,
+#select-helper-textbox,
+#find-helper-textbox {
+  border: none;
+  margin: 4px;
+  border-radius: 8px;
 }
 
 #form-helper-autofill {
-  padding: 4px 0; /* half core spacing & none (autorepeat arrows compensate) */
+  padding: 0; /* half core spacing & none (autorepeat arrows compensate) */
   color: black;
   background-color: rgb(235,235,235);
-  background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
+  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background-size: auto 100%;
+  background-repeat: repeat-x;
 }
 
 #form-helper-autofill > .autorepeatbutton-down {
@@ -1436,8 +1439,8 @@ echrome-select-option[disabled="true"] {
 }
 
 #menulist-popup > label:not([value=""]) + #menulist-commands {
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-topright: 0px;
+  -moz-border-radius-topleft: 0;
+  -moz-border-radius-topright: 0;
 }
 
 .menulist-command,
