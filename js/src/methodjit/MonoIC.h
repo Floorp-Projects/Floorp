@@ -108,10 +108,6 @@ struct TraceICInfo {
 #ifdef DEBUG
     jsbytecode *jumpTargetPC;
 #endif
-    
-    /* This data is used by the tracing JIT. */
-    void *traceData;
-    uintN traceEpoch;
 
     bool hasSlowTraceHint : 1;
 };
