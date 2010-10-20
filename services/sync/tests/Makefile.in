@@ -47,3 +47,6 @@ MODULE = test_services_sync
 XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk
+
+libs:: unit/head_appinfo.js.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/head_appinfo.js
