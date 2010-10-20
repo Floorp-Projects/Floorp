@@ -1,9 +1,9 @@
 notification, notification[type="warning"] {
   padding: 0;
-  color: #000;
-  background: #8db8d8;
-  border-top: 1px solid #6897bd;
-  border-bottom: 1px solid #6897bd;
+  color: #fff;
+  background: #5768c3;
+  border-top: 1px solid #4756aa;
+  border-bottom: 1px solid #4756aa;
 }
 
 notification .messageCloseButton {
@@ -17,7 +17,7 @@ notification .messageCloseButton:hover:active {
 }
 
 notification .outset {
-  border-color: #6897bd !important;
+  border-color: #4756aa !important;
 }
 
 notification .buttons {
