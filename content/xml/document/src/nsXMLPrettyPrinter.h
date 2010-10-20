@@ -52,8 +52,8 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDocumentObserver
-    virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
-    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
 
     // nsIMutationObserver
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -61,7 +61,7 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
-    
+
     /**
      * This will prettyprint the document if the document is loaded in a
      * displayed window.
