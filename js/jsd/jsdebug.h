@@ -487,19 +487,6 @@ extern JSD_PUBLIC_API(jsuword)
 JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line);
 
 /*
-* Get the first 'Program Counter' value where a breakpoint can be set.
-*/
-extern JSD_PUBLIC_API(jsuword)
-JSD_GetFirstValidPC(JSDContext* jsdc, JSDScript* jsdscript);
-
-/*
-* Get the 'Program Counter' value just after the last byte of the script.
-* 0 is returned for invalid scripts.
-*/
-extern JSD_PUBLIC_API(jsuword)
-JSD_GetEndPC(JSDContext* jsdc, JSDScript* jsdscript);
-
-/*
 * Get the source line number for a given 'Program Counter' location.
 * Returns 0 if no source line information is appropriate (or available) for
 * the given pc.

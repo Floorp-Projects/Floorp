@@ -92,6 +92,7 @@ namespace nanojit
         i386_use_cmov = (features & (1<<15)) != 0;
         i386_fixed_esp = false;
 #endif
+        harden_function_alignment = false;
 
 #if defined(NANOJIT_ARM)
 

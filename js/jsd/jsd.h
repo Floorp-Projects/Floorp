@@ -478,12 +478,6 @@ jsd_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata)
 extern jsuword
 jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line);
 
-extern jsuword
-jsd_GetFirstValidPC(JSDContext* jsdc, JSDScript* jsdscript);
-
-extern jsuword
-jsd_GetEndPC(JSDContext* jsdc, JSDScript* jsdscript);
-
 extern uintN
 jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc);
 

@@ -241,27 +241,34 @@ FrameState::pushSynced(JSValueType type, RegisterID reg)
 inline void
 FrameState::push(Address address)
 {
-    FrameEntry *fe = rawPush();
-
-    /* :XXX: X64 */
-    fe->resetUnsynced();
-
-    /* Prevent us from clobbering this reg. */
+#ifdef JS_PUNBOX64
+    // It's okay if either of these clobbers address.base, since we guarantee
+    // eviction will not physically clobber. It's also safe, on x64, for
+    // loadValueAsComponents() to take either type or data regs as address.base.
+    RegisterID typeReg = allocReg();
+    RegisterID dataReg = allocReg();
+    masm.loadValueAsComponents(address, typeReg, dataReg);
+#elif JS_NUNBOX32
+    // Prevent us from clobbering this reg.
     bool free = freeRegs.hasReg(address.base);
     if (free)
         freeRegs.takeReg(address.base);
 
-    RegisterID dreg = allocReg(fe, RematInfo::DATA);
-    masm.loadPayload(address, dreg);
-    fe->data.setRegister(dreg);
+    RegisterID typeReg = allocReg();
 
-    /* Now it's safe to grab this register again. */
+    masm.loadTypeTag(address, typeReg);
+
+    // Allow re-use of the base register. This could avoid a spill, and
+    // is safe because the following allocReg() won't actually emit any
+    // writes to the register.
     if (free)
         freeRegs.putReg(address.base);
 
-    RegisterID treg = allocReg(fe, RematInfo::TYPE);
-    masm.loadTypeTag(address, treg);
-    fe->type.setRegister(treg);
+    RegisterID dataReg = allocReg();
+    masm.loadPayload(address, dataReg);
+#endif
+
+    pushRegs(typeReg, dataReg);
 }
 
 inline void
@@ -597,13 +604,13 @@ FrameState::syncFe(FrameEntry *fe)
 
         /* Get a register if necessary, without clobbering its pair. */
         if (needTypeReg) {
-            if (backing->data.inRegister()) {
+            if (backing->data.inRegister() && !regstate[backing->data.reg()].isPinned()) {
                 pairReg = backing->data.reg();
                 pinReg(backing->data.reg());
             }
             tempRegForType(backing);
         } else if (needDataReg) {
-            if (backing->type.inRegister()) {
+            if (backing->type.inRegister() && !regstate[backing->type.reg()].isPinned()) {
                 pairReg = backing->type.reg();
                 pinReg(backing->type.reg());
             }

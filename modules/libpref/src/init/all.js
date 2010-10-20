@@ -597,7 +597,7 @@ pref("javascript.options.methodjit.chrome",  false);
 // please find Bug 417052 comment 17 and Bug 456721
 // Comment 32.
 pref("javascript.options.mem.high_water_mark", 32);
-pref("javascript.options.mem.gc_frequency",   1600);
+pref("javascript.options.mem.gc_frequency",   300);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);

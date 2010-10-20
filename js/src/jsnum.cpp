@@ -779,8 +779,8 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-num_valueOf(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
     double d;
     if (!GetPrimitiveThis(cx, vp, &d))
@@ -879,8 +879,8 @@ static JSFunctionSpec number_methods[] = {
 #endif
     JS_TN(js_toString_str,       num_toString,          1, JSFUN_PRIMITIVE_THIS, &num_toString_trcinfo),
     JS_FN(js_toLocaleString_str, num_toLocaleString,    0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,        num_valueOf,           0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,         num_valueOf,           0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_valueOf_str,        js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toJSON_str,         js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
     JS_FN("toFixed",             num_toFixed,           1, JSFUN_PRIMITIVE_THIS),
     JS_FN("toExponential",       num_toExponential,     1, JSFUN_PRIMITIVE_THIS),
     JS_FN("toPrecision",         num_toPrecision,       1, JSFUN_PRIMITIVE_THIS),

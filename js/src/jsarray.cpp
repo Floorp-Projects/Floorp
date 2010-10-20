@@ -433,6 +433,9 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
 JSBool JS_FASTCALL
 js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
 {
+#ifdef DEBUG
+    Class *origObjClasp = obj->clasp; 
+#endif
     jsuint u = jsuint(i);
     jsuint capacity = obj->getDenseArrayCapacity();
     if (u < capacity)
@@ -440,10 +443,15 @@ js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
     if (INDEX_TOO_SPARSE(obj, u))
         return false;
 
-    return obj->ensureDenseArrayElements(cx, u + 1);
+    JSBool ret = obj->ensureDenseArrayElements(cx, u + 1);
+
+    /* Partially check the CallInfo's storeAccSet is correct. */
+    JS_ASSERT(obj->clasp == origObjClasp);
+    return ret;
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32, 0,
-                     nanojit::ACCSET_STORE_ANY)
+/* This function and its callees do not touch any object's .clasp field. */
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32,
+                     0, nanojit::ACCSET_STORE_ANY & ~ACCSET_OBJ_CLASP)
 #endif
 
 static JSBool
@@ -819,8 +827,9 @@ js_Array_dense_setelem_hole(JSContext* cx, JSObject* obj, jsint i)
         obj->setArrayLength(u + 1);
     return true;
 }
+/* storeAccSet == ACCSET_OBJ_PRIVATE: because it can set 'length'. */
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_Array_dense_setelem_hole, CONTEXT, OBJECT, INT32,
-                     0, nanojit::ACCSET_STORE_ANY)
+                     0, ACCSET_OBJ_PRIVATE)
 #endif
 
 static JSBool
@@ -1905,7 +1914,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
             }
         } else {
             CompareArgs ca(cx);
-            if (!ca.session.start(cx, fval, NullValue(), 2))
+            if (!ca.session.start(cx, fval, UndefinedValue(), 2))
                 return false;
 
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),

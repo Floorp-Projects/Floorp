@@ -133,6 +133,8 @@ class StubCompiler
     STUB_CALL_TYPE(VoidPtrStubMIC);
     STUB_CALL_TYPE(VoidStubCallIC);
     STUB_CALL_TYPE(VoidPtrStubCallIC);
+    STUB_CALL_TYPE(BoolStubEqualityIC);
+    STUB_CALL_TYPE(VoidPtrStubTraceIC);
 #endif
 
 #undef STUB_CALL_TYPE

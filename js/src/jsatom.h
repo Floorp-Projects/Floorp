@@ -372,6 +372,8 @@ struct JSAtomState
     JSAtom              *valueAtom;
     JSAtom              *testAtom;
     JSAtom              *useStrictAtom;
+    JSAtom              *locAtom;
+    JSAtom              *lineAtom;
 
 #if JS_HAS_XML_SUPPORT
     JSAtom              *etagoAtom;

@@ -60,6 +60,7 @@ CPPSRCS = \
   testExtendedEq.cpp \
   testFuncCallback.cpp \
   testGCChunkAlloc.cpp \
+  testGetPropertyDefault.cpp \
   testIntString.cpp \
   testIsAboutToBeFinalized.cpp \
   testLookup.cpp \
@@ -71,6 +72,7 @@ CPPSRCS = \
   testSetPropertyWithNativeGetterStubSetter.cpp \
   testBug604087.cpp \
   testTrap.cpp \
+  testUTF8.cpp \
   testXDR.cpp \
   $(NULL)
 

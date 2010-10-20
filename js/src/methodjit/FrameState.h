@@ -248,12 +248,14 @@ class FrameState
         }
 
         void pin() {
+            JS_ASSERT(fe_ != NULL);
             assertConsistency();
             save_ = fe_;
             fe_ = NULL;
         }
 
         void unpin() {
+            JS_ASSERT(save_ != NULL);
             assertConsistency();
             fe_ = save_;
             save_ = NULL;
@@ -509,7 +511,7 @@ class FrameState
                         bool resultNeeded = true);
 
     /* Ensures that an FE has both type and data remat'd in registers. */
-    void ensureFullRegs(FrameEntry *fe);
+    void ensureFullRegs(FrameEntry *fe, MaybeRegisterID *typeReg, MaybeRegisterID *dataReg);
 
     /*
      * Similar to allocForBinary, except works when the LHS and RHS have the
