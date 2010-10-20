@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* NB: Keep this list synced with jitstatHandler in jit-test.js. */
+/* NB: Keep this list synced with jitstatHandler in trace-test.js. */
 /**
  * Proper use of this file: Consumers must define JITSTAT; they can optionally
  * also define MONITOR_JITSTAT or RECORDER_JITSTAT or both to do separate

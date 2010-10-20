@@ -173,7 +173,7 @@ function assertError(src, errorType) {
 
 // general tests
 
-// NB: These are useful but for now jit-test doesn't do I/O reliably.
+// NB: These are useful but for now trace-test doesn't do I/O reliably.
 
 //program(_).assert(Reflect.parse(snarf('data/flapjax.txt')));
 //program(_).assert(Reflect.parse(snarf('data/jquery-1.4.2.txt')));
