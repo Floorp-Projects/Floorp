@@ -813,8 +813,8 @@ StartRequest(JSContext *cx)
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
    
-    if (t->data.requestDepth) {
-        t->data.requestDepth++;
+    if (t->requestDepth) {
+        t->requestDepth++;
     } else {
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
@@ -827,14 +827,7 @@ StartRequest(JSContext *cx)
 
         /* Indicate that a request is running. */
         rt->requestCount++;
-        t->data.requestDepth = 1;
-
-        /*
-         * Adjust rt->interruptCounter to reflect any interrupts added while the
-         * thread was suspended.
-         */
-        if (t->data.interruptFlags)
-            JS_ATOMIC_INCREMENT(&rt->interruptCounter);
+        t->requestDepth = 1;
 
         if (rt->requestCount == 1 && rt->activityCallback)
             rt->activityCallback(rt->activityCallbackArg, true);
@@ -846,9 +839,9 @@ StopRequest(JSContext *cx)
 {
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
-    JS_ASSERT(t->data.requestDepth != 0);
-    if (t->data.requestDepth != 1) {
-        t->data.requestDepth--;
+    JS_ASSERT(t->requestDepth != 0);
+    if (t->requestDepth != 1) {
+        t->requestDepth--;
     } else {
         LeaveTrace(cx);  /* for GC safety */
 
@@ -858,14 +851,7 @@ StopRequest(JSContext *cx)
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
 
-        t->data.requestDepth = 0;
-
-        /*
-         * Adjust rt->interruptCounter to reflect any interrupts added while the
-         * thread still had active requests.
-         */
-        if (t->data.interruptFlags)
-            JS_ATOMIC_DECREMENT(&rt->interruptCounter);
+        t->requestDepth = 0;
 
         js_ShareWaitingTitles(cx);
 
@@ -917,12 +903,12 @@ JS_SuspendRequest(JSContext *cx)
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
-    jsrefcount saveDepth = t->data.requestDepth;
+    jsrefcount saveDepth = t->requestDepth;
     if (!saveDepth)
         return 0;
 
     t->suspendCount++;
-    t->data.requestDepth = 1;
+    t->requestDepth = 1;
     StopRequest(cx);
     return saveDepth;
 #else
@@ -939,10 +925,10 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
     if (saveDepth == 0)
         return;
     JS_ASSERT(saveDepth >= 1);
-    JS_ASSERT(!t->data.requestDepth);
+    JS_ASSERT(!t->requestDepth);
     JS_ASSERT(t->suspendCount);
     StartRequest(cx);
-    t->data.requestDepth = saveDepth;
+    t->requestDepth = saveDepth;
     t->suspendCount--;
 #endif
 }
@@ -5039,10 +5025,22 @@ JS_GetOperationCallback(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx)
 {
+    /*
+     * We allow for cx to come from another thread. Thus we must deal with
+     * possible JS_ClearContextThread calls when accessing cx->thread. But we
+     * assume that the calling thread is in a request so JSThread cannot be
+     * GC-ed.
+     */
+    JSThreadData *td;
 #ifdef JS_THREADSAFE
-    AutoLockGC lock(cx->runtime);
+    JSThread *thread = cx->thread;
+    if (!thread)
+        return;
+    td = &thread->data;
+#else
+    td = JS_THREAD_DATA(cx);
 #endif
-    TriggerOperationCallback(cx);
+    td->triggerOperationCallback();
 }
 
 JS_PUBLIC_API(void)
@@ -5870,7 +5868,7 @@ JS_ClearContextThread(JSContext *cx)
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
-    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->data.requestDepth);
+    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->requestDepth);
    
     /*
      * We can access t->id as long as the GC lock is held and we cannot race
