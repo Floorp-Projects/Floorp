@@ -148,8 +148,6 @@ IDBTransaction::OnRequestFinished()
     if (!mAborted) {
       NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
     }
-    mReadyState = nsIIDBTransaction::DONE;
-
     CommitOrRollback();
   }
 }
@@ -158,7 +156,10 @@ nsresult
 IDBTransaction::CommitOrRollback()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mReadyState == nsIIDBTransaction::DONE, "Bad readyState!");
+
+  if (!mAborted) {
+    NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
+  }
 
   TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
   NS_ENSURE_STATE(pool);
@@ -744,6 +745,8 @@ CommitHelper::Run()
 {
   if (NS_IsMainThread()) {
     NS_ASSERTION(mDoomedObjects.IsEmpty(), "Didn't release doomed objects!");
+
+    mTransaction->mReadyState = nsIIDBTransaction::DONE;
 
     nsCOMPtr<nsIDOMEvent> event;
     if (mAborted) {
