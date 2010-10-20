@@ -625,6 +625,13 @@ js_CurrentThread(JSRuntime *rt)
     JSThread::Map::AddPtr p = rt->threads.lookupForAdd(id);
     if (p) {
         thread = p->value;
+
+        /*
+         * If thread has no contexts, it might be left over from a previous
+         * thread with the same id but a different stack address.
+         */
+        if (JS_CLIST_IS_EMPTY(&thread->contextList))
+            thread->data.nativeStackBase = GetNativeStackBase();
     } else {
         JS_UNLOCK_GC(rt);
         thread = NewThread(id);
@@ -642,6 +649,7 @@ js_CurrentThread(JSRuntime *rt)
         JS_ASSERT(p->value == thread);
     }
     JS_ASSERT(thread->id == id);
+    JS_ASSERT(thread->data.nativeStackBase == GetNativeStackBase());
 
     return thread;
 }
