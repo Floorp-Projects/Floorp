@@ -111,9 +111,16 @@ interface nsIApplicationCacheNamespace : nsISupports
  * loads.  Inactive caches will be removed from the cache when they are
  * no longer referenced.
  */
-[scriptable, uuid(663e2e2e-04a0-47b6-87b3-a122be46cb53)]
+[scriptable, uuid(32f83e3f-470c-4423-a86a-d35d1c215ccb)]
 interface nsIApplicationCache : nsISupports
 {
+    /**
+     * Init this application cache instance to just hold the group ID and
+     * the client ID to work just as a handle to the real cache. Used on
+     * content process to simplify the application cache code.
+     */
+    void initAsHandle(in ACString groupId, in ACString clientId);
+
     /**
      * Entries in an application cache can be marked as one or more of
      * the following types.

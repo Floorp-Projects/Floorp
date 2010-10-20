@@ -41,6 +41,7 @@
 #include "mozilla/dom/PContentDialogChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
+#include "mozilla/docshell/OfflineCacheUpdateChild.h"
 
 #include "BasicLayers.h"
 #include "nsIWebBrowser.h"
@@ -94,6 +95,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
+using namespace mozilla::docshell;
 
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
@@ -806,6 +808,24 @@ TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
   nsRefPtr<ContentListener> listener = new ContentListener(this);
   NS_ENSURE_TRUE(listener, true);
   chromeHandler->AddEventListener(aType, listener, capture);
+  return true;
+}
+
+POfflineCacheUpdateChild*
+TabChild::AllocPOfflineCacheUpdate(const URI& manifestURI,
+            const URI& documentURI,
+            const nsCString& clientID,
+            const bool& stickDocument)
+{
+  NS_RUNTIMEABORT("unused");
+  return nsnull;
+}
+
+bool
+TabChild::DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* actor)
+{
+  OfflineCacheUpdateChild* offlineCacheUpdate = static_cast<OfflineCacheUpdateChild*>(actor);
+  delete offlineCacheUpdate;
   return true;
 }
 
