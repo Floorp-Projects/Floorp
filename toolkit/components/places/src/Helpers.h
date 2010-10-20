@@ -55,13 +55,17 @@ namespace places {
 class AsyncStatementCallback : public mozIStorageStatementCallback
 {
 public:
-  // Implement the error handler for asynchronous statements.
-  NS_IMETHOD HandleError(mozIStorageError *aError);
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  AsyncStatementCallback() {}
+
+protected:
+  virtual ~AsyncStatementCallback() {}
 };
 
 /**
- * Macro to use in place of NS_DECL_MOZISTORAGESTATEMENTCALLBACK to declare the
- * methods this class does not implement.
+ * Macros to use in place of NS_DECL_MOZISTORAGESTATEMENTCALLBACK to declare the
+ * methods this class assumes silent or notreached.
  */
 #define NS_DECL_ASYNCSTATEMENTCALLBACK \
   NS_IMETHOD HandleResult(mozIStorageResultSet *); \
@@ -71,6 +75,24 @@ public:
  * Macros to use for lazy statements initialization in Places services that use
  * GetStatement() method.
  */
+#ifdef DEBUG
+#define RETURN_IF_STMT(_stmt, _sql)                                            \
+  PR_BEGIN_MACRO                                                               \
+  if (address_of(_stmt) == address_of(aStmt)) {                                \
+    if (!_stmt) {                                                              \
+      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt));     \
+      if (NS_FAILED(rv)) {                                                     \
+        nsCAutoString err;                                                     \
+        (void)mDBConn->GetLastErrorString(err);                                \
+        (void)fprintf(stderr, "$$$ compiling statement failed with '%s'\n",    \
+                      err.get());                                              \
+      }                                                                        \
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                       \
+    }                                                                          \
+    return _stmt.get();                                                        \
+  }                                                                            \
+  PR_END_MACRO
+#else
 #define RETURN_IF_STMT(_stmt, _sql)                                            \
   PR_BEGIN_MACRO                                                               \
   if (address_of(_stmt) == address_of(aStmt)) {                                \
@@ -81,6 +103,7 @@ public:
     return _stmt.get();                                                        \
   }                                                                            \
   PR_END_MACRO
+#endif
 
 // Async statements don't need to be scoped, they are reset when done.
 // So use this version for statements used async, scoped version for statements
