@@ -129,14 +129,14 @@
           return false; // Mobile default is false
         },
 
-        startDownload: function() {
+        startUpdate: function() {
           if (!this.update)
             this.update = this.um.activeUpdate;
       
           this.aus.pauseDownload();
-          let state = this.aus.downloadUpdate(this.update, false);
-          if (state == "failed")
-            return;
+
+          let updateTimerCallback = this.aus.QueryInterface(Ci.nsITimerCallback);
+          updateTimerCallback.notify(null);
         }
       };
 
@@ -169,7 +169,7 @@
           }
 
           showUpdateMessage(true);
-          Updater.startDownload();
+          Updater.startUpdate();
         },
 
         onError: function(aRequest, aUpdate) {
