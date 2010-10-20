@@ -298,9 +298,6 @@ struct PICInfo {
     PICLabels labels;
 #endif
 
-    // Where in the script did we generate this PIC?
-    jsbytecode *pc;
-    
     // Index into the script's atom table.
     JSAtom *atom;
 
