@@ -6,7 +6,7 @@
 
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.
-const FILE_WIN_TEST_EXE = "updatetest.exe";
+const FILE_WIN_TEST_EXE = "aus_test_app.exe";
 
 // Backup the updater.ini and use a custom one to prevent the updater from
 // launching a post update executable.
@@ -69,6 +69,38 @@ XPCOMUtils.defineLazyGetter(this, "gIsLessThanMacOSX_10_6", function test_gMacVe
   return (Services.vc.compare(version, "10.6") < 0)
 });
 
+/**
+ * Checks for the existence of a platform specific application binary that can
+ * be used for the test and gets its path if it is found.
+ *
+ * Note: The application shell scripts for launching the application work on all
+ * platforms that provide a launch shell script except for Mac OS X 10.5 which
+ * is why this test uses the binaries to launch the application.
+ */
+XPCOMUtils.defineLazyGetter(this, "gAppBinPath", function test_gAppBinPath() {
+  let processDir = getCurrentProcessDir();
+  let appBin = processDir.clone();
+  appBin.append(APP_BIN_NAME + APP_BIN_SUFFIX);
+  if (appBin.exists()) {
+    if (IS_WIN) {
+      let appBinCopy = processDir.clone();
+      appBinCopy.append(FILE_WIN_TEST_EXE);
+      if (appBinCopy.exists()) {
+        appBinCopy.remove(false);
+      }
+      appBin.copyTo(processDir, FILE_WIN_TEST_EXE);
+      appBin = processDir.clone();
+      appBin.append(FILE_WIN_TEST_EXE);
+    }
+    let appBinPath = appBin.path;
+    if (/ /.test(appBinPath)) {
+      appBinPath = '"' + appBinPath + '"';
+    }
+    return appBinPath;
+  }
+  return null;
+});
+
 function run_test() {
   if (IS_ANDROID) {
     logTestInfo("this test is not applicable to Android... returning early");
@@ -85,7 +117,7 @@ function run_test() {
 
   removeUpdateDirsAndFiles();
 
-  if (!getAppBinPath()) {
+  if (!gAppBinPath) {
     do_throw("Main application binary not found... expected: " +
              APP_BIN_NAME + APP_BIN_SUFFIX);
     return;
@@ -411,42 +443,6 @@ function resetEnvironment() {
 }
 
 /**
- * Checks for the existence of a platform specific application binary that can
- * be used for the test and returns its path if it is found.
- *
- * Note: The application shell scripts for launching the application work on all
- * platforms that provide a launch shell script except for Mac OS X 10.5 which
- * is why this test uses the binaries to launch the application.
- *
- * @return  path to an application binary that can be used for this test or null
- *          if an application binary that can be used for this test is not
- *          found.
- */
-function getAppBinPath() {
-  let processDir = getCurrentProcessDir();
-  let appBin = processDir.clone();
-  appBin.append(APP_BIN_NAME + APP_BIN_SUFFIX);
-  if (appBin.exists()) {
-    if (IS_WIN) {
-      let appBinCopy = processDir.clone();
-      appBinCopy.append(FILE_WIN_TEST_EXE);
-      if (appBinCopy.exists()) {
-        appBinCopy.remove(false);
-      }
-      appBin.copyTo(processDir, appBinCopy.leafName);
-      appBin = processDir.clone();
-      appBin.append(appBinCopy.leafName);
-    }
-    let appBinPath = appBin.path;
-    if (/ /.test(appBinPath)) {
-      appBinPath = '"' + appBinPath + '"';
-    }
-    return appBinPath;
-  }
-  return null;
-}
-
-/**
  * Gets the platform specific binary used to launch the application using
  * nsIProcess.
  *
@@ -490,8 +486,6 @@ function getLaunchBin() {
  * 2>&1 pipes stderr to sdout.
  */
 function getProcessArgs() {
-  let appBinPath = getAppBinPath();
-
   // Pipe the output from the launched application to a file so the output from
   // its console isn't present in the xpcshell log.
   let appConsoleLogPath = getAppConsoleLogPath();
@@ -507,7 +501,7 @@ function getProcessArgs() {
     if (gIsLessThanMacOSX_10_6) {
       scriptContents += "arch -arch i386 ";
     }
-    scriptContents += appBinPath + " -no-remote -process-updates 1> " +
+    scriptContents += gAppBinPath + " -no-remote -process-updates 1> " +
                       appConsoleLogPath + " 2>&1";
     writeFile(launchScript, scriptContents);
     logTestInfo("created " + launchScript.path + " containing:\n" +
@@ -515,7 +509,7 @@ function getProcessArgs() {
     args = [launchScript.path];
   }
   else {
-    args = ["/D", "/Q", "/C", appBinPath, "-no-remote", "-process-updates",
+    args = ["/D", "/Q", "/C", gAppBinPath, "-no-remote", "-process-updates",
             "1>", appConsoleLogPath, "2>&1"];
   }
   return args;
