@@ -358,6 +358,7 @@
 @BINPATH@/components/nsPlacesAutoComplete.js
 @BINPATH@/components/nsPlacesExpiration.js
 @BINPATH@/components/PlacesProtocolHandler.js
+@BINPATH@/components/PlacesCategoriesStarter.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest
@@ -550,6 +551,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/crashreporter.app/
 #else
 @BINPATH@/crashreporter@BIN_SUFFIX@
+@BINPATH@/crashreporter.crt
 @BINPATH@/crashreporter.ini
 #ifdef XP_UNIX
 @BINPATH@/Throbber-small.gif
@@ -617,4 +619,10 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/XPIDialogService.js
 @BINPATH@/components/libmozgnome.so
 @BINPATH@/components/libmozphone.so
-@BINPATH@/extensions/
+@BINPATH@/extensions/feedback@mobile.mozilla.org.xpi
+
+; testing stuff that probably shouldn't be in here
+@BINPATH@/pageloader@JAREXT@
+@BINPATH@/pageloader.manifest
+@BINPATH@/components/tp-cmdline.js
+@BINPATH@/components/tp-cmdline.manifest
