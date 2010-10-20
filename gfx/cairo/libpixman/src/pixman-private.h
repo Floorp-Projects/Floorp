@@ -36,8 +36,7 @@ typedef void (*fetch_scanline_t) (pixman_image_t *image,
 				  int             y,
 				  int             width,
 				  uint32_t       *buffer,
-				  const uint32_t *mask,
-				  uint32_t        mask_bits);
+				  const uint32_t *mask);
 
 typedef uint32_t (*fetch_pixel_32_t) (bits_image_t *image,
 				      int           x,
@@ -81,6 +80,7 @@ struct image_common
     image_type_t                type;
     int32_t                     ref_count;
     pixman_region32_t           clip_region;
+    int32_t			alpha_count;	    /* How many times this image is being used as an alpha map */
     pixman_bool_t               have_clip_region;   /* FALSE if there is no clip */
     pixman_bool_t               client_clip;        /* Whether the source clip was
 						       set by a client */
@@ -152,17 +152,18 @@ struct radial_gradient
 
     circle_t   c1;
     circle_t   c2;
-    double     cdx;
-    double     cdy;
-    double     dr;
-    double     A;
+
+    circle_t   delta;
+    double     a;
+    double     inva;
+    double     mindr;
 };
 
 struct conical_gradient
 {
     gradient_t           common;
     pixman_point_fixed_t center;
-    pixman_fixed_t       angle;
+    double		 angle;
 };
 
 struct bits_image
@@ -176,24 +177,12 @@ struct bits_image
     uint32_t *                 free_me;
     int                        rowstride;  /* in number of uint32_t's */
 
-    /* Fetch a pixel, disregarding alpha maps, transformations etc. */
-    fetch_pixel_32_t	       fetch_pixel_raw_32;
-    fetch_pixel_64_t	       fetch_pixel_raw_64;
-
-    /* Fetch a pixel, taking alpha maps into account */
+    fetch_scanline_t           fetch_scanline_32;
     fetch_pixel_32_t	       fetch_pixel_32;
-    fetch_pixel_64_t	       fetch_pixel_64;
-
-    /* Fetch raw scanlines, with no regard for transformations, alpha maps etc. */
-    fetch_scanline_t           fetch_scanline_raw_32;
-    fetch_scanline_t           fetch_scanline_raw_64;
-
-    /* Store scanlines with no regard for alpha maps */
-    store_scanline_t           store_scanline_raw_32;
-    store_scanline_t           store_scanline_raw_64;
-
-    /* Store a scanline, taking alpha maps into account */
     store_scanline_t           store_scanline_32;
+
+    fetch_scanline_t           fetch_scanline_64;
+    fetch_pixel_64_t	       fetch_pixel_64;
     store_scanline_t           store_scanline_64;
 
     /* Used for indirect access to the bits */
@@ -214,9 +203,8 @@ union pixman_image
     solid_fill_t       solid;
 };
 
-
 void
-_pixman_bits_image_setup_raw_accessors (bits_image_t *image);
+_pixman_bits_image_setup_accessors (bits_image_t *image);
 
 void
 _pixman_image_get_scanline_generic_64  (pixman_image_t *image,
@@ -224,8 +212,7 @@ _pixman_image_get_scanline_generic_64  (pixman_image_t *image,
                                         int             y,
                                         int             width,
                                         uint32_t *      buffer,
-                                        const uint32_t *mask,
-                                        uint32_t        mask_bits);
+                                        const uint32_t *mask);
 
 source_image_class_t
 _pixman_image_classify (pixman_image_t *image,
@@ -240,8 +227,7 @@ _pixman_image_get_scanline_32 (pixman_image_t *image,
                                int             y,
                                int             width,
                                uint32_t *      buffer,
-                               const uint32_t *mask,
-                               uint32_t        mask_bits);
+                               const uint32_t *mask);
 
 /* Even thought the type of buffer is uint32_t *, the function actually expects
  * a uint64_t *buffer.
@@ -252,8 +238,7 @@ _pixman_image_get_scanline_64 (pixman_image_t *image,
                                int             y,
                                int             width,
                                uint32_t *      buffer,
-                               const uint32_t *unused,
-                               uint32_t        unused2);
+                               const uint32_t *unused);
 
 void
 _pixman_image_store_scanline_32 (bits_image_t *  image,
@@ -570,41 +555,61 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_NO_PAD_REPEAT			(1 <<  3)
 #define FAST_PATH_NO_REFLECT_REPEAT		(1 <<  4)
 #define FAST_PATH_NO_ACCESSORS			(1 <<  5)
-#define FAST_PATH_NO_WIDE_FORMAT		(1 <<  6)
-#define FAST_PATH_COVERS_CLIP			(1 <<  7)
+#define FAST_PATH_NARROW_FORMAT			(1 <<  6)
 #define FAST_PATH_COMPONENT_ALPHA		(1 <<  8)
+#define FAST_PATH_SAMPLES_OPAQUE		(1 <<  7)
 #define FAST_PATH_UNIFIED_ALPHA			(1 <<  9)
 #define FAST_PATH_SCALE_TRANSFORM		(1 << 10)
 #define FAST_PATH_NEAREST_FILTER		(1 << 11)
-#define FAST_PATH_SIMPLE_REPEAT			(1 << 12)
+#define FAST_PATH_HAS_TRANSFORM			(1 << 12)
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
 #define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
 #define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
 #define FAST_PATH_SAMPLES_COVER_CLIP		(1 << 16)
-#define FAST_PATH_16BIT_SAFE			(1 << 17)
-#define FAST_PATH_X_UNIT_POSITIVE		(1 << 18)
+#define FAST_PATH_X_UNIT_POSITIVE		(1 << 17)
+#define FAST_PATH_AFFINE_TRANSFORM		(1 << 18)
+#define FAST_PATH_Y_UNIT_ZERO			(1 << 19)
+#define FAST_PATH_BILINEAR_FILTER		(1 << 20)
+#define FAST_PATH_NO_NORMAL_REPEAT		(1 << 21)
 
-#define _FAST_PATH_STANDARD_FLAGS					\
-    (FAST_PATH_ID_TRANSFORM		|				\
-     FAST_PATH_NO_ALPHA_MAP		|				\
-     FAST_PATH_NO_CONVOLUTION_FILTER	|				\
+#define FAST_PATH_PAD_REPEAT						\
+    (FAST_PATH_NO_NONE_REPEAT		|				\
+     FAST_PATH_NO_NORMAL_REPEAT		|				\
+     FAST_PATH_NO_REFLECT_REPEAT)
+
+#define FAST_PATH_NORMAL_REPEAT						\
+    (FAST_PATH_NO_NONE_REPEAT		|				\
      FAST_PATH_NO_PAD_REPEAT		|				\
-     FAST_PATH_NO_REFLECT_REPEAT	|				\
-     FAST_PATH_NO_ACCESSORS		|				\
-     FAST_PATH_NO_WIDE_FORMAT		|				\
-     FAST_PATH_COVERS_CLIP)
+     FAST_PATH_NO_REFLECT_REPEAT)
 
-#define FAST_PATH_STD_SRC_FLAGS						\
-    _FAST_PATH_STANDARD_FLAGS
-#define FAST_PATH_STD_MASK_U_FLAGS					\
-    (_FAST_PATH_STANDARD_FLAGS		|				\
-     FAST_PATH_UNIFIED_ALPHA)
-#define FAST_PATH_STD_MASK_CA_FLAGS					\
-    (_FAST_PATH_STANDARD_FLAGS		|				\
-     FAST_PATH_COMPONENT_ALPHA)
+#define FAST_PATH_NONE_REPEAT						\
+    (FAST_PATH_NO_NORMAL_REPEAT		|				\
+     FAST_PATH_NO_PAD_REPEAT		|				\
+     FAST_PATH_NO_REFLECT_REPEAT)
+
+#define FAST_PATH_REFLECT_REPEAT					\
+    (FAST_PATH_NO_NONE_REPEAT		|				\
+     FAST_PATH_NO_NORMAL_REPEAT		|				\
+     FAST_PATH_NO_PAD_REPEAT)
+
+#define FAST_PATH_STANDARD_FLAGS					\
+    (FAST_PATH_NO_CONVOLUTION_FILTER	|				\
+     FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NARROW_FORMAT)
+
 #define FAST_PATH_STD_DEST_FLAGS					\
     (FAST_PATH_NO_ACCESSORS		|				\
-     FAST_PATH_NO_WIDE_FORMAT)
+     FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NARROW_FORMAT)
+
+#define SOURCE_FLAGS(format)						\
+    (FAST_PATH_STANDARD_FLAGS |						\
+     ((PIXMAN_ ## format == PIXMAN_solid) ?				\
+      0 : (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_ID_TRANSFORM)))
+
+#define MASK_FLAGS(format, extra)					\
+    ((PIXMAN_ ## format == PIXMAN_null) ? 0 : (SOURCE_FLAGS (format) | extra))
 
 #define FAST_PATH(op, src, src_flags, mask, mask_flags, dest, dest_flags, func) \
     PIXMAN_OP_ ## op,							\
@@ -618,19 +623,19 @@ _pixman_choose_implementation (void);
 
 #define PIXMAN_STD_FAST_PATH(op, src, mask, dest, func)			\
     { FAST_PATH (							\
-	  op,								\
-	  src, FAST_PATH_STD_SRC_FLAGS,					\
-	  mask, (PIXMAN_ ## mask) ? FAST_PATH_STD_MASK_U_FLAGS : 0,	\
-	  dest, FAST_PATH_STD_DEST_FLAGS,				\
-	  func) }
+	    op,								\
+	    src,  SOURCE_FLAGS (src),					\
+	    mask, MASK_FLAGS (mask, FAST_PATH_UNIFIED_ALPHA),		\
+	    dest, FAST_PATH_STD_DEST_FLAGS,				\
+	    func) }
 
 #define PIXMAN_STD_FAST_PATH_CA(op, src, mask, dest, func)		\
     { FAST_PATH (							\
-	  op,								\
-	  src, FAST_PATH_STD_SRC_FLAGS,					\
-	  mask, FAST_PATH_STD_MASK_CA_FLAGS,				\
-	  dest, FAST_PATH_STD_DEST_FLAGS,				\
-	  func) }
+	    op,								\
+	    src,  SOURCE_FLAGS (src),					\
+	    mask, MASK_FLAGS (mask, FAST_PATH_COMPONENT_ALPHA),		\
+	    dest, FAST_PATH_STD_DEST_FLAGS,				\
+	    func) }
 
 /* Memory allocation helpers */
 void *
@@ -733,6 +738,9 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
  */
 
 #undef DEBUG
+
+#define COMPILE_TIME_ASSERT(x)						\
+    do { typedef int compile_time_assertion [(x)?1:-1]; } while (0)
 
 /* Turn on debugging depending on what type of release this is
  */
