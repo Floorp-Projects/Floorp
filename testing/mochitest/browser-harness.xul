@@ -210,7 +210,7 @@
         }).join("\n");
         if (this.duration) {
           html += "<p class=\"info\">TEST-END | " + path + " | finished in " +
-                  this.duration + " ms";
+                  this.duration + " ms</p>";
         }
         return html;
       }
