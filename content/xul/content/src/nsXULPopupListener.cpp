@@ -55,7 +55,7 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
-
+#include "nsEventStateManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
@@ -303,7 +303,8 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
 
     nsIEventStateManager *esm = context->EventStateManager();
     nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
-    esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
+    nsEventStateManager::SetGlobalActiveContent(
+      static_cast<nsEventStateManager*>(esm), focusableContent);
   }
   return rv;
 }
