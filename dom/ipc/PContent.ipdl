@@ -96,6 +96,12 @@ parent:
     async StartVisitedQuery(URI uri);
     async VisitURI(URI uri, URI referrer, PRUint32 flags);
     async SetURITitle(URI uri, nsString title);
+    
+    // filepicker remoting
+    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, 
+                        nsString title, nsString defaultFile, nsString defaultExtension,
+                        nsString[] filters, nsString[] filterNames)
+        returns (nsString[] files, PRInt16 retValue, nsresult result);
 
     async LoadURIExternal(URI uri);
 

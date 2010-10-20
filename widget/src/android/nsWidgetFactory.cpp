@@ -54,6 +54,10 @@
 #include "nsTransferable.h"
 #include "nsFilePicker.h"
 #include "nsHTMLFormatConverter.h"
+#ifdef MOZ_IPC
+#include "nsFilePickerProxy.h"
+#include "nsXULAppAPI.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -63,8 +67,27 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+
+static nsresult
+nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
+                        void **aResult)
+{
+  *aResult = nsnull;
+  if (aOuter != nsnull) {
+      return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCOMPtr<nsIFilePicker> picker;
+  
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content)
+        picker = new nsFilePickerProxy();
+    else 
+#endif
+        picker = new nsFilePicker;
+
+  return picker->QueryInterface(aIID, aResult);
+}
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
