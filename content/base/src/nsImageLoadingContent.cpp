@@ -699,21 +699,36 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 }
 
 nsresult
-nsImageLoadingContent::ForceImageState(PRBool aForce, PRInt32 aState)
+nsImageLoadingContent::ForceImageState(PRBool aForce, nsEventStates::InternalType aState)
 {
   mIsImageStateForced = aForce;
-  mForcedImageState = aState;
+  mForcedImageState = nsEventStates(aState);
   return NS_OK;
 }
 
-PRInt32
+nsEventStates
 nsImageLoadingContent::ImageState() const
 {
-  return mIsImageStateForced ? mForcedImageState :
-    (mBroken * NS_EVENT_STATE_BROKEN) |
-    (mUserDisabled * NS_EVENT_STATE_USERDISABLED) |
-    (mSuppressed * NS_EVENT_STATE_SUPPRESSED) |
-    (mLoading * NS_EVENT_STATE_LOADING);
+  if (mIsImageStateForced) {
+    return mForcedImageState;
+  }
+
+  nsEventStates states;
+
+  if (mBroken) {
+    states |= NS_EVENT_STATE_BROKEN;
+  }
+  if (mUserDisabled) {
+    states |= NS_EVENT_STATE_USERDISABLED;
+  }
+  if (mSuppressed) {
+    states |= NS_EVENT_STATE_SUPPRESSED;
+  }
+  if (mLoading) {
+    states |= NS_EVENT_STATE_LOADING;
+  }
+
+  return states;
 }
 
 void
@@ -734,7 +749,7 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
     return;
   }
 
-  PRInt32 oldState = ImageState();
+  nsEventStates oldState = ImageState();
 
   mLoading = mBroken = mUserDisabled = mSuppressed = PR_FALSE;
   
@@ -762,8 +777,8 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
     nsIDocument* doc = thisContent->GetCurrentDoc();
     if (doc) {
       NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
-      PRInt32 changedBits = oldState ^ ImageState();
-      if (changedBits) {
+      nsEventStates changedBits = oldState ^ ImageState();
+      if (!changedBits.IsEmpty()) {
         mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(thisContent, nsnull, changedBits);
       }

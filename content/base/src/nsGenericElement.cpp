@@ -771,7 +771,7 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 
 //----------------------------------------------------------------------
 
-PRInt32
+nsEventStates
 nsIContent::IntrinsicState() const
 {
   return IsEditable() ? NS_EVENT_STATE_MOZ_READWRITE :
@@ -4675,9 +4675,9 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
   // When notifying, make sure to keep track of states whose value
   // depends solely on the value of an attribute.
-  PRUint32 stateMask;
+  nsEventStates stateMask;
   if (aNotify) {
-    stateMask = PRUint32(IntrinsicState());
+    stateMask = IntrinsicState();
   }
 
   nsMutationGuard::DidMutate();
@@ -4712,8 +4712,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
 
   if (aNotify) {
-    stateMask = stateMask ^ PRUint32(IntrinsicState());
-    if (stateMask && document) {
+    stateMask ^= IntrinsicState();
+    if (document && !stateMask.IsEmpty()) {
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStatesChanged(this, nsnull, stateMask);
     }
@@ -4914,10 +4914,10 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   // When notifying, make sure to keep track of states whose value
   // depends solely on the value of an attribute.
-  PRUint32 stateMask;
+  nsEventStates stateMask;
   if (aNotify) {
-    stateMask = PRUint32(IntrinsicState());
-  }    
+    stateMask = IntrinsicState();
+  }
 
   PRBool hasMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
@@ -4959,8 +4959,8 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   if (aNotify) {
-    stateMask = stateMask ^ PRUint32(IntrinsicState());
-    if (stateMask && document) {
+    stateMask ^= IntrinsicState();
+    if (document && !stateMask.IsEmpty()) {
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStatesChanged(this, nsnull, stateMask);
     }

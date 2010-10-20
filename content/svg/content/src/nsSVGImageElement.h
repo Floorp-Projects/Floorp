@@ -81,7 +81,7 @@ public:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 

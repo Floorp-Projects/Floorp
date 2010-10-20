@@ -103,7 +103,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -331,7 +331,7 @@ nsHTMLAreaElement::GetHrefURI() const
   return GetHrefURIForAnchors();
 }
 
-PRInt32
+nsEventStates
 nsHTMLAreaElement::IntrinsicState() const
 {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
