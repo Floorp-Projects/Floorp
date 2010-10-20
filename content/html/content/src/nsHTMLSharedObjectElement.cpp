@@ -122,7 +122,7 @@ public:
                                 nsAttrValue &aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
   virtual void DestroyContent();
 
   // nsObjectLoadingContent
@@ -455,7 +455,7 @@ nsHTMLSharedObjectElement::StartObjectLoad(PRBool aNotify)
   }
 }
 
-PRInt32
+nsEventStates
 nsHTMLSharedObjectElement::IntrinsicState() const
 {
   return nsGenericHTMLElement::IntrinsicState() | ObjectState();

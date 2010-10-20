@@ -448,17 +448,17 @@ nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
 
 // This is a macro so that we don't evaluate the boolean last arg
 // unless we have to; it can be expensive
-#define IMAGE_OK(_state, _loadingOK)                        \
-   (((_state) & BAD_STATES) == 0 ||                         \
-    (((_state) & BAD_STATES) == NS_EVENT_STATE_LOADING &&   \
-     (_loadingOK)))
+#define IMAGE_OK(_state, _loadingOK)                                           \
+   (!(_state).HasAtLeastOneOfStates(BAD_STATES) ||                                    \
+    (!(_state).HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED) && \
+     (_state).HasState(NS_EVENT_STATE_LOADING) && (_loadingOK)))
 
 /* static */
 PRBool
 nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
                                         nsStyleContext* aStyleContext)
 {
-  PRInt32 state = aContent->IntrinsicState();
+  nsEventStates state = aContent->IntrinsicState();
   if (IMAGE_OK(state,
                HaveFixedSize(aStyleContext->GetStylePosition()))) {
     // Image is fine; do the image frame thing
@@ -1261,7 +1261,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               getter_AddRefs(currentRequest));
     }
 
-    PRInt32 contentState = mContent->IntrinsicState();
+    nsEventStates contentState = mContent->IntrinsicState();
     PRBool imageOK = IMAGE_OK(contentState, PR_TRUE);
 
     nsCOMPtr<imgIContainer> imgCon;

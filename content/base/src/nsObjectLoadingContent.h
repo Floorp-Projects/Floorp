@@ -132,7 +132,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * NS_EVENT_STATE_BROKEN, NS_EVENT_STATE_USERDISABLED and
      * NS_EVENT_STATE_SUPPRESSED representing the current state of the object.
      */
-    PRInt32 ObjectState() const;
+    nsEventStates ObjectState() const;
 
     void SetIsNetworkCreated(PRBool aNetworkCreated)
     {
@@ -259,7 +259,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * @param aSync If a synchronous frame construction is required. If false,
      *              the construction may either be sync or async.
      */
-    void NotifyStateChanged(ObjectType aOldType, PRInt32 aOldState,
+    void NotifyStateChanged(ObjectType aOldType, nsEventStates aOldState,
                             PRBool aSync);
 
     /**

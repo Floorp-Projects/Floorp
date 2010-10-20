@@ -4206,14 +4206,14 @@ nsDocument::EndLoad()
 
 void
 nsDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2,
-                                 PRInt32 aStateMask)
+                                 nsEventStates aStateMask)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStatesChanged,
                                (this, aContent1, aContent2, aStateMask));
 }
 
 void
-nsDocument::DocumentStatesChanged(PRInt32 aStateMask)
+nsDocument::DocumentStatesChanged(nsEventStates aStateMask)
 {
   // Invalidate our cached state.
   mGotDocumentState &= ~aStateMask;
@@ -7734,16 +7734,16 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
   }
 }
 
-PRInt32
+nsEventStates
 nsDocument::GetDocumentState()
 {
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_RTL_LOCALE)) {
+  if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
     if (IsDocumentRightToLeft()) {
       mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
     }
     mGotDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
   }
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+  if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
     nsIPresShell* shell = GetShell();
     if (shell && shell->GetPresContext() &&
         shell->GetPresContext()->IsTopLevelWindowInactive()) {

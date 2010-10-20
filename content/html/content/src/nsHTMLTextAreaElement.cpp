@@ -131,9 +131,9 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   // nsITextControlElemet
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
@@ -989,10 +989,10 @@ nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
   return PR_FALSE;
 }
 
-PRInt32
+nsEventStates
 nsHTMLTextAreaElement::IntrinsicState() const
 {
-  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
     state |= NS_EVENT_STATE_REQUIRED;
@@ -1109,7 +1109,7 @@ nsresult
 nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                     const nsAString* aValue, PRBool aNotify)
 {
-  PRInt32 states = 0;
+  nsEventStates states;
 
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
@@ -1136,7 +1136,7 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         states |= NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_MOZ_READWRITE;
       }
 
-      if (doc && states) {
+      if (doc && !states.IsEmpty()) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, states);
       }
@@ -1405,7 +1405,7 @@ nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
 }
 
 void
-nsHTMLTextAreaElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
+nsHTMLTextAreaElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();

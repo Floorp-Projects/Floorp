@@ -564,7 +564,7 @@ public:
     NS_DECL_NSIDOMXULELEMENT
 
     virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-    virtual PRInt32 IntrinsicState() const;
+    virtual nsEventStates IntrinsicState() const;
 
     nsresult EnsureLocalStyle();
 

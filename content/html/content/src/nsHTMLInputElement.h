@@ -159,7 +159,7 @@ public:
   virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();
 
-  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
 
   // nsIContent
   virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
@@ -184,7 +184,7 @@ public:
 
   virtual void DoneCreatingElement();
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   // nsITextControlElement
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);

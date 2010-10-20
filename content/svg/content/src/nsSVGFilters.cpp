@@ -5337,7 +5337,7 @@ public:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   // imgIDecoderObserver
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
@@ -5488,7 +5488,7 @@ nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-PRInt32
+nsEventStates
 nsSVGFEImageElement::IntrinsicState() const
 {
   return nsSVGFEImageElementBase::IntrinsicState() |
