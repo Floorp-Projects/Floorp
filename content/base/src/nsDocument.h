@@ -297,13 +297,11 @@ public:
   NS_DECL_NSIDOMSTYLESHEETLIST
 
   // nsIDocumentObserver
-  virtual void NodeWillBeDestroyed(const nsINode *aNode);
-  virtual void StyleSheetAdded(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet,
-                               PRBool aDocumentSheet);
-  virtual void StyleSheetRemoved(nsIDocument *aDocument,
-                                 nsIStyleSheet* aStyleSheet,
-                                 PRBool aDocumentSheet);
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED
+
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
   nsIStyleSheet* GetItemAt(PRUint32 aIndex);
 

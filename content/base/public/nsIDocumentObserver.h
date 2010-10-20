@@ -233,36 +233,73 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 
-#define NS_DECL_NSIDOCUMENTOBSERVER                                          \
-    virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
-    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
-    virtual void BeginLoad(nsIDocument* aDocument);                          \
-    virtual void EndLoad(nsIDocument* aDocument);                            \
+#define NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                              \
+    virtual void BeginUpdate(nsIDocument* aDocument,                         \
+                             nsUpdateType aUpdateType);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                \
+    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                \
+    virtual void BeginLoad(nsIDocument* aDocument);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                  \
+    virtual void EndLoad(nsIDocument* aDocument);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED                     \
     virtual void ContentStatesChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent1,                 \
                                       nsIContent* aContent2,                 \
-                                      PRInt32 aStateMask);                   \
+                                      PRInt32 aStateMask);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                    \
     virtual void DocumentStatesChanged(nsIDocument* aDocument,               \
-                                       PRInt32 aStateMask);                  \
+                                       PRInt32 aStateMask);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                          \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
                                  nsIStyleSheet* aStyleSheet,                 \
-                                 PRBool aDocumentSheet);                     \
+                                 PRBool aDocumentSheet);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                        \
     virtual void StyleSheetRemoved(nsIDocument* aDocument,                   \
                                    nsIStyleSheet* aStyleSheet,               \
-                                   PRBool aDocumentSheet);                   \
+                                   PRBool aDocumentSheet);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED         \
     virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,    \
                                                   nsIStyleSheet* aStyleSheet,\
-                                                  PRBool aApplicable);       \
+                                                  PRBool aApplicable);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
     virtual void StyleRuleChanged(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
                                   nsIStyleRule* aOldStyleRule,               \
-                                  nsIStyleRule* aNewStyleRule);              \
+                                  nsIStyleRule* aNewStyleRule);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                           \
     virtual void StyleRuleAdded(nsIDocument* aDocument,                      \
                                 nsIStyleSheet* aStyleSheet,                  \
-                                nsIStyleRule* aStyleRule);                   \
+                                nsIStyleRule* aStyleRule);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                         \
     virtual void StyleRuleRemoved(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
-                                  nsIStyleRule* aStyleRule);                 \
+                                  nsIStyleRule* aStyleRule);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER                                          \
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                                  \
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                    \
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                    \
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                      \
+    NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED                         \
+    NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                        \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                              \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                            \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED             \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                             \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                               \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                             \
     NS_DECL_NSIMUTATIONOBSERVER
 
 

@@ -895,35 +895,18 @@ public:
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
   // nsIDocumentObserver
-  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
-  virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
-  virtual void BeginLoad(nsIDocument* aDocument);
-  virtual void EndLoad(nsIDocument* aDocument);
-  virtual void ContentStatesChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    PRInt32 aStateMask);
-  virtual void DocumentStatesChanged(nsIDocument* aDocument,
-                                     PRInt32 aStateMask);
-  virtual void StyleSheetAdded(nsIDocument* aDocument,
-                               nsIStyleSheet* aStyleSheet,
-                               PRBool aDocumentSheet);
-  virtual void StyleSheetRemoved(nsIDocument* aDocument,
-                                 nsIStyleSheet* aStyleSheet,
-                                 PRBool aDocumentSheet);
-  virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,
-                                                nsIStyleSheet* aStyleSheet,
-                                                PRBool aApplicable);
-  virtual void StyleRuleChanged(nsIDocument* aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aOldStyleRule,
-                                nsIStyleRule* aNewStyleRule);
-  virtual void StyleRuleAdded(nsIDocument* aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule);
-  virtual void StyleRuleRemoved(nsIDocument* aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule);
+  NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
+  NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
+  NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD
+  NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD
+  NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED
+  NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED
+  NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
