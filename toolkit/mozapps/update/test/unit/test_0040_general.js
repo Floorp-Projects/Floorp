@@ -44,6 +44,7 @@ var gAppInfo;
 
 function run_test() {
   do_test_pending();
+  do_register_cleanup(end_test);
   removeUpdateDirsAndFiles();
   // The mock XMLHttpRequest is MUCH faster
   overrideXHR(callHandleEvent);
@@ -55,7 +56,6 @@ function run_test() {
 }
 
 function end_test() {
-  do_test_finished();
   cleanUp();
 }
 
@@ -75,7 +75,7 @@ function getResult(url) {
 function run_test_pt1() {
   gCheckFunc = check_test_pt1;
   var url = URL_PREFIX + "%PRODUCT%/";
-  dump("Testing: url constructed with %PRODUCT% - " + url + "\n");
+  logTestInfo("testing url constructed with %PRODUCT% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -89,7 +89,7 @@ function check_test_pt1() {
 function run_test_pt2() {
   gCheckFunc = check_test_pt2;
   var url = URL_PREFIX + "%VERSION%/";
-  dump("Testing: url constructed with %VERSION% - " + url + "\n");
+  logTestInfo("testing url constructed with %VERSION% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -103,7 +103,7 @@ function check_test_pt2() {
 function run_test_pt3() {
   gCheckFunc = check_test_pt3;
   var url = URL_PREFIX + "%BUILD_ID%/";
-  dump("Testing: url constructed with %BUILD_ID% - " + url + "\n");
+  logTestInfo("testing url constructed with %BUILD_ID% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -118,7 +118,7 @@ function check_test_pt3() {
 function run_test_pt4() {
   gCheckFunc = check_test_pt4;
   var url = URL_PREFIX + "%BUILD_TARGET%/";
-  dump("Testing: url constructed with %BUILD_TARGET% - " + url + "\n");
+  logTestInfo("testing url constructed with %BUILD_TARGET% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -152,7 +152,7 @@ function check_test_pt4() {
 function run_test_pt5() {
   gCheckFunc = check_test_pt5;
   var url = URL_PREFIX + "%LOCALE%/";
-  dump("Testing: url constructed with %LOCALE% - " + url + "\n");
+  logTestInfo("testing url constructed with %LOCALE% - " + url);
   setUpdateURLOverride(url);
   try {
     gUpdateChecker.checkForUpdates(updateCheckListener, true);
@@ -173,7 +173,7 @@ function check_test_pt5() {
 function run_test_pt6() {
   gCheckFunc = check_test_pt6;
   var url = URL_PREFIX + "%CHANNEL%/";
-  dump("Testing: url constructed with %CHANNEL% - " + url + "\n");
+  logTestInfo("testing url constructed with %CHANNEL% - " + url);
   setUpdateURLOverride(url);
   setUpdateChannel();
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
@@ -188,7 +188,7 @@ function check_test_pt6() {
 function run_test_pt7() {
   gCheckFunc = check_test_pt7;
   var url = URL_PREFIX + "%CHANNEL%/";
-  dump("Testing: url constructed with %CHANNEL% - " + url + "\n");
+  logTestInfo("testing url constructed with %CHANNEL% - " + url);
   setUpdateURLOverride(url);
   gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1", "test_partner1");
   gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2", "test_partner2");
@@ -204,7 +204,7 @@ function check_test_pt7() {
 function run_test_pt8() {
   gCheckFunc = check_test_pt8;
   var url = URL_PREFIX + "%PLATFORM_VERSION%/";
-  dump("Testing: url constructed with %PLATFORM_VERSION% - " + url + "\n");
+  logTestInfo("testing url constructed with %PLATFORM_VERSION% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -218,7 +218,7 @@ function check_test_pt8() {
 function run_test_pt9() {
   gCheckFunc = check_test_pt9;
   var url = URL_PREFIX + "%OS_VERSION%/";
-  dump("Testing: url constructed with %OS_VERSION% - " + url + "\n");
+  logTestInfo("testing url constructed with %OS_VERSION% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -248,7 +248,7 @@ function check_test_pt9() {
 function run_test_pt10() {
   gCheckFunc = check_test_pt10;
   var url = URL_PREFIX + "%DISTRIBUTION%/";
-  dump("Testing: url constructed with %DISTRIBUTION% - " + url + "\n");
+  logTestInfo("testing url constructed with %DISTRIBUTION% - " + url);
   setUpdateURLOverride(url);
   gDefaultPrefBranch.setCharPref(PREF_DISTRIBUTION_ID, "test_distro");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
@@ -263,7 +263,7 @@ function check_test_pt10() {
 function run_test_pt11() {
   gCheckFunc = check_test_pt11;
   var url = URL_PREFIX + "%DISTRIBUTION_VERSION%/";
-  dump("Testing: url constructed with %DISTRIBUTION_VERSION% - " + url + "\n");
+  logTestInfo("testing url constructed with %DISTRIBUTION_VERSION% - " + url);
   setUpdateURLOverride(url);
   gDefaultPrefBranch.setCharPref(PREF_DISTRIBUTION_VERSION, "test_distro_version");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
@@ -278,7 +278,7 @@ function check_test_pt11() {
 function run_test_pt12() {
   gCheckFunc = check_test_pt12;
   var url = URL_PREFIX;
-  dump("Testing: url constructed that doesn't have a parameter - " + url + "\n");
+  logTestInfo("testing url constructed that doesn't have a parameter - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -292,12 +292,12 @@ function check_test_pt12() {
 function run_test_pt13() {
   gCheckFunc = check_test_pt13;
   var url = URL_PREFIX + "?extra=param";
-  dump("Testing: url constructed that has a parameter - " + url + "\n");
+  logTestInfo("testing url constructed that has a parameter - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt13() {
   do_check_eq(getResult(gRequestURL), "?extra=param&force=1");
-  end_test();
+  do_test_finished();
 }

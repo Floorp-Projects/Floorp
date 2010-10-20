@@ -4824,7 +4824,8 @@
       IfErrors continue +1
       ; If the uninstall.log does not exist don't perform post update
       ; operations. This prevents updating the registry for zip builds.
-      IfFileExists "$EXEDIR\uninstall.log" +1 finish
+      IfFileExists "$EXEDIR\uninstall.log" +2 +1
+      Quit ; Nothing initialized so no need to call OnEndCommon
       ${PostUpdate}
       ClearErrors
       ${GetOptions} "$R0" "/UninstallLog=" $R2
