@@ -59,6 +59,7 @@
       is(objectStore.keyPath, "", "Correct keyPath");
       is(objectStore.indexNames.length, 0, "Correct indexNames");
 
+      // Wait until it's complete!
       transaction.oncomplete = grabEventAndContinueHandler;
       event = yield;
 
