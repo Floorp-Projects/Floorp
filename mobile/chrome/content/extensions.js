@@ -765,31 +765,26 @@ function AddonInstallListener() {
 }
 
 AddonInstallListener.prototype = {
-  _updating: false,
 
   onInstallEnded: function(aInstall, aAddon) {
+    if (aInstall.existingAddon && (aInstall.existingAddon.pendingOperations & AddonManager.PENDING_UPGRADE))
+      ExtensionsView.showRestart("update");
+    else if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL)
+      ExtensionsView.showRestart("normal");
+
     let element = ExtensionsView.getElementForAddon(aAddon.id);
-    if (!element)
-      return;
-
-    this._updating = element.hasAttribute("updating");
-    if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL)
-      ExtensionsView.showRestart(element.hasAttribute("updating") ? "update" : "normal");
-
-    this._showInstallCompleteAlert(true);
-
-    if (!ExtensionsView.visible)
-      return;
-
-    element.setAttribute("opType", "needs-restart");
-    element.setAttribute("status", "success");
-
-    // If we are updating an add-on, change the status
-    if (this._updating) {
-      let strings = Elements.browserBundle;
-      element.setAttribute("updateStatus", strings.getFormattedString("addonUpdate.updated", [aAddon.version]));
-      element.removeAttribute("updating");
+    if (element) {  
+      element.setAttribute("opType", "needs-restart");
+      element.setAttribute("status", "success");
+  
+      // If we are updating an add-on, change the status
+      if (element.hasAttribute("updating")) {
+        let strings = Elements.browserBundle;
+        element.setAttribute("updateStatus", strings.getFormattedString("addonUpdate.updated", [aAddon.version]));
+        element.removeAttribute("updating");
+      }
     }
+    this._showInstallCompleteAlert(true);
   },
 
   onInstallFailed: function(aInstall, aError) {
