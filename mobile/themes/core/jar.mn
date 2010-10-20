@@ -82,6 +82,7 @@ chrome.jar:
   skin/images/buttondark-active-64.png      (images/buttondark-active-64.png)
   skin/images/toolbarbutton-default-64.png  (images/toolbarbutton-default-64.png)
   skin/images/toolbarbutton-active-64.png   (images/toolbarbutton-active-64.png)
+  skin/images/sidebarbutton-active-hdpi.png (images/sidebarbutton-active-hdpi.png)
   skin/images/previous-default-64.png       (images/previous-default-64.png)
   skin/images/next-default-64.png           (images/next-default-64.png)
   skin/images/previous-active-64.png        (images/previous-active-64.png)
