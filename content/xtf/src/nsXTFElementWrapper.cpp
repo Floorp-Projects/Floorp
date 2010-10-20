@@ -901,10 +901,10 @@ nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 NS_IMETHODIMP
-nsXTFElementWrapper::SetIntrinsicState(PRInt32 aNewState)
+nsXTFElementWrapper::SetIntrinsicState(PRUint64 aNewState)
 {
   nsIDocument *doc = GetCurrentDoc();
-  PRInt32 bits = mIntrinsicState ^ aNewState;
+  PRUint64 bits = mIntrinsicState ^ aNewState;
   
   if (!doc || !bits)
     return NS_OK;
@@ -915,7 +915,7 @@ nsXTFElementWrapper::SetIntrinsicState(PRInt32 aNewState)
 
   mIntrinsicState = aNewState;
   mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  doc->ContentStatesChanged(this, nsnull, bits);
+  doc->ContentStatesChanged(this, nsnull, (PRInt32)bits);
 
   return NS_OK;
 }
