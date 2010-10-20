@@ -818,9 +818,9 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
   // This code may not the best solution, but we can leave it here until we find the better approach.
   nsIEventStateManager *esm = PresContext()->EventStateManager();
 
-  PRInt32 state = esm->GetContentState(mContent);
+  nsEventStates state = esm->GetContentState(mContent);
 
-  if (state & NS_EVENT_STATE_HOVER)
+  if (state.HasState(NS_EVENT_STATE_HOVER))
     esm->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
 
   nsMenuFrame* menuFrame = GetParentMenu();

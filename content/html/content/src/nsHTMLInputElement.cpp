@@ -799,7 +799,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  PRBool aNotify)
 {
   // States changes that have to be passed to ContentStatesChanged().
-  PRInt32 states = 0;
+  nsEventStates states;
 
   if (aNameSpaceID == kNameSpaceID_None) {
     //
@@ -932,7 +932,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         states |= NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_MOZ_READWRITE;
       }
 
-      if (doc && states) {
+      if (doc && !states.IsEmpty()) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, states);
       }
@@ -3257,13 +3257,13 @@ nsHTMLInputElement::DoneCreatingElement()
   SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_FALSE);
 }
 
-PRInt32
+nsEventStates
 nsHTMLInputElement::IntrinsicState() const
 {
   // If you add states here, and they're type-dependent, you need to add them
   // to the type case in AfterSetAttr.
   
-  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
     // Check current checked state (:checked)
     if (GET_BOOLBIT(mBitField, BF_CHECKED)) {
@@ -4413,7 +4413,7 @@ nsHTMLInputElement::OnValueChanged(PRBool aNotify)
 }
 
 void
-nsHTMLInputElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
+nsHTMLInputElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();

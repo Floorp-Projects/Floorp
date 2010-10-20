@@ -91,7 +91,7 @@ public:
   void SetSelectedInternal(PRBool aValue, PRBool aNotify);
 
   // nsIContent
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 

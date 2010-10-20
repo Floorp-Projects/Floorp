@@ -1160,7 +1160,7 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
   else {
     // XXX Do we really want this for all read-write content?
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    *checkSpelling = !!(content->IntrinsicState() & NS_EVENT_STATE_MOZ_READWRITE);
+    *checkSpelling = content->IntrinsicState().HasState(NS_EVENT_STATE_MOZ_READWRITE);
   }
 
   return NS_OK;

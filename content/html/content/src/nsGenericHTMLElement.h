@@ -846,7 +846,7 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
   virtual PRUint32 GetDesiredIMEState();
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
@@ -864,14 +864,14 @@ public:
    * @note Classes redefining this method should not call ContentStatesChanged
    * but they should pass aStates instead.
    */
-  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
 
   void FieldSetFirstLegendChanged(PRBool aNotify) {
     UpdateFieldSet();
 
     // The disabled state may have change because the element might not be in
     // the first legend anymore.
-    FieldSetDisabledChanged(0, aNotify);
+    FieldSetDisabledChanged(nsEventStates(), aNotify);
   }
 
   /**

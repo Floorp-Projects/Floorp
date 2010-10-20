@@ -1249,9 +1249,9 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
 void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,
                                            nsIContent* aContent2,
-                                           PRInt32 aStateMask)
+                                           nsEventStates aStateMask)
 {
-  if (0 == (aStateMask & NS_EVENT_STATE_CHECKED)) {
+  if (!aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
     return;
   }
 
@@ -1260,7 +1260,7 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
 }
 
 void nsDocAccessible::DocumentStatesChanged(nsIDocument* aDocument,
-                                            PRInt32 aStateMask)
+                                            nsEventStates aStateMask)
 {
 }
 

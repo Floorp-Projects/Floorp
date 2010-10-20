@@ -2730,13 +2730,13 @@ nsGenericHTMLFormElement::IsSubmittableControl() const
          type & NS_FORM_INPUT_ELEMENT;
 }
 
-PRInt32
+nsEventStates
 nsGenericHTMLFormElement::IntrinsicState() const
 {
   // If you add attribute-dependent states here, you need to add them them to
   // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
   // implement IntrinsicState() and are affected by that attribute.
-  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLElement::IntrinsicState();
 
   if (CanBeDisabled()) {
     // :enabled/:disabled
@@ -2949,7 +2949,7 @@ nsGenericHTMLFormElement::UpdateFieldSet()
 }
 
 void
-nsGenericHTMLFormElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
+nsGenericHTMLFormElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
 {
   if (!aNotify) {
     return;
@@ -3457,7 +3457,7 @@ nsGenericHTMLElement::IsEditableRoot() const
 static void
 MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
 {
-  PRInt32 stateBefore = aContent->IntrinsicState();
+  nsEventStates stateBefore = aContent->IntrinsicState();
 
   aContent->UpdateEditableState();
 

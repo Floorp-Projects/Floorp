@@ -119,7 +119,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual nsXPCClassInfo* GetClassInfo();
 };
@@ -479,7 +479,7 @@ nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
                                               aResult);
 }
 
-PRInt32
+nsEventStates
 nsHTMLAnchorElement::IntrinsicState() const
 {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
