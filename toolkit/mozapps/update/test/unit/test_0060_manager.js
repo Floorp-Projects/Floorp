@@ -39,9 +39,12 @@
 /* General Update Manager Tests */
 
 function run_test() {
-  dump("Testing: addition of a successful update to " + FILE_UPDATES_DB +
-       " and verification of update properties with the format prior to " +
-       "bug 530872\n");
+  do_test_pending();
+  do_register_cleanup(end_test);
+
+  logTestInfo("testing addition of a successful update to " + FILE_UPDATES_DB +
+              " and verification of update properties with the format prior " +
+              "to bug 530872");
   removeUpdateDirsAndFiles();
   setUpdateChannel("test_channel");
 
@@ -207,10 +210,10 @@ function run_test() {
 
   patch = update.selectedPatch;
   do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, "http://localhost:4444/data/empty.mar");
+  do_check_eq(patch.URL, URL_HOST + URL_PATH + "/" + FILE_SIMPLE_MAR);
   do_check_eq(patch.hashFunction, "MD5");
-  do_check_eq(patch.hashValue, "6232cd43a1c77e30191c53a329a3f99d");
-  do_check_eq(patch.size, "775");
+  do_check_eq(patch.hashValue, MD5_HASH_SIMPLE_MAR);
+  do_check_eq(patch.size, SIZE_SIMPLE_MAR);
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_SUCCEEDED);
 
@@ -237,12 +240,16 @@ function run_test() {
 
   patch = update.selectedPatch;
   do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, "http://localhost:4444/data/empty.mar");
+  do_check_eq(patch.URL, URL_HOST + URL_PATH + "/" + FILE_SIMPLE_MAR);
   do_check_eq(patch.hashFunction, "MD5");
-  do_check_eq(patch.hashValue, "6232cd43a1c77e30191c53a329a3f99d");
-  do_check_eq(patch.size, "775");
+  do_check_eq(patch.hashValue, MD5_HASH_SIMPLE_MAR);
+  do_check_eq(patch.size, SIZE_SIMPLE_MAR);
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_FAILED);
 
+  do_test_finished();
+}
+
+function end_test() {
   cleanUp();
 }

@@ -9,10 +9,12 @@
 
 function run_test() {
   do_test_pending();
-  dump("Testing: Bug 595059 - calling nsIUpdatePrompt::showUpdateError " +
-       "should call getNewPrompter and alert on the object returned by " +
-       "getNewPrompter when the update.state = " + STATE_FAILED + " and the " +
-       "update.errorCode = " + WRITE_ERROR + "\n");
+  do_register_cleanup(end_test);
+
+  logTestInfo("testing Bug 595059 - calling nsIUpdatePrompt::showUpdateError " +
+              "should call getNewPrompter and alert on the object returned " +
+              "by getNewPrompter when the update.state = " + STATE_FAILED +
+              " and the update.errorCode = " + WRITE_ERROR);
 
   removeUpdateDirsAndFiles();
   setUpdateChannel();
@@ -47,7 +49,6 @@ function end_test() {
   let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
                               WindowWatcherFactory);
-  do_test_finished();
   cleanUp();
 }
 
@@ -62,7 +63,7 @@ var WindowWatcher = {
                                                     [Services.appinfo.name,
                                                      Services.appinfo.name], 2);
         do_check_eq(aText, text);
-        end_test();
+        do_test_finished();
       }
     }; 
   },

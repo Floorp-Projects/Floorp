@@ -47,12 +47,11 @@ const TESTS = [ {
 } ];
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   let url = URL_UPDATE + "?showDetails=1" +
             getVersionParams(getNewerAppVersion(), getNewerPlatformVersion());
   setUpdateURLOverride(url);
-  debugDump(PREF_APP_UPDATE_URL_OVERRIDE + ": " + url);
 
   gUP.checkForUpdates();
 }
