@@ -45,7 +45,6 @@
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/WyciwygChannelChild.h"
-#include "mozilla/net/FTPChannelChild.h"
 
 namespace mozilla {
 namespace net {
@@ -109,24 +108,6 @@ NeckoChild::DeallocPHttpChannel(PHttpChannelChild* channel)
   NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPHttpChannel called by non-child!");
 
   HttpChannelChild* child = static_cast<HttpChannelChild*>(channel);
-  child->ReleaseIPDLReference();
-  return true;
-}
-
-PFTPChannelChild*
-NeckoChild::AllocPFTPChannel()
-{
-  // We don't allocate here: see FTPChannelChild::AsyncOpen()
-  NS_RUNTIMEABORT("AllocPFTPChannel should not be called");
-  return nsnull;
-}
-
-bool
-NeckoChild::DeallocPFTPChannel(PFTPChannelChild* channel)
-{
-  NS_ABORT_IF_FALSE(IsNeckoChild(), "DeallocPFTPChannel called by non-child!");
-
-  FTPChannelChild* child = static_cast<FTPChannelChild*>(channel);
   child->ReleaseIPDLReference();
   return true;
 }
