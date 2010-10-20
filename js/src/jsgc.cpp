@@ -1172,11 +1172,11 @@ MarkConservativeStackRoots(JSTracer *trc)
         JSThread *thread = r.front().value;
         ConservativeGCThreadData *ctd = &thread->data.conservativeGC;
         if (ctd->hasStackToScan()) {
-            JS_ASSERT_IF(!thread->data.requestDepth, thread->suspendCount);
+            JS_ASSERT_IF(!thread->requestDepth, thread->suspendCount);
             MarkThreadDataConservatively(trc, &thread->data);
         } else {
             JS_ASSERT(!thread->suspendCount);
-            JS_ASSERT(thread->data.requestDepth <= ctd->requestThreshold);
+            JS_ASSERT(thread->requestDepth <= ctd->requestThreshold);
         }
     }
 #else
@@ -1210,8 +1210,8 @@ RecordNativeStackTopForGC(JSContext *cx)
 
 #ifdef JS_THREADSAFE
     /* Record the stack top here only if we are called from a request. */
-    JS_ASSERT(cx->thread->data.requestDepth >= ctd->requestThreshold);
-    if (cx->thread->data.requestDepth == ctd->requestThreshold)
+    JS_ASSERT(cx->thread->requestDepth >= ctd->requestThreshold);
+    if (cx->thread->requestDepth == ctd->requestThreshold)
         return;
 #endif
     ctd->recordStackTop();
@@ -2210,7 +2210,7 @@ MarkRuntime(JSTracer *trc)
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter)) {
         for (AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down) {
 #ifdef JS_THREADSAFE
-            JS_ASSERT_IF(!acx->thread->data.requestDepth, acx->thread->suspendCount);
+            JS_ASSERT_IF(!acx->thread->requestDepth, acx->thread->suspendCount);
 #endif
             JS_ASSERT(JS_THREAD_DATA(acx)->conservativeGC.hasStackToScan());
             void *thing;
@@ -2988,7 +2988,7 @@ LetOtherGCFinish(JSContext *cx)
     JS_ASSERT(rt->gcThread);
     JS_ASSERT(cx->thread != rt->gcThread);
 
-    size_t requestDebit = cx->thread->data.requestDepth ? 1 : 0;
+    size_t requestDebit = cx->thread->requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
 #ifdef JS_TRACER
     JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
@@ -3082,7 +3082,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
     for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
         JSThread *thread = r.front().value;
         if (thread != cx->thread)
-            thread->data.triggerOperationCallback(rt);
+            thread->data.triggerOperationCallback();
     }
 
     /*
@@ -3091,7 +3091,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
      * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
      * rt->requestCount transitions to 0.
      */
-    size_t requestDebit = cx->thread->data.requestDepth ? 1 : 0;
+    size_t requestDebit = cx->thread->requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
     if (requestDebit != rt->requestCount) {
         rt->requestCount -= requestDebit;
@@ -3264,7 +3264,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
      * request.
      */
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread->data.requestDepth);
+    JS_ASSERT(cx->thread->requestDepth);
 
     /*
      * This is only necessary if AutoGCSession below would wait for GC to
