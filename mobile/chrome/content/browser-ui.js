@@ -1019,6 +1019,7 @@ var BrowserUI = {
         break;
       }
       case "cmd_opensearch":
+        this.blurFocusedElement();
         BrowserSearch.toggle();
         break;
       case "cmd_bookmarks":
