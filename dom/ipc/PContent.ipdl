@@ -45,8 +45,11 @@ include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
+include "PPrefTuple.h";
 
 using GeoPosition;
+using PrefTuple;
+using nsTArray<PrefTuple>;
 
 using ChromePackage;
 using ResourceMapping;
@@ -75,7 +78,7 @@ child:
 
     async NotifyVisited(URI uri);
 
-    PreferenceUpdate(nsCString pref);
+    PreferenceUpdate(PrefTuple pref);
 
     NotifyAlertsObserver(nsCString topic, nsString data);
 
@@ -92,8 +95,8 @@ parent:
 
     async LoadURIExternal(URI uri);
 
-    // PrefService messages
-    sync ReadPrefs() returns (nsCString retValue);
+    // PrefService message
+    sync ReadPrefsArray() returns (nsTArray<PrefTuple> retValue);
 
     // PermissionsManager messages
     sync TestPermission(URI uri, nsCString type, PRBool exact) returns (PRUint32 retValue);

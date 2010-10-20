@@ -184,10 +184,10 @@ ContentParent::IsAlive()
 }
 
 bool
-ContentParent::RecvReadPrefs(nsCString* prefs)
+ContentParent::RecvReadPrefsArray(nsTArray<PrefTuple> *prefs)
 {
     EnsurePrefService();
-    mPrefService->SerializePreferences(*prefs);
+    mPrefService->MirrorPreferences(prefs);
     return true;
 }
 
@@ -275,10 +275,14 @@ ContentParent::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, "nsPref:changed")) {
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
-        nsCString prefBuffer;
-        nsCOMPtr<nsIPrefServiceInternal> prefs = do_GetService("@mozilla.org/preferences-service;1");
-        prefs->SerializePreference(strData, prefBuffer);
-        if (!SendPreferenceUpdate(prefBuffer))
+
+        PrefTuple pref;
+        nsCOMPtr<nsIPrefServiceInternal> prefService =
+          do_GetService("@mozilla.org/preferences-service;1");
+
+        prefService->MirrorPreference(strData, &pref);
+
+        if (!SendPreferenceUpdate(pref))
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
