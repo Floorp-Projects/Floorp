@@ -67,6 +67,11 @@
 #include "nsPrintOptionsQt.h"
 #include "nsPrintDialogQt.h"
 #endif
+#ifdef MOZ_IPC
+#include "nsFilePickerProxy.h"
+#include "nsXULAppAPI.h"
+#endif
+
 // from nsWindow.cpp
 extern PRBool gDisableNativeTheme;
 
@@ -84,7 +89,27 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+
+static nsresult
+nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
+                        void **aResult)
+{
+  *aResult = nsnull;
+  if (aOuter != nsnull) {
+      return NS_ERROR_NO_AGGREGATION;
+  }
+  nsCOMPtr<nsIFilePicker> picker;
+  
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content)
+        picker = new nsFilePickerProxy();
+    else 
+#endif
+        picker = new nsFilePicker;
+
+  return picker->QueryInterface(aIID, aResult);
+}
+
 
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecQt)
