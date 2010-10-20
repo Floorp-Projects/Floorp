@@ -74,14 +74,6 @@ _class::HandleError(mozIStorageError *aError) \
   FAVICONSTEP_FAIL_IF_FALSE_RV(false, NS_OK); \
 }
 
-#define ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(_class) \
-NS_IMETHODIMP \
-_class::HandleResult(mozIStorageResultSet* aResultSet) \
-{ \
-  NS_NOTREACHED("Got an unexpected result?");\
-  return NS_OK; \
-}
-
 #define CONTENT_SNIFFING_SERVICES "content-sniffing-services"
 
 /**
@@ -94,14 +86,6 @@ _class::HandleResult(mozIStorageResultSet* aResultSet) \
 
 namespace mozilla {
 namespace places {
-
-////////////////////////////////////////////////////////////////////////////////
-//// AsyncFaviconStep
-
-NS_IMPL_ISUPPORTS0(
-  AsyncFaviconStep
-)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncFaviconStepper
@@ -263,10 +247,6 @@ AsyncFaviconStepperInternal::Cancel(bool aNotify)
 ////////////////////////////////////////////////////////////////////////////////
 //// GetEffectivePageStep
 
-NS_IMPL_ISUPPORTS_INHERITED0(
-  GetEffectivePageStep
-, AsyncFaviconStep
-)
 ASYNC_STATEMENT_HANDLEERROR_IMPL(GetEffectivePageStep)
 
 
@@ -415,10 +395,6 @@ GetEffectivePageStep::CheckPageAndProceed()
 ////////////////////////////////////////////////////////////////////////////////
 //// FetchDatabaseIconStep
 
-NS_IMPL_ISUPPORTS_INHERITED0(
-  FetchDatabaseIconStep
-, AsyncFaviconStep
-)
 ASYNC_STATEMENT_HANDLEERROR_IMPL(FetchDatabaseIconStep)
 
 
@@ -515,12 +491,7 @@ FetchDatabaseIconStep::HandleCompletion(PRUint16 aReason)
 ////////////////////////////////////////////////////////////////////////////////
 //// EnsureDatabaseEntryStep
 
-NS_IMPL_ISUPPORTS_INHERITED0(
-  EnsureDatabaseEntryStep
-, AsyncFaviconStep
-)
 ASYNC_STATEMENT_HANDLEERROR_IMPL(EnsureDatabaseEntryStep)
-ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(EnsureDatabaseEntryStep)
 
 
 void
@@ -780,12 +751,7 @@ FetchNetworkIconStep::AsyncOnChannelRedirect(nsIChannel* oldChannel,
 ////////////////////////////////////////////////////////////////////////////////
 //// SetFaviconDataStep
 
-NS_IMPL_ISUPPORTS_INHERITED0(
-  SetFaviconDataStep
-, AsyncFaviconStep
-)
 ASYNC_STATEMENT_HANDLEERROR_IMPL(SetFaviconDataStep)
-ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(SetFaviconDataStep)
 
 
 void
@@ -883,12 +849,7 @@ SetFaviconDataStep::HandleCompletion(PRUint16 aReason)
 ////////////////////////////////////////////////////////////////////////////////
 //// AssociateIconWithPageStep
 
-NS_IMPL_ISUPPORTS_INHERITED0(
-  AssociateIconWithPageStep
-, AsyncFaviconStep
-)
 ASYNC_STATEMENT_HANDLEERROR_IMPL(AssociateIconWithPageStep)
-ASYNC_STATEMENT_EMPTY_HANDLERESULT_IMPL(AssociateIconWithPageStep)
 
 
 void
@@ -955,12 +916,6 @@ AssociateIconWithPageStep::HandleCompletion(PRUint16 aReason)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// NotifyStep
-
-NS_IMPL_ISUPPORTS_INHERITED0(
-  NotifyStep
-, AsyncFaviconStep
-)
-
 
 void
 NotifyStep::Run()

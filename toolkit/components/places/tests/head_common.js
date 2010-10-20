@@ -257,7 +257,7 @@ function dump_table(aName)
 function page_in_database(aUrl)
 {
   let stmt = DBConn().createStatement(
-    "SELECT id FROM moz_places_view WHERE url = :url"
+    "SELECT id FROM moz_places WHERE url = :url"
   );
   stmt.params.url = aUrl;
   try {
@@ -460,6 +460,57 @@ function check_JSON_backup() {
 
 
 /**
+ * Waits for a frecency update then calls back.
+ *
+ * @param aUrl
+ *        Address of the page we are waiting frecency for.
+ * @param aValidator
+ *        Validator function for the current frecency. If it returns true we
+ *        have the expected frecency, otherwise we wait for next update.
+ * @param aCallback
+ *        function invoked when frecency update finishes.
+ * @param aCbScope
+ *        "this" scope for the callback
+ * @param aCbArguments
+ *        array of arguments to be passed to the callback
+ *
+ * @note since frecency is something that can be changed by a bunch of stuff
+ *       like adding and removing visits, bookmarks we use a polling strategy.
+ */
+function waitForFrecency(aUrl, aValidator, aCallback, aCbScope, aCbArguments) {
+  Services.obs.addObserver(function (aSubject, aTopic, aData) {
+    let frecency = frecencyForUrl(aUrl);
+    if (!aValidator(frecency)) {
+      return;
+    }
+    Services.obs.removeObserver(arguments.callee, aTopic);
+    aCallback.apply(aCbScope, aCbArguments);
+  }, "places-frecency-updated", false);
+}
+
+/**
+ * Returns the frecency of a url.
+ *
+ * @param  aURL
+ *         the URL to get frecency for.
+ * @return the frecency value.
+ */
+function frecencyForUrl(aUrl)
+{
+  let stmt = DBConn().createStatement(
+    "SELECT frecency FROM moz_places WHERE url = ?1"
+  );
+  stmt.bindUTF8StringParameter(0, aUrl);
+  if (!stmt.executeStep())
+    throw "No result for frecency.";
+  let frecency = stmt.getInt32(0);
+  stmt.finalize();
+
+  return frecency;
+}
+
+
+/**
  * Compares two times in usecs, considering eventual platform timers skews.
  *
  * @param aTimeBefore
@@ -478,33 +529,3 @@ function is_time_ordered(before, after) {
   return after - before > -skew;
 }
 
-
-// These tests are known to randomly fail due to bug 507790 when database
-// flushes are active, so we turn off syncing for them.
-let (randomFailingSyncTests = [
-  "test_multi_word_tags.js",
-  "test_removeVisitsByTimeframe.js",
-  "test_utils_getURLsForContainerNode.js",
-  "test_exclude_livemarks.js",
-  "test_402799.js",
-  "test_results-as-visit.js",
-  "test_sorting.js",
-  "test_redirectsMode.js",
-  "test_384228.js",
-  "test_395593.js",
-  "test_containersQueries_sorting.js",
-  "test_browserGlue_smartBookmarks.js",
-  "test_browserGlue_distribution.js",
-  "test_331487.js",
-  "test_tags.js",
-  "test_385829.js",
-  "test_405938_restore_queries.js",
-]) {
-  let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
-  if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
-    print("Test " + currentTestFilename +
-          " is known random due to bug 507790, disabling PlacesDBFlush.");
-    let sync = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsIObserver);
-    sync.observe(null, "places-debug-stop-sync", null);
-  }
-}

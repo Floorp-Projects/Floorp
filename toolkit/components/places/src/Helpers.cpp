@@ -47,6 +47,24 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncStatementCallback
 
+NS_IMPL_ISUPPORTS1(
+  AsyncStatementCallback
+, mozIStorageStatementCallback
+)
+
+NS_IMETHODIMP
+AsyncStatementCallback::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  NS_ABORT_IF_FALSE(false, "Was not expecting a resultset, but got it.");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementCallback::HandleCompletion(PRUint16 aReason)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 AsyncStatementCallback::HandleError(mozIStorageError *aError)
 {

@@ -48,6 +48,8 @@ MODULE       = storage
 XPIDL_MODULE = storage
 GRE_MODULE   = 1
 
+# NOTE When adding something to this list, you probably need to add it to the
+#      storage.h file too.
 XPIDLSRCS = \
 	mozIStorageService.idl \
 	mozIStorageConnection.idl \
@@ -70,6 +72,7 @@ XPIDLSRCS = \
   mozIStorageServiceQuotaManagement.idl \
   mozIStorageVacuumParticipant.idl \
 	$(NULL)
+# SEE ABOVE NOTE!
 
 EXPORTS_NAMESPACES = mozilla
 
