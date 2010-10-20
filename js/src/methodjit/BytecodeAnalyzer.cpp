@@ -248,7 +248,7 @@ BytecodeAnalyzer::analyze(uint32 index)
              *   leaveblock 1
              *   retrval
              *   leaveblock 1
-             * (see testNullCallee in jit-tests)
+             * (see testNullCallee in trace-tests)
              */
             JS_ASSERT(js_CodeSpec[op].length == 1);
             uint32 offs = (pc + 1) - script->code;
