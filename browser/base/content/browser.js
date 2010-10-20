@@ -5750,7 +5750,7 @@ var OfflineApps = {
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject);
+    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, window);
   },
 
   /////////////////////////////////////////////////////////////////////////////

@@ -76,6 +76,7 @@
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
+using namespace mozilla::docshell;
 
 namespace mozilla {
 namespace dom {

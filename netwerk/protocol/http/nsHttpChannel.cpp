@@ -4533,6 +4533,25 @@ nsHttpChannel::SetChooseApplicationCache(PRBool aChoose)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::MarkOfflineCacheEntryAsForeign()
+{
+    if (!mApplicationCache)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsresult rv;
+
+    nsCAutoString cacheKey;
+    rv = GenerateCacheKey(mPostID, cacheKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mApplicationCache->MarkEntry(cacheKey,
+                                      nsIApplicationCache::ITEM_FOREIGN);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIAsyncVerifyRedirectCallback
 //-----------------------------------------------------------------------------

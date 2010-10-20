@@ -96,7 +96,9 @@ protected:
                              const PRBool&              forceAllowThirdPartyCookie,
                              const bool&                doResumeAt,
                              const PRUint64&            startPos,
-                             const nsCString&           entityID);
+                             const nsCString&           entityID,
+                             const bool&                chooseApplicationCache,
+                             const nsCString&           appCacheClientID);
 
   virtual bool RecvSetPriority(const PRUint16& priority);
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
@@ -110,6 +112,7 @@ protected:
                                                    const PRInt32& broken,
                                                    const PRInt32& no);
   virtual bool RecvDocumentChannelCleanup();
+  virtual bool RecvMarkOfflineCacheEntryAsForeign();
 
   virtual void ActorDestroy(ActorDestroyReason why);
 
