@@ -15,7 +15,7 @@
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
                 <em:updateLink>http://example.com/browser/mobile/chrome/addons/browser_install1_3.xpi</em:updateLink>
-                <em:updateHash>sha1:8c4d2f5c9eadc8850558a9a9618aae25886dbe7c</em:updateHash>
+                <em:updateHash>sha1:f2d4b57686c60e237bcf19cd4ca8d2b65de04b07</em:updateHash>
               </Description>
             </em:targetApplication>
           </Description>
