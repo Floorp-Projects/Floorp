@@ -247,7 +247,7 @@ class nsCookieService : public nsICookieService
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
     void                          PurgeCookies(PRInt64 aCurrentTimeInUsec);
-    PRBool                        FindCookie(const nsCString& aBaseDomain, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter, PRInt64 aCurrentTime);
+    PRBool                        FindCookie(const nsCString& aBaseDomain, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
     PRUint32                      CountCookiesFromHostInternal(const nsCString &aBaseDomain, nsEnumerationData &aData);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);
