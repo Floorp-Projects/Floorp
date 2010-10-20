@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 
 _BROWSER_TEST_FILES = \
+	browser_webconsole_bug_580030_errors_after_page_reload.js \
 	browser_webconsole_basic_net_logging.js \
 	browser_webconsole_bug_579412_input_focus.js \
 	browser_webconsole_bug_580001_closing_after_completion.js \
