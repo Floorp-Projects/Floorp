@@ -1009,7 +1009,7 @@ pageaction {
   border-style: solid;
   border-width: 1px !important;
   height: 64px;
-  width :100%;
+  width: 100%;
 }
 
 /* Override buttons style */
@@ -1020,6 +1020,10 @@ pageaction {
 
 .prompt-button > .button-box {
   padding: 0 4px 1px 3px !important;
+}
+
+.prompt-button > .button-box > .button-icon {
+  -moz-margin-end: 8px;
 }
 
 @media (min-width: 500px) {
