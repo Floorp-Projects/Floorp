@@ -865,11 +865,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     onlyXML = true;
 #endif
 
-    CG_SWITCH_TO_PROLOG(&cg);
-    if (js_Emit1(cx, &cg, JSOP_TRACE) < 0)
-        goto out;
-    CG_SWITCH_TO_MAIN(&cg);
-
     inDirectivePrologue = true;
     for (;;) {
         tt = tokenStream.peekToken(TSF_OPERAND);
@@ -5766,6 +5761,7 @@ Parser::statement()
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
             obj->setParent(tc->blockChain());
+            blockbox->parent = tc->blockChainBox;
             tc->blockChainBox = blockbox;
             stmt->blockBox = blockbox;
 

@@ -146,6 +146,8 @@ namespace ic {
 # endif
 # if defined JS_MONOIC
     struct MICInfo;
+    struct EqualityICInfo;
+    struct TraceICInfo;
     struct CallICInfo;
 # endif
 }
@@ -175,6 +177,8 @@ typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *
 typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 typedef void (JS_FASTCALL *VoidStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
+typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceICInfo *);
 #endif
 #ifdef JS_POLYIC
 typedef void (JS_FASTCALL *VoidStubPIC)(VMFrame &, js::mjit::ic::PICInfo *);
@@ -196,6 +200,14 @@ struct JITScript {
     uint32          nMICs;      /* number of MonoICs */
     ic::CallICInfo  *callICs;   /* CallICs in this script. */
     uint32          nCallICs;   /* number of call ICs */
+    ic::EqualityICInfo *equalityICs;
+    uint32          nEqualityICs;
+    ic::TraceICInfo *traceICs;
+    uint32          nTraceICs;
+
+    // Additional ExecutablePools that IC stubs were generated into.
+    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
+    ExecPoolVector execPools;
 #endif
 #ifdef JS_POLYIC
     ic::PICInfo     *pics;      /* PICs in this script */
@@ -264,6 +276,10 @@ struct CallSite
     uint32 pcOffset;
     uint32 id;
 };
+
+/* Re-enables a tracepoint in the method JIT. */
+void
+EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index);
 
 } /* namespace mjit */
 

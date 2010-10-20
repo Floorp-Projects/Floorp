@@ -236,6 +236,9 @@ struct PICInfo {
     // last stub.
     bool shapeRegHasBaseShape : 1;
 
+    // True if can use the property cache.
+    bool usePropCache : 1;
+
     // State flags.
     bool hit : 1;                   // this PIC has been executed
     bool inlinePathPatched : 1;     // inline path has been patched

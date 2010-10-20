@@ -212,6 +212,13 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
+namespace js {
+
+extern JSBool
+GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp);
+
+} /* namespace js */
+
 extern JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp, JSBool strict);
 
@@ -238,6 +245,10 @@ struct NativeIterator;
 }
 
 struct JSFunction;
+
+namespace nanojit {
+class ValidateWriter;
+}
 
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
@@ -271,13 +282,19 @@ struct JSFunction;
  * hasSlotsArray().  In all cases, capacity gives the number of usable slots.
  * Two objects with the same shape have the same number of fixed slots,
  * and either both have or neither have dynamically allocated slot arrays.
+ *
+ * If you change this struct, you'll probably need to change the AccSet values
+ * in jsbuiltins.h.
  */
 struct JSObject : js::gc::Cell {
     /*
      * TraceRecorder must be a friend because it generates code that
      * manipulates JSObjects, which requires peeking under any encapsulation.
+     * ValidateWriter must be a friend because it works in tandem with
+     * TraceRecorder.
      */
     friend class js::TraceRecorder;
+    friend class nanojit::ValidateWriter;
 
     /*
      * Private pointer to the last added property and methods to manipulate the
@@ -321,9 +338,10 @@ struct JSObject : js::gc::Cell {
         BRANDED         = 0x08,
         GENERIC         = 0x10,
         METHOD_BARRIER  = 0x20,
-        INDEXED         =  0x40,
-        OWN_SHAPE       =  0x80,
-        BOUND_FUNCTION  = 0x100
+        INDEXED         = 0x40,
+        OWN_SHAPE       = 0x80,
+        BOUND_FUNCTION  = 0x100,
+        HAS_EQUALITY    = 0x200
     };
 
     /*
@@ -409,6 +427,8 @@ struct JSObject : js::gc::Cell {
     bool generic()              { return !!(flags & GENERIC); }
     void setGeneric()           { flags |= GENERIC; }
 
+    bool hasSpecialEquality()   { return !!(flags & HAS_EQUALITY); }
+    
   private:
     void generateOwnShape(JSContext *cx);
 

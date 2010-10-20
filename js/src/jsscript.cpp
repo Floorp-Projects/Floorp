@@ -1097,7 +1097,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
 
-    if (prologLength + mainLength <= 3) {
+    if (prologLength + mainLength <= 3 &&
+        !(cg->flags & TCF_IN_FUNCTION)) {
         /*
          * Check very short scripts to see whether they are "empty" and return
          * the const empty-script singleton if so.

@@ -118,7 +118,7 @@ class Assembler : public BaseAssembler
         andPtr(Registers::PayloadMaskReg, val);
     }
 
-    /* Returns a label after the one Value load. */
+    // Returns a label after the one Value load.
     template <typename T>
     Label loadValueAsComponents(T address, RegisterID type, RegisterID payload) {
         loadValue(address, type);

@@ -852,7 +852,7 @@ public:
     {
         js::JaegerSpew(js::JSpew_Insns,
                        IPFX "xorq       %s, %s\n", MAYBE_PAD,
-                       nameIReg(4,src), nameIReg(4, dst));
+                       nameIReg(8,src), nameIReg(8, dst));
         m_formatter.oneByteOp64(OP_XOR_EvGv, src, dst);
     }
 

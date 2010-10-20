@@ -111,7 +111,8 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     constList(parser->context),
     globalUses(ContextAllocPolicy(parser->context)),
     closedArgs(ContextAllocPolicy(parser->context)),
-    closedVars(ContextAllocPolicy(parser->context))
+    closedVars(ContextAllocPolicy(parser->context)),
+    traceIndex(0)
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -1378,6 +1379,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObjectBox *blockBox,
 {
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
+    blockBox->parent = tc->blockChainBox;
     blockBox->object->setParent(tc->blockChain());
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
@@ -1399,6 +1401,15 @@ EmitBackPatchOp(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t *lastp)
     *lastp = offset;
     JS_ASSERT(delta > 0);
     return EmitJump(cx, cg, op, delta);
+}
+
+static ptrdiff_t
+EmitTraceOp(JSContext *cx, JSCodeGenerator *cg)
+{
+    uint32 index = cg->traceIndex;
+    if (index < UINT16_MAX)
+        cg->traceIndex++;
+    return js_Emit3(cx, cg, JSOP_TRACE, UINT16_HI(index), UINT16_LO(index));
 }
 
 /*
@@ -1591,11 +1602,7 @@ js_PopStatement(JSTreeContext *tc)
     if (STMT_LINKS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
         if (stmt->flags & SIF_SCOPE) {
-            if (stmt->downScope) {
-                tc->blockChainBox = stmt->downScope->blockBox;
-            } else {
-                tc->blockChainBox = NULL;
-            }
+            tc->blockChainBox = stmt->blockBox->parent;
             JS_SCOPE_DEPTH_METERING(--tc->scopeDepth);
         }
     }
@@ -3716,15 +3723,10 @@ bad:
 JSBool
 js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
-    CG_SWITCH_TO_PROLOG(cg);
-    JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
-    if (js_Emit1(cx, cg, JSOP_BEGIN) < 0)
-        return false;
-    CG_SWITCH_TO_MAIN(cg);
-
     if (cg->flags & TCF_FUN_IS_GENERATOR) {
-        /* JSOP_GENERATOR must be the first real instruction. */
+        /* JSOP_GENERATOR must be the first instruction. */
         CG_SWITCH_TO_PROLOG(cg);
+        JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return false;
         CG_SWITCH_TO_MAIN(cg);
@@ -4361,7 +4363,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 if (popScope) {
                     cg->topStmt = stmt;
                     cg->topScopeStmt = scopeStmt;
-                    cg->blockChainBox = scopeStmt->blockBox;
+                    JS_ASSERT(cg->blockChainBox == scopeStmt->blockBox);
                 }
 #endif
             }
@@ -4829,7 +4831,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = js_Emit1(cx, cg, JSOP_TRACE);
+        top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
@@ -4852,7 +4854,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /* Compile the loop body. */
-        top = js_Emit1(cx, cg, JSOP_TRACE);
+        top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
         js_PushStatement(cg, &stmtInfo, STMT_DO_LOOP, top);
@@ -4952,7 +4954,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
-            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+            if (EmitTraceOp(cx, cg) < 0)
                 return JS_FALSE;
 
 #ifdef DEBUG
@@ -5179,7 +5181,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             SET_STATEMENT_TOP(&stmtInfo, top);
 
             /* Emit code for the loop body. */
-            if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
+            if (EmitTraceOp(cx, cg) < 0)
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
@@ -6479,7 +6481,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         jmp = EmitJump(cx, cg, JSOP_FILTER, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = js_Emit1(cx, cg, JSOP_TRACE);
+        top = EmitTraceOp(cx, cg);
         if (top < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))

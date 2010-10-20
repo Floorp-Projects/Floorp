@@ -818,6 +818,13 @@ mjit::JITScript::release()
 #endif
 
 #if defined JS_MONOIC
+    for (JSC::ExecutablePool **pExecPool = execPools.begin();
+         pExecPool != execPools.end();
+         ++pExecPool)
+    {
+        (*pExecPool)->release();
+    }
+    
     for (uint32 i = 0; i < nCallICs; i++)
         callICs[i].releasePools();
 #endif
