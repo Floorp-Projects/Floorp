@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "prlog.h"
 #include "prio.h"
+#include "nsIIPCSerializable.h"
 
 template<class CharType> class nsLineBuffer;
 
@@ -76,13 +77,15 @@ protected:
 
 class nsFileInputStream : public nsFileStream,
                           public nsIFileInputStream,
-                          public nsILineInputStream
+                          public nsILineInputStream,
+                          public nsIIPCSerializable
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIFILEINPUTSTREAM
     NS_DECL_NSILINEINPUTSTREAM
+    NS_DECL_NSIIPCSERIALIZABLE
     
     // Overrided from nsFileStream
     NS_IMETHOD Seek(PRInt32 aWhence, PRInt64 aOffset);
@@ -104,18 +107,15 @@ protected:
     nsLineBuffer<char> *mLineBuffer;
 
     /**
-     * The file being opened.  Only stored when DELETE_ON_CLOSE or
-     * REOPEN_ON_REWIND are true.
+     * The file being opened.
      */
     nsCOMPtr<nsIFile> mFile;
     /**
      * The IO flags passed to Init() for the file open.
-     * Only set for REOPEN_ON_REWIND.
      */
     PRInt32 mIOFlags;
     /**
      * The permissions passed to Init() for the file open.
-     * Only set for REOPEN_ON_REWIND.
      */
     PRInt32 mPerm;
     /**
