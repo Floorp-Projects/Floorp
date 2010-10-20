@@ -72,6 +72,10 @@
 #include "prlog.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
+#ifdef MOZ_IPC
+#include "nsXULAppAPI.h"
+#endif
+
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
 
 static const PRUint32 kRescheduleLimit = 3;
