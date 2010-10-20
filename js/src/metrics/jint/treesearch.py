@@ -387,7 +387,7 @@ if __name__ == '__main__':
     lib_dir = os.path.join(script_dir, 'lib')
 
     # The [TESTS] optional arguments are paths of test files relative
-    # to the jit-test/tests directory.
+    # to the trace-test/tests directory.
 
     from optparse import OptionParser
     op = OptionParser(usage='%prog [options] JS_SHELL test')
