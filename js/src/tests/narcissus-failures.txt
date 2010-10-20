@@ -1346,9 +1346,9 @@ js1_8_1/regress/regress-530879.js
 js1_8_1/strict/12.2.1.js
 js1_8_1/strict/generator-eval-arguments.js
 js1_8_1/strict/let-block-eval-arguments.js
-js1_8_1/trace/math-trace-tests.js
+js1_8_1/trace/math-jit-tests.js
 js1_8_1/trace/testDeepBailFromNonNative.js
-js1_8_1/trace/trace-test.js
+js1_8_1/trace/jit-test.js
 js1_8_5/extensions/censor-strict-caller.js
 js1_8_5/extensions/destructure-accessor.js
 js1_8_5/extensions/reflect-parse.js
