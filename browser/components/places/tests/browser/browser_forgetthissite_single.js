@@ -86,19 +86,10 @@ function test() {
               "be hidden with " + selectionCount + " items selected");
             // Close the context menu
             contextmenu.hidePopup();
-            // Wait for the Organizer window to actually be closed
-            function closeObserver(aSubject, aTopic, aData) {
-              if (aTopic != "domwindowclosed")
-                return;
-              ww.unregisterNotification(closeObserver);
-              SimpleTest.waitForFocus(function() {
-                // Proceed
-                funcNext();
-              });
-            }
-            ww.registerNotification(closeObserver);
             // Close Library window.
             organizer.close();
+            // Proceed
+            funcNext();
           }, false);
           // Get cell coordinates
           var x = {}, y = {}, width = {}, height = {};
