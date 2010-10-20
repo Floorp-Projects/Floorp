@@ -6,11 +6,9 @@
  * Contributor(s):
  *  Julian Viereck <jviereck@mozilla.com>
  *  Patrick Walton <pcwalton@mozilla.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
-
-//XXX: this test needs refactoring as there are major timing issues
-// where repsonse bodys are not available before the check is run
 
 // Tests that network log messages bring up the network panel.
 
@@ -21,153 +19,157 @@ const TEST_IMG = "http://example.com/browser/toolkit/components/console/hudservi
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
+let lastRequest = null;
+
 function test()
 {
-  addTab("data:text/html,WebConsole network logging tests");
+  addTab("data:text/html,Web Console network logging tests");
 
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);
-    testOpenWebConsole();
+
+    openConsole();
+    is(HUDService.displaysIndex().length, 1, "Web Console was opened");
+
+    hudId = HUDService.displaysIndex()[0];
+    hud = HUDService.getHeadsUpDisplay(hudId);
+
+    HUDService.lastFinishedRequestCallback = function(aRequest) {
+      lastRequest = aRequest;
+    };
+
+    executeSoon(testPageLoad);
   }, true);
 }
 
-function testOpenWebConsole()
+function testPageLoad()
 {
-  openConsole();
-  is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
-
-  hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.getHeadsUpDisplay(hudId);
-
-  testNetworkLogging();
-}
-
-function testNetworkLogging()
-{
-  var lastFinishedRequest = null;
-  HUDService.lastFinishedRequestCallback =
-    function requestDoneCallback(aHttpRequest)
-    {
-      lastFinishedRequest = aHttpRequest;
-    };
-
-  let loggingGen;
-  // This generator function is used to step through the individual, async tests.
-  function loggingGeneratorFunc() {
-    browser.addEventListener("load", function onLoad () {
-      browser.removeEventListener("load", onLoad, true);
-      loggingGen.next();
-    }, true);
-    browser.contentWindow.wrappedJSObject.document.location =
-      TEST_NETWORK_REQUEST_URI;
-    yield;
+  browser.addEventListener("load", function(aEvent) {
+    browser.removeEventListener(aEvent.type, arguments.callee, true);
 
     // Check if page load was logged correctly.
-    let httpActivity = lastFinishedRequest;
-    isnot(httpActivity, null, "Page load was logged");
-    is(httpActivity.url, TEST_NETWORK_REQUEST_URI,
+    ok(lastRequest, "Page load was logged");
+    is(lastRequest.url, TEST_NETWORK_REQUEST_URI,
       "Logged network entry is page load");
-    is(httpActivity.method, "GET", "Method is correct");
-    ok(!("body" in httpActivity.request), "No request body was stored");
-    ok(!("body" in httpActivity.response), "No response body was stored");
-    ok(!httpActivity.response.listener, "No response listener is stored");
+    is(lastRequest.method, "GET", "Method is correct");
+    ok(!("body" in lastRequest.request), "No request body was stored");
+    ok(!("body" in lastRequest.response), "No response body was stored");
+    ok(!lastRequest.response.listener, "No response listener is stored");
 
-    // Turn on logging of request bodies and check again.
-    // HUDService.saveRequestAndResponseBodies = true;
-    // browser.addEventListener("load", function onLoad () {
-    //   browser.removeEventListener("load", onLoad, true);
-    //   loggingGen.next();
-    // }, false);
-    // browser.contentWindow.wrappedJSObject.document.location.reload();
-    // yield;
+    lastRequest = null;
+    executeSoon(testPageLoadBody);
+  }, true);
 
-    // httpActivity = lastFinishedRequest;
-    // ok(httpActivity, "Page load was logged again");
-    // ok(httpActivity.response.body.indexOf("<!DOCTYPE HTML>") == 0,
-    //   "Response body's beginning is okay");
-
-    // Start xhr-get test.
-    browser.contentWindow.wrappedJSObject.testXhrGet(loggingGen);
-    yield;
-
-    // Use executeSoon here as the xhr callback calls loggingGen.next() before
-    // the network observer detected that the request is completly done and the
-    // HUDService.lastFinishedRequest is set. executeSoon solves that problem.
-    executeSoon(function() {
-      // Check if xhr-get test was successful.
-      httpActivity = lastFinishedRequest;
-      isnot(httpActivity, null, "testXhrGet() was logged");
-      is(httpActivity.method, "GET", "Method is correct");
-      is(httpActivity.request.body, null, "No request body was sent");
-      // is(httpActivity.response.body, TEST_DATA_JSON_CONTENT,
-      //  "Response is correct");
-      lastFinishedRequest = null;
-      loggingGen.next();
-    });
-    yield;
-
-    // Start xhr-post test.
-    log("WHA WHA?\n\n\n");
-    log(browser.contentWindow.wrappedJSObject.testXhrPost);
-    browser.contentWindow.wrappedJSObject.testXhrPost(loggingGen);
-    yield;
-
-    executeSoon(function() {
-      // Check if xhr-post test was successful.
-      httpActivity = lastFinishedRequest;
-      isnot(httpActivity, null, "testXhrPost() was logged");
-      is(httpActivity.method, "POST", "Method is correct");
-      // is(httpActivity.request.body, "Hello world!",
-      //  "Request body was logged");
-      // is(httpActivity.response.body, TEST_DATA_JSON_CONTENT,
-      //   "Response is correct");
-      lastFinishedRequest = null;
-      loggingGen.next();
-    });
-    yield;
-
-    // Start submit-form test. As the form is submitted, the page is loaded
-    // again. Bind to the DOMContentLoaded event to catch when this is done.
-    browser.addEventListener("load", function onLoad () {
-      browser.removeEventListener("load", onLoad, true);
-      loggingGen.next();
-    }, true);
-    browser.contentWindow.wrappedJSObject.testSubmitForm();
-    yield;
-
-    // Check if submitting the form was logged successful.
-    httpActivity = lastFinishedRequest;
-    isnot(httpActivity, null, "testSubmitForm() was logged");
-    is(httpActivity.method, "POST", "Method is correct");
-    // isnot(httpActivity.request.body.indexOf(
-    //   "Content-Type: application/x-www-form-urlencoded"), -1,
-    //   "Content-Type is correct");
-    // isnot(httpActivity.request.body.indexOf(
-    //   "Content-Length: 20"), -1, "Content-length is correct");
-    // isnot(httpActivity.request.body.indexOf(
-    //   "name=foo+bar&age=144"), -1, "Form data is correct");
-    // ok(httpActivity.response.body.indexOf("<!DOCTYPE HTML>") == 0,
-    //   "Response body's beginning is okay");
-
-    lastFinishedRequest = null;
-
-    // Open the NetworkPanel. The functionality of the NetworkPanel is tested
-    // within the testNetworkPanel() function.
-    let filterBox = hud.querySelectorAll(".hud-filter-box")[0];
-    let networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
-    is (networkPanel, httpActivity.panels[0].get(), "Network panel stored on httpActivity object");
-    networkPanel.panel.addEventListener("load", function onLoad() {
-      networkPanel.panel.removeEventListener("load", onLoad, true);
-
-      ok(true, "NetworkPanel was opened");
-      networkPanel.panel.hidePopup();
-      // All tests are done. Shutdown.
-      lastFinishedRequest = null;
-      HUDService.lastFinishedRequestCallback = null;
-      finishTest();
-    }, true);
-  }
-
-  loggingGen = loggingGeneratorFunc();
-  loggingGen.next();
+  content.location = TEST_NETWORK_REQUEST_URI;
 }
+
+function testPageLoadBody()
+{
+  // Turn on logging of request bodies and check again.
+  HUDService.saveRequestAndResponseBodies = true;
+  browser.addEventListener("load", function(aEvent) {
+    browser.removeEventListener(aEvent.type, arguments.callee, true);
+
+    ok(lastRequest, "Page load was logged again");
+    is(lastRequest.response.body.indexOf("<!DOCTYPE HTML>"), 0,
+      "Response body's beginning is okay");
+
+    lastRequest = null;
+    executeSoon(testXhrGet);
+  }, true);
+
+  content.location.reload();
+}
+
+function testXhrGet()
+{
+  let callback = function() {
+    ok(lastRequest, "testXhrGet() was logged");
+    is(lastRequest.method, "GET", "Method is correct");
+    is(lastRequest.request.body, null, "No request body was sent");
+    is(lastRequest.response.body, TEST_DATA_JSON_CONTENT,
+      "Response is correct");
+
+    lastRequest = null;
+    executeSoon(testXhrPost);
+  };
+
+  // Start the XMLHttpRequest() GET test.
+  content.wrappedJSObject.testXhrGet(function() {
+    // Use executeSoon here as the xhr callback is invoked before the network
+    // observer detected that the request is completly done and the
+    // HUDService.lastFinishedRequest is set. executeSoon solves that problem.
+    executeSoon(callback);
+  });
+}
+
+function testXhrPost()
+{
+  let callback = function() {
+    ok(lastRequest, "testXhrPost() was logged");
+    is(lastRequest.method, "POST", "Method is correct");
+    is(lastRequest.request.body, "Hello world!",
+      "Request body was logged");
+    is(lastRequest.response.body, TEST_DATA_JSON_CONTENT,
+      "Response is correct");
+
+    lastRequest = null;
+    executeSoon(testFormSubmission);
+  };
+
+  // Start the XMLHttpRequest() POST test.
+  content.wrappedJSObject.testXhrPost(function() {
+    executeSoon(callback);
+  });
+}
+
+function testFormSubmission()
+{
+  // Start the form submission test. As the form is submitted, the page is
+  // loaded again. Bind to the load event to catch when this is done.
+  browser.addEventListener("load", function(aEvent) {
+    browser.removeEventListener(aEvent.type, arguments.callee, true);
+
+    ok(lastRequest, "testFormSubmission() was logged");
+    is(lastRequest.method, "POST", "Method is correct");
+    isnot(lastRequest.request.body.
+      indexOf("Content-Type: application/x-www-form-urlencoded"), -1,
+      "Content-Type is correct");
+    isnot(lastRequest.request.body.
+      indexOf("Content-Length: 20"), -1, "Content-length is correct");
+    isnot(lastRequest.request.body.
+      indexOf("name=foo+bar&age=144"), -1, "Form data is correct");
+    ok(lastRequest.response.body.indexOf("<!DOCTYPE HTML>") == 0,
+      "Response body's beginning is okay");
+
+    executeSoon(testNetworkPanel);
+  }, true);
+
+  let form = content.document.querySelector("form");
+  ok(form, "we have the HTML form");
+  form.submit();
+}
+
+function testNetworkPanel()
+{
+  // Open the NetworkPanel. The functionality of the NetworkPanel is tested
+  // within separate test files.
+  let filterBox = hud.querySelector(".hud-filter-box");
+  let networkPanel = HUDService.openNetworkPanel(filterBox, lastRequest);
+  is(networkPanel, lastRequest.panels[0].get(),
+    "Network panel stored on lastRequest object");
+
+  networkPanel.panel.addEventListener("load", function(aEvent) {
+    networkPanel.panel.removeEventListener(aEvent.type, arguments.callee,
+      true);
+
+    ok(true, "NetworkPanel was opened");
+
+    // All tests are done. Shutdown.
+    networkPanel.panel.hidePopup();
+    lastRequest = null;
+    HUDService.lastFinishedRequestCallback = null;
+    executeSoon(finishTest);
+  }, true);
+}
+
