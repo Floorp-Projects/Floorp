@@ -54,6 +54,8 @@
 #include "nsSerializationHelper.h"
 #include "nsISerializable.h"
 #include "nsIAssociatedContentSecurity.h"
+#include "nsIApplicationCacheService.h"
+#include "nsIOfflineCacheUpdate.h"
 
 namespace mozilla {
 namespace net {
@@ -110,7 +112,9 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const PRBool&              forceAllowThirdPartyCookie,
                                  const bool&                doResumeAt,
                                  const PRUint64&            startPos,
-                                 const nsCString&           entityID)
+                                 const nsCString&           entityID,
+                                 const bool&                chooseApplicationCache,
+                                 const nsCString&           appCacheClientID)
 {
   nsCOMPtr<nsIURI> uri(aURI);
   nsCOMPtr<nsIURI> originalUri(aOriginalURI);
@@ -175,6 +179,41 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   httpChan->SetRedirectionLimit(redirectionLimit);
   httpChan->SetAllowPipelining(allowPipelining);
   httpChan->SetForceAllowThirdPartyCookie(forceAllowThirdPartyCookie);
+
+  nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
+    do_QueryInterface(mChannel);
+  nsCOMPtr<nsIApplicationCacheService> appCacheService =
+    do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
+
+  PRBool setChooseApplicationCache = chooseApplicationCache;
+  if (appCacheChan && appCacheService) {
+    // We might potentially want to drop this flag (that is TRUE by default)
+    // after we succefully associate the channel with an application cache
+    // reported by the channel child.  Dropping it here may be too early.
+    appCacheChan->SetInheritApplicationCache(PR_FALSE);
+    if (!appCacheClientID.IsEmpty()) {
+      nsCOMPtr<nsIApplicationCache> appCache;
+      rv = appCacheService->GetApplicationCache(appCacheClientID,
+                                                getter_AddRefs(appCache));
+      if (NS_SUCCEEDED(rv)) {
+        appCacheChan->SetApplicationCache(appCache);
+        setChooseApplicationCache = PR_FALSE;
+      }
+    }
+
+    if (setChooseApplicationCache) {
+      nsCOMPtr<nsIOfflineCacheUpdateService> offlineUpdateService =
+        do_GetService("@mozilla.org/offlinecacheupdate-service;1", &rv);
+      if (NS_SUCCEEDED(rv)) {
+        rv = offlineUpdateService->OfflineAppAllowedForURI(uri,
+                                                           nsnull,
+                                                           &setChooseApplicationCache);
+
+        if (setChooseApplicationCache && NS_SUCCEEDED(rv))
+          appCacheChan->SetChooseApplicationCache(PR_TRUE);
+      }
+    }
+  }
 
   rv = httpChan->AsyncOpen(mChannelListener, nsnull);
   if (NS_FAILED(rv))
@@ -268,6 +307,14 @@ HttpChannelParent::RecvDocumentChannelCleanup()
   return true;
 }
 
+bool 
+HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
+{
+  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+  httpChan->MarkOfflineCacheEntryAsForeign();
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // nsIRequestObserver and nsIStreamListener methods equivalents
 //-----------------------------------------------------------------------------
@@ -290,6 +337,22 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   chan->GetCacheTokenExpirationTime(&expirationTime);
   nsCString cachedCharset;
   chan->GetCacheTokenCachedCharset(cachedCharset);
+
+  PRBool loadedFromApplicationCache;
+  chan->GetLoadedFromApplicationCache(&loadedFromApplicationCache);
+  if (loadedFromApplicationCache) {
+    nsCOMPtr<nsIApplicationCache> appCache;
+    chan->GetApplicationCache(getter_AddRefs(appCache));
+    nsCString appCacheGroupId;
+    nsCString appCacheClientId;
+    appCache->GetGroupID(appCacheGroupId);
+    appCache->GetClientID(appCacheClientId);
+    if (mIPCClosed || 
+        !SendAssociateApplicationCache(appCacheGroupId, appCacheClientId))
+    {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
 
   nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
   if (encodedChannel)

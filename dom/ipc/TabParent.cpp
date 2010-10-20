@@ -43,6 +43,7 @@
 #include "mozilla/ipc/DocumentRendererShmemParent.h"
 #include "mozilla/ipc/DocumentRendererNativeIDParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/docshell/OfflineCacheUpdateParent.h"
 
 #include "nsIURI.h"
 #include "nsFocusManager.h"
@@ -691,6 +692,35 @@ bool
 TabParent::DeallocPRenderFrame(PRenderFrameParent* aFrame)
 {
   delete aFrame;
+  return true;
+}
+
+mozilla::docshell::POfflineCacheUpdateParent*
+TabParent::AllocPOfflineCacheUpdate(const URI& aManifestURI,
+                                    const URI& aDocumentURI,
+                                    const nsCString& aClientID,
+                                    const bool& stickDocument)
+{
+  nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
+    new mozilla::docshell::OfflineCacheUpdateParent();
+
+  nsresult rv = update->Schedule(aManifestURI, aDocumentURI, aClientID,
+                                 stickDocument);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  POfflineCacheUpdateParent* result = update.get();
+  update.forget();
+  return result;
+}
+
+bool
+TabParent::DeallocPOfflineCacheUpdate(mozilla::docshell::POfflineCacheUpdateParent* actor)
+{
+  mozilla::docshell::OfflineCacheUpdateParent* update =
+    static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(actor);
+
+  update->Release();
   return true;
 }
 
