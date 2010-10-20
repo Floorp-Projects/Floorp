@@ -61,6 +61,7 @@
 #include "nsICharsetResolver.h"
 #include "nsNetCID.h"
 #include "nsToolkitCompsCID.h"
+#include "nsThreadUtils.h"
 
 #include "nsINavBookmarksService.h"
 #include "nsIPrivateBrowsingService.h"
@@ -94,6 +95,12 @@
 #define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
 #endif
 
+// Fired after frecency has been updated.
+#define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
+
+// Fired after frecency has been updated.
+#define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
+
 // Fired when Places is shutting down.  Any code should stop accessing Places
 // APIs after this notification.  If you need to listen for Places shutdown
 // you should only use this notification, next ones are intended only for
@@ -121,15 +128,29 @@ namespace places {
 
   enum HistoryStatementId {
     DB_GET_PAGE_INFO_BY_URL = 0
-  , DB_GET_TAGS = 1
-  , DB_IS_PAGE_VISITED = 2
-  , DB_INSERT_VISIT = 3
-  , DB_RECENT_VISIT_OF_URL = 4
-  , DB_GET_PAGE_VISIT_STATS = 5
-  , DB_UPDATE_PAGE_VISIT_STATS = 6
-  , DB_ADD_NEW_PAGE = 7
-  , DB_GET_URL_PAGE_INFO = 8
-  , DB_SET_PLACE_TITLE = 9
+  , DB_GET_TAGS
+  , DB_IS_PAGE_VISITED
+  , DB_INSERT_VISIT
+  , DB_RECENT_VISIT_OF_URL
+  , DB_GET_PAGE_VISIT_STATS
+  , DB_UPDATE_PAGE_VISIT_STATS
+  , DB_ADD_NEW_PAGE
+  , DB_GET_URL_PAGE_INFO
+  , DB_SET_PLACE_TITLE
+  , DB_PAGE_INFO_FOR_FRECENCY
+  , DB_VISITS_FOR_FRECENCY
+  };
+
+  enum JournalMode {
+    // Default SQLite journal mode.
+    JOURNAL_DELETE = 0
+    // Can reduce fsyncs on Linux when journal is deleted (See bug 460315).
+    // We fallback to this mode when WAL is unavailable.
+  , JOURNAL_TRUNCATE
+    // Unsafe in case of crashes on database swap or low memory.
+  , JOURNAL_MEMORY
+    // Can reduce number of fsyncs.  We try to use this mode by default.
+  , JOURNAL_WAL
   };
 
 } // namespace places
@@ -201,18 +222,26 @@ public:
   }
 
   /**
+   * Used by other components in the places directory to get a reference to a
+   * const version of this history object.
+   *
+   * @return A pointer to a const version of the service if it exists,
+   *         NULL otherwise.
+   */
+  static const nsNavHistory* GetConstHistoryService()
+  {
+    const nsNavHistory* const history = gHistoryService;
+    return history;
+  }
+
+  /**
    * Returns the database ID for the given URI, or 0 if not found and autoCreate
    * is false.
    */
   nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
                        PRBool aAutoCreate);
 
-  nsresult CalculateFullVisitCount(PRInt64 aPlaceId, PRInt32 *aVisitCount);
-
-  nsresult UpdateFrecency(PRInt64 aPlaceId, PRBool aIsBookmark);
-  nsresult UpdateFrecencyInternal(PRInt64 aPlaceId, PRInt32 aTyped,
-                                  PRInt32 aHidden, PRInt32 aOldFrecency,
-                                  PRBool aIsBookmark);
+  nsresult UpdateFrecency(PRInt64 aPlaceId);
 
   /**
    * Calculate frecencies for places that don't have a valid value yet
@@ -416,9 +445,12 @@ public:
 
   mozIStorageStatement* GetStatementById(
     enum mozilla::places::HistoryStatementId aStatementId
-  )
+  ) const
   {
     using namespace mozilla::places;
+
+    NS_ASSERTION(NS_IsMainThread(), "Can only get statement on main thread");
+
     switch(aStatementId) {
       case DB_GET_PAGE_INFO_BY_URL:
         return mDBGetURLPageInfo;
@@ -440,8 +472,89 @@ public:
         return mDBGetURLPageInfo;
       case DB_SET_PLACE_TITLE:
         return mDBSetPlaceTitle;
+      case DB_PAGE_INFO_FOR_FRECENCY:
+        return mDBPageInfoForFrecency;
+      case DB_VISITS_FOR_FRECENCY:
+        return mDBVisitsForFrecency;
     }
     return nsnull;
+  }
+
+  mozIStorageStatement* GetStatementByStoragePool(
+    enum mozilla::places::HistoryStatementId aStatementId
+  ) const
+  {
+    using namespace mozilla::places;
+
+    switch(aStatementId) {
+      case DB_PAGE_INFO_FOR_FRECENCY:
+        return NS_IsMainThread() ? mDBPageInfoForFrecency
+                                 : mDBAsyncThreadPageInfoForFrecency;
+      case DB_VISITS_FOR_FRECENCY:
+        return NS_IsMainThread() ? mDBVisitsForFrecency
+                                 : mDBAsyncThreadVisitsForFrecency;
+    }
+    return nsnull;
+  }
+
+  PRInt32 GetFrecencyAgedWeight(PRInt32 aAgeInDays) const
+  {
+    if (aAgeInDays <= mFirstBucketCutoffInDays) {
+      return mFirstBucketWeight;
+    }
+    if (aAgeInDays <= mSecondBucketCutoffInDays) {
+      return mSecondBucketWeight;
+    }
+    if (aAgeInDays <= mThirdBucketCutoffInDays) {
+      return mThirdBucketWeight;
+    }
+    if (aAgeInDays <= mFourthBucketCutoffInDays) {
+      return mFourthBucketWeight;
+    }
+    return mDefaultWeight;
+  }
+
+  PRInt32 GetFrecencyBucketWeight(PRInt32 aBucketIndex) const
+  {
+    switch(aBucketIndex) {
+      case 1:
+        return mFirstBucketWeight;
+      case 2:
+        return mSecondBucketWeight;
+      case 3:
+        return mThirdBucketWeight;
+      case 4:
+        return mFourthBucketWeight;
+      default:
+        return mDefaultWeight;
+    }
+  }
+
+  PRInt32 GetFrecencyTransitionBonus(PRInt32 aTransitionType,
+                                     bool aVisited) const
+  {
+    switch (aTransitionType) {
+      case nsINavHistoryService::TRANSITION_EMBED:
+        return mEmbedVisitBonus;
+      case nsINavHistoryService::TRANSITION_FRAMED_LINK:
+        return mFramedLinkVisitBonus;
+      case nsINavHistoryService::TRANSITION_LINK:
+        return mLinkVisitBonus;
+      case nsINavHistoryService::TRANSITION_TYPED:
+        return aVisited ? mTypedVisitBonus : mUnvisitedTypedBonus;
+      case nsINavHistoryService::TRANSITION_BOOKMARK:
+        return aVisited ? mBookmarkVisitBonus : mUnvisitedBookmarkBonus;
+      case nsINavHistoryService::TRANSITION_DOWNLOAD:
+        return mDownloadVisitBonus;
+      case nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT:
+        return mPermRedirectVisitBonus;
+      case nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY:
+        return mTempRedirectVisitBonus;
+      default:
+        // 0 == undefined (see bug #375777 for details)
+        NS_WARN_IF_FALSE(!aTransitionType, "new transition but no bonus for frecency");
+        return mDefaultVisitBonus;
+    }
   }
 
   PRInt64 GetNewSessionID();
@@ -479,6 +592,7 @@ protected:
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<nsIFile> mDBFile;
+  PRInt32 mDBPageSize;
 
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfo;     // kGetInfoIndex_* results
@@ -531,9 +645,16 @@ protected:
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
   nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
   nsCOMPtr<mozIStorageStatement> mDBVisitsForFrecency;
-  nsCOMPtr<mozIStorageStatement> mDBUpdateFrecencyAndHidden;
+  nsCOMPtr<mozIStorageStatement> mDBUpdateFrecency;
+  nsCOMPtr<mozIStorageStatement> mDBUpdateHiddenOnFrecency;
   nsCOMPtr<mozIStorageStatement> mDBGetPlaceVisitStats;
-  nsCOMPtr<mozIStorageStatement> mDBFullVisitCount;
+  nsCOMPtr<mozIStorageStatement> mDBPageInfoForFrecency;
+
+  // Cached statements used in frecency calculation.  Since it could happen on
+  // both main thread or storage async thread, we keep two versions of them
+  // for thread-safety.
+  nsCOMPtr<mozIStorageStatement> mDBAsyncThreadVisitsForFrecency;
+  nsCOMPtr<mozIStorageStatement> mDBAsyncThreadPageInfoForFrecency;
 
   /**
    * Initializes the database file.  If the database does not exist, was
@@ -545,6 +666,12 @@ protected:
    *        Note: A valid database connection must be opened if this is true.
    */
   nsresult InitDBFile(PRBool aForceInit);
+
+  /**
+   * Set journal mode on the database.
+   */
+  nsresult SetJournalMode(enum mozilla::places::JournalMode aJournalMode);
+  enum mozilla::places::JournalMode mCurrentJournalMode;
 
   /**
    * Initializes the database.  This performs any necessary migrations for the
@@ -560,7 +687,6 @@ protected:
    */
   nsresult InitAdditionalDBItems();
   nsresult InitTempTables();
-  nsresult InitViews();
   nsresult InitFunctions();
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
@@ -570,6 +696,7 @@ protected:
   nsresult MigrateV8Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV9Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV10Up(mozIStorageConnection *aDBConn);
+  nsresult MigrateV11Up(mozIStorageConnection *aDBConn);
 
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
   nsresult PreparePlacesForVisitsDelete(const nsCString& aPlaceIdsQueryString);

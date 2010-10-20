@@ -65,7 +65,7 @@
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"
-#include "mozIStorageCompletionCallback.h"
+#include "mozIStorageAsyncStatement.h"
 
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
@@ -134,17 +134,13 @@ using namespace mozilla::places;
 
 // This is the schema version, update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 10
+#define DATABASE_SCHEMA_VERSION 11
 
 // Filename of the database.
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
 
 // Filename used to backup corrupt databases.
 #define DATABASE_CORRUPT_FILENAME NS_LITERAL_STRING("places.sqlite.corrupt")
-
-// We use the TRUNCATE journal mode to reduce the number of fsyncs.  Without
-// this setting we had a Ts hit on Linux.  See bug 460315 for details.
-#define DATABASE_JOURNAL_MODE "TRUNCATE"
 
 // Fraction of free pages in the database to force a vacuum between
 // DATABASE_MAX_TIME_BEFORE_VACUUM and DATABASE_MIN_TIME_BEFORE_VACUUM.
@@ -227,8 +223,6 @@ static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQu
 class VacuumDBListener : public AsyncStatementCallback
 {
 public:
-  NS_DECL_ISUPPORTS
-
   VacuumDBListener(nsIPrefBranch* aBranch)
     : mPrefBranch(aBranch)
   {
@@ -252,8 +246,6 @@ public:
 private:
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
 };
-
-NS_IMPL_ISUPPORTS1(VacuumDBListener, mozIStorageStatementCallback)
 
 } // anonymous namespace
 
@@ -389,7 +381,7 @@ protected:
     }
   }
 
-  const char* mTopic;
+  const char* const mTopic;
   bool mDoubleEnqueue;
 };
 
@@ -398,6 +390,36 @@ NS_IMPL_ISUPPORTS2(
 , mozIStorageCompletionCallback
 , nsIRunnable
 )
+
+
+// Used to notify a topic to system observers on async execute completion.
+class AsyncStatementCallbackNotifier : public AsyncStatementCallback
+{
+public:
+  AsyncStatementCallbackNotifier(const char* aTopic)
+    : mTopic(aTopic)
+  {
+  }
+
+  NS_IMETHOD HandleCompletion(PRUint16 aReason);
+
+private:
+  const char* mTopic;
+};
+
+NS_IMETHODIMP
+AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
+  }
+
+  return NS_OK;
+}
 
 } // anonymouse namespace
 
@@ -425,6 +447,8 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 nsNavHistory::nsNavHistory()
 : mBatchLevel(0)
 , mBatchDBTransaction(nsnull)
+, mDBPageSize(0)
+, mCurrentJournalMode(JOURNAL_DELETE)
 , mCachedNow(0)
 , mExpireNowTimer(nsnull)
 , mLastSessionID(0)
@@ -670,25 +694,79 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 
 
 nsresult
+nsNavHistory::SetJournalMode(enum JournalMode aJournalMode)
+{
+  nsCAutoString journalMode;
+  switch (aJournalMode) {
+    default:
+      NS_NOTREACHED("Trying to set an unknown journal mode.");
+      // Fall through to the default mode of DELETE.
+    case JOURNAL_DELETE:
+      journalMode.AssignLiteral("delete");
+      break;
+    case JOURNAL_TRUNCATE:
+      journalMode.AssignLiteral("truncate");
+      break;
+    case JOURNAL_MEMORY:
+      journalMode.AssignLiteral("memory");
+      break;
+    case JOURNAL_WAL:
+      journalMode.AssignLiteral("wal");
+      break;
+  }
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "PRAGMA journal_mode = ") + journalMode,
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageStatementScoper scoper(statement);
+  PRBool hasResult;
+  rv = statement->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
+
+  nsCAutoString currentJournalMode;
+  rv = statement->GetUTF8String(0, currentJournalMode);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bool succeeded = currentJournalMode.Equals(journalMode);
+  if (succeeded) {
+    mCurrentJournalMode = aJournalMode;
+  }
+  else {
+    NS_WARNING(nsPrintfCString(128, "Setting journal mode failed: %s",
+                               PromiseFlatCString(journalMode).get()).get());
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+nsresult
 nsNavHistory::InitDB()
 {
   // Get the database schema version.
   PRInt32 currentSchemaVersion = 0;
   nsresult rv = mDBConn->GetSchemaVersion(&currentSchemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
+  {
+    // Get the page size.  This may be different than the default if the
+    // database file already existed with a different page size.
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
+                                  getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the page size.  This may be different than the default if the
-  // database file already existed with a different page size.
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
-                                getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasResult;
-  mozStorageStatementScoper scoper(statement);
-  rv = statement->ExecuteStep(&hasResult);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
-  PRInt32 pageSize = statement->AsInt32(0);
+    PRBool hasResult;
+    mozStorageStatementScoper scoper(statement);
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
+    rv = statement->GetInt32(0, &mDBPageSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(mDBPageSize > 0, NS_ERROR_UNEXPECTED);
+  }
 
   // Ensure that temp tables are held in memory, not on disk.  We use temp
   // tables mainly for fsync and I/O reduction.
@@ -720,21 +798,20 @@ nsNavHistory::InitDB()
   PRInt64 cacheSize = physMem * cachePercentage / 100;
 
   // Compute number of cached pages, this will be our cache size.
-  PRInt64 cachePages = cacheSize / pageSize;
-  nsCAutoString pageSizePragma("PRAGMA cache_size = ");
-  pageSizePragma.AppendInt(cachePages);
-  rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
+  PRInt64 cachePages = cacheSize / mDBPageSize;
+  nsCAutoString cacheSizePragma("PRAGMA cache_size = ");
+  cacheSizePragma.AppendInt(cachePages);
+  rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Lock the database file.  This is done partly to avoid third party
-  // applications to access it while it's in use, partly for performance.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA locking_mode = EXCLUSIVE"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA journal_mode = " DATABASE_JOURNAL_MODE));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Be sure to set journal mode after page_size.  WAL would prevent the change
+  // otherwise.
+  if (NS_FAILED(SetJournalMode(JOURNAL_WAL))) {
+    // Ignore errors, if we fail here the database could be considered corrupt
+    // and we won't be able to go on, even if it's just matter of a bogus file
+    // system.  The default mode (DELETE) will be fine in such a case.
+    (void)SetJournalMode(JOURNAL_TRUNCATE);
+  }
 
   // We are going to initialize tables, so everything from now on should be in
   // a transaction for performances.
@@ -822,6 +899,12 @@ nsNavHistory::InitDB()
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      // Migrate places up to V11
+      if (currentSchemaVersion < 11) {
+        rv = MigrateV11Up(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
       // Schema Upgrades must add migration code here.
 
     } else {
@@ -877,6 +960,12 @@ nsNavHistory::InitDB()
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_PLACEDATE);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Visits triggers.
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // This makes a big difference in startup time for large profiles because of
     // finding bookmark redirects using the referring page. 
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_FROMVISIT);
@@ -906,8 +995,6 @@ nsresult
 nsNavHistory::InitAdditionalDBItems()
 {
   nsresult rv = InitTempTables();
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = InitViews();
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InitFunctions();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1001,82 +1088,9 @@ mozStorageFunctionGetUnreversedHost::OnFunctionCall(
 nsresult
 nsNavHistory::InitTempTables()
 {
-  nsresult rv;
-
-  // moz_places_temp
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_TEMP);
+  nsresult rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_OPENPAGES_TEMP);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_URL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_FAVICON);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_REVHOST);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_VISITCOUNT);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_TEMP_FRECENCY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_SYNC_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-
-  // moz_historyvisits_temp
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_TEMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_TEMP_PLACEDATE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_TEMP_FROMVISIT);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_TEMP_VISITDATE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // moz_openpages_temp
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_OPENPAGES_TEMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = mDBConn->ExecuteSimpleSQL(CREATE_REMOVEOPENPAGE_CLEANUP_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::InitViews()
-{
-  nsresult rv;
-
-  // moz_places_view
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_VIEW);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_PLACES_VIEW_INSERT_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_PLACES_VIEW_DELETE_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_PLACES_VIEW_UPDATE_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // moz_historyvisits_view
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_VIEW);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_VIEW_INSERT_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_VIEW_DELETE_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_VIEW_UPDATE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1096,6 +1110,9 @@ nsNavHistory::InitFunctions()
   rv = MatchAutoCompleteFunction::create(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = CalculateFrecencyFunction::create(mDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -1106,182 +1123,107 @@ nsNavHistory::InitFunctions()
 nsresult
 nsNavHistory::InitStatements()
 {
-  // mDBGetURLPageInfo
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique urls.
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, url, title, rev_host, visit_count "
-    "FROM moz_places_temp "
-    "WHERE url = :page_url "
-    "UNION ALL "
     "SELECT id, url, title, rev_host, visit_count "
     "FROM moz_places "
     "WHERE url = :page_url "
-    "LIMIT 1"),
-    getter_AddRefs(mDBGetURLPageInfo));
+  ), getter_AddRefs(mDBGetURLPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBGetIdPageInfo
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique place ids.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id, url, title, rev_host, visit_count "
-      "FROM moz_places_temp "
-      "WHERE id = :page_id "
-      "UNION ALL "
-      "SELECT id, url, title, rev_host, visit_count "
-      "FROM moz_places "
-      "WHERE id = :page_id "
-      "LIMIT 1"),
-    getter_AddRefs(mDBGetIdPageInfo));
+ rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, url, title, rev_host, visit_count "
+    "FROM moz_places "
+    "WHERE id = :page_id "
+  ), getter_AddRefs(mDBGetIdPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBRecentVisitOfURL
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // expect visits in temp table being the most recent.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id, session, visit_date "
-      "FROM moz_historyvisits_temp "
-      "WHERE place_id = IFNULL( "
-        "(SELECT id FROM moz_places_temp WHERE url = :page_url), "
-        "(SELECT id FROM moz_places WHERE url = :page_url) "
-      ") "
-      "UNION ALL "
-      "SELECT id, session, visit_date "
-      "FROM moz_historyvisits "
-      "WHERE place_id = IFNULL( "
-        "(SELECT id FROM moz_places_temp WHERE url = :page_url), "
-        "(SELECT id FROM moz_places WHERE url = :page_url) "
-      ") "
-      "ORDER BY visit_date DESC "
-      "LIMIT 1 "),
-    getter_AddRefs(mDBRecentVisitOfURL));
+    "SELECT id, session, visit_date "
+    "FROM moz_historyvisits "
+    "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
+    "ORDER BY visit_date DESC "
+  ), getter_AddRefs(mDBRecentVisitOfURL));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBRecentVisitOfPlace
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // expect visits in temp table being the most recent.  
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_historyvisits_temp "
-      "WHERE place_id = :page_id "
-        "AND visit_date = :visit_date "
-        "AND session = :session "
-      "UNION ALL "
-      "SELECT id FROM moz_historyvisits "
-      "WHERE place_id = :page_id "
-        "AND visit_date = :visit_date "
-        "AND session = :session "
-      "LIMIT 1"),
-    getter_AddRefs(mDBRecentVisitOfPlace));
+    "SELECT id FROM moz_historyvisits "
+    "WHERE place_id = :page_id "
+      "AND visit_date = :visit_date "
+      "AND session = :session "
+  ), getter_AddRefs(mDBRecentVisitOfPlace));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBInsertVisit
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_historyvisits_view "
-        "(from_visit, place_id, visit_date, visit_type, session) "
-      "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session)"),
-    getter_AddRefs(mDBInsertVisit));
+    "INSERT INTO moz_historyvisits "
+      "(from_visit, place_id, visit_date, visit_type, session) "
+    "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
+  ), getter_AddRefs(mDBInsertVisit));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBGetPageVisitStats (see InternalAdd)
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique place ids.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id, visit_count, typed, hidden "
-      "FROM moz_places_temp "
-      "WHERE url = :page_url "
-      "UNION ALL "
-      "SELECT id, visit_count, typed, hidden "
-      "FROM moz_places "
-      "WHERE url = :page_url "
-      "LIMIT 1"),
-    getter_AddRefs(mDBGetPageVisitStats));
+    "SELECT id, visit_count, typed, hidden "
+    "FROM moz_places "
+    "WHERE url = :page_url "
+  ), getter_AddRefs(mDBGetPageVisitStats));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBIsPageVisited
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // only need to know if a visit exists.
-  // Use indexed params here for performance.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id "
-      "FROM moz_places_temp h "
-      "WHERE url = ?1 " 
-        "AND ( "
-          "EXISTS(SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id LIMIT 1) "
-          "OR EXISTS(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1) "
-        ") "
-      "UNION ALL "
-      "SELECT h.id "
-      "FROM moz_places h "
-      "WHERE url = ?1 "
-      "AND ( "
-        "EXISTS(SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id LIMIT 1) "
-        "OR EXISTS(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1) "
-      ") "
-      "LIMIT 1"), 
-    getter_AddRefs(mDBIsPageVisited));
+    "SELECT h.id "
+    "FROM moz_places h "
+    "WHERE url = ?1 "
+      "AND EXISTS(SELECT id FROM moz_historyvisits WHERE place_id = h.id LIMIT 1) "
+  ), getter_AddRefs(mDBIsPageVisited));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBUpdatePageVisitStats (see InternalAdd)
-  // we don't need to update visit_count since it's maintained
-  // in sync by triggers, and we must NEVER touch it
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places_view "
-      "SET hidden = :hidden, typed = :typed "
-      "WHERE id = :page_id"),
-    getter_AddRefs(mDBUpdatePageVisitStats));
+    "UPDATE moz_places "
+    "SET hidden = :hidden, typed = :typed "
+    "WHERE id = :page_id "
+  ), getter_AddRefs(mDBUpdatePageVisitStats));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBAddNewPage (see InternalAddNewPage)
+  // We have both sync and async users, so it could happen that an async
+  // statement tries to insert a page when a sync statement just added it.
+  // We should ignore the insertion in such a case, the async implementer
+  // will fetch the id of the existing entry.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_places_view "
-        "(url, title, rev_host, hidden, typed, frecency) "
-      "VALUES (:page_url, :page_title, :rev_host, :hidden, :typed, :frecency)"),
-    getter_AddRefs(mDBAddNewPage));
+    "INSERT OR IGNORE INTO moz_places "
+      "(url, title, rev_host, hidden, typed, frecency) "
+    "VALUES (:page_url, :page_title, :rev_host, :hidden, :typed, :frecency) "
+  ), getter_AddRefs(mDBAddNewPage));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBGetTags
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "/* do not warn (bug 487594) */ "
-      "SELECT GROUP_CONCAT(tag_title, ', ') "
-      "FROM ( "
-        "SELECT t.title AS tag_title "
-        "FROM moz_bookmarks b "
-        "JOIN moz_bookmarks t ON t.id = b.parent "
-        "WHERE b.fk = IFNULL((SELECT id FROM moz_places_temp WHERE url = :page_url), "
-                            "(SELECT id FROM moz_places WHERE url = :page_url)) "
-          "AND LENGTH(t.title) > 0 "
-          "AND b.type = ") +
-            nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
-          NS_LITERAL_CSTRING(" AND t.parent = :tags_folder "
-        "ORDER BY t.title COLLATE NOCASE ASC)"),
-    getter_AddRefs(mDBGetTags));
+    "/* do not warn (bug 487594) */ "
+    "SELECT GROUP_CONCAT(tag_title, ', ') "
+    "FROM ( "
+      "SELECT t.title AS tag_title "
+      "FROM moz_bookmarks b "
+      "JOIN moz_bookmarks t ON t.id = b.parent "
+      "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
+        "AND LENGTH(t.title) > 0 "
+        "AND b.type = ") +
+          nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
+        NS_LITERAL_CSTRING(" AND t.parent = :tags_folder "
+      "ORDER BY t.title COLLATE NOCASE ASC) "
+  ), getter_AddRefs(mDBGetTags));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBGetItemsWithAnno
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.item_id, a.content "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
-      "WHERE n.name = :anno_name"),
-    getter_AddRefs(mDBGetItemsWithAnno));
-   NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBSetPlaceTitle
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places_view "
-      "SET title = :page_title "
-      "WHERE url = :page_url"),
-    getter_AddRefs(mDBSetPlaceTitle));
+    "SELECT a.item_id, a.content "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
+    "WHERE n.name = :anno_name "
+  ), getter_AddRefs(mDBGetItemsWithAnno));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBRegisterOpenPage
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
+    "SET title = :page_title "
+    "WHERE url = :page_url "
+  ), getter_AddRefs(mDBSetPlaceTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT OR REPLACE INTO moz_openpages_temp (url, open_count) "
       "VALUES (:page_url, "
@@ -1289,19 +1231,17 @@ nsNavHistory::InitStatements()
           "(SELECT open_count + 1 FROM moz_openpages_temp WHERE url = :page_url), "
           "1"
         ")"
-      ")"),
-    getter_AddRefs(mDBRegisterOpenPage));
+      ")"
+  ), getter_AddRefs(mDBRegisterOpenPage));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBUnregisterOpenPage
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_openpages_temp "
       "SET open_count = open_count - 1 "
-      "WHERE url = :page_url"),
-    getter_AddRefs(mDBUnregisterOpenPage));
+      "WHERE url = :page_url"
+  ), getter_AddRefs(mDBUnregisterOpenPage));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBVisitsForFrecency
   // NOTE: This is not limited to visits with "visit_type NOT IN (0,4,7,8)"
   // because otherwise mDBVisitsForFrecency would return no visits
   // for places with only embed (or undefined) visits.  That would
@@ -1310,71 +1250,72 @@ nsNavHistory::InitStatements()
   // frecency.
   // In case of a temporary or permanent redirect, calculate the frecency as if
   // the original page was visited.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT v.visit_date, COALESCE( "
-        "(SELECT r.visit_type FROM moz_historyvisits_temp r "
-          "WHERE v.visit_type IN ") +
-            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-                                        TRANSITION_REDIRECT_TEMPORARY) +
-            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
-        "(SELECT r.visit_type FROM moz_historyvisits r "
-          "WHERE v.visit_type IN ") +
-            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-                                        TRANSITION_REDIRECT_TEMPORARY) +
-            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
-        "visit_type) "
-      "FROM moz_historyvisits_temp v "
-      "WHERE v.place_id = :page_id "
-      "UNION ALL "
-      "SELECT v.visit_date, COALESCE( "
-        "(SELECT r.visit_type FROM moz_historyvisits_temp r "
-          "WHERE v.visit_type IN ") +
-            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-                                        TRANSITION_REDIRECT_TEMPORARY) +
-            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
-        "(SELECT r.visit_type FROM moz_historyvisits r "
-          "WHERE v.visit_type IN ") +
-            nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
-                                        TRANSITION_REDIRECT_TEMPORARY) +
-            NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
-        "visit_type) "
-      "FROM moz_historyvisits v "
-      "WHERE v.place_id = :page_id "
-        "AND v.id NOT IN (SELECT id FROM moz_historyvisits_temp) "
-      "ORDER BY visit_date DESC LIMIT ") +
-        nsPrintfCString("%d", mNumVisitsForFrecency),
-    getter_AddRefs(mDBVisitsForFrecency));
+  nsCAutoString visitsForFrecencySQL(NS_LITERAL_CSTRING(
+    "SELECT "
+      "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), "
+      "COALESCE( "
+        "(SELECT r.visit_type FROM moz_historyvisits r WHERE v.visit_type IN ") +
+          nsPrintfCString("(%d,%d) ", TRANSITION_REDIRECT_PERMANENT,
+                                      TRANSITION_REDIRECT_TEMPORARY) +
+          NS_LITERAL_CSTRING(" AND r.id = v.from_visit), "
+        "visit_type), "
+      "visit_date "
+    "FROM moz_historyvisits v "
+    "WHERE v.place_id = :page_id "
+    "ORDER BY visit_date DESC LIMIT ") +
+      nsPrintfCString("%d", mNumVisitsForFrecency)
+  );
+
+  rv = mDBConn->CreateStatement(visitsForFrecencySQL,
+                                getter_AddRefs(mDBVisitsForFrecency));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->CreateStatement(visitsForFrecencySQL,
+                                getter_AddRefs(mDBAsyncThreadVisitsForFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBUpdateFrecencyAndHidden
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places_view SET frecency = :frecency, hidden = :hidden "
-      "WHERE id = :page_id"),
-    getter_AddRefs(mDBUpdateFrecencyAndHidden));
+      "UPDATE moz_places "
+      "SET frecency = CALCULATE_FRECENCY(:page_id) "
+      "WHERE id = :page_id"
+  ), getter_AddRefs(mDBUpdateFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBGetPlaceVisitStats
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique place ids.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT typed, hidden, frecency "
-      "FROM moz_places_temp WHERE id = :page_id "
-      "UNION ALL "
-      "SELECT typed, hidden, frecency "
-      "FROM moz_places WHERE id = :page_id "
-      "LIMIT 1"),
-    getter_AddRefs(mDBGetPlaceVisitStats));
+      "UPDATE moz_places "
+      "SET hidden = 0 "
+      "WHERE id = :page_id AND frecency <> 0"
+  ), getter_AddRefs(mDBUpdateHiddenOnFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // when calculating frecency, we want the visit count to be 
-  // all the visits.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT "
-        "(SELECT COUNT(*) FROM moz_historyvisits WHERE place_id = :page_id) + "
-        "(SELECT COUNT(*) FROM moz_historyvisits_temp WHERE place_id = :page_id "
-            "AND id NOT IN (SELECT id FROM moz_historyvisits))"),
-    getter_AddRefs(mDBFullVisitCount));
+    "SELECT typed, hidden, frecency "
+    "FROM moz_places "
+    "WHERE id = :page_id "
+  ), getter_AddRefs(mDBGetPlaceVisitStats));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // When calculating frecency, we need special information for the page.
+  nsCAutoString pageInfoForFrecencySQL(NS_LITERAL_CSTRING(
+    "SELECT typed, hidden, visit_count, "
+           "(SELECT count(*) FROM moz_historyvisits WHERE place_id = :page_id), "
+           "(SELECT id FROM moz_bookmarks "
+            "WHERE fk = :page_id "
+              "AND parent NOT IN ("
+                "SELECT a.item_id "
+                "FROM moz_items_annos a "
+                "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
+                "WHERE n.name = :anno_name"
+              ") "
+            "LIMIT 1), "
+           "(url > 'place:' AND url < 'place;') "
+    "FROM moz_places "
+    "WHERE id = :page_id "
+  ));
+  rv = mDBConn->CreateStatement(pageInfoForFrecencySQL,
+                                getter_AddRefs(mDBPageInfoForFrecency));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->CreateStatement(pageInfoForFrecencySQL,
+                                getter_AddRefs(mDBAsyncThreadPageInfoForFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1807,8 +1748,7 @@ nsNavHistory::MigrateV9Up(mozIStorageConnection *aDBConn)
   // Added in Bug 488966.  The last_visit_date column caches the last
   // visit date, this enhances SELECT performances when we
   // need to sort visits by visit date.
-  // The cached value is synced by INSERT and DELETE triggers on
-  // moz_historyvisits_view, on every added or removed visit.
+  // The cached value is synced by triggers on every added or removed visit.
   // See nsPlacesTriggers.h for details on the triggers.
   PRBool oldIndexExists = PR_FALSE;
   nsresult rv = mDBConn->IndexExists(
@@ -1828,24 +1768,11 @@ nsNavHistory::MigrateV9Up(mozIStorageConnection *aDBConn)
     // This query can be really slow due to disk access, since it will basically
     // dupe the table contents in the journal file, and then write them down
     // in the database.
-    // We will temporary use a memory journal file, this has the advantage of
-    // reducing write times by a half, but will temporary consume more memory
-    // and increase risks of corruption if we should crash in the middle of this
-    // update.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "PRAGMA journal_mode = MEMORY"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "UPDATE moz_places SET last_visit_date = "
           "(SELECT MAX(visit_date) "
            "FROM moz_historyvisits "
            "WHERE place_id = moz_places.id)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Restore the default journal mode.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "PRAGMA journal_mode = " DATABASE_JOURNAL_MODE));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1865,7 +1792,60 @@ nsNavHistory::MigrateV10Up(mozIStorageConnection *aDBConn)
 
   return NS_OK;
 }
-   
+
+
+nsresult
+nsNavHistory::MigrateV11Up(mozIStorageConnection *aDBConn)
+{
+  // Temp tables are going away, so we need the visit_count triggers to return.
+
+  // Regardless triggers existance, every time we pass through this migration
+  // step, we must ensure correctness of visit_count values.
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places SET visit_count = "
+      "(SELECT count(*) FROM moz_historyvisits "
+       "WHERE place_id = moz_places.id "
+        "AND visit_type NOT IN ") +
+          nsPrintfCString("(0,%d,%d,%d) ",
+                          nsINavHistoryService::TRANSITION_EMBED,
+                          nsINavHistoryService::TRANSITION_FRAMED_LINK,
+                          nsINavHistoryService::TRANSITION_DOWNLOAD) +
+      NS_LITERAL_CSTRING(")")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now create triggers if needed.
+  nsCOMPtr<mozIStorageStatement> triggerDetection;
+  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT name "
+      "FROM sqlite_master "
+      "WHERE type = 'trigger' "
+      "AND name = :trigger_name"),
+    getter_AddRefs(triggerDetection));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Both visits triggers were removed in the past at the same time, so we can
+  // check just one of them.
+  PRBool triggerExists;
+  rv = triggerDetection->BindUTF8StringByName(
+    NS_LITERAL_CSTRING("trigger_name"),
+    NS_LITERAL_CSTRING("moz_historyvisits_afterinsert_v2_trigger")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = triggerDetection->ExecuteStep(&triggerExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!triggerExists) {
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+
 // nsNavHistory::GetUrlIdFor
 //
 //    Called by the bookmarks and annotation services, this function returns the
@@ -1932,7 +1912,6 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
   nsresult rv = URIBinder::Bind(mDBAddNewPage, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // title
   if (aTitle.IsVoid()) {
     rv = mDBAddNewPage->BindNullByName(NS_LITERAL_CSTRING("page_title"));
   }
@@ -1954,34 +1933,22 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // hidden
   rv = mDBAddNewPage->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aHidden);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // typed
   rv = mDBAddNewPage->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aTyped);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString url;
-  rv = aURI->GetSpec(url);
+  nsCAutoString spec;
+  rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // frecency
-  PRInt32 frecency = -1;
-  if (aCalculateFrecency) {
-    rv = CalculateFrecency(-1 /* no page id, since this page doesn't exist */,
-                           aTyped, aVisitCount, url, &frecency);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = mDBAddNewPage->BindInt32ByName(NS_LITERAL_CSTRING("frecency"), frecency);
+  rv = mDBAddNewPage->BindInt32ByName(NS_LITERAL_CSTRING("frecency"),
+                                      IsQueryURI(spec) ? 0 : -1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBAddNewPage->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If the caller wants the page ID, go get it
-  if (aPageID) {
+  PRInt64 pageId;
+  {
     mozStorageStatementScoper scoper(mDBGetURLPageInfo);
 
     rv = URIBinder::Bind(mDBGetURLPageInfo, NS_LITERAL_CSTRING("page_url"), aURI);
@@ -1991,8 +1958,17 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
     rv = mDBGetURLPageInfo->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
+    pageId = mDBGetURLPageInfo->AsInt64(0);
+  }
 
-    *aPageID = mDBGetURLPageInfo->AsInt64(0);
+  if (aCalculateFrecency) {
+    rv = UpdateFrecency(pageId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // If the caller wants the page ID, return it.
+  if (aPageID) {
+    *aPageID = pageId;
   }
 
   return NS_OK;
@@ -2186,12 +2162,11 @@ nsNavHistory::GetNewSessionID()
 
   // Extract the last session ID, so we know where to pick up. There is no
   // index over sessions so we use the visit_date index.
-  // This happens on the first visit, so we don't care about temp tables.
   nsCOMPtr<mozIStorageStatement> selectSession;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT session FROM moz_historyvisits "
-      "ORDER BY visit_date DESC LIMIT 1"),
-    getter_AddRefs(selectSession));
+    "SELECT session FROM moz_historyvisits "
+    "ORDER BY visit_date DESC "
+  ), getter_AddRefs(selectSession));
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool hasSession;
   if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession)
@@ -2234,8 +2209,6 @@ nsNavHistory::GetDaysOfHistory() {
         "strftime('%s','now','localtime','utc') - "
         "( "
           "SELECT visit_date FROM moz_historyvisits "
-          "UNION ALL "
-          "SELECT visit_date FROM moz_historyvisits_temp "
           "ORDER BY visit_date ASC LIMIT 1 "
         ")/1000000 "
       ")/86400) AS daysOfHistory "),
@@ -2606,9 +2579,7 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT 1 "
-      "WHERE EXISTS (SELECT id FROM moz_historyvisits_temp LIMIT 1) "
-        "OR EXISTS (SELECT id FROM moz_historyvisits LIMIT 1)"),
+      "SELECT 1 FROM moz_historyvisits "),
     getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = dbSelectStatement->ExecuteStep(aHasEntries);
@@ -2618,6 +2589,7 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
   return NS_OK;
 }
 
+
 nsresult
 nsNavHistory::FixInvalidFrecenciesForExcludedPlaces()
 {
@@ -2626,13 +2598,10 @@ nsNavHistory::FixInvalidFrecenciesForExcludedPlaces()
   // set frecency to 0 so that it is excluded from url bar autocomplete.
   nsCOMPtr<mozIStorageStatement> dbUpdateStatement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places_view "
+      "UPDATE moz_places "
       "SET frecency = 0 WHERE id IN ("
         "SELECT h.id FROM moz_places h "
         "WHERE h.url >= 'place:' AND h.url < 'place;' "
-        "UNION "
-        "SELECT h.id FROM moz_places_temp h "
-        "WHERE  h.url >= 'place:' AND h.url < 'place;' "
         "UNION "
         // Unvisited child of a livemark
         "SELECT b.fk FROM moz_bookmarks b "
@@ -2642,8 +2611,6 @@ nsNavHistory::FixInvalidFrecenciesForExcludedPlaces()
         "WHERE n.name = :anno_name "
         "AND b.fk IN( "
           "SELECT id FROM moz_places WHERE visit_count = 0 AND frecency < 0 "
-          "UNION ALL "
-          "SELECT id FROM moz_places_temp WHERE visit_count = 0 AND frecency < 0 "
         ") "
       ")"),
     getter_AddRefs(dbUpdateStatement));
@@ -2657,30 +2624,6 @@ nsNavHistory::FixInvalidFrecenciesForExcludedPlaces()
   rv = dbUpdateStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::CalculateFullVisitCount(PRInt64 aPlaceId, PRInt32 *aVisitCount)
-{
-  mozStorageStatementScoper scope(mDBFullVisitCount);
-
-  nsresult rv = mDBFullVisitCount->BindInt64ByName(
-    NS_LITERAL_CSTRING("page_id"), aPlaceId
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasVisits = PR_TRUE;
-  rv = mDBFullVisitCount->ExecuteStep(&hasVisits);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (hasVisits) {
-    rv = mDBFullVisitCount->GetInt32(0, aVisitCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else
-    *aVisitCount = 0;
-  
   return NS_OK;
 }
 
@@ -2921,9 +2864,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // Update frecency (*after* the visit info is in the db)
   // Swallow errors here, since if we've gotten this far, it's more
   // important to notify the observers below.
-  nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bs, NS_ERROR_OUT_OF_MEMORY);
-  (void)UpdateFrecency(pageID, bs->IsRealBookmark(pageID));
+  (void)UpdateFrecency(pageID);
 
   // Notify observers: The hidden detection code must match that in
   // GetQueryResults to maintain consistency.
@@ -3321,45 +3262,11 @@ PlacesSQLQueryBuilder::SelectAsURI()
         "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "h.last_visit_date, f.url, v.session, null, null, null, null, ") +
         tagsSqlFragment + NS_LITERAL_CSTRING(
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits_temp v ON h.id = v.place_id "
+        "FROM moz_places h "
+        "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
         // WHERE 1 is a no-op since additonal conditions will start with AND.
         "WHERE 1 "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "GROUP BY h.id "
-        "UNION ALL "
-        "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-        "h.last_visit_date, f.url, v.session, null, null, null, null, ") +
-        tagsSqlFragment + NS_LITERAL_CSTRING(
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE h.id NOT IN (SELECT place_id FROM moz_historyvisits_temp) "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "GROUP BY h.id "
-        "UNION ALL "
-        "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-        "h.last_visit_date, f.url, v.session, null, null, null, null, ") +
-        tagsSqlFragment + NS_LITERAL_CSTRING(
-        "FROM moz_places h "
-        "JOIN moz_historyvisits_temp v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "GROUP BY h.id "
-        "UNION ALL "
-        "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-        "h.last_visit_date, f.url, v.session, null, null, null, null, ") +
-        tagsSqlFragment + NS_LITERAL_CSTRING(
-        "FROM moz_places h "
-        "JOIN moz_historyvisits v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-          "AND h.id NOT IN (SELECT place_id FROM moz_historyvisits_temp) "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
         "GROUP BY h.id ");
@@ -3389,30 +3296,12 @@ PlacesSQLQueryBuilder::SelectAsURI()
                 // ADDITIONAL_CONDITIONS will filter on parent.
                 "WHERE b.type = 1 {ADDITIONAL_CONDITIONS} "
                 ") AS seed ON b2.fk = seed.fk "
-          "JOIN moz_places_temp h ON h.id = b2.fk "
-          "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-          "WHERE NOT EXISTS ( "
-            "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
-                nsPrintfCString("%lld", history->GetTagsFolder()) +
-          NS_LITERAL_CSTRING(") "
-          "UNION ALL "
-          "SELECT b2.fk, h.url, COALESCE(b2.title, h.title), h.rev_host, "
-            "h.visit_count, h.last_visit_date, f.url, null, b2.id, "
-            "b2.dateAdded, b2.lastModified, b2.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(
-          "FROM moz_bookmarks b2 "
-          "JOIN (SELECT b.fk "
-                "FROM moz_bookmarks b "
-                // ADDITIONAL_CONDITIONS will filter on parent.
-                "WHERE b.type = 1 {ADDITIONAL_CONDITIONS} "
-                ") AS seed ON b2.fk = seed.fk "
           "JOIN moz_places h ON h.id = b2.fk "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
           "WHERE NOT EXISTS ( "
             "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
                 nsPrintfCString("%lld", history->GetTagsFolder()) +
           NS_LITERAL_CSTRING(") "
-            "AND h.id NOT IN (SELECT id FROM moz_places_temp) "
           "ORDER BY b2.fk DESC, b2.lastModified DESC");
       }
       else {
@@ -3426,24 +3315,9 @@ PlacesSQLQueryBuilder::SelectAsURI()
             "b.dateAdded, b.lastModified, b.parent, ") +
             tagsSqlFragment + NS_LITERAL_CSTRING(
           "FROM moz_bookmarks b "
-          "JOIN moz_places_temp h ON b.fk = h.id AND b.type = 1 "
-          "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-          "WHERE NOT EXISTS "
-            "(SELECT id FROM moz_bookmarks "
-              "WHERE id = b.parent AND parent = ") +
-                nsPrintfCString("%lld", history->GetTagsFolder()) +
-            NS_LITERAL_CSTRING(") "
-            "{ADDITIONAL_CONDITIONS}"
-          "UNION ALL "
-          "SELECT b.fk, h.url, COALESCE(b.title, h.title), h.rev_host, "
-            "h.visit_count, h.last_visit_date, f.url, null, b.id, "
-            "b.dateAdded, b.lastModified, b.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(
-          "FROM moz_bookmarks b "
           "JOIN moz_places h ON b.fk = h.id AND b.type = 1 "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-          "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-            "AND NOT EXISTS "
+          "WHERE NOT EXISTS "
               "(SELECT id FROM moz_bookmarks "
                 "WHERE id = b.parent AND parent = ") +
                   nsPrintfCString("%lld", history->GetTagsFolder()) +
@@ -3472,42 +3346,11 @@ PlacesSQLQueryBuilder::SelectAsVisit()
     "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
       "v.visit_date, f.url, v.session, null, null, null, null, ") +
       tagsSqlFragment + NS_LITERAL_CSTRING(
-    "FROM moz_places_temp h "
-    "JOIN moz_historyvisits_temp v ON h.id = v.place_id "
-    "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-    // WHERE 1 is a no-op since additonal conditions will start with AND.
-    "WHERE 1 "
-      "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-      "{ADDITIONAL_CONDITIONS} "
-    "UNION ALL "
-    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-      "v.visit_date, f.url, v.session, null, null, null, null, ") +
-      tagsSqlFragment + NS_LITERAL_CSTRING(
-    "FROM moz_places_temp h "
+    "FROM moz_places h "
     "JOIN moz_historyvisits v ON h.id = v.place_id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     // WHERE 1 is a no-op since additonal conditions will start with AND.
     "WHERE 1 "
-      "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-      "{ADDITIONAL_CONDITIONS} "
-    "UNION ALL "
-    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-      "v.visit_date, f.url, v.session, null, null, null, null, ") +
-      tagsSqlFragment + NS_LITERAL_CSTRING(
-    "FROM moz_places h "
-    "JOIN moz_historyvisits_temp v ON h.id = v.place_id "
-    "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-      "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-      "{ADDITIONAL_CONDITIONS} "
-    "UNION ALL "
-    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-      "v.visit_date, f.url, v.session, null, null, null, null, ") +
-      tagsSqlFragment + NS_LITERAL_CSTRING(
-    "FROM moz_places h "
-    "JOIN moz_historyvisits v ON h.id = v.place_id "
-    "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
       "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
       "{ADDITIONAL_CONDITIONS} ");
 
@@ -3682,12 +3525,6 @@ PlacesSQLQueryBuilder::SelectAsDay()
                "%s AS beginTime, "
                "%s AS endTime "
          "WHERE EXISTS ( "
-           "SELECT id FROM moz_historyvisits_temp "
-          "WHERE visit_date >= %s "
-            "AND visit_date < %s "
-            "AND visit_type NOT IN (0,%d,%d) "
-            "{QUERY_OPTIONS_VISITS} "
-          "UNION ALL "
           "SELECT id FROM moz_historyvisits "
           "WHERE visit_date >= %s "
             "AND visit_date < %s "
@@ -3698,10 +3535,6 @@ PlacesSQLQueryBuilder::SelectAsDay()
       dateParam.get(),
       sqlFragmentContainerBeginTime.get(),
       sqlFragmentContainerEndTime.get(),
-      sqlFragmentSearchBeginTime.get(),
-      sqlFragmentSearchEndTime.get(),
-       nsINavHistoryService::TRANSITION_EMBED,
-       nsINavHistoryService::TRANSITION_FRAMED_LINK,
       sqlFragmentSearchBeginTime.get(),
       sqlFragmentSearchEndTime.get(),
       nsINavHistoryService::TRANSITION_EMBED,
@@ -3736,15 +3569,8 @@ PlacesSQLQueryBuilder::SelectAsSite()
              "'place:type=%ld&sort=%ld&domain=&domainIsHost=true', "
              ":localhost, :localhost, null, null, null, null, null, null, null "
       "WHERE EXISTS ( "
-        "SELECT id FROM moz_places_temp "
-        "WHERE hidden <> 1 "
-          "AND rev_host = '.' "
-          "AND visit_count > 0 "
-          "AND url BETWEEN 'file://' AND 'file:/~' "
-        "UNION ALL "
         "SELECT id FROM moz_places "
-        "WHERE id NOT IN (SELECT id FROM moz_places_temp) "
-          "AND hidden <> 1 "
+        "WHERE hidden <> 1 "
           "AND rev_host = '.' "
           "AND visit_count > 0 "
           "AND url BETWEEN 'file://' AND 'file:/~' "
@@ -3756,14 +3582,8 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "FROM ( "
         "SELECT get_unreversed_host(rev_host) host "
         "FROM ( "
-          "SELECT DISTINCT rev_host FROM moz_places_temp "
-          "WHERE hidden <> 1 "
-            "AND rev_host <> '.' "
-            "AND visit_count > 0 "
-          "UNION ALL "
           "SELECT DISTINCT rev_host FROM moz_places "
-          "WHERE id NOT IN (SELECT id FROM moz_places_temp) "
-            "AND hidden <> 1 "
+          "WHERE hidden <> 1 "
             "AND rev_host <> '.' "
             "AND visit_count > 0 "
         ") "
@@ -3789,33 +3609,6 @@ PlacesSQLQueryBuilder::SelectAsSite()
           "AND h.url BETWEEN 'file://' AND 'file:/~' "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
-        "UNION "
-        "SELECT h.id "
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits v ON v.place_id = h.id "
-        "WHERE h.hidden <> 1 AND h.rev_host = '.' "
-          "AND h.visit_count > 0 "
-          "AND h.url BETWEEN 'file://' AND 'file:/~' "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "UNION "
-        "SELECT h.id "
-        "FROM moz_places h "
-        "JOIN moz_historyvisits_temp v ON v.place_id = h.id "
-        "WHERE h.hidden <> 1 AND h.rev_host = '.' "
-          "AND h.visit_count > 0 "
-          "AND h.url BETWEEN 'file://' AND 'file:/~' "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "UNION "
-        "SELECT h.id "
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits_temp v ON v.place_id = h.id "
-        "WHERE h.hidden <> 1 AND h.rev_host = '.' "
-          "AND h.visit_count > 0 "
-          "AND h.url BETWEEN 'file://' AND 'file:/~' "
-          "{QUERY_OPTIONS_VISITS}  {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "        
       ") "
       "UNION ALL "
       "SELECT DISTINCT null, "
@@ -3830,30 +3623,6 @@ PlacesSQLQueryBuilder::SelectAsSite()
           "AND h.visit_count > 0 "
           "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
           "{ADDITIONAL_CONDITIONS} "
-        "UNION "
-        "SELECT DISTINCT get_unreversed_host(rev_host) AS host "
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits v ON v.place_id = h.id "
-        "WHERE h.rev_host <> '.' "
-          "AND h.visit_count > 0 "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "UNION "
-        "SELECT DISTINCT get_unreversed_host(rev_host) AS host "
-        "FROM moz_places h "
-        "JOIN moz_historyvisits_temp v ON v.place_id = h.id "
-        "WHERE h.rev_host <> '.' "
-          "AND h.visit_count > 0 "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "UNION "
-        "SELECT DISTINCT get_unreversed_host(rev_host) AS host "
-        "FROM moz_places_temp h "
-        "JOIN moz_historyvisits_temp v ON v.place_id = h.id "        
-        "WHERE h.rev_host <> '.' "
-          "AND h.visit_count > 0 "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "        
         "ORDER BY 1 ASC "
       ") ",
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
@@ -3905,11 +3674,6 @@ PlacesSQLQueryBuilder::Where()
   else if (mRedirectsMode == nsINavHistoryQueryOptions::REDIRECTS_MODE_TARGET) {
     additionalVisitsConditions += NS_LITERAL_CSTRING(
       "AND NOT EXISTS ( "
-        "SELECT id FROM moz_historyvisits_temp WHERE from_visit = v.id "
-        "AND visit_type IN ") +
-        nsPrintfCString("(%d,%d) ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                                    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-      NS_LITERAL_CSTRING(") AND NOT EXISTS ( "
         "SELECT id FROM moz_historyvisits WHERE from_visit = v.id "
         "AND visit_type IN ") +
         nsPrintfCString("(%d,%d) ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
@@ -3976,9 +3740,7 @@ PlacesSQLQueryBuilder::OrderBy()
   switch(mSortingMode)
   {
     case nsINavHistoryQueryOptions::SORT_BY_NONE:
-      // If this is a URI query the sorting could change based on the
-      // sync status of disk and temp tables, we must ensure sorting does not
-      // change between queries.
+      // Ensure sorting does not change based on tables status.
       if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_URI) {
         if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
           mQueryString += NS_LITERAL_CSTRING(" ORDER BY b.id ASC ");
@@ -4121,37 +3883,10 @@ nsNavHistory::ConstructQueryString(
       "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, h.last_visit_date, "
           "f.url, null, null, null, null, null, ") +
           tagsSqlFragment + NS_LITERAL_CSTRING(
-        "FROM moz_places_temp h "
-        "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE h.hidden <> 1 "
-          "AND EXISTS (SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id "
-                       "AND visit_type NOT IN ") +
-                       nsPrintfCString("(0,%d,%d) ",
-                                       nsINavHistoryService::TRANSITION_EMBED,
-                                       nsINavHistoryService::TRANSITION_FRAMED_LINK) +
-                       NS_LITERAL_CSTRING("UNION ALL "
-                       "SELECT id FROM moz_historyvisits WHERE place_id = h.id "
-                       "AND visit_type NOT IN ") +
-                       nsPrintfCString("(0,%d,%d) ",
-                                       nsINavHistoryService::TRANSITION_EMBED,
-                                       nsINavHistoryService::TRANSITION_FRAMED_LINK) +
-                       NS_LITERAL_CSTRING("LIMIT 1) "
-          "{QUERY_OPTIONS} "
-      "UNION ALL "
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, h.last_visit_date, "
-          "f.url, null, null, null, null, null, ") +
-          tagsSqlFragment + NS_LITERAL_CSTRING(
         "FROM moz_places h "
         "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
         "WHERE h.hidden <> 1 "
-          "AND h.id NOT IN (SELECT id FROM moz_places_temp) "
-          "AND EXISTS (SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id "
-                       "AND visit_type NOT IN ") +
-                       nsPrintfCString("(0,%d,%d) ",
-                                       nsINavHistoryService::TRANSITION_EMBED,
-                                       nsINavHistoryService::TRANSITION_FRAMED_LINK) +
-                       NS_LITERAL_CSTRING("UNION ALL "
-                       "SELECT id FROM moz_historyvisits WHERE place_id = h.id "
+          "AND EXISTS (SELECT id FROM moz_historyvisits WHERE place_id = h.id "
                        "AND visit_type NOT IN ") +
                        nsPrintfCString("(0,%d,%d) ",
                                        nsINavHistoryService::TRANSITION_EMBED,
@@ -4174,15 +3909,9 @@ nsNavHistory::ConstructQueryString(
           nsINavHistoryQueryOptions::REDIRECTS_MODE_SOURCE) {
       additionalQueryOptions +=  nsPrintfCString(256,
         "AND NOT EXISTS ( "
-          "SELECT id FROM moz_historyvisits_temp WHERE place_id = h.id "
-                                             "AND visit_type IN (%d,%d)"
-        ") "
-        "AND NOT EXISTS ( "
           "SELECT id FROM moz_historyvisits WHERE place_id = h.id "
                                              "AND visit_type IN (%d,%d)"
         ") ",
-        TRANSITION_REDIRECT_PERMANENT,
-        TRANSITION_REDIRECT_TEMPORARY,
         TRANSITION_REDIRECT_PERMANENT,
         TRANSITION_REDIRECT_TEMPORARY);
     }
@@ -4191,29 +3920,11 @@ nsNavHistory::ConstructQueryString(
       additionalQueryOptions += nsPrintfCString(1024,
         "AND NOT EXISTS ( "
           "SELECT id "
-          "FROM moz_historyvisits_temp v "
-          "WHERE place_id = h.id "
-            "AND EXISTS(SELECT id FROM moz_historyvisits_temp "
-                           "WHERE from_visit = v.id AND visit_type IN (%d,%d) "
-                        "UNION ALL "
-                        "SELECT id FROM moz_historyvisits "
-                           "WHERE from_visit = v.id AND visit_type IN (%d,%d)) "
-          "UNION ALL "
-          "SELECT id "
           "FROM moz_historyvisits v "
           "WHERE place_id = h.id "
-            "AND EXISTS(SELECT id FROM moz_historyvisits_temp "
-                           "WHERE from_visit = v.id AND visit_type IN (%d,%d) "
-                        "UNION ALL "
-                        "SELECT id FROM moz_historyvisits "
+            "AND EXISTS(SELECT id FROM moz_historyvisits "
                            "WHERE from_visit = v.id AND visit_type IN (%d,%d)) "
         ") ",
-        TRANSITION_REDIRECT_PERMANENT,
-        TRANSITION_REDIRECT_TEMPORARY,
-        TRANSITION_REDIRECT_PERMANENT,
-        TRANSITION_REDIRECT_TEMPORARY,
-        TRANSITION_REDIRECT_PERMANENT,
-        TRANSITION_REDIRECT_TEMPORARY,
         TRANSITION_REDIRECT_PERMANENT,
         TRANSITION_REDIRECT_TEMPORARY);
     }
@@ -4459,27 +4170,11 @@ nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   nsCOMPtr<mozIStorageStatement> statement;
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // expect newest visits being in temp table.
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT url, visit_date FROM moz_historyvisits_temp v "
-      "JOIN moz_places_temp h ON v.place_id = h.id "
-      "WHERE h.hidden <> 1 "
-      "UNION ALL "
-      "SELECT url, visit_date FROM moz_historyvisits_temp v "
-      "JOIN moz_places h ON v.place_id = h.id "
-      "WHERE h.hidden <> 1 "
-      "UNION ALL "
-      "SELECT url, visit_date FROM moz_historyvisits v "
-      "JOIN moz_places_temp h ON v.place_id = h.id "
-      "WHERE h.hidden <> 1 "
-      "UNION ALL "
       "SELECT url, visit_date FROM moz_historyvisits v "
       "JOIN moz_places h ON v.place_id = h.id "
       "WHERE h.hidden <> 1 "
-      "ORDER BY visit_date DESC "
-      "LIMIT 1 "),
+      "ORDER BY visit_date DESC "),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4537,7 +4232,7 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
 
   // Delete all visits for the specified place ids.
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits_view WHERE place_id IN (") +
+      "DELETE FROM moz_historyvisits WHERE place_id IN (") +
         aPlaceIdsQueryString +
         NS_LITERAL_CSTRING(")"));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4576,21 +4271,12 @@ nsNavHistory::PreparePlacesForVisitsDelete(const nsCString& aPlaceIdsQueryString
   // to figure out which places to recalculate frecency first.
   // Pay attention to not set frecency = 0 if visit_count = 0
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "UPDATE moz_places_view "
+      "UPDATE moz_places "
       "SET frecency = -MAX(visit_count, 1) "
       "WHERE id IN ( "
         "SELECT h.id " 
-        "FROM moz_places_temp h "
-        "WHERE h.id IN ( ") + aPlaceIdsQueryString + NS_LITERAL_CSTRING(") "
-          "AND ( "
-            "EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk =h.id) "
-            "OR EXISTS (SELECT a.id FROM moz_annos a WHERE a.place_id = h.id) "
-          ") "
-        "UNION ALL "
-        "SELECT h.id " 
         "FROM moz_places h "
         "WHERE h.id IN ( ") + aPlaceIdsQueryString + NS_LITERAL_CSTRING(") "
-          "AND h.id NOT IN (SELECT id FROM moz_places_temp) "
           "AND ( "
             "EXISTS (SELECT b.id FROM moz_bookmarks b WHERE b.fk =h.id) "
             "OR EXISTS (SELECT a.id FROM moz_annos a WHERE a.place_id = h.id) "
@@ -4625,16 +4311,9 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
   // Note that we do NOT delete favicons. Any unreferenced favicons will be
   // deleted next time the browser is shut down.
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places_view WHERE id IN ("
-        "SELECT h.id FROM moz_places_temp h "
-        "WHERE h.id IN ( ") + aPlaceIdsQueryString + NS_LITERAL_CSTRING(") "
-          "AND SUBSTR(h.url, 1, 6) <> 'place:' "
-          "AND NOT EXISTS "
-            "(SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id LIMIT 1) "
-        "UNION ALL "
+      "DELETE FROM moz_places WHERE id IN ( "
         "SELECT h.id FROM moz_places h "
-        "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
-          "AND h.id IN ( ") + aPlaceIdsQueryString + NS_LITERAL_CSTRING(") "
+        "WHERE h.id IN ( ") + aPlaceIdsQueryString + NS_LITERAL_CSTRING(") "
           "AND SUBSTR(h.url, 1, 6) <> 'place:' "
           "AND NOT EXISTS "
             "(SELECT b.id FROM moz_bookmarks b WHERE b.fk = h.id LIMIT 1) "
@@ -4773,12 +4452,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 
   // create statement depending on delete type
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_places_temp "
-      "WHERE ") + conditionString + NS_LITERAL_CSTRING(
-      "UNION ALL "
       "SELECT id FROM moz_places "
-      "WHERE id NOT IN (SELECT id FROM moz_places_temp) "
-        "AND ") + conditionString,
+      "WHERE ") + conditionString,
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringByIndex(0, revHostDot);
@@ -4830,20 +4505,9 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
   // this query is faster than actually selecting in moz_historyvisits
   nsCOMPtr<mozIStorageStatement> selectByTime;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id FROM moz_places_temp h WHERE "
-        "EXISTS "
-          "(SELECT id FROM moz_historyvisits v WHERE v.place_id = h.id "
-            "AND v.visit_date >= :from_date AND v.visit_date <= :to_date LIMIT 1)"
-        "OR EXISTS "
-          "(SELECT id FROM moz_historyvisits_temp v WHERE v.place_id = h.id "
-            "AND v.visit_date >= :from_date AND v.visit_date <= :to_date LIMIT 1) "
-      "UNION "
       "SELECT h.id FROM moz_places h WHERE "
         "EXISTS "
           "(SELECT id FROM moz_historyvisits v WHERE v.place_id = h.id "
-            "AND v.visit_date >= :from_date AND v.visit_date <= :to_date LIMIT 1)"
-        "OR EXISTS "
-          "(SELECT id FROM moz_historyvisits_temp v WHERE v.place_id = h.id "
             "AND v.visit_date >= :from_date AND v.visit_date <= :to_date LIMIT 1)"),
     getter_AddRefs(selectByTime));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4904,16 +4568,8 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
     mozStorageStatementScoper scope(selectByTime);
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT place_id "
-        "FROM moz_historyvisits_temp "
-        "WHERE :from_date <= visit_date AND visit_date <= :to_date "
-        "UNION "
-        "SELECT place_id "
         "FROM moz_historyvisits "
         "WHERE :from_date <= visit_date AND visit_date <= :to_date "
-        "EXCEPT "
-        "SELECT place_id "
-        "FROM moz_historyvisits_temp "
-        "WHERE visit_date < :from_date OR :to_date < visit_date "
         "EXCEPT "
         "SELECT place_id "
         "FROM moz_historyvisits "
@@ -4950,7 +4606,7 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
   // Delete all visits within the timeframe.
   nsCOMPtr<mozIStorageStatement> deleteVisitsStmt;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits_view "
+      "DELETE FROM moz_historyvisits "
       "WHERE :from_date <= visit_date AND visit_date <= :to_date"),
     getter_AddRefs(deleteVisitsStmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4990,19 +4646,13 @@ nsNavHistory::RemoveAllPages()
   // idle query to figure out which places to recalcuate frecency first.
   // We must do this before deleting visits.
   nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_places_view SET frecency = -MAX(visit_count, 1) "
-    "WHERE id IN("
-      "SELECT h.id FROM moz_places_temp h "
-      "WHERE EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
-      "UNION ALL "
-      "SELECT h.id FROM moz_places h "
-      "WHERE EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
-    ")"));
+    "UPDATE moz_places SET frecency = -MAX(visit_count, 1) "
+    "WHERE id IN(SELECT b.fk FROM moz_bookmarks b WHERE b.fk NOTNULL)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Expire visits, then let the paranoid functions do the cleanup for us.
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits_view"));
+      "DELETE FROM moz_historyvisits"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Some of the remaining places could be place: urls or
@@ -5995,39 +5645,25 @@ nsNavHistory::VacuumDatabase()
                                              nsnull);
     }
 
-    // Actually vacuuming a database is a slow operation, since it could take
-    // seconds.  Part of the time is spent in updating the journal file on disk
-    // and this is particularly bad on devices with slow I/O.  Temporary
-    // moving the journal to memory could increase a bit the possibility of
-    // corruption if we crash during this time, but makes the process really
-    // faster.
-    nsCOMPtr<mozIStorageStatement> journalToMemory;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "PRAGMA journal_mode = MEMORY"),
-      getter_AddRefs(journalToMemory));
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If journal mode is WAL, a VACUUM cannot upgrade page_size value.
+    // If current page_size is not the expected one, journal mode must be
+    // changed to a rollback one.  Once done we won't be able to go back to WAL
+    // mode though, since non-reset statements exist.  Just keep using
+    // compatible mode till next restart.
+    // See http://www.sqlite.org/wal.html
+    if (mCurrentJournalMode == JOURNAL_WAL &&
+        mDBPageSize != SQLITE_DEFAULT_PAGE_SIZE) {
+      (void)SetJournalMode(JOURNAL_TRUNCATE);
+    }
 
-    nsCOMPtr<mozIStorageStatement> vacuum;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("VACUUM"),
-                                  getter_AddRefs(vacuum));
+    nsCOMPtr<mozIStorageAsyncStatement> vacuum;
+    rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING("VACUUM"),
+                                       getter_AddRefs(vacuum));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<mozIStorageStatement> journalToDefault;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "PRAGMA journal_mode = " DATABASE_JOURNAL_MODE),
-      getter_AddRefs(journalToDefault));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mozIStorageBaseStatement *stmts[] = {
-      journalToMemory,
-      vacuum,
-      journalToDefault
-    };
     nsCOMPtr<mozIStoragePendingStatement> ps;
     nsRefPtr<VacuumDBListener> vacuumDBListener =
       new VacuumDBListener(mPrefBranch);
-    rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts),
-                               vacuumDBListener, getter_AddRefs(ps));
+    rv = vacuum->ExecuteAsync(vacuumDBListener, getter_AddRefs(ps));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -6038,17 +5674,15 @@ nsNavHistory::VacuumDatabase()
 nsresult
 nsNavHistory::DecayFrecency()
 {
-  // Update frecency values.
   nsresult rv = FixInvalidFrecencies();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Globally decay places frecency rankings to estimate reduced frecency
   // values of pages that haven't been visited for a while, i.e., they do
-  // not get an updated frecency. We directly modify moz_places to avoid
-  // bringing the whole database into places_temp through places_view. A
-  // scaling factor of .975 results in .5 the original value after 28 days.
-  nsCOMPtr<mozIStorageStatement> decayFrecency;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  // not get an updated frecency.  A scaling factor of .975 results in .5 the
+  // original value after 28 days.
+  nsCOMPtr<mozIStorageAsyncStatement> decayFrecency;
+  rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
       "WHERE frecency > 0"),
     getter_AddRefs(decayFrecency));
@@ -6056,15 +5690,15 @@ nsNavHistory::DecayFrecency()
 
   // Decay potentially unused adaptive entries (e.g. those that are at 1)
   // to allow better chances for new entries that will start at 1.
-  nsCOMPtr<mozIStorageStatement> decayAdaptive;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageAsyncStatement> decayAdaptive;
+  rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_inputhistory SET use_count = use_count * .975"),
     getter_AddRefs(decayAdaptive));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Delete any adaptive entries that won't help in ordering anymore.
-  nsCOMPtr<mozIStorageStatement> deleteAdaptive;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  nsCOMPtr<mozIStorageAsyncStatement> deleteAdaptive;
+  rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_inputhistory WHERE use_count < .01"),
     getter_AddRefs(deleteAdaptive));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -6256,9 +5890,6 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     for (PRUint32 i = 0; i < transitions.Length(); ++i) {
       nsPrintfCString param(":transition%d_", i);
       clause.Str("EXISTS (SELECT 1 FROM moz_historyvisits "
-                         "WHERE place_id = h.id AND visit_type = "
-                ).Param(param.get()).Str(" UNION ALL "
-                         "SELECT 1 FROM moz_historyvisits_temp "
                          "WHERE place_id = h.id AND visit_type = "
                 ).Param(param.get()).Str(" LIMIT 1)");
       if (i < transitions.Length() - 1)
@@ -7550,286 +7181,54 @@ void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 } // anonymous namespace
 
 
+// if we calculated a non-zero frecency we should unhide this place
+// so that previously hidden (non-livebookmark item) bookmarks 
+// will now appear in autocomplete
+// if we calculated a zero frecency, we re-use the old hidden value.
 nsresult
-nsNavHistory::UpdateFrecency(PRInt64 aPlaceId, PRBool aIsBookmarked)
+nsNavHistory::UpdateFrecency(PRInt64 aPlaceId)
 {
-  mozStorageStatementScoper statsScoper(mDBGetPlaceVisitStats);
-  nsresult rv = mDBGetPlaceVisitStats->BindInt64ByName(
-    NS_LITERAL_CSTRING("page_id"), aPlaceId
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(mDBUpdateFrecency && mDBUpdateHiddenOnFrecency);
 
-  PRBool hasResults = PR_FALSE;
-  rv = mDBGetPlaceVisitStats->ExecuteStep(&hasResults);
-  NS_ENSURE_SUCCESS(rv, rv);
+#define ASYNC_BIND(_stmt) \
+  PR_BEGIN_MACRO \
+    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray; \
+    nsresult rv = _stmt->NewBindingParamsArray(getter_AddRefs(paramsArray)); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    nsCOMPtr<mozIStorageBindingParams> params; \
+    rv = paramsArray->NewBindingParams(getter_AddRefs(params)); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    rv = params->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    rv = paramsArray->AddParams(params); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+    rv = _stmt->BindParameters(paramsArray); \
+    NS_ENSURE_SUCCESS(rv, rv); \
+  PR_END_MACRO
 
-  if (!hasResults) {
-    NS_WARNING("attempting to update frecency for a bogus place");
-    // before I added the check for itemType == TYPE_BOOKMARK
-    // I hit this with aPlaceId of 0 (on import)
-    return NS_OK;
-  }
+  ASYNC_BIND(mDBUpdateFrecency);
+  ASYNC_BIND(mDBUpdateHiddenOnFrecency);
 
-  PRInt32 typed = 0;
-  rv = mDBGetPlaceVisitStats->GetInt32(0, &typed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mozIStorageBaseStatement *stmts[] = {
+    mDBUpdateFrecency
+  , mDBUpdateHiddenOnFrecency
+  };
 
-  PRInt32 hidden = 0;
-  rv = mDBGetPlaceVisitStats->GetInt32(1, &hidden);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 oldFrecency = 0;
-  rv = mDBGetPlaceVisitStats->GetInt32(2, &oldFrecency);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = UpdateFrecencyInternal(aPlaceId, typed, hidden, oldFrecency,
-                              aIsBookmarked);
+  nsCOMPtr<AsyncStatementCallbackNotifier> callback =
+    new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  nsresult rv = mDBConn->ExecuteAsync(stmts, NS_ARRAY_LENGTH(stmts), callback,
+                                      getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+#undef ASYNC_BIND
 }
 
-nsresult
-nsNavHistory::UpdateFrecencyInternal(PRInt64 aPlaceId, PRInt32 aTyped,
-  PRInt32 aHidden, PRInt32 aOldFrecency, PRBool aIsBookmarked)
-{
-  PRInt32 visitCountForFrecency = 0;
-  // Since visit_count excludes visit with visit_type NOT IN(0,4,7,8), it can't
-  // be uses for calculating frecency.  Instead it must must be recalculated.
-  nsresult rv = CalculateFullVisitCount(aPlaceId, &visitCountForFrecency);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 newFrecency = 0;
-  rv = CalculateFrecencyInternal(aPlaceId, aTyped, visitCountForFrecency,
-                                 aIsBookmarked, &newFrecency);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // save ourselves the UPDATE if the frecency hasn't changed
-  // One way this can happen is with livemarks.
-  // when we added the livemark, the frecency was 0.  
-  // On refresh, when we remove and then add the livemark items,
-  // the frecency (for a given moz_places) will not have changed
-  // (if we've never visited that place).
-  // Additionally, don't bother overwriting a valid frecency with an invalid one
-  if ((newFrecency == aOldFrecency) || (aOldFrecency && newFrecency < 0))
-    return NS_OK;
-
-  mozStorageStatementScoper updateScoper(mDBUpdateFrecencyAndHidden);
-  rv = mDBUpdateFrecencyAndHidden->BindInt64ByName(
-    NS_LITERAL_CSTRING("page_id"), aPlaceId
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBUpdateFrecencyAndHidden->BindInt32ByName(
-    NS_LITERAL_CSTRING("frecency"), newFrecency
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // if we calculated a non-zero frecency we should unhide this place
-  // so that previously hidden (non-livebookmark item) bookmarks 
-  // will now appear in autocomplete
-  // if we calculated a zero frecency, we re-use the old hidden value.
-  rv = mDBUpdateFrecencyAndHidden->BindInt32ByName(
-    NS_LITERAL_CSTRING("hidden"),  newFrecency ? 0 /* not hidden */ : aHidden
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBUpdateFrecencyAndHidden->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
-                                        PRInt32 aTyped,
-                                        PRInt32 aVisitCount,
-                                        PRBool aIsBookmarked,
-                                        PRInt32 *aFrecency)
-{
-  PRTime normalizedNow = NormalizeTimeRelativeToday(GetNow());
-
-  float pointsForSampledVisits = 0.0;
-
-  if (aPlaceId != -1) {
-    PRInt32 numSampledVisits = 0;
-
-    mozStorageStatementScoper scoper(mDBVisitsForFrecency);
-    nsresult rv = mDBVisitsForFrecency->BindInt64ByName(
-      NS_LITERAL_CSTRING("page_id"), aPlaceId
-    );
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // mDBVisitsForFrecency is limited by the browser.frecency.numVisits pref
-    PRBool hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(mDBVisitsForFrecency->ExecuteStep(&hasMore)) 
-           && hasMore) {
-      numSampledVisits++;
-
-      PRInt32 visitType = mDBVisitsForFrecency->AsInt32(1);
-
-      PRInt32 bonus = 0;
-
-      switch (visitType) {
-        case nsINavHistoryService::TRANSITION_EMBED:
-          bonus = mEmbedVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_FRAMED_LINK:
-          bonus = mFramedLinkVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_LINK:
-          bonus = mLinkVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_TYPED:
-          bonus = mTypedVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_BOOKMARK:
-          bonus = mBookmarkVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_DOWNLOAD:
-          bonus = mDownloadVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT:
-          bonus = mPermRedirectVisitBonus;
-          break;
-        case nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY:
-          bonus = mTempRedirectVisitBonus;
-          break;
-        default:
-          // 0 == undefined (see bug #375777 for details)
-          NS_WARN_IF_FALSE(!visitType, "new transition but no weight for frecency");
-          bonus = mDefaultVisitBonus;
-          break;
-      }
-
-      // Always add the bookmark visit bonus.
-      if (aIsBookmarked)
-        bonus += mBookmarkVisitBonus;
-
-#ifdef DEBUG_FRECENCY
-      printf("CalculateFrecency() for place %lld has a bonus of %d\n", aPlaceId, bonus);
-#endif
-
-      // if bonus was zero, we can skip the work to determine the weight
-      if (bonus) {
-        PRTime visitDate = mDBVisitsForFrecency->AsInt64(0);
-        PRInt64 ageInDays = GetAgeInDays(normalizedNow, visitDate);
-
-        PRInt32 weight = 0;
-
-        if (ageInDays <= mFirstBucketCutoffInDays)
-          weight = mFirstBucketWeight;
-        else if (ageInDays <= mSecondBucketCutoffInDays)
-          weight = mSecondBucketWeight;
-        else if (ageInDays <= mThirdBucketCutoffInDays)
-          weight = mThirdBucketWeight;
-        else if (ageInDays <= mFourthBucketCutoffInDays) 
-          weight = mFourthBucketWeight;
-        else
-          weight = mDefaultWeight;
-
-        pointsForSampledVisits += (float)(weight * (bonus / 100.0));
-      }
-    }
-
-    if (numSampledVisits) {
-      // fix for bug #412219
-      if (!pointsForSampledVisits) {
-        // For URIs with zero points in the sampled recent visits
-        // but "browsing" type visits outside the sampling range, set
-        // frecency to -visit_count, so they're still shown in autocomplete.
-        PRInt32 visitCount = 0;
-        mozStorageStatementScoper scoper(mDBGetIdPageInfo);
-        rv = mDBGetIdPageInfo->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        PRBool hasVisits = PR_TRUE;
-        if (NS_SUCCEEDED(mDBGetIdPageInfo->ExecuteStep(&hasVisits)) && hasVisits) {
-          rv = mDBGetIdPageInfo->GetInt32(nsNavHistory::kGetInfoIndex_VisitCount,
-                                          &visitCount);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        // If we don't have visits set to 0
-        *aFrecency = -visitCount;
-      }
-      else {
-        // Estimate frecency using the last few visits.
-        // Use NS_ceilf() so that we don't round down to 0, which
-        // would cause us to completely ignore the place during autocomplete.
-        *aFrecency = (PRInt32) NS_ceilf(aVisitCount * NS_ceilf(pointsForSampledVisits) / numSampledVisits);
-      }
-
-#ifdef DEBUG_FRECENCY
-      printf("CalculateFrecency() for place %lld: %d = %d * %f / %d\n", aPlaceId, *aFrecency, aVisitCount, pointsForSampledVisits, numSampledVisits);
-#endif
-
-      return NS_OK;
-    }
-  }
- 
-  // XXX the code below works well for guessing the frecency on import, and we'll correct later once we have
-  // visits.
-  // what if we don't have visits and we never visit?  we could end up with a really high value
-  // that keeps coming up in ac results?  only do this on import?  something to figure out.
-  PRInt32 bonus = 0;
-
-  // not the same logic above, as a single visit could not be both
-  // a bookmark visit and a typed visit.  but when estimating a frecency
-  // for a place that doesn't have any visits, this will make it so
-  // something bookmarked and typed will have a higher frecency than
-  // something just typed or just bookmarked.
-  if (aIsBookmarked)
-    bonus += mUnvisitedBookmarkBonus;
-  if (aTyped)
-    bonus += mUnvisitedTypedBonus;
-
-  // assume "now" as our ageInDays, so use the first bucket.
-  pointsForSampledVisits = mFirstBucketWeight * (bonus / (float)100.0); 
-   
-  // for a unvisited bookmark, produce a non-zero frecency
-  // so that unvisited bookmarks show up in URL bar autocomplete
-  if (!aVisitCount && aIsBookmarked)
-    aVisitCount = 1;
-
-  // use NS_ceilf() so that we don't round down to 0, which
-  // would cause us to completely ignore the place during autocomplete
-  *aFrecency = (PRInt32) NS_ceilf(aVisitCount * NS_ceilf(pointsForSampledVisits));
-#ifdef DEBUG_FRECENCY
-  printf("CalculateFrecency() for unvisited: frecency %d = %f points (b: %d, t: %d) * visit count %d\n", *aFrecency, pointsForSampledVisits, aIsBookmarked, aTyped, aVisitCount);
-#endif
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::CalculateFrecency(PRInt64 aPlaceId,
-                                PRInt32 aTyped,
-                                PRInt32 aVisitCount,
-                                nsCAutoString &aURL,
-                                PRInt32 *aFrecency)
-{
-  *aFrecency = 0;
-
-  PRBool isBookmark = PR_FALSE;
-
-  // determine if the place is a (non-livemark item) bookmark and prevent
-  // place: queries from showing up in the URL bar autocomplete results
-  if (!IsQueryURI(aURL) && aPlaceId != -1) {
-    nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bs, NS_ERROR_OUT_OF_MEMORY);
-    isBookmark = bs->IsRealBookmark(aPlaceId);
-  }
-
-  nsresult rv = CalculateFrecencyInternal(aPlaceId, aTyped, aVisitCount,
-                                          isBookmark, aFrecency);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
 
 nsresult
 nsNavHistory::FixInvalidFrecencies()
 {
-  mozStorageTransaction transaction(mDBConn, PR_TRUE);
-
   // Find all places with invalid frecencies (frecency < 0) that occur when:
   // 1) we've done "clear private data"
   // 2) we've expired or deleted visits
@@ -7843,78 +7242,25 @@ nsNavHistory::FixInvalidFrecencies()
   // Note, we are not limiting ourselves to places with visits because we may
   // not have any if the place is a bookmark and we expired or deleted all the
   // visits.
-  nsCOMPtr<mozIStorageStatement> invalidFrecencies;
+  nsCOMPtr<mozIStorageStatement> fixInvalidFrecenciesStmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id, typed, hidden, frecency, url "
-      "FROM moz_places_view "
+      "UPDATE moz_places "
+      "SET frecency = CALCULATE_FRECENCY(id) "
       "WHERE frecency < 0"),
-    getter_AddRefs(invalidFrecencies));
+    getter_AddRefs(fixInvalidFrecenciesStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(invalidFrecencies->ExecuteStep(&hasMore)) && hasMore) {
-    PRInt64 placeId = invalidFrecencies->AsInt64(0);
-    PRInt32 typed = invalidFrecencies->AsInt32(1);
-    PRInt32 hidden = invalidFrecencies->AsInt32(2);
-    PRInt32 oldFrecency = invalidFrecencies->AsInt32(3);
-    nsCAutoString url;
-    invalidFrecencies->GetUTF8String(4, url);
-
-    PRBool isBook = PR_FALSE;
-    if (!IsQueryURI(url)) {
-      nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-      isBook = bookmarks->IsRealBookmark(placeId);
-    }
-
-    rv = UpdateFrecencyInternal(placeId, typed, hidden, oldFrecency, isBook);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<AsyncStatementCallbackNotifier> callback =
+    new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = fixInvalidFrecenciesStmt->ExecuteAsync(callback, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 
 #ifdef MOZ_XUL
-
-namespace {
-
-// Used to notify a topic to system observers on async execute completion.
-class AutoCompleteStatementCallbackNotifier : public AsyncStatementCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_ASYNCSTATEMENTCALLBACK
-};
-
-NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
-                   mozIStorageStatementCallback)
-
-NS_IMETHODIMP
-AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
-{
-  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  if (observerService) {
-    (void)observerService->NotifyObservers(nsnull,
-                                           TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED,
-                                           nsnull);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AutoCompleteStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
-{
-  NS_ASSERTION(PR_FALSE, "You cannot use AutoCompleteStatementCallbackNotifier to get async statements resultset");
-  return NS_OK;
-}
-
-} // anonymous namespace
 
 nsresult
 nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
@@ -7942,8 +7288,8 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We do the update asynchronously and we do not care about failures.
-  nsCOMPtr<AutoCompleteStatementCallbackNotifier> callback =
-    new AutoCompleteStatementCallbackNotifier();
+  nsCOMPtr<AsyncStatementCallbackNotifier> callback =
+    new AsyncStatementCallbackNotifier(TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED);
   nsCOMPtr<mozIStoragePendingStatement> canceler;
   rv = stmt->ExecuteAsync(callback, getter_AddRefs(canceler));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -7962,15 +7308,9 @@ nsNavHistory::GetDBFeedbackIncrease()
     "INSERT OR REPLACE INTO moz_inputhistory "
       // use_count will asymptotically approach the max of 10.
       "SELECT h.id, IFNULL(i.input, :input_text), IFNULL(i.use_count, 0) * .9 + 1 "
-      "FROM moz_places_temp h "
-      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = :input_text "
-      "WHERE url = :page_url "
-      "UNION ALL "
-      "SELECT h.id, IFNULL(i.input, :input_text), IFNULL(i.use_count, 0) * .9 + 1 "
       "FROM moz_places h "
       "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = :input_text "
-      "WHERE url = :page_url "
-        "AND h.id NOT IN (SELECT id FROM moz_places_temp)"),
+      "WHERE url = :page_url "),
     getter_AddRefs(mDBFeedbackIncrease));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -8038,27 +7378,14 @@ nsNavHistory::GetDBVisitToVisitResult()
   if (mDBVisitToVisitResult)
     return mDBVisitToVisitResult;
 
-  // mDBVisitToVisitResult, should match kGetInfoIndex_* (see GetQueryResults)
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique visit ids.
+  // Should match kGetInfoIndex_* (see GetQueryResults)
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
           "v.visit_date, f.url, v.session, null, null, null, null "
-        "FROM moz_places_temp h "
-        "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
-        "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE v.id = :visit_id OR v_t.id = :visit_id "
-      "UNION ALL "
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-          "v.visit_date, f.url, v.session, null, null, null, null "
         "FROM moz_places h "
-        "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
-        "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
+        "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE v.id = :visit_id OR v_t.id = :visit_id "
-      "LIMIT 1"),
+        "WHERE v.id = :visit_id "),
     getter_AddRefs(mDBVisitToVisitResult));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -8071,27 +7398,14 @@ nsNavHistory::GetDBVisitToURLResult()
   if (mDBVisitToURLResult)
     return mDBVisitToURLResult;
 
-  // mDBVisitToURLResult, should match kGetInfoIndex_* (see GetQueryResults)
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique visit ids.
+  // Should match kGetInfoIndex_* (see GetQueryResults)
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
              "h.last_visit_date, f.url, null, null, null, null, null, null "
-        "FROM moz_places_temp h "
-        "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
-        "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-        "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE v.id = :visit_id OR v_t.id = :visit_id "
-      "UNION ALL "
-      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-             "h.last_visit_date, f.url, null, null, null, null, null, null "
         "FROM moz_places h "
-        "LEFT JOIN moz_historyvisits_temp v_t ON h.id = v_t.place_id "
-        "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
+        "JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-        "WHERE v.id = :visit_id OR v_t.id = :visit_id "
-      "LIMIT 1"),
+        "WHERE v.id = :visit_id "),
     getter_AddRefs(mDBVisitToURLResult));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -8109,14 +7423,6 @@ nsNavHistory::GetDBBookmarkToUrlResult()
   // for perf reasons, LIMIT 1 will discard duplicates faster since we
   // have unique place ids.
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
-        "b.dateAdded, b.lastModified, b.parent, null "
-      "FROM moz_bookmarks b "
-      "JOIN moz_places_temp h ON b.fk = h.id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE b.id = :item_id "
-      "UNION ALL "
       "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
         "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
         "b.dateAdded, b.lastModified, b.parent, null "
@@ -8153,11 +7459,14 @@ nsNavHistory::FinalizeStatements() {
     mDBVisitToVisitResult,
     mDBBookmarkToUrlResult,
     mDBVisitsForFrecency,
-    mDBUpdateFrecencyAndHidden,
+    mDBUpdateFrecency,
+    mDBUpdateHiddenOnFrecency,
     mDBGetPlaceVisitStats,
-    mDBFullVisitCount,
+    mDBPageInfoForFrecency,
     mDBRegisterOpenPage,
     mDBUnregisterOpenPage,
+    mDBAsyncThreadPageInfoForFrecency,
+    mDBAsyncThreadVisitsForFrecency,
   };
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {
