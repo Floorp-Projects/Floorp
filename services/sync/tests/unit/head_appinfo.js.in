@@ -62,3 +62,12 @@ registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"
 // Provide resource://services-sync if it isn't already available
 let weaveService = Cc["@mozilla.org/weave/service;1"].getService();
 weaveService.wrappedJSObject.addResourceAlias();
+
+
+// Some tests hang on OSX debug builds. See bug 604565.
+let DISABLE_TESTS_BUG_604565 = false;
+#ifdef XP_MACOSX
+#ifdef MOZ_DEBUG_SYMBOLS
+DISABLE_TESTS_BUG_604565 = true;
+#endif
+#endif
