@@ -83,6 +83,12 @@ textbox[isempty="true"] {
   color: gray;
 }
 
+textbox.search-bar {
+  border: 2px solid transparent;
+  background-color: #f9f9f9;
+  background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
+}
+
 /* sidebars spacer --------------------------------------------------------- */
 .sidebar-spacer {
   background-color: #767973;

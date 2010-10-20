@@ -132,8 +132,6 @@ toolbarbutton.urlbar-button {
 #urlbar-container[mode="edit"] > #urlbar-edit {
   border-left: none;
   border-right: 1px solid rgba(0,0,0,0.5);
-  background-color: #f9f9f9;
-  background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
 }
 
 #urlbar-container[mode="edit"] > #urlbar-edit:-moz-locale-dir(ltr) {
@@ -229,8 +227,10 @@ toolbarbutton.urlbar-button {
   background: transparent;
 }
 
-#urlbar-edit:not([open]):hover:active {
-  background-color: #8db8d8;
+#urlbar-edit[open],
+#urlbar-edit:hover:active {
+  background-color: #f9f9f9;
+  background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
 }
 
 #urlbar-edit > hbox > .textbox-input-box {
@@ -1180,12 +1180,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
 #content-navigator > #select-container > #select-spacer,
 #content-navigator > #select-container > #select-container-inner > #select-buttons {
   display: none;
-}
-
-#find-helper-textbox {
-  border: 2px solid transparent;
-  background-color: #f9f9f9;
-  background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
 }
 
 #find-helper-textbox[status="1"] { /* Ci.nsITypeAheadFind.FIND_NOTFOUND */
