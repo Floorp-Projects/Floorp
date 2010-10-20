@@ -286,11 +286,6 @@ var Browser = {
       // bound it to a sane place, but not where we were when the resize began :(
       Browser.hideTitlebar();
 
-      // XXX Hack. Browser also behaves badly on resize.
-      let browser = getBrowser();
-      browser.style.display = "none";
-      browser.style.display = "block";
-
       // We want to keep the current focused element into view if possible
       let currentElement = document.activeElement;
       let [scrollbox, scrollInterface] = ScrollUtils.getScrollboxFromElement(currentElement);
