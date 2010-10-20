@@ -48,6 +48,7 @@ using RequestHeaderTuples;
 using nsHttpResponseHead;
 using nsHttpAtom;
 using IPC::URI;
+using IPC::InputStream;
 
 namespace mozilla {
 namespace net {
@@ -68,8 +69,8 @@ parent:
             PRUint32            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
-            nsCString           uploadStreamData,
-            PRInt32             uploadStreamInfo,
+            InputStream         uploadStream,
+            PRBool              uploadStreamHasHeaders,
             PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,

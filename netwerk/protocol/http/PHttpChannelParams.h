@@ -49,8 +49,10 @@
 #include "nsHttpHeaderArray.h"
 #include "nsHttpResponseHead.h"
 
-#include "nsIStringStream.h"
-#include "nsISupportsPrimitives.h"
+#include "nsStringStream.h"
+#include "nsIIPCSerializable.h"
+#include "nsIClassInfo.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {
@@ -195,56 +197,109 @@ struct ParamTraits<nsHttpResponseHead>
   }
 };
 
+class InputStream {
+public:
+  InputStream() : mStream(nsnull) {}
+  InputStream(nsIInputStream* aStream) : mStream(aStream) {}
+  operator nsIInputStream*() const { return mStream.get(); }
+
+  friend struct ParamTraits<InputStream>;
+
+private:
+  // Unimplemented
+  InputStream& operator=(InputStream&);
+
+  nsCOMPtr<nsIInputStream> mStream;
+};
+
 template<>
-struct ParamTraits<nsIStringInputStream*>
+struct ParamTraits<InputStream>
 {
-  typedef nsIStringInputStream* paramType;
+  typedef InputStream paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    nsCAutoString value;
-    nsCOMPtr<nsISupportsCString> cstr(do_QueryInterface(aParam));
+    bool isNull = !aParam.mStream;
+    aMsg->WriteBool(isNull);
 
-    if (cstr) {
-      cstr->GetData(value);
-    } else {
-      PRUint32 length;
-      aParam->Available(&length);
-      value.SetLength(length);
-      NS_ASSERTION(value.Length() == length, "SetLength failed");
-      char *c = value.BeginWriting();
-      PRUint32 bytesRead;
-#ifdef DEBUG
-      nsresult rv = 
-#endif
-      aParam->Read(c, length, &bytesRead);
-      NS_ASSERTION(NS_SUCCEEDED(rv) && bytesRead == length, "Read failed");
+    if (isNull)
+      return;
+
+    nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(aParam.mStream);
+    bool isSerializable = !!serializable;
+    WriteParam(aMsg, isSerializable);
+
+    if (!serializable) {
+      NS_WARNING("nsIInputStream implementation doesn't support nsIIPCSerializable; falling back to copying data");
+
+      nsCString streamString;
+      PRUint32 bytes;
+
+      aParam.mStream->Available(&bytes);
+      if (bytes > 0) {
+        nsresult rv = NS_ReadInputStreamToString(aParam.mStream, streamString, bytes);
+        NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't read input stream into a string!");
+      }
+
+      WriteParam(aMsg, streamString);
+      return;
     }
 
-    WriteParam(aMsg, value);
+    nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aParam.mStream);
+    char cidStr[NSID_LENGTH];
+    nsCID cid;
+    nsresult rv = classInfo->GetClassIDNoAlloc(&cid);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "All IPDL streams must report a valid class ID");
+
+    cid.ToProvidedString(cidStr);
+    WriteParam(aMsg, nsCAutoString(cidStr));
+    serializable->Write(aMsg);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    nsCAutoString value;
-    if (!ReadParam(aMsg, aIter, &value))
+    bool isNull;
+    if (!ReadParam(aMsg, aIter, &isNull))
       return false;
 
-    nsresult rv;
+    if (isNull) {
+      aResult->mStream = nsnull;
+      return true;
+    }
 
-    nsCOMPtr<nsIStringInputStream> stream
-      (do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
-    if (NS_FAILED(rv))
+    bool isSerializable;
+    if (!ReadParam(aMsg, aIter, &isSerializable))
       return false;
 
-    rv = stream->SetData(value.get(), value.Length());
-    if (NS_FAILED(rv))
-      return false;
+    nsCOMPtr<nsIInputStream> stream;
+    if (!isSerializable) {
+      nsCString streamString;
+      if (!ReadParam(aMsg, aIter, &streamString))
+        return false;
 
-    stream.forget(aResult);
+      nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), streamString);
+      if (NS_FAILED(rv))
+        return false;
+    } else {
+      nsCAutoString cidStr;
+      nsCID cid;
+      if (!ReadParam(aMsg, aIter, &cidStr) ||
+          !cid.Parse(cidStr.get()))
+        return false;
+
+      stream = do_CreateInstance(cid);
+      if (!stream)
+        return false;
+      nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(stream);
+      if (!serializable || !serializable->Read(aMsg, aIter))
+        return false;
+    }
+
+    stream.swap(aResult->mStream);
     return true;
   }
 };
+
 } // namespace IPC
 
 #endif // mozilla_net_PHttpChannelParams_h

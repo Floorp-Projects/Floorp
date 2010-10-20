@@ -81,10 +81,6 @@
 namespace mozilla {
 namespace net {
 
-typedef enum { eUploadStream_null = -1,
-               eUploadStream_hasNoHeaders = 0,
-               eUploadStream_hasHeaders = 1 } UploadStreamInfoType;
-
 /*
  * This class is a partial implementation of nsIHttpChannel.  It contains code
  * shared by nsHttpChannel and HttpChannelChild. 
