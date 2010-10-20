@@ -65,8 +65,6 @@ protected:
   virtual bool DeallocPCookieService(PCookieServiceChild*);
   virtual PWyciwygChannelChild* AllocPWyciwygChannel();
   virtual bool DeallocPWyciwygChannel(PWyciwygChannelChild*);
-  virtual PFTPChannelChild* AllocPFTPChannel();
-  virtual bool DeallocPFTPChannel(PFTPChannelChild*);
 };
 
 /**

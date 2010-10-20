@@ -123,8 +123,4 @@ private:
 
 extern nsFtpProtocolHandler *gFtpHandler;
 
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* gFTPLog;
-#endif
-
 #endif // !nsFtpProtocolHandler_h__

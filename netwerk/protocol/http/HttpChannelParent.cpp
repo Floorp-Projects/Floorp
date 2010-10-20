@@ -102,8 +102,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const PRUint32&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
-                                 const IPC::InputStream&    uploadStream,
-                                 const PRBool&              uploadStreamHasHeaders,
+                                 const nsCString&           uploadStreamData,
+                                 const PRInt32&             uploadStreamInfo,
                                  const PRUint16&            priority,
                                  const PRUint8&             redirectionLimit,
                                  const PRBool&              allowPipelining,
@@ -158,10 +158,16 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
 
-  nsCOMPtr<nsIInputStream> stream(uploadStream);
-  if (stream) {
+  if (uploadStreamInfo != eUploadStream_null) {
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewPostDataStream(getter_AddRefs(stream), false, uploadStreamData, 0);
+    if (NS_FAILED(rv))
+      return SendCancelEarly(rv);
+
     httpChan->InternalSetUploadStream(stream);
-    httpChan->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
+    // We're casting uploadStreamInfo into PRBool here on purpose because
+    // we know possible values are either 0 or 1. See uploadStreamInfoType.
+    httpChan->SetUploadStreamHasHeaders((PRBool) uploadStreamInfo);
   }
 
   if (priority != nsISupportsPriority::PRIORITY_NORMAL)
