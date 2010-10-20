@@ -5437,15 +5437,81 @@ HUDConsoleObserver = {
 
     if (aSubject instanceof Ci.nsIScriptError) {
       switch (aSubject.category) {
+        // We ignore chrome-originating errors as we only
+        // care about content.
         case "XPConnect JavaScript":
+          // nsXPCWrappedJSClass::CheckForException()
+          // nsXPCComponents_Utils::ReportError()
         case "component javascript":
         case "chrome javascript":
-          // we ignore these CHROME-originating errors as we only
-          // care about content
+          // ScriptErrorEvent in nsJSEnvironment.cpp
+        case "chrome registration":
+          // nsChromeRegistry::LogMessageWithContext()
+        case "XBL":
+          // nsXBLService
+        case "XBL Prototype Handler":
+          // nsXBLPrototypeHandler::ReportKeyConflict()
+        case "XBL Content Sink":
+          // nsXBLContentSink
+        case "xbl javascript":
+          // XBL_ProtoErrorReporter in nsXBLDocumentInfo.cpp
+        case "FrameConstructor":
+          // nsCSSFrameConstructor::ProcessChildren()
           return;
+
+        // Display the messages from the following categories.
         case "HUDConsole":
         case "CSS Parser":
+          // nsCSSScanner::OutputError()
+        case "CSS Loader":
+          // SheetLoadData::OnStreamComplete()
         case "content javascript":
+          // ScriptErrorEvent in nsJSEnvironment.cpp
+        case "DOM Events":
+          // nsHtml5StreamParser::ContinueAfterScripts()
+          // ReportUseOfDeprecatedMethod() in nsGlobalWindow.cpp,
+          // nsHTMLDocument.cpp, nsDOMEvent.cpp
+          // nsDOMEvent::ReportWrongPropertyAccessWarning()
+          // nsHTMLDocument::WriteCommon()
+        case "DOM:HTML":
+          // PrintWarningOnConsole() in nsDOMClassInfo.cpp
+        case "DOM Window":
+          // nsGlobalWindow::Close()
+          // TODO: This message is never displayed because its origin cannot be
+          // determined, no sourceName is given. See bug 603711.
+        case "SVG":
+          // nsSVGUtils::ReportToConsole()
+          // nsSVGElement::ReportAttributeParseFailure()
+        case "ImageMap":
+          // logMessage() in nsImageMap.cpp
+        case "HTML":
+          // SendJSWarning() in nsFormSubmission.cpp
+        case "Canvas":
+          // nsCanvasRenderingContext2D::SetStyleFromStringOrInterface()
+          // TODO: This message is never displayed because its origin cannot be
+          // determined, no sourceName is given. See bug 603714.
+        case "DOM3 Load":
+          // ReportUseOfDeprecatedMethod() in nsXMLDocument.cpp
+          // TODO: This message is generally not displayed because its origin
+          // (sourceName) points to the previous URI of the document object -
+          // not the URI of the page in which the script tries to load the new
+          // URI. See bug 603720.
+        case "DOM":
+          // nsDocument::ReportEmptyGetElementByIdArg()
+          //   TODO: This message is never displayed because its origin cannot
+          //   be determined, no sourceName is given. See bug 603723.
+          // nsXMLDocument::Load() - for chrome code.
+        case "malformed-xml":
+          // nsExpatDriver::HandleError()
+          // TODO: This message is only displayed when its origin (sourceName)
+          // is the same as the tab location for which a Web Console is open.
+          // See bug 603727.
+        case "DOM Worker javascript":
+          // nsReportErrorRunnable and DOMWorkerErrorReporter in
+          // nsDOMThreadService.cpp
+          // TODO: This message is never displayed because its origin
+          // (sourceName) points us only to the script that thrown the exception
+          // - no way to associate it to a specific tab. See bug 603730.
           HUDService.reportConsoleServiceContentScriptError(aSubject);
           return;
         default:

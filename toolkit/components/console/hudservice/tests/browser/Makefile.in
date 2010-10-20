@@ -92,6 +92,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
 	browser_webconsole_bug_588342_document_focus.js \
+	browser_webconsole_bug_595934_message_categories.js \
 	head.js \
 	$(NULL)
 
@@ -116,6 +117,15 @@ _BROWSER_TEST_PAGES = \
 	test-bug-593003-iframe-wrong-hud-iframe.html \
 	test-console-replaced-api.html \
 	test-own-console.html \
+	test-bug-595934-dom-events.html \
+	test-bug-595934-css-loader.html \
+	test-bug-595934-css-loader.css \
+	test-bug-595934-css-loader.css^headers^ \
+	test-bug-595934-dom-html.html \
+	test-bug-595934-imagemap.html \
+	test-bug-595934-html.html \
+	test-bug-595934-malformedxml.xhtml \
+	test-bug-595934-svg.xhtml \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
