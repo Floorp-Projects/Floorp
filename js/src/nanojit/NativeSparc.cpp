@@ -503,7 +503,7 @@ namespace nanojit
         return tt;
     }
 
-    inline void Assembler::JMP(void *t) {
+    void Assembler::JMP(void *t) {
         if (!t) {
             JMP_long_placeholder();
         } else {
