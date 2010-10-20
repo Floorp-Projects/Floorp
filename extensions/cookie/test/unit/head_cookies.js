@@ -36,6 +36,26 @@ function do_check_throws(f, result, stack)
   do_throw("expected result " + result + ", none thrown", stack);
 }
 
+// Helper to step a generator function and catch a StopIteration exception.
+function do_run_generator(generator)
+{
+  try {
+    generator.next();
+  } catch (e) {
+    if (e != StopIteration)
+      do_throw("caught exception " + e, Components.stack.caller);
+  }
+}
+
+// Helper to finish a generator function test.
+function do_finish_generator_test(generator)
+{
+  do_execute_soon(function() {
+    generator.close();
+    do_test_finished();
+  });
+}
+
 function _observer(generator, service, topic) {
   Services.obs.addObserver(this, topic, false);
 
@@ -51,14 +71,8 @@ _observer.prototype = {
     Services.obs.removeObserver(this, this.topic);
 
     // Continue executing the generator function.
-    if (this.generator) {
-      try {
-        this.generator.next();
-      } catch (e) {
-        if (e != StopIteration)
-          do_throw("caught exception " + e, Components.stack.caller);
-      }
-    }
+    if (this.generator)
+      do_run_generator(this.generator);
 
     this.generator = null;
     this.service = null;
