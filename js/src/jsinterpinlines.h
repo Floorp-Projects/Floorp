@@ -131,23 +131,17 @@ JSStackFrame::resetInvokeCallFrame()
 }
 
 inline void
-JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flagsArg)
+JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 flagsArg,
+                                      void *ncode)
 {
     JS_ASSERT((flagsArg & ~(JSFRAME_CONSTRUCTING |
                             JSFRAME_FUNCTION |
                             JSFRAME_OVERFLOW_ARGS |
                             JSFRAME_UNDERFLOW_ARGS)) == 0);
-    JSFrameRegs *regs = cx->regs;
 
-    /* Initialize the caller half of the stack frame members. */
     flags_ = JSFRAME_FUNCTION | flagsArg;
-    args.nactual = nactual;  /* only need to write if over/under-flow */
-    prev_ = regs->fp;
-    JS_ASSERT(!hasImacropc());
-    JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
-
-    JS_ASSERT(!hasCallObj());
+    prev_ = cx->regs->fp;
+    ncode_ = ncode;
 }
 
 /*
@@ -155,10 +149,11 @@ JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flag
  * of slow paths before initializing the rest of the members.
  */
 inline void
-JSStackFrame::initCallFrameEarlyPrologue(JSFunction *fun, void *ncode)
+JSStackFrame::initCallFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
 {
     exec.fun = fun;
-    ncode_ = ncode;
+    if (flags_ & (JSFRAME_OVERFLOW_ARGS | JSFRAME_UNDERFLOW_ARGS))
+        args.nactual = nactual;
 }
 
 /*
