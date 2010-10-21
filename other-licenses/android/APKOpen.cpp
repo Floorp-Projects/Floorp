@@ -48,11 +48,14 @@
 #include <unistd.h>
 #include <zlib.h>
 #include "dlfcn.h"
+#include "APKOpen.h"
 
 /* compression methods */
 #define STORE    0
 #define DEFLATE  8
 #define LZMA    14
+
+#define NS_EXPORT __attribute__ ((visibility("default")))
 
 struct local_file_header {
   uint32_t signature;
@@ -106,6 +109,7 @@ struct cdir_end {
 
 static size_t zip_size;
 static int zip_fd;
+NS_EXPORT struct mapping_info * lib_mapping;
 
 static void * map_file (const char *file)
 {
@@ -172,8 +176,6 @@ static uint32_t simple_write(int fd, const void *buf, uint32_t count)
   }
   return out_offset;
 }
-
-#define NS_EXPORT __attribute__ ((visibility("default")))
 
 #define SHELL_WRAPPER0(name) \
 typedef void (*name ## _t)(JNIEnv *, jclass); \
@@ -393,14 +395,57 @@ static void * mozload(const char * path, void *zip,
   return handle;
 }
 
+static void *
+extractBuf(const char * path, void *zip,
+           struct cdir_entry *cdir_start, uint16_t cdir_entries)
+{
+  struct cdir_entry *entry = find_cdir_entry(cdir_start, cdir_entries, path);
+  struct local_file_header *file = (struct local_file_header *)(zip + letoh32(entry->offset));
+  void * data = ((void *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
+
+  void * buf = malloc(letoh32(entry->uncompressed_size));
+  if (buf == (void *)-1) {
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't alloc decompression buffer for %s", path);
+    return NULL;
+  }
+  if (letoh16(file->compression) == DEFLATE)
+    extractLib(entry, data, buf);
+  else
+    memcpy(buf, data, letoh32(entry->uncompressed_size));
+
+  return buf;
+}
+
+static int mapping_count = 0;
+static char *file_ids = NULL;
+
+#define MAX_MAPPING_INFO 32
+
+extern "C" void
+report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
+{
+  if (!file_ids || mapping_count >= MAX_MAPPING_INFO)
+    return;
+
+  struct mapping_info *info = &lib_mapping[mapping_count++];
+  info->name = strdup(name);
+  info->base = (uintptr_t)base;
+  info->len = len;
+  info->offset = offset;
+
+  char * entry = strstr(file_ids, name);
+  if (entry)
+    info->file_id = strndup(entry + strlen(name) + 1, 32);
+}
+
 extern "C" void simple_linker_init(void);
 
 static void
 loadLibs(const char *apkName)
 {
-  simple_linker_init();
-
   chdir("/data/data/org.mozilla.fennec");
+
+  simple_linker_init();
 
   struct stat status;
   if (!stat(apkName, &status))
@@ -426,6 +471,11 @@ loadLibs(const char *apkName)
 
   struct cdir_entry *cdir_start = (struct cdir_entry *)(zip + cdir_offset);
 
+#ifdef MOZ_CRASHREPORTER
+  lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
+  file_ids = (char *)extractBuf("lib.id", zip, cdir_start, cdir_entries);
+#endif
+
 #define MOZLOAD(name) mozload("lib/lib" name ".so", zip, cdir_start, cdir_entries)
   MOZLOAD("mozalloc");
   MOZLOAD("nspr4");
@@ -445,6 +495,11 @@ loadLibs(const char *apkName)
 
   close(zip_fd);
 
+#ifdef MOZ_CRASHREPORTER
+  free(file_ids);
+  file_ids = NULL;
+#endif
+
   if (!xul_handle)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libxul!");
 
@@ -459,7 +514,6 @@ loadLibs(const char *apkName)
   GETFUNC(callObserver);
   GETFUNC(removeObserver);
 #undef GETFUNC
-
 #ifdef DEBUG
   gettimeofday(&t1, 0);
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "spent %d total",
