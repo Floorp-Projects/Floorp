@@ -4259,6 +4259,13 @@ mjit::Compiler::jsop_instanceof()
     if (!lhs->isTypeKnown())
         isFalse = frame.testPrimitive(Assembler::Equal, lhs);
 
+    /* Quick test to avoid wrapped objects. */
+    masm.loadPtr(Address(obj, offsetof(JSObject, clasp)), temp);
+    masm.loadPtr(Address(temp, offsetof(Class, ext) +
+                              offsetof(ClassExtension, wrappedObject)), temp);
+    j = masm.branchTestPtr(Assembler::NonZero, temp, temp);
+    stubcc.linkExit(j, Uses(3));
+
     Address protoAddr(obj, offsetof(JSObject, proto));
     Label loop = masm.label();
 

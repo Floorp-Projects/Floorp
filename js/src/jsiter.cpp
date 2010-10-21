@@ -111,7 +111,7 @@ Class js_IteratorClass = {
         NULL,       /* outerObject    */
         NULL,       /* innerObject    */
         iterator_iterator,
-        NULL        /* unused */
+        NULL        /* wrappedObject  */
     }
 };
 
@@ -1170,7 +1170,7 @@ Class js_GeneratorClass = {
         NULL,       /* outerObject    */
         NULL,       /* innerObject    */
         iterator_iterator,
-        NULL        /* unused */
+        NULL,       /* wrappedObject  */
     }
 };
 
