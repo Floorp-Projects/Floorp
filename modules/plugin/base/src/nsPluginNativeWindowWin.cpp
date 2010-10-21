@@ -171,6 +171,7 @@ public:
 };
 
 static PRBool sInMessageDispatch = PR_FALSE;
+static PRBool sInPreviousMessageDispatch = PR_FALSE;
 static UINT sLastMsg = 0;
 
 static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsIPluginInstance * aInst,
@@ -313,14 +314,19 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
     case WM_SETFOCUS:
     case WM_KILLFOCUS: {
-      // RealPlayer can crash, don't process the message for those, see bug 328675
+      // RealPlayer can crash, don't process the message for those,
+      // see bug 328675.
       if (win->mPluginType == nsPluginType_Real && msg == sLastMsg)
         return TRUE;
-      // Make sure setfocus and killfocus get through
-      // even if they are eaten by the plugin
+      // Make sure setfocus and killfocus get through to the widget procedure
+      // even if they are eaten by the plugin. Also make sure we aren't calling
+      // recursively.
       WNDPROC prevWndProc = win->GetPrevWindowProc();
-      if (prevWndProc)
+      if (prevWndProc && !sInPreviousMessageDispatch) {
+        sInPreviousMessageDispatch = PR_TRUE;
         ::CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
+        sInPreviousMessageDispatch = PR_FALSE;
+      }
       break;
     }
 #endif
