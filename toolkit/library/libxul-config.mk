@@ -261,13 +261,13 @@ STATIC_LIBS += morkreader_s
 COMPONENT_LIBS += \
 	places \
 	$(NULL)
-else
+endif
+
 ifdef MOZ_MORK
 ifdef MOZ_XUL
 COMPONENT_LIBS += \
 	mork \
 	$(NULL)
-endif
 endif
 endif
 
