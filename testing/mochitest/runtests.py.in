@@ -675,8 +675,7 @@ toolbar#nav-bar {
     if self.automation.IS_WIN32:
       chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
 
-    temp_file = os.path.join(tempfile.mkdtemp(), "mochikit.manifest")
-    manifestFile = open(temp_file, "w")
+    manifest = os.path.join(options.profilePath, 'tests.manifest')
 
     browser_chrome = ""
     if options.browserChrome:
@@ -693,15 +692,15 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
       print "TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension"
       return None
 
+    manifestFile = open(manifest, "w")
     if self.installTestsJar(options):
       manifestFile.write("content mochitests jar:tests.jar!/content/\n");
     else:
       manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
-    self.installChromeJar(jarDir, browser_chrome, options)
-      
     manifestFile.close()
 
-    return self.installChromeFile(temp_file, options)
+    self.installChromeJar(jarDir, browser_chrome, options)
+    return manifest
 
   def installChromeJar(self, jarDirName, browser_chrome, options):
     """
@@ -720,12 +719,6 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
       shutil.copy(os.path.join(self.SCRIPT_DIRECTORY, 'tests.jar'), options.profilePath)
       return True
     return False
-
-  def installChromeFile(self, filename, options):
-    """ copy tests.manifest to the profile directory so we can auto register with tests.jar """
-    manifest = os.path.join(options.profilePath, 'tests.manifest')
-    shutil.copy(filename, manifest)
-    return manifest
 
   def copyExtraFilesToProfile(self, options):
     "Copy extra files or dirs specified on the command line to the testing profile."
