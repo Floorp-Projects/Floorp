@@ -31,17 +31,21 @@
       <property name="mIgnoreClick" onget="return true;" onset="val;"/>
       <property name="readOnly" onget="return this.inputField.readOnly;">
         <setter><![CDATA[
-          if (val == this.inputField.readOnly)
+          let input = this.inputField;
+          if (val == input.readOnly)
             return;
 
-          this.inputField.readOnly = val;
+          input.readOnly = val;
           val ? this.setAttribute("readonly", "true")
               : this.removeAttribute("readonly");
 
           // This is a workaround needed to cycle focus for the IME state
           // to be set properly (bug 488420)
-          this.inputField.blur();
-          this.inputField.focus();
+          input.blur();
+          input.focus();
+
+          if (val)
+            input.selectionStart = input.selectionEnd = 0;
 
           return val;
         ]]></setter>
@@ -96,6 +100,13 @@
     </implementation>
 
     <handlers>
+      <handler event="ValueChange" phase="bubbling">
+        <![CDATA[
+          if (this.readOnly)
+            this.inputField.selectionStart = this.inputField.selectionEnd = 0;
+        ]]>
+      </handler>
+
       <handler event="text" phase="bubbling">
         <![CDATA[
           if (this.mController.input == this)
@@ -105,7 +116,7 @@
 
       <handler event="focus" phase="bubbling">
         <![CDATA[
-          if (this.clickSelectsAll)
+          if (this.clickSelectsAll && !this.readOnly)
             this.select();
         ]]>
       </handler>
