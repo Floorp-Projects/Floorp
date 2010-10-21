@@ -1439,7 +1439,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowID(PRUint64 *aWindowID)
 {
   NS_ASSERTION(mWindow->IsOuterWindow(), "How did that happen?");
-  *aWindowID = mWindow->mWindowID;
+  *aWindowID = mWindow->WindowID();
   return NS_OK;
 }
 
@@ -1451,7 +1451,7 @@ nsDOMWindowUtils::GetCurrentInnerWindowID(PRUint64 *aWindowID)
   if (!inner) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  *aWindowID = inner->mWindowID;
+  *aWindowID = inner->WindowID();
   return NS_OK;
 }
 
