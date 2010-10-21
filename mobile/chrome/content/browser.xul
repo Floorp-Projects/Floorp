@@ -206,7 +206,7 @@
   </keyset>
 
   <stack flex="1" id="stack">
-    <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1">
+    <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" elasticheight="100" elasticwidth="100" flex="1">
       <vbox class="panel-dark">
         <spacer class="toolbar-height"/>
         <!-- Left toolbar -->

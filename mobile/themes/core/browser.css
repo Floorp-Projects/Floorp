@@ -158,7 +158,7 @@ toolbarbutton.urlbar-button {
 }
 
 .urlbar-cap-button[open="true"],
-.urlbar-cap-button:hover:active {
+.urlbar-cap-button:not([disabled="true"]):hover:active {
   background-image: url("chrome://browser/skin/images/endcap-active-bg.png");
 }
 
@@ -177,7 +177,7 @@ toolbarbutton.urlbar-button {
   -moz-border-radius-bottomright: 8px;
 }
 
-#identity-box[open],
+#identity-box[open="true"],
 #identity-box:hover:active {
   border-right: 1px solid rgba(0, 0, 0, 0.2);
 }
@@ -187,7 +187,7 @@ toolbarbutton.urlbar-button {
   background-image: url("chrome://browser/skin/images/endcap-ssl-default-bg.png");
 }
 
-#identity-box[mode="verifiedIdentity"][open],
+#identity-box[mode="verifiedIdentity"][open="true"],
 #identity-box[mode="verifiedIdentity"]:hover:active {
   background-image: url("chrome://browser/skin/images/endcap-ssl-active-bg.png");
 }
@@ -196,7 +196,7 @@ toolbarbutton.urlbar-button {
   background-image: url("chrome://browser/skin/images/endcap-ev-default-bg.png");
 }
 
-#identity-box[mode="verifiedDomain"][open],
+#identity-box[mode="verifiedDomain"][open="true"],
 #identity-box[mode="verifiedDomain"]:hover:active {
   background-image: url("chrome://browser/skin/images/endcap-ev-active-bg.png");
 }
@@ -227,7 +227,7 @@ toolbarbutton.urlbar-button {
   background: transparent;
 }
 
-#urlbar-edit[open],
+#urlbar-edit[open="true"],
 #urlbar-edit:hover:active {
   background-color: #f9f9f9;
   background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
@@ -257,7 +257,15 @@ toolbarbutton.urlbar-button {
   -moz-border-radius-bottomleft: 8px;
 }
 
-#urlbar-icons:hover:active {
+#urlbar-icons[disabled="true"] {
+  pointer-events: none;
+}
+
+#urlbar-icons[disabled="true"] > toolbarbutton {
+  opacity: 0.5;
+}
+
+#urlbar-icons:not([disabled="true"]):hover:active {
   border-left: 1px solid rgba(0, 0, 0, 0.2);
 }
 
@@ -1502,4 +1510,9 @@ echrome-select-option[disabled="true"] {
 .full-screen {
   position: absolute;
   z-index: 500;
+}
+
+/* elastic scrollboxes */
+#controls-scrollbox > * {
+  box-shadow: rgba(0,0,0,0.4) 3px 3px 3px;
 }
