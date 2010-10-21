@@ -185,8 +185,11 @@ FontEntry::CreateFontEntryFromFace(FT_Face aFace, const PRUint8 *aFontData) {
     FontEntry *fe = new FontEntry(fontName);
     fe->mItalic = aFace->style_flags & FT_STYLE_FLAG_ITALIC;
     fe->mFTFace = aFace;
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+#else
     fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, 0);
-
+#endif
     FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
     cairo_font_face_set_user_data(fe->mFontFace, &key,
                                   userFontData, FTFontDestroyFunc);
