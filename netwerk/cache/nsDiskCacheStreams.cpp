@@ -43,7 +43,6 @@
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
-#include "mozilla/FileUtils.h"
 
 
 
@@ -729,10 +728,6 @@ nsDiskCacheStreamIO::FlushBufferToFile()
         // allocate file
         rv = OpenCacheFile(PR_RDWR | PR_CREATE_FILE, &mFD);
         if (NS_FAILED(rv))  return rv;
-
-        PRInt64 dataSize = mBinding->mCacheEntry->PredictedDataSize();
-        if (dataSize != -1)
-            mozilla::fallocate(mFD, PR_MIN(dataSize, kPreallocateLimit));
     }
     
     // write buffer
