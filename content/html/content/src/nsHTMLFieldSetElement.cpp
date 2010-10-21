@@ -216,13 +216,15 @@ nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 {
   bool firstLegendHasChanged = false;
 
-  if (GetChildAt(aIndex) == mFirstLegend) {
+  if (mFirstLegend && (GetChildAt(aIndex) == mFirstLegend)) {
     // If we are removing the first legend we have to found another one.
-    for (nsIContent* child = mFirstLegend; child;
-         child = child->GetNextSibling()) {
+    nsIContent* child = mFirstLegend->GetNextSibling();
+    mFirstLegend = nsnull;
+    firstLegendHasChanged = true;
+
+    for (; child; child = child->GetNextSibling()) {
       if (child->IsHTML(nsGkAtoms::legend)) {
         mFirstLegend = child;
-        firstLegendHasChanged = true;
         break;
       }
     }
