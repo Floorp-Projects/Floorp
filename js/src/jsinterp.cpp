@@ -2387,6 +2387,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
 #ifndef TRACE_RECORDER
 #define TRACE_RECORDER(cx) (false)
+#define TRACE_PROFILER(cx) (false)
 #endif
 
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
@@ -2411,7 +2412,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         if ((n) <= 0) {                                                       \
             CHECK_BRANCH();                                                   \
             if (op == JSOP_NOTRACE) {                                         \
-                if (TRACE_RECORDER(cx)) {                                     \
+                if (TRACE_RECORDER(cx) || TRACE_PROFILER(cx)) {               \
                     MONITOR_BRANCH();                                         \
                     op = (JSOp) *regs.pc;                                     \
                 }                                                             \
@@ -2504,6 +2505,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
      */
     if (interpMode == JSINTERP_RECORD) {
         JS_ASSERT(TRACE_RECORDER(cx));
+        ENABLE_INTERRUPTS();
+    } else if (interpMode == JSINTERP_PROFILE) {
         ENABLE_INTERRUPTS();
     } else if (TRACE_RECORDER(cx)) {
         AbortRecording(cx, "attempt to reenter interpreter while recording");
@@ -2603,6 +2606,20 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         }
 
 #ifdef JS_TRACER
+#ifdef JS_METHODJIT
+        if (LoopProfile *prof = TRACE_PROFILER(cx)) {
+            LoopProfile::ProfileAction act = prof->profileOperation(cx, op);
+            switch (act) {
+                case LoopProfile::ProfComplete:
+                    leaveOnSafePoint = true;
+                    LEAVE_ON_SAFE_POINT();
+                    break;
+                default:
+                    moreInterrupts = true;
+                    break;
+            }
+        }
+#endif
         if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
             AbortableRecordingStatus status = tr->monitorRecording(op);
             JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
@@ -4674,7 +4691,7 @@ BEGIN_CASE(JSOP_APPLY)
             mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, regs.fp);
             if (status == mjit::Compile_Error)
                 goto error;
-            if (!TRACE_RECORDER(cx) && status == mjit::Compile_Okay) {
+            if (!TRACE_RECORDER(cx) && !TRACE_PROFILER(cx) && status == mjit::Compile_Okay) {
                 interpReturnOK = mjit::JaegerShot(cx);
                 CHECK_INTERRUPT_HANDLER();
                 goto jit_return;
@@ -6153,6 +6170,12 @@ BEGIN_CASE(JSOP_EXCEPTION)
     JS_ASSERT(cx->throwing);
     PUSH_COPY(cx->exception);
     cx->throwing = JS_FALSE;
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
+    if (interpMode == JSINTERP_PROFILE) {
+        leaveOnSafePoint = true;
+        LEAVE_ON_SAFE_POINT();
+    }
+#endif
     CHECK_BRANCH();
 END_CASE(JSOP_EXCEPTION)
 
@@ -6751,6 +6774,10 @@ END_CASE(JSOP_ARRAYPUSH)
      */
     if (TRACE_RECORDER(cx))
         AbortRecording(cx, "error or exception while recording");
+# ifdef JS_METHODJIT
+    if (TRACE_PROFILER(cx))
+        AbortProfiling(cx);
+# endif
 #endif
 
     if (!cx->throwing) {
@@ -6932,6 +6959,10 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT_IF(interpReturnOK && interpMode == JSINTERP_RECORD, !TRACE_RECORDER(cx));
     if (TRACE_RECORDER(cx))
         AbortRecording(cx, "recording out of Interpret");
+# ifdef JS_METHODJIT
+    if (TRACE_PROFILER(cx))
+        AbortProfiling(cx);
+# endif
 #endif
 
     JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), !js_IsActiveWithOrBlock(cx, &regs.fp->scopeChain(), 0));

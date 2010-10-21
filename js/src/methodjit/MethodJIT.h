@@ -281,6 +281,9 @@ struct CallSite
 void
 EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index);
 
+uintN
+GetCallTargetCount(JSScript *script, jsbytecode *pc);
+
 } /* namespace mjit */
 
 } /* namespace js */
