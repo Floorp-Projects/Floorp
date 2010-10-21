@@ -58,7 +58,7 @@ public:
   // LayerD3D9 Implementation
   virtual Layer* GetLayer();
 
-  virtual void RenderLayer();
+  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
 };
 
 } /* layers */
