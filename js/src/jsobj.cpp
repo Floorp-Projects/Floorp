@@ -812,7 +812,7 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
     if (obj->isProxy())
         return JSProxy::obj_toString(cx, obj);
 
-    const char *clazz = obj->getClass()->name;
+    const char *clazz = obj->wrappedObject(cx)->getClass()->name;
     size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
     jschar *chars = (jschar *) cx->malloc((nchars + 1) * sizeof(jschar));
     if (!chars)
@@ -5860,6 +5860,13 @@ JSType
 js_TypeOf(JSContext *cx, JSObject *obj)
 {
     /*
+     * Unfortunately we have wrappers that are native objects and thus don't
+     * overwrite js_TypeOf (i.e. XPCCrossOriginWrapper), so we have to
+     * unwrap here.
+     */
+    obj = obj->wrappedObject(cx);
+
+    /*
      * ECMA 262, 11.4.3 says that any native object that implements
      * [[Call]] should be of type "function". However, RegExp is of
      * type "object", not "function", for Web compatibility.
@@ -5886,7 +5893,7 @@ js_IsDelegate(JSContext *cx, JSObject *obj, const Value &v)
 {
     if (v.isPrimitive())
         return false;
-    JSObject *obj2 = &v.toObject();
+    JSObject *obj2 = v.toObject().wrappedObject(cx);
     while ((obj2 = obj2->getProto()) != NULL) {
         if (obj2 == obj)
             return true;
@@ -6379,6 +6386,16 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     GC_POKE(cx, JS_NULL);
     JS_UNLOCK_OBJ(cx, obj);
     return true;
+}
+
+JSObject *
+JSObject::wrappedObject(JSContext *cx) const
+{
+    if (JSObjectOp op = getClass()->ext.wrappedObject) {
+        if (JSObject *obj = op(cx, const_cast<JSObject *>(this)))
+            return obj;
+    }
+    return const_cast<JSObject *>(this);
 }
 
 JSObject *
