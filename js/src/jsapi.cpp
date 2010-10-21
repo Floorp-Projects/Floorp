@@ -3000,7 +3000,7 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
         return NULL;
 
     /* Construct a regexp statics object for this global object. */
-    JSObject *res = regexp_statics_construct(cx);
+    JSObject *res = regexp_statics_construct(cx, obj);
     if (!res ||
         !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS,
                             ObjectValue(*res))) {
