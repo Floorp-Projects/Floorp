@@ -189,6 +189,16 @@ function getStates(aAccOrElmOrID)
   return [state.value, extraState.value];
 }
 
+/**
+ * Return true if the accessible has given states.
+ */
+function hasState(aAccOrElmOrID, aState, aExtraState)
+{
+  var [state, exstate] = getStates(aAccOrElmOrID);
+  return (aState ? state & aState : true) &&
+    (aExtraState ? exstate & aExtraState : true);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private implementation details
 

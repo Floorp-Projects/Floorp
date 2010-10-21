@@ -2629,16 +2629,11 @@ nsAccessible::Init()
   if (!nsAccessNodeWrap::Init())
     return PR_FALSE;
 
-  nsDocAccessible *docAcc =
+  nsDocAccessible* document =
     GetAccService()->GetDocAccessible(mContent->GetOwnerDoc());
-  NS_ASSERTION(docAcc, "Cannot cache new nsAccessible!");
-  if (!docAcc)
-    return PR_FALSE;
+  NS_ASSERTION(document, "Cannot cache new nsAccessible!");
 
-  void *uniqueID = nsnull;
-  GetUniqueID(&uniqueID);
-
-  return docAcc->CacheAccessible(uniqueID, this);
+  return document ? document->CacheAccessible(this) : PR_FALSE;
 }
 
 void
@@ -2647,10 +2642,8 @@ nsAccessible::Shutdown()
   // Invalidate the child count and pointers to other accessibles, also make
   // sure none of its children point to this parent
   InvalidateChildren();
-  if (mParent) {
-    mParent->InvalidateChildren();
-    UnbindFromParent();
-  }
+  if (mParent)
+    mParent->RemoveChild(this);
 
   nsAccessNodeWrap::Shutdown();
 }
@@ -2699,14 +2692,14 @@ nsAccessible::BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent)
 {
   NS_PRECONDITION(aParent, "This method isn't used to set null parent!");
 
-  if (mParent && mParent != aParent) {
-    // Adopt a child -- we allow this now. the new parent
-    // may be a dom node which wasn't previously accessible but now is.
-    // The old parent's children now need to be invalidated, since 
-    // it no longer owns the child, the new parent does
-    NS_ASSERTION(PR_FALSE, "Adopting child!");
-    if (mParent)
+  if (mParent) {
+    if (mParent != aParent) {
+      NS_ERROR("Adopting child!");
       mParent->InvalidateChildren();
+    } else {
+      NS_ERROR("Binding to the same parent!");
+      return;
+    }
   }
 
   mParent = aParent;
@@ -2907,13 +2900,10 @@ nsAccessible::IsInCache()
 {
   nsDocAccessible *docAccessible =
     GetAccService()->GetDocAccessible(mContent->GetOwnerDoc());
-  if (!docAccessible)
-    return nsnull;
+  if (docAccessible)
+    return docAccessible->GetCachedAccessibleByUniqueID(UniqueID()) ? PR_TRUE : PR_FALSE;
 
-  void *uniqueID = nsnull;
-  GetUniqueID(&uniqueID);
-
-  return docAccessible->GetCachedAccessible(uniqueID) ? PR_TRUE : PR_FALSE;
+  return PR_FALSE;
 }
 #endif
 

@@ -140,11 +140,6 @@
 #include "nsIXULDocument.h"
 #endif /* MOZ_XUL */
 
-#ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
-#include "nsIAccessibleEvent.h"
-#endif /* ACCESSIBILITY */
-
 #include "nsCycleCollectionParticipant.h"
 #include "nsCCUncollectableMarker.h"
 
@@ -3651,21 +3646,6 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
                          PRBool aMutationEvent)
 {
   nsIDocument* doc = GetCurrentDoc();
-#ifdef ACCESSIBILITY
-  // A11y needs to be notified of content removals first, so accessibility
-  // events can be fired before any changes occur
-  if (aNotify && doc) {
-    nsIPresShell *presShell = doc->GetShell();
-    if (presShell && presShell->IsAccessibilityActive()) {
-      nsCOMPtr<nsIAccessibilityService> accService = 
-        do_GetService("@mozilla.org/accessibilityService;1");
-      if (accService) {
-        accService->InvalidateSubtreeFor(presShell, aKid,
-                                         nsIAccessibilityService::NODE_REMOVE);
-      }
-    }
-  }
-#endif
 
   nsMutationGuard::DidMutate();
 

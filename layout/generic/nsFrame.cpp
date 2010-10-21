@@ -6519,8 +6519,12 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // will be enough to make them keyboard scrollable.
         nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
         if (scrollFrame) {
-          nsMargin margin = scrollFrame->GetActualScrollbarSizes();
-          if (margin.top || margin.right || margin.bottom || margin.left) {
+          nsIScrollableFrame::ScrollbarStyles styles =
+            scrollFrame->GetScrollbarStyles();
+          if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
+              styles.mVertical == NS_STYLE_OVERFLOW_AUTO ||
+              styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
+              styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO) {
             // Scroll bars will be used for overflow
             isFocusable = PR_TRUE;
             tabIndex = 0;

@@ -130,7 +130,6 @@
 #endif
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
-#include "nsIAccessibleEvent.h"
 #endif
 
 #include "nsInlineFrame.h"
@@ -6713,6 +6712,17 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 #endif
 
+#ifdef ACCESSIBILITY
+  if (mPresShell->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->ContentRangeInserted(mPresShell, aContainer,
+                                       aFirstNewContent, nsnull);
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -7283,6 +7293,17 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   }
 #endif
 
+#ifdef ACCESSIBILITY
+  if (mPresShell->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->ContentRangeInserted(mPresShell, aContainer,
+                                       aStartChild, aEndChild);
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -7414,7 +7435,17 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       LAYOUT_PHASE_TEMP_REENTER();
       return rv;
     }
-    
+
+#ifdef ACCESSIBILITY
+    if (mPresShell->IsAccessibilityActive()) {
+      nsCOMPtr<nsIAccessibilityService> accService =
+          do_GetService("@mozilla.org/accessibilityService;1");
+      if (accService) {
+        accService->ContentRemoved(mPresShell, aContainer, aChild);
+      }
+    }
+#endif
+
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
     nsIFrame* inflowChild = childFrame;
@@ -9079,28 +9110,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       }
     }
   }
-
-#ifdef ACCESSIBILITY
-  if (mPresShell->IsAccessibilityActive()) {
-    PRUint32 changeType;
-    if (frame) {
-      nsIFrame *newFrame = aContent->GetPrimaryFrame();
-      changeType = newFrame ? nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE :
-                              nsIAccessibilityService::FRAME_HIDE;
-    }
-    else {
-      changeType = nsIAccessibilityService::FRAME_SHOW;
-    }
-
-    // A significant enough change occurred that this part
-    // of the accessible tree is no longer valid.
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->InvalidateSubtreeFor(mPresShell, aContent, changeType);
-    }
-  }
-#endif
 
   return rv;
 }

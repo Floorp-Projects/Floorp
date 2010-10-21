@@ -51,6 +51,7 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
+#include "nsDataHashtable.h"
 
 class AccGroupInfo;
 class EmbeddedObjCollector;
@@ -66,6 +67,8 @@ class nsIView;
 
 typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessible>
   nsAccessibleHashtable;
+typedef nsDataHashtable<nsPtrHashKey<const nsINode>, nsAccessible*>
+  NodeToAccessibleMap;
 
 // see nsAccessible::GetAttrValue
 #define NS_OK_NO_ARIA_VALUE \
@@ -206,6 +209,7 @@ public:
    *                      nsnull if none.
    */
   virtual void SetRoleMapEntry(nsRoleMapEntry *aRoleMapEntry);
+  const nsRoleMapEntry* GetRoleMapEntry() const { return mRoleMapEntry; }
 
   /**
    * Cache children if necessary. Return true if the accessible is defunct.
@@ -290,7 +294,9 @@ public:
       mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull).get() : nsnull;
   }
   PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
+  nsAccessible* GetCachedChildAt(PRUint32 aIndex) const { return mChildren.ElementAt(aIndex); }
   PRBool AreChildrenCached() const { return mChildrenFlags != eChildrenUninitialized; }
+  bool IsBoundToParent() const { return mParent; }
 
 #ifdef DEBUG
   /**
