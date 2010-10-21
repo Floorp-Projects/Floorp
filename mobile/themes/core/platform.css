@@ -351,7 +351,7 @@ radio:last-child:-moz-locale-dir(rtl) {
 }
 
 radio[focused="true"] > .radio-label-box {
-  border: none;
+  border: 1px solid transparent;
 }
 
 /* checkbox radios --------------------------------------------------------- */
@@ -484,6 +484,7 @@ colorpicker > vbox {
 
 menulist {
   -moz-appearance: none !important;
+  -moz-user-focus: ignore;
   min-width: 56px !important; /* button size */
   min-height: 56px !important; /* button size */
   color: #000 !important;
