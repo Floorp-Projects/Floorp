@@ -60,13 +60,13 @@ var teardownModule = function(module) {
 }
 
 var testUndoTabFromContextMenu = function() {
-  // Open the tab browser context menu
-  var tabBar = tabBrowser.getElement({type: 'tabs'});
-  controller.rightClick(tabBar);
+  // Open the tab browser context menu on the current tab
+  var currentTab = tabBrowser.getTab();
+  controller.rightClick(currentTab);
 
   // Check if 'Undo Close Tab' is disabled
   var contextMenuItem = new elementslib.ID(controller.window.document, 'context_undoCloseTab');
-  controller.assertProperty(contextMenuItem, 'disabled', true);
+  controller.assertJSProperty(contextMenuItem, 'disabled', true);
   UtilsAPI.closeContentAreaContextMenu(controller);
 
   // Check 'Recently Closed Tabs' count, should be 0
@@ -93,8 +93,8 @@ var testUndoTabFromContextMenu = function() {
                       {closedTabCount: SessionStoreAPI.getClosedTabCount(controller)});
 
   // Check if 'Undo Close Tab' is enabled
-  controller.rightClick(tabBar);
-  controller.assertProperty(contextMenuItem, 'disabled', false);
+  controller.rightClick(currentTab);
+  controller.assertJSProperty(contextMenuItem, 'disabled', false);
 
   // Restore recently closed tab via tab browser context menu'
   controller.click(contextMenuItem);
@@ -110,7 +110,7 @@ var testUndoTabFromContextMenu = function() {
                       {closedTabCount: SessionStoreAPI.getClosedTabCount(controller)});
 
   // Check if 'Undo Close Tab' is disabled
-  controller.rightClick(tabBar);
-  controller.assertProperty(contextMenuItem, 'disabled', true);
+  controller.rightClick(currentTab);
+  controller.assertJSProperty(contextMenuItem, 'disabled', true);
   UtilsAPI.closeContentAreaContextMenu(controller);
 }

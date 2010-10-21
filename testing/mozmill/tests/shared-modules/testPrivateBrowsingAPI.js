@@ -156,13 +156,13 @@ privateBrowsing.prototype = {
    */
   reset : function privateBrowsing_reset() {
     try {
-      pb.stop(true);
+      this.stop(true);
     } catch (ex) {
       // Do a hard reset
-      pb.enabled = false;
+      this.enabled = false;
     }
 
-    pb.showPrompt = true;
+    this.showPrompt = true;
   },
 
   /**
