@@ -237,15 +237,10 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   // when subclassed. If this is Real, lets examine the event and drop it
   // on the floor if we get into this recursive situation. See bug 192914.
   if (win->mPluginType == nsPluginType_Real) {
-    
-    if (sInMessageDispatch && (msg == sLastMsg)) {
-#ifdef DEBUG
-      printf("Dropping event %d for Real on the floor\n", msg);
-#endif
-      return PR_TRUE;  // prevents event dispatch
-    } else {
-      sLastMsg = msg;  // no need to prevent dispatch
-    }
+    if (sInMessageDispatch && msg == sLastMsg)
+      return PR_TRUE;
+    // Cache the last message sent
+    sLastMsg = msg;
   }
 
   PRBool enablePopups = PR_FALSE;
@@ -398,9 +393,9 @@ nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
   mParentWnd = NULL;
   mParentProc = NULL;
 
-  if (sWM_FLASHBOUNCEMSG == 0)
+  if (!sWM_FLASHBOUNCEMSG) {
     sWM_FLASHBOUNCEMSG = ::RegisterWindowMessage(NS_PLUGIN_CUSTOM_MSG_ID);
-
+  }
 }
 
 nsPluginNativeWindowWin::~nsPluginNativeWindowWin()
@@ -491,47 +486,46 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 {
   // check the incoming instance, null indicates that window is going away and we are
   // not interested in subclassing business any more, undo and don't subclass
+  if (!aPluginInstance) {
+    UndoSubclassAndAssociateWindow();
+    nsPluginNativeWindow::CallSetWindow(aPluginInstance);
+    return NS_OK;
+  }
 
   // check plugin mime type and cache it if it will need special treatment later
   if (mPluginType == nsPluginType_Unknown) {
-    if (aPluginInstance) {
-      const char* mimetype = nsnull;
-      aPluginInstance->GetMIMEType(&mimetype);
-      if (mimetype) { 
-        if (!strcmp(mimetype, "application/x-shockwave-flash"))
-          mPluginType = nsPluginType_Flash;
-        else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
-          mPluginType = nsPluginType_Real;
-        else if (!strcmp(mimetype, "application/pdf"))
-          mPluginType = nsPluginType_PDF;
-        else
-          mPluginType = nsPluginType_Other;
-      }
+    const char* mimetype = nsnull;
+    aPluginInstance->GetMIMEType(&mimetype);
+    if (mimetype) { 
+      if (!strcmp(mimetype, "application/x-shockwave-flash"))
+        mPluginType = nsPluginType_Flash;
+      else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
+        mPluginType = nsPluginType_Real;
+      else if (!strcmp(mimetype, "application/pdf"))
+        mPluginType = nsPluginType_PDF;
+      else
+        mPluginType = nsPluginType_Other;
     }
   }
 
   // WINCE does not subclass windows.  See bug 300011 for the details.
 #ifndef WINCE
-  if (!aPluginInstance) {
-    UndoSubclassAndAssociateWindow();
-    mPrevWinProc = NULL;
-  }
+  // grab the widget procedure before the plug-in does a subclass in
+  // setwindow. We'll use this in PluginWndProc for forwarding focus
+  // events to the widget.
+  WNDPROC currentWndProc =
+    (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
+  if (!mPrevWinProc && currentWndProc != PluginWndProc)
+    mPrevWinProc = currentWndProc;
 
-  // We need WndProc before plug-ins do subclass in nsPluginNativeWindow::CallSetWindow.
-  if (aPluginInstance) {
-    WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
-    if (currentWndProc != PluginWndProc)
-      mPrevWinProc = currentWndProc;
-
-    // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
-    // V8.2.2 and V9.1 don't have such problem.
-    if (mPluginType == nsPluginType_PDF) {
-      HWND parent = ::GetParent((HWND)window);
-      if (mParentWnd != parent) {
-        NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
-        mParentWnd = parent;
-        mParentProc = ::GetWindowLongPtr(mParentWnd, GWLP_WNDPROC);
-      }
+  // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
+  // V8.2.2 and V9.1 don't have such problem.
+  if (mPluginType == nsPluginType_PDF) {
+    HWND parent = ::GetParent((HWND)window);
+    if (mParentWnd != parent) {
+      NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
+      mParentWnd = parent;
+      mParentProc = ::GetWindowLongPtr(mParentWnd, GWLP_WNDPROC);
     }
   }
 #endif
@@ -539,8 +533,7 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
   nsPluginNativeWindow::CallSetWindow(aPluginInstance);
 
 #ifndef WINCE
-  if (aPluginInstance)
-    SubclassAndAssociateWindow();
+  SubclassAndAssociateWindow();
 #endif
 
   return NS_OK;
@@ -550,17 +543,30 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 
 nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 {
-  if (type != NPWindowTypeWindow)
+  if (type != NPWindowTypeWindow || !window)
     return NS_ERROR_FAILURE;
 
   HWND hWnd = (HWND)window;
-  if (!hWnd)
-    return NS_ERROR_FAILURE;
 
-  // check if we need to re-subclass
+  // check if we need to subclass
   WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
-  if (PluginWndProc == currentWndProc)
+  if (currentWndProc == PluginWndProc)
     return NS_OK;
+
+  // If the plugin reset the subclass, set it back.
+  if (mPluginWinProc) {
+#ifdef DEBUG
+    NS_WARNING("A plugin cleared our subclass - resetting.");
+    if (currentWndProc != mPluginWinProc) {
+      NS_WARNING("Procedures do not match up, discarding old subclass value.");
+    }
+    if (mPrevWinProc && currentWndProc == mPrevWinProc) {
+      NS_WARNING("The new procedure is our widget procedure?");
+    }
+#endif
+    SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)PluginWndProc);
+    return NS_OK;
+  }
 
   LONG_PTR style = GetWindowLongPtr(hWnd, GWL_STYLE);
 #ifdef MOZ_IPC
@@ -576,7 +582,7 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 #endif
   SetWindowLongPtr(hWnd, GWL_STYLE, style);
 
-  mPluginWinProc = SubclassWindow(hWnd, (LONG_PTR)PluginWndProc);
+  mPluginWinProc = (WNDPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)PluginWndProc);
   if (!mPluginWinProc)
     return NS_ERROR_FAILURE;
 
@@ -604,7 +610,8 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
   if (mPluginWinProc) {
     WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
     if (currentWndProc == PluginWndProc)
-      SubclassWindow(hWnd, (LONG_PTR)mPluginWinProc);
+      SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)mPluginWinProc);
+    mPluginWinProc = NULL;
 
     LONG_PTR style = GetWindowLongPtr(hWnd, GWL_STYLE);
     style &= ~WS_CLIPCHILDREN;
