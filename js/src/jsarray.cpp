@@ -391,20 +391,6 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
     return JS_TRUE;
 }
 
-struct STATIC_SKIP_INFERENCE CopyNonHoleArgs
-{
-    CopyNonHoleArgs(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
-    JSObject *aobj;
-    Value *dst;
-    void operator()(uintN argi, Value *src) {
-        if (aobj->getArgsElement(argi).isMagic(JS_ARGS_HOLE))
-            dst->setUndefined();
-        else
-            *dst = *src;
-        ++dst;
-    }
-};
-
 namespace js {
 
 bool
@@ -424,7 +410,7 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
          */
         if (JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate()) {
             JS_ASSERT(fp->numActualArgs() <= JS_ARGS_LENGTH_MAX);
-            fp->forEachCanonicalActualArg(CopyNonHoleArgs(aobj, vp));
+            fp->forEachCanonicalActualArg(CopyNonHoleArgsTo(aobj, vp));
         } else {
             Value *srcbeg = aobj->getArgsElements();
             Value *srcend = srcbeg + length;
