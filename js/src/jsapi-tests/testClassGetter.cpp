@@ -53,8 +53,10 @@ static JSFunctionSpec ptestFunctions[] = {
 
 BEGIN_TEST(testClassGetter_isCalled)
 {
-    CHECK(JS_InitClass(cx, JS_GetGlobalObject(cx), NULL, &ptestClass, PTest, 0,
-                       NULL, ptestFunctions, NULL, NULL));
+    JSObject *my_proto;
+
+    my_proto = JS_InitClass(cx, JS_GetGlobalObject(cx), NULL, &ptestClass, PTest, 0,
+                            NULL, ptestFunctions, NULL, NULL);
 
     EXEC("function check() { var o = new PTest(); o.test_fn(); o.test_value1; o.test_value2; o.test_value1; }");
 
