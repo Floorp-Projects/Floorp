@@ -120,8 +120,6 @@
 #define TOPIC_DATABASE_LOCKED "places-database-locked"
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
-// Fired before starting a VACUUM operation.
-#define TOPIC_DATABASE_VACUUM_STARTING "places-vacuum-starting"
 
 namespace mozilla {
 namespace places {
@@ -177,6 +175,7 @@ class nsNavHistory : public nsSupportsWeakReference
                    , public nsICharsetResolver
                    , public nsPIPlacesDatabase
                    , public nsPIPlacesHistoryListenersNotifier
+                   , public mozIStorageVacuumParticipant
 {
   friend class PlacesSQLQueryBuilder;
 
@@ -193,6 +192,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLACESDATABASE
   NS_DECL_NSPIPLACESHISTORYLISTENERSNOTIFIER
+  NS_DECL_MOZISTORAGEVACUUMPARTICIPANT
 
 
   /**
@@ -640,13 +640,9 @@ protected:
   nsresult FinalizeStatements();
 
   /**
-   * Analyzes the database and VACUUM it, if needed.
+   * Decays frecency and inputhistory values.  Runs on idle-daily.
    */
   nsresult DecayFrecency();
-  /**
-   * Decays frecency and inputhistory values.
-   */
-  nsresult VacuumDatabase();
 
   /**
    * Finalizes all Places internal statements, allowing to safely close the
