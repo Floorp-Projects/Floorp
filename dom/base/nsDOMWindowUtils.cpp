@@ -1608,3 +1608,12 @@ nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetOuterWindowWithId(PRUint64 aWindowID,
+                                       nsIDOMWindow** aWindow)
+{
+  *aWindow = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
+  NS_IF_ADDREF(*aWindow);
+  return NS_OK;
+}
