@@ -2741,7 +2741,7 @@ struct kernel_statfs {
   LSS_INLINE _syscall2(int,     sigaltstack,     const stack_t*, s,
                        const stack_t*, o)
   #if defined(__NR_sigreturn)
-  LSS_INLINE _syscall1(int,     sigreturn,       unsigned long, u);
+  LSS_INLINE _syscall1(int,     sigreturn,       unsigned long, u)
   #endif
   LSS_INLINE _syscall2(int,     stat,            const char*, f,
                       struct kernel_stat*,   b)
@@ -2758,7 +2758,7 @@ struct kernel_statfs {
                        const struct kernel_iovec*, v, size_t, c)
   #if defined(__NR_getcpu)
     LSS_INLINE _syscall3(long, getcpu, unsigned *, cpu,
-                         unsigned *, node, void *, unused);
+                         unsigned *, node, void *, unused)
   #endif
   #if defined(__x86_64__) ||                                                  \
      (defined(__mips__) && _MIPS_SIM != _MIPS_SIM_ABI32)
