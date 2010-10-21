@@ -1861,7 +1861,8 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
         data->ToString(formattedMsg);
 
         rv = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,
-                                formattedMsg.get(), ifaceName, methodName, data,
+                                formattedMsg.get(), ifaceName, methodName,
+                                static_cast<nsIScriptError*>(data),
                                 exceptn, nsnull, nsnull);
 
         NS_RELEASE(data);

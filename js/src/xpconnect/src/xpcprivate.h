@@ -3927,7 +3927,8 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
-class nsScriptError : public nsIScriptError {
+class nsScriptError : public nsIScriptError,
+                      public nsIScriptError2 {
 public:
     nsScriptError();
 
@@ -3938,6 +3939,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
+    NS_DECL_NSISCRIPTERROR2
 
 private:
     nsString mMessage;
@@ -3947,6 +3949,7 @@ private:
     PRUint32 mColumnNumber;
     PRUint32 mFlags;
     nsCString mCategory;
+    PRUint64 mWindowID;
 };
 
 /***************************************************************************/
