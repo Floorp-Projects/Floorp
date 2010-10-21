@@ -188,13 +188,38 @@ private:
 
   ~nsNavBookmarks();
 
-  nsresult InitRoots();
-  nsresult InitDefaults();
-  nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
-                      const nsCString& name,
-                      PRInt64* aID,
-                      PRInt64 aParentID,
-                      PRBool* aWasCreated);
+  /**
+   * Locates the root items in the bookmarks folder hierarchy assigning folder
+   * ids to the root properties that are exposed through the service interface.
+   * 
+   * @param aForceCreate
+   *        Whether the method should try creating the roots.  It should be set
+   *        to true if the database has just been created or upgraded.
+   *
+   * @note The creation of roots skips already existing entries.
+   */
+  nsresult InitRoots(bool aForceCreate);
+
+  /**
+   * Tries to create a root folder with the given name.
+   *
+   * @param name
+   *        Name associated to the root.
+   * @param _itemId
+   *        if set CreateRoot will skip creation, otherwise will return the
+   *        newly created folder id.
+   * @param aParentId
+   *        Id of the parent that should cotain this root.
+   * @param aBundle
+   *        Stringbundle used to get the visible title of the root.
+   * @param aTitleStringId
+   *        Id of the title string in the stringbundle.
+   */
+  nsresult CreateRoot(const nsCString& name,
+                      PRInt64* _itemId,
+                      PRInt64 aParentId,
+                      nsIStringBundle* aBundle,
+                      const PRUnichar* aTitleStringId);
 
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex,
@@ -226,13 +251,12 @@ private:
   PRInt32 mItemCount;
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
-  PRInt64 mRoot;
-  PRInt64 mBookmarksRoot;
-  PRInt64 mTagRoot;
-  PRInt64 mUnfiledRoot;
 
-  // personal toolbar folder
-  PRInt64 mToolbarFolder;
+  PRInt64 mRoot;
+  PRInt64 mMenuRoot;
+  PRInt64 mTagsRoot;
+  PRInt64 mUnfiledRoot;
+  PRInt64 mToolbarRoot;
 
   // The level of batches' nesting, 0 when no batches are open.
   PRInt32 mBatchLevel;
