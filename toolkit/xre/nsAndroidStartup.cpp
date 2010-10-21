@@ -52,6 +52,8 @@
 #include "nsILocalFile.h"
 #include "nsAppRunner.h"
 #include "AndroidBridge.h"
+#include "APKOpen.h"
+#include "nsExceptionHandler.h"
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
@@ -72,6 +74,15 @@ struct AutoAttachJavaThread {
 static void*
 GeckoStart(void *data)
 {
+#ifdef MOZ_CRASHREPORTER
+    struct mapping_info *info = lib_mapping;
+    while (info->name) {
+      CrashReporter::AddLibraryMapping(info->name, info->file_id, info->base,
+                                       info->len, info->offset);
+      info++;
+    }
+#endif
+
     AutoAttachJavaThread attacher;
     if (!attacher.attached)
         return 0;
@@ -109,7 +120,6 @@ GeckoStart(void *data)
 
     appData->xreDirectory = xreDir.get();
 
-
     nsTArray<char *> targs;
     char *arg = strtok(static_cast<char *>(data), " ");
     while (arg) {
@@ -117,7 +127,7 @@ GeckoStart(void *data)
         arg = strtok(NULL, " ");
     }
     targs.AppendElement(static_cast<char *>(nsnull));
-    
+
     int result = XRE_main(targs.Length() - 1, targs.Elements(), appData);
 
     if (result)
