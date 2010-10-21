@@ -63,6 +63,9 @@ struct VMFrame
             void *ptr2;
             void *ptr3;
         } x;
+        struct {
+            uint32 dynamicArgc;
+        } call;
     } u;
 
     VMFrame      *previous;

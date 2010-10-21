@@ -397,7 +397,7 @@ StackSpace::pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameG
 bool
 StackSpace::bumpCommitAndLimit(JSStackFrame *base, Value *sp, uintN nvals, Value **limit) const
 {
-    JS_ASSERT(sp == firstUnused());
+    JS_ASSERT(sp >= firstUnused());
     JS_ASSERT(sp + nvals >= *limit);
 #ifdef XP_WIN
     if (commitEnd <= *limit) {
