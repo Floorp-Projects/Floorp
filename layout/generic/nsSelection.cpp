@@ -4816,6 +4816,11 @@ nsTypedSelection::RemoveRange(nsIRange* aRange)
 
   nsINode* beginNode = aRange->GetStartParent();
   nsINode* endNode = aRange->GetEndParent();
+
+  if (!beginNode || !endNode) {
+    // Detached range; nothing else to do here.
+    return NS_OK;
+  }
   
   // find out the length of the end node, so we can select all of it
   PRInt32 beginOffset, endOffset;
