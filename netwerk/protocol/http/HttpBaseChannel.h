@@ -59,6 +59,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIApplicationCache.h"
 #include "nsIResumableChannel.h"
+#include "mozilla/net/NeckoCommon.h"
 
 namespace mozilla {
 namespace net {
