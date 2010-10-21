@@ -665,7 +665,7 @@ QUOTED_WILDCARD = $(if $(wildcard $(subst $(space),?,$(1))),"$(1)")
 CHECKSUM_ALGORITHM = 'sha512'
 
 # This variable defines where the checksum file will be located
-CHECKSUM_FILE = $(DIST)/$(PKG_PATH)/$(PKG_BASENAME).checksums
+CHECKSUM_FILE = "$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).checksums"
 
 UPLOAD_FILES= \
   $(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE)) \
