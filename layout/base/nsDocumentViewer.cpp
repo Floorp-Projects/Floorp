@@ -2011,7 +2011,7 @@ DocumentViewerImpl::Show(void)
 NS_IMETHODIMP
 DocumentViewerImpl::Hide(void)
 {
-  if (mWindow) {
+  if (!mAttachedToParent && mWindow) {
     mWindow->Show(PR_FALSE);
   }
 
@@ -2054,7 +2054,7 @@ DocumentViewerImpl::Hide(void)
 
   nsCOMPtr<nsIBaseWindow> base_win(do_QueryReferent(mContainer));
 
-  if (base_win) {
+  if (base_win && !mAttachedToParent) {
     base_win->SetParentWidget(nsnull);
   }
 
