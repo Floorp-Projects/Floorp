@@ -748,7 +748,7 @@ public:
   nsIDOMDOMTokenList* GetClassList(nsresult *aResult);
   void SetCapture(PRBool aRetargetToElement);
   void ReleaseCapture();
-  PRBool MozMatchesSelector(const nsAString& aSelector);
+  PRBool MozMatchesSelector(const nsAString& aSelector, nsresult* aResult);
 
   /**
    * Get the attr info for the given namespace ID and attribute name.  The
