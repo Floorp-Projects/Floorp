@@ -213,7 +213,11 @@
     -moz-appearance: none;
     margin-top: 3px;
     margin-bottom: 3px;
+%ifdef WINSTRIPE_AERO
     -moz-margin-start: 30px;
+%else
+    -moz-margin-start: -moz-calc(1.45em + 4px);
+%endif
     padding: 0;
     border-top: 1px solid #d6e5f5;
     border-bottom: none;
