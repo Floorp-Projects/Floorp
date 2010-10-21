@@ -1211,7 +1211,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALLNAME)
 
           BEGIN_CASE(JSOP_EVAL)
-            jsop_eval();
+          {
+            JaegerSpew(JSpew_Insns, " --- EVAL --- \n");
+            emitEval(GET_ARGC(PC));
+            JaegerSpew(JSpew_Insns, " --- END EVAL --- \n");
+          }
           END_CASE(JSOP_EVAL)
 
           BEGIN_CASE(JSOP_CALL)
@@ -4328,11 +4332,17 @@ mjit::Compiler::jsop_instanceof()
 }
 
 void
-mjit::Compiler::jsop_eval()
+mjit::Compiler::emitEval(uint32 argc)
 {
-    JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
-    inlineCallHelper(GET_ARGC(PC), false);
-    JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
+    /* Check for interrupts on function call */
+    interruptCheckHelper();
+
+    frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
+    prepareStubCall(Uses(argc + 2));
+    masm.move(Imm32(argc), Registers::ArgReg1);
+    stubCall(stubs::Eval);
+    frame.popn(argc + 2);
+    frame.pushSynced();
 }
 
 /*

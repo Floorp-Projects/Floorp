@@ -1717,6 +1717,22 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
 
+enum EvalType { INDIRECT_EVAL, DIRECT_EVAL };
+
+/*
+ * Common code implementing direct and indirect eval.
+ *
+ * Evaluate vp[2], if it is a string, in the context of the given calling
+ * frame, with the provided scope chain, with the semantics of either a direct
+ * or indirect eval (see ES5 10.4.2).  If this is an indirect eval, scopeobj
+ * must be a global object.
+ *
+ * On success, store the completion value in *vp and return true.
+ */
+extern bool
+EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
+           JSObject *scopeobj);
+
 extern bool
 IsBuiltinEvalFunction(JSFunction *fun);
 

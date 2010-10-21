@@ -1328,6 +1328,27 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
 }
 
 bool
+DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp)
+{
+    JS_ASSERT(vp == cx->regs->sp - argc - 2);
+    JS_ASSERT(vp[0].isObject());
+    JS_ASSERT(vp[0].toObject().isFunction());
+    JS_ASSERT(vp[0].toObject().getFunctionPrivate() == evalfun);
+    JS_ASSERT(IsBuiltinEvalFunction(evalfun));
+
+    AutoFunctionCallProbe callProbe(cx, evalfun);
+
+    JSStackFrame *caller = cx->fp();
+    JS_ASSERT(caller->isScriptFrame());
+    JSObject *scopeChain =
+        GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+    if (!scopeChain || !EvalKernel(cx, argc, vp, DIRECT_EVAL, caller, scopeChain))
+        return false;
+    cx->regs->sp = vp + 1;
+    return true;
+}
+
+bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp)
 {
     int32_t i;
@@ -4632,11 +4653,7 @@ BEGIN_CASE(JSOP_EVAL)
     if (!IsBuiltinEvalFunction(newfun))
         goto not_direct_eval;
 
-    Probes::enterJSFun(cx, newfun);
-    JSBool ok = CallJSNative(cx, newfun->u.n.native, argc, vp);
-    Probes::exitJSFun(cx, newfun);
-    regs.sp = vp + 1;
-    if (!ok)
+    if (!DirectEval(cx, newfun, argc, vp))
         goto error;
 }
 END_CASE(JSOP_EVAL)

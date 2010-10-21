@@ -442,6 +442,30 @@ stubs::UncachedCall(VMFrame &f, uint32 argc)
     return ucr.codeAddr;
 }
 
+void JS_FASTCALL
+stubs::Eval(VMFrame &f, uint32 argc)
+{
+    Value *vp = f.regs.sp - (argc + 2);
+
+    JSObject *callee;
+    JSFunction *fun;
+
+    if (!IsFunctionObject(*vp, &callee) ||
+        !IsBuiltinEvalFunction((fun = callee->getFunctionPrivate())))
+    {
+        if (!ComputeThisFromVpInPlace(f.cx, vp) ||
+            !Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
+        {
+            THROW();
+        }
+        return;
+    }
+
+    JS_ASSERT(f.regs.fp == f.cx->fp());
+    if (!DirectEval(f.cx, fun, argc, vp))
+        THROW();
+}
+
 void
 stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 {
