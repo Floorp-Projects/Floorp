@@ -219,7 +219,7 @@ OfflineCacheUpdateGlue::ApplicationCacheAvailable(nsIApplicationCache *aApplicat
                 aApplicationCache->GetClientID(clientID);
             }
             LOG(("Update %p: associating app cache %s to document %p",
-                 this, clientID.get(), mDocument));
+                 this, clientID.get(), mDocument.get()));
         }
 #endif
 
