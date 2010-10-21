@@ -289,7 +289,7 @@ def parse_jitflags():
                  for flags in OPTIONS.jitflags.split(',') ]
     for flags in jitflags:
         for flag in flags:
-            if flag not in ('-j', '-m', '-d'):
+            if flag not in ('-j', '-m', '-p', '-d'):
                 print('Invalid jit flag: "%s"'%flag)
                 sys.exit(1)
     return jitflags
