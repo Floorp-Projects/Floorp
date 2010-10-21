@@ -44,7 +44,7 @@
   <binding id="arrowbox" extends="xul:box">
     <content orient="vertical">
       <xul:box anonid="container" class="panel-arrowcontainer">
-        <xul:box anonid="arrowbox" class="panel-arrowbox">
+        <xul:box anonid="arrowbox" class="panel-arrowbox" dir="ltr">
           <xul:image anonid="arrow" class="panel-arrow"/>
         </xul:box>
         <xul:box class="panel-arrowcontent" flex="1">
@@ -92,9 +92,9 @@
                 if (vertPos == 0) {
                   hideArrow = true;
                 } else {
-                  arrowbox.style.MozMarginStart = ((anchorRect.left - popupRect.left) + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
+                  arrowbox.style.marginLeft = ((anchorRect.left - popupRect.left) + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
                   if (vertPos == 1) {
-                    container.dir = ""; 
+                    container.dir = "ltr"; 
                     anchorClass = "top";
                   } else if (vertPos == -1) {
                     container.dir = "reverse"; 
@@ -106,7 +106,7 @@
                 arrowbox.orient = "vertical";
                 arrowbox.style.marginTop = ((anchorRect.top - popupRect.top) + (anchorRect.height / 2) - HALF_ARROW_WIDTH) + "px";
                 if (horizPos == 1) {
-                  container.dir = ""; 
+                  container.dir = "ltr"; 
                   anchorClass = "left";
                 } else if (horizPos == -1) {
                   container.dir = "reverse";
