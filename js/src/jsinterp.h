@@ -197,8 +197,8 @@ struct JSStackFrame
     inline void resetInvokeCallFrame();
 
     /* Called by method-jit stubs and serve as a specification for jit-code. */
-    inline void initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flags);
-    inline void initCallFrameEarlyPrologue(JSFunction *fun, void *ncode);
+    inline void initCallFrameCallerHalf(JSContext *cx, uint32 flags, void *ncode);
+    inline void initCallFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
     inline void initCallFrameLatePrologue();
 
     /* Used for eval. */
