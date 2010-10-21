@@ -68,7 +68,6 @@
 #include "nsConsoleMessage.h"
 
 #ifdef MOZ_PERMISSIONS
-#include "nsPermission.h"
 #include "nsPermissionManager.h"
 #endif
 
@@ -226,16 +225,17 @@ ContentParent::RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions)
     NS_ABORT_IF_FALSE(permissionManager,
                  "We have no permissionManager in the Chrome process !");
 
-    nsISimpleEnumerator *enumerator;
-    nsresult rv = permissionManager->GetEnumerator(&enumerator);
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
     while(1) {
         PRBool hasMore;
         enumerator->HasMoreElements(&hasMore);
         if (!hasMore)
             break;
-        nsISupports *supp;
-        enumerator->GetNext((nsISupports**)&supp);
+
+        nsCOMPtr<nsISupports> supp;
+        enumerator->GetNext(getter_AddRefs(supp));
         nsCOMPtr<nsIPermission> perm = do_QueryInterface(supp);
 
         nsCString host;
