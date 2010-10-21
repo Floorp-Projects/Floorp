@@ -84,7 +84,7 @@ textbox[isempty="true"] {
 }
 
 textbox.search-bar {
-  border: 2px solid transparent;
+  border: 2px solid rgba(0,0,0,0.4);
   background-color: #f9f9f9;
   background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
 }
@@ -184,24 +184,6 @@ button:not([disabled]):hover:active {
   display: -moz-initial !important;
 }
 
-/* dark buttons ------------------------------------------------------------ */
-button.button-dark {
-  color: #fff !important;
-  background: transparent !important;
-  -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
-  border-radius: 8px;
-}
-
-button.button-dark[type="checkbox"][checked="true"],
-button.button-dark:not([disabled="true"]):hover:active,
-notification button:not([disabled="true"]):hover:active {
-  -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
-}
-
-button.button-dark[disabled="true"] {
-  color: #7e7e7e !important;
-}
-
 /* spinbuttons ------------------------------------------------------------- */
 spinbuttons {
   border: none !important;
@@ -288,30 +270,6 @@ toolbarbutton[open="true"] {
   border-color: transparent;
 }
 
-/* dark buttons ------------------------------------------------------------ */
-toolbarbutton.button-dark {
-  color: #fff;
-  padding: 2px 4px;
-  border-width: 10px;
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-64.png") 10 repeat repeat;
-}
-
-toolbarbutton.button-dark[type="checkbox"][checked="true"],
-toolbarbutton.button-dark:not([disabled="true"]):hover:active {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 10 repeat repeat;
-}
-
-toolbarbutton.button-dark[disabled="true"] {
-  color: #7e7e7e;
-}
-
-toolbarbutton.button-dark[type="checkbox"][checked="true"] {
-  /* checked overrides */
-  color: #fff !important;
-  background: none !important;
-  padding: 2px 4px !important;
-}
-
 /* checkbox buttons ----------------------------------------------------------- */
 .button-checkbox {
   padding: 0 !important;
@@ -366,8 +324,8 @@ radio .radio-icon, radio .radio-check {
 
 radio:not([disabled=true]):hover:active,
 radio[selected] {
-  color: white;
-  background-image: url("chrome://browser/skin/images/toggle-on.png");
+  background-image: url("chrome://browser/skin/images/textbox-bg.png");
+  border-right: 1px solid rgba(0,0,0,0.2);
 }
 
 radio:first-child {
@@ -416,63 +374,6 @@ radio.checkbox-radio-off:hover:active {
 radio.checkbox-radio-on:not([selected]) .radio-label-box,
 radio.checkbox-radio-off:not([selected]) .radio-label-box {
   visibility: hidden;
-}
-
-/* dark radios ------------------------------------------------------------- */
-.toggle-dark radio {
-  color: #fff;
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-inactive-64.png") 8 repeat repeat;
-}
-
-.toggle-dark:not([disabled=true]) radio:hover:active,
-.toggle-dark radio[selected] {
-  color: #fff;
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-active-64.png") 8 repeat repeat;
-}
-
-.toggle-dark radio:first-child {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
-}
-
-.toggle-dark radio:first-child:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
-}
-
-.toggle-dark:not([disabled=true]) radio:first-child:hover:active,
-.toggle-dark radio:first-child[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
-}
-
-.toggle-dark:not([disabled=true]) radio:first-child:hover:active:-moz-locale-dir(rtl),
-.toggle-dark radio:first-child[selected]:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
-}
-
-.toggle-dark radio:last-child {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
-}
-
-.toggle-dark radio:last-child:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
-}
-
-.toggle-dark:not([disabled=true]) radio:last-child:hover:active,
-.toggle-dark radio:last-child[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
-}
-
-.toggle-dark:not([disabled=true]) radio:last-child:hover:active:-moz-locale-dir(rtl),
-.toggle-dark radio:last-child[selected]:-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
-}
-
-.toggle-dark radio:first-child:last-child {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-inactive-64.png") 8 repeat repeat;
-}
-
-.toggle-dark:not([disabled=true]) radio:first-child:last-child:hover:active,
-.toggle-dark radio:first-child:last-child[selected] {
-  -moz-border-image: url("chrome://browser/skin/images/toggledarkboth-active-64.png") 8 repeat repeat;
 }
 
 /* richlistbox ------------------------------------------------------------- */
@@ -597,20 +498,6 @@ menulist[disabled="true"] {
 
 menulist:not([disabled="true"]):hover:active {
   background-image: url("chrome://browser/skin/images/toggle-off.png");
-}
-
-menulist.button-dark {
-  color: #fff !important;
-  background: transparent !important;
-  -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
-}
-
-menulist.button-dark:not([disabled="true"]):hover:active {
-  -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
-}
-
-menulist.button-dark[disabled="true"] {
-  color: #7e7e7e !important;
 }
 
 menulist > dropmarker {
