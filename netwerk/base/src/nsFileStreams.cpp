@@ -244,7 +244,11 @@ nsFileInputStream::Open(nsIFile* aFile, PRInt32 aIOFlags, PRInt32 aPerm)
         // opened the file descriptor, we'll try to remove the file.  if that
         // fails, then we'll just remember the nsIFile and remove it after we
         // close the file descriptor.
-        aFile->Remove(PR_FALSE);
+        rv = aFile->Remove(PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          // No need to remove it later. Clear the flag.
+          mBehaviorFlags &= ~DELETE_ON_CLOSE;
+        }
     }
 
     return NS_OK;
