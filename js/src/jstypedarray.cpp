@@ -929,7 +929,7 @@ class TypedArrayTemplate
 
             if (!tarray->copyFrom(cx, src, offset))
                 return false;
-        } else if (arg0->wrappedObject(cx)->isArray()) {
+        } else {
             jsuint len;
             if (!js_GetLengthProperty(cx, arg0, &len))
                 return false;
@@ -943,10 +943,6 @@ class TypedArrayTemplate
 
             if (!tarray->copyFrom(cx, arg0, len, offset))
                 return false;
-        } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
         }
 
         vp->setUndefined();
@@ -990,21 +986,9 @@ class TypedArrayTemplate
     {
         type = ArrayTypeID();
 
-        //printf ("Constructing with type %d other %p offset %d length %d\n", type, other, byteOffset, length);
-
-        if (other->wrappedObject(cx)->isArray()) {
-            jsuint len;
-            if (!js_GetLengthProperty(cx, other, &len))
-                return false;
-            if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), len))
-                return false;
-            if (!copyFrom(cx, other, len))
-                return false;
-        } else if (js_IsTypedArray(other)) {
+        if (js_IsTypedArray(other)) {
             TypedArray *tarray = TypedArray::fromJSObject(other);
             JS_ASSERT(tarray);
-
-            //printf ("SizeAndCount: %d %d\n", sizeof(NativeType), tarray->length);
 
             if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), tarray->length))
                 return false;
@@ -1063,9 +1047,13 @@ class TypedArrayTemplate
             length = len;
             data = abuf->offsetData(boffset);
         } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
+            jsuint len;
+            if (!js_GetLengthProperty(cx, other, &len))
+                return false;
+            if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), len))
+                return false;
+            if (!copyFrom(cx, other, len))
+                return false;
         }
 
         return true;
