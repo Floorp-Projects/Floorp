@@ -166,6 +166,12 @@ struct Registers {
 
     static const uint32 AvailRegs = SavedRegs | TempRegs;
 
+    static bool isSaved(RegisterID reg) {
+        uint32 mask = maskReg(reg);
+        JS_ASSERT(mask & AvailRegs);
+        return bool(mask & SavedRegs);
+    }
+
     Registers()
       : freeMask(AvailRegs)
     { }

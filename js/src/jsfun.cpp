@@ -2252,6 +2252,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     if (argc < 2 || vp[3].isNullOrUndefined())
         return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
+    /* N.B. Changes need to be propagated to stubs::SplatApplyArgs. */
+
     /* Step 3. */
     if (!vp[3].isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);

@@ -701,12 +701,6 @@ class StackSpace
     friend class AllFramesIter;
     StackSegment *getCurrentSegment() const { return currentSegment; }
 
-    /*
-     * Allocate nvals on the top of the stack, report error on failure.
-     * N.B. the caller must ensure |from == firstUnused()|.
-     */
-    inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
-
 #ifdef XP_WIN
     /* Commit more memory from the reserved stack space. */
     JS_FRIEND_API(bool) bumpCommit(Value *from, ptrdiff_t nvals) const;
@@ -751,9 +745,6 @@ class StackSpace
      * TraceNativeStorage as a conservative upper bound.
      */
     inline bool ensureEnoughSpaceToEnterTrace();
-
-    /* See stubs::HitStackQuota. */
-    inline bool bumpCommitEnd(Value *from, uintN nslots);
 
     /* +1 for slow native's stack frame. */
     static const ptrdiff_t MAX_TRACE_SPACE_VALS =
@@ -833,6 +824,12 @@ class StackSpace
      * if fully committed or if 'limit' exceeds 'base' + STACK_QUOTA.
      */
     bool bumpCommitAndLimit(JSStackFrame *base, Value *from, uintN nvals, Value **limit) const;
+
+    /*
+     * Allocate nvals on the top of the stack, report error on failure.
+     * N.B. the caller must ensure |from >= firstUnused()|.
+     */
+    inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);

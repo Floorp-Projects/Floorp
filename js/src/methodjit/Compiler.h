@@ -126,7 +126,6 @@ class Compiler : public BaseCompiler
          * more comments.
          */
         jsbytecode   *pc;
-        uint32       argc;
         DataLabelPtr funGuard;
         Jump         funJump;
         Jump         hotJump;
@@ -140,7 +139,7 @@ class Compiler : public BaseCompiler
         Jump         oolJump;
         RegisterID   funObjReg;
         RegisterID   funPtrReg;
-        uint32       frameDepth;
+        FrameSize    frameSize;
     };
 
   private:
@@ -354,10 +353,10 @@ class Compiler : public BaseCompiler
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);
-    void checkCallSpeculation(uint32 argc, FrameEntry *origCallee, FrameEntry *origThis,
-                              MaybeRegisterID origCalleeType, RegisterID origCalleeData,
-                              MaybeRegisterID origThisType, RegisterID origThisData,
-                              Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
+    void checkCallApplySpeculation(uint32 argc, FrameEntry *origCallee, FrameEntry *origThis,
+                                   MaybeRegisterID origCalleeType, RegisterID origCalleeData,
+                                   MaybeRegisterID origThisType, RegisterID origThisData,
+                                   Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     void inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
