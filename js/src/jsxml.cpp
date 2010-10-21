@@ -1763,7 +1763,9 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, NULL, filename, lineno)) {
-            JSObject *scopeChain = &js_GetTopStackFrame(cx)->scopeChain();
+            JSObject *scopeChain = JS_GetScopeChain(cx);
+            if (!scopeChain)
+                return NULL;
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
             uintN flags;
             if (pn && GetXMLSettingFlags(cx, &flags)) {
