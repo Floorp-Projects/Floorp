@@ -5601,16 +5601,16 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
 
 
 PRBool
-nsGenericElement::MozMatchesSelector(const nsAString& aSelector)
+nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResult)
 {
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsPresContext* presContext;
   PRBool matches = PR_FALSE;
 
-  if (NS_SUCCEEDED(ParseSelectorList(this, aSelector,
-                                     getter_Transfers(selectorList),
-                                     &presContext)))
-  {
+  *aResult = ParseSelectorList(this, aSelector, getter_Transfers(selectorList),
+                               &presContext);
+
+  if (NS_SUCCEEDED(*aResult)) {
     RuleProcessorData data(presContext, this, nsnull);
     matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
   }
@@ -5622,6 +5622,9 @@ NS_IMETHODIMP
 nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aReturn)
 {
   NS_PRECONDITION(aReturn, "Null out param?");
-  *aReturn = mContent->MozMatchesSelector(aSelector);
-  return NS_OK;
+
+  nsresult rv;
+  *aReturn = mContent->MozMatchesSelector(aSelector, &rv);
+
+  return rv;
 }
