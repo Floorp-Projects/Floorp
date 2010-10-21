@@ -378,10 +378,13 @@ public:
                    const nsAString& aErrorMsg,
                    const nsAString& aFileName,
                    const nsAString& aSourceLine,
-                   PRBool aDispatchEvent)
+                   PRBool aDispatchEvent,
+                   PRUint64 aWindowID)
   : mScriptGlobal(aScriptGlobal), mLineNr(aLineNr), mColumn(aColumn),
     mFlags(aFlags), mErrorMsg(aErrorMsg), mFileName(aFileName),
-    mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent) {}
+    mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent),
+    mWindowID(aWindowID)
+  {}
 
   NS_IMETHOD Run()
   {
@@ -468,10 +471,18 @@ public:
           ? "chrome javascript"
           : "content javascript";
 
-        rv = errorObject->Init(mErrorMsg.get(), mFileName.get(),
-                               mSourceLine.get(),
-                               mLineNr, mColumn, mFlags,
-                               category);
+        nsCOMPtr<nsIScriptError2> error2(do_QueryInterface(errorObject));
+        if (error2) {
+          rv = error2->InitWithWindowID(mErrorMsg.get(), mFileName.get(),
+                                        mSourceLine.get(),
+                                        mLineNr, mColumn, mFlags,
+                                        category, mWindowID);
+        } else {
+          rv = errorObject->Init(mErrorMsg.get(), mFileName.get(),
+                                 mSourceLine.get(),
+                                 mLineNr, mColumn, mFlags,
+                                 category);
+        }
 
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIConsoleService> consoleService =
@@ -494,6 +505,7 @@ public:
   nsString                        mFileName;
   nsString                        mSourceLine;
   PRBool                          mDispatchEvent;
+  PRUint64                        mWindowID;
 
   static PRBool sHandlingScriptError;
 };
@@ -573,11 +585,14 @@ NS_ScriptErrorReporter(JSContext *cx,
        */
       nsAutoString sourceLine;
       sourceLine.Assign(reinterpret_cast<const PRUnichar*>(report->uclinebuf));
+      nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
+      PRUint64 windowID = win ? win->WindowID() : 0;
       nsContentUtils::AddScriptRunner(
         new ScriptErrorEvent(globalObject, report->lineno,
                              report->uctokenptr - report->uclinebuf,
                              report->flags, msg, fileName, sourceLine,
-                             report->errorNumber != JSMSG_OUT_OF_MEMORY));
+                             report->errorNumber != JSMSG_OUT_OF_MEMORY,
+                             windowID));
     }
   }
 

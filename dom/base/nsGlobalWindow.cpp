@@ -650,7 +650,10 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
   mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
-  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
+  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
+  // Make sure no actual window ends up with mWindowID == 0
+  mWindowID(++gNextWindowID)
+ {}
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
@@ -698,7 +701,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mCleanedUp(PR_FALSE),
     mCallCleanUpAfterModalDialogCloses(PR_FALSE),
-    mWindowID(gNextWindowID++),
     mDialogAbuseCount(0),
     mDialogDisabled(PR_FALSE)
 {

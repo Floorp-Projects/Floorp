@@ -905,10 +905,6 @@ protected:
 
   nsCOMPtr<nsIIDBFactory> mIndexedDB;
 
-  // A unique (as long as our 64-bit counter doesn't roll over) id for
-  // this window.
-  PRUint64 mWindowID;
-
   // In the case of a "trusted" dialog (@see PopupControlState), we
   // set this counter to ensure a max of MAX_DIALOG_LIMIT
   PRUint32                      mDialogAbuseCount;
