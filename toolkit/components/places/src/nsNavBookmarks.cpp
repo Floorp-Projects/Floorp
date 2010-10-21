@@ -123,9 +123,10 @@ SearchBookmarkForKeyword(nsTrimInt64HashKey::KeyType aKey,
 
 nsNavBookmarks::nsNavBookmarks() : mItemCount(0)
                                  , mRoot(0)
-                                 , mBookmarksRoot(0)
-                                 , mTagRoot(0)
-                                 , mToolbarFolder(0)
+                                 , mMenuRoot(0)
+                                 , mTagsRoot(0)
+                                 , mUnfiledRoot(0)
+                                 , mToolbarRoot(0)
                                  , mBatchLevel(0)
                                  , mBatchDBTransaction(nsnull)
                                  , mCanNotify(false)
@@ -162,11 +163,11 @@ nsNavBookmarks::Init()
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   mDBConn = history->GetStorageConnection();
   NS_ENSURE_STATE(mDBConn);
+  PRUint16 dbStatus;
+  nsresult rv = history->GetDatabaseStatus(&dbStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // TODO: we could consider roots changes as schema changes, and init them
-  // only if the database has been created/updated, history.databaseStatus
-  // can tell us that.
-  nsresult rv = InitRoots();
+  rv = InitRoots(dbStatus != nsINavHistoryService::DATABASE_STATUS_OK);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCanNotify = true;
@@ -198,7 +199,7 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
   PRBool exists;
   nsresult rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (! exists) {
+  if (!exists) {
     rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_BOOKMARKS);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -219,7 +220,6 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // moz_bookmarks_roots
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_roots"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists) {
@@ -227,10 +227,9 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // moz_keywords
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_keywords"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (! exists) {
+  if (!exists) {
     rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_KEYWORDS);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -475,211 +474,116 @@ nsNavBookmarks::FinalizeStatements() {
 }
 
 
-// nsNavBookmarks::InitRoots
-//
-//    This locates and creates if necessary the root items in the bookmarks
-//    folder hierarchy. These items are stored in a special roots table that
-//    maps short predefined names to folder IDs.
-//
-//    Normally, these folders will exist already and we will save their IDs
-//    which are exposed through the bookmark service interface.
-//
-//    If the root does not exist, a folder is created for it and the ID is
-//    saved in the root table. No user-visible name is given to these folders
-//    and they have no parent or other attributes.
-//
-//    These attributes are set when the default_places.html file is imported.
-//    It defines the hierarchy, and has special attributes that tell us when
-//    a folder is one of our well-known roots. We then insert the root in the
-//    defined point in the hierarchy and set its attributes from this.
-//
-//    This should be called as the last part of the init process so that
-//    all of the statements are set up and the service is ready to use.
-
 nsresult
-nsNavBookmarks::InitRoots()
+nsNavBookmarks::InitRoots(bool aForceCreate)
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-
-  nsCOMPtr<mozIStorageStatement> getRootStatement;
+  nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT folder_id FROM moz_bookmarks_roots WHERE root_name = :root_name"),
-    getter_AddRefs(getRootStatement));
+    "SELECT root_name, folder_id FROM moz_bookmarks_roots"
+  ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool createdPlacesRoot = PR_FALSE;
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("places"),
-                  &mRoot, 0, &createdPlacesRoot);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("menu"),
-                  &mBookmarksRoot, mRoot, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool createdToolbarFolder;
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("toolbar"),
-                  &mToolbarFolder, mRoot, &createdToolbarFolder);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Once toolbar was not a root, we may need to move over the items and
-  // delete the custom folder
-  if (!createdPlacesRoot && createdToolbarFolder) {
-    nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-    NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-
-    nsTArray<PRInt64> folders;
-    rv = annosvc->GetItemsWithAnnotationTArray(BOOKMARKS_TOOLBAR_FOLDER_ANNO,
-                                               &folders);
+  PRBool hasResult;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    nsCAutoString rootName;
+    rv = stmt->GetUTF8String(0, rootName);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (folders.Length() > 0) {
-      nsCOMPtr<mozIStorageStatement> moveItems;
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "UPDATE moz_bookmarks SET parent = :new_parent "
-        "WHERE parent = :old_parent"
-      ), getter_AddRefs(moveItems));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = moveItems->BindInt64ByName(NS_LITERAL_CSTRING("new_parent"),
-                                      mToolbarFolder);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = moveItems->BindInt64ByName(NS_LITERAL_CSTRING("old_parent"),
-                                      folders[0]);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = moveItems->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = RemoveFolder(folders[0]);
-      NS_ENSURE_SUCCESS(rv, rv);
+    PRInt64 rootId;
+    rv = stmt->GetInt64(1, &rootId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ABORT_IF_FALSE(rootId != 0, "Root id is 0, that is an invalid value.");
+
+    if (rootName.EqualsLiteral("places")) {
+      mRoot = rootId;
+    }
+    else if (rootName.EqualsLiteral("menu")) {
+      mMenuRoot = rootId;
+    }
+    else if (rootName.EqualsLiteral("toolbar")) {
+      mToolbarRoot = rootId;
+    }
+    else if (rootName.EqualsLiteral("tags")) {
+      mTagsRoot = rootId;
+    }
+    else if (rootName.EqualsLiteral("unfiled")) {
+      mUnfiledRoot = rootId;
     }
   }
 
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"),
-                  &mTagRoot, mRoot, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aForceCreate) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+    nsIStringBundle* bundle = history->GetBundle();
+    NS_ENSURE_TRUE(bundle, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("unfiled"),
-                  &mUnfiledRoot, mRoot, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // Set titles for special folders
-  // We cannot rely on createdPlacesRoot due to Fx3beta->final migration path
-  PRUint16 databaseStatus = nsINavHistoryService::DATABASE_STATUS_OK;
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  rv = history->GetDatabaseStatus(&databaseStatus);
-  if (NS_FAILED(rv) ||
-      databaseStatus != nsINavHistoryService::DATABASE_STATUS_OK) {
-    rv = InitDefaults();
+    rv = CreateRoot(NS_LITERAL_CSTRING("places"), &mRoot, 0,
+                    nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CreateRoot(NS_LITERAL_CSTRING("menu"), &mMenuRoot, mRoot, bundle,
+                    NS_LITERAL_STRING("BookmarksMenuFolderTitle").get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CreateRoot(NS_LITERAL_CSTRING("toolbar"), &mToolbarRoot, mRoot, bundle,
+                    NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CreateRoot(NS_LITERAL_CSTRING("tags"), &mTagsRoot, mRoot, bundle,
+                    NS_LITERAL_STRING("TagsFolderTitle").get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CreateRoot(NS_LITERAL_CSTRING("unfiled"), &mUnfiledRoot, mRoot, bundle,
+                    NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 
-// nsNavBookmarks::InitDefaults
-//
-// Initializes default bookmarks and containers.
-// Pulls from places.propertes for l10n.
-// Replaces the old default_places.html file.
 nsresult
-nsNavBookmarks::InitDefaults()
+nsNavBookmarks::CreateRoot(const nsCString& name,
+                           PRInt64* _itemId,
+                           PRInt64 aParentId,
+                           nsIStringBundle* aBundle,
+                           const PRUnichar* aTitleStringId)
 {
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsIStringBundle* bundle = history->GetBundle();
-  NS_ENSURE_TRUE(bundle, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv;
 
-  // Bookmarks Menu
-  nsXPIDLString bookmarksTitle;
-  nsresult rv = bundle->GetStringFromName(
-    NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
-    getter_Copies(bookmarksTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mBookmarksRoot, NS_ConvertUTF16toUTF8(bookmarksTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Bookmarks Toolbar
-  nsXPIDLString toolbarTitle;
-  rv = bundle->GetStringFromName(
-    NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
-    getter_Copies(toolbarTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mToolbarFolder, NS_ConvertUTF16toUTF8(toolbarTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Unsorted Bookmarks
-  nsXPIDLString unfiledTitle;
-  rv = bundle->GetStringFromName(
-    NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get(),
-    getter_Copies(unfiledTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mUnfiledRoot, NS_ConvertUTF16toUTF8(unfiledTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Tags
-  nsXPIDLString tagsTitle;
-  rv = bundle->GetStringFromName(
-    NS_LITERAL_STRING("TagsFolderTitle").get(),
-    getter_Copies(tagsTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mTagRoot, NS_ConvertUTF16toUTF8(tagsTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// nsNavBookmarks::CreateRoot
-//
-//    This gets or creates a root folder of the given type. aWasCreated
-//    (optional) is true if the folder had to be created, false if we just used
-//    an old one. The statement that gets a folder ID from a root name is
-//    passed in so the DB only needs to parse the statement once, and we don't
-//    have to have a global for this. Creation is less optimized because it
-//    happens rarely.
-
-nsresult
-nsNavBookmarks::CreateRoot(mozIStorageStatement* aGetRootStatement,
-                           const nsCString& name, PRInt64* aID,
-                           PRInt64 aParentID, PRBool* aWasCreated)
-{
-  NS_ENSURE_STATE(aGetRootStatement);
-  mozStorageStatementScoper scoper(aGetRootStatement);
-  PRBool hasResult = PR_FALSE;
-  nsresult rv = aGetRootStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("root_name"), name);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aGetRootStatement->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (hasResult) {
-    if (aWasCreated)
-      *aWasCreated = PR_FALSE;
-    rv = aGetRootStatement->GetInt64(0, aID);
+  if (*_itemId == 0) {
+    // The root does not exist.  Create a new untitled folder for it.
+    rv = CreateFolder(aParentId, EmptyCString(), DEFAULT_INDEX, _itemId);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(*aID != 0, "Root is 0 for some reason, folders can't have 0 ID");
-    return NS_OK;
+
+    // Create a entry  in moz_bookmarks_roots to link the folder to the root.
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT INTO moz_bookmarks_roots (root_name, folder_id) "
+      "VALUES (:root_name, :item_id)"
+    ), getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("root_name"), name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), *_itemId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (aWasCreated)
-    *aWasCreated = PR_TRUE;
 
-  // create folder with no name or attributes
-  nsCOMPtr<mozIStorageStatement> insertStatement;
-  rv = CreateFolder(aParentID, EmptyCString(), nsINavBookmarksService::DEFAULT_INDEX, aID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // save root ID
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO moz_bookmarks_roots (root_name, folder_id) "
-    "VALUES (:root_name, :item_id)"
-  ), getter_AddRefs(insertStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = insertStatement->BindUTF8StringByName(NS_LITERAL_CSTRING("root_name"), name);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = insertStatement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), *aID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = insertStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Now set the title on the root.  Notice we do this regardless, to take in
+  // could title changes when schema changes.
+  if (aTitleStringId) {
+    nsXPIDLString title;
+    rv = aBundle->GetStringFromName(aTitleStringId, getter_Copies(title));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SetItemTitle(*_itemId, NS_ConvertUTF16toUTF8(title));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -763,7 +667,7 @@ nsNavBookmarks::GetPlacesRoot(PRInt64* aRoot)
 NS_IMETHODIMP
 nsNavBookmarks::GetBookmarksMenuFolder(PRInt64* aRoot)
 {
-  *aRoot = mBookmarksRoot;
+  *aRoot = mMenuRoot;
   return NS_OK;
 }
 
@@ -771,7 +675,7 @@ nsNavBookmarks::GetBookmarksMenuFolder(PRInt64* aRoot)
 NS_IMETHODIMP
 nsNavBookmarks::GetToolbarFolder(PRInt64* aFolderId)
 {
-  *aFolderId = mToolbarFolder;
+  *aFolderId = mToolbarRoot;
   return NS_OK;
 }
 
@@ -779,7 +683,7 @@ nsNavBookmarks::GetToolbarFolder(PRInt64* aFolderId)
 NS_IMETHODIMP
 nsNavBookmarks::GetTagsFolder(PRInt64* aRoot)
 {
-  *aRoot = mTagRoot;
+  *aRoot = mTagsRoot;
   return NS_OK;
 }
 
@@ -956,7 +860,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   PRInt64 grandParentId;
   rv = GetFolderIdForItem(aFolder, &grandParentId);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (grandParentId == mTagRoot) {
+  if (grandParentId == mTagsRoot) {
     // query for all bookmarks for that URI, notify for each
     nsTArray<PRInt64> bookmarks;
     rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
@@ -1072,7 +976,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     PRInt64 grandParentId;
     rv = GetFolderIdForItem(folderId, &grandParentId);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (grandParentId == mTagRoot) {
+    if (grandParentId == mTagsRoot) {
       nsCOMPtr<nsIURI> uri;
       rv = NS_NewURI(getter_AddRefs(uri), spec);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1423,8 +1327,8 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolderId)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aFolderId == mToolbarFolder) {
-    mToolbarFolder = 0;
+  if (aFolderId == mToolbarRoot) {
+    mToolbarRoot = 0;
   }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -1646,7 +1550,7 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
       // bookmark-folder result nodes which contain a bookmark for the removed
       // bookmark's url.
 
-      if (child.grandParentId == mTagRoot) {
+      if (child.grandParentId == mTagsRoot) {
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), child.url);
         NS_ENSURE_SUCCESS(rv, rv);
