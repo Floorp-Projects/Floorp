@@ -94,21 +94,6 @@ textbox.search-bar {
   background-color: #767973;
 }
 
-/* dialog popups ----------------------------------------------------------- */
-.dialog-dark {
-  color: #fff;
-  background-color: #767973;
-  border-width: 4px 3px 4px 3px;
-  border-style: solid;
-  -moz-border-top-colors: black #4a4b4f;
-  -moz-border-left-colors: black #4a4b4f;
-  -moz-border-bottom-colors: black #4a4b4f;
-  -moz-border-right-colors: black #4a4b4f;
-  -moz-border-radius: 8px 8px 8px 8px;
-  -moz-box-shadow: black 0 2px 2px;
-  padding: 8px;
-}
-
 /* prompt dialogs ---------------------------------------------------------- */
 .context-block,
 .modal-block {
@@ -119,6 +104,7 @@ textbox.search-bar {
 }
 
 dialog,
+.dialog-dark,
 .panel-arrowcontent {
   background: url("chrome://browser/skin/images/popup-bg-hdpi.png") left bottom repeat-x;
   background-color: white;
