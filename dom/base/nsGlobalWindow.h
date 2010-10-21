@@ -562,6 +562,10 @@ public:
     return mSerial;
   }
 
+  static nsGlobalWindow* GetOuterWindowWithId(PRUint64 aWindowID) {
+    return sOuterWindowsById ? sOuterWindowsById->Get(aWindowID) : nsnull;
+  }
+
 protected:
   // Object Management
   virtual ~nsGlobalWindow();
@@ -946,6 +950,9 @@ protected:
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
   static nsIDOMStorageList* sGlobalStorageList;
+
+  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindow*> WindowByIdTable;
+  static WindowByIdTable* sOuterWindowsById;
 };
 
 /*
