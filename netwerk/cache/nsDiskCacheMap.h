@@ -94,9 +94,6 @@ struct nsDiskCacheEntry;
 #define kMaxDataFileSize   5 * 1024 * 1024  // 5 MB (in bytes) 
 #define kBuckets           (1 << 5)    // must be a power of 2!
 
-// preallocate up to 1MB of separate cache file
-#define kPreallocateLimit  1 * 1024 * 1024
-
 class nsDiskCacheRecord {
 
 private:
