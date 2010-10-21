@@ -620,20 +620,22 @@ class CallCompiler : public BaseCompiler
 
     bool generateNativeStub()
     {
+        /* Snapshot the frameDepth before SplatApplyArgs modifies it. */
+        uintN initialFrameDepth = f.regs.sp - f.regs.fp->slots();
+
         /*
          * SplatApplyArgs has not been called, so we call it here before
          * potentially touching f.u.call.dynamicArgc.
          */
-        uintN staticFrameDepth = f.regs.sp - f.regs.fp->slots();
         Value *vp;
         if (ic.frameSize.isStatic()) {
-            JS_ASSERT(staticFrameDepth == ic.frameSize.staticFrameDepth());
+            JS_ASSERT(f.regs.sp - f.regs.fp->slots() == (int)ic.frameSize.staticFrameDepth());
             vp = f.regs.sp - (2 + ic.frameSize.staticArgc());
         } else {
             JS_ASSERT(*f.regs.pc == JSOP_FUNAPPLY && GET_ARGC(f.regs.pc) == 2);
-            if (!ic::SplatApplyArgs(f))  /* updates regs.sp */
+            if (!ic::SplatApplyArgs(f))       /* updates regs.sp */
                 THROWV(true);
-            vp = f.regs.fp->slots() + (staticFrameDepth - 3);  /* this, arg1, arg2 */
+            vp = f.regs.sp - (2 + f.u.call.dynamicArgc);
         }
 
         JSObject *obj;
@@ -668,7 +670,8 @@ class CallCompiler : public BaseCompiler
 
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
-            masm.stubCall(JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs), f.regs.pc, staticFrameDepth);
+            masm.stubCall(JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
+                          f.regs.pc, initialFrameDepth);
         }
 
         Registers tempRegs;
@@ -685,7 +688,7 @@ class CallCompiler : public BaseCompiler
 
         /* Store sp (if not already set by ic::SplatApplyArgs). */
         if (ic.frameSize.isStatic()) {
-            uint32 spOffset = sizeof(JSStackFrame) + staticFrameDepth * sizeof(Value);
+            uint32 spOffset = sizeof(JSStackFrame) + initialFrameDepth * sizeof(Value);
             masm.addPtr(Imm32(spOffset), JSFrameReg, t0);
             masm.storePtr(t0, FrameAddress(offsetof(VMFrame, regs.sp)));
         }
@@ -966,9 +969,54 @@ JSBool JS_FASTCALL
 ic::SplatApplyArgs(VMFrame &f)
 {
     JSContext *cx = f.cx;
+    JS_ASSERT(GET_ARGC(f.regs.pc) == 2);
+
+    /*
+     * The lazyArgsObj flag indicates an optimized call |f.apply(x, arguments)|
+     * where the args obj has not been created or pushed on the stack. Thus,
+     * if lazyArgsObj is set, the stack for |f.apply(x, arguments)| is:
+     *
+     *  | Function.prototype.apply | f | x |
+     *
+     * Otherwise, if !lazyArgsObj, the stack is a normal 2-argument apply:
+     *
+     *  | Function.prototype.apply | f | x | arguments |
+     */
+    if (f.u.call.lazyArgsObj) {
+        Value *vp = f.regs.sp - 3;
+        JS_ASSERT(JS_CALLEE(cx, vp).toObject().getFunctionPrivate()->u.n.native == js_fun_apply);
+
+        JSStackFrame *fp = f.regs.fp;
+        if (!fp->hasOverriddenArgs() &&
+            (!fp->hasArgsObj() ||
+             (fp->hasArgsObj() && !fp->argsObj().isArgsLengthOverridden()))) {
+
+            uintN n = fp->numActualArgs();
+            if (!BumpStack(f, n))
+                THROWV(false);
+            f.regs.sp += n;
+
+            Value *argv = JS_ARGV(cx, vp + 1 /* vp[1]'s argv */);
+            if (fp->hasArgsObj())
+                fp->forEachCanonicalActualArg(CopyNonHoleArgsTo(&fp->argsObj(), argv));
+            else
+                fp->forEachCanonicalActualArg(CopyTo(argv));
+
+            f.u.call.dynamicArgc = n;
+            return true;
+        }
+
+        /*
+         * Can't optimize; push the arguments object so that the stack matches
+         * the !lazyArgsObj stack state described above.
+         */
+        f.regs.sp++;
+        if (!js_GetArgsValue(cx, fp, &vp[3]))
+            THROWV(false);
+    }
+
     Value *vp = f.regs.sp - 4;
     JS_ASSERT(JS_CALLEE(cx, vp).toObject().getFunctionPrivate()->u.n.native == js_fun_apply);
-    JS_ASSERT(GET_ARGC(f.regs.pc) == 2);
 
     /*
      * This stub should mimic the steps taken by js_fun_apply. Step 1 and part

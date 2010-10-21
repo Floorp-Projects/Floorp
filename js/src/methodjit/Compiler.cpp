@@ -23,6 +23,7 @@
  * Contributor(s):
  *   David Anderson <danderson@mozilla.com>
  *   David Mandelin <dmandelin@mozilla.com>
+ *   Jan de Mooij <jandemooij@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -125,11 +126,12 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())), 
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame, script),
-    debugMode(cx->compartment->debugMode)
+    debugMode(cx->compartment->debugMode),
 #if defined JS_TRACER
-    , addTraceHints(cx->traceJitEnabled)
+    addTraceHints(cx->traceJitEnabled),
 #endif
-    , oomInVector(false)
+    oomInVector(false),
+    applyTricks(NoApplyTricks)
 {
 }
 
@@ -903,8 +905,17 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
-            prepareStubCall(Uses(0));
-            stubCall(stubs::Arguments);
+            /*
+             * For calls of the form 'f.apply(x, arguments)' we can avoid
+             * creating an args object by having ic::SplatApplyArgs pull
+             * directly from the stack. To do this, we speculate here that
+             * 'apply' actually refers to js_fun_apply. If this is not true,
+             * the slow path in JSOP_FUNAPPLY will create the args object.
+             */
+            if (canUseApplyTricks())
+                applyTricks = LazyArgsObj;
+            else
+                jsop_arguments();
             frame.pushSynced();
           END_CASE(JSOP_ARGUMENTS)
 
@@ -2347,7 +2358,8 @@ IsLowerableFunCallOrApply(jsbytecode *pc)
 }
 
 void
-mjit::Compiler::checkCallApplySpeculation(uint32 argc, FrameEntry *origCallee, FrameEntry *origThis,
+mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedArgc,
+                                          FrameEntry *origCallee, FrameEntry *origThis,
                                           MaybeRegisterID origCalleeType, RegisterID origCalleeData,
                                           MaybeRegisterID origThisType, RegisterID origThisData,
                                           Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch)
@@ -2379,8 +2391,19 @@ mjit::Compiler::checkCallApplySpeculation(uint32 argc, FrameEntry *origCallee, F
         stubcc.linkExitDirect(isFun, stubcc.masm.label());
         stubcc.linkExitDirect(isNative, stubcc.masm.label());
 
-        stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-        stubcc.call(stubs::UncachedCall);
+        int32 frameDepthAdjust;
+        if (applyTricks == LazyArgsObj) {
+            stubcc.call(stubs::Arguments);
+            frameDepthAdjust = +1;
+        } else {
+            frameDepthAdjust = 0;
+        }
+
+        stubcc.masm.move(Imm32(callImmArgc), Registers::ArgReg1);
+        JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
+        stubcc.masm.stubCall(JS_FUNC_TO_DATA_PTR(void *, stubs::UncachedCall),
+                             PC, frame.frameDepth() + frameDepthAdjust);
+        JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
         ADD_CALLSITE(true);
 
         RegisterID r0 = Registers::ReturnReg;
@@ -2407,33 +2430,50 @@ mjit::Compiler::checkCallApplySpeculation(uint32 argc, FrameEntry *origCallee, F
         *uncachedCallSlowRejoin = stubcc.masm.jump();
         JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
     }
+
+    /*
+     * For simplicity, we don't statically specialize calls to
+     * ic::SplatApplyArgs based on applyTricks. Rather, this state is
+     * communicated dynamically through the VMFrame.
+     */
+    if (*PC == JSOP_FUNAPPLY) {
+        masm.store32(Imm32(applyTricks == LazyArgsObj),
+                     FrameAddress(offsetof(VMFrame, u.call.lazyArgsObj)));
+    }
+}
+
+/* This predicate must be called before the current op mutates the FrameState. */
+bool
+mjit::Compiler::canUseApplyTricks()
+{
+    JS_ASSERT(*PC == JSOP_ARGUMENTS);
+    jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
+    return *nextpc == JSOP_FUNAPPLY &&
+           IsLowerableFunCallOrApply(nextpc) &&
+           !debugMode;
 }
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
 void
-mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
+mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 {
     /* Check for interrupts on function call */
     interruptCheckHelper();
 
-    FrameEntry *origCallee = frame.peek(-int(argc + 2));
-    FrameEntry *origThis = frame.peek(-int(argc + 1));
+    int32 speculatedArgc;
+    if (applyTricks == LazyArgsObj) {
+        frame.pop();
+        speculatedArgc = 1;
+    } else {
+        speculatedArgc = callImmArgc;
+    }
+
+    FrameEntry *origCallee = frame.peek(-(speculatedArgc + 2));
+    FrameEntry *origThis = frame.peek(-(speculatedArgc + 1));
 
     /* 'this' does not need to be synced for constructing. */
     if (callingNew)
         frame.discardFe(origThis);
-
-    /*
-     * Currently, constant values are not functions, so don't even try to
-     * optimize. This lets us assume that callee/this have regs below.
-     */
-#ifdef JS_MONOIC
-    if (origCallee->isConstant() || origCallee->isNotType(JSVAL_TYPE_OBJECT) || debugMode) {
-#endif
-        emitUncachedCall(argc, callingNew);
-        return;
-#ifdef JS_MONOIC
-    }
 
     /*
      * From the presence of JSOP_FUN{CALL,APPLY}, we speculate that we are
@@ -2443,6 +2483,26 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * we are not actually calling js_fun_call, the callIC must act as normal.
      */
     bool lowerFunCallOrApply = IsLowerableFunCallOrApply(PC);
+
+    /*
+     * Currently, constant values are not functions, so don't even try to
+     * optimize. This lets us assume that callee/this have regs below.
+     */
+#ifdef JS_MONOIC
+    if (debugMode ||
+        origCallee->isConstant() || origCallee->isNotType(JSVAL_TYPE_OBJECT) ||
+        (lowerFunCallOrApply &&
+         (origThis->isConstant() || origThis->isNotType(JSVAL_TYPE_OBJECT)))) {
+#endif
+        if (applyTricks == LazyArgsObj) {
+            /* frame.pop() above reset us to pre-JSOP_ARGUMENTS state */
+            jsop_arguments();
+            frame.pushSynced();
+        }
+        emitUncachedCall(callImmArgc, callingNew);
+        return;
+#ifdef JS_MONOIC
+    }
 
     /* Initialized by both branches below. */
     CallGenInfo     callIC(PC);
@@ -2474,10 +2534,11 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
                 PinRegAcrossSyncAndKill p3(frame, origThisData), p4(frame, origThisType);
 
                 /* Leaves pinned regs untouched. */
-                frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
+                frame.syncAndKill(Registers(Registers::AvailRegs), Uses(speculatedArgc + 2));
             }
 
-            checkCallApplySpeculation(argc, origCallee, origThis,
+            checkCallApplySpeculation(callImmArgc, speculatedArgc,
+                                      origCallee, origThis,
                                       origCalleeType, origCalleeData,
                                       origThisType, origThisData,
                                       &uncachedCallSlowRejoin, &uncachedCallPatch);
@@ -2493,17 +2554,17 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
              * length of the array passed to apply.
              */
             if (*PC == JSOP_FUNCALL)
-                callIC.frameSize.initStatic(frame.frameDepth(), argc - 1);
+                callIC.frameSize.initStatic(frame.frameDepth(), speculatedArgc - 1);
             else
                 callIC.frameSize.initDynamic();
         } else {
             /* Leaves pinned regs untouched. */
-            frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
+            frame.syncAndKill(Registers(Registers::AvailRegs), Uses(speculatedArgc + 2));
 
             icCalleeType = origCalleeType;
             icCalleeData = origCalleeData;
             icRvalAddr = frame.addressOf(origCallee);
-            callIC.frameSize.initStatic(frame.frameDepth(), argc);
+            callIC.frameSize.initStatic(frame.frameDepth(), speculatedArgc);
         }
     }
 
@@ -2640,7 +2701,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
         uncachedCallPatch.joinPoint = callIC.joinPoint;
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
 
-    frame.popn(argc + 2);
+    frame.popn(speculatedArgc + 2);
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
@@ -2666,6 +2727,8 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     callPatches.append(callPatch);
     if (lowerFunCallOrApply)
         callPatches.append(uncachedCallPatch);
+
+    applyTricks = NoApplyTricks;
 #endif
 }
 
@@ -4578,6 +4641,13 @@ mjit::Compiler::emitEval(uint32 argc)
     stubCall(stubs::Eval);
     frame.popn(argc + 2);
     frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_arguments()
+{
+    prepareStubCall(Uses(0));
+    stubCall(stubs::Arguments);
 }
 
 /*

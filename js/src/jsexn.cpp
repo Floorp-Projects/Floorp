@@ -260,15 +260,6 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
     return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
-struct CopyTo
-{
-    Value *dst;
-    CopyTo(jsval *dst) : dst(Valueify(dst)) {}
-    void operator()(uintN, Value *src) {
-        *dst++ = *src;
-    }
-};
-
 static JSBool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                JSString *filename, uintN lineno, JSErrorReport *report)
@@ -354,7 +345,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                             ? ATOM_TO_STRING(fp->fun()->atom)
                             : cx->runtime->emptyString;
             elem->argc = fp->numActualArgs();
-            fp->forEachCanonicalActualArg(CopyTo(values));
+            fp->forEachCanonicalActualArg(CopyTo(Valueify(values)));
             values += elem->argc;
         }
         elem->ulineno = 0;

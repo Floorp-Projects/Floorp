@@ -314,6 +314,33 @@ JSStackFrame::forEachFormalArg(Op op)
         op(i, p);
 }
 
+namespace js {
+
+struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
+{
+    CopyNonHoleArgsTo(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
+    JSObject *aobj;
+    Value *dst;
+    void operator()(uintN argi, Value *src) {
+        if (aobj->getArgsElement(argi).isMagic(JS_ARGS_HOLE))
+            dst->setUndefined();
+        else
+            *dst = *src;
+        ++dst;
+    }
+};
+
+struct CopyTo
+{
+    Value *dst;
+    CopyTo(Value *dst) : dst(dst) {}
+    void operator()(uintN, Value *src) {
+        *dst++ = *src;
+    }
+};
+
+}
+
 JS_ALWAYS_INLINE void
 JSStackFrame::clearMissingArgs()
 {
