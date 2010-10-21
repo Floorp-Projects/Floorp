@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<script>
+
+function boom()
+{
+  var r = document.documentElement;
+  r.style.display = "table-cell";
+  r.style.MozTransitionProperty = "x";
+  window.getComputedStyle(r).MozTransitionProperty;
+}
+
+</script>
+<body onload="boom();"></body>
