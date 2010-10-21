@@ -51,6 +51,10 @@
 #include "gfxContext.h"
 %}
 
+[ref] native nsConstRect(const nsRect);
+native nscolor(nscolor);
+[ptr] native gfxContext(gfxContext);
+
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -806,10 +810,8 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
-%{C++
-  virtual nsresult RenderDocument(const nsRect& aRect,
-                                  PRUint32 aFlags,
-                                  nscolor aBackgroundColor,
-                                  gfxContext* aThebesContext) = 0;
-%}
+  [noscript] void RenderDocument(in nsConstRect aRect,
+                                 in PRUint32 aFlags,
+                                 in nscolor aBackgroundColor,
+                                 in gfxContext aThebesContext);
 };
