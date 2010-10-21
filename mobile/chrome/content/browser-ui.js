@@ -605,7 +605,6 @@ var BrowserUI = {
   },
 
   closeAutoComplete: function closeAutoComplete() {
-    dump("=========================== called\n");
     if (this.isAutoCompleteOpen())
       this._edit.popup.closePopup();
 
@@ -861,9 +860,18 @@ var BrowserUI = {
       // Awesome popup event
       case "NavigationPanelShown":
         this._edit.setAttribute("open", "true");
+
+        // Disabled the search button if no search engines are available
+        let button = document.getElementById("urlbar-icons");
+        if (BrowserSearch.engines.length)
+          button.removeAttribute("disabled");
+        else
+          button.setAttribute("disabled", "true");
+
         break;
       case "NavigationPanelHidden":
         this._edit.removeAttribute("open");
+        document.getElementById("urlbar-icons").removeAttribute("disabled");
         break;
     }
   },
