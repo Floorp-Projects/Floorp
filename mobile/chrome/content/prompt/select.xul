@@ -25,7 +25,7 @@
       <description id="prompt-select-message"/>
     </scrollbox>
 
-    <menulist id="prompt-select-list" class="button-dark"/>
+    <menulist id="prompt-select-list"/>
   </vbox>
 
   <hbox class="prompt-buttons">

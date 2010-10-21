@@ -368,7 +368,7 @@
         <image id="bookmark-image"/>
       </hbox>
       <hbox pack="center">
-        <button class="button-dark" label="&editBookmarkDone.label;" oncommand="BookmarkHelper.save();"/>
+        <button label="&editBookmarkDone.label;" oncommand="BookmarkHelper.save();"/>
       </hbox>
     </vbox>
 
@@ -477,17 +477,17 @@
               <label class="panel-header" value="&consoleHeader.label;"/>
               <hbox align="center">
                 <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
-                <textbox id="console-eval-textbox" class="toolbar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
-                <button id="console-button-eval" class="button-dark show-text" label="&consoleEvaluate.label;" oncommand="ConsoleView.evaluateTypein()"/>
+                <textbox id="console-eval-textbox" class="toolbar search-bar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
+                <button id="console-button-eval" class="show-text" label="&consoleEvaluate.label;" oncommand="ConsoleView.evaluateTypein()"/>
               </hbox>
               <hbox align="center" pack="end">
-                <radiogroup id="console-filter" class="toggle-dark" oncommand="ConsoleView.changeMode();">
+                <radiogroup id="console-filter" oncommand="ConsoleView.changeMode();">
                   <radio id="console-filter-all" label="&consoleAll.label;" value="all" selected="true"/>
                   <radio id="console-filter-messages" label="&consoleMessages.label;" value="message"/>
                   <radio id="console-filter-warnings" label="&consoleWarnings.label;" value="warning"/>
                   <radio id="console-filter-errors" label="&consoleErrors.label;" value="error"/>
                 </radiogroup>
-                <button id="console-clear" class="button-dark show-text" oncommand="ConsoleView.clearConsole();" label="&consoleClear.label;"/>
+                <button id="console-clear" class="show-text" oncommand="ConsoleView.clearConsole();" label="&consoleClear.label;"/>
               </hbox>
             </vbox>
 
@@ -531,7 +531,7 @@
       <vbox id="select-container-inner" class="dialog-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons" pack="center">
-          <button id="select-buttons-done" class="button-dark" label="&selectHelper.done;" oncommand="SelectHelperUI.hide();"/>
+          <button id="select-buttons-done" label="&selectHelper.done;" oncommand="SelectHelperUI.hide();"/>
         </hbox>
       </vbox>
       <spacer flex="1000"/>
