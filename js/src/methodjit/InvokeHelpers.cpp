@@ -274,10 +274,10 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
         THROWV(NULL);
 
     /* Reset the part of the stack frame set by the caller. */
-    newfp->initCallFrameCallerHalf(cx, nactual, flags);
+    newfp->initCallFrameCallerHalf(cx, flags, ncode);
 
     /* Reset the part of the stack frame set by the prologue up to now. */
-    newfp->initCallFrameEarlyPrologue(fun, ncode);
+    newfp->initCallFrameEarlyPrologue(fun, nactual);
 
     /* The caller takes care of assigning fp to regs. */
     return newfp;
@@ -306,7 +306,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
      * prologue. Pass the existing value for ncode, it has already been set
      * by the jit code calling into this stub.
      */
-    fp->initCallFrameEarlyPrologue(fun, fp->nativeReturnAddress());
+    fp->initCallFrameEarlyPrologue(fun, nactual);
 
     /* Empty script does nothing. */
     bool callingNew = fp->isConstructing();
