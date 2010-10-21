@@ -350,6 +350,10 @@ radio:last-child:-moz-locale-dir(rtl) {
   border-radius: 8px 0px 0px 8px;
 }
 
+radio[focused="true"] > .radio-label-box {
+  border: none;
+}
+
 /* checkbox radios --------------------------------------------------------- */
 checkbox {
   margin: 1px 5px 2px 5px; /* match platform style for buttons */
