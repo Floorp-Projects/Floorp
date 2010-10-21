@@ -324,8 +324,8 @@ radio .radio-icon, radio .radio-check {
 
 radio:not([disabled=true]):hover:active,
 radio[selected] {
-  background-image: url("chrome://browser/skin/images/textbox-bg.png");
-  border-right: 1px solid rgba(0,0,0,0.2);
+  color: white;
+  background-image: url("chrome://browser/skin/images/toggle-on.png");
 }
 
 radio:first-child {
