@@ -1724,7 +1724,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
 
     Value *argv = JS_ARGV(cx, vp);
     Value fval;
-    if (argc > 0) {
+    if (argc > 0 && !argv[0].isUndefined()) {
         if (argv[0].isPrimitive()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_SORT_ARG);
             return false;
@@ -2464,7 +2464,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
         }
         begin = (jsuint)d;
 
-        if (argc > 1) {
+        if (argc > 1 && !argv[1].isUndefined()) {
             if (!ValueToNumber(cx, argv[1], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
