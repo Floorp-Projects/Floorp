@@ -3634,7 +3634,7 @@ var FullScreen = {
       // The user may quit fullscreen during an animation
       clearInterval(this._animationInterval);
       clearTimeout(this._animationTimeout);
-      gNavToolbox.style.marginTop = "0px";
+      gNavToolbox.style.marginTop = "";
       if (this._isChromeCollapsed)
         this.mouseoverToggle(true);
       this._isAnimating = false;
@@ -3767,7 +3767,7 @@ var FullScreen = {
       if (animateFrameAmount >= gNavToolbox.boxObject.height) {
         // We've animated enough
         clearInterval(FullScreen._animationInterval);
-        gNavToolbox.style.marginTop = "0px";
+        gNavToolbox.style.marginTop = "";
         FullScreen._isAnimating = false;
         FullScreen._shouldAnimate = false; // Just to make sure
         FullScreen.mouseoverToggle(false);
