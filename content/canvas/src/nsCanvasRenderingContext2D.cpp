@@ -814,6 +814,18 @@ protected:
     }
 
     friend struct nsCanvasBidiProcessor;
+
+private:
+#ifdef MOZ_IPC
+    void DeallocShmemIfShared(nsRefPtr<gfxASurface> &aSurface) {
+      ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
+      if (allocator && gfxSharedImageSurface::IsSharedImage(aSurface)) {
+          Shmem mem = static_cast<gfxSharedImageSurface*>(aSurface.get())->GetShmem();
+          allocator->DeallocShmem(mem);
+      }
+    }
+#endif
+
 };
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
@@ -874,11 +886,7 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     Reset();
 
 #ifdef MOZ_IPC
-    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
-    if (allocator && gfxSharedImageSurface::IsSharedImage(mBackSurface)) {
-        Shmem mem = static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem();
-        allocator->DeallocShmem(mem);
-    }
+    DeallocShmemIfShared(mBackSurface);
     mBackSurface = nsnull;
 #endif
 
@@ -895,11 +903,7 @@ nsresult
 nsCanvasRenderingContext2D::Reset()
 {
 #ifdef MOZ_IPC
-    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
-    if (allocator && gfxSharedImageSurface::IsSharedImage(mSurface)) {
-        Shmem &mem = static_cast<gfxSharedImageSurface*>(mSurface.get())->GetShmem();
-        allocator->DeallocShmem(mem);
-    }
+    DeallocShmemIfShared(mSurface);
 #endif
 
     // only do this for non-docshell created contexts,
