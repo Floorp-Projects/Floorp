@@ -59,8 +59,9 @@ interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
+interface nsIDOMWindow;
 
-[scriptable, uuid(8707ed93-3277-42a5-a235-533aa661a263)]
+[scriptable, uuid(bf43190f-dc49-4948-934f-4613438ed84a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -799,6 +800,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * error if there is no widget associated with this window.
    */
   readonly attribute AString layerManagerType;
+
+  /**
+   * Return the outer window with the given ID, if any.  Can return null.
+   */
+  nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
 %{C++
   virtual nsresult RenderDocument(const nsRect& aRect,
