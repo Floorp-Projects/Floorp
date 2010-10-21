@@ -1189,18 +1189,6 @@ protected:
   PRPackedBool              mIsActive;
   PRPackedBool              mFrozen;
 
-#ifdef ACCESSIBILITY
-  /**
-   * Call this when there have been significant changes in the rendering for
-   * a content subtree, so the matching accessibility subtree can be invalidated
-   */
-  void InvalidateAccessibleSubtree(nsIContent *aContent);
-#endif
-
-  // Set to true when the accessibility service is being used to mirror
-  // the dom/layout trees
-  PRPackedBool              mIsAccessibilityActive;
-
   PRPackedBool              mObservesMutationsForPrint;
 
   PRPackedBool              mReflowScheduled; // If true, we have a reflow

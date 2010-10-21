@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test accessible recreation</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function recreateAccessible(aID, aWontBeAccessible)
+    {
+      this.node = getNode(aID);
+      this.accessible =
+        isAccessible(this.node) ? getAccessible(this.node) : null;
+
+      this.eventSeq = [ ];
+
+      if (this.accessible)
+        this.eventSeq.push(new invokerChecker(EVENT_HIDE,
+                                              this.accessible));
+
+      if (!aWontBeAccessible)
+        this.eventSeq.push(new invokerChecker(EVENT_SHOW, getAccessible,
+                                              this.node));
+
+      this.eventSeq.push(new invokerChecker(EVENT_REORDER,
+                                            getContainerAccessible(this.node)));
+
+      if (this.accessible) {
+        this.unexpectedEventSeq = [
+          new invokerChecker(EVENT_SHOW, this.accessible)
+        ];
+      }
+    }
+
+    function changeAttr(aID, aAttr, aValue)
+    {
+      this.__proto__ = new recreateAccessible(aID);
+
+      this.invoke = function changeAttr_invoke()
+      {
+        this.node.setAttribute(aAttr, aValue);
+      }
+
+      this.getID = function changeAttr_getID()
+      {
+        return "change " + aAttr + "attribute for " + aID;
+      }
+    }
+
+    function removeAttr(aID, aAttr)
+    {
+      this.__proto__ = new recreateAccessible(aID, true);
+
+      this.invoke = function remvoeAttr_invoke()
+      {
+        this.node.removeAttribute(aAttr);
+      }
+
+      this.getID = function remvoeAttr_getID()
+      {
+        return "remove " + aAttr + "attribute for " + aID;
+      }
+    }
+
+    function changeRole(aID, aHasAccessible)
+    {
+      this.__proto__ = new changeAttr(aID, "role", "button");
+    }
+
+    function removeRole(aID)
+    {
+      this.__proto__ = new removeAttr(aID, "role");
+    }
+
+    function changeOnclick(aID)
+    {
+      this.__proto__ = new changeAttr(aID, "onclick", "alert(3);");
+    }
+
+    function changeHref(aID)
+    {
+      this.__proto__ = new changeAttr(aID, "href", "www");
+    }
+
+    function changeMultiselectable(aID)
+    {
+      this.__proto__ = new changeAttr(aID, "aria-multiselectable", "true");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      // make the accessible an inaccessible
+      gQueue.push(new changeRole("span"));
+
+      // make the inaccessible an accessible
+      gQueue.push(new removeRole("span"));
+
+      // recreate an accessible by role change
+      gQueue.push(new changeRole("div1"));
+
+      // recreate an accessible by onclick change
+      gQueue.push(new changeOnclick("div2"));
+
+      // recreate an accessible by href change
+      gQueue.push(new changeHref("anchor"));
+
+      // recreate an accessible by aria-multiselectable change
+      gQueue.push(new changeMultiselectable("div3"));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Rework accessible tree update code"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
+    Mozilla Bug 570275
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <span id="span">span</span>
+  <div id="div1">div</div>
+  <div id="div2">div</div>
+  <a id="anchor">anchor</a>
+  <div id="div3" role="listbox">list</div>
+
+  <div id="eventdump"></div>
+</body>
+</html>
