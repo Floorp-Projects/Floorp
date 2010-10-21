@@ -23,6 +23,7 @@
  *   Andrei Volkov <av@netscape.com>
  *   Brian Stell <bstell@netscape.com>
  *   Peter Lubczynski <peterl@netscape.com>
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,7 +52,7 @@
 #include "nsDebug.h"
 
 #include "nsGUIEvent.h"
-
+#include "nsWindowsDllInterceptor.h"
 #include "nsPluginSafety.h"
 #include "nsPluginNativeWindow.h"
 #include "nsThreadUtils.h"
@@ -152,6 +153,7 @@ private:
 public:
   // locals
   WNDPROC GetPrevWindowProc();
+  void SetPrevWindowProc(WNDPROC proc) { mPluginWinProc = proc; }
   WNDPROC GetWindowProc();
   PluginWindowEvent * GetPluginWindowEvent(HWND aWnd,
                                            UINT aMsg,
@@ -159,8 +161,8 @@ public:
                                            LPARAM aLParam);
 
 private:
-  WNDPROC mPrevWinProc;
   WNDPROC mPluginWinProc;
+  WNDPROC mPrevWinProc;
   PluginWindowWeakRef mWeakRef;
   nsRefPtr<PluginWindowEvent> mCachedPluginWindowEvent;
 
@@ -380,6 +382,135 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   return res;
 }
 
+/*
+ * Flash will reset the subclass of our widget at various times.
+ * (Notably when entering and exiting full screen mode.) This
+ * occurs independent of the main plugin window event procedure.
+ * We trap these subclass calls to prevent our subclass hook from
+ * getting dropped.
+ * Note, ascii versions can be nixed once flash versions < 10.1
+ * are considered obsolete.
+ */
+static WindowsDllInterceptor sUser32Intercept;
+
+#ifdef _WIN64
+typedef LONG_PTR
+  (WINAPI *User32SetWindowLongPtrA)(HWND hWnd,
+                                    int nIndex,
+                                    LONG_PTR dwNewLong);
+typedef LONG_PTR
+  (WINAPI *User32SetWindowLongPtrW)(HWND hWnd,
+                                    int nIndex,
+                                    LONG_PTR dwNewLong);
+static User32SetWindowLongPtrA sUser32SetWindowLongAHookStub = NULL;
+static User32SetWindowLongPtrW sUser32SetWindowLongWHookStub = NULL;
+#else
+typedef LONG
+(WINAPI *User32SetWindowLongA)(HWND hWnd,
+                               int nIndex,
+                               LONG dwNewLong);
+typedef LONG
+(WINAPI *User32SetWindowLongW)(HWND hWnd,
+                               int nIndex,
+                               LONG dwNewLong);
+static User32SetWindowLongA sUser32SetWindowLongAHookStub = NULL;
+static User32SetWindowLongW sUser32SetWindowLongWHookStub = NULL;
+#endif
+static inline PRBool
+SetWindowLongHookCheck(HWND hWnd,
+                       int nIndex,
+                       LONG_PTR newLong)
+{
+  nsPluginNativeWindowWin * win =
+    (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
+  if (!win || (win && win->mPluginType != nsPluginType_Flash) ||
+      (nIndex == GWLP_WNDPROC &&
+       newLong == reinterpret_cast<LONG_PTR>(PluginWndProc)))
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
+#ifdef _WIN64
+LONG_PTR WINAPI
+SetWindowLongPtrAHook(HWND hWnd,
+                      int nIndex,
+                      LONG_PTR newLong)
+#else
+LONG WINAPI
+SetWindowLongAHook(HWND hWnd,
+                   int nIndex,
+                   LONG newLong)
+#endif
+{
+  if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
+      return sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
+
+  // Set flash's new subclass to get the result. 
+  LONG_PTR proc = sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
+
+  // We already checked this in SetWindowLongHookCheck
+  nsPluginNativeWindowWin * win =
+    (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
+
+  // Hook our subclass back up, just like we do on setwindow.   
+  win->SetPrevWindowProc(
+    reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
+      reinterpret_cast<LONG_PTR>(PluginWndProc))));
+  return proc;
+}
+
+#ifdef _WIN64
+LONG_PTR WINAPI
+SetWindowLongPtrWHook(HWND hWnd,
+                      int nIndex,
+                      LONG_PTR newLong)
+#else
+LONG WINAPI
+SetWindowLongWHook(HWND hWnd,
+                   int nIndex,
+                   LONG newLong)
+#endif
+{
+  if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
+      return sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
+
+  // Set flash's new subclass to get the result. 
+  LONG_PTR proc = sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
+
+  // We already checked this in SetWindowLongHookCheck
+  nsPluginNativeWindowWin * win =
+    (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
+
+  // Hook our subclass back up, just like we do on setwindow.   
+  win->SetPrevWindowProc(
+    reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
+      reinterpret_cast<LONG_PTR>(PluginWndProc))));
+  return proc;
+}
+
+static void
+HookSetWindowLongPtr()
+{
+#ifdef _WIN64
+  // XXX WindowsDllInterceptor doesn't support hooks
+  // in 64-bit builds, disabling this code for now.
+  return;
+#endif
+
+  sUser32Intercept.Init("user32.dll");
+#ifdef _WIN64
+  sUser32Intercept.AddHook("SetWindowLongPtrA", SetWindowLongPtrAHook,
+                           (void**) &sUser32SetWindowLongAHookStub);
+  sUser32Intercept.AddHook("SetWindowLongPtrW", SetWindowLongPtrWHook,
+                           (void**) &sUser32SetWindowLongWHookStub);
+#else
+  sUser32Intercept.AddHook("SetWindowLongA", SetWindowLongAHook,
+                           (void**) &sUser32SetWindowLongAHookStub);
+  sUser32Intercept.AddHook("SetWindowLongW", SetWindowLongWHook,
+                           (void**) &sUser32SetWindowLongWHookStub);
+#endif
+}
+
 /**
  *   nsPluginNativeWindowWin implementation
  */
@@ -490,6 +621,8 @@ nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWPar
 
 nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
 {
+  // Note, 'window' can be null
+
   // check the incoming instance, null indicates that window is going away and we are
   // not interested in subclassing business any more, undo and don't subclass
   if (!aPluginInstance) {
@@ -516,22 +649,24 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 
   // WINCE does not subclass windows.  See bug 300011 for the details.
 #ifndef WINCE
-  // grab the widget procedure before the plug-in does a subclass in
-  // setwindow. We'll use this in PluginWndProc for forwarding focus
-  // events to the widget.
-  WNDPROC currentWndProc =
-    (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
-  if (!mPrevWinProc && currentWndProc != PluginWndProc)
-    mPrevWinProc = currentWndProc;
+  if (window) {
+    // grab the widget procedure before the plug-in does a subclass in
+    // setwindow. We'll use this in PluginWndProc for forwarding focus
+    // events to the widget.
+    WNDPROC currentWndProc =
+      (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
+    if (!mPrevWinProc && currentWndProc != PluginWndProc)
+      mPrevWinProc = currentWndProc;
 
-  // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
-  // V8.2.2 and V9.1 don't have such problem.
-  if (mPluginType == nsPluginType_PDF) {
-    HWND parent = ::GetParent((HWND)window);
-    if (mParentWnd != parent) {
-      NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
-      mParentWnd = parent;
-      mParentProc = ::GetWindowLongPtr(mParentWnd, GWLP_WNDPROC);
+    // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
+    // V8.2.2 and V9.1 don't have such problem.
+    if (mPluginType == nsPluginType_PDF) {
+      HWND parent = ::GetParent((HWND)window);
+      if (mParentWnd != parent) {
+        NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
+        mParentWnd = parent;
+        mParentProc = ::GetWindowLongPtr(mParentWnd, GWLP_WNDPROC);
+      }
     }
   }
 #endif
@@ -540,6 +675,11 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPl
 
 #ifndef WINCE
   SubclassAndAssociateWindow();
+
+  if (window && mPluginType == nsPluginType_Flash &&
+      !GetPropW((HWND)window, L"PluginInstanceParentProperty")) {
+    HookSetWindowLongPtr();
+  }
 #endif
 
   return NS_OK;
