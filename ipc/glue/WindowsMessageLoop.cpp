@@ -339,6 +339,9 @@ ProcessOrDeferMessage(HWND hwnd,
   return res;
 }
 
+} // anonymous namespace
+
+// We need the pointer value of this in PluginInstanceChild.
 LRESULT CALLBACK
 NeuteredWindowProc(HWND hwnd,
                    UINT uMsg,
@@ -356,6 +359,8 @@ NeuteredWindowProc(HWND hwnd,
   // DefWindowProc, or defer it for later.
   return ProcessOrDeferMessage(hwnd, uMsg, wParam, lParam);
 }
+
+namespace {
 
 static bool
 WindowIsDeferredWindow(HWND hWnd)
@@ -464,8 +469,7 @@ RestoreWindowProcedure(HWND hWnd)
 {
   NS_ASSERTION(WindowIsDeferredWindow(hWnd),
                "Not a deferred window, this shouldn't be in our list!");
-
-  LONG_PTR oldWndProc = (LONG_PTR)RemoveProp(hWnd, kOldWndProcProp);
+  LONG_PTR oldWndProc = (LONG_PTR)GetProp(hWnd, kOldWndProcProp);
   if (oldWndProc) {
     NS_ASSERTION(oldWndProc != (LONG_PTR)NeuteredWindowProc,
                  "This shouldn't be possible!");
@@ -475,6 +479,7 @@ RestoreWindowProcedure(HWND hWnd)
     NS_ASSERTION(currentWndProc == (LONG_PTR)NeuteredWindowProc,
                  "This should never be switched out from under us!");
   }
+  RemoveProp(hWnd, kOldWndProcProp);
 }
 
 LRESULT CALLBACK
