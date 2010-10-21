@@ -1030,7 +1030,9 @@ pageaction {
   border-style: solid;
   border-width: 1px !important;
   height: 64px;
+  min-height: 64px;
   width: 100%;
+  min-width: 200px; /* keep the button from being too narrow */
 }
 
 /* Override richlistbox and richlistitem styles */
@@ -1038,12 +1040,12 @@ pageaction {
   width: 100%;
 }
 
+.prompt-button,
 .context-command {
   -moz-box-align: center;
-  min-height: 64px;
-  min-width: 200px; /* keep the button from being too narrow */
 }
 
+.prompt-button[selected="true"],
 .context-command[selected="true"] {
   background: transparent;
 }
@@ -1431,12 +1433,6 @@ echrome-select-option[disabled="true"] {
 }
 
 /* menulist popup ---------------------------------------------------------- */
-#menulist-popup {
-  border: none;
-  padding: 1px;
-  -moz-border-radius: 8px;
-}
-
 #menulist-popup > #menulist-title {
   padding: 12px 4px 4px 4px;
   font-size: 18px;
@@ -1446,52 +1442,9 @@ echrome-select-option[disabled="true"] {
   display: none;
 }
 
-#menulist-commands {
-  border: 1px solid rgb(207,207,207);
-  -moz-border-radius: 8px;
-}
-
-#menulist-popup > label:not([value=""]) + #menulist-commands {
-  -moz-border-radius-topleft: 0;
-  -moz-border-radius-topright: 0;
-}
-
-.menulist-command,
-.menulist-command[selected] {
-  -moz-box-align: center;
-  background-color: rgb(245,245,245);
-  min-width: 200px; /* keep the command from being too narrow */
-}
-
 .menulist-command > image {
   width: 32px;
   height: 32px;
-}
-
-.menulist-command:first-child {
-  background: -moz-linear-gradient(top, rgb(255,255,255), rgb(245,245,245));
-}
-
-#menulist-popup > #menulist-title[value=""] + #menulist-commands > .menulist-command:first-child {
-  -moz-border-radius: 8px 8px 0 0;
-}
-
-.menulist-command:last-child {
-  background: -moz-linear-gradient(top, rgb(245,245,245), rgb(215,215,215));
-  -moz-border-radius: 0 0 8px 8px;
-}
-
-.menulist-command:first-child:last-child {
-  -moz-border-radius: 8px;
-}
-
-.menulist-command:hover:active {
-  background: #8db8d8;
-}
-
-.menulist-command.selected {
-  background: #8db8d8;
-  pointer-events: none;
 }
 
 .menulist-command.selected > image {

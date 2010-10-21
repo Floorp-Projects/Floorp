@@ -2391,7 +2391,7 @@ var MenuListHelperUI = {
       let item = document.createElement("richlistitem");
       // Add selected as a class name instead of an attribute to not being overidden
       // by the richlistbox behavior (it sets the "current" and "selected" attribute
-      item.setAttribute("class", "menulist-command" + (child.selected ? " selected" : ""));
+      item.setAttribute("class", "menulist-command prompt-button" + (child.selected ? " selected" : ""));
 
       let image = document.createElement("image");
       image.setAttribute("src", child.image || "");
