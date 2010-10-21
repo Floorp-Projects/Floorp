@@ -2282,6 +2282,9 @@ JSContext::updateJITEnabled()
                           JSC::MacroAssemblerX86Common::HasSSE2
 # endif
                         ;
+#ifdef JS_TRACER
+    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
+#endif
 #endif
 }
 

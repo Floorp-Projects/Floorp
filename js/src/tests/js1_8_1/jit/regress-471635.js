@@ -62,17 +62,19 @@ function test()
   var recorderStarted;
   var recorderAborted;
   var traceCompleted;
+  var skip = true;
 
-  if (this.tracemonkey)
+  if (this.tracemonkey && !this.tracemonkey.profiler)
   {
     recorderStarted = this.tracemonkey.recorderStarted;
     recorderAborted = this.tracemonkey.recorderAborted;
     traceCompleted  = this.tracemonkey.traceCompleted;
+    skip = false;
   }
 
   jit(false);
 
-  if (this.tracemonkey)
+  if (!skip)
   {
     expect = 'recorderStarted=1, recorderAborted=0, traceCompleted=1';
     actual = 'recorderStarted=' + recorderStarted + ', recorderAborted=' + recorderAborted + ', traceCompleted=' + traceCompleted;

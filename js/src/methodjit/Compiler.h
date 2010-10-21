@@ -177,6 +177,7 @@ class Compiler : public BaseCompiler
         RegisterID typeReg;
         bool usePropCache;
         Label shapeGuard;
+        jsbytecode *pc;
         JSAtom *atom;
         StateRemat objRemat;
         StateRemat idRemat;
