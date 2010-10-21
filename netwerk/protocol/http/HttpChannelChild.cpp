@@ -835,29 +835,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   if (NS_FAILED(rv))
     return rv;
 
-  // Prepare uploadStream for POST data
-  nsCAutoString uploadStreamData;
-  PRInt32 uploadStreamInfo;
-
-  if (mUploadStream) {
-    // Read entire POST stream into string:
-    // This is a temporary measure until bug 564553 is implemented:  we're doing
-    // a blocking read of a potentially arbitrarily large stream, so this isn't
-    // performant/safe for large file uploads.
-    PRUint32 bytes;
-    mUploadStream->Available(&bytes);
-    if (bytes > 0) {
-      rv = NS_ReadInputStreamToString(mUploadStream, uploadStreamData, bytes);
-      if (NS_FAILED(rv))
-        return rv;
-    }
-
-    uploadStreamInfo = mUploadStreamHasHeaders ? 
-      eUploadStream_hasHeaders : eUploadStream_hasNoHeaders;
-  } else {
-    uploadStreamInfo = eUploadStream_null;
-  }
-
   const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
   if (cookieHeader) {
     mUserSetCookieHeader = cookieHeader;
@@ -930,9 +907,10 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
                 IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
-                mRequestHeaders, mRequestHead.Method(), uploadStreamData,
-                uploadStreamInfo, mPriority, mRedirectionLimit,
-                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
+                mRequestHeaders, mRequestHead.Method(),
+                IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
+                mPriority, mRedirectionLimit, mAllowPipelining,
+                mForceAllowThirdPartyCookie, mSendResumeAt,
                 mStartPos, mEntityID, mChooseApplicationCache, 
                 appCacheClientId);
 
