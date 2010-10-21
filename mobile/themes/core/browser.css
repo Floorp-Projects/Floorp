@@ -154,11 +154,12 @@ toolbarbutton.urlbar-button {
   -moz-box-flex: 1;
   -moz-box-align: center;
   -moz-box-pack: center;
+  background-image: url("chrome://browser/skin/images/endcap-default-bg.png");
 }
 
 .urlbar-cap-button[open="true"],
 .urlbar-cap-button:hover:active {
-  background-color: rgba(189,192,197,0.4);
+  background-image: url("chrome://browser/skin/images/endcap-active-bg.png");
 }
 
 /* left cap button --------------------------------------------------------- */
@@ -183,22 +184,21 @@ toolbarbutton.urlbar-button {
 
 /* add special color */
 #identity-box[mode="verifiedIdentity"] {
-  background-color: rgb(137,215,21);
+  background-image: url("chrome://browser/skin/images/endcap-ssl-default-bg.png");
 }
 
-#identity-box[mode="verifiedIdentity"]:hover:active,
-#identity-box[mode="verifiedIdentity"][open] {
-  background-color: rgb(115,181,16);
+#identity-box[mode="verifiedIdentity"][open],
+#identity-box[mode="verifiedIdentity"]:hover:active {
+  background-image: url("chrome://browser/skin/images/endcap-ssl-active-bg.png");
 }
 
-/* add special color */
 #identity-box[mode="verifiedDomain"] {
-  background-color: rgb(101,121,227);
+  background-image: url("chrome://browser/skin/images/endcap-ev-default-bg.png");
 }
 
-#identity-box[mode="verifiedDomain"]:hover:active,
-#identity-box[mode="verifiedDomain"][open] {
-  background-color: rgb(86,102,189);
+#identity-box[mode="verifiedDomain"][open],
+#identity-box[mode="verifiedDomain"]:hover:active {
+  background-image: url("chrome://browser/skin/images/endcap-ev-active-bg.png");
 }
 
 #urlbar-throbber[loading] {
@@ -950,7 +950,15 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 /* Popup Icons */
 #identity-popup-icon {
   padding: 0;
-  list-style-image: url("chrome://browser/skin/images/identity-48.png");
+  list-style-image: url("chrome://browser/skin/images/identity-default-hdpi.png");
+}
+
+#identity-container[mode="verifiedIdentity"] > hbox > #identity-popup-icon {
+  list-style-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
+}
+
+#identity-container[mode="verifiedDomain"] > hbox > #identity-popup-icon {
+  list-style-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
 }
 
 /* Popup Body Text */
@@ -985,12 +993,12 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 #identity-popup-encryption-icon {
-  list-style-image: url("chrome://browser/skin/images/unlock-40.png");
+  list-style-image: url("chrome://browser/skin/images/unlocked-hdpi.png");
 }
 
 #identity-container[mode="verifiedIdentity"] > hbox > vbox > #identity-popup-encryption-icon ,
 #identity-container[mode="verifiedDomain"] > hbox > vbox > #identity-popup-encryption-icon {
-  list-style-image: url("chrome://browser/skin/images/lock-40.png");
+  list-style-image: url("chrome://browser/skin/images/locked-hdpi.png");
 }
 
 /* Page Actions, Prompt, and Context Menu popups --------------------------- */
