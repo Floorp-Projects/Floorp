@@ -1555,6 +1555,10 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowWithId(PRUint64 aWindowID,
                                        nsIDOMWindow** aWindow)
 {
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   *aWindow = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
   NS_IF_ADDREF(*aWindow);
   return NS_OK;
