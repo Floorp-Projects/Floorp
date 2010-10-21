@@ -299,7 +299,6 @@ namespace mozilla {
                 "JOIN moz_bookmarks t_t ON t_t.id = b_t.parent  "
                 "WHERE b_t.fk = ") +
                 aRelation + NS_LITERAL_CSTRING(" "
-                "AND LENGTH(t_t.title) > 0 "
                 "AND t_t.parent = ") +
                 nsPrintfCString("%lld", aTagsFolder) + NS_LITERAL_CSTRING(" "
                 "ORDER BY t_t.title COLLATE NOCASE ASC "
