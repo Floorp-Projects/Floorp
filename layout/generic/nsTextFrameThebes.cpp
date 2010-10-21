@@ -452,6 +452,9 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun, nsTextFrame* aStartContinuation)
     }
     else {
       userData->mMappedFlowCount = destroyFromIndex;
+      if (userData->mLastFlowIndex >= destroyFromIndex) {
+        userData->mLastFlowIndex = destroyFromIndex - 1;
+      }
     }
   }
 }
@@ -7125,12 +7128,10 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the tag
   IndentBy(out, aIndent);
   ListTag(out);
-#ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
-#endif
   if (HasView()) {
     fprintf(out, " [view=%p]", static_cast<void*>(GetView()));
   }
+  fprintf(out, " [run=%p]", static_cast<void*>(mTextRun));
 
   PRInt32 totalContentLength;
   nsCAutoString tmp;
