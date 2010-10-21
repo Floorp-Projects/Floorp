@@ -40,6 +40,7 @@
 
 #include "common/memory.h"
 #include "google_breakpad/common/minidump_format.h"
+#include <asm/ptrace.h>
 
 namespace google_breakpad {
 
