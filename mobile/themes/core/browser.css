@@ -1014,6 +1014,7 @@ pageaction {
   border-style: solid;
   border-width: 1px !important;
   height: 64px;
+  width: 100%;
 }
 
 /* Override richlistbox and richlistitem styles */
