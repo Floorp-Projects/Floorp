@@ -931,33 +931,27 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
     return JS_TRUE;
 }
 
-static JSObject *
-CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
+static bool
+CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj)
 {
-    JSObject *inner;
-
-    if (!scopeobj)
-        goto bad;
-
-    OBJ_TO_INNER_OBJECT(cx, scopeobj);
-    if (!scopeobj)
-        return NULL;
+    JSObject *inner = scopeobj;
+    OBJ_TO_INNER_OBJECT(cx, inner);
+    if (!inner)
+        return false;
+    JS_ASSERT(inner == scopeobj);
 
     /* XXX This is an awful gross hack. */
-    inner = scopeobj;
     while (scopeobj) {
         JSObjectOp op = scopeobj->getClass()->ext.innerObject;
-        if (op && op(cx, scopeobj) != scopeobj)
-            goto bad;
+        if (op && op(cx, scopeobj) != scopeobj) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_INDIRECT_CALL,
+                                 js_eval_str);
+            return false;
+        }
         scopeobj = scopeobj->getParent();
     }
 
-    return inner;
-
-bad:
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_BAD_INDIRECT_CALL, caller);
-    return NULL;
+    return true;
 }
 
 const char *
@@ -1093,12 +1087,14 @@ EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN static
 static JSBool
 eval(JSContext *cx, uintN argc, Value *vp)
 {
-    if (argc < 1) {
-        vp->setUndefined();
-        return true;
-    }
+    /*
+     * NB: This method handles only indirect eval: direct eval is handled by
+     *     JSOP_EVAL.
+     */
 
     JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
+
+    /* FIXME Bug 602994: This really should be perfectly cromulent. */
     if (!caller) {
         /* Eval code needs to inherit principals from the caller. */
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1106,72 +1102,36 @@ eval(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    jsbytecode *callerPC = caller->pc(cx);
-    bool directCall = (callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
+    return EvalKernel(cx, argc, vp, INDIRECT_EVAL, caller, vp[0].toObject().getGlobal());
+}
 
-    /*
-     * If the callee was originally a cross-compartment wrapper, this is an
-     * indirect call.
-     */
-    if (directCall && caller->scopeChain().compartment() != vp[0].toObject().compartment())
-        directCall = false;
+namespace js {
 
+bool
+EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame *caller,
+           JSObject *scopeobj)
+{
     /*
-     * Direct calls to eval are supposed to see the caller's |this|. If we
-     * haven't wrapped that yet, do so now, before we make a copy of it for
-     * the eval code to use.
+     * FIXME Bug 602994: Calls with no scripted caller should be permitted and
+     *       should be implemented as indirect calls.
      */
-    if (!caller->computeThis(cx))
-        return false;
-        
-    Value *argv = JS_ARGV(cx, vp);
-    if (!argv[0].isString()) {
-        *vp = argv[0];
-        return true;
-    }
+    JS_ASSERT(caller);
+    JS_ASSERT(scopeobj);
 
     /*
      * We once supported a second argument to eval to use as the scope chain
      * when evaluating the code string.  Warn when such uses are seen so that
      * authors will know that support for eval(s, o) has been removed.
      */
-    if (argc > 1 && !caller->script()->warnedAboutTwoArgumentEval) {
+    JSScript *callerScript = caller->script();
+    if (argc > 1 && !callerScript->warnedAboutTwoArgumentEval) {
         static const char TWO_ARGUMENT_WARNING[] =
             "Support for eval(code, scopeObject) has been removed. "
             "Use |with (scopeObject) eval(code);| instead.";
         if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
             return false;
-        caller->script()->warnedAboutTwoArgumentEval = true;
+        callerScript->warnedAboutTwoArgumentEval = true;
     }
-
-    /*
-     * Per ES5, if we see an indirect call, then run in the global scope.
-     * (eval is specified this way so that the compiler can make assumptions
-     * about what bindings may or may not exist in the current frame if it
-     * doesn't see 'eval'.)
-     */
-    uintN staticLevel;
-    JSObject *scopeobj;
-    if (directCall) {
-        /* Compile using the caller's current scope object. */
-        staticLevel = caller->script()->staticLevel + 1;
-        scopeobj = GetScopeChainFast(cx, caller, JSOP_EVAL,
-                                     JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
-        if (!scopeobj)
-            return false;
-
-        JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
-    } else {
-        /* Pretend that we're top level. */
-        staticLevel = 0;
-        scopeobj = vp[0].toObject().getGlobal();
-    }
-
-    /* Ensure we compile this eval with the right object in the scope chain. */
-    JSObject *result = CheckScopeChainValidity(cx, scopeobj, js_eval_str);
-    if (!result)
-        return false;
-    JS_ASSERT(result == scopeobj);
 
     /*
      * CSP check: Is eval() allowed at all?
@@ -1182,13 +1142,47 @@ eval(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    JSObject *callee = &vp[0].toObject();
-    JSPrincipals *principals = js_EvalFramePrincipals(cx, callee, caller);
-    uintN line;
-    const char *file = js_ComputeFilename(cx, caller, principals, &line);
+    /* ES5 15.1.2.1 step 1. */
+    if (argc < 1) {
+        vp->setUndefined();
+        return true;
+    }
+    if (!vp[2].isString()) {
+        *vp = vp[2];
+        return true;
+    }
+    JSString *str = vp[2].toString();
 
-    JSString *str = argv[0].toString();
-    JSScript *script = NULL;
+    /* ES5 15.1.2.1 steps 2-8. */
+    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, Jsvalify(vp)));
+    JS_ASSERT(IsBuiltinEvalFunction(callee->getFunctionPrivate()));
+    JSPrincipals *principals = js_EvalFramePrincipals(cx, callee, caller);
+
+    /*
+     * Per ES5, indirect eval runs in the global scope. (eval is specified this
+     * way so that the compiler can make assumptions about what bindings may or
+     * may not exist in the current frame if it doesn't see 'eval'.)
+     */
+    uintN staticLevel;
+    if (evalType == DIRECT_EVAL) {
+        staticLevel = caller->script()->staticLevel + 1;
+
+#ifdef DEBUG
+        jsbytecode *callerPC = caller->pc(cx);
+        JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
+        JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
+#endif
+    } else {
+        /* Pretend that we're top level. */
+        staticLevel = 0;
+
+        JS_ASSERT(scopeobj == scopeobj->getGlobal());
+        JS_ASSERT(scopeobj->isGlobal());
+    }
+
+    /* Ensure we compile this eval with the right object in the scope chain. */
+    if (!CheckScopeChainValidity(cx, scopeobj))
+        return false;
 
     const jschar *chars;
     size_t length;
@@ -1200,34 +1194,44 @@ eval(JSContext *cx, uintN argc, Value *vp)
      * isn't JSON, JSON parsing will probably fail quickly, so little time
      * will be lost.
      */
-    if (length > 2 && chars[0] == '(' && chars[length-1] == ')') {
+    if (length > 2 && chars[0] == '(' && chars[length - 1] == ')') {
         JSONParser *jp = js_BeginJSONParse(cx, vp, /* suppressErrors = */true);
-        JSBool ok = jp != NULL;
-        if (ok) {
+        if (jp != NULL) {
             /* Run JSON-parser on string inside ( and ). */
-            ok = js_ConsumeJSONText(cx, jp, chars+1, length-2);
+            JSBool ok = js_ConsumeJSONText(cx, jp, chars + 1, length - 2);
             ok &= js_FinishJSONParse(cx, jp, NullValue());
             if (ok)
                 return true;
         }
     }
 
+    /*
+     * Direct calls to eval are supposed to see the caller's |this|. If we
+     * haven't wrapped that yet, do so now, before we make a copy of it for
+     * the eval code to use.
+     */
+    if (evalType == DIRECT_EVAL && !caller->computeThis(cx))
+        return false;
+
+    JSScript *script = NULL;
     JSScript **bucket = EvalCacheHash(cx, str);
-    if (directCall && caller->isFunctionFrame())
+    if (evalType == DIRECT_EVAL && caller->isFunctionFrame())
         script = EvalCacheLookup(cx, str, caller, staticLevel, principals, scopeobj, bucket);
 
     /*
-     * We can't have a callerFrame (down in js_Execute's terms) if we're in
-     * global code. This includes indirect eval and direct eval called with a
-     * scope object parameter.
+     * We can't have a callerFrame (down in js::Execute's terms) if we're in
+     * global code (or if we're an indirect eval).
      */
     JSStackFrame *callerFrame = (staticLevel != 0) ? caller : NULL;
     if (!script) {
+        uintN lineno;
+        const char *filename = js_ComputeFilename(cx, caller, principals, &lineno);
+
         uint32 tcflags = TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT | TCF_COMPILE_FOR_EVAL;
         script = Compiler::compileScript(cx, scopeobj, callerFrame,
                                          principals, tcflags,
                                          chars, length,
-                                         NULL, file, line, str, staticLevel);
+                                         NULL, filename, lineno, str, staticLevel);
         if (!script)
             return false;
     }
@@ -1250,8 +1254,6 @@ eval(JSContext *cx, uintN argc, Value *vp)
 
     return ok;
 }
-
-namespace js {
 
 bool
 IsBuiltinEvalFunction(JSFunction *fun)
