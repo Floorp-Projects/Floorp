@@ -4620,10 +4620,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   if (popup != aEvent.currentTarget)
     return;
 
-  var i;
-
   // Empty the menu
-  for (i = popup.childNodes.length-1; i >= 0; --i) {
+  for (var i = popup.childNodes.length-1; i >= 0; --i) {
     var deadItem = popup.childNodes[i];
     if (deadItem.hasAttribute("toolbarId"))
       popup.removeChild(deadItem);
@@ -4631,9 +4629,9 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   var firstMenuItem = aInsertPoint || popup.firstChild;
 
-  let toolbarNodes = [document.getElementById("addon-bar")];
-  for (i = 0; i < gNavToolbox.childNodes.length; ++i)
-    toolbarNodes.push(gNavToolbox.childNodes[i]);
+  let toolbarNodes = Array.slice(gNavToolbox.childNodes);
+  toolbarNodes.push(document.getElementById("addon-bar"));
+
   toolbarNodes.forEach(function(toolbar) {
     var toolbarName = toolbar.getAttribute("toolbarname");
     if (toolbarName) {
