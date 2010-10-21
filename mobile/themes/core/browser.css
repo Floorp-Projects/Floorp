@@ -1111,6 +1111,11 @@ pageaction:not([image]) > hbox >.pageaction-image {
   padding: 4px;
 }
 
+#search-engines-list > .prompt-button > .button-box > .button-icon {
+  width: 32px;
+  height: 32px;
+}
+
 /* Preferences window   ---------------------------------------------------- */
 .setting {
   padding-left: 10px;
