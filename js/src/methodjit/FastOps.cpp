@@ -524,13 +524,21 @@ mjit::Compiler::jsop_bitop(JSOp op)
         RegisterID rr = frame.tempRegForData(rhs);
 #endif
 
-        if (lhs->isConstant()) {
-            frame.pinReg(rr);
+        if (frame.haveSameBacking(lhs, rhs)) {
+            // It's okay to allocReg(). If |rr| is evicted, it won't result in
+            // a load, and |rr == reg| is fine since this is (x << x).
             reg = frame.allocReg();
-            masm.move(Imm32(lhs->getValue().toInt32()), reg);
-            frame.unpinReg(rr);
+            if (rr != reg)
+                masm.move(rr, reg);
         } else {
-            reg = frame.copyDataIntoReg(lhs);
+            frame.pinReg(rr);
+            if (lhs->isConstant()) {
+                reg = frame.allocReg();
+                masm.move(Imm32(lhs->getValue().toInt32()), reg);
+            } else {
+                reg = frame.copyDataIntoReg(lhs);
+            }
+            frame.unpinReg(rr);
         }
         
         if (op == JSOP_LSH) {
