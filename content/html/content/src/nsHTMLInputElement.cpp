@@ -3868,12 +3868,13 @@ nsHTMLInputElement::UpdatePatternMismatchValidityState()
 void
 nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
 {
+  PRBool validBefore = IsValid();
   UpdateTooLongValidityState();
   UpdateValueMissingValidityState();
   UpdateTypeMismatchValidityState();
   UpdatePatternMismatchValidityState();
 
-  if (aNotify) {
+  if (validBefore != IsValid() && aNotify) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
