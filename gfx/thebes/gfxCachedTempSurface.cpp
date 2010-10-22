@@ -127,6 +127,8 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
   }
 
   nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
+  ctx->Rectangle(gfxRect(0, 0, aSize.width, aSize.height));
+  ctx->Clip();
   if (!cleared && aContentType != gfxASurface::CONTENT_COLOR) {
     ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
     ctx->Paint();
