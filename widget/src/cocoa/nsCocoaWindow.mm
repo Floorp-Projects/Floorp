@@ -206,23 +206,25 @@ nsCocoaWindow::~nsCocoaWindow()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *screen)
+// Very large windows work in Cocoa, but can take a long time to
+// process (multiple minutes), during which time the system is
+// unresponsive and seems hung. Although it's likely that windows
+// much larger than screen size are bugs, be conservative and only
+// intervene if the values are so large as to hog the cpu.
+#define SIZE_LIMIT 100000
+static bool WindowSizeAllowed(PRInt32 aWidth, PRInt32 aHeight)
 {
-  nsIntRect screenBounds(nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
-  
-  if (aRect.width > screenBounds.width) {
-    aRect.width = screenBounds.width;
+  if (aWidth > SIZE_LIMIT) {
+    NS_ERROR(nsPrintfCString(256, "Requested Cocoa window width of %d is too much, max allowed is %d",
+                             aWidth, SIZE_LIMIT).get());
+    return false;
   }
-  if (aRect.height > screenBounds.height) {
-    aRect.height = screenBounds.height;
+  if (aHeight > SIZE_LIMIT) {
+    NS_ERROR(nsPrintfCString(256, "Requested Cocoa window height of %d is too much, max allowed is %d",
+                             aHeight, SIZE_LIMIT).get());
+    return false;
   }
-  
-  if (aRect.x - screenBounds.x + aRect.width > screenBounds.width) {
-    aRect.x += screenBounds.width - (aRect.x - screenBounds.x + aRect.width);
-  }
-  if (aRect.y - screenBounds.y + aRect.height > screenBounds.height) {
-    aRect.y += screenBounds.height - (aRect.y - screenBounds.y + aRect.height);
-  }
+  return true;
 }
 
 // Some applications like Camino use native popup windows
@@ -253,14 +255,14 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
 
-  nsIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, [NSScreen mainScreen]);
+  if (!WindowSizeAllowed(aRect.width, aRect.height))
+    return NS_ERROR_FAILURE;
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;
   mBorderStyle = eBorderStyle_default;
 
-  Inherited::BaseCreate(aParent, newBounds, aHandleEventFunction, aContext, aAppShell,
+  Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                         aToolkit, aInitData);
 
   mParent = aParent;
@@ -269,12 +271,12 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   if ((mWindowType == eWindowType_popup) && UseNativePopupWindows())
     return NS_OK;
 
-  nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds),
+  nsresult rv = CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(aRect),
                                    mBorderStyle, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == eWindowType_popup)
-    return CreatePopupContentView(newBounds, aHandleEventFunction, aContext, aAppShell, aToolkit);
+    return CreatePopupContentView(aRect, aHandleEventFunction, aContext, aAppShell, aToolkit);
 
   return NS_OK;
 
@@ -1124,17 +1126,17 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsIntRect newBounds = nsIntRect(aX, aY, aWidth, aHeight);
-  FitRectToVisibleAreaForScreen(newBounds, [mWindow screen]);
+  if (!WindowSizeAllowed(aWidth, aHeight))
+    return NS_ERROR_FAILURE;
 
   nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
-  BOOL isMoving = (windowBounds.x != newBounds.x || windowBounds.y != newBounds.y);
-  BOOL isResizing = (windowBounds.width != newBounds.width || windowBounds.height != newBounds.height);
+  BOOL isMoving = (windowBounds.x != aX || windowBounds.y != aY);
+  BOOL isResizing = (windowBounds.width != aWidth || windowBounds.height != aHeight);
 
   if (IsResizing() || !mWindow || (!isMoving && !isResizing))
     return NS_OK;
-  
-  mBounds = newBounds;
+
+  mBounds = nsIntRect(aX, aY, aWidth, aHeight);
   NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(mBounds);
 
   // We have to report the size event -first-, to make sure that content
@@ -1169,7 +1171,10 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-  
+
+  if (!WindowSizeAllowed(aWidth, aHeight))
+    return NS_ERROR_FAILURE;
+
   nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
 
