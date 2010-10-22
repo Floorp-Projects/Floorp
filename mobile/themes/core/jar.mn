@@ -76,8 +76,6 @@ chrome.jar:
   skin/images/mozilla-32.png                (images/mozilla-32.png)
   skin/images/toggle-on.png                 (images/toggle-on.png)
   skin/images/toggle-off.png                (images/toggle-off.png)
-  skin/images/toolbarbutton-default-64.png  (images/toolbarbutton-default-64.png)
-  skin/images/toolbarbutton-active-64.png   (images/toolbarbutton-active-64.png)
   skin/images/sidebarbutton-active-hdpi.png (images/sidebarbutton-active-hdpi.png)
   skin/images/previous-hdpi.png             (images/previous-hdpi.png)
   skin/images/next-hdpi.png                 (images/next-hdpi.png)
