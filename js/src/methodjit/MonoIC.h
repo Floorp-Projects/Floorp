@@ -116,7 +116,7 @@ struct TraceICInfo {
     bool hasSlowTraceHint : 1;
 };
 
-static const uint16 BAD_TRACEIC_INDEX = (uint16_t)-1;
+static const uint16 BAD_TRACEIC_INDEX = (uint16)0xffff;
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
 void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
@@ -135,7 +135,7 @@ struct EqualityICInfo {
 
     bool generated : 1;
     JSC::MacroAssembler::RegisterID tempReg : 5;
-    Assembler::Condition cond : 6;
+    Assembler::Condition cond;
 };
 
 JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
