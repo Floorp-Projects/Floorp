@@ -275,6 +275,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     nsRect dirtyRect; // only used if aDirtyRect is non-null
     if (aDirtyRect) {
       dirtyRect = aDirtyRect->ToAppUnits(PresContext()->AppUnitsPerDevPixel());
+      // Adjust dirtyRect to match our local coordinate system.
+      dirtyRect.MoveBy(-mRect.TopLeft());
     }
 
     // XXXbholley - I don't think huge images in SVGs are common enough to
