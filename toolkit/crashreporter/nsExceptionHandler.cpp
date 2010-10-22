@@ -264,6 +264,13 @@ void FileIDToGUID(const char* file_id, u_int8_t guid[sizeof(MDGUID)])
     guid[i] = (u_int8_t)(c & 0xFF);
     file_id += 2;
   }
+  // GUIDs are stored in network byte order.
+  uint32_t* data1 = reinterpret_cast<uint32_t*>(guid);
+  *data1 = htonl(*data1);
+  uint16_t* data2 = reinterpret_cast<uint16_t*>(guid + 4);
+  *data2 = htons(*data2);
+  uint16_t* data3 = reinterpret_cast<uint16_t*>(guid + 6);
+  *data3 = htons(*data3);
 }
 #endif
 
