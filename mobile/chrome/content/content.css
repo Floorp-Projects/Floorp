@@ -63,7 +63,7 @@ xul|scrollbarbutton {
   display: none !important;
 }
 
-xul|thumb {
+xul|scrollbarbutton > xul|thumb {
   min-width: 10px !important;
   -moz-appearance: none !important;
   background-color: gray !important;
@@ -255,3 +255,8 @@ select[disabled] > input[type="button"] {
   padding: 1px 7px 1px 7px;
 }
 
+/* -moz-touch-enabled? media elements */
+video > xul|videocontrols,
+audio > xul|videocontrols {
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
+}
