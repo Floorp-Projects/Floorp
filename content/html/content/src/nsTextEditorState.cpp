@@ -78,6 +78,30 @@ struct SelectionState {
   PRInt32 mEnd;
 };
 
+class RestoreSelectionState : public nsRunnable {
+public:
+  RestoreSelectionState(nsTextControlFrame *aFrame, PRInt32 aStart, PRInt32 aEnd)
+    : mFrame(aFrame),
+      mWeakFrame(aFrame),
+      mStart(aStart),
+      mEnd(aEnd)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    if (mWeakFrame.IsAlive()) {
+      mFrame->SetSelectionRange(mStart, mEnd);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsTextControlFrame* mFrame;
+  nsWeakFrame mWeakFrame;
+  PRInt32 mStart;
+  PRInt32 mEnd;
+};
+
 /*static*/
 PRBool
 nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
@@ -1329,7 +1353,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   // Restore our selection after being bound to a new frame
   if (mSelState) {
-    mBoundFrame->SetSelectionRange(mSelState->mStart, mSelState->mEnd);
+    nsContentUtils::AddScriptRunner(new RestoreSelectionState(mBoundFrame, mSelState->mStart, mSelState->mEnd));
     mSelState = nsnull;
   }
 
