@@ -4085,7 +4085,8 @@ JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
-    return obj->wrappedObject(cx)->isArray();
+    return obj->isArray() ||
+           (obj->isWrapper() && JSWrapper::wrappedObject(obj)->isArray());
 }
 
 JS_PUBLIC_API(JSBool)
