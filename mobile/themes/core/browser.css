@@ -1424,7 +1424,3 @@ echrome-select-option[disabled="true"] {
   z-index: 500;
 }
 
-/* elastic scrollboxes */
-#controls-scrollbox > * {
-  box-shadow: rgba(0,0,0,0.4) 3px 3px 3px;
-}
