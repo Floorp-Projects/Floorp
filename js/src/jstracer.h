@@ -686,6 +686,7 @@ public:
         OP_FWDJUMP, // Jumps with positive delta
         OP_NEW, // JSOP_NEW instructions
         OP_RECURSIVE, // Recursive calls
+        OP_TYPED_ARRAY, // Accesses to typed arrays
         OP_LIMIT
     };
 
