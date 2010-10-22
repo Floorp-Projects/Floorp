@@ -1069,10 +1069,9 @@ namespace nanojit
         const int32_t pushsize = 4*istack + 8*fargs; // actual stack space used
 
 #if _MSC_VER
-        // msc only provides 4-byte alignment, anything more than 4 on windows
-        // x86-32 requires dynamic rESP alignment in prolog/epilog and static
-        // esp-alignment here.
-        uint32_t align = 4;//NJ_ALIGN_STACK;
+        // msc only provides 4-byte alignment but we have 8 byte stack adjustment
+        // logic so maintain our 8 byte alignment.
+        uint32_t align = 8;
 #else
         uint32_t align = NJ_ALIGN_STACK;
 #endif
