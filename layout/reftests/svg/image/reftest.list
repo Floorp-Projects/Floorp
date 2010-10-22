@@ -14,6 +14,9 @@
 == image-x-01.svg             image-x-01-ref.svg
 == image-xy-01.svg            image-xy-01-ref.svg
 == image-y-01.svg             image-y-01-ref.svg
+== image-zoom-01a.svg         image-zoom-01-ref.svg
+== image-zoom-01b.svg         image-zoom-01-ref.svg
+== image-zoom-02.svg          image-zoom-02-ref.svg
 
 # Tests for <image> with preserveAspectRatio
 # NOTE: The reference cases in the following tests trigger 20 assertions each
