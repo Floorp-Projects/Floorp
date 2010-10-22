@@ -929,7 +929,7 @@ class TypedArrayTemplate
 
             if (!tarray->copyFrom(cx, src, offset))
                 return false;
-        } else if (arg0->wrappedObject(cx)->isArray()) {
+        } else {
             jsuint len;
             if (!js_GetLengthProperty(cx, arg0, &len))
                 return false;
@@ -943,10 +943,6 @@ class TypedArrayTemplate
 
             if (!tarray->copyFrom(cx, arg0, len, offset))
                 return false;
-        } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
         }
 
         vp->setUndefined();
@@ -989,37 +985,18 @@ class TypedArrayTemplate
     init(JSContext *cx, JSObject *other, int32 byteOffsetInt = -1, int32 lengthInt = -1)
     {
         type = ArrayTypeID();
+        ArrayBuffer *abuf;
 
-        //printf ("Constructing with type %d other %p offset %d length %d\n", type, other, byteOffset, length);
-
-        if (other->wrappedObject(cx)->isArray()) {
-            jsuint len;
-            if (!js_GetLengthProperty(cx, other, &len))
-                return false;
-            if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), len))
-                return false;
-            if (!copyFrom(cx, other, len))
-                return false;
-        } else if (js_IsTypedArray(other)) {
+        if (js_IsTypedArray(other)) {
             TypedArray *tarray = TypedArray::fromJSObject(other);
             JS_ASSERT(tarray);
-
-            //printf ("SizeAndCount: %d %d\n", sizeof(NativeType), tarray->length);
 
             if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), tarray->length))
                 return false;
             if (!copyFrom(cx, tarray))
                 return false;
-        } else if (other->getClass() == &ArrayBuffer::jsclass) {
-            ArrayBuffer *abuf = ArrayBuffer::fromJSObject(other);
-
-            if (!abuf) {
-                // the arg isn't a real arraybuffer
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_TYPED_ARRAY_BAD_ARGS);
-                return false;
-            }
-
+        } else if (other->getClass() == &ArrayBuffer::jsclass &&
+                   ((abuf = ArrayBuffer::fromJSObject(other)) != NULL)) {
             uint32 boffset = (byteOffsetInt < 0) ? 0 : uint32(byteOffsetInt);
 
             if (boffset > abuf->byteLength || boffset % sizeof(NativeType) != 0) {
@@ -1063,9 +1040,13 @@ class TypedArrayTemplate
             length = len;
             data = abuf->offsetData(boffset);
         } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
+            jsuint len;
+            if (!js_GetLengthProperty(cx, other, &len))
+                return false;
+            if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), len))
+                return false;
+            if (!copyFrom(cx, other, len))
+                return false;
         }
 
         return true;
