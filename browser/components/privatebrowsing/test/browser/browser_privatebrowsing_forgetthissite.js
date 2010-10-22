@@ -117,13 +117,13 @@ function test() {
             Services.ww.registerNotification(closeObserver);
             // Close Library window.
             organizer.close();
-          }, false);
+          }, true);
           // Get cell coordinates
           var x = {}, y = {}, width = {}, height = {};
           tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "text",
                                                   x, y, width, height);
           // Initiate a context menu for the selected cell
-          EventUtils.synthesizeMouse(tree.body, x + 4, y + 4, {type: "contextmenu"}, organizer);
+          EventUtils.synthesizeMouse(tree.body, x.value + width.value / 2, y.value + height.value / 2, {type: "contextmenu"}, organizer);
         });
       }, organizer);
     }
