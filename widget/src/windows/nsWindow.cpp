@@ -5897,6 +5897,14 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 
   // Handle window size mode changes
   if (wp->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
+
+    // Bug 566135 - Windows theme code calls show window on SW_SHOWMINIMIZED
+    // windows when fullscreen games disable desktop composition. If we're
+    // minimized and not being activated, ignore the event and let windows
+    // handle it.
+    if (mSizeMode == nsSizeMode_Minimized && (wp->flags & SWP_NOACTIVATE))
+      return;
+
     nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
 
     WINDOWPLACEMENT pl;
@@ -6067,7 +6075,8 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
   // browser know we are changing size modes, so alternative css can kick in.
   // If we're going into fullscreen mode, ignore this, since it'll reset
   // margins to normal mode. 
-  if (info->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
+  if ((info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) &&
+      mSizeMode != nsSizeMode_Fullscreen) {
     WINDOWPLACEMENT pl;
     pl.length = sizeof(pl);
     ::GetWindowPlacement(mWnd, &pl);
