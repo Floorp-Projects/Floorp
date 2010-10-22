@@ -13,11 +13,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453736
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=453736">Mozilla Bug 453736</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-
 </div>
 <pre id="test">
 <script type="application/javascript">
-
 /** Test for Bug 453736 **/
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
@@ -26,39 +24,7 @@ addLoadEvent(function() {
     function() { return document.createElementNS("http://www.w3.org/2000/svg", "script"); }
   ];
 
-  const noScriptContainers = ["iframe", "noframes", "noembed"];
-  for (var i = 0; i < noScriptContainers.length; ++i) {
-    for each (var func in scriptCreationFuncs) {
-      var cont = noScriptContainers[i];
-      var node = document.createElement(cont);
-      document.body.appendChild(node);
-      var s = func();
-      s.setAttribute("type", "application/javascript");
-      s.appendChild(document.createTextNode('window["'+cont+'ScriptRan"] = true'));
-
-      window[cont+"ScriptRan"] = false;
-      document.body.appendChild(s.cloneNode(true));
-      is(window[cont+"ScriptRan"], true,
-         "Clone of non-inserted script created with " + func +" should run");
-   
-      window[cont+"ScriptRan"] = false;
-      node.appendChild(s);
-      is(window[cont+"ScriptRan"], false,
-         "Script created with " + func +" shouldn't run when inserting in <"+cont+">");
-
-      window[cont+"ScriptRan"] = false;
-      document.body.appendChild(s);
-      is(window[cont+"ScriptRan"], false,
-         "Script created with " + func + " shouldn't run when moving out of <"+cont+">");
-
-      window[cont+"ScriptRan"] = false;
-      document.body.appendChild(s.cloneNode(true));
-      is(window[cont+"ScriptRan"], false,
-         "Clone of script inside <" + cont + "> created with " + func + " shouldn't run");
-    }
-  }
-
-  const scriptContainers = ["div"];
+  const scriptContainers = ["div", "iframe", "noframes", "noembed"];
   for (var i = 0; i < scriptContainers.length; ++i) {
     for each (var func in scriptCreationFuncs) {
       var cont = scriptContainers[i];
@@ -87,10 +53,6 @@ addLoadEvent(function() {
 
   SimpleTest.finish();
 });
-
-
-
-
 </script>
 </pre>
 </body>
