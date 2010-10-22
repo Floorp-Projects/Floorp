@@ -1083,7 +1083,7 @@ GestureModule.prototype = {
     // Accumulate pinch delta. Small changes are just jitter.
     let oldScale = this._pinchScale;
     this._pinchDelta += aEvent.delta;
-    if (this._pinchDelta > -oldScale && this._pinchDelta < this._oldScale)
+    if (this._pinchDelta > -oldScale && this._pinchDelta < oldScale)
       return;
 
     // decrease the pinchDelta min/max values to limit zooming out/in speed
