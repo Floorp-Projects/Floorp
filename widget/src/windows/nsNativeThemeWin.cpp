@@ -1426,8 +1426,9 @@ RENDER_AGAIN:
       nsUXThemeData::drawThemeBG(theme, hdc, gripPart, state, &widgetRect, &clipRect);
     }
   }
-  else if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
-           aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED)
+  else if ((aWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
+            aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) &&
+            nsUXThemeData::CheckForCompositor())
   {
     // The caption buttons are drawn by the DWM, we just need to clear the area where they
     // are because we might have drawn something above them (like a background-image).
