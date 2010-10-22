@@ -1120,9 +1120,15 @@ struct JSPendingProxyOperation {
 };
 
 struct JSThreadData {
+#ifdef JS_THREADSAFE
+    /* The request depth for this thread. */
+    unsigned            requestDepth;
+#endif
+
     /*
-     * If this flag is set, we were asked to call back the operation callback
-     * as soon as possible.
+     * If non-zero, we were been asked to call the operation callback as soon
+     * as possible.  If the thread has an active request, this contributes
+     * towards rt->interruptCounter.
      */
     volatile jsword     interruptFlags;
 
@@ -1209,17 +1215,8 @@ struct JSThreadData {
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
 
-    static const jsword INTERRUPT_OPERATION_CALLBACK = 0x1;
-
-    void triggerOperationCallback() {
-        /*
-         * Use JS_ATOMIC_SET in the hope that it will make sure the write will
-         * become immediately visible to other processors polling the flag.
-         * Note that we only care about visibility here, not read/write
-         * ordering.
-         */
-        JS_ATOMIC_SET_MASK(&interruptFlags, INTERRUPT_OPERATION_CALLBACK);
-    }
+    /* This must be called with the GC lock held. */
+    inline void triggerOperationCallback(JSRuntime *rt);
 };
 
 #ifdef JS_THREADSAFE
@@ -1251,9 +1248,6 @@ struct JSThread {
      * Protected by rt->gcLock.
      */
     bool                gcWaiting;
-
-    /* The request depth for this thread. */
-    unsigned            requestDepth;
 
     /* Number of JS_SuspendRequest calls withot JS_ResumeRequest. */
     unsigned            suspendCount;
@@ -1552,7 +1546,10 @@ struct JSRuntime {
     JSObject            *anynameObject;
     JSObject            *functionNamespaceObject;
 
-#ifndef JS_THREADSAFE
+#ifdef JS_THREADSAFE
+    /* Number of threads with active requests and unhandled interrupts. */
+    volatile jsword     interruptCounter;
+#else
     JSThreadData        threadData;
 
 #define JS_THREAD_DATA(cx)      (&(cx)->runtime->threadData)
@@ -2437,7 +2434,7 @@ class AutoCheckRequestDepth {
 
 # define CHECK_REQUEST(cx)                                                    \
     JS_ASSERT((cx)->thread);                                                  \
-    JS_ASSERT((cx)->thread->requestDepth || (cx)->thread == (cx)->runtime->gcThread); \
+    JS_ASSERT((cx)->thread->data.requestDepth || (cx)->thread == (cx)->runtime->gcThread); \
     AutoCheckRequestDepth _autoCheckRequestDepth(cx);
 
 #else
@@ -3217,7 +3214,7 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 #ifdef JS_THREADSAFE
 # define JS_ASSERT_REQUEST_DEPTH(cx)  (JS_ASSERT((cx)->thread),               \
-                                       JS_ASSERT((cx)->thread->requestDepth >= 1))
+                                       JS_ASSERT((cx)->thread->data.requestDepth >= 1))
 #else
 # define JS_ASSERT_REQUEST_DEPTH(cx)  ((void) 0)
 #endif
@@ -3229,7 +3226,27 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 #define JS_CHECK_OPERATION_LIMIT(cx)                                          \
     (JS_ASSERT_REQUEST_DEPTH(cx),                                             \
-     (!(JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK) || js_InvokeOperationCallback(cx)))
+     (!JS_THREAD_DATA(cx)->interruptFlags || js_InvokeOperationCallback(cx)))
+
+JS_ALWAYS_INLINE void
+JSThreadData::triggerOperationCallback(JSRuntime *rt)
+{
+    /*
+     * Use JS_ATOMIC_SET and JS_ATOMIC_INCREMENT in the hope that it ensures
+     * the write will become immediately visible to other processors polling
+     * the flag.  Note that we only care about visibility here, not read/write
+     * ordering: this field can only be written with the GC lock held.
+     */
+    if (interruptFlags)
+        return;
+    JS_ATOMIC_SET(&interruptFlags, 1);
+
+#ifdef JS_THREADSAFE
+    /* rt->interruptCounter does not reflect suspended threads. */
+    if (requestDepth != 0)
+        JS_ATOMIC_INCREMENT(&rt->interruptCounter);
+#endif
+}
 
 /*
  * Invoke the operation callback and return false if the current execution
@@ -3243,7 +3260,11 @@ js_HandleExecutionInterrupt(JSContext *cx);
 
 namespace js {
 
-/* Must be called with GC lock taken. */
+/* These must be called with GC lock taken. */
+
+void
+TriggerOperationCallback(JSContext *cx);
+
 void
 TriggerAllOperationCallbacks(JSRuntime *rt);
 
