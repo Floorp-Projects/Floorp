@@ -105,6 +105,12 @@
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
 
+#ifdef XP_MACOSX
+// AssertMacros.h defines 'check' and conflicts with AccessCheck.h
+#undef check
+#endif
+#include "AccessCheck.h"
+
 #ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
 #endif
@@ -947,8 +953,9 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
+  JSObject* global = ::JS_GetGlobalForScopeChain(cx);
   PRBool isTrackingChromeCodeTime =
-    ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx));
+    global && xpc::AccessCheck::isChrome(global->getCompartment());
   if (duration < (isTrackingChromeCodeTime ?
                   sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
     return JS_TRUE;
