@@ -57,11 +57,11 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
   nsHTMLContentSerializer();
   virtual ~nsHTMLContentSerializer();
 
-  NS_IMETHOD AppendElementStart(nsIContent *aElement,
-                                nsIContent *aOriginalElement,
+  NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
+                                mozilla::dom::Element* aOriginalElement,
                                 nsAString& aStr);
-  
-  NS_IMETHOD AppendElementEnd(nsIContent *aElement,
+
+  NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
                               nsAString& aStr);
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
