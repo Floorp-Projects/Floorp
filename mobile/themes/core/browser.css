@@ -1392,12 +1392,16 @@ echrome-select-option[disabled="true"] {
 }
 
 /* menulist popup ---------------------------------------------------------- */
-#menulist-popup > #menulist-title {
+#menulist-commands {
+  display: -moz-box;
+}
+
+#menulist-title {
   padding: 12px 4px 4px 4px;
   font-size: 18px;
 }
 
-#menulist-popup > #menulist-title[value=""] {
+#menulist-title[value=""] {
   display: none;
 }
 
