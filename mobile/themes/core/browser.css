@@ -1094,6 +1094,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 .settings-title {
   color: black;
   font-size: smaller;
+  font-weight: bold;
   background-color: transparent;
   margin: 0;
   padding: 5px 10px;
