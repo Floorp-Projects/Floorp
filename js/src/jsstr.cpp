@@ -108,6 +108,8 @@ JSString::flatten()
     jschar *chars;
     size_t capacity;
     JS_ASSERT(isRope());
+    if (!isRope())
+        JS_CRASH(0xe0 | (mLengthAndFlags & TYPE_FLAGS_MASK));
 
     /*
      * This can be called from any string in the rope, so first traverse to the
@@ -129,7 +131,7 @@ JSString::flatten()
      * interior node with a NULL parent, so that we end up at NULL when we are
      * done processing it.
      */
-    topNode->convertToInteriorNode(NULL);
+    topNode->convertToInteriorNode((JSString *) 0x2);
     JSString *str = topNode, *next;
     size_t pos = 0;
 
@@ -137,7 +139,7 @@ JSString::flatten()
      * Traverse the tree, making each interior string dependent on the resulting
      * string.
      */
-    while (str) {
+    while (str != (JSString *) 0x2) {
         switch (str->ropeTraversalCount()) {
           case 0:
             next = str->ropeLeft();
@@ -297,6 +299,9 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         buf[length] = 0;
         return shortStr->header();
     }
+
+    left->checkCompartment(cx, 0xd0);
+    right->checkCompartment(cx, 0xd4);
 
     /*
      * We need to enforce a tree structure in ropes: every node needs to have a
