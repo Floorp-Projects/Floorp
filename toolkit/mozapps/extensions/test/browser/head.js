@@ -41,6 +41,18 @@ registerCleanupFunction(function() {
   }
   catch (e) {
   }
+
+  // We can for now know that getAllInstalls actually calls its callback before
+  // it returns so this will complete before the next test start.
+  AddonManager.getAllInstalls(function(aInstalls) {
+    aInstalls.forEach(function(aInstall) {
+      if (aInstall instanceof MockInstall)
+        return;
+
+      ok(false, "Should not have seen an install of " + aInstall.sourceURI.spec + " in state " + aInstall.state);
+      aInstall.cancel();
+    });
+  });
 });
 
 function add_test(test) {
@@ -229,6 +241,29 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
 
   close_manager(aManagerWindow, function() {
     open_manager(aView, aCallback, aLoadCallback);
+  });
+}
+
+function wait_for_window_open(aCallback) {
+  Services.wm.addListener({
+    onOpenWindow: function(aWindow) {
+      Services.wm.removeListener(this);
+
+      let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowInternal);
+      domwindow.addEventListener("load", function() {
+        domwindow.removeEventListener("load", arguments.callee, false);
+        executeSoon(function() {
+          aCallback(domwindow);
+        });
+      }, false);
+    },
+
+    onCloseWindow: function(aWindow) {
+    },
+
+    onWindowTitleChange: function(aWindow, aTitle) {
+    }
   });
 }
 
