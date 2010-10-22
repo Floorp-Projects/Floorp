@@ -1097,8 +1097,6 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_TypeOf)(cx, this);
     }
 
-    JSObject *wrappedObject(JSContext *cx) const;
-
     /* These four are time-optimized to avoid stub calls. */
     JSObject *thisObject(JSContext *cx) {
         JSObjectOp op = getOps()->thisObject;

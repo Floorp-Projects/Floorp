@@ -10211,14 +10211,9 @@ TraceRecorder::getThis(LIns*& this_ins)
 
     /* thisv is a reference, so it'll see the newly computed |this|. */
 #ifdef DEBUG
-    /*
-     * Check that thisv is our global. It could be a XPCCrossOriginWrapper around an outer
-     * window object whose inner object is our global, so follow all the links as needed.
-     */
     JS_ASSERT(thisv.isObject());
-    JSObject *thisObj = thisv.toObject().wrappedObject(cx);
-    OBJ_TO_INNER_OBJECT(cx, thisObj);
-    JS_ASSERT(thisObj == globalObj);
+    JSObject *thisObj = &thisv.toObject();
+    JS_ASSERT(thisObj->getClass()->ext.innerObject);
 #endif
     this_ins = INS_CONSTOBJ(globalObj);
     set(&thisv, this_ins);

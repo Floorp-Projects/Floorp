@@ -101,6 +101,7 @@
 #include "jsstr.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
+#include "jswrapper.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -2394,11 +2395,9 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
             return false;
         const Value &v = p[i];
         if (v.isObject()) {
-            JSObject *wobj;
-
             aobj = &v.toObject();
-            wobj = aobj->wrappedObject(cx);
-            if (wobj->isArray()) {
+            if (aobj->isArray() ||
+                (aobj->isWrapper() && JSWrapper::wrappedObject(aobj)->isArray())) {
                 jsid id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
                 if (!aobj->getProperty(cx, id, tvr.addr()))
                     return false;
@@ -2827,10 +2826,12 @@ array_every(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_isArray(JSContext *cx, uintN argc, Value *vp)
 {
+    JSObject *obj;
     vp->setBoolean(argc > 0 &&
                    vp[2].isObject() &&
-                   vp[2].toObject().wrappedObject(cx)->isArray());
-    return JS_TRUE;
+                   ((obj = &vp[2].toObject())->isArray() ||
+                    (obj->isWrapper() && JSWrapper::wrappedObject(obj)->isArray())));
+    return true;
 }
 
 static JSFunctionSpec array_methods[] = {
