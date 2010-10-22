@@ -17055,6 +17055,12 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (op == JSOP_INT8)
         prevConst = GET_INT8(cx->regs->pc);
 
+    if (op == JSOP_GETELEM || op == JSOP_SETELEM) {
+        Value& lval = cx->regs->sp[op == JSOP_GETELEM ? -2 : -3];
+        if (lval.isObject() && js_IsTypedArray(&lval.toObject()))
+            increment(OP_TYPED_ARRAY);
+    }
+
     prevOp = op;
 
     if (op == JSOP_CALL) {
@@ -17221,6 +17227,7 @@ LoopProfile::decide(JSContext *cx)
     debug_only_printf(LC_TMProfiler, "FEATURE eval %d\n", allOps[OP_EVAL]);
     debug_only_printf(LC_TMProfiler, "FEATURE new %d\n", allOps[OP_NEW]);
     debug_only_printf(LC_TMProfiler, "FEATURE call %d\n", allOps[OP_CALL]);
+    debug_only_printf(LC_TMProfiler, "FEATURE typedarray %d\n", allOps[OP_TYPED_ARRAY]);
     debug_only_printf(LC_TMProfiler, "FEATURE fwdjump %d\n", allOps[OP_FWDJUMP]);
     debug_only_printf(LC_TMProfiler, "FEATURE recursive %d\n", allOps[OP_RECURSIVE]);
     debug_only_printf(LC_TMProfiler, "FEATURE shortLoop %d\n", shortLoop);
@@ -17254,6 +17261,11 @@ LoopProfile::decide(JSContext *cx)
         /* The tracer handles these ops well because of inlining. */
         goodOps += (count(OP_CALL) + count(OP_NEW))*20;
 
+        /* The tracer specialized typed array access. */
+        goodOps += count(OP_TYPED_ARRAY)*10;
+
+        debug_only_printf(LC_TMProfiler, "FEATURE goodOps %u\n", goodOps);
+        
         if (goodOps >= numAllOps)
             traceOK = true;
     }
