@@ -95,7 +95,7 @@ function test() {
           // Open the context menu
           let contextmenu = doc.getElementById("placesContext");
           contextmenu.addEventListener("popupshown", function() {
-            contextmenu.removeEventListener("popupshown", arguments.callee, false);
+            contextmenu.removeEventListener("popupshown", arguments.callee, true);
             let forgetThisSite = doc.getElementById("placesContext_deleteHost");
             is(forgetThisSite.hidden, !expected,
               "The Forget This Site menu item should " + (expected ? "not " : "") + "be hidden");
