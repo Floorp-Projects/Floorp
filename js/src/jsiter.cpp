@@ -624,6 +624,16 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     bool keysOnly = (flags == JSITER_ENUMERATE);
 
     if (obj) {
+        /* Enumerate Iterator.prototype directly. */
+        JSIteratorOp op = obj->getClass()->ext.iteratorObject;
+        if (op && (obj->getClass() != &js_IteratorClass || obj->getNativeIterator())) {
+            JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
+            if (!iterobj)
+                return false;
+            vp->setObject(*iterobj);
+            return true;
+        }
+
         if (keysOnly) {
             /*
              * Check to see if this is the same as the most recent object which
@@ -813,25 +823,12 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
         if ((flags & JSITER_ENUMERATE)) {
             if (!js_ValueToObjectOrNull(cx, *vp, &obj))
                 return false;
-            if (!obj)
-                return GetIterator(cx, NULL, flags, vp);
+            /* fall through */
         } else {
             obj = js_ValueToNonNullObject(cx, *vp);
             if (!obj)
                 return false;
         }
-    }
-
-    AutoObjectRooter tvr(cx, obj);
-
-    /* Enumerate Iterator.prototype directly. */
-    JSIteratorOp op = obj->getClass()->ext.iteratorObject;
-    if (op && (obj->getClass() != &js_IteratorClass || obj->getNativeIterator())) {
-        JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
-        if (!iterobj)
-            return false;
-        vp->setObject(*iterobj);
-        return true;
     }
 
     return GetIterator(cx, obj, flags, vp);
@@ -1084,7 +1081,9 @@ stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 
 Class js_StopIterationClass = {
     js_StopIteration_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration) |
+    JSCLASS_FREEZE_PROTO |
+    JSCLASS_FREEZE_CTOR,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
