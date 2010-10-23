@@ -585,7 +585,7 @@ class FrameState
      * Fully stores a FrameEntry into two arbitrary registers. tempReg may be
      * used as a temporary.
      */
-    void loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
+    void loadForReturn(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
 
     /*
      * Stores the top stack slot back to a slot.
@@ -719,6 +719,11 @@ class FrameState
      * Same as unpinReg(), but does not restore the FrameEntry.
      */
     inline void unpinKilledReg(RegisterID reg);
+
+    /* Pins a data or type register if one exists. */
+    MaybeRegisterID maybePinData(FrameEntry *fe);
+    MaybeRegisterID maybePinType(FrameEntry *fe);
+    void maybeUnpinReg(MaybeRegisterID reg);
 
     /*
      * Dups the top item on the stack.

@@ -1949,7 +1949,7 @@ mjit::Compiler::loadReturnValue(Assembler *masm, FrameEntry *fe)
                 }
             }
         } else {
-            frame.loadTo(fe, typeReg, dataReg, Registers::ReturnReg);
+            frame.loadForReturn(fe, typeReg, dataReg, Registers::ReturnReg);
         }
     } else {
          // Load a return value from POPV or SETRVAL into the return registers,
@@ -2036,13 +2036,6 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             /* There will always be a call object. */
             prepareStubCall(Uses(fe ? 1 : 0));
             stubCall(stubs::PutActivationObjects);
-
-            if (fe) {
-                emitReturnValue(&masm, fe);
-                emitFinalReturn(masm);
-                frame.discardFrame();
-                return;
-            }
         } else {
             /* if (hasCallObj() || hasArgsObj()) stubs::PutActivationObjects() */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,

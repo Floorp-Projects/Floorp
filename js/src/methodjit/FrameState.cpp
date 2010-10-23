@@ -326,7 +326,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
 #endif
 }
 
-void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
+void FrameState::loadForReturn(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
 {
     JS_ASSERT(dataReg != typeReg && dataReg != tempReg && typeReg != tempReg);
 
@@ -338,25 +338,51 @@ void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, 
     if (fe->isCopy())
         fe = fe->copyOf();
 
+    MaybeRegisterID maybeType = maybePinType(fe);
+    MaybeRegisterID maybeData = maybePinData(fe);
+
     if (fe->isTypeKnown()) {
-        RegisterID data = tempRegForData(fe);
-        if (data != dataReg)
-            masm.move(data, dataReg);
+        // If the data is in memory, or in the wrong reg, load/move it.
+        if (!maybeData.isSet())
+            masm.loadPayload(addressOf(fe), dataReg);
+        else if (maybeData.reg() != dataReg)
+            masm.move(maybeData.reg(), dataReg);
         masm.move(ImmType(fe->getKnownType()), typeReg);
         return;
     }
 
-#ifdef JS_PUNBOX64 
-    // If the value is synced, and requires at least one load, we can do
-    // better on x64.
+    // If both halves of the value are in memory, make this easier and load
+    // both pieces into their respective registers.
     if (fe->type.inMemory() && fe->data.inMemory()) {
         masm.loadValueAsComponents(addressOf(fe), typeReg, dataReg);
         return;
     }
-#endif
 
-    RegisterID data = tempRegForData(fe);
-    RegisterID type = tempRegForType(fe);
+    // Now, we should be guaranteed that at least one part is in a register.
+    JS_ASSERT(maybeType.isSet() || maybeData.isSet());
+
+    // Make sure we have two registers while making sure not clobber either half.
+    // Here we are allowed to mess up the FrameState invariants, because this
+    // is specialized code for a path that is about to discard the entire frame.
+    if (!maybeType.isSet()) {
+        JS_ASSERT(maybeData.isSet());
+        if (maybeData.reg() != typeReg)
+            maybeType = typeReg;
+        else
+            maybeType = tempReg;
+        masm.loadTypeTag(addressOf(fe), maybeType.reg());
+    } else if (!maybeData.isSet()) {
+        JS_ASSERT(maybeType.isSet());
+        if (maybeType.reg() != dataReg)
+            maybeData = dataReg;
+        else
+            maybeData = tempReg;
+        masm.loadPayload(addressOf(fe), maybeData.reg());
+    }
+
+    RegisterID type = maybeType.reg();
+    RegisterID data = maybeData.reg();
+
     if (data == typeReg && type == dataReg) {
         masm.move(type, tempReg);
         masm.move(data, dataReg);
@@ -1591,5 +1617,34 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
         unpinReg(backingLeft->data.reg());
     if (backingRight->data.inRegister())
         unpinReg(backingRight->data.reg());
+}
+
+MaybeRegisterID
+FrameState::maybePinData(FrameEntry *fe)
+{
+    fe = fe->isCopy() ? fe->copyOf() : fe;
+    if (fe->data.inRegister()) {
+        pinReg(fe->data.reg());
+        return fe->data.reg();
+    }
+    return MaybeRegisterID();
+}
+
+MaybeRegisterID
+FrameState::maybePinType(FrameEntry *fe)
+{
+    fe = fe->isCopy() ? fe->copyOf() : fe;
+    if (fe->type.inRegister()) {
+        pinReg(fe->type.reg());
+        return fe->type.reg();
+    }
+    return MaybeRegisterID();
+}
+
+void
+FrameState::maybeUnpinReg(MaybeRegisterID reg)
+{
+    if (reg.isSet())
+        unpinReg(reg.reg());
 }
 
