@@ -1400,9 +1400,22 @@ SessionStoreService.prototype = {
     if (!browser || !browser.currentURI)
       // can happen when calling this function right after .addTab()
       return tabData;
-    else if (browser.__SS_data && browser.__SS_data._tabStillLoading)
+    else if (browser.__SS_data && browser.__SS_data._tabStillLoading) {
       // use the data to be restored when the tab hasn't been completely loaded
-      return browser.__SS_data;
+      tabData = browser.__SS_data;
+      if (aTab.pinned)
+        tabData.pinned = true;
+      else
+        delete tabData.pinned;
+      if (browser.userTypedValue) {
+        tabData.userTypedValue = browser.userTypedValue;
+        tabData.userTypedClear = browser.userTypedClear;
+      } else {
+        delete tabData.userTypedValue;
+        delete tabData.userTypedClear;
+      }
+      return tabData;
+    }
     
     var history = null;
     try {
@@ -1443,10 +1456,15 @@ SessionStoreService.prototype = {
     if (browser.userTypedValue) {
       tabData.userTypedValue = browser.userTypedValue;
       tabData.userTypedClear = browser.userTypedClear;
+    } else {
+      delete tabData.userTypedValue;
+      delete tabData.userTypedClear;
     }
 
     if (aTab.pinned)
       tabData.pinned = true;
+    else
+      delete tabData.pinned;
     tabData.hidden = aTab.hidden;
 
     var disallow = [];
