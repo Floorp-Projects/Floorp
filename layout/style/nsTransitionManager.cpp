@@ -242,12 +242,15 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
                              nsCSSProps::kSIDTable[cv.mProperty]))
     {
       nsCSSValue *prop = aRuleData->ValueFor(cv.mProperty);
+      if (prop->GetUnit() == eCSSUnit_Null) {
 #ifdef DEBUG
-      PRBool ok =
+        PRBool ok =
 #endif
-        nsStyleAnimation::UncomputeValue(cv.mProperty, aRuleData->mPresContext,
-                                         cv.mValue, *prop);
-      NS_ABORT_IF_FALSE(ok, "could not store computed value");
+          nsStyleAnimation::UncomputeValue(cv.mProperty,
+                                           aRuleData->mPresContext,
+                                           cv.mValue, *prop);
+        NS_ABORT_IF_FALSE(ok, "could not store computed value");
+      }
     }
   }
 }
