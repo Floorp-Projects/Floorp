@@ -344,16 +344,6 @@ class SetPropCompiler : public PICStubCompiler
             JS_ASSERT(shape->hasSlot());
             pic.shapeRegHasBaseShape = false;
 
-#ifdef JS_THREADSAFE
-            /* Check that the object isn't shared, so no locking needed. */
-            masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), pic.shapeReg);
-            Jump sharedObject = masm.branchPtr(Assembler::NotEqual,
-                                               Address(pic.objReg, offsetof(JSObject, title.ownercx)),
-                                               pic.shapeReg);
-            if (!slowExits.append(sharedObject))
-                return false;
-#endif
-
             /* Emit shape guards for the object's prototype chain. */
             JSObject *proto = obj->getProto();
             RegisterID lastReg = pic.objReg;
@@ -549,11 +539,6 @@ class SetPropCompiler : public PICStubCompiler
         if (clasp->ops.setProperty)
             return disable("ops set property hook");
 
-#ifdef JS_THREADSAFE
-        if (!CX_OWNS_OBJECT_TITLE(cx, obj))
-            return disable("shared object");
-#endif
-
         jsid id = ATOM_TO_JSID(atom);
 
         JSObject *holder;
@@ -563,7 +548,6 @@ class SetPropCompiler : public PICStubCompiler
 
         /* If the property exists but is on a prototype, treat as addprop. */
         if (prop && holder != obj) {
-            AutoPropertyDropper dropper(cx, holder, prop);
             const Shape *shape = (const Shape *) prop;
 
             if (!holder->isNative())
@@ -655,8 +639,6 @@ class SetPropCompiler : public PICStubCompiler
 
             return generateStub(initialShape, shape, true, !obj->hasSlotsArray());
         }
-
-        AutoPropertyDropper dropper(cx, holder, prop);
 
         const Shape *shape = (const Shape *) prop;
         if (pic.kind == ic::PICInfo::SETMETHOD && !shape->isMethod())
@@ -863,7 +845,6 @@ class GetPropCompiler : public PICStubCompiler
         if (!prop)
             return disable("property not found");
 
-        AutoPropertyDropper dropper(cx, holder, prop);
         const Shape *shape = (const Shape *)prop;
         if (holder != obj)
             return disable("proto walk on String.prototype");
@@ -1181,8 +1162,6 @@ class GetPropCompiler : public PICStubCompiler
 
         if (!prop)
             return disable("lookup failed");
-
-        AutoPropertyDropper dropper(cx, holder, prop);
 
         if (!holder->isNative())
             return disable("non-native holder");
@@ -1521,8 +1500,6 @@ class GetElemCompiler : public PICStubCompiler
         if (!prop)
             return disable("lookup failed");
 
-        AutoPropertyDropper dropper(cx, holder, prop);
-
         if (!obj->isNative())
             return disable("non-native obj");
         if (!holder->isNative())
@@ -1850,7 +1827,6 @@ class ScopeNameCompiler : public PICStubCompiler
     bool retrieve(Value *vp)
     {
         if (prop && (!obj->isNative() || !holder->isNative())) {
-            holder->dropProperty(cx, prop);
             if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
                 return false;
         } else {
@@ -1873,7 +1849,6 @@ class ScopeNameCompiler : public PICStubCompiler
                 normalized = js_UnwrapWithObject(cx, obj);
             NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp,
                        return false);
-            JS_UNLOCK_OBJ(cx, holder);
         }
 
         return true;
@@ -2214,8 +2189,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(obj2->containsSlot(slot));
-            rval = obj2->lockedGetSlot(slot);
+            rval = obj2->nativeGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
             const Shape *shape = entry->vword.toShape();

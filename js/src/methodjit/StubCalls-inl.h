@@ -76,7 +76,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
             (shape)->slot != SHAPE_INVALID_SLOT &&                            \
             !(obj)->brandedOrHasMethodBarrier()) {                            \
             /* Fast path for, e.g., plain Object instance properties. */      \
-            (obj)->lockedSetSlot((shape)->slot, *vp);                         \
+            (obj)->nativeSetSlot((shape)->slot, *vp);                         \
         } else {                                                              \
             if (!js_NativeSet(cx, obj, shape, false, vp))                     \
                 THROW();                                                      \
@@ -90,7 +90,7 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
             JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
                       !shape->hasDefaultSetter());                            \
             if (((shape)->slot != SHAPE_INVALID_SLOT))                        \
-                *(vp) = (pobj)->lockedGetSlot((shape)->slot);                 \
+                *(vp) = (pobj)->nativeGetSlot((shape)->slot);                 \
             else                                                              \
                 (vp)->setUndefined();                                         \
         } else {                                                              \

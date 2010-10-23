@@ -260,20 +260,6 @@ struct PropertyTable {
 
 struct JSObject;
 
-inline const js::Value &
-JSObject::lockedGetSlot(uintN slot) const
-{
-    OBJ_CHECK_SLOT(this, slot);
-    return this->getSlot(slot);
-}
-
-inline void
-JSObject::lockedSetSlot(uintN slot, const js::Value &value)
-{
-    OBJ_CHECK_SLOT(this, slot);
-    this->setSlot(slot, value);
-}
-
 namespace js {
 
 class PropertyTree;
@@ -860,18 +846,6 @@ Shape::isSharedPermanent() const
 {
     return (~attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0;
 }
-
-class AutoObjectLocker {
-    JSContext   * const cx;
-    JSObject    * const obj;
-  public:
-    AutoObjectLocker(JSContext *cx, JSObject *obj)
-      : cx(cx), obj(obj) {
-        JS_LOCK_OBJ(cx, obj);
-    }
-
-    ~AutoObjectLocker() { JS_UNLOCK_OBJ(cx, obj); }
-};
 
 }
 

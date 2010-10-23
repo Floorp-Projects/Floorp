@@ -550,8 +550,8 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * has the same thread as cx, or cx->thread runs the GC (in which case
          * all other requests must be suspended), or ownercx->thread runs a GC
          * and the GC waits for all requests to finish. Set title->ownercx to
-         * cx so that the matching JS_UNLOCK_OBJ macro call will take the fast
-         * path around the corresponding js_UnlockObj function call.
+         * cx to enable the fast path around the matching js_UnlockTitle
+         * function call.
          *
          * If title->u.link is non-null, title has already been inserted on
          * the rt->titleSharingTodo list, because another thread's context
@@ -653,147 +653,6 @@ js_ShareWaitingTitles(JSContext *cx)
     }
     if (shared)
         JS_NOTIFY_ALL_CONDVAR(cx->runtime->titleSharingDone);
-}
-
-/* Exported to js.c, which calls it via OBJ_GET_* and JSVAL_IS_* macros. */
-JS_FRIEND_API(jsval)
-js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
-{
-    jsval v;
-#ifndef NSPR_LOCK
-    JSThinLock *tl;
-    jsword me;
-#endif
-
-    OBJ_CHECK_SLOT(obj, slot);
-
-    /*
-     * Native object locking is inlined here to optimize the single-threaded
-     * and contention-free multi-threaded cases.
-     */
-    JS_ASSERT(obj->title.ownercx != cx);
-    JS_ASSERT(obj->containsSlot(slot));
-
-    /*
-     * Avoid locking if called from the GC.  Also avoid locking a non-extensible
-     * object.  If neither of those special cases applies, try to claim obj's
-     * flyweight lock from whatever context may have had it in an earlier
-     * request.
-     */
-    if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        !obj->isExtensible() ||
-        (obj->title.ownercx && ClaimTitle(&obj->title, cx))) {
-        return Jsvalify(obj->getSlot(slot));
-    }
-
-#ifndef NSPR_LOCK
-    tl = &obj->title.lock;
-    me = CX_THINLOCK_ID(cx);
-    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
-    if (NativeCompareAndSwap(&tl->owner, 0, me)) {
-        /*
-         * Got the lock with one compare-and-swap. Even so, someone else may
-         * have mutated obj so it now has its own title lock, which would
-         * require either a restart from the top of this routine, or a thin
-         * lock release followed by fat lock acquisition.
-         */
-        v = Jsvalify(obj->getSlot(slot));
-        if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
-            /* Assert that title locks never revert to flyweight. */
-            JS_ASSERT(obj->title.ownercx != cx);
-            LOGIT(obj->title, '1');
-            obj->title.u.count = 1;
-            js_UnlockObj(cx, obj);
-        }
-        return v;
-    }
-    if (Thin_RemoveWait(ReadWord(tl->owner)) == me)
-        return Jsvalify(obj->getSlot(slot));
-#endif
-
-    js_LockObj(cx, obj);
-    v = Jsvalify(obj->getSlot(slot));
-
-    /*
-     * Test whether cx took ownership of obj's scope during js_LockObj.
-     *
-     * This does not mean that a given scope reverted to flyweight from "thin"
-     * or "fat" -- it does mean that obj's map pointer changed due to another
-     * thread setting a property, requiring obj to cease sharing a prototype
-     * object's scope (whose lock was not flyweight, else we wouldn't be here
-     * in the first place!).
-     */
-    if (obj->title.ownercx != cx)
-        js_UnlockTitle(cx, &obj->title);
-    return v;
-}
-
-void
-js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
-{
-#ifndef NSPR_LOCK
-    JSThinLock *tl;
-    jsword me;
-#endif
-
-    OBJ_CHECK_SLOT(obj, slot);
-
-    /* Any string stored in a thread-safe object must be immutable. */
-    if (JSVAL_IS_STRING(v) &&
-        !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
-        /* FIXME bug 363059: See comments in js_FinishSharingScope. */
-        v = JSVAL_NULL;
-    }
-
-    /*
-     * Native object locking is inlined here to optimize the single-threaded
-     * and contention-free multi-threaded cases.
-     */
-    JS_ASSERT(obj->title.ownercx != cx);
-    JS_ASSERT(obj->containsSlot(slot));
-
-    /*
-     * Avoid locking if called from the GC.  Also avoid locking a non-extensible
-     * object.  If neither of those special cases applies, try to claim obj's
-     * flyweight lock from whatever context may have had it in an earlier
-     * request.
-     */
-    if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        !obj->isExtensible() ||
-        (obj->title.ownercx && ClaimTitle(&obj->title, cx))) {
-        obj->lockedSetSlot(slot, Valueify(v));
-        return;
-    }
-
-#ifndef NSPR_LOCK
-    tl = &obj->title.lock;
-    me = CX_THINLOCK_ID(cx);
-    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
-    if (NativeCompareAndSwap(&tl->owner, 0, me)) {
-        obj->lockedSetSlot(slot, Valueify(v));
-        if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
-            /* Assert that scope locks never revert to flyweight. */
-            JS_ASSERT(obj->title.ownercx != cx);
-            LOGIT(obj->title, '1');
-            obj->title.u.count = 1;
-            js_UnlockObj(cx, obj);
-        }
-        return;
-    }
-    if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        obj->lockedSetSlot(slot, Valueify(v));
-        return;
-    }
-#endif
-
-    js_LockObj(cx, obj);
-    obj->lockedSetSlot(slot, Valueify(v));
-
-    /*
-     * Same drill as above, in js_GetSlotThreadSafe.
-     */
-    if (obj->title.ownercx != cx)
-        js_UnlockTitle(cx, &obj->title);
 }
 
 #ifndef NSPR_LOCK
@@ -1232,34 +1091,6 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
 }
 
 void
-js_LockObj(JSContext *cx, JSObject *obj)
-{
-    JS_ASSERT(obj->isNative());
-
-    /*
-     * We must test whether the GC is calling and return without mutating any
-     * state, especially lockedSealedScope. Note asymmetry with respect to
-     * js_UnlockObj, which is a thin-layer on top of js_UnlockTitle.
-     */
-    if (CX_THREAD_IS_RUNNING_GC(cx))
-        return;
-
-    if (!obj->isExtensible() && !cx->thread->lockedSealedTitle) {
-        cx->thread->lockedSealedTitle = &obj->title;
-        return;
-    }
-
-    js_LockTitle(cx, &obj->title);
-}
-
-void
-js_UnlockObj(JSContext *cx, JSObject *obj)
-{
-    JS_ASSERT(obj->isNative());
-    js_UnlockTitle(cx, &obj->title);
-}
-
-void
 js_InitTitle(JSContext *cx, JSTitle *title)
 {
 #ifdef JS_THREADSAFE
@@ -1298,19 +1129,13 @@ js_IsRuntimeLocked(JSRuntime *rt)
 }
 
 JSBool
-js_IsObjLocked(JSContext *cx, JSObject *obj)
-{
-    return js_IsTitleLocked(cx, &obj->title);
-}
-
-JSBool
 js_IsTitleLocked(JSContext *cx, JSTitle *title)
 {
     /* Special case: the GC locking any object's title, see js_LockTitle. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return JS_TRUE;
 
-    /* Special case: locked object is not extensible -- see js_LockObj. */
+    /* Special case: locked object is not extensible. */
     if (cx->thread->lockedSealedTitle == title)
         return JS_TRUE;
 

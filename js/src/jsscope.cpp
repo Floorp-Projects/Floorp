@@ -1270,7 +1270,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     JS_ASSERT(!JSID_IS_VOID(shape.id));
     if (shape.isMethod()) {
 #ifdef DEBUG
-        const Value &prev = lockedGetSlot(shape.slot);
+        const Value &prev = nativeGetSlot(shape.slot);
         JS_ASSERT(&shape.methodObject() == &prev.toObject());
         JS_ASSERT(canHaveMethodBarrier());
         JS_ASSERT(hasMethodBarrier());

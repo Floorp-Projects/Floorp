@@ -86,20 +86,17 @@ ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
 
     JS_ASSERT(ic->kind == ic::MICInfo::GET);
 
-    JS_LOCK_OBJ(f.cx, obj);
     const Shape *shape = obj->nativeLookup(id);
     if (!shape ||
         !shape->hasDefaultGetterOrIsMethod() ||
         !shape->hasSlot())
     {
-        JS_UNLOCK_OBJ(f.cx, obj);
         if (shape)
             PatchGetFallback(f, ic);
         stubs::GetGlobalName(f);
         return;
     }
     uint32 slot = shape->slot;
-    JS_UNLOCK_OBJ(f.cx, obj);
 
     ic->u.name.touched = true;
 
@@ -164,21 +161,18 @@ ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
 
     JS_ASSERT(ic->kind == ic::MICInfo::SET);
 
-    JS_LOCK_OBJ(f.cx, obj);
     const Shape *shape = obj->nativeLookup(id);
     if (!shape ||
         !shape->hasDefaultGetterOrIsMethod() ||
         !shape->writable() ||
         !shape->hasSlot())
     {
-        JS_UNLOCK_OBJ(f.cx, obj);
         if (shape)
             PatchSetFallback(f, ic);
         GetStubForSetGlobalName(f)(f, atom);
         return;
     }
     uint32 slot = shape->slot;
-    JS_UNLOCK_OBJ(f.cx, obj);
 
     ic->u.name.touched = true;
 

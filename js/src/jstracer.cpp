@@ -5684,18 +5684,11 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
      * that it isn't the global at run time.
      */
     if (!globalObj->hasOwnShape()) {
-        JS_LOCK_OBJ(cx, globalObj);
-        bool ok = globalObj->globalObjectOwnShapeChange(cx);
-        JS_UNLOCK_OBJ(cx, globalObj);
-        if (!ok) {
+        if (!globalObj->globalObjectOwnShapeChange(cx)) {
             debug_only_print0(LC_TMTracer,
                               "Can't record: failed to give globalObj a unique shape.\n");
             return false;
         }
-    } else {
-        /* Claim the title so we don't abort at the top of recordLoopEdge. */
-        JS_LOCK_OBJ(cx, globalObj);
-        JS_UNLOCK_OBJ(cx, globalObj);
     }
 
     uint32 globalShape = globalObj->shape();
@@ -6168,14 +6161,6 @@ RecordingIfTrue(bool b)
 JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
-#ifdef JS_THREADSAFE
-    /* If changing this, see "Claim the title" in CheckGlobalObjectShape. */
-    if (cx->fp()->scopeChain().getGlobal()->title.ownercx != cx) {
-        AbortRecording(cx, "Global object not owned by this context");
-        return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
-    }
-#endif
-
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Process needFlush and deep abort requests. */
@@ -8235,23 +8220,16 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
         LIns *obj_ins;
         CHECK_STATUS_A(traverseScopeChain(chainHead, head_ins, obj, obj_ins));
 
-        if (obj2 != obj) {
-            obj2->dropProperty(cx, prop);
+        if (obj2 != obj)
             RETURN_STOP_A("prototype property");
-        }
 
         Shape* shape = (Shape*) prop;
-        if (!isValidSlot(obj, shape)) {
-            JS_UNLOCK_OBJ(cx, obj2);
+        if (!isValidSlot(obj, shape))
             return ARECORD_STOP;
-        }
-        if (!lazilyImportGlobalSlot(shape->slot)) {
-            JS_UNLOCK_OBJ(cx, obj2);
+        if (!lazilyImportGlobalSlot(shape->slot))
             RETURN_STOP_A("lazy import of global slot failed");
-        }
         vp = &obj->getSlotRef(shape->slot);
         ins = get(vp);
-        JS_UNLOCK_OBJ(cx, obj2);
         nr.tracked = true;
         return ARECORD_CONTINUE;
     }
@@ -8259,11 +8237,9 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
     if (obj == obj2 && obj->isCall()) {
         AbortableRecordingStatus status =
             InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
-        JS_UNLOCK_OBJ(cx, obj);
         return status;
     }
 
-    obj2->dropProperty(cx, prop);
     RETURN_STOP_A("fp->scopeChain is not global or active call object");
 }
 
@@ -9657,7 +9633,6 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 RETURN_STOP_A("cannot cache name");
         } else {
             TraceMonitor &localtm = *traceMonitor;
-            JSContext *localcx = cx;
             int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
                                                         cx->resolveFlags,
                                                         &obj2, &prop);
@@ -9666,11 +9641,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 RETURN_ERROR_A("error in js_LookupPropertyWithFlags");
 
             /* js_LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
-            if (!localtm.recorder) {
-                if (prop)
-                    obj2->dropProperty(localcx, prop);
+            if (!localtm.recorder)
                 return ARECORD_ABORTED;
-            }
 
             if (prop) {
                 if (!obj2->isNative())
@@ -9695,7 +9667,6 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             return ARECORD_CONTINUE;
         }
 
-        obj2->dropProperty(cx, prop);
         if (!entry)
             RETURN_STOP_A("failed to fill property cache");
     }
@@ -12681,7 +12652,6 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
     JSObject* pobj;
     JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
     JS_ASSERT(prop == (JSProperty*) shape);
-    pobj->dropProperty(cx, prop);
 #endif
 
     // Shape::get contains a special case for With objects. We can elide it
@@ -15198,7 +15168,6 @@ TraceRecorder::record_JSOP_IN()
     x = lir->ins2ImmI(LIR_eqi, x, 1);
 
     TraceMonitor &localtm = *traceMonitor;
-    JSContext *localcx = cx;
 
     JSObject* obj2;
     JSProperty* prop;
@@ -15208,15 +15177,10 @@ TraceRecorder::record_JSOP_IN()
         RETURN_ERROR_A("obj->lookupProperty failed in JSOP_IN");
 
     /* lookupProperty can reenter the interpreter and kill |this|. */
-    if (!localtm.recorder) {
-        if (prop)
-            obj2->dropProperty(localcx, prop);
+    if (!localtm.recorder)
         return ARECORD_ABORTED;
-    }
 
     bool cond = prop != NULL;
-    if (prop)
-        obj2->dropProperty(cx, prop);
 
     /*
      * The interpreter fuses comparisons and the following branch, so we have

@@ -194,15 +194,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                 JS_ASSERT(obj->isExtensible());
 
                 if (obj->nativeEmpty()) {
-                    /*
-                     * We check that cx owns obj here and will continue to own
-                     * it after ensureClassReservedSlotsForEmptyObject returns
-                     * so we can continue to skip JS_UNLOCK_OBJ calls.
-                     */
-                    JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
-                    bool ok = obj->ensureClassReservedSlotsForEmptyObject(cx);
-                    JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
-                    if (!ok)
+                    if (!obj->ensureClassReservedSlotsForEmptyObject(cx))
                         THROW();
                 }
 
@@ -238,7 +230,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                      * new property, not updating an existing slot's value that
                      * might contain a method of a branded shape.
                      */
-                    obj->lockedSetSlot(slot, rval);
+                    obj->setSlot(slot, rval);
 
                     /*
                      * Purge the property cache of the id we may have just
@@ -357,9 +349,8 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
             f.regs.sp[-1].setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
-            JS_ASSERT(obj2->containsSlot(slot));
             f.regs.sp++;
-            f.regs.sp[-1] = obj2->lockedGetSlot(slot);
+            f.regs.sp[-1] = obj2->nativeGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
             shape = entry->vword.toShape();
@@ -406,7 +397,6 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        obj2->dropProperty(cx, prop);
         if (!obj->getProperty(cx, id, &rval))
             return NULL;
     } else {
@@ -415,7 +405,6 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
         if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(cx, normalized);
         NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
-        JS_UNLOCK_OBJ(cx, obj2);
     }
 
     f.regs.sp++;
@@ -491,8 +480,6 @@ stubs::ForName(VMFrame &f, JSAtom *atom)
     JSProperty *prop;
     if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
         THROW();
-    if (prop)
-        obj2->dropProperty(cx, prop);
     {
         AutoValueRooter tvr(cx);
         JS_ASSERT(regs.sp[-1].isObject());
@@ -975,7 +962,6 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
             if (oldAttrs & JSPROP_PERMANENT)
                 doSet = true;
         }
-        pobj->dropProperty(cx, prop);
     }
 
     Value rval = ObjectValue(*obj);
@@ -1759,8 +1745,7 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
     if (!atom) {
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(obj->containsSlot(slot));
-            Value &rref = obj->getSlotRef(slot);
+            Value &rref = obj->nativeGetSlotRef(slot);
             int32_t tmp;
             if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
                 int32_t inc = tmp + N;
@@ -1781,7 +1766,6 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
         ReportAtomNotDefined(cx, atom);
         return false;
     }
-    obj2->dropProperty(cx, prop);
     return ObjIncOp<N, POST, strict>(f, obj, id);
 }
 
@@ -2042,8 +2026,7 @@ InlineGetProp(VMFrame &f)
                 rval.setObject(entry->vword.toFunObj());
             } else if (entry->vword.isSlot()) {
                 uint32 slot = entry->vword.toSlot();
-                JS_ASSERT(obj2->containsSlot(slot));
-                rval = obj2->lockedGetSlot(slot);
+                rval = obj2->nativeGetSlot(slot);
             } else {
                 JS_ASSERT(entry->vword.isShape());
                 const Shape *shape = entry->vword.toShape();
@@ -2134,8 +2117,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(obj2->containsSlot(slot));
-            rval = obj2->lockedGetSlot(slot);
+            rval = obj2->nativeGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
             const Shape *shape = entry->vword.toShape();
@@ -2249,8 +2231,7 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
      */
     PropertyCacheEntry *entry;
     const Shape *shape;
-    if (CX_OWNS_OBJECT_TITLE(cx, obj) &&
-        JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, &shape, &entry) &&
+    if (JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, &shape, &entry) &&
         shape->hasDefaultSetter() &&
         shape->previous() == obj->lastProperty())
     {
@@ -2277,7 +2258,7 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
          * property, not updating an existing slot's value that might
          * contain a method of a branded shape.
          */
-        obj->lockedSetSlot(slot, rval);
+        obj->nativeSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
 
@@ -2684,7 +2665,6 @@ stubs::DelName(VMFrame &f, JSAtom *atom)
     f.regs.sp++;
     f.regs.sp[-1] = BooleanValue(true);
     if (prop) {
-        obj2->dropProperty(f.cx, prop);
         if (!obj->deleteProperty(f.cx, id, &f.regs.sp[-1], false))
             THROW();
     }
@@ -2761,8 +2741,6 @@ stubs::DefVar(VMFrame &f, JSAtom *atom)
         JS_ASSERT(prop);
         obj2 = obj;
     }
-
-    obj2->dropProperty(cx, prop);
 }
 
 JSBool JS_FASTCALL
@@ -2786,11 +2764,7 @@ stubs::In(VMFrame &f)
     if (!obj->lookupProperty(cx, id, &obj2, &prop))
         THROWV(JS_FALSE);
 
-    JSBool cond = !!prop;
-    if (prop)
-        obj2->dropProperty(cx, prop);
-
-    return cond;
+    return prop != NULL;
 }
 
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
