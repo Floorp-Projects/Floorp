@@ -1054,8 +1054,6 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         JS_ASSERT(prop);
         const Shape *shape = (const Shape *)prop;
         def.knownSlot = shape->slot;
-
-        globalObj->dropProperty(cx, prop);
     }
 
     js::Vector<JSScript *, 16, ContextAllocPolicy> worklist(cx);
@@ -3481,7 +3479,6 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
     JSAtomListElement *ale = globalScope->names.lookup(atom);
     if (!ale) {
         JSContext *cx = cg->parser->context;
-        AutoObjectLocker locker(cx, globalObj);
 
         JSObject *holder;
         JSProperty *prop;
@@ -3492,8 +3489,6 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
 
         GlobalScope::GlobalDef def;
         if (prop) {
-            AutoPropertyDropper dropper(cx, globalObj, prop);
-
             /*
              * A few cases where we don't bother aggressively caching:
              *   1) Function value changes.

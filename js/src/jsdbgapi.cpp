@@ -559,8 +559,6 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
     DBG_UNLOCK(rt);
 
     if (!setter) {
-        JS_LOCK_OBJ(cx, wp->object);
-
         /*
          * If the property wasn't found on wp->object, or it isn't still being
          * watched, then someone else must have deleted or unwatched it, and we
@@ -575,7 +573,6 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
             if (!shape)
                 ok = false;
         }
-        JS_UNLOCK_OBJ(cx, wp->object);
     }
 
     cx->free(wp);
@@ -679,15 +676,13 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             wp->flags |= JSWP_HELD;
             DBG_UNLOCK(rt);
 
-            JS_LOCK_OBJ(cx, obj);
             jsid propid = shape->id;
             jsid userid = SHAPE_USERID(shape);
-            JS_UNLOCK_OBJ(cx, obj);
 
             /* NB: wp is held, so we can safely dereference it still. */
             if (!wp->handler(cx, obj, propid,
                              obj->containsSlot(shape->slot)
-                             ? Jsvalify(obj->getSlotMT(cx, shape->slot))
+                             ? Jsvalify(obj->nativeGetSlot(shape->slot))
                              : JSVAL_VOID,
                              Jsvalify(vp), wp->closure)) {
                 DBG_LOCK(rt);
@@ -781,7 +776,6 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     JSProperty *prop;
     const Shape *shape;
     JSRuntime *rt;
-    JSBool ok;
     JSWatchPoint *wp;
     PropertyOp watcher;
 
@@ -838,14 +832,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 
         if (pobj->isNative()) {
             valroot.set(pobj->containsSlot(shape->slot)
-                        ? pobj->lockedGetSlot(shape->slot)
+                        ? pobj->nativeGetSlot(shape->slot)
                         : UndefinedValue());
             getter = shape->getter();
             setter = shape->setter();
             attrs = shape->attributes();
             flags = shape->getFlags();
             shortid = shape->shortid;
-            JS_UNLOCK_OBJ(cx, pobj);
         } else {
             if (!pobj->getProperty(cx, propid, valroot.addr()) ||
                 !pobj->getAttributes(cx, propid, &attrs)) {
@@ -869,22 +862,17 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
      * At this point, prop/shape exists in obj, obj is locked, and we must
      * unlock the object before returning.
      */
-    ok = JS_TRUE;
     DBG_LOCK(rt);
     wp = FindWatchPoint(rt, obj, propid);
     if (!wp) {
         DBG_UNLOCK(rt);
         watcher = js_WrapWatchedSetter(cx, propid, shape->attributes(), shape->setter());
-        if (!watcher) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!watcher)
+            return JS_FALSE;
 
         wp = (JSWatchPoint *) cx->malloc(sizeof *wp);
-        if (!wp) {
-            ok = JS_FALSE;
-            goto out;
-        }
+        if (!wp)
+            return JS_FALSE;
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
@@ -899,8 +887,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
             JS_INIT_CLIST(&wp->links);
             DBG_LOCK(rt);
             DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
-            ok = JS_FALSE;
-            goto out;
+            return JS_FALSE;
         }
         wp->shape = shape;
 
@@ -917,10 +904,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     wp->handler = handler;
     wp->closure = reinterpret_cast<JSObject*>(closure);
     DBG_UNLOCK(rt);
-
-out:
-    JS_UNLOCK_OBJ(cx, obj);
-    return ok;
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)

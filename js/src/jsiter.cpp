@@ -254,8 +254,6 @@ static bool
 EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags, IdSet &ht,
                           typename EnumPolicy::ResultVector *props)
 {
-    JS_LOCK_OBJ(cx, pobj);
-
     size_t initialLength = props->length();
 
     /* Collect all unique properties from this object's scope. */
@@ -272,8 +270,6 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     }
 
     Reverse(props->begin() + initialLength, props->end());
-
-    JS_UNLOCK_OBJ(cx, pobj);
     return true;
 }
 
@@ -922,12 +918,11 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                             return false;
                         if (prop) {
                             uintN attrs;
-                            if (obj2.object()->isNative()) {
+                            if (obj2.object()->isNative())
                                 attrs = ((Shape *) prop)->attributes();
-                                JS_UNLOCK_OBJ(cx, obj2.object());
-                            } else if (!obj2.object()->getAttributes(cx, *idp, &attrs)) {
+                            else if (!obj2.object()->getAttributes(cx, *idp, &attrs))
                                 return false;
-                            }
+
                             if (attrs & JSPROP_ENUMERATE)
                                 continue;
                         }

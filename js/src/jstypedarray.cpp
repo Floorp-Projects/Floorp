@@ -527,7 +527,6 @@ class TypedArrayTemplate
                     shape = (Shape *) prop;
                     if (!js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp))
                         return false;
-                    JS_UNLOCK_OBJ(cx, obj2);
                 }
             }
         }
