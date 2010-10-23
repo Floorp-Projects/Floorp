@@ -96,6 +96,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+#include "methodjit/MethodJIT.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -5931,6 +5932,10 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
         JSD_DebuggerOff(jsdc);
     }
 #endif  /* JSDEBUGGER */
+
+#ifdef JS_METHODJIT
+    mjit::DumpAllProfiles(cx);
+#endif
 
     return result;
 }
