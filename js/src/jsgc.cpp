@@ -2623,7 +2623,6 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
 
     bool cycle = false;
     for (JSObject *obj2 = proto; obj2;) {
-        obj2 = obj2->wrappedObject(cx);
         if (obj2 == obj) {
             cycle = true;
             break;
