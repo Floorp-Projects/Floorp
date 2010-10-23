@@ -647,10 +647,6 @@ args_enumerate(JSContext *cx, JSObject *obj)
         JSProperty *prop;
         if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
             return false;
-
-        /* prop is null when the property was deleted. */
-        if (prop)
-            pobj->dropProperty(cx, prop);
     }
     return true;
 }
@@ -768,7 +764,7 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
 
     /*
      * Trigger reflection in strictargs_resolve using a series of
-     * js_LookupProperty calls.  Beware deleted properties!
+     * js_LookupProperty calls.
      */
     JSObject *pobj;
     JSProperty *prop;
@@ -776,26 +772,18 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
     // length
     if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), &pobj, &prop))
         return false;
-    if (prop)
-        pobj->dropProperty(cx, prop);
 
     // callee
     if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.calleeAtom), &pobj, &prop))
         return false;
-    if (prop)
-        pobj->dropProperty(cx, prop);
 
     // caller
     if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.callerAtom), &pobj, &prop))
         return false;
-    if (prop)
-        pobj->dropProperty(cx, prop);
 
     for (uint32 i = 0, argc = obj->getArgsInitialLength(); i < argc; i++) {
         if (!js_LookupProperty(cx, obj, INT_TO_JSID(i), &pobj, &prop))
             return false;
-        if (prop)
-            pobj->dropProperty(cx, prop);
     }
 
     return true;

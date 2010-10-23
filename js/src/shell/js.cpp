@@ -2320,7 +2320,6 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
-                obj2->dropProperty(cx, prop);
                 if (!obj->getProperty(cx, id, &value))
                     return JS_FALSE;
             }
@@ -2974,13 +2973,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
         JSProperty *prop;
-
-        if (!cpx->inner->lookupProperty(cx, id, objp, &prop))
-            return JS_FALSE;
-        if (prop)
-            cpx->inner->dropProperty(cx, prop);
-
-        return JS_TRUE;
+        return cpx->inner->lookupProperty(cx, id, objp, &prop);
     }
 
 #ifdef LAZY_STANDARD_CLASSES

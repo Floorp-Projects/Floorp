@@ -1716,15 +1716,6 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     return JS_TRUE;
 }
 
-static JSBool
-AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom)
-{
-    JS_LOCK_OBJ(cx, obj);
-    bool found = obj->nativeContains(ATOM_TO_JSID(atom));
-    JS_UNLOCK_OBJ(cx, obj);
-    return found;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 {
@@ -1738,7 +1729,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (!AlreadyHasOwnProperty(cx, obj, atom) &&
+    if (!obj->nativeContains(ATOM_TO_JSID(atom)) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
                              PropertyStub, PropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -1748,7 +1739,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     /* Initialize any classes that have not been resolved yet. */
     for (i = 0; standard_class_atoms[i].init; i++) {
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
-        if (!AlreadyHasOwnProperty(cx, obj, atom) &&
+        if (!obj->nativeContains(ATOM_TO_JSID(atom)) &&
             !standard_class_atoms[i].init(cx, obj)) {
             return JS_FALSE;
         }
@@ -1814,7 +1805,7 @@ static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
                     jsint *ip, JSBool *foundp)
 {
-    *foundp = AlreadyHasOwnProperty(cx, obj, atom);
+    *foundp = obj->nativeContains(ATOM_TO_JSID(atom));
     if (*foundp)
         ida = AddAtomToArray(cx, atom, ida, ip);
     return ida;
@@ -3178,17 +3169,15 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
 
         if (shape->isMethod()) {
             AutoShapeRooter root(cx, shape);
-            JS_UNLOCK_OBJ(cx, obj2);
             vp->setObject(shape->methodObject());
             return obj2->methodReadBarrier(cx, *shape, vp);
         }
 
         /* Peek at the native property's slot value, without doing a Get. */
         if (obj2->containsSlot(shape->slot))
-            *vp = obj2->lockedGetSlot(shape->slot);
+            *vp = obj2->nativeGetSlot(shape->slot);
         else
             vp->setBoolean(true);
-        JS_UNLOCK_OBJ(cx, obj2);
     } else if (obj2->isDenseArray()) {
         return js_GetDenseArrayElementValue(cx, obj2, id, vp);
     } else {
@@ -3250,23 +3239,15 @@ JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name, uintN
     return atom && JS_LookupPropertyWithFlagsById(cx, obj, ATOM_TO_JSID(atom), flags, &obj2, vp);
 }
 
-static JSBool
-HasPropertyResult(JSContext *cx, JSObject *obj2, JSProperty *prop, JSBool *foundp)
-{
-    *foundp = (prop != NULL);
-    if (prop)
-        obj2->dropProperty(cx, prop);
-    return true;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_HasPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
 {
     JSObject *obj2;
     JSProperty *prop;
-    return LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
-                              &obj2, &prop) &&
-           HasPropertyResult(cx, obj2, prop, foundp);
+    JSBool ok = LookupPropertyById(cx, obj, id, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
+                                   &obj2, &prop);
+    *foundp = (prop != NULL);
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3304,14 +3285,10 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, JSObject *obj, jsid id, JSBool *foun
             return JS_FALSE;
         }
         *foundp = (obj == obj2);
-        if (prop)
-            obj2->dropProperty(cx, prop);
         return JS_TRUE;
     }
 
-    JS_LOCK_OBJ(cx, obj);
     *foundp = obj->nativeContains(id);
-    JS_UNLOCK_OBJ(cx, obj);
     return JS_TRUE;
 }
 
@@ -3522,7 +3499,6 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
         return JS_FALSE;
     }
     if (obj2 != obj || !obj->isNative()) {
-        obj2->dropProperty(cx, prop);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
                              alias, name, obj2->getClass()->name);
         return JS_FALSE;
@@ -3538,7 +3514,6 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
                                    shape->shortid)
               != NULL);
     }
-    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 
@@ -3548,7 +3523,6 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     JSObject *obj2;
     JSProperty *prop;
     Shape *shape;
-    JSBool ok;
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -3564,20 +3538,17 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     }
     if (obj2 != obj || !obj->isNative()) {
         char numBuf[12];
-        obj2->dropProperty(cx, prop);
         JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)alias);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
                              numBuf, name, obj2->getClass()->name);
         return JS_FALSE;
     }
     shape = (Shape *)prop;
-    ok = (js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
-                               shape->getter(), shape->setter(), shape->slot,
-                               shape->attributes(), shape->getFlags() | Shape::ALIAS,
-                               shape->shortid)
-          != NULL);
-    JS_UNLOCK_OBJ(cx, obj);
-    return ok;
+    return js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
+                                shape->getter(), shape->setter(), shape->slot,
+                                shape->attributes(), shape->getFlags() | Shape::ALIAS,
+                                shape->shortid)
+           != NULL;
 }
 
 static JSBool
@@ -3596,8 +3567,6 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         desc->getter = NULL;
         desc->setter = NULL;
         desc->value.setUndefined();
-        if (prop)
-            obj2->dropProperty(cx, prop);
         return JS_TRUE;
     }
 
@@ -3613,11 +3582,10 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             desc->getter = shape->getter();
             desc->setter = shape->setter();
             if (obj2->containsSlot(shape->slot))
-                desc->value = obj2->lockedGetSlot(shape->slot);
+                desc->value = obj2->nativeGetSlot(shape->slot);
             else
                 desc->value.setUndefined();
         }
-        JS_UNLOCK_OBJ(cx, obj2);
     } else {
         if (obj2->isProxy()) {
             JSAutoResolveFlags rf(cx, flags);
@@ -3715,8 +3683,6 @@ SetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN attrs, JS
         return false;
     if (!prop || obj != obj2) {
         *foundp = false;
-        if (prop)
-            obj2->dropProperty(cx, prop);
         return true;
     }
     JSBool ok = obj->isNative()

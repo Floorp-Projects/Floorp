@@ -384,7 +384,6 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole,
         *hole = JS_TRUE;
         vp->setUndefined();
     } else {
-        obj2->dropProperty(cx, prop);
         if (!obj->getProperty(cx, idr.id(), vp))
             return JS_FALSE;
         *hole = JS_FALSE;
@@ -726,7 +725,6 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             shape = (const Shape *) prop;
             if (!js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp))
                 return JS_FALSE;
-            JS_UNLOCK_OBJ(cx, obj2);
         }
         return JS_TRUE;
     }

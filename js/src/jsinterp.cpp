@@ -1025,10 +1025,6 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
         return true;
     if (obj2->isNative()) {
         oldAttrs = ((Shape *) prop)->attributes();
-
-        /* If our caller doesn't want prop, unlock obj2. */
-        if (!propp)
-            JS_UNLOCK_OBJ(cx, obj2);
     } else {
         if (!obj2->getAttributes(cx, id, &oldAttrs))
             return false;
@@ -1078,8 +1074,6 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
             if (!(oldAttrs & JSPROP_PERMANENT))
                 return JS_TRUE;
         }
-        if (prop)
-            obj2->dropProperty(cx, prop);
 
         report = JSREPORT_ERROR;
         isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
@@ -2020,10 +2014,8 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     }
     if (!ok)
         return false;
-    if (cx->runtime->gcNumber != sample || entry->vshape() != pobj->shape()) {
-        pobj->dropProperty(cx, prop);
+    if (cx->runtime->gcNumber != sample || entry->vshape() != pobj->shape())
         return true;
-    }
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
 
@@ -2034,7 +2026,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     } else if (entry->vword.isShape()) {
         JS_ASSERT(entry->vword.toShape() == shape);
         JS_ASSERT_IF(shape->isMethod(),
-                     &shape->methodObject() == &pobj->lockedGetSlot(shape->slot).toObject());
+                     &shape->methodObject() == &pobj->nativeGetSlot(shape->slot).toObject());
     } else {
         Value v;
         JS_ASSERT(entry->vword.isFunObj());
@@ -2042,7 +2034,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(pobj->brandedOrHasMethodBarrier());
         JS_ASSERT(shape->hasDefaultGetterOrIsMethod());
         JS_ASSERT(pobj->containsSlot(shape->slot));
-        v = pobj->lockedGetSlot(shape->slot);
+        v = pobj->nativeGetSlot(shape->slot);
         JS_ASSERT(&entry->vword.toFunObj() == &v.toObject());
 
         if (shape->isMethod()) {
@@ -2051,7 +2043,6 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         }
     }
 
-    pobj->dropProperty(cx, prop);
     return true;
 }
 
@@ -3002,8 +2993,6 @@ BEGIN_CASE(JSOP_IN)
     if (!obj->lookupProperty(cx, id, &obj2, &prop))
         goto error;
     bool cond = prop != NULL;
-    if (prop)
-        obj2->dropProperty(cx, prop);
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp--;
     regs.sp[-1].setBoolean(cond);
@@ -3078,8 +3067,7 @@ BEGIN_CASE(JSOP_FORNAME)
     JSProperty *prop;
     if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
         goto error;
-    if (prop)
-        obj2->dropProperty(cx, prop);
+
     {
         AutoValueRooter tvr(cx);
         JS_ASSERT(regs.sp[-1].isObject());
@@ -3169,7 +3157,7 @@ END_CASE(JSOP_PICK)
             JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
                       !shape->hasDefaultSetter());                            \
             if (((shape)->slot != SHAPE_INVALID_SLOT))                        \
-                *(vp) = (pobj)->lockedGetSlot((shape)->slot);                 \
+                *(vp) = (pobj)->nativeGetSlot((shape)->slot);                 \
             else                                                              \
                 (vp)->setUndefined();                                         \
         } else {                                                              \
@@ -3185,7 +3173,7 @@ END_CASE(JSOP_PICK)
             (shape)->slot != SHAPE_INVALID_SLOT &&                            \
             !(obj)->brandedOrHasMethodBarrier()) {                            \
             /* Fast path for, e.g., plain Object instance properties. */      \
-            (obj)->lockedSetSlot((shape)->slot, *vp);                         \
+            (obj)->nativeSetSlot((shape)->slot, *vp);                         \
         } else {                                                              \
             if (!js_NativeSet(cx, obj, shape, false, vp))                     \
                 goto error;                                                   \
@@ -3758,7 +3746,6 @@ BEGIN_CASE(JSOP_DELNAME)
     /* ECMA says to return true if name is undefined or inherited. */
     PUSH_BOOLEAN(true);
     if (prop) {
-        obj2->dropProperty(cx, prop);
         if (!obj->deleteProperty(cx, id, &regs.sp[-1], false))
             goto error;
     }
@@ -3867,8 +3854,7 @@ BEGIN_CASE(JSOP_GNAMEDEC)
         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(obj->containsSlot(slot));
-            Value &rref = obj->getSlotRef(slot);
+            Value &rref = obj->nativeGetSlotRef(slot);
             int32_t tmp;
             if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
                 int32_t inc = tmp + ((js_CodeSpec[op].format & JOF_INC) ? 1 : -1);
@@ -3891,7 +3877,6 @@ BEGIN_CASE(JSOP_GNAMEDEC)
         atomNotDefined = atom;
         goto atom_not_defined;
     }
-    obj2->dropProperty(cx, prop);
 }
 
 do_incop:
@@ -4107,8 +4092,7 @@ BEGIN_CASE(JSOP_GETXPROP)
                     rval.setObject(entry->vword.toFunObj());
                 } else if (entry->vword.isSlot()) {
                     uint32 slot = entry->vword.toSlot();
-                    JS_ASSERT(obj2->containsSlot(slot));
-                    rval = obj2->lockedGetSlot(slot);
+                    rval = obj2->nativeGetSlot(slot);
                 } else {
                     JS_ASSERT(entry->vword.isShape());
                     const Shape *shape = entry->vword.toShape();
@@ -4203,8 +4187,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             rval.setObject(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
-            JS_ASSERT(obj2->containsSlot(slot));
-            rval = obj2->lockedGetSlot(slot);
+            rval = obj2->nativeGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isShape());
             const Shape *shape = entry->vword.toShape();
@@ -4344,15 +4327,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 JS_ASSERT(obj->isExtensible());
 
                 if (obj->nativeEmpty()) {
-                    /*
-                     * We check that cx owns obj here and will continue to own
-                     * it after ensureClassReservedSlotsForEmptyObject returns
-                     * so we can continue to skip JS_UNLOCK_OBJ calls.
-                     */
-                    JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
-                    bool ok = obj->ensureClassReservedSlotsForEmptyObject(cx);
-                    JS_ASSERT(CX_OWNS_OBJECT_TITLE(cx, obj));
-                    if (!ok)
+                    if (!obj->ensureClassReservedSlotsForEmptyObject(cx))
                         goto error;
                 }
 
@@ -4389,7 +4364,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                      * might contain a method of a branded shape.
                      */
                     TRACE_2(SetPropHit, entry, shape);
-                    obj->lockedSetSlot(slot, rval);
+                    obj->nativeSetSlot(slot, rval);
 
                     /*
                      * Purge the property cache of the id we may have just
@@ -4808,8 +4783,7 @@ BEGIN_CASE(JSOP_CALLNAME)
             PUSH_OBJECT(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uintN slot = entry->vword.toSlot();
-            JS_ASSERT(obj2->containsSlot(slot));
-            PUSH_COPY(obj2->lockedGetSlot(slot));
+            PUSH_COPY(obj2->nativeGetSlot(slot));
         } else {
             JS_ASSERT(entry->vword.isShape());
             shape = entry->vword.toShape();
@@ -4854,7 +4828,6 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        obj2->dropProperty(cx, prop);
         if (!obj->getProperty(cx, id, &rval))
             goto error;
     } else {
@@ -4863,7 +4836,6 @@ BEGIN_CASE(JSOP_CALLNAME)
         if (normalized->getClass() == &js_WithClass && !shape->hasDefaultGetter())
             normalized = js_UnwrapWithObject(cx, normalized);
         NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval);
-        JS_UNLOCK_OBJ(cx, obj2);
     }
 
     PUSH_COPY(rval);
@@ -5276,7 +5248,6 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
     }
 
     /* Minimize footprint with generic code instead of NATIVE_GET. */
-    obj2->dropProperty(cx, prop);
     Value *vp = regs.sp;
     PUSH_NULL();
     if (!obj->getProperty(cx, id, vp))
@@ -5320,38 +5291,22 @@ BEGIN_CASE(JSOP_FORGLOBAL)
     if (!IteratorNext(cx, &regs.sp[-1].toObject(), &rval))
         goto error;
     PUSH_COPY(rval);
-    uint32 slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
+    uint32 slot = script->getGlobalSlot(GET_SLOTNO(regs.pc));
     JSObject *obj = regs.fp->scopeChain().getGlobal();
-    JS_ASSERT(obj->containsSlot(slot));
-    JS_LOCK_OBJ(cx, obj);
-    {
-        if (!obj->methodWriteBarrier(cx, slot, rval)) {
-            JS_UNLOCK_OBJ(cx, obj);
-            goto error;
-        }
-        obj->lockedSetSlot(slot, rval);
-        JS_UNLOCK_OBJ(cx, obj);
-    }
+    if (!obj->methodWriteBarrier(cx, slot, rval))
+        goto error;
+    obj->nativeSetSlot(slot, rval);
     regs.sp--;
 }
 END_CASE(JSOP_FORGLOBAL)
 
 BEGIN_CASE(JSOP_SETGLOBAL)
 {
-    uint32 slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
+    uint32 slot = script->getGlobalSlot(GET_SLOTNO(regs.pc));
     JSObject *obj = regs.fp->scopeChain().getGlobal();
-    JS_ASSERT(obj->containsSlot(slot));
-    {
-        JS_LOCK_OBJ(cx, obj);
-        if (!obj->methodWriteBarrier(cx, slot, regs.sp[-1])) {
-            JS_UNLOCK_OBJ(cx, obj);
-            goto error;
-        }
-        obj->lockedSetSlot(slot, regs.sp[-1]);
-        JS_UNLOCK_OBJ(cx, obj);
-    }
+    if (!obj->methodWriteBarrier(cx, slot, regs.sp[-1]))
+        goto error;
+    obj->nativeSetSlot(slot, regs.sp[-1]);
 }
 END_SET_CASE(JSOP_SETGLOBAL)
 
@@ -5394,8 +5349,6 @@ BEGIN_CASE(JSOP_DEFVAR)
         JS_ASSERT(prop);
         obj2 = obj;
     }
-
-    obj2->dropProperty(cx, prop);
 }
 END_CASE(JSOP_DEFVAR)
 
@@ -5506,7 +5459,6 @@ BEGIN_CASE(JSOP_DEFFUN)
             if (oldAttrs & JSPROP_PERMANENT)
                 doSet = true;
         }
-        pobj->dropProperty(cx, prop);
     }
 
     Value rval = ObjectValue(*obj);
@@ -5967,8 +5919,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
      */
     PropertyCacheEntry *entry;
     const Shape *shape;
-    if (CX_OWNS_OBJECT_TITLE(cx, obj) &&
-        JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, &shape, &entry) &&
+    if (JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, &shape, &entry) &&
         shape->hasDefaultSetter() &&
         shape->previous() == obj->lastProperty())
     {
@@ -5996,7 +5947,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * contain a method of a branded shape.
          */
         TRACE_2(SetPropHit, entry, shape);
-        obj->lockedSetSlot(slot, rval);
+        obj->nativeSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
 

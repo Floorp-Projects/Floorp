@@ -1713,7 +1713,6 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                 JS_ASSERT(cg->compileAndGo());
                 obj = cg->scopeChain;
 
-                JS_LOCK_OBJ(cx, obj);
                 const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
                 if (shape) {
                     /*
@@ -1724,10 +1723,9 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                      */
                     if (!shape->writable() && !shape->configurable() &&
                         shape->hasDefaultGetter() && obj->containsSlot(shape->slot)) {
-                        *constp = obj->lockedGetSlot(shape->slot);
+                        *constp = obj->getSlot(shape->slot);
                     }
                 }
-                JS_UNLOCK_OBJ(cx, obj);
 
                 if (shape)
                     break;
