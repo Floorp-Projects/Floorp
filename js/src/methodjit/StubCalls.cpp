@@ -2764,7 +2764,7 @@ stubs::In(VMFrame &f)
     if (!obj->lookupProperty(cx, id, &obj2, &prop))
         THROWV(JS_FALSE);
 
-    return prop != NULL;
+    return !!prop;
 }
 
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);

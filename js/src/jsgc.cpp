@@ -2359,10 +2359,6 @@ LetOtherGCFinish(JSContext *cx)
             JS_NOTIFY_REQUEST_DONE(rt);
     }
 
-    /* See comments before another call to js_ShareWaitingTitles below. */
-    cx->thread->gcWaiting = true;
-    js_ShareWaitingTitles(cx);
-
     /*
      * Check that we did not release the GC lock above and let the GC to
      * finish before we wait.
@@ -2379,7 +2375,6 @@ LetOtherGCFinish(JSContext *cx)
         JS_AWAIT_GC_DONE(rt);
     } while (rt->gcThread);
 
-    cx->thread->gcWaiting = false;
     rt->requestCount += requestDebit;
 }
 
@@ -2445,18 +2440,9 @@ AutoGCSession::AutoGCSession(JSContext *cx)
     if (requestDebit != rt->requestCount) {
         rt->requestCount -= requestDebit;
 
-        /*
-         * Share any title that is owned by the GC thread before we wait, to
-         * avoid a deadlock with ClaimTitle. We also set the gcWaiting flag so
-         * that ClaimTitle can claim the title ownership from the GC thread if
-         * that function is called while the GC is waiting.
-         */
-        cx->thread->gcWaiting = true;
-        js_ShareWaitingTitles(cx);
         do {
             JS_AWAIT_REQUEST_DONE(rt);
         } while (rt->requestCount > 0);
-        cx->thread->gcWaiting = false;
         rt->requestCount += requestDebit;
     }
 
