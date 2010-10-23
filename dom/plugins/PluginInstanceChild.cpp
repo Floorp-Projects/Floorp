@@ -94,6 +94,8 @@ using mozilla::gfx::SharedDIB;
 // helpers' section for details.
 const int kFlashWMUSERMessageThrottleDelayMs = 5;
 
+static const TCHAR kPluginIgnoreSubclassProperty[] = TEXT("PluginIgnoreSubclassProperty");
+
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
@@ -203,6 +205,7 @@ PluginInstanceChild::InitQuirksModes(const nsCString& aMimeType)
     else if (FindInReadable(flash, aMimeType)) {
         mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
         mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
+        mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
     }
 #endif
 }
@@ -929,6 +932,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
           mWindow.type = aWindow.type;
 
           if (mPluginIface->setwindow) {
+              SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
               (void) mPluginIface->setwindow(&mData, &mWindow);
               WNDPROC wndProc = reinterpret_cast<WNDPROC>(
                   GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
@@ -937,6 +941,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                       SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
                                        reinterpret_cast<LONG_PTR>(PluginWindowProc)));
               }
+              RemoveProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty);
+              HookSetWindowLongPtr();
           }
       }
       break;
@@ -994,6 +1000,7 @@ PluginInstanceChild::Initialize()
 
 static const TCHAR kWindowClassName[] = TEXT("GeckoPluginWindow");
 static const TCHAR kPluginInstanceChildProperty[] = TEXT("PluginInstanceChildProperty");
+static const TCHAR kFlashThrottleProperty[] = TEXT("MozillaFlashThrottleProperty");
 
 // static
 bool
@@ -1045,6 +1052,7 @@ PluginInstanceChild::CreatePluginWindow()
         return false;
 
     // Apparently some plugins require an ASCII WndProc.
+    printf("setting DefWindowProcA\n");
     SetWindowLongPtrA(mPluginWindowHWND, GWLP_WNDPROC,
                       reinterpret_cast<LONG_PTR>(DefWindowProcA));
 
@@ -1058,14 +1066,14 @@ PluginInstanceChild::DestroyPluginWindow()
         // Unsubclass the window.
         WNDPROC wndProc = reinterpret_cast<WNDPROC>(
             GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
+        // Removed prior to SetWindowLongPtr, see HookSetWindowLongPtr.
+        RemoveProp(mPluginWindowHWND, kPluginInstanceChildProperty);
         if (wndProc == PluginWindowProc) {
             NS_ASSERTION(mPluginWndProc, "Should have old proc here!");
             SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
                              reinterpret_cast<LONG_PTR>(mPluginWndProc));
             mPluginWndProc = 0;
         }
-
-        RemoveProp(mPluginWindowHWND, kPluginInstanceChildProperty);
         DestroyWindow(mPluginWindowHWND);
         mPluginWindowHWND = 0;
     }
@@ -1122,7 +1130,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 {
     NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
                  "Failed to prevent a nonqueued message from running!");
-
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
         GetProp(hWnd, kPluginInstanceChildProperty));
     if (!self) {
@@ -1187,6 +1194,9 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     // on the window. (In non-oopp land, we would set and release via
     // widget for other reasons.)
     switch(message) {    
+      case WM_LBUTTONDOWN:
+      case WM_MBUTTONDOWN:
+      case WM_RBUTTONDOWN:
       case WM_LBUTTONUP:
       case WM_MBUTTONUP:
       case WM_RBUTTONUP:
@@ -1204,6 +1214,158 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         RemoveProp(hWnd, kPluginInstanceChildProperty);
 
     return res;
+}
+
+/* set window long ptr hook for flash */
+
+/*
+ * Flash will reset the subclass of our widget at various times.
+ * (Notably when entering and exiting full screen mode.) This
+ * occurs independent of the main plugin window event procedure.
+ * We trap these subclass calls to prevent our subclass hook from
+ * getting dropped.
+ * Note, ascii versions can be nixed once flash versions < 10.1
+ * are considered obsolete.
+ */
+ 
+#ifdef _WIN64
+typedef LONG_PTR
+  (WINAPI *User32SetWindowLongPtrA)(HWND hWnd,
+                                    int nIndex,
+                                    LONG_PTR dwNewLong);
+typedef LONG_PTR
+  (WINAPI *User32SetWindowLongPtrW)(HWND hWnd,
+                                    int nIndex,
+                                    LONG_PTR dwNewLong);
+static User32SetWindowLongPtrA sUser32SetWindowLongAHookStub = NULL;
+static User32SetWindowLongPtrW sUser32SetWindowLongWHookStub = NULL;
+#else
+typedef LONG
+(WINAPI *User32SetWindowLongA)(HWND hWnd,
+                               int nIndex,
+                               LONG dwNewLong);
+typedef LONG
+(WINAPI *User32SetWindowLongW)(HWND hWnd,
+                               int nIndex,
+                               LONG dwNewLong);
+static User32SetWindowLongA sUser32SetWindowLongAHookStub = NULL;
+static User32SetWindowLongW sUser32SetWindowLongWHookStub = NULL;
+#endif
+
+extern LRESULT CALLBACK
+NeuteredWindowProc(HWND hwnd,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam);
+
+const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
+
+// static
+PRBool
+PluginInstanceChild::SetWindowLongHookCheck(HWND hWnd,
+                                            int nIndex,
+                                            LONG_PTR newLong)
+{
+      // Let this go through if it's not a subclass
+  if (nIndex != GWLP_WNDPROC ||
+      // if it's not a subclassed plugin window
+      !GetProp(hWnd, kPluginInstanceChildProperty) ||
+      // if we're not disabled
+      GetProp(hWnd, kPluginIgnoreSubclassProperty) ||
+      // if the subclass is set to a known procedure
+      newLong == reinterpret_cast<LONG_PTR>(PluginWindowProc) ||
+      newLong == reinterpret_cast<LONG_PTR>(NeuteredWindowProc) ||
+      newLong == reinterpret_cast<LONG_PTR>(DefWindowProcA) ||
+      newLong == reinterpret_cast<LONG_PTR>(DefWindowProcW) ||
+      // if the subclass is a WindowsMessageLoop subclass restore
+      GetProp(hWnd, kOldWndProcProp))
+      return PR_TRUE;
+  // prevent the subclass
+  return PR_FALSE;
+}
+
+#ifdef _WIN64
+LONG_PTR WINAPI
+PluginInstanceChild::SetWindowLongPtrAHook(HWND hWnd,
+                                           int nIndex,
+                                           LONG_PTR newLong)
+#else
+LONG WINAPI
+PluginInstanceChild::SetWindowLongAHook(HWND hWnd,
+                                        int nIndex,
+                                        LONG newLong)
+#endif
+{
+    if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
+        return sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
+
+    // Set flash's new subclass to get the result. 
+    LONG_PTR proc = sUser32SetWindowLongAHookStub(hWnd, nIndex, newLong);
+
+    // We already checked this in SetWindowLongHookCheck
+    PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
+        GetProp(hWnd, kPluginInstanceChildProperty));
+
+    // Hook our subclass back up, just like we do on setwindow.   
+    self->mPluginWndProc =
+        reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
+            reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    return proc;
+}
+
+#ifdef _WIN64
+LONG_PTR WINAPI
+PluginInstanceChild::SetWindowLongPtrWHook(HWND hWnd,
+                                           int nIndex,
+                                           LONG_PTR newLong)
+#else
+LONG WINAPI
+PluginInstanceChild::SetWindowLongWHook(HWND hWnd,
+                                        int nIndex,
+                                        LONG newLong)
+#endif
+{
+    if (SetWindowLongHookCheck(hWnd, nIndex, newLong))
+        return sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
+
+    // Set flash's new subclass to get the result. 
+    LONG_PTR proc = sUser32SetWindowLongWHookStub(hWnd, nIndex, newLong);
+
+    // We already checked this in SetWindowLongHookCheck
+    PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
+        GetProp(hWnd, kPluginInstanceChildProperty));
+
+    // Hook our subclass back up, just like we do on setwindow.   
+    self->mPluginWndProc =
+        reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
+            reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    return proc;
+}
+
+void
+PluginInstanceChild::HookSetWindowLongPtr()
+{
+#ifdef _WIN64
+    // XXX WindowsDllInterceptor doesn't support hooks
+    // in 64-bit builds, disabling this code for now.
+    return;
+#endif
+
+    if (!(GetQuirks() & QUIRK_FLASH_HOOK_SETLONGPTR))
+        return;
+
+    sUser32Intercept.Init("user32.dll");
+#ifdef _WIN64
+    sUser32Intercept.AddHook("SetWindowLongPtrA", SetWindowLongPtrAHook,
+                             (void**) &sUser32SetWindowLongAHookStub);
+    sUser32Intercept.AddHook("SetWindowLongPtrW", SetWindowLongPtrWHook,
+                             (void**) &sUser32SetWindowLongWHookStub);
+#else
+    sUser32Intercept.AddHook("SetWindowLongA", SetWindowLongAHook,
+                             (void**) &sUser32SetWindowLongAHookStub);
+    sUser32Intercept.AddHook("SetWindowLongW", SetWindowLongWHook,
+                             (void**) &sUser32SetWindowLongWHookStub);
+#endif
 }
 
 /* windowless track popup menu helpers */
@@ -1610,7 +1772,7 @@ PluginInstanceChild::UnhookWinlessFlashThrottle()
                    reinterpret_cast<LONG_PTR>(tmpProc));
 
   // Remove our instance prop
-  RemoveProp(mWinlessHiddenMsgHWND, kPluginInstanceChildProperty);
+  RemoveProp(mWinlessHiddenMsgHWND, kFlashThrottleProperty);
   mWinlessHiddenMsgHWND = nsnull;
 }
 
@@ -1622,7 +1784,7 @@ PluginInstanceChild::WinlessHiddenFlashWndProc(HWND hWnd,
                                                LPARAM lParam)
 {
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
-        GetProp(hWnd, kPluginInstanceChildProperty));
+        GetProp(hWnd, kFlashThrottleProperty));
     if (!self) {
         NS_NOTREACHED("Badness!");
         return 0;
@@ -1680,7 +1842,7 @@ PluginInstanceChild::EnumThreadWindowsCallback(HWND hWnd,
             self->mWinlessThrottleOldWndProc =
                 reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWnd, GWLP_WNDPROC,
                 reinterpret_cast<LONG_PTR>(WinlessHiddenFlashWndProc)));
-            SetProp(hWnd, kPluginInstanceChildProperty, self);
+            SetProp(hWnd, kFlashThrottleProperty, self);
             NS_ASSERTION(self->mWinlessThrottleOldWndProc,
                          "SetWindowLongPtr failed?!");
         }
@@ -2648,6 +2810,10 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
+
+#if defined(OS_WIN)
+    SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
+#endif
 
     if (mBackSurface) {
         // Get last surface back, and drop it

@@ -537,15 +537,6 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 5px !important;
 }
 
-/* Put the unified dropdown button on a diet */
-#back-forward-dropmarker {
-  width: 24px;
-}
-
-#back-forward-dropmarker > .toolbarbutton-menu-dropmarker {
-  width: 12px;
-}
-
 /* 24px primary toolbar buttons */
 #back-button {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
@@ -696,6 +687,10 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
+#feed-button {
+  -moz-image-region: rect(0px 168px 24px 144px);
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
@@ -838,6 +833,10 @@ toolbar[iconsize="small"] #sync-button {
 toolbar[iconsize="small"] #sync-button[status="active"] {
   list-style-image: url("chrome://browser/skin/sync-16-throbber.png");
   -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+toolbar[iconsize="small"] #feed-button {
+  -moz-image-region: rect(0px 112px 16px 96px);
 }
 
 /* Fullscreen window controls */
@@ -984,11 +983,8 @@ toolbar[iconsize="small"] #sync-button[status="active"] {
   background-color: rgb(95%,95%,95%);
   background-image: -moz-linear-gradient(rgba(170,170,170,.25), rgba(0,0,0,.3));
   color: #444;
-  -moz-border-end: 1px solid rgba(0,0,0,.1);
-}
-
-#identity-box:-moz-locale-dir(rtl) {
-  -moz-border-start: 1px solid rgba(0,0,0,.1);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1) inset;
+  border-radius: 1.5px;
 }
 
 #identity-box:-moz-focusring {

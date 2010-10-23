@@ -46,6 +46,7 @@
 #include "nsIClassInfo.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
+#include "nsStringStream.h"
 
 namespace IPC {
 
@@ -171,6 +172,109 @@ struct ParamTraits<URI>
     else {
       aLog->append(L"[]");
     }
+  }
+};
+
+class InputStream {
+ public:
+  InputStream() : mStream(nsnull) {}
+  InputStream(nsIInputStream* aStream) : mStream(aStream) {}
+  operator nsIInputStream*() const { return mStream.get(); }
+
+  friend struct ParamTraits<InputStream>;
+
+ private:
+  // Unimplemented
+  InputStream& operator=(InputStream&);
+
+  nsCOMPtr<nsIInputStream> mStream;
+};
+
+template<>
+struct ParamTraits<InputStream>
+{
+  typedef InputStream paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    bool isNull = !aParam.mStream;
+    aMsg->WriteBool(isNull);
+
+    if (isNull)
+      return;
+
+    nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(aParam.mStream);
+    bool isSerializable = !!serializable;
+    WriteParam(aMsg, isSerializable);
+
+    if (!serializable) {
+      NS_WARNING("nsIInputStream implementation doesn't support nsIIPCSerializable; falling back to copying data");
+
+      nsCString streamString;
+      PRUint32 bytes;
+
+      aParam.mStream->Available(&bytes);
+      if (bytes > 0) {
+        nsresult rv = NS_ReadInputStreamToString(aParam.mStream, streamString, bytes);
+        NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't read input stream into a string!");
+      }
+
+      WriteParam(aMsg, streamString);
+      return;
+    }
+
+    nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aParam.mStream);
+    char cidStr[NSID_LENGTH];
+    nsCID cid;
+    nsresult rv = classInfo->GetClassIDNoAlloc(&cid);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "All IPDL streams must report a valid class ID");
+
+    cid.ToProvidedString(cidStr);
+    WriteParam(aMsg, nsCAutoString(cidStr));
+    serializable->Write(aMsg);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    bool isNull;
+    if (!ReadParam(aMsg, aIter, &isNull))
+      return false;
+
+    if (isNull) {
+      aResult->mStream = nsnull;
+      return true;
+    }
+
+    bool isSerializable;
+    if (!ReadParam(aMsg, aIter, &isSerializable))
+      return false;
+
+    nsCOMPtr<nsIInputStream> stream;
+    if (!isSerializable) {
+      nsCString streamString;
+      if (!ReadParam(aMsg, aIter, &streamString))
+        return false;
+
+      nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), streamString);
+      if (NS_FAILED(rv))
+        return false;
+    } else {
+      nsCAutoString cidStr;
+      nsCID cid;
+      if (!ReadParam(aMsg, aIter, &cidStr) ||
+          !cid.Parse(cidStr.get()))
+        return false;
+
+      stream = do_CreateInstance(cid);
+      if (!stream)
+        return false;
+      nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(stream);
+      if (!serializable || !serializable->Read(aMsg, aIter))
+        return false;
+    }
+
+    stream.swap(aResult->mStream);
+    return true;
   }
 };
 

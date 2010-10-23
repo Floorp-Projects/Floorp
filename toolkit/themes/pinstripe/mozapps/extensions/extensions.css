@@ -640,7 +640,7 @@
   color: grey;
 }
 
-#detail-contrib-button {
+#detail-contrib-btn {
   color: #FFF;
   font-weight: bold;
   text-shadow: #4C9EF8 -1px -1px 1px;
@@ -649,7 +649,7 @@
   list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
 }
 
-#detail-contrib-button:hover {
+#detail-contrib-btn:hover {
   border-color: #4271FF;
   background-image: -moz-linear-gradient(#49CEFF, #4271FF);
 }

@@ -187,6 +187,7 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES		+= -D_IMPL_NS_COM
 
@@ -196,7 +197,7 @@ DEFINES     += -DHAVE_USR_LIB64_DIR
 endif
 endif
 
-LOCAL_INCLUDES	= -I..
+LOCAL_INCLUDES	+= -I..
 
 ifeq ($(MOZ_PLATFORM_MAEMO),5)
 CFLAGS          += $(MOZ_DBUS_CFLAGS)

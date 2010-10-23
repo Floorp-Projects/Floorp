@@ -306,7 +306,10 @@ $(IMPORT_LIBRARY): $(MAPFILE)
 	$(IMPLIB) $@ $(MAPFILE)
 else
 ifeq (,$(filter-out WIN95 WINCE WINMO,$(OS_TARGET)))
+# PDBs and import libraries need to depend on the shared library to
+# order dependencies properly.
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+$(SHARED_LIB_PDB): $(SHARED_LIBRARY)
 endif
 endif
 

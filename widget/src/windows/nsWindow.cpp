@@ -2457,7 +2457,8 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
 
     // The minimum glass height must be the caption buttons height,
     // otherwise the buttons are drawn incorrectly.
-    margins.cyTopHeight = PR_MAX(largest.y, mCaptionButtons.height);
+    margins.cyTopHeight = PR_MAX(largest.y,
+                                 nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
   }
 
   // Only update glass area if there are changes
@@ -2501,65 +2502,6 @@ void nsWindow::UpdateGlass()
     nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 #endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-}
-#endif
-
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-void nsWindow::UpdateCaptionButtonsClippingRect()
-{
-  NS_ASSERTION(mWnd, "UpdateCaptionButtonsClippingRect called with invalid mWnd.");
-
-  RECT captionButtons;
-  mCaptionButtonsRoundedRegion.SetEmpty();
-  mCaptionButtons.Empty();
-
-  if (!mCustomNonClient ||
-      mSizeMode == nsSizeMode_Fullscreen || 
-      mSizeMode == nsSizeMode_Minimized ||
-      !nsUXThemeData::CheckForCompositor() ||
-      FAILED(nsUXThemeData::dwmGetWindowAttributePtr(mWnd,
-                                                     DWMWA_CAPTION_BUTTON_BOUNDS,
-                                                     &captionButtons,
-                                                     sizeof(captionButtons)))) {
-    return;
-  }
-
-  mCaptionButtons = nsWindowGfx::ToIntRect(captionButtons);
-
-  // Adjustments to reported area
-  PRInt32 leftMargin = (mNonClientMargins.left == -1) ? mHorResizeMargin  : mNonClientMargins.left;
-
-  // "leftMargin - 1" represents the resizer border and an
-  // one pixel adjustment to hide the semi-transparent highlight.
-  // The extra width is already excluded when the window is maximized.
-  mCaptionButtons.x -= leftMargin - 1;
-
-  if (mSizeMode != nsSizeMode_Maximized) {
-    mCaptionButtons.width += leftMargin - 1;
-    mCaptionButtons.height -= mVertResizeMargin + 1;
-  } else {
-    // Adjustments to the buttons' shift from the edge of the screen,
-    // plus some apparently transparent drop shadow below them.
-    mCaptionButtons.width -= 2;
-    mCaptionButtons.height -= 3;
-  }
-
-  // Create a rounded region by shrinking the 2 bottommost pixel rows from
-  // the rect by 1 and 2 pixels.
-  // mCaptionButtons:        mCaptionButtonsRoundedRegion:
-  //  +-----------+                  +-----------+
-  //  |           |                  |           |
-  //  |           |                   |         |
-  //  +-----------+                    +-------+
-  nsIntRect round1(mCaptionButtons.x, mCaptionButtons.y,
-                   mCaptionButtons.width, mCaptionButtons.height - 2);
-  nsIntRect round2(mCaptionButtons.x + 1, mCaptionButtons.YMost() - 2,
-                   mCaptionButtons.width - 2, 1);
-  nsIntRect round3(mCaptionButtons.x + 2, mCaptionButtons.YMost() - 1,
-                   mCaptionButtons.width - 4, 1);
-  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round1);
-  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round2);
-  mCaptionButtonsRoundedRegion.Or(mCaptionButtonsRoundedRegion, round3);
 }
 #endif
 
@@ -2745,6 +2687,7 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   if (nsUXThemeData::CheckForCompositor()) {
     style = GetWindowLong(mWnd, GWL_STYLE);
     SetWindowLong(mWnd, GWL_STYLE, style | WS_VISIBLE);
+    Invalidate(PR_FALSE);
   }
 
   // Let the dom know via web shell window
@@ -3180,8 +3123,12 @@ nsWindow::HasPendingInputEvent()
  **************************************************************/
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager()
+nsWindow::GetLayerManager(bool* aAllowRetaining)
 {
+  if (aAllowRetaining) {
+    *aAllowRetaining = true;
+  }
+
 #ifndef WINCE
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -3189,7 +3136,7 @@ nsWindow::GetLayerManager()
     PRBool accelerateByDefault = PR_TRUE;
     PRBool disableAcceleration = PR_FALSE;
     PRBool preferOpenGL = PR_FALSE;
-    PRBool useD3D10 = PR_FALSE;
+    PRBool preferD3D9 = PR_FALSE;
     if (prefs) {
       prefs->GetBoolPref("layers.accelerate-all",
                          &accelerateByDefault);
@@ -3197,8 +3144,8 @@ nsWindow::GetLayerManager()
                          &disableAcceleration);
       prefs->GetBoolPref("layers.prefer-opengl",
                          &preferOpenGL);
-      prefs->GetBoolPref("layers.use-d3d10",
-                         &useD3D10);
+      prefs->GetBoolPref("layers.prefer-d3d9",
+                         &preferD3D9);
     }
 
     const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -3223,7 +3170,7 @@ nsWindow::GetLayerManager()
 
     if (mUseAcceleratedRendering) {
 #ifdef MOZ_ENABLE_D3D10_LAYER
-      if (useD3D10) {
+      if (!preferD3D9) {
         nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
           new mozilla::layers::LayerManagerD3D10(this);
         if (layerManager->Initialize()) {
@@ -4297,6 +4244,43 @@ static int ReportException(EXCEPTION_POINTERS *aExceptionInfo)
 }
 #endif
 
+static PRBool
+DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt32 y)
+{
+  GetSystemMenu(hWnd, TRUE); // reset the system menu
+  HMENU hMenu = GetSystemMenu(hWnd, FALSE);
+  if (hMenu) {
+    // update the options
+    switch(sizeMode) {
+      case nsSizeMode_Fullscreen:
+        EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
+        // intentional fall through
+      case nsSizeMode_Maximized:
+        EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_GRAYED);
+        EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
+        break;
+      case nsSizeMode_Minimized:
+        EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_GRAYED);
+        break;
+      case nsSizeMode_Normal:
+        EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
+        break;
+    }
+    LPARAM cmd =
+      TrackPopupMenu(hMenu,
+                     (TPM_LEFTBUTTON|TPM_RIGHTBUTTON|
+                      TPM_RETURNCMD|TPM_TOPALIGN|
+                      (isRtl ? TPM_RIGHTALIGN : TPM_LEFTALIGN)),
+                     x, y, 0, hWnd, NULL);
+    if (cmd) {
+      PostMessage(hWnd, WM_SYSCOMMAND, cmd, 0);
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 // The WndProc procedure for all nsWindows in this toolkit. This merely catches
 // exceptions and passes the real work to WindowProcInternal. See bug 587406
 // and http://msdn.microsoft.com/en-us/library/ms633573%28VS.85%29.aspx
@@ -4913,36 +4897,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                              PR_FALSE, nsMouseEvent::eLeftButton,
                              MOUSE_INPUT_SOURCE())) {
         // Blank area hit, throw up the system menu.
-        GetSystemMenu(mWnd, TRUE); // reset the system menu
-        HMENU hMenu = GetSystemMenu(mWnd, FALSE);
-        if (hMenu) {
-          // update the options
-          switch(mSizeMode) {
-            case nsSizeMode_Fullscreen:
-            case nsSizeMode_Maximized:
-              EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
-              EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_GRAYED);
-              EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
-              break;
-            case nsSizeMode_Minimized:
-              EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_GRAYED);
-              break;
-            case nsSizeMode_Normal:
-              EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
-              break;
-          }
-          LPARAM cmd =
-            TrackPopupMenu(hMenu,
-                           (TPM_LEFTBUTTON|TPM_RIGHTBUTTON|
-                            TPM_RETURNCMD|TPM_TOPALIGN|
-                            (mIsRTL ? TPM_RIGHTALIGN : TPM_LEFTALIGN)),
-                           GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
-                           0, mWnd, NULL);
-          if (cmd) {
-            PostMessage(mWnd, WM_SYSCOMMAND, cmd, 0);
-          }
-          result = PR_TRUE;
-        }
+        DisplaySystemMenu(mWnd, mSizeMode, mIsRTL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        result = PR_TRUE;
       }
     }
     break;
@@ -5271,6 +5227,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // prevent Windows from trimming the working set. bug 76831
       if (!sTrimOnMinimize && wParam == SC_MINIMIZE) {
         ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
+        result = PR_TRUE;
+      }
+
+      // Handle the system menu manually when we're in full screen mode
+      // so we can set the appropriate options.
+      if (wParam == SC_KEYMENU && lParam == VK_SPACE &&
+          mSizeMode == nsSizeMode_Fullscreen) {
+        DisplaySystemMenu(mWnd, mSizeMode, mIsRTL,
+                          MOZ_SYSCONTEXT_X_POS,
+                          MOZ_SYSCONTEXT_Y_POS);
         result = PR_TRUE;
       }
       break;
@@ -5950,6 +5916,14 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 
   // Handle window size mode changes
   if (wp->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
+
+    // Bug 566135 - Windows theme code calls show window on SW_SHOWMINIMIZED
+    // windows when fullscreen games disable desktop composition. If we're
+    // minimized and not being activated, ignore the event and let windows
+    // handle it.
+    if (mSizeMode == nsSizeMode_Minimized && (wp->flags & SWP_NOACTIVATE))
+      return;
+
     nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
 
     WINDOWPLACEMENT pl;
@@ -6120,7 +6094,8 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
   // browser know we are changing size modes, so alternative css can kick in.
   // If we're going into fullscreen mode, ignore this, since it'll reset
   // margins to normal mode. 
-  if (info->flags & SWP_FRAMECHANGED && mSizeMode != nsSizeMode_Fullscreen) {
+  if ((info->flags & SWP_FRAMECHANGED && !(info->flags & SWP_NOSIZE)) &&
+      mSizeMode != nsSizeMode_Fullscreen) {
     WINDOWPLACEMENT pl;
     pl.length = sizeof(pl);
     ::GetWindowPlacement(mWnd, &pl);
@@ -7134,10 +7109,6 @@ PRBool nsWindow::OnResize(nsIntRect &aWindowRect)
     mD2DWindowSurface = NULL;
     Invalidate(PR_FALSE);
   }
-#endif
-
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-  UpdateCaptionButtonsClippingRect();
 #endif
 
   // call the event callback

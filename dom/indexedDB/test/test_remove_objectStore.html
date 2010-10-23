@@ -14,6 +14,8 @@
     function testSteps()
     {
       const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+      const UNKNOWN_ERR =
+        Components.interfaces.nsIIDBDatabaseException.UNKNOWN_ERR;
 
       const name = window.location.pathname;
       const description = "My Test Database";
@@ -27,12 +29,12 @@
       let db = event.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
-      request = db.createObjectStore(objectStoreName, "foo");
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore(objectStoreName, "foo");
 
       let addedCount = 0;
 
@@ -50,23 +52,17 @@
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
 
-      request = db.removeObjectStore(objectStore.name);
+      request = db.setVersion("2");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, undefined, "Correct result");
+      db.removeObjectStore(objectStore.name);
       is(db.objectStoreNames.length, 0, "Correct objectStores list");
 
-      request = db.createObjectStore(objectStoreName, "foo");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
+      objectStore = db.createObjectStore(objectStoreName, "foo");
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
-
-      objectStore = event.result;
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -76,13 +72,26 @@
       }
       event = yield;
 
-      request = db.removeObjectStore(objectStore.name);
+      db.removeObjectStore(objectStore.name);
+      is(db.objectStoreNames.length, 0, "Correct objectStores list");
+
+      continueToNextStep();
+      yield;
+
+      request = db.setVersion("3");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, undefined, "Correct result");
-      is(db.objectStoreNames.length, 0, "Correct objectStores list");
+      objectStore = db.createObjectStore(objectStoreName, "foo");
+
+      request = objectStore.add({foo:"bar"});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+
+      db.removeObjectStore(objectStoreName);
+
+      event = yield;
 
       finishTest();
       yield;

@@ -15,6 +15,7 @@ const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
 const ROLE_COMBOBOX_OPTION = nsIAccessibleRole.ROLE_COMBOBOX_OPTION;
 const ROLE_COLUMNHEADER = nsIAccessibleRole.ROLE_COLUMNHEADER;
+const ROLE_DIALOG = nsIAccessibleRole.ROLE_DIALOG;
 const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
 const ROLE_EMBEDDED_OBJECT = nsIAccessibleRole.ROLE_EMBEDDED_OBJECT;
 const ROLE_ENTRY = nsIAccessibleRole.ROLE_ENTRY;
@@ -99,4 +100,24 @@ function getRole(aAccOrElmOrID)
   }
 
   return role;
+}
+
+/**
+ * Analogy of SimpleTest.is function used to check the role.
+ */
+function isRole(aIdentifier, aRole, aMsg)
+{
+  var role = getRole(aIdentifier);
+  if (role == - 1)
+    return;
+
+  if (role == aRole) {
+    ok(true, aMsg);
+    return;
+  }
+
+  var got = roleToString(role);
+  var expected = roleToString(aRole);
+
+  ok(false, aMsg + "got '" + got + "', expected '" + expected + "'");
 }

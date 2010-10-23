@@ -84,22 +84,36 @@
     /**
      * Insert inaccessible child node containing accessibles.
      */
-    function insertChildSpan(aID)
+    function insertChildSpan(aID, aInsertAllTogether)
     {
       this.__proto__ = new textInsertInvoker(aID, 0, 5, "33322");
 
       this.invoke = function insertChildSpan_invoke()
       {
         // <span><span>333</span><span>22</span></span>
-        var topSpan = document.createElement("span");
-        var fSpan = document.createElement("span");
-        fSpan.textContent = "333";
-        topSpan.appendChild(fSpan);
-        var sSpan = document.createElement("span");
-        sSpan.textContent = "22";
-        topSpan.appendChild(sSpan);
+        if (aInsertAllTogether) {
+          var topSpan = document.createElement("span");
+          var fSpan = document.createElement("span");
+          fSpan.textContent = "333";
+          topSpan.appendChild(fSpan);
+          var sSpan = document.createElement("span");
+          sSpan.textContent = "22";
+          topSpan.appendChild(sSpan);
 
-        this.DOMNode.insertBefore(topSpan, this.DOMNode.childNodes[0]);
+          this.DOMNode.insertBefore(topSpan, this.DOMNode.childNodes[0]);
+
+        } else {
+          var topSpan = document.createElement("span");
+          this.DOMNode.insertBefore(topSpan, this.DOMNode.childNodes[0]);
+
+          var fSpan = document.createElement("span");
+          fSpan.textContent = "333";
+          topSpan.appendChild(fSpan);
+
+          var sSpan = document.createElement("span");
+          sSpan.textContent = "22";
+          topSpan.appendChild(sSpan);
+        }
       }
 
       this.getID = function insertChildSpan_getID()
@@ -271,7 +285,8 @@
       // Text remove event on inaccessible child HTML span removal containing
       // accessible text nodes.
       gQueue.push(new removeChildSpan("p"));
-      gQueue.push(new insertChildSpan("p"));
+      gQueue.push(new insertChildSpan("p"), true);
+      gQueue.push(new insertChildSpan("p"), false);
 
       // Remove embedded character.
       gQueue.push(new removeChildDiv("div"));
@@ -322,6 +337,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=575052"
      title="Cache text offsets within hypertext accessible">
     Mozilla Bug 575052
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275"
+     title="Rework accessible tree update code">
+    Mozilla Bug 570275
   </a>
 
   <p id="display"></p>

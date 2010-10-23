@@ -173,6 +173,7 @@
       this.dumper = gDumper;
       this.results = [];
       this.scope = null;
+      this.duration = 0;
     }
     browserTest.prototype = {
       get passCount() {
@@ -191,6 +192,10 @@
         this.dumper.dump(result.result + " | " + this.path + " | " + result.msg + "\n");
       },
 
+      setDuration: function setDuration(duration) {
+        this.duration = duration;
+      },
+
       get htmlLog() {
         let txtToHTML = Cc["@mozilla.org/txttohtmlconv;1"].
                         getService(Ci.mozITXTToHTMLConv);
@@ -198,11 +203,16 @@
           return txtToHTML.scanTXT(str, Ci.mozITXTToHTMLConv.kEntities);
         }
         var path = _entityEncode(this.path);
-        return this.results.map(function (t) {
+        var html = this.results.map(function (t) {
           var class = t.info ? "info" : "result " + (t.pass ? "passed" : "failed");
           return "<p class=\"" + class + "\">" + t.result + " | " + path +
                  " | " + _entityEncode(t.msg) + "</p>";
         }).join("\n");
+        if (this.duration) {
+          html += "<p class=\"info\">TEST-END | " + path + " | finished in " +
+                  this.duration + " ms</p>";
+        }
+        return html;
       }
     };
 

@@ -543,13 +543,13 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
   return nodeInfo;
 }
 
-PRInt32
+nsEventStates
 nsXTFElementWrapper::IntrinsicState() const
 {
-  PRInt32 retState = nsXTFElementWrapperBase::IntrinsicState();
-  if (mIntrinsicState & NS_EVENT_STATE_MOZ_READONLY) {
+  nsEventStates retState = nsXTFElementWrapperBase::IntrinsicState();
+  if (mIntrinsicState.HasState(NS_EVENT_STATE_MOZ_READONLY)) {
     retState &= ~NS_EVENT_STATE_MOZ_READWRITE;
-  } else if (mIntrinsicState & NS_EVENT_STATE_MOZ_READWRITE) {
+  } else if (mIntrinsicState.HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
     retState &= ~NS_EVENT_STATE_MOZ_READONLY;
   }
 
@@ -901,19 +901,20 @@ nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 NS_IMETHODIMP
-nsXTFElementWrapper::SetIntrinsicState(PRInt32 aNewState)
+nsXTFElementWrapper::SetIntrinsicState(nsEventStates::InternalType aNewState)
 {
   nsIDocument *doc = GetCurrentDoc();
-  PRInt32 bits = mIntrinsicState ^ aNewState;
-  
-  if (!doc || !bits)
+  nsEventStates newStates(aNewState);
+  nsEventStates bits = mIntrinsicState ^ newStates;
+
+  if (!doc || bits.IsEmpty())
     return NS_OK;
 
-  NS_WARN_IF_FALSE(!((aNewState & NS_EVENT_STATE_MOZ_READONLY) &&
-                   (aNewState & NS_EVENT_STATE_MOZ_READWRITE)),
+  NS_WARN_IF_FALSE(!newStates.HasAllStates(NS_EVENT_STATE_MOZ_READONLY |
+                                           NS_EVENT_STATE_MOZ_READWRITE),
                    "Both READONLY and READWRITE are being set.  Yikes!!!");
 
-  mIntrinsicState = aNewState;
+  mIntrinsicState = newStates;
   mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
   doc->ContentStatesChanged(this, nsnull, bits);
 

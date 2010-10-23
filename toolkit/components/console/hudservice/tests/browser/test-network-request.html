@@ -1,30 +1,27 @@
 <!DOCTYPE HTML>
-<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
     <title>Console HTTP test page</title>
-    <script type="text/javascript">
-      function makeXhr(aMethod, aUrl, aRequestBody, aTestGenerator) {
+    <script type="text/javascript"><!--
+      function makeXhr(aMethod, aUrl, aRequestBody, aCallback) {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open(aMethod, aUrl, true);
-        xmlhttp.onreadystatechange = function (aEvt) {
+        xmlhttp.onreadystatechange = function() {
           if (xmlhttp.readyState == 4) {
-            aTestGenerator.next();
+            aCallback();
           }
         };
         xmlhttp.send(aRequestBody);
       }
 
-      function testXhrGet(aTestGenerator) {
-        makeXhr('get', 'test-data.json', null, aTestGenerator);
+      function testXhrGet(aCallback) {
+        makeXhr('get', 'test-data.json', null, aCallback);
       }
 
-      function testXhrPost(aTestGenerator) {
-        makeXhr('post', 'test-data.json', "Hello world!", aTestGenerator);
+      function testXhrPost(aCallback) {
+        makeXhr('post', 'test-data.json', "Hello world!", aCallback);
       }
-
-      function testSubmitForm() {
-        document.getElementsByTagName("form")[0].submit();
-      }
-    </script>
+    // --></script>
   </head>
   <body>
     <h1>Heads Up Display HTTP Logging Testpage</h1>

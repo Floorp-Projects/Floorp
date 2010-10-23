@@ -130,7 +130,6 @@
 #endif
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
-#include "nsIAccessibleEvent.h"
 #endif
 
 #include "nsInlineFrame.h"
@@ -1883,7 +1882,7 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
   const PRUint32 nameSpaceID = aItem.mNameSpaceID;
-  
+
   nsresult rv = NS_OK;
 
   // create the pseudo SC for the outer table as a child of the inner SC
@@ -3650,9 +3649,9 @@ nsCSSFrameConstructor::FindObjectData(nsIContent* aContent,
   // cases when the object is broken/suppressed/etc (e.g. a broken image), but
   // we want to treat those cases as TYPE_NULL
   PRUint32 type;
-  if (aContent->IntrinsicState() &
-      (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-       NS_EVENT_STATE_SUPPRESSED)) {
+  if (aContent->IntrinsicState().HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
+                                                       NS_EVENT_STATE_USERDISABLED |
+                                                       NS_EVENT_STATE_SUPPRESSED)) {
     type = nsIObjectLoadingContent::TYPE_NULL;
   } else {
     nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(aContent));
@@ -6713,6 +6712,17 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 #endif
 
+#ifdef ACCESSIBILITY
+  if (mPresShell->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->ContentRangeInserted(mPresShell, aContainer,
+                                       aFirstNewContent, nsnull);
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -7283,6 +7293,17 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   }
 #endif
 
+#ifdef ACCESSIBILITY
+  if (mPresShell->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->ContentRangeInserted(mPresShell, aContainer,
+                                       aStartChild, aEndChild);
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -7414,7 +7435,17 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
       LAYOUT_PHASE_TEMP_REENTER();
       return rv;
     }
-    
+
+#ifdef ACCESSIBILITY
+    if (mPresShell->IsAccessibilityActive()) {
+      nsCOMPtr<nsIAccessibilityService> accService =
+          do_GetService("@mozilla.org/accessibilityService;1");
+      if (accService) {
+        accService->ContentRemoved(mPresShell, aContainer, aChild);
+      }
+    }
+#endif
+
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
     nsIFrame* inflowChild = childFrame;
@@ -8035,7 +8066,7 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
 nsresult
 nsCSSFrameConstructor::ContentStatesChanged(nsIContent* aContent1,
                                             nsIContent* aContent2,
-                                            PRInt32 aStateMask) 
+                                            nsEventStates aStateMask)
 {
   // XXXbz it would be good if this function only took Elements, but
   // we'd have to make ESM guarantee that usefully.
@@ -8050,7 +8081,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIContent* aContent1,
 
 void
 nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
-                                             PRInt32 aStateMask) 
+                                             nsEventStates aStateMask)
 {
   nsStyleSet *styleSet = mPresShell->StyleSet();
   nsPresContext *presContext = mPresShell->GetPresContext();
@@ -8067,8 +8098,10 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
   if (primaryFrame) {
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
-        (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-                       NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING))) {
+        aStateMask.HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
+                                  NS_EVENT_STATE_USERDISABLED |
+                                  NS_EVENT_STATE_SUPPRESSED |
+                                  NS_EVENT_STATE_LOADING)) {
       hint = nsChangeHint_ReconstructFrame;
     } else {
       PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
@@ -8089,11 +8122,11 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
   nsRestyleHint rshint = 
     styleSet->HasStateDependentStyle(presContext, aElement, aStateMask);
       
-  if ((aStateMask & NS_EVENT_STATE_HOVER) && rshint != 0) {
+  if (aStateMask.HasState(NS_EVENT_STATE_HOVER) && rshint != 0) {
     ++mHoverGeneration;
   }
 
-  if (aStateMask & NS_EVENT_STATE_VISITED) {
+  if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
     // Exposing information to the page about whether the link is
     // visited or not isn't really something we can worry about here.
     // FIXME: We could probably do this a bit better.
@@ -9077,28 +9110,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       }
     }
   }
-
-#ifdef ACCESSIBILITY
-  if (mPresShell->IsAccessibilityActive()) {
-    PRUint32 changeType;
-    if (frame) {
-      nsIFrame *newFrame = aContent->GetPrimaryFrame();
-      changeType = newFrame ? nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE :
-                              nsIAccessibilityService::FRAME_HIDE;
-    }
-    else {
-      changeType = nsIAccessibilityService::FRAME_SHOW;
-    }
-
-    // A significant enough change occurred that this part
-    // of the accessible tree is no longer valid.
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->InvalidateSubtreeFor(mPresShell, aContent, changeType);
-    }
-  }
-#endif
 
   return rv;
 }

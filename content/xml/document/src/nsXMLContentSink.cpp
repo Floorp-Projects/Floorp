@@ -541,9 +541,11 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
     if (ssle) {
       ssle->InitStyleLinkElement(PR_FALSE);
-      ssle->SetEnableUpdates(PR_FALSE);
+      if (aFromParser) {
+        ssle->SetEnableUpdates(PR_FALSE);
+      }
       if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
-        ssle->SetLineNumber(aLineNumber);
+        ssle->SetLineNumber(aFromParser ? aLineNumber : 0);
       }
     }
   } 

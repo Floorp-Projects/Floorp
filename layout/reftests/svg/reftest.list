@@ -66,6 +66,7 @@ include svg-integration/reftest.list
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
+skip-if(gtk2Widget) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 569770
 == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
@@ -117,6 +118,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundin
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
+== objectBoundingBox-and-pattern-02.svg pass.svg
 == opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg

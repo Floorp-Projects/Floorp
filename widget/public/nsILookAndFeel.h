@@ -184,6 +184,7 @@ public:
     eMetric_SelectTextfieldsOnKeyFocus,                   // select textfields when focused via tab/accesskey?
     eMetric_SubmenuDelay,                                 // delay before submenus open
     eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
+    eMetric_ScrollbarsCanOverlapContent,                  // can scrollbars float above content?
     eMetric_SkipNavigatingDisabledMenuItem,               // skip navigating to disabled menu item?
     eMetric_DragThresholdX,                               // begin a drag if the mouse is moved further than the threshold while the button is down
     eMetric_DragThresholdY,

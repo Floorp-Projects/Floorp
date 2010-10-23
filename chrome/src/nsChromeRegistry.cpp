@@ -329,9 +329,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   rv = GetProviderAndPath(chromeURL, provider, path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIURI* baseURI;
-  rv = GetBaseURIFromPackage(package, provider, path, &baseURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIURI* baseURI = GetBaseURIFromPackage(package, provider, path);
 
   PRUint32 flags;
   rv = GetFlagsFromPackage(package, &flags);

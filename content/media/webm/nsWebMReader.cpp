@@ -66,6 +66,13 @@ static const unsigned NS_PER_MS = 1000000;
 static const float NS_PER_S = 1e9;
 static const float MS_PER_S = 1e3;
 
+NS_SPECIALIZE_TEMPLATE
+class nsAutoRefTraits<nestegg_packet> : public nsPointerRefTraits<nestegg_packet>
+{
+public:
+  static void Release(nestegg_packet* aPacket) { nestegg_free_packet(aPacket); }
+};
+
 // Functions for reading and seeking using nsMediaStream required for
 // nestegg_io. The 'user data' passed to these functions is the
 // decoder from which the media stream is obtained.
@@ -301,20 +308,20 @@ nsresult nsWebMReader::ReadMetadata()
         r = vorbis_synthesis_headerin(&mVorbisInfo,
                                       &mVorbisComment,
                                       &opacket);
-        if (r < 0) {
+        if (r != 0) {
           Cleanup();
           return NS_ERROR_FAILURE;
         }
       }
 
       r = vorbis_synthesis_init(&mVorbisDsp, &mVorbisInfo);
-      if (r < 0) {
+      if (r != 0) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
 
       r = vorbis_block_init(&mVorbisDsp, &mVorbisBlock);
-      if (r < 0) {
+      if (r != 0) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
@@ -358,7 +365,6 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
   uint64_t tstamp = 0;
   r = nestegg_packet_tstamp(aPacket, &tstamp);
   if (r == -1) {
-    nestegg_free_packet(aPacket);
     return PR_FALSE;
   }
 
@@ -405,44 +411,39 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
     size_t length;
     r = nestegg_packet_data(aPacket, i, &data, &length);
     if (r == -1) {
-      nestegg_free_packet(aPacket);
       return PR_FALSE;
     }
 
     ogg_packet opacket = InitOggPacket(data, length, PR_FALSE, PR_FALSE, -1);
 
     if (vorbis_synthesis(&mVorbisBlock, &opacket) != 0) {
-      nestegg_free_packet(aPacket);
       return PR_FALSE;
     }
 
     if (vorbis_synthesis_blockin(&mVorbisDsp,
                                  &mVorbisBlock) != 0) {
-      nestegg_free_packet(aPacket);
       return PR_FALSE;
     }
 
-    float** pcm = 0;
+    VorbisPCMValue** pcm = 0;
     PRInt32 samples = 0;
     while ((samples = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
-      float* buffer = new float[samples * mChannels];
-      float* p = buffer;
-      for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
-        for (PRUint32 j = 0; j < mChannels; ++j) {
-          *p++ = pcm[j][i];
+      SoundDataValue* buffer = new SoundDataValue[samples * mChannels];
+      for (PRUint32 j = 0; j < mChannels; ++j) {
+        VorbisPCMValue* channel = pcm[j];
+        for (PRUint32 i = 0; i < PRUint32(samples); ++i) {
+          buffer[i*mChannels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
         }
       }
 
       PRInt64 duration = 0;
       if (!SamplesToMs(samples, rate, duration)) {
         NS_WARNING("Int overflow converting WebM audio duration");
-        nestegg_free_packet(aPacket);
         return PR_FALSE;
       }
       PRInt64 total_duration = 0;
       if (!SamplesToMs(total_samples, rate, total_duration)) {
         NS_WARNING("Int overflow converting WebM audio total_duration");
-        nestegg_free_packet(aPacket);
         return PR_FALSE;
       }
       
@@ -457,18 +458,15 @@ PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket)
       mAudioQueue.Push(s);
       mAudioSamples += samples;
       if (vorbis_synthesis_read(&mVorbisDsp, samples) != 0) {
-        nestegg_free_packet(aPacket);
         return PR_FALSE;
       }
     }
   }
 
-  nestegg_free_packet(aPacket);
-
   return PR_TRUE;
 }
 
-nestegg_packet* nsWebMReader::NextPacket(TrackType aTrackType)
+nsReturnRef<nestegg_packet> nsWebMReader::NextPacket(TrackType aTrackType)
 {
   // The packet queue that packets will be pushed on if they
   // are not the type we are interested in.
@@ -493,30 +491,30 @@ nestegg_packet* nsWebMReader::NextPacket(TrackType aTrackType)
   // Value of other track
   PRUint32 otherTrack = aTrackType == VIDEO ? mAudioTrack : mVideoTrack;
 
-  nestegg_packet* packet = NULL;
+  nsAutoRef<nestegg_packet> packet;
 
   if (packets.GetSize() > 0) {
-    packet = packets.PopFront();
-  }
-  else {
+    packet.own(packets.PopFront());
+  } else {
     // Keep reading packets until we find a packet
     // for the track we want.
     do {
-      int r = nestegg_read_packet(mContext, &packet);
+      nestegg_packet* p;
+      int r = nestegg_read_packet(mContext, &p);
       if (r <= 0) {
-        return NULL;
+        return nsReturnRef<nestegg_packet>();
       }
+      packet.own(p);
 
       unsigned int track = 0;
       r = nestegg_packet_track(packet, &track);
       if (r == -1) {
-        nestegg_free_packet(packet);
-        return NULL;
+        return nsReturnRef<nestegg_packet>();
       }
 
       if (hasOtherType && otherTrack == track) {
         // Save the packet for when we want these packets
-        otherPackets.Push(packet);
+        otherPackets.Push(packet.disown());
         continue;
       }
 
@@ -524,13 +522,10 @@ nestegg_packet* nsWebMReader::NextPacket(TrackType aTrackType)
       if (hasType && ourTrack == track) {
         break;
       }
-
-      // The packet is for a track we're not interested in
-      nestegg_free_packet(packet);
     } while (PR_TRUE);
   }
 
-  return packet;
+  return packet.out();
 }
 
 PRBool nsWebMReader::DecodeAudioData()
@@ -538,7 +533,7 @@ PRBool nsWebMReader::DecodeAudioData()
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
     "Should be on state machine thread or decode thread.");
-  nestegg_packet* packet = NextPacket(AUDIO);
+  nsAutoRef<nestegg_packet> packet(NextPacket(AUDIO));
   if (!packet) {
     mAudioQueue.Finish();
     return PR_FALSE;
@@ -553,32 +548,28 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine or decode thread.");
-  int r = 0;
-  nestegg_packet* packet = NextPacket(VIDEO);
 
+  nsAutoRef<nestegg_packet> packet(NextPacket(VIDEO));
   if (!packet) {
     mVideoQueue.Finish();
     return PR_FALSE;
   }
 
   unsigned int track = 0;
-  r = nestegg_packet_track(packet, &track);
+  int r = nestegg_packet_track(packet, &track);
   if (r == -1) {
-    nestegg_free_packet(packet);
     return PR_FALSE;
   }
 
   unsigned int count = 0;
   r = nestegg_packet_count(packet, &count);
   if (r == -1) {
-    nestegg_free_packet(packet);
     return PR_FALSE;
   }
 
   uint64_t tstamp = 0;
   r = nestegg_packet_tstamp(packet, &tstamp);
   if (r == -1) {
-    nestegg_free_packet(packet);
     return PR_FALSE;
   }
 
@@ -588,14 +579,13 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   // video frame.
   uint64_t next_tstamp = 0;
   {
-    nestegg_packet* next_packet = NextPacket(VIDEO);
+    nsAutoRef<nestegg_packet> next_packet(NextPacket(VIDEO));
     if (next_packet) {
       r = nestegg_packet_tstamp(next_packet, &next_tstamp);
       if (r == -1) {
-        nestegg_free_packet(next_packet);
         return PR_FALSE;
       }
-      mVideoPackets.PushFront(next_packet);
+      mVideoPackets.PushFront(next_packet.disown());
     } else {
       MonitorAutoExit exitMon(mMonitor);
       MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
@@ -615,7 +605,6 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     size_t length;
     r = nestegg_packet_data(packet, i, &data, &length);
     if (r == -1) {
-      nestegg_free_packet(packet);
       return PR_FALSE;
     }
 
@@ -633,7 +622,6 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     }
 
     if(vpx_codec_decode(&mVP8, data, length, NULL, 0)) {
-      nestegg_free_packet(packet);
       return PR_FALSE;
     }
 
@@ -680,14 +668,12 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                        si.is_kf,
                                        -1);
       if (!v) {
-        nestegg_free_packet(packet);
         return PR_FALSE;
       }
       mVideoQueue.Push(v);
     }
   }
- 
-  nestegg_free_packet(packet);
+
   return PR_TRUE;
 }
 

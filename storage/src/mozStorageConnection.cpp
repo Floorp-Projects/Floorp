@@ -423,8 +423,9 @@ Connection::initialize(nsIFile *aDatabaseFile,
 #endif
   // Switch db to preferred page size in case the user vacuums.
   sqlite3_stmt *stmt;
-  srv = prepareStmt(mDBConn, NS_LITERAL_CSTRING("PRAGMA page_size = 32768"),
-                    &stmt);
+  nsCAutoString pageSizeQuery(NS_LITERAL_CSTRING("PRAGMA page_size = "));
+  pageSizeQuery.AppendInt(DEFAULT_PAGE_SIZE);
+  srv = prepareStmt(mDBConn, pageSizeQuery, &stmt);
   if (srv == SQLITE_OK) {
     (void)stepStmt(stmt);
     (void)::sqlite3_finalize(stmt);

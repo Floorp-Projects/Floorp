@@ -597,6 +597,7 @@ PRProcess * _PR_CreateWindowsProcess(
 #else
     STARTUPINFO startupInfo;
 #endif
+    DWORD creationFlags = 0;
     PROCESS_INFORMATION procInfo;
     BOOL retVal;
     char *cmdLine = NULL;
@@ -677,6 +678,12 @@ PRProcess * _PR_CreateWindowsProcess(
         if (attr->stdoutFd) {
             startupInfo.hStdOutput = (HANDLE) attr->stdoutFd->secret->md.osfd;
             redirected = PR_TRUE;
+            /*
+             * If stdout is redirected, we can assume that the process will
+             * not write anything useful to the console windows, and therefore
+             * automatically set the CREATE_NO_WINDOW flag.
+             */
+            creationFlags |= CREATE_NO_WINDOW;
         }
         if (attr->stderrFd) {
             startupInfo.hStdError = (HANDLE) attr->stderrFd->secret->md.osfd;
@@ -703,7 +710,7 @@ PRProcess * _PR_CreateWindowsProcess(
                             NULL,  /* security attributes for the primary
                                     * thread in the new process */
                             TRUE,  /* inherit handles */
-                            0,     /* creation flags */
+                            creationFlags,
                             envBlock,  /* an environment block, consisting
                                         * of a null-terminated block of
                                         * null-terminated strings.  Each
@@ -724,7 +731,7 @@ PRProcess * _PR_CreateWindowsProcess(
                            NULL,  /* security attributes for the primary
                                    * thread in the new process */
                            TRUE,  /* inherit handles */
-                           0,     /* creation flags */
+                           creationFlags,
                            envBlock,  /* an environment block, consisting
                                        * of a null-terminated block of
                                        * null-terminated strings.  Each

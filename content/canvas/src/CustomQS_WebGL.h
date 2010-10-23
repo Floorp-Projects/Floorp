@@ -344,9 +344,9 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
                 xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
                 return JS_FALSE;
             }
-            rv = self->TexImage2D_array(argv0, argv1, argv2,
-                                        int_width, int_height, 0,
-                                        argv3, argv4, js::TypedArray::fromJSObject(obj_data));
+            rv = self->TexImage2D_imageData(argv0, argv1, argv2,
+                                            int_width, int_height, 0,
+                                            argv3, argv4, js::TypedArray::fromJSObject(obj_data));
         }
     } else if (argc > 8 &&
                JSVAL_IS_OBJECT(argv[8])) // here, we allow null !
@@ -462,10 +462,10 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
                 xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
                 return JS_FALSE;
             }
-            rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
-                                           int_width, int_height,
-                                           argv4, argv5,
-                                           js::TypedArray::fromJSObject(obj_data));
+            rv = self->TexSubImage2D_imageData(argv0, argv1, argv2, argv3,
+                                               int_width, int_height,
+                                               argv4, argv5,
+                                               js::TypedArray::fromJSObject(obj_data));
         }
     } else if (argc > 8 &&
                !JSVAL_IS_PRIMITIVE(argv[8]))

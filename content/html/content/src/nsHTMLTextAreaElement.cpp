@@ -131,9 +131,9 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   // nsITextControlElemet
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
@@ -155,6 +155,7 @@ public:
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
   NS_IMETHOD CreateEditor();
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
   NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
@@ -424,14 +425,14 @@ nsHTMLTextAreaElement::IsHTMLFocusable(PRBool aWithMouse,
 
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Autofocus, autofocus)
-NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Cols, cols)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, Cols, cols, 20)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLTextAreaElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Required, required)
-NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, Rows, rows, 2)
+NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Wrap, wrap)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Placeholder, placeholder)
   
@@ -499,6 +500,13 @@ NS_IMETHODIMP_(nsIContent*)
 nsHTMLTextAreaElement::GetRootEditorNode()
 {
   return mState->GetRootNode();
+}
+
+NS_IMETHODIMP_(nsIContent*)
+nsHTMLTextAreaElement::CreatePlaceholderNode()
+{
+  NS_ENSURE_SUCCESS(mState->CreatePlaceholderNode(), nsnull);
+  return mState->GetPlaceholderNode();
 }
 
 NS_IMETHODIMP_(nsIContent*)
@@ -624,6 +632,8 @@ nsHTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   } else if (aAttribute == nsGkAtoms::wrap) {
     NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+  } else if (aAttribute == nsGkAtoms::placeholder) {
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   }
   return retval;
 }
@@ -979,10 +989,10 @@ nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
   return PR_FALSE;
 }
 
-PRInt32
+nsEventStates
 nsHTMLTextAreaElement::IntrinsicState() const
 {
-  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
     state |= NS_EVENT_STATE_REQUIRED;
@@ -1099,7 +1109,7 @@ nsresult
 nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                     const nsAString* aValue, PRBool aNotify)
 {
-  PRInt32 states = 0;
+  nsEventStates states;
 
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
@@ -1126,7 +1136,7 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         states |= NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_MOZ_READWRITE;
       }
 
-      if (doc && states) {
+      if (doc && !states.IsEmpty()) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, states);
       }
@@ -1376,26 +1386,33 @@ NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
 {
   // Update the validity state
+  PRBool validBefore = IsValid();
   UpdateTooLongValidityState();
   UpdateValueMissingValidityState();
 
   if (aNotify) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
-                                              NS_EVENT_STATE_INVALID |
-                                              // We could check if that is
-                                              // really needed but considering
-                                              // we are already updating the
-                                              // state for valid/invalid...
-                                              NS_EVENT_STATE_MOZ_PLACEHOLDER);
+    nsEventStates states;
+    if (validBefore != IsValid()) {
+      states |= (NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
+    }
+
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)
+        && !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
+      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
+    }
+
+    if (!states.IsEmpty()) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        doc->ContentStatesChanged(this, nsnull, states);
+      }
     }
   }
 }
 
 void
-nsHTMLTextAreaElement::FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify)
+nsHTMLTextAreaElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
 {
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();

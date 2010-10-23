@@ -755,7 +755,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if stackFixerFunction:
           line = stackFixerFunction(line)
         self.log.info(line.rstrip())
-        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out." in line:
+        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
           self.dumpScreen(utilityPath)
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)

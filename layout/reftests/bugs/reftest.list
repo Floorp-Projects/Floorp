@@ -1490,6 +1490,7 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
+== 579655-1.html 579655-1-ref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
 random-if(layersGPUAccelerated) == 579323-1.html 579323-1-ref.html
@@ -1503,6 +1504,7 @@ random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
 == 582037-2a.html 582037-2-ref.html
 == 582037-2b.html 582037-2-ref.html
 asserts(0-1) == 582146-1.html about:blank
+== 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
@@ -1512,6 +1514,12 @@ asserts(0-1) == 582146-1.html about:blank
 == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 597721-1.html 597721-1-ref.html
+== 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
+== 600974-1.html 600974-1-ref.html
+== 604737.html 604737-ref.html
+== 600974-2.html 600974-1-ref.html
+== 600974-3.html 600974-1-ref.html
+== 605157-1.xhtml 605157-1-ref.xhtml

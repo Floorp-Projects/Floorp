@@ -65,8 +65,6 @@
 namespace mozilla {
 namespace net {
 
-class ChildChannelEvent;
-
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public nsICacheInfoChannel
@@ -75,7 +73,7 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIApplicationCacheChannel
                        , public nsIAsyncVerifyRedirectCallback
                        , public nsIAssociatedContentSecurity
-                       , public ChannelEventQueue
+                       , public ChannelEventQueue<HttpChannelChild>
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -120,6 +118,8 @@ public:
   void AddIPDLReference();
   void ReleaseIPDLReference();
 
+  bool IsSuspended();
+
 protected:
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                           const PRBool& useResponseHead,
@@ -141,6 +141,8 @@ protected:
                           const PRUint32& redirectFlags,
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
+  bool RecvAssociateApplicationCache(const nsCString& groupID,
+                                     const nsCString& clientID);
   bool RecvDeleteSelf();
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nsnull);
@@ -164,9 +166,6 @@ private:
   bool mIPCOpen;
   bool mKeptAlive;
 
-  void FlushEventQueue();
-  bool ShouldEnqueue();
-
   void OnStartRequest(const nsHttpResponseHead& responseHead,
                           const PRBool& useResponseHead,
                           const RequestHeaderTuples& requestHeaders,
@@ -188,7 +187,6 @@ private:
   void Redirect3Complete();
   void DeleteSelf();
 
-  friend class AutoEventEnqueuer;
   friend class StartRequestEvent;
   friend class StopRequestEvent;
   friend class DataAvailableEvent;
@@ -205,9 +203,9 @@ private:
 //-----------------------------------------------------------------------------
 
 inline bool
-HttpChannelChild::ShouldEnqueue()
+HttpChannelChild::IsSuspended()
 {
-  return ChannelEventQueue::ShouldEnqueue() || mSuspendCount;
+  return mSuspendCount != 0;
 }
 
 } // namespace net

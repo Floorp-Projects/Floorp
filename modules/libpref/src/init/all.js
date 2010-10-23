@@ -816,6 +816,9 @@ pref("network.IDN.whitelist.xn--fiqz9s", true); // Traditional
 pref("network.IDN.whitelist.xn--fiqs8s", true); // Simplified
 // hk, Hong Kong, .<Hong Kong>
 pref("network.IDN.whitelist.xn--j6w193g", true);
+// ir, Iran, <.Iran> with variants
+pref("network.IDN.whitelist.xn--mgba3a4f16a", true);
+pref("network.IDN.whitelist.xn--mgba3a4fra", true);
 // jo, Jordan, .<Al-Ordon>
 pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
 // ru, Russian Federation, .<RF>
@@ -1320,6 +1323,12 @@ pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
+#endif
+
+#ifdef XP_WIN
+// Disable oopp for java on windows. They run their own
+// process isolation which conflicts with our implementation.
+pref("dom.ipc.plugins.java.enabled", false);
 #endif
 
 #ifndef ANDROID
@@ -3237,7 +3246,7 @@ pref("gfx.direct2d.disabled", false);
 pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
-pref("layers.use-d3d10", false);
+pref("layers.prefer-d3d9", false);
 #endif
 #endif
 

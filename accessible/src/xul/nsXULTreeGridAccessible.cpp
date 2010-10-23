@@ -805,18 +805,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXULTreeGridCellAccessible,
                              nsXULTreeGridCellAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULTreeGridCellAccessible: nsIAccessNode implementation
-
-NS_IMETHODIMP
-nsXULTreeGridCellAccessible::GetUniqueID(void **aUniqueID)
-{
-  NS_ENSURE_ARG_POINTER(aUniqueID);
-  *aUniqueID = static_cast<void*>(this);
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridCellAccessible: nsIAccessible implementation
 
 NS_IMETHODIMP
@@ -1122,6 +1110,12 @@ nsXULTreeGridCellAccessible::Init()
     mTreeView->GetCellText(mRow, mColumn, mCachedTextEquiv);
 
   return PR_TRUE;
+}
+
+bool
+nsXULTreeGridCellAccessible::IsPrimaryForNode() const
+{
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

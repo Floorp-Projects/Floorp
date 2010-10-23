@@ -80,6 +80,7 @@ const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/upd
 const DIR_EXTENSIONS                  = "extensions";
 const DIR_STAGE                       = "staged";
 const DIR_XPI_STAGE                   = "staged-xpis";
+const DIR_TRASH                       = "trash";
 
 const FILE_OLD_DATABASE               = "extensions.rdf";
 const FILE_DATABASE                   = "extensions.sqlite";
@@ -159,6 +160,125 @@ var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\
     return this[aName];
   })
 }, this);
+
+/**
+ * A safe way to move a file or the contents of a directory to a new directory.
+ * The move is performed recursively and if anything fails an attempt is made to
+ * rollback the entire operation. The operation may also be rolled back to its
+ * original state after it has completed by calling the rollback method.
+ *
+ * Moves can be chained. Calling move multiple times will remember the whole set
+ * and if one fails all of the move operations will be rolled back.
+ */
+function SafeMoveOperation() {
+  this._movedFiles = [];
+  this._createdDirs = [];
+}
+
+SafeMoveOperation.prototype = {
+  _movedFiles: null,
+  _createdDirs: null,
+
+  _moveFile: function(aFile, aTargetDirectory) {
+    let oldFile = aFile.clone();
+    let newFile = aFile.clone();
+    try {
+      newFile.moveTo(aTargetDirectory, null);
+    }
+    catch (e) {
+      throw new Error("Failed to move file " + aFile.path + " to " +
+                      aTargetDirectory.path + ": " + e);
+    }
+    this._movedFiles.push({ oldFile: oldFile, newFile: newFile });
+  },
+
+  _moveDirectory: function(aDirectory, aTargetDirectory) {
+    let newDir = aTargetDirectory.clone();
+    newDir.append(aDirectory.leafName);
+    try {
+      newDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    }
+    catch (e) {
+      throw new Error("Failed to create directory " + newDir.path + ": " + e);
+    }
+    this._createdDirs.push(newDir);
+
+    let entries = aDirectory.directoryEntries
+                            .QueryInterface(Ci.nsIDirectoryEnumerator);
+    try {
+      let entry;
+      while (entry = entries.nextFile)
+        this._moveDirEntry(entry, newDir);
+    }
+    finally {
+      entries.close();
+    }
+
+    // The directory should be empty by this point. If it isn't this will throw
+    // and all of the operations will be rolled back
+    try {
+      aDirectory.permissions = FileUtils.PERMS_DIRECTORY;
+      aDirectory.remove(false);
+    }
+    catch (e) {
+      throw new Error("Failed to remove directory " + aDirectory.path + ": " + e);
+    }
+
+    // Note we put the directory move in after all the file moves so the
+    // directory is recreated before all the files are moved back
+    this._movedFiles.push({ oldFile: aDirectory, newFile: newDir });
+  },
+
+  _moveDirEntry: function(aDirEntry, aTargetDirectory) {
+    if (aDirEntry.isDirectory())
+      this._moveDirectory(aDirEntry, aTargetDirectory);
+    else
+      this._moveFile(aDirEntry, aTargetDirectory);
+  },
+
+  /**
+   * Moves a file or directory into a new directory. If an error occurs then all
+   * files that have been moved will be moved back to their original location.
+   *
+   * @param  aFile
+   *         The file or directory to be moved.
+   * @param  aTargetDirectory
+   *         The directory to move into, this is expected to be an empty
+   *         directory.
+   */
+  move: function(aFile, aTargetDirectory) {
+    try {
+      this._moveDirEntry(aFile, aTargetDirectory);
+    }
+    catch (e) {
+      ERROR("Failure moving " + aFile.path + " to " + aTargetDirectory.path + ": " + e);
+      this.rollback();
+      throw e;
+    }
+  },
+
+  /**
+   * Rolls back all the moves that this operation performed. If an exception
+   * occurs here then both old and new directories are left in an indeterminate
+   * state
+   */
+  rollback: function() {
+    while (this._movedFiles.length > 0) {
+      let move = this._movedFiles.pop();
+      if (move.newFile.isDirectory()) {
+        let oldDir = move.oldFile.parent.clone();
+        oldDir.append(move.oldFile.leafName);
+        oldDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+      }
+      else {
+        move.newFile.moveTo(move.oldFile.parent, null);
+      }
+    }
+
+    while (this._createdDirs.length > 0)
+      recursiveRemove(this._createdDirs.pop());
+  }
+};
 
 /**
  * Gets the currently selected locale for display.
@@ -655,6 +775,7 @@ function buildJarURI(aJarfile, aPath) {
 /**
  * Creates and returns a new unique temporary file. The caller should delete
  * the file when it is no longer needed.
+ *
  * @return an nsIFile that points to a randomly named, initially empty file in
  *         the OS temporary files directory
  */
@@ -890,6 +1011,42 @@ function resultRows(aStatement) {
 }
 
 /**
+ * Removes the specified files or directories in a staging directory and then if
+ * the staging directory is empty attempts to remove it.
+ *
+ * @param  aDir
+ *         nsIFile for the staging directory to clean up
+ * @param  aLeafNames
+ *         An array of file or directory to remove from the directory, the
+ *         array may be empty
+ */
+function cleanStagingDir(aDir, aLeafNames) {
+  aLeafNames.forEach(function(aName) {
+    let file = aDir.clone();
+    file.append(aName);
+    if (file.exists())
+      recursiveRemove(file);
+  });
+
+  let dirEntries = aDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+  try {
+    if (dirEntries.nextFile)
+      return;
+  }
+  finally {
+    dirEntries.close();
+  }
+
+  try {
+    aDir.permissions = FileUtils.PERMS_DIRECTORY;
+    aDir.remove(false);
+  }
+  catch (e) {
+    // Failing to remove the staging directory is ignorable
+  }
+}
+
+/**
  * Recursively removes a directory or file fixing permissions when necessary.
  *
  * @param  aFile
@@ -923,7 +1080,7 @@ function recursiveRemove(aFile) {
 /**
  * Returns the timestamp of the most recently modified file in a directory,
  * or simply the file's own timestamp if it is not a directory.
- * 
+ *
  * @param  aFile
  *         A non-null nsIFile object
  * @return Epoch time, as described above. 0 for an empty directory.
@@ -943,7 +1100,7 @@ function recursiveLastModifiedTime(aFile) {
     entries.close();
     return maxTime;
   }
-  
+
   // If the file is something else, just ignore it.
   return 0;
 }
@@ -1267,17 +1424,11 @@ var XPIProvider = {
 
     this.inactiveAddonIDs = [];
 
-    // Get the list of IDs of add-ons that are pending update.
-    let updates = [i.addon.id for each (i in this.installs)
-                   if ((i.state == AddonManager.STATE_INSTALLED) &&
-                       i.existingAddon)];
-
-    // If there are pending operations or installs waiting to complete then
-    // we must update the list of active add-ons
-    if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false) ||
-        updates.length > 0) {
+    // If there are pending operations then we must update the list of active
+    // add-ons
+    if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {
       XPIDatabase.updateActiveAddons();
-      XPIDatabase.writeAddonsList(updates);
+      XPIDatabase.writeAddonsList();
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
     }
 
@@ -1356,9 +1507,9 @@ var XPIProvider = {
     }
     catch (e) { }
   },
-  
+
   /**
-   * Gets the add-on states for an install location. 
+   * Gets the add-on states for an install location.
    * This function may be expensive because of the recursiveLastModifiedTime call.
    *
    * @param  location
@@ -1543,6 +1694,8 @@ var XPIProvider = {
           continue;
         }
 
+        changed = true;
+
         if (stageDirEntry.isDirectory()) {
           // Check if the directory contains an install manifest.
           let manifest = stageDirEntry.clone();
@@ -1552,9 +1705,13 @@ var XPIProvider = {
           // install location.
           if (!manifest.exists()) {
             LOG("Processing uninstall of " + id + " in " + aLocation.name);
-            aLocation.uninstallAddon(id);
+            try {
+              aLocation.uninstallAddon(id);
+            }
+            catch (e) {
+              ERROR("Failed to uninstall add-on " + id + " in " + aLocation.name);
+            }
             // The file check later will spot the removal and cleanup the database
-            changed = true;
             continue;
           }
         }
@@ -1570,7 +1727,6 @@ var XPIProvider = {
         }
 
         aManifests[aLocation.name][id] = null;
-        changed = true;
 
         // Check for a cached AddonInternal for this add-on, it may contain
         // updated compatibility information
@@ -1614,7 +1770,7 @@ var XPIProvider = {
   /**
    * Compares the add-ons that are currently installed to those that were
    * known to be installed when the application last ran and applies any
-   * changes found to the database. Also sends "startupcache-invalidate" signal to 
+   * changes found to the database. Also sends "startupcache-invalidate" signal to
    * observerservice if it detects that data may have changed.
    *
    * @param  aState
@@ -2025,7 +2181,7 @@ var XPIProvider = {
     // Cache the new install location states
     cache = JSON.stringify(this.getInstallLocationStates());
     Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
-    
+
     if (changed) {
       // Init this, so it will get the notification.
       let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
@@ -2151,7 +2307,7 @@ var XPIProvider = {
         LOG("Updating database with changes to installed add-ons");
         XPIDatabase.updateActiveAddons();
         XPIDatabase.commitTransaction();
-        XPIDatabase.writeAddonsList([]);
+        XPIDatabase.writeAddonsList();
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(this.bootstrappedAddons));
@@ -2172,7 +2328,7 @@ var XPIProvider = {
                                        true);
     if (!addonsList.exists()) {
       LOG("Add-ons list is missing, recreating");
-      XPIDatabase.writeAddonsList([]);
+      XPIDatabase.writeAddonsList();
     }
   },
 
@@ -2899,10 +3055,7 @@ var XPIProvider = {
     if (!(aAddon instanceof DBAddonInternal))
       throw new Error("Can only cancel uninstall for installed addons.");
 
-    let stagedAddon = aAddon._installLocation.getStagingDir();
-    stagedAddon.append(aAddon.id);
-    if (stagedAddon.exists())
-      stagedAddon.remove(true);
+    cleanStagingDir(aAddon._installLocation.getStagingDir(), [aAddon.id]);
 
     XPIDatabase.setAddonProperties(aAddon, {
       pendingUninstall: false
@@ -3116,10 +3269,9 @@ var XPIDatabase = {
 
     makeAddonVisible: "UPDATE addon SET visible=1 WHERE internal_id=:internal_id",
     removeAddonMetadata: "DELETE FROM addon WHERE internal_id=:internal_id",
-    // Equates to active = visible && !userDisabled && !appDisabled &&
-    // !pendingUninstall
+    // Equates to active = visible && !userDisabled && !appDisabled
     setActiveAddons: "UPDATE addon SET active=MIN(visible, 1 - userDisabled, " +
-                     "1 - appDisabled, 1 - pendingUninstall)",
+                     "1 - appDisabled)",
     setAddonProperties: "UPDATE addon SET userDisabled=:userDisabled, " +
                         "appDisabled=:appDisabled, " +
                         "pendingUninstall=:pendingUninstall, " +
@@ -4214,12 +4366,8 @@ var XPIDatabase = {
 
   /**
    * Writes out the XPI add-ons list for the platform to read.
-   *
-   * @param  aPendingUpdateIDs
-   *         An array of IDs of add-ons that are pending update and so shouldn't
-   *         be included in the add-ons list.
    */
-  writeAddonsList: function XPIDB_writeAddonsList(aPendingUpdateIDs) {
+  writeAddonsList: function XPIDB_writeAddonsList() {
     LOG("Writing add-ons list");
     Services.appinfo.invalidateCachesOnRestart();
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
@@ -4232,9 +4380,6 @@ var XPIDatabase = {
     let stmt = this.getStatement("getActiveAddons");
 
     for (let row in resultRows(stmt)) {
-      // Don't include add-ons that are waiting to be updated
-      if (aPendingUpdateIDs.indexOf(row.id) != -1)
-        continue;
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(row.id + ":" + row.version);
     }
@@ -4251,9 +4396,6 @@ var XPIDatabase = {
     }
     count = 0;
     for (let row in resultRows(stmt)) {
-      // Don't include add-ons that are waiting to be updated
-      if (aPendingUpdateIDs.indexOf(row.id) != -1)
-        continue;
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(row.id + ":" + row.version);
     }
@@ -4489,20 +4631,9 @@ AddonInstall.prototype = {
       break;
     case AddonManager.STATE_INSTALLED:
       LOG("Cancelling install of " + this.addon.id);
-      let stagedAddon = this.installLocation.getStagingDir();
-      let stagedJSON = stagedAddon.clone();
-      stagedAddon.append(this.addon.id);
-      stagedJSON.append(this.addon.id + ".json");
-      if (stagedAddon.exists()) {
-        recursiveRemove(stagedAddon);
-      }
-      else {
-        stagedAddon.leafName += ".xpi";
-        if (stagedAddon.exists())
-          stagedAddon.remove(false);
-      }
-      if (stagedJSON.exists())
-        stagedJSON.remove(true);
+      cleanStagingDir(this.installLocation.getStagingDir(),
+                      [this.addon.id, this.addon.id + ".xpi",
+                       this.addon.id + ".json"]);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
 
@@ -5068,6 +5199,15 @@ AddonInstall.prototype = {
       return;
     }
 
+    // Find and cancel any pending installs for the same add-on in the same
+    // install location
+    XPIProvider.installs.forEach(function(aInstall) {
+      if (aInstall.state == AddonManager.STATE_INSTALLED &&
+          aInstall.installLocation == this.installLocation &&
+          aInstall.addon.id == this.addon.id)
+        aInstall.cancel();
+    }, this);
+
     let isUpgrade = this.existingAddon &&
                     this.existingAddon._installLocation == this.installLocation;
     let requiresRestart = XPIProvider.installRequiresRestart(this.addon);
@@ -5080,7 +5220,6 @@ AddonInstall.prototype = {
 
     try {
       // First stage the file regardless of whether restarting is necessary
-      let stagedJSON = stagedAddon.clone();
       if (this.addon.unpack || Prefs.getBoolPref(PREF_XPI_UNPACK, false)) {
         LOG("Addon " + this.addon.id + " will be installed as " +
             "an unpacked directory");
@@ -5105,7 +5244,8 @@ AddonInstall.prototype = {
         this.addon._sourceBundle = stagedAddon;
 
         // Cache the AddonInternal as it may have updated compatibiltiy info
-        stagedJSON.append(this.addon.id + ".json");
+        let stagedJSON = stagedAddon.clone();
+        stagedJSON.leafName = this.addon.id + ".json";
         if (stagedJSON.exists())
           stagedJSON.remove(true);
         let stream = Cc["@mozilla.org/network/file-output-stream;1"].
@@ -5165,10 +5305,7 @@ AddonInstall.prototype = {
             XPIProvider.unloadBootstrapScope(this.existingAddon.id);
           }
 
-          if (isUpgrade) {
-            this.installLocation.uninstallAddon(this.existingAddon.id);
-          }
-          else if (this.existingAddon.active) {
+          if (!isUpgrade && this.existingAddon.active) {
             this.existingAddon.active = false;
             XPIDatabase.updateAddonActive(this.existingAddon);
           }
@@ -5176,6 +5313,7 @@ AddonInstall.prototype = {
 
         // Install the new add-on into its final location
         let file = this.installLocation.installAddon(this.addon.id, stagedAddon);
+        cleanStagingDir(stagedAddon.parent, []);
 
         // Update the metadata in the database
         this.addon._installLocation = this.installLocation;
@@ -6221,7 +6359,7 @@ DirectoryInstallLocation.prototype = {
 
       let id = entry.leafName;
 
-      if (id == DIR_STAGE || id == DIR_XPI_STAGE)
+      if (id == DIR_STAGE || id == DIR_XPI_STAGE || id == DIR_TRASH)
         continue;
 
       let directLoad = false;
@@ -6301,6 +6439,23 @@ DirectoryInstallLocation.prototype = {
   },
 
   /**
+   * Returns a directory that is normally on the same filesystem as the rest of
+   * the install location and can be used for temporarily storing files during
+   * safe move operations. Calling this method will delete the existing trash
+   * directory and its contents.
+   *
+   * @return an nsIFile
+   */
+  getTrashDir: function DirInstallLocation_getTrashDir() {
+    let trashDir = this._directory.clone();
+    trashDir.append(DIR_TRASH);
+    if (trashDir.exists())
+      recursiveRemove(trashDir);
+    trashDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    return trashDir;
+  },
+
+  /**
    * Installs an add-on into the install location.
    *
    * @param  aId
@@ -6310,27 +6465,49 @@ DirectoryInstallLocation.prototype = {
    * @return an nsIFile indicating where the add-on was installed to
    */
   installAddon: function DirInstallLocation_installAddon(aId, aSource) {
+    let trashDir = this.getTrashDir();
+
+    let transaction = new SafeMoveOperation();
+
     let file = this._directory.clone().QueryInterface(Ci.nsILocalFile);
     file.append(aId);
-    if (file.exists())
-      recursiveRemove(file);
 
-    file = this._directory.clone().QueryInterface(Ci.nsILocalFile);
-    file.append(aId + ".xpi");
-    if (file.exists()) {
-      Services.obs.notifyObservers(file, "flush-cache-entry", null);
-      file.remove(true);
+    // If any of these operations fails the finally block will clean up the
+    // temporary directory
+    try {
+      if (file.exists())
+        transaction.move(file, trashDir);
+
+      file = this._directory.clone().QueryInterface(Ci.nsILocalFile);
+      file.append(aId + ".xpi");
+      if (file.exists()) {
+        Services.obs.notifyObservers(file, "flush-cache-entry", null);
+        transaction.move(file, trashDir);
+      }
+
+      if (aSource.isFile())
+        Services.obs.notifyObservers(aSource, "flush-cache-entry", null);
+
+      transaction.move(aSource, this._directory);
+    }
+    finally {
+      // It isn't ideal if this cleanup fails but it isn't worth rolling back
+      // the install because of it.
+      try {
+        recursiveRemove(trashDir);
+      }
+      catch (e) {
+        WARN("Failed to remove trash directory when installing " + aId);
+      }
     }
 
-    aSource = aSource.clone().QueryInterface(Ci.nsILocalFile);
-    if (aSource.isFile())
-      Services.obs.notifyObservers(aSource, "flush-cache-entry", null);
-    aSource.moveTo(this._directory, aSource.leafName);
-    aSource.lastModifiedTime = Date.now();
-    this._FileToIDMap[aSource.path] = aId;
-    this._IDToFileMap[aId] = aSource;
+    let newFile = this._directory.clone().QueryInterface(Ci.nsILocalFile);
+    newFile.append(aSource.leafName);
+    newFile.lastModifiedTime = Date.now();
+    this._FileToIDMap[newFile.path] = aId;
+    this._IDToFileMap[aId] = newFile;
 
-    return aSource;
+    return newFile;
   },
 
   /**
@@ -6348,9 +6525,6 @@ DirectoryInstallLocation.prototype = {
       return;
     }
 
-    delete this._FileToIDMap[file.path];
-    delete this._IDToFileMap[aId];
-
     file = this._directory.clone();
     file.append(aId);
     if (!file.exists())
@@ -6359,12 +6533,35 @@ DirectoryInstallLocation.prototype = {
     if (!file.exists()) {
       WARN("Attempted to remove " + aId + " from " +
            this._name + " but it was already gone");
+
+      delete this._FileToIDMap[file.path];
+      delete this._IDToFileMap[aId];
       return;
     }
 
+    let trashDir = this.getTrashDir();
+
     if (file.leafName != aId)
       Services.obs.notifyObservers(file, "flush-cache-entry", null);
-    recursiveRemove(file);
+
+    let transaction = new SafeMoveOperation();
+
+    try {
+      transaction.move(file, trashDir);
+    }
+    finally {
+      // It isn't ideal if this cleanup fails, but it is probably better than
+      // rolling back the uninstall at this point
+      try {
+        recursiveRemove(trashDir);
+      }
+      catch (e) {
+        WARN("Failed to remove trash directory when uninstalling " + aId);
+      }
+    }
+
+    delete this._FileToIDMap[file.path];
+    delete this._IDToFileMap[aId];
   },
 
   /**
