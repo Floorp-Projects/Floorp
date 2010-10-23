@@ -597,7 +597,6 @@ DestroyThread(JSThread *thread)
 {
     /* The thread must have zero contexts. */
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
-    JS_ASSERT(!thread->titleToShare);
 
     /*
      * The conservative GC scanner should be disabled when the thread leaves
@@ -1182,19 +1181,6 @@ FreeContext(JSContext *cx)
     /* Finally, free cx itself. */
     cx->~JSContext();
     js_free(cx);
-}
-
-JSBool
-js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
-{
-    JSCList *cl;
-
-    for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next) {
-        if (cl == &cx->link)
-            return JS_TRUE;
-    }
-    JS_RUNTIME_METER(rt, deadContexts);
-    return JS_FALSE;
 }
 
 JSContext *
