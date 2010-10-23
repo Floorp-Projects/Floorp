@@ -2306,6 +2306,10 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
     return NS_OK;
   }
 
+  // XXXbz can aMimeType ever actually be null here?  If not, either
+  // the callers are wrong (and passing "" instead of null) or we can
+  // remove the codepaths dealing with null aMimeType in
+  // InstantiateEmbeddedPlugin.
   NS_ASSERTION(aMimeType || aURI, "Need a type or a URI!");
 
   // Note: If PrepareInstanceOwner() returns an error, |this| may very
