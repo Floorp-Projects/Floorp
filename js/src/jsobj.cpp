@@ -3680,6 +3680,13 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!proto->getEmptyShape(cx, proto->clasp, FINALIZE_OBJECT0))
         goto bad;
 
+    if (clasp->flags & (JSCLASS_FREEZE_PROTO|JSCLASS_FREEZE_CTOR)) {
+        if (proto && (clasp->flags & JSCLASS_FREEZE_PROTO) && !proto->freeze(cx))
+            goto bad;
+        if (ctor && (clasp->flags & JSCLASS_FREEZE_CTOR) && !ctor->freeze(cx))
+            goto bad;
+    }
+
     /* If this is a standard class, cache its prototype. */
     if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor, proto))
         goto bad;

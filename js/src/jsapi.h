@@ -1718,6 +1718,10 @@ struct JSClass {
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
+/* Indicate whether the proto or ctor should be frozen. */
+#define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
+#define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
+
 /* Additional global reserved slots, beyond those for standard prototypes. */
 #define JSRESERVED_GLOBAL_SLOTS_COUNT     3
 #define JSRESERVED_GLOBAL_THIS            (JSProto_LIMIT * 3)
