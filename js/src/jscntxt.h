@@ -1237,27 +1237,12 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     void                *id;
 
-    /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
-    JSTitle             *titleToShare;
-
-    /*
-     * This thread is inside js_GC, either waiting until it can start GC, or
-     * waiting for GC to finish on another thread. This thread holds no locks;
-     * other threads may steal titles from it.
-     *
-     * Protected by rt->gcLock.
-     */
-    bool                gcWaiting;
-
     /* Number of JS_SuspendRequest calls withot JS_ResumeRequest. */
     unsigned            suspendCount;
 
 # ifdef DEBUG
     unsigned            checkRequestDepth;
 # endif
-
-    /* Weak ref, for low-cost sealed title locking */
-    JSTitle             *lockedSealedTitle;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -1466,28 +1451,6 @@ struct JSRuntime {
     PRCondVar           *stateChange;
 
     /*
-     * State for sharing single-threaded titles, once a second thread tries to
-     * lock a title.  The titleSharingDone condvar is protected by rt->gcLock
-     * to minimize number of locks taken in JS_EndRequest.
-     *
-     * The titleSharingTodo linked list is likewise "global" per runtime, not
-     * one-list-per-context, to conserve space over all contexts, optimizing
-     * for the likely case that titles become shared rarely, and among a very
-     * small set of threads (contexts).
-     */
-    PRCondVar           *titleSharingDone;
-    JSTitle             *titleSharingTodo;
-
-/*
- * Magic terminator for the rt->titleSharingTodo linked list, threaded through
- * title->u.link.  This hack allows us to test whether a title is on the list
- * by asking whether title->u.link is non-null.  We use a large, likely bogus
- * pointer here to distinguish this value from any valid u.count (small int)
- * value.
- */
-#define NO_TITLE_SHARING_TODO   ((JSTitle *) 0xfeedbeef)
-
-    /*
      * Lock serializing trapList and watchPointList accesses, and count of all
      * mutations to trapList and watchPointList made by debugger threads.  To
      * keep the code simple, we define debuggerMutations for the thread-unsafe
@@ -1609,14 +1572,7 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    /* Title lock and scope property metering. */
-    jsrefcount          claimAttempts;
-    jsrefcount          claimedTitles;
-    jsrefcount          deadContexts;
-    jsrefcount          deadlocksAvoided;
-    jsrefcount          liveShapes;
-    jsrefcount          sharedTitles;
-    jsrefcount          totalShapes;
+    /* Property metering. */
     jsrefcount          liveObjectProps;
     jsrefcount          liveObjectPropsPreSweep;
     jsrefcount          totalObjectProps;
@@ -3071,13 +3027,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 
 extern void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
-
-/*
- * Return true if cx points to a context in rt->contextList, else return false.
- * NB: the caller (see jslock.c:ClaimTitle) must hold rt->gcLock.
- */
-extern JSBool
-js_ValidContextPointer(JSRuntime *rt, JSContext *cx);
 
 static JS_INLINE JSContext *
 js_ContextFromLinkField(JSCList *link)

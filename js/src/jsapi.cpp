@@ -649,10 +649,6 @@ JSRuntime::init(uint32 maxbytes)
     stateChange = JS_NEW_CONDVAR(gcLock);
     if (!stateChange)
         return false;
-    titleSharingDone = JS_NEW_CONDVAR(gcLock);
-    if (!titleSharingDone)
-        return false;
-    titleSharingTodo = NO_TITLE_SHARING_TODO;
     debuggerLock = JS_NEW_LOCK();
     if (!debuggerLock)
         return false;
@@ -703,8 +699,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(rtLock);
     if (stateChange)
         JS_DESTROY_CONDVAR(stateChange);
-    if (titleSharingDone)
-        JS_DESTROY_CONDVAR(titleSharingDone);
     if (debuggerLock)
         JS_DESTROY_LOCK(debuggerLock);
 #endif
@@ -866,8 +860,6 @@ StopRequest(JSContext *cx)
          */
         if (t->data.interruptFlags)
             JS_ATOMIC_DECREMENT(&rt->interruptCounter);
-
-        js_ShareWaitingTitles(cx);
 
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);

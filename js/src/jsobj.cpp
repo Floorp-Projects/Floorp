@@ -1402,7 +1402,7 @@ js_HasOwnPropertyHelper(JSContext *cx, LookupPropOp lookup, uintN argc,
     }
     if (!js_HasOwnProperty(cx, lookup, obj, id, &obj2, &prop))
         return JS_FALSE;
-    vp->setBoolean(prop != NULL);
+    vp->setBoolean(!!prop);
     return JS_TRUE;
 }
 
