@@ -114,8 +114,9 @@ Tester.prototype = {
   finish: function Tester_finish(aSkipSummary) {
     this._cs.unregisterListener(this);
 
+    this.dumper.dump("\nINFO TEST-START | Shutdown\n");
     if (this.tests.length) {
-      this.dumper.dump("\nBrowser Chrome Test Summary\n");
+      this.dumper.dump("Browser Chrome Test Summary\n");
 
       function sum(a,b) a+b;
       var passCount = this.tests.map(function (f) f.passCount).reduce(sum);
@@ -131,7 +132,6 @@ Tester.prototype = {
     }
 
     this.dumper.dump("\n*** End BrowserChrome Test Results ***\n");
-    this.dumper.dump("TEST-START | Shutdown\n");
 
     this.dumper.done();
 
@@ -166,8 +166,8 @@ Tester.prototype = {
 
       // Note the test run time
       let time = Date.now() - this.lastStartTime;
-      let msg = "Test took " + (time / 1000) + "s to complete\n";
-      this.currentTest.addResult(new testMessage(msg));
+      this.dumper.dump("INFO TEST-END | " + this.currentTest.path + " | finished in " + time + "ms\n");
+      this.currentTest.setDuration(time);
     }
 
     // Check the window state for the current test before moving to the next one.

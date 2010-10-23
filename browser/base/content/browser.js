@@ -253,7 +253,6 @@ function UpdateBackForwardCommands(aWebNavigation) {
   }
 }
 
-#ifdef XP_MACOSX
 /**
  * Click-and-Hold implementation for the Back and Forward buttons
  * XXXmano: should this live in toolbarbutton.xml?
@@ -310,8 +309,8 @@ function SetClickAndHoldHandlers() {
   // the forward buttons.
   var unifiedButton = document.getElementById("unified-back-forward-button");
   if (unifiedButton && !unifiedButton._clickHandlersAttached) {
-    var popup = document.getElementById("back-forward-dropmarker")
-                        .firstChild.cloneNode(true);
+    var popup = document.getElementById("backForwardMenu").cloneNode(true);
+    popup.removeAttribute("id");
     var backButton = document.getElementById("back-button");
     backButton.setAttribute("type", "menu");
     backButton.appendChild(popup);
@@ -324,7 +323,6 @@ function SetClickAndHoldHandlers() {
     unifiedButton._clickHandlersAttached = true;
   }
 }
-#endif
 
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
@@ -1462,12 +1460,10 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
 
-#ifdef XP_MACOSX
   // Setup click-and-hold gestures access to the session history
   // menus if global click-and-hold isn't turned on
   if (!getBoolPref("ui.click_hold_context_menus", false))
     SetClickAndHoldHandlers();
-#endif
 
   // Initialize the full zoom setting.
   // We do this before the session restore service gets initialized so we can
@@ -1535,11 +1531,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
       tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
     }
   }, 10000);
-
-  // Delayed initialization of PlacesDBUtils.
-  // This component checks for database coherence once per day, on
-  // an idle timer, taking corrective actions where needed.
-  setTimeout(function() PlacesUtils.startPlacesDBUtils(), 15000);
 
 #ifndef XP_MACOSX
   updateEditUIVisibility();
@@ -3492,12 +3483,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
 
-    var backForwardDropmarker = document.getElementById("back-forward-dropmarker");
-    if (backForwardDropmarker)
-      backForwardDropmarker.disabled =
-        document.getElementById('Browser:Back').hasAttribute('disabled') &&
-        document.getElementById('Browser:Forward').hasAttribute('disabled');
-
 #ifndef XP_MACOSX
     updateEditUIVisibility();
 #endif
@@ -3524,15 +3509,11 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
 
-#ifdef XP_MACOSX
   // make sure to re-enable click-and-hold
   if (!getBoolPref("ui.click_hold_context_menus", false))
     SetClickAndHoldHandlers();
-#endif
 
-  // XXX Shouldn't have to do this, but I do
-  if (!gCustomizeSheet)
-    window.focus();
+  window.content.focus();
 }
 
 function BrowserToolboxCustomizeChange() {
@@ -3653,7 +3634,7 @@ var FullScreen = {
       // The user may quit fullscreen during an animation
       clearInterval(this._animationInterval);
       clearTimeout(this._animationTimeout);
-      gNavToolbox.style.marginTop = "0px";
+      gNavToolbox.style.marginTop = "";
       if (this._isChromeCollapsed)
         this.mouseoverToggle(true);
       this._isAnimating = false;
@@ -3786,7 +3767,7 @@ var FullScreen = {
       if (animateFrameAmount >= gNavToolbox.boxObject.height) {
         // We've animated enough
         clearInterval(FullScreen._animationInterval);
-        gNavToolbox.style.marginTop = "0px";
+        gNavToolbox.style.marginTop = "";
         FullScreen._isAnimating = false;
         FullScreen._shouldAnimate = false; // Just to make sure
         FullScreen.mouseoverToggle(false);
@@ -4487,7 +4468,7 @@ var TabsProgressListener = {
     // document URI is not yet the about:-uri of the error page.
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        /^about:/.test(aBrowser.contentWindow.document.documentURI)) {
+        /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
       aBrowser.addEventListener("click", BrowserOnClick, false);
       aBrowser.addEventListener("pagehide", function () {
         aBrowser.removeEventListener("click", BrowserOnClick, false);
@@ -4639,10 +4620,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   if (popup != aEvent.currentTarget)
     return;
 
-  var i;
-
   // Empty the menu
-  for (i = popup.childNodes.length-1; i >= 0; --i) {
+  for (var i = popup.childNodes.length-1; i >= 0; --i) {
     var deadItem = popup.childNodes[i];
     if (deadItem.hasAttribute("toolbarId"))
       popup.removeChild(deadItem);
@@ -4650,9 +4629,9 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   var firstMenuItem = aInsertPoint || popup.firstChild;
 
-  let toolbarNodes = [document.getElementById("addon-bar")];
-  for (i = 0; i < gNavToolbox.childNodes.length; ++i)
-    toolbarNodes.push(gNavToolbox.childNodes[i]);
+  let toolbarNodes = Array.slice(gNavToolbox.childNodes);
+  toolbarNodes.push(document.getElementById("addon-bar"));
+
   toolbarNodes.forEach(function(toolbar) {
     var toolbarName = toolbar.getAttribute("toolbarname");
     if (toolbarName) {
@@ -5754,7 +5733,7 @@ var OfflineApps = {
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject);
+    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, window);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -6583,7 +6562,22 @@ function convertFromUnicode(charset, str)
  */
 var FeedHandler = {
   /**
-   * Called when the user clicks on the Subscribe to This Page... menu item.
+   * The click handler for the Feed icon in the toolbar. Opens the
+   * subscription page if user is not given a choice of feeds.
+   * (Otherwise the list of available feeds will be presented to the
+   * user in a popup menu.)
+   */
+  onFeedButtonClick: function(event) {
+    event.stopPropagation();
+
+    if (event.target.hasAttribute("feed") &&
+        event.eventPhase == Event.AT_TARGET &&
+        (event.button == 0 || event.button == 1)) {
+        this.subscribeToFeed(null, event);
+    }
+  },
+
+ /** Called when the user clicks on the Subscribe to This Page... menu item.
    * Builds a menu of unique feeds associated with the page, and if there
    * is only one, shows the feed inline in the browser window.
    * @param   menuPopup
@@ -6607,6 +6601,13 @@ var FeedHandler = {
 
     while (menuPopup.firstChild)
       menuPopup.removeChild(menuPopup.firstChild);
+
+    if (feeds.length == 1) {
+      var feedButton = document.getElementById("feed-button");
+      if (feedButton)
+        feedButton.setAttribute("feed", feeds[0].href);
+      return false;
+    }
 
     // Build the menu showing the available feed choices for viewing.
     for (var i = 0; i < feeds.length; ++i) {
@@ -6679,16 +6680,30 @@ var FeedHandler = {
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
+    var feedButton = document.getElementById("feed-button");
+
     var feeds = gBrowser.selectedBrowser.feeds;
     if (!feeds || feeds.length == 0) {
+      if (feedButton) {
+        feedButton.disabled = true;
+        feedButton.removeAttribute("feed");
+      }
       this._feedMenuitem.setAttribute("disabled", "true");
       this._feedMenupopup.setAttribute("hidden", "true");
       this._feedMenuitem.removeAttribute("hidden");
     } else {
+      if (feedButton)
+        feedButton.disabled = false;
+
       if (feeds.length > 1) {
         this._feedMenuitem.setAttribute("hidden", "true");
         this._feedMenupopup.removeAttribute("hidden");
+        if (feedButton)
+          feedButton.removeAttribute("feed");
       } else {
+        if (feedButton)
+          feedButton.setAttribute("feed", feeds[0].href);
+
         this._feedMenuitem.setAttribute("feed", feeds[0].href);
         this._feedMenuitem.removeAttribute("disabled");
         this._feedMenuitem.removeAttribute("hidden");
@@ -6709,6 +6724,12 @@ var FeedHandler = {
       browserForLink.feeds = [];
 
     browserForLink.feeds.push({ href: link.href, title: link.title });
+
+    if (browserForLink == gBrowser.selectedBrowser) {
+      var feedButton = document.getElementById("feed-button");
+      if (feedButton)
+        feedButton.collapsed = false;
+    }
   }
 };
 

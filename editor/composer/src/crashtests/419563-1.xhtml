@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.appendChild(document.body);
+  document.getElementById("s").contentEditable = "true";
+  document.getElementById("v").focus();
+  document.body.focus();
+  document.execCommand("delete", false, null);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<span id="s">thesewords arenot realwords</span><body contenteditable="true" onload="setTimeout(boom, 0);"><span contenteditable="false"><div id="v" contenteditable="true"></div>Five</span></body>
+
+</html>

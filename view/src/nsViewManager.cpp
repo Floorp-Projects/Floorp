@@ -600,7 +600,6 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
       if (view && visible && type != eWindowType_popup) {
         NS_ASSERTION(type == eWindowType_plugin,
                      "Only plugin or popup widgets can be children!");
-        nsViewManager* viewManager = view->GetViewManager();
 
         // We do not need to invalidate in plugin widgets, but we should
         // exclude them from the invalidation region IF we're not on

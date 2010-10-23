@@ -51,6 +51,7 @@ _TEST_FILES =\
 		test_general.html \
 		test_general.xul \
 		test_inputs.html \
+		test_link.html \
 		test_tree.xul \
 		test_treegrid.xul \
 		$(NULL)

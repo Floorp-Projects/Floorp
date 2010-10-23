@@ -14,7 +14,7 @@ load 310556-1.xhtml
 load 322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts(2) asserts-if(gtk2Widget,12) load 323386-1.html # Bug 575011
+asserts(2) asserts-if(gtk2Widget,8) load 323386-1.html # Bug 575011
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -299,7 +299,7 @@ load 503961-1.xhtml
 load 503961-2.html
 load 508168-1.html
 load 508908-1.html
-skip-if(cocoaWidget) load 505912-1.html # Mac OS X intermittent orange bug 599391
+load 505912-1.html
 load 509749-1.html
 load 511482.html
 load 512724-1.html
@@ -338,3 +338,10 @@ load 586973-1.html
 load 589002-1.html
 load 590404.html
 load 591141.html
+asserts(0-1) load 592118.html
+load 594808-1.html
+load 603490-1.html
+load 603510-1.html
+load 604314-1.html
+load 604843.html
+load 605340.html

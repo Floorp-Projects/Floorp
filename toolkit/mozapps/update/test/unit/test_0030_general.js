@@ -44,6 +44,7 @@ var gExpectedStatusResult;
 
 function run_test() {
   do_test_pending();
+  do_register_cleanup(end_test);
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();
   // The mock XMLHttpRequest is MUCH faster
@@ -54,8 +55,12 @@ function run_test() {
   do_timeout(0, run_test_pt1);
 }
 
-function end_test() {
+// The nsHttpServer must be stopped before calling do_test_finished
+function finish_test() {
   stop_httpserver(do_test_finished);
+}
+
+function end_test() {
   cleanUp();
 }
 
@@ -84,7 +89,7 @@ function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
   gCheckFunc = check_test_helper_pt1_1;
   gNextRunFunc = aNextRunFunc;
   gExpectedStatusResult = aExpectedStatusResult;
-  dump("Testing: " + aMsg + "\n");
+  logTestInfo(aMsg, Components.stack.caller);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -112,84 +117,70 @@ function setResponseBody(aHashFunction, aHashValue) {
 
 // mar download with a valid MD5 hash
 function run_test_pt1() {
-  setResponseBody("MD5", "6232cd43a1c77e30191c53a329a3f99d");
+  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
   run_test_helper_pt1("run_test_pt1 - mar download with a valid MD5 hash",
                       AUS_Cr.NS_OK, run_test_pt2);
 }
 
 // mar download with an invalid MD5 hash
 function run_test_pt2() {
-  setResponseBody("MD5", "6232cd43a1c77e30191c53a329a3f99e");
+  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR + "0");
   run_test_helper_pt1("run_test_pt2 - mar download with an invalid MD5 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt3);
 }
 
 // mar download with a valid SHA1 hash
 function run_test_pt3() {
-  setResponseBody("SHA1", "63A739284A1A73ECB515176B1A9D85B987E789CE");
+  setResponseBody("SHA1", SHA1_HASH_SIMPLE_MAR);
   run_test_helper_pt1("run_test_pt3 - mar download with a valid SHA1 hash",
                       AUS_Cr.NS_OK, run_test_pt4);
 }
 
 // mar download with an invalid SHA1 hash
 function run_test_pt4() {
-  setResponseBody("SHA1", "63A739284A1A73ECB515176B1A9D85B987E789CD");
+  setResponseBody("SHA1", SHA1_HASH_SIMPLE_MAR + "0");
   run_test_helper_pt1("run_test_pt4 - mar download with an invalid SHA1 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt5);
 }
 
 // mar download with a valid SHA256 hash
 function run_test_pt5() {
-  var hashValue = "a8d9189f3978afd90dc7cd72e887ef22474c178e8314f23df2f779c881" +
-                  "b872e2";
-  setResponseBody("SHA256", hashValue);
+  setResponseBody("SHA256", SHA256_HASH_SIMPLE_MAR);
   run_test_helper_pt1("run_test_pt5 - mar download with a valid SHA256 hash",
                       AUS_Cr.NS_OK, run_test_pt6);
 }
 
 // mar download with an invalid SHA256 hash
 function run_test_pt6() {
-  var hashValue = "a8d9189f3978afd90dc7cd72e887ef22474c178e8314f23df2f779c881" +
-                  "b872e1";
-  setResponseBody("SHA256", hashValue);
+  setResponseBody("SHA256", SHA256_HASH_SIMPLE_MAR + "0");
   run_test_helper_pt1("run_test_pt6 - mar download with an invalid SHA256 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt7);
 }
 
 // mar download with a valid SHA384 hash
 function run_test_pt7() {
-  var hashValue = "802c64f6caa6c356f7a5f8d9a008c08c54fe915c3ec7cf9e215c3bccc9" +
-                  "e195c78b2669840d7b1d46ff3c1dfa751d72e1";
-  setResponseBody("SHA384", hashValue);
+  setResponseBody("SHA384", SHA384_HASH_SIMPLE_MAR);
   run_test_helper_pt1("run_test_pt7 - mar download with a valid SHA384 hash",
                       AUS_Cr.NS_OK, run_test_pt8);
 }
 
 // mar download with an invalid SHA384 hash
 function run_test_pt8() {
-  var hashValue = "802c64f6caa6c356f7a5f8d9a008c08c54fe915c3ec7cf9e215c3bccc9" +
-                  "e195c78b2669840d7b1d46ff3c1dfa751d72e2";
-  setResponseBody("SHA384", hashValue);
+  setResponseBody("SHA384", SHA384_HASH_SIMPLE_MAR + "0");
   run_test_helper_pt1("run_test_pt8 - mar download with an invalid SHA384 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt9);
 }
 
 // mar download with a valid SHA512 hash
 function run_test_pt9() {
-  var hashValue = "1d2307e309587ddd04299423b34762639ce6af3ee17cfdaa8fdd4e66b5" +
-                  "a61bfb6555b6e40a82604908d6d68d3e42f318f82e22b6f5e1118b4222" +
-                  "e3417a2fa2d0";
-  setResponseBody("SHA512", hashValue);
+  setResponseBody("SHA512", SHA512_HASH_SIMPLE_MAR);
   run_test_helper_pt1("run_test_pt9 - mar download with a valid SHA512 hash",
                       AUS_Cr.NS_OK, run_test_pt10);
 }
 
 // mar download with an invalid SHA384 hash
 function run_test_pt10() {
-  var hashValue = "1d2307e309587ddd04299423b34762639ce6af3ee17cfdaa8fdd4e66b5" +
-                  "a61bfb6555b6e40a82604908d6d68d3e42f318f82e22b6f5e1118b4222" +
-                  "e3417a2fa2d1";
-  setResponseBody("SHA512", hashValue);
+  setResponseBody("SHA512", SHA512_HASH_SIMPLE_MAR + "0");
   run_test_helper_pt1("run_test_pt10 - mar download with an invalid SHA512 hash",
                       AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt11);
 }
@@ -200,7 +191,7 @@ function run_test_pt11() {
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("run_test_pt11 - mar download with the mar not found",
-                      AUS_Cr.NS_ERROR_UNEXPECTED, end_test);
+                      AUS_Cr.NS_ERROR_UNEXPECTED, finish_test);
 }
 
 /* Update download listener - nsIRequestObserver */

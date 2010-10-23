@@ -41,6 +41,9 @@
 [scriptable, uuid(0b9341f3-95d4-4fa4-adcd-e119e0db2889)]
 interface nsIDOMViewCSS : nsIDOMAbstractView
 {
+  /**
+   * @see <http://dev.w3.org/csswg/cssom/#dom-window-getcomputedstyle>
+   */
   nsIDOMCSSStyleDeclaration getComputedStyle(in nsIDOMElement elt, 
-                                       in DOMString pseudoElt);
+                                             [optional] in DOMString pseudoElt);
 };

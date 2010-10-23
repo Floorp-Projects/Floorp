@@ -89,6 +89,7 @@ EXTRA_COMPONENTS = \
   nsPlacesDBFlush.js \
   nsPlacesExpiration.js \
   nsMicrosummaryService.js \
+  PlacesCategoriesStarter.js \
   $(NULL)
 
 ifdef MOZ_XUL

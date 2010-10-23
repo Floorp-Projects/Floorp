@@ -823,11 +823,11 @@ void
 nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
                                         nsIContent* aContent1,
                                         nsIContent* aContent2,
-                                        PRInt32 aStateMask)
+                                        nsEventStates aStateMask)
 {
   if (!aContent1 || !mSelection ||
       !aContent1->IsHTML() ||
-      !(aStateMask & NS_EVENT_STATE_CHECKED))
+      !aStateMask.HasState(NS_EVENT_STATE_CHECKED))
     return;
 
   if (aContent1->Tag() == nsGkAtoms::option) {

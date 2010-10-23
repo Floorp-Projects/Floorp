@@ -11,53 +11,53 @@
 
 const test = [
 // 0: Valid surrogate pair
-              ["%00%2D%00%2D%D8%35%DC%20%00%2D%00%2D",
+              ["%D8%35%DC%20%00%2D%00%2D",
 //    expected: surrogate pair
-               "--\uD835\uDC20--"],
+               "\uD835\uDC20--"],
 // 1: Lone high surrogate
-              ["%00%2D%00%2D%D8%35%00%2D%00%2D",
+              ["%D8%35%00%2D%00%2D",
 //    expected: one replacement char
-               "--\uFFFD--"],
+               "\uFFFD--"],
 // 2: Lone low surrogate
-              ["%00%2D%00%2D%DC%20%00%2D%00%2D",
+              ["%DC%20%00%2D%00%2D",
 //    expected: one replacement char
-               "--\uFFFD--"],
+               "\uFFFD--"],
 // 3: Two high surrogates
-              ["%00%2D%00%2D%D8%35%D8%35%00%2D%00%2D",
+              ["%D8%35%D8%35%00%2D%00%2D",
 //    expected: two replacement chars
-               "--\uFFFD\uFFFD--"],
+               "\uFFFD\uFFFD--"],
 // 4: Two low surrogates
-              ["%00%2D%00%2D%DC%20%DC%20%00%2D%00%2D",
+              ["%DC%20%DC%20%00%2D%00%2D",
 //    expected: two replacement chars
-              "--\uFFFD\uFFFD--"],
+	       "\uFFFD\uFFFD--"],
 // 5: Low surrogate followed by high surrogate
-              ["%00%2D%00%2D%DC%20%D8%35%00%2D%00%2D",
+              ["%DC%20%D8%35%00%2D%00%2D",
 //    expected: two replacement chars
-               "--\uFFFD\uFFFD--"],
+               "\uFFFD\uFFFD--"],
 // 6: Lone high surrogate followed by valid surrogate pair
-              ["%00%2D%00%2D%D8%35%D8%35%DC%20%00%2D%00%2D",
+              ["%D8%35%D8%35%DC%20%00%2D%00%2D",
 //    expected: replacement char followed by surrogate pair
-               "--\uFFFD\uD835\uDC20--"],
+               "\uFFFD\uD835\uDC20--"],
 // 7: Lone low surrogate followed by valid surrogate pair
-              ["%00%2D%00%2D%DC%20%D8%35%DC%20%00%2D%00%2D",
+              ["%DC%20%D8%35%DC%20%00%2D%00%2D",
 //    expected: replacement char followed by surrogate pair
-               "--\uFFFD\uD835\uDC20--"],
+               "\uFFFD\uD835\uDC20--"],
 // 8: Valid surrogate pair followed by lone high surrogate
-              ["%00%2D%00%2D%D8%35%DC%20%D8%35%00%2D%00%2D",
+              ["%D8%35%DC%20%D8%35%00%2D%00%2D",
 //    expected: surrogate pair followed by replacement char
-               "--\uD835\uDC20\uFFFD--"],
+               "\uD835\uDC20\uFFFD--"],
 // 9: Valid surrogate pair followed by lone low surrogate
-              ["%00%2D%00%2D%D8%35%DC%20%DC%20%00%2D%00%2D",
+              ["%D8%35%DC%20%DC%20%00%2D%00%2D",
 //    expected: surrogate pair followed by replacement char
-               "--\uD835\uDC20\uFFFD--"],
+               "\uD835\uDC20\uFFFD--"],
 // 10: Lone high surrogate at the end of the input
-              ["%00%2D%00%2D%00%2D%00%2D%D8%35%",
+              ["%D8%35%",
 //    expected: nothing
-               "----"],
+               ""],
 // 11: Half code unit at the end of the input
-              ["%00%2D%00%2D%00%2D%00%2D%D8",
+              ["%D8",
 //    expected: nothing
-              "----"]];
+              ""]];
 
 const IOService = Components.Constructor("@mozilla.org/network/io-service;1",
                                          "nsIIOService");
@@ -95,15 +95,40 @@ function testCase(testText, expectedText, bufferLength, charset)
   do_check_eq(escape(outStr), escape(expectedText));
 }
 
+// Add 32 dummy characters to the test text to work around the minimum buffer
+// size of an ns*Buffer
+const MINIMUM_BUFFER_SIZE=32;
+function padBytes(str)
+{
+  var padding = "";
+  for (var i = 0; i < MINIMUM_BUFFER_SIZE; ++i) {
+    padding += "%00%2D";
+  }
+  return padding + str;
+}
+
+function padUnichars(str)
+{
+  var padding = "";
+  for (var i = 0; i < MINIMUM_BUFFER_SIZE; ++i) {
+    padding += "-";
+  }
+  return padding + str;
+}
+
 // Byte-swap %-encoded utf-16
 function flip(str) { return str.replace(/(%..)(%..)/g, "$2$1"); }
 
 function run_test()
 {
   for (var i = 0; i < 12; ++i) {
-    for (var bufferLength = 4; bufferLength < 8; ++ bufferLength) {
-      testCase(test[i][0], test[i][1], bufferLength, "UTF-16BE");
-      testCase(flip(test[i][0]), test[i][1], bufferLength, "UTF-16LE");
+    for (var bufferLength = MINIMUM_BUFFER_SIZE;
+	 bufferLength < MINIMUM_BUFFER_SIZE + 4;
+	 ++ bufferLength) {
+      var testText = padBytes(test[i][0]);
+      var expectedText = padUnichars(test[i][1]);
+      testCase(testText, expectedText, bufferLength, "UTF-16BE");
+      testCase(flip(testText), expectedText, bufferLength, "UTF-16LE");
     }
   }
 }

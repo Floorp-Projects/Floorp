@@ -58,10 +58,14 @@ class ChannelEvent
 // event loop (ex: IPDL rpc) could cause listener->OnDataAvailable (for
 // instance) to be called before mListener->OnStartRequest has completed.
 
+template<class T> class AutoEventEnqueuerBase;
+
+template<class T>
 class ChannelEventQueue
 {
  public:
-  ChannelEventQueue() : mQueuePhase(PHASE_UNQUEUED) {}
+  ChannelEventQueue(T* self) : mQueuePhase(PHASE_UNQUEUED)
+                             , mSelf(self) {}
   ~ChannelEventQueue() {}
   
  protected:
@@ -69,10 +73,7 @@ class ChannelEventQueue
   void EndEventQueueing();
   void EnqueueEvent(ChannelEvent* callback);
   bool ShouldEnqueue();
-
-  // Consumers must implement their own flushing routine, as there are too many
-  // implementation-specific details to generalize easily.
-  virtual void FlushEventQueue() = 0;
+  void FlushEventQueue();
 
   nsTArray<nsAutoPtr<ChannelEvent> > mEventQueue;
   enum {
@@ -82,11 +83,16 @@ class ChannelEventQueue
     PHASE_FLUSHING
   } mQueuePhase;
 
-  friend class AutoEventEnqueuer;
+  typedef AutoEventEnqueuerBase<T> AutoEventEnqueuer;
+
+ private:
+  T* mSelf;
+
+  friend class AutoEventEnqueuerBase<T>;
 };
 
-inline void
-ChannelEventQueue::BeginEventQueueing()
+template<class T> inline void
+ChannelEventQueue<T>::BeginEventQueueing()
 {
   if (mQueuePhase != PHASE_UNQUEUED)
     return;
@@ -94,8 +100,8 @@ ChannelEventQueue::BeginEventQueueing()
   mQueuePhase = PHASE_QUEUEING;
 }
 
-inline void
-ChannelEventQueue::EndEventQueueing()
+template<class T> inline void
+ChannelEventQueue<T>::EndEventQueueing()
 {
   if (mQueuePhase != PHASE_QUEUEING)
     return;
@@ -103,34 +109,72 @@ ChannelEventQueue::EndEventQueueing()
   mQueuePhase = PHASE_FINISHED_QUEUEING;
 }
 
-inline bool
-ChannelEventQueue::ShouldEnqueue()
+template<class T> inline bool
+ChannelEventQueue<T>::ShouldEnqueue()
 {
-  return mQueuePhase != PHASE_UNQUEUED;
+  return mQueuePhase != PHASE_UNQUEUED || mSelf->IsSuspended();
 }
 
-inline void
-ChannelEventQueue::EnqueueEvent(ChannelEvent* callback)
+template<class T> inline void
+ChannelEventQueue<T>::EnqueueEvent(ChannelEvent* callback)
 {
   mEventQueue.AppendElement(callback);
 }
 
+template<class T> void
+ChannelEventQueue<T>::FlushEventQueue()
+{
+  NS_ABORT_IF_FALSE(mQueuePhase != PHASE_UNQUEUED,
+                    "Queue flushing should not occur if PHASE_UNQUEUED");
+  
+  // Queue already being flushed
+  if (mQueuePhase != PHASE_FINISHED_QUEUEING || mSelf->IsSuspended())
+    return;
+  
+  nsRefPtr<T> kungFuDeathGrip(mSelf);
+  if (mEventQueue.Length() > 0) {
+    // It is possible for new callbacks to be enqueued as we are
+    // flushing the queue, so the queue must not be cleared until
+    // all callbacks have run.
+    mQueuePhase = PHASE_FLUSHING;
+    
+    PRUint32 i;
+    for (i = 0; i < mEventQueue.Length(); i++) {
+      mEventQueue[i]->Run();
+      if (mSelf->IsSuspended())
+        break;
+    }
+
+    // We will always want to remove at least one finished callback.
+    if (i < mEventQueue.Length())
+      i++;
+
+    mEventQueue.RemoveElementsAt(0, i);
+  }
+
+  if (mSelf->IsSuspended())
+    mQueuePhase = PHASE_QUEUEING;
+  else
+    mQueuePhase = PHASE_UNQUEUED;
+}
+
 // Ensures any incoming IPDL msgs are queued during its lifetime, and flushes
 // the queue when it goes out of scope.
-class AutoEventEnqueuer 
+template<class T>
+class AutoEventEnqueuerBase
 {
  public:
-  AutoEventEnqueuer(ChannelEventQueue* queue) : mEventQueue(queue) 
+  AutoEventEnqueuerBase(ChannelEventQueue<T>* queue) : mEventQueue(queue) 
   {
     mEventQueue->BeginEventQueueing();
   }
-  ~AutoEventEnqueuer() 
+  ~AutoEventEnqueuerBase() 
   { 
     mEventQueue->EndEventQueueing();
     mEventQueue->FlushEventQueue(); 
   }
  private:
-  ChannelEventQueue *mEventQueue;
+  ChannelEventQueue<T> *mEventQueue;
 };
 
 }

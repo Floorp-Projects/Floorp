@@ -41,6 +41,11 @@
  * automatic creation of the content-length header.
  */
 
+#ifdef MOZ_IPC
+#include "IPC/IPCMessageUtils.h"
+#include "mozilla/net/NeckoMessageUtils.h"
+#endif
+
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIMultiplexInputStream.h"
@@ -48,9 +53,13 @@
 #include "nsISeekableStream.h"
 #include "nsIStringStream.h"
 #include "nsString.h"
+#include "nsMIMEInputStream.h"
+#include "nsIIPCSerializable.h"
+#include "nsIClassInfoImpl.h"
 
 class nsMIMEInputStream : public nsIMIMEInputStream,
-                          public nsISeekableStream
+                          public nsISeekableStream,
+                          public nsIIPCSerializable
 {
 public:
     nsMIMEInputStream();
@@ -60,6 +69,7 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIMIMEINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_NSIIPCSERIALIZABLE
     
     NS_METHOD Init();
 
@@ -88,10 +98,22 @@ private:
     PRPackedBool mStartedReading;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMIMEInputStream,
-                              nsIMIMEInputStream,
-                              nsIInputStream,
-                              nsISeekableStream)
+NS_IMPL_THREADSAFE_ADDREF(nsMIMEInputStream)
+NS_IMPL_THREADSAFE_RELEASE(nsMIMEInputStream)
+
+NS_IMPL_CLASSINFO(nsMIMEInputStream, NULL, nsIClassInfo::THREADSAFE,
+                  NS_MIMEINPUTSTREAM_CID)
+
+NS_IMPL_QUERY_INTERFACE4_CI(nsMIMEInputStream,
+                            nsIMIMEInputStream,
+                            nsIInputStream,
+                            nsISeekableStream,
+                            nsIIPCSerializable)
+NS_IMPL_CI_INTERFACE_GETTER4(nsMIMEInputStream,
+                             nsIMIMEInputStream,
+                             nsIInputStream,
+                             nsISeekableStream,
+                             nsIIPCSerializable)
 
 nsMIMEInputStream::nsMIMEInputStream() : mAddContentLength(PR_FALSE),
                                          mStartedReading(PR_FALSE)
@@ -304,4 +326,59 @@ nsMIMEInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
     NS_RELEASE(inst);
 
     return rv;
+}
+
+PRBool
+nsMIMEInputStream::Read(const IPC::Message *aMsg, void **aIter)
+{
+#ifdef MOZ_IPC
+    using IPC::ReadParam;
+
+    if (!ReadParam(aMsg, aIter, &mHeaders) ||
+        !ReadParam(aMsg, aIter, &mContentLength) ||
+        !ReadParam(aMsg, aIter, &mStartedReading))
+        return PR_FALSE;
+
+    // nsMIMEInputStream::Init() already appended mHeaderStream & mCLStream
+    mHeaderStream->ShareData(mHeaders.get(),
+                             mStartedReading? mHeaders.Length() : 0);
+    mCLStream->ShareData(mContentLength.get(),
+                         mStartedReading? mContentLength.Length() : 0);
+
+    IPC::InputStream inputStream;
+    if (!ReadParam(aMsg, aIter, &inputStream))
+        return PR_FALSE;
+
+    nsCOMPtr<nsIInputStream> stream(inputStream);
+    mData = stream;
+    if (stream) {
+        nsresult rv = mStream->AppendStream(mData);
+        if (NS_FAILED(rv))
+            return PR_FALSE;
+    }
+
+    if (!ReadParam(aMsg, aIter, &mAddContentLength))
+        return PR_FALSE;
+
+    return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
+}
+
+void
+nsMIMEInputStream::Write(IPC::Message *aMsg)
+{
+#ifdef MOZ_IPC
+    using IPC::WriteParam;
+
+    WriteParam(aMsg, mHeaders);
+    WriteParam(aMsg, mContentLength);
+    WriteParam(aMsg, mStartedReading);
+
+    IPC::InputStream inputStream(mData);
+    WriteParam(aMsg, inputStream);
+
+    WriteParam(aMsg, mAddContentLength);
+#endif
 }

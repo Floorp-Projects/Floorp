@@ -152,9 +152,11 @@
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>
     </menupopup>
 
+    <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
+         of this menupopup -->
     <menupopup id="backForwardMenu"
                onpopupshowing="return FillHistoryMenu(event.target);"
-               oncommand="gotoHistoryIndex(event);"
+               oncommand="gotoHistoryIndex(event); event.stopPropagation();"
                onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
@@ -181,21 +183,10 @@
           <label id="editBookmarkPanelTitle"/>
           <description id="editBookmarkPanelDescription"/>
           <hbox>
-            <button id="editBookmarkPanelUndoRemoveButton"
-                    class="editBookmarkPanelHeaderButton"
-                    hidden="true"
-                    oncommand="StarUI.undoRemoveBookmarkCommand();"
-                    label="&editBookmark.undo.label;"
-                    accesskey="&editBookmark.undo.accessKey;"/>
             <button id="editBookmarkPanelRemoveButton"
                     class="editBookmarkPanelHeaderButton"
                     oncommand="StarUI.removeBookmarkButtonCommand();"
                     accesskey="&editBookmark.removeBookmark.accessKey;"/>
-            <button id="editBookmarkPanelEditButton"
-                    class="editBookmarkPanelHeaderButton"
-                    oncommand="StarUI.editButtonCommand();"
-                    label="&editBookmark.edit.label;"
-                    accesskey="&editBookmark.edit.accessKey;"/>
           </hbox>
         </vbox>
       </row>
@@ -817,9 +808,9 @@
   </hbox>
   <spacer id="titlebar-spacer" flex="1"/>
   <hbox id="titlebar-buttonbox">
-    <toolbarbutton id="titlebar-min" oncommand="window.minimize();"/>
-    <toolbarbutton id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-    <toolbarbutton id="titlebar-close" command="cmd_closeWindow"/>
+    <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
+    <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+    <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
   </hbox>
   </hbox>
   </vbox>
@@ -882,21 +873,6 @@
                        command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&forwardButton.tooltip;"/>
-        <toolbarbutton id="back-forward-dropmarker" type="menu"
-                       disabled="true" tooltiptext="&backForwardMenu.tooltip;"
-                       onbroadcast="if (this.disabled) this.disabled =
-                                      document.getElementById('Browser:Back').hasAttribute('disabled') &amp;&amp;
-                                      document.getElementById('Browser:Forward').hasAttribute('disabled');">
-          <!-- bug 415444: event.stopPropagation is here for the cloned version of
-               this menupopup -->
-          <menupopup context=""
-                     position="after_start"
-                     onpopupshowing="return FillHistoryMenu(event.target);"
-                     oncommand="gotoHistoryIndex(event); event.stopPropagation();"
-                     onclick="checkForMiddleClick(this, event);"/>
-          <observes element="Browser:Back" attribute="disabled"/>
-          <observes element="Browser:Forward" attribute="disabled"/>
-        </toolbarbutton>
       </toolbaritem>
 
       <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -1281,6 +1257,19 @@
                      label="&syncToolbarButton.label;"
                      oncommand="gSyncUI.handleToolbarButton()"/>
 #endif
+      <toolbarbutton id="feed-button"
+                     type="menu"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     disabled="true"
+                     label="&feedButton.label;"
+                     tooltiptext="&feedButton.tooltip;"
+                     onclick="return FeedHandler.onFeedButtonClick(event);">
+        <menupopup position="after_end"
+                   id="feed-menu"
+                   onpopupshowing="return FeedHandler.buildFeedList(this);"
+                   oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                   onclick="checkForMiddleClick(this, event);"/>
+      </toolbarbutton>
     </toolbarpalette>
   </toolbox>
 

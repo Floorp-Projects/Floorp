@@ -1,0 +1,102 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const VERSION_CHANGE =
+        Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let versionChangeEventCount = 0;
+      let db1, db2, db3;
+
+      db1 = event.result;
+      db1.addEventListener("versionchange", function(event) {
+        ok(true, "Got version change event");
+        is(event.source, null, "Correct source");
+        is(event.target, db1, "Correct target");
+        is(event.version, "1", "Correct version");
+        is(versionChangeEventCount++, 0, "Correct count");
+        db1.close();
+      }, false);
+
+      request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      db2 = event.result;
+      db2.addEventListener("versionchange", function(event) {
+        ok(true, "Got version change event");
+        is(event.source, null, "Correct source");
+        is(event.target, db2, "Correct target");
+        is(event.version, "2", "Correct version");
+        is(versionChangeEventCount++, 1, "Correct count");
+      }, false);
+
+      request = db2.setVersion("1");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onblocked = function(event) {
+        ok(true, "Got version change blocked event");
+        is(event.source, db2, "Correct source");
+        is(event.target, request, "Correct target");
+        is(event.version, "1", "Correct version");
+        is(versionChangeEventCount++, 2, "Correct count");
+      };
+
+      event = yield;
+      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+
+      request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      db3 = event.result;
+
+      request = db3.setVersion("2");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onblocked = function(event) {
+        ok(true, "Got version change blocked event");
+        is(event.source, db3, "Correct source");
+        is(event.target, request, "Correct target");
+        is(event.version, "2", "Correct version");
+        versionChangeEventCount++;
+        db2.close();
+      };
+
+      event = yield;
+      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+
+      is(versionChangeEventCount, 3, "Saw all expected events");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

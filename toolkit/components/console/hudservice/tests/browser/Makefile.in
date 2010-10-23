@@ -47,12 +47,16 @@ include $(topsrcdir)/config/rules.mk
 
 
 _BROWSER_TEST_FILES = \
+	browser_webconsole_bug_580030_errors_after_page_reload.js \
 	browser_webconsole_basic_net_logging.js \
 	browser_webconsole_bug_579412_input_focus.js \
 	browser_webconsole_bug_580001_closing_after_completion.js \
 	browser_webconsole_bug_580400_groups.js \
 	browser_webconsole_bug_588730_text_node_insertion.js \
+	browser_webconsole_completion.js \
 	browser_webconsole_console_logging_api.js \
+	browser_webconsole_consoleonpage.js \
+	browser_webconsole_chrome.js \
 	browser_webconsole_display_accessors.js \
 	browser_webconsole_execution_scope.js \
 	browser_webconsole_get_content_window_from_hud_id.js \
@@ -70,33 +74,35 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_log_node_classes.js \
 	browser_webconsole_network_panel.js \
+	browser_webconsole_jsterm.js \
 	browser_webconsole_null_and_undefined_output.js \
 	browser_webconsole_output_order.js \
 	browser_webconsole_property_panel.js \
+	browser_webconsole_property_provider.js \
 	browser_webconsole_registries.js \
 	browser_webconsole_storage_create_display.js \
 	browser_webconsole_storage_iteration.js \
 	browser_webconsole_storage_record_entry.js \
 	browser_webconsole_storage_record_many_entries.js \
 	browser_webconsole_bug_587617_output_copy.js \
-	browser_webconsole_bug_588342_document_focus.js \
 	browser_webconsole_bug_585237_line_limit.js \
 	browser_webconsole_bug_581231_close_button.js \
 	browser_webconsole_bug_582201_duplicate_errors.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
+	browser_webconsole_bug_583816_tab_focus.js \
 	browser_webconsole_bug_594477_clickable_output.js \
 	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
+	browser_webconsole_bug_595350_multiple_windows_and_tabs.js \
+	browser_webconsole_bug_594497_history_arrow_keys.js \
+	browser_webconsole_bug_588342_document_focus.js \
+	browser_webconsole_bug_595934_message_categories.js \
 	head.js \
 	$(NULL)
 
 # compartment-disabled
-#	browser_webconsole_consoleonpage.js \
 #	browser_webconsole_bug_593003_iframe_wrong_hud.js \
-#	browser_webconsole_bug_583816_tab_focus.js \
-#	browser_webconsole_property_provider.js \
-#	browser_webconsole_completion.js \
 
 _BROWSER_TEST_PAGES = \
 	test-console.html \
@@ -116,6 +122,15 @@ _BROWSER_TEST_PAGES = \
 	test-bug-593003-iframe-wrong-hud-iframe.html \
 	test-console-replaced-api.html \
 	test-own-console.html \
+	test-bug-595934-dom-events.html \
+	test-bug-595934-css-loader.html \
+	test-bug-595934-css-loader.css \
+	test-bug-595934-css-loader.css^headers^ \
+	test-bug-595934-dom-html.html \
+	test-bug-595934-imagemap.html \
+	test-bug-595934-html.html \
+	test-bug-595934-malformedxml.xhtml \
+	test-bug-595934-svg.xhtml \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

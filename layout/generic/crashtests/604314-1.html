@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var sel = window.getSelection('');
+  sel.collapse(document.createTextNode("x"), 0);
+  sel.extend(document.documentElement, 0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

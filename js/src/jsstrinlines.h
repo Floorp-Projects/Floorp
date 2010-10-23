@@ -123,4 +123,11 @@ inline
 JSRopeBuilder::JSRopeBuilder(JSContext *cx)
   : cx(cx), mStr(cx->runtime->emptyString) {}
 
+inline void
+JSString::checkCompartment(JSContext *cx, int addr)
+{
+    if (isRope() && asCell()->compartment() != cx->compartment)
+        JS_CRASH(addr);
+}
+
 #endif /* jsstrinlines_h___ */
