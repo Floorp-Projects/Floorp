@@ -97,16 +97,15 @@ class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
+    public static native void loadLibs(String apkName);
 
     // java-side stuff
-    public static void loadGeckoLibs() {
+    public static void loadGeckoLibs(String apkName) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
-
-        // MozAlloc
-        System.loadLibrary("mozalloc");
         System.loadLibrary("mozutils");
+
                 
         Intent i = GeckoApp.mAppContext.getIntent();
         String env = i.getStringExtra("env0");
@@ -121,35 +120,13 @@ class GeckoAppShell
                           GeckoApp.mAppContext.getAppName() +"/tmp");
         if (!f.exists())
             f.mkdirs();
+
         GeckoAppShell.putenv("TMPDIR=" + f.getPath());
 
         f = Environment.getDownloadCacheDirectory();
         GeckoAppShell.putenv("EXTERNAL_STORAGE" + f.getPath());
 
-        // NSPR
-        System.loadLibrary("nspr4");
-        System.loadLibrary("plc4");
-        System.loadLibrary("plds4");
-
-        // SQLite
-        System.loadLibrary("mozsqlite3");
-
-        // NSS
-        System.loadLibrary("nssutil3");
-        System.loadLibrary("nss3");
-        System.loadLibrary("ssl3");
-        System.loadLibrary("smime3");
-
-        // XUL
-        System.loadLibrary("xul");
-
-        // xpcom glue -- needed to load binary components
-        System.loadLibrary("xpcom");                                          
-
-        // Root certs. someday we may teach security/manager/ssl/src/nsNSSComponent.cpp to find ckbi itself
-        System.loadLibrary("nssckbi");
-        System.loadLibrary("freebl3");
-        System.loadLibrary("softokn3");
+        loadLibs(apkName);
     }
 
     public static void runGecko(String apkPath, String args, String url) {
@@ -363,6 +340,26 @@ class GeckoAppShell
         Log.i("GeckoAppJava", "scheduling restart");
         gRestartScheduled = true;        
     }
+ 
+    // "Installs" an application by creating a shortcut
+    static void installWebApplication(String aURI, String aTitle, String aIconData) {
+        Log.w("GeckoAppJava", "installWebApplication for " + aURI + " [" + aTitle + "]");
+
+        // the intent to be launched by the shortcut
+        Intent shortcutIntent = new Intent("org.mozilla.fennec.WEBAPP");
+        shortcutIntent.setClassName(GeckoApp.mAppContext,
+                                    "org.mozilla." + GeckoApp.mAppContext.getAppName() + ".App");
+        shortcutIntent.putExtra("args", "--webapp=" + aURI);
+        
+        Intent intent = new Intent();
+        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+        intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
+        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bitmap);
+        intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+        GeckoApp.mAppContext.sendBroadcast(intent);
+    }
     
     static String[] getHandlersForMimeType(String aMimeType, String aAction) {
         Intent intent = getIntentForActionString(aAction);
@@ -520,6 +517,15 @@ class GeckoAppShell
             notification.updateProgress(aAlertText, aProgress, aProgressMax);
     }
 
+    public static void alertsProgressListener_OnCancel(String aAlertName) {
+        Log.i("GeckoAppJava", "GeckoAppShell.alertsProgressListener_OnCancel('" + aAlertName + "'");
+
+        removeObserver(aAlertName);
+
+        int notificationID = aAlertName.hashCode();
+        removeNotification(notificationID);
+    }
+
     public static void handleNotification(String aAction, String aAlertName, String aAlertCookie) {
         int notificationID = aAlertName.hashCode();
 
@@ -553,5 +559,8 @@ class GeckoAppShell
          DisplayMetrics metrics = new DisplayMetrics();
          GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
          return metrics.densityDpi;
+    }
+    public static String showFilePicker() {
+        return GeckoApp.mAppContext.showFilePicker();
     }
 }

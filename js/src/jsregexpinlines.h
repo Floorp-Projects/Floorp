@@ -389,13 +389,35 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     return obj;
 }
 
+#ifdef ANDROID
+static bool
+YarrJITIsBroken(JSContext *cx)
+{
+#if defined(JS_TRACER) && defined(JS_METHODJIT)
+    /* FIXME/bug 604774: dead code walking.
+     *
+     * If both JITs are disabled, assume they were disabled because
+     * we're running on a blacklisted device.
+     */
+    return !cx->traceJitEnabled && !cx->methodJitEnabled;
+#else
+    return false;
+#endif
+}
+#endif  /* ANDROID */
+
 inline bool
 RegExp::compileHelper(JSContext *cx, UString &pattern)
 {
 #if ENABLE_YARR_JIT
     bool fellBack = false;
     int error = 0;
-    jitCompileRegex(*cx->runtime->regExpAllocator, compiled, pattern, parenCount, error, fellBack, ignoreCase(), multiline());
+    jitCompileRegex(*cx->runtime->regExpAllocator, compiled, pattern, parenCount, error, fellBack, ignoreCase(), multiline()
+#ifdef ANDROID
+                    /* Temporary gross hack to work around buggy kernels. */
+                    , YarrJITIsBroken(cx)
+#endif
+);
     if (!error)
         return true;
     if (fellBack)

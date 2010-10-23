@@ -111,7 +111,8 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  void Paint(nsIRenderingContext& aRenderingContext,
+  void Paint(const nsDisplayListBuilder* aBuilder,
+             nsIRenderingContext& aRenderingContext,
              const nsRect& aDirtyRect, nsPoint aPt);
 
 #ifdef DEBUG

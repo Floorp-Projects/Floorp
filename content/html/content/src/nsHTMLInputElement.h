@@ -159,7 +159,7 @@ public:
   virtual PRBool RestoreState(nsPresState* aState);
   virtual PRBool AllowDrop();
 
-  virtual void FieldSetDisabledChanged(PRInt32 aStates, PRBool aNotify);
+  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
 
   // nsIContent
   virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
@@ -184,7 +184,7 @@ public:
 
   virtual void DoneCreatingElement();
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   // nsITextControlElement
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
@@ -206,6 +206,7 @@ public:
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame);
   NS_IMETHOD CreateEditor();
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
   NS_IMETHOD_(void) UpdatePlaceholderText(PRBool aNotify);
   NS_IMETHOD_(void) SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
@@ -427,7 +428,7 @@ protected:
   void FireOnChange();
 
   /**
-   * Visit a the group of radio buttons this radio belongs to
+   * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
    */
   nsresult VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent);

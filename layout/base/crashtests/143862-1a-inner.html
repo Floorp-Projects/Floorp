@@ -1,0 +1,19 @@
+<title>Testcase, bug 143862</title>
+<style type="text/css">
+html { overflow: hidden; }
+</style>
+<script>
+dump("143862-1-inner.html: A\n");
+window.addEventListener("load", o, false);
+function o()
+{
+  dump("143862-1-inner.html: B*\n");
+  document.documentElement.offsetHeight;
+  dump("143862-1-inner.html: B\n");
+  document.open();
+  dump("143862-1-inner.html: C\n");
+  parent.document.documentElement.removeAttribute("class");
+  dump("143862-1-inner.html: D\n");
+  document.close();
+}
+</script>

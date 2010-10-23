@@ -46,6 +46,7 @@
 #include "nsMargin.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetAtoms.h"
+#include "nsEventStates.h"
 
 class nsIFrame;
 class nsIPresShell;
@@ -70,7 +71,7 @@ class nsNativeTheme
   nsNativeTheme();
 
   // Returns the content state (hover, focus, etc), see nsIEventStateManager.h
-  PRInt32 GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType);
+  nsEventStates GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType);
 
   // Returns whether the widget is already styled by content
   // Normally called from ThemeSupportsWidget to turn off native theming
@@ -80,7 +81,7 @@ class nsNativeTheme
 
   // Accessors to widget-specific state information
 
-  bool IsDisabled(nsIFrame* aFrame, PRInt32 aEventStates);
+  bool IsDisabled(nsIFrame* aFrame, nsEventStates aEventStates);
 
   // RTL chrome direction
   PRBool IsFrameRTL(nsIFrame* aFrame);

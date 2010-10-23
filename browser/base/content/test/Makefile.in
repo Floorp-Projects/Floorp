@@ -149,7 +149,9 @@ _BROWSER_FILES = \
                  browser_bug579872.js \
                  browser_bug580956.js \
                  browser_bug581242.js \
+                 browser_bug581253.js \
                  browser_bug581947.js \
+                 browser_bug585785.js \
                  browser_bug585830.js \
                  browser_bug592338.js \
                  browser_bug594131.js \

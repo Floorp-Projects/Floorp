@@ -43,6 +43,7 @@ var gExpectedCount;
 
 function run_test() {
   do_test_pending();
+  do_register_cleanup(end_test);
   removeUpdateDirsAndFiles();
   setUpdateURLOverride();
   setUpdateChannel();
@@ -53,7 +54,6 @@ function run_test() {
 }
 
 function end_test() {
-  do_test_finished();
   cleanUp();
 }
 
@@ -64,7 +64,7 @@ function run_test_helper_pt1(aMsg, aExpectedCount, aNextRunFunc) {
   gCheckFunc = check_test_helper_pt1;
   gNextRunFunc = aNextRunFunc;
   gExpectedCount = aExpectedCount;
-  dump("Testing: " + aMsg + "\n");
+  logTestInfo(aMsg, Components.stack.caller);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -92,14 +92,13 @@ function callHandleEvent() {
 
 // update xml not found
 function run_test_pt01() {
-  run_test_helper_pt1("run_test_pt01 - update xml not available",
+  run_test_helper_pt1("testing update xml not available",
                       null, run_test_pt02);
 }
 
 // one update available and the update's property values
 function run_test_pt02() {
-  dump("Testing: run_test_pt02 - one update available and the update's " +
-       "property values\n");
+  logTestInfo("testing one update available and the update's property values");
   gUpdates = null;
   gUpdateCount = null;
   gCheckFunc = check_test_pt02;
@@ -199,8 +198,8 @@ function check_test_pt02() {
 
 // one update available and the update's property default values
 function run_test_pt03() {
-  dump("Testing: run_test_pt03 - one update available and the update's " +
-       "property default values with the format prior to bug 530872\n");
+  logTestInfo("testing one update available and the update's property values " +
+              "with the format prior to bug 530872");
   gUpdates = null;
   gUpdateCount = null;
   gCheckFunc = check_test_pt03;
@@ -267,14 +266,14 @@ function check_test_pt03() {
 // Empty update xml
 function run_test_pt04() {
   gResponseBody = "\n";
-  run_test_helper_pt1("run_test_pt04 - empty update xml",
+  run_test_helper_pt1("testing empty update xml",
                       null, run_test_pt05);
 }
 
 // no updates available
 function run_test_pt05() {
   gResponseBody = getRemoteUpdatesXMLString("");
-  run_test_helper_pt1("run_test_pt05 - no updates available",
+  run_test_helper_pt1("testing no updates available",
                       0, run_test_pt06);
 }
 
@@ -284,7 +283,7 @@ function run_test_pt06() {
   patches += getRemotePatchString("partial");
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("run_test_pt06 - one update available",
+  run_test_helper_pt1("testing one update available",
                       1, run_test_pt07);
 }
 
@@ -296,7 +295,7 @@ function run_test_pt07() {
   updates += getRemoteUpdateString(patches);
   updates += getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("run_test_pt07 - three updates available",
+  run_test_helper_pt1("testing three updates available",
                       3, run_test_pt08);
 }
 
@@ -307,7 +306,7 @@ function run_test_pt08() {
   patches += getRemotePatchString("partial", null, null, null, "0");
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("run_test_pt08 - one update with complete and partial " +
+  run_test_helper_pt1("testing one update with complete and partial " +
                       "patches with size 0", 0, run_test_pt09);
 }
 
@@ -316,7 +315,7 @@ function run_test_pt09() {
   var patches = getRemotePatchString("complete", null, null, null, "0");
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("one update with complete patch with size 0",
+  run_test_helper_pt1("testing one update with complete patch with size 0",
                       0, run_test_pt10);
 }
 
@@ -325,7 +324,7 @@ function run_test_pt10() {
   var patches = getRemotePatchString("partial", null, null, null, "0");
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("one update with partial patch with size 0",
+  run_test_helper_pt1("testing one update with partial patch with size 0",
                       0, run_test_pt11);
 }
 
@@ -336,7 +335,7 @@ function run_test_pt11() {
   var updates = getRemoteUpdateString(patches, "minor", null, null, "1.0pre");
   updates += getRemoteUpdateString(patches, "minor", null, null, "1.0a");
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("two updates older than the current version",
+  run_test_helper_pt1("testing two updates older than the current version",
                       2, check_test_pt11);
 }
 
@@ -352,7 +351,7 @@ function run_test_pt12() {
   patches += getRemotePatchString("partial");
   var updates = getRemoteUpdateString(patches, "minor", null, "version 1.0");
   gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("one update equal to the current version",
+  run_test_helper_pt1("testing one update equal to the current version",
                       1, check_test_pt12);
 }
 
@@ -360,5 +359,5 @@ function check_test_pt12() {
   var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   do_check_neq(bestUpdate, null);
   do_check_eq(bestUpdate.displayVersion, "version 1.0");
-  end_test();
+  do_test_finished();
 }

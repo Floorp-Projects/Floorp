@@ -3684,6 +3684,14 @@ nsHtml5Tokenizer::eof()
         state = returnState;
         continue;
       }
+      case NS_HTML5TOKENIZER_CDATA_RSQB: {
+        tokenHandler->characters(nsHtml5Tokenizer::RSQB_RSQB, 0, 1);
+        NS_HTML5_BREAK(eofloop);
+      }
+      case NS_HTML5TOKENIZER_CDATA_RSQB_RSQB: {
+        tokenHandler->characters(nsHtml5Tokenizer::RSQB_RSQB, 0, 2);
+        NS_HTML5_BREAK(eofloop);
+      }
       case NS_HTML5TOKENIZER_DATA:
       default: {
         NS_HTML5_BREAK(eofloop);

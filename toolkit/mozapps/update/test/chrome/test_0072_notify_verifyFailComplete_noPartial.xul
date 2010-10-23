@@ -27,7 +27,7 @@ const TESTS = [ {
 } ];
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   let patches = getLocalPatchString("complete", null, null, "1234", null, null,
                                     STATE_DOWNLOADING);

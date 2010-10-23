@@ -478,6 +478,10 @@ members = [
     'nsIIDBTransaction.*',
     'nsIIDBTransactionEvent.*',
     'nsIIDBFactory.*',
+    'nsIIDBVersionChangeEvent.*',
+    'nsIIDBVersionChangeRequest.*',
+    'nsIIndexedDatabaseUsageCallback.*',
+    'nsIIndexedDatabaseManager.*',
     ]
 
 # Most interfaces can be found by searching the includePath; to find
@@ -506,6 +510,8 @@ irregularFilenames = {
     'nsIWebGLRenderbuffer': 'nsICanvasRenderingContextWebGL',
     'nsIWebGLActiveInfo': 'nsICanvasRenderingContextWebGL',
     'nsIWebGLUniformLocation': 'nsICanvasRenderingContextWebGL',
+
+    'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
     }
 
 customIncludes = [
@@ -778,8 +784,7 @@ customMethodCalls = {
         },
     'nsIDOMNSElement_MozMatchesSelector': {
         'thisType': 'nsGenericElement',
-        'code': '    PRBool result = self->MozMatchesSelector(arg0);',
-        'canFail': False
+        'code': '    PRBool result = self->MozMatchesSelector(arg0, &rv);',
         },
     'nsIDOM3Text_': {
         'thisType': 'nsGenericTextNode'

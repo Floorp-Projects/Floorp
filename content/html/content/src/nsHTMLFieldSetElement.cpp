@@ -122,7 +122,7 @@ nsHTMLFieldSetElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRUint32 length = mElements->Length(PR_TRUE);
     for (PRUint32 i=0; i<length; ++i) {
       static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
-        ->FieldSetDisabledChanged(0, aNotify);
+        ->FieldSetDisabledChanged(nsEventStates(), aNotify);
     }
   }
 
@@ -216,13 +216,15 @@ nsHTMLFieldSetElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 {
   bool firstLegendHasChanged = false;
 
-  if (GetChildAt(aIndex) == mFirstLegend) {
+  if (mFirstLegend && (GetChildAt(aIndex) == mFirstLegend)) {
     // If we are removing the first legend we have to found another one.
-    for (nsIContent* child = mFirstLegend; child;
-         child = child->GetNextSibling()) {
+    nsIContent* child = mFirstLegend->GetNextSibling();
+    mFirstLegend = nsnull;
+    firstLegendHasChanged = true;
+
+    for (; child; child = child->GetNextSibling()) {
       if (child->IsHTML(nsGkAtoms::legend)) {
         mFirstLegend = child;
-        firstLegendHasChanged = true;
         break;
       }
     }

@@ -1478,6 +1478,10 @@ function run_StructType_tests() {
   do_check_throws(function() {
     opaque_t.define([{ a: ctypes.int32_t, b: ctypes.int64_t }]);
   }, Error);
+  do_check_throws(function() {
+    opaque_t.define([{ a: ctypes.int32_t }, { b: 0 }]);
+  }, Error);
+  do_check_false(opaque_t.hasOwnProperty("prototype"));
 
   // Check that circular references work with opaque structs...
   // but not crazy ones.
@@ -1490,9 +1494,14 @@ function run_StructType_tests() {
   do_check_eq(circular.a.toSource(), opaque.address().toSource());
   do_check_eq(opaque.b.toSource(), circular.toSource());
 
+  // Check that attempting to redefine a struct fails and if attempted, the
+  // original definition is preserved.
   do_check_throws(function() {
-    opaque_t.define([{ c: ctypes.int32_t }]);
+    opaque_t.define([{ c: ctypes.int32_t.array(8) }]);
   }, Error);
+  do_check_eq(opaque_t.size, circular_t.size);
+  do_check_true(opaque_t.prototype.hasOwnProperty("b"));
+  do_check_false(opaque_t.prototype.hasOwnProperty("c"));
 
   // StructType size, alignment, and offset calculations have already been
   // checked for each basic type. We do not need to check them again.

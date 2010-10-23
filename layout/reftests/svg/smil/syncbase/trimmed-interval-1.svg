@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(1);
+        document.getElementById('a').setAttribute('end', '0s');
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    The timebase interval is updated such that it would be deleted but because
+    it is active, it is trimmed instead. Test that the dependent interval is
+    notified accordingly.
+   -->
+  <rect width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="0.5s" dur="10s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="purple; green; orange" keyTimes="0; 0.75; 1"
+      begin="a.end" dur="2s"/>
+  </rect>
+</svg>

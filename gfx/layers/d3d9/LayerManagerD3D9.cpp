@@ -298,7 +298,7 @@ LayerManagerD3D9::Render()
     }
     device()->SetScissorRect(&r);
 
-    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
+    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer(1.0, gfx3DMatrix());
   }
 
   device()->EndScene();

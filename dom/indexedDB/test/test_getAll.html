@@ -25,12 +25,12 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("foo", "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("foo", "", true);
 
       request = objectStore.getAll();
       request.onerror = errorHandler;
@@ -53,7 +53,7 @@
       }
       yield;
 
-      request = db.objectStore("foo").getAll();
+      request = db.transaction("foo").objectStore("foo").getAll();
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -65,7 +65,7 @@
         is(event.result[i], values[i], "Same value");
       }
 
-      request = db.objectStore("foo").getAll(null, 5);
+      request = db.transaction("foo").objectStore("foo").getAll(null, 5);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -79,7 +79,7 @@
 
       let keyRange = moz_indexedDB.makeBoundKeyRange(1, 9);
 
-      request = db.objectStore("foo").getAll(keyRange);
+      request = db.transaction("foo").objectStore("foo").getAll(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -93,7 +93,7 @@
 
       keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
 
-      request = db.objectStore("foo").getAll(keyRange);
+      request = db.transaction("foo").objectStore("foo").getAll(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -107,7 +107,7 @@
 
       keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
 
-      request = db.objectStore("foo").getAll(keyRange, 2);
+      request = db.transaction("foo").objectStore("foo").getAll(keyRange, 2);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -121,7 +121,7 @@
 
       keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
 
-      request = db.objectStore("foo").getAll(keyRange, 50);
+      request = db.transaction("foo").objectStore("foo").getAll(keyRange, 50);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -135,7 +135,7 @@
 
       keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
 
-      request = db.objectStore("foo").getAll(keyRange, 0);
+      request = db.transaction("foo").objectStore("foo").getAll(keyRange, 0);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -145,7 +145,7 @@
 
       keyRange = moz_indexedDB.makeBoundKeyRange(4, 7, true, true);
 
-      request = db.objectStore("foo").getAll(keyRange);
+      request = db.transaction("foo").objectStore("foo").getAll(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

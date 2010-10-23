@@ -147,6 +147,7 @@ class nsRunnable;
 
 class nsDOMOfflineResourceList;
 class nsGeolocation;
+class nsDesktopNotificationCenter;
 
 #ifdef MOZ_DISABLE_DOMCRYPTO
 class nsIDOMCrypto;
@@ -373,7 +374,8 @@ public:
   }
   virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForEventTargetChain()
   {
-    return static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
+    return IsInnerWindow() ?
+      this : static_cast<nsPIDOMEventTarget*>(GetCurrentInnerWindowInternal());
   }
   virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
@@ -559,6 +561,10 @@ public:
 
   virtual PRUint32 GetSerial() {
     return mSerial;
+  }
+
+  static nsGlobalWindow* GetOuterWindowWithId(PRUint64 aWindowID) {
+    return sOuterWindowsById ? sOuterWindowsById->Get(aWindowID) : nsnull;
   }
 
 protected:
@@ -929,10 +935,6 @@ protected:
 
   nsCOMPtr<nsIIDBFactory> mIndexedDB;
 
-  // A unique (as long as our 64-bit counter doesn't roll over) id for
-  // this window.
-  PRUint64 mWindowID;
-
   // In the case of a "trusted" dialog (@see PopupControlState), we
   // set this counter to ensure a max of MAX_DIALOG_LIMIT
   PRUint32                      mDialogAbuseCount;
@@ -949,6 +951,9 @@ protected:
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
   static nsIDOMStorageList* sGlobalStorageList;
+
+  typedef nsDataHashtable<nsUint64HashKey, nsGlobalWindow*> WindowByIdTable;
+  static WindowByIdTable* sOuterWindowsById;
 };
 
 /*
@@ -1039,6 +1044,7 @@ protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
   nsRefPtr<nsGeolocation> mGeolocation;
+  nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsIDocShell* mDocShell; // weak reference
 };
 

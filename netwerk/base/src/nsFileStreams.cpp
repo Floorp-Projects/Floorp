@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "IPC/IPCMessageUtils.h"
+#endif
+
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
 #elif defined(XP_WIN)
@@ -59,7 +63,7 @@
 #include "nsMimeTypes.h"
 #include "nsReadLine.h"
 #include "nsNetUtil.h"
-//#include "nsFileTransportService.h"
+#include "nsIClassInfoImpl.h"
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 
@@ -173,11 +177,27 @@ nsFileStream::SetEOF()
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileInputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsFileInputStream,
-                             nsFileStream,
+NS_IMPL_ADDREF_INHERITED(nsFileInputStream, nsFileStream)
+NS_IMPL_RELEASE_INHERITED(nsFileInputStream, nsFileStream)
+
+NS_IMPL_CLASSINFO(nsFileInputStream, NULL, nsIClassInfo::THREADSAFE,
+                  NS_LOCALFILEINPUTSTREAM_CID)
+
+NS_INTERFACE_MAP_BEGIN(nsFileInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsFileStream)
+    NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIFileInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsILineInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_IMPL_QUERY_CLASSINFO(nsFileInputStream)
+NS_INTERFACE_MAP_END_INHERITING(nsFileStream)
+
+NS_IMPL_CI_INTERFACE_GETTER5(nsFileInputStream,
                              nsIInputStream,
                              nsIFileInputStream,
-                             nsILineInputStream)
+                             nsISeekableStream,
+                             nsILineInputStream,
+                             nsIIPCSerializable)
 
 nsresult
 nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -225,9 +245,9 @@ nsFileInputStream::Open(nsIFile* aFile, PRInt32 aIOFlags, PRInt32 aPerm)
         // fails, then we'll just remember the nsIFile and remove it after we
         // close the file descriptor.
         rv = aFile->Remove(PR_FALSE);
-        if (NS_FAILED(rv) && !(mBehaviorFlags & REOPEN_ON_REWIND)) {
-            // If REOPEN_ON_REWIND is not happenin', we haven't saved the file yet
-            mFile = aFile;
+        if (NS_SUCCEEDED(rv)) {
+          // No need to remove it later. Clear the flag.
+          mBehaviorFlags &= ~DELETE_ON_CLOSE;
         }
     }
 
@@ -243,12 +263,9 @@ nsFileInputStream::Init(nsIFile* aFile, PRInt32 aIOFlags, PRInt32 aPerm,
 
     mBehaviorFlags = aBehaviorFlags;
 
-    // If the file will be reopened on rewind, save the info to open the file
-    if (mBehaviorFlags & REOPEN_ON_REWIND) {
-        mFile = aFile;
-        mIOFlags = aIOFlags;
-        mPerm = aPerm;
-    }
+    mFile = aFile;
+    mIOFlags = aIOFlags;
+    mPerm = aPerm;
 
     return Open(aFile, aIOFlags, aPerm);
 }
@@ -361,6 +378,54 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
     }
 
     return nsFileStream::Seek(aWhence, aOffset);
+}
+
+PRBool
+nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
+{
+#ifdef MOZ_IPC
+    using IPC::ReadParam;
+
+    nsCString path;
+    PRBool followLinks;
+    PRInt32 flags;
+    if (!ReadParam(aMsg, aIter, &path) ||
+        !ReadParam(aMsg, aIter, &followLinks) ||
+        !ReadParam(aMsg, aIter, &flags))
+        return PR_FALSE;
+
+    nsCOMPtr<nsILocalFile> file;
+    nsresult rv = NS_NewNativeLocalFile(path, followLinks, getter_AddRefs(file));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    // IO flags = -1 means readonly, and
+    // permissions are unimportant since we're reading
+    rv = Init(file, -1, -1, flags);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
+}
+
+void
+nsFileInputStream::Write(IPC::Message *aMsg)
+{
+#ifdef MOZ_IPC
+    using IPC::WriteParam;
+
+    nsCString path;
+    mFile->GetNativePath(path);
+    WriteParam(aMsg, path);
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
+    PRBool followLinks;
+    localFile->GetFollowLinks(&followLinks);
+    WriteParam(aMsg, followLinks);
+    WriteParam(aMsg, mBehaviorFlags);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@
  * Contributor(s):
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
- *   Michael Kraft <morac99-firefox@yahoo.com>
+ *   Michael Kraft <morac99-firefox2@yahoo.com>
  *   Paul O’Shannessy <paul@oshannessy.com>
  *   Nils Maier <maierman@web.de>
  *
@@ -64,6 +64,9 @@ const STATE_QUITTING = -1;
 
 const STATE_STOPPED_STR = "stopped";
 const STATE_RUNNING_STR = "running";
+
+const TAB_STATE_NEEDS_RESTORE = 1;
+const TAB_STATE_RESTORING = 2;
 
 const PRIVACY_NONE = 0;
 const PRIVACY_ENCRYPTED = 1;
@@ -216,6 +219,16 @@ SessionStoreService.prototype = {
 
   // Whether we've been initialized
   _initialized: false,
+
+  // The original "sessionstore.resume_session_once" preference value before it
+  // was modified by saveState.  saveState will set the
+  // "sessionstore.resume_session_once" to true when the
+  // the "sessionstore.resume_from_crash" preference is false (crash recovery
+  // is disabled) so that pinned tabs will be restored in the case of a
+  // crash.  This variable is used to restore the original value so the
+  // previous session is not always restored when
+  // "sessionstore.resume_from_crash" is true.
+  _resume_session_once_on_shutdown: null,
 
 /* ........ Public Getters .............. */
 
@@ -443,15 +456,25 @@ SessionStoreService.prototype = {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
         this._clearingOnShutdown = false;
       }
+      else if (this._resume_session_once_on_shutdown != null) {
+        // if the sessionstore.resume_session_once preference was changed by
+        // saveState because crash recovery is disabled then restore the
+        // preference back to the value it was prior to that.  This will prevent
+        // SessionStore from always restoring the session when crash recovery is
+        // disabled.
+        this._prefBranch.setBoolPref("sessionstore.resume_session_once",
+                                     this._resume_session_once_on_shutdown);
+      }
       this._loadState = STATE_QUITTING; // just to be sure
       this._uninit();
       break;
     case "browser:purge-session-history": // catch sanitization 
       let openWindows = {};
       this._forEachBrowserWindow(function(aWindow) {
-        Array.forEach(aWindow.gBrowser.browsers, function(aBrowser) {
-          delete aBrowser.__SS_data;
-          delete aBrowser.__SS_needsRestore;
+        Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
+          delete aTab.linkedBrowser.__SS_data;
+          if (aTab.linkedBrowser.__SS_restoreState)
+            this._resetTabRestoringState(aTab);
         });
         openWindows[aWindow.__SSi] = true;
       });
@@ -550,6 +573,12 @@ SessionStoreService.prototype = {
         break;
       case "sessionstore.resume_from_crash":
         this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
+        // restore original resume_session_once preference if set in saveState
+        if (this._resume_session_once_on_shutdown != null) {
+          this._prefBranch.setBoolPref("sessionstore.resume_session_once",
+                                       this._resume_session_once_on_shutdown);
+          this._resume_session_once_on_shutdown = null;
+        }
         // either create the file with crash recovery information or remove it
         // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
         if (!this._resume_from_crash)
@@ -874,9 +903,15 @@ SessionStoreService.prototype = {
 
     delete browser.__SS_data;
 
-    // If this tab was in the middle of restoring, we want to restore the next
-    // tab. If the tab hasn't been restored, we want to remove it from the array.
-    this._resetTabRestoringState(aTab, true, false);
+    // If this tab was in the middle of restoring or still needs to be restored,
+    // we need to reset that state. If the tab was restoring, we will attempt to
+    // restore the next tab.
+    let previousState;
+    if (previousState = browser.__SS_restoreState) {
+      this._resetTabRestoringState(aTab);
+      if (previousState == TAB_STATE_RESTORING)
+        this.restoreNextTab();
+    }
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -972,12 +1007,12 @@ SessionStoreService.prototype = {
       this._windows[aWindow.__SSi].selected = aWindow.gBrowser.tabContainer.selectedIndex;
 
       let tab = aWindow.gBrowser.selectedTab;
-      // If __SS_needsRestore is still on the browser, then we haven't restored
+      // If __SS_restoreState is still on the browser and it is
+      // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
       // this tab yet. Explicitly call restoreTab to kick off the restore.
-      if (tab.linkedBrowser.__SS_needsRestore) {
-        this._tabsToRestore.visible.splice(this._tabsToRestore.visible.indexOf(tab));
+      if (tab.linkedBrowser.__SS_restoreState &&
+          tab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
         this.restoreTab(tab);
-      }
 
       // attempt to update the current URL we send in a crash report
       this._updateCrashReportURL(aWindow);
@@ -986,7 +1021,8 @@ SessionStoreService.prototype = {
 
   onTabShow: function sss_onTabShow(aTab) {
     // If the tab hasn't been restored yet, move it into the right _tabsToRestore bucket
-    if (aTab.linkedBrowser.__SS_needsRestore) {
+    if (aTab.linkedBrowser.__SS_restoreState &&
+        aTab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
       this._tabsToRestore.hidden.splice(this._tabsToRestore.hidden.indexOf(aTab));
       // Just put it at the end of the list of visible tabs;
       this._tabsToRestore.visible.push(aTab);
@@ -995,7 +1031,8 @@ SessionStoreService.prototype = {
 
   onTabHide: function sss_onTabHide(aTab) {
     // If the tab hasn't been restored yet, move it into the right _tabsToRestore bucket
-    if (aTab.linkedBrowser.__SS_needsRestore) {
+    if (aTab.linkedBrowser.__SS_restoreState &&
+        aTab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
       this._tabsToRestore.visible.splice(this._tabsToRestore.visible.indexOf(aTab));
       // Just put it at the end of the list of hidden tabs;
       this._tabsToRestore.hidden.push(aTab);
@@ -1336,19 +1373,14 @@ SessionStoreService.prototype = {
    * Store all session data for a window
    * @param aWindow
    *        Window reference
-   * @param aPinnedOnly
-   *        Bool collect pinned tabs only
    */
-  _saveWindowHistory: function sss_saveWindowHistory(aWindow, aPinnedOnly) {
+  _saveWindowHistory: function sss_saveWindowHistory(aWindow) {
     var tabbrowser = aWindow.gBrowser;
     var tabs = tabbrowser.tabs;
     var tabsData = this._windows[aWindow.__SSi].tabs = [];
     
-    for (var i = 0; i < tabs.length; i++) {
-      if (aPinnedOnly && !tabs[i].pinned)
-        break;
+    for (var i = 0; i < tabs.length; i++)
       tabsData.push(this._collectTabData(tabs[i]));
-    }
     
     this._windows[aWindow.__SSi].selected = tabbrowser.mTabBox.selectedIndex + 1;
   },
@@ -2011,7 +2043,7 @@ SessionStoreService.prototype = {
         if (!this._isWindowLoaded(aWindow)) // window data is still in _statesToRestore
           return;
         if (aUpdateAll || this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
-          this._collectWindowData(aWindow, aPinnedOnly);
+          this._collectWindowData(aWindow);
         }
         else { // always update the window features (whose change alone never triggers a save operation)
           this._updateWindowFeatures(aWindow);
@@ -2063,8 +2095,15 @@ SessionStoreService.prototype = {
 #endif
 
     if (aPinnedOnly) {
+      // perform a deep copy so that existing session variables are not changed.
+      total = JSON.parse(this._toJSONString(total));
       total = total.filter(function (win) {
         win.tabs = win.tabs.filter(function (tab) tab.pinned);
+        // remove closed tabs
+        win._closedTabs = [];
+        // correct selected tab index if it was stripped out
+        if (win.selected > win.tabs.length)
+          win.selected = 1;
         return win.tabs.length > 0;
       });
       if (total.length == 0)
@@ -2077,8 +2116,9 @@ SessionStoreService.prototype = {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     }
     ix = windows.indexOf(this.activeWindowSSiCache);
-    // We don't want to restore focus to a minimized window.
-    if (ix != -1 && total[ix].sizemode == "minimized")
+    // We don't want to restore focus to a minimized window or a window which had all its
+    // tabs stripped out (doesn't exist).
+    if (ix != -1 && total[ix] && total[ix].sizemode == "minimized")
       ix = -1;
 
     return { windows: total, selectedWindow: ix + 1, _closedWindows: lastClosedWindowsCopy };
@@ -2104,12 +2144,12 @@ SessionStoreService.prototype = {
     return { windows: total };
   },
 
-  _collectWindowData: function sss_collectWindowData(aWindow, aPinnedOnly) {
+  _collectWindowData: function sss_collectWindowData(aWindow) {
     if (!this._isWindowLoaded(aWindow))
       return;
     
     // update the internal state data for this window
-    this._saveWindowHistory(aWindow, aPinnedOnly);
+    this._saveWindowHistory(aWindow);
     this._updateTextAndScrollData(aWindow);
     this._updateCookieHosts(aWindow);
     this._updateWindowFeatures(aWindow);
@@ -2221,10 +2261,15 @@ SessionStoreService.prototype = {
         tabbrowser.showTab(tabs[t]);
     }
 
-    // If overwriting tabs, we want to remove __SS_restoring from the browser.
+    // If overwriting tabs, we want to reset each tab's "restoring" state. Since
+    // we're overwriting those tabs, they should no longer be restoring. The
+    // tabs will be rebuilt and marked if they need to be restored after loading
+    // state (in restoreHistoryPrecursor).
     if (aOverwriteTabs) {
-      for (let i = 0; i < tabbrowser.tabs.length; i++)
-        this._resetTabRestoringState(tabbrowser.tabs[i], false, false);
+      for (let i = 0; i < tabbrowser.tabs.length; i++) {
+        if (tabbrowser.browsers[i].__SS_restoreState)
+          this._resetTabRestoringState(tabbrowser.tabs[i]);
+      }
     }
 
     // We want to set up a counter on the window that indicates how many tabs
@@ -2298,13 +2343,6 @@ SessionStoreService.prototype = {
   restoreHistoryPrecursor:
     function sss_restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab, aIx, aCount) {
     var tabbrowser = aWindow.gBrowser;
-
-    // In order for setTabState to add gTabsProgressListener, we want to add it
-    // here. We'll only attempt to do it when aCount == 0 though so we don't add
-    // it multiple times.
-    if (aCount == 0 &&
-        tabbrowser.mTabsProgressListeners.indexOf(gRestoreTabsProgressListener) == -1)
-      tabbrowser.addTabsProgressListener(gRestoreTabsProgressListener);
 
     // make sure that all browsers and their histories are available
     // - if one's not, resume this check in 100ms (repeat at most 10 times)
@@ -2391,7 +2429,7 @@ SessionStoreService.prototype = {
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
       browser.__SS_data = tabData;
-      browser.__SS_needsRestore = true;
+      browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
 
       if (!tabData.entries || tabData.entries.length == 0) {
         // make sure to blank out this tab's content
@@ -2528,23 +2566,47 @@ SessionStoreService.prototype = {
     }
   },
 
-  restoreTab: function(aTab) {
+  /**
+   * Restores the specified tab. If the tab can't be restored (eg, no history or
+   * calling gotoIndex fails), then state changes will be rolled back.
+   * This method will check if gTabsProgressListener is attached to the tab's
+   * window, ensuring that we don't get caught without one.
+   * This method removes the session history listener right before starting to
+   * attempt a load. This will prevent cases of "stuck" listeners.
+   * If this method returns false, then it is up to the caller to decide what to
+   * do. In the common case (restoreNextTab), we will want to then attempt to
+   * restore the next tab. In the other case (selecting the tab, reloading the
+   * tab), the caller doesn't actually want to do anything if no page is loaded.
+   *
+   * @param aTab
+   *        the tab to restore
+   *
+   * @returns true/false indicating whether or not a load actually happened
+   */
+  restoreTab: function sss_restoreTab(aTab) {
     let window = aTab.ownerDocument.defaultView;
     let browser = aTab.linkedBrowser;
     let tabData = browser.__SS_data;
 
-    // There are cases within where we haven't actually started a load and so we
-    // should call restoreNextTab. We don't want to do it immediately though
-    // since we might not set userTypedValue in a timely fashion.
-    let shouldRestoreNextTab = false;
+    // There are cases within where we haven't actually started a load. In that
+    // that case we'll reset state changes we made and return false to the caller
+    // can handle appropriately.
+    let didStartLoad = false;
+
+    // Make sure that the tabs progress listener is attached to this window
+    this._ensureTabsProgressListener(window);
+
+    // Make sure that this tab is removed from _tabsToRestore
+    this._removeTabFromTabsToRestore(aTab);
 
     // Increase our internal count.
     this._tabsRestoringCount++;
 
-    // Decrement the number of tabs this window needs to restore
-    window.__SS_tabsToRestore--;
+    // Set this tab's state to restoring
+    browser.__SS_restoreState = TAB_STATE_RESTORING;
 
-    delete browser.__SS_needsRestore;
+    // Remove the history listener, since we no longer need it once we start restoring
+    this._removeSHistoryListener(aTab);
 
     let activeIndex = (tabData.index || tabData.entries.length) - 1;
     if (activeIndex >= tabData.entries.length)
@@ -2558,25 +2620,15 @@ SessionStoreService.prototype = {
       browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = aTab;
 
+      didStartLoad = true;
       try {
-        // Get the tab title (set in restoreHistoryPrecursor) for later
-        let label = aTab.label;
-        browser.__SS_restoring = true;
         browser.webNavigation.gotoIndex(activeIndex);
-        // gotoIndex will force the "loading" string, so set the title
-        aTab.label = label;
       }
       catch (ex) {
         // ignore page load errors
         aTab.removeAttribute("busy");
-        shouldRestoreNextTab = true;
+        didStartLoad = false;
       }
-    }
-    else {
-      // If there is no active index, then we'll never set __SS_restore_data
-      // and even if there is a load event, we won't kick of the next tab
-      // (restoreDocument won't get called), so do it ourselves.
-      shouldRestoreNextTab = true;
     }
 
     // Handle userTypedValue. Setting userTypedValue seems to update gURLbar
@@ -2584,24 +2636,31 @@ SessionStoreService.prototype = {
     if (tabData.userTypedValue) {
       browser.userTypedValue = tabData.userTypedValue;
       if (tabData.userTypedClear) {
-        browser.__SS_restoring = true;
+        didStartLoad = true;
         browser.loadURI(tabData.userTypedValue, null, null, true);
-      }
-      else {
-        shouldRestoreNextTab = true;
       }
     }
 
-    if (shouldRestoreNextTab)
-      this.restoreNextTab(true);
+    // If we didn't start a load, then we won't reset this tab through the usual
+    // channel (via the progress listener), so reset the tab ourselves.
+    if (!didStartLoad)
+      this._resetTabRestoringState(aTab);
+
+    return didStartLoad;
   },
 
-  restoreNextTab: function sss_restoreNextTab(aFromTabFinished) {
+  /**
+   * This _attempts_ to restore the next available tab. If the restore fails,
+   * then we will attempt the next one.
+   * There are conditions where this won't do anything:
+   *   if we're in the process of quitting
+   *   if there are no tabs to restore
+   *   if we have already reached the limit for number of tabs to restore
+   */
+  restoreNextTab: function sss_restoreNextTab() {
     // If we call in here while quitting, we don't actually want to do anything
     if (this._loadState == STATE_QUITTING)
       return;
-    if (aFromTabFinished)
-      this._tabsRestoringCount--;
 
     // If it's not possible to restore anything, then just bail out.
     if (this._maxConcurrentTabRestores >= 0 &&
@@ -2619,17 +2678,11 @@ SessionStoreService.prototype = {
 
     if (nextTabArray) {
       let tab = nextTabArray.shift();
-      this.restoreTab(tab);
-    }
-    else {
-      // Remove the progress listener from windows. It will get re-added as needed.
-      this._forEachBrowserWindow(function(aWindow) {
-        if (!aWindow.__SS_tabsToRestore) {
-          // This won't fail since removeTabsProgressListener just filters. It
-          // doesn't attempt to splice.
-          aWindow.gBrowser.removeTabsProgressListener(gRestoreTabsProgressListener);
-        }
-      });
+      let didStartLoad = this.restoreTab(tab);
+      // If we don't start a load in the restored tab (eg, no entries) then we
+      // want to attempt to restore the next tab.
+      if (!didStartLoad)
+        this.restoreNextTab();
     }
   },
 
@@ -3016,8 +3069,18 @@ SessionStoreService.prototype = {
     if (!oState)
       return;
 
-    if (pinnedOnly)
-      this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
+    if (pinnedOnly) {
+      // Save original resume_session_once preference for when quiting browser,
+      // otherwise session will be restored next time browser starts and we
+      // only want it to be restored in the case of a crash.
+      if (this._resume_session_once_on_shutdown == null) {
+        this._resume_session_once_on_shutdown =
+          this._prefBranch.getBoolPref("sessionstore.resume_session_once");
+        this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
+        // flush the preference file so preference will be saved in case of a crash
+        Services.prefs.savePrefFile(null);
+      }
+    }
 
     oState.session = {
       state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
@@ -3163,6 +3226,24 @@ SessionStoreService.prototype = {
 
     return window;
   },
+
+  /**
+   * Gets the tab for the given browser. This should be marginally better
+   * than using tabbrowser's getTabForContentWindow. This assumes the browser
+   * is the linkedBrowser of a tab, not a dangling browser.
+   *
+   * @param aBrowser
+   *        The browser from which to get the tab.
+   */
+  _getTabForBrowser: function sss_getTabForBrowser(aBrowser) {
+    let window = aBrowser.ownerDocument.defaultView;
+    for (let i = 0; i < window.gBrowser.tabs.length; i++) {
+      let tab = window.gBrowser.tabs[i];
+      if (tab.linkedBrowser == aBrowser)
+        return tab;
+    }
+  },
+
 
   /**
    * Whether or not to resume session, if not recovering from a crash.
@@ -3549,69 +3630,92 @@ SessionStoreService.prototype = {
 
   /**
    * Reset the restoring state for a particular tab. This will be called when
-   * removing a tab, when a tab needs to be reset (it's being overwritten), or
-   * when reload occurs. This is multipurpose and is meant to provide a single
-   * path for very similar functionality.
+   * removing a tab or when a tab needs to be reset (it's being overwritten).
    *
    * @param aTab
    *        The tab that will be "reset"
-   * @param aRestoreNextTab
-   *        If the tab is currently restoring, should we allow a new restore to
-   *        begin
-   * @param aRestoreThisTab
-   *        In the process of "resetting" this tab, should we also restore it.
    */
-  _resetTabRestoringState:
-    function sss__resetTabRestoringState(aTab, aRestoreNextTab, aRestoreThisTab) {
+  _resetTabRestoringState: function sss__resetTabRestoringState(aTab) {
+    let window = aTab.ownerDocument.defaultView;
     let browser = aTab.linkedBrowser;
 
-    if (browser.__SS_restoring) {
-      // If the session history listener hasn't been detached, make sure we
-      // remove it and delete the reference.
-      if (browser.__SS_shistoryListener) {
-        browser.webNavigation.sessionHistory.
-                              removeSHistoryListener(browser.__SS_shistoryListener);
-        delete browser.__SS_shistoryListener;
-      }
+    // Keep the tab's previous state for later in this method
+    let previousState = browser.__SS_restoreState;
 
-      delete browser.__SS_restoring;
-      if (aRestoreNextTab) {
-        // this._tabsRestoringCount is decremented in restoreNextTab.
-        this.restoreNextTab(true);
-      }
-      else {
-        // Even if we aren't restoring the next tab, we still need to decrement
-        // the restoring count. Normally it gets done within restoreNextTab.
-        this._tabsRestoringCount--;
-      }
+    // The browser is no longer in any sort of restoring state.
+    delete browser.__SS_restoreState;
+
+    // We want to decrement window.__SS_tabsToRestore here so that we always
+    // decrement it AFTER a tab is done restoring or when a tab gets "reset".
+    window.__SS_tabsToRestore--;
+
+    // Remove the progress listener if we should.
+    this._removeTabsProgressListener(window);
+
+    if (previousState == TAB_STATE_RESTORING) {
+      this._tabsRestoringCount--;
     }
-    else if (browser.__SS_needsRestore) {
-      // First we'll remove the tab from the hidden/visible array of tabs left
-      // to restore.
-      let splicedTabs;
-      if (aTab.hidden) {
-        splicedTabs =
-          this._tabsToRestore.hidden.splice(this._tabsToRestore.hidden.indexOf(aTab), 1);
-      }
-      else {
-        splicedTabs =
-          this._tabsToRestore.visible.splice(this._tabsToRestore.visible.indexOf(aTab), 1);
-      }
-      if (aRestoreThisTab && splicedTabs.length) {
-        // If we want to restore the tab, then we'll do that. This tab still
-        // needs restore, so we're going to restore this one, not the next one
-        // as was done above.
-        this.restoreTab(aTab);
-      }
-      else {
-        // If we don't want to restore the tab, we want to explicitly remove
-        // __SS_needsRestore and decrement __SS_tabsToRestore. Normally this is
-        // done in restoreTab.
-        let window = aTab.ownerDocument.defaultView;
-        window.__SS_tabsToRestore--;
-        delete browser.__SS_needsRestore;
-      }
+    else if (previousState == TAB_STATE_NEEDS_RESTORE) {
+      // Make sure the session history listener is removed. This is normally
+      // done in restoreTab, but this tab is being removed before that gets called.
+      this._removeSHistoryListener(aTab);
 
+      // Make sure that the tab is removed from the list of tabs to restore.
+      // Again, this is normally done in restoreTab, but that isn't being called
+      // for this tab.
+      this._removeTabFromTabsToRestore(aTab);
+    }
+  },
+
+  /**
+   * Remove the tab from this._tabsToRestore[visible/hidden]
+   *
+   * @param aTab
+   */
+  _removeTabFromTabsToRestore: function sss__removeTabFromTabsToRestore(aTab) {
+    let arr = this._tabsToRestore[aTab.hidden ? "hidden" : "visible"];
+    let index = arr.indexOf(aTab);
+    if (index > -1)
+      arr.splice(index, 1);
+  },
+
+  /**
+   * Add the tabs progress listener to the window if it isn't already
+   *
+   * @param aWindow
+   *        The window to add our progress listener to
+   */
+  _ensureTabsProgressListener: function sss__ensureTabsProgressListener(aWindow) {
+    let tabbrowser = aWindow.gBrowser;
+    if (tabbrowser.mTabsProgressListeners.indexOf(gRestoreTabsProgressListener) == -1)
+      tabbrowser.addTabsProgressListener(gRestoreTabsProgressListener);
+  },
+
+  /**
+   * Attempt to remove the tabs progress listener from the window.
+   *
+   * @param aWindow
+   *        The window from which to remove our progress listener from
+   */
+  _removeTabsProgressListener: function sss__removeTabsProgressListener(aWindow) {
+    // If there are no tabs left to restore (or restoring) in this window, then
+    // we can safely remove the progress listener from this window.
+    if (!aWindow.__SS_tabsToRestore)
+      aWindow.gBrowser.removeTabsProgressListener(gRestoreTabsProgressListener);
+  },
+
+  /**
+   * Remove the session history listener from the tab's browser if there is one.
+   *
+   * @param aTab
+   *        The tab who's browser to remove the listener
+   */
+  _removeSHistoryListener: function sss__removeSHistoryListener(aTab) {
+    let browser = aTab.linkedBrowser;
+    if (browser.__SS_shistoryListener) {
+      browser.webNavigation.sessionHistory.
+                            removeSHistoryListener(browser.__SS_shistoryListener);
+      delete browser.__SS_shistoryListener;
     }
   },
 
@@ -3748,16 +3852,14 @@ let gRestoreTabsProgressListener = {
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Ignore state changes on browsers that we've already restored and state
     // changes that aren't applicable.
-    if (aBrowser.__SS_restoring &&
+    if (aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
       // We need to reset the tab before starting the next restore.
-      // _resetTabRestoringState will make sure we remove the session history
-      // listener and will call restoreNextTab.
-      let window = aBrowser.ownerDocument.defaultView;
-      let tab = window.gBrowser._getTabForContentWindow(aBrowser.contentWindow);
-      this.ss._resetTabRestoringState(tab, true, false);
+      let tab = this.ss._getTabForBrowser(aBrowser);
+      this.ss._resetTabRestoringState(tab);
+      this.ss.restoreNextTab();
     }
   }
 }
@@ -3781,10 +3883,9 @@ SessionStoreSHistoryListener.prototype = {
   OnHistoryPurge: function(aNumEntries) { return true; },
   OnHistoryReload: function(aReloadURI, aReloadFlags) {
     // On reload, we want to make sure that session history loads the right
-    // URI. In order to do that, we will call _resetTabRestoringState.
-    // __SS_needsRestore will still be on this tab's browser, so we will end up
-    // calling restoreTab and this tab will be loaded.
-    this.ss._resetTabRestoringState(this.tab, false, true);
+    // URI. In order to do that, we will juet call restoreTab. That will remove
+    // the history listener and load the right URI.
+    this.ss.restoreTab(this.tab);
     // Returning false will stop the load that docshell is attempting.
     return false;
   }

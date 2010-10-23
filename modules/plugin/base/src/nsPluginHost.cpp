@@ -333,7 +333,7 @@ NS_IMETHODIMP nsPluginUnloadEvent::Run()
 {
   if (mLibrary) {
     // put our unload call in a safety wrapper
-    NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);
+    NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull);
   } else {
     NS_WARNING("missing library from nsPluginUnloadEvent");
   }
@@ -348,7 +348,7 @@ nsresult nsPluginHost::PostPluginUnloadEvent(PRLibrary* aLibrary)
     return NS_OK;
 
   // failure case
-  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull, nsnull);
+  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull);
 
   return NS_ERROR_FAILURE;
 }

@@ -88,15 +88,17 @@ protected:
                              const PRUint32&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
-                             const nsCString&           uploadStreamData,
-                             const PRInt32&             uploadStreamInfo,
+                             const IPC::InputStream&    uploadStream,
+                             const PRBool&              uploadStreamHasHeaders,
                              const PRUint16&            priority,
                              const PRUint8&             redirectionLimit,
                              const PRBool&              allowPipelining,
                              const PRBool&              forceAllowThirdPartyCookie,
                              const bool&                doResumeAt,
                              const PRUint64&            startPos,
-                             const nsCString&           entityID);
+                             const nsCString&           entityID,
+                             const bool&                chooseApplicationCache,
+                             const nsCString&           appCacheClientID);
 
   virtual bool RecvSetPriority(const PRUint16& priority);
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
@@ -110,6 +112,7 @@ protected:
                                                    const PRInt32& broken,
                                                    const PRInt32& no);
   virtual bool RecvDocumentChannelCleanup();
+  virtual bool RecvMarkOfflineCacheEntryAsForeign();
 
   virtual void ActorDestroy(ActorDestroyReason why);
 

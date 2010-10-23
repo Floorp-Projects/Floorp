@@ -74,7 +74,8 @@ static PRBool gLeftShift;
 static PRBool gRightShift;
 static PRBool gLeftAlt;
 static PRBool gRightAlt;
-static PRBool gSym;
+static PRBool gMenu;
+static PRBool gMenuConsumed;
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gAndroidBounds[0] is the topmost
@@ -592,8 +593,11 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager()
+nsWindow::GetLayerManager(bool* aAllowRetaining)
 {
+    if (aAllowRetaining) {
+        *aAllowRetaining = true;
+    }
     if (mLayerManager) {
         return mLayerManager;
     }
@@ -1016,7 +1020,7 @@ send_again:
 
     event.time = ae->Time();
     event.isShift = gLeftShift || gRightShift;
-    event.isControl = gSym;
+    event.isControl = PR_FALSE;
     event.isMeta = PR_FALSE;
     event.isAlt = gLeftAlt || gRightAlt;
 
@@ -1122,7 +1126,7 @@ nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
     nsSimpleGestureEvent event(PR_TRUE, msg, this, direction, delta);
 
     event.isShift = gLeftShift || gRightShift;
-    event.isControl = gSym;
+    event.isControl = PR_FALSE;
     event.isMeta = PR_FALSE;
     event.isAlt = gLeftAlt || gRightAlt;
     event.time = time;
@@ -1289,10 +1293,13 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key)
 
     event.charCode = key.UnicodeChar();
     event.isShift = gLeftShift || gRightShift;
-    event.isControl = PR_FALSE;
+    event.isControl = gMenu;
     event.isAlt = PR_FALSE;
     event.isMeta = PR_FALSE;
     event.time = key.Time();
+
+    if (gMenu)
+        gMenuConsumed = PR_TRUE;
 }
 
 void
@@ -1313,6 +1320,10 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
                 command = nsWidgetAtoms::VolumeDown;
                 doCommand = PR_TRUE;
                 break;
+            case AndroidKeyEvent::KEYCODE_MENU:
+                gMenu = PR_TRUE;
+                gMenuConsumed = PR_FALSE;
+                break;
         }
     } else {
         switch (keyCode) {
@@ -1323,8 +1334,11 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
                 return;
             }
             case AndroidKeyEvent::KEYCODE_MENU:
-                command = nsWidgetAtoms::Menu;
-                doCommand = PR_TRUE;
+                gMenu = PR_FALSE;
+                if (!gMenuConsumed) {
+                    command = nsWidgetAtoms::Menu;
+                    doCommand = PR_TRUE;
+                }
                 break;
             case AndroidKeyEvent::KEYCODE_SEARCH:
                 command = nsWidgetAtoms::Search;
@@ -1378,9 +1392,6 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         break;
     case AndroidKeyEvent::KEYCODE_ALT_RIGHT:
         gRightAlt = isDown;
-        break;
-    case AndroidKeyEvent::KEYCODE_SYM:
-        gSym = isDown;
         break;
     case AndroidKeyEvent::KEYCODE_BACK:
     case AndroidKeyEvent::KEYCODE_MENU:

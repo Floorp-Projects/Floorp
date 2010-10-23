@@ -167,7 +167,7 @@ toolbarbutton.bookmark-item {
   color: #222;
   border: 0;
   border-radius: 10000px;
-  padding: 0 8px;
+  padding: 1px 8px;
   margin: 0 0 1px;
 }
 
@@ -214,6 +214,8 @@ toolbarbutton.bookmark-item > menupopup {
 .bookmark-item > .toolbarbutton-icon {
   width: 16px;
   min-height: 16px;
+  max-height: 16px;
+  padding: 0;
 }
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
@@ -495,10 +497,6 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   border-bottom-right-radius: 0;
 }
 
-#back-forward-dropmarker {
-  display: none;
-}
-
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-back.png") !important;
@@ -709,6 +707,13 @@ toolbar[mode="icons"] #zoom-in-button {
   list-style-image: url("chrome://browser/skin/sync-throbber.png");
   -moz-image-region: rect(0, 20px, 20px, 0px);
 }
+
+/* feed button */
+
+#feed-button {
+  -moz-image-region: rect(0, 460px, 20px, 440px);
+}
+
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 

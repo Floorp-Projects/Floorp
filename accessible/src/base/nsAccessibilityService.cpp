@@ -74,6 +74,7 @@
 #include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
 #include "mozilla/Services.h"
+#include "nsIEventStateManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
@@ -232,12 +233,10 @@ nsAccessibilityService::CreateHTMLButtonAccessible(nsIContent* aContent,
 
 already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLLIAccessible(nsIContent* aContent,
-                                               nsIPresShell* aPresShell,
-                                               const nsAString& aBulletText)
+                                               nsIPresShell* aPresShell)
 {
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
-  nsAccessible* accessible = new nsHTMLLIAccessible(aContent, weakShell,
-                                                    aBulletText);
+  nsAccessible* accessible = new nsHTMLLIAccessible(aContent, weakShell);
   NS_IF_ADDREF(accessible);
   return accessible;
 }
@@ -473,6 +472,62 @@ nsAccessibilityService::CreateHTMLCaptionAccessible(nsIContent* aContent,
 }
 
 void
+nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
+                                             nsIContent* aContainer,
+                                             nsIContent* aStartChild,
+                                             nsIContent* aEndChild)
+{
+#ifdef DEBUG_A11Y
+  nsAutoString tag;
+  aStartChild->Tag()->ToString(tag);
+  nsIAtom* id = aStartChild->GetID();
+  nsCAutoString strid;
+  if (id)
+    id->ToUTF8String(strid);
+  nsAutoString ctag;
+  aContainer->Tag()->ToString(ctag);
+  nsIAtom* cid = aContainer->GetID();
+  nsCAutoString strcid;
+  if (cid)
+    cid->ToUTF8String(strcid);
+  printf("\ncontent inserted: %s@id='%s', container: %s@id='%s', end node: %p\n\n",
+         NS_ConvertUTF16toUTF8(tag).get(), strid.get(),
+         NS_ConvertUTF16toUTF8(ctag).get(), strcid.get(), aEndChild);
+#endif
+
+  // XXX: bug 606082. aContainer is null when root element is inserted into
+  // document, we need to handle this and update the tree, also we need to
+  // update a content node of the document accessible.
+  if (aContainer) {
+    nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
+    if (docAccessible)
+      docAccessible->UpdateTree(aContainer, aStartChild, aEndChild, PR_TRUE);
+  }
+}
+
+void
+nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
+                                       nsIContent* aContainer,
+                                       nsIContent* aChild)
+{
+#ifdef DEBUG_A11Y
+  nsAutoString id;
+  aChild->Tag()->ToString(id);
+  printf("\ncontent removed: %s\n", NS_ConvertUTF16toUTF8(id).get());
+#endif
+
+  // XXX: bug 606082. aContainer is null when root element is inserted into
+  // document, we need to handle this and update the tree, perhaps destroy
+  // the document accessible.
+  if (aContainer) {
+    nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
+    if (docAccessible)
+      docAccessible->UpdateTree(aContainer, aChild, aChild->GetNextSibling(),
+                                PR_FALSE);
+  }
+}
+
+void
 nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
 {
   // Presshell destruction will automatically destroy shells for descendant
@@ -491,14 +546,22 @@ nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
   ShutdownDocAccessible(doc);
 }
 
+void
+nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
+                                           nsIContent* aContent)
+{
+  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  if (document)
+    document->RecreateAccessible(aContent);
+}
+
 // nsAccessibilityService protected
 nsAccessible *
 nsAccessibilityService::GetCachedAccessible(nsINode *aNode,
                                             nsIWeakReference *aWeakShell)
 {
   nsDocAccessible *docAccessible = GetDocAccessible(aNode->GetOwnerDoc());
-  return docAccessible ?
-    docAccessible->GetCachedAccessible(static_cast<void*>(aNode)) : nsnull;
+  return docAccessible ? docAccessible->GetCachedAccessible(aNode) : nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -696,7 +759,7 @@ nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   // "unofficially" shutdown document (i.e. not from nsAccDocManager) can still
   // exist in the document cache.
   nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  nsAccessible* accessible = FindAccessibleInCache(static_cast<void*>(node));
+  nsAccessible* accessible = FindAccessibleInCache(node);
   if (!accessible) {
     nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
     if (document)
@@ -734,7 +797,7 @@ nsAccessibilityService::GetAccessible(nsINode* aNode)
 }
 
 nsAccessible*
-nsAccessibilityService::GetCachedContainerAccessible(nsINode* aNode)
+nsAccessibilityService::GetCachedAccessibleOrContainer(nsINode* aNode)
 {
   if (!aNode)
     return nsnull;
@@ -751,8 +814,8 @@ nsAccessibilityService::GetCachedContainerAccessible(nsINode* aNode)
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
 
   nsAccessible *accessible = nsnull;
-  while ((currNode = currNode->GetNodeParent()) &&
-         !(accessible = GetCachedAccessible(currNode, weakShell)));
+  while (!(accessible = GetCachedAccessible(currNode, weakShell)) &&
+         (currNode = currNode->GetNodeParent()));
 
   return accessible;
 }
@@ -859,8 +922,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   nsWeakFrame weakFrame = content->GetPrimaryFrame();
 
   // Check frame to see if it is hidden.
-  if (!weakFrame.GetFrame() ||
-      !weakFrame.GetFrame()->GetStyleVisibility()->IsVisible()) {
+  if (!weakFrame.GetFrame()) {
     if (aIsHidden)
       *aIsHidden = PR_TRUE;
 
@@ -1197,23 +1259,24 @@ nsAccessibilityService::GetAccessibleByRule(nsINode* aNode,
   if (!aNode || !aWeakShell)
     return nsnull;
 
-  nsAccessible* cachedAcc = GetCachedAccessible(aNode, aWeakShell);
-  if (cachedAcc) {
-    if (aWhatToGet & eGetAccForNode)
+  if (aWhatToGet & eGetAccForNode) {
+    nsAccessible* cachedAcc = GetCachedAccessible(aNode, aWeakShell);
+    if (cachedAcc && cachedAcc->IsBoundToParent())
       return cachedAcc;
-
-    // XXX: while nsAccessible::GetParent() tries to repair broken tree and
-    // may not return cached parent then we use GetAccessibleOrContainer().
-    return GetAccessibleByRule(aNode->GetNodeParent(), aWeakShell,
-                               eGetAccForNodeOrContainer);
   }
 
-  // Go up looking for the nearest accessible container stored in cache.
+  // Go up looking for the nearest accessible container having cached children.
   nsTArray<nsINode*> nodes;
+
   nsINode* node = aNode;
-  while ((node = node->GetNodeParent()) &&
-         !(cachedAcc = GetCachedAccessible(node, aWeakShell)))
+  nsAccessible* cachedAcc = nsnull;
+  while ((node = node->GetNodeParent())) {
+    cachedAcc = GetCachedAccessible(node, aWeakShell);
+    if (cachedAcc && cachedAcc->IsBoundToParent())
+      break;
+
     nodes.AppendElement(node);
+  }
 
   // Node is not in accessible document.
   if (!cachedAcc)
@@ -1634,8 +1697,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     // Normally for li, it is created by the list item frame (in nsBlockFrame)
     // which knows about the bullet frame; however, in this case the list item
     // must have been styled using display: foo
-    nsAccessible* accessible = new nsHTMLLIAccessible(aContent, aWeakShell,
-                                                      EmptyString());
+    nsAccessible* accessible = new nsHTMLLIAccessible(aContent, aWeakShell);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
@@ -1714,29 +1776,6 @@ nsAccessibilityService::RemoveNativeRootAccessible(nsAccessible* aAccessible)
   if (applicationAcc)
     applicationAcc->RemoveChild(aAccessible);
 #endif
-}
-
-// Called from layout when the frame tree owned by a node changes significantly
-nsresult
-nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
-                                             nsIContent *aChangeContent,
-                                             PRUint32 aChangeType)
-{
-  NS_ASSERTION(aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE ||
-               aChangeType == nsIAccessibilityService::FRAME_SHOW ||
-               aChangeType == nsIAccessibilityService::FRAME_HIDE ||
-               aChangeType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE ||
-               aChangeType == nsIAccessibilityService::NODE_APPEND ||
-               aChangeType == nsIAccessibilityService::NODE_REMOVE,
-               "Incorrect aEvent passed in");
-
-  NS_ENSURE_ARG_POINTER(aShell);
-
-  nsDocAccessible *docAccessible = GetDocAccessible(aShell->GetDocument());
-  if (docAccessible)
-    docAccessible->InvalidateCacheSubtree(aChangeContent, aChangeType);
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -51,6 +51,10 @@
 #include "gfxContext.h"
 %}
 
+[ref] native nsConstRect(const nsRect);
+native nscolor(nscolor);
+[ptr] native gfxContext(gfxContext);
+
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -59,8 +63,9 @@ interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
+interface nsIDOMWindow;
 
-[scriptable, uuid(43fd9eb5-9e08-4d60-a305-3f87b1d5c398)]
+[scriptable, uuid(33cbae2d-2361-4f3d-b589-cc55af07a434)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -789,10 +794,18 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute AString layerManagerType;
 
-%{C++
-  virtual nsresult RenderDocument(const nsRect& aRect,
-                                  PRUint32 aFlags,
-                                  nscolor aBackgroundColor,
-                                  gfxContext* aThebesContext) = 0;
-%}
+  /**
+   * The DPI of the display
+   */
+  readonly attribute float displayDPI;
+
+  /**
+   * Return the outer window with the given ID, if any.  Can return null.
+   */
+  nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
+
+  [noscript] void RenderDocument(in nsConstRect aRect,
+                                 in PRUint32 aFlags,
+                                 in nscolor aBackgroundColor,
+                                 in gfxContext aThebesContext);
 };

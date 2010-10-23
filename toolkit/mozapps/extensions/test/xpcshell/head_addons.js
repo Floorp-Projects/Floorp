@@ -1049,5 +1049,16 @@ do_register_cleanup(function() {
     do_throw("Found unexpected file in temporary directory: " + entry.leafName);
   }
 
+  var testDir = gProfD.clone();
+  testDir.append("extensions");
+  testDir.append("trash");
+  do_check_false(testDir.exists());
+
+  testDir.leafName = "staged";
+  do_check_false(testDir.exists());
+
+  testDir.leafName = "staged-xpis";
+  do_check_false(testDir.exists());
+
   shutdownManager();
 });

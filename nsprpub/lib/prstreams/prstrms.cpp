@@ -37,510 +37,512 @@
 
 /*
  * Robin J. Maxwell 11-22-96
+ * Fredrik Roubert <roubert@google.com> 2010-07-23
+ * Matt Austern <austern@google.com> 2010-07-23
  */
 
 #include "prstrms.h"
-#include <string.h> // memmove
 
-//
-// Definition of macros _PRSTR_BP, _PRSTR_DELBUF, and _PRSTR_DELBUF_C.
-//
-// _PRSTR_BP is the protected member of class ios that is returned
-// by the public method rdbuf().
-//
-// _PRSTR_DELBUF is the method or data member of class ios, if available,
-// with which we can ensure that the ios destructor does not delete
-// the associated streambuf.  If such a method or data member does not
-// exist, define _PRSTR_DELBUF to be empty.
-//
-// _PRSTR_DELBUF_C is just _PRSTR_DELBUF qualified by a base class.
-//
+#include <cstdio>
+#include <cstring>
+#include <ios>
+#include <new>
 
-#if defined(__GNUC__)
-#define _PRSTR_BP _strbuf
-#define _PRSTR_DELBUF(x)    /* as nothing */
-#define _PRSTR_DELBUF_C(c, x)  /* as nothing */
-#elif defined(WIN32)
-#define _PRSTR_BP bp
-#define _PRSTR_DELBUF(x)	delbuf(x)
-#define _PRSTR_DELBUF_C(c, x)	c::_PRSTR_DELBUF(x)
-#elif defined(OSF1)
-#define _PRSTR_BP m_psb
-#define _PRSTR_DELBUF(x) /* as nothing */
-#define _PRSTR_DELBUF_C(c, x)	/* as nothing */
-#elif defined(QNX)
-#define PRFSTREAMS_BROKEN
-#else
-#define _PRSTR_BP bp
-// Unix compilers don't believe in encapsulation
-// At least on Solaris this is also ignored
-#define _PRSTR_DELBUF(x)	delbuf = x
-#define _PRSTR_DELBUF_C(c, x)	c::_PRSTR_DELBUF(x)
-#endif
+using std::ios_base;
+using std::iostream;
+using std::istream;
+using std::nothrow;
+using std::ostream;
+using std::streambuf;
+using std::streamsize;
 
-const PRIntn STRM_BUFSIZ = 8192;
-
-#if !defined (PRFSTREAMS_BROKEN)   
 
 PRfilebuf::PRfilebuf():
-_fd(0),
-_opened(PR_FALSE),
-_allocated(PR_FALSE)
-{
-}
+    _fd(NULL),
+    _opened(false),
+    _allocated(false),
+    _unbuffered(false),
+    _user_buf(false),
+    _buf_base(NULL),
+    _buf_end(NULL) { }
+
 
 PRfilebuf::PRfilebuf(PRFileDesc *fd):
-streambuf(),
-_fd(fd),
-_opened(PR_FALSE),
-_allocated(PR_FALSE)
+    _fd(fd),
+    _opened(false),
+    _allocated(false),
+    _unbuffered(false),
+    _user_buf(false),
+    _buf_base(NULL),
+    _buf_end(NULL) { }
+
+
+PRfilebuf::PRfilebuf(PRFileDesc *fd, char_type *ptr, streamsize len):
+    _fd(fd),
+    _opened(false),
+    _allocated(false),
+    _unbuffered(false),
+    _user_buf(false),
+    _buf_base(NULL),
+    _buf_end(NULL)
 {
+    setbuf(ptr, len);
 }
 
-PRfilebuf::PRfilebuf(PRFileDesc *fd, char * buffptr, int bufflen):
-_fd(fd),
-_opened(PR_FALSE),
-_allocated(PR_FALSE)
-{
-    PRfilebuf::setbuf(buffptr, bufflen);
-}
 
 PRfilebuf::~PRfilebuf()
 {
-    if (_opened){
+    if (_opened) {
         close();
-    }else
+    } else {
         sync();
-	if (_allocated)
-		delete base();
+    }
+    if (_allocated) {
+        delete _buf_base;
+    }
 }
 
-PRfilebuf*	
-PRfilebuf::open(const char *name, int mode, int flags)
+
+PRfilebuf *PRfilebuf::open(
+    const char *name, ios_base::openmode flags, PRIntn mode)
 {
-     if (_fd != 0)
-        return 0;    // error if already open
-     PRIntn PRmode = 0;
-    // translate mode argument
-    if (!(mode & ios::nocreate))
-        PRmode |= PR_CREATE_FILE;
-    //if (mode & ios::noreplace)
-    //    PRmode |= O_EXCL;
-    if (mode & ios::app){
-        mode |= ios::out;
-        PRmode |= PR_APPEND;
+    if (_fd != NULL) {
+        return NULL;  // Error if already open.
     }
-    if (mode & ios::trunc){
-        mode |= ios::out;  // IMPLIED
-        PRmode |= PR_TRUNCATE;
-    }
-    if (mode & ios::out){
-        if (mode & ios::in)
-            PRmode |= PR_RDWR;
-        else
-            PRmode |= PR_WRONLY;
-        if (!(mode & (ios::in|ios::app|ios::ate|ios::noreplace))){
-            mode |= ios::trunc; // IMPLIED
-            PRmode |= PR_TRUNCATE;
-        }
-    }else if (mode & ios::in)
-        PRmode |= PR_RDONLY;
-    else
-        return 0;    // error if not ios:in or ios::out
 
+    // Translate flags argument.
+    PRIntn prflags = 0;
+    bool ate = (flags & ios_base::ate) != 0;
+    flags &= ~(ios_base::ate | ios_base::binary);
 
-    //
-    // The usual portable across unix crap...
-    // NT gets a hokey piece of junk layer that prevents
-    // access to the API.
-#ifdef WIN32
-    _fd = PR_Open(name, PRmode, PRmode);
-#else
-    _fd = PR_Open(name, PRmode, flags);
-#endif
-    if (_fd == 0)
-        return 0;
-    _opened = PR_TRUE;
-    if ((!unbuffered()) && (!ebuf())){
-        char * sbuf = new char[STRM_BUFSIZ];
-        if (!sbuf)
-            unbuffered(1);
-        else{
-			_allocated = PR_TRUE;
-            streambuf::setb(sbuf,sbuf+STRM_BUFSIZ,0);
-		}
+    // TODO: The flag PR_CREATE_FILE should probably be used for the cases
+    // (out), (out|app), (out|trunc) and (in|out|trunc) as the C++ standard
+    // specifies that these cases should open files 'as if by using fopen with
+    // "w"'. But adding that flag here will cause the unit test to leave files
+    // behind after running (which might or might not be an error in the unit
+    // test) so the matter needs further investigation before any changes are
+    // made. The old prstreams implementation used the non-standard flag
+    // ios::nocreate to control the use of PR_CREATE_FILE.
+
+    if (flags == (ios_base::out)) {
+        prflags = PR_WRONLY | PR_TRUNCATE;
+    } else if (flags == (ios_base::out | ios_base::app)) {
+        prflags = PR_RDWR | PR_APPEND;
+    } else if (flags == (ios_base::out | ios_base::trunc)) {
+        prflags = PR_WRONLY | PR_TRUNCATE;
+    } else if (flags == (ios_base::in)) {
+        prflags = PR_RDONLY;
+    } else if (flags == (ios_base::in | ios_base::out)) {
+        prflags = PR_RDWR;
+    } else if (flags == (ios_base::in | ios_base::out | ios_base::trunc)) {
+        prflags = PR_RDWR | PR_TRUNCATE;
+    } else {
+        return NULL;  // Unrecognized flag combination.
     }
-    if (mode & ios::ate){
-        if (seekoff(0,ios::end,mode)==EOF){
-            close();
-            return 0;
-        }
+
+    if ((_fd = PR_Open(name, prflags, mode)) == NULL) {
+        return NULL;
     }
+
+    _opened = true;
+
+    if (ate &&
+            seekoff(0, ios_base::end, flags) == pos_type(traits_type::eof())) {
+        close();
+        return NULL;
+    }
+
     return this;
 }
 
-PRfilebuf*	
-PRfilebuf::attach(PRFileDesc *fd)
+
+PRfilebuf *PRfilebuf::attach(PRFileDesc *fd)
 {
-    _opened = PR_FALSE;
+    if (_fd != NULL) {
+        return NULL;  // Error if already open.
+    }
+
+    _opened = false;
     _fd = fd;
     return this;
 }
 
-int	
-PRfilebuf::overflow(int c)
+
+PRfilebuf *PRfilebuf::close()
 {
-    if (allocate()==EOF)        // make sure there is a reserve area
-        return EOF;
-    if (PRfilebuf::sync()==EOF) // sync before new buffer created below
-        return EOF;
+    if (_fd == NULL)
+        return NULL;
 
-    if (!unbuffered())
-        setp(base(),ebuf());
+    int status = sync();
 
-    if (c!=EOF){
-        if ((!unbuffered()) && (pptr() < epptr())) // guard against recursion
-            sputc(c);
-        else{
-            if (PR_Write(_fd, &c, 1)!=1)
-                return(EOF);
-        }
+    if (PR_Close(_fd) == PR_FAILURE ||
+            traits_type::eq_int_type(status, traits_type::eof())) {
+        return NULL;
     }
-    return(1);  // return something other than EOF if successful
-}
 
-int	
-PRfilebuf::underflow()
-{
-    int count;
-    unsigned char tbuf;
-
-    if (in_avail())
-        return (int)(unsigned char) *gptr();
-
-    if (allocate()==EOF)        // make sure there is a reserve area
-        return EOF;
-    if (PRfilebuf::sync()==EOF)
-        return EOF;
-
-    if (unbuffered())
-        {
-        if (PR_Read(_fd,(void *)&tbuf,1)<=0)
-            return EOF;
-        return (int)tbuf;
-        }
-
-    if ((count=PR_Read(_fd,(void *)base(),blen())) <= 0)
-        return EOF;     // reached EOF
-    setg(base(),base(),base()+count);
-    return (int)(unsigned char) *gptr();
-}
-
-streambuf*	
-PRfilebuf::setbuf(char *buffptr, PRstreambuflen bufflen)
-{
-    if (is_open() && (ebuf()))
-        return 0;
-    if ((!buffptr) || (bufflen <= 0))
-        unbuffered(1);
-    else
-        setb(buffptr, buffptr+bufflen, 0);
+    _fd = NULL;
     return this;
 }
 
-streampos	
-PRfilebuf::seekoff(streamoff offset, ios::seek_dir dir, int /* mode */)
-{
-    if (PR_GetDescType(_fd) == PR_DESC_FILE){
-        PRSeekWhence fdir;
-        PRInt32 retpos;
-        switch (dir) {
-            case ios::beg :
-                fdir = PR_SEEK_SET;
-                break;
-            case ios::cur :
-                fdir = PR_SEEK_CUR;
-                break;
-            case ios::end :
-                fdir = PR_SEEK_END;
-                break;
-            default:
-            // error
-                return(EOF);
-            }
 
-        if (PRfilebuf::sync()==EOF)
-            return EOF;
-        if ((retpos=PR_Seek(_fd, offset, fdir))==-1L)
-            return (EOF);
-        return((streampos)retpos);
-    }else
-        return (EOF);
+streambuf *PRfilebuf::setbuf(char_type *ptr, streamsize len)
+{
+    if (is_open() && _buf_end) {
+        return NULL;
+    }
+
+    if (!ptr || len <= 0) {
+        _unbuffered = true;
+    } else {
+        setb(ptr, ptr + len, false);
+    }
+
+    return this;
 }
 
 
-int 
-PRfilebuf::sync()
+streambuf::pos_type PRfilebuf::seekoff(
+    off_type offset, ios_base::seekdir dir, ios_base::openmode /*flags*/)
 {
-    PRInt32 count; 
+    if (PR_GetDescType(_fd) != PR_DESC_FILE) {
+        return traits_type::eof();
+    }
 
-    if (_fd==0)
-        return(EOF);
+    PRSeekWhence whence;
+    PRInt64 pos;
 
-    if (!unbuffered()){
-        // Sync write area
-        if ((count=out_waiting())!=0){
+    switch (dir) {
+        case ios_base::beg: whence = PR_SEEK_SET; break;
+        case ios_base::cur: whence = PR_SEEK_CUR; break;
+        case ios_base::end: whence = PR_SEEK_END; break;
+        default:
+            return traits_type::eof();  // This should never happen.
+    }
+
+    if (traits_type::eq_int_type(sync(), traits_type::eof())) {
+        return traits_type::eof();
+    }
+
+    if ((pos = PR_Seek64(_fd, offset, whence)) == -1) {
+        return traits_type::eof();
+    }
+
+    return pos;
+}
+
+
+int PRfilebuf::sync()
+{
+    if (_fd == NULL) {
+        return traits_type::eof();
+    }
+
+    if (!_unbuffered) {
+        // Sync write area.
+        PRInt32 waiting;
+        if ((waiting = pptr() - pbase()) != 0) {
             PRInt32 nout;
-            if ((nout =PR_Write(_fd,
-                               (void *) pbase(),
-                               (unsigned int)count)) != count){
+            if ((nout = PR_Write(_fd, pbase(), waiting)) != waiting) {
                 if (nout > 0) {
-                    // should set _pptr -= nout
-                    pbump(-(int)nout);
-                    memmove(pbase(), pbase()+nout, (int)(count-nout));
+                    // Should set _pptr -= nout.
+                    pbump(-nout);
+                    memmove(pbase(), pbase() + nout, waiting - nout);
                 }
-                return(EOF);
+                return traits_type::eof();
             }
         }
-        setp(0,0); // empty put area
+        setp(NULL, NULL);  // Empty put area.
 
-        if (PR_GetDescType(_fd) == PR_DESC_FILE){
-            // Sockets can't seek; don't need this
-            if ((count=in_avail()) > 0){
-                if (PR_Seek(_fd, -count, PR_SEEK_CUR)!=-1L)
-                {
-                    return (EOF);
+        if (PR_GetDescType(_fd) == PR_DESC_FILE) {
+            // Sockets can't seek; don't need this.
+            PROffset64 avail;
+            if ((avail = in_avail()) > 0) {
+                if (PR_Seek64(_fd, -avail, PR_SEEK_CUR) != -1) {
+                    return traits_type::eof();
                 }
             }
         }
-        setg(0,0,0); // empty get area
+        setg(NULL, NULL, NULL);  // Empty get area.
     }
-    return(0);
+
+    return 0;
 }
 
-PRfilebuf * 
-PRfilebuf::close()
+
+streambuf::int_type PRfilebuf::underflow()
 {
-    int retval;
-    if (_fd==0)
-        return 0;
+    PRInt32 count;
+    char_type byte;
 
-    retval = sync();
+    if (gptr() != NULL && gptr() < egptr()) {
+        return traits_type::to_int_type(*gptr());
+    }
 
-    if ((PR_Close(_fd)==0) || (retval==EOF))
-        return 0;
-    _fd = 0;
-    return this;
+    // Make sure there is a reserve area.
+    if (!_unbuffered && _buf_base == NULL && !allocate()) {
+        return traits_type::eof();
+    }
+
+    // Sync before new buffer created below.
+    if (traits_type::eq_int_type(sync(), traits_type::eof())) {
+        return traits_type::eof();
+    }
+
+    if (_unbuffered) {
+        if (PR_Read(_fd, &byte, 1) <= 0) {
+            return traits_type::eof();
+        }
+
+        return traits_type::to_int_type(byte);
+    }
+
+    if ((count = PR_Read(_fd, _buf_base, _buf_end - _buf_base)) <= 0) {
+        return traits_type::eof();  // Reached EOF.
+    }
+
+    setg(_buf_base, _buf_base, _buf_base + count);
+    return traits_type::to_int_type(*gptr());
 }
+
+
+streambuf::int_type PRfilebuf::overflow(int_type c)
+{
+    // Make sure there is a reserve area.
+    if (!_unbuffered && _buf_base == NULL && !allocate()) {
+        return traits_type::eof();
+    }
+
+    // Sync before new buffer created below.
+    if (traits_type::eq_int_type(sync(), traits_type::eof())) {
+        return traits_type::eof();
+    }
+
+    if (!_unbuffered) {
+        setp(_buf_base, _buf_end);
+    }
+
+    if (!traits_type::eq_int_type(c, traits_type::eof())) {
+        // Extract the byte to be written.
+        // (Required on big-endian architectures.)
+        char_type byte = traits_type::to_char_type(c);
+        if (!_unbuffered && pptr() < epptr()) {  // Guard against recursion.
+            return sputc(byte);
+        } else {
+            if (PR_Write(_fd, &byte, 1) != 1) {
+                return traits_type::eof();
+            }
+        }
+    }
+
+    return traits_type::not_eof(c);
+}
+
+
+bool PRfilebuf::allocate()
+{
+    char_type *buf = new(nothrow) char_type[BUFSIZ];
+    if (buf == NULL) {
+        return false;
+    }
+
+    setb(buf, buf + BUFSIZ, true);
+    return true;
+}
+
+
+void PRfilebuf::setb(char_type *buf_base, char_type *buf_end, bool user_buf)
+{
+    if (_buf_base && !_user_buf) {
+        delete[] _buf_base;
+    }
+
+    _buf_base = buf_base;
+    _buf_end = buf_end;
+    _user_buf = user_buf;
+}
+
 
 PRifstream::PRifstream():
-istream(new PRfilebuf)
+    istream(NULL),
+    _filebuf()
 {
-    _PRSTR_DELBUF(0);
+    init(&_filebuf);
 }
+
 
 PRifstream::PRifstream(PRFileDesc *fd):
-istream(new PRfilebuf(fd))
+    istream(NULL),
+    _filebuf(fd)
 {
-    _PRSTR_DELBUF(0);
+    init(&_filebuf);
 }
 
-PRifstream::PRifstream(PRFileDesc *fd, char *buff, int bufflen):
-istream(new PRfilebuf(fd, buff, bufflen))
+
+PRifstream::PRifstream(PRFileDesc *fd, char_type *ptr, streamsize len):
+    istream(NULL),
+    _filebuf(fd, ptr, len)
 {
-    _PRSTR_DELBUF(0);
+    init(&_filebuf);
 }
 
-PRifstream::PRifstream(const char * name, int mode, int flags):
-istream(new PRfilebuf)
-{
-    _PRSTR_DELBUF(0);
-    if (!rdbuf()->open(name, (mode|ios::in), flags))
-        clear(rdstate() | ios::failbit);
-}
 
-PRifstream::~PRifstream()
+PRifstream::PRifstream(const char *name, openmode flags, PRIntn mode):
+    istream(NULL),
+    _filebuf()
 {
-	sync();
-
-	delete rdbuf();
-#ifdef _PRSTR_BP
-	_PRSTR_BP = 0;
-#endif
-}
-
-streambuf * 
-PRifstream::setbuf(char * ptr, int len)
-{
-    if ((is_open()) || (!(rdbuf()->setbuf(ptr, len)))){
-        clear(rdstate() | ios::failbit);
-        return 0;
+    init(&_filebuf);
+    if (!_filebuf.open(name, flags | in, mode)) {
+        setstate(failbit);
     }
-    return rdbuf();
 }
 
-void 
-PRifstream::attach(PRFileDesc *fd)
+
+PRifstream::~PRifstream() { }
+
+
+void PRifstream::open(const char *name, openmode flags, PRIntn mode)
 {
-    if (!(rdbuf()->attach(fd)))
-        clear(rdstate() | ios::failbit);
+    if (is_open() || !_filebuf.open(name, flags | in, mode)) {
+        setstate(failbit);
+    }
 }
 
-void 
-PRifstream::open(const char * name, int mode, int flags)
+
+void PRifstream::attach(PRFileDesc *fd)
 {
-    if (is_open() || !(rdbuf()->open(name, (mode|ios::in), flags)))
-        clear(rdstate() | ios::failbit);
+    if (!_filebuf.attach(fd)) {
+        setstate(failbit);
+    }
 }
 
-void 
-PRifstream::close()
+
+void PRifstream::close()
 {
-    clear((rdbuf()->close()) ? 0 : (rdstate() | ios::failbit));
+    if (_filebuf.close() == NULL) {
+        setstate(failbit);
+    }
 }
+
 
 PRofstream::PRofstream():
-ostream(new PRfilebuf)
+    ostream(NULL),
+    _filebuf()
 {
-    _PRSTR_DELBUF(0);
+    init(&_filebuf);
 }
+
 
 PRofstream::PRofstream(PRFileDesc *fd):
-ostream(new PRfilebuf(fd))
+    ostream(NULL),
+    _filebuf(fd)
 {
-    _PRSTR_DELBUF(0);
+    init(&_filebuf);
 }
 
-PRofstream::PRofstream(PRFileDesc *fd, char *buff, int bufflen):
-ostream(new PRfilebuf(fd, buff, bufflen))
+
+PRofstream::PRofstream(PRFileDesc *fd, char_type *ptr, streamsize len):
+    ostream(NULL),
+    _filebuf(fd, ptr, len)
 {
-    _PRSTR_DELBUF(0);
+    init(&_filebuf);
 }
 
-PRofstream::PRofstream(const char *name, int mode, int flags):
-ostream(new PRfilebuf)
-{
-    _PRSTR_DELBUF(0);
-    if (!rdbuf()->open(name, (mode|ios::out), flags))
-        clear(rdstate() | ios::failbit);
-}
 
-PRofstream::~PRofstream()
+PRofstream::PRofstream(const char *name, openmode flags, PRIntn mode):
+    ostream(NULL),
+    _filebuf()
 {
-	flush();
-
-	delete rdbuf();
-#ifdef _PRSTR_BP
-	_PRSTR_BP = 0;
-#endif
-}
-
-streambuf * 
-PRofstream::setbuf(char * ptr, int len)
-{
-    if ((is_open()) || (!(rdbuf()->setbuf(ptr, len)))){
-        clear(rdstate() | ios::failbit);
-        return 0;
+    init(&_filebuf);
+    if (!_filebuf.open(name, flags | out, mode)) {
+        setstate(failbit);
     }
-    return rdbuf();
 }
 
-void 
-PRofstream::attach(PRFileDesc *fd)
+
+PRofstream::~PRofstream() { }
+
+
+void PRofstream::open(const char *name, openmode flags, PRIntn mode)
 {
-    if (!(rdbuf()->attach(fd)))
-        clear(rdstate() | ios::failbit);
+    if (is_open() || !_filebuf.open(name, flags | out, mode)) {
+        setstate(failbit);
+    }
 }
 
-void 
-PRofstream::open(const char * name, int mode, int flags)
+
+void PRofstream::attach(PRFileDesc *fd)
 {
-    if (is_open() || !(rdbuf()->open(name, (mode|ios::out), flags)))
-        clear(rdstate() | ios::failbit);
+    if (!_filebuf.attach(fd)) {
+        setstate(failbit);
+    }
 }
 
-void 
-PRofstream::close()
+
+void PRofstream::close()
 {
-    clear((rdbuf()->close()) ? 0 : (rdstate() | ios::failbit));
+    if (_filebuf.close() == NULL) {
+        setstate(failbit);
+    }
 }
+
 
 PRfstream::PRfstream():
-iostream(new PRfilebuf)
+    iostream(NULL),
+    _filebuf()
 {
-	_PRSTR_DELBUF_C(istream, 0);
-	_PRSTR_DELBUF_C(ostream, 0);
+    init(&_filebuf);
 }
+
 
 PRfstream::PRfstream(PRFileDesc *fd):
-iostream(new PRfilebuf(fd))
+    iostream(NULL),
+    _filebuf(fd)
 {
-	_PRSTR_DELBUF_C(istream, 0);
-	_PRSTR_DELBUF_C(ostream, 0);
+    init(&_filebuf);
 }
 
-PRfstream::PRfstream(PRFileDesc *fd, char *buff, int bufflen):
-iostream(new PRfilebuf(fd, buff, bufflen))
+
+PRfstream::PRfstream(PRFileDesc *fd, char_type *ptr, streamsize len):
+    iostream(NULL),
+    _filebuf(fd, ptr, len)
 {
-	_PRSTR_DELBUF_C(istream, 0);
-	_PRSTR_DELBUF_C(ostream, 0);
+    init(&_filebuf);
 }
 
-PRfstream::PRfstream(const char *name, int mode, int flags):
-iostream(new PRfilebuf)
-{
-	_PRSTR_DELBUF_C(istream, 0);
-	_PRSTR_DELBUF_C(ostream, 0);
-    if (!rdbuf()->open(name, (mode|(ios::in|ios::out)), flags))
-        clear(rdstate() | ios::failbit);
-}
 
-PRfstream::~PRfstream()
+PRfstream::PRfstream(const char *name, openmode flags, PRIntn mode):
+    iostream(NULL),
+    _filebuf()
 {
-	sync();
-	flush();
-
-	delete rdbuf();
-#ifdef _PRSTR_BP
-	istream::_PRSTR_BP = 0;
-	ostream::_PRSTR_BP = 0;
-#endif
-}
-
-streambuf * 
-PRfstream::setbuf(char * ptr, int len)
-{
-    if ((is_open()) || (!(rdbuf()->setbuf(ptr, len)))){
-        clear(rdstate() | ios::failbit);
-        return 0;
+    init(&_filebuf);
+    if (!_filebuf.open(name, flags | in | out, mode)) {
+        setstate(failbit);
     }
-    return rdbuf();
 }
 
-void 
-PRfstream::attach(PRFileDesc *fd)
+
+PRfstream::~PRfstream() { }
+
+
+void PRfstream::open(const char *name, openmode flags, PRIntn mode)
 {
-    if (!(rdbuf()->attach(fd)))
-        clear(rdstate() | ios::failbit);
+    if (is_open() || !_filebuf.open(name, flags | in | out, mode)) {
+        setstate(failbit);
+    }
 }
 
-void 
-PRfstream::open(const char * name, int mode, int flags)
+
+void PRfstream::attach(PRFileDesc *fd)
 {
-    if (is_open() || !(rdbuf()->open(name, (mode|(ios::in|ios::out)), flags)))
-        clear(rdstate() | ios::failbit);
+    if (!_filebuf.attach(fd)) {
+        setstate(failbit);
+    }
 }
 
-void 
-PRfstream::close()
+
+void PRfstream::close()
 {
-    clear((rdbuf()->close()) ? 0 : (rdstate() | ios::failbit));
+    if (_filebuf.close() == NULL) {
+        setstate(failbit);
+    }
 }
-
-#else
-
-// fix it sometime
-
-int fix_prfstreams ()	{	return 0; }
-
-#endif

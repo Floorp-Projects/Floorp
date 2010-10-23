@@ -41,6 +41,18 @@ registerCleanupFunction(function() {
   }
   catch (e) {
   }
+
+  // We can for now know that getAllInstalls actually calls its callback before
+  // it returns so this will complete before the next test start.
+  AddonManager.getAllInstalls(function(aInstalls) {
+    aInstalls.forEach(function(aInstall) {
+      if (aInstall instanceof MockInstall)
+        return;
+
+      ok(false, "Should not have seen an install of " + aInstall.sourceURI.spec + " in state " + aInstall.state);
+      aInstall.cancel();
+    });
+  });
 });
 
 function add_test(test) {
@@ -83,6 +95,28 @@ function get_addon_file_url(aFilename) {
                 getService(Components.interfaces.nsIIOService);
     return ios.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
   }
+}
+
+function get_test_items_in_list(aManager) {
+  var tests = "@tests.mozilla.org";
+
+  let view = aManager.document.getElementById("view-port").selectedPanel;
+  let listid = view.id == "search-view" ? "search-list" : "addon-list";
+  let item = aManager.document.getElementById(listid).firstChild;
+  let items = [];
+
+  while (item) {
+    if (item.localName != "richlistitem") {
+      item = item.nextSibling;
+      continue;
+    }
+
+    if (!item.mAddon || item.mAddon.id.substring(item.mAddon.id.length - tests.length) == tests)
+      items.push(item);
+    item = item.nextSibling;
+  }
+
+  return items;
 }
 
 function check_all_in_list(aManager, aIds, aIgnoreExtras) {
@@ -207,6 +241,29 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
 
   close_manager(aManagerWindow, function() {
     open_manager(aView, aCallback, aLoadCallback);
+  });
+}
+
+function wait_for_window_open(aCallback) {
+  Services.wm.addListener({
+    onOpenWindow: function(aWindow) {
+      Services.wm.removeListener(this);
+
+      let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowInternal);
+      domwindow.addEventListener("load", function() {
+        domwindow.removeEventListener("load", arguments.callee, false);
+        executeSoon(function() {
+          aCallback(domwindow);
+        });
+      }, false);
+    },
+
+    onCloseWindow: function(aWindow) {
+    },
+
+    onWindowTitleChange: function(aWindow, aTitle) {
+    }
   });
 }
 
@@ -400,6 +457,11 @@ MockProvider.prototype = {
    *         The add-on to add
    */
   addAddon: function MP_addAddon(aAddon) {
+    var oldAddons = this.addons.filter(function(aOldAddon) aOldAddon.id == aAddon.id);
+    var oldAddon = oldAddons.length > 0 ? oldAddons[0] : null;
+
+    this.addons = this.addons.filter(function(aOldAddon) aOldAddon.id != aAddon.id);
+
     this.addons.push(aAddon);
     aAddon._provider = this;
 
@@ -409,7 +471,7 @@ MockProvider.prototype = {
     let requiresRestart = (aAddon.operationsRequiringRestart &
                            AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             null, requiresRestart)
+                                             oldAddon, requiresRestart)
   },
 
   /**
