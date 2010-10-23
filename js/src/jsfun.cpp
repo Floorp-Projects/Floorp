@@ -2292,7 +2292,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
      * Steps 4-5 (note erratum removing steps originally numbered 5 and 7 in
      * original version of ES5).
      */
-    JSObject *aobj = vp[3].toObject().wrappedObject(cx);
+    JSObject *aobj = &vp[3].toObject();
     jsuint length;
     if (aobj->isArray()) {
         length = aobj->getArrayLength();
@@ -2484,7 +2484,7 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Step 2. */
-    if (!target->wrappedObject(cx)->isCallable()) {
+    if (!target->isCallable()) {
         if (JSString *str = js_ValueToString(cx, vp[1])) {
             if (const char *bytes = js_GetStringBytes(cx, str)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

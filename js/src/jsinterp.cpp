@@ -1119,8 +1119,7 @@ HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 static JS_ALWAYS_INLINE bool
 EqualObjects(JSContext *cx, JSObject *lobj, JSObject *robj)
 {
-    return lobj == robj ||
-           lobj->wrappedObject(cx) == robj->wrappedObject(cx);
+    return lobj == robj;
 }
 
 bool

@@ -10240,14 +10240,9 @@ TraceRecorder::getThis(LIns*& this_ins)
 
     /* thisv is a reference, so it'll see the newly computed |this|. */
 #ifdef DEBUG
-    /*
-     * Check that thisv is our global. It could be a XPCCrossOriginWrapper around an outer
-     * window object whose inner object is our global, so follow all the links as needed.
-     */
     JS_ASSERT(thisv.isObject());
-    JSObject *thisObj = thisv.toObject().wrappedObject(cx);
-    OBJ_TO_INNER_OBJECT(cx, thisObj);
-    JS_ASSERT(thisObj == globalObj);
+    JSObject *thisObj = &thisv.toObject();
+    JS_ASSERT(thisObj->getClass()->ext.innerObject);
 #endif
     this_ins = INS_CONSTOBJ(globalObj);
     set(&thisv, this_ins);
@@ -15998,6 +15993,12 @@ TraceRecorder::record_JSOP_CALLELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STOP()
 {
+    /* A return from callDepth 0 terminates the current loop, except for recursion. */
+    if (callDepth == 0) {
+        AUDIT(returnLoopExits);
+        return endLoop();
+    }
+
     JSStackFrame *fp = cx->fp();
 
     if (fp->hasImacropc()) {
@@ -17019,6 +17020,12 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (op == JSOP_INT8)
         prevConst = GET_INT8(cx->regs->pc);
 
+    if (op == JSOP_GETELEM || op == JSOP_SETELEM) {
+        Value& lval = cx->regs->sp[op == JSOP_GETELEM ? -2 : -3];
+        if (lval.isObject() && js_IsTypedArray(&lval.toObject()))
+            increment(OP_TYPED_ARRAY);
+    }
+
     prevOp = op;
 
     if (op == JSOP_CALL) {
@@ -17185,6 +17192,7 @@ LoopProfile::decide(JSContext *cx)
     debug_only_printf(LC_TMProfiler, "FEATURE eval %d\n", allOps[OP_EVAL]);
     debug_only_printf(LC_TMProfiler, "FEATURE new %d\n", allOps[OP_NEW]);
     debug_only_printf(LC_TMProfiler, "FEATURE call %d\n", allOps[OP_CALL]);
+    debug_only_printf(LC_TMProfiler, "FEATURE typedarray %d\n", allOps[OP_TYPED_ARRAY]);
     debug_only_printf(LC_TMProfiler, "FEATURE fwdjump %d\n", allOps[OP_FWDJUMP]);
     debug_only_printf(LC_TMProfiler, "FEATURE recursive %d\n", allOps[OP_RECURSIVE]);
     debug_only_printf(LC_TMProfiler, "FEATURE shortLoop %d\n", shortLoop);
@@ -17218,6 +17226,11 @@ LoopProfile::decide(JSContext *cx)
         /* The tracer handles these ops well because of inlining. */
         goodOps += (count(OP_CALL) + count(OP_NEW))*20;
 
+        /* The tracer specialized typed array access. */
+        goodOps += count(OP_TYPED_ARRAY)*10;
+
+        debug_only_printf(LC_TMProfiler, "FEATURE goodOps %u\n", goodOps);
+        
         if (goodOps >= numAllOps)
             traceOK = true;
     }
