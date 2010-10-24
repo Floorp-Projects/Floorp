@@ -787,7 +787,6 @@ const gFormSubmitObserver = {
   init: function()
   {
     this.panel = document.getElementById('invalid-form-popup');
-    this.panel.appendChild(document.createTextNode(""));
   },
 
   panelIsOpen: function()
@@ -821,7 +820,7 @@ const gFormSubmitObserver = {
     }
 
     // Limit the message to 256 characters.
-    this.panel.firstChild.nodeValue = element.validationMessage.substring(0, 256);
+    this.panel.firstChild.textContent = element.validationMessage.substring(0, 256);
 
     element.focus();
 
