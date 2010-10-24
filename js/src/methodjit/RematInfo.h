@@ -70,6 +70,11 @@ struct ValueRemat {
         JS_ASSERT(!isConstant && !u.s.isTypeKnown);
         return u.s.type.reg;
     }
+
+    bool isType(JSValueType type_) const {
+        JS_ASSERT(!isConstant);
+        return u.s.isTypeKnown && u.s.type.knownType == type_;
+    }
 };
 
 /*

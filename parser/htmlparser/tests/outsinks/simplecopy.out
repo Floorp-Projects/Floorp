@@ -5,11 +5,10 @@ Here is a line ending with a space followed by a line break. Plaintext output sh
 
 Here is a list:
 
-    * An item
-    * A nested ordered list:
-    *
-         1. item one
-         2. item two
-    * last item
+    An item
+    A nested ordered list:
+        item one
+        item two
+    last item
 
 Here is a paragraph after the list.

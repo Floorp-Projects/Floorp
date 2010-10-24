@@ -7,50 +7,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/HUDService.jsm");
-
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
+function test() {
+  addTab(TEST_URI);
+  browser.addEventListener("load", tabLoaded, true);
+}
+
 function tabLoaded() {
-  gBrowser.selectedBrowser.removeEventListener("load", tabLoaded, true);
+  browser.removeEventListener("load", tabLoaded, true);
+  openConsole();
 
-  waitForFocus(function () {
-    HUDService.activateHUDForContext(gBrowser.selectedTab);
+  // See bugs 574036, 586386 and 587617.
 
-    // See bugs 574036, 586386 and 587617.
+  let HUD = HUDService.getDisplayByURISpec(
+    browser.contentWindow.wrappedJSObject.document.location.href);
+  let filterBox = HUD.querySelector(".hud-filter-box");
+  outputNode = HUD.querySelector(".hud-output-node");
+  let selection = getSelection();
+  let jstermInput = HUD.querySelector(".jsterm-input-node");
+  let console = browser.contentWindow.wrappedJSObject.console;
+  let contentSelection = browser.contentWindow.wrappedJSObject.getSelection();
 
-    let HUD = HUDService.getDisplayByURISpec(content.location.href);
-    let filterBox = HUD.querySelector(".hud-filter-box");
-    let outputNode = HUD.querySelector(".hud-output-node");
-    let selection = getSelection();
-    let jstermInput = HUD.querySelector(".jsterm-input-node");
-    let console = content.wrappedJSObject.console;
-    let contentSelection = content.getSelection();
+  let make_selection = function () {
+    let controller =
+      top.document.commandDispatcher.
+      getControllerForCommand("cmd_copy");
+    is(controller.isCommandEnabled("cmd_copy"), false, "cmd_copy is disabled");
 
-    let make_selection = function () {
-      let controller = top.document.commandDispatcher.
-        getControllerForCommand("cmd_copy");
-      is(controller.isCommandEnabled("cmd_copy"), false, "cmd_copy is disabled");
+    console.log("Hello world!");
 
-      console.log("Hello world!");
+    let range = top.document.createRange();
+    let selectedNode = outputNode.querySelector(".hud-group > label:last-child");
+    range.selectNode(selectedNode);
+    selection.addRange(range);
 
-      let range = document.createRange();
-      let selectedNode = outputNode.querySelector(".hud-group > label:last-child");
-      range.selectNode(selectedNode);
-      selection.addRange(range);
+    selectedNode.focus();
 
-      selectedNode.focus();
+    goUpdateCommand("cmd_copy");
 
-      goUpdateCommand("cmd_copy");
+    controller = top.document.commandDispatcher.
+      getControllerForCommand("cmd_copy");
+    is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
-      controller = top.document.commandDispatcher.
-        getControllerForCommand("cmd_copy");
-      is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
-
-      waitForClipboard(selectedNode.textContent, clipboard_setup,
-        clipboard_copy_done, clipboard_copy_done);
+    waitForClipboard(selectedNode.textContent, clipboard_setup,
+      clipboard_copy_done, clipboard_copy_done);
     };
 
     let clipboard_setup = function () {
@@ -59,7 +60,7 @@ function tabLoaded() {
 
     let clipboard_copy_done = function () {
       selection.removeAllRanges();
-      testEnd();
+      finishTest();
     };
 
     // Check if we first need to clear any existing selections.
@@ -78,24 +79,9 @@ function tabLoaded() {
       }
 
       goUpdateCommand("cmd_copy");
-      make_selection();
+        make_selection();
     }
     else {
       make_selection();
     }
-  });
 }
-
-function testEnd() {
-  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
-  finish();
-}
-
-function test() {
-  waitForExplicitFinish();
-
-  gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
-
-  content.location = TEST_URI;
-}
-

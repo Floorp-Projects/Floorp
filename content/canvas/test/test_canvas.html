@@ -4017,7 +4017,7 @@ var canvas = document.getElementById('c140');
 var ctx = canvas.getContext('2d');
 
 ctx.fillStyle = 'rgba(0,0,0,0)';
-ok(ctx.fillStyle == 'rgba(0, 0, 0, 0.0)', "ctx.fillStyle == 'rgba(0, 0, 0, 0.0)'");
+is(ctx.fillStyle, 'rgba(0, 0, 0, 0)', "ctx.fillStyle should be what we set it to");
 
 
 }
@@ -12917,7 +12917,7 @@ ok(ctx.isPointInPath(NaN, NaN) === false, "ctx.isPointInPath(NaN, NaN) === false
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -15904,7 +15904,7 @@ var ctx = canvas.getContext('2d');
 ctx.shadowColor = 'lime';
 ok(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
 ctx.shadowColor = 'RGBA(0,255, 0,0)';
-ok(ctx.shadowColor === 'rgba(0, 255, 0, 0.0)', "ctx.shadowColor === 'rgba(0, 255, 0, 0.0)'");
+is(ctx.shadowColor, 'rgba(0, 255, 0, 0)', "ctx.shadowColor should be what we set it to");
 
 
 }

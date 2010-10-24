@@ -44,7 +44,8 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsScriptError, nsIConsoleMessage, nsIScriptError,
+                              nsIScriptError2)
 
 nsScriptError::nsScriptError()
     :  mMessage(),
@@ -53,7 +54,8 @@ nsScriptError::nsScriptError()
        mSourceLine(),
        mColumnNumber(0),
        mFlags(0),
-       mCategory()
+       mCategory(),
+       mWindowID(0)
 {
 }
 
@@ -128,6 +130,20 @@ nsScriptError::Init(const PRUnichar *message,
                     PRUint32 flags,
                     const char *category)
 {
+    return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
+                            columnNumber, flags, category, 0);
+}
+
+NS_IMETHODIMP
+nsScriptError::InitWithWindowID(const PRUnichar *message,
+                                const PRUnichar *sourceName,
+                                const PRUnichar *sourceLine,
+                                PRUint32 lineNumber,
+                                PRUint32 columnNumber,
+                                PRUint32 flags,
+                                const char *category,
+                                PRUint64 aWindowID)
+{
     mMessage.Assign(message);
     mSourceName.Assign(sourceName);
     mLineNumber = lineNumber;
@@ -135,6 +151,7 @@ nsScriptError::Init(const PRUnichar *message,
     mColumnNumber = columnNumber;
     mFlags = flags;
     mCategory.Assign(category);
+    mWindowID = aWindowID;
 
     return NS_OK;
 }
@@ -197,5 +214,12 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
 
     aResult.Assign(temp);
     JS_smprintf_free(temp);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptError::GetOuterWindowID(PRUint64 *aWindowID)
+{
+    *aWindowID = mWindowID;
     return NS_OK;
 }

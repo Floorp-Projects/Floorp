@@ -143,6 +143,7 @@ public:
   virtual nsresult InitContext();
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                      nsIScriptGlobalObject *aCurrentInner);
+  virtual nsresult SetOuterObject(void *aOuterObject);
   virtual nsresult InitOuterWindow();
   virtual PRBool IsContextInitialized();
   virtual void FinalizeContext();
@@ -209,8 +210,13 @@ public:
   // elapsed since the previous cycle collector call.
   static PRBool IntervalCC();
 
-  // Calls IntervalCC() if user is currently inactive, otherwise MaybeCC(PR_TRUE)
-  static void CCIfUserInactive();
+  // Calls IntervalCC() if user is currently inactive.
+  // If user is active and aOrMaybeCC PR_TRUE, this calls MaybeCC(PR_TRUE)
+  // If aOnlyIfNewSuspectedObjects is PR_TRUE, CC is called only if
+  // user is inactive and there are some new suspected objects.
+  
+  static void CCIfUserInactive(PRBool aOrMaybeCC = PR_TRUE,
+                               PRBool aOnlyIfNewSuspectedObjects = PR_FALSE);
 
   static void FireGCTimer(PRBool aLoadInProgress);
 
@@ -311,12 +317,9 @@ private:
   PRTime mModalStateTime;
   PRUint32 mModalStateDepth;
 
-  // mGlobalWrapperRef is used only to hold a strong reference to the
-  // global object wrapper while the nsJSContext is alive. This cuts
-  // down on the number of rooting and unrooting calls XPConnect has
-  // to make when the global object is touched in JS.
-
-  nsCOMPtr<nsISupports> mGlobalWrapperRef;
+  // mGlobalObjectRef ensures that the outer window stays alive as long as the
+  // context does. It is eventually collected by the cycle collector.
+  nsCOMPtr<nsISupports> mGlobalObjectRef;
 
   static int JSOptionChangedCallback(const char *pref, void *data);
 

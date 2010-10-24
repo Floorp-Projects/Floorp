@@ -77,6 +77,7 @@ class ImageLayer;
 class ColorLayer;
 class ImageContainer;
 class CanvasLayer;
+class ShadowLayer;
 class SpecificLayerAttributes;
 
 /**
@@ -224,7 +225,8 @@ public:
   enum LayersBackend {
     LAYERS_BASIC = 0,
     LAYERS_OPENGL,
-    LAYERS_D3D9
+    LAYERS_D3D9,
+    LAYERS_D3D10
   };
 
   LayerManager() : mDestroyed(PR_FALSE)
@@ -641,6 +643,19 @@ public:
    * a ThebesLayer.
    */
   virtual ThebesLayer* AsThebesLayer() { return nsnull; }
+
+  /**
+   * Dynamic cast to a ShadowLayer.  Return null if this is not a
+   * ShadowLayer.  Can be used anytime.
+   */
+  virtual ShadowLayer* AsShadowLayer() { return nsnull; }
+
+  // These getters can be used anytime.  They return the effective
+  // values that should be used when drawing this layer to screen,
+  // accounting for this layer possibly being a shadow.
+  const nsIntRect* GetEffectiveClipRect();
+  const nsIntRegion& GetEffectiveVisibleRegion();
+  const gfx3DMatrix& GetEffectiveTransform();
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;

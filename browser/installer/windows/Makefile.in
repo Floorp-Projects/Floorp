@@ -103,5 +103,7 @@ $(CONFIG_DIR)/setup.exe::
 	  --preprocess-locale $(topsrcdir) \
 	  $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) $(CONFIG_DIR)
 
+GARBARGE_DIRS += instgen
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk

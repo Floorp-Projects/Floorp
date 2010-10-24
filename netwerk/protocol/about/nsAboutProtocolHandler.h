@@ -76,6 +76,8 @@ private:
 // Class to allow us to propagate the base URI to about:blank correctly
 class nsNestedAboutURI : public nsSimpleNestedURI {
 public:
+    NS_DECL_NSIIPCSERIALIZABLE
+
     nsNestedAboutURI(nsIURI* aInnerURI, nsIURI* aBaseURI)
         : nsSimpleNestedURI(aInnerURI)
         , mBaseURI(aBaseURI)

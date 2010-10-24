@@ -91,6 +91,7 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += \
 	oleaut32.lib \
 	version.lib \
+	ole32.lib \
 	$(NULL)
 endif
 

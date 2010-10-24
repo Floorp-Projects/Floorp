@@ -172,7 +172,7 @@ ThebesLayerD3D9::InvalidateRegion(const nsIntRegion &aRegion)
 }
 
 void
-ThebesLayerD3D9::RenderLayer()
+ThebesLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 {
   if (mVisibleRegion.IsEmpty()) {
     return;
@@ -225,23 +225,15 @@ ThebesLayerD3D9::RenderLayer()
     mValidRegion = mVisibleRegion;
   }
 
-  float quadTransform[4][4];
-  /*
-   * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-   * and size.
-   */
-  memset(&quadTransform, 0, sizeof(quadTransform));
-  quadTransform[2][2] = 1.0f;
-  quadTransform[3][3] = 1.0f;
-
-  device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
+  gfx3DMatrix transform = mTransform * aTransform;
+  device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
   float opacity[4];
   /*
    * We always upload a 4 component float, but the shader will use only the
    * first component since it's declared as a 'float'.
    */
-  opacity[0] = GetOpacity();
+  opacity[0] = GetOpacity() * aOpacity;
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
@@ -257,22 +249,27 @@ ThebesLayerD3D9::RenderLayer()
 
   const nsIntRect *iterRect;
   while ((iterRect = iter.Next())) {
-    quadTransform[0][0] = (float)iterRect->width;
-    quadTransform[1][1] = (float)iterRect->height;
-    quadTransform[3][0] = (float)iterRect->x;
-    quadTransform[3][1] = (float)iterRect->y;
-    
-    device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
-    device()->SetVertexShaderConstantF(13, ShaderConstantRect(
+    device()->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(iterRect->x,
+                                                          iterRect->y,
+                                                          iterRect->width,
+                                                          iterRect->height),
+                                       1);
+
+    device()->SetVertexShaderConstantF(CBvTextureCoords,
+      ShaderConstantRect(
         (float)(iterRect->x - visibleRect.x) / (float)visibleRect.width,
         (float)(iterRect->y - visibleRect.y) / (float)visibleRect.height,
         (float)iterRect->width / (float)visibleRect.width,
         (float)iterRect->height / (float)visibleRect.height), 1);
+
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
   }
 
   // Set back to default.
-  device()->SetVertexShaderConstantF(13, ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
+  device()->SetVertexShaderConstantF(CBvTextureCoords,
+                                     ShaderConstantRect(0, 0, 1.0f, 1.0f),
+                                     1);
 }
 
 void
@@ -365,9 +362,14 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   nsRefPtr<gfxASurface> destinationSurface;
 
   nsRefPtr<IDirect3DTexture9> tmpTexture;
-  device()->CreateTexture(bounds.width, bounds.height, 1,
-                          0, fmt,
-                          D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+  hr = device()->CreateTexture(bounds.width, bounds.height, 1,
+                               0, fmt,
+                               D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+
+  if (FAILED(hr)) {
+    ReportFailure(NS_LITERAL_CSTRING("Failed to create temporary texture in system memory."), hr);
+    return;
+  }
 
   nsRefPtr<IDirect3DSurface9> surf;
   HDC dc;

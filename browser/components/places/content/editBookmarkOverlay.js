@@ -692,7 +692,12 @@ var gEditItemOverlay = {
 
     // Here we update either the item title or its cached static title
     var newTitle = this._element("userEnteredName").label;
-    if (this._getItemStaticTitle() != newTitle) {
+    if (!newTitle &&
+        PlacesUtils.bookmarks.getFolderIdForItem(this._itemId) == PlacesUtils.tagsFolderId) {
+      // We don't allow setting an empty title for a tag, restore the old one.
+      this._initNamePicker();
+    }
+    else if (this._getItemStaticTitle() != newTitle) {
       this._mayUpdateFirstEditField("namePicker");
       if (PlacesUtils.microsummaries.hasMicrosummary(this._itemId)) {
         // Note: this implicitly also takes care of the microsummary->static
@@ -1003,20 +1008,16 @@ var gEditItemOverlay = {
     }
   },
 
+  /**
+   * Splits "tagsField" element value, returning an array of valid tag strings.
+   *
+   * @return Array of tag strings found in the field value.
+   */
   _getTagsArrayFromTagField: function EIO__getTagsArrayFromTagField() {
-    // we don't require the leading space (after each comma)
-    var tags = this._element("tagsField").value.split(",");
-    for (var i=0; i < tags.length; i++) {
-      // remove trailing and leading spaces
-      tags[i] = tags[i].replace(/^\s+/, "").replace(/\s+$/, "");
-
-      // remove empty entries from the array.
-      if (tags[i] == "") {
-        tags.splice(i, 1);
-        i--;
-      }
-    }
-    return tags;
+    let tags = this._element("tagsField").value;
+    return tags.trim()
+               .split(/\s*,\s*/) // Split on commas and remove spaces.
+               .filter(function (tag) tag.length > 0); // Kill empty tags.
   },
 
   newFolder: function EIO_newFolder() {

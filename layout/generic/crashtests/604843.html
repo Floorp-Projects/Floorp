@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+
+  var c = document.getElementById("c");
+  var t1 = document.createTextNode("x x x x x x x x x x x x x x x x x x x x");
+  var t2 = document.createTextNode("y y y y y y y y y y y y y y y y y y y y y");
+  c.appendChild(t1);
+  c.appendChild(t2);
+  document.documentElement.offsetHeight;
+
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  c.insertBefore(div, t2);
+  document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="width: 5ch; font-family: monospace; margin: 0;">
+<table><tbody><tr><td id="c"></td></tr></tbody></table>
+</body>
+</html>

@@ -63,26 +63,26 @@ public:
   NS_DECL_NSIOBSERVER
 
   CheckPermissionsHelper(AsyncConnectionHelper* aHelper,
-                         nsIThread* aThread,
                          nsIDOMWindow* aWindow,
+                         const nsAString& aName,
                          const nsACString& aASCIIOrigin)
   : mHelper(aHelper),
-    mThread(aThread),
     mWindow(aWindow),
+    mName(aName),
     mASCIIOrigin(aASCIIOrigin),
     mHasPrompted(PR_FALSE),
     mPromptResult(0)
   {
     NS_ASSERTION(aHelper, "Null pointer!");
-    NS_ASSERTION(aThread, "Null pointer!");
     NS_ASSERTION(aWindow, "Null pointer!");
-    NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty host!");
+    NS_ASSERTION(!aName.IsEmpty(), "Empty name!");
+    NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
   }
 
 private:
   nsRefPtr<AsyncConnectionHelper> mHelper;
-  nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<nsIDOMWindow> mWindow;
+  nsString mName;
   nsCString mASCIIOrigin;
   PRBool mHasPrompted;
   PRUint32 mPromptResult;

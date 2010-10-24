@@ -41,7 +41,6 @@ DEPTH		= ..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-narcissusdir    = $(topsrcdir)/../narcissus
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -50,7 +49,6 @@ CPPSRCS		= \
   js.cpp \
   jsworkers.cpp \
   $(NULL)
-NJS             = njs
 
 DEFINES         += -DEXPORT_JS_API
 
@@ -79,10 +77,5 @@ LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
 endif
 
 # People expect the js shell to wind up in the top-level JS dir.
-# The njs script expects to be in the same directory as the js shell as well as
-# narcissus/js*.js.
 libs::
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DEPTH)
-	$(NSINSTALL) -D $(DEPTH)/narcissus
-	$(INSTALL) $(IFLAGS2) $(foreach f,$(wildcard $(narcissusdir)/js*.js),"$f") $(DEPTH)/narcissus
-	$(INSTALL) $(IFLAGS2) $(srcdir)/$(NJS) $(DEPTH)

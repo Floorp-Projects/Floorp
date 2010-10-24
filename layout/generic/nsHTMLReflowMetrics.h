@@ -55,6 +55,99 @@
 #endif
 
 /**
+ * When we store overflow areas as an array of scrollable and visual
+ * overflow, we use these indices.
+ *
+ * eOverflowType_LENGTH is needed (for gcc 4.5.*, at least) to ensure
+ * that 2 is a valid value of nsOverflowType for use in
+ * NS_FOR_FRAME_OVERFLOW_TYPES.
+ */
+enum nsOverflowType { eVisualOverflow, eScrollableOverflow,
+                      eOverflowType_LENGTH };
+
+#define NS_FOR_FRAME_OVERFLOW_TYPES(var_)                                     \
+  for (nsOverflowType var_ = nsOverflowType(0); var_ < 2;                     \
+       var_ = nsOverflowType(var_ + 1))
+
+struct nsOverflowAreas {
+private:
+  nsRect mRects[2];
+public:
+  nsRect& Overflow(size_t aIndex) {
+    NS_ASSERTION(0 <= aIndex && aIndex < 2, "index out of range");
+    return mRects[aIndex];
+  }
+  const nsRect& Overflow(size_t aIndex) const {
+    NS_ASSERTION(0 <= aIndex && aIndex < 2, "index out of range");
+    return mRects[aIndex];
+  }
+
+  nsRect& VisualOverflow() { return mRects[eVisualOverflow]; }
+  const nsRect& VisualOverflow() const { return mRects[eVisualOverflow]; }
+
+  nsRect& ScrollableOverflow() { return mRects[eScrollableOverflow]; }
+  const nsRect& ScrollableOverflow() const { return mRects[eScrollableOverflow]; }
+
+  nsOverflowAreas() {
+    // default-initializes to zero due to nsRect's default constructor
+  }
+
+  nsOverflowAreas(const nsRect& aVisualOverflow,
+                  const nsRect& aScrollableOverflow)
+  {
+    mRects[eVisualOverflow] = aVisualOverflow;
+    mRects[eScrollableOverflow] = aScrollableOverflow;
+  }
+
+  nsOverflowAreas(const nsOverflowAreas& aOther) {
+    *this = aOther;
+  }
+
+  nsOverflowAreas& operator=(const nsOverflowAreas& aOther) {
+    mRects[0] = aOther.mRects[0];
+    mRects[1] = aOther.mRects[1];
+    return *this;
+  }
+
+  bool operator==(const nsOverflowAreas& aOther) const {
+    // Scrollable overflow is a point-set rectangle and visual overflow
+    // is a pixel-set rectangle.
+    return VisualOverflow() == aOther.VisualOverflow() &&
+           ScrollableOverflow().IsExactEqual(aOther.ScrollableOverflow());
+  }
+
+  bool operator!=(const nsOverflowAreas& aOther) const {
+    return !(*this == aOther);
+  }
+
+  nsOverflowAreas operator+(const nsPoint& aPoint) const {
+    nsOverflowAreas result(*this);
+    result += aPoint;
+    return result;
+  }
+
+  nsOverflowAreas& operator+=(const nsPoint& aPoint) {
+    mRects[0] += aPoint;
+    mRects[1] += aPoint;
+    return *this;
+  }
+
+  void Clear() {
+    mRects[0].SetRect(0, 0, 0, 0);
+    mRects[1].SetRect(0, 0, 0, 0);
+  }
+
+  // Mutates |this| by unioning both overflow areas with |aOther|.
+  void UnionWith(const nsOverflowAreas& aOther);
+
+  // Mutates |this| by unioning both overflow areas with |aRect|.
+  void UnionAllWith(const nsRect& aRect);
+
+  // Mutates |this| by setting both overflow areas to |aRect|.
+  void SetAllTo(const nsRect& aRect);
+};
+
+/**
  * An nsCollapsingMargin represents a vertical collapsing margin between
  * blocks as described in section 8.3.1 of CSS2,
  * <URL: http://www.w3.org/TR/REC-CSS2/box.html#collapsing-margins >.
@@ -157,28 +250,39 @@ struct nsHTMLReflowMetrics {
   // Carried out bottom margin values. This is the collapsed
   // (generational) bottom margin value.
   nsCollapsingMargin mCarriedOutBottomMargin;
-  
+
   // For frames that have content that overflow their content area
-  // (HasOverflowRect() is true) this rectangle represents the total area
-  // of the frame including visible overflow, i.e., don't include overflowing
-  // content that is hidden.
-  // The rect is in the local coordinate space of the frame, and should be at
-  // least as big as the desired size. If there is no content that overflows,
-  // then the overflow area is identical to the desired size and should be
-  // {0, 0, width, height}.
-  nsRect mOverflowArea;
+  // (HasOverflowAreas() is true) these rectangles represent the total
+  // area of the frame including visible overflow, i.e., don't include
+  // overflowing content that is hidden.  The rects are in the local
+  // coordinate space of the frame, and should be at least as big as the
+  // desired size. If there is no content that overflows, then the
+  // overflow area is identical to the desired size and should be {0, 0,
+  // width, height}.
+  nsOverflowAreas mOverflowAreas;
+
+  nsRect& VisualOverflow()
+    { return mOverflowAreas.VisualOverflow(); }
+  const nsRect& VisualOverflow() const
+    { return mOverflowAreas.VisualOverflow(); }
+  nsRect& ScrollableOverflow()
+    { return mOverflowAreas.ScrollableOverflow(); }
+  const nsRect& ScrollableOverflow() const
+    { return mOverflowAreas.ScrollableOverflow(); }
+
+  // Set all of mOverflowAreas to (0, 0, width, height).
+  void SetOverflowAreasToDesiredBounds();
+
+  // Union all of mOverflowAreas with (0, 0, width, height).
+  void UnionOverflowAreasWithDesiredBounds();
 
   PRUint32 mFlags;
- 
+
   // XXXldb Should |aFlags| generally be passed from parent to child?
   // Some places do it, and some don't.  |aFlags| should perhaps go away
   // entirely.
   nsHTMLReflowMetrics(PRUint32 aFlags = 0) {
     mFlags = aFlags;
-    mOverflowArea.x = 0;
-    mOverflowArea.y = 0;
-    mOverflowArea.width = 0;
-    mOverflowArea.height = 0;
 #ifdef MOZ_MATHML
     mBoundingMetrics.Clear();
 #endif
@@ -194,10 +298,7 @@ struct nsHTMLReflowMetrics {
   {
     mFlags = aOther.mFlags;
     mCarriedOutBottomMargin = aOther.mCarriedOutBottomMargin;
-    mOverflowArea.x = aOther.mOverflowArea.x;
-    mOverflowArea.y = aOther.mOverflowArea.y;
-    mOverflowArea.width = aOther.mOverflowArea.width;
-    mOverflowArea.height = aOther.mOverflowArea.height;
+    mOverflowAreas = aOther.mOverflowAreas;
 #ifdef MOZ_MATHML
     mBoundingMetrics = aOther.mBoundingMetrics;
 #endif

@@ -112,7 +112,7 @@
                  accesskey="&setup.emailAddress.accesskey;"
                  control="weaveEmail"/>
           <textbox id="weaveEmail"
-                   onchange="gSyncSetup.onEmailChange()"/>
+                   oninput="gSyncSetup.onEmailInput()"/>
         </row>
         <row id="emailFeedbackRow" align="center" hidden="true">
           <spacer/>
@@ -160,7 +160,7 @@
           <label value="&signIn.serverURL.label;"
                  accesskey="&signIn.serverURL.accesskey;"
                  control="weaveServerURL"/>
-          <textbox id="weaveServerURL" onchange="gSyncSetup.onServerChange()"/>
+          <textbox id="weaveServerURL" oninput="gSyncSetup.onServerInput()"/>
         </row>
         <row id="serverFeedbackRow" align="center" hidden="true">
           <spacer/>
@@ -217,7 +217,8 @@
       <textbox id="weavePassphrase"
                onkeyup="gSyncSetup.onPassphraseChange()"
                onchange="gSyncSetup.onPassphraseChange()"
-               onfocus="this.select()"/>
+               onfocus="this.select();
+                        gSyncSetup.afterBackup();"/>
 
       <vbox id="passphraseFeedback" pack="center">
         <hbox id="passphraseFeedbackRow" hidden="true" align="center">
@@ -252,11 +253,13 @@
     <groupbox align="center">
       <description>&syncKeyBackup.description;</description>
       <hbox>
-        <button label="&button.syncKeyBackup.print.label;"
+        <button id="printSyncKeyButton"
+                label="&button.syncKeyBackup.print.label;"
                 accesskey="&button.syncKeyBackup.print.accesskey;"
                 oncommand="gSyncUtils.passphrasePrint('weavePassphrase');
                            gSyncSetup.afterBackup();"/>
-        <button label="&button.syncKeyBackup.save.label;"
+        <button id="saveSyncKeyButton"
+                label="&button.syncKeyBackup.save.label;"
                 accesskey="&button.syncKeyBackup.save.accesskey;"
                 oncommand="gSyncUtils.passphraseSave('weavePassphrase');
                            gSyncSetup.afterBackup();"/>

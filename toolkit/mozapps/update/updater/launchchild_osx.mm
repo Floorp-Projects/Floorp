@@ -37,54 +37,73 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <Cocoa/Cocoa.h>
-
-#ifdef __ppc__
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <mach/machine.h>
-#endif /* __ppc__ */
-
+#include <CoreServices/CoreServices.h>
+#include <crt_externs.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <spawn.h>
 #include "readstrings.h"
+
+// Prefer the currently running architecture (this is the same as the
+// architecture that launched the updater) and fallback to CPU_TYPE_ANY if it
+// is no longer available after the update.
+static cpu_type_t pref_cpu_types[2] = {
+#if defined(__i386__)
+                                 CPU_TYPE_X86,
+#elif defined(__x86_64__)
+                                 CPU_TYPE_X86_64,
+#elif defined(__ppc__)
+                                 CPU_TYPE_POWERPC,
+#endif
+                                 CPU_TYPE_ANY };
 
 void LaunchChild(int argc, char **argv)
 {
-  int i;
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  NSTask *child = [[[NSTask alloc] init] autorelease];
-  NSMutableArray *args = [[[NSMutableArray alloc] init] autorelease];
-
-#ifdef __ppc__
-  // It's possible that the app is a universal binary running under Rosetta
-  // translation because the user forced it to.  Relaunching via NSTask would
-  // launch the app natively, which the user apparently doesn't want.
-  // In that case, try to preserve translation.
-
-  // If the sysctl doesn't exist, it's because Rosetta doesn't exist,
-  // so don't try to force translation.  In case of other errors, just assume
-  // that the app is native.
-
-  int isNative = 0;
-  size_t sz = sizeof(isNative);
-
-  if (sysctlbyname("sysctl.proc_native", &isNative, &sz, NULL, 0) == 0 &&
-      !isNative) {
-    // Running translated on ppc.
-
-    cpu_type_t preferredCPU = CPU_TYPE_POWERPC;
-    sysctlbyname("sysctl.proc_exec_affinity", NULL, NULL,
-                 &preferredCPU, sizeof(preferredCPU));
-
-    // Nothing can be done to handle failure, relaunch anyway.
+  // Initialize spawn attributes.
+  posix_spawnattr_t spawnattr;
+  if (posix_spawnattr_init(&spawnattr) != 0) {
+    printf("Failed to init posix spawn attribute.");
+    return;
   }
-#endif /* __ppc__ */
 
-  for (i = 1; i < argc; ++i)
-    [args addObject: [NSString stringWithCString: argv[i]]];
+  // Set spawn attributes.
+  size_t attr_count = 2;
+  size_t attr_ocount = 0;
+  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, pref_cpu_types, &attr_ocount) != 0 ||
+      attr_ocount != attr_count) {
+    printf("Failed to set binary preference on posix spawn attribute.");
+    posix_spawnattr_destroy(&spawnattr);
+    return;
+  }
 
-  [child setLaunchPath: [NSString stringWithCString: argv[0]]];
-  [child setArguments: args];
-  [child launch];
-  [pool release];
+  // "posix_spawnp" uses null termination for arguments rather than a count.
+  // Note that we are not duplicating the argument strings themselves.
+  char** argv_copy = (char**)malloc((argc + 1) * sizeof(char*));
+  if (!argv_copy) {
+    printf("Failed to allocate memory for arguments.");
+    posix_spawnattr_destroy(&spawnattr);
+    return;
+  }
+  for (int i = 0; i < argc; i++) {
+    argv_copy[i] = argv[i];
+  }
+  argv_copy[argc] = NULL;
+
+  // Pass along our environment.
+  char** envp = NULL;
+  char*** cocoaEnvironment = _NSGetEnviron();
+  if (cocoaEnvironment) {
+    envp = *cocoaEnvironment;
+  }
+
+  int result = posix_spawnp(NULL, argv_copy[0], NULL, &spawnattr, argv_copy, envp);
+
+  free(argv_copy);
+  posix_spawnattr_destroy(&spawnattr);
+
+  if (result != 0) {
+    printf("Process spawn failed with code %d!", result);
+  }
 }
 
 void

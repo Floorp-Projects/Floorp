@@ -61,7 +61,7 @@
 #endif
             buttonlabelextra1="&continueButton.label;"
             width="&window.width;"
-            ondialogaccept="onOK()"
+            ondialogaccept="return onOK()"
             ondialogcancel="onCancel()"
             ondialogextra1="window.close()"
             onload="onLoad();"

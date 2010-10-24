@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=410986
+-->
+<head>
+  <title>Test for Bug 410986</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=410986">Mozilla Bug 410986</a>
+<p id="display"></p>
+<div id="content">
+  <div id="contents"><span style="color: green;">green text</span></div>
+  <div id="editor" contenteditable="true"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 410986 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  getSelection().selectAllChildren(document.getElementById("contents"));
+  SimpleTest.waitForClipboard("green text",
+    function() {
+      synthesizeKey("C", {accelKey: true});
+    },
+    function() {
+      var ed = document.getElementById("editor");
+      ed.focus();
+      if (navigator.platform.indexOf("Mac") >= 0) {
+        synthesizeKey("V", {accelKey: true, shiftKey: true, altKey: true});
+      } else {
+        synthesizeKey("V", {accelKey: true, shiftKey: true});
+      }
+      is(ed.innerHTML, "green text", "Content should be pasted in plaintext format");
+
+      ed.innerHTML = "";
+      ed.blur();
+      getSelection().selectAllChildren(document.getElementById("contents"));
+      SimpleTest.waitForClipboard("green text",
+        function() {
+          synthesizeKey("C", {accelKey: true});
+        },
+        function() {
+          var ed = document.getElementById("editor");
+          ed.focus();
+          synthesizeKey("V", {accelKey: true});
+          isnot(ed.innerHTML.indexOf("<span style=\"color: green;\">green text</span>"), -1,
+                "Content should be pasted in HTML format");
+
+          SimpleTest.finish();
+        },
+        function() {
+          ok(false, "Failed to copy the second item to the clipboard");
+          SimpleTest.finish();
+        }
+      );
+    },
+    function() {
+      ok(false, "Failed to copy the first item to the clipboard");
+      SimpleTest.finish();
+    }
+  );
+});
+
+</script>
+</pre>
+</body>
+</html>

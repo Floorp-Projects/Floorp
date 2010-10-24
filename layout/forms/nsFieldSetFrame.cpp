@@ -597,14 +597,14 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       aDesiredSize.height = min;
   }
   aDesiredSize.width = contentRect.width + borderPadding.LeftRight();
-  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
   if (mLegendFrame)
-    ConsiderChildOverflow(aDesiredSize.mOverflowArea, mLegendFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mLegendFrame);
   if (mContentFrame)
-    ConsiderChildOverflow(aDesiredSize.mOverflowArea, mContentFrame);
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mContentFrame);
   FinishAndStoreOverflow(&aDesiredSize);
 
-  Invalidate(aDesiredSize.mOverflowArea);
+  Invalidate(aDesiredSize.VisualOverflow());
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

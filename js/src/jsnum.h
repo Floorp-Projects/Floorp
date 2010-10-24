@@ -363,7 +363,8 @@ ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 static inline int32
 js_DoubleToECMAInt32(jsdouble d)
 {
-#if defined(__i386__) || defined(__i386)
+#if defined(__i386__) || defined(__i386) || defined(__x86_64__) || \
+    defined(_M_IX86) || defined(_M_X64)
     jsdpun du, duh, two32;
     uint32 di_h, u_tmp, expon, shift_amount;
     int32 mask32;
@@ -613,6 +614,9 @@ js_DoubleToInteger(jsdouble d)
 extern JSBool
 js_strtod(JSContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, jsdouble *dp);
+
+extern JSBool
+js_num_valueOf(JSContext *cx, uintN argc, js::Value *vp);
 
 namespace js {
 

@@ -50,6 +50,7 @@ panel {
   padding: 0px;
   min-width: 1px;
   background: Menu;
+  color: MenuText;
 }
 
 menupopup {
@@ -60,6 +61,93 @@ menupopup > menu > menupopup {
  /* align submenus */
   -moz-margin-start: -3px;
   margin-top: -3px;
+}
+
+panel[type="arrow"] {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  -moz-transition: opacity 300ms;
+}
+
+.panel-arrowcontent {
+  border-radius: 6px;
+%ifdef WINSTRIPE_AERO
+  background-color: rgba(179,230,255,.35);
+  background-image: -moz-linear-gradient(rgba(250,253,255,.9), rgba(250,253,255,.75) 20px, rgba(250,253,255,.70) 39px, rgba(250,253,255,0) 41px, rgba(250,253,255,0));
+  margin: 5px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.65) inset,
+              0 1px 0 rgba(255,255,255,.3) inset,
+              0 0 0 1px rgba(0,0,0,.75),
+              0 1px 3px 2px rgba(0,0,0,.65);
+%else
+  background: -moz-linear-gradient(rgba(248,250,253,1), rgba(248,250,253,1) 20px, rgba(248,250,253,.97));
+  padding: 6px;
+  margin: 3px;
+  box-shadow: 0 0 5px 1px rgba(184,205,232,1) inset,
+              0 0 0 1px rgba(0,0,0,.25),
+              0 1px 5px rgba(0,0,0,.5);
+%endif
+}
+
+%ifdef WINSTRIPE_AERO
+.panel-inner-arrowcontent {
+  background-color: rgba(250,250,250,.95);
+  background-clip: padding-box;
+  margin: 4px;
+  border: 2px solid;
+  -moz-border-radius: 2px;
+  -moz-border-top-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
+  -moz-border-left-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
+  -moz-border-bottom-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
+  -moz-border-right-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
+  padding: 6px;
+}
+%endif
+
+.panel-arrow[side="top"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-up.png");
+%ifdef WINSTRIPE_AERO
+  margin-bottom: -5px;
+%else
+  margin-left: 6px;
+  margin-right: 6px;
+  margin-bottom: -13px;
+%endif
+}
+
+.panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-down.png");
+%ifdef WINSTRIPE_AERO
+  margin-top: -5px;
+%else
+  margin-left: 6px;
+  margin-right: 6px;
+  margin-top: -12px;
+%endif
+}
+
+.panel-arrow[side="left"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
+%ifdef WINSTRIPE_AERO
+  margin-right: -5px;
+%else
+  margin-top: 6px;
+  margin-bottom: 6px;
+  margin-right: -12px;
+%endif
+}
+
+.panel-arrow[side="right"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
+  -moz-transform: scaleX(-1);
+%ifdef WINSTRIPE_AERO
+  margin-left: -5px;
+%else
+  margin-top: 6px;
+  margin-bottom: 6px;
+  margin-left: -12px;
+%endif
 }
 
 /* ::::: tooltip ::::: */

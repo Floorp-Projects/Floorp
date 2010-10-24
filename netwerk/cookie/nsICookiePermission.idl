@@ -142,6 +142,8 @@ interface nsICookiePermission : nsISupports
    *        the channel for the load trying to get or set cookies
    *
    * @return the originating URI.
+   *
+   * @status DEPRECATED -- use mozIThirdPartyUtil instead.
    */
   nsIURI getOriginatingURI(in nsIChannel aChannel);
 };

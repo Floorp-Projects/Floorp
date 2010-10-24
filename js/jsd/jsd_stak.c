@@ -125,13 +125,14 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
     {
         JSScript* script = JS_GetFrameScript(cx, fp);
         jsuword  pc = (jsuword) JS_GetFramePC(cx, fp);
+        jsval dummyThis;
 
         /*
          * don't construct a JSDStackFrame for dummy frames (those without a
          * |this| object, or native frames, if JSD_INCLUDE_NATIVE_FRAMES
          * isn't set.
          */
-        if (JS_GetFrameThis(cx, fp) &&
+        if (JS_GetFrameThis(cx, fp, &dummyThis) &&
             ((jsdc->flags & JSD_INCLUDE_NATIVE_FRAMES) ||
              JS_IsScriptFrame(cx, fp)))
         {
@@ -342,11 +343,13 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
+        JSBool ok;
+        jsval thisval;
         JS_BeginRequest(jsdthreadstate->context);
-        obj = JS_GetFrameThis(jsdthreadstate->context, jsdframe->fp);
+        ok = JS_GetFrameThis(jsdthreadstate->context, jsdframe->fp, &thisval);
         JS_EndRequest(jsdthreadstate->context);
-        if(obj)
-            jsdval = JSD_NewValue(jsdc, OBJECT_TO_JSVAL(obj));
+        if(ok)
+            jsdval = JSD_NewValue(jsdc, thisval);
     }
 
     JSD_UNLOCK_THREADSTATES(jsdc);

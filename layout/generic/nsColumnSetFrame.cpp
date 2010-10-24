@@ -443,7 +443,7 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
     return;
   }
   
-  nsRect r = aChild->GetOverflowRect();
+  nsRect r = aChild->GetVisualOverflowRect();
   r += aChild->GetPosition();
   aParent->Invalidate(r);
   r -= aChild->GetPosition();
@@ -555,8 +555,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
   
   nsRect contentRect(0, 0, 0, 0);
-  nsRect overflowRect(0, 0, 0, 0);
-  
+  nsOverflowAreas overflowRects;
+
   nsIFrame* child = mFrames.FirstChild();
   nsPoint childOrigin = nsPoint(borderPadding.left, borderPadding.top);
   // For RTL, figure out where the last column's left edge should be. Since the
@@ -603,8 +603,10 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // may have overflowing content that cares about the available height boundary.
     // (It may also have overflowing content that doesn't care about the available height
     // boundary, but if so, too bad, this optimization is defeated.)
+    // We want scrollable overflow here since this is a calculation that
+    // affects layout.
     PRBool skipResizeHeightShrink = shrinkingHeightOnly
-      && child->GetOverflowRect().YMost() <= aConfig.mColMaxHeight;
+      && child->GetScrollableOverflowRect().YMost() <= aConfig.mColMaxHeight;
 
     nscoord childContentBottom = 0;
     if (!reflowNext && (skipIncremental || skipResizeHeightShrink)) {
@@ -695,7 +697,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
     contentRect.UnionRect(contentRect, child->GetRect());
 
-    ConsiderChildOverflow(overflowRect, child);
+    ConsiderChildOverflow(overflowRects, child);
     contentBottom = NS_MAX(contentBottom, childContentBottom);
     aColData.mLastHeight = childContentBottom;
     aColData.mSumHeight += childContentBottom;
@@ -801,7 +803,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   
   // If we're doing RTL, we need to make sure our last column is at the left-hand side of the frame.
   if (RTL && childOrigin.x != targetX) {
-    overflowRect = nsRect(0, 0, 0, 0);
+    overflowRects.Clear();
     contentRect = nsRect(0, 0, 0, 0);
     PRInt32 deltaX = targetX - childOrigin.x;
 #ifdef DEBUG_roc
@@ -809,7 +811,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 #endif
     for (child = mFrames.FirstChild(); child; child = child->GetNextSibling()) {
       MoveChildTo(this, child, child->GetPosition() + nsPoint(deltaX, 0));
-      ConsiderChildOverflow(overflowRect, child);
+      ConsiderChildOverflow(overflowRects, child);
       contentRect.UnionRect(contentRect, child->GetRect());
     }
   }
@@ -847,9 +849,9 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   aDesiredSize.height = borderPadding.top + contentSize.height +
     borderPadding.bottom;
   aDesiredSize.width = contentSize.width + borderPadding.left + borderPadding.right;
-  overflowRect.UnionRect(overflowRect, nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
-  aDesiredSize.mOverflowArea = overflowRect;
-  
+  aDesiredSize.mOverflowAreas = overflowRects;
+  aDesiredSize.UnionOverflowAreasWithDesiredBounds();
+
 #ifdef DEBUG_roc
   printf("*** DONE PASS feasible=%d\n", allFit && NS_FRAME_IS_FULLY_COMPLETE(aStatus)
          && !NS_FRAME_IS_TRUNCATED(aStatus));

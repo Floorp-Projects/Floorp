@@ -195,7 +195,7 @@ let gSyncUI = {
     let buttons = [new Weave.NotificationButton(
       this._stringBundle.GetStringFromName("error.sync.serverStatusButton.label"),
       this._stringBundle.GetStringFromName("error.sync.serverStatusButton.accesskey"),
-      function() { gWeaveWin.openServerStatus(); return true; }
+      function() { gSyncUI.openServerStatus(); return true; }
     )];
     let notification = new Weave.Notification(
       title, description, null, Weave.Notifications.PRIORITY_INFO, buttons);

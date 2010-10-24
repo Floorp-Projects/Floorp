@@ -44,6 +44,7 @@
 #include "IndexedDatabase.h"
 
 #include "nsIObserver.h"
+#include "nsIRunnable.h"
 
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
@@ -53,7 +54,6 @@
 
 #include "IDBTransaction.h"
 
-class nsIRunnable;
 class nsIThreadPool;
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -61,17 +61,18 @@ BEGIN_INDEXEDDB_NAMESPACE
 class FinishTransactionRunnable;
 class QueuedDispatchInfo;
 
-class TransactionThreadPool : public nsIObserver
+class TransactionThreadPool
 {
+  friend class nsAutoPtr<TransactionThreadPool>;
   friend class FinishTransactionRunnable;
 
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
   // returns a non-owning ref!
   static TransactionThreadPool* GetOrCreate();
+
+  // returns a non-owning ref!
   static TransactionThreadPool* Get();
+
   static void Shutdown();
 
   nsresult Dispatch(IDBTransaction* aTransaction,
@@ -79,7 +80,9 @@ public:
                     bool aFinish,
                     nsIRunnable* aFinishRunnable);
 
-  void WaitForAllTransactionsToComplete(IDBDatabase* aDatabase);
+  bool WaitForAllDatabasesToComplete(
+                                   nsTArray<nsRefPtr<IDBDatabase> >& aDatabases,
+                                   nsIRunnable* aCallback);
 
 protected:
   class TransactionQueue : public nsIRunnable
@@ -136,6 +139,12 @@ protected:
     bool finish;
   };
 
+  struct DatabasesCompleteCallback
+  {
+    nsTArray<nsRefPtr<IDBDatabase> > mDatabases;
+    nsCOMPtr<nsIRunnable> mCallback;
+  };
+
   TransactionThreadPool();
   ~TransactionThreadPool();
 
@@ -154,12 +163,16 @@ protected:
                     aInfo.finishRunnable);
   }
 
+  void MaybeFireCallback(PRUint32 aCallbackIndex);
+
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
   nsClassHashtable<nsUint32HashKey, DatabaseTransactionInfo>
     mTransactionsInProgress;
 
   nsTArray<QueuedDispatchInfo> mDelayedDispatchQueue;
+
+  nsTArray<DatabasesCompleteCallback> mCompleteCallbacks;
 };
 
 END_INDEXEDDB_NAMESPACE

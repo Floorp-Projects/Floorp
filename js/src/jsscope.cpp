@@ -50,7 +50,7 @@
 #include "jsbit.h"
 #include "jsclist.h"
 #include "jsdhash.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -67,6 +67,7 @@
 #include "jsscopeinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 uint32
 js_GenerateShape(JSContext *cx, bool gcLocked)
@@ -168,7 +169,13 @@ PropertyTable::init(JSContext *cx, Shape *lastProp)
         METER(searches);
         METER(initSearches);
         Shape **spp = search(shape.id, true);
-        SHAPE_STORE_PRESERVING_COLLISION(spp, &shape);
+
+        /*
+         * Beware duplicate args and arg vs. var conflicts: the youngest shape
+         * (nearest to lastProp) must win. See bug 600067.
+         */
+        if (!SHAPE_FETCH(spp))
+            SHAPE_STORE_PRESERVING_COLLISION(spp, &shape);
     }
     return true;
 }
@@ -1163,6 +1170,18 @@ JSObject::removeProperty(JSContext *cx, jsid id)
          */
         JS_ASSERT(shape == lastProp);
         removeLastProperty();
+
+        /*
+         * Revert to fixed slots if this was the first dynamically allocated slot,
+         * preserving invariant that objects with the same shape use the fixed
+         * slots in the same way.
+         */
+        size_t fixed = numFixedSlots();
+        if (shape->slot == fixed) {
+            JS_ASSERT_IF(!lastProp->isEmptyShape() && lastProp->hasSlot(),
+                         lastProp->slot == fixed - 1);
+            revertToFixedSlots(cx);
+        }
     }
     updateShape(cx);
 
@@ -1197,6 +1216,14 @@ JSObject::clear(JSContext *cx)
 
     if (inDictionaryMode())
         shape->listp = &lastProp;
+
+    /*
+     * Revert to fixed slots if we have cleared below the first dynamically
+     * allocated slot, preserving invariant that objects with the same shape
+     * use the fixed slots in the same way.
+     */
+    if (hasSlotsArray() && JSSLOT_FREE(getClass()) <= numFixedSlots())
+        revertToFixedSlots(cx);
 
     /*
      * We have rewound to a uniquely-shaped empty scope, so we don't need an
@@ -1361,16 +1388,16 @@ Shape::trace(JSTracer *trc) const
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if ((attrs & JSPROP_GETTER) && rawGetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            Mark(trc, getterObject(), JSTRACE_OBJECT);
+            Mark(trc, getterObject());
         }
         if ((attrs & JSPROP_SETTER) && rawSetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            Mark(trc, setterObject(), JSTRACE_OBJECT);
+            Mark(trc, setterObject());
         }
     }
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        Mark(trc, &methodObject(), JSTRACE_OBJECT);
+        Mark(trc, &methodObject());
     }
 }

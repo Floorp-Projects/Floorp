@@ -122,7 +122,7 @@ public:
                                 nsAttrValue &aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
   virtual void DestroyContent();
 
   // nsObjectLoadingContent
@@ -360,7 +360,7 @@ NS_IMPL_INT_ATTR(nsHTMLSharedObjectElement, Hspace, hspace)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Name, name)
 NS_IMPL_URI_ATTR_WITH_BASE(nsHTMLSharedObjectElement, Object, object, codebase)
 NS_IMPL_URI_ATTR(nsHTMLSharedObjectElement, Src, src)
-NS_IMPL_INT_ATTR(nsHTMLSharedObjectElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedObjectElement, TabIndex, tabindex, -1)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLSharedObjectElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Width, width)
@@ -455,7 +455,7 @@ nsHTMLSharedObjectElement::StartObjectLoad(PRBool aNotify)
   }
 }
 
-PRInt32
+nsEventStates
 nsHTMLSharedObjectElement::IntrinsicState() const
 {
   return nsGenericHTMLElement::IntrinsicState() | ObjectState();

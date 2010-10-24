@@ -54,9 +54,6 @@
             role: ROLE_ENTRY,
             children: [
               {
-                role: ROLE_TEXT_LEAF // HTML 5 placeholder attribute value
-              },
-              {
                 role: ROLE_TEXT_LEAF // Text node for the node's value
               }
             ]
@@ -126,9 +123,6 @@
           {
             role: ROLE_ENTRY,
             children: [
-              {
-                role: ROLE_TEXT_LEAF // HTML 5 placeholder attribute value
-              },
               {
                 role: ROLE_TEXT_LEAF // Text node for the node's value
               }

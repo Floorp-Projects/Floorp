@@ -9,7 +9,7 @@ line is.
 
 Testing Space stuffing
  From shouldn't start a line.
-  Nor a space.
+Nor a space.
  > Neither should a greater-than symbol.
 --
 Above is NOT a sig delimiter since it's missing 
@@ -17,4 +17,4 @@ the trailing SPACE:
 
 -- 
 Above is a sig delimiter. I hope.
-A sig (wow!). 
+A sig (wow!).

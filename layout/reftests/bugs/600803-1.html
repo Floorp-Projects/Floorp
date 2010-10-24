@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <body onload="onLoad()">
+    <textarea></textarea>
+    <div id="start"></div>
+    <div id="end"></div>
+    <script>
+      function onLoad() {
+        var t = document.querySelector("textarea");
+        t.value = "aaa\nbbb";
+        t.value = "aaa\nbbb\n";
+        t.value += "X";
+        document.getElementById("start").textContent = t.selectionStart;
+        document.getElementById("end").textContent = t.selectionEnd;
+      }
+    </script>
+  </body>
+</html>

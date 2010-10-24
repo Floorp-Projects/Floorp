@@ -37,6 +37,24 @@
 let Cu = Components.utils;
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 
+const gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
+function _(str) {
+  return str.replace(".", gDecimalSymbol);
+}
+
+function testConvertByteUnits(aBytes, aValue, aUnit)
+{
+  let [value, unit] = DownloadUtils.convertByteUnits(aBytes);
+  do_check_eq(value, aValue);
+  do_check_eq(unit, aUnit);
+}
+
+function testTransferTotal(aCurrBytes, aMaxBytes, aTransfer)
+{
+  let transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes);
+  do_check_eq(transfer, aTransfer);
+}
+
 // Get the em-dash character because typing it directly here doesn't work :(
 let gDash = DownloadUtils.getDownloadStatus(0)[0].match(/remaining (.) 0 bytes/)[1];
 
@@ -80,6 +98,25 @@ function testURI(aURI, aDisp, aHost)
 
 function run_test()
 {
+  testConvertByteUnits(-1, "-1", "bytes");
+  testConvertByteUnits(1, _("1.0"), "bytes");
+  testConvertByteUnits(42, _("42.0"), "bytes");
+  testConvertByteUnits(123, _("123"), "bytes");
+  testConvertByteUnits(1024, _("1.0"), "KB");
+  testConvertByteUnits(8888, _("8.7"), "KB");
+  testConvertByteUnits(59283, _("57.9"), "KB");
+  testConvertByteUnits(640000, _("625"), "KB");
+  testConvertByteUnits(1048576, _("1.0"), "MB");
+  testConvertByteUnits(307232768, _("293"), "MB");
+  testConvertByteUnits(1073741824, _("1.0"), "GB");
+
+  testTransferTotal(1, 1, _("1.0 of 1.0 bytes"));
+  testTransferTotal(234, 4924, _("234 bytes of 4.8 KB"));
+  testTransferTotal(94923, 233923, _("92.7 of 228 KB"));
+  testTransferTotal(2342, 294960345, _("2.3 KB of 281 MB"));
+  testTransferTotal(234, undefined, _("234 bytes"));
+  testTransferTotal(4889023, undefined, _("4.7 MB"));
+
   if (0) {
     // Help find some interesting test cases
     let r = function() Math.floor(Math.random() * 10);

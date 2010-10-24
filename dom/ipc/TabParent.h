@@ -92,11 +92,13 @@ public:
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const nsString& aJSON);
     virtual bool RecvNotifyIMEFocus(const PRBool& aFocus,
-                                    nsIMEUpdatePreference* aPreference);
+                                    nsIMEUpdatePreference* aPreference,
+                                    PRUint32* aSeqno);
     virtual bool RecvNotifyIMETextChange(const PRUint32& aStart,
                                          const PRUint32& aEnd,
                                          const PRUint32& aNewEnd);
-    virtual bool RecvNotifyIMESelection(const PRUint32& aAnchor,
+    virtual bool RecvNotifyIMESelection(const PRUint32& aSeqno,
+                                        const PRUint32& aAnchor,
                                         const PRUint32& aFocus);
     virtual bool RecvNotifyIMETextHint(const nsString& aText);
     virtual bool RecvEndIMEComposition(const PRBool& aCancel,
@@ -168,6 +170,13 @@ public:
     virtual PContentPermissionRequestParent* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor);
 
+    virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdate(
+            const URI& aManifestURI,
+            const URI& aDocumentURI,
+            const nsCString& aClientID,
+            const bool& stickDocument);
+    virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateParent* actor);
+
     JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
     NS_DECL_ISUPPORTS
@@ -179,9 +188,9 @@ public:
 
     static TabParent *GetIMETabParent() { return mIMETabParent; }
     bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
-    bool SendCompositionEvent(const nsCompositionEvent& event);
-    bool SendTextEvent(const nsTextEvent& event);
-    bool SendSelectionEvent(const nsSelectionEvent& event);
+    bool SendCompositionEvent(nsCompositionEvent& event);
+    bool SendTextEvent(nsTextEvent& event);
+    bool SendSelectionEvent(nsSelectionEvent& event);
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         PRBool aSync,
@@ -211,6 +220,7 @@ protected:
     nsTArray<DelayedDialogData*> mDelayedDialogs;
 
     PRBool ShouldDelayDialogs();
+    PRBool AllowContentIME();
 
     NS_OVERRIDE
     virtual PRenderFrameParent* AllocPRenderFrame();
@@ -232,6 +242,7 @@ protected:
     // Compositions in almost all cases are small enough for nsAutoString
     nsAutoString mIMECompositionText;
     PRUint32 mIMECompositionStart;
+    PRUint32 mIMESeqno;
 
 private:
     already_AddRefed<nsFrameLoader> GetFrameLoader() const;

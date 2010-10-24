@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=587106
+-->
+<head>
+  <title>Test for Bug 587106</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=587106">Mozilla Bug 587106</a>
+<p id="display"><canvas id="c"><canvas></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 587106 **/
+  var ctx=document.getElementById('c').getContext('2d');
+  for (var i = 0; i < 100; ++i) {
+    // Skip things that will give different alpha values depending on weird
+    // rounding stuff.
+    var tentativeAlpha = i / 100 * 255;
+    if (Math.abs(tentativeAlpha.toFixed(1) - tentativeAlpha.toFixed(0)) == 0.5) {
+      // Skip this one, please!
+      continue;
+    }
+    ctx.strokeStyle = 'rgba(0, 0, 0, ' + (i/100) + ')';
+    is(ctx.strokeStyle, 'rgba(0, 0, 0, ' + (i/100) + ')',
+       'strokeStyle should match for opacity='+(i/100));
+  }
+
+</script>
+</pre>
+</body>
+</html>

@@ -94,6 +94,9 @@ namespace nanojit
         // If true, use softfloat for all floating point operations,
         // whether or not an FPU is present. (ARM only for now, but might also includes MIPS in the future)
         uint32_t soft_float:1;
+
+        // If true, compiler will insert a random amount of space in between functions (x86-32 only)
+        uint32_t harden_function_alignment:1;
     };
 }
 

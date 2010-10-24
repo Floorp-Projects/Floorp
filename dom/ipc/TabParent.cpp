@@ -43,6 +43,7 @@
 #include "mozilla/ipc/DocumentRendererShmemParent.h"
 #include "mozilla/ipc/DocumentRendererNativeIDParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/docshell/OfflineCacheUpdateParent.h"
 
 #include "nsIURI.h"
 #include "nsFocusManager.h"
@@ -317,12 +318,14 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 
 bool
 TabParent::RecvNotifyIMEFocus(const PRBool& aFocus,
-                              nsIMEUpdatePreference* aPreference)
+                              nsIMEUpdatePreference* aPreference,
+                              PRUint32* aSeqno)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
     return true;
 
+  *aSeqno = mIMESeqno;
   mIMETabParent = aFocus ? this : nsnull;
   mIMESelectionAnchor = 0;
   mIMESelectionFocus = 0;
@@ -355,16 +358,19 @@ TabParent::RecvNotifyIMETextChange(const PRUint32& aStart,
 }
 
 bool
-TabParent::RecvNotifyIMESelection(const PRUint32& aAnchor,
+TabParent::RecvNotifyIMESelection(const PRUint32& aSeqno,
+                                  const PRUint32& aAnchor,
                                   const PRUint32& aFocus)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
     return true;
 
-  mIMESelectionAnchor = aAnchor;
-  mIMESelectionFocus = aFocus;
-  widget->OnIMESelectionChange();
+  if (aSeqno == mIMESeqno) {
+    mIMESelectionAnchor = aAnchor;
+    mIMESelectionFocus = aFocus;
+    widget->OnIMESelectionChange();
+  }
   return true;
 }
 
@@ -444,12 +450,13 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
 }
 
 bool
-TabParent::SendCompositionEvent(const nsCompositionEvent& event)
+TabParent::SendCompositionEvent(nsCompositionEvent& event)
 {
   mIMEComposing = event.message == NS_COMPOSITION_START;
   mIMECompositionStart = PR_MIN(mIMESelectionAnchor, mIMESelectionFocus);
   if (mIMECompositionEnding)
     return true;
+  event.seqno = ++mIMESeqno;
   return PBrowserParent::SendCompositionEvent(event);
 }
 
@@ -461,7 +468,7 @@ TabParent::SendCompositionEvent(const nsCompositionEvent& event)
  * here and pass the text as the EndIMEComposition return value
  */
 bool
-TabParent::SendTextEvent(const nsTextEvent& event)
+TabParent::SendTextEvent(nsTextEvent& event)
 {
   if (mIMECompositionEnding) {
     mIMECompositionText = event.theText;
@@ -476,14 +483,16 @@ TabParent::SendTextEvent(const nsTextEvent& event)
   mIMESelectionAnchor = mIMESelectionFocus =
       mIMECompositionStart + event.theText.Length();
 
+  event.seqno = ++mIMESeqno;
   return PBrowserParent::SendTextEvent(event);
 }
 
 bool
-TabParent::SendSelectionEvent(const nsSelectionEvent& event)
+TabParent::SendSelectionEvent(nsSelectionEvent& event)
 {
   mIMESelectionAnchor = event.mOffset + (event.mReversed ? event.mLength : 0);
   mIMESelectionFocus = event.mOffset + (!event.mReversed ? event.mLength : 0);
+  event.seqno = ++mIMESeqno;
   return PBrowserParent::SendSelectionEvent(event);
 }
 
@@ -522,8 +531,17 @@ bool
 TabParent::RecvSetIMEEnabled(const PRUint32& aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget)
+  if (widget && AllowContentIME()) {
     widget->SetIMEEnabled(aValue);
+
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (observerService) {
+      nsAutoString state;
+      state.AppendInt(aValue);
+      observerService->NotifyObservers(nsnull, "ime-enabled-state-changed", state.get());
+    }
+  }
+
   return true;
 }
 
@@ -540,7 +558,7 @@ bool
 TabParent::RecvSetIMEOpenState(const PRBool& aValue)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget)
+  if (widget && AllowContentIME())
     widget->SetIMEOpenState(aValue);
   return true;
 }
@@ -686,6 +704,35 @@ TabParent::DeallocPRenderFrame(PRenderFrameParent* aFrame)
   return true;
 }
 
+mozilla::docshell::POfflineCacheUpdateParent*
+TabParent::AllocPOfflineCacheUpdate(const URI& aManifestURI,
+                                    const URI& aDocumentURI,
+                                    const nsCString& aClientID,
+                                    const bool& stickDocument)
+{
+  nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
+    new mozilla::docshell::OfflineCacheUpdateParent();
+
+  nsresult rv = update->Schedule(aManifestURI, aDocumentURI, aClientID,
+                                 stickDocument);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  POfflineCacheUpdateParent* result = update.get();
+  update.forget();
+  return result;
+}
+
+bool
+TabParent::DeallocPOfflineCacheUpdate(mozilla::docshell::POfflineCacheUpdateParent* actor)
+{
+  mozilla::docshell::OfflineCacheUpdateParent* update =
+    static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(actor);
+
+  update->Release();
+  return true;
+}
+
 PRBool
 TabParent::ShouldDelayDialogs()
 {
@@ -694,6 +741,19 @@ TabParent::ShouldDelayDialogs()
   PRBool delay = PR_FALSE;
   frameLoader->GetDelayRemoteDialogs(&delay);
   return delay;
+}
+
+PRBool
+TabParent::AllowContentIME()
+{
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+
+  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+  if (focusedContent && focusedContent->IsEditable())
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 already_AddRefed<nsFrameLoader>

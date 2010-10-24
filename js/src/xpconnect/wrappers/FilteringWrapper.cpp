@@ -41,6 +41,7 @@
 #include "AccessCheck.h"
 #include "CrossOriginWrapper.h"
 #include "XrayWrapper.h"
+#include "WrapperFactory.h"
 
 #include "XPCWrapper.h"
 
@@ -72,11 +73,10 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     for (size_t n = 0; n < props.length(); ++n) {
         jsid id = props[n];
         Permission perm;
-        if (perm != PermitObjectAccess && !Policy::check(cx, wrapper, id, false, perm))
+        if (!Policy::check(cx, wrapper, id, JSWrapper::GET, perm))
             return false; // Error
-        if (perm != DenyAccess) {
+        if (perm != DenyAccess)
             props[w++] = id;
-        }
     }
     props.resize(w);
     return true;
@@ -84,12 +84,20 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 
 template <typename Policy>
 static bool
-CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, bool set, Permission &perm)
+CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act, Permission &perm)
 {
-    if (!Policy::check(cx, wrapper, id, set, perm)) {
+    if (!Policy::check(cx, wrapper, id, act, perm)) {
         return false;
     }
     if (perm == DenyAccess) {
+        // Reporting an error here indicates a problem entering the
+        // compartment. Therefore, any errors that we throw should be
+        // thrown in our *caller's* compartment, so they can inspect
+        // the error object.
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wrapper))
+            return false;
+
         AccessCheck::deny(cx, id);
         return false;
     }
@@ -133,23 +141,42 @@ FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN 
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
+FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
+                                      JSWrapper::Action act)
 {
     Permission perm;
-    return CheckAndReport<Policy>(cx, wrapper, JSID_VOID, set, perm) &&
-           Base::enter(cx, wrapper, id, set);
+    return CheckAndReport<Policy>(cx, wrapper, id, act, perm) &&
+           Base::enter(cx, wrapper, id, act);
 }
 
 #define SOW FilteringWrapper<JSCrossCompartmentWrapper, OnlyIfSubjectIsSystem>
+#define SCSOW FilteringWrapper<JSWrapper, OnlyIfSubjectIsSystem>
 #define COW FilteringWrapper<JSCrossCompartmentWrapper, ExposedPropertiesOnly>
-#define XOW FilteringWrapper<XrayWrapper<CrossOriginWrapper>, CrossOriginAccessiblePropertiesOnly>
+#define XOW FilteringWrapper<XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray>, \
+                             CrossOriginAccessiblePropertiesOnly>
+#define NNXOW FilteringWrapper<JSCrossCompartmentWrapper, CrossOriginAccessiblePropertiesOnly>
+#define LW    FilteringWrapper<XrayWrapper<JSWrapper, SameCompartmentXray>, \
+                               SameOriginOrCrossOriginAccessiblePropertiesOnly>
+#define XLW   FilteringWrapper<XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray>, \
+                               SameOriginOrCrossOriginAccessiblePropertiesOnly>
 
-template<> SOW SOW::singleton(0);
+template<> SOW SOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                              WrapperFactory::SOW_FLAG);
+template<> SCSOW SCSOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                                  WrapperFactory::SOW_FLAG);
 template<> COW COW::singleton(0);
-template<> XOW XOW::singleton(0);
+template<> XOW XOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                              WrapperFactory::PARTIALLY_TRANSPARENT);
+template<> NNXOW NNXOW::singleton(WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG |
+                                  WrapperFactory::PARTIALLY_TRANSPARENT);
+template<> LW  LW::singleton(0);
+template<> XLW XLW::singleton(0);
 
 template class SOW;
 template class COW;
 template class XOW;
+template class NNXOW;
+template class LW;
+template class XLW;
 
 }

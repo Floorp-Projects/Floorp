@@ -77,7 +77,11 @@ public:
 
   NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull) {
+    if (aForceTransparentSurface) {
+      *aForceTransparentSurface = PR_FALSE;
+    }
     nsIFrame* f = GetUnderlyingFrame();
     nsHTMLCanvasElement *canvas = CanvasElementFromContent(f->GetContent());
     return canvas->GetIsOpaque();
@@ -209,7 +213,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
     aMetrics.height = NS_MAX(0, aMetrics.height);
   }
 
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
+  aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
   if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {

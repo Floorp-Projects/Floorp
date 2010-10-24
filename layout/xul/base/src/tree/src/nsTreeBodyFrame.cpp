@@ -2527,7 +2527,10 @@ NS_IMETHODIMP
 nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
                            nsIFrame::Cursor& aCursor)
 {
-  if (mView) {
+  // Check the GetScriptHandlingObject so we don't end up running code when
+  // the document is a zombie.
+  PRBool dummy;
+  if (mView && GetContent()->GetCurrentDoc()->GetScriptHandlingObject(dummy)) {
     PRInt32 row;
     nsTreeColumn* col;
     nsIAtom* child;
@@ -3382,7 +3385,8 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
           
         // Paint the image.
         nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
-            pt, aDirtyRect, imgIContainer::FLAG_NONE, &imageSize);
+            gfxPattern::FILTER_NEAREST, pt, &aDirtyRect,
+            imgIContainer::FLAG_NONE, &imageSize);
       }
     }
   }
@@ -3690,7 +3694,8 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
 
     // Paint the image.
     nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
-        pt, aDirtyRect, imgIContainer::FLAG_NONE, &imageSize);
+        gfxPattern::FILTER_NEAREST, pt, &aDirtyRect,
+        imgIContainer::FLAG_NONE, &imageSize);
   }
 }
 

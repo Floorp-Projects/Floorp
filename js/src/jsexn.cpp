@@ -46,7 +46,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -67,6 +67,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::gc;
 
 /* Forward declarations for js_ErrorClass's initializer. */
 static JSBool
@@ -100,7 +101,7 @@ Class js_ErrorClass = {
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    Exception,      /* construct   */
+    NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
     JS_CLASS_TRACE(exn_trace)
@@ -407,16 +408,14 @@ exn_trace(JSTracer *trc, JSObject *obj)
     priv = GetExnPrivate(trc->context, obj);
     if (priv) {
         if (priv->message)
-            JS_CALL_STRING_TRACER(trc, priv->message, "exception message");
+            MarkString(trc, priv->message, "exception message");
         if (priv->filename)
-            JS_CALL_STRING_TRACER(trc, priv->filename, "exception filename");
+            MarkString(trc, priv->filename, "exception filename");
 
         elem = priv->stackElems;
         for (vcount = i = 0; i != priv->stackDepth; ++i, ++elem) {
-            if (elem->funName) {
-                JS_CALL_STRING_TRACER(trc, elem->funName,
-                                      "stack trace function name");
-            }
+            if (elem->funName)
+                MarkString(trc, elem->funName, "stack trace function name");
             if (IS_GC_MARKING_TRACER(trc) && elem->filename)
                 js_MarkScriptFilename(elem->filename);
             vcount += elem->argc;

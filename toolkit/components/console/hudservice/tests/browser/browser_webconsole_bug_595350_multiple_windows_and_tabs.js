@@ -5,70 +5,80 @@
  *
  * Contributor(s):
  *  Patrick Walton <pcwalton@mozilla.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
 // Tests that the Web Console doesn't leak when multiple tabs and windows are
 // opened and then closed.
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/HUDService.jsm");
+const TEST_URI = "data:text/html,Web Console test for bug 595350";
 
-const TEST_URI = "http://example.com/";
-
-let mainWindowTabs = [], newWindowTabs = [];
+let win1 = window, win2;
+let openTabs = [];
 let loadedTabCount = 0;
-let newWindow;
 
 function test() {
-  waitForExplicitFinish();
-  waitForFocus(onFocus);
+  // Add two tabs in the main window.
+  addTabs(win1);
+
+  // Open a new window.
+  win2 = OpenBrowserWindow();
+  win2.addEventListener("load", onWindowLoad, true);
 }
 
-function onFocus() {
-  window.open(TEST_URI);
-  executeSoon(onWindowLoad);
+function onWindowLoad(aEvent) {
+  win2.removeEventListener(aEvent.type, arguments.callee, true);
+
+  // Add two tabs in the new window.
+  addTabs(win2);
 }
 
-function onWindowLoad() {
-  newWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  ok(newWindow, "we have the window");
+function addTabs(aWindow) {
+  for (let i = 0; i < 2; i++) {
+    let tab = aWindow.gBrowser.addTab(TEST_URI);
+    openTabs.push(tab);
 
-  addTabs(mainWindowTabs, gBrowser);
-  addTabs(newWindowTabs, newWindow.gBrowser);
-}
+    tab.linkedBrowser.addEventListener("load", function(aEvent) {
+      tab.linkedBrowser.removeEventListener(aEvent.type, arguments.callee,
+        true);
 
-function addTabs(aTabList, aGBrowser) {
-  for (let i = 0; i < 3; i++) {
-    let tab = aGBrowser.addTab(TEST_URI);
-    tab.linkedBrowser.addEventListener("DOMContentLoaded",
-                                       onTabLoad.bind(this, tab), false);
-    aTabList.push(tab);
+      loadedTabCount++;
+      if (loadedTabCount >= 4) {
+        executeSoon(performTest);
+      }
+    }, true);
   }
 }
 
-function onTabLoad(aTab) {
-  loadedTabCount++;
-  if (loadedTabCount < 6) {
-    return;
+function performTest() {
+  // open the Web Console for each of the four tabs and log a message.
+  for (let i = 0; i < openTabs.length; i++) {
+    let tab = openTabs[i];
+    HUDService.activateHUDForContext(tab);
+    let hudId = HUDService.getHudIdByWindow(tab.linkedBrowser.contentWindow);
+    ok(hudId, "HUD is open for tab " + i);
+    let HUD = HUDService.hudWeakReferences[hudId].get();
+    HUD.console.log("message for tab " + i);
   }
 
-  testMultipleWindowsAndTabs();
-}
+  let displays = HUDService.displaysIndex();
+  is(displays.length, 4, "four displays found");
 
-function testMultipleWindowsAndTabs() {
-  for (let i = 0; i < 3; i++) {
-    HUDService.activateHUDForContext(mainWindowTabs[i]);
-    HUDService.activateHUDForContext(newWindowTabs[i]);
-  }
+  win2.close();
 
   executeSoon(function() {
-    newWindow.close();
-    for (let i = 0; i < 3; i++) {
-      gBrowser.removeTab(mainWindowTabs[i]);
-    }
+    win1.gBrowser.removeTab(openTabs[0]);
+    win1.gBrowser.removeTab(openTabs[1]);
 
-    finish();
+    executeSoon(function() {
+      displays = HUDService.displaysIndex();
+      is(displays.length, 0, "no displays found");
+
+      displays = openTabs = win1 = win2 = null;
+
+      finishTest();
+    });
   });
 }
 

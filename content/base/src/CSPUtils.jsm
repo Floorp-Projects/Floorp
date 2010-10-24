@@ -216,43 +216,65 @@ CSPRep.fromString = function(aStr, self) {
         }
       }
     }
-    
+
     // REPORT URI ///////////////////////////////////////////////////////
     if (dirname === UD.REPORT_URI) {
       // might be space-separated list of URIs
       var uriStrings = dirvalue.split(/\s+/);
       var okUriStrings = [];
 
-      // Verify that each report URI is in the same etld + 1
-      // if "self" is defined, and just that it's valid otherwise.
       for (let i in uriStrings) {
+        var uri = null;
         try {
-          var uri = gIoService.newURI(uriStrings[i],null,null);
+          // Relative URIs are okay, but to ensure we send the reports to the
+          // right spot, the relative URIs are expanded here during parsing.
+          // The resulting CSPRep instance will have only absolute URIs.
+          uri = gIoService.newURI(uriStrings[i],null,selfUri);
+
+          // if there's no host, don't do the ETLD+ check.  This will throw
+          // NS_ERROR_FAILURE if the URI doesn't have a host, causing a parse
+          // failure.
+          uri.host;
+
+          // Verify that each report URI is in the same etld + 1 and that the
+          // scheme and port match "self" if "self" is defined, and just that
+          // it's valid otherwise.
           if (self) {
-            if (gETLDService.getBaseDomain(uri) ===
+            if (gETLDService.getBaseDomain(uri) !==
                 gETLDService.getBaseDomain(selfUri)) {
-              okUriStrings.push(uriStrings[i]);
-            } else {
               CSPWarning("can't use report URI from non-matching eTLD+1: "
                          + gETLDService.getBaseDomain(uri));
+              continue;
+            }
+            if (!uri.schemeIs(selfUri.scheme)) {
+              CSPWarning("can't use report URI with different scheme from "
+                         + "originating document: " + uri.asciiSpec);
+              continue;
+            }
+            if (uri.port && uri.port !== selfUri.port) {
+              CSPWarning("can't use report URI with different port from "
+                         + "originating document: " + uri.asciiSpec);
+              continue;
             }
           }
         } catch(e) {
           switch (e.result) {
             case Components.results.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS:
             case Components.results.NS_ERROR_HOST_IS_IP_ADDRESS:
-              if (uri.host === selfUri.host) {
-                okUriStrings.push(uriStrings[i]);
-              } else {
-                CSPWarning("page on " + selfUri.host + " cannot send reports to " + uri.host);
+              if (uri.host !== selfUri.host) {
+                CSPWarning("page on " + selfUri.host
+                           + " cannot send reports to " + uri.host);
+                continue;
               }
               break;
 
             default:
               CSPWarning("couldn't parse report URI: " + uriStrings[i]);
-              break;
+              continue;
           }
         }
+        // all verification passed: same ETLD+1, scheme, and port.
+        okUriStrings.push(uri.asciiSpec);
       }
       aCSPR._directives[UD.REPORT_URI] = okUriStrings.join(' ');
       continue directive;

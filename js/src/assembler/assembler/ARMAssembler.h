@@ -132,7 +132,7 @@ namespace JSC {
     class ARMAssembler {
     public:
         
-#ifdef DEBUG
+#ifdef JS_METHODJIT_SPEW
         bool isOOLPath;
         // Assign a default value to keep Valgrind quiet.
         ARMAssembler() : isOOLPath(false) { }
@@ -146,6 +146,7 @@ namespace JSC {
         typedef SegmentedVector<int, 64> Jumps;
 
         unsigned char *buffer() const { return m_buffer.buffer(); }
+        bool oom() const { return m_buffer.oom(); }
 
         // ARM conditional constants
         typedef enum {

@@ -89,7 +89,8 @@ div.group {
   margin-top: 10px;
 }
 
-div.group, div#header {
+div.group,
+div#header {
   background: #FFF;
   border-color: #E1E1E1;
   border-style: solid;

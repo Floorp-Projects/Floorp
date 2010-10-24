@@ -1355,9 +1355,9 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     // When notifying, make sure to keep track of states whose value
     // depends solely on the value of an attribute.
-    PRUint32 stateMask;
+    nsEventStates stateMask;
     if (aNotify) {
-        stateMask = PRUint32(IntrinsicState());
+        stateMask = IntrinsicState();
  
         nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
                                          nsIDOMMutationEvent::REMOVAL);
@@ -1459,8 +1459,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     }
 
     if (aNotify) {
-        stateMask = stateMask ^ PRUint32(IntrinsicState());
-        if (stateMask && doc) {
+        stateMask ^= IntrinsicState();
+        if (doc && !stateMask.IsEmpty()) {
             MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, aNotify);
             doc->ContentStatesChanged(this, nsnull, stateMask);
         }
@@ -2239,10 +2239,10 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     return NS_OK;
 }
 
-PRInt32
+nsEventStates
 nsXULElement::IntrinsicState() const
 {
-    PRInt32 state = nsStyledElement::IntrinsicState();
+    nsEventStates state = nsStyledElement::IntrinsicState();
 
     const nsIAtom* tag = Tag();
     if (GetNameSpaceID() == kNameSpaceID_XUL &&

@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Arrow Panels"
+        style="padding: 10px;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+
+<stack flex="1">
+  <label id="topleft" value="Top Left" left="0" top="0"/>
+  <label id="topright" value="Top Right" right="0" top="0"/>
+  <label id="bottomleft" value="Bottom Left" left="0" bottom="0"/>
+  <label id="bottomright" value="Bottom Right" right="0" bottom="0"/>
+  <label id="middle" value="Middle" left="150" top="150"/>
+</stack>
+
+<panel id="panel" type="arrow" onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
+  <label id="panellabel" value="This is some text" height="80"/>
+</panel>
+
+<script type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var expectedAnchor = null;
+var expectedSide = "", expectedAnchorEdge = "";
+var runNextTest;
+
+function startTest()
+{
+  runNextTest = nextTest();
+  runNextTest.next();
+}
+
+function nextTest()
+{
+  var panel = $("panel");
+
+  function openPopup(position, anchor, expected, anchorEdge)
+  {
+    expectedAnchor = $(anchor);
+    expectedSide = expected;
+    expectedAnchorEdge = anchorEdge;
+
+    panel.openPopup(expectedAnchor, position, 0, 0, false, false, null);
+  }
+
+  openPopup("after_start", "topleft", "top", "left");
+  yield;
+  openPopup("after_start", "bottomleft", "bottom", "left");
+  yield;
+  openPopup("before_start", "topleft", "top", "left");
+  yield;
+  openPopup("before_start", "bottomleft", "bottom", "left");
+  yield;
+  openPopup("after_start", "middle", "top", "left");
+  yield;
+  openPopup("before_start", "middle", "bottom", "left");
+  yield;
+
+  openPopup("after_start", "topright", "top", "right");
+  yield;
+  openPopup("after_start", "bottomright", "bottom", "right");
+  yield;
+  openPopup("before_start", "topright", "top", "right");
+  yield;
+  openPopup("before_start", "bottomright", "bottom", "right");
+  yield;
+
+  openPopup("start_before", "topleft", "left", "top");
+  yield;
+  openPopup("start_before", "topright", "right", "top");
+  yield;
+  openPopup("end_before", "topleft", "left", "top");
+  yield;
+  openPopup("end_before", "topright", "right", "top");
+  yield;
+  openPopup("start_before", "middle", "right", "top");
+  yield;
+  openPopup("end_before", "middle", "left", "top");
+  yield;
+
+  openPopup("start_before", "bottomleft", "left", "bottom");
+  yield;
+  openPopup("start_before", "bottomright", "right", "bottom");
+  yield;
+  openPopup("end_before", "bottomleft", "left", "bottom");
+  yield;
+  openPopup("end_before", "bottomright", "right", "bottom");
+  yield;
+
+  SimpleTest.finish();
+  yield;
+}
+
+function checkPanelPosition(panel)
+{
+  var anchor = panel.anchorNode;
+  var panelRect = panel.getBoundingClientRect();
+  var anchorRect = anchor.getBoundingClientRect();
+  var labelRect = $("panellabel").getBoundingClientRect();
+  switch (expectedSide) {
+    case "top":
+      ok(labelRect.top > anchorRect.bottom + 5, "panel label is below");
+      break;
+    case "bottom":
+      ok(labelRect.bottom < anchorRect.top - 5, "panel label is above");
+      break;
+    case "left":
+      ok(labelRect.left > anchorRect.right + 5, "panel label is right");
+      break;
+    case "right":
+      ok(labelRect.right < anchorRect.left - 5, "panel label is left");
+      break;
+  }
+
+  switch (expectedAnchorEdge) {
+    case "top":
+      is(panelRect.top, anchorRect.top, "anchored on top");
+      break;
+    case "bottom":
+      is(panelRect.bottom, anchorRect.bottom, "anchored on bottom");
+      break;
+    case "left":
+      is(panelRect.left, anchorRect.left, "anchored on left");
+      break;
+    case "right":
+      is(panelRect.right, anchorRect.right, "anchored on right");
+      break;
+  }
+
+  is(anchor, expectedAnchor, "anchor");
+
+  var arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  is(arrow.getAttribute("side"), expectedSide, "panel arrow side");
+  is(arrow.hidden, false, "panel hidden");
+
+  panel.hidePopup();
+}
+
+SimpleTest.waitForFocus(startTest);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"/>
+
+</window>

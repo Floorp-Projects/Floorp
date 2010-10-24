@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Philipp von Weitershausen <philipp@weitershausen.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,9 +50,11 @@ XPIDLSRCS = \
   IWeaveCrypto.idl \
   $(NULL)
 
-EXTRA_COMPONENTS = \
-  WeaveCrypto.js \
-  WeaveCrypto.manifest \
-  $(NULL)
+libs::
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/modules/* $(FINAL_TARGET)/modules/services-crypto
+
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
 
 include $(topsrcdir)/config/rules.mk

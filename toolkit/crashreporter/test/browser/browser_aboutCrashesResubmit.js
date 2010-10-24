@@ -3,7 +3,7 @@ var scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                              .getService(Components.interfaces.mozIJSSubScriptLoader);
 
 var rootDir = getRootDirectory(gTestPath);
-scriptLoader.loadSubScript(rootDir + "/aboutcrashes_utils.js", this);
+scriptLoader.loadSubScript(rootDir + "aboutcrashes_utils.js", this);
 
 function cleanup_and_finish() {
   try {

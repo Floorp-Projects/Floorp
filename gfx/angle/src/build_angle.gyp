@@ -3,6 +3,11 @@
 # found in the LICENSE file.
 
 {
+  'target_defaults': {
+    'defines': [
+      'TRACE_OUTPUT_FILE="angle-debug.txt"',
+    ],
+  },
   'targets': [
     {
       'target_name': 'translator_common',
@@ -19,6 +24,7 @@
       'sources': [
         'compiler/BaseTypes.h',
         'compiler/Common.h',
+        'compiler/Compiler.cpp',
         'compiler/ConstantUnion.h',
         'compiler/debug.cpp',
         'compiler/debug.h',
@@ -52,6 +58,8 @@
         'compiler/SymbolTable.h',
         'compiler/Types.h',
         'compiler/unistd.h',
+        'compiler/VariableInfo.cpp',
+        'compiler/VariableInfo.h',
         'compiler/preprocessor/atom.c',
         'compiler/preprocessor/atom.h',
         'compiler/preprocessor/compile.h',
@@ -177,6 +185,8 @@
             'libGLESv2/Buffer.h',
             'libGLESv2/Context.cpp',
             'libGLESv2/Context.h',
+            'libGLESv2/Fence.cpp',
+            'libGLESv2/Fence.h',
             'libGLESv2/Framebuffer.cpp',
             'libGLESv2/Framebuffer.h',
             'libGLESv2/libGLESv2.cpp',

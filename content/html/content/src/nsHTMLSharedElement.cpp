@@ -265,8 +265,36 @@ nsHTMLSharedElement::SetProfile(const nsAString& aValue)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Version, version)
 
 // nsIDOMHTMLBaseElement
-NS_IMPL_URI_ATTR(nsHTMLSharedElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Target, target)
+NS_IMETHODIMP
+nsHTMLSharedElement::GetHref(nsAString& aValue)
+{
+  nsAutoString href;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+
+  nsCOMPtr<nsIURI> uri;
+  nsIDocument* doc = GetOwnerDoc();
+  if (doc) {
+    nsContentUtils::NewURIWithDocumentCharset(
+      getter_AddRefs(uri), href, doc, doc->GetDocumentURI());
+  }
+  if (!uri) {
+    aValue = href;
+    return NS_OK;
+  }
+  
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  CopyUTF8toUTF16(spec, aValue);
+
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsHTMLSharedElement::SetHref(const nsAString& aValue)
+{
+  return SetAttrHelper(nsGkAtoms::href, aValue);
+}
+
 
 PRBool
 nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,

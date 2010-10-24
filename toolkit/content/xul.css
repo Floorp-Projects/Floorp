@@ -419,6 +419,10 @@ tooltip {
   margin-top: 21px;
 }
 
+panel[type="arrow"] {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#arrowpanel");
+}
+
 %ifdef XP_MACOSX
 .statusbar-resizerpanel {
   display: none;

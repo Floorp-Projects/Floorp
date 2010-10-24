@@ -121,8 +121,6 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 
-#define MS_PER_SECOND 1000
-
 using namespace mozilla::layers;
 
 // Under certain conditions there may be no-one holding references to
@@ -390,7 +388,8 @@ NS_IMPL_STRING_ATTR(nsHTMLMediaElement, Preload, preload)
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
 NS_IMETHODIMP nsHTMLMediaElement::GetMozAutoplayEnabled(PRBool *aAutoplayEnabled)
 {
-  *aAutoplayEnabled = mAutoplayEnabled;
+  // Do not allow autoplay on editable nodes
+  *aAutoplayEnabled = !IsEditable() && mAutoplayEnabled;
 
   return NS_OK;
 }
@@ -492,7 +491,7 @@ void nsHTMLMediaElement::AbortExistingLoads()
   mError = nsnull;
   mLoadedFirstFrame = PR_FALSE;
   mAutoplaying = PR_TRUE;
-  mIsLoadingFromSrcAttribute = PR_FALSE;
+  mIsLoadingFromSourceChildren = PR_FALSE;
   mSuspendedAfterFirstFrame = PR_FALSE;
   mAllowSuspendAfterFirstFrame = PR_TRUE;
   mSourcePointer = nsnull;
@@ -655,7 +654,8 @@ void nsHTMLMediaElement::SelectResource()
     nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv)) {
       LOG(PR_LOG_DEBUG, ("%p Trying load from src=%s", this, NS_ConvertUTF16toUTF8(src).get()));
-      mIsLoadingFromSrcAttribute = PR_TRUE;
+      NS_ASSERTION(!mIsLoadingFromSourceChildren,
+        "Should think we're not loading from source children by default");
       mLoadingSrc = uri;
       if (mPreloadAction == nsHTMLMediaElement::PRELOAD_NONE) {
         // preload:none media, suspend the load here before we make any
@@ -674,6 +674,7 @@ void nsHTMLMediaElement::SelectResource()
     NoSupportedMediaSourceError();
   } else {
     // Otherwise, the source elements will be used.
+    mIsLoadingFromSourceChildren = PR_TRUE;
     LoadFromSourceChildren();
   }
   mIsRunningSelectResource = PR_FALSE;
@@ -681,7 +682,7 @@ void nsHTMLMediaElement::SelectResource()
 
 void nsHTMLMediaElement::NotifyLoadError()
 {
-  if (mIsLoadingFromSrcAttribute) {
+  if (!mIsLoadingFromSourceChildren) {
     LOG(PR_LOG_DEBUG, ("NotifyLoadError(), no supported media error"));
     NoSupportedMediaSourceError();
   } else {
@@ -693,7 +694,7 @@ void nsHTMLMediaElement::NotifyLoadError()
 
 void nsHTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
                                               PRUint32 aFrameBufferLength,
-                                              PRUint64 aTime)
+                                              float aTime)
 {
   // Auto manage the memory for the frame buffer, so that if we add an early
   // return-on-error here in future, we won't forget to release the memory.
@@ -734,7 +735,7 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
 {
   NS_ASSERTION(mDelayingLoadEvent,
                "Should delay load event (if in document) during load");
-  NS_ASSERTION(!mIsLoadingFromSrcAttribute,
+  NS_ASSERTION(mIsLoadingFromSourceChildren,
                "Must remember we're loading from source children");
   while (PR_TRUE) {
     nsresult rv;
@@ -758,7 +759,8 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
     }
 
     // If we have a type attribute, it must be a supported type.
-    if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+    if (child->HasAttr(kNameSpaceID_None, nsGkAtoms::type) &&
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
         GetCanPlay(type) == CANPLAY_NO)
     {
       DispatchAsyncSourceError(child);
@@ -809,7 +811,7 @@ void nsHTMLMediaElement::ResumeLoad(PreloadAction aAction)
   mPreloadAction = aAction;
   ChangeDelayLoadStatus(PR_TRUE);
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
-  if (mIsLoadingFromSrcAttribute) {
+  if (!mIsLoadingFromSourceChildren) {
     // We were loading from the element's src attribute.
     if (NS_FAILED(LoadResource(uri))) {
       NoSupportedMediaSourceError();
@@ -831,9 +833,11 @@ static PRBool IsAutoplayEnabled()
 void nsHTMLMediaElement::UpdatePreloadAction()
 {
   PreloadAction nextAction = PRELOAD_UNDEFINED;
-  // If autoplay is set, we should always preload data, as we'll need it
-  // to play.
-  if (IsAutoplayEnabled() && HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) {
+  // If autoplay is set, or we're playing, we should always preload data,
+  // as we'll need it to play.
+  if ((IsAutoplayEnabled() && HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) ||
+      !mPaused)
+  {
     nextAction = nsHTMLMediaElement::PRELOAD_ENOUGH;
   } else {
     // Find the appropriate preload action by looking at the attribute.
@@ -973,7 +977,6 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
     listener = crossSiteListener;
     NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
-    crossSiteListener->AllowHTTPResult(HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE);
   } else {
     rv = nsContentUtils::GetSecurityManager()->
            CheckLoadURIWithPrincipal(NodePrincipal(),
@@ -1285,7 +1288,7 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mWaitingFired(PR_FALSE),
     mIsBindingToTree(PR_FALSE),
     mIsRunningLoadMethod(PR_FALSE),
-    mIsLoadingFromSrcAttribute(PR_FALSE),
+    mIsLoadingFromSourceChildren(PR_FALSE),
     mDelayingLoadEvent(PR_FALSE),
     mIsRunningSelectResource(PR_FALSE),
     mSuspendedAfterFirstFrame(PR_FALSE),
@@ -1395,7 +1398,9 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
   mPaused = PR_FALSE;
   mAutoplaying = PR_FALSE;
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
+  // and our preload status.
   AddRemoveSelfReference();
+  UpdatePreloadAction();
 
   return NS_OK;
 }
@@ -1830,7 +1835,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_LOADING;
 
-  nsresult rv = decoder->Load(stream, nsnull);
+  nsresult rv = decoder->Load(stream, nsnull, aOriginal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1857,7 +1862,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   if (!stream)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = decoder->Load(stream, aListener);
+  nsresult rv = decoder->Load(stream, aListener, nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1978,7 +1983,18 @@ void nsHTMLMediaElement::NetworkError()
 
 void nsHTMLMediaElement::DecodeError()
 {
-  Error(nsIDOMMediaError::MEDIA_ERR_DECODE);
+  if (mIsLoadingFromSourceChildren) {
+    NS_ASSERTION(mSourceLoadCandidate, "Must know the source we were loading from!");
+    if (mDecoder) {
+      mDecoder->Shutdown();
+      mDecoder = nsnull;
+    }
+    mError = nsnull;
+    DispatchAsyncSourceError(mSourceLoadCandidate);
+    QueueLoadFromSourceTask();
+  } else {
+    Error(nsIDOMMediaError::MEDIA_ERR_DECODE);
+  }
 }
 
 void nsHTMLMediaElement::LoadAborted()
@@ -2207,7 +2223,7 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
 
 nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
                                                          PRUint32 aFrameBufferLength,
-                                                         PRUint64 aTime)
+                                                         float aTime)
 {
   // Auto manage the memory for the frame buffer. If we fail and return
   // an error, this ensures we free the memory in the frame buffer. Otherwise
@@ -2227,7 +2243,7 @@ nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
 
   rv = audioavailableEvent->InitAudioAvailableEvent(NS_LITERAL_STRING("MozAudioAvailable"),
                                                     PR_TRUE, PR_TRUE, frameBuffer.forget(), aFrameBufferLength,
-                                                    (float)aTime / MS_PER_SECOND, mAllowAudioData);
+                                                    aTime, mAllowAudioData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool dummy;

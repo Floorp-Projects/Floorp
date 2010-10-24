@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=599368
+-->
+<head>
+  <title>Test for Bug 599368</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=599368">Mozilla Bug 599368</a>
+<iframe id="display" src="about:blank"></iframe>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 599368 **/
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("load", step1, false);
+
+var gImage;
+var gIframe;
+var gBlueNotSelected;
+var gBlueSelected;
+var gFuchsiaSelected;
+
+function step1()
+{
+  gIframe = document.getElementById("display");
+  doc = gIframe.contentDocument;
+
+  gImage = doc.createElement('img');
+  var src = String(window.location).split("/");
+  src.pop();
+  src.push("blue-32x32.png");
+  src = src.join("/");
+  gImage.src = src;
+  gImage.addEventListener("load", step2, false);
+  doc.body.appendChild(gImage);
+
+  doc.designMode = "on";
+}
+
+function step2() {
+  gImage.removeEventListener("load", step2, false);
+
+  gBlueNotSelected = snapshotWindow(gIframe.contentWindow, false);
+
+  synthesizeMouse(gImage, 5, 5, {}, gIframe.contentWindow);
+  setTimeout(step3, 0);
+}
+
+function step3() {
+  gBlueSelected = snapshotWindow(gIframe.contentWindow, false);
+
+  var src = String(window.location).split("/");
+  src.pop();
+  src.push("fuchsia-32x32.png");
+  src = src.join("/");
+  gImage.addEventListener("load", step4, false);
+  gImage.src = src;
+}
+
+function step4() {
+  gImage.removeEventListener("load", step4, false);
+
+  gFuchsiaSelected = snapshotWindow(gIframe.contentWindow, false);
+
+  assert_different(gBlueNotSelected, gBlueSelected,
+                   "selecting image should add drag points");
+  assert_different(gBlueSelected, gFuchsiaSelected,
+                   "different images should appear different");
+
+  SimpleTest.finish();
+}
+
+function assert_different(shot1, shot2, desc)
+{
+  var [correct, s1, s2] = compareSnapshots(shot1, shot2, false);
+  ok(correct, desc);
+}
+
+</script>
+</pre>
+</body>
+</html>

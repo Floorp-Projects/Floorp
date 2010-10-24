@@ -753,8 +753,7 @@ nsJSCID::CreateInstance(nsISupports **_retval)
                         nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
-        NS_ASSERTION(JS_IsExceptionPending(cx),
-                     "security manager vetoed CreateInstance without setting exception");
+        NS_ERROR("how are we not being called from chrome here?");
         return NS_OK;
     }
 
@@ -775,13 +774,9 @@ nsJSCID::CreateInstance(nsISupports **_retval)
     if(NS_FAILED(rv) || !inst)
         return NS_ERROR_XPC_CI_RETURNED_FAILURE;
 
-    JSObject* instJSObj;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = xpc->WrapNative(cx, obj, inst, *iid, getter_AddRefs(holder));
-    if(NS_FAILED(rv) || !holder || NS_FAILED(holder->GetJSObject(&instJSObj)))
+    rv = xpc->WrapNativeToJSVal(cx, obj, inst, nsnull, iid, PR_TRUE, vp, nsnull);
+    if(NS_FAILED(rv) || JSVAL_IS_PRIMITIVE(*vp))
         return NS_ERROR_XPC_CANT_CREATE_WN;
-
-    *vp = OBJECT_TO_JSVAL(instJSObj);
     ccxp->SetReturnValueWasSet(JS_TRUE);
     return NS_OK;
 }

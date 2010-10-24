@@ -323,16 +323,21 @@ nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
                                               nsIAtom* aPseudo,
                                               nsIPresShell* aPresShell)
 {
-  // If there's no pres shell, get it from the content
-  if (!aPresShell) {
-    aPresShell = GetPresShellForContent(aElement);
-    if (!aPresShell)
+  // If the content has a pres shell, we must use it.  Otherwise we'd
+  // potentially mix rule trees by using the wrong pres shell's style
+  // set.  Using the pres shell from the content also means that any
+  // content that's actually *in* a document will get the style from the
+  // correct document.
+  nsIPresShell *presShell = GetPresShellForContent(aElement);
+  if (!presShell) {
+    presShell = aPresShell;
+    if (!presShell)
       return nsnull;
   }
 
-  aPresShell->FlushPendingNotifications(Flush_Style);
+  presShell->FlushPendingNotifications(Flush_Style);
 
-  return GetStyleContextForElementNoFlush(aElement, aPseudo, aPresShell);
+  return GetStyleContextForElementNoFlush(aElement, aPseudo, presShell);
 }
 
 /* static */
@@ -342,11 +347,15 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
                                                      nsIPresShell* aPresShell)
 {
   NS_ABORT_IF_FALSE(aElement, "NULL element");
-
-  // If there's no pres shell, get it from the content
-  if (!aPresShell) {
-    aPresShell = GetPresShellForContent(aElement);
-    if (!aPresShell)
+  // If the content has a pres shell, we must use it.  Otherwise we'd
+  // potentially mix rule trees by using the wrong pres shell's style
+  // set.  Using the pres shell from the content also means that any
+  // content that's actually *in* a document will get the style from the
+  // correct document.
+  nsIPresShell *presShell = GetPresShellForContent(aElement);
+  if (!presShell) {
+    presShell = aPresShell;
+    if (!presShell)
       return nsnull;
   }
 
@@ -373,13 +382,13 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsElement())
     parentContext = GetStyleContextForElementNoFlush(parent->AsElement(),
-                                                     nsnull, aPresShell);
+                                                     nsnull, presShell);
 
-  nsPresContext *presContext = aPresShell->GetPresContext();
+  nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext)
     return nsnull;
 
-  nsStyleSet *styleSet = aPresShell->StyleSet();
+  nsStyleSet *styleSet = presShell->StyleSet();
 
   if (aPseudo) {
     nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
@@ -2074,28 +2083,28 @@ nsresult
 nsComputedDOMStyle::DoGetBorderBottomLeftRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
-                         NS_CORNER_BOTTOM_LEFT, aValue);
+                         NS_CORNER_BOTTOM_LEFT, PR_TRUE, aValue);
 }
 
 nsresult
 nsComputedDOMStyle::DoGetBorderBottomRightRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
-                         NS_CORNER_BOTTOM_RIGHT, aValue);
+                         NS_CORNER_BOTTOM_RIGHT, PR_TRUE, aValue);
 }
 
 nsresult
 nsComputedDOMStyle::DoGetBorderTopLeftRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
-                         NS_CORNER_TOP_LEFT, aValue);
+                         NS_CORNER_TOP_LEFT, PR_TRUE, aValue);
 }
 
 nsresult
 nsComputedDOMStyle::DoGetBorderTopRightRadius(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleBorder()->mBorderRadius,
-                         NS_CORNER_TOP_RIGHT, aValue);
+                         NS_CORNER_TOP_RIGHT, PR_TRUE, aValue);
 }
 
 nsresult
@@ -2265,28 +2274,28 @@ nsresult
 nsComputedDOMStyle::DoGetOutlineRadiusBottomLeft(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleOutline()->mOutlineRadius,
-                         NS_CORNER_BOTTOM_LEFT, aValue);
+                         NS_CORNER_BOTTOM_LEFT, PR_FALSE, aValue);
 }
 
 nsresult
 nsComputedDOMStyle::DoGetOutlineRadiusBottomRight(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleOutline()->mOutlineRadius,
-                         NS_CORNER_BOTTOM_RIGHT, aValue);
+                         NS_CORNER_BOTTOM_RIGHT, PR_FALSE, aValue);
 }
 
 nsresult
 nsComputedDOMStyle::DoGetOutlineRadiusTopLeft(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleOutline()->mOutlineRadius,
-                         NS_CORNER_TOP_LEFT, aValue);
+                         NS_CORNER_TOP_LEFT, PR_FALSE, aValue);
 }
 
 nsresult
 nsComputedDOMStyle::DoGetOutlineRadiusTopRight(nsIDOMCSSValue** aValue)
 {
   return GetEllipseRadii(GetStyleOutline()->mOutlineRadius,
-                         NS_CORNER_TOP_RIGHT, aValue);
+                         NS_CORNER_TOP_RIGHT, PR_FALSE, aValue);
 }
 
 nsresult
@@ -2316,20 +2325,42 @@ nsComputedDOMStyle::DoGetOutlineColor(nsIDOMCSSValue** aValue)
 nsresult
 nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
                                     PRUint8 aFullCorner,
+                                    PRBool aIsBorder, // else outline
                                     nsIDOMCSSValue** aValue)
 {
-  const nsStyleCoord& radiusX
-    = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, PR_FALSE));
-  const nsStyleCoord& radiusY
-    = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, PR_TRUE));
+  nsStyleCoord radiusX, radiusY;
+  if (mInnerFrame && aIsBorder) {
+    nscoord radii[8];
+    mInnerFrame->GetBorderRadii(radii);
+    radiusX.SetCoordValue(radii[NS_FULL_TO_HALF_CORNER(aFullCorner, PR_FALSE)]);
+    radiusY.SetCoordValue(radii[NS_FULL_TO_HALF_CORNER(aFullCorner, PR_TRUE)]);
+  } else {
+    radiusX = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, PR_FALSE));
+    radiusY = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, PR_TRUE));
+
+    if (mInnerFrame) {
+      // We need to convert to absolute coordinates before doing the
+      // equality check below.
+      nscoord v;
+
+      v = StyleCoordToNSCoord(radiusX,
+                              &nsComputedDOMStyle::GetFrameBorderRectWidth,
+                              0, PR_TRUE);
+      radiusX.SetCoordValue(v);
+
+      v = StyleCoordToNSCoord(radiusY,
+                              &nsComputedDOMStyle::GetFrameBorderRectHeight,
+                              0, PR_TRUE);
+      radiusY.SetCoordValue(v);
+    }
+  }
 
   // for compatibility, return a single value if X and Y are equal
   if (radiusX == radiusY) {
     nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
     NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-    SetValueToCoord(val, radiusX, PR_TRUE,
-                    &nsComputedDOMStyle::GetFrameBorderRectWidth);
+    SetValueToCoord(val, radiusX, PR_TRUE);
 
     NS_ADDREF(*aValue = val);
     return NS_OK;
@@ -2352,10 +2383,8 @@ nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    SetValueToCoord(valX, radiusX, PR_TRUE,
-                    &nsComputedDOMStyle::GetFrameBorderRectWidth);
-    SetValueToCoord(valY, radiusY, PR_TRUE,
-                    &nsComputedDOMStyle::GetFrameBorderRectWidth);
+    SetValueToCoord(valX, radiusX, PR_TRUE);
+    SetValueToCoord(valY, radiusY, PR_TRUE);
 
     NS_ADDREF(*aValue = valueList);
     return NS_OK;
@@ -4036,6 +4065,19 @@ nsComputedDOMStyle::GetFrameBorderRectWidth(nscoord& aWidth)
 }
 
 PRBool
+nsComputedDOMStyle::GetFrameBorderRectHeight(nscoord& aHeight)
+{
+  if (!mInnerFrame) {
+    return PR_FALSE;
+  }
+
+  AssertFlushedPendingReflows();
+
+  aHeight = mInnerFrame->GetSize().height;
+  return PR_TRUE;
+}
+
+PRBool
 nsComputedDOMStyle::GetFrameBoundsWidthForTransform(nscoord& aWidth)
 {
   // We need a frame to work with.
@@ -4705,13 +4747,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
    * Properties commented out with // are not yet implemented            *
    * Properties commented out with //// are shorthands and not queryable *
   \* ******************************************************************* */
-  static
-#ifndef XP_MACOSX
-    // XXX If this actually fixes the bustage, replace this with an
-    // autoconf test.
-  const
-#endif
-  ComputedStyleMapEntry map[] = {
+  static const ComputedStyleMapEntry map[] = {
     /* ****************************** *\
      * Implementations of CSS2 styles *
     \* ****************************** */

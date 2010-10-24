@@ -148,7 +148,7 @@ ImageLayerD3D9::GetLayer()
 }
 
 void
-ImageLayerD3D9::RenderLayer()
+ImageLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 {
   if (!GetContainer()) {
     return;
@@ -165,29 +165,23 @@ ImageLayerD3D9::RenderLayer()
     }
     yuvImage->AllocateTextures();
 
-    float quadTransform[4][4];
-    /*
-     * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-     * and size. To get pixel perfect mapping we extend the quad half a pixel
-     * beyond all edges.
-     */
-    memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)yuvImage->mSize.width;
-    quadTransform[1][1] = (float)yuvImage->mSize.height;
-    quadTransform[2][2] = 1.0f;
-    quadTransform[3][3] = 1.0f;
+    device()->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(0,
+                                                          0,
+                                                          yuvImage->mSize.width,
+                                                          yuvImage->mSize.height),
+                                       1);
 
-
-    device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
-    device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
+    gfx3DMatrix transform = mTransform * aTransform;
+    device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
     float opacity[4];
     /*
      * We always upload a 4 component float, but the shader will
      * only use the the first component since it's declared as a 'float'.
      */
-    opacity[0] = GetOpacity();
-    device()->SetPixelShaderConstantF(0, opacity, 1);
+    opacity[0] = GetOpacity() * aOpacity;
+    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
 
@@ -219,29 +213,24 @@ ImageLayerD3D9::RenderLayer()
     CairoImageD3D9 *cairoImage =
       static_cast<CairoImageD3D9*>(image.get());
 
-    float quadTransform[4][4];
-    /*
-     * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-     * and size. To get pixel perfect mapping we extend the quad half a pixel
-     * beyond all edges.
-     */
-    memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)cairoImage->mSize.width;
-    quadTransform[1][1] = (float)cairoImage->mSize.height;
-    quadTransform[2][2] = 1.0f;
-    quadTransform[3][3] = 1.0f;
 
+    device()->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(0,
+                                                          0,
+                                                          cairoImage->mSize.width,
+                                                          cairoImage->mSize.height),
+                                       1);
 
-    device()->SetVertexShaderConstantF(0, &quadTransform[0][0], 4);
-    device()->SetVertexShaderConstantF(4, &mTransform._11, 4);
+    gfx3DMatrix transform = mTransform * aTransform;
+    device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
     float opacity[4];
     /*
      * We always upload a 4 component float, but the shader will
      * only use the the first component since it's declared as a 'float'.
      */
-    opacity[0] = GetOpacity();
-    device()->SetPixelShaderConstantF(0, opacity, 1);
+    opacity[0] = GetOpacity() * aOpacity;
+    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 

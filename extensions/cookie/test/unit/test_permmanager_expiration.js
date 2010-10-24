@@ -2,27 +2,36 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// setup a profile directory
-var dir = do_get_profile();
+// Test that permissions with specific expiry times behave as expected.
 
-// initialize the permission manager service
-var pm = Cc["@mozilla.org/permissionmanager;1"]
-         .getService(Ci.nsIPermissionManager);
-
-var ios = Cc["@mozilla.org/network/io-service;1"]
-          .getService(Ci.nsIIOService);
-var permURI = ios.newURI("http://example.com", null, null);
+let test_generator = do_run_test();
 
 function run_test() {
+  do_test_pending();
+  test_generator.next();
+}
+
+function continue_test()
+{
+  do_run_generator(test_generator);
+}
+
+function do_run_test() {
+  // Set up a profile.
+  let profile = do_get_profile();
+
+  let pm = Services.permissions;
+  let permURI = NetUtil.newURI("http://example.com");
+  let now = Number(Date.now());
 
   // add a permission with *now* expiration
-  pm.add(permURI, "test/expiration-perm-exp", 1, pm.EXPIRE_TIME, (new Date()).getTime());
+  pm.add(permURI, "test/expiration-perm-exp", 1, pm.EXPIRE_TIME, now);
 
   // add a permission with future expiration (100 milliseconds)
-  pm.add(permURI, "test/expiration-perm-exp2", 1, pm.EXPIRE_TIME, (new Date()).getTime() + 100);
+  pm.add(permURI, "test/expiration-perm-exp2", 1, pm.EXPIRE_TIME, now + 100);
 
-  // add a permission with future expiration (10000 milliseconds)
-  pm.add(permURI, "test/expiration-perm-exp3", 1, pm.EXPIRE_TIME, (new Date()).getTime() + 10000);
+  // add a permission with future expiration (1000 seconds)
+  pm.add(permURI, "test/expiration-perm-exp3", 1, pm.EXPIRE_TIME, now + 1e6);
 
   // add a permission without expiration
   pm.add(permURI, "test/expiration-perm-nexp", 1, pm.EXPIRE_NEVER, 0);
@@ -32,30 +41,15 @@ function run_test() {
   do_check_eq(1, pm.testPermission(permURI, "test/expiration-perm-nexp"));
 
   // ... and the first one has
-  do_test_pending();
-  do_timeout(10, verifyFirstExpiration);
+  do_timeout(10, continue_test);
+  yield;
+  do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp"));
 
   // ... and that the short-term one will
-  do_test_pending();
-  do_timeout(200, verifyExpiration);
-
-  // clean up
-  do_test_pending();
-  do_timeout(300, end_test);
-}
-
-function verifyFirstExpiration() { 
-  do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp"));
-  do_test_finished();
-}
-
-function verifyExpiration() { 
+  do_timeout(200, continue_test);
+  yield;
   do_check_eq(0, pm.testPermission(permURI, "test/expiration-perm-exp2")); 
-  do_test_finished();
+
+  do_finish_generator_test(test_generator);
 }
 
-function end_test() {
-  // clean up
-  pm.removeAll();
-  do_test_finished();
-}

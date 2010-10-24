@@ -148,7 +148,7 @@ protected:
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
   nsIContent* GetCurrentContent();
-  StackNode & GetCurrentStackNode();
+  StackNode* GetCurrentStackNode();
   nsresult PushContent(nsIContent *aContent);
   void PopContent();
   PRBool HaveNotifiedForCurrentContent() const;

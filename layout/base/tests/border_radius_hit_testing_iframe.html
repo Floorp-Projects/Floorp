@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<title>border-radius hit testing</title>
+<style>
+
+  body { margin: 0; }
+
+  #one, #two {
+    border-radius: 100px 60px 40px 120px / 40px 60px 60px 80px;
+    margin-bottom: 100px;
+  }
+
+  #two { overflow: hidden }
+
+  #one, #two > div {
+    height: 200px;
+    background: blue;
+    cursor: progress;
+  }
+
+  #one:hover, #two > div:hover {
+    background: fuchsia;
+  }
+
+</style>
+<body>
+<div id="one"></div>
+<div id="two"><div></div></div>

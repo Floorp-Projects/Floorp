@@ -735,11 +735,20 @@ nsCopySupport::FireClipboardEvent(PRInt32 aType, nsIPresShell* aPresShell, nsISe
   if (status == nsEventStatus_eConsumeNoDefault)
     return PR_FALSE;
 
-  // no need to do anything special during a paste. Either an event listener
+  if (presShell->IsDestroying())
+    return PR_FALSE;
+
+  // No need to do anything special during a paste. Either an event listener
   // took care of it and cancelled the event, or the caller will handle it.
   // Return true to indicate the event wasn't cancelled.
   if (aType == NS_PASTE)
     return PR_TRUE;
+
+  // Update the presentation in case the event handler modified the selection,
+  // see bug 602231.
+  presShell->FlushPendingNotifications(Flush_Frames);
+  if (presShell->IsDestroying())
+    return PR_FALSE;
 
   // call the copy code
   if (NS_FAILED(nsCopySupport::HTMLCopy(sel, doc, nsIClipboard::kGlobalClipboard)))

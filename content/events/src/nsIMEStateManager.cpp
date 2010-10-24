@@ -63,6 +63,8 @@
 #include "nsISelectionController.h"
 #include "nsIMutationObserver.h"
 #include "nsContentEventHandler.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 /******************************************************************/
 /* nsIMEStateManager                                              */
@@ -235,6 +237,28 @@ nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   return aContent->GetDesiredIMEState();
 }
 
+// Helper class, used for IME enabled state change notification
+class IMEEnabledStateChangedEvent : public nsRunnable {
+public:
+  IMEEnabledStateChangedEvent(PRUint32 aState)
+    : mState(aState)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (observerService) {
+      nsAutoString state;
+      state.AppendInt(mState);
+      observerService->NotifyObservers(nsnull, "ime-enabled-state-changed", state.get());
+    }
+    return NS_OK;
+  }
+
+private:
+  PRUint32 mState;
+};
+
 void
 nsIMEStateManager::SetIMEState(PRUint32 aState,
                                nsIWidget* aWidget)
@@ -243,6 +267,8 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
     PRUint32 state =
       nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
     aWidget->SetIMEEnabled(state);
+
+    nsContentUtils::AddScriptRunner(new IMEEnabledStateChangedEvent(state));
   }
   if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
     PRBool open = !!(aState & nsIContent::IME_STATUS_OPEN);

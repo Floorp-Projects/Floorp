@@ -25,6 +25,8 @@ int UniformComponentCount(GLenum type)
       case GL_BOOL:
       case GL_FLOAT:
       case GL_INT:
+      case GL_SAMPLER_2D:
+      case GL_SAMPLER_CUBE:
           return 1;
       case GL_BOOL_VEC2:
       case GL_FLOAT_VEC2:
@@ -68,6 +70,8 @@ GLenum UniformComponentType(GLenum type)
       case GL_FLOAT_MAT4:
           return GL_FLOAT;
       case GL_INT:
+      case GL_SAMPLER_2D:
+      case GL_SAMPLER_CUBE:
       case GL_INT_VEC2:
       case GL_INT_VEC3:
       case GL_INT_VEC4:
@@ -183,6 +187,49 @@ GLsizei ComputePitch(GLsizei width, GLenum format, GLenum type, GLint alignment)
     return (rawPitch + alignment - 1) & ~(alignment - 1);
 }
 
+GLsizei ComputeCompressedPitch(GLsizei width, GLenum format)
+{
+    switch (format)
+    {
+      case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+      case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        break;
+      default:
+        return 0;
+    }
+
+    ASSERT(width % 4 == 0);
+
+    return 8 * width / 4;
+}
+
+GLsizei ComputeCompressedSize(GLsizei width, GLsizei height, GLenum format)
+{
+    switch (format)
+    {
+      case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+      case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        break;
+      default:
+        return 0;
+    }
+
+    return 8 * (GLsizei)ceil((float)width / 4.0f) * (GLsizei)ceil((float)height / 4.0f);
+}
+
+bool IsCompressed(GLenum format)
+{
+    if(format == GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
+       format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 // Returns the size, in bytes, of a single texel in an Image
 int ComputePixelSize(GLenum format, GLenum type)
 {
@@ -204,6 +251,28 @@ int ComputePixelSize(GLenum format, GLenum type)
       case GL_UNSIGNED_SHORT_5_5_5_1:
       case GL_UNSIGNED_SHORT_5_6_5:
         return sizeof(unsigned short);
+      case GL_FLOAT:
+        switch (format)
+        {
+          case GL_ALPHA:           return sizeof(float);
+          case GL_LUMINANCE:       return sizeof(float);
+          case GL_LUMINANCE_ALPHA: return sizeof(float) * 2;
+          case GL_RGB:             return sizeof(float) * 3;
+          case GL_RGBA:            return sizeof(float) * 4;
+          default: UNREACHABLE();
+        }
+        break;
+      case GL_HALF_FLOAT_OES:
+        switch (format)
+        {
+          case GL_ALPHA:           return sizeof(unsigned short);
+          case GL_LUMINANCE:       return sizeof(unsigned short);
+          case GL_LUMINANCE_ALPHA: return sizeof(unsigned short) * 2;
+          case GL_RGB:             return sizeof(unsigned short) * 3;
+          case GL_RGBA:            return sizeof(unsigned short) * 4;
+          default: UNREACHABLE();
+        }
+        break;
       default: UNREACHABLE();
     }
 
@@ -230,6 +299,21 @@ bool CheckTextureFormatType(GLenum format, GLenum type)
         {
           case GL_RGBA:
           case GL_BGRA_EXT:
+          case GL_RGB:
+          case GL_ALPHA:
+          case GL_LUMINANCE:
+          case GL_LUMINANCE_ALPHA:
+            return true;
+
+          default:
+            return false;
+        }
+
+      case GL_FLOAT:
+      case GL_HALF_FLOAT_OES:
+        switch (format)
+        {
+          case GL_RGBA:
           case GL_RGB:
           case GL_ALPHA:
           case GL_LUMINANCE:
@@ -465,6 +549,10 @@ unsigned int GetAlphaSize(D3DFORMAT colorFormat)
 {
     switch (colorFormat)
     {
+      case D3DFMT_A16B16G16R16F:
+        return 16;
+      case D3DFMT_A32B32G32R32F:
+        return 32;
       case D3DFMT_A2R10G10B10:
         return 2;
       case D3DFMT_A8R8G8B8:
@@ -484,6 +572,10 @@ unsigned int GetRedSize(D3DFORMAT colorFormat)
 {
     switch (colorFormat)
     {
+      case D3DFMT_A16B16G16R16F:
+        return 16;
+      case D3DFMT_A32B32G32R32F:
+        return 32;
       case D3DFMT_A2R10G10B10:
         return 10;
       case D3DFMT_A8R8G8B8:
@@ -502,6 +594,10 @@ unsigned int GetGreenSize(D3DFORMAT colorFormat)
 {
     switch (colorFormat)
     {
+      case D3DFMT_A16B16G16R16F:
+        return 16;
+      case D3DFMT_A32B32G32R32F:
+        return 32;
       case D3DFMT_A2R10G10B10:
         return 10;
       case D3DFMT_A8R8G8B8:
@@ -521,6 +617,10 @@ unsigned int GetBlueSize(D3DFORMAT colorFormat)
 {
     switch (colorFormat)
     {
+      case D3DFMT_A16B16G16R16F:
+        return 16;
+      case D3DFMT_A32B32G32R32F:
+        return 32;
       case D3DFMT_A2R10G10B10:
         return 10;
       case D3DFMT_A8R8G8B8:
@@ -601,12 +701,31 @@ D3DFORMAT ConvertRenderbufferFormat(GLenum format)
     switch (format)
     {
       case GL_RGBA4:
-      case GL_RGB5_A1:              return D3DFMT_A8R8G8B8;
+      case GL_RGB5_A1:
+      case GL_RGBA8_OES:            return D3DFMT_A8R8G8B8;
       case GL_RGB565:               return D3DFMT_R5G6B5;
+      case GL_RGB8_OES:             return D3DFMT_X8R8G8B8;
       case GL_DEPTH_COMPONENT16:
-      case GL_STENCIL_INDEX8:       return D3DFMT_D24S8;
+      case GL_STENCIL_INDEX8:       
+      case GL_DEPTH24_STENCIL8_OES: return D3DFMT_D24S8;
       default: UNREACHABLE();       return D3DFMT_A8R8G8B8;
     }
+}
+
+GLsizei GetSamplesFromMultisampleType(D3DMULTISAMPLE_TYPE type)
+{
+    if (type == D3DMULTISAMPLE_NONMASKABLE)
+        return 0;
+    else
+        return type;
+}
+
+D3DMULTISAMPLE_TYPE GetMultisampleTypeFromSamples(GLsizei samples)
+{
+    if (samples <= 1)
+        return D3DMULTISAMPLE_NONE;
+    else
+        return (D3DMULTISAMPLE_TYPE)samples;
 }
 
 }

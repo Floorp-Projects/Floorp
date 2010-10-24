@@ -63,8 +63,7 @@ else
   var recorderAbortedStart = this.tracemonkey.recorderAborted;
   var traceCompletedStart  = this.tracemonkey.traceCompleted;
 
-
-  for (var i = 0; i < 5; i++)
+  for (var i = 0; i < RUNLOOP; i++)
   {
     Array(1);
   }

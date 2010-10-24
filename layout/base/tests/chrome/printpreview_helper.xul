@@ -104,7 +104,7 @@ function startTest1() {
 
   // Note this timeout is needed so that we can check that timers run
   // after print preview, but not during it.
-  window.frames[0].counter = counter;
+  window.frames[0].wrappedJSObject.counter = counter;
   window.frames[0].counterTimeout = "document.body.firstChild.nextSibling.innerHTML = ++counter + ' timers';" +
                                     "window.setTimeout(counterTimeout, 0);";
   window.frames[0].setTimeout(window.frames[0].counterTimeout, 0);

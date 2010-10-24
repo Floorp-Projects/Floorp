@@ -74,6 +74,12 @@ mochitest-plain:
 	$(RUN_MOCHITEST)
 	$(CHECK_TEST_ERROR)
 
+# Allow mochitest-1 ... mochitest-5 for developer ease
+mochitest-1 mochitest-2 mochitest-3 mochitest-4 mochitest-5: mochitest-%:
+	echo "mochitest: $* / 5"
+	$(RUN_MOCHITEST) --chunk-by-dir=4 --total-chunks=5 --this-chunk=$*
+	$(CHECK_TEST_ERROR)
+
 mochitest-chrome:
 	$(RUN_MOCHITEST) --chrome
 	$(CHECK_TEST_ERROR)
@@ -83,7 +89,17 @@ mochitest-a11y:
 	$(CHECK_TEST_ERROR)
 
 mochitest-ipcplugins:
+#ifdef XP_MACOSX
+#if defined(__i386__)
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.i386.test.plugin=true --test-path=modules/plugin/test
+#elif defined(__x86_64__)
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.x86_64.test.plugin=true --test-path=modules/plugin/test
+#elif defined(__ppc__)
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.ppc.test.plugin=true --test-path=modules/plugin/test
+#endif
+#else
 	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=true --test-path=modules/plugin/test
+#endif
 	$(CHECK_TEST_ERROR)
 
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
@@ -132,8 +148,13 @@ PKG_STAGE = $(DIST)/universal/test-package-stage
 endif
 
 package-tests:
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	@rm -f "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
+ifndef UNIVERSAL_BINARY
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+else
+	#building tests.jar (bug 543800) fails on unify, so we build tests.jar after unify is run
+	$(MAKE) -C $(DEPTH)/testing/mochitest stage-chromejar PKG_STAGE=$(DIST)/universal
+endif
 	cd $(PKG_STAGE) && \
 	  zip -r9D "$(call core_abspath,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" *
 

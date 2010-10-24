@@ -177,8 +177,12 @@ public:
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
            nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion);
   }
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder)
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull)
   {
+    if (aForceTransparentSurface) {
+      *aForceTransparentSurface = PR_FALSE;
+    }
     return NS_GET_A(mExtraBackgroundColor) == 255 ||
            nsDisplayBackground::IsOpaque(aBuilder);
   }
@@ -197,6 +201,12 @@ public:
   {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     return frame->CanvasArea() + ToReferenceFrame();
+  }
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
+  {
+    // We need to override so we don't consider border-radius.
+    aOutFrames->AppendElement(mFrame);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,

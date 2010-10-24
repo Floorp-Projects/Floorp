@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=595652
+-->
+<head>
+  <title>Test for Bug 595652</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=595652">Mozilla Bug 595652</a>
+<iframe src="border_radius_hit_testing_iframe.html" id="iframe" height="600" width="500" style="border:none"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 595652 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var iframe = document.getElementById("iframe");
+  
+  var doc = iframe.contentDocument;
+
+  var container = doc.body;
+  var one = doc.getElementById("one");
+  var two = doc.getElementById("two").firstChild;
+
+  //container.addEventListener("click", function(event) { alert(event.clientX + "," + event.clientY) }, false);
+
+  function check(x, y, expected_element, description)
+  {
+	is(doc.elementFromPoint(x, y), expected_element,
+	   "point (" + x + ", " + y + "): " + description);
+  }
+
+  check(42, 6, container, "outside top left corner of #one");
+  check(11, 21, container, "outside top left corner of #one");
+  check(476, 10, container, "outside top right corner of #one");
+  check(495, 28, container, "outside top right corner of #one");
+  check(483, 197, container, "outside bottom right corner of #one");
+  check(497, 175, container, "outside bottom right corner of #one");
+  check(29, 182, container, "outside bottom left corner of #one");
+  check(73, 198, container, "outside bottom left corner of #one");
+
+  check(95, 2, one, "inside top left corner of #one (curved quadrant)");
+  check(16, 27, one, "inside top left corner of #one (curved quadrant)");
+  check(87, 37, one, "inside top left corner of #one (curved quadrant)");
+  check(465, 10, one, "inside top right corner of #one (curved quadrant)");
+  check(489, 33, one, "inside top right corner of #one (curved quadrant)");
+  check(443, 56, one, "inside top right corner of #one (curved quadrant)");
+  check(493, 167, one, "inside bottom right corner of #one (curved quadrant)");
+  check(476, 188, one, "inside bottom right corner of #one (curved quadrant)");
+  check(462, 144, one, "inside bottom right corner of #one (curved quadrant)");
+  check(74, 186, one, "inside bottom left corner of #one (curved quadrant)");
+  check(16, 153, one, "inside bottom left corner of #one (curved quadrant)");
+  check(112, 124, one, "inside bottom left corner of #one (curved quadrant)");
+
+  check(250, 1, one, "along top edge of #one");
+  check(250, 199, one, "along bottom edge of #one");
+  check(1, 100, one, "along left edge of #one");
+  check(499, 100, one, "along right edge of #one");
+  check(250, 100, one, "in center of #one");
+
+  check(2, 52, one, "inside top left corner of #one (left edge, outside ellipse)");
+  check(82, 52, one, "inside top left corner of #one (left edge, inside ellipse)");
+
+  check(42, 306, container, "outside top left corner of #two");
+  check(11, 321, container, "outside top left corner of #two");
+  check(476, 310, container, "outside top right corner of #two");
+  check(495, 328, container, "outside top right corner of #two");
+  check(483, 497, container, "outside bottom right corner of #two");
+  check(497, 475, container, "outside bottom right corner of #two");
+  check(29, 482, container, "outside bottom left corner of #two");
+  check(73, 498, container, "outside bottom left corner of #two");
+
+  check(95, 302, two, "inside top left corner of #two (curved quadrant)");
+  check(16, 327, two, "inside top left corner of #two (curved quadrant)");
+  check(87, 337, two, "inside top left corner of #two (curved quadrant)");
+  check(465, 310, two, "inside top right corner of #two (curved quadrant)");
+  check(489, 333, two, "inside top right corner of #two (curved quadrant)");
+  check(443, 356, two, "inside top right corner of #two (curved quadrant)");
+  check(493, 467, two, "inside bottom right corner of #two (curved quadrant)");
+  check(476, 488, two, "inside bottom right corner of #two (curved quadrant)");
+  check(462, 444, two, "inside bottom right corner of #two (curved quadrant)");
+  check(74, 486, two, "inside bottom left corner of #two (curved quadrant)");
+  check(16, 453, two, "inside bottom left corner of #two (curved quadrant)");
+  check(112, 424, two, "inside bottom left corner of #two (curved quadrant)");
+
+  check(250, 301, two, "along top edge of #two");
+  check(250, 499, two, "along bottom edge of #two");
+  check(1, 400, two, "along left edge of #two");
+  check(499, 400, two, "along right edge of #two");
+  check(250, 400, two, "in center of #two");
+
+  check(2, 352, two, "inside top left corner of #two (left edge, outside ellipse)");
+  check(82, 352, two, "inside top left corner of #two (left edge, inside ellipse)");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

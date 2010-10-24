@@ -24,6 +24,7 @@
  *
  * Contributor(s):
  *   Robert Ginda <rginda@netscape.com>
+ *   Kris Maglione <maglione.k@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -56,6 +57,7 @@
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIFileURL.h"
+#include "nsScriptLoader.h"
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
@@ -70,6 +72,7 @@
 #define LOAD_ERROR_URI_NOT_LOCAL "Trying to load a non-local URI."
 #define LOAD_ERROR_NOSTREAM  "Error opening input stream (invalid filename?)"
 #define LOAD_ERROR_NOCONTENT "ContentLength not available (not a local URL?)"
+#define LOAD_ERROR_BADCHARSET "Error converting to specified charset"
 #define LOAD_ERROR_BADREAD   "File Read Error."
 #define LOAD_ERROR_READUNDERFLOW "File Read Error (underflow.)"
 #define LOAD_ERROR_NOPRINCIPALS "Failed to get principals."
@@ -158,7 +161,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     char     *url;
     JSObject *target_obj = nsnull;
-    ok = JS_ConvertArguments (cx, argc, argv, "s / o", &url, &target_obj);
+    jschar   *charset = nsnull;
+    ok = JS_ConvertArguments (cx, argc, argv, "s / o W", &url, &target_obj, &charset);
     if (!ok)
     {
         /* let the exception raised by JS_ConvertArguments show through */
@@ -203,6 +207,10 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 #endif  
     }
 
+    // Remember an object out of the calling compartment so that we
+    // can properly wrap the result later.
+    JSObject *result_obj = target_obj;
+
     // Innerize the target_obj so that we compile the loaded script in the
     // correct (inner) scope.
     if (JSObjectOp op = target_obj->getClass()->ext.innerObject)
@@ -213,6 +221,14 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
         fprintf (stderr, "Final global: %p\n", target_obj);
 #endif
     }
+    else if (target_obj->isWrapper())
+    {
+        target_obj = target_obj->unwrap();
+    }
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, target_obj))
+        return NS_ERROR_UNEXPECTED;
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
@@ -339,7 +355,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
      * JSPRINCIPALS_DROP macro takes a JSContext, which we won't have in the
      * destructor */
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
-    if (NS_FAILED(rv) || !jsPrincipals) {
+    if (NS_FAILED(rv) || !jsPrincipals)
+    {
         errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOPRINCIPALS);
         goto return_exception;
     }
@@ -348,8 +365,36 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
      * exceptions, including the source/line number */
     er = JS_SetErrorReporter (cx, mozJSLoaderErrorReporter);
 
-    ok = JS_EvaluateScriptForPrincipals (cx, target_obj, jsPrincipals,
-                                         buf, len, uriStr.get(), 1, rval);        
+    if (charset)
+    {
+        nsString script;
+        rv = nsScriptLoader::ConvertToUTF16 (nsnull,
+                                             reinterpret_cast<PRUint8*>(buf.get()), len,
+                                             nsDependentString(
+                                                 reinterpret_cast<PRUnichar*>(charset)),
+                                             nsnull, script);
+        if (NS_FAILED(rv))
+        {
+            errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_BADCHARSET);
+            goto return_exception;
+        }
+        ok = JS_EvaluateUCScriptForPrincipals (cx, target_obj, jsPrincipals,
+                                               reinterpret_cast<const jschar*>(script.get()),
+                                               script.Length(), uriStr.get(), 1, rval);
+    }
+    else
+    {
+        ok = JS_EvaluateScriptForPrincipals (cx, target_obj, jsPrincipals,
+                                             buf, len, uriStr.get(), 1, rval);
+    }
+
+    {
+        JSAutoEnterCompartment rac;
+
+        if (!rac.enter(cx, result_obj) || !JS_WrapValue(cx, rval))
+            return NS_ERROR_UNEXPECTED; 
+    }
+
     /* repent for our evil deeds */
     JS_SetErrorReporter (cx, er);
 

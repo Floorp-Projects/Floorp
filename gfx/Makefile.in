@@ -60,7 +60,7 @@ ifneq ($(OS_ARCH)$(OS_TEST),Linuxx86_64)
 DIRS		+= angle
 endif
 
-DIRS		+= src qcms layers harfbuzz/src thebes src/thebes
+DIRS		+= src qcms layers harfbuzz/src ots/src thebes src/thebes
 
 ifdef BUILD_STATIC_LIBS
 DIRS		+= ycbcr

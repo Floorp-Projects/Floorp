@@ -411,72 +411,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     res = NS_OK;
 
     switch (aID) {
-    case eMetric_WindowTitleHeight:
-        aMetric = 0;
-        break;
-    case eMetric_WindowBorderWidth:
-        // XXXldb Why is this commented out?
-        //    aMetric = mStyle->klass->xthickness;
-        break;
-    case eMetric_WindowBorderHeight:
-        // XXXldb Why is this commented out?
-        //    aMetric = mStyle->klass->ythickness;
-        break;
-    case eMetric_Widget3DBorder:
-        // XXXldb Why is this commented out?
-        //    aMetric = 4;
-        break;
-    case eMetric_TextFieldHeight:
-        {
-            GtkRequisition req;
-            GtkWidget *text = gtk_entry_new();
-            // needed to avoid memory leak
-            g_object_ref_sink(GTK_OBJECT(text));
-            gtk_widget_size_request(text,&req);
-            aMetric = req.height;
-            gtk_widget_destroy(text);
-            g_object_unref(text);
-        }
-        break;
-    case eMetric_TextFieldBorder:
-        aMetric = 2;
-        break;
-    case eMetric_TextVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_TextShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 15;
-        break;
-    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 1;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-        aMetric = 10;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-        aMetric = 8;
-        break;
-    case eMetric_CheckboxSize:
-        aMetric = 15;
-        break;
-    case eMetric_RadioboxSize:
-        aMetric = 15;
-        break;
-    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 15;
-        break;
-    case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 15;
-        break;
-    case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 1;
-        break;
-    case eMetric_ListVerticalInsidePadding:
-        aMetric = 1;
-        break;
     case eMetric_CaretBlinkTime:
         {
             GtkSettings *settings;
@@ -579,6 +513,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_DWMCompositor:
     case eMetric_WindowsClassic:
     case eMetric_WindowsDefaultTheme:
+    case eMetric_WindowsThemeIdentifier:
         aMetric = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
@@ -653,30 +588,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
     res = NS_OK;
 
     switch (aID) {
-    case eMetricFloat_TextFieldVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_TextFieldHorizontalInsidePadding:
-        aMetric = 0.95f; // large number on purpose so minimum padding is used
-        break;
-    case eMetricFloat_TextAreaVerticalInsidePadding:
-        aMetric = 0.40f;    
-        break;
-    case eMetricFloat_TextAreaHorizontalInsidePadding:
-        aMetric = 0.40f; // large number on purpose so minimum padding is used
-        break;
-    case eMetricFloat_ListVerticalInsidePadding:
-        aMetric = 0.10f;
-        break;
-    case eMetricFloat_ListHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ButtonVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_ButtonHorizontalInsidePadding:
-        aMetric = 0.25f;
-        break;
     case eMetricFloat_IMEUnderlineRelativeSize:
         aMetric = 1.0f;
         break;

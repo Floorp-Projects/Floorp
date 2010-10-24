@@ -152,14 +152,14 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       nsRefPtr<ShadowThebesLayer> layer =
         layer_manager()->CreateShadowThebesLayer();
-      layer->SetParent(this);
+      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateThebesLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateContainerLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateContainerLayer"));
 
-      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayer();
+      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateShadowContainerLayer();
       AsShadowLayer(edit.get_OpCreateContainerLayer())->Bind(layer);
       break;
     }
@@ -168,14 +168,14 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       nsRefPtr<ShadowImageLayer> layer =
         layer_manager()->CreateShadowImageLayer();
-      layer->SetParent(this);
+      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateImageLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateColorLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateColorLayer"));
 
-      nsRefPtr<ColorLayer> layer = layer_manager()->CreateColorLayer();
+      nsRefPtr<ShadowColorLayer> layer = layer_manager()->CreateShadowColorLayer();
       AsShadowLayer(edit.get_OpCreateColorLayer())->Bind(layer);
       break;
     }
@@ -184,7 +184,7 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
 
       nsRefPtr<ShadowCanvasLayer> layer = 
         layer_manager()->CreateShadowCanvasLayer();
-      layer->SetParent(this);
+      layer->SetAllocator(this);
       AsShadowLayer(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
     }
@@ -195,12 +195,8 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       ShadowThebesLayer* thebes = static_cast<ShadowThebesLayer*>(
         AsShadowLayer(otb)->AsLayer());
 
-      ThebesBuffer unusedBuffer;
-      nsIntRegion unusedRegion; float unusedXRes, unusedYRes;
-      thebes->Swap(
-        ThebesBuffer(otb.initialFront(), otb.bufferRect(), nsIntPoint(0, 0)),
-        unusedRegion,
-        &unusedBuffer, &unusedRegion, &unusedXRes, &unusedYRes);
+      thebes->SetFrontBuffer(otb.initialFront(), otb.frontValidRegion(),
+                             otb.xResolution(), otb.yResolution());
 
       break;
     }

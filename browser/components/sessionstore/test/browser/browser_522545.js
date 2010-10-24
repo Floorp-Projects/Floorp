@@ -50,6 +50,7 @@ function test() {
   is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);

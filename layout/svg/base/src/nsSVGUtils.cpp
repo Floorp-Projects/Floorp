@@ -620,7 +620,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
         viewportFrame = GetOuterSVGFrame(aFrame);
       }
       if (viewportFrame->GetType() == nsGkAtoms::svgOuterSVGFrame) {
-        nsRect r = viewportFrame->GetOverflowRect();
+        nsRect r = viewportFrame->GetVisualOverflowRect();
         // GetOverflowRect is relative to our border box, but we need it
         // relative to our content box.
         r.MoveBy(viewportFrame->GetPosition() - viewportFrame->GetContentRect().TopLeft());
@@ -1324,7 +1324,8 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame)
     // filter to text. When one of these facilities is applied to text
     // the bounding box is the entire ‘text’ element in all
     // cases.
-    nsSVGTextContainerFrame* metrics = do_QueryFrame(aFrame);
+    nsSVGTextContainerFrame* metrics = do_QueryFrame(
+      GetFirstNonAAncestorFrame(aFrame));
     if (metrics) {
       while (aFrame->GetType() != nsGkAtoms::svgTextFrame) {
         aFrame = aFrame->GetParent();
@@ -1535,18 +1536,18 @@ nsSVGUtils::GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex)
 // ----------------------------------------------------------------------
 
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
-  mRenderMode(NORMAL), mRenderingContext(aContext)
+  mRenderMode(NORMAL), mRenderingContext(aContext), mPaintingToWindow(PR_FALSE)
 {
   mGfxContext = aContext->ThebesContext();
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
-  mRenderMode(NORMAL), mGfxContext(aContext)
+  mRenderMode(NORMAL), mGfxContext(aContext), mPaintingToWindow(PR_FALSE)
 {
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
-  mRenderMode(NORMAL)
+  mRenderMode(NORMAL), mPaintingToWindow(PR_FALSE)
 {
   mGfxContext = new gfxContext(aSurface);
 }
@@ -1564,3 +1565,17 @@ nsSVGRenderState::GetRenderingContext(nsIFrame *aFrame)
   return mRenderingContext;
 }
 
+/* static */ PRBool
+nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
+{
+  if (aRootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
+      aRootSVGElem->Tag() != nsGkAtoms::svg) {
+    NS_ABORT_IF_FALSE(PR_FALSE, "Expecting an SVG <svg> node");
+    return PR_FALSE;
+  }
+
+  const nsSVGSVGElement *svgSvgElem =
+    static_cast<const nsSVGSVGElement*>(aRootSVGElem);
+
+  return svgSvgElem->HasValidViewbox();
+}

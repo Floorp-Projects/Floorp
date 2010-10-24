@@ -125,37 +125,11 @@ private:
             const PRInt64& aContentLength);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
-    virtual bool RecvGetPrefType(const nsCString& prefName,
-            PRInt32* retValue, nsresult* rv);
-
-    virtual bool RecvGetBoolPref(const nsCString& prefName,
-            PRBool* retValue, nsresult* rv);
-
-    virtual bool RecvGetIntPref(const nsCString& prefName,
-            PRInt32* retValue, nsresult* rv);
-
-    virtual bool RecvGetCharPref(const nsCString& prefName,
-            nsCString* retValue, nsresult* rv);
-
-    virtual bool RecvGetPrefLocalizedString(const nsCString& prefName,
-            nsString* retValue, nsresult* rv);
-
-    virtual bool RecvPrefHasUserValue(const nsCString& prefName,
-            PRBool* retValue, nsresult* rv);
-
-    virtual bool RecvPrefIsLocked(const nsCString& prefName,
-            PRBool* retValue, nsresult* rv);
-
-    virtual bool RecvGetChildList(const nsCString& domain,
-            nsTArray<nsCString>* list, nsresult* rv);
-
-    virtual bool RecvTestPermission(const IPC::URI&  aUri,
-                                    const nsCString& aType,
-                                    const PRBool&    aExact,
-                                    PRUint32*        retValue);
+    virtual bool RecvReadPrefsArray(nsTArray<PrefTuple> *retValue);
 
     void EnsurePrefService();
-    void EnsurePermissionService();
+
+    virtual bool RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions);
 
     virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
@@ -165,7 +139,18 @@ private:
 
     virtual bool RecvSetURITitle(const IPC::URI& uri,
                                  const nsString& title);
-
+    
+    virtual bool RecvShowFilePicker(const PRInt16& mode,
+                                    const PRInt16& selectedType,
+                                    const nsString& title,
+                                    const nsString& defaultFile,
+                                    const nsString& defaultExtension,
+                                    const nsTArray<nsString>& filters,
+                                    const nsTArray<nsString>& filterNames,
+                                    nsTArray<nsString>* files,
+                                    PRInt16* retValue,
+                                    nsresult* result);
+ 
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                            const nsString& aText, const PRBool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName);
@@ -179,6 +164,15 @@ private:
     virtual bool RecvGeolocationStart();
     virtual bool RecvGeolocationStop();
 
+    virtual bool RecvConsoleMessage(const nsString& aMessage);
+    virtual bool RecvScriptError(const nsString& aMessage,
+                                 const nsString& aSourceName,
+                                 const nsString& aSourceLine,
+                                 const PRUint32& aLineNumber,
+                                 const PRUint32& aColNumber,
+                                 const PRUint32& aFlags,
+                                 const nsCString& aCategory);
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
@@ -189,8 +183,7 @@ private:
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
     bool mIsAlive;
-    nsCOMPtr<nsIPrefBranch> mPrefService; 
-    nsCOMPtr<nsIPermissionManager> mPermissionService; 
+    nsCOMPtr<nsIPrefServiceInternal> mPrefService; 
 };
 
 } // namespace dom

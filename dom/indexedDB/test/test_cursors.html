@@ -32,12 +32,12 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("autoIncrement", "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("autoIncrement", "", true);
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -47,12 +47,7 @@
       }
       yield;
 
-      request = db.createObjectStore("autoIncrementKeyPath", "foo", true);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      objectStore = event.result;
+      objectStore = db.createObjectStore("autoIncrementKeyPath", "foo", true);
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -62,12 +57,7 @@
       }
       yield;
 
-      request = db.createObjectStore("keyPath", "foo");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      objectStore = event.result;
+      objectStore = db.createObjectStore("keyPath", "foo");
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -77,12 +67,7 @@
       }
       yield;
 
-      request = db.createObjectStore("foo", "");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      let event = yield;
-
-      objectStore = event.result;
+      objectStore = db.createObjectStore("foo", "");
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;

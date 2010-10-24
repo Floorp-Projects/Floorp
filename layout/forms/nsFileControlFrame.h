@@ -93,23 +93,12 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements);
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                        PRUint32 aFilter);
 
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
-
-  /**
-   * This methods return the file filter mask requested by the HTML5 accept
-   * attribute. If the accept attribute isn't present or the value isn't valid,
-   * the returned value will be 0.
-   *
-   * See:
-   * http://dev.w3.org/html5/spec/forms.html#attr-input-accept
-   *
-   * @return the file picker filter mask or 0 if there is no filter.
-   */
-  PRInt32 GetFileFilterFromAccept() const;
 
   typedef PRBool (*AcceptAttrCallback)(const nsAString&, void*);
   void ParseAcceptAttribute(AcceptAttrCallback aCallback, void* aClosure) const;

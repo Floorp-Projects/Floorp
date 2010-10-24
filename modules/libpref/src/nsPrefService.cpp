@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
+#include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
 #endif
 
@@ -67,6 +68,7 @@
 #include "prefapi.h"
 #include "prefread.h"
 #include "prefapi_private_data.h"
+#include "PrefTuple.h"
 
 #include "nsITimelineService.h"
 
@@ -131,14 +133,6 @@ nsresult nsPrefService::Init()
 
   mRootBranch = (nsIPrefBranch2 *)rootBranch;
 
-#ifdef MOZ_IPC
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // We're done. Let the prefbranch remote requests.
-    return NS_OK;
-  }
-#endif
-
-  nsXPIDLCString lockFileName;
   nsresult rv;
 
   rv = PREF_Init();
@@ -147,6 +141,22 @@ nsresult nsPrefService::Init()
   rv = pref_InitInitialObjects();
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef MOZ_IPC
+  using mozilla::dom::ContentChild;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    nsTArray<PrefTuple> array;
+    ContentChild::GetSingleton()->SendReadPrefsArray(&array);
+
+    // Store the array
+    nsTArray<PrefTuple>::size_type index = array.Length();
+    while (index-- > 0) {
+      pref_SetPrefTuple(array[index], PR_TRUE);
+    }
+    return NS_OK;
+  }
+#endif
+
+  nsXPIDLCString lockFileName;
   /*
    * The following is a small hack which will allow us to only load the library
    * which supports the netscape.cfg file if the preference is defined. We
@@ -320,6 +330,33 @@ NS_IMETHODIMP nsPrefService::ReadExtensionPrefs(nsILocalFile *aFile)
     PREF_FinalizeParseState(&ps);
   }
   return rv;
+}
+
+NS_IMETHODIMP nsPrefService::SetPreference(const PrefTuple *aPref)
+{
+  return pref_SetPrefTuple(*aPref, PR_TRUE);
+}
+
+NS_IMETHODIMP nsPrefService::MirrorPreference(const nsACString& aPrefName,
+                                              PrefTuple *aPref)
+{
+  PrefHashEntry *pref = pref_HashTableLookup(nsDependentCString(aPrefName).get());
+
+  if (!pref)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  pref_GetTupleFromEntry(pref, aPref);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrefService::MirrorPreferences(nsTArray<PrefTuple> *aArray)
+{
+  aArray->SetCapacity(PL_DHASH_TABLE_SIZE(&gHashTable));
+
+  PL_DHashTableEnumerate(&gHashTable, pref_MirrorPrefs, aArray);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)

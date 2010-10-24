@@ -225,6 +225,10 @@ struct PatternTerm {
 struct PatternAlternative {
     PatternAlternative(PatternDisjunction* disjunction)
         : m_parent(disjunction)
+        , m_onceThrough(false)
+        , m_hasFixedSize(false)
+        , m_startsWithBOL(false)
+        , m_containsBOL(false)
     {
     }
 
@@ -239,16 +243,30 @@ struct PatternAlternative {
         JS_ASSERT(m_terms.length());
         m_terms.popBack();
     }
+    
+    void setOnceThrough()
+    {
+        m_onceThrough = true;
+    }
+    
+    bool onceThrough()
+    {
+        return m_onceThrough;
+    }
 
     js::Vector<PatternTerm, 0, js::SystemAllocPolicy> m_terms;
     PatternDisjunction* m_parent;
     unsigned m_minimumSize;
-    bool m_hasFixedSize;
+    bool m_onceThrough : 1;
+    bool m_hasFixedSize : 1;
+    bool m_startsWithBOL : 1;
+    bool m_containsBOL : 1;
 };
 
 struct PatternDisjunction {
     PatternDisjunction(PatternAlternative* parent = 0)
         : m_parent(parent)
+        , m_hasFixedSize(false)
     {
     }
     
@@ -287,9 +305,10 @@ struct RegexPattern {
     RegexPattern(bool ignoreCase, bool multiline)
         : m_ignoreCase(ignoreCase)
         , m_multiline(multiline)
+        , m_containsBackreferences(false)
+        , m_containsBOL(false)
         , m_numSubpatterns(0)
         , m_maxBackReference(0)
-        , m_containsBackreferences(false)
         , newlineCached(0)
         , digitsCached(0)
         , spacesCached(0)
@@ -312,6 +331,7 @@ struct RegexPattern {
         m_maxBackReference = 0;
 
         m_containsBackreferences = false;
+        m_containsBOL = false;
 
         newlineCached = 0;
         digitsCached = 0;
@@ -375,14 +395,17 @@ struct RegexPattern {
         return nonwordcharCached;
     }
 
-    bool m_ignoreCase;
-    bool m_multiline;
+    typedef js::Vector<PatternDisjunction*, 4, js::SystemAllocPolicy> PatternDisjunctions;
+    typedef js::Vector<CharacterClass*, 0, js::SystemAllocPolicy> CharacterClasses;
+    bool m_ignoreCase : 1;
+    bool m_multiline : 1;
+    bool m_containsBackreferences : 1;
+    bool m_containsBOL : 1;
     unsigned m_numSubpatterns;
     unsigned m_maxBackReference;
-    bool m_containsBackreferences;
     PatternDisjunction *m_body;
-    js::Vector<PatternDisjunction*, 4, js::SystemAllocPolicy> m_disjunctions;
-    js::Vector<CharacterClass*, 0, js::SystemAllocPolicy> m_userCharacterClasses;
+    PatternDisjunctions m_disjunctions;
+    CharacterClasses m_userCharacterClasses;
 
 private:
     CharacterClass* newlineCached;

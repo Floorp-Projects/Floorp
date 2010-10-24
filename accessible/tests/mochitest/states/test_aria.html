@@ -29,6 +29,36 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+    function testAriaDisabledTree(aAccOrElmOrID)
+    {
+      // test accessible and its subtree for propagated state.
+      var acc = getAccessible(aAccOrElmOrID);
+      if (!acc)
+        return;
+
+      var [state, extraState] = getStates(aAccOrElmOrID);
+      if (state & STATE_UNAVAILABLE) {
+        var role = getRole(acc);
+        if (role != ROLE_GROUPING) {
+          testStates(acc, STATE_FOCUSABLE);
+        }
+      }
+
+      // Iterate over its children to see if the state got propagated.
+      var children = null;
+      try {
+        children = acc.children;
+      } catch(e) {}
+      ok(children, "Could not get children for " + aAccOrElmOrID +"!");
+  
+      if (children) {
+        for (var i = 0; i < children.length; i++) {
+          var childAcc = children.queryElementAt(i, nsIAccessible);
+          testAriaDisabledTree(childAcc);
+        }
+      }
+    }
+
     function doTest()
     {
       // aria_autocomplete
@@ -64,7 +94,7 @@
 
       // test disabled group and all its descendants to see if they are
       // disabled, too. See bug 429285.
-      testStatesInSubtree("group", STATE_UNAVAILABLE);
+      testAriaDisabledTree("group");
 
       // offscreen test
       testStates("aria_offscreen_textbox", STATE_OFFSCREEN);

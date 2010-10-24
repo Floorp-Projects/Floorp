@@ -62,6 +62,7 @@
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
 
 static const  PRInt32 kTabSize=4;
+static const  PRInt32 kOLNumberWidth = 3;
 static const  PRInt32 kIndentSizeHeaders = 2;  /* Indention of h1, if
                                                 mHeaderStrategy = 1 or = 2.
                                                 Indention of other headers
@@ -128,6 +129,8 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mTagStackIndex = 0;
   mIgnoreAboveIndex = (PRUint32)kNotFound;
 
+  // initialize the OL stack, where numbers for ordered lists are kept
+  mOLStack = new PRInt32[OLStackSize];
   mOLStackIndex = 0;
 
   mULCount = 0;
@@ -136,6 +139,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
 nsPlainTextSerializer::~nsPlainTextSerializer()
 {
   delete[] mTagStack;
+  delete[] mOLStack;
   NS_WARN_IF_FALSE(mHeadLevel == 0, "Wrong head level!");
 }
 
@@ -695,8 +699,53 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   }
   else if (type == eHTMLTag_ol) {
     EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
-    mOLStackIndex++;
+    if (mFlags & nsIDocumentEncoder::OutputFormatted) {
+      // Must end the current line before we change indention
+      if (mOLStackIndex < OLStackSize) {
+        nsAutoString startAttr;
+        PRInt32 startVal = 1;
+        if(NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::start, startAttr))){
+          PRInt32 rv = 0;
+          startVal = startAttr.ToInteger(&rv);
+          if (NS_FAILED(rv))
+            startVal = 1;
+        }
+        mOLStack[mOLStackIndex++] = startVal;
+      }
+    } else {
+      mOLStackIndex++;
+    }
     mIndent += kIndentSizeList;  // see ul
+  }
+  else if (type == eHTMLTag_li &&
+           (mFlags & nsIDocumentEncoder::OutputFormatted)) {
+    if (mTagStackIndex > 1 && IsInOL()) {
+      if (mOLStackIndex > 0) {
+        nsAutoString valueAttr;
+        if(NS_SUCCEEDED(GetAttributeValue(aNode, nsGkAtoms::value, valueAttr))){
+          PRInt32 rv = 0;
+          PRInt32 valueAttrVal = valueAttr.ToInteger(&rv);
+          if (NS_SUCCEEDED(rv))
+            mOLStack[mOLStackIndex-1] = valueAttrVal;
+        }
+        // This is what nsBulletFrame does for OLs:
+        mInIndentString.AppendInt(mOLStack[mOLStackIndex-1]++, 10);
+      }
+      else {
+        mInIndentString.Append(PRUnichar('#'));
+      }
+
+      mInIndentString.Append(PRUnichar('.'));
+
+    }
+    else {
+      static char bulletCharArray[] = "*o+#";
+      PRUint32 index = mULCount > 0 ? (mULCount - 1) : 3;
+      char bulletChar = bulletCharArray[index % 4];
+      mInIndentString.Append(PRUnichar(bulletChar));
+    }
+
+    mInIndentString.Append(PRUnichar(' '));
   }
   else if (type == eHTMLTag_dl) {
     EnsureVerticalSpace(1);
@@ -874,7 +923,15 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     if (mFloatingLines < 0)
       mFloatingLines = 0;
     mLineBreakDue = PR_TRUE;
-  } 
+  }
+  else if (((type == eHTMLTag_li) ||
+            (type == eHTMLTag_dt)) &&
+           (mFlags & nsIDocumentEncoder::OutputFormatted)) {
+    // Items that should always end a line, but get no more whitespace
+    if (mFloatingLines < 0)
+      mFloatingLines = 0;
+    mLineBreakDue = PR_TRUE;
+  }
   else if (type == eHTMLTag_pre) {
     mFloatingLines = GetLastBool(mIsInCiteBlockquote) ? 0 : 1;
     mLineBreakDue = PR_TRUE;

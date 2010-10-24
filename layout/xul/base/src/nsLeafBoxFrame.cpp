@@ -340,7 +340,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   aDesiredSize.ascent = GetBoxAscent(state);
 
   // the overflow rect is set in SetBounds() above
-  aDesiredSize.mOverflowArea = GetOverflowRect();
+  aDesiredSize.mOverflowAreas = GetOverflowAreas();
 
 #ifdef DO_NOISY_REFLOW
   {

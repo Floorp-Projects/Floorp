@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Henrik Skupin <hskupin@mozilla.com>
+ *   Geo Mealer <gmealer@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,29 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * @fileoverview
- * The AddonsAPI adds support for addons related functions. It also gives
- * access to the Addons Manager.
- */
-
 var MODULE_NAME = 'AddonsAPI';
 
 const RELATIVE_ROOT = '.';
-const MODULE_REQUIRES = ['PrefsAPI', 'UtilsAPI'];
+const MODULE_REQUIRES = ['DOMUtilsAPI', 'PrefsAPI', 'TabbedBrowsingAPI',
+                         'UtilsAPI'];
 
-const gTimeout = 5000;
+const TIMEOUT = 5000;
+const TIMEOUT_DOWNLOAD = 15000;
+const TIMEOUT_SEARCH = 30000;
 
-// Addons Manager element templates
-const AM_TOPBAR       = '/id("extensionsManager")/id("topBar")';
-const AM_DECK         = '/id("extensionsManager")/id("addonsMsg")';
-const AM_SELECTOR     = AM_TOPBAR + '/{"flex":"1"}/{"class":"viewGroupWrapper"}/id("viewGroup")';
-const AM_NOTIFICATION = AM_DECK + '/{"type":"warning"}';
-const AM_SEARCHFIELD  = AM_DECK + '/id("extensionsBox")/id("searchPanel")/id("searchfield")';
-const AM_SEARCHBUTTON = AM_SEARCHFIELD + '/anon({"class":"textbox-input-box"})/anon({"anonid":"search-icons"})';
-const AM_SEARCHINPUT  = AM_SEARCHFIELD + '/anon({"class":"textbox-input-box"})/anon({"anonid":"input"})';
-const AM_LISTBOX      = AM_DECK + '/id("extensionsBox")/[1]/id("extensionsView")';
-const AM_LISTBOX_BTN  = '/anon({"flex":"1"})/{"class":"addonTextBox"}/{"flex":"1"}';
+// Available search filters
+const SEARCH_FILTER = [
+  "local",
+  "remote"
+];
 
 // Preferences which have to be changed to make sure we do not interact with the
 // official AMO page but preview.addons.mozilla.org instead
@@ -72,18 +65,26 @@ const AMO_PREFERENCES = [
 /**
  * Constructor
  */
-function addonsManager()
-{
-  this._controller = null;
-  this._utilsAPI = collector.getModule('UtilsAPI');
+function addonsManager(aController) {
+  this._DOMUtilsAPI = collector.getModule('DOMUtilsAPI');
+  this._TabbedBrowsingAPI = collector.getModule('TabbedBrowsingAPI');
+  this._UtilsAPI = collector.getModule('UtilsAPI');
+
+  this._controller = aController;
+  this._tabBrowser = new this._TabbedBrowsingAPI.tabBrowser(this._controller);
 }
 
 /**
  * Addons Manager class
  */
 addonsManager.prototype = {
+
+  ///////////////////////////////
+  // Global section
+  ///////////////////////////////
+
   /**
-   * Returns the controller of the window
+   * Get the controller of the window
    *
    * @returns Mozmill Controller
    * @type {MozMillController}
@@ -93,293 +94,1131 @@ addonsManager.prototype = {
   },
 
   /**
-   * Retrieve the id of the currently selected pane
-   *
-   * @returns Id of the currently selected pane
-   * @type string
-   */
-  get paneId() {
-    var selected = this.getElement({type: "selector_button", subtype: "selected", value: "true"});
-
-    return /\w+/.exec(selected.getNode().id);
-  },
-
-  /**
-   * Select the pane with the given id
-   *
-   * @param {string} id
-   *        Id of the pane to select
-   */
-  set paneId(id) {
-    if (this.paneId == id)
-      return;
-
-    var button = this.getElement({type: "selector_button", subtype: "id", value: id + "-view"});
-    this._controller.waitThenClick(button, gTimeout);
-
-    // Wait until the expected pane has been selected
-    this._controller.waitForEval("subject.window.paneId == subject.expectedPaneId", gTimeout, 100,
-                                 {window: this, expectedPaneId: id});
-  },
-
-  /**
-   * Clear the search field
-   */
-  clearSearchField : function addonsManager_clearSearchField() {
-    this.paneId = 'search';
-
-    var searchInput = this.getElement({type: "search_fieldInput"});
-    var cmdKey = UtilsAPI.getEntity(this.getDtds(), "selectAllCmd.key");
-    this._controller.keypress(searchInput, cmdKey, {accelKey: true});
-    this._controller.keypress(searchInput, 'VK_DELETE', {});
-  },
-
-  /**
-   * Close the Addons Manager
-   *
-   * @param {boolean} force
-   *        Force closing of the window
-   */
-  close : function addonsManager_close(force) {
-    var windowCount = mozmill.utils.getWindows().length;
-
-    if (this._controller) {
-      // Check if we should force the closing of the AM window
-      if (force) {
-        this._controller.window.close();
-      } else {
-        var cmdKey = UtilsAPI.getEntity(this.getDtds(), "closeCmd.key");
-        this._controller.keypress(null, cmdKey, {accelKey: true});
-      }
-
-      this._controller.waitForEval("subject.getWindows().length == " + (windowCount - 1),
-                                   gTimeout, 100, mozmill.utils);
-      this._controller = null;
-    }
-  },
-
-  /**
    * Gets all the needed external DTD urls as an array
    *
-   * @returns Array of external DTD urls
-   * @type [string]
+   * @returns URL's of external DTD files
+   * @type {array of string}
    */
-  getDtds : function downloadManager_getDtds() {
-    var dtds = ["chrome://mozapps/locale/extensions/extensions.dtd",
-                "chrome://browser/locale/browser.dtd"];
+  get dtds() {
+    var dtds = [
+      "chrome://mozapps/locale/extensions/extensions.dtd",
+      "chrome://browser/locale/browser.dtd"
+    ];
+
     return dtds;
   },
 
   /**
-   * Retrieve an UI element based on the given spec
+   * Open the Add-ons Manager
    *
-   * @param {object} spec
-   *        Information of the UI element which should be retrieved
-   *        type: General type information
-   *        subtype: Specific element or property
-   *        value: Value of the element or property
-   * @returns Element which has been created
-   * @type {ElemBase}
+   * @param {object} aSpec
+   *        Information how to open the Add-ons Manager
+   *        Elements: type    - Event, can be menu, or shortcut
+   *                            [optional - default: menu]
+   *                  waitFor - Wait until the Add-ons Manager has been opened
+   *                            [optional - default: true]
+   *                  
+   *
+   * @returns Reference the tab with the Add-ons Manager open
+   * @type {object}
+   *       Elements: controller - Mozmill Controller of the window
+   *                 index - Index of the tab
    */
-  getElement : function addonsManager_getElement(spec) {
-    var elem = null;
+  open : function addonsManager_open(aSpec) {
+    var spec = aSpec || { };
+    var type = (spec.type == undefined) ? "menu" : spec.type;
+    var waitFor = (spec.waitFor == undefined) ? true : spec.waitFor;
 
-    switch(spec.type) {
-      case "button_continue":
-        elem = new elementslib.ID(this._controller.window.document, "continueDialogButton");
+    switch (type) {
+      case "menu":
+        var menuItem = new elementslib.Elem(this._controller.
+                                            menus["tools-menu"].menu_openAddons);
+        this._controller.click(menuItem);
         break;
-      case "button_enableAll":
-        elem = new elementslib.ID(this._controller.window.document, "enableAllButton");
-        break;
-      case "button_findUpdates":
-        elem = new elementslib.ID(this._controller.window.document, "checkUpdatesAllButton");
-        break;
-      case "button_hideInformation":
-        elem = new elementslib.ID(this._controller.window.document, "hideUpdateInfoButton");
-        break;
-      case "button_installFile":
-        elem = new elementslib.ID(this._controller.window.document, "installFileButton");
-        break;
-      case "button_installUpdates":
-        elem = new elementslib.ID(this._controller.window.document, "installUpdatesAllButton");
-        break;
-      case "button_showInformation":
-        elem = new elementslib.ID(this._controller.window.document, "showUpdateInfoButton");
-        break;
-      case "button_skip":
-        elem = new elementslib.ID(this._controller.window.document, "skipDialogButton");
-        break;
-      case "link_browseAddons":
-        elem = new elementslib.ID(this._controller.window.document, "browseAddons");
-        break;
-      case "link_getMore":
-        elem = new elementslib.ID(this._controller.window.document, "getMore");
-        break;
-      case "listbox":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_LISTBOX);
-        break;
-      case "listbox_button":
-        // The search pane uses a bit differnet markup
-        if (this.paneId == "search") {
-          elem = new elementslib.Lookup(this._controller.window.document, spec.value.expression +
-                                        AM_LISTBOX_BTN + '/{"flex":"1"}/anon({"anonid":"selectedButtons"})' +
-                                        '/{"command":"cmd_' + spec.subtype + '"}');
-        } else {
-          elem = new elementslib.Lookup(this._controller.window.document, spec.value.expression +
-                                        AM_LISTBOX_BTN + '/{"command":"cmd_' + spec.subtype + '"}');
-        }
-        break;
-      case "listbox_element":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_LISTBOX +
-                                      '/{"' + spec.subtype + '":"' + spec.value + '"}');
-        break;
-      case "notificationBar":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_NOTIFICATION);
-        break;
-      case "notificationBar_buttonRestart":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_DECK +
-                                      '/{"type":"warning"}');
-        break;
-      case "search_field":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_SEARCHFIELD);
-        break;
-      case "search_fieldButton":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_SEARCHBUTTON);
-        break;
-      case "search_fieldInput":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_SEARCHINPUT);
-        break;
-      case "search_status":
-        elem = new elementslib.ID(this._controller.window.document,
-                                  'urn:mozilla:addons:search:status:' + spec.subtype);
-        break;
-      case "search_statusLabel":
-        elem = new elementslib.Elem(spec.value.getNode().boxObject.firstChild);
-        break;
-      case "selector":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_SELECTOR);
-        break;
-      case "selector_button":
-        elem = new elementslib.Lookup(this._controller.window.document, AM_SELECTOR +
-                                      '/{"' + spec.subtype + '":"' + spec.value + '"}');
+      case "shortcut":
+        var cmdKey = this._UtilsAPI.getEntity(this.dtds, "addons.commandkey");
+        this._controller.keypress(null, cmdKey, {accelKey: true, shiftKey: true});
         break;
       default:
-        throw new Error(arguments.callee.name + ": Unknown element type - " + spec.type);
+        throw new Error(arguments.callee.name + ": Unknown event type - " +
+                        event.type);
     }
 
-    return elem;
+    return waitFor ? this.waitForOpened() : null;
   },
 
   /**
-   * Returns the specified item from the richlistbox
+   * Check if the Add-ons Manager is open
    *
-   * @param {string} name
-   *        nodeName of the wanted richlistitem
-   * @param {string} value
-   *        nodeValue of the wanted richlistitem
-   * @returns Element string of the given list item
-   * @type string
+   * @returns True if the Add-ons Manager is open
+   * @type {boolean}
    */
-  getListboxItem : function addonsManager_getListItem(name, value) {
-    return this.getElement({type: "listbox_element", subtype: name, value: value});
-  },
-
-  /**
-   * Retrieves the pane with the given id
-   *
-   * @returns The pane
-   * @type {ElemBase}
-   */
-  getPane : function addonsManager_getPane(id) {
-    return this.getElement({type: "selector_button", subtype: "id", value: id + "-view"});
-  },
-
-  /**
-   * Retrieve the current enabled/disabled state of the given plug-in
-   *
-   * @param {string} node
-   *        Node name of the plug-in entry
-   * @param {string} value
-   *        Node value of the plug-in entry
-   * @returns True if plug-in is enabled
-   * @type boolean
-   */
-  getPluginState : function addonsManager_getPluginState(node, value) {
-    // If the plugins pane is not selected, do it now
-    this.paneId = "plugins";
-    
-    var plugin = this.getListboxItem(node, value);
-    var status = plugin.getNode().getAttribute('isDisabled') == 'false';
-
-    return status;
-  },
-
-  /**
-   * Open the Addons Manager
-   *
-   * @param {MozMillController} controller
-   *        MozMillController of the window to operate on
-   */
-  open : function addonsManager_open(controller) {
-    controller.click(new elementslib.Elem(controller.menus["tools-menu"].menu_openAddons));
-    this.waitForOpened(controller);
-  },
-
-  /**
-   * Search for the given search term inside the "Get Addons" pane
-   *
-   * @param {string} searchTerm
-   *        Term to search for
-   */
-  search : function addonsManager_search(searchTerm) {
-    // Select the search pane and start search
-    this.paneId = "search";
-
-    var searchField = this.getElement({type: "search_field"});
-
-    this.clearSearchField();
-    this._controller.waitForElement(searchField, gTimeout);
-    this._controller.type(searchField, searchTerm);
-    this._controller.keypress(searchField, "VK_RETURN", {});
-  },
-
-  /**
-   * Set the state of the given plug-in
-   *
-   * @param {string} node
-   *        Node name of the plug-in entry
-   * @param {string} value
-   *        Node value of the plug-in entry
-   * @param {boolean} enable
-   *        True if the plug-in should be enabled.
-   */
-  setPluginState : function addonsManager_setPluginState(node, value, enable) {
-    // If plugin already has the target state, do nothing
-    if (this.getPluginState(node, value) == enable)
-      return;
-
-    // Select the plug-in entry
-    var plugin = this.getListboxItem(node, value);
-    this._controller.click(plugin);
-
-    // Click the Enable/Disable button
-    var subtype = enable ? "enable" : "disable";
-    var button = this.getElement({type: "listbox_button", subtype: subtype, value: plugin});
-
-    this._controller.waitThenClick(button, gTimeout);
-    this._controller.waitForEval("subject.plugin.getPluginState(subject.node, subject.value) == subject.state", gTimeout, 100,
-                                 {plugin: this, node: node, value: value, state: enable});
+  get isOpen() {
+    return (this.getTabs().length > 0);
   },
 
   /**
    * Waits until the Addons Manager has been opened and returns its controller
    *
-   * @param {MozMillController} controller
-   *        MozMillController of the window to operate on
+   * @param {object} aSpec
+   *        Object with parameters for customization
+   *        Elements: timeout - Duration to wait for the target state
+   *                            [optional - default: 5s]
+   *
+   * @returns Currently selected tab
    */
-  waitForOpened : function addonsManager_waitforOpened(controller) {
-    this._controller = this._utilsAPI.handleWindow("type", "Extension:Manager",
-                                                   null, true);
+  waitForOpened : function addonsManager_waitforOpened(aSpec) {
+    var spec = aSpec || { };
+    var timeout = (spec.timeout == undefined) ? TIMEOUT : spec.timeout;
+
+    // TODO: restore after 1.5.1 has landed
+    // var self = this;
+    //
+    // mozmill.utils.waitFor(function() {
+    //   return self.isOpen;
+    // }, timeout, 100, "Add-ons Manager has been opened");
+    
+    mozmill.utils.waitForEval("subject.isOpen", timeout, 100, this);
+
+    // The first tab found will be the selected one
+    var tab = this.getTabs()[0];
+    tab.controller.waitForPageLoad();
+
+    return tab;
+  },
+
+  /**
+   * Close the Addons Manager
+   *
+   * @param {object} aSpec
+   *        Information about the event to send
+   *        Elements: type - Event type (closeButton, menu, middleClick, shortcut)
+   */
+  close : function addonsManager_close(aSpec) {
+    this._tabBrowser.closeTab(aSpec);
+  },
+
+  /**
+   * Retrieves the list of open add-ons manager tabs
+   *
+   * @returns List of open tabs
+   * @type {array of object}
+   *       Elements: controller - MozMillController
+   *                 index      - Index of the tab
+   */
+  getTabs : function addonsManager_getTabs() {
+    return this._TabbedBrowsingAPI.getTabsWithURL("about:addons");
+  },
+
+  /**
+   * Opens the utils button menu and clicks the specified menu entry
+   *
+   * @param {object} aSpec
+   *        Information about the menu
+   *        Elements: item - menu item to click (updateNow, viewUpdates,
+   *                         installFromFile, autoUpdateDefault,
+   *                         resetAddonUpdatesToAutomatic,
+   *                         resetAddonUpdatesToManual)
+   */
+  handleUtilsButton : function addonsManager_handleUtilsButton(aSpec) {
+    var spec = aSpec || { };
+    var item = spec.item;
+
+    if (!item)
+      throw new Error(arguments.callee.name + ": Menu item not specified.");
+
+    var button = this.getElement({type: "utilsButton"});
+    var menu = this.getElement({type: "utilsButton_menu"});
+
+    try {
+      this._controller.click(button);
+
+      // Click the button and wait until menu has been opened
+      
+      // TODO: restore after 1.5.1 has landed
+      // mozmill.utils.waitFor(function() {
+      //   return menu.getNode() && menu.getNode().state == "open";
+      // }, TIMEOUT, 100, "Menu of utils button has been opened.");
+      
+      mozmill.utils.waitForEval("subject && subject.state == 'open'",
+                                TIMEOUT, 100, menu.getNode());
+
+      // Click the given menu entry and make sure the 
+      var menuItem = this.getElement({
+        type: "utilsButton_menuItem",
+        value: "#utils-" + item
+      });
+
+      this._controller.click(menuItem);
+    } finally {
+      // Make sure the menu has been closed
+      this._controller.keypress(menu, "VK_ESCAPE", {});
+      
+      // TODO: restore after 1.5.1 has landed
+      // mozmill.utils.waitFor(function() {
+      //   return menu.getNode() && menu.getNode().state == "closed";
+      // }, TIMEOUT, 100, "Menu of utils button has been closed.");
+      
+      mozmill.utils.waitForEval("subject && subject.state == 'closed'",
+                                TIMEOUT, 100, menu.getNode());
+    }
+  },
+
+
+  ///////////////////////////////
+  // Add-on section
+  ///////////////////////////////
+
+  /**
+   * Check if the specified add-on is compatible
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   *
+   * @returns True if the add-on is compatible
+   * @type {ElemBase}
+   */
+  isAddonCompatible : function addonsManager_isAddonCompatible(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+
+    if (!addon)
+      throw new Error(arguments.callee.name + ": Add-on not specified.");
+
+    // XXX: Bug 599702 doens't give enough information which type of notification
+    return addon.getNode().getAttribute("notification") != "warning";
+  },
+
+  /**
+   * Check if the specified add-on is enabled
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   *
+   * @returns True if the add-on is enabled
+   * @type {ElemBase}
+   */
+  isAddonEnabled : function addonsManager_isAddonEnabled(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+
+    if (!addon)
+      throw new Error(arguments.callee.name + ": Add-on not specified.");
+
+    return addon.getNode().getAttribute("active") == "true";
+  },
+
+  /**
+   * Check if the specified add-on is installed
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   *
+   * @returns True if the add-on is installed
+   * @type {ElemBase}
+   */
+  isAddonInstalled : function addonsManager_isAddonInstalled(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+
+    if (!addon)
+      throw new Error(arguments.callee.name + ": Add-on not specified.");
+
+    // Bug 600502 : Add-ons in search view are not initialized correctly
+    return addon.getNode().getAttribute("remote") == "false" &&
+           addon.getNode().getAttribute("status") == "installed";
+  },
+
+  /**
+   * Enables the specified add-on
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   */
+  enableAddon : function addonsManager_enableAddon(aSpec) {
+    var spec = aSpec || { };
+    spec.button = "enable";
+
+    var button = this.getAddonButton(spec);
+    this._controller.click(button);
+  },
+
+  /**
+   * Disables the specified add-on
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   */
+  disableAddon : function addonsManager_disableAddon(aSpec) {
+    var spec = aSpec || { };
+    spec.button = "disable";
+
+    var button = this.getAddonButton(spec);
+    this._controller.click(button);
+  },
+
+  /**
+   * Installs the specified add-on
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon   - Add-on element
+   *                  waitFor - Wait until the category has been selected
+   *                            [optional - default: true]
+   *                  timeout - Duration to wait for the download
+   *                            [optional - default: 15s]
+   */
+  installAddon : function addonsManager_installAddon(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+    var timeout = spec.timeout;
+    var button = "install";
+    var waitFor = (spec.waitFor == undefined) ? true : spec.waitFor;
+
+    var button = this.getAddonButton({addon: addon, button: button});
+    this._controller.click(button);
+
+    if (waitFor)
+      this.waitForDownloaded({addon: addon, timeout: timeout});
+  },
+
+  /**
+   * Removes the specified add-on
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   */
+  removeAddon : function addonsManager_removeAddon(aSpec) {
+    var spec = aSpec || { };
+    spec.button = "remove";
+
+    var button = this.getAddonButton(spec);
+    this._controller.click(button);
+  },
+
+  /**
+   * Undo the last action performed for the given add-on
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   */
+  undo : function addonsManager_undo(aSpec) {
+    var spec = aSpec || { };
+    spec.link = "undo";
+
+    var link = this.getAddonLink(spec);
+    this._controller.click(link);
+  },
+
+  /**
+   * Returns the addons from the currently selected view which match the
+   * filter criteria
+   *
+   * @param {object} aSpec
+   *        Information about the filter to apply
+   *        Elements: attribute - DOM attribute of the wanted addon
+   *                              [optional - default: ""]
+   *                  value     - Value of the DOM attribute
+   *                              [optional - default: ""]
+   *
+   * @returns List of addons
+   * @type {array of ElemBase}
+   */
+  getAddons : function addonsManager_addons(aSpec) {
+    var spec = aSpec || {};
+
+    return this.getElements({
+      type: "addons",
+      subtype: spec.attribute,
+      value: spec.value,
+      parent: this.selectedView
+    });
+  },
+
+  /**
+   * Returns the element of the specified add-ons button
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon  - Add-on element
+   *                  button - Button (disable, enable, preferences, remove)
+   *
+   * @returns Add-on button
+   * @type {ElemBase}
+   */
+  getAddonButton : function addonsManager_getAddonButton(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+    var button = spec.button;
+
+    if (!button)
+      throw new Error(arguments.callee.name + ": Button not specified.");
+
+    return this.getAddonChildElement({addon: addon, type: button + "Button"});
+  },
+
+  /**
+   * Returns the element of the specified add-ons link
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon - Add-on element
+   *                  link  - Link
+   *                            List view (more, restart, undo)
+   *                            Detail view (findUpdates, restart, undo)
+   *
+   * @return Add-on link
+   * @type {ElemBase}
+   */
+  getAddonLink : function addonsManager_getAddonLink(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+    var link = spec.link;
+
+    if (!link)
+      throw new Error(arguments.callee.name + ": Link not specified.");
+
+    return this.getAddonChildElement({addon: addon, type: link + "Link"});
+  },
+
+  /**
+   * Returns the element of the specified add-ons radio group
+   *
+   * @param {object} aSpec
+   *        Information on which add-on to operate on
+   *        Elements: addon      - Add-on element
+   *                  radiogroup - Radiogroup
+   *                                 Detail View (autoUpdate)
+   *
+   * @returns Add-on radiogroup
+   * @type {ElemBase}
+   */
+  getAddonRadiogroup : function addonsManager_getAddonRadiogroup(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+    var radiogroup = spec.radiogroup;
+
+    if (!radiogroup)
+      throw new Error(arguments.callee.name + ": Radiogroup not specified.");
+
+    return this.getAddonChildElement({addon: addon, type: radiogroup + "Radiogroup"});
+  },
+
+  /**
+   * Retrieve the given child element of the specified add-on
+   *
+   * @param {object} aSpec
+   *        Information for getting the add-ons child node
+   *        Elements: addon     - Add-on element
+   *                  type      - Type of the element
+   *                              [optional - default: use attribute/value]
+   *                  attribute - DOM attribute of the node
+   *                  value     - Value of the DOM attribute
+   *
+   * @returns Element
+   * @type {ElemBase}
+   */
+  getAddonChildElement : function addonsManager_getAddonChildElement(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+    var attribute = spec.attribute;
+    var value = spec.value;
+    var type = spec.type;
+
+    if (!addon)
+      throw new Error(arguments.callee.name + ": Add-on not specified.");
+
+    // If no type has been set retrieve a general element which needs an
+    // attribute and value
+    if (!type) {
+      type = "element";
+
+      if (!attribute)
+        throw new Error(arguments.callee.name + ": DOM attribute not specified.");
+      if (!value)
+        throw new Error(arguments.callee.name + ": Value not specified.");
+    }
+
+    // For the details view the elements don't have anonymous nodes
+    if (this.selectedView.getNode().id == "detail-view") {
+      return this.getElement({
+        type: "detailView_" + type,
+        subtype: attribute,
+        value: value
+      });
+    } else {
+      return this.getElement({
+        type: "listView_" + type,
+        subtype: attribute,
+        value: value,
+        parent: addon
+      });
+    }
+  },
+
+  /**
+   * Wait until the specified add-on has been downloaded
+   * 
+   * @param {object} aSpec
+   *        Object with parameters for customization
+   *        Elements: addon   - Add-on element to wait for being downloaded
+   *                  timeout - Duration to wait for the target state
+   *                            [optional - default: 15s]
+   */
+  waitForDownloaded : function addonsManager_waitForDownloaded(aSpec) {
+    var spec = aSpec || { };
+    var addon = spec.addon;
+    var timeout = (spec.timeout == undefined) ? TIMEOUT_DOWNLOAD : spec.timeout;
+
+    if (!addon)
+      throw new Error(arguments.callee.name + ": Add-on not specified.");
+
+    var self = this;
+    var node = addon.getNode();
+    
+    // TODO: restore after 1.5.1 has landed
+    // mozmill.utils.waitFor(function () {
+    //   return node.getAttribute("pending") == "install" &&
+    //          node.getAttribute("status") != "installing";
+    // }, timeout, 100, "'" + node.getAttribute("name") + "' has been downloaded");
+    
+    mozmill.utils.waitForEval("subject.getAttribute('pending') == 'install' &&" +
+                              "subject.getAttribute('status') != 'installing'",
+                              timeout, 100, node);
+  },
+
+
+  ///////////////////////////////
+  // Category section
+  ///////////////////////////////
+
+  /**
+   * Retrieve the currently selected category
+   *
+   * @returns Element which represents the currently selected category
+   * @type {ElemBase}
+   */
+  get selectedCategory() {
+    return this.getCategories({attribute: "selected", value: "true"})[0];
+  },
+
+  /**
+   * Returns the categories which match the filter criteria
+   *
+   * @param {object} aSpec
+   *        Information about the filter to apply
+   *        Elements: attribute - DOM attribute of the wanted category
+   *                              [optional - default: ""]
+   *                  value     - Value of the DOM attribute
+   *                              [optional - default: ""]
+   *
+   * @returns List of categories
+   * @type {array of ElemBase}
+   */
+  getCategories : function addonsManager_categories(aSpec) {
+    var spec = aSpec || { };
+
+    var categories = this.getElements({
+      type: "categories",
+      subtype: spec.attribute,
+      value: spec.value
+    });
+
+    if (categories.length == 0)
+      throw new Error(arguments.callee.name + ": Categories could not be found.");
+
+    return categories;
+  },
+
+  /**
+   * Get the category element for the specified id
+   *
+   * @param {object} aSpec
+   *        Information for getting a category
+   *        Elements: id - Category id (search, discover, languages,
+   *                       searchengines, extensions, themes, plugins,
+   *                       availableUpdates, recentUpdates)
+   *
+   * @returns Category
+   * @type {ElemBase}
+   */
+  getCategoryById : function addonsManager_getCategoryById(aSpec) {
+    var spec = aSpec || { };
+    var id = spec.id;
+
+    if (!id)
+      throw new Error(arguments.callee.name + ": Category ID not specified.");
+
+    return this.getCategories({
+      attribute: "id",
+      value: "category-" + id
+    })[0];
+  },
+
+  /**
+   * Get the ID of the given category element
+   *
+   * @param {object} aSpec
+   *        Information for getting a category
+   *        Elements: category - Category to get the id from
+   *
+   * @returns Category Id
+   * @type {string}
+   */
+  getCategoryId : function addonsManager_getCategoryId(aSpec) {
+    var spec = aSpec || { };
+    var category = spec.category;
+
+    if (!category)
+      throw new Error(arguments.callee.name + ": Category not specified.");
+
+    return category.getNode().id;
+  },
+
+  /**
+   * Select the given category
+   *
+   * @param {object} aSpec
+   *        Information for selecting a category
+   *        Elements: category - Category element
+   *                  waitFor  - Wait until the category has been selected
+   *                             [optional - default: true]
+   */
+  setCategory : function addonsManager_setCategory(aSpec) {
+    var spec = aSpec || { };
+    var category = spec.category;
+    var waitFor = (spec.waitFor == undefined) ? true : spec.waitFor;
+
+    if (!category)
+      throw new Error(arguments.callee.name + ": Category not specified.");
+
+    this._controller.click(category);
+
+    if (waitFor)
+      this.waitForCategory({category: category});
+  },
+
+  /**
+   * Select the category with the given id
+   *
+   * @param {object} aSpec
+   *        Information for selecting a category
+   *        Elements: id      - Category id (search, discover, languages,
+   *                            searchengines, extensions, themes, plugins,
+   *                            availableUpdates, recentUpdates)
+   *                  waitFor - Wait until the category has been selected
+   *                            [optional - default: true]
+   */
+  setCategoryById : function addonsManager_setCategoryById(aSpec) {
+    var spec = aSpec || { };
+    var id = spec.id;
+    var waitFor = (spec.waitFor == undefined) ? true : spec.waitFor;
+
+    if (!id)
+      throw new Error(arguments.callee.name + ": Category ID not specified.");
+
+    // Retrieve the category and set it as active
+    var category = this.getCategoryById({id: id});
+    if (category)
+      this.setCategory({category: category, waitFor: waitFor});
+    else
+      throw new Error(arguments.callee.name + ": Category '" + id + " not found.");
+  },
+
+  /**
+   * Wait until the specified category has been selected
+   * 
+   * @param {object} aSpec
+   *        Object with parameters for customization
+   *        Elements: category - Category element to wait for
+   *                  timeout - Duration to wait for the target state
+   *                            [optional - default: 5s]
+   */
+  waitForCategory : function addonsManager_waitForCategory(aSpec) {
+    var spec = aSpec || { };
+    var category = spec.category;
+    var timeout = (spec.timeout == undefined) ? TIMEOUT : spec.timeout;
+
+    if (!category)
+      throw new Error(arguments.callee.name + ": Category not specified.");
+
+    // TODO: restore after 1.5.1 has landed
+    // var self = this;
+    // mozmill.utils.waitFor(function () {
+    //   return self.selectedCategory.getNode() == category.getNode();
+    // }, timeout, 100, "Category '" + category.getNode().id + "' has been set");
+    
+    mozmill.utils.waitForEval("subject.self.selectedCategory.getNode() == subject.aCategory.getNode()",
+                               timeout, 100, 
+                               {self: this, aCategory: category});
+  },
+
+  ///////////////////////////////
+  // Search section
+  ///////////////////////////////
+
+  /**
+   * Clear the search field
+   */
+  clearSearchField : function addonsManager_clearSearchField() {
+    var textbox = this.getElement({type: "search_textbox"});
+    var cmdKey = this._UtilsAPI.getEntity(this.dtds, "selectAllCmd.key");
+
+    this._controller.keypress(textbox, cmdKey, {accelKey: true});
+    this._controller.keypress(textbox, 'VK_DELETE', {});
+  },
+
+  /**
+   * Search for a specified add-on
+   *
+   * @param {object} aSpec
+   *        Information to execute the search
+   *        Elements: value   - Search term
+   *                  timeout - Duration to wait for search results
+   *                            [optional - default: 30s]
+   *                  waitFor - Wait until the search has been finished
+   *                            [optional - default: true]
+   */
+  search : function addonsManager_search(aSpec) {
+    var spec = aSpec || { };
+    var value = spec.value;
+    var timeout = (spec.timeout == undefined) ? TIMEOUT_SEARCH : spec.timeout;
+    var waitFor = (spec.waitFor == undefined) ? true : spec.waitFor;
+
+    if (!value)
+      throw new Error(arguments.callee.name + ": Search term not specified.");
+
+    var textbox = this.getElement({type: "search_textbox"});
+
+    this.clearSearchField();
+    this._controller.type(textbox, value);
+    this._controller.keypress(textbox, "VK_RETURN", {});
+
+    if (waitFor)
+      this.waitForSearchFinished();
+  },
+
+  /**
+   * Check if a search is active
+   *
+   * @returns State of the search
+   * @type {boolean}
+   */
+  get isSearching() {
+    var throbber = this.getElement({type: "search_throbber"});
+    return throbber.getNode().hasAttribute("active");
+  },
+
+  /**
+   * Retrieve the currently selected search filter
+   *
+   * @returns Element which represents the currently selected search filter
+   * @type {ElemBase}
+   */
+  get selectedSearchFilter() {
+    var filter = this.getSearchFilter({attribute: "selected", value: "true"});
+
+    return (filter.length > 0) ? filter[0] : undefined;
+  },
+
+  /**
+   * Set the currently selected search filter status
+   *
+   * @param {string} aValue
+   *        Filter for the search results (local, remote)
+   */
+  set selectedSearchFilter(aValue) {
+    var filter = this.getSearchFilter({attribute: "value", value: aValue});
+
+    if (SEARCH_FILTER.indexOf(aValue) == -1)
+      throw new Error(arguments.callee.name + ": '" + aValue +
+                      "' is not a valid search filter");
+
+    if (filter.length > 0) {
+      this._controller.click(filter[0]);
+      this.waitForSearchFilter({filter: filter[0]});
+    }
+  },
+
+  /**
+   * Returns the available search filters which match the filter criteria
+   *
+   * @param {object} aSpec
+   *        Information about the filter to apply
+   *        Elements: attribute - DOM attribute of the wanted filter
+   *                              [optional - default: ""]
+   *                  value     - Value of the DOM attribute
+   *                              [optional - default: ""]
+   *
+   * @returns List of search filters
+   * @type {array of ElemBase}
+   */
+  getSearchFilter : function addonsManager_getSearchFilter(aSpec) {
+    var spec = aSpec || { };
+
+    return this.getElements({
+      type: "search_filterRadioButtons",
+      subtype: spec.attribute,
+      value: spec.value
+    });
+  },
+
+  /**
+   * Get the search filter element for the specified value
+   *
+   * @param {string} aValue
+   *        Search filter value (local, remote)
+   *
+   * @returns Search filter element
+   * @type {ElemBase}
+   */
+  getSearchFilterByValue : function addonsManager_getSearchFilterByValue(aValue) {
+    if (!aValue)
+      throw new Error(arguments.callee.name + ": Search filter value not specified.");
+
+    return this.getElement({
+      type: "search_filterRadioGroup",
+      subtype: "value",
+      value: aValue
+    });
+  },
+
+  /**
+   * Get the value of the given search filter element
+   *
+   * @param {object} aSpec
+   *        Information for getting the views matched by the criteria
+   *        Elements: filter - Filter element
+   *
+   * @returns Value of the search filter
+   * @type {string}
+   */
+  getSearchFilterValue : function addonsManager_getSearchFilterValue(aSpec) {
+    var spec = aSpec || { };
+    var filter = spec.filter;
+
+    if (!filter)
+      throw new Error(arguments.callee.name + ": Search filter not specified.");
+
+    return filter.getNode().value;
+  },
+
+  /**
+   * Waits until the specified search filter has been selected
+   * 
+   * @param {object} aSpec
+   *        Object with parameters for customization
+   *        Elements: filter  - Filter element to wait for
+   *                  timeout - Duration to wait for the target state
+   *                            [optional - default: 5s]
+   */
+  waitForSearchFilter : function addonsManager_waitForSearchFilter(aSpec) {
+    var spec = aSpec || { };
+    var filter = spec.filter;
+    var timeout = (spec.timeout == undefined) ? TIMEOUT : spec.timeout;
+
+    if (!filter)
+      throw new Error(arguments.callee.name + ": Search filter not specified.");
+
+    // TODO: restore after 1.5.1 has landed
+    // var self = this;
+    // 
+    // mozmill.utils.waitFor(function () {
+    //   return self.selectedSearchFilter.getNode() == filter.getNode();
+    // }, timeout, 100, "Search filter '" + filter.getNode().value + "' has been set");
+    
+    mozmill.utils.waitForEval("subject.self.selectedSearchFilter.getNode() == subject.aFilter.getNode()",
+                              timeout, 100,
+                              {self: this, aFilter: filter});
+  },
+
+  /**
+   * Returns the list of add-ons found by the selected filter
+   *
+   * @returns List of add-ons
+   * @type {ElemBase}
+   */
+  getSearchResults : function addonsManager_getSearchResults() {
+    var filterValue = this.getSearchFilterValue({
+      filter: this.selectedSearchFilter
+    });
+
+    switch (filterValue) {
+      case "local":
+        return this.getAddons({attribute: "status", value: "installed"});
+      case "remote":
+        return this.getAddons({attribute: "remote", value: "true"});
+      default:
+        throw new Error(arguments.callee.name + ": Unknown search filter '" +
+                        filterValue + "' selected");
+    }
+  },
+
+  /**
+   * Waits until the active search has been finished
+   * 
+   * @param {object} aSpec
+   *        Object with parameters for customization
+   *        Elements: timeout - Duration to wait for the target state
+   */
+  waitForSearchFinished : function addonsManager_waitForSearchFinished(aSpec) {
+    var spec = aSpec || { };
+    var timeout = (spec.timeout == undefined) ? TIMEOUT_SEARCH : spec.timeout;
+
+    // TODO: restore after 1.5.1 has landed
+    // var self = this;
+    // 
+    // mozmill.utils.waitFor(function () {
+    //   return self.isSearching == false;
+    // }, timeout, 100, "Search has been finished");
+    
+    mozmill.utils.waitForEval("subject.isSearching == false", 
+                              timeout, 100, this);
+  },
+
+  ///////////////////////////////
+  // View section
+  ///////////////////////////////
+
+  /**
+   * Returns the views which match the filter criteria
+   *
+   * @param {object} aSpec
+   *        Information for getting the views matched by the criteria
+   *        Elements: attribute - DOM attribute of the node
+   *                              [optional - default: ""]
+   *                  value     - Value of the DOM attribute
+   *                              [optional - default: ""]
+   *
+   * @returns Filtered list of views
+   * @type {array of ElemBase}
+   */
+  getViews : function addonsManager_getViews(aSpec) {
+    var spec = aSpec || { };
+    var attribute = spec.attribute;
+    var value = spec.value;
+
+    return this.getElements({type: "views", subtype: attribute, value: value});
+  },
+
+  /**
+   * Check if the details view is active
+   *
+   * @returns True if the default view is selected
+   * @type {boolean}
+   */
+  get isDetailViewActive() {
+    return (this.selectedView.getNode().id == "detail-view");
+  },
+
+  /**
+   * Retrieve the currently used view
+   *
+   * @returns Element which represents the currently selected view
+   * @type {ElemBase}
+   */
+  get selectedView() {
+    var viewDeck = this.getElement({type: "viewDeck"});
+    var views = this.getViews();
+
+    return views[viewDeck.getNode().selectedIndex];
+  },
+
+
+  ///////////////////////////////
+  // UI Elements section
+  ///////////////////////////////
+
+  /**
+   * Retrieve an UI element based on the given specification
+   *
+   * @param {object} aSpec
+   *        Information of the UI elements which should be retrieved
+   *        Elements: type     - Identifier of the element
+   *                  subtype  - Attribute of the element to filter
+   *                             [optional - default: ""]
+   *                  value    - Value of the attribute to filter
+   *                             [optional - default: ""]
+   *                  parent   - Parent of the to find element
+   *                             [optional - default: document]
+   *
+   * @returns Element which has been found
+   * @type {ElemBase}
+   */
+  getElement : function addonsManager_getElement(aSpec) {
+    var elements = this.getElements(aSpec);
+
+    return (elements.length > 0) ? elements[0] : undefined;
+  },
+
+  /**
+   * Retrieve list of UI elements based on the given specification
+   *
+   * @param {object} aSpec
+   *        Information of the UI elements which should be retrieved
+   *        Elements: type     - Identifier of the element
+   *                  subtype  - Attribute of the element to filter
+   *                             [optional - default: ""]
+   *                  value    - Value of the attribute to filter
+   *                             [optional - default: ""]
+   *                  parent   - Parent of the to find element
+   *                             [optional - default: document]
+   *
+   * @returns Elements which have been found
+   * @type {array of ElemBase}
+   */
+  getElements : function addonsManager_getElements(aSpec) {
+    var spec = aSpec || { };
+    var type = spec.type;
+    var subtype = spec.subtype;
+    var value = spec.value;
+    var parent = spec.parent;
+
+    var root = parent ? parent.getNode() : this._controller.tabs.activeTab;
+    var nodeCollector = new this._DOMUtilsAPI.nodeCollector(root);
+
+    switch (type) {
+      // Add-ons
+      case "addons":
+        nodeCollector.queryNodes(".addon").filterByDOMProperty(subtype, value);
+        break;
+      case "addonsList":
+        nodeCollector.queryNodes("#addon-list");
+        break;
+      // Categories
+      case "categoriesList":
+        nodeCollector.queryNodes("#categories");
+        break;
+      case "categories":
+        nodeCollector.queryNodes(".category").filterByDOMProperty(subtype, value);
+        break;
+      // Detail view
+      case "detailView_element":
+        nodeCollector.queryNodes(value);
+        break;
+      case "detailView_disableButton":
+        nodeCollector.queryNodes("#detail-disable");
+        break;
+      case "detailView_enableButton":
+        nodeCollector.queryNodes("#detail-enable");
+        break;
+      case "detailView_installButton":
+        nodeCollector.queryNodes("#detail-install");
+        break;
+      case "detailView_preferencesButton":
+        nodeCollector.queryNodes("#detail-prefs");
+        break;
+      case "detailView_removeButton":
+        nodeCollector.queryNodes("#detail-uninstall");
+        break;
+      case "detailView_findUpdatesLink":
+        nodeCollector.queryNodes("#detail-findUpdates");
+        break;
+      // Bug 599771 - button-link's are missing id or anonid
+      //case "detailView_restartLink":
+      //  nodeCollector.queryNodes("#detail-restart");
+      //  break;
+      case "detailView_undoLink":
+        nodeCollector.queryNodes("#detail-undo");
+        break;
+      case "detailView_findUpdatesRadiogroup":
+        nodeCollector.queryNodes("#detail-findUpdates");
+        break;
+      // List view
+      case "listView_element":
+        nodeCollector.queryAnonymousNodes(subtype, value);
+        break;
+      case "listView_disableButton":
+        nodeCollector.queryAnonymousNodes("anonid", "disable-btn");
+        break;
+      case "listView_enableButton":
+        nodeCollector.queryAnonymousNodes("anonid", "enable-btn");
+        break;
+      case "listView_installButton":
+        // There is another binding we will have to skip
+        nodeCollector.queryAnonymousNodes("anonid", "install-status");
+        nodeCollector.root = nodeCollector.nodes[0];
+        nodeCollector.queryAnonymousNodes("anonid", "install-remote");
+        break;
+      case "listView_preferencesButton":
+        nodeCollector.queryAnonymousNodes("anonid", "preferences-btn");
+        break;
+      case "listView_removeButton":
+        nodeCollector.queryAnonymousNodes("anonid", "remove-btn");
+        break;
+      case "listView_moreLink":
+        // Bug 599771 - button-link's are missing id or anonid
+        nodeCollector.queryAnonymousNodes("class", "details button-link");
+        break;
+      // Bug 599771 - button-link's are missing id or anonid
+      //case "listView_restartLink":
+      //  nodeCollector.queryAnonymousNodes("anonid", "restart");
+      //  break;
+      case "listView_undoLink":
+        nodeCollector.queryAnonymousNodes("anonid", "undo");
+        break;
+      case "listView_cancelDownload":
+        // There is another binding we will have to skip
+        nodeCollector.queryAnonymousNodes("anonid", "install-status");
+        nodeCollector.root = nodeCollector.nodes[0];
+        nodeCollector.queryAnonymousNodes("anonid", "cancel");
+        break;
+      case "listView_pauseDownload":
+        // There is another binding we will have to skip
+        nodeCollector.queryAnonymousNodes("anonid", "install-status");
+        nodeCollector.root = nodeCollector.nodes[0];
+        nodeCollector.queryAnonymousNodes("anonid", "pause");
+        break;
+      case "listView_progressDownload":
+        // There is another binding we will have to skip
+        nodeCollector.queryAnonymousNodes("anonid", "install-status");
+        nodeCollector.root = nodeCollector.nodes[0];
+        nodeCollector.queryAnonymousNodes("anonid", "progress");
+        break;
+      // Search
+      // Bug 599775 - Controller needs to handle radio groups correctly
+      // Means for now we have to use the radio buttons
+      case "search_filterRadioButtons":
+        nodeCollector.queryNodes(".search-filter-radio").filterByDOMProperty(subtype, value);
+        break;
+      case "search_filterRadioGroup":
+        nodeCollector.queryNodes("#search-filter-radiogroup");
+        break;
+      case "search_textbox":
+        nodeCollector.queryNodes("#header-search");
+        break;
+      case "search_throbber":
+        nodeCollector.queryNodes("#header-searching");
+        break;
+      // Utils
+      case "utilsButton":
+        nodeCollector.queryNodes("#header-utils-btn");
+        break;
+      case "utilsButton_menu":
+        nodeCollector.queryNodes("#utils-menu");
+        break;
+      case "utilsButton_menuItem":
+        nodeCollector.queryNodes(value);
+        break;
+      // Views
+      case "viewDeck":
+        nodeCollector.queryNodes("#view-port");
+        break;
+      case "views":
+        nodeCollector.queryNodes(".view-pane").filterByDOMProperty(subtype, value);
+        break;
+      default:
+        throw new Error(arguments.callee.name + ": Unknown element type - " + spec.type);
+    }
+
+    return nodeCollector.elements;
   }
 };
 
@@ -389,9 +1228,10 @@ addonsManager.prototype = {
 function useAmoPreviewUrls() {
   var prefSrv = collector.getModule('PrefsAPI').preferences;
 
-  for each (preference in AMO_PREFERENCES) {
+  for each (var preference in AMO_PREFERENCES) {
     var pref = prefSrv.getPref(preference.name, "");
-    prefSrv.setPref(preference.name, pref.replace(preference.old, preference.new));
+    prefSrv.setPref(preference.name,
+                    pref.replace(preference.old, preference.new));
   }
 }
 
@@ -401,7 +1241,7 @@ function useAmoPreviewUrls() {
 function resetAmoPreviewUrls() {
   var prefSrv = collector.getModule('PrefsAPI').preferences;
 
-  for each (preference in AMO_PREFERENCES) {
+  for each (var preference in AMO_PREFERENCES) {
     prefSrv.clearUserPref(preference.name);
   }
 }

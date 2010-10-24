@@ -266,6 +266,15 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
   if (!plugin)
     return NS_ERROR_NULL_POINTER;
 
+  typedef BOOL
+  (WINAPI *pfnSetDllDirectory) (LPCWSTR);
+  pfnSetDllDirectory setDllDirectory =
+    reinterpret_cast<pfnSetDllDirectory>
+    (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
+  if (setDllDirectory) {
+    setDllDirectory(NULL);
+  }
+
 #ifndef WINCE
   nsAutoString pluginFolderPath;
   plugin->GetPath(pluginFolderPath);
@@ -297,6 +306,10 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     NS_ASSERTION(bCheck, "Error in Loading plugin");
   }
 #endif
+
+  if (setDllDirectory) {
+    setDllDirectory(L"");
+  }
 
   return rv;
 }

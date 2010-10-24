@@ -122,7 +122,7 @@ public:
                                 nsAttrValue &aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
   virtual void DestroyContent();
 
   // nsObjectLoadingContent
@@ -143,6 +143,12 @@ private:
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
   NS_HIDDEN_(void) StartObjectLoad(PRBool aNotify);
+
+  /**
+   * Returns if the element is currently focusable regardless of it's tabindex
+   * value. This is used to know the default tabindex value.
+   */
+  bool IsFocusableForTabIndex();
 
   PRPackedBool mIsDoneAddingChildren;
 };
@@ -297,23 +303,61 @@ nsHTMLObjectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
+bool
+nsHTMLObjectElement::IsFocusableForTabIndex()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+    return false;
+  }
+
+  return Type() == eType_Plugin || IsEditableRoot() ||
+         (Type() == eType_Document && nsContentUtils::IsSubDocumentTabbable(this));
+}
+
 PRBool
 nsHTMLObjectElement::IsHTMLFocusable(PRBool aWithMouse,
                                      PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (Type() == eType_Plugin) {
+  // TODO: this should probably be managed directly by IsHTMLFocusable.
+  // See bug 597242.
+  nsIDocument *doc = GetCurrentDoc();
+  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+    if (aTabIndex) {
+      GetIntAttr(nsGkAtoms::tabindex, -1, aTabIndex);
+    }
+
+    *aIsFocusable = PR_FALSE;
+
+    return PR_FALSE;
+  }
+
+  // This method doesn't call nsGenericHTMLFormElement intentionally.
+  // TODO: It should probably be changed when bug 597242 will be fixed.
+  if (Type() == eType_Plugin || IsEditableRoot() ||
+      (Type() == eType_Document && nsContentUtils::IsSubDocumentTabbable(this))) {
     // Has plugin content: let the plugin decide what to do in terms of
     // internal focus from mouse clicks
     if (aTabIndex) {
-      GetTabIndex(aTabIndex);
+      GetIntAttr(nsGkAtoms::tabindex, 0, aTabIndex);
     }
-  
+
     *aIsFocusable = PR_TRUE;
 
     return PR_FALSE;
   }
 
-  return nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex);
+  // TODO: this should probably be managed directly by IsHTMLFocusable.
+  // See bug 597242.
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::tabindex);
+
+  *aIsFocusable = attrVal && attrVal->Type() == nsAttrValue::eInteger;
+
+  if (aTabIndex && *aIsFocusable) {
+    *aTabIndex = attrVal->GetIntegerValue();
+  }
+
+  return PR_FALSE;
 }
 
 PRUint32
@@ -375,7 +419,8 @@ NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Height, height)
 NS_IMPL_INT_ATTR(nsHTMLObjectElement, Hspace, hspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Standby, standby)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLObjectElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLObjectElement, TabIndex, tabindex,
+                               IsFocusableForTabIndex() ? 0 : -1)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLObjectElement, Vspace, vspace)
@@ -479,7 +524,7 @@ nsHTMLObjectElement::StartObjectLoad(PRBool aNotify)
   SetIsNetworkCreated(PR_FALSE);
 }
 
-PRInt32
+nsEventStates
 nsHTMLObjectElement::IntrinsicState() const
 {
   return nsGenericHTMLFormElement::IntrinsicState() | ObjectState();

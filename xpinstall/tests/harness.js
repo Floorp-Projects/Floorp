@@ -1,9 +1,19 @@
 const TESTROOT = "http://example.com/browser/xpinstall/tests/";
 const TESTROOT2 = "http://example.org/browser/xpinstall/tests/";
-const CHROMEROOT = "chrome://mochikit/content/browser/xpinstall/tests/"
 const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 const ADDONS_URL = "chrome://mozapps/content/extensions/extensions.xul";
+
+var rootDir = getRootDirectory(gTestPath);
+var path = rootDir.split('/');
+var chromeName = path[0] + '//' + path[2];
+var croot = chromeName + "/content/browser/xpinstall/tests/";
+var jar = getJar(croot);
+if (jar) {
+  var tmpdir = extractJarToTmp(jar);
+  croot = 'file://' + tmpdir.path + '/';
+}
+const CHROMEROOT = croot;
 
 /**
  * This is a test harness designed to handle responding to UI during the process

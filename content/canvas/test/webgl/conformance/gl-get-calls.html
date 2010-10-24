@@ -50,13 +50,6 @@ else {
     testPassed("context exists");
 
     debug("");
-    debug("Context is correct type");
-    if (context instanceof WebGLRenderingContext)
-      testPassed("context is correct type");
-    else
-      testFailed("context is not correct type");
-
-    debug("");
     debug("Context contains getError");
     if ("getError" in context)
       testPassed("context contains getError");

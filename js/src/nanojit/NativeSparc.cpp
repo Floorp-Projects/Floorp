@@ -153,12 +153,13 @@ namespace nanojit
 
     void Assembler::asm_call(LIns* ins)
     {
-        Register retReg = ( ins->isop(LIR_calld) ? F0 : retRegs[0] );
-        deprecated_prepResultReg(ins, rmask(retReg));
+        if (!ins->isop(LIR_callv)) {
+            Register retReg = ( ins->isop(LIR_calld) ? F0 : retRegs[0] );
+            deprecated_prepResultReg(ins, rmask(retReg));
+        }
 
         // Do this after we've handled the call result, so we don't
         // force the call result to be spilled unnecessarily.
-
         evictScratchRegsExcept(0);
 
         const CallInfo* ci = ins->callInfo();
@@ -169,7 +170,8 @@ namespace nanojit
         ArgType argTypes[MAXARGS];
         uint32_t argc = ci->getArgTypes(argTypes);
 
-        NanoAssert(ins->isop(LIR_callp) || ins->isop(LIR_calld));
+        NanoAssert(ins->isop(LIR_callv) || ins->isop(LIR_callp) ||
+                   ins->isop(LIR_calld));
         verbose_only(if (_logc->lcbits & LC_Native)
                      outputf("        %p:", _nIns);
                      )

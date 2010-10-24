@@ -217,13 +217,6 @@ function runTest(testNum) {
         doKey("down");
         break;
 
-        // Trigger autocomplete popup
-        // Look at form 3, try to trigger autocomplete popup
-        input = $_(4, "field2");
-        restoreForm();
-        doKey("down");
-        break;
-
     case 103:
         checkMenuEntries(["PASS1", "PASS2", "final"]);
         // Check first entry
@@ -256,11 +249,133 @@ function runTest(testNum) {
         doKey("down");
         doKey("return");
         checkForm("final");
-        
-        SimpleTest.finish();
-        return;
+
+        testNum = 199;
+        restoreForm();
+        doKey("down");
         break;
 
+    // Test dynamic updates.
+    // For some reasons, when there is an update of the list, the selection is
+    // lost so we need to go down like if we were at the beginning of the list
+    // again.
+    case 200:
+      // Removing the second element while on the first then going down and
+      // push enter. Value should be one from the third suggesion.
+      doKey("down");
+      var datalist = document.getElementById('suggest');
+      var toRemove = datalist.children[1]
+      datalist.removeChild(toRemove);
+
+      doKey("down");
+      doKey("down");
+      doKey("return");
+      checkForm("final");
+
+      // Restore the element.
+      datalist.insertBefore(toRemove, datalist.children[1]);
+      restoreForm();
+      doKey("down");
+      break;
+
+    case 201:
+      // Adding an attribute after the first one while on the first then going
+      // down and push enter. Value should be the on from the new suggestion.
+      doKey("down");
+      var datalist = document.getElementById('suggest');
+      var added = Option("Foo");
+      datalist.insertBefore(added, datalist.children[1]);
+
+      doKey("down");
+      doKey("down");
+      doKey("return");
+      checkForm("Foo");
+
+      // Remove the element.
+      datalist.removeChild(added);
+      restoreForm();
+      doKey("down");
+      break;
+
+    case 202:
+      // Change the first element value attribute.
+      doKey("down");
+      var datalist = document.getElementById('suggest');
+      var prevValue = datalist.children[0].value;
+      datalist.children[0].value = "foo";
+
+      doKey("down");
+      doKey("return");
+      checkForm("foo");
+
+      datalist.children[0].value = prevValue;
+      restoreForm();
+      doKey("down");
+      break;
+
+    case 203:
+      // Change the textContent to update the value attribute.
+      doKey("down");
+      var datalist = document.getElementById('suggest');
+      var prevValue = datalist.children[0].getAttribute('value');
+      datalist.children[0].removeAttribute('value');
+      datalist.children[0].textContent = "foobar";
+
+      doKey("down");
+      doKey("return");
+      checkForm("foobar");
+
+      datalist.children[0].setAttribute('value', prevValue);
+      testNum = 299;
+      restoreForm();
+      doKey("down");
+      break;
+
+    // Tests for filtering (or not).
+    case 300:
+      // Filters with first letter of the word.
+      synthesizeKey("f", {});
+      setTimeout(function() {
+        doKey("down");
+        doKey("return");
+        checkForm("final");
+        restoreForm();
+        doKey("down");
+        setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
+      }, 500);
+      return;
+      break;
+
+    case 301:
+      // Filter with a leterr in the middle of the word.
+      synthesizeKey("i", {});
+      synthesizeKey("n", {});
+      setTimeout(function() {
+        doKey("down");
+        doKey("return");
+        checkForm("final");
+        restoreForm();
+        doKey("down");
+        setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
+      }, 500);
+      return;
+      break;
+
+    case 302:
+      // Filter is disabled with mozNoFilter.
+      input.setAttribute('mozNoFilter', 'true');
+      synthesizeKey("f", {});
+      setTimeout(function() {
+        doKey("down");
+        doKey("return");
+        checkForm("Google");
+        input.removeAttribute('mozNoFilter');
+        restoreForm();
+        doKey("down");
+        SimpleTest.finish();
+      }, 500);
+      return;
+      break;
     default:
         ok(false, "Unexpected invocation of test #" + testNum);
         SimpleTest.finish();

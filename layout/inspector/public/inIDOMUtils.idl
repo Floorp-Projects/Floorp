@@ -46,7 +46,7 @@ interface nsIDOMDocument;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMNode;
 
-[scriptable, uuid(78fd16c2-bdfb-4b1d-8738-d536d0a8f430)]
+[scriptable, uuid(aa6562de-2628-44fa-90a8-13d6aee404d6)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -65,6 +65,6 @@ interface inIDOMUtils : nsISupports
   nsIArray getBindingURLs(in nsIDOMElement aElement);
 
   // content state utilities
-  long getContentState(in nsIDOMElement aElement);
-  void setContentState(in nsIDOMElement aElement, in long aState);
+  unsigned long long getContentState(in nsIDOMElement aElement);
+  void setContentState(in nsIDOMElement aElement, in unsigned long long aState);
 };

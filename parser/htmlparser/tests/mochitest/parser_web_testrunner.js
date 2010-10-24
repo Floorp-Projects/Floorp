@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Robert Sayre <sayrer@gmail.com>
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,46 +49,75 @@
  * an iframe with id "testframe".
  */
 
+var functionsToRunAsync = [];
+
+window.addEventListener("message", function(event) {
+  if (event.source == window && event.data == "async-run") {
+    event.stopPropagation();
+    var fn = functionsToRunAsync.shift();
+    fn();
+  }
+}, true);
+
+function asyncRun(fn) {
+  functionsToRunAsync.push(fn);
+  window.postMessage("async-run", "*");
+}
+
 function writeErrorSummary(input, expected, got, isTodo) {
-  if (!isTodo) {
+  if (isTodo) {
+    appendChildNodes($("display"), H2("Unexpected Success:"));
+  } else {
     appendChildNodes($("display"), H2("Unexpected Failure:"));
   }
   appendChildNodes(
     $("display"), BR(),
     SPAN("Matched: "), "" + (expected == got),
-    P("Input: " + input),
-    PRE("Expected:\n|" + expected +"|", "\n-\n",
-        "Output:\n|" + got + "|\n\n"),
+    PRE("Input: \n" + input, "\n-\n",
+        "Expected:\n" + expected, "\n-\n",
+        "Output:\n" + got + "\n-\n"),
     HR()
   );
 }
 
 /**
  * Control will bounce back and forth between nextTest() and the
- * event handler returned by makeTestChecker() until the 'testcases'
- * iterator is spent.
+ * event handler returned by makeTestChecker() or the callback returned by
+ * makeFragmentTestChecker() until the 'testcases' iterator is spent.
  */
 function makeTestChecker(input, expected, errors) {
   return function (e) {
     var domAsString = docToTestOutput(e.target.contentDocument);
-    // It's possible we need to reorder attributes to get these to match
-    if (expected == domAsString) {
-      is(domAsString, expected, "HTML5 expected success. " + new Date());
+    if (html5Exceptions[input]) {
+      todo_is(domAsString, expected, "HTML5 expected success.");
+      if (domAsString == expected) {
+        writeErrorSummary(input, expected, domAsString, true);
+      }
     } else {
-      var reorderedDOM = reorderToMatchExpected(domAsString, expected);
-      if (html5Exceptions[input]) {
-        todo(reorderedDOM == expected, "HTML5 expected failure. " + new Date());
-        writeErrorSummary(input, expected, reorderedDOM, true);
-      } else {
-        if (reorderedDOM != expected) {
-          is(reorderedDOM, expected, "HTML5 unexpected failure. " + input + " " + new Date());
-          writeErrorSummary(input, expected, reorderedDOM, false);
-        } else {
-          is(reorderedDOM, expected, "HTML5 expected success. " + new Date());
-        }
+      is(domAsString, expected, "HTML5 expected success.");
+      if (domAsString != expected) {
+        writeErrorSummary(input, expected, domAsString, false);
       }
     }
     nextTest(e.target);
+  } 
+}
+
+function makeFragmentTestChecker(input, 
+                                 expected, 
+                                 errors, 
+                                 fragment, 
+                                 testframe) {
+  return function () {
+    var context = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                           fragment);
+    context.innerHTML = input;
+    var domAsString = fragmentToTestOutput(context);
+    is(domAsString, expected, "HTML5 expected success. " + new Date());
+    if (domAsString != expected) {
+      writeErrorSummary(input, expected, domAsString, false);
+    }
+    nextTest(testframe);
   } 
 }
 
@@ -95,10 +125,18 @@ var testcases;
 function nextTest(testframe) {
   var test = 0;
   try {
-    var [input, output, errors] = testcases.next();
-    dataURL = "data:text/html;base64," + btoa(input);
-    testframe.onload = makeTestChecker(input, output, errors);
-    testframe.src = dataURL;
+    var [input, output, errors, fragment] = testcases.next();
+    if (fragment) {
+      asyncRun(makeFragmentTestChecker(input, 
+                                       output, 
+                                       errors, 
+                                       fragment, 
+                                       testframe));
+    } else {
+      dataURL = "data:text/html;charset=utf-8," + encodeURIComponent(input);
+      testframe.onload = makeTestChecker(input, output, errors);
+      testframe.src = dataURL;
+    }
   } catch (err if err instanceof StopIteration) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     prefService.setBoolPref("html5.enable", origPref);
@@ -106,30 +144,23 @@ function nextTest(testframe) {
   }
 }
 
-var framesLoaded = [];
-function frameLoaded(e) {
-  framesLoaded.push(e.target);
-  if (framesLoaded.length == parserDatFiles.length) {
-    var tests = [scrapeText(ifr.contentDocument)
-                 for each (ifr in framesLoaded)];
-    testcases = test_parser(tests);    
+var testFileContents = [];
+function loadNextTestFile() {
+  var datFile = parserDatFiles.shift();
+  if (datFile) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        testFileContents.push(this.responseText);
+        loadNextTestFile();
+      }
+    };
+    xhr.open("GET", "html5lib_tree_construction/" + datFile);
+    xhr.send();
+  } else {
+    testcases = test_parser(testFileContents);
     nextTest($("testframe"));
-
-    //SimpleTest.finish();
   }
-}
-
-/**
- * Create an iframe for each dat file
- */
-function makeIFrames() {
-  for each (var filename in parserDatFiles) {
-    var datFrame = document.createElement("iframe");
-    datFrame.onload = frameLoaded;
-    datFrame.src = filename;
-    $("display").appendChild(datFrame);
-  }
-  appendChildNodes($("display"), BR(), "Results: ", HR());
 }
 
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -138,5 +169,5 @@ var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                   .QueryInterface(Components.interfaces.nsIPrefService);
 var origPref = prefService.getBoolPref("html5.enable");
 prefService.setBoolPref("html5.enable", true);
-addLoadEvent(makeIFrames);
+addLoadEvent(loadNextTestFile);
 SimpleTest.waitForExplicitFinish();

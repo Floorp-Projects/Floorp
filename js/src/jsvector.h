@@ -41,6 +41,7 @@
 #define jsvector_h_
 
 #include "jstl.h"
+#include "jsprvtd.h"
 
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
@@ -381,6 +382,7 @@ class Vector : AllocPolicy
 
     /* Leave new elements as uninitialized memory. */
     bool growByUninitialized(size_t incr);
+    bool resizeUninitialized(size_t newLength);
 
     void clear();
 
@@ -466,6 +468,7 @@ Vector<T,N,AP>::~Vector()
  * curLength and check for overflow.
  */
 template <class T, size_t N, class AP>
+STATIC_POSTCONDITION(!return || newCap >= curLength + lengthInc)
 inline bool
 Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
                                      size_t &newCap)
@@ -621,12 +624,24 @@ Vector<T,N,AP>::growByUninitialized(size_t incr)
 }
 
 template <class T, size_t N, class AP>
+STATIC_POSTCONDITION(!return || ubound(this->begin()) >= newLength)
 inline bool
 Vector<T,N,AP>::resize(size_t newLength)
 {
     size_t curLength = length();
     if (newLength > curLength)
         return growBy(newLength - curLength);
+    shrinkBy(curLength - newLength);
+    return true;
+}
+
+template <class T, size_t N, class AP>
+JS_ALWAYS_INLINE bool
+Vector<T,N,AP>::resizeUninitialized(size_t newLength)
+{
+    size_t curLength = length();
+    if (newLength > curLength)
+        return growByUninitialized(newLength - curLength);
     shrinkBy(curLength - newLength);
     return true;
 }

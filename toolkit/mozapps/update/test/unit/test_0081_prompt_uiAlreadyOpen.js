@@ -10,8 +10,11 @@
 var gCheckFunc;
 
 function run_test() {
-  dump("Testing: nsIUpdatePrompt notifications should not be seen when there " +
-       "is already an application update window open\n");
+  do_test_pending();
+  do_register_cleanup(end_test);
+
+  logTestInfo("testing nsIUpdatePrompt notifications should not be seen when " +
+              "there is already an application update window open");
 
   removeUpdateDirsAndFiles();
   setUpdateChannel();
@@ -30,7 +33,7 @@ function run_test() {
 
   standardInit();
 
-  dump("showUpdateInstalled should not call openWindow\n");
+  logTestInfo("testing showUpdateInstalled should not call openWindow");
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, true);
 
   gCheckFunc = check_showUpdateInstalled;
@@ -39,7 +42,7 @@ function run_test() {
   // didn't throw and otherwise it would report no tests run.
   do_check_true(true);
 
-  dump("showUpdateAvailable should not call openWindow\n");
+  logTestInfo("testing showUpdateAvailable should not call openWindow");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_FAILED);
@@ -60,6 +63,11 @@ function run_test() {
                               WindowWatcherFactory);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),
                               WindowMediatorFactory);
+
+  do_test_finished();
+}
+
+function end_test() {
   cleanUp();
 }
 

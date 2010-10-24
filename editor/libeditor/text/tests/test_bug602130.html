@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602130
+-->
+<head>
+  <title>Test for Bug 602130</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602130">Mozilla Bug 602130</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 602130 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var i = document.createElement("input");
+  document.body.appendChild(i);
+  i.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
+  i.select();
+  i.focus();
+  is(i.editor.transactionManager.numberOfUndoItems, 0,
+     "The number of undo items should be 0 after initing the editor");
+  i.style.display = "none";
+  document.offsetWidth;
+  i.style.display = "";
+  document.offsetWidth;
+  i.select();
+  i.focus();
+  is(i.editor.transactionManager.numberOfUndoItems, 0,
+     "The number of undo items should be 0 after re-initing the editor");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

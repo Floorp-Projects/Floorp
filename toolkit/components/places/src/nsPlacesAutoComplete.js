@@ -516,8 +516,8 @@ nsPlacesAutoComplete.prototype = {
 
   handleError: function PAC_handleError(aError)
   {
-    Cu.reportError("Places AutoComplete: An async statement encountered an " +
-                   "error: " + aError.result + ", '" + aError.message + "'");
+    Components.utils.reportError("Places AutoComplete: An async statement encountered an " +
+                                 "error: " + aError.result + ", '" + aError.message + "'");
   },
 
   handleCompletion: function PAC_handleCompletion(aReason)

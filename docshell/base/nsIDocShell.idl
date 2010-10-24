@@ -71,7 +71,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(0e1e1ee5-5baa-4e27-98af-3197d70d0304)]
+[scriptable, uuid(74470127-87eb-4f79-8293-1616fe9cb689)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -155,10 +155,6 @@ interface nsIDocShell : nsISupports
    * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
    *                          in nsIWebNavigation.
    * @param aSHEntry        - Active Session History entry (if loading from SH)
-   * @param firstParty      - 
-   * @param aDocShell       - 
-   * @param aRequest        - 
-   * @param aHttpMethod     - Force the HTTP channel to use a specific HTTP method
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
@@ -172,8 +168,7 @@ interface nsIDocShell : nsISupports
                               in nsISHEntry aSHEntry,
                               in boolean firstParty,
                               out nsIDocShell aDocShell,
-                              out nsIRequest aRequest,
-                              in string aHttpMethod);
+                              out nsIRequest aRequest);
 
   /**
    * Do either a history.pushState() or history.replaceState() operation,
@@ -539,4 +534,13 @@ interface nsIDocShell : nsISupports
    * The ID of the docshell in the session history.
    */
   readonly attribute unsigned long long historyID;
+};
+
+[uuid(5f7a2184-31b6-4d67-9c75-0c17477766e2)]
+interface nsIDocShell_MOZILLA_2_0_BRANCH : nsISupports {
+  /**
+   * Create a new about:blank document and content viewer.
+   * @param aPrincipal the principal to use for the new document.
+   */
+  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
 };
