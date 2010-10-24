@@ -44,7 +44,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(7685dac8-3637-4660-a544-928c5ec0e714)]
+[scriptable, uuid(a79a4031-9590-496c-b005-96b8542591ef)]
 interface nsIXULRuntime : nsISupports
 {
   /**
