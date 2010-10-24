@@ -61,7 +61,7 @@ public:
   /* LayerD3D9 implementation */
   Layer* GetLayer();
   virtual PRBool IsEmpty();
-  virtual void RenderLayer();
+  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
   virtual void CleanResources();
   virtual void LayerManagerDestroyed();
 

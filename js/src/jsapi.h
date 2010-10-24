@@ -334,6 +334,7 @@ static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
     jsid id;
+    JS_ASSERT(str);
     JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
     JSID_BITS(id) = (size_t)str;
@@ -491,13 +492,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
-#define JSFUN_THISP_FLAGS(f)  (f)
-#define JSFUN_THISP_TEST(f,t) ((f) & t)
-
-#define JSFUN_THISP_STRING    0x0100    /* |this| may be a primitive string */
-#define JSFUN_THISP_NUMBER    0x0200    /* |this| may be a primitive number */
-#define JSFUN_THISP_BOOLEAN   0x0400    /* |this| may be a primitive boolean */
-#define JSFUN_THISP_PRIMITIVE 0x0700    /* |this| may be any primitive value */
+#define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
 
 #define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
@@ -717,8 +712,8 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2);
 extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
-extern JS_PUBLIC_API(void)
-JS_CommenceRuntimeShutDown(JSRuntime *rt);
+/* Deprecated. */
+#define JS_CommenceRuntimeShutDown(rt) ((void) 0) 
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
@@ -937,7 +932,9 @@ extern JS_PUBLIC_API(JSCompartmentCallback)
 JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
+JS_SetWrapObjectCallbacks(JSRuntime *rt,
+                          JSWrapObjectCallback callback,
+                          JSPreWrapCallback precallback);
 
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
@@ -957,50 +954,34 @@ JS_WrapObject(JSContext *cx, JSObject **objp);
 extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
-extern JS_FRIEND_API(JSCompartment *)
-js_SwitchToCompartment(JSContext *cx, JSCompartment *compartment);
-
-extern JS_FRIEND_API(JSCompartment *)
-js_SwitchToObjectCompartment(JSContext *cx, JSObject *obj);
+extern JS_PUBLIC_API(JSObject *)
+JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
+class JS_PUBLIC_API(JSAutoEnterCompartment)
 {
     JSCrossCompartmentCall *call;
+
   public:
-    JSAutoCrossCompartmentCall() : call(NULL) {}
+    JSAutoEnterCompartment() : call(NULL) {}
 
     bool enter(JSContext *cx, JSObject *target);
 
+    void enterAndIgnoreErrors(JSContext *cx, JSObject *target);
+
     bool entered() const { return call != NULL; }
 
-    ~JSAutoCrossCompartmentCall() {
-        if (call)
+    ~JSAutoEnterCompartment() {
+        if (call && call != reinterpret_cast<JSCrossCompartmentCall*>(1))
             JS_LeaveCrossCompartmentCall(call);
     }
 
-    void swap(JSAutoCrossCompartmentCall &other) {
+    void swap(JSAutoEnterCompartment &other) {
         JSCrossCompartmentCall *tmp = call;
         call = other.call;
         other.call = tmp;
-    }
-};
-
-class JSAutoEnterCompartment
-{
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment) : cx(cx) {
-        compartment = js_SwitchToCompartment(cx, newCompartment);
-    }
-    JSAutoEnterCompartment(JSContext *cx, JSObject *target) : cx(cx) {
-        compartment = js_SwitchToObjectCompartment(cx, target);
-    }
-    ~JSAutoEnterCompartment() {
-        js_SwitchToCompartment(cx, compartment);
     }
 };
 
@@ -1737,9 +1718,8 @@ struct JSClass {
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
 /* Additional global reserved slots, beyond those for standard prototypes. */
-#define JSRESERVED_GLOBAL_SLOTS_COUNT     4
-#define JSRESERVED_GLOBAL_COMPARTMENT     (JSProto_LIMIT * 3)
-#define JSRESERVED_GLOBAL_THIS            (JSRESERVED_GLOBAL_COMPARTMENT + 1)
+#define JSRESERVED_GLOBAL_SLOTS_COUNT     3
+#define JSRESERVED_GLOBAL_THIS            (JSProto_LIMIT * 3)
 #define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
 #define JSRESERVED_GLOBAL_REGEXP_STATICS  (JSRESERVED_GLOBAL_THROWTYPEERROR + 1)
 
@@ -2080,7 +2060,13 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyDefault(JSContext *cx, JSObject *obj, const char *name, jsval def, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyByIdDefault(JSContext *cx, JSObject *obj, jsid id, jsval def, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
@@ -2614,6 +2600,39 @@ extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace JS {
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunction(cx, thisObj, fun, argc, argv, rval);
+}
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, const char *name, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunctionName(cx, thisObj, name, argc, argv, rval);
+}
+
+static inline bool
+Call(JSContext *cx, JSObject *thisObj, jsval fun, uintN argc, jsval *argv, jsval *rval) {
+    return !!JS_CallFunctionValue(cx, thisObj, fun, argc, argv, rval);
+}
+
+extern JS_PUBLIC_API(bool)
+Call(JSContext *cx, jsval thisv, jsval fun, uintN argc, jsval *argv, jsval *rval);
+
+static inline bool
+Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsval *rval) {
+    return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
+}
+
+} // namespace JS
+
+JS_BEGIN_EXTERN_C
+#endif // __cplusplus
+
 /*
  * These functions allow setting an operation callback that will be called
  * from the thread the context is associated with some time after any thread
@@ -2860,6 +2879,112 @@ JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
 JS_PUBLIC_API(JSBool)
 JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
+
+/************************************************************************/
+
+/* API for the HTML5 internal structured cloning algorithm. */
+
+/* The maximum supported structured-clone serialization format version. */
+#define JS_STRUCTURED_CLONE_VERSION 1
+
+JS_PUBLIC_API(JSBool)
+JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes, jsval *vp);
+
+/* Note: On success, the caller is responsible for calling js_free(*datap). */
+JS_PUBLIC_API(JSBool)
+JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp);
+
+JS_PUBLIC_API(JSBool)
+JS_StructuredClone(JSContext *cx, jsval v, jsval *vp);
+
+#ifdef __cplusplus
+/* RAII sugar for JS_WriteStructuredClone. */
+class JSAutoStructuredCloneBuffer {
+    JSContext *cx;
+    uint64 *data_;
+    size_t nbytes_;
+
+  public:
+    explicit JSAutoStructuredCloneBuffer(JSContext *cx) : cx(cx), data_(NULL), nbytes_(0) {}
+    ~JSAutoStructuredCloneBuffer() { clear(); }
+
+    uint64 *data() const { return data_; }
+    size_t nbytes() const { return nbytes_; }
+
+    void clear() {
+        if (data_) {
+            JS_free(cx, data_);
+            data_ = NULL;
+            nbytes_ = 0;
+        }
+    }
+
+    /*
+     * Adopt some memory. It will be automatically freed by the destructor.
+     * data must have been allocated using JS_malloc.
+     */
+    void adopt(uint64 *data, size_t nbytes) {
+        clear();
+        data_ = data;
+        nbytes_ = nbytes;
+    }
+
+    /*
+     * Remove the buffer so that it will not be automatically freed.
+     * After this, the caller is responsible for calling JS_free(*datap).
+     */
+    void steal(uint64 **datap, size_t *nbytesp) {
+        *datap = data_;
+        *nbytesp = nbytes_;
+        data_ = NULL;
+        nbytes_ = 0;
+    }
+
+    bool read(jsval *vp) const {
+        JS_ASSERT(data_);
+        return !!JS_ReadStructuredClone(cx, data_, nbytes_, vp);
+    }
+
+    bool write(jsval v) {
+        clear();
+        bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_);
+        if (!ok) {
+            data_ = NULL;
+            nbytes_ = 0;
+        }
+        return ok;
+    }
+};
+#endif
+
+/* API for implementing custom serialization behavior (for ImageData, File, etc.) */
+
+/* The range of tag values the application may use for its own custom object types. */
+#define JS_SCTAG_USER_MIN  ((uint32) 0xFFFF8000)
+#define JS_SCTAG_USER_MAX  ((uint32) 0xFFFFFFFF)
+
+#define JS_SCERR_RECURSION 0
+
+struct JSStructuredCloneCallbacks {
+    ReadStructuredCloneOp read;
+    WriteStructuredCloneOp write;
+    StructuredCloneErrorOp reportError;
+};
+
+JS_PUBLIC_API(void)
+JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);
+
+JS_PUBLIC_API(JSBool)
+JS_ReadUint32Pair(JSStructuredCloneReader *r, uint32 *p1, uint32 *p2);
+
+JS_PUBLIC_API(JSBool)
+JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len);
+
+JS_PUBLIC_API(JSBool)
+JS_WriteUint32Pair(JSStructuredCloneWriter *w, uint32 tag, uint32 data);
+
+JS_PUBLIC_API(JSBool)
+JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len);
 
 /************************************************************************/
 

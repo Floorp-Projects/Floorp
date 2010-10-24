@@ -274,6 +274,24 @@ for (prop in supported_properties) {
 }
 div.style.removeProperty("-moz-transition");
 
+function get_distance(prop, v1, v2)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  return utils.computeAnimationDistance(div, prop, v1, v2);
+}
+
+function check_distance(prop, start, quarter, end)
+{
+  var sq = get_distance(prop, start, quarter);
+  var se = get_distance(prop, start, end);
+  var qe = get_distance(prop, quarter, end);
+
+  ok(Math.abs((sq * 4 - se) / se) < 0.0001, "property '" + prop + "': distance " + sq + " from start '" + start + "' to quarter '" + quarter + "' should be quarter distance " + se + " from start '" + start + "' to end '" + end + "'");
+  ok(Math.abs((qe * 4 - se * 3) / se) < 0.0001, "property '" + prop + "': distance " + qe + " from quarter '" + quarter + "' to end '" + end + "' should be three quarters distance " + se + " from start '" + start + "' to end '" + end + "'");
+}
+
 function test_length_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "4px", "");
@@ -283,6 +301,7 @@ function test_length_transition(prop) {
   div.style.setProperty(prop, "12px", "");
   is(cs.getPropertyValue(prop), "6px",
      "length-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "4px", "6px", "12px");
 }
 
 // Test using float values in the range [0, 1] (e.g. opacity)
@@ -295,6 +314,7 @@ function test_float_zeroToOne_transition(prop) {
   div.style.setProperty(prop, "0.8", "");
   is(cs.getPropertyValue(prop), "0.425",
      "float-valued property " + prop + ": interpolation of floats");
+  check_distance(prop, "0.3", "0.425", "0.8");
 }
 
 // Test using float values in the range [1, infinity) (e.g. stroke-miterlimit)
@@ -307,6 +327,7 @@ function test_float_aboveOne_transition(prop) {
   div.style.setProperty(prop, "2.1", "");
   is(cs.getPropertyValue(prop), "1.275",
      "float-valued property " + prop + ": interpolation of floats");
+  check_distance(prop, "1", "1.275", "2.1");
 }
 
 function test_percent_transition(prop) {
@@ -327,6 +348,7 @@ function test_percent_transition(prop) {
      res + " should be a quarter of the way between " + bv + " and " + av);
   ok(has_num(res),
      "percent-valued property " + prop + ": percent computes to number");
+  check_distance(prop, "25%", "37.5%", "75%");
 }
 
 function test_length_percent_calc_transition(prop) {
@@ -357,28 +379,34 @@ function test_length_percent_calc_transition(prop) {
      + v2v + "'");
 
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "-moz-calc(100% + 200px)", "");
+  div.style.setProperty(prop, "-moz-calc(25% + 100px)", "");
   v1v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v1v), b + 2*c,
+  is(any_unit_to_num(v1v) * 4, b + 4*c,
      "computed value before transition for " + prop + ": '" + v1v + "'");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "300%", "");
+  div.style.setProperty(prop, "75%", "");
   v2v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v2v) * 2, -1*a + 3*b + 3*c,
+  is(any_unit_to_num(v2v) * 8, 5*a + 3*b + 6*c,
      "interpolation between calc() and percent for " + prop + ": '" +
      v2v + "'");
 
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "400px", "");
+  div.style.setProperty(prop, "150px", "");
   v1v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v1v), 4*c,
+  is(any_unit_to_num(v1v) * 2, c * 3,
      "computed value before transition for " + prop + ": '" + v1v + "'");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "-moz-calc(200% + 200px)", "");
+  div.style.setProperty(prop, "-moz-calc(50% + 50px)", "");
   v2v = cs.getPropertyValue(prop);
-  is(any_unit_to_num(v2v) * 2, a + b + 7*c,
+  is(any_unit_to_num(v2v) * 8, 7 * a + b + 10*c,
      "interpolation between length and calc() for " + prop + ": '" +
      v2v + "'");
+
+  check_distance(prop, "50%", "-moz-calc(37.5% + 50px)", "200px");
+  check_distance(prop, "-moz-calc(25% + 100px)", "-moz-calc(37.5% + 75px)",
+                       "75%");
+  check_distance(prop, "150px", "-moz-calc(125px + 12.5%)",
+                       "-moz-calc(50% + 50px)");
 }
 
 function test_color_transition(prop) {
@@ -401,6 +429,11 @@ function test_color_transition(prop) {
   div.style.setProperty(prop, "currentColor", "");
   is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of currentColor");
+
+  check_distance(prop, "rgb(255, 28, 0)", "rgb(210, 42, 32)",
+                       "rgb(75, 84, 128)");
+  check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "currentColor");
+
   (prop == "color" ? div.parentNode : div).style.removeProperty("color");
 }
 
@@ -414,6 +447,9 @@ function test_border_color_transition(prop) {
   div.style.removeProperty(prop);
   is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of initial value");
+
+  check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "-moz-initial");
+
   div.style.removeProperty("color");
 }
 
@@ -428,6 +464,8 @@ function test_shadow_transition(prop) {
   div.style.setProperty(prop, "4px 8px 3px red", "");
   is(cs.getPropertyValue(prop), "rgba(255, 0, 0, 0.25) 1px 2px 0.75px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation of shadows");
+  check_distance(prop, "none", "rgba(255, 0, 0, 0.25) 1px 2px 0.75px",
+                       "4px 8px 3px red");
 
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "#038000 4px 4px, 2px 2px blue", "");
@@ -437,6 +475,9 @@ function test_shadow_transition(prop) {
   div.style.setProperty(prop, "8px 8px 8px red", "");
   is(cs.getPropertyValue(prop), "rgb(66, 96, 0) 5px 5px 2px" + spreadStr + ", rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation of shadows");
+  check_distance(prop, "#038000 4px 4px, 2px 2px blue",
+                       "rgb(66, 96, 0) 5px 5px 2px, rgba(0, 0, 255, 0.75) 1.5px 1.5px 0px",
+                       "8px 8px 8px red");
 
   if (prop == "box-shadow") {
     div.style.setProperty(prop, "8px 8px 8px red inset", "");
@@ -449,6 +490,9 @@ function test_shadow_transition(prop) {
     div.style.setProperty(prop, "8px 8px 8px red", "");
     is(cs.getPropertyValue(prop), "rgb(255, 0, 0) 8px 8px 8px 0px",
        "shadow-valued property " + prop + ": non-interpolable cases");
+    check_distance(prop, "8px 8px 8px red inset",
+                         "rgb(255, 0, 0) 8px 8px 8px 2px inset",
+                         "8px 8px 8px 8px red inset");
   }
 
   var defaultColor = cs.getPropertyValue("color") + " ";
@@ -458,6 +502,7 @@ function test_shadow_transition(prop) {
   div.style.setProperty(prop, "6px 14px 10px", "");
   is(cs.getPropertyValue(prop), defaultColor + "3px 5px 4px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation without color");
+  check_distance(prop, "2px 2px 2px", "3px 5px 4px", "6px 14px 10px");
 }
 
 function test_dasharray_transition(prop) {
@@ -470,6 +515,7 @@ function test_dasharray_transition(prop) {
   div.style.setProperty(prop, "15px", "");
   is(cs.getPropertyValue(prop), "6",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
+  check_distance(prop, "3", "6", "15px");
   div.style.setProperty(prop, "none", "");
   is(cs.getPropertyValue(prop), "none",
      "dasharray-valued property " + prop + ": non-interpolability of none");
@@ -480,6 +526,7 @@ function test_dasharray_transition(prop) {
   div.style.setProperty(prop, "14, 12,16,16px", "");
   is(cs.getPropertyValue(prop), "8, 9, 7, 7",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
+  check_distance(prop, "6,8px,4,4", "8,9,7,7", "14, 12,16,16px");
   div.style.setProperty(prop, "none", "");
   is(cs.getPropertyValue(prop), "none",
      "dasharray-valued property " + prop + ": non-interpolability of none");
@@ -490,12 +537,15 @@ function test_dasharray_transition(prop) {
   div.style.setProperty(prop, "4,8,12,16", "");
   is(cs.getPropertyValue(prop), "7, 14, 6, 10, 13, 5, 9, 16, 4, 8, 15, 7",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
+  check_distance(prop, "8,16,4", "7, 14, 6, 10, 13, 5, 9, 16, 4, 8, 15, 7",
+                       "4,8,12,16");
   div.style.setProperty(prop, "2,50%,6,10", "");
   is(cs.getPropertyValue(prop), "2, 50%, 6, 10",
      "dasharray-valued property " + prop + ": non-interpolability of mixed units");
   div.style.setProperty(prop, "6,30%,2,2", "");
   is(cs.getPropertyValue(prop), "3, 45%, 5, 8",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
+  check_distance(prop, "2,50%,6,10", "3, 45%, 5, 8", "6,30%,2,2");
 }
 
 function test_radius_transition(prop) {
@@ -516,6 +566,7 @@ function test_radius_transition(prop) {
   div.style.setProperty(prop, "15px", "");
   is(cs.getPropertyValue(prop), "6px",
      "radius-valued property " + prop + ": interpolation of radius");
+  check_distance(prop, "3px", "6px", "15px");
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "5%", "");
   is(cs.getPropertyValue(prop), "10px",
@@ -524,6 +575,7 @@ function test_radius_transition(prop) {
   div.style.setProperty(prop, "25%", "");
   is(cs.getPropertyValue(prop), "20px",
      "radius-valued property " + prop + ": interpolation of radius");
+  check_distance(prop, "5%", "10%", "25%");
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "3px 8px", "");
   is(cs.getPropertyValue(prop), "3px 8px",
@@ -532,6 +584,7 @@ function test_radius_transition(prop) {
   div.style.setProperty(prop, "15px 12px", "");
   is(cs.getPropertyValue(prop), "6px 9px",
      "radius-valued property " + prop + ": interpolation of radius");
+  check_distance(prop, "3px 8px", "6px 9px", "15px 12px");
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "5% 15%", "");
   is(cs.getPropertyValue(prop), "10px 30px",
@@ -540,6 +593,7 @@ function test_radius_transition(prop) {
   div.style.setProperty(prop, "25%", "");
   is(cs.getPropertyValue(prop), "20px 35px",
      "radius-valued property " + prop + ": interpolation of radius");
+  check_distance(prop, "5% 15%", "10% 17.5%", "25%");
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "8% 12%", "");
   is(cs.getPropertyValue(prop), "16px 24px",
@@ -548,6 +602,8 @@ function test_radius_transition(prop) {
   div.style.setProperty(prop, "40px 20px", "");
   is(cs.getPropertyValue(prop), "22px 23px",
      "radius-valued property " + prop + ": interpolation of radius with mixed units");
+  check_distance(prop, "8% 12%", "-moz-calc(6% + 10px) -moz-calc(5px + 9%)",
+                       "40px 20px");
 
   test_length_percent_calc_transition(prop);
 
@@ -566,6 +622,7 @@ function test_zindex_transition(prop) {
   div.style.setProperty(prop, "-14", "");
   is(cs.getPropertyValue(prop), "-1",
      "integer-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "6", "1", "-14");
   div.style.setProperty(prop, "auto", "");
   is(cs.getPropertyValue(prop), "auto",
      "integer-valued property " + prop + ": auto not interpolable");
@@ -575,6 +632,7 @@ function test_zindex_transition(prop) {
   div.style.setProperty(prop, "8", "");
   is(cs.getPropertyValue(prop), "-1",
      "integer-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "-4", "-1", "8");
 }
 
 function test_font_stretch(prop) {
@@ -588,6 +646,7 @@ function test_font_stretch(prop) {
   div.style.setProperty(prop, "ultra-expanded", "");
   is(cs.getPropertyValue(prop), "semi-expanded",
      "font-stretch property " + prop + ": interpolation of font-stretches");
+  check_distance(prop, "normal", "semi-expanded", "ultra-expanded");
   div.style.setProperty(prop, "wider", "");
   is(cs.getPropertyValue(prop), "wider",
      "font-stretch property " + prop + ": can't interpolate wider/narrower");
@@ -597,6 +656,7 @@ function test_font_stretch(prop) {
   div.style.setProperty(prop, "extra-condensed", "");
   is(cs.getPropertyValue(prop), "normal",
      "font-stretch property " + prop + ": interpolation of font-stretches");
+  check_distance(prop, "expanded", "semi-expanded", "condensed");
 }
 
 function test_font_weight(prop) {
@@ -610,6 +670,7 @@ function test_font_weight(prop) {
   div.style.setProperty(prop, "900", "");
   is(cs.getPropertyValue(prop), "500",
      "font-weight property " + prop + ": interpolation of font-weights");
+  check_distance(prop, "400", "500", "800");
   div.style.setProperty(prop, "lighter", "");
   is(cs.getPropertyValue(prop), "lighter",
      "font-weight property " + prop + ": can't interpolate bolder/lighter");
@@ -619,6 +680,7 @@ function test_font_weight(prop) {
   div.style.setProperty(prop, "100", "");
   is(cs.getPropertyValue(prop), "700",
      "font-weight property " + prop + ": interpolation of font-weights");
+  check_distance(prop, "900", "700", "100");
 }
 
 function test_pos_integer_or_auto_transition(prop) {
@@ -630,6 +692,7 @@ function test_pos_integer_or_auto_transition(prop) {
   div.style.setProperty(prop, "11", "");
   is(cs.getPropertyValue(prop), "5",
      "integer-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "4", "6", "12");
   div.style.setProperty(prop, "auto", "");
   is(cs.getPropertyValue(prop), "auto",
      "integer-valued property " + prop + ": auto not interpolable");
@@ -639,6 +702,7 @@ function test_pos_integer_or_auto_transition(prop) {
   div.style.setProperty(prop, "4", "");
   is(cs.getPropertyValue(prop), "7",
      "integer-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "8", "7", "4");
 }
 
 function test_length_pair_transition(prop) {
@@ -650,6 +714,7 @@ function test_length_pair_transition(prop) {
   div.style.setProperty(prop, "12px 10px", "");
   is(cs.getPropertyValue(prop), "6px 7px",
      "length-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "4px 6px", "6px 7px", "12px 10px");
 }
 
 function test_length_percent_pair_transition(prop) {
@@ -661,6 +726,7 @@ function test_length_percent_pair_transition(prop) {
   div.style.setProperty(prop, "12px 70%", "");
   is(cs.getPropertyValue(prop), "6px 55%",
      "length-valued property " + prop + ": interpolation of lengths");
+  check_distance(prop, "4px 50%", "6px 55%", "12px 70%");
 }
 
 function test_rect_transition(prop) {
@@ -672,6 +738,9 @@ function test_rect_transition(prop) {
   div.style.setProperty(prop, "rect(0px, 4px, 4px, 2px)", "");
   is(cs.getPropertyValue(prop), "rect(3px, 13px, 10px, 5px)",
      "rect-valued property " + prop + ": interpolation of rects");
+  check_distance(prop, "rect(4px, 16px, 12px, 6px)",
+                       "rect(3px, 13px, 10px, 5px)",
+                       "rect(0px, 4px, 4px, 2px)");
   if (prop == "clip") {
     div.style.setProperty(prop, "rect(0px, 6px, 4px, auto)", "");
     is(cs.getPropertyValue(prop), "rect(0px, 6px, 4px, auto)",
@@ -692,6 +761,12 @@ function test_visibility_transition(prop) {
   div.style.setProperty(prop, "hidden", "");
   is(cs.getPropertyValue(prop), "visible",
      "visibility property " + prop + ": interpolation of visibility");
+  isnot(get_distance(prop, "visible", "hidden"), 0,
+        "distance between visible and hidden should not be zero");
+  is(get_distance(prop, "visible", "visible"), 0,
+     "distance between visible and visible should not be zero");
+  is(get_distance(prop, "hidden", "hidden"), 0,
+     "distance between hidden and hidden should not be zero");
 }
 
 function test_background_size_transition(prop) {
@@ -703,6 +778,7 @@ function test_background_size_transition(prop) {
   div.style.setProperty(prop, "100% 100%", "");
   is(cs.getPropertyValue(prop), "62.5% 85%",
      "property " + prop + ": interpolation of percents");
+  check_distance(prop, "50% 80%", "62.5% 85%", "100% 100%");
   div.style.setProperty(prop, "contain", "");
   is(cs.getPropertyValue(prop), "contain",
      "property " + prop + ": can't interpolate 'contain'");
@@ -718,6 +794,7 @@ function test_background_position_transition(prop) {
   div.style.setProperty(prop, "bottom right", "");
   is(cs.getPropertyValue(prop), "62.5% 85%",
      "property " + prop + ": interpolation of percents");
+  check_distance(prop, "center 80%", "62.5% 85%", "bottom right");
   test_background_position_size_common(prop);
 }
 
@@ -730,30 +807,43 @@ function test_background_position_size_common(prop) {
   div.style.setProperty(prop, "50px 0", "");
   is(cs.getPropertyValue(prop), "20px 30px",
      "property " + prop + ": interpolation of lengths");
+  check_distance(prop, "10px 40px", "20px 30px", "50px 0");
   div.style.setProperty(prop, "10px 40px, 50px 50px, 30px 20px", "");
   is(cs.getPropertyValue(prop), "10px 40px, 50px 50px, 30px 20px",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "50px 20px, 70px 50px, 30px 40px", "");
   is(cs.getPropertyValue(prop), "20px 35px, 55px 50px, 30px 25px",
      "property " + prop + ": interpolation of lists of lengths");
+  check_distance(prop, "10px 40px, 50px 50px, 30px 20px",
+                       "20px 35px, 55px 50px, 30px 25px",
+                       "50px 20px, 70px 50px, 30px 40px");
   div.style.setProperty(prop, "10px 40%, 50% 50px, 30% 20%, 5px 10px", "");
   is(cs.getPropertyValue(prop), "10px 40%, 50% 50px, 30% 20%, 5px 10px",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "50px 20%, 70% 50px, 30% 40%, 25px 50px", "");
   is(cs.getPropertyValue(prop), "20px 35%, 55% 50px, 30% 25%, 10px 20px",
      "property " + prop + ": interpolation of lists of lengths and percents");
+  check_distance(prop, "10px 40%, 50% 50px, 30% 20%, 5px 10px",
+                       "20px 35%, 55% 50px, 30% 25%, 10px 20px",
+                       "50px 20%, 70% 50px, 30% 40%, 25px 50px");
   div.style.setProperty(prop, "20% 40%, 8px 12px", "");
   is(cs.getPropertyValue(prop), "20% 40%, 8px 12px",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "12px 20px, 40% 16%", "");
   is(cs.getPropertyValue(prop), "-moz-calc(3px + 15%) -moz-calc(5px + 30%), -moz-calc(6px + 10%) -moz-calc(9px + 4%)",
      "property " + prop + ": interpolation that computes to calc()");
+  check_distance(prop, "20% 40%, 8px 12px",
+                       "-moz-calc(3px + 15%) -moz-calc(5px + 30%), -moz-calc(6px + 10%) -moz-calc(9px + 4%)",
+                       "12px 20px, 40% 16%");
   div.style.setProperty(prop, "-moz-calc(20% + 40px) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)", "");
   is(cs.getPropertyValue(prop), "-moz-calc(40px + 20%) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)",
      "property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "12px 20%, -moz-calc(20%) -moz-calc(16px + 60%), -moz-calc(8px + 20%) -moz-calc(40px + 16%)", "");
   is(cs.getPropertyValue(prop), "-moz-calc(33px + 15%) -moz-calc(30px + 35%), -moz-calc(6px + 5%) -moz-calc(4px + 24%), -moz-calc(17px + 14%) -moz-calc(28px + 10%)",
      "property " + prop + ": interpolation that computes to calc()");
+  check_distance(prop, "-moz-calc(20% + 40px) -moz-calc(40px + 40%), 8px 12%, -moz-calc(20px + 12%) -moz-calc(24px + 8%)",
+                       "-moz-calc(33px + 15%) -moz-calc(30px + 35%), -moz-calc(6px + 5%) -moz-calc(4px + 24%), -moz-calc(17px + 14%) -moz-calc(28px + 10%)",
+                       "12px 20%, -moz-calc(20%) -moz-calc(16px + 60%), -moz-calc(8px + 20%) -moz-calc(40px + 16%)");
 }
 
 function test_transform_transition(prop) {
@@ -771,42 +861,61 @@ function test_transform_transition(prop) {
   var tests = [
     // rotate
     { start: 'none', end: 'rotate(60deg)',
+      expected_uncomputed: 'rotate(15deg)',
       expected: c_rot_15 },
     { start: 'rotate(0)', end: 'rotate(60deg)',
+      expected_uncomputed: 'rotate(15deg)',
       expected: c_rot_15 },
     { start: 'rotate(0deg)', end: 'rotate(60deg)',
+      expected_uncomputed: 'rotate(15deg)',
       expected: c_rot_15 },
     { start: 'none', end: c_rot_60,
       expected: c_rot_15 },
-    { start: 'none', end: 'rotate(360deg)', expected: c('rotate(90deg)') },
-    { start: 'none', end: 'rotate(720deg)', expected: c('rotate(180deg)') },
-    { start: 'none', end: 'rotate(1080deg)', expected: c('rotate(270deg)') },
-    { start: 'none', end: 'rotate(1440deg)', expected: c('scale(1)'),
+    { start: 'none', end: 'rotate(360deg)',
+      expected_uncomputed: 'rotate(90deg)',
+      expected: c('rotate(90deg)') },
+    { start: 'none', end: 'rotate(720deg)',
+      expected_uncomputed: 'rotate(180deg)',
+      expected: c('rotate(180deg)') },
+    { start: 'none', end: 'rotate(1080deg)',
+      expected_uncomputed: 'rotate(270deg)',
+      expected: c('rotate(270deg)') },
+    { start: 'none', end: 'rotate(1440deg)',
+      expected_uncomputed: 'rotate(360deg)',
+      expected: c('scale(1)'),
       round_error_ok: true },
 
     // translate
     { start: 'translate(20px)', end: 'none',
+      expected_uncomputed: 'translate(15px)',
       expected: 'matrix(1, 0, 0, 1, 15px, 0px)' },
     { start: 'translate(20px, 12px)', end: 'none',
+      expected_uncomputed: 'translate(15px, 9px)',
       expected: 'matrix(1, 0, 0, 1, 15px, 9px)' },
     { start: 'translateX(-20px)', end: 'none',
+      expected_uncomputed: 'translateX(-15px)',
       expected: 'matrix(1, 0, 0, 1, -15px, 0px)' },
     { start: 'translateY(-40px)', end: 'none',
+      expected_uncomputed: 'translateY(-30px)',
       expected: 'matrix(1, 0, 0, 1, 0px, -30px)' },
     // percentages are relative to 300px (width) and 50px (height)
     // per the prerequisites in property_database.js
     { start: 'translate(20%)', end: 'none',
+      expected_uncomputed: 'translate(15%)',
       expected: 'matrix(1, 0, 0, 1, 45px, 0px)' },
     { start: 'translate(20%, 12%)', end: 'none',
+      expected_uncomputed: 'translate(15%, 9%)',
       expected: 'matrix(1, 0, 0, 1, 45px, 4.5px)' },
     { start: 'translateX(-20%)', end: 'none',
+      expected_uncomputed: 'translateX(-15%)',
       expected: 'matrix(1, 0, 0, 1, -45px, 0px)' },
     { start: 'translateY(-40%)', end: 'none',
+      expected_uncomputed: 'translateY(-30%)',
       expected: 'matrix(1, 0, 0, 1, 0px, -15px)' },
     { start: 'none', end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
-      expected: c('rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)') },
+      expected_uncomputed: 'rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)' },
     { start: 'none', end: 'rotate(-90deg) translate(20%, 20%) rotate(90deg)',
-      expected: c('rotate(-22.5deg) translate(5%, 5%) rotate(22.5deg)') },
+      expected_uncomputed: 'rotate(-22.5deg) translate(5%, 5%) rotate(22.5deg)' },
     // test percent translation using matrix decomposition
     { start: 'rotate(45deg) rotate(-45deg)',
       end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
@@ -820,6 +929,7 @@ function test_transform_transition(prop) {
     // property_database.js
     { start: 'translateX(20%)', /* 60px */
       end: 'translateX(-moz-calc(10% + 1em))', /* 30px + 20px = 50px */
+      expected_uncomputed: 'translateX(-moz-calc(17.5% + 0.25em))',
       expected: 'matrix(1, 0, 0, 1, 57.5px, 0px)' },
     { start: 'translate(-moz-calc(0.75 * 3em + 1.5 * 10%), -moz-calc(0.5 * 5em + 0.5 * 8%))', /* 90px, 52px */
       end: 'rotate(90deg) translateY(20%) rotate(90deg) translateY(-moz-calc(10% + 0.5em)) rotate(180deg)', /* -10px, -15px */
@@ -827,18 +937,25 @@ function test_transform_transition(prop) {
 
     // scale
     { start: 'scale(2)', end: 'none',
+      expected_uncomputed: 'scale(1.75)',
       expected: 'matrix(1.75, 0, 0, 1.75, 0px, 0px)' },
     { start: 'none', end: 'scale(0.4)',
+      expected_uncomputed: 'scale(0.85)',
       expected: 'matrix(0.85, 0, 0, 0.85, 0px, 0px)' },
     { start: 'scale(2)', end: 'scale(-2)',
+      expected_uncomputed: 'scale(1)',
       expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
     { start: 'scale(2)', end: 'scale(-6)',
+      expected_uncomputed: 'scale(0)',
       expected: 'matrix(0, 0, 0, 0, 0px, 0px)' },
     { start: 'scale(2, 0.4)', end: 'none',
+      expected_uncomputed: 'scale(1.75, 0.55)',
       expected: 'matrix(1.75, 0, 0, 0.55, 0px, 0px)' },
     { start: 'scaleX(3)', end: 'none',
+      expected_uncomputed: 'scaleX(2.5)',
       expected: 'matrix(2.5, 0, 0, 1, 0px, 0px)' },
     { start: 'scaleY(5)', end: 'none',
+      expected_uncomputed: 'scaleY(4)',
       expected: 'matrix(1, 0, 0, 4, 0px, 0px)' },
 
     // skew
@@ -859,12 +976,12 @@ function test_transform_transition(prop) {
 
     // matrix : skewX
     { start: 'matrix(1, 0, 3, 1, 0px, 0px)', end: 'none',
-      expected: 'matrix(1, 0, 2.25, 1, 0px, 0px)' },
+      expected_uncomputed: 'matrix(1, 0, 2.25, 1, 0px, 0px)' },
     { start: 'skewX(0)', end: 'skewX(-45deg) translate(0)',
       expected: 'matrix(1, 0, -0.25, 1, 0px, 0px)' },
     // matrix : rotate
     { start: 'rotate(-30deg)', end: 'matrix(0, 1, -1, 0, 0px, 0px)',
-      expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
+      expected_uncomputed: 'matrix(1, 0, 0, 1, 0px, 0px)' },
     { start: 'rotate(-30deg) translateX(0)',
       end: 'translateX(0) rotate(-90deg)',
       expected: c('rotate(-45deg)') },
@@ -879,10 +996,12 @@ function test_transform_transition(prop) {
       end: 'matrix(1, 0, 0, 1, 0, 0)',
       expected: c('rotate(135deg)') },
     { start: 'scale(-1)', end: 'none',
+      expected_uncomputed: 'scale(-0.5)',
       expected: 'matrix(-0.5, 0, 0, -0.5, 0px, 0px)' },
     { start: 'rotate(180deg)', end: 'none',
-      expected: c('rotate(135deg)') },
+      expected_uncomputed: 'rotate(135deg)' },
     { start: 'rotate(-180deg)', end: 'none',
+      expected_uncomputed: 'rotate(-135deg)',
       expected: c('rotate(225deg)') },
 
     // ... and a bunch of similar possibilities.  The spec isn't settled
@@ -890,6 +1009,7 @@ function test_transform_transition(prop) {
     // http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
     { start: 'matrix(-1, 0, 0, 1, 0pt, 0pt)', /* scaleX(-1) */
       end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected_uncomputed: 'matrix(-0.5, 0, 0, 1, 0, 0)',
       expected: c('scaleX(-0.5)') },
 
     { start: 'matrix(1, 0, 0, -1, 0pt, 0pt)', /* rotate(-180deg) scaleX(-1) */
@@ -974,6 +1094,19 @@ function test_transform_transition(prop) {
                   'rad) scale(2, 0.5)') },
   ];
 
+  var matrix_re = /^matrix\(([^,]*), ([^,]*), ([^,]*), ([^,]*), ([^,]*)px, ([^,]*)px\)$/;
+  for (var i in tests) {
+    var test = tests[i];
+    if (!("expected" in test)) {
+      var v = test.expected_uncomputed;
+      if (v.match(matrix_re)) {
+        test.expected = v;
+      } else {
+        test.expected = c(v);
+      }
+    }
+  }
+
   for (var i in tests) {
     var test = tests[i];
     div.style.setProperty("-moz-transition-property", "none", "");
@@ -989,7 +1122,7 @@ function test_transform_transition(prop) {
          "interpolation of transitions: " + test.start + " to " + test.end);
     } else {
       function s(mat) {
-        return mat.match(/^matrix\(([^,]*), ([^,]*), ([^,]*), ([^,]*), ([^,]*)px, ([^,]*)px\)$/).slice(1,7);
+        return mat.match(matrix_re).slice(1,7);
       }
       var pass = true;
       var actual_split = s(actual);
@@ -1005,6 +1138,9 @@ function test_transform_transition(prop) {
       ok(pass,
          "interpolation of transitions: " + test.start + " to " + test.end +
          ": " + actual + " should approximately equal " + test.expected);
+    }
+    if ("expected_uncomputed" in test) {
+      check_distance(prop, test.start, test.expected_uncomputed, test.end);
     }
   }
 }

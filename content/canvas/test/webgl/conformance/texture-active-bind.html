@@ -64,9 +64,10 @@ function init()
       [192,255,64,255],
       [200,0,255,255]];
 
-  // Make 4 textures by using 4 active texture units.
+  // Make 4 textures by using 4 active texture units if available.
+  var texunits = Math.min(colors.length, gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS))
   var textures = [];
-  for (var ii = 0; ii < colors.length; ++ii) {
+  for (var ii = 0; ii < texunits; ++ii) {
     var tex = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0 + ii);
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -75,7 +76,7 @@ function init()
   glErrorShouldBe(gl, gl.NO_ERROR);
 
   // now use each texture unit to write into the textures,
-  for (var ii = 0; ii < colors.length; ++ii) {
+  for (var ii = 0; ii < texunits; ++ii) {
     var c = colors[ii];
     ctx2d.fillStyle =
         "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + c[3] + ")";
@@ -92,7 +93,7 @@ function init()
   gl.clearColor(1,0,0,1);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  for (var ii = 0; ii < colors.length; ++ii) {
+  for (var ii = 0; ii < texunits; ++ii) {
     var x = ii % 2;
     var y = Math.floor(ii / 2);
     gl.uniform1i(textureLoc, ii);
@@ -106,7 +107,7 @@ function init()
   }
   glErrorShouldBe(gl, gl.NO_ERROR);
 
-  for (var ii = 0; ii < colors.length; ++ii) {
+  for (var ii = 0; ii < texunits; ++ii) {
     var c = colors[ii];
     var x = ii % 2;
     var y = Math.floor(ii / 2);

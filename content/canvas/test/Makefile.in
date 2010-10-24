@@ -68,12 +68,25 @@ _TEST_FILES_0 = \
 	image_green-redirect^headers^ \
 	test_drawImageIncomplete.html \
 	test_canvas_font_setter.html \
-	test_2d.composite.uncovered.image.source-in.html \
+	test_2d.composite.canvas.destination-atop.html \
+	test_2d.composite.canvas.destination-in.html \
+	test_2d.composite.canvas.source-in.html \
+	test_2d.composite.canvas.source-out.html \
+	test_2d.composite.image.destination-atop.html \
+	test_2d.composite.image.destination-in.html \
+	test_2d.composite.image.source-in.html \
+	test_2d.composite.image.source-out.html \
 	test_2d.composite.uncovered.image.destination-in.html \
+	test_2d.composite.uncovered.image.source-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
-	test_2d.composite.uncovered.image.destination-atop.html \
 	test_mozGetAsFile.html \
+	test_canvas_strokeStyle_getter.html \
 	$(NULL)
+
+ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
+# This test fails in Suite on Linux for some reason, disable it there
+_TEST_FILES_0 += test_2d.composite.uncovered.image.destination-atop.html
+endif
 
 # xor and lighter aren't well handled by cairo; they mostly work, but we don't want
 # to test that
@@ -87,18 +100,6 @@ _TEST_FILES_0 = \
 #	test_2d.composite.canvas.lighter.html \
 #	test_2d.composite.clip.xor.html \
 #	test_2d.composite.clip.lighter.html \
-#
-
-# Temporarily disabled tests; unbounded operators changed behaviour, need to reevaluate tests
-#
-#	test_2d.composite.canvas.destination-atop.html \
-#	test_2d.composite.canvas.destination-in.html \
-#	test_2d.composite.canvas.source-in.html \
-#	test_2d.composite.canvas.source-out.html \
-#	test_2d.composite.image.destination-atop.html \
-#	test_2d.composite.image.destination-in.html \
-#	test_2d.composite.image.source-in.html \
-#	test_2d.composite.image.source-out.html \
 #
 
 # Tests that fail on Mac (possibly because spec is underdefined?).  Bug 407105

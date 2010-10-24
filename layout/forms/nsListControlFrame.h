@@ -297,10 +297,12 @@ protected:
   PRBool     UpdateSelection();
 
   /**
-   * Returns whether the nsIDOMHTMLSelectElement supports 
-   * multiple selection.
+   * Returns whether mContent supports multiple selection.
    */
-  PRBool     GetMultiple(nsIDOMHTMLSelectElement* aSelect = nsnull) const;
+  PRBool     GetMultiple() const {
+    return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  }
+
 
   /**
    * Toggles (show/hide) the combobox dropdown menu.

@@ -226,11 +226,9 @@ public:
                                nsIWeakReference* aShell);
   virtual ~nsHTMLComboboxListAccessible() {}
 
-  // nsIAccessible
-  NS_IMETHOD GetUniqueID(void **aUniqueID);
-
   // nsAccessNode
   virtual nsIFrame* GetFrame();
+  virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);

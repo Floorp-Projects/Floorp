@@ -45,7 +45,6 @@
 #include "xpcinlines.h"
 #include "xpcquickstubs.h"
 #include "XPCWrapper.h"
-#include "XPCNativeWrapper.h"
 
 static inline QITableEntry *
 GetOffsets(nsISupports *identity, XPCWrappedNativeProto* proto)

@@ -51,6 +51,10 @@
 #include "gfxContext.h"
 %}
 
+[ref] native nsConstRect(const nsRect);
+native nscolor(nscolor);
+[ptr] native gfxContext(gfxContext);
+
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -59,8 +63,9 @@ interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
+interface nsIDOMWindow;
 
-[scriptable, uuid(8707ed93-3277-42a5-a235-533aa661a263)]
+[scriptable, uuid(def3fbe8-961b-4c8b-8cac-eb6a4e604bb5)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -471,17 +476,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
 
   /**
-   * Creates a ChromeObjectWrapper for the object and returns it.
-   *
-   * @param scope The JavaScript object whose scope we'll use as the
-   *        parent of the wrapper.
-   * @param objToWrap The JavaScript object to wrap.
-   * @return the wrapped object.
-   */
-
-  void getCOWForObject(/* scope, objToWrap */);
-
-  /**
    * Get IME open state. TRUE means 'Open', otherwise, 'Close'.
    * This property works only when IMEEnabled is IME_STATUS_ENABLED.
    */
@@ -800,10 +794,30 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute AString layerManagerType;
 
-%{C++
-  virtual nsresult RenderDocument(const nsRect& aRect,
-                                  PRUint32 aFlags,
-                                  nscolor aBackgroundColor,
-                                  gfxContext* aThebesContext) = 0;
-%}
+  /**
+   * The DPI of the display
+   */
+  readonly attribute float displayDPI;
+
+  /**
+   * Return the outer window with the given ID, if any.  Can return null.
+   */
+  nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
+
+  [noscript] void RenderDocument(in nsConstRect aRect,
+                                 in PRUint32 aFlags,
+                                 in nscolor aBackgroundColor,
+                                 in gfxContext aThebesContext);
+
+  /**
+   * Method for testing nsStyleAnimation::ComputeDistance.
+   *
+   * Returns the distance between the two values as reported by
+   * nsStyleAnimation::ComputeDistance for the given element and
+   * property.
+   */
+  double computeAnimationDistance(in nsIDOMElement element,
+                                  in AString property,
+                                  in AString value1,
+                                  in AString value2);
 };

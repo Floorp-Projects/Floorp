@@ -2,5 +2,4 @@
 // other lines are assumed to be .html files
 
 conformance/00_testFIXME_list.txt
-more/00_testFIXME_list.txt
 

@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=505915
+-->
+<head>
+  <title>Test for Bug 505915</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=505915">Mozilla Bug 505915</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 505915 **/
+var dataUrl = "data:text/html,<script>parent.f = function() { return this; };<" + "/script>";
+var targetUrl = "http://example.com";
+var f;
+
+var p = 0;
+function go() {
+        switch (++p) {
+        case 1:
+                frames[0].location = dataUrl;
+                break;
+        case 2:
+                frames[0].location = targetUrl;
+                break;
+        case 3:
+                try {
+                    f().cross_origin_property;
+                    ok(false, "should have thrown an exception");
+                } catch (e) {
+                    ok(/Permission denied/.test(e), "threw the correct exception");
+                }
+                SimpleTest.finish();
+                break;
+        }
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<iframe id="ifr" onload="go();"></iframe>
+
+</body>
+</html>

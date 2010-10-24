@@ -2,7 +2,7 @@
 for (let a in [0])
 a = e
 for (let a in [0])
-function () {
+(function () {
     a
-}
+})
 

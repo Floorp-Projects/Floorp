@@ -57,5 +57,10 @@ XPIDLSRCS	= \
               nsIRelativeFilePref.idl \
               $(NULL)
 
+EXPORTS     = \
+              PPrefTuple.h \
+              PrefTuple.h
+              $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 

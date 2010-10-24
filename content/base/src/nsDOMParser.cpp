@@ -59,6 +59,9 @@
 #include "nsDOMError.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/AutoRestore.h"
+
+using namespace mozilla;
 
 // nsIDOMEventListener
 nsresult
@@ -263,6 +266,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
 
+  AutoRestore<PRPackedBool> restoreSyncLoop(mLoopingForSyncLoad);
   mLoopingForSyncLoad = PR_TRUE;
 
   // Have to pass PR_FALSE for reset here, else the reset will remove

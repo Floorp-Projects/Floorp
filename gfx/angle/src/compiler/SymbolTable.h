@@ -76,7 +76,7 @@ public:
     TType& getType() { return type; }    
     const TType& getType() const { return type; }
     bool isUserType() const { return userType; }
-    void changeQualifier(TQualifier qualifier) { type.changeQualifier(qualifier); }
+    void setQualifier(TQualifier qualifier) { type.setQualifier(qualifier); }
     void updateArrayInformationType(TType *t) { arrayInformationType = t; }
     TType* getArrayInformationType() { return arrayInformationType; }
 
@@ -156,14 +156,18 @@ public:
 
     const TString& getMangledName() const { return mangledName; }
     const TType& getReturnType() const { return returnType; }
+
     void relateToOperator(TOperator o) { op = o; }
     TOperator getBuiltInOp() const { return op; }
+
+    void relateToExtension(const TString& ext) { extension = ext; }
+    const TString& getExtension() const { return extension; }
+
     void setDefined() { defined = true; }
     bool isDefined() { return defined; }
 
-    int getParamCount() const { return static_cast<int>(parameters.size()); }    
-    TParameter& operator [](int i)       { return parameters[i]; }
-    const TParameter& operator [](int i) const { return parameters[i]; }
+    int getParamCount() const { return static_cast<int>(parameters.size()); }  
+    const TParameter& getParam(int i) const { return parameters[i]; }
 
     virtual void dump(TInfoSink &infoSink) const;
     TFunction(const TFunction&, TStructureMap& remapper);
@@ -175,6 +179,7 @@ protected:
     TType returnType;
     TString mangledName;
     TOperator op;
+    TString extension;
     bool defined;
 };
 
@@ -221,6 +226,7 @@ public:
     }
 
     void relateToOperator(const char* name, TOperator op);
+    void relateToExtension(const char* name, const TString& ext);
     void dump(TInfoSink &infoSink) const;
     TSymbolTableLevel* clone(TStructureMap& remapper);
 
@@ -289,8 +295,16 @@ public:
         return symbol;
     }
 
-    TSymbolTableLevel* getGlobalLevel() { assert(table.size() >= 2); return table[1]; }
-    void relateToOperator(const char* name, TOperator op) { table[0]->relateToOperator(name, op); }
+    TSymbolTableLevel* getGlobalLevel() {
+        assert(table.size() >= 2);
+        return table[1];
+    }
+    void relateToOperator(const char* name, TOperator op) {
+        table[0]->relateToOperator(name, op);
+    }
+    void relateToExtension(const char* name, const TString& ext) {
+        table[0]->relateToExtension(name, ext);
+    }
     int getMaxSymbolId() { return uniqueId; }
     void dump(TInfoSink &infoSink) const;
     void copyTable(const TSymbolTable& copyOf);

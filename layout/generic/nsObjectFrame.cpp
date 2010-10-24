@@ -459,7 +459,10 @@ public:
 
   PRBool UseLayers()
   {
-    return (mUsePluginLayers &&
+    PRBool useAsyncRendering;
+    return (mInstance &&
+            NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
+            useAsyncRendering &&
             (!mPluginWindow ||
              mPluginWindow->type == NPWindowTypeDrawable));
   }
@@ -593,7 +596,6 @@ private:
 
   nsRefPtr<gfxASurface> mLayerSurface;
   PRPackedBool          mWaitingForPaint;
-  PRPackedBool          mUsePluginLayers;
 };
 
   // Mac specific code to fix up port position and clip
@@ -937,7 +939,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
+  aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
   // delay plugin instantiation until all children have
@@ -1265,8 +1267,12 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 PRBool
-nsDisplayPlugin::IsOpaque(nsDisplayListBuilder* aBuilder)
+nsDisplayPlugin::IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface)
 {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   return f->IsOpaque();
 }
@@ -2276,6 +2282,16 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
                "Instantiation should still be prevented!");
   mPreventInstantiation = PR_FALSE;
 
+#ifdef ACCESSIBILITY
+  if (PresContext()->PresShell()->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
+    }
+  }
+#endif
+
   return rv;
 }
 
@@ -2290,6 +2306,10 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
     return NS_OK;
   }
 
+  // XXXbz can aMimeType ever actually be null here?  If not, either
+  // the callers are wrong (and passing "" instead of null) or we can
+  // remove the codepaths dealing with null aMimeType in
+  // InstantiateEmbeddedPlugin.
   NS_ASSERTION(aMimeType || aURI, "Need a type or a URI!");
 
   // Note: If PrepareInstanceOwner() returns an error, |this| may very
@@ -2333,6 +2353,16 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   NS_ASSERTION(mPreventInstantiation,
                "Instantiation should still be prevented!");
+
+#ifdef ACCESSIBILITY
+  if (PresContext()->PresShell()->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
+    }
+  }
+#endif
 
   mPreventInstantiation = PR_FALSE;
 
@@ -2787,13 +2817,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #endif
 
   mWaitingForPaint = PR_FALSE;
-  mUsePluginLayers =
-    nsContentUtils::GetBoolPref("mozilla.plugins.use_layers",
-#ifdef MOZ_X11
-                                PR_TRUE); // Lets test plugin layers on X11 first
-#else
-                                PR_FALSE); // Lets test plugin layers on X11 first
-#endif
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
@@ -2879,10 +2902,6 @@ nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
   NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set once!");
 
   mInstance = aInstance;
-  PRBool useAsyncPainting = PR_FALSE;
-  if (mInstance &&
-      NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncPainting)))
-      mUsePluginLayers = useAsyncPainting;
 
   return NS_OK;
 }

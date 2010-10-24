@@ -66,6 +66,19 @@ public class RunDataThread extends Thread
 		{
 		bListening = false;
 		}
+	
+	public void SendToDataChannel(String strToSend)
+		{
+		int nNumWorkers = theWorkers.size();
+		for (int lcv = 0; lcv < nNumWorkers; lcv++)
+			{
+			if (theWorkers.get(lcv).isAlive())
+				{
+				theWorkers.get(lcv).SendString(strToSend);
+				}
+			}
+		return;
+		}
 
 	public void run() {
 		try {

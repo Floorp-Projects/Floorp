@@ -253,6 +253,7 @@ namespace nanojit
 
     /** Bucket hashtable with a fixed # of buckets (never rehash)
      *  Intended for use when a reasonable # of buckets can be estimated ahead of time.
+     *  Note that operator== is used to compare keys.
      */
     template<class K, class T, class H=DefaultHash<K> > class HashMap {
         Allocator& allocator;

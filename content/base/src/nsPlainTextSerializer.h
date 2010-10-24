@@ -254,6 +254,8 @@ protected:
   // Content in the stack above this index should be ignored:
   PRUint32          mIgnoreAboveIndex;
 
+  // The stack for ordered lists
+  PRInt32         *mOLStack;
   PRUint32         mOLStackIndex;
 
   PRUint32         mULCount;

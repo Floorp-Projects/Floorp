@@ -79,7 +79,7 @@ WifiGeoCoordsObject.prototype = {
 
 };
 
-function WifiGeoPositionObject(location, address) {
+function WifiGeoPositionObject(location) {
 
     this.coords = new WifiGeoCoordsObject(location.latitude,
                                           location.longitude,
@@ -87,7 +87,8 @@ function WifiGeoPositionObject(location, address) {
                                           location.altitude || 0,
                                           location.altitude_accuracy || 0);
 
-    if (address) {
+    if (location.address) {
+        let address = location.address;
         this.address = new WifiGeoAddressObject(address.street_number || null,
                                                 address.street || null,
                                                 address.premises || null,
@@ -383,19 +384,12 @@ WifiGeoPositionProvider.prototype = {
                 }
             }
 
-            var address = null;
-            try {
-                address = response.location.address;
-            } catch (e) {
-                LOG("No address in response");
+            if (response.location) {
+                var newLocation = new WifiGeoPositionObject(response.location);
+
+                var update = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationUpdate);
+                update.update(newLocation);
             }
-
-            LOG("sending update to geolocation.");
-
-            var newLocation = new WifiGeoPositionObject(response.location, address);
-
-            var update = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationUpdate);
-            update.update(newLocation);
         };
 
         var accessToken = this.getAccessTokenForURL(provider_url);

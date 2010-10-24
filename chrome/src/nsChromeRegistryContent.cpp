@@ -170,28 +170,26 @@ nsChromeRegistryContent::RegisterOverride(const OverrideMapping& aOverride)
   mOverrideTable.Put(chromeURI, overrideURI);
 }
 
-nsresult
+nsIURI*
 nsChromeRegistryContent::GetBaseURIFromPackage(const nsCString& aPackage,
                                                const nsCString& aProvider,
-                                               const nsCString& aPath,
-                                               nsIURI* *aResult)
+                                               const nsCString& aPath)
 {
   PackageEntry* entry;
   if (!mPackagesHash.Get(aPackage, &entry)) {
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
-  *aResult = nsnull;
   if (aProvider.EqualsLiteral("locale")) {
-    *aResult = entry->localeBaseURI;
+    return entry->localeBaseURI;
   }
   else if (aProvider.EqualsLiteral("skin")) {
-    *aResult = entry->skinBaseURI;
+    return entry->skinBaseURI;
   }
   else if (aProvider.EqualsLiteral("content")) {
-    *aResult = entry->contentBaseURI;
+    return entry->contentBaseURI;
   }
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult

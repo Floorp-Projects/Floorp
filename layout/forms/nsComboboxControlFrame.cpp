@@ -728,8 +728,8 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
 {
-  PRInt32 eventStates = mContent->IntrinsicState();
-  if (eventStates & NS_EVENT_STATE_DISABLED) {
+  nsEventStates eventStates = mContent->IntrinsicState();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
     return;
   }
 
@@ -928,8 +928,8 @@ nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  PRInt32 eventStates = mContent->IntrinsicState();
-  if (eventStates & NS_EVENT_STATE_DISABLED) {
+  nsEventStates eventStates = mContent->IntrinsicState();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
     return NS_OK;
   }
 
@@ -1037,7 +1037,8 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsComboboxControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsComboboxControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                                 PRUint32 aFilter)
 {
   aElements.MaybeAppendElement(mDisplayContent);
   aElements.MaybeAppendElement(mButtonContent);
@@ -1385,8 +1386,8 @@ void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
                                         nsPoint aPt)
 {
   /* Do we need to do anything? */
-  PRInt32 eventStates = mContent->IntrinsicState();
-  if ((eventStates & NS_EVENT_STATE_DISABLED) || mFocused != this)
+  nsEventStates eventStates = mContent->IntrinsicState();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || mFocused != this)
     return;
 
   aRenderingContext.PushState();

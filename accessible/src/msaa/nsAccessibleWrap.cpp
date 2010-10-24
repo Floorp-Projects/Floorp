@@ -1354,12 +1354,7 @@ STDMETHODIMP
 nsAccessibleWrap::get_uniqueID(long *uniqueID)
 {
 __try {
-  void *id = nsnull;
-  nsresult rv = GetUniqueID(&id);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *uniqueID = - reinterpret_cast<long>(id);
+  *uniqueID = - reinterpret_cast<long>(UniqueID());
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -1575,60 +1570,53 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED ||
       eventType == nsIAccessibleEvent::EVENT_FOCUS) {
     UpdateSystemCaret();
+
+  } else if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
+    // If the accessible children are changed then drop the IEnumVariant current
+    // position of the accessible.
+    UnattachIEnumVariant();
   }
- 
+
   PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
   if (!childID)
     return NS_OK; // Can't fire an event without a child ID
 
-  // See if we're in a scrollable area with its own window
-  nsAccessible *newAccessible = nsnull;
-  if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
-    // Don't use frame from current accessible when we're hiding that
-    // accessible.
-    newAccessible = accessible->GetCachedParent();
-  } else {
-    newAccessible = accessible;
-  }
-
-  HWND hWnd = GetHWNDFor(newAccessible);
+  HWND hWnd = GetHWNDFor(accessible);
   NS_ENSURE_TRUE(hWnd, NS_ERROR_FAILURE);
 
-  // Gecko uses two windows for every scrollable area. One window contains
-  // scrollbars and the child window contains only the client area.
-  // Details of the 2 window system:
-  // * Scrollbar window: caret drawing window & return value for WindowFromAccessibleObject()
-  // * Client area window: text drawing window & MSAA event window
+  nsAutoString tag;
+  nsCAutoString id;
+  nsIContent* cnt = accessible->GetContent();
+  if (cnt) {
+    cnt->Tag()->ToString(tag);
+    nsIAtom* aid = cnt->GetID();
+    if (aid)
+      aid->ToUTF8String(id);
+  }
+
+#ifdef DEBUG_A11Y
+  printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
+         eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
+         childID, hWnd);
+#endif
 
   // Fire MSAA event for client area window.
   NotifyWinEvent(winEvent, hWnd, OBJID_CLIENT, childID);
-
-  // If the accessible children are changed then drop the IEnumVariant current
-  // position of the accessible.
-  if (eventType == nsIAccessibleEvent::EVENT_REORDER)
-    UnattachIEnumVariant();
-
   return NS_OK;
 }
 
 //------- Helper methods ---------
 
-PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
+PRInt32 nsAccessibleWrap::GetChildIDFor(nsAccessible* aAccessible)
 {
   // A child ID of the window is required, when we use NotifyWinEvent,
   // so that the 3rd party application can call back and get the IAccessible
   // the event occurred on.
 
-  void *uniqueID = nsnull;
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-  if (!accessNode) {
-    return 0;
-  }
-  accessNode->GetUniqueID(&uniqueID);
-
   // Yes, this means we're only compatibible with 32 bit
   // MSAA is only available for 32 bit windows, so it's okay
-  return - NS_PTR_TO_INT32(uniqueID);
+  // XXX: bug 606080
+  return aAccessible ? - NS_PTR_TO_INT32(aAccessible->UniqueID()) : 0;
 }
 
 HWND

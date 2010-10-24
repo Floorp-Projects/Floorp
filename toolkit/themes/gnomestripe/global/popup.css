@@ -47,6 +47,15 @@ panel {
   color: MenuText;
 }
 
+panel[type="arrow"] {
+  -moz-transition: opacity 300ms;
+}
+
+.panel-arrowbox {
+  /* the arrows don't display properly on Linux so disable for now */
+  display: none;
+}
+
 /* ::::: tooltip ::::: */
 
 tooltip {

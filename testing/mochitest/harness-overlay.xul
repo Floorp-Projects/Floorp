@@ -17,76 +17,59 @@
           src="chrome://mochikit/content/tests/SimpleTest/quit.js" />
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript;version=1.7"><![CDATA[
-    function loadTests()
-    {
-      window.removeEventListener("load", loadTests, false);
 
-      var dir = document.documentElement.getAttribute('directory');
-      var url = "chrome://mochikit/content/" + dir + "/";
-      // Find our chrome dir
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-      var chromeURI = ios.newURI("chrome://mochikit/content/",
-                                 null, null);
-      var resolvedURI = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                          getService(Ci.nsIChromeRegistry).
-                          convertChromeURL(chromeURI);
-      var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].
-                          getService(Ci.nsIFileProtocolHandler);
-      var chromeDir = fileHandler.getFileFromURLSpec(resolvedURI.spec);
-      chromeDir = chromeDir.parent.QueryInterface(Ci.nsILocalFile);
-      chromeDir.appendRelativePath(dir);
+function loadTests()
+{
+  window.removeEventListener("load", loadTests, false);
 
-      var singleTestPath;
-      if ("testPath" in params && params.testPath) {
-        var extraPath = params.testPath;
-        var pathToCheck = chromeDir.clone().QueryInterface(Ci.nsILocalFile);
-        var pathIsFile = false;
-        try {
-          var pathParts = extraPath.toString().split("/");
-          for each (var part in pathParts) {
-            pathToCheck.append(part);
-          }          
-          if (pathToCheck.isDirectory()) {
-            for each (var part in pathParts) {
-              chromeDir.append(part);
-            }          
-            url += extraPath + "/";
-          }
-          else {
-            pathIsFile = true;
-          }
-        }
-        catch (e) {
-          pathIsFile = true;
-        }
-        if (pathIsFile) {
-          singleTestPath = url + params.testPath;
-        }
-      }
-      // load server.js in so we can share template functions
-      var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                           getService(Ci.mozIJSSubScriptLoader);
-      var srvScope = {};
-      scriptLoader.loadSubScript("chrome://mochikit/content/server.js",
-                                 srvScope);
+  var baseurl = 'chrome://mochitests/content';
+  var testsURI = Components.classes["@mozilla.org/file/directory_service;1"]
+                      .getService(Components.interfaces.nsIProperties)
+                      .get("ProfD", Components.interfaces.nsILocalFile);
+  testsURI.append("tests.manifest");
+  var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
+              getService(Components.interfaces.nsIIOService);
+  var manifestFile = ioSvc.newFileURI(testsURI)
+                  .QueryInterface(Components.interfaces.nsIFileURL).file;
 
-      // generate our test list
-      srvScope.makeTags();
-      var [links, count] = srvScope.list(url, chromeDir, true);
-      var tableContent = srvScope.linksToTableRows(links, 0);
-      function populate() {
-        $("test-table").innerHTML += tableContent;
-      }
-      gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
-      populate();
-      hookup();
+  Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
+    autoRegister(manifestFile);
 
-      // if we got passed a test path, just run that single test
-      if (singleTestPath)
-        window.location.href = singleTestPath;
-    }
+  var dir = document.documentElement.getAttribute('directory');
+
+  // load server.js in so we can share template functions
+  var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                       getService(Ci.mozIJSSubScriptLoader);
+  var srvScope = {};
+  scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
+                             srvScope);
+  // generate our test list
+  srvScope.makeTags();
+
+  var singleTestPath;
+  var links;
+
+  if (getResolvedURI(baseurl).JARFile) {
+    [links, singleTestPath] = getMochitestJarListing(baseurl, params.testPath, dir);
+  } else {
+    [links, singleTestPath] = getFileListing(baseurl, params.testPath, dir, srvScope);
+  }
+  
+  var tableContent = srvScope.linksToTableRows(links, 0);
+
+  function populate() {
+    $("test-table").innerHTML += tableContent;
+  }
+  gTestList = eval(srvScope.jsonArrayOfTestFiles(links));
+  populate();
+  hookup();
+
+  if (singleTestPath)
+    window.location.href = singleTestPath;
+}
 
     window.addEventListener("load", loadTests, false);
   ]]>

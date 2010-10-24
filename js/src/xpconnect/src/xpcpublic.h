@@ -47,6 +47,7 @@
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        const nsACString &origin, nsIPrincipal *principal,
-                       JSObject **global, JSCompartment **compartment);
+                       bool preferXrays, JSObject **global,
+                       JSCompartment **compartment);
 
 #endif

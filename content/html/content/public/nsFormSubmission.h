@@ -52,7 +52,7 @@ class nsIDocShell;
 class nsIRequest;
 class nsISaveAsCharset;
 class nsIMultiplexInputStream;
-class nsIDOMFile;
+class nsIDOMBlob;
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
@@ -79,10 +79,10 @@ public:
    * Submit a name/file pair
    *
    * @param aName the name of the parameter
-   * @param aFile the file to submit
+   * @param aBlob the file to submit
    */
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMFile* aFile) = 0;
+                                   nsIDOMBlob* aBlob) = 0;
   
   /**
    * Reports whether the instance supports AddIsindex().
@@ -188,7 +188,7 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMFile* aFile);
+                                   nsIDOMBlob* aBlob);
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
 

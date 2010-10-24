@@ -40,7 +40,7 @@
 #include "nsTArray.h"
 #include "nsAudioAvailableEventManager.h"
 
-#define MILLISECONDS_PER_SECOND 1000
+#define MILLISECONDS_PER_SECOND 1000.0f
 #define MAX_PENDING_EVENTS 100
 
 using namespace mozilla;
@@ -52,7 +52,7 @@ private:
   nsAutoArrayPtr<float> mFrameBuffer;
 public:
   nsAudioAvailableEventRunner(nsBuiltinDecoder* aDecoder, float* aFrameBuffer,
-                              PRUint32 aFrameBufferLength, PRUint64 aTime) :
+                              PRUint32 aFrameBufferLength, float aTime) :
     mDecoder(aDecoder),
     mFrameBuffer(aFrameBuffer),
     mFrameBufferLength(aFrameBufferLength),
@@ -72,7 +72,9 @@ public:
   }
 
   const PRUint32 mFrameBufferLength;
-  const PRUint64 mTime;
+
+  // Start time of the buffer data (in seconds).
+  const float mTime;
 };
 
 
@@ -104,7 +106,7 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
   while (mPendingEvents.Length() > 0) {
     nsAudioAvailableEventRunner* e =
       (nsAudioAvailableEventRunner*)mPendingEvents[0].get();
-    if (e->mTime > aCurrentTime) {
+    if (e->mTime * MILLISECONDS_PER_SECOND > aCurrentTime) {
       break;
     }
     nsCOMPtr<nsIRunnable> event = mPendingEvents[0];
@@ -113,7 +115,7 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
   }
 }
 
-void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
+void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioData,
                                                          PRUint32 aAudioDataLength,
                                                          PRUint64 aEndTimeSampleOffset)
 {
@@ -131,22 +133,25 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
     }
     mSignalBufferLength = currentBufferSize;
   }
-  float* audioData = aAudioData;
+  SoundDataValue* audioData = aAudioData;
   PRUint32 audioDataLength = aAudioDataLength;
   PRUint32 signalBufferTail = mSignalBufferLength - mSignalBufferPosition;
 
   // Group audio samples into optimal size for event dispatch, and queue.
   while (signalBufferTail <= audioDataLength) {
-    PRUint64 time = 0;
+    float time = 0.0;
     // Guard against unsigned number overflow during first frame time calculation.
     if (aEndTimeSampleOffset > mSignalBufferPosition + audioDataLength) {
-      time = MILLISECONDS_PER_SECOND * (aEndTimeSampleOffset -
-             mSignalBufferPosition - audioDataLength) / mSamplesPerSecond;
+      time = (aEndTimeSampleOffset - mSignalBufferPosition - audioDataLength) / 
+             mSamplesPerSecond;
     }
 
     // Fill the signalBuffer.
-    memcpy(mSignalBuffer.get() + mSignalBufferPosition,
-           audioData, sizeof(float) * signalBufferTail);
+    PRUint32 i;
+    float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
+    for (i = 0; i < signalBufferTail; ++i) {
+      signalBuffer[i] = MOZ_CONVERT_SOUND_SAMPLE(audioData[i]);
+    }
     audioData += signalBufferTail;
     audioDataLength -= signalBufferTail;
 
@@ -185,8 +190,11 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(float* aAudioData,
 
   if (audioDataLength > 0) {
     // Add data to the signalBuffer.
-    memcpy(mSignalBuffer.get() + mSignalBufferPosition,
-           audioData, sizeof(float) * audioDataLength);
+    PRUint32 i;
+    float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
+    for (i = 0; i < audioDataLength; ++i) {
+      signalBuffer[i] = MOZ_CONVERT_SOUND_SAMPLE(audioData[i]);
+    }
     mSignalBufferPosition += audioDataLength;
   }
 }
@@ -219,9 +227,11 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
          (mSignalBufferLength - mSignalBufferPosition) * sizeof(float));
 
   // Force this last event to go now.
+  float time = (aEndTime / MILLISECONDS_PER_SECOND) - 
+               (mSignalBufferPosition / mSamplesPerSecond);
   nsCOMPtr<nsIRunnable> lastEvent =
     new nsAudioAvailableEventRunner(mDecoder, mSignalBuffer.forget(),
-                                    mSignalBufferLength, aEndTime);
+                                    mSignalBufferLength, time);
   NS_DispatchToMainThread(lastEvent, NS_DISPATCH_NORMAL);
 
   mSignalBufferPosition = 0;

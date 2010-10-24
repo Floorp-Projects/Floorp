@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=517163
+-->
+<window title="Mozilla Bug 517163"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=517163"
+     target="_blank">Mozilla Bug 517163</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    function dont_call() {
+      ok(false, "This method should not be called.");
+    }
+
+    function go() {
+      /** Test for Bug 517163 **/
+      var rval = Components.utils.lookupMethod($("ifr").contentDocument,
+                                               "getElementsByTagName")("body");
+      ok(/XrayWrapper/(rval.toString()), "got an XPCNativeWrapper back");
+
+      // Overwrite one of our own functions and make sure we can still
+      // reach the underlying function through lookupMethod.
+
+      var iframe = $('ifr');
+      document.getElementById = dont_call;
+      rval = Components.utils.lookupMethod(document, "getElementById")("ifr");
+      is(rval, iframe, "got the wrong element back");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    ]]>
+  </script>
+
+  <iframe type="content"
+          src="http://mochi.test:8888"
+          onload="go()"
+          id="ifr">
+  </iframe>
+</window>

@@ -43,8 +43,12 @@
 #include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "nsIFilePicker.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
+#include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIObserverService.h"
 #include "nsContentUtils.h"
@@ -59,6 +63,13 @@
 #include "nsIAlertsService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsConsoleMessage.h"
+
+#ifdef MOZ_PERMISSIONS
+#include "nsPermissionManager.h"
+#endif
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
 
@@ -126,6 +137,13 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         mRunToCompletionDepth = 0;
 
     mIsAlive = false;
+
+    if (obs) {
+        nsString context = NS_LITERAL_STRING("");
+        if (AbnormalShutdown == why)
+            context.AssignLiteral("abnormal");
+        obs->NotifyObservers(nsnull, "ipc:content-shutdown", context.get());
+    }
 }
 
 TabParent*
@@ -180,118 +198,10 @@ ContentParent::IsAlive()
 }
 
 bool
-ContentParent::RecvGetPrefType(const nsCString& prefName,
-                               PRInt32* retValue, nsresult* rv)
-{
-    *retValue = 0;
-
-    EnsurePrefService();
-    *rv = mPrefService->GetPrefType(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvGetBoolPref(const nsCString& prefName,
-                               PRBool* retValue, nsresult* rv)
-{
-    *retValue = PR_FALSE;
-
-    EnsurePrefService();
-    *rv = mPrefService->GetBoolPref(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvGetIntPref(const nsCString& prefName,
-                              PRInt32* retValue, nsresult* rv)
-{
-    *retValue = 0;
-
-    EnsurePrefService();
-    *rv = mPrefService->GetIntPref(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvGetCharPref(const nsCString& prefName,
-                               nsCString* retValue, nsresult* rv)
+ContentParent::RecvReadPrefsArray(nsTArray<PrefTuple> *prefs)
 {
     EnsurePrefService();
-    *rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(*retValue));
-    return true;
-}
-
-bool
-ContentParent::RecvGetPrefLocalizedString(const nsCString& prefName,
-                                          nsString* retValue, nsresult* rv)
-{
-    EnsurePrefService();
-    nsCOMPtr<nsIPrefLocalizedString> string;
-    *rv = mPrefService->GetComplexValue(prefName.get(),
-            NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(string));
-
-    if (NS_SUCCEEDED(*rv))
-      string->GetData(getter_Copies(*retValue));
-
-    return true;
-}
-
-bool
-ContentParent::RecvPrefHasUserValue(const nsCString& prefName,
-                                    PRBool* retValue, nsresult* rv)
-{
-    *retValue = PR_FALSE;
-
-    EnsurePrefService();
-    *rv = mPrefService->PrefHasUserValue(prefName.get(), retValue);
-    return true;
-}
-
-bool
-ContentParent::RecvPrefIsLocked(const nsCString& prefName,
-                                PRBool* retValue, nsresult* rv)
-{
-    *retValue = PR_FALSE;
-
-    EnsurePrefService();
-    *rv = mPrefService->PrefIsLocked(prefName.get(), retValue);
-        
-    return true;
-}
-
-bool
-ContentParent::RecvGetChildList(const nsCString& domain,
-                                nsTArray<nsCString>* list, nsresult* rv)
-{
-    EnsurePrefService();
-
-    PRUint32 count;
-    char **childArray;
-    *rv = mPrefService->GetChildList(domain.get(), &count, &childArray);
-
-    if (NS_SUCCEEDED(*rv)) {
-      list->SetCapacity(count);
-      for (PRUint32 i = 0; i < count; ++i)
-        *(list->AppendElement()) = childArray[i];
-    }
-        
-    return true;
-}
-
-bool
-ContentParent::RecvTestPermission(const IPC::URI&  aUri,
-                                   const nsCString& aType,
-                                   const PRBool&    aExact,
-                                   PRUint32*        retValue)
-{
-    EnsurePermissionService();
-
-    nsCOMPtr<nsIURI> uri(aUri);
-    if (aExact) {
-        mPermissionService->TestExactPermission(uri, aType.get(), retValue);
-    } else {
-        mPermissionService->TestPermission(uri, aType.get(), retValue);
-    }
+    mPrefService->MirrorPreferences(prefs);
     return true;
 }
 
@@ -306,16 +216,48 @@ ContentParent::EnsurePrefService()
     }
 }
 
-void
-ContentParent::EnsurePermissionService()
+bool
+ContentParent::RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions)
 {
-    nsresult rv;
-    if (!mPermissionService) {
-        mPermissionService = do_GetService(
-            NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-        NS_ASSERTION(NS_SUCCEEDED(rv), 
-                     "We lost permissionService in the Chrome process !");
+#ifdef MOZ_PERMISSIONS
+    nsRefPtr<nsPermissionManager> permissionManager =
+        nsPermissionManager::GetSingleton();
+    NS_ABORT_IF_FALSE(permissionManager,
+                 "We have no permissionManager in the Chrome process !");
+
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
+    while(1) {
+        PRBool hasMore;
+        enumerator->HasMoreElements(&hasMore);
+        if (!hasMore)
+            break;
+
+        nsCOMPtr<nsISupports> supp;
+        enumerator->GetNext(getter_AddRefs(supp));
+        nsCOMPtr<nsIPermission> perm = do_QueryInterface(supp);
+
+        nsCString host;
+        perm->GetHost(host);
+        nsCString type;
+        perm->GetType(type);
+        PRUint32 capability;
+        perm->GetCapability(&capability);
+        PRUint32 expireType;
+        perm->GetExpireType(&expireType);
+        PRInt64 expireTime;
+        perm->GetExpireTime(&expireTime);
+
+        aPermissions->AppendElement(IPC::Permission(host, type, capability,
+                                                    expireType, expireTime));
     }
+
+    // Ask for future changes
+    permissionManager->ChildRequestPermissions();
+#endif
+
+    return true;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
@@ -362,7 +304,14 @@ ContentParent::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, "nsPref:changed")) {
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
-        if (!SendNotifyRemotePrefObserver(strData))
+
+        PrefTuple pref;
+        nsCOMPtr<nsIPrefServiceInternal> prefService =
+          do_GetService("@mozilla.org/preferences-service;1");
+
+        prefService->MirrorPreference(strData, &pref);
+
+        if (!SendPreferenceUpdate(pref))
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
@@ -506,6 +455,78 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
 }
 
 bool
+ContentParent::RecvShowFilePicker(const PRInt16& mode,
+                                  const PRInt16& selectedType,
+                                  const nsString& title,
+                                  const nsString& defaultFile,
+                                  const nsString& defaultExtension,
+                                  const nsTArray<nsString>& filters,
+                                  const nsTArray<nsString>& filterNames,
+                                  nsTArray<nsString>* files,
+                                  PRInt16* retValue,
+                                  nsresult* result)
+{
+    nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
+    if (!filePicker) {
+        *result = NS_ERROR_NOT_AVAILABLE;
+        return true;
+    }
+
+    // as the parent given to the content process would be meaningless in this
+    // process, always use active window as the parent
+    nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+    nsCOMPtr<nsIDOMWindow> window;
+    ww->GetActiveWindow(getter_AddRefs(window));
+
+    // initialize the "real" picker with all data given
+    *result = filePicker->Init(window, title, mode);
+    if (NS_FAILED(*result))
+        return true;
+    
+    PRUint32 count = filters.Length();
+    for (PRUint32 i = 0; i < count; ++i) {
+        filePicker->AppendFilter(filterNames[i], filters[i]);
+    }
+
+    filePicker->SetDefaultString(defaultFile);
+    filePicker->SetDefaultExtension(defaultExtension);
+    filePicker->SetFilterIndex(selectedType);
+
+    // and finally open the dialog
+    *result = filePicker->Show(retValue);
+    if (NS_FAILED(*result))
+        return true;
+
+    if (mode == nsIFilePicker::modeOpenMultiple) {
+        nsCOMPtr<nsISimpleEnumerator> fileIter;
+        *result = filePicker->GetFiles(getter_AddRefs(fileIter));
+
+        nsCOMPtr<nsILocalFile> singleFile;
+        PRBool loop = PR_TRUE;
+        while (NS_SUCCEEDED(fileIter->HasMoreElements(&loop)) && loop) {
+            fileIter->GetNext(getter_AddRefs(singleFile));
+            if (singleFile) {
+                nsAutoString filePath;
+                singleFile->GetPath(filePath);
+                files->AppendElement(filePath);
+            }
+        }
+        return true;
+    }
+    nsCOMPtr<nsILocalFile> file;
+    filePicker->GetFile(getter_AddRefs(file));
+
+    // even with NS_OK file can be null if nothing was selected 
+    if (file) {                                 
+        nsAutoString filePath;
+        file->GetPath(filePath);
+        files->AppendElement(filePath);
+    }
+
+    return true;
+}
+
+bool
 ContentParent::RecvLoadURIExternal(const IPC::URI& uri)
 {
     nsCOMPtr<nsIExternalProtocolService> extProtService(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
@@ -603,22 +624,27 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 bool
 ContentParent::RecvGeolocationStart()
 {
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return true;
+  if (mGeolocationWatchID == -1) {
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
+      return true;
+    }
+    geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
   }
-  geo->WatchPosition(this, nsnull, nsnull, &mGeolocationWatchID);
   return true;
 }
 
 bool
 ContentParent::RecvGeolocationStop()
 {
-  nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
-  if (!geo) {
-    return true;
+  if (mGeolocationWatchID != -1) {
+    nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
+    if (!geo) {
+      return true;
+    }
+    geo->ClearWatch(mGeolocationWatchID);
+    mGeolocationWatchID = -1;
   }
-  geo->ClearWatch(mGeolocationWatchID);
   return true;
 }
 
@@ -627,6 +653,41 @@ ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
   SendGeolocationUpdate(GeoPosition(postion));
   return NS_OK;
+}
+
+bool
+ContentParent::RecvConsoleMessage(const nsString& aMessage)
+{
+  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!svc)
+    return true;
+  
+  nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
+  svc->LogMessage(msg);
+  return true;
+}
+
+bool
+ContentParent::RecvScriptError(const nsString& aMessage,
+                                      const nsString& aSourceName,
+                                      const nsString& aSourceLine,
+                                      const PRUint32& aLineNumber,
+                                      const PRUint32& aColNumber,
+                                      const PRUint32& aFlags,
+                                      const nsCString& aCategory)
+{
+  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!svc)
+      return true;
+
+  nsCOMPtr<nsIScriptError> msg(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  nsresult rv = msg->Init(aMessage.get(), aSourceName.get(), aSourceLine.get(),
+                          aLineNumber, aColNumber, aFlags, aCategory.get());
+  if (NS_FAILED(rv))
+    return true;
+
+  svc->LogMessage(msg);
+  return true;
 }
 
 } // namespace dom

@@ -73,9 +73,12 @@ public:
 
   /**
    * Appends "native" anonymous children created by CreateAnonymousContent()
-   * to the given content list.
+   * to the given content list depending on the filter.
+   *
+   * @see nsIContent::GetChildren for set of values used for filter.
    */
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements) = 0;
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                        PRUint32 aFilter) = 0;
 
   /**
    * Implementations can override this method to create special frames for the

@@ -187,7 +187,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
     void accumulateCharacters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
-    void accumulateCharacter(PRUnichar c);
     void requestSuspension();
     nsIContent** createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
     nsIContent** createElement(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
@@ -210,6 +209,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent** node);
   public:
+    PRBool cdataSectionAllowed();
     void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks);
   protected:
     nsIContent** currentNode();
@@ -350,6 +350,7 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_CHARSET_DOUBLE_QUOTED 10
 #define NS_HTML5TREE_BUILDER_CHARSET_UNQUOTED 11
 #define NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK PR_INT32_MAX
+#define NS_HTML5TREE_BUILDER_AAA_MAX_ITERATIONS 10
 
 
 #endif

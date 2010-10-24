@@ -137,9 +137,15 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
     JS_SetContextPrivate(mCx, this);
     JSObject* implGlobal =
       JS_NewCompartmentAndGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass), NULL);
+    if (!implGlobal)
+        return false;
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(mCx, implGlobal))
+        return false;
+
     jsval ctypes;
-    if (!implGlobal ||
-        !JS_InitStandardClasses(mCx, implGlobal) ||
+    if (!JS_InitStandardClasses(mCx, implGlobal) ||
 #ifdef BUILD_CTYPES
         !JS_InitCTypesClass(mCx, implGlobal) ||
         !JS_GetProperty(mCx, implGlobal, "ctypes", &ctypes) ||
@@ -173,6 +179,12 @@ JetpackChild::RecvSendMessage(const nsString& messageName,
                               const nsTArray<Variant>& data)
 {
   JSAutoRequest request(mCx);
+
+  JSObject *global = JS_GetGlobalObject(mCx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(mCx, global))
+    return false;
+
   return JetpackActorCommon::RecvMessage(mCx, messageName, data, NULL);
 }
 
@@ -181,9 +193,14 @@ JetpackChild::RecvEvalScript(const nsString& code)
 {
   JSAutoRequest request(mCx);
 
-  js::AutoValueRooter ignored(mCx);
-  (void) JS_EvaluateUCScript(mCx, JS_GetGlobalObject(mCx), code.get(),
-                             code.Length(), "", 1, ignored.jsval_addr());
+  JSObject *global = JS_GetGlobalObject(mCx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(mCx, global))
+    return false;
+
+  jsval ignored;
+  (void) JS_EvaluateUCScript(mCx, global, code.get(),
+                             code.Length(), "", 1, &ignored);
   return true;
 }
 
@@ -431,11 +448,15 @@ JetpackChild::CreateSandbox(JSContext* cx, uintN argc, jsval* vp)
   if (!obj)
     return JS_FALSE;
 
-  JSAutoCrossCompartmentCall ac;
+  jsval rval = OBJECT_TO_JSVAL(obj);
+  if (!JS_WrapValue(cx, &rval))
+    return JS_FALSE;
+
+  JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj))
     return JS_FALSE;
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+  JS_SET_RVAL(cx, vp, rval);
   return JS_InitStandardClasses(cx, obj);
 }
 
@@ -449,22 +470,31 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
 
   jsval* argv = JS_ARGV(cx, vp);
 
-  JSObject* obj;
-  if (!JSVAL_IS_OBJECT(argv[0]) ||
-      !(obj = JSVAL_TO_OBJECT(argv[0])) ||
-      &sGlobalClass != JS_GetClass(cx, obj) ||
-      obj == JS_GetGlobalObject(cx)) {
-    JS_ReportError(cx, "The first argument to evalInSandbox must be a global object created using createSandbox.");
-    return JS_FALSE;
-  }
-
   JSString* str = JS_ValueToString(cx, argv[1]);
   if (!str)
     return JS_FALSE;
 
-  JSAutoCrossCompartmentCall ac;
+  JSObject* obj;
+  if (!JSVAL_IS_OBJECT(argv[0]) ||
+      !(obj = JSVAL_TO_OBJECT(argv[0]))) {
+    JS_ReportError(cx, "The first argument to evalInSandbox must be a global object created using createSandbox.");
+    JS_ASSERT(JS_FALSE);
+    return JS_FALSE;
+  }
+
+  // Unwrap, and switch compartments
+  obj = obj->unwrap();
+
+  JSAutoEnterCompartment ac;
   if (!ac.enter(cx, obj))
     return JS_FALSE;
+
+  if (&sGlobalClass != JS_GetClass(cx, obj) ||
+      obj == JS_GetGlobalObject(cx)) {
+    JS_ReportError(cx, "The first argument to evalInSandbox must be a global object created using createSandbox.");
+    JS_ASSERT(JS_FALSE);
+    return JS_FALSE;
+  }
 
   js::AutoValueRooter ignored(cx);
   return JS_EvaluateUCScript(cx, obj, JS_GetStringChars(str), JS_GetStringLength(str), "", 1,

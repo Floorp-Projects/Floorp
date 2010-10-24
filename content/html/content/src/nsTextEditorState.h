@@ -51,6 +51,7 @@ class nsISelectionController;
 class nsFrameSelection;
 class nsIEditor;
 class nsITextControlElement;
+struct SelectionState;
 
 /**
  * nsTextEditorState is a class which is responsible for managing the state of
@@ -160,14 +161,14 @@ public:
   void EmptyValue() { if (mValue) mValue->Truncate(); }
   PRBool IsEmpty() const { return mValue ? mValue->IsEmpty() : PR_TRUE; }
 
+  nsresult CreatePlaceholderNode();
+
   nsIContent* GetRootNode() {
     if (!mRootNode)
       CreateRootNode();
     return mRootNode;
   }
   nsIContent* GetPlaceholderNode() {
-    if (!mPlaceholderDiv)
-      CreatePlaceholderNode();
     return mPlaceholderDiv;
   }
 
@@ -216,7 +217,6 @@ private:
   void operator= (const nsTextEditorState&);
 
   nsresult CreateRootNode();
-  nsresult CreatePlaceholderNode();
 
   void ValueWasChanged(PRBool aNotify);
 
@@ -250,6 +250,7 @@ private:
 
   nsITextControlElement* const mTextCtrlElement;
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
+  nsAutoPtr<SelectionState> mSelState;
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsIContent> mRootNode;
   nsCOMPtr<nsIContent> mPlaceholderDiv;

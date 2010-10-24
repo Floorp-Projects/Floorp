@@ -1,10 +1,10 @@
 <html>
     <script>
-        function check(elt, expectXOW, message) {
+        function check(elt, expectProxy, message) {
             netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
             var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                               .getInterface(Components.interfaces.nsIDOMWindowUtils);
-            var result = ((utils.getClassName(elt) === 'XPCCrossOriginWrapper') === expectXOW)
+            var result = ((utils.getClassName(elt) === 'Proxy') === expectProxy)
                          ? "PASS"
                          : "FAIL";
 

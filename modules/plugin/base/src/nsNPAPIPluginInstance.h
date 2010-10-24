@@ -204,6 +204,8 @@ private:
   mozilla::TimeStamp mStopTime;
 
   nsCOMPtr<nsIURI> mURI;
+
+  PRPackedBool mUsePluginLayersPref;
 };
 
 #endif // nsNPAPIPluginInstance_h_

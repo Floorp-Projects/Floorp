@@ -17,6 +17,49 @@ XPCOMUtils.defineLazyServiceGetter(Services, "cookiemgr",
                                    "@mozilla.org/cookiemanager;1",
                                    "nsICookieManager2");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "etld",
+                                   "@mozilla.org/network/effective-tld-service;1",
+                                   "nsIEffectiveTLDService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "permissions",
+                                   "@mozilla.org/permissionmanager;1",
+                                   "nsIPermissionManager");
+
+function do_check_throws(f, result, stack)
+{
+  if (!stack)
+    stack = Components.stack.caller;
+
+  try {
+    f();
+  } catch (exc) {
+    if (exc.result == result)
+      return;
+    do_throw("expected result " + result + ", caught " + exc, stack);
+  }
+  do_throw("expected result " + result + ", none thrown", stack);
+}
+
+// Helper to step a generator function and catch a StopIteration exception.
+function do_run_generator(generator)
+{
+  try {
+    generator.next();
+  } catch (e) {
+    if (e != StopIteration)
+      do_throw("caught exception " + e, Components.stack.caller);
+  }
+}
+
+// Helper to finish a generator function test.
+function do_finish_generator_test(generator)
+{
+  do_execute_soon(function() {
+    generator.close();
+    do_test_finished();
+  });
+}
+
 function _observer(generator, service, topic) {
   Services.obs.addObserver(this, topic, false);
 
@@ -33,7 +76,7 @@ _observer.prototype = {
 
     // Continue executing the generator function.
     if (this.generator)
-      this.generator.next();
+      do_run_generator(this.generator);
 
     this.generator = null;
     this.service = null;
@@ -95,3 +138,372 @@ function do_count_cookies() {
   return do_count_enumerator(Services.cookiemgr.enumerator);
 }
 
+// Helper object to store cookie data.
+function Cookie(name,
+                value,
+                host,
+                path,
+                expiry,
+                lastAccessed,
+                creationTime,
+                isSession,
+                isSecure,
+                isHttpOnly)
+{
+  this.name = name;
+  this.value = value;
+  this.host = host;
+  this.path = path;
+  this.expiry = expiry;
+  this.lastAccessed = lastAccessed;
+  this.creationTime = creationTime;
+  this.isSession = isSession;
+  this.isSecure = isSecure;
+  this.isHttpOnly = isHttpOnly;
+
+  let strippedHost = host.charAt(0) == '.' ? host.slice(1) : host;
+
+  try {
+    this.baseDomain = Services.etld.getBaseDomainFromHost(strippedHost);
+  } catch (e) {
+    if (e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
+        e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS)
+      this.baseDomain = strippedHost;
+  }
+}
+
+// Object representing a database connection and associated statements. The
+// implementation varies depending on schema version.
+function CookieDatabaseConnection(profile, schema)
+{
+  // Manually generate a cookies.sqlite file with appropriate rows, columns,
+  // and schema version. If it already exists, just set up our statements.
+  let file = profile.clone();
+  file.append("cookies.sqlite");
+  let exists = file.exists();
+
+  this.db = Services.storage.openDatabase(file);
+  this.schema = schema;
+  if (!exists)
+    this.db.schemaVersion = schema;
+
+  // Open an exclusive connection, so we error out if the database is open
+  // by another reader.
+  this.db.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+
+  switch (schema) {
+  case 2:
+    {
+      if (!exists) {
+        this.db.executeSimpleSQL(
+          "CREATE TABLE moz_cookies (       \
+             id INTEGER PRIMARY KEY,        \
+             name TEXT,                     \
+             value TEXT,                    \
+             host TEXT,                     \
+             path TEXT,                     \
+             expiry INTEGER,                \
+             lastAccessed INTEGER,          \
+             isSecure INTEGER,              \
+             isHttpOnly INTEGER)");
+      }
+
+      this.stmtInsert = this.db.createStatement(
+        "INSERT OR REPLACE INTO moz_cookies ( \
+           id,                            \
+           name,                          \
+           value,                         \
+           host,                          \
+           path,                          \
+           expiry,                        \
+           lastAccessed,                  \
+           isSecure,                      \
+           isHttpOnly)                    \
+           VALUES (                       \
+           :id,                           \
+           :name,                         \
+           :value,                        \
+           :host,                         \
+           :path,                         \
+           :expiry,                       \
+           :lastAccessed,                 \
+           :isSecure,                     \
+           :isHttpOnly)");
+
+      this.stmtDelete = this.db.createStatement(
+        "DELETE FROM moz_cookies WHERE id = :id");
+
+      this.stmtUpdate = this.db.createStatement(
+        "UPDATE moz_cookies SET lastAccessed = :lastAccessed WHERE id = :id");
+
+      break;
+    }
+
+  case 3:
+    {
+      if (!exists) {
+        this.db.executeSimpleSQL(
+          "CREATE TABLE moz_cookies (       \
+            id INTEGER PRIMARY KEY,         \
+            baseDomain TEXT,                \
+            name TEXT,                      \
+            value TEXT,                     \
+            host TEXT,                      \
+            path TEXT,                      \
+            expiry INTEGER,                 \
+            lastAccessed INTEGER,           \
+            isSecure INTEGER,               \
+            isHttpOnly INTEGER)");
+
+        this.db.executeSimpleSQL(
+          "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain)");
+      }
+
+      this.stmtInsert = this.db.createStatement(
+        "INSERT INTO moz_cookies (        \
+           id,                            \
+           baseDomain,                    \
+           name,                          \
+           value,                         \
+           host,                          \
+           path,                          \
+           expiry,                        \
+           lastAccessed,                  \
+           isSecure,                      \
+           isHttpOnly)                    \
+           VALUES (                       \
+           :id,                           \
+           :baseDomain,                   \
+           :name,                         \
+           :value,                        \
+           :host,                         \
+           :path,                         \
+           :expiry,                       \
+           :lastAccessed,                 \
+           :isSecure,                     \
+           :isHttpOnly)");
+
+      this.stmtDelete = this.db.createStatement(
+        "DELETE FROM moz_cookies WHERE id = :id");
+
+      this.stmtUpdate = this.db.createStatement(
+        "UPDATE moz_cookies SET lastAccessed = :lastAccessed WHERE id = :id");
+
+      break;
+    }
+
+  case 4:
+    {
+      if (!exists) {
+        this.db.executeSimpleSQL(
+          "CREATE TABLE moz_cookies (       \
+            id INTEGER PRIMARY KEY,         \
+            baseDomain TEXT,                \
+            name TEXT,                      \
+            value TEXT,                     \
+            host TEXT,                      \
+            path TEXT,                      \
+            expiry INTEGER,                 \
+            lastAccessed INTEGER,           \
+            creationTime INTEGER,           \
+            isSecure INTEGER,               \
+            isHttpOnly INTEGER              \
+            CONSTRAINT moz_uniqueid UNIQUE (name, host, path))");
+
+        this.db.executeSimpleSQL(
+          "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain)");
+
+        this.db.executeSimpleSQL(
+          "PRAGMA journal_mode = WAL");
+      }
+
+      this.stmtInsert = this.db.createStatement(
+        "INSERT INTO moz_cookies (        \
+           baseDomain,                    \
+           name,                          \
+           value,                         \
+           host,                          \
+           path,                          \
+           expiry,                        \
+           lastAccessed,                  \
+           creationTime,                  \
+           isSecure,                      \
+           isHttpOnly)                    \
+           VALUES (                       \
+           :baseDomain,                   \
+           :name,                         \
+           :value,                        \
+           :host,                         \
+           :path,                         \
+           :expiry,                       \
+           :lastAccessed,                 \
+           :creationTime,                 \
+           :isSecure,                     \
+           :isHttpOnly)");
+
+      this.stmtDelete = this.db.createStatement(
+        "DELETE FROM moz_cookies          \
+           WHERE name = :name AND host = :host AND path = :path");
+
+      this.stmtUpdate = this.db.createStatement(
+        "UPDATE moz_cookies SET lastAccessed = :lastAccessed \
+           WHERE name = :name AND host = :host AND path = :path");
+
+      break;
+    }
+
+  default:
+    do_throw("unrecognized schemaVersion!");
+  }
+}
+
+CookieDatabaseConnection.prototype =
+{
+  insertCookie: function(cookie)
+  {
+    if (!cookie instanceof Cookie)
+      do_throw("not a cookie");
+
+    switch (this.schema)
+    {
+    case 2:
+      this.stmtInsert.bindByName("id", cookie.creationTime);
+      this.stmtInsert.bindByName("name", cookie.name);
+      this.stmtInsert.bindByName("value", cookie.value);
+      this.stmtInsert.bindByName("host", cookie.host);
+      this.stmtInsert.bindByName("path", cookie.path);
+      this.stmtInsert.bindByName("expiry", cookie.expiry);
+      this.stmtInsert.bindByName("lastAccessed", cookie.lastAccessed);
+      this.stmtInsert.bindByName("isSecure", cookie.isSecure);
+      this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
+      break;
+
+    case 3:
+      this.stmtInsert.bindByName("id", cookie.creationTime);
+      this.stmtInsert.bindByName("baseDomain", cookie.baseDomain);
+      this.stmtInsert.bindByName("name", cookie.name);
+      this.stmtInsert.bindByName("value", cookie.value);
+      this.stmtInsert.bindByName("host", cookie.host);
+      this.stmtInsert.bindByName("path", cookie.path);
+      this.stmtInsert.bindByName("expiry", cookie.expiry);
+      this.stmtInsert.bindByName("lastAccessed", cookie.lastAccessed);
+      this.stmtInsert.bindByName("isSecure", cookie.isSecure);
+      this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
+      break;
+
+    case 3:
+      this.stmtInsert.bindByName("baseDomain", cookie.baseDomain);
+      this.stmtInsert.bindByName("name", cookie.name);
+      this.stmtInsert.bindByName("value", cookie.value);
+      this.stmtInsert.bindByName("host", cookie.host);
+      this.stmtInsert.bindByName("path", cookie.path);
+      this.stmtInsert.bindByName("expiry", cookie.expiry);
+      this.stmtInsert.bindByName("lastAccessed", cookie.lastAccessed);
+      this.stmtInsert.bindByName("creationTime", cookie.creationTime);
+      this.stmtInsert.bindByName("isSecure", cookie.isSecure);
+      this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
+      break;
+
+    default:
+      do_throw("unrecognized schemaVersion!");
+    }
+
+    do_execute_stmt(this.stmtInsert);
+  },
+
+  deleteCookie: function(cookie)
+  {
+    if (!cookie instanceof Cookie)
+      do_throw("not a cookie");
+
+    switch (this.db.schemaVersion)
+    {
+    case 2:
+    case 3:
+      this.stmtDelete.bindByName("id", cookie.creationTime);
+      break;
+
+    case 4:
+      this.stmtDelete.bindByName("name", cookie.name);
+      this.stmtDelete.bindByName("host", cookie.host);
+      this.stmtDelete.bindByName("path", cookie.path);
+      break;
+
+    default:
+      do_throw("unrecognized schemaVersion!");
+    }
+
+    do_execute_stmt(this.stmtDelete);
+  },
+
+  updateCookie: function(cookie)
+  {
+    if (!cookie instanceof Cookie)
+      do_throw("not a cookie");
+
+    switch (this.db.schemaVersion)
+    {
+    case 2:
+    case 3:
+      this.stmtUpdate.bindByName("id", cookie.creationTime);
+      this.stmtUpdate.bindByName("lastAccessed", cookie.lastAccessed);
+      break;
+
+    case 4:
+      this.stmtDelete.bindByName("name", cookie.name);
+      this.stmtDelete.bindByName("host", cookie.host);
+      this.stmtDelete.bindByName("path", cookie.path);
+      this.stmtUpdate.bindByName("lastAccessed", cookie.lastAccessed);
+      break;
+
+    default:
+      do_throw("unrecognized schemaVersion!");
+    }
+
+    do_execute_stmt(this.stmtUpdate);
+  },
+
+  close: function()
+  {
+    this.stmtInsert.finalize();
+    this.stmtDelete.finalize();
+    this.stmtUpdate.finalize();
+    this.db.close();
+
+    this.stmtInsert = null;
+    this.stmtDelete = null;
+    this.stmtUpdate = null;
+    this.db = null;
+  }
+}
+
+// Count the cookies from 'host' in a database.
+function do_count_cookies_in_db(profile, host)
+{
+  let file = profile.clone();
+  file.append("cookies.sqlite");
+  let connection = Services.storage.openDatabase(file);
+
+  let select = connection.createStatement(
+    "SELECT COUNT(1) FROM moz_cookies WHERE host = :host");
+  select.bindByName("host", host);
+  select.executeStep();
+  let result = select.getInt32(0);
+
+  select.reset();
+  select.finalize();
+  connection.close();
+  return result;
+}
+
+// Execute 'stmt', ensuring that we reset it if it throws.
+function do_execute_stmt(stmt)
+{
+  try {
+    stmt.executeStep();
+    stmt.reset();
+  } catch (e) {
+    stmt.reset();
+    throw e;
+  }
+}

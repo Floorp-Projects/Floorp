@@ -50,7 +50,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=6
+MOD_PATCH_VERSION=7
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -193,6 +193,8 @@ if test "$target" = "arm-android-eabi" ; then
     if test -z "$HOST_LDFLAGS" ; then
         HOST_LDFLAGS=" "
     fi
+
+    WRAP_MALLOC_CFLAGS="-Wl,--wrap=dlopen -Wl,--wrap=dlclose -Wl,--wrap=dlerror -Wl,--wrap=dlsym -Wl,--wrap=dladdr"
 
     AC_DEFINE(ANDROID)
 fi
@@ -933,6 +935,16 @@ if test -n "$MOZ_THUMB2"; then
     *)
       AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
     ;;
+  esac
+else
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+       CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
+      fi
+      ;;
   esac
 fi
 
@@ -1698,8 +1710,12 @@ arm-android-eabi)
            elif test $_CC_BUILD -ge 762; then
               _USE_DYNAMICBASE=1
            fi
+           AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
+           AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test $_CC_MAJOR_VERSION -ge 15; then
            _USE_DYNAMICBASE=1    
+           AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+           AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         fi
 
         if test -n "$_USE_DYNAMICBASE"; then
@@ -2511,6 +2527,35 @@ dnl ========================================================
 dnl Check options
 dnl ========================================================
 
+dnl ======================================================
+dnl = Enable compiling with ccache
+dnl ======================================================
+AC_ARG_WITH(ccache,
+[  --with-ccache[=path/to/ccache]
+                          Enable compiling with ccache],
+    CCACHE=$withval, CCACHE="no")
+
+if test "$CCACHE" != "no"; then
+    if test -n "$CCACHE"; then
+        if test "$CCACHE" = "yes"; then
+            CCACHE=
+        else
+            if test ! -e "$CCACHE"; then
+                AC_MSG_ERROR([$CCACHE not found])
+            fi
+        fi
+    fi
+    AC_PATH_PROGS(CCACHE, $CCACHE ccache)
+    if test -z "$CCACHE" -o "$CCACHE" = ":"; then
+        AC_MSG_ERROR([ccache not found])
+    elif test -x "$CCACHE"; then
+        CC="$CCACHE $CC"
+        CXX="$CCACHE $CXX"
+    else
+        AC_MSG_ERROR([$CCACHE is not executable])
+    fi
+fi
+
 dnl ========================================================
 dnl =
 dnl = --enable-strip
@@ -2673,14 +2718,6 @@ AC_ARG_ENABLE(ipv6,
       else
 	    USE_IPV6=
       fi])
-
-
-AC_ARG_ENABLE(boehm,
-    [  --enable-boehm          Enable the Boehm Garbage Collector],
-    [ if test "$enableval" = "yes"; then
-        AC_DEFINE(GC_LEAK_DETECTOR)
-        GC_LEAK_DETECTOR=1
-    fi])
 
 if test -n "$USE_PTHREADS"; then
    dnl See if -pthread is supported.
@@ -2954,7 +2991,7 @@ AC_ARG_ENABLE(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-       WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign"
+       WRAP_MALLOC_CFLAGS="${LDFLAGS} ${WRAP_MALLOC_CFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign"
        DSO_LDOPTS="$DSO_LDOPTS $WRAP_MALLOC_CFLAGS"
     else
        AC_MSG_ERROR([--enable-wrap-malloc is not supported for non-GNU toolchains])
@@ -2997,7 +3034,6 @@ AC_SUBST(USE_IPV6)
 AC_SUBST(USE_N32)
 AC_SUBST(USE_64)
 AC_SUBST(OBJECT_MODE)
-AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(ENABLE_STRIP)
 
 AC_SUBST(USE_PTHREADS)

@@ -333,7 +333,7 @@ NS_IMETHODIMP nsPluginUnloadEvent::Run()
 {
   if (mLibrary) {
     // put our unload call in a safety wrapper
-    NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);
+    NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull);
   } else {
     NS_WARNING("missing library from nsPluginUnloadEvent");
   }
@@ -348,7 +348,7 @@ nsresult nsPluginHost::PostPluginUnloadEvent(PRLibrary* aLibrary)
     return NS_OK;
 
   // failure case
-  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull, nsnull);
+  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull);
 
   return NS_ERROR_FAILURE;
 }
@@ -907,8 +907,8 @@ nsPluginHost::GetPluginTempDir(nsIFile **aDir)
 }
 
 NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
-                                                            nsIPluginInstanceOwner* aOwner,
-                                                            nsIStreamListener** aListener)
+                                                        nsIPluginInstanceOwner* aOwner,
+                                                        nsIStreamListener** aListener)
 {
   NS_PRECONDITION(aChannel && aOwner,
                   "Invalid arguments to InstantiatePluginForChannel");
@@ -930,8 +930,9 @@ NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
   }
 #endif
 
-  // XXX do we need to look for stopped plugins, like InstantiateEmbeddedPlugin
-  // does?
+  // Note that we're not setting up a plugin instance here; the stream
+  // listener's OnStartRequest will handle doing that, looking for
+  // stopped plugins, etc, etc.
 
   return NewEmbeddedPluginStreamListener(uri, aOwner, nsnull, aListener);
 }
@@ -940,6 +941,14 @@ NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
 NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
                                                       nsIURI* aURL,
                                                       nsIPluginInstanceOwner *aOwner)
+{
+  return DoInstantiateEmbeddedPlugin(aMimeType, aURL, aOwner, PR_TRUE);
+}
+
+nsresult
+nsPluginHost::DoInstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
+                                          nsIPluginInstanceOwner* aOwner,
+                                          PRBool aAllowOpeningStreams)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -975,7 +984,11 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
   // Security checks
   // Can't do security checks without a URI - hopefully the plugin will take
   // care of that
-  if (aURL) {
+  // No need to do the security check if aAllowOpeningStreams is
+  // false; we don't plan to do any network access in that case.
+  // Furthermore, doing it could reenter plugin instantiation, which
+  // would be Bad.
+  if (aURL && aAllowOpeningStreams) {
     nsCOMPtr<nsIScriptSecurityManager> secMan =
                     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
@@ -1015,9 +1028,11 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
   // Determine if the scheme of this URL is one we can handle internaly because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise
   // |NS_OpenURI| in |InstantiateEmbeddedPlugin| may open up a OS protocal registered helper app
+  // Also set bCanHandleInternally to true if aAllowOpeningStreams is
+  // false; we don't want to do any network traffic in that case.
   PRBool bCanHandleInternally = PR_FALSE;
   nsCAutoString scheme;
-  if (aURL && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
+  if (aURL && aAllowOpeningStreams && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
       nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
       contractID += scheme;
       ToLowerCase(contractID);
@@ -2030,19 +2045,15 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
           *aPluginsChanged = PR_TRUE;
         }
       }
-    }
-    else {
-      // plugin file was added, flag this fact
-      *aPluginsChanged = PR_TRUE;
-    }
 
-    // if we are not creating the list, just continue the loop
-    // no need to proceed if changes are detected
-    if (!aCreatePluginList) {
-      if (*aPluginsChanged)
-        return NS_OK;
-      else
+      // If we're not creating a list and we already know something changed then
+      // we're done.
+      if (!aCreatePluginList) {
+        if (*aPluginsChanged) {
+          return NS_OK;
+        }
         continue;
+      }
     }
 
     // if it is not found in cache info list or has been changed, create a new one
@@ -2130,6 +2141,15 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
 
     // do it if we still want it
     if (bAddIt) {
+      // We have a valid new plugin so report that plugins have changed.
+      *aPluginsChanged = PR_TRUE;
+
+      // If we're not creating a plugin list, simply looking for changes,
+      // then we're done.
+      if (!aCreatePluginList) {
+        return NS_OK;
+      }
+
       pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;

@@ -211,7 +211,7 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
+- (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext;
 
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
@@ -323,6 +323,7 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
   NS_IMETHOD              Update();
+  virtual PRBool          GetShouldAccelerate();
 
   NS_IMETHOD        SetCursor(nsCursor aCursor);
   NS_IMETHOD        SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
@@ -394,10 +395,6 @@ public:
   static PRBool DoHasPendingInputEvent();
   static PRUint32 GetCurrentInputEventCount();
   static void UpdateCurrentInputEventCount();
-
-  static void ApplyConfiguration(nsIWidget* aExpectedParent,
-                                 const nsIWidget::Configuration& aConfiguration,
-                                 PRBool aRepaint);
 
   nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
   NSView<mozView>* GetEditorView();

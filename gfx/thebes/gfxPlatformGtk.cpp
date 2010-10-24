@@ -95,7 +95,7 @@ gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
 #ifndef MOZ_PANGO
 typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
-typedef nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<FontEntry> > > PrefFontTable;
+typedef nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > PrefFontTable;
 static FontTable *gPlatformFonts = NULL;
 static FontTable *gPlatformFontAliases = NULL;
 static PrefFontTable *gPrefFonts = NULL;
@@ -306,7 +306,7 @@ gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
 #else
 
 nsresult
-gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
+gfxPlatformGtk::GetFontList(nsIAtom *aLangGroup,
                             const nsACString& aGenericFamily,
                             nsTArray<nsString>& aListOfFonts)
 {
@@ -477,10 +477,10 @@ gfxPlatformGtk::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFa
 
 gfxFontGroup *
 gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
-                               const gfxFontStyle *aStyle,
-                                gfxUserFontSet * /*aUserFontSet*/)
+                                const gfxFontStyle *aStyle,
+                                gfxUserFontSet *aUserFontSet)
 {
-    return new gfxFT2FontGroup(aFamilies, aStyle);
+    return new gfxFT2FontGroup(aFamilies, aStyle, aUserFontSet);
 }
 
 #endif
@@ -698,13 +698,13 @@ gfxPlatformGtk::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
 }
 
 PRBool
-gfxPlatformGtk::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<FontEntry> > *aFontEntryList)
+gfxPlatformGtk::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList)
 {
     return gPrefFonts->Get(aKey, aFontEntryList);
 }
 
 void
-gfxPlatformGtk::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<FontEntry> >& aFontEntryList)
+gfxPlatformGtk::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList)
 {
     gPrefFonts->Put(aKey, aFontEntryList);
 }

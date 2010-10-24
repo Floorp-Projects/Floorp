@@ -1416,7 +1416,13 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
                                     nsACString& _retval)
 {
   nsresult rv = NS_OK;
-  _retval.Truncate();
+  _retval.SetIsVoid(PR_TRUE);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
+
+  if (!httpChannel) {
+    return NS_OK;
+  }
 
   // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
   PRBool chrome = PR_FALSE; // default to false in case IsCapabilityEnabled fails
@@ -1425,13 +1431,11 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
        (header.LowerCaseEqualsASCII("set-cookie") ||
         header.LowerCaseEqualsASCII("set-cookie2"))) {
     NS_WARNING("blocked access to response header");
-    _retval.SetIsVoid(PR_TRUE);
     return NS_OK;
   }
 
   // Check for dangerous headers
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    
     // Make sure we don't leak header information from denied cross-site
     // requests.
     if (mChannel) {
@@ -1456,16 +1460,33 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
     }
 
     if (!safeHeader) {
+      nsCAutoString headerVal;
+      // The "Access-Control-Expose-Headers" header contains a comma separated
+      // list of method names.
+      httpChannel->
+        GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"),
+                          headerVal);
+      nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
+      while(exposeTokens.hasMoreTokens()) {
+        const nsDependentCSubstring& token = exposeTokens.nextToken();
+        if (token.IsEmpty()) {
+          continue;
+        }
+        if (!IsValidHTTPToken(token)) {
+          return NS_OK;
+        }
+        if (header.Equals(token, nsCaseInsensitiveCStringComparator())) {
+          safeHeader = PR_TRUE;
+        }
+      }
+    }
+
+    if (!safeHeader) {
       return NS_OK;
     }
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
-
-  if (httpChannel) {
-    rv = httpChannel->GetResponseHeader(header, _retval);
-  }
-
+  rv = httpChannel->GetResponseHeader(header, _retval);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     // Means no header
     _retval.SetIsVoid(PR_TRUE);
@@ -1586,8 +1607,6 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
 nsresult
 nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
 {
-  nsresult rv;
-
   // First check if cross-site requests are enabled
   if ((mState & XML_HTTP_REQUEST_XSITEENABLED)) {
     return NS_OK;
@@ -1611,24 +1630,10 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
   httpChannel->GetRequestMethod(method);
   if (!mACUnsafeHeaders.IsEmpty() ||
       HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
-      (mUpload && mUpload->HasListeners())) {
-    mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
-  }
-  else if (method.LowerCaseEqualsLiteral("post")) {
-    nsCAutoString contentTypeHeader;
-    httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                  contentTypeHeader);
-
-    nsCAutoString contentType, charset;
-    rv = NS_ParseContentType(contentTypeHeader, contentType, charset);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!contentType.LowerCaseEqualsLiteral("text/plain")) {
-      mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
-    }
-  }
-  else if (!method.LowerCaseEqualsLiteral("get") &&
-           !method.LowerCaseEqualsLiteral("head")) {
+      (mUpload && mUpload->HasListeners()) ||
+      (!method.LowerCaseEqualsLiteral("get") &&
+       !method.LowerCaseEqualsLiteral("post") &&
+       !method.LowerCaseEqualsLiteral("head"))) {
     mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
   }
 
@@ -2488,7 +2493,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       // ignore the necessary headers for an empty Content-Type.
       nsCOMPtr<nsIUploadChannel2> uploadChannel2(do_QueryInterface(httpChannel));
       // This assertion will fire if buggy extensions are installed
-      NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel");
+      NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel2");
       if (uploadChannel2) {
           uploadChannel2->ExplicitSetUploadStream(postDataStream, contentType,
                                                  -1, method, PR_FALSE);
@@ -2504,6 +2509,23 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         uploadChannel->SetUploadStream(postDataStream, contentType, -1);
         // Reset the method to its original value
         httpChannel->SetRequestMethod(method);
+      }
+    }
+  }
+
+  if (httpChannel) {
+    nsCAutoString contentTypeHeader;
+    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                       contentTypeHeader);
+    if (NS_SUCCEEDED(rv)) {
+      nsCAutoString contentType, charset;
+      rv = NS_ParseContentType(contentTypeHeader, contentType, charset);
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      if (!contentType.LowerCaseEqualsLiteral("text/plain") &&
+          !contentType.LowerCaseEqualsLiteral("application/x-www-form-urlencoded") &&
+          !contentType.LowerCaseEqualsLiteral("multipart/form-data")) {
+        mACUnsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
       }
     }
   }
@@ -2765,8 +2787,10 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     // Check for dangerous cross-site headers
     PRBool safeHeader = !!(mState & XML_HTTP_REQUEST_XSITEENABLED);
     if (!safeHeader) {
+      // Content-Type isn't always safe, but we'll deal with it in Send()
       const char *kCrossOriginSafeHeaders[] = {
-        "accept", "accept-language", "content-type"
+        "accept", "accept-language", "content-language", "content-type",
+        "last-event-id"
       };
       for (i = 0; i < NS_ARRAY_LENGTH(kCrossOriginSafeHeaders); ++i) {
         if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {

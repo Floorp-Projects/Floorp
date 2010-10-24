@@ -55,8 +55,9 @@ class nsDiskCacheBlockFile {
 public:
     nsDiskCacheBlockFile()
            : mFD(nsnull)
-           , mBlockSize(0)
            , mBitMap(nsnull)
+           , mBlockSize(0)
+           , mFileSize(0)
            , mBitMapDirty(PR_FALSE)
             {}
     ~nsDiskCacheBlockFile() { (void) Close(PR_TRUE); }

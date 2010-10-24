@@ -50,7 +50,7 @@ function PlacesItem(uri, type) {
   this.type = type || "item";
 }
 PlacesItem.prototype = {
-  decrypt: function PlacesItem_decrypt(passphrase) {
+  decrypt: function PlacesItem_decrypt(passphrase, keyUri) {
     // Do the normal CryptoWrapper decrypt, but change types before returning
     let clear = CryptoWrapper.prototype.decrypt.apply(this, arguments);
 

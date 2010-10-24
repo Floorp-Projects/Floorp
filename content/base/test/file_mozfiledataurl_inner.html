@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<script type="application/javascript;version=1.8">
+var img;
+var audio;
+var iframe;
+
+addEventListener("message", function(e) {
+  mess = JSON.parse(e.data);
+  
+  if ("img" in mess)
+    img.src = mess.img;
+  else if ("audio" in mess)
+    audio.src = mess.audio
+  else if ("iframe" in mess)
+    iframe.src = mess.iframe;
+  else if ("xhr" in mess) {
+    let xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+      sendItUp({ text: xhr.responseText });
+    }
+    try {
+      xhr.open("GET", mess.xhr);
+      xhr.send();
+    }
+    catch (ex) {
+      sendItUp({ didThrow: true });
+    }
+  }
+
+}, false);
+
+function sendItUp(obj) {
+  window.parent.postMessage(JSON.stringify(obj), "*");
+}
+
+function audioNotifyParent(e) {
+  sendItUp({ type: e.type });
+}
+
+function imgNotifyParent(e) {
+  sendItUp({ type: e.type,
+             width: e.target.width,
+             height: e.target.height });
+}
+
+function iframeNotifyParent(e) {
+  res = { type: e.type };
+  try {
+    res.text = e.target.contentDocument.getElementsByTagName("p")[0].textContent;
+  } catch (ex) {}
+  try {
+    res.imgWidth = e.target.contentDocument.getElementById("img").width;
+  } catch (ex) {}
+
+  sendItUp(res);
+}
+
+onload = function() {
+  img = document.getElementById('img');
+  img.onerror = img.onload = imgNotifyParent;
+  iframe = document.getElementById('iframe');
+  iframe.onerror = iframe.onload = iframeNotifyParent;
+  audio = document.getElementById('audio');
+  audio.onerror = audio.oncanplay = audioNotifyParent;
+}
+
+</script>
+<body>
+<img id=img>
+<audio id=audio>
+<iframe id=iframe></iframe>
+</html>

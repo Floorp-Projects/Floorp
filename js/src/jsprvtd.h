@@ -55,6 +55,7 @@
  */
 
 #include "jspubtd.h"
+#include "jsstaticcheck.h"
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
@@ -127,6 +128,7 @@ class AutoStringRooter;
 class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
+class InvokeSessionGuard;
 class TraceRecorder;
 struct TraceMonitor;
 class StackSpace;

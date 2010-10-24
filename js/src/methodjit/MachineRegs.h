@@ -190,11 +190,16 @@ struct Registers {
         return !(freeMask & mask);
     }
 
-    RegisterID takeAnyReg() {
+    RegisterID peekReg() {
         JS_ASSERT(!empty());
         int ireg;
         JS_FLOOR_LOG2(ireg, freeMask);
         RegisterID reg = (RegisterID)ireg;
+        return reg;
+    }
+
+    RegisterID takeAnyReg() {
+        RegisterID reg = peekReg();
         takeReg(reg);
         return reg;
     }

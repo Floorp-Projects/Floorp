@@ -509,19 +509,6 @@ public:
   NS_HIDDEN_(nsresult) GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& aResult);
 
   /**
-   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_VALUE.
-   * Gets the enum value string of an attribute and using a default value if
-   * the attribute is missing or the string is an invalid enum value.
-   *
-   * @param aType     the name of the attribute.
-   * @param aDefault  the default value if the attribute is missing or invalid.
-   * @param aResult   string corresponding to the value [out].
-   */
-  NS_HIDDEN_(nsresult) GetEnumAttr(nsIAtom* aAttr,
-                                   const char* aDefault,
-                                   nsAString& aResult);
-
-  /**
    * Returns the current disabled state of the element.
    */
   virtual bool IsDisabled() const {
@@ -715,6 +702,19 @@ protected:
   NS_HIDDEN_(nsresult) GetURIListAttr(nsIAtom* aAttr, nsAString& aResult);
 
   /**
+   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_VALUE.
+   * Gets the enum value string of an attribute and using a default value if
+   * the attribute is missing or the string is an invalid enum value.
+   *
+   * @param aType     the name of the attribute.
+   * @param aDefault  the default value if the attribute is missing or invalid.
+   * @param aResult   string corresponding to the value [out].
+   */
+  NS_HIDDEN_(nsresult) GetEnumAttr(nsIAtom* aAttr,
+                                   const char* aDefault,
+                                   nsAString& aResult);
+
+  /**
    * Locates the nsIEditor associated with this node.  In general this is
    * equivalent to GetEditorInternal(), but for designmode or contenteditable,
    * this may need to get an editor that's not actually on this element's
@@ -774,7 +774,6 @@ protected:
   // Used by A, AREA, LINK, and STYLE.
   already_AddRefed<nsIURI> GetHrefURIForAnchors() const;
 
-private:
   /**
    * Returns whether this element is an editable root. There are two types of
    * editable roots:
@@ -787,6 +786,7 @@ private:
    */
   PRBool IsEditableRoot() const;
 
+private:
   void ChangeEditableState(PRInt32 aChange);
 };
 
@@ -846,7 +846,7 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
   virtual PRUint32 GetDesiredIMEState();
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
@@ -864,14 +864,14 @@ public:
    * @note Classes redefining this method should not call ContentStatesChanged
    * but they should pass aStates instead.
    */
-  virtual void FieldSetDisabledChanged(PRInt32 aStates);
+  virtual void FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify);
 
-  void FieldSetFirstLegendChanged() {
+  void FieldSetFirstLegendChanged(PRBool aNotify) {
     UpdateFieldSet();
 
     // The disabled state may have change because the element might not be in
     // the first legend anymore.
-    FieldSetDisabledChanged(0);
+    FieldSetDisabledChanged(nsEventStates(), aNotify);
   }
 
   /**
@@ -1121,7 +1121,7 @@ NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
  * SetAttr methods.
  */
 #define NS_IMPL_INT_ATTR(_class, _method, _atom)                    \
-  NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
+  NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0)
 
 #define NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
   NS_IMETHODIMP                                                           \

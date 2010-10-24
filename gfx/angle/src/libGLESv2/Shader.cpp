@@ -34,18 +34,20 @@ Shader::Shader(ResourceManager *manager, GLuint handle) : mHandle(handle), mReso
 
         if (result)
         {
-            TBuiltInResource resources;
-            resources.maxVertexAttribs = MAX_VERTEX_ATTRIBS;
-            resources.maxVertexUniformVectors = MAX_VERTEX_UNIFORM_VECTORS;
-            resources.maxVaryingVectors = MAX_VARYING_VECTORS;
-            resources.maxVertexTextureImageUnits = MAX_VERTEX_TEXTURE_IMAGE_UNITS;
-            resources.maxCombinedTextureImageUnits = MAX_COMBINED_TEXTURE_IMAGE_UNITS;
-            resources.maxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
-            resources.maxFragmentUniformVectors = MAX_FRAGMENT_UNIFORM_VECTORS;
-            resources.maxDrawBuffers = MAX_DRAW_BUFFERS;
+            ShBuiltInResources resources;
+            ShInitBuiltInResources(&resources);
+            resources.MaxVertexAttribs = MAX_VERTEX_ATTRIBS;
+            resources.MaxVertexUniformVectors = MAX_VERTEX_UNIFORM_VECTORS;
+            resources.MaxVaryingVectors = MAX_VARYING_VECTORS;
+            resources.MaxVertexTextureImageUnits = MAX_VERTEX_TEXTURE_IMAGE_UNITS;
+            resources.MaxCombinedTextureImageUnits = MAX_COMBINED_TEXTURE_IMAGE_UNITS;
+            resources.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
+            resources.MaxFragmentUniformVectors = MAX_FRAGMENT_UNIFORM_VECTORS;
+            resources.MaxDrawBuffers = MAX_DRAW_BUFFERS;
+            resources.OES_standard_derivatives = 1;
 
-            mFragmentCompiler = ShConstructCompiler(EShLangFragment, EShSpecGLES2, &resources);
-            mVertexCompiler = ShConstructCompiler(EShLangVertex, EShSpecGLES2, &resources);
+            mFragmentCompiler = ShConstructCompiler(SH_FRAGMENT_SHADER, SH_GLES2_SPEC, &resources);
+            mVertexCompiler = ShConstructCompiler(SH_VERTEX_SHADER, SH_GLES2_SPEC, &resources);
         }
     }
 
@@ -279,21 +281,23 @@ void Shader::compileToHLSL(void *compiler)
     delete[] mInfoLog;
     mInfoLog = NULL;
 
-    int result = ShCompile(compiler, &mSource, 1, EShOptNone, EDebugOpNone);
-    const char *obj = ShGetObjectCode(compiler);
-    const char *info = ShGetInfoLog(compiler);
+    int result = ShCompile(compiler, &mSource, 1, SH_OBJECT_CODE);
 
     if (result)
     {
-        mHlsl = new char[strlen(obj) + 1];
-        strcpy(mHlsl, obj);
+        int objCodeLen = 0;
+        ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &objCodeLen);
+        mHlsl = new char[objCodeLen];
+        ShGetObjectCode(compiler, mHlsl);
 
         TRACE("\n%s", mHlsl);
     }
     else
     {
-        mInfoLog = new char[strlen(info) + 1];
-        strcpy(mInfoLog, info);
+        int infoLogLen = 0;
+        ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &infoLogLen);
+        mInfoLog = new char[infoLogLen];
+        ShGetInfoLog(compiler, mInfoLog);
 
         TRACE("\n%s", mInfoLog);
     }

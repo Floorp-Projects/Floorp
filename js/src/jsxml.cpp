@@ -80,6 +80,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 
 /*
  * NOTES
@@ -212,6 +213,20 @@ AppendString(JSCharBuffer &cb, JSString *str)
     return cb.append(chars, end);
 }
 
+/*
+ * This wrapper is needed because NewBuiltinClassInstance doesn't
+ * call the constructor, and we need a place to set the
+ * HAS_EQUALITY bit.
+ */
+static inline JSObject *
+NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
+{
+    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    if (obj && clasp->ext.equality)
+        obj->flags |= JSObject::HAS_EQUALITY;
+    return obj;
+}
+
 #define DEFINE_GETTER(name,code)                                               \
     static JSBool                                                              \
     name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
@@ -231,8 +246,8 @@ DEFINE_GETTER(NameURI_getter,
 static void
 namespace_finalize(JSContext *cx, JSObject *obj)
 {
-    if (cx->runtime->functionNamespaceObject == obj)
-        cx->runtime->functionNamespaceObject = NULL;
+    if (obj->compartment()->functionNamespaceObject == obj)
+        obj->compartment()->functionNamespaceObject = NULL;
 }
 
 static JSBool
@@ -308,7 +323,7 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
 {
     JSObject *obj;
 
-    obj = NewBuiltinClassInstance(cx, &js_NamespaceClass);
+    obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
     if (!obj)
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefix()));
@@ -338,8 +353,8 @@ static void
 anyname_finalize(JSContext* cx, JSObject* obj)
 {
     /* Make sure the next call to js_GetAnyName doesn't try to use obj. */
-    if (cx->runtime->anynameObject == obj)
-        cx->runtime->anynameObject = NULL;
+    if (obj->compartment()->anynameObject == obj)
+        obj->compartment()->anynameObject = NULL;
 }
 
 static JSBool
@@ -519,7 +534,7 @@ static JSObject *
 NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
             Class *clasp = &js_QNameClass)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    JSObject *obj = NewBuiltinClassInstanceXML(cx, clasp);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -632,7 +647,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             return JS_TRUE;
         }
 
-        obj = NewBuiltinClassInstance(cx, &js_NamespaceClass);
+        obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
         if (!obj)
             return JS_FALSE;
     }
@@ -697,6 +712,8 @@ Namespace(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    if (thisobj)
+        thisobj->flags |= JSObject::HAS_EQUALITY;
     return NamespaceHelper(cx, thisobj, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
@@ -738,7 +755,7 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
          * Create and return a new QName or AttributeName object exactly as if
          * constructed.
          */
-        obj = NewBuiltinClassInstance(cx, clasp);
+        obj = NewBuiltinClassInstanceXML(cx, clasp);
         if (!obj)
             return JS_FALSE;
     }
@@ -832,6 +849,8 @@ QName(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
+    if (thisobj)
+        thisobj->flags |= JSObject::HAS_EQUALITY;
     return QNameHelper(cx, thisobj, &js_QNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
@@ -871,6 +890,15 @@ attr_identity(const void *a, const void *b)
     const JSXML *xmlb = (const JSXML *) b;
 
     return qname_identity(xmla->name, xmlb->name);
+}
+
+void
+JSXMLArrayCursor::trace(JSTracer *trc) {
+#ifdef DEBUG
+    size_t index = 0;
+#endif
+    for (JSXMLArrayCursor *cursor = this; cursor; cursor = cursor->next)
+        js::gc::MarkGCThing(trc, cursor->root, "cursor_root", index++);
 }
 
 static void
@@ -1282,7 +1310,7 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
     JSXMLClass xml_class;
     int stackDummy;
 
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy)) {
         ReportCompileErrorNumber(cx, &parser->tokenStream, pn, JSREPORT_ERROR,
                                  JSMSG_OVER_RECURSED);
         return NULL;
@@ -4635,7 +4663,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
         xml = vec[i];
         if (xml) {
             JS_SET_TRACING_INDEX(trc, "xml_vector", i);
-            Mark(trc, xml, JSTRACE_XML);
+            Mark(trc, xml);
         }
     }
 }
@@ -6943,15 +6971,15 @@ void
 js_TraceXML(JSTracer *trc, JSXML *xml)
 {
     if (xml->object)
-        JS_CALL_OBJECT_TRACER(trc, xml->object, "object");
+        MarkObject(trc, *xml->object, "object");
     if (xml->name)
-        JS_CALL_OBJECT_TRACER(trc, xml->name, "name");
+        MarkObject(trc, *xml->name, "name");
     if (xml->parent)
         JS_CALL_TRACER(trc, xml->parent, JSTRACE_XML, "xml_parent");
 
     if (JSXML_HAS_VALUE(xml)) {
         if (xml->xml_value)
-            JS_CALL_STRING_TRACER(trc, xml->xml_value, "value");
+            MarkString(trc, xml->xml_value, "value");
         return;
     }
 
@@ -6966,7 +6994,7 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
         if (xml->xml_target)
             JS_CALL_TRACER(trc, xml->xml_target, JSTRACE_XML, "target");
         if (xml->xml_targetprop)
-            JS_CALL_OBJECT_TRACER(trc, xml->xml_targetprop, "targetprop");
+            MarkObject(trc, *xml->xml_targetprop, "targetprop");
     } else {
         MarkObjectRange(trc, xml->xml_namespaces.length,
                         (JSObject **) xml->xml_namespaces.vector,
@@ -6982,22 +7010,6 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
         if (IS_GC_MARKING_TRACER(trc))
             xml->xml_attrs.trim();
     }
-}
-
-void
-js_FinalizeXML(JSContext *cx, JSXML *xml)
-{
-    if (JSXML_HAS_KIDS(xml)) {
-        xml->xml_kids.finish(cx);
-        if (xml->xml_class == JSXML_CLASS_ELEMENT) {
-            xml->xml_namespaces.finish(cx);
-            xml->xml_attrs.finish(cx);
-        }
-    }
-
-#ifdef DEBUG_notme
-    JS_REMOVE_LINK(&xml->links);
-#endif
 }
 
 JSObject *
@@ -7154,44 +7166,32 @@ js_InitXMLClasses(JSContext *cx, JSObject *obj)
 JSBool
 js_GetFunctionNamespace(JSContext *cx, Value *vp)
 {
-    JSRuntime *rt;
     JSObject *obj;
     JSString *prefix, *uri;
 
-    /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
-    rt = cx->runtime;
-    obj = rt->functionNamespaceObject;
+    obj = cx->compartment->functionNamespaceObject;
     if (!obj) {
-        JS_LOCK_GC(rt);
-        obj = rt->functionNamespaceObject;
-        if (!obj) {
-            JS_UNLOCK_GC(rt);
+        JSRuntime *rt = cx->runtime;
+        prefix = ATOM_TO_STRING(rt->atomState.typeAtoms[JSTYPE_FUNCTION]);
+        uri = ATOM_TO_STRING(rt->atomState.functionNamespaceURIAtom);
+        obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
+        if (!obj)
+            return false;
 
-            prefix = ATOM_TO_STRING(rt->atomState.typeAtoms[JSTYPE_FUNCTION]);
-            uri = ATOM_TO_STRING(rt->atomState.functionNamespaceURIAtom);
-            obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
-            if (!obj)
-                return JS_FALSE;
+        /*
+         * Avoid entraining any in-scope Object.prototype.  The loss of
+         * Namespace.prototype is not detectable, as there is no way to
+         * refer to this instance in scripts.  When used to qualify method
+         * names, its prefix and uri references are copied to the QName.
+         */
+        obj->clearProto();
+        obj->clearParent();
 
-            /*
-             * Avoid entraining any in-scope Object.prototype.  The loss of
-             * Namespace.prototype is not detectable, as there is no way to
-             * refer to this instance in scripts.  When used to qualify method
-             * names, its prefix and uri references are copied to the QName.
-             */
-            obj->clearProto();
-            obj->clearParent();
-
-            JS_LOCK_GC(rt);
-            if (!rt->functionNamespaceObject)
-                rt->functionNamespaceObject = obj;
-            else
-                obj = rt->functionNamespaceObject;
-        }
-        JS_UNLOCK_GC(rt);
+        cx->compartment->functionNamespaceObject = obj;
     }
     vp->setObject(*obj);
-    return JS_TRUE;
+
+    return true;
 }
 
 /*
@@ -7335,66 +7335,38 @@ anyname_toString(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSRuntime *rt;
     JSObject *obj;
-    JSBool ok;
 
-    /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
-    rt = cx->runtime;
-    obj = rt->anynameObject;
+    obj = cx->compartment->anynameObject;
     if (!obj) {
-        JS_LOCK_GC(rt);
-        obj = rt->anynameObject;
-        if (!obj) {
-            JS_UNLOCK_GC(rt);
+        JSRuntime *rt = cx->runtime;
 
-            /*
-             * Protect multiple newborns created below, in the do-while(0)
-             * loop used to ensure that we leave this local root scope.
-             */
-            ok = js_EnterLocalRootScope(cx);
-            if (!ok)
-                return JS_FALSE;
+        obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
+        if (!obj)
+            return false;
 
-            do {
-                obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
-                if (!obj) {
-                    ok = JS_FALSE;
-                    break;
-                }
-                InitXMLQName(obj, rt->emptyString, rt->emptyString,
-                             ATOM_TO_STRING(rt->atomState.starAtom));
-                METER(xml_stats.qname);
+        InitXMLQName(obj, rt->emptyString, rt->emptyString,
+                     ATOM_TO_STRING(rt->atomState.starAtom));
+        METER(xml_stats.qname);
 
-                /*
-                 * Avoid entraining any Object.prototype found via cx's scope
-                 * chain or global object.  This loses the default toString,
-                 * but no big deal: we want to customize toString anyway for
-                 * clearer diagnostics.
-                 */
-                if (!JS_DefineFunction(cx, obj, js_toString_str,
-                                       anyname_toString, 0, 0)) {
-                    ok = JS_FALSE;
-                    break;
-                }
-                JS_ASSERT(!obj->getProto());
-                JS_ASSERT(!obj->getParent());
-            } while (0);
+        /*
+         * Avoid entraining any Object.prototype found via cx's scope
+         * chain or global object.  This loses the default toString,
+         * but no big deal: we want to customize toString anyway for
+         * clearer diagnostics.
+         */
+        if (!JS_DefineFunction(cx, obj, js_toString_str,
+                               anyname_toString, 0, 0))
+            return false;
 
-            js_LeaveLocalRootScopeWithResult(cx, obj);
-            if (!ok)
-                return JS_FALSE;
+        JS_ASSERT(!obj->getProto());
+        JS_ASSERT(!obj->getParent());
 
-            JS_LOCK_GC(rt);
-            if (!rt->anynameObject)
-                rt->anynameObject = obj;
-            else
-                obj = rt->anynameObject;
-        }
-        JS_UNLOCK_GC(rt);
+        cx->compartment->anynameObject = obj;
     }
+
     *idp = OBJECT_TO_JSID(obj);
-    return JS_TRUE;
+    return true;
 }
 
 JSBool

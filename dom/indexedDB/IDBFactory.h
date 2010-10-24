@@ -47,10 +47,13 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+struct DatabaseInfo;
 class IDBDatabase;
+struct ObjectStoreInfo;
 
 class IDBFactory : public nsIIDBFactory
 {
+  typedef nsTArray<nsAutoPtr<ObjectStoreInfo> > ObjectStoreInfoArray;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBFACTORY
@@ -69,6 +72,17 @@ public:
   static nsresult
   GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
                         nsIFile** aDirectory);
+
+  static nsresult
+  LoadDatabaseInformation(mozIStorageConnection* aConnection,
+                          PRUint32 aDatabaseId,
+                          nsAString& aVersion,
+                          ObjectStoreInfoArray& aObjectStores);
+
+  static nsresult
+  UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
+                         const nsAString& aVersion,
+                         ObjectStoreInfoArray& aObjectStores);
 
 private:
   IDBFactory() { }

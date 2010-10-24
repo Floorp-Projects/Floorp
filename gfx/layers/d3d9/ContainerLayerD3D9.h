@@ -65,9 +65,13 @@ public:
 
   PRBool IsEmpty();
 
-  void RenderLayer();
+  void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
 
   virtual void LayerManagerDestroyed();
+
+private:
+  bool ShouldUseIntermediate(float aOpacity,
+                             const gfx3DMatrix &aMatrix);
 };
 
 } /* layers */

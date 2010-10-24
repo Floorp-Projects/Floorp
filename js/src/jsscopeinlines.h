@@ -60,19 +60,45 @@ js::Shape::freeTable(JSContext *cx)
 }
 
 inline js::EmptyShape *
-JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp)
+JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
+                        /* gc::FinalizeKind */ unsigned kind)
 {
-    if (emptyShape)
-        JS_ASSERT(aclasp == emptyShape->getClass());
-    else
-        emptyShape = js::EmptyShape::create(cx, aclasp);
-    return emptyShape;
+    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+    int i = kind - js::gc::FINALIZE_OBJECT0;
+
+    if (!emptyShapes) {
+        emptyShapes = (js::EmptyShape**)
+            cx->calloc(sizeof(js::EmptyShape*) * js::gc::JS_FINALIZE_OBJECT_LIMIT);
+        if (!emptyShapes)
+            return NULL;
+
+        /*
+         * Always fill in emptyShapes[0], so canProvideEmptyShape works.
+         * Other empty shapes are filled in lazily.
+         */
+        emptyShapes[0] = js::EmptyShape::create(cx, aclasp);
+        if (!emptyShapes[0]) {
+            cx->free(emptyShapes);
+            emptyShapes = NULL;
+            return NULL;
+        }
+    }
+
+    JS_ASSERT(aclasp == emptyShapes[0]->getClass());
+
+    if (!emptyShapes[i]) {
+        emptyShapes[i] = js::EmptyShape::create(cx, aclasp);
+        if (!emptyShapes[i])
+            return NULL;
+    }
+
+    return emptyShapes[i];
 }
 
 inline bool
 JSObject::canProvideEmptyShape(js::Class *aclasp)
 {
-    return !emptyShape || emptyShape->getClass() == aclasp;
+    return !emptyShapes || emptyShapes[0]->getClass() == aclasp;
 }
 
 inline void

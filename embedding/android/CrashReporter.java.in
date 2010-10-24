@@ -1,0 +1,287 @@
+/* -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; -*-
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Android code.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brad Lassey <blassey@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#filter substitution
+package org.mozilla.@MOZ_APP_NAME@;
+
+
+import android.app.*;
+import android.content.*;
+import android.os.*;
+import android.util.*;
+import android.view.*;
+import android.view.View.*;
+import android.widget.*;
+
+import org.mozilla.gecko.*;
+import java.util.*;
+import java.io.*;
+import java.net.*;
+import java.nio.channels.*;
+
+public class CrashReporter extends Activity
+{
+  static final String kMiniDumpPathKey = "upload_file_minidump";
+  static final String kPageURLKey = "URL";
+  ProgressDialog mProgressDialog;
+  File mPendingMinidumpFile;
+  File mPendingExtrasFile;
+  HashMap<String, String> mExtrasStringMap;
+
+  boolean moveFile(File inFile, File outFile)
+  {
+    Log.i("GeckoCrashReporter", "moving " + inFile + " to " + outFile);
+    if (inFile.renameTo(outFile))
+      return true;
+    try {
+      outFile.createNewFile();
+      Log.i("GeckoCrashReporter", "couldn't rename minidump file");
+      // so copy it instead
+      FileChannel inChannel = new FileInputStream(inFile).getChannel();
+      FileChannel outChannel = new FileOutputStream(outFile).getChannel();
+      long transferred = inChannel.transferTo(0, inChannel.size(), outChannel);
+      inChannel.close();
+      outChannel.close();
+
+      if (transferred > 0)
+        inFile.delete();
+    } catch (Exception e) {
+      Log.e("GeckoCrashReporter",
+            "exception while copying minidump file: ", e);
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public void finish()
+  {
+    mProgressDialog.dismiss();
+    super.finish();
+  }
+
+  @Override
+  public void onCreate(Bundle savedInstanceState)
+  {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.crash_reporter);
+    mProgressDialog = new ProgressDialog(CrashReporter.this);
+    mProgressDialog.setMessage(getString(R.string.sending_crash_report));
+
+    final Button restartButton = (Button) findViewById(R.id.restart);
+    final Button closeButton = (Button) findViewById(R.id.close);
+    String passedMinidumpPath = getIntent().getStringExtra("minidumpPath");
+    File passedMinidumpFile = new File(passedMinidumpPath);
+    File pendingDir =
+      new File("/data/data/org.mozilla.@MOZ_APP_NAME@/mozilla/Crash Reports/pending");
+    pendingDir.mkdirs();
+    mPendingMinidumpFile = new File(pendingDir, passedMinidumpFile.getName());
+    moveFile(passedMinidumpFile, mPendingMinidumpFile);
+
+    File extrasFile = new File(passedMinidumpPath.replaceAll(".dmp", ".extra"));
+    mPendingExtrasFile = new File(pendingDir, extrasFile.getName());
+    moveFile(extrasFile, mPendingExtrasFile);
+
+    mExtrasStringMap = new HashMap<String, String>();
+    readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
+  }
+
+  public void onCloseClick(View v)
+  {
+    mProgressDialog.show();
+    new Thread(new Runnable() {
+      public void run() {
+        sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
+      }}).start();
+  }
+
+  public void onRestartClick(View v)
+  {
+    doRestart();
+    mProgressDialog.show();
+    new Thread(new Runnable() {
+      public void run() {
+        sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
+      }}).start();
+  }
+
+  boolean readStringsFromFile(String filePath, Map stringMap)
+  {
+    try {
+      BufferedReader reader = new BufferedReader(
+        new FileReader(filePath));
+      return readStringsFromReader(reader, stringMap);
+    } catch (Exception e) {
+      Log.e("GeckoCrashReporter", "exception while reading strings: ", e);
+      return false;
+    }
+  }
+
+  boolean readStringsFromReader(BufferedReader reader, Map stringMap)
+    throws java.io.IOException
+  {
+    String line;
+    while ((line = reader.readLine()) != null) {
+      int equalsPos = -1;
+      if ((equalsPos = line.indexOf('=')) != -1) {
+        String key = line.substring(0, equalsPos);
+        String val = unescape(line.substring(equalsPos + 1));
+        stringMap.put(key, val);
+      }
+    }
+    reader.close();
+    return true;
+  }
+
+  String generateBoundary()
+  {
+    // Generate some random numbers to fill out the boundary
+    int r0 = (int)((double)Integer.MAX_VALUE * Math.random());
+    int r1 = (int)((double)Integer.MAX_VALUE * Math.random());
+
+    return String.format("---------------------------%08X%08X", r0, r1);
+  }
+
+  void sendPart(OutputStream os, String boundary, String name, String data)
+    throws IOException
+  {
+    os.write(("--" + boundary + "\r\n" +
+              "Content-Disposition: form-data; name=\"" +
+              name + "\"\r\n\r\n" +
+              data + "\r\n").getBytes());
+  }
+
+  void sendFile(OutputStream os, String boundary, String name, File file)
+    throws IOException
+  {
+    os.write(("--" + boundary + "\r\n" +
+              "Content-Disposition: form-data; " +
+              "name=\"" + name + "\"; " +
+              "filename=\"" + file.getName() + "\"\r\n" +
+              "Content-Type: application/octet-stream\r\n" +
+              "\r\n").getBytes());
+    FileChannel fc =
+      new FileInputStream(file).getChannel();
+    fc.transferTo(0, fc.size(), Channels.newChannel(os));
+    fc.close();
+  }
+
+  void sendReport(File minidumpFile, Map<String, String> extras,
+                  File extrasFile)
+  {
+    Log.i("GeckoCrashReport", "sendReport: " + minidumpFile.getPath());
+    final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
+    final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
+
+    if (!sendReportCheckbox.isChecked())
+      finish();
+
+    String spec = extras.get("ServerURL");
+    if (spec == null)
+      finish();
+
+    Log.i("GeckoCrashReport", "server url: " + spec);
+    try {
+      URL url = new URL(spec);
+      HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+      conn.setRequestMethod("POST");
+      String boundary = generateBoundary();
+      conn.setDoOutput(true);
+      conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+      OutputStream os = conn.getOutputStream();
+      Iterator<String> keys = extras.keySet().iterator();
+      while (keys.hasNext()) {
+        String key = keys.next();
+        if (key.equals(kPageURLKey)) {
+          if (includeURLCheckbox.isChecked())
+            sendPart(os, boundary, key, extras.get(key));
+        } else if (!key.equals("ServerURL")){
+          sendPart(os, boundary, key, extras.get(key));
+        }
+      }
+      sendFile(os, boundary, kMiniDumpPathKey, minidumpFile);
+      os.write(("\r\n--" + boundary + "--\r\n").getBytes());
+      os.flush();
+      os.close();
+      BufferedReader br = new BufferedReader(
+        new InputStreamReader(conn.getInputStream()));
+      HashMap<String, String>  responseMap = new HashMap<String, String>();
+      readStringsFromReader(br, responseMap);
+
+      if (conn.getResponseCode() == conn.HTTP_OK) {
+        File submittedDir = new File(
+          "/data/data/org.mozilla.@MOZ_APP_NAME@/mozilla/Crash Reports/submitted");
+        submittedDir.mkdirs();
+        minidumpFile.delete();
+        extrasFile.delete();
+        String crashid = responseMap.get("CrashID");
+        File file = new File(submittedDir, crashid + ".txt");
+        FileOutputStream fos = new FileOutputStream(file);
+        fos.write("Crash ID: ".getBytes());
+        fos.write(crashid.getBytes());
+        fos.close();
+      }
+    } catch (IOException e) {
+      Log.e("GeckoCrashReporter", "exception during send: ", e);
+    }
+
+    finish();
+  }
+
+  void doRestart()
+  {
+    try {
+      String action = "android.intent.action.MAIN";
+      Intent intent = new Intent(action);
+      intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
+                          "org.mozilla.@MOZ_APP_NAME@.App");
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      Log.i("GeckoCrashReporter", intent.toString());
+      startActivity(intent);
+    } catch (Exception e) {
+      Log.e("GeckoCrashReporter", "error while trying to restart", e);
+    }
+  }
+
+  public String unescape(String string)
+  {
+    return string.replaceAll("\\\\", "\\").replaceAll("\\n", "\n")
+      .replaceAll("\\t", "\t");
+  }
+}
+

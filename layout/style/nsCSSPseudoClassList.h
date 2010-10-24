@@ -115,6 +115,10 @@ CSS_PSEUDO_CLASS(mozLWThemeDarkText, ":-moz-lwtheme-darktext")
 // Matches anything when the containing window is inactive
 CSS_PSEUDO_CLASS(mozWindowInactive, ":-moz-window-inactive")
 
+// Matches any table elements that have a nonzero border attribute,
+// according to HTML integer attribute parsing rules.
+CSS_PSEUDO_CLASS(mozTableBorderNonzero, ":-moz-table-border-nonzero")
+
 // :not needs to come at the end of the non-bit pseudo-class list, since
 // it doesn't actually get directly matched on in SelectorMatches.
 CSS_PSEUDO_CLASS(notPseudo, ":not")

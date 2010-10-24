@@ -230,16 +230,17 @@
 
       this.invoke = function cloneAndReplaceInDOM_invoke()
       {
-        var newElm = this.DOMNode.cloneNode(true);
-        newElm.removeAttribute('id');
-        this.eventSeq[1][1] = newElm;
-        this.DOMNode.parentNode.replaceChild(newElm, this.DOMNode);
+        this.DOMNode.parentNode.replaceChild(this.newElm, this.DOMNode);
       }
 
       this.getID = function cloneAndReplaceInDOM_getID()
       {
         return aNodeOrID + " clone and replace in DOM.";
       }
+
+      this.newElm = this.DOMNode.cloneNode(true);
+      this.newElm.removeAttribute('id');
+      this.setTarget(kShowEvent, this.newElm);
     }
 
     /**
@@ -279,7 +280,7 @@
      * Do tests.
      */
     var gQueue = null;
-    // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpID = "eventdump"; // debug stuff
 
     function doTests()
     {
@@ -292,25 +293,12 @@
       gQueue.push(new changeStyle(id, "display", "none", kHideEvents));
       gQueue.push(new changeStyle(id, "display", "inline", kShowEvents));
 
-      // Show/hide events by changing of visibility style of accessible DOM node
-      // from 'visible' to 'hidden', 'hidden' to 'visible'.
-      var id = "link2";
-      getAccessible(id);
-      gQueue.push(new changeStyle(id, "visibility", "hidden", kHideEvents));
-      gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
-
       // Show/hide events by changing of display style of accessible DOM node
       // from 'inline' to 'block', 'block' to 'inline'.
       var id = "link3";
       getAccessible(id); // ensure accessible is created
       gQueue.push(new changeStyle(id, "display", "block", kHideAndShowEvents));
       gQueue.push(new changeStyle(id, "display", "inline", kHideAndShowEvents));
-
-      // Show/hide events by changing of visibility style of accessible DOM node
-      // from 'collapse' to 'visible', 'visible' to 'collapse'.
-      var id = "link4";
-      gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
-      gQueue.push(new changeStyle(id, "visibility", "collapse", kHideEvents));
 
       // Show/hide events by adding new accessible DOM node and removing old one.
       var id = "link5";
@@ -347,15 +335,12 @@
 
       // Show/hide events by creating new accessible DOM node and replacing
       // old one.
-      // XXX: bug 472810
-      // gQueue.push(new cloneAndReplaceInDOM("link6"));
+      getAccessible("link6"); // ensure accessible is created
+      gQueue.push(new cloneAndReplaceInDOM("link6"));
 
       // Show/hide events by changing class name on the parent node.
       gQueue.push(new changeClass("container2", "link7", "", kShowEvents));
       gQueue.push(new changeClass("container2", "link7", "displayNone",
-                                  kHideEvents));
-      gQueue.push(new changeClass("container3", "link8", "", kShowEvents));
-      gQueue.push(new changeClass("container3", "link8", "visibilityHidden",
                                   kHideEvents));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
@@ -372,11 +357,16 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=469985"
      title=" turn the test from bug 354745 into mochitest">
     Mozilla Bug 469985
-  </a>
+  </a><br>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=472662"
      title="no reorder event when html:link display property is changed from 'none' to 'inline'">
     Mozilla Bug 472662
+  </a><br>
+  <a target="_blank"
+     title="Rework accessible tree update code"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
+    Mozilla Bug 570275
   </a>
 
   <p id="display"></p>

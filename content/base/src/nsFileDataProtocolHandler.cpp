@@ -55,7 +55,7 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 // Hash table
 struct FileDataInfo
 {
-  nsCOMPtr<nsIDOMFile> mFile;
+  nsCOMPtr<nsIDOMBlob> mFile;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
@@ -63,7 +63,7 @@ static nsClassHashtable<nsCStringHashKey, FileDataInfo>* gFileDataTable;
 
 void
 nsFileDataProtocolHandler::AddFileDataEntry(nsACString& aUri,
-					    nsIDOMFile* aFile,
+					    nsIDOMBlob* aFile,
                                             nsIPrincipal* aPrincipal)
 {
   if (!gFileDataTable) {
@@ -426,8 +426,13 @@ nsFileDataProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
 
+  nsAutoString type;
+  rv = info->mFile->GetType(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   channel->SetOwner(owner);
   channel->SetOriginalURI(uri);
+  channel->SetContentType(NS_ConvertUTF16toUTF8(type));
   channel.forget(result);
   
   return NS_OK;

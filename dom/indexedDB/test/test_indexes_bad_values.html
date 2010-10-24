@@ -56,12 +56,12 @@
 
       let db = event.result;
 
-      request = db.createObjectStore(objectStoreName, "");
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore(objectStoreName, "");
 
       let addedData = 0;
       for (let i in objectStoreData) {
@@ -76,20 +76,10 @@
       }
       event = yield;
 
-      addedData = 0;
       for (let i in indexData) {
-        request = objectStore.createIndex(indexData[i].name,
-                                          indexData[i].keyPath,
-                                          indexData[i].unique);
-        request.onerror = errorHandler;
-        request.onsuccess = function(event) {
-          if (++addedData == indexData.length) {
-            is(objectStore.indexNames.length, addedData, "Good index count");
-            testGenerator.send(event);
-          }
-        }
+        objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
+                                indexData[i].unique);
       }
-      event = yield;
 
       addedData = 0;
       for (let i in badObjectStoreData) {
@@ -104,7 +94,8 @@
       }
       yield;
 
-      objectStore = db.objectStore(objectStoreName);
+      objectStore = db.transaction(objectStoreName)
+                      .objectStore(objectStoreName);
 
       let keyIndex = 0;
 

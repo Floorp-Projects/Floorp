@@ -1,0 +1,5 @@
+; test call to void function
+
+forty_two = immi 42
+callv printi cdecl forty_two
+reti forty_two

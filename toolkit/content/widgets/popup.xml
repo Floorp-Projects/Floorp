@@ -278,6 +278,112 @@
     </handlers>
   </binding>
 
+  <binding id="arrowpanel" extends="chrome://global/content/bindings/popup.xml#panel">
+    <content flip="both">
+      <xul:box anonid="container" class="panel-arrowcontainer">
+        <xul:box anonid="arrowbox" class="panel-arrowbox">
+          <xul:image anonid="arrow" class="panel-arrow"/>
+        </xul:box>
+        <xul:box class="panel-arrowcontent">
+          <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack">
+            <children/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+    </content>
+    <implementation>
+      <field name="_fadeTimer"/>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing">
+      <![CDATA[
+        var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+        var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
+        var arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
+
+        var anchor = this.anchorNode;
+        if (!anchor) {
+          arrow.hidden = true;
+          return;
+        }
+
+        var anchorRect = anchor.getBoundingClientRect();
+        var popupRect = this.getBoundingClientRect();
+
+        var horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left)) ? -1 :
+                       (Math.round(popupRect.left) >= Math.round(anchorRect.right)) ? 1 : 0;
+        var vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top)) ? -1 :
+                      (Math.round(popupRect.top) >= Math.round(anchorRect.bottom)) ? 1 : 0;
+
+        var anchorClass = "";
+        var hideAnchor = false;
+        if (horizPos == 0) {
+          container.orient = "vertical";
+          arrowbox.orient = "";
+          if (vertPos == 0) {
+            hideAnchor = true;
+          }
+          else {
+            arrowbox.pack = popupRect.left + popupRect.width / 2 < anchorRect.left ? "end" : "start";
+            if (vertPos == 1) {
+              container.dir = ""; 
+              anchorClass = "top";
+            }
+            else if (vertPos == -1) {
+              container.dir = "reverse"; 
+              anchorClass = "bottom";
+            }
+          }
+        }
+        else if (vertPos == 0) {
+          container.orient = "";
+          arrowbox.orient = "vertical";
+          if (horizPos == 0) {
+            hideAnchor = true;
+          }
+          else {
+            arrowbox.pack = popupRect.top + popupRect.height / 2 < anchorRect.top ? "end" : "start";
+            if (horizPos == 1) {
+              container.dir = ""; 
+              anchorClass = "left";
+            }
+            else if (horizPos == -1) {
+              container.dir = "reverse";
+              anchorClass = "right";
+            }
+          }
+        }
+        else {
+          hideAnchor = true;
+        }
+        arrow.hidden = hideAnchor;
+        arrow.setAttribute("side", anchorClass);
+
+        // set fading
+        var fade = this.getAttribute("fade");
+        var fadeDelay = (fade == "fast") ? 1 : fade == "slow" ? 4000 : 0;
+        if (fadeDelay) {
+          this._fadeTimer = setTimeout(function (self) {
+            self.style.opacity = 0.2;
+          }, fadeDelay, this);
+        }
+      ]]>
+      </handler>
+      <handler event="popuphiding">
+        clearTimeout(this._fadeTimer);
+        this.style.removeProperty("opacity");
+      </handler>
+      <handler event="transitionend">
+      <![CDATA[
+        if (event.propertyName == "opacity") {
+          this.hidePopup();
+          this.style.removeProperty("opacity");
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <children>

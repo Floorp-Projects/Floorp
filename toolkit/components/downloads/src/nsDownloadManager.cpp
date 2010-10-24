@@ -1101,6 +1101,10 @@ nsDownloadManager::GetActiveDownloads(nsISimpleEnumerator **aResult)
   return NS_NewArrayEnumerator(aResult, mCurrentDownloads);
 }
 
+/**
+ * For platforms where helper apps use the downloads directory (i.e. mobile),
+ * this should be kept in sync with nsExternalHelperAppService.cpp
+ */
 NS_IMETHODIMP
 nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
 {
@@ -1184,7 +1188,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
       rv = NS_NewNativeLocalFile(nsDependentCString(sdcard),
                                  PR_TRUE, getter_AddRefs(downloadDir));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = downloadDir->Append(NS_LITERAL_STRING("download"));
+      rv = downloadDir->Append(NS_LITERAL_STRING("downloads"));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {

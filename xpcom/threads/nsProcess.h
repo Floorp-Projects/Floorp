@@ -52,8 +52,10 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsIObserver.h"
 #include "nsString.h"
+#ifndef XP_MACOSX
 #include "prproces.h"
-#if defined(PROCESSMODEL_WINAPI) 
+#endif
+#if defined(PROCESSMODEL_WINAPI)
 #include <windows.h>
 #include <shellapi.h>
 #endif
@@ -77,14 +79,15 @@ private:
   ~nsProcess();
   static void PR_CALLBACK Monitor(void *arg);
   void ProcessComplete();
-  NS_IMETHOD CopyArgsAndRunProcess(PRBool blocking, const char** args,
-                                   PRUint32 count, nsIObserver* observer,
-                                   PRBool holdWeak);
-  NS_IMETHOD CopyArgsAndRunProcessw(PRBool blocking, const PRUnichar** args,
-                                    PRUint32 count, nsIObserver* observer,
-                                    PRBool holdWeak);
-  NS_IMETHOD RunProcess(PRBool blocking, char **args, PRUint32 count,
-                        nsIObserver* observer, PRBool holdWeak, PRBool argsUTF8);
+  nsresult CopyArgsAndRunProcess(PRBool blocking, const char** args,
+                                 PRUint32 count, nsIObserver* observer,
+                                 PRBool holdWeak);
+  nsresult CopyArgsAndRunProcessw(PRBool blocking, const PRUnichar** args,
+                                  PRUint32 count, nsIObserver* observer,
+                                  PRBool holdWeak);
+  // The 'args' array is null-terminated.
+  nsresult RunProcess(PRBool blocking, char **args, nsIObserver* observer,
+                      PRBool holdWeak, PRBool argsUTF8);
 
   PRThread* mThread;
   PRLock* mLock;
@@ -99,10 +102,10 @@ private:
   // These members are modified by multiple threads, any accesses should be
   // protected with mLock.
   PRInt32 mExitValue;
-#if defined(PROCESSMODEL_WINAPI) 
+#if defined(PROCESSMODEL_WINAPI)
   typedef DWORD (WINAPI*GetProcessIdPtr)(HANDLE process);
   HANDLE mProcess;
-#else
+#elif !defined(XP_MACOSX)
   PRProcess *mProcess;
 #endif
 };

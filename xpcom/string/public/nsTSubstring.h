@@ -50,8 +50,7 @@ class NS_COM nsTStringComparator_CharT
 
       nsTStringComparator_CharT() {}
 
-      virtual int operator()( const char_type*, const char_type*, PRUint32 length ) const = 0;
-      virtual int operator()( char_type, char_type ) const = 0;
+      virtual int operator()( const char_type*, const char_type*, PRUint32, PRUint32 ) const = 0;
   };
 
 
@@ -66,8 +65,7 @@ class NS_COM nsTDefaultStringComparator_CharT
 
       nsTDefaultStringComparator_CharT() {}
 
-      virtual int operator()( const char_type*, const char_type*, PRUint32 length ) const;
-      virtual int operator()( char_type, char_type ) const;
+      virtual int operator()( const char_type*, const char_type*, PRUint32, PRUint32 ) const;
   };
 
   /**

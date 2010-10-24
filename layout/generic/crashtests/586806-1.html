@@ -1,17 +1,15 @@
 <html class="reftest-wait">
 <head>
 <script>
-function doe2(i) {
+function doe2() {
 document.getElementById('b').style.position = 'static';
 document.getElementById('a').setAttribute('style', 'position: absolute; -moz-column-count: 2;');
 document.documentElement.removeAttribute("class");
 }
-setTimeout(doe2,100);
-
 </script>
 </head>
 <style>body * {border: 1px solid black;}</style>
-<body>
+<body onload="doe2();">
 <div style="width: 500px;border: 1px solid black;">
 <div style="display: inline-block; width: 100px; height: 100px;"></div>
 <span style="position: absolute;"></span>

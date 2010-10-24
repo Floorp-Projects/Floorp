@@ -452,6 +452,10 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
   JSObject* implGlobal = JS_GetGlobalObject(cx);
   js::AutoValueRooter rval(cx);
 
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, implGlobal))
+    return false;
+
   for (PRUint32 i = 0; i < snapshot.Length(); ++i) {
     Variant* vp = results ? results->AppendElement() : NULL;
     rval.set(JSVAL_VOID);

@@ -90,6 +90,15 @@ void ExtractEnvironmentFromCL(int &argc, char **&argv)
 
 int wmain(int argc, WCHAR **argv)
 {
+  typedef BOOL
+  (WINAPI *pfnSetDllDirectory) (LPCWSTR);
+  pfnSetDllDirectory setDllDirectory =
+    reinterpret_cast<pfnSetDllDirectory>
+    (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
+  if (setDllDirectory) {
+    setDllDirectory(L"");
+  }
+
 #ifdef XRE_WANT_DLL_BLOCKLIST
   SetupDllBlocklist();
 #endif

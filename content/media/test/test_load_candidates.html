@@ -25,7 +25,7 @@ var manager = new MediaTestManager;
 
 function finish(evt) {
   var v = evt.target;
-  ok(v._error, "Should have received an error event before loaded");
+  is(v._error, 2, "Should have received 2 error events before loaded");
   v._finished = true;
   v.parentNode.removeChild(v);
   manager.finished(v.token);
@@ -33,7 +33,7 @@ function finish(evt) {
 
 function errorHandler(evt) {
   evt.stopPropagation();
-  evt.target.parentNode._error = true;
+  evt.target.parentNode._error++;
 }
 
 var extenstion = {
@@ -48,7 +48,7 @@ function startTest(test, token) {
   var v = document.createElement('video');
   v.token = token;
   manager.started(token);
-  v._error = false;
+  v._error = 0;
   v._finished = false;
   v._name = test.name;
   
@@ -60,8 +60,14 @@ function startTest(test, token) {
   
   var s2 = document.createElement("source");
   s2.type = test.type;
-  s2.src = test.name;
+  s2.src = "test_load_candidates.html"; // definitely an invalid media file, regardless of its actual mime type...
+  s2.addEventListener("error", errorHandler, false);
   v.appendChild(s2);
+    
+  var s3 = document.createElement("source");
+  s3.type = test.type;
+  s3.src = test.name;
+  v.appendChild(s3);
   
   v.addEventListener("loadeddata", finish, false);
   document.body.appendChild(v);

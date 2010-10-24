@@ -41,6 +41,7 @@
 #include "nsDiskCache.h"
 #include "nsDiskCacheDeviceSQL.h"
 #include "nsCacheService.h"
+#include "nsApplicationCache.h"
 
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -594,31 +595,15 @@ nsApplicationCacheNamespace::GetData(nsACString &out)
  * nsApplicationCache
  */
 
-class nsApplicationCache : public nsIApplicationCache
-                         , public nsSupportsWeakReference
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPLICATIONCACHE
-
-  nsApplicationCache(nsOfflineCacheDevice *device,
-                     const nsACString &group,
-                     const nsACString &clientID);
-
-  virtual ~nsApplicationCache();
-
-  void MarkInvalid() { mValid = PR_FALSE; }
-
-private:
-  nsRefPtr<nsOfflineCacheDevice> mDevice;
-  nsCString mGroup;
-  nsCString mClientID;
-  PRBool mValid;
-};
-
 NS_IMPL_ISUPPORTS2(nsApplicationCache,
                    nsIApplicationCache,
                    nsISupportsWeakReference)
+
+nsApplicationCache::nsApplicationCache()
+  : mDevice(nsnull)
+  , mValid(PR_TRUE)
+{
+}
 
 nsApplicationCache::nsApplicationCache(nsOfflineCacheDevice *device,
                                        const nsACString &group,
@@ -632,11 +617,32 @@ nsApplicationCache::nsApplicationCache(nsOfflineCacheDevice *device,
 
 nsApplicationCache::~nsApplicationCache()
 {
+  if (!mDevice)
+    return;
+
   mDevice->mCaches.Remove(mClientID);
 
   // If this isn't an active cache anymore, it can be destroyed.
   if (mValid && !mDevice->IsActiveCache(mGroup, mClientID))
     Discard();
+}
+
+void
+nsApplicationCache::MarkInvalid()
+{
+  mValid = PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsApplicationCache::InitAsHandle(const nsACString &groupId,
+                                 const nsACString &clientId)
+{
+  NS_ENSURE_FALSE(mDevice, NS_ERROR_ALREADY_INITIALIZED);
+  NS_ENSURE_TRUE(mGroup.IsEmpty(), NS_ERROR_ALREADY_INITIALIZED);
+
+  mGroup = groupId;
+  mClientID = clientId;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -656,6 +662,8 @@ nsApplicationCache::GetClientID(nsACString &out)
 NS_IMETHODIMP
 nsApplicationCache::GetActive(PRBool *out)
 {
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
+
   *out = mDevice->IsActiveCache(mGroup, mClientID);
   return NS_OK;
 }
@@ -664,6 +672,7 @@ NS_IMETHODIMP
 nsApplicationCache::Activate()
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   mDevice->ActivateCache(mGroup, mClientID);
   return NS_OK;
@@ -673,6 +682,7 @@ NS_IMETHODIMP
 nsApplicationCache::Discard()
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   mValid = PR_FALSE;
 
@@ -689,6 +699,7 @@ nsApplicationCache::MarkEntry(const nsACString &key,
                               PRUint32 typeBits)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   return mDevice->MarkEntry(mClientID, key, typeBits);
 }
@@ -699,6 +710,7 @@ nsApplicationCache::UnmarkEntry(const nsACString &key,
                                 PRUint32 typeBits)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   return mDevice->UnmarkEntry(mClientID, key, typeBits);
 }
@@ -708,6 +720,7 @@ nsApplicationCache::GetTypes(const nsACString &key,
                              PRUint32 *typeBits)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   return mDevice->GetTypes(mClientID, key, typeBits);
 }
@@ -718,6 +731,7 @@ nsApplicationCache::GatherEntries(PRUint32 typeBits,
                                   char *** keys)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   return mDevice->GatherEntries(mClientID, typeBits, count, keys);
 }
@@ -726,6 +740,7 @@ NS_IMETHODIMP
 nsApplicationCache::AddNamespaces(nsIArray *namespaces)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   if (!namespaces)
     return NS_OK;
@@ -757,6 +772,7 @@ nsApplicationCache::GetMatchingNamespace(const nsACString &key,
 
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   return mDevice->GetMatchingNamespace(mClientID, key, out);
 }
@@ -765,6 +781,7 @@ NS_IMETHODIMP
 nsApplicationCache::GetUsage(PRUint32 *usage)
 {
   NS_ENSURE_TRUE(mValid, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mDevice, NS_ERROR_NOT_AVAILABLE);
 
   return mDevice->GetUsage(mClientID, usage);
 }

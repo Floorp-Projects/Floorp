@@ -39,76 +39,44 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIDOMWindow;
 interface nsIDOMNode;
 interface nsIDOMDocument;
 interface nsIDOMLoadStatus;
 interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;
+interface nsIApplicationCache;
 
-[scriptable, uuid(a28abeaf-a0b4-4440-b2fe-bc78249710ea)]
+[scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
-  /**
-   * There was an error updating the cache.
-   *
-   * @param aUpdate
-   *        The nsIOfflineCacheUpdate being processed.
-   */
-  void error(in nsIOfflineCacheUpdate aUpdate);
+  const unsigned long STATE_ERROR = 1;
+  const unsigned long STATE_CHECKING = 2;
+  const unsigned long STATE_NOUPDATE = 3;
+  const unsigned long STATE_OBSOLETE = 4;
+  const unsigned long STATE_DOWNLOADING = 5;
+  const unsigned long STATE_ITEMSTARTED = 6;
+  const unsigned long STATE_ITEMCOMPLETED = 7;
+  const unsigned long STATE_FINISHED = 10;
 
   /**
-   * The manifest is being checked for updates
+   * aUpdate has changed its state.
    *
    * @param aUpdate
    *        The nsIOfflineCacheUpdate being processed.
+   * @param event
+   *        See enumeration above
    */
-  void checking(in nsIOfflineCacheUpdate aUpdate);
+  void updateStateChanged(in nsIOfflineCacheUpdate aUpdate, in PRUint32 state);
 
   /**
-   * No update was necessary.
+   * Informs the observer about an application being available to associate.
    *
-   * @param aUpdate
-   *        The nsIOfflineCacheUpdate being processed.
+   * @param applicationCache
+   *        The application cache instance that has been created or found by the 
+   *        update to associate with
    */
-  void noUpdate(in nsIOfflineCacheUpdate aUpdate);
-
-  /**
-   * The cache group is now obsolete.
-   *
-   * @param aUpdate
-   *        The nsIOfflineCacheUpdate being processed.
-   */
-  void obsolete(in nsIOfflineCacheUpdate aUpdate);
-
-  /**
-   * Starting to download resources
-   *
-   * @param aUpdate
-   *        The nsIOfflineCacheUpdate being processed.
-   */
-  void downloading(in nsIOfflineCacheUpdate aUpdate);
-
-  /**
-   * An item has started downloading.
-   *
-   * @param aUpdate
-   *        The nsIOfflineCacheUpdate being processed.
-   * @param aItem
-   *        load status for the item that is being downloaded.
-   */
-  void itemStarted(in nsIOfflineCacheUpdate aUpdate,
-                   in nsIDOMLoadStatus aItem);
-
-  /**
-   * An item has finished loading.
-   *
-   * @param aUpdate
-   *        The nsIOfflineCacheUpdate being processed.
-   * @param aItem
-   *         load status for the item that completed.
-   */
-  void itemCompleted(in nsIOfflineCacheUpdate aUpdate,
-                     in nsIDOMLoadStatus aItem);
+  void applicationCacheAvailable(in nsIApplicationCache applicationCache);
 };
 
 /**
@@ -125,7 +93,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(877261bb-b952-4d27-847e-859bdd47c0ec)]
+[scriptable, uuid(24605d81-8cf9-4021-8575-7f39aacbf31a)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -169,7 +137,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * @param aDocumentURI
    *        The page that is requesting the update.
    */
-  void init(in nsIURI aManifestURI, in nsIURI aDocumentURI);
+  void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument);
 
   /**
    * Initialize the update for partial processing. 
@@ -199,12 +167,6 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * event will be sent to the observer service.
    */
   void schedule();
-
-  /**
-   * Access to the list of items in the update.
-   */
-  readonly attribute unsigned long count;
-  nsIDOMLoadStatus item(in unsigned long index);
 
   /**
    * Observe loads that are added to the update.
@@ -254,7 +216,8 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      * Otherwise a new update will be scheduled.
      */
     nsIOfflineCacheUpdate scheduleUpdate(in nsIURI aManifestURI,
-                                         in nsIURI aDocumentURI);
+                                         in nsIURI aDocumentURI,
+                                         in nsIDOMWindow aWindow);
 
     /**
      * Schedule a cache update for a manifest when the document finishes

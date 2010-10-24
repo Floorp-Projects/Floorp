@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+# include "gfxSharedImageSurface.h"
+#endif
+
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
 #include "yuv_convert.h"
@@ -157,10 +161,10 @@ void
 RecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
                            const gfxIntSize& aSize)
 {
+  MutexAutoLock lock(mLock);
+
   if (!aTexture->IsAllocated())
     return;
-
-  MutexAutoLock lock(mLock);
 
   if (!mRecycledTextures[aType].IsEmpty() && aSize != mRecycledTextureSizes[aType]) {
     mRecycledTextures[aType].Clear();
@@ -406,7 +410,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         yuvImage->mSize.width,
                                         yuvImage->mSize.height));
-    program->SetLayerTransform(mTransform);
+    program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetOpacity());
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
@@ -437,7 +441,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         cairoImage->mSize.width,
                                         cairoImage->mSize.height));
-    program->SetLayerTransform(mTransform);
+    program->SetLayerTransform(GetEffectiveTransform());
     program->SetLayerOpacity(GetOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
@@ -592,6 +596,9 @@ PlanarYCbCrImageOGL::AllocateTextures(mozilla::gl::GLContext *gl)
 void
 PlanarYCbCrImageOGL::UpdateTextures(GLContext *gl)
 {
+  if (!mBuffer || !mHasData)
+    return;
+
   GLint alignment;
 
   if (!((ptrdiff_t)mData.mYStride & 0x7) && !((ptrdiff_t)mData.mYChannel & 0x7)) {
@@ -707,6 +714,103 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
                      LOCAL_GL_UNSIGNED_BYTE,
                      imageSurface->Data());
 }
+
+
+#ifdef MOZ_IPC
+
+ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
+  : ShadowImageLayer(aManager, nsnull)
+  , LayerOGL(aManager)
+{
+  mImplData = static_cast<LayerOGL*>(this);
+}  
+
+ShadowImageLayerOGL::~ShadowImageLayerOGL()
+{}
+
+PRBool
+ShadowImageLayerOGL::Init(gfxSharedImageSurface* aFront,
+                          const nsIntSize& aSize)
+{
+  mDeadweight = aFront;
+  gfxSize sz = mDeadweight->GetSize();
+  mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
+                                       mDeadweight->GetContentType(),
+                                       LOCAL_GL_CLAMP_TO_EDGE);
+  return PR_TRUE;
+}
+
+already_AddRefed<gfxSharedImageSurface>
+ShadowImageLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
+{
+  if (!mDestroyed && mTexImage) {
+    // XXX this is always just ridiculously slow
+
+    gfxSize sz = aNewFront->GetSize();
+    nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
+    // NB: this gfxContext must not escape EndUpdate() below
+    nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(updateRegion);
+
+    dest->SetOperator(gfxContext::OPERATOR_SOURCE);
+    dest->DrawSurface(aNewFront, aNewFront->GetSize());
+
+    mTexImage->EndUpdate();
+  }
+
+  return aNewFront;
+}
+
+void
+ShadowImageLayerOGL::DestroyFrontBuffer()
+{
+  mTexImage = nsnull;
+  if (mDeadweight) {
+    mOGLManager->DestroySharedSurface(mDeadweight, mAllocator);
+    mDeadweight = nsnull;
+  }
+}
+
+void
+ShadowImageLayerOGL::Destroy()
+{
+  if (!mDestroyed) {
+    mDestroyed = PR_TRUE;
+    mTexImage = nsnull;
+  }
+}
+
+Layer*
+ShadowImageLayerOGL::GetLayer()
+{
+  return this;
+}
+
+void
+ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                                 const nsIntPoint& aOffset)
+{
+  mOGLManager->MakeCurrent();
+
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
+  ColorTextureLayerProgram *program = mOGLManager->GetBGRALayerProgram();
+
+  ApplyFilter(mFilter);
+
+  program->Activate();
+  program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
+  program->SetLayerTransform(mTransform);
+  program->SetLayerOpacity(GetOpacity());
+  program->SetRenderOffset(aOffset);
+  program->SetTextureUnit(0);
+
+  mOGLManager->BindAndDrawQuad(program);
+
+  DEBUG_GL_ERROR_CHECK(gl());
+}
+
+#endif  // MOZ_IPC
+
 
 } /* layers */
 } /* mozilla */

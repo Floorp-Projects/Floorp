@@ -4,6 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=366936
 -->
 <head>
+  <meta charset=utf-8>
   <title>Test for Bug 366936</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" 
@@ -15,9 +16,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
   <script type="application/javascript"
           src="html5_tree_construction_exceptions.js"></script>
   <script class="testbody" type="application/javascript;version=1.7">
-   var parserDatFiles = ["html5lib_tree_dat1.txt", 
-                         "html5lib_tree_dat2.txt",
-                         "html5lib_tree_dat3.txt"];
+   var parserDatFiles = ["adoption01.dat",
+                         "adoption02.dat",
+                         "comments01.dat",
+                         "doctype01.dat",
+                         "entities01.dat",
+                         "entities02.dat",
+                         "html5test-com.dat",
+                         "inbody01.dat",
+                         "isindex.dat",
+                         "pending-spec-changes.dat",
+                         "pending-spec-changes-plain-text-unsafe.dat",
+                         "plain-text-unsafe.dat",
+                         "scripted/adoption01.dat",
+                         "scripted/webkit01.dat",
+                         "scriptdata01.dat",
+                         "tables01.dat",
+                         "tests10.dat",
+                         "tests11.dat",
+                         "tests12.dat",
+                         "tests14.dat",
+                         "tests15.dat",
+                         "tests16.dat"];
+
   </script>
   <script type="application/javascript;version=1.7"
           src="parser_web_testrunner.js"></script>

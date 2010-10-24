@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <script xlink:href="util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var grid = generateSymbolGrid("blueRect10x10.svg#root", 20, 40);
+      grid.setAttribute("transform", "translate(10, 10)");
+      document.documentElement.appendChild(grid);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</svg>

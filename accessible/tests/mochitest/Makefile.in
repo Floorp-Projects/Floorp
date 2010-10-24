@@ -52,6 +52,7 @@ DIRS	= \
   states \
   table \
   tree \
+  treeupdate \
   $(null)
 
 include $(DEPTH)/config/autoconf.mk

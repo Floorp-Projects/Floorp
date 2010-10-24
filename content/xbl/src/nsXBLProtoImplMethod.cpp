@@ -149,6 +149,12 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
   if (mJSMethodObject && targetClassObject) {
     nsDependentString name(mName);
     JSAutoRequest ar(cx);
+    JSAutoEnterCompartment ac;
+
+    if (!ac.enter(cx, globalObject)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     JSObject * method = ::JS_CloneFunctionObject(cx, mJSMethodObject, globalObject);
     if (!method) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -306,6 +312,10 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   JSObject* thisObject = JSVAL_TO_OBJECT(v);
 
   JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+
+  if (!ac.enter(cx, thisObject))
+    return NS_ERROR_UNEXPECTED;
 
   // Clone the function object, using thisObject as the parent so "this" is in
   // the scope chain of the resulting function (for backwards compat to the

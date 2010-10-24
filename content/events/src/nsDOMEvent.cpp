@@ -739,10 +739,12 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     }
     case NS_FOCUS_EVENT:
     {
-      newEvent = new nsFocusEvent(PR_FALSE, msg);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      static_cast<nsFocusEvent*>(newEvent)->fromRaise =
-        static_cast<nsFocusEvent*>(mEvent)->fromRaise;
+      nsFocusEvent* newFocusEvent = new nsFocusEvent(PR_FALSE, msg);
+      NS_ENSURE_TRUE(newFocusEvent, NS_ERROR_OUT_OF_MEMORY);
+      nsFocusEvent* oldFocusEvent = static_cast<nsFocusEvent*>(mEvent);
+      newFocusEvent->fromRaise = oldFocusEvent->fromRaise;
+      newFocusEvent->isRefocus = oldFocusEvent->isRefocus;
+      newEvent = newFocusEvent;
       break;
     }
 

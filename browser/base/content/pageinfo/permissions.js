@@ -125,6 +125,10 @@ function onUnloadPermission()
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(permissionObserver, "perm-changed");
+
+  var dbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
+                            .getService(nsIIndexedDatabaseManager);
+  dbManager.cancelGetUsageForURI(gPermURI, onIndexedDBUsageCallback);
 }
 
 function initRow(aPartId)
@@ -195,27 +199,16 @@ function setRadioState(aPartId, aValue)
 
 function initIndexedDBRow()
 {
+  var dbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
+                            .getService(nsIIndexedDatabaseManager);
+  dbManager.getUsageForURI(gPermURI, onIndexedDBUsageCallback);
+
   var status = document.getElementById("indexedDBStatus");
   var button = document.getElementById("indexedDBClear");
 
-  var usage = Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
-                        .getService(nsIIndexedDatabaseManager)
-                        .getUsageForURI(gPermURI);
-  if (usage) {
-    if (!("DownloadUtils" in window)) {
-      Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-    }
-    status.value =
-      gBundle.getFormattedString("indexedDBUsage",
-                                 DownloadUtils.convertByteUnits(usage));
-    status.removeAttribute("hidden");
-    button.removeAttribute("hidden");
-  }
-  else {
-    status.value = "";
-    status.setAttribute("hidden", "true");
-    button.setAttribute("hidden", "true");
-  }
+  status.value = "";
+  status.setAttribute("hidden", "true");
+  button.setAttribute("hidden", "true");
 }
 
 function onIndexedDBClear()
@@ -229,4 +222,26 @@ function onIndexedDBClear()
   permissionManager.remove(gPermURI.host, "indexedDB");
   permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
   initIndexedDBRow();
+}
+
+function onIndexedDBUsageCallback(uri, usage)
+{
+  if (!uri.equals(gPermURI)) {
+    throw new Error("Callback received for bad URI: " + uri);
+  }
+
+  if (usage) {
+    if (!("DownloadUtils" in window)) {
+      Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+    }
+
+    var status = document.getElementById("indexedDBStatus");
+    var button = document.getElementById("indexedDBClear");
+
+    status.value =
+      gBundle.getFormattedString("indexedDBUsage",
+                                 DownloadUtils.convertByteUnits(usage));
+    status.removeAttribute("hidden");
+    button.removeAttribute("hidden");
+  }
 }

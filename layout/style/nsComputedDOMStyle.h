@@ -125,6 +125,7 @@ private:
 
   nsresult GetEllipseRadii(const nsStyleCorners& aRadius,
                            PRUint8 aFullCorner,
+                           PRBool aIsBorder, // else outline
                            nsIDOMCSSValue** aValue);
 
   nsresult GetOffsetWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
@@ -450,6 +451,7 @@ private:
   PRBool GetFrameBoundsWidthForTransform(nscoord &aWidth);
   PRBool GetFrameBoundsHeightForTransform(nscoord &aHeight);
   PRBool GetFrameBorderRectWidth(nscoord& aWidth);
+  PRBool GetFrameBorderRectHeight(nscoord& aHeight);
 
   struct ComputedStyleMapEntry
   {

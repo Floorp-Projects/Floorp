@@ -3,6 +3,7 @@
 %undef WINSTRIPE_AERO
 
 %define customToolbarColor hsl(214,44%,87%)
+%define glassToolbarBorderColor rgb(40%,40%,40%)
 
 @media all and (-moz-windows-default-theme) {
   #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
@@ -27,7 +28,7 @@
     -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
-                     0 0 2px 1px rgba(255,255,255,.25) inset;
+                0 0 2px 1px rgba(255,255,255,.25) inset;
   }
 
   #appmenu-button:-moz-window-inactive {
@@ -40,8 +41,7 @@
   /* Bug 413060, comment 16: Vista Aero is a special case where we use a
      tooltip appearance for the address bar popup panels */
   #identity-popup,
-  #editBookmarkPanel,
-  #notification-popup {
+  #editBookmarkPanel {
     -moz-appearance: tooltip;
     color: InfoText;
   }
@@ -67,13 +67,22 @@
 
 @media all and (-moz-windows-compositor) {
   /* these should be hidden w/glass enabled. windows draws it's own buttons. */
-  #titlebar-buttonbox {
+  #titlebar-buttonbox:not(:-moz-lwtheme),
+  .titlebar-button {
     display: none;
+  }
+
+  #main-window[sizemode="maximized"] #titlebar-buttonbox {
+    -moz-margin-end: 2px;
   }
 
   #main-window {
     -moz-appearance: -moz-win-borderless-glass;
     background: transparent;
+  }
+
+  #main-window[chromemargin^="0,"][sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox {
+    margin-top: -7px;
   }
 
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
@@ -90,9 +99,24 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-    border-left: 1px solid ThreeDShadow;
-    border-right: 1px solid ThreeDShadow;
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
+    border-left: 1px solid @glassToolbarBorderColor@;
+    border-right: 1px solid @glassToolbarBorderColor@;
+  }
+  #navigator-toolbox,
+  #navigator-toolbox > toolbar {
+    border-color: @glassToolbarBorderColor@ !important;
+  }
+
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+    border-top-left-radius: 3.5px;
+    border-top-right-radius: 3.5px;
+  }
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
+    padding-left: 4px;
+    padding-right: 4px;
   }
 
   /* Make the window draggable by glassed toolbars (bug 555081) */

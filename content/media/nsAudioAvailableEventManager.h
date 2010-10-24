@@ -63,7 +63,8 @@ public:
 
   // Queues audio sample data and re-packages it into equal sized
   // framebuffers.  Called from the audio thread.
-  void QueueWrittenAudioData(float* aAudioData, PRUint32 aAudioDataLength,
+  void QueueWrittenAudioData(SoundDataValue* aAudioData,
+                             PRUint32 aAudioDataLength,
                              PRUint64 aEndTimeSampleOffset);
 
   // Clears the queue of any existing events.  Called from both the state
@@ -82,7 +83,7 @@ private:
   nsBuiltinDecoder* mDecoder;
 
   // The number of samples per second.
-  PRUint64 mSamplesPerSecond;
+  float mSamplesPerSecond;
 
   // A buffer for audio data to be dispatched in DOM events.
   nsAutoArrayPtr<float> mSignalBuffer;

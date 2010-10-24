@@ -257,48 +257,6 @@ void nsDataObjCollection::AddDataObject(IDataObject * aDataObj)
   mDataObjects.AppendElement(dataObj);
 }
 
-// IAsyncOperation methods
-STDMETHODIMP nsDataObjCollection::EndOperation(HRESULT hResult,
-                                               IBindCtx *pbcReserved,
-                                               DWORD dwEffects)
-{
-  mIsInOperation = FALSE;
-  Release();
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObjCollection::GetAsyncMode(BOOL *pfIsOpAsync)
-{
-  if (!pfIsOpAsync)
-    return E_FAIL;
-
-  *pfIsOpAsync = mIsAsyncMode;
-
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObjCollection::InOperation(BOOL *pfInAsyncOp)
-{
-  if (!pfInAsyncOp)
-    return E_FAIL;
-
-  *pfInAsyncOp = mIsInOperation;
-
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObjCollection::SetAsyncMode(BOOL fDoOpAsync)
-{
-  mIsAsyncMode = fDoOpAsync;
-  return S_OK;
-}
-
-STDMETHODIMP nsDataObjCollection::StartOperation(IBindCtx *pbcReserved)
-{
-  mIsInOperation = TRUE;
-  return S_OK;
-}
-
 // Methods for getting data
 HRESULT nsDataObjCollection::GetFile(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {

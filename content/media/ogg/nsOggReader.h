@@ -41,7 +41,11 @@
 
 #include <ogg/ogg.h>
 #include <theora/theoradec.h>
+#ifdef MOZ_TREMOR
+#include <tremor/ivorbiscodec.h>
+#else
 #include <vorbis/codec.h>
+#endif
 #include "nsBuiltinDecoderReader.h"
 #include "nsOggCodecState.h"
 #include "VideoUtils.h"
@@ -57,7 +61,7 @@ public:
   nsOggReader(nsBuiltinDecoder* aDecoder);
   ~nsOggReader();
 
-  virtual nsresult Init();
+  virtual nsresult Init(nsBuiltinDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
   virtual PRBool DecodeAudioData();
 

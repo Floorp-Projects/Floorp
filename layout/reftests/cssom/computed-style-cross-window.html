@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>getComputedStyle across windows</title>
+<style>
+p { color: blue }
+
+div { margin: 1em 0 }
+</style>
+
+<script>
+
+var gRunCount = 2;
+
+function run() {
+  if (--gRunCount != 0)
+    return;
+
+  var i = document.getElementById("i");
+
+  var pout = document.getElementById("out");
+  var poutnone = document.getElementById("outnone");
+  var poutdet = document.createElement("p");
+  var pin = i.contentDocument.getElementsByTagName("p")[0];
+  var pinnone = i.contentDocument.getElementsByTagName("p")[1];
+  var pindet = i.contentDocument.createElement("p");
+
+  document.getElementById("res1").style.color =
+    window.getComputedStyle(pin, "").color;
+
+  document.getElementById("res2").style.color =
+    i.contentWindow.getComputedStyle(pout, "").color;
+
+  document.getElementById("res3").style.color =
+    window.getComputedStyle(pinnone, "").color;
+
+  document.getElementById("res4").style.color =
+    i.contentWindow.getComputedStyle(poutnone, "").color;
+
+  document.getElementById("res5").style.color =
+    window.getComputedStyle(pindet, "").color;
+
+  document.getElementById("res6").style.color =
+    i.contentWindow.getComputedStyle(poutdet, "").color;
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+<body onload="run()">
+
+<p id="out">This is a paragraph outside the iframe.</p>
+<div style="display:none"><p id="outnone">This is a paragraph outside the iframe.</p></div>
+
+<iframe id="i" src="computed-style-cross-window-inner.html" onload="run()"></iframe>
+
+<div id="res1">This paragraph is the color that
+outerWindow.getComputedStyle says the paragraph inside the iframe
+is.</div>
+
+<div id="res2">This paragraph is the color that
+iframeWindow.getComputedStyle says the paragraph outside the iframe
+is.</div>
+
+<div id="res3">This paragraph is the color that
+outerWindow.getComputedStyle says the display:none paragraph inside the
+iframe is.</div>
+
+<div id="res4">This paragraph is the color that
+iframeWindow.getComputedStyle says the display:none paragraph outside
+the iframe is.</div>
+
+<div id="res5">This paragraph is the color that
+outerWindow.getComputedStyle says the detached paragraph inside the
+iframe is.</div>
+
+<div id="res6">This paragraph is the color that
+iframeWindow.getComputedStyle says the detached paragraph outside
+the iframe is.</div>

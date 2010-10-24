@@ -137,6 +137,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug580685.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
+		test_computed_style.html \
 		test_computed_style_no_pseudo.html \
 		test_css_cross_domain.html \
 		test_css_eof_handling.html \

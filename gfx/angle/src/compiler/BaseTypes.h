@@ -51,6 +51,21 @@ enum TBasicType
     EbtAddress,            // should be deprecated??
 };
 
+inline const char* getBasicString(TBasicType t)
+{
+    switch (t)
+    {
+    case EbtVoid:              return "void";              break;
+    case EbtFloat:             return "float";             break;
+    case EbtInt:               return "int";               break;
+    case EbtBool:              return "bool";              break;
+    case EbtSampler2D:         return "sampler2D";         break;
+    case EbtSamplerCube:       return "samplerCube";       break;
+    case EbtStruct:            return "structure";         break;
+    default:                   return "unknown type";
+    }
+}
+
 inline bool IsSampler(TBasicType type)
 {
     return type > EbtGuardSamplerBegin && type < EbtGuardSamplerEnd;

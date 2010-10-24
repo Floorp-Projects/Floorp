@@ -24,7 +24,7 @@ function run_test() {
   }, profileDir);
   // Attempt to make this look like it was added some time in the past so
   // the update makes the last modified time change.
-  dest.lastModifiedTime -= 5000;
+  setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
 
   startupManager();
 

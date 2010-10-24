@@ -1,16 +1,35 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r385
+Current revision: r445
 
 Local patches:
     angle-nspr.patch - use NSPR for TLS
 
     angle-shared.patch - add declspec dllexport/dllimport support on win32
 
-    fix-compile.patch - Remove some trailing commas
+== Visual Studio Solution Files ==
 
-To regenerate the flex/yacc generated files:
+The VS solution/project files that are used to build ANGLE are built
+with VS2008 in upstream ANGLE.  Because our build machines use VS2005,
+they need to be downgraded using
+http://www.emmet-gray.com/Articles/ProjectConverter.htm before being
+checked in with an ANGLE update.
 
-flex --noline --nounistd --outfile=generated/glslang.cpp src/compiler/glslang.l
-bison --no-lines --defines=generated/glslang_tab.h --skeleton=yacc.c --output=generated/glslang_tab.cpp src/compiler/glslang.y
+== Regenerating Parser ==
+ 
+To regenerate the flex/yacc generated files, do the following -- note
+that they'll generate different results, but with the same effect.
+
+Doing this on linux is preferred:
+
+  flex --noline --nounistd --outfile=generated/glslang.cpp src/compiler/glslang.l
+  bison --no-lines --defines=generated/glslang_tab.h --skeleton=yacc.c --output=generated/glslang_tab.cpp src/compiler/glslang.y
+
+or (win32) -- note the manual removal of unistd.h and the renaming of the bison generated file:
+
+  src/compiler/tools/flex.exe -L -ogenerated/glslang.cpp src/compiler/glslang.l
+# get rid of #include <unistd.h>
+  grep -v unistd generated/glslang.cpp > foo && mv foo generated/glslang.cpp
+  BISON_SIMPLE=src/compiler/tools/bison.simple src/compiler/tools/bison.exe --no-lines --defines --yacc --output=generated/glslang_tab.cpp src/compiler/glslang.y
+  mv generated/glslang_tab.cpp.h generated/glslang_tab.h
 

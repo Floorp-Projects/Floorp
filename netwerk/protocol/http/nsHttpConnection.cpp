@@ -206,6 +206,15 @@ nsHttpConnection::CanReuse()
                          && IsAlive();
 }
 
+PRUint32 nsHttpConnection::TimeToLive()
+{
+    PRInt32 tmp = mIdleTimeout - (NowInSeconds() - mLastReadTime);
+    if (0 > tmp)
+        tmp = 0;
+
+    return tmp;
+}
+
 PRBool
 nsHttpConnection::IsAlive()
 {
@@ -247,18 +256,32 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
     if (!val)
         return PR_FALSE; // no header, no love
 
-    // the list of servers known to do bad things with pipelined requests
-    static const char *bad_servers[] = {
-        "Microsoft-IIS/4.",
-        "Microsoft-IIS/5.",
-        "Netscape-Enterprise/3.",
-        nsnull
-    };
+    // The blacklist is indexed by the first character. All of these servers are
+    // known to return their identifier as the first thing in the server string,
+    // so we can do a leading match. 
 
-    for (const char **server = bad_servers; *server; ++server) {
-        if (PL_strcasestr(val, *server) != nsnull) {
-            LOG(("looks like this server does not support pipelining"));
-            return PR_FALSE;
+    static const char *bad_servers[26][5] = {
+        { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // a - d
+        { "EFAServer/", nsnull },                                       // e
+        { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // f - i
+        { nsnull }, { nsnull }, { nsnull },                             // j - l 
+        { "Microsoft-IIS/4.", "Microsoft-IIS/5.", nsnull },             // m
+        { "Netscape-Enterprise/3.", "Netscape-Enterprise/4.", 
+          "Netscape-Enterprise/5.", "Netscape-Enterprise/6.", nsnull }, // n
+        { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // o - r
+        { nsnull }, { nsnull }, { nsnull }, { nsnull },                 // s - v
+        { "WebLogic 3.", "WebLogic 4.","WebLogic 5.", "WebLogic 6.", nsnull }, // w 
+        { nsnull }, { nsnull }, { nsnull }                              // x - z
+    };  
+
+    int index = val[0] - 'A'; // the whole table begins with capital letters
+    if ((index >= 0) && (index <= 25))
+    {
+        for (int i = 0; bad_servers[index][i] != nsnull; i++) {
+            if (!PL_strncmp (val, bad_servers[index][i], strlen (bad_servers[index][i]))) {
+                LOG(("looks like this server does not support pipelining"));
+                return PR_FALSE;
+            }
         }
     }
 

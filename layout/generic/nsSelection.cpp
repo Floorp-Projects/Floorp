@@ -3554,8 +3554,15 @@ CompareToRangeStart(nsINode* aCompareNode, PRInt32 aCompareOffset,
 {
   nsINode* start = aRange->GetStartParent();
   NS_ENSURE_STATE(aCompareNode && start);
-  *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
-                                        start, aRange->StartOffset());
+  // If the nodes that we're comparing are not in the same document,
+  // assume that aCompareNode will fall at the end of the ranges.
+  if (aCompareNode->GetCurrentDoc() != start->GetCurrentDoc() ||
+      !start->GetCurrentDoc()) {
+    *aCmp = 1;
+  } else {
+    *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
+                                          start, aRange->StartOffset());
+  }
   return NS_OK;
 }
 
@@ -3565,8 +3572,15 @@ CompareToRangeEnd(nsINode* aCompareNode, PRInt32 aCompareOffset,
 {
   nsINode* end = aRange->GetEndParent();
   NS_ENSURE_STATE(aCompareNode && end);
-  *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
-                                        end, aRange->EndOffset());
+  // If the nodes that we're comparing are not in the same document,
+  // assume that aCompareNode will fall at the end of the ranges.
+  if (aCompareNode->GetCurrentDoc() != end->GetCurrentDoc() ||
+      !end->GetCurrentDoc()) {
+    *aCmp = 1;
+  } else {
+    *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
+                                          end, aRange->EndOffset());
+  }
   return NS_OK;
 }
 
@@ -4802,6 +4816,11 @@ nsTypedSelection::RemoveRange(nsIRange* aRange)
 
   nsINode* beginNode = aRange->GetStartParent();
   nsINode* endNode = aRange->GetEndParent();
+
+  if (!beginNode || !endNode) {
+    // Detached range; nothing else to do here.
+    return NS_OK;
+  }
   
   // find out the length of the end node, so we can select all of it
   PRInt32 beginOffset, endOffset;
@@ -5132,14 +5151,21 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
 
   if (NS_FAILED(res))
     return res;
+  // We pass |disconnected| to the following ComparePoints calls in order
+  // to avoid assertions, and there is no special handling required, since
+  // ComparePoints returns 1 in the disconnected case.
+  PRBool disconnected = PR_FALSE;
   PRInt32 result1 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                  focusNode, focusOffset);
+                                                  focusNode, focusOffset,
+                                                  &disconnected);
   //compare old cursor to new cursor
   PRInt32 result2 = nsContentUtils::ComparePoints(focusNode, focusOffset,
-                                                  aParentNode, aOffset);
+                                                  aParentNode, aOffset,
+                                                  &disconnected);
   //compare anchor to new cursor
   PRInt32 result3 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                  aParentNode, aOffset);
+                                                  aParentNode, aOffset,
+                                                  &disconnected);
 
   if (result2 == 0) //not selecting anywhere
     return NS_OK;

@@ -25,7 +25,7 @@
 function load() {
   // When the function will be executed, the focus events from autofocus should
   // have been processed.
-  setTimeout(parent.gGen.next(), 0);
+  parent.SimpleTest.executeSoon(parent.gGen.next.bind(parent.gGen));
 }
 </script>
 

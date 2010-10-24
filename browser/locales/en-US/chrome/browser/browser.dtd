@@ -113,7 +113,6 @@ can reach it easily. -->
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY forwardCmd.accesskey         "F">
 <!ENTITY forwardButton.tooltip        "Go forward one page">
-<!ENTITY backForwardMenu.tooltip      "Recent pages">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadButton.tooltip         "Reload current page">
@@ -149,6 +148,7 @@ can reach it easily. -->
 
 <!ENTITY bookmarksMenuButton.label          "Bookmarks">
 <!ENTITY bookmarksMenuButton.tooltip        "Display your bookmarks">
+<!ENTITY bookmarksMenuButton.unsorted.label "Unsorted Bookmarks">
 <!ENTITY viewBookmarksSidebar.label         "Show in Sidebar">
 <!ENTITY viewBookmarksToolbar.label         "View Bookmarks Toolbar">
 
@@ -299,9 +299,9 @@ can reach it easily. -->
 
   Unix: Ctrl+J (0.8, 0.9 support)
         Ctrl+K (cross platform binding)
-  Mac:  Ctrl+K (cross platform binding)
+  Mac:  Cmd+K (cross platform binding)
+        Cmd+Opt+F (platform convention)
   Win:  Ctrl+K (cross platform binding)
-        Ctrl+E (IE compat) 
 
   We support Ctrl+K on all platforms now and advertise it in the menu since it is
   our standard - it is a "safe" choice since it is near no harmful keys like "W" as
@@ -310,12 +310,11 @@ can reach it easily. -->
   is a fundamental keybinding and we are maintaining a XP binding so that it is easy
   for people to switch to Linux.
 
-  Do *not* tamper with these values without talking to ben@mozilla.org
-
  -->
 <!ENTITY searchFocus.commandkey       "k">
-<!ENTITY searchFocus.commandkey2      "e">
 <!ENTITY searchFocusUnix.commandkey   "j">
+
+<!ENTITY tabView.commandkey           "e">
 
 <!ENTITY openLinkCmdInTab.label       "Open Link in New Tab">
 <!ENTITY openLinkCmdInTab.accesskey   "T">
@@ -514,10 +513,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY editBookmark.done.label                     "Done">
 <!ENTITY editBookmark.cancel.label                   "Cancel">
 <!ENTITY editBookmark.removeBookmark.accessKey       "R">
-<!ENTITY editBookmark.undo.label                     "Undo">
-<!ENTITY editBookmark.undo.accessKey                 "U">
-<!ENTITY editBookmark.edit.label                     "Edit…">
-<!ENTITY editBookmark.edit.accessKey                 "E">
 
 <!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo "You are connected to">

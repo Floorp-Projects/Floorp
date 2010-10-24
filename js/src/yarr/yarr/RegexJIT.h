@@ -82,7 +82,11 @@ private:
     JSRegExp* m_fallback;
 };
 
-void jitCompileRegex(ExecutableAllocator &allocator, RegexCodeBlock& jitObject, const UString& pattern, unsigned& numSubpatterns, int& error, bool &fellBack, bool ignoreCase = false, bool multiline = false);
+void jitCompileRegex(ExecutableAllocator &allocator, RegexCodeBlock& jitObject, const UString& pattern, unsigned& numSubpatterns, int& error, bool &fellBack, bool ignoreCase = false, bool multiline = false
+#ifdef ANDROID
+                     , bool forceFallback = false
+#endif
+);
 
 inline int executeRegex(JSContext *cx, RegexCodeBlock& jitObject, const UChar* input, unsigned start, unsigned length, int* output, int outputArraySize)
 {

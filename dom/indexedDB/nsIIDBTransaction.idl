@@ -63,6 +63,7 @@ interface nsIIDBTransaction : nsISupports
   const unsigned short READ_WRITE = 0;
   const unsigned short READ_ONLY = 1;
   const unsigned short SNAPSHOT_READ = 2;
+  const unsigned short VERSION_CHANGE = 3;
   readonly attribute unsigned short mode;
 
   readonly attribute nsIDOMDOMStringList objectStoreNames;

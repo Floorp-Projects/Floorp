@@ -42,6 +42,10 @@
 
 #include "Layers.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/layers/ShadowLayers.h"
+#endif
+
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -69,12 +73,23 @@ namespace mozilla {
 namespace layers {
 
 class LayerOGL;
+class ShadowThebesLayer;
+class ShadowContainerLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
+class ShadowColorLayer;
 
 /**
  * This is the LayerManager used for OpenGL 2.1. For now this will render on
  * the main thread.
  */
-class THEBES_API LayerManagerOGL : public LayerManager {
+class THEBES_API LayerManagerOGL :
+#ifdef MOZ_IPC
+    public ShadowLayerManager
+#else
+    public LayerManager
+#endif
+{
   typedef mozilla::gl::GLContext GLContext;
 
 public:
@@ -134,6 +149,12 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
+
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
+  virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer();
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
+  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer();
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("OpenGL"); }
@@ -314,12 +335,18 @@ public:
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-   virtual const char* Name() const { return "OGL"; }
+  virtual const char* Name() const { return "OGL"; }
 #endif // MOZ_LAYERS_HAVE_LOG
 
-   const nsIntSize& GetWigetSize() {
-     return mWidgetSize;
-   }
+  const nsIntSize& GetWigetSize() {
+    return mWidgetSize;
+  }
+  
+  /**
+   * Setup the viewport and projection matrix for rendering
+   * to a window of the given dimensions.
+   */
+  void SetupPipeline(int aWidth, int aHeight);
 
 private:
   /** Widget associated with this layer manager */
@@ -382,15 +409,12 @@ private:
    * Render the current layer tree to the active target.
    */
   void Render();
-  /**
-   * Setup the viewport and projection matrix for rendering
-   * to a window of the given dimensions.
-   */
-  void SetupPipeline(int aWidth, int aHeight);
+
   /**
    * Setup a backbuffer of the given dimensions.
    */
   void SetupBackBuffer(int aWidth, int aHeight);
+
   /**
    * Copies the content of our backbuffer to the set transaction target.
    */
@@ -442,6 +466,7 @@ public:
 
   typedef mozilla::gl::GLContext GLContext;
 
+  LayerManagerOGL* OGLManager() const { return mOGLManager; }
   GLContext *gl() const { return mOGLManager->gl(); }
 
   void ApplyFilter(gfxPattern::GraphicsFilter aFilter);

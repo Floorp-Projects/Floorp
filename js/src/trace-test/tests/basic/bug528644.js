@@ -6,11 +6,11 @@ function g(foo) {
 }
 
 var makegen = eval("\n\
-  function(b) {\n\
+  (function(b) {\n\
       var h = \n\
         eval(\"new function() { yield print(b) }\" ); \n\
     return h\n\
-  }\n\
+  })\n\
 ");
 
 g(makegen());

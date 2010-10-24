@@ -330,6 +330,7 @@ pref("browser.search.log", false);
 // Ordering of Search Engines in the Engine list. 
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
+pref("browser.search.order.3",                "chrome://browser-region/locale/region.properties");
 
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
@@ -490,8 +491,8 @@ pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/in
 // simple gestures support
 pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
 pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
-pref("browser.gesture.swipe.up", "cmd_scrollTop");
-pref("browser.gesture.swipe.down", "cmd_scrollBottom");
+pref("browser.gesture.swipe.up", "Browser:HideTabView");
+pref("browser.gesture.swipe.down", "Browser:ShowTabView");
 #ifdef XP_MACOSX
 pref("browser.gesture.pinch.latched", true);
 pref("browser.gesture.pinch.threshold", 150);
@@ -791,9 +792,9 @@ pref("browser.sessionstore.interval", 15000);
 pref("browser.sessionstore.postdata", 0);
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
-pref("browser.sessionstore.privacy_level", 1);
+pref("browser.sessionstore.privacy_level", 0);
 // the same as browser.sessionstore.privacy_level, but for saving deferred session data
-pref("browser.sessionstore.privacy_level_deferred", 2);
+pref("browser.sessionstore.privacy_level_deferred", 0);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
 // how many windows can be reopened (per session) - on non-OS X platforms this
@@ -802,7 +803,11 @@ pref("browser.sessionstore.max_windows_undo", 3);
 // number of crashes that can occur before the about:sessionrestore page is displayed
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("browser.sessionstore.max_resumed_crashes", 1);
-// number of tabs to restore concurrently
+// The number of tabs that can restore concurrently:
+// < 0 = All tabs can restore at the same time
+//   0 = Only the selected tab in each window will be restored
+//       Other tabs won't be restored until they are selected
+//   N = The number of tabs to restore at the same time
 pref("browser.sessionstore.max_concurrent_tabs", 3);
 
 // allow META refresh by default
@@ -938,14 +943,12 @@ pref("toolbar.customization.usesheet", false);
 // The default for this pref reflects whether the build is capable of IPC.
 // (Turning it on in a no-IPC build will have no effect.)
 #ifdef XP_MACOSX
-// OSX still has only partial support for IPC.  Note that the PowerPC
-// and x86 builds must generate identical copies of this file, so we
-// can't make the prefs indicate that IPC is not available at all in
-// PowerPC builds.
-pref("dom.ipc.plugins.enabled", false);
-// These plug-ins will run OOP by default
-pref("dom.ipc.plugins.enabled.flash player.plugin", true);
-pref("dom.ipc.plugins.enabled.javaplugin2_npapi.plugin", true);
+// i386 ipc preferences
+pref("dom.ipc.plugins.enabled.i386", false);
+pref("dom.ipc.plugins.enabled.i386.flash player.plugin", true);
+pref("dom.ipc.plugins.enabled.i386.javaplugin2_npapi.plugin", true);
+// x86_64 ipc preferences
+pref("dom.ipc.plugins.enabled.x86_64", true);
 #elifdef MOZ_IPC
 pref("dom.ipc.plugins.enabled", true);
 #else
@@ -962,7 +965,7 @@ pref("browser.taskbar.lists.frequent.enabled", true);
 pref("browser.taskbar.lists.recent.enabled", false);
 pref("browser.taskbar.lists.maxListItemCount", 7);
 pref("browser.taskbar.lists.tasks.enabled", true);
-pref("browser.taskbar.lists.refreshInSeconds", 30);
+pref("browser.taskbar.lists.refreshInSeconds", 120);
 #endif
 #endif
 
@@ -1043,13 +1046,13 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
-// Disable the Error Console
+// Disable the error console and inspector
 pref("devtools.errorconsole.enabled", false);
-
-// disable the Inspector
 pref("devtools.inspector.enabled", false);
 
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
 
+// Whether the Panorama should animate going in/out of tabs
+pref("browser.panorama.animate_zoom", true);

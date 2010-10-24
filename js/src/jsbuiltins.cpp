@@ -302,11 +302,14 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     JSFunction *fun = (JSFunction*) funobj;
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
 
-    JSObject* closure = js_NewGCObject(cx);
+    JSObject* closure = js_NewGCObject(cx, gc::FINALIZE_OBJECT2);
     if (!closure)
         return NULL;
 
-    closure->initSharingEmptyShape(&js_FunctionClass, proto, parent, fun, cx);
+    if (!closure->initSharingEmptyShape(cx, &js_FunctionClass, proto, parent,
+                                        fun, gc::FINALIZE_OBJECT2)) {
+        return NULL;
+    }
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT,

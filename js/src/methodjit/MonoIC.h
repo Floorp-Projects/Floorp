@@ -69,8 +69,7 @@ struct MICInfo {
 #endif
     {
         GET,
-        SET,
-        TRACER
+        SET
     };
 
     /* Used by multiple MICs. */
@@ -87,11 +86,6 @@ struct MICInfo {
     uint32 patchValueOffset;
 #endif
 
-    /* Used by TRACER. */
-    JSC::CodeLocationJump traceHint;
-    JSC::CodeLocationJump slowTraceHintOne;
-    JSC::CodeLocationJump slowTraceHintTwo;
-
     /* Used by all MICs. */
     Kind kind : 3;
     union {
@@ -101,16 +95,46 @@ struct MICInfo {
             bool typeConst : 1;
             bool dataConst : 1;
         } name;
-        /* Used by TRACER. */
-        struct {
-            bool hasSlowTraceHintOne : 1;
-            bool hasSlowTraceHintTwo : 1;
-        } hints;
     } u;
 };
 
-void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);
-void JS_FASTCALL SetGlobalName(VMFrame &f, uint32 index);
+struct TraceICInfo {
+    TraceICInfo() {}
+
+    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationLabel jumpTarget;
+    JSC::CodeLocationJump traceHint;
+    JSC::CodeLocationJump slowTraceHint;
+#ifdef DEBUG
+    jsbytecode *jumpTargetPC;
+#endif
+
+    bool hasSlowTraceHint : 1;
+};
+
+static const uint16 BAD_TRACEIC_INDEX = (uint16_t)-1;
+
+void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
+void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
+
+struct EqualityICInfo {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationCall stubCall;
+    BoolStub stub;
+    JSC::CodeLocationLabel target;
+    JSC::CodeLocationLabel fallThrough;
+    JSC::CodeLocationJump jumpToStub;
+
+    ValueRemat lvr, rvr;
+
+    bool generated : 1;
+    JSC::MacroAssembler::RegisterID tempReg : 5;
+    Assembler::Condition cond : 6;
+};
+
+JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
 struct CallICInfo {
@@ -145,7 +169,7 @@ struct CallICInfo {
     JSC::CodeLocationJump funJump;
 
     /* Offset to inline scripted call, from funGuard. */
-    uint32 hotCallOffset   : 16;
+    uint32 hotJumpOffset   : 16;
     uint32 joinPointOffset : 16;
 
     /* Out of line slow call. */
@@ -187,13 +211,13 @@ struct CallICInfo {
     }
 };
 
-void * JS_FASTCALL New(VMFrame &f, uint32 index);
-void * JS_FASTCALL Call(VMFrame &f, uint32 index);
-void JS_FASTCALL NativeNew(VMFrame &f, uint32 index);
-void JS_FASTCALL NativeCall(VMFrame &f, uint32 index);
+void * JS_FASTCALL New(VMFrame &f, ic::CallICInfo *ic);
+void * JS_FASTCALL Call(VMFrame &f, ic::CallICInfo *ic);
+void JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
+void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 
 void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSContext *cx, JSScript *script);
+void SweepCallICs(JSScript *script);
 
 } /* namespace ic */
 } /* namespace mjit */

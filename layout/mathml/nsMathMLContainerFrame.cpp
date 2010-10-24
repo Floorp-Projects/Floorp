@@ -856,12 +856,15 @@ nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
 {
   // nsIFrame::FinishAndStoreOverflow likes the overflow area to include the
   // frame rectangle.
-  nsRect frameRect(0, 0, aMetrics->width, aMetrics->height);
+  aMetrics->SetOverflowAreasToDesiredBounds();
 
   // Text-shadow overflows.
   if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks) {
+    nsRect frameRect(0, 0, aMetrics->width, aMetrics->height);
     nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(frameRect, this);
-    frameRect.UnionRect(frameRect, shadowRect);
+    // shadows contribute only to visual overflow
+    nsRect& visOverflow = aMetrics->VisualOverflow();
+    visOverflow.UnionRect(visOverflow, shadowRect);
   }
 
   // All non-child-frame content such as nsMathMLChars (and most child-frame
@@ -871,7 +874,9 @@ nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
                      mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing,
                      mBoundingMetrics.ascent + mBoundingMetrics.descent);
 
-  aMetrics->mOverflowArea.UnionRect(frameRect, boundingBox);
+  // REVIEW: Maybe this should contribute only to visual overflow
+  // and not scrollable?
+  aMetrics->mOverflowAreas.UnionAllWith(boundingBox);
 
   // mBoundingMetrics does not necessarily include content of <mpadded>
   // elements whose mBoundingMetrics may not be representative of the true
@@ -879,7 +884,7 @@ nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
   // make such to include child overflow areas.
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    ConsiderChildOverflow(aMetrics->mOverflowArea, childFrame);
+    ConsiderChildOverflow(aMetrics->mOverflowAreas, childFrame);
     childFrame = childFrame->GetNextSibling();
   }
 

@@ -202,9 +202,6 @@ nsSMILTimedElement::nsSMILTimedElement()
 
 nsSMILTimedElement::~nsSMILTimedElement()
 {
-  // Put us in a consistent state in case we get any callbacks
-  mElementState = STATE_POSTACTIVE;
-
   // Unlink all instance times from dependent intervals
   for (PRUint32 i = 0; i < mBeginInstances.Length(); ++i) {
     mBeginInstances[i]->Unlink();
@@ -218,10 +215,8 @@ nsSMILTimedElement::~nsSMILTimedElement()
   // Notify anyone listening to our intervals that they're gone
   // (We shouldn't get any callbacks from this because all our instance times
   // are now disassociated with any intervals)
-  if (mCurrentInterval) {
-    mCurrentInterval->Unlink();
-    mCurrentInterval = nsnull;
-  }
+  mElementState = STATE_POSTACTIVE;
+  ResetCurrentInterval();
 
   for (PRInt32 i = mOldIntervals.Length() - 1; i >= 0; --i) {
     mOldIntervals[i]->Unlink();
@@ -683,21 +678,27 @@ nsSMILTimedElement::Rewind()
 {
   NS_ABORT_IF_FALSE(mAnimationElement,
       "Got rewind request before being attached to an animation element");
-  NS_ABORT_IF_FALSE(mSeekState == SEEK_NOT_SEEKING,
-      "Got rewind request whilst already seeking");
 
-  mSeekState = mElementState == STATE_ACTIVE ?
-               SEEK_BACKWARD_FROM_ACTIVE :
-               SEEK_BACKWARD_FROM_INACTIVE;
+  // It's possible to get a rewind request whilst we're already in the middle of
+  // a backwards seek. This can happen when we're performing tree surgery and
+  // seeking containers at the same time because we can end up requesting
+  // a local rewind on an element after binding it to a new container and then
+  // performing a rewind on that container as a whole without sampling in
+  // between.
+  //
+  // However, it should currently be impossible to get a rewind in the middle of
+  // a forwards seek since forwards seeks are detected and processed within the
+  // same (re)sample.
+  if (mSeekState == SEEK_NOT_SEEKING) {
+    mSeekState = mElementState == STATE_ACTIVE ?
+                 SEEK_BACKWARD_FROM_ACTIVE :
+                 SEEK_BACKWARD_FROM_INACTIVE;
+  }
+  NS_ABORT_IF_FALSE(mSeekState == SEEK_BACKWARD_FROM_INACTIVE ||
+                    mSeekState == SEEK_BACKWARD_FROM_ACTIVE,
+                    "Rewind in the middle of a forwards seek?");
 
-  // Set the STARTUP state first so that if we get any callbacks we won't waste
-  // time recalculating the current interval
-  mElementState = STATE_STARTUP;
-  mCurrentRepeatIteration = 0;
-
-  // Clear the intervals and instance times except those instance times we can't
-  // regenerate (DOM calls etc.)
-  RewindTiming();
+  ClearIntervalProgress();
 
   UnsetBeginSpec(RemoveNonDynamic);
   UnsetEndSpec(RemoveNonDynamic);
@@ -1103,6 +1104,13 @@ nsSMILTimedElement::IsTimeDependent(const nsSMILTimedElement& aOther) const
 void
 nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
 {
+  // If we were already active then clear all our timing information and start
+  // afresh
+  if (mElementState != STATE_STARTUP) {
+    mSeekState = SEEK_NOT_SEEKING;
+    Rewind();
+  }
+
   // Resolve references to other parts of the tree
   PRUint32 count = mBeginSpecs.Length();
   for (PRUint32 i = 0; i < count; ++i) {
@@ -1114,10 +1122,8 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
     mEndSpecs[j]->ResolveReferences(aContextNode);
   }
 
-  // Clear any previous milestone since it might be been processed whilst we
-  // were not bound to the tree.
+  // Register new milestone
   mPrevRegisteredMilestone = sMaxMilestone;
-
   RegisterMilestone();
 }
 
@@ -1244,13 +1250,13 @@ nsSMILTimedElement::ClearSpecs(TimeValueSpecList& aSpecs,
 }
 
 void
-nsSMILTimedElement::RewindTiming()
+nsSMILTimedElement::ClearIntervalProgress()
 {
-  if (mCurrentInterval) {
-    mCurrentInterval->Unlink();
-    mCurrentInterval = nsnull;
-  }
+  mElementState = STATE_STARTUP;
+  mCurrentRepeatIteration = 0;
+  ResetCurrentInterval();
 
+  // Remove old intervals
   for (PRInt32 i = mOldIntervals.Length() - 1; i >= 0; --i) {
     mOldIntervals[i]->Unlink();
   }
@@ -1373,11 +1379,10 @@ nsSMILTimedElement::UnpreserveInstanceTimes(InstanceTimeList& aList)
   const nsSMILInstanceTime* cutoff = mCurrentInterval ?
       mCurrentInterval->Begin() :
       prevInterval ? prevInterval->Begin() : nsnull;
-  InstanceTimeComparator cmp;
   PRUint32 count = aList.Length();
   for (PRUint32 i = 0; i < count; ++i) {
     nsSMILInstanceTime* instance = aList[i].get();
-    if (!cutoff || cmp.LessThan(cutoff, instance)) {
+    if (!cutoff || cutoff->Time().CompareTo(instance->Time()) < 0) {
       instance->UnmarkShouldPreserve();
     }
   }
@@ -1854,23 +1859,26 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
       if (changed || aForceChangeNotice) {
         NotifyChangedInterval();
       }
-   }
+    }
 
     // There's a chance our next milestone has now changed, so update the time
     // container
     RegisterMilestone();
-  } else {
-    if (mElementState == STATE_ACTIVE && mClient) {
-      // Only apply a fill if it was already being applied before the (now
-      // deleted) interval was created
-      PRBool applyFill = HasPlayed() && mFillMode == FILL_FREEZE;
-      mClient->Inactivate(applyFill);
-    }
-
-    if (mElementState == STATE_ACTIVE || mElementState == STATE_WAITING) {
+  } else { // GetNextInterval failed: Current interval is no longer valid
+    if (mElementState == STATE_ACTIVE) {
+      // The interval is active so we can't just delete it, instead trim it so
+      // that begin==end.
+      if (!mCurrentInterval->End()->SameTimeAndBase(*mCurrentInterval->Begin()))
+      {
+        mCurrentInterval->SetEnd(*mCurrentInterval->Begin());
+        NotifyChangedInterval();
+      }
+      // The transition to the postactive state will take place on the next
+      // sample (along with firing end events, clearing intervals etc.)
+      RegisterMilestone();
+    } else if (mElementState == STATE_WAITING) {
       mElementState = STATE_POSTACTIVE;
-      mCurrentInterval->Unlink();
-      mCurrentInterval = nsnull;
+      ResetCurrentInterval();
     }
   }
 }
