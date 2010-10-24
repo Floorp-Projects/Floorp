@@ -6150,7 +6150,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
             (void) clasp->mark(cx, obj, trc);
     }
     if (clasp->flags & JSCLASS_IS_GLOBAL) {
-        JSCompartment *compartment = obj->compartment();
+        JSCompartment *compartment = obj->getCompartment();
         compartment->marked = true;
     }
 

@@ -1227,7 +1227,9 @@ namespace js {
 
 class DeflatedStringCache {
   public:
+    DeflatedStringCache();
     bool init();
+    ~DeflatedStringCache();
 
     void sweep(JSContext *cx);
     void remove(JSString *str);
@@ -1267,6 +1269,9 @@ class DeflatedStringCache {
     ::js_GetStringBytes(JSContext *cx, JSString *str);
 
     Map                 map;
+#ifdef JS_THREADSAFE
+    JSLock              *lock;
+#endif
 };
 
 } /* namespace js */
