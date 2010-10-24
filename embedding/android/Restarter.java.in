@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,24 +39,25 @@
 package org.mozilla.@MOZ_APP_NAME@;
 
 import android.content.*;
-import android.util.Log;
+import android.util.*;
+import android.os.*;
 import java.io.*;
 
 public class Restarter extends BroadcastReceiver {
-    @Override 
-    public void onReceive(Context context, Intent intent) {
+    @Override
+    public void onReceive(Context aContext, Intent aIntent) {
         Log.i("Restarter", "trying to restart @MOZ_APP_NAME@");
-        try { 
+        try {
             boolean stillRunning;
             do {
                 stillRunning = false;
-                Process p = Runtime.getRuntime().exec("/system/bin/ps");
+                java.lang.Process p = Runtime.getRuntime().exec("/system/bin/ps");
                 BufferedReader psOut = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 String line;
                 Log.i("Restarter", "pid: " + new Integer(android.os.Process.myPid()).toString());
                 while((line = psOut.readLine()) != null) {
                     Log.i("Restarter", "ps: " + line);
-                    if (line.contains("org.mozilla.@MOZ_APP_NAME@.App")){
+                    if (line.contains("org.mozilla.@MOZ_APP_NAME@")){
                         if (!line.contains(new Integer(android.os.Process.myPid()).toString())){
                             Log.i("Restarter", "app still running, wait a bit");
                             stillRunning = true;
@@ -69,23 +70,22 @@ public class Restarter extends BroadcastReceiver {
                 }
             } while(stillRunning);
         } catch (Exception e) {
-                Log.i("Restarter", e.toString());
+            Log.i("Restarter", e.toString());
         }
         try {
             String action = "android.intent.action.MAIN";
-            String env;
-            StringBuffer envstr = new StringBuffer();
-            for (int c = 0; (env = intent.getStringExtra("env" + c)) != null; c++) {
-                envstr.append(" --es env" + c + " " + env);
-            }
-            String amCmd = "/system/bin/am start -a " + action + envstr.toString() + 
-                " -n org.mozilla.@MOZ_APP_NAME@/org.mozilla.@MOZ_APP_NAME@.App";
-            Log.i("Restarter", amCmd);
-
-            Runtime.getRuntime().exec(amCmd);
+            Intent intent = new Intent(action);
+            intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
+                                "org.mozilla.@MOZ_APP_NAME@.App");
+            Bundle b = aIntent.getExtras();
+            if (b != null)
+                intent.putExtras(b);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Log.i("GeckoAppJava", intent.toString());
+            aContext.startActivity(intent);
         } catch (Exception e) {
             Log.i("Restarter", e.toString());
         }
-        System.exit(0);    
+        System.exit(0);
     }
 };

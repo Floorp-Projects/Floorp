@@ -332,7 +332,7 @@ class GeckoAppShell
             GeckoApp.mAppContext.doRestart();
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
-            System.exit(0);
+            GeckoApp.mAppContext.finish();
         }
 
     }
