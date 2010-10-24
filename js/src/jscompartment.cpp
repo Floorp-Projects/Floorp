@@ -74,8 +74,7 @@ JSCompartment::init()
 #ifdef JS_GCMETER
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
-    return crossCompartmentWrappers.init() &&
-           deflatedStringCache.init();
+    return crossCompartmentWrappers.init();
 }
 
 bool
@@ -153,7 +152,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         if (!obj->getClass()->ext.innerObject) {
             obj = vp->toObject().unwrap(&flags);
             vp->setObject(*obj);
-            if (obj->compartment() == this)
+            if (obj->getCompartment() == this)
                 return true;
 
             if (cx->runtime->preWrapObjectCallback)
@@ -162,7 +161,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
                 return false;
 
             vp->setObject(*obj);
-            if (obj->compartment() == this)
+            if (obj->getCompartment() == this)
                 return true;
         } else {
             if (cx->runtime->preWrapObjectCallback)
