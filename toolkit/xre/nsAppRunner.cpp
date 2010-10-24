@@ -870,13 +870,13 @@ NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
   fclose(pidstat);
   PR_smprintf_free(statpath);
 
-  PRTime starttime = 0;
+  long starttime = 0;
   sscanf(strrchr(stat, ')') + 2,
          "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u "
-         "%*u %*u %*u %*u %*u %*d %*d %*d %*d %llu",
+         "%*u %*u %*u %*u %*u %*d %*d %*d %*d %lu",
          &starttime);
 
-  *aTimestamp = cached = boottime + ((starttime / tickspersecond) * PR_USEC_PER_SEC);;
+  *aTimestamp = cached = boottime + ((starttime / tickspersecond) * PR_USEC_PER_SEC);
   return NS_OK;
 #elif XP_WIN
   FILETIME start, foo, bar, baz;
