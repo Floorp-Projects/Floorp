@@ -2245,17 +2245,13 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     }
     TIMESTAMP(sweepObjectEnd);
 
-    /*
-     * We sweep the deflated cache before we finalize the strings so the
-     * cache can safely use js_IsAboutToBeFinalized..
-     */
-    rt->deflatedStringCache->sweep(cx);
-
     for (JSCompartment **comp = rt->compartments.begin(); comp != rt->compartments.end(); comp++) {
-        FinalizeArenaList<JSShortString>(*comp, cx, FINALIZE_SHORT_STRING);
-        FinalizeArenaList<JSString>(*comp, cx, FINALIZE_STRING);
+        JSCompartment *compartment = *comp;
+        compartment->deflatedStringCache.sweep(cx);
+        FinalizeArenaList<JSShortString>(compartment, cx, FINALIZE_SHORT_STRING);
+        FinalizeArenaList<JSString>(compartment, cx, FINALIZE_STRING);
         for (unsigned i = FINALIZE_EXTERNAL_STRING0; i <= FINALIZE_EXTERNAL_STRING_LAST; ++i)
-            FinalizeArenaList<JSString>(*comp, cx, i);
+            FinalizeArenaList<JSString>(compartment, cx, i);
     }
 
     TIMESTAMP(sweepStringEnd);

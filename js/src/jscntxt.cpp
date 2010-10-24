@@ -2069,7 +2069,7 @@ JSContext::resetCompartment()
             return;
         }
     }
-    compartment = scopeobj->getCompartment();
+    compartment = scopeobj->compartment();
 }
 
 void
