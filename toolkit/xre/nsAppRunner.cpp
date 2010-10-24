@@ -839,6 +839,12 @@ nsXULAppInfo::InvalidateCachesOnRestart()
 /* readonly attribute unsigned long launchTimestamp; */
 NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
 {
+  static PRUint64 cached = 0;
+  if (cached)
+  {
+    *aTimestamp = cached;
+    return NS_OK;
+  }
 #ifdef XP_UNIX
   FILE *uptime;
   long tickspersecond = sysconf(_SC_CLK_TCK);
@@ -870,7 +876,7 @@ NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
          "%*u %*u %*u %*u %*u %*d %*d %*d %*d %llu",
          &starttime);
 
-  *aTimestamp = boottime + ((starttime / tickspersecond) * PR_USEC_PER_SEC);
+  *aTimestamp = cached = boottime + ((starttime / tickspersecond) * PR_USEC_PER_SEC);;
   return NS_OK;
 #elif XP_WIN
   FILETIME start, foo, bar, baz;
@@ -880,9 +886,9 @@ NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
     // copied from NSPR _PR_FileTimeToPRTime
     CopyMemory(aTimestamp, &start, sizeof(PRTime));
 #ifdef __GNUC__
-    *aTimestamp = (*aTimestamp - 116444736000000000LL) / 10LL;
+    *aTimestamp = cached = (*aTimestamp - 116444736000000000LL) / 10LL;
 #else
-    *aTimestamp = (*aTimestamp - 116444736000000000i64) / 10i64;
+    *aTimestamp = cached = (*aTimestamp - 116444736000000000i64) / 10i64;
 #endif    
     return NS_OK;
   }
