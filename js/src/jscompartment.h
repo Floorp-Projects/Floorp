@@ -84,6 +84,11 @@ struct JS_FRIEND_API(JSCompartment) {
     JSObject            *anynameObject;
     JSObject            *functionNamespaceObject;
 
+    /*
+     * Deflated string cache for this compartment.
+     */
+    js::DeflatedStringCache deflatedStringCache;
+
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
 
@@ -134,7 +139,7 @@ class SwitchToCompartment : public PreserveCompartment {
     }
 
     SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
-        cx->compartment = target->getCompartment();
+        cx->compartment = target->compartment();
     }
 };
 

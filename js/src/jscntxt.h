@@ -1406,8 +1406,6 @@ struct JSRuntime {
     js::Value           negativeInfinityValue;
     js::Value           positiveInfinityValue;
 
-    js::DeflatedStringCache *deflatedStringCache;
-
     JSString            *emptyString;
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
