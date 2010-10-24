@@ -1591,7 +1591,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             JSObject &caller = vp->toObject();
 
             /* Censor the caller if it is from another compartment. */
-            if (caller.compartment() != cx->compartment) {
+            if (caller.getCompartment() != cx->compartment) {
                 vp->setNull();
             } else if (caller.isFunction() && caller.getFunctionPrivate()->inStrictMode()) {
                 JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,

@@ -526,7 +526,7 @@ class CompartmentChecker
 
     void check(JSObject *obj) {
         if (obj)
-            check(obj->compartment());
+            check(obj->getCompartment());
     }
 
     void check(const js::Value &v) {

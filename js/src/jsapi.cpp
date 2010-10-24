@@ -633,6 +633,10 @@ JSRuntime::init(uint32 maxbytes)
         return false;
 #endif
 
+    deflatedStringCache = new js::DeflatedStringCache();
+    if (!deflatedStringCache || !deflatedStringCache->init())
+        return false;
+
     wrapObjectCallback = js::TransparentObjectWrapper;
 
 #ifdef JS_THREADSAFE
@@ -675,6 +679,11 @@ JSRuntime::~JSRuntime()
     js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
+    /*
+     * Finish the deflated string cache after the last GC and after
+     * calling js_FinishAtomState, which finalizes strings.
+     */
+    delete deflatedStringCache;
 #if ENABLE_YARR_JIT
     delete regExpAllocator;
 #endif
@@ -1170,7 +1179,7 @@ bool
 JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
 {
     JS_ASSERT(!call);
-    if (cx->compartment == target->compartment()) {
+    if (cx->compartment == target->getCompartment()) {
         call = reinterpret_cast<JSCrossCompartmentCall*>(1);
         return true;
     }
@@ -1224,8 +1233,8 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
      * need to "move" the window from wrapper's compartment to target's
      * compartment.
      */
-    JSCompartment *destination = target->compartment();
-    if (wrapper->compartment() == destination) {
+    JSCompartment *destination = target->getCompartment();
+    if (wrapper->getCompartment() == destination) {
         // If the wrapper is in the same compartment as the destination, then
         // we know that we won't find wrapper in the destination's cross
         // compartment map and that the same object will continue to work.
@@ -1302,7 +1311,7 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
             return NULL;
         if (!wrapper->swap(cx, tobj))
             return NULL;
-        wrapper->compartment()->crossCompartmentWrappers.put(targetv, wrapperv);
+        wrapper->getCompartment()->crossCompartmentWrappers.put(targetv, wrapperv);
     }
 
     return obj;
@@ -5070,7 +5079,7 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
     }
 
     /* Hand off bytes to the deflated string cache, if possible. */
-    if (!cx->compartment->deflatedStringCache.setBytes(cx, str, bytes))
+    if (!cx->runtime->deflatedStringCache->setBytes(cx, str, bytes))
         cx->free(bytes);
     return str;
 }

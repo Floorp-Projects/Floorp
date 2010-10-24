@@ -317,7 +317,7 @@ AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
     : context(cx),
       origin(cx->compartment),
       target(target),
-      destination(target->compartment()),
+      destination(target->getCompartment()),
       input(cx),
       entered(false)
 {
