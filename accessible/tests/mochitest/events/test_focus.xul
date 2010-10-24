@@ -41,7 +41,7 @@
      * Do tests.
      */
 
-    // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpID = "eventdump"; // debug stuff
 
     var gQueue = null;
 

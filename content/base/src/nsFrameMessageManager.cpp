@@ -414,6 +414,11 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         nsAutoGCRoot resultGCRoot3(&thisValue, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
+        JSAutoEnterCompartment ac;
+
+        if (!ac.enter(ctx, object))
+          return PR_FALSE;
+
         jsval funval = JSVAL_VOID;
         if (JS_ObjectIsFunction(ctx, object)) {
           // If the listener is a JS function:
@@ -449,15 +454,24 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         js::AutoValueRooter argv(ctx);
         argv.set(OBJECT_TO_JSVAL(param));
 
-        JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
-        JS_CallFunctionValue(ctx, thisObject,
-                             funval, 1, argv.jsval_addr(), &rval);
-        if (aJSONRetVal) {
-          nsString json;
-          if (JS_TryJSON(ctx, &rval) &&
-              JS_Stringify(ctx, &rval, nsnull, JSVAL_NULL,
-                           JSONCreator, &json)) {
-            aJSONRetVal->AppendElement(json);
+        {
+          JSAutoEnterCompartment tac;
+
+          JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
+
+          if (!tac.enter(ctx, thisObject) ||
+              !JS_WrapValue(ctx, argv.jsval_addr()))
+            return NS_ERROR_UNEXPECTED;
+
+          JS_CallFunctionValue(ctx, thisObject,
+                               funval, 1, argv.jsval_addr(), &rval);
+          if (aJSONRetVal) {
+            nsString json;
+            if (JS_TryJSON(ctx, &rval) &&
+                JS_Stringify(ctx, &rval, nsnull, JSVAL_NULL,
+                             JSONCreator, &json)) {
+              aJSONRetVal->AppendElement(json);
+            }
           }
         }
       }

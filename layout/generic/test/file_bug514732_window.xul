@@ -9,7 +9,7 @@
         title="bug 514732 test">
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+          src="chrome://mochikit/content/tests/SimpleTest/docshell_helpers.js">
   </script>
 
   <script type="application/javascript"><![CDATA[

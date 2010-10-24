@@ -2212,7 +2212,7 @@ PIXMAN_EXPORT PREFIX (_contains_rectangle) (region_type_t *  region,
 PIXMAN_EXPORT void
 PREFIX (_translate) (region_type_t *region, int x, int y)
 {
-    int x1, x2, y1, y2;
+    overflow_int_t x1, x2, y1, y2;
     int nbox;
     box_type_t * pbox;
 
@@ -2222,7 +2222,7 @@ PREFIX (_translate) (region_type_t *region, int x, int y)
     region->extents.x2 = x2 = region->extents.x2 + x;
     region->extents.y2 = y2 = region->extents.y2 + y;
     
-    if (((x1 - SHRT_MIN) | (y1 - SHRT_MIN) | (SHRT_MAX - x2) | (SHRT_MAX - y2)) >= 0)
+    if (((x1 - PIXMAN_REGION_MIN) | (y1 - PIXMAN_REGION_MIN) | (PIXMAN_REGION_MAX - x2) | (PIXMAN_REGION_MAX - y2)) >= 0)
     {
         if (region->data && (nbox = region->data->numRects))
         {
@@ -2237,7 +2237,7 @@ PREFIX (_translate) (region_type_t *region, int x, int y)
         return;
     }
 
-    if (((x2 - SHRT_MIN) | (y2 - SHRT_MIN) | (SHRT_MAX - x1) | (SHRT_MAX - y1)) <= 0)
+    if (((x2 - PIXMAN_REGION_MIN) | (y2 - PIXMAN_REGION_MIN) | (PIXMAN_REGION_MAX - x1) | (PIXMAN_REGION_MAX - y1)) <= 0)
     {
         region->extents.x2 = region->extents.x1;
         region->extents.y2 = region->extents.y1;
@@ -2246,15 +2246,15 @@ PREFIX (_translate) (region_type_t *region, int x, int y)
         return;
     }
 
-    if (x1 < SHRT_MIN)
-	region->extents.x1 = SHRT_MIN;
-    else if (x2 > SHRT_MAX)
-	region->extents.x2 = SHRT_MAX;
+    if (x1 < PIXMAN_REGION_MIN)
+	region->extents.x1 = PIXMAN_REGION_MIN;
+    else if (x2 > PIXMAN_REGION_MAX)
+	region->extents.x2 = PIXMAN_REGION_MAX;
 
-    if (y1 < SHRT_MIN)
-	region->extents.y1 = SHRT_MIN;
-    else if (y2 > SHRT_MAX)
-	region->extents.y2 = SHRT_MAX;
+    if (y1 < PIXMAN_REGION_MIN)
+	region->extents.y1 = PIXMAN_REGION_MIN;
+    else if (y2 > PIXMAN_REGION_MAX)
+	region->extents.y2 = PIXMAN_REGION_MAX;
 
     if (region->data && (nbox = region->data->numRects))
     {
@@ -2267,22 +2267,22 @@ PREFIX (_translate) (region_type_t *region, int x, int y)
             pbox_out->x2 = x2 = pbox->x2 + x;
             pbox_out->y2 = y2 = pbox->y2 + y;
 
-            if (((x2 - SHRT_MIN) | (y2 - SHRT_MIN) |
-                 (SHRT_MAX - x1) | (SHRT_MAX - y1)) <= 0)
+            if (((x2 - PIXMAN_REGION_MIN) | (y2 - PIXMAN_REGION_MIN) |
+                 (PIXMAN_REGION_MAX - x1) | (PIXMAN_REGION_MAX - y1)) <= 0)
             {
                 region->data->numRects--;
                 continue;
 	    }
 
-            if (x1 < SHRT_MIN)
-		pbox_out->x1 = SHRT_MIN;
-            else if (x2 > SHRT_MAX)
-		pbox_out->x2 = SHRT_MAX;
+            if (x1 < PIXMAN_REGION_MIN)
+		pbox_out->x1 = PIXMAN_REGION_MIN;
+            else if (x2 > PIXMAN_REGION_MAX)
+		pbox_out->x2 = PIXMAN_REGION_MAX;
 
-            if (y1 < SHRT_MIN)
-		pbox_out->y1 = SHRT_MIN;
-            else if (y2 > SHRT_MAX)
-		pbox_out->y2 = SHRT_MAX;
+            if (y1 < PIXMAN_REGION_MIN)
+		pbox_out->y1 = PIXMAN_REGION_MIN;
+            else if (y2 > PIXMAN_REGION_MAX)
+		pbox_out->y2 = PIXMAN_REGION_MAX;
 
             pbox_out++;
 	}

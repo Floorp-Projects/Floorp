@@ -399,7 +399,7 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
     // Now see if thet caret extends beyond the view's bounds. If it does,
     // then snap it back, put it as close to the edge as it can.
     nscoord overflow = caretInScroll.XMost() -
-      scrolled->GetOverflowRectRelativeToSelf().width;
+      scrolled->GetVisualOverflowRectRelativeToSelf().width;
     if (overflow > 0)
       aRect->x -= overflow;
   }
@@ -524,7 +524,7 @@ void nsCaret::InvalidateOutsideCaret()
   nsIFrame *frame = GetCaretFrame();
 
   // Only invalidate if we are not fully contained by our frame's rect.
-  if (frame && !frame->GetOverflowRect().Contains(GetCaretRect()))
+  if (frame && !frame->GetVisualOverflowRect().Contains(GetCaretRect()))
     InvalidateRects(mCaretRect, GetHookRect(), frame);
 }
 

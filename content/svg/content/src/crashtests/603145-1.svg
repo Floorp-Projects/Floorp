@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+<![CDATA[
+
+var q = document.createElementNS("http://www.w3.org/2000/svg", "text").rotate.baseVal.appendItem({});
+q.__proto__ = document.createTextNode("x");
+q.constructor;
+
+]]>
+</script>
+</svg>

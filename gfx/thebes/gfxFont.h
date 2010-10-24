@@ -299,6 +299,11 @@ public:
     // if it is more efficient to get the table from the OS at that level.
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
+    // Preload a font table into the cache (used to store layout tables for
+    // harfbuzz, when they will be stripped from the actual sfnt being
+    // passed to platform font APIs for rasterization)
+    void PreloadFontTable(PRUint32 aTag, nsTArray<PRUint8>& aTable);
+
     nsString         mName;
 
     PRPackedBool     mItalic      : 1;

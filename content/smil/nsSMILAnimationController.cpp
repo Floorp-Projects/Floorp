@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Brian Birtles <birtles@gmail.com>
  *   Daniel Holbert <dholbert@mozilla.com>
+ *   Robert Longson <longsonr@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -134,6 +135,7 @@ nsSMILAnimationController::Pause(PRUint32 aType)
   nsSMILTimeContainer::Pause(aType);
 
   if (mPauseState) {
+    mDeferredStartSampling = PR_FALSE;
     StopSampling(GetRefreshDriverForDoc(mDocument));
   }
 }
@@ -254,12 +256,35 @@ nsSMILAnimationController::Unlink()
 }
 
 //----------------------------------------------------------------------
+// Refresh driver lifecycle related methods
+
+void
+nsSMILAnimationController::NotifyRefreshDriverCreated(
+    nsRefreshDriver* aRefreshDriver)
+{
+  if (!mPauseState && !mDeferredStartSampling) {
+    StartSampling(aRefreshDriver);
+  }
+}
+
+void
+nsSMILAnimationController::NotifyRefreshDriverDestroying(
+    nsRefreshDriver* aRefreshDriver)
+{
+  if (!mPauseState && !mDeferredStartSampling) {
+    StopSampling(aRefreshDriver);
+  }
+}
+
+//----------------------------------------------------------------------
 // Timer-related implementation helpers
 
 void
 nsSMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver)
 {
   NS_ASSERTION(mPauseState == 0, "Starting sampling but controller is paused");
+  NS_ASSERTION(!mDeferredStartSampling,
+               "Started sampling but the deferred start flag is still set");
   if (aRefreshDriver) {
     NS_ABORT_IF_FALSE(!GetRefreshDriverForDoc(mDocument) ||
                       aRefreshDriver == GetRefreshDriverForDoc(mDocument),
@@ -720,12 +745,12 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
     return PR_FALSE;
 
   // Look up target (animated) attribute
-  //
-  // XXXdholbert As mentioned in SMILANIM section 3.1, attributeName may
-  // have an XMLNS prefix to indicate the XML namespace. Need to parse
-  // that somewhere.
-  nsIAtom* attributeName = aAnimElem->GetTargetAttributeName();
-  if (!attributeName)
+  // SMILANIM section 3.1, attributeName may
+  // have an XMLNS prefix to indicate the XML namespace.
+  nsCOMPtr<nsIAtom> attributeName;
+  PRInt32 attributeNamespaceID;
+  if (!aAnimElem->GetTargetAttributeName(&attributeNamespaceID,
+                                         getter_AddRefs(attributeName)))
     // Animation has no target attr -- skip it.
     return PR_FALSE;
 
@@ -735,11 +760,13 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // Check if an 'auto' attributeType refers to a CSS property or XML attribute.
   // Note that SMIL requires we search for CSS properties first. So if they
   // overlap, 'auto' = 'CSS'. (SMILANIM 3.1)
-  PRBool isCSS;
+  PRBool isCSS = PR_FALSE;
   if (attributeType == eSMILTargetAttrType_auto) {
-    nsCSSProperty prop =
-      nsCSSProps::LookupProperty(nsDependentAtomString(attributeName));
-    isCSS = nsSMILCSSProperty::IsPropertyAnimatable(prop);
+    if (attributeNamespaceID == kNameSpaceID_None) {
+      nsCSSProperty prop =
+        nsCSSProps::LookupProperty(nsDependentAtomString(attributeName));
+      isCSS = nsSMILCSSProperty::IsPropertyAnimatable(prop);
+    }
   } else {
     isCSS = (attributeType == eSMILTargetAttrType_CSS);
   }
@@ -747,6 +774,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // Construct the key
   aResult.mElement = targetElem;
   aResult.mAttributeName = attributeName;
+  aResult.mAttributeNamespaceID = attributeNamespaceID;
   aResult.mIsCSS = isCSS;
 
   return PR_TRUE;

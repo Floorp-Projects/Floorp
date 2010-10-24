@@ -6,6 +6,46 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+// State constants
+
+// const STATE_BUSY is defined in common.js
+const STATE_CHECKED = nsIAccessibleStates.STATE_CHECKED;
+const STATE_CHECKABLE = nsIAccessibleStates.STATE_CHECKABLE;
+const STATE_COLLAPSED = nsIAccessibleStates.STATE_COLLAPSED;
+const STATE_EXPANDED = nsIAccessibleStates.STATE_EXPANDED;
+const STATE_EXTSELECTABLE = nsIAccessibleStates.STATE_EXTSELECTABLE;
+const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
+const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
+const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;
+const STATE_INVALID = nsIAccessibleStates.STATE_INVALID;
+const STATE_LINKED = nsIAccessibleStates.STATE_LINKED;
+const STATE_MIXED = nsIAccessibleStates.STATE_MIXED;
+const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;
+const STATE_OFFSCREEN = nsIAccessibleStates.STATE_OFFSCREEN;
+const STATE_PRESSED = nsIAccessibleStates.STATE_PRESSED;
+const STATE_READONLY = nsIAccessibleStates.STATE_READONLY;
+const STATE_REQUIRED = nsIAccessibleStates.STATE_REQUIRED;
+const STATE_SELECTABLE = nsIAccessibleStates.STATE_SELECTABLE;
+const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
+const STATE_TRAVERSED = nsIAccessibleStates.STATE_TRAVERSED;
+const STATE_UNAVAILABLE = nsIAccessibleStates.STATE_UNAVAILABLE;
+
+const EXT_STATE_ACTIVE = nsIAccessibleStates.EXT_STATE_ACTIVE;
+const EXT_STATE_DEFUNCT = nsIAccessibleStates.EXT_STATE_DEFUNCT;
+const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
+const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
+const EXT_STATE_HORIZONTAL = nsIAccessibleStates.EXT_STATE_HORIZONTAL;
+const EXT_STATE_MULTI_LINE = nsIAccessibleStates.EXT_STATE_MULTI_LINE;
+const EXT_STATE_SINGLE_LINE = nsIAccessibleStates.EXT_STATE_SINGLE_LINE;
+const EXT_STATE_SUPPORTS_AUTOCOMPLETION =
+  nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Test functions
+
 /**
  * Tests the states and extra states of the given accessible.
  * Also tests for unwanted states and extra states.
@@ -92,14 +132,6 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
     isState(state & STATE_SELECTABLE, STATE_SELECTABLE, false,
             "Selected element should be selectable!");
   }
-
-  // unavailable
-  if (state & STATE_UNAVAILABLE) {
-    var role = getRole(aAccOrElmOrID);
-    if (role != ROLE_GROUPING && role != ROLE_EMBEDDED_OBJECT)
-      isState(state & STATE_FOCUSABLE, STATE_FOCUSABLE, false,
-              "Disabled " + id + " must be focusable!");
-  }
 }
 
 /**
@@ -155,6 +187,16 @@ function getStates(aAccOrElmOrID)
   acc.getState(state, extraState);
 
   return [state.value, extraState.value];
+}
+
+/**
+ * Return true if the accessible has given states.
+ */
+function hasState(aAccOrElmOrID, aState, aExtraState)
+{
+  var [state, exstate] = getStates(aAccOrElmOrID);
+  return (aState ? state & aState : true) &&
+    (aExtraState ? exstate & aExtraState : true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

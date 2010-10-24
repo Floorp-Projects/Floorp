@@ -41,27 +41,38 @@ interface nsIDOMFileError;
 interface nsIInputStream;
 interface nsIURI;
 interface nsIPrincipal;
+interface nsIDOMBlob;
 
-[scriptable, uuid(414e5d40-c831-4b28-acdc-8ff02d1a317d)]
-interface nsIDOMFile : nsISupports
+[scriptable, uuid(5822776a-049c-4de7-adb6-dd9efc39d082)]
+interface nsIDOMBlob : nsISupports
 {
-  //fileName and fileSize are now deprecated attributes
-  readonly attribute DOMString fileName;
-  readonly attribute unsigned long long fileSize;
-
-  readonly attribute DOMString name;
-  readonly attribute DOMString mozFullPath;
   readonly attribute unsigned long long size;
   readonly attribute DOMString type;
 
-  DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
-  DOMString getAsDataURL();             // raises(FileException) on retrieval
-  DOMString getAsBinary();              // raises(FileException) on retrieval
+  nsIDOMBlob slice(in unsigned long long start,
+                   in unsigned long long length,
+                   [optional] in DOMString contentType);
 
   [noscript] readonly attribute nsIInputStream internalStream;
   // The caller is responsible for releasing the internalUrl from the
   // moz-filedata: protocol handler
   [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
+};
+
+[scriptable, uuid(ae1405b0-e411-481e-9606-b29ec7982687)]
+interface nsIDOMFile : nsIDOMBlob
+{
+  readonly attribute DOMString name;
+  readonly attribute DOMString mozFullPath;
+
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
+
+  // These are all deprecated and not in spec. Will be removed in a future
+  // release
+  readonly attribute DOMString fileName;
+  readonly attribute unsigned long long fileSize;
+  DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
+  DOMString getAsDataURL();             // raises(FileException) on retrieval
+  DOMString getAsBinary();              // raises(FileException) on retrieval
 };

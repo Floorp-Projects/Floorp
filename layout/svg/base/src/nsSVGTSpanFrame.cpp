@@ -109,7 +109,8 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
       (aAttribute == nsGkAtoms::x ||
        aAttribute == nsGkAtoms::y ||
        aAttribute == nsGkAtoms::dx ||
-       aAttribute == nsGkAtoms::dy)) {
+       aAttribute == nsGkAtoms::dy ||
+       aAttribute == nsGkAtoms::rotate)) {
     NotifyGlyphMetricsChange();
   }
 

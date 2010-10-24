@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=597331
+-->
+<head>
+  <title>Test for Bug 597331</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=597331">Mozilla Bug 597331</a>
+<p id="display"></p>
+<div id="content">
+<textarea>line1
+line2
+line3
+</textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 597331 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var t = document.querySelector("textarea");
+  t.focus();
+  t.selectionStart = 4;
+  t.selectionEnd = 4;
+  SimpleTest.executeSoon(function() {
+    var before = snapshotWindow(window, true);
+    t.selectionStart = 5;
+    t.selectionEnd = 5;
+    t.addEventListener("keydown", function() {
+      t.removeEventListener("keydown", arguments.callee, false);
+
+      SimpleTest.executeSoon(function() {
+        t.style.display = 'block';
+        document.body.offsetWidth;
+        t.style.display = '';
+        document.body.offsetWidth;
+
+        is(t.selectionStart, 4, "Cursor should be moved correctly");
+        is(t.selectionEnd, 4, "Cursor should be moved correctly");
+
+        var after = snapshotWindow(window, true);
+
+        var result = compareSnapshots(before, after, true);
+        ok(result[0], "The caret should be displayed correctly after reframing");
+
+        SimpleTest.finish();
+      });
+    }, false);
+    synthesizeKey("VK_LEFT", {});
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

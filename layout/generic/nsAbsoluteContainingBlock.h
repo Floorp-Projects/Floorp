@@ -104,9 +104,9 @@ public:
   // function will reflow any absolutely positioned child frames that need to
   // be reflowed, e.g., because the absolutely positioned child frame has
   // 'auto' for an offset, or a percentage based width or height.
-  // If aChildBounds is set, it returns (in the local coordinate space) the 
-  // bounding rect of the absolutely positioned child elements taking into 
-  // account their overflow area (if it is visible).
+  // aOverflowAreas, if non-null, is unioned with (in the local
+  // coordinate space) the overflow areas of the absolutely positioned
+  // children.
   // @param aForceReflow if this is false, reflow for some absolutely
   //        positioned frames may be skipped based on whether they use
   //        placeholders for positioning and on whether the containing block
@@ -120,7 +120,7 @@ public:
                   PRBool                   aConstrainHeight,
                   PRBool                   aCBWidthChanged,
                   PRBool                   aCBHeightChanged,
-                  nsRect*                  aChildBounds = nsnull);
+                  nsOverflowAreas*         aOverflowAreas);
 
 
   void DestroyFrames(nsIFrame* aDelegatingFrame,
@@ -150,7 +150,7 @@ protected:
                                PRBool                   aConstrainHeight,
                                nsIFrame*                aKidFrame,
                                nsReflowStatus&          aStatus,
-                               nsRect*                  aChildBounds);
+                               nsOverflowAreas*         aOverflowAreas);
 
   // Mark our absolute frames dirty.  If aMarkAllDirty is true, all will be
   // marked with NS_FRAME_IS_DIRTY.  Otherwise, the size-dependant ones will be

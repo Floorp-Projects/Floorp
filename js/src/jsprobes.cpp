@@ -119,7 +119,7 @@ jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
         //return (void *)argval.toDouble();
     }
 
-    return argval.asGCThing();
+    return argval.toGCThing();
 }
 #endif
 

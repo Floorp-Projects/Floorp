@@ -32,7 +32,7 @@ const TESTS = [ {
 } ];
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   // Specify the url to update.sjs with a slowDownloadMar param so the ui can
   // load before the download completes.

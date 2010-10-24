@@ -80,7 +80,7 @@ function test() {
             // mark the window with some unique data to be restored later on
             ss.setWindowValue(newWin, uniqueKey, uniqueValue);
             let textbox = newWin.content.document.getElementById("textbox");
-            textbox.wrappedJSObject.value = uniqueText;
+            textbox.value = uniqueText;
 
             newWin.close();
 
@@ -108,7 +108,7 @@ function test() {
                    "The window correctly restored the URL");
 
                 let textbox = newWin2.content.document.getElementById("textbox");
-                is(textbox.wrappedJSObject.value, uniqueText,
+                is(textbox.value, uniqueText,
                    "The window correctly restored the form");
                 is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
                    "The window correctly restored the data associated with it");

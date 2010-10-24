@@ -110,6 +110,39 @@ extern "C" {
 
 @end
 
+// Workaround for Bug 542048
+// On 64-bit, NSSearchFieldCells don't draw focus rings.
+#if defined(__x86_64__)
+
+static void DrawFocusRing(NSRect rect, float radius)
+{
+  NSSetFocusRingStyle(NSFocusRingOnly);
+  NSBezierPath* path = [NSBezierPath bezierPath];
+  rect = NSInsetRect(rect, radius, radius);
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMaxX(rect), NSMaxY(rect)) radius:radius startAngle:  0.0 endAngle: 90.0];
+  [path appendBezierPathWithArcWithCenter:NSMakePoint(NSMinX(rect), NSMaxY(rect)) radius:radius startAngle: 90.0 endAngle:180.0];
+  [path closePath];
+  [path fill];
+}
+
+@interface SearchFieldCellWithFocusRing : NSSearchFieldCell {} @end
+
+@implementation SearchFieldCellWithFocusRing
+
+- (void)drawWithFrame:(NSRect)rect inView:(NSView*)controlView
+{
+  [super drawWithFrame:rect inView:controlView];
+  if ([self showsFirstResponder]) {
+    DrawFocusRing(rect, NSHeight(rect) / 2);
+  }
+}
+
+@end
+  
+#endif
+
 // Copied from nsLookAndFeel.h
 // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
 static const int kThemeScrollBarArrowsBoth = 2;
@@ -211,7 +244,11 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
+#if defined(__x86_64__)
+  mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
+#else
   mSearchFieldCell = [[NSSearchFieldCell alloc] initTextCell:@""];
+#endif
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mSearchFieldCell setBezeled:YES];
   [mSearchFieldCell setEditable:YES];
@@ -573,7 +610,7 @@ static const CellRenderSettings checkboxSettings = {
 void
 nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbox,
                                         const HIRect& inBoxRect, PRBool inSelected,
-                                        PRInt32 inState, nsIFrame* aFrame)
+                                        nsEventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -584,10 +621,10 @@ nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbo
   if (inCheckbox && GetIndeterminate(aFrame))
     state = NSMixedState;
 
-  [cell setEnabled:!(inState & NS_EVENT_STATE_DISABLED)];
-  [cell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
+  [cell setEnabled:!IsDisabled(aFrame, inState)];
+  [cell setShowsFirstResponder:inState.HasState(NS_EVENT_STATE_FOCUS)];
   [cell setState:state];
-  [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
+  [cell setHighlighted:inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)];
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
 
   // Ensure that the control is square.
@@ -630,12 +667,12 @@ static const CellRenderSettings searchFieldSettings = {
 
 void
 nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
-                                    nsIFrame* aFrame, PRInt32 inState)
+                                    nsIFrame* aFrame, nsEventStates inState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSSearchFieldCell* cell = mSearchFieldCell;
-  [cell setEnabled:!(inState & NS_EVENT_STATE_DISABLED)];
+  [cell setEnabled:!IsDisabled(aFrame, inState)];
   // NOTE: this could probably use inState
   [cell setShowsFirstResponder:IsFocused(aFrame)];
 
@@ -678,18 +715,17 @@ static const CellRenderSettings pushButtonSettings = {
 
 void
 nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
-                                   PRInt32 inState, nsIFrame* aFrame)
+                                   nsEventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   BOOL isActive = FrameIsInActiveWindow(aFrame);
-  BOOL isDisabled = inState & NS_EVENT_STATE_DISABLED;
+  BOOL isDisabled = IsDisabled(aFrame, inState);
 
   [mPushButtonCell setEnabled:!isDisabled];
-  [mPushButtonCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) &&
-                                   (inState & NS_EVENT_STATE_HOVER) && 
-                                   isActive)];
-  [mPushButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS) && !isDisabled && isActive];
+  [mPushButtonCell setHighlighted:isActive &&
+                                  inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)];
+  [mPushButtonCell setShowsFirstResponder:inState.HasState(NS_EVENT_STATE_FOCUS) && !isDisabled && isActive];
 
   // If the button is tall enough, draw the square button style so that buttons with
   // non-standard content look good. Otherwise draw normal rounded aqua buttons.
@@ -794,11 +830,12 @@ void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                const HIRect& inBoxRect, PRBool inIsDefault,
                                ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
-                               PRInt32 inState, nsIFrame* aFrame)
+                               nsEventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   BOOL isActive = FrameIsInActiveWindow(aFrame);
+  BOOL isDisabled = IsDisabled(aFrame, inState);
 
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
@@ -806,10 +843,10 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   bdi.value = inValue;
   bdi.adornment = inAdornment;
 
-  if (inState & NS_EVENT_STATE_DISABLED) {
+  if (isDisabled) {
     bdi.state = kThemeStateUnavailable;
   }
-  else if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER)) {
+  else if (inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)) {
     bdi.state = kThemeStatePressed;
   }
   else {
@@ -821,11 +858,11 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       bdi.state = kThemeStateActive;
   }
 
-  if (inState & NS_EVENT_STATE_FOCUS && isActive)
+  if (inState.HasState(NS_EVENT_STATE_FOCUS) && isActive)
     bdi.adornment |= kThemeAdornmentFocus;
 
-  if (inIsDefault && !(inState & NS_EVENT_STATE_DISABLED) && isActive &&
-      !(inState & NS_EVENT_STATE_ACTIVE)) {
+  if (inIsDefault && !isDisabled && isActive &&
+      !inState.HasState(NS_EVENT_STATE_ACTIVE)) {
     bdi.adornment |= kThemeAdornmentDefault;
     bdi.animation.time.start = 0;
     bdi.animation.time.current = CFAbsoluteTimeGetCurrent();
@@ -922,7 +959,8 @@ static const CellRenderSettings editableMenulistSettings = {
 
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 PRInt32 inState, PRUint8 aWidgetType, nsIFrame* aFrame)
+                                 nsEventStates inState, PRUint8 aWidgetType,
+                                 nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -931,8 +969,8 @@ nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect
   BOOL isEditable = (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD);
   NSCell* cell = isEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
 
-  [cell setEnabled:!(inState & NS_EVENT_STATE_DISABLED)];
-  [cell setShowsFirstResponder:(IsFocused(aFrame) || (inState & NS_EVENT_STATE_FOCUS))];
+  [cell setEnabled:!IsDisabled(aFrame, inState)];
+  [cell setShowsFirstResponder:(IsFocused(aFrame) || inState.HasState(NS_EVENT_STATE_FOCUS))];
   [cell setHighlighted:IsOpenButton(aFrame)];
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
 
@@ -947,7 +985,7 @@ void
 nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
                                     const HIRect& inBoxRect, ThemeDrawState inDrawState,
                                     ThemeButtonAdornment inAdornment,
-                                    PRInt32 inState, nsIFrame* aFrame)
+                                    nsEventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -957,7 +995,7 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
   bdi.value = kThemeButtonOff;
   bdi.adornment = inAdornment;
 
-  if (inState & NS_EVENT_STATE_DISABLED)
+  if (IsDisabled(aFrame, inState))
     bdi.state = kThemeStateUnavailable;
   else
     bdi.state = FrameIsInActiveWindow(aFrame) ? inDrawState : kThemeStateActive;
@@ -969,7 +1007,8 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
 
 void
 nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
-                              const HIRect& inBoxRect, PRBool inReadOnly, PRInt32 inState)
+                              const HIRect& inBoxRect, PRBool inDisabled,
+                              nsEventStates inState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -979,14 +1018,13 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
 
   // We don't ever set an inactive state for this because it doesn't
   // look right (see other apps).
-  fdi.state = ((inState & NS_EVENT_STATE_DISABLED) || inReadOnly) ? kThemeStateUnavailable
-                                                                  : kThemeStateActive;
+  fdi.state = inDisabled ? kThemeStateUnavailable : kThemeStateActive;
 
   // for some reason focus rings on listboxes draw incorrectly
   if (inKind == kHIThemeFrameListBox)
     fdi.isFocused = 0;
   else
-    fdi.isFocused = (inState & NS_EVENT_STATE_FOCUS) != 0;
+    fdi.isFocused = inState.HasState(NS_EVENT_STATE_FOCUS);
 
   // HIThemeDrawFrame takes the rect for the content area of the frame, not
   // the bounding rect for the frame. Here we reduce the size of the rect we
@@ -1078,7 +1116,7 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
 
 void
 nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
-                              PRInt32 inState, PRBool inIsVertical,
+                              nsEventStates inState, PRBool inIsVertical,
                               PRBool inIsReverse, PRInt32 inCurrentValue,
                               PRInt32 inMinValue, PRInt32 inMaxValue,
                               nsIFrame* aFrame)
@@ -1098,9 +1136,9 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
     tdi.attributes |= kThemeTrackHorizontal;
   if (inIsReverse)
     tdi.attributes |= kThemeTrackRightToLeft;
-  if (inState & NS_EVENT_STATE_FOCUS)
+  if (inState.HasState(NS_EVENT_STATE_FOCUS))
     tdi.attributes |= kThemeTrackHasFocus;
-  if (inState & NS_EVENT_STATE_DISABLED)
+  if (IsDisabled(aFrame, inState))
     tdi.enableState = kThemeTrackDisabled;
   else
     tdi.enableState = FrameIsInActiveWindow(aFrame) ? kThemeTrackActive : kThemeTrackInactive;
@@ -1118,7 +1156,7 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
 
 void
 nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
-                            PRInt32 inState, nsIFrame* aFrame)
+                            nsEventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1127,15 +1165,17 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
   tdi.kind = kHIThemeTabKindNormal;
 
   PRBool isSelected = IsSelectedTab(aFrame);
+  PRBool isDisabled = IsDisabled(aFrame, inState);
+
   if (isSelected) {
-    if (inState & NS_EVENT_STATE_DISABLED)
+    if (isDisabled)
       tdi.style = kThemeTabFrontUnavailable;
     else
       tdi.style = FrameIsInActiveWindow(aFrame) ? kThemeTabFront : kThemeTabFrontInactive;
   } else {
-    if (inState & NS_EVENT_STATE_DISABLED)
+    if (isDisabled)
       tdi.style = kThemeTabNonFrontUnavailable;
-    else if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))
+    else if (inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER))
       tdi.style = kThemeTabNonFrontPressed;
     else
       tdi.style = FrameIsInActiveWindow(aFrame) ? kThemeTabNonFront : kThemeTabNonFrontInactive;
@@ -1184,7 +1224,7 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
     inBoxRect.size.width += 1;
   }
   
-  if (inState & NS_EVENT_STATE_FOCUS)
+  if (inState.HasState(NS_EVENT_STATE_FOCUS))
     tdi.adornment |= kThemeAdornmentFocus;
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
@@ -1193,14 +1233,14 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
 }
 
 static inline UInt8
-ConvertToPressState(PRInt32 aButtonState, UInt8 aPressState)
+ConvertToPressState(nsEventStates aButtonState, UInt8 aPressState)
 {
   // If the button is pressed, return the press state passed in. Otherwise, return 0.
-  return ((aButtonState & NS_EVENT_STATE_ACTIVE) && (aButtonState & NS_EVENT_STATE_HOVER)) ? aPressState : 0;
+  return aButtonState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER) ? aPressState : 0;
 }
 
 void 
-nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonStates[])
+nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, nsEventStates aButtonStates[])
 {
   static nsIContent::AttrValuesArray attributeValues[] = {
     &nsWidgetAtoms::scrollbarUpTop,
@@ -1221,8 +1261,7 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonSta
                                                       attributeValues, eCaseMatters);
     if (attrIndex < 0) continue;
 
-    PRInt32 currentState = GetContentState(childFrame, NS_THEME_BUTTON);
-    aButtonStates[attrIndex] = currentState;
+    aButtonStates[attrIndex] = GetContentState(childFrame, NS_THEME_BUTTON);
   }
 }
 
@@ -1286,7 +1325,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   // Only go get these scrollbar button states if we need it. For example, there's no reaon to look up scrollbar button 
   // states when we're only creating a TrackDrawInfo to determine the size of the thumb.
   if (aShouldGetButtonStates) {
-    PRInt32 buttonStates[] = {0, 0, 0, 0};
+    nsEventStates buttonStates[4];
     GetScrollbarPressStates(aFrame, buttonStates);
     NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
     // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
@@ -1562,7 +1601,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   //CGContextFillRect(cgContext, bounds);
 #endif
 
-  PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+  nsEventStates eventState = GetContentState(aFrame, aWidgetType);
 
   switch (aWidgetType) {
     case NS_THEME_DIALOG: {
@@ -1574,8 +1613,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     case NS_THEME_MENUPOPUP: {
       HIThemeMenuDrawInfo mdi = {
         version: 0,
-        menuType: (eventState & NS_EVENT_STATE_DISABLED) ? kThemeMenuTypeInactive
-                                                         : kThemeMenuTypePopUp
+        menuType: IsDisabled(aFrame, eventState) ? kThemeMenuTypeInactive
+                                                 : kThemeMenuTypePopUp
       };
 
       PRBool isLeftOfParent = PR_FALSE;
@@ -1598,7 +1637,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       HIThemeMenuItemDrawInfo drawInfo = {
         version: 0,
         itemType: kThemeMenuItemPlain,
-        state: ((eventState & NS_EVENT_STATE_DISABLED) ? kThemeMenuDisabled :
+        state: (IsDisabled(aFrame, eventState) ? kThemeMenuDisabled :
                  CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive) ? kThemeMenuSelected :
                  kThemeMenuActive)
       };
@@ -1611,7 +1650,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_MENUSEPARATOR: {
       ThemeMenuState menuState;
-      if (eventState & NS_EVENT_STATE_DISABLED) {
+      if (IsDisabled(aFrame, eventState)) {
         menuState = kThemeMenuDisabled;
       }
       else {
@@ -1749,7 +1788,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
         eventState |= NS_EVENT_STATE_FOCUS;
       }
 
-      DrawFrame(cgContext, kHIThemeFrameTextFieldSquare, macRect, IsReadOnly(aFrame), eventState);
+      DrawFrame(cgContext, kHIThemeFrameTextFieldSquare, macRect,
+                IsDisabled(aFrame, eventState) || IsReadOnly(aFrame), eventState);
       break;
       
     case NS_THEME_SEARCHFIELD:
@@ -1887,7 +1927,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       CGContextStrokePath(cgContext);
 
       // draw a focus ring
-      if (eventState & NS_EVENT_STATE_FOCUS) {
+      if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
         // We need to bring the rectangle in by 1 pixel on each side.
         CGRect cgr = CGRectMake(macRect.origin.x + 1,
                                 macRect.origin.y + 1,

@@ -80,8 +80,7 @@ LayerManagerD3D9::Initialize()
   if (gfxInfo) {
     PRInt32 status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-      if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
-          status != nsIGfxInfo::FEATURE_AVAILABLE)
+      if (status != nsIGfxInfo::FEATURE_NO_INFO)
       {
         NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
         return PR_FALSE;
@@ -258,6 +257,17 @@ LayerManagerD3D9::CreateOptimalSurface(const gfxIntSize &aSize,
 }
 
 void
+LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
+{
+  // We could choose to abort here when hr == E_OUTOFMEMORY.
+  nsCString msg;
+  msg.Append(aMsg);
+  msg.AppendLiteral(" Error code: ");
+  msg.AppendInt(aCode);
+  NS_WARNING(msg.BeginReading());
+}
+
+void
 LayerManagerD3D9::Render()
 {
   if (!mSwapChain->PrepareForRendering()) {
@@ -288,7 +298,7 @@ LayerManagerD3D9::Render()
     }
     device()->SetScissorRect(&r);
 
-    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
+    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer(1.0, gfx3DMatrix());
   }
 
   device()->EndScene();
@@ -310,29 +320,36 @@ LayerManagerD3D9::SetupPipeline()
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  float viewMatrix[4][4];
+  gfx3DMatrix viewMatrix;
   /*
    * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
    * <1.0, -1.0> bottomright)
    */
-  memset(&viewMatrix, 0, sizeof(viewMatrix));
-  viewMatrix[0][0] = 2.0f / rect.width;
-  viewMatrix[1][1] = -2.0f / rect.height;
-  viewMatrix[2][2] = 1.0f;
-  viewMatrix[3][0] = -1.0f;
-  viewMatrix[3][1] = 1.0f;
-  viewMatrix[3][3] = 1.0f;
+  viewMatrix._11 = 2.0f / rect.width;
+  viewMatrix._22 = -2.0f / rect.height;
+  viewMatrix._41 = -1.0f;
+  viewMatrix._42 = 1.0f;
 
-  HRESULT hr = device()->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
+  HRESULT hr = device()->SetVertexShaderConstantF(CBmProjection,
+                                                  &viewMatrix._11, 4);
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to set projection shader constant!");
   }
 
-  hr = device()->SetVertexShaderConstantF(13, ShaderConstantRect(0, 0, 1.0f, 1.0f), 1);
+  hr = device()->SetVertexShaderConstantF(CBvTextureCoords,
+                                          ShaderConstantRect(0, 0, 1.0f, 1.0f),
+                                          1);
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to set texCoords shader constant!");
+  }
+
+  float offset[] = { 0, 0, 0, 0 };
+  hr = device()->SetVertexShaderConstantF(CBvRenderTargetOffset, offset, 1);
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to set RenderTargetOffset shader constant!");
   }
 }
 

@@ -316,7 +316,7 @@ public:
 
   nsPIDOMWindow *GetOuterWindow()
   {
-    return mIsInnerWindow ? mOuterWindow : this;
+    return mIsInnerWindow ? mOuterWindow.get() : this;
   }
 
   nsPIDOMWindow *GetCurrentInnerWindow() const
@@ -554,6 +554,11 @@ public:
    */
   virtual PRUint32 GetSerial() = 0;
 
+  /**
+   * Return the window id of this window
+   */
+  PRUint64 WindowID() const { return mWindowID; }
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -606,11 +611,15 @@ protected:
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;
-  nsPIDOMWindow         *mOuterWindow;
+  nsCOMPtr<nsPIDOMWindow> mOuterWindow;
 
   // the element within the document that is currently focused when this
   // window is active
   nsCOMPtr<nsIContent> mFocusedNode;
+
+  // A unique (as long as our 64-bit counter doesn't roll over) id for
+  // this window.
+  PRUint64 mWindowID;
 };
 
 

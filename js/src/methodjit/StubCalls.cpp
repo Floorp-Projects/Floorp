@@ -64,6 +64,8 @@
 #include "jscntxtinlines.h"
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
+#include "jsfuninlines.h"
+
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -95,6 +97,15 @@ stubs::BindName(VMFrame &f)
     }
     f.regs.sp++;
     f.regs.sp[-1].setObject(*obj);
+}
+
+void JS_FASTCALL
+stubs::BindNameNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = js_FindIdentifierBase(f.cx, &f.fp()->scopeChain(), ATOM_TO_JSID(atom));
+    if (!obj)
+        THROW();
+    f.regs.sp[0].setObject(*obj);
 }
 
 JSObject * JS_FASTCALL
@@ -141,8 +152,6 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
         JSObject *obj2;
         JSAtom *atom;
         if (cache->testForSet(cx, f.regs.pc, obj, &entry, &obj2, &atom)) {
-            JS_ASSERT(obj->isExtensible());
-
             /*
              * Fast property cache hit, only partially confirmed by
              * testForSet. We know that the entry applies to regs.pc and
@@ -182,6 +191,8 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                     break;
                 }
             } else {
+                JS_ASSERT(obj->isExtensible());
+
                 if (obj->nativeEmpty()) {
                     /*
                      * We check that cx owns obj here and will continue to own
@@ -283,6 +294,22 @@ template void JS_FASTCALL stubs::SetName<false>(VMFrame &f, JSAtom *origAtom);
 
 template<JSBool strict>
 void JS_FASTCALL
+stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSObject *obj = ValueToObject(f.cx, &f.regs.sp[-2]);
+    if (!obj)
+        THROW();
+    Value rval = f.regs.sp[-1];
+    if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
+        THROW();
+    f.regs.sp[-2] = rval;
+}
+
+template void JS_FASTCALL stubs::SetPropNoCache<true>(VMFrame &f, JSAtom *origAtom);
+template void JS_FASTCALL stubs::SetPropNoCache<false>(VMFrame &f, JSAtom *origAtom);
+
+template<JSBool strict>
+void JS_FASTCALL
 stubs::SetGlobalNameDumb(VMFrame &f, JSAtom *atom)
 {
     JSContext *cx = f.cx;
@@ -355,7 +382,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 #endif
         if (callname) {
             f.regs.sp++;
-            f.regs.sp[-1].setNull();
+            f.regs.sp[-1].setUndefined();
         }
         return obj;
     }
@@ -400,14 +427,15 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
             (clasp = thisp->getClass()) == &js_CallClass ||
             clasp == &js_BlockClass ||
             clasp == &js_DeclEnvClass) {
-            thisp = NULL;
+            f.regs.sp++;
+            f.regs.sp[-1].setUndefined();
         } else {
             thisp = thisp->thisObject(cx);
             if (!thisp)
                 return NULL;
+            f.regs.sp++;
+            f.regs.sp[-1].setObject(*thisp);
         }
-        f.regs.sp++;
-        f.regs.sp[-1].setObjectOrNull(thisp);
     }
     return obj;
 }
@@ -509,30 +537,23 @@ stubs::GetElem(VMFrame &f)
         int32_t i = rref.toInt32();
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(i);
-            
+
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
                 copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
-
-                /* Reload retval from the stack in the rare hole case. */
-                copyFrom = &regs.sp[-1];
             }
         } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
 
             if (arg < obj->getArgsInitialLength()) {
-                JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
-                if (afp) {
-                    copyFrom = &afp->canonicalActualArg(arg);
+                copyFrom = obj->addressOfArgsElement(arg);
+                if (!copyFrom->isMagic()) {
+                    if (JSStackFrame *afp = (JSStackFrame *) obj->getPrivate())
+                        copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }
-
-                copyFrom = obj->addressOfArgsElement(arg);
-                if (!copyFrom->isMagic())
-                    goto end_getelem;
-                /* Otherwise, fall to getProperty(). */
             }
         }
         if (JS_LIKELY(INT_FITS_IN_JSID(i)))
@@ -571,30 +592,31 @@ stubs::CallElem(VMFrame &f)
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
-    /* Fetch the left part and resolve it to a non-null object. */
-    JSObject *obj = ValueToObject(cx, &regs.sp[-2]);
-    if (!obj)
+    /* Find the object on which to look for |this|'s properties. */
+    Value thisv = regs.sp[-2];
+    JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
+    if (!thisObj)
         THROW();
 
-    /* Fetch index and convert it to id suitable for use with obj. */
+    /* Fetch index and convert it to id suitable for use with thisObj. */
     jsid id;
-    if (!FetchElementId(f, obj, regs.sp[-1], id, &regs.sp[-2]))
+    if (!FetchElementId(f, thisObj, regs.sp[-1], id, &regs.sp[-2]))
         THROW();
 
     /* Get or set the element. */
-    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
+    if (!js_GetMethod(cx, thisObj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(regs.sp[-2].isUndefined())) {
+    if (JS_UNLIKELY(regs.sp[-2].isUndefined()) && thisv.isObject()) {
         regs.sp[-2] = regs.sp[-1];
-        regs.sp[-1].setObject(*obj);
+        regs.sp[-1].setObject(*thisObj);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     } else
 #endif
     {
-        regs.sp[-1].setObject(*obj);
+        regs.sp[-1] = thisv;
     }
 }
 
@@ -608,7 +630,7 @@ stubs::SetElem(VMFrame &f)
     Value &objval = regs.sp[-3];
     Value &idval  = regs.sp[-2];
     Value retval  = regs.sp[-1];
-    
+
     JSObject *obj;
     jsid id;
 
@@ -870,17 +892,9 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
-        /*
-         * Inline js_GetScopeChain a bit to optimize for the case of a
-         * top-level function.
-         */
-        if (!fp->hasBlockChain()) {
-            obj2 = &fp->scopeChain();
-        } else {
-            obj2 = js_GetScopeChain(cx, fp);
-            if (!obj2)
-                THROW();
-        }
+        obj2 = js_GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        if (!obj2)
+            THROW();
     }
 
     /*
@@ -913,9 +927,6 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      */
     JSObject *parent = &fp->varobj(cx);
 
-    uint32 old;
-    bool doSet;
-
     /*
      * Check for a const property of the same name -- or any kind of property
      * if executing with the strict option.  We check here at runtime as well
@@ -929,34 +940,44 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         THROW();
 
     /*
-     * We deviate from 10.1.2 in ECMA 262 v3 and under eval use for function
-     * declarations JSObject::setProperty, not JSObject::defineProperty, to
-     * preserve the JSOP_PERMANENT attribute of existing properties and make
-     * sure that such properties cannot be deleted.
+     * We deviate from ES3 10.1.3, ES5 10.5, by using JSObject::setProperty not
+     * JSObject::defineProperty for a function declaration in eval code whose
+     * id is already bound to a JSPROP_PERMANENT property, to ensure that such
+     * properties can't be deleted.
      *
      * We also use JSObject::setProperty for the existing properties of Call
-     * objects with matching attributes to preserve the native getters and
-     * setters that store the value of the property in the interpreter frame,
-     * see bug 467495.
+     * objects with matching attributes to preserve the internal (JSPropertyOp)
+     * getters and setters that update the value of the property in the stack
+     * frame. See bug 467495.
      */
-    doSet = (attrs == JSPROP_ENUMERATE);
-    JS_ASSERT_IF(doSet, fp->isEvalFrame());
+    bool doSet = false;
     if (prop) {
-        if (parent == pobj &&
-            parent->isCall() &&
-            (old = ((Shape *) prop)->attributes(),
-             !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
-             (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs)) {
-            /*
-             * js_CheckRedeclaration must reject attempts to add a getter or
-             * setter to an existing property without a getter or setter.
-             */
-            JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
-            JS_ASSERT(!(old & JSPROP_READONLY));
+        JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)));
+        JS_ASSERT((attrs == JSPROP_ENUMERATE) == fp->isEvalFrame());
+
+        if (attrs == JSPROP_ENUMERATE) {
+            /* In eval code: assign rather than (re-)define, always. */
             doSet = true;
+        } else if (parent->isCall()) {
+            JS_ASSERT(parent == pobj);
+
+            uintN oldAttrs = ((Shape *) prop)->attributes();
+            JS_ASSERT(!(oldAttrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER)));
+
+            /*
+             * We may be processing a function sub-statement or declaration in
+             * function code: we assign rather than redefine if the essential
+             * JSPROP_PERMANENT (not [[Configurable]] in ES5 terms) attribute
+             * is not changing (note that JSPROP_ENUMERATE is set for all Call
+             * object properties).
+             */
+            JS_ASSERT(oldAttrs & attrs & JSPROP_ENUMERATE);
+            if (oldAttrs & JSPROP_PERMANENT)
+                doSet = true;
         }
         pobj->dropProperty(cx, prop);
     }
+
     Value rval = ObjectValue(*obj);
     ok = doSet
          ? parent->setProperty(cx, id, &rval, strict)
@@ -1110,7 +1131,7 @@ StubEqualityOp(VMFrame &f)
 
             /*
              * The string==string case is repeated because DefaultValue() can
-             * convert lval/rval to strings. 
+             * convert lval/rval to strings.
              */
             if (lval.isString() && rval.isString()) {
                 JSString *l = lval.toString();
@@ -1122,7 +1143,7 @@ StubEqualityOp(VMFrame &f)
                     !ValueToNumber(cx, rval, &r)) {
                     return false;
                 }
-                
+
                 if (EQ)
                     cond = JSDOUBLE_COMPARE(l, ==, r, false);
                 else
@@ -1408,17 +1429,9 @@ stubs::Trap(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::This(VMFrame &f)
 {
-    JSObject *obj = f.fp()->computeThisObject(f.cx);
-    if (!obj)
+    if (!f.fp()->computeThis(f.cx))
         THROW();
-    f.regs.sp[-1].setObject(*obj);
-}
-
-void JS_FASTCALL
-stubs::ComputeThis(VMFrame &f)
-{
-    if (!f.fp()->computeThisObject(f.cx))
-        THROW();
+    f.regs.sp[-1] = f.fp()->thisValue();
 }
 
 void JS_FASTCALL
@@ -1432,21 +1445,25 @@ stubs::Neg(VMFrame &f)
 }
 
 JSObject * JS_FASTCALL
-stubs::NewInitArray(VMFrame &f)
+stubs::NewInitArray(VMFrame &f, uint32 count)
 {
-    JSObject *obj = js_NewArrayObject(f.cx, 0, NULL);
-    if (!obj)
+    JSContext *cx = f.cx;
+    gc::FinalizeKind kind = GuessObjectGCKind(count, true);
+
+    JSObject *obj = NewArrayWithKind(cx, kind);
+    if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
     return obj;
 }
 
 JSObject * JS_FASTCALL
-stubs::NewInitObject(VMFrame &f)
+stubs::NewInitObject(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
+    gc::FinalizeKind kind = GuessObjectGCKind(count, false);
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass); 
-    if (!obj)
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+    if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
 
     return obj;
@@ -1526,7 +1543,8 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         if (!obj)
             THROWV(NULL);
     } else {
-        JSObject *parent = js_GetScopeChain(f.cx, f.fp());
+        JSObject *parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
+                                                JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             THROWV(NULL);
 
@@ -1543,7 +1561,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_DEFLOCALFUN_FC, JSOP_DEFLOCALFUN_FC_LENGTH);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -1575,7 +1593,7 @@ stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+        fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
         return obj;
     }
     return Lambda(f, fun);
@@ -1588,7 +1606,7 @@ stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
         const Value &lref = f.regs.sp[-1];
         if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+            fun->setMethodAtom(f.fp()->script()->getAtom(GET_SLOTNO(f.regs.pc)));
             return obj;
         }
     }
@@ -1607,7 +1625,7 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
          * we don't need to clone that compiler- created function
          * object for identity/mutation reasons.
          */
-        int iargc = GET_ARGC(f.regs.pc + JSOP_LAMBDA_LENGTH);
+        int iargc = GET_ARGC(f.regs.pc);
 
         /*
          * Note that we have not yet pushed obj as the final argument,
@@ -1637,7 +1655,7 @@ stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
     if (FUN_NULL_CLOSURE(fun) && obj->getParent() == &f.fp()->scopeChain()) {
-        jsbytecode *pc2 = f.regs.pc + JSOP_LAMBDA_LENGTH + JSOP_NULL_LENGTH;
+        jsbytecode *pc2 = f.regs.pc + JSOP_NULL_LENGTH;
         JSOp op2 = JSOp(*pc2);
 
         if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
@@ -1655,7 +1673,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun)) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = js_GetScopeChain(f.cx, f.fp());
+        parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
         if (!parent)
             THROWV(NULL);
     }
@@ -2060,6 +2078,20 @@ stubs::GetProp(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::GetPropNoCache(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+
+    Value *vp = &f.regs.sp[-1];
+    JSObject *obj = ValueToObject(cx, vp);
+    if (!obj)
+        THROW();
+
+    if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
+        THROW();
+}
+
+void JS_FASTCALL
 stubs::CallProp(VMFrame &f, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
@@ -2113,75 +2145,44 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         regs.sp++;
         regs.sp[-2] = rval;
         regs.sp[-1] = lval;
-        goto end_callprop;
-    }
-
-    /*
-     * Cache miss: use the immediate atom that was loaded for us under
-     * PropertyCache::test.
-     */
-    jsid id;
-    id = ATOM_TO_JSID(origAtom);
-
-    regs.sp++;
-    regs.sp[-1].setNull();
-    if (lval.isObject()) {
-        if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(!aobj->getOps()->getProperty)
-                          ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                          : JSGET_NO_METHOD_BARRIER,
-                          &rval)) {
-            THROW();
-        }
-        regs.sp[-1] = objv;
-        regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(!objv.toObject().getOps()->getProperty);
-        if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
-                                  JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
-                                  &rval)) {
-            THROW();
-        }
-        regs.sp[-1] = lval;
-        regs.sp[-2] = rval;
-    }
+        /*
+         * Cache miss: use the immediate atom that was loaded for us under
+         * PropertyCache::test.
+         */
+        jsid id;
+        id = ATOM_TO_JSID(origAtom);
 
-  end_callprop:
-    /* Wrap primitive lval in object clothing if necessary. */
-    if (lval.isPrimitive()) {
-        /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-        JSObject *funobj;
-        if (!IsFunctionObject(rval, &funobj) ||
-            !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), lval)) {
-            if (!js_PrimitiveToObject(cx, &regs.sp[-1]))
+        regs.sp++;
+        regs.sp[-1].setNull();
+        if (lval.isObject()) {
+            if (!js_GetMethod(cx, &objv.toObject(), id,
+                              JS_LIKELY(!aobj->getOps()->getProperty)
+                              ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                              : JSGET_NO_METHOD_BARRIER,
+                              &rval)) {
                 THROW();
+            }
+            regs.sp[-1] = objv;
+            regs.sp[-2] = rval;
+        } else {
+            JS_ASSERT(!objv.toObject().getOps()->getProperty);
+            if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
+                                      JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
+                                      &rval)) {
+                THROW();
+            }
+            regs.sp[-1] = lval;
+            regs.sp[-2] = rval;
         }
     }
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined())) {
+    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
         regs.sp[-2].setString(ATOM_TO_STRING(origAtom));
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
     }
 #endif
-}
-
-void JS_FASTCALL
-stubs::WrapPrimitiveThis(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    const Value &funv = f.regs.sp[-2];
-    const Value &thisv = f.regs.sp[-1];
-
-    JS_ASSERT(thisv.isPrimitive());
-
-    /* FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=412571 */
-    JSObject *funobj;
-    if (!IsFunctionObject(funv, &funobj) ||
-        !PrimitiveThisTest(GET_FUNCTION_PRIVATE(cx, funobj), thisv)) {
-        if (!js_PrimitiveToObject(cx, &f.regs.sp[-1]))
-            THROW();
-    }
 }
 
 void JS_FASTCALL
@@ -2219,7 +2220,7 @@ stubs::Iter(VMFrame &f, uint32 flags)
     JS_ASSERT(!f.regs.sp[-1].isPrimitive());
 }
 
-static void 
+static void
 InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
 {
     JSContext *cx = f.cx;
@@ -2388,7 +2389,7 @@ stubs::Throw(VMFrame &f)
 JSObject * JS_FASTCALL
 stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -2457,7 +2458,9 @@ void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     JSFrameRegs &regs = f.regs;
+#ifdef DEBUG
     JSStackFrame *fp = f.fp();
+#endif
 
     JS_ASSERT(obj->isStaticBlock());
     JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
@@ -2469,7 +2472,6 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 
 #ifdef DEBUG
     JSContext *cx = f.cx;
-    JS_ASSERT(fp->maybeBlockChain() == obj->getParent());
 
     /*
      * The young end of fp->scopeChain() may omit blocks if we haven't closed
@@ -2491,19 +2493,17 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
             JS_ASSERT(parent);
     }
 #endif
-
-    fp->setBlockChain(obj);
 }
 
 void JS_FASTCALL
-stubs::LeaveBlock(VMFrame &f)
+stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp();
 
 #ifdef DEBUG
-    JS_ASSERT(fp->blockChain()->getClass() == &js_BlockClass);
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, fp->blockChain());
+    JS_ASSERT(blockChain->isStaticBlock());
+    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, blockChain);
 
     JS_ASSERT(blockDepth <= StackDepth(fp->script()));
 #endif
@@ -2513,14 +2513,11 @@ stubs::LeaveBlock(VMFrame &f)
      * the stack into the clone, and pop it off the chain.
      */
     JSObject *obj = &fp->scopeChain();
-    if (obj->getProto() == fp->blockChain()) {
+    if (obj->getProto() == blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
             THROW();
     }
-
-    /* Pop the block chain, too.  */
-    fp->setBlockChain(fp->blockChain()->getParent());
 }
 
 void * JS_FASTCALL
@@ -2528,18 +2525,19 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     jsbytecode *jpc = pc;
     JSScript *script = f.fp()->script();
+    void **nmap = script->nativeMap(f.fp()->isConstructing());
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
 
     if (!lval.isPrimitive()) {
         ptrdiff_t offs = (pc + GET_JUMP_OFFSET(pc)) - script->code;
-        JS_ASSERT(script->nmap[offs]);
-        return script->nmap[offs];
+        JS_ASSERT(nmap[offs]);
+        return nmap[offs];
     }
 
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
-    
+
     pc += JUMP_OFFSET_LEN;
     uint32 npairs = GET_UINT16(pc);
     pc += UINT16_LEN;
@@ -2555,8 +2553,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
                 JSString *rhs = rval.toString();
                 if (rhs == str || js_EqualStrings(str, rhs)) {
                     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                    JS_ASSERT(script->nmap[offs]);
-                    return script->nmap[offs];
+                    JS_ASSERT(nmap[offs]);
+                    return nmap[offs];
                 }
             }
             pc += JUMP_OFFSET_LEN;
@@ -2568,8 +2566,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (rval.isNumber() && d == rval.toNumber()) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(script->nmap[offs]);
-                return script->nmap[offs];
+                JS_ASSERT(nmap[offs]);
+                return nmap[offs];
             }
             pc += JUMP_OFFSET_LEN;
         }
@@ -2579,16 +2577,16 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (lval == rval) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(script->nmap[offs]);
-                return script->nmap[offs];
+                JS_ASSERT(nmap[offs]);
+                return nmap[offs];
             }
             pc += JUMP_OFFSET_LEN;
         }
     }
 
     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(jpc)) - script->code;
-    JS_ASSERT(script->nmap[offs]);
-    return script->nmap[offs];
+    JS_ASSERT(nmap[offs]);
+    return nmap[offs];
 }
 
 void * JS_FASTCALL
@@ -2596,7 +2594,6 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 {
     jsbytecode * const originalPC = origPc;
     jsbytecode *pc = originalPC;
-    JSScript *script = f.fp()->script();
     uint32 jumpOffset = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
 
@@ -2634,16 +2631,22 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     }
 
 finally:
+    JSScript *script = f.fp()->script();
+    void **nmap = script->nativeMap(f.fp()->isConstructing());
+
     /* Provide the native address. */
     ptrdiff_t offset = (originalPC + jumpOffset) - script->code;
-    JS_ASSERT(script->nmap[offset]);
-    return script->nmap[offset];
+    JS_ASSERT(nmap[offset]);
+    return nmap[offset];
 }
 
 void JS_FASTCALL
 stubs::Unbrand(VMFrame &f)
 {
-    JSObject *obj = &f.regs.sp[-1].toObject();
+    const Value &thisv = f.regs.sp[-1];
+    if (!thisv.isObject())
+        return;
+    JSObject *obj = &thisv.toObject();
     if (obj->isNative() && !obj->unbrand(f.cx))
         THROW();
 }

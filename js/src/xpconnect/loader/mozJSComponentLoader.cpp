@@ -74,6 +74,7 @@
 #include "nsNetUtil.h"
 #endif
 #include "jsxdrapi.h"
+#include "jscompartment.h"
 #include "jsprf.h"
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -100,6 +101,7 @@
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
+static const char kCacheKeyPrefix[] = "jsloader:";
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
 #if !defined(XP_BEOS) && !defined(XP_OS2)
@@ -743,7 +745,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
         return NULL;
 
     JSCLContextHelper cx(this);
-    JSAutoCrossCompartmentCall ac;
+    JSAutoEnterCompartment ac;
     if (!ac.enter(cx, entry->global))
         return NULL;
 
@@ -881,6 +883,8 @@ mozJSComponentLoader::ReadScript(StartupCache* cache, nsIURI *uri,
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
+    spec.Insert(kCacheKeyPrefix, 0);
+    
     nsAutoArrayPtr<char> buf;   
     PRUint32 len;
     rv = cache->GetBuffer(spec.get(), getter_Transfers(buf), 
@@ -907,6 +911,8 @@ mozJSComponentLoader::WriteScript(StartupCache* cache, JSScript *script,
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    spec.Insert(kCacheKeyPrefix, 0);
 
     LOG(("Writing %s to startupcache\n", spec.get()));
     nsCOMPtr<nsIObjectOutputStream> oos;
@@ -941,8 +947,9 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
     JSPrincipals* jsPrincipals = nsnull;
     JSCLContextHelper cx(this);
+
     // preserve caller's compartment
-    JSAutoEnterCompartment ac1(cx, (JSCompartment *)NULL);
+    js::PreserveCompartment pc(cx);
     
 #ifndef XPCONNECT_STANDALONE
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
@@ -979,7 +986,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     rv = holder->GetJSObject(&global);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSAutoCrossCompartmentCall ac;
+    JSAutoEnterCompartment ac;
     if (!ac.enter(cx, global))
         return NS_ERROR_FAILURE;
 
@@ -1356,8 +1363,19 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         targetObject = JS_GetGlobalForObject(cx, targetObject);
     }
  
+    JSAutoEnterCompartment ac;
+    if (targetObject && !ac.enter(cx, targetObject)) {
+        NS_ERROR("can't enter compartment");
+        return NS_ERROR_FAILURE;
+    }
+
     JSObject *globalObj = nsnull;
     rv = ImportInto(registryLocation, targetObject, cc, &globalObj);
+
+    if (globalObj && !JS_WrapObject(cx, &globalObj)) {
+        NS_ERROR("can't wrap return value");
+        return NS_ERROR_FAILURE;
+    }
 
     jsval *retval = nsnull;
     cc->GetRetValPtr(&retval);
@@ -1474,7 +1492,8 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     jsval symbols;
     if (targetObj) {
         JSCLContextHelper cxhelper(this);
-        JSAutoCrossCompartmentCall ac;
+
+        JSAutoEnterCompartment ac;
         if (!ac.enter(mContext, mod->global))
             return NULL;
 
@@ -1522,7 +1541,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                       JS_GetStringBytes(symbolName));
             }
 
-            if (!JS_SetProperty(mContext, targetObj,
+            JSAutoEnterCompartment target_ac;
+
+            if (!target_ac.enter(mContext, targetObj) ||
+                !JS_WrapValue(mContext, &val) ||
+                !JS_SetProperty(mContext, targetObj,
                                 JS_GetStringBytes(symbolName), &val)) {
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),

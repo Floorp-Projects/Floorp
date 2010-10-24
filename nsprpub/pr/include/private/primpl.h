@@ -192,12 +192,7 @@ struct _PT_Notified
 #define _PT_THREAD_UNBLOCK_INTERRUPT(thr)			\
 		(thr->interrupt_blocked = 0)
 
-#ifdef GC_LEAK_DETECTOR
-/* All threads are GCable. */
-#define _PT_IS_GCABLE_THREAD(thr) 1
-#else
 #define _PT_IS_GCABLE_THREAD(thr) ((thr)->state & PT_THREAD_GCABLE)
-#endif /* GC_LEAK_DETECTOR */
 
 /* 
 ** Possible values for thread's suspend field
@@ -633,12 +628,7 @@ NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 #define        _PR_ADJUST_STACKSIZE(stackSize)
 #endif
 
-#ifdef GC_LEAK_DETECTOR
-/* All threads are GCable. */
-#define _PR_IS_GCABLE_THREAD(thr) 1
-#else
 #define _PR_IS_GCABLE_THREAD(thr) ((thr)->flags & _PR_GCABLE_THREAD)
-#endif /* GC_LEAK_DETECTOR */
 
 #define _PR_PENDING_INTERRUPT(thr)					\
 		(!((thr)->flags & _PR_INTERRUPT_BLOCKED) && ((thr)->flags & _PR_INTERRUPT))
@@ -1803,9 +1793,6 @@ extern void _PR_CleanupTPD(void);
 extern void _PR_Cleanup(void);
 extern void _PR_LogCleanup(void);
 extern void _PR_InitLayerCache(void);
-#ifdef GC_LEAK_DETECTOR
-extern void _PR_InitGarbageCollector(void);
-#endif
 
 extern PRBool _pr_initialized;
 extern void _PR_ImplicitInitialization(void);

@@ -25,14 +25,15 @@
       ok(event.source === moz_indexedDB, "correct event.source");
 
       var db = event.result;
-      request = db.createObjectStore(objectStoreName, null, true);
+
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
       ok(event.source === db, "correct event.source");
 
-      var objectStore = event.result;
+      var objectStore = db.createObjectStore(objectStoreName, null, true);
       request = objectStore.add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;

@@ -72,11 +72,17 @@ public:
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER
 
+  enum ShutdownMethod {
+    AutomaticShutdown = 0,
+    ManualShutdown
+  };
+
   /**
    * Create a new LazyIdleThread that will destroy its thread after the given
    * number of milliseconds.
    */
   LazyIdleThread(PRUint32 aIdleTimeoutMS,
+                 ShutdownMethod aShutdownMethod = AutomaticShutdown,
                  nsIObserver* aIdleObserver = nsnull);
 
   /**
@@ -190,6 +196,13 @@ private:
    * another timer will be on the way.
    */
   PRUint32 mIdleNotificationCount;
+
+  /**
+   * Whether or not the thread should automatically shutdown. If the owner
+   * specified ManualShutdown at construction time then the owner should take
+   * care to call Shutdown() manually when appropriate.
+   */
+  ShutdownMethod mShutdownMethod;
 
   /**
    * Only accessed on the owning thread. Set to true when Shutdown() has been

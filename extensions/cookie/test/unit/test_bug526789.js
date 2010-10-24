@@ -2,21 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function do_check_throws(f, result, stack)
-{
-  if (!stack)
-    stack = Components.stack.caller;
-
-  try {
-    f();
-  } catch (exc) {
-    if (exc.result == result)
-      return;
-    do_throw("expected result " + result + ", caught " + exc, stack);
-  }
-  do_throw("expected result " + result + ", none thrown", stack);
-}
-
 function run_test() {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);

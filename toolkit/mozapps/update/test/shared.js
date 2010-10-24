@@ -78,24 +78,18 @@ const NS_GRE_DIR                   = "GreD";
 const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
 const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 
-const STATE_NONE            = "null";
-const STATE_DOWNLOADING     = "downloading";
-const STATE_PENDING         = "pending";
-const STATE_APPLYING        = "applying";
-const STATE_SUCCEEDED       = "succeeded";
-const STATE_DOWNLOAD_FAILED = "download-failed";
-const STATE_FAILED          = "failed";
-
 const CRC_ERROR   = 4;
 const WRITE_ERROR = 7;
 
 const FILE_BACKUP_LOG     = "backup-update.log";
 const FILE_LAST_LOG       = "last-update.log";
+const FILE_UPDATER_INI    = "updater.ini";
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_UPDATE_ARCHIVE = "update.mar";
 const FILE_UPDATE_LOG     = "update.log";
 const FILE_UPDATE_STATUS  = "update.status";
+const FILE_UPDATE_VERSION = "update.version";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -113,48 +107,42 @@ const PR_EXCL        = 0x80;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
+#include sharedUpdateXML.js
+
 AUS_Cu.import("resource://gre/modules/Services.jsm");
 AUS_Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const URI_UPDATES_PROPERTIES = "chrome://mozapps/locale/update/updates.properties";
 const gUpdateBundle = Services.strings.createBundle(URI_UPDATES_PROPERTIES);
 
-
-__defineGetter__("gAUS", function() {
-  delete this.gAUS;
-  return this.gAUS = AUS_Cc["@mozilla.org/updates/update-service;1"].
-                     getService(AUS_Ci.nsIApplicationUpdateService).
-                     QueryInterface(AUS_Ci.nsITimerCallback).
-                     QueryInterface(AUS_Ci.nsIObserver);
+XPCOMUtils.defineLazyGetter(this, "gAUS", function test_gAUS() {
+  return AUS_Cc["@mozilla.org/updates/update-service;1"].
+         getService(AUS_Ci.nsIApplicationUpdateService).
+         QueryInterface(AUS_Ci.nsITimerCallback).
+         QueryInterface(AUS_Ci.nsIObserver);
 });
 
-__defineGetter__("gUpdateManager", function() {
-  delete this.gUpdateManager;
-  return this.gUpdateManager = AUS_Cc["@mozilla.org/updates/update-manager;1"].
-                               getService(AUS_Ci.nsIUpdateManager);
+XPCOMUtils.defineLazyServiceGetter(this, "gUpdateManager",
+                                   "@mozilla.org/updates/update-manager;1",
+                                   "nsIUpdateManager");
+
+XPCOMUtils.defineLazyGetter(this, "gUpdateChecker", function test_gUC() {
+  return AUS_Cc["@mozilla.org/updates/update-checker;1"].
+         createInstance(AUS_Ci.nsIUpdateChecker);
 });
 
-__defineGetter__("gUpdateChecker", function() {
-  delete this.gUpdateChecker;
-  return this.gUpdateChecker = AUS_Cc["@mozilla.org/updates/update-checker;1"].
-                               createInstance(AUS_Ci.nsIUpdateChecker);
+XPCOMUtils.defineLazyGetter(this, "gUP", function test_gUP() {
+  return AUS_Cc["@mozilla.org/updates/update-prompt;1"].
+         createInstance(AUS_Ci.nsIUpdatePrompt);
 });
 
-__defineGetter__("gUP", function() {
-  delete this.gUP;
-  return this.gUP = AUS_Cc["@mozilla.org/updates/update-prompt;1"].
-                    createInstance(AUS_Ci.nsIUpdatePrompt);
+XPCOMUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {
+  return Services.prefs.getDefaultBranch(null);
 });
 
-__defineGetter__("gDefaultPrefBranch", function() {
-  delete this.gDefaultPrefBranch;
-  return this.gDefaultPrefBranch = Services.prefs.getDefaultBranch(null);
-});
-
-__defineGetter__("gZipW", function() {
-  delete this.gZipW;
-  return this.gZipW = AUS_Cc["@mozilla.org/zipwriter;1"].
-                      createInstance(AUS_Ci.nsIZipWriter);
+XPCOMUtils.defineLazyGetter(this, "gZipW", function test_gZipW() {
+  return AUS_Cc["@mozilla.org/zipwriter;1"].
+         createInstance(AUS_Ci.nsIZipWriter);
 });
 
 /* Initializes the update service stub */
@@ -175,8 +163,9 @@ function reloadUpdateManagerData() {
  *          The update channel. If not specified 'test_channel' will be used.
  */
 function setUpdateChannel(aChannel) {
-  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL,
-                                 aChannel ? aChannel : "test_channel");
+  let channel = aChannel ? aChannel : "test_channel";
+  debugDump("setting default pref " + PREF_APP_UPDATE_CHANNEL + " to " + channel);
+  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL, channel);
 }
 
 /**
@@ -186,292 +175,9 @@ function setUpdateChannel(aChannel) {
  *          used.
  */
 function setUpdateURLOverride(aURL) {
-  Services.prefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE,
-                             aURL ? aURL : URL_HOST + "update.xml");
-}
-
-/**
- * Constructs a string representing a remote update xml file.
- * @param   aUpdates
- *          The string representing the update elements.
- * @returns The string representing a remote update xml file.
- */
-function getRemoteUpdatesXMLString(aUpdates) {
-  return "<?xml version=\"1.0\"?>\n" +
-         "<updates>\n" +
-           aUpdates +
-         "</updates>\n";
-}
-
-/**
- * Constructs a string representing an update element for a remote update xml
- * file.
- * See getUpdateString
- * @returns The string representing an update element for an update xml file.
- */
-function getRemoteUpdateString(aPatches, aType, aName, aDisplayVersion,
-                               aAppVersion, aPlatformVersion, aBuildID,
-                               aDetailsURL, aBillboardURL, aLicenseURL,
-                               aShowPrompt, aShowNeverForVersion, aShowSurvey,
-                               aVersion, aExtensionVersion, aCustom1,
-                               aCustom2) {
-  return  getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                          aPlatformVersion, aBuildID, aDetailsURL,
-                          aBillboardURL, aLicenseURL, aShowPrompt,
-                          aShowNeverForVersion, aShowSurvey, aVersion,
-                          aExtensionVersion, aCustom1, aCustom2) + ">\n" +
-              aPatches + 
-         "  </update>\n";
-}
-
-/**
- * Constructs a string representing a patch element for a remote update xml
- * file
- * See getPatchString
- * @returns The string representing a patch element for a remote update xml
- *          file.
- */
-function getRemotePatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
-  return getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) +
-         "/>\n";
-}
-
-/**
- * Constructs a string representing a local update xml file.
- * @param   aUpdates
- *          The string representing the update elements.
- * @returns The string representing a local update xml file.
- */
-function getLocalUpdatesXMLString(aUpdates) {
-  if (!aUpdates || aUpdates == "")
-    return "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"/>"
-  return ("<updates xmlns=\"http://www.mozilla.org/2005/app-update\">" +
-           aUpdates +
-         "</updates>").replace(/>\s+\n*</g,'><');
-}
-
-/**
- * Constructs a string representing an update element for a local update xml
- * file.
- * See getUpdateString
- * @param   aServiceURL
- *          The update's xml url.
- *          If null will default to 'http://test_service/'.
- * @param   aIsCompleteUpdate
- *          The string 'true' if this update was a complete update or the string
- *          'false' if this update was a partial update.
- *          If null will default to 'true'.
- * @param   aChannel
- *          The update channel name.
- *          If null will default to 'test_channel'.
- * @param   aForegroundDownload
- *          The string 'true' if this update was manually downloaded or the
- *          string 'false' if this update was automatically downloaded.
- *          If null will default to 'true'.
- * @param   aPreviousAppVersion
- *          The application version prior to applying the update.
- *          If null will not be present.
- * @returns The string representing an update element for an update xml file.
- */
-function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
-                              aAppVersion, aPlatformVersion, aBuildID,
-                              aDetailsURL, aBillboardURL, aLicenseURL,
-                              aServiceURL, aInstallDate, aStatusText,
-                              aIsCompleteUpdate, aChannel, aForegroundDownload,
-                              aShowPrompt, aShowNeverForVersion, aShowSurvey,
-                              aVersion, aExtensionVersion, aPreviousAppVersion,
-                              aCustom1, aCustom2) {
-  var serviceURL = aServiceURL ? aServiceURL : "http://test_service/";
-  var installDate = aInstallDate ? aInstallDate : "1238441400314";
-  var statusText = aStatusText ? aStatusText : "Install Pending";
-  var isCompleteUpdate = typeof(aIsCompleteUpdate) == "string" ? aIsCompleteUpdate : "true";
-  var channel = aChannel ? aChannel : "test_channel";
-  var foregroundDownload =
-    typeof(aForegroundDownload) == "string" ? aForegroundDownload : "true";
-  var previousAppVersion = aPreviousAppVersion ? "previousAppVersion=\"" + aPreviousAppVersion + "\" " : "";
-  return getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                         aPlatformVersion, aBuildID, aDetailsURL, aBillboardURL,
-                         aLicenseURL, aShowPrompt, aShowNeverForVersion,
-                         aShowSurvey, aVersion, aExtensionVersion, aCustom1,
-                         aCustom2) +
-                   " " +
-                   previousAppVersion +
-                   "serviceURL=\"" + serviceURL + "\" " +
-                   "installDate=\"" + installDate + "\" " +
-                   "statusText=\"" + statusText + "\" " +
-                   "isCompleteUpdate=\"" + isCompleteUpdate + "\" " +
-                   "channel=\"" + channel + "\" " +
-                   "foregroundDownload=\"" + foregroundDownload + "\">"  +
-              aPatches + 
-         "  </update>";
-}
-
-/**
- * Constructs a string representing a patch element for a local update xml file.
- * See getPatchString
- * @param   aSelected
- *          Whether this patch is selected represented or not. The string 'true'
- *          denotes selected and the string 'false' denotes not selected.
- *          If null will default to the string 'true'.
- * @param   aState
- *          The patch's state.
- *          If null will default to STATE_SUCCEEDED (e.g. 'succeeded').
- * @returns The string representing a patch element for a local update xml file.
- */
-function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
-                             aSelected, aState) {
-  var selected = typeof(aSelected) == "string" ? aSelected : "true";
-  var state = aState ? aState : STATE_SUCCEEDED;
-  return getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) + " " +
-         "selected=\"" + selected + "\" " +
-         "state=\"" + state + "\"/>\n";
-}
-
-/**
- * Constructs a string representing an update element for a remote update xml
- * file.
- * @param   aType
- *          The update's type which should be major or minor.
- *          If null will default to 'major'.
- * @param   aName
- *          The update's name.
- *          If null will default to 'App Update Test'.
- * @param   aDisplayVersion
- *          The update's display version.
- *          If null will default to 'version 99.0'.
- * @param   aAppVersion
- *          The update's application version.
- *          If null will default to '99.0'.
- * @param   aPlatformVersion
- *          The update's platform version.
- *          If null will default to '99.0'.
- * @param   aBuildID
- *          The update's build id.
- *          If null will default to '20080811053724'.
- * @param   aDetailsURL
- *          The update's details url.
- *          If null will default to 'http://test_details/' due to due to
- *          bug 470244.
- * @param   aBillboardURL
- *          The update's billboard url.
- *          If null it will not be added.
- * @param   aLicenseURL
- *          The update's license url.
- *          If null will not be added.
- * @param   aShowPrompt
- *          Whether to show the prompt for the update when auto update is
- *          enabled.
- *          If null will not be added and the backend will default to false.
- * @param   aShowNeverForVersion
- *          Whether to show the 'No Thanks' button in the update prompt.
- *          If null will not be added and the backend will default to false.
- * @param   aShowSurvey
- *          Whether to show the 'No Thanks' button in the update prompt.
- *          If null will not be added and the backend will default to false.
- * @param   aVersion
- *          The update's application version from 1.9.2.
- *          If null will not be present.
- * @param   aExtensionVersion
- *          The update's application version from 1.9.2.
- *          If null will not be present.
- * @param   aCustom1
- *          A custom attribute name AND attribute value to add to the xml.
- *          Example: custom1_attribute="custom1 value"
- *          If null will not be present.
- * @param   aCustom2
- *          A custom attribute name AND attribute value to add to the xml.
- *          Example: custom2_attribute="custom2 value"
- *          If null will not be present.
- * @returns The string representing an update element for an update xml file.
- */
-function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                         aPlatformVersion, aBuildID, aDetailsURL, aBillboardURL,
-                         aLicenseURL, aShowPrompt, aShowNeverForVersion,
-                         aShowSurvey, aVersion, aExtensionVersion, aCustom1,
-                         aCustom2) {
-  var type = aType ? aType : "major";
-  var name = aName ? aName : "App Update Test";
-  var displayVersion = "";
-  if (aDisplayVersion || !aVersion) {
-    displayVersion = "displayVersion=\"" +
-                     (aDisplayVersion ? aDisplayVersion
-                                      : "version 99.0") + "\" ";
-  }
-  // version has been deprecated in favor of displayVersion but it still needs
-  // to be tested for forward compatibility.
-  var version = aVersion ? "version=\"" + aVersion + "\" " : "";
-  var appVersion = "";
-  if (aAppVersion || !aExtensionVersion) {
-    appVersion = "appVersion=\"" + (aAppVersion ? aAppVersion : "99.0") + "\" ";
-  }
-  // extensionVersion has been deprecated in favor of appVersion but it still
-  // needs to be tested for forward compatibility.
-  var extensionVersion = aExtensionVersion ? "extensionVersion=\"" + aExtensionVersion + "\" " : "";
-  var platformVersion = "";
-  if (aPlatformVersion) {
-    platformVersion = "platformVersion=\"" + (aPlatformVersion ? aPlatformVersion : "99.0") + "\" ";
-  }
-  var buildID = aBuildID ? aBuildID : "20080811053724";
-  // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
-//   var detailsURL = aDetailsURL ? "detailsURL=\"" + aDetailsURL + "\" " : "";
-  var detailsURL = "detailsURL=\"" + (aDetailsURL ? aDetailsURL : "http://test_details/") + "\" ";
-  var billboardURL = aBillboardURL ? "billboardURL=\"" + aBillboardURL + "\" " : "";
-  var licenseURL = aLicenseURL ? "licenseURL=\"" + aLicenseURL + "\" " : "";
-  var showPrompt = aShowPrompt ? "showPrompt=\"" + aShowPrompt + "\" " : "";
-  var showNeverForVersion = aShowNeverForVersion ? "showNeverForVersion=\"" + aShowNeverForVersion + "\" " : "";
-  var showSurvey = aShowSurvey ? "showSurvey=\"" + aShowSurvey + "\" " : "";
-  var custom1 = aCustom1 ? aCustom1 + " " : "";
-  var custom2 = aCustom2 ? aCustom2 + " " : "";
-  return "  <update type=\"" + type + "\" " +
-                   "name=\"" + name + "\" " +
-                   displayVersion +
-                   version +
-                   appVersion +
-                   extensionVersion +
-                   platformVersion +
-                   detailsURL +
-                   billboardURL +
-                   licenseURL +
-                   showPrompt +
-                   showNeverForVersion +
-                   showSurvey +
-                   custom1 +
-                   custom2 +
-                   "buildID=\"" + buildID + "\"";
-}
-
-/**
- * Constructs a string representing a patch element for an update xml file.
- * @param   aType
- *          The patch's type which should be complete or partial.
- *          If null will default to 'complete'.
- * @param   aURL
- *          The patch's url to the mar file.
- *          If null will default to 'http://localhost:4444/data/empty.mar'.
- * @param   aHashFunction
- *          The patch's hash function used to verify the mar file.
- *          If null will default to 'MD5'.
- * @param   aHashValue
- *          The patch's hash value used to verify the mar file.
- *          If null will default to '6232cd43a1c77e30191c53a329a3f99d'
- *          which is the MD5 hash value for the empty.mar.
- * @param   aSize
- *          The patch's file size for the mar file.
- *          If null will default to '775' which is the file size for the
- *          empty.mar.
- * @returns The string representing a patch element for an update xml file.
- */
-function getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
-  var type = aType ? aType : "complete";
-  var url = aURL ? aURL : URL_HOST + URL_PATH + "/empty.mar";
-  var hashFunction = aHashFunction ? aHashFunction : "MD5";
-  var hashValue = aHashValue ? aHashValue : "6232cd43a1c77e30191c53a329a3f99d";
-  var size = aSize ? aSize : "775";
-  return "    <patch type=\"" + type + "\" " +
-                     "URL=\"" + url + "\" " +
-                     "hashFunction=\"" + hashFunction + "\" " +
-                     "hashValue=\"" + hashValue + "\" " +
-                     "size=\"" + size + "\"";
+  let url = aURL ? aURL : URL_HOST + "update.xml";
+  debugDump("setting " + PREF_APP_UPDATE_URL_OVERRIDE + " to " + url);
+  Services.prefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
 }
 
 /**
@@ -505,6 +211,20 @@ function writeStatusFile(aStatus) {
 }
 
 /**
+ * Writes the current update version to a file in the patch directory,
+ & indicating to the patching system the version of the update.
+ * @param   aVersion
+ *          The version value to write.
+ */
+function writeVersionFile(aVersion) {
+  var file = getUpdatesDir();
+  file.append("0");
+  file.append(FILE_UPDATE_VERSION);
+  aVersion += "\n";
+  writeFile(file, aVersion);
+}
+
+/**
  * Gets the updates directory.
  * @returns The updates directory.
  */
@@ -534,6 +254,28 @@ function writeFile(aFile, aText) {
 }
 
 /**
+ * Reads the current update operation/state in a file in the patch
+ * directory.
+ * @param   aDir (optional)
+ *          nsIFile to read the update status from. If not provided the
+ *          application's update status file will be used.
+ * @returns The status value.
+ */
+function readStatusFile(aFile) {
+  var file;
+  if (aFile) {
+    file = aFile.clone();
+    file.append(FILE_UPDATE_STATUS);
+  }
+  else {
+    file = getUpdatesDir();
+    file.append("0");
+    file.append(FILE_UPDATE_STATUS);
+  }
+  return readFile(file).split("\n")[0];
+}
+
+/**
  * Reads text from a file and returns the string.
  * @param   aFile
  *          The file to read from.
@@ -554,7 +296,7 @@ function readFile(aFile) {
 }
 
 /**
- * Reads the binary contents of a file and returns is as a string.
+ * Reads the binary contents of a file and returns it as a string.
  * @param   aFile
  *          The file to read from.
  * @returns The contents of the file as a string.
@@ -563,18 +305,18 @@ function readFileBytes(aFile) {
   var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
             createInstance(AUS_Ci.nsIFileInputStream);
   fis.init(aFile, -1, -1, false);
-   var bis = AUS_Cc["@mozilla.org/binaryinputstream;1"].
-             createInstance(AUS_Ci.nsIBinaryInputStream);
-   bis.setInputStream(fis);
-   var data = [];
-   var count = fis.available();
-   while (count > 0) {
-     var bytes = bis.readByteArray(Math.min(65535, count));
-     data.push(String.fromCharCode.apply(null, bytes));
-     count -= bytes.length;
-     if (bytes.length == 0)
-       do_throw("Nothing read from input stream!");
-   }
+  var bis = AUS_Cc["@mozilla.org/binaryinputstream;1"].
+            createInstance(AUS_Ci.nsIBinaryInputStream);
+  bis.setInputStream(fis);
+  var data = [];
+  var count = fis.available();
+  while (count > 0) {
+    var bytes = bis.readByteArray(Math.min(65535, count));
+    data.push(String.fromCharCode.apply(null, bytes));
+    count -= bytes.length;
+    if (bytes.length == 0)
+      do_throw("Nothing read from input stream!");
+  }
   data.join('');
   fis.close();
   return data.toString();
@@ -736,4 +478,33 @@ function getCurrentProcessDir() {
  */
 function getGREDir() {
   return Services.dirsvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
+}
+
+/**
+ * Logs TEST-INFO messages.
+ * @param   aText
+ *          The text to log.
+ * @param   aCaller (optional)
+ *          An optional Components.stack.caller. If not specified
+ *          Components.stack.caller will be used.
+ */
+function logTestInfo(aText, aCaller) {
+  let caller = (aCaller ? aCaller : Components.stack.caller);
+  dump("TEST-INFO | " + caller.filename + " | [" + caller.name + " : " +
+       caller.lineNumber + "] " + aText + "\n");
+}
+
+/**
+ * Logs TEST-INFO messages when DEBUG_AUS_TEST evaluates to true.
+ * @param   aText
+ *          The text to log.
+ * @param   aCaller (optional)
+ *          An optional Components.stack.caller. If not specified
+ *          Components.stack.caller will be used.
+ */
+function debugDump(aText, aCaller) {
+  if (DEBUG_AUS_TEST) {
+    let caller = aCaller ? aCaller : Components.stack.caller;
+    logTestInfo(aText, caller);
+  }
 }

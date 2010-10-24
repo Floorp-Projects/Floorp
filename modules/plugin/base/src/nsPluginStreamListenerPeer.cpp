@@ -584,10 +584,16 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
       // determine if we need to try embedded again. FullPage takes a different code path
       PRInt32 mode;
       mOwner->GetMode(&mode);
-      if (mode == NP_EMBED)
-        rv = pluginHost->InstantiateEmbeddedPlugin(aContentType.get(), aURL, mOwner);
-      else
+      if (mode == NP_EMBED) {
+        // Make sure to not allow new streams to be opened here; we've
+        // already got a stream for this data; we just need a properly
+        // set up plugin instance.
+        rv = pluginHost->DoInstantiateEmbeddedPlugin(aContentType.get(), aURL,
+                                                     mOwner, PR_FALSE);
+      }
+      else {
         rv = pluginHost->SetUpPluginInstance(aContentType.get(), aURL, mOwner);
+      }
       
       if (NS_OK == rv) {
         mOwner->GetInstance(getter_AddRefs(pluginInstCOMPtr));
@@ -598,6 +604,12 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
           // If we've got a native window, the let the plugin know about it.
           if (window->window) {
             ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
+          } else {
+            PRBool useAsyncPainting = PR_FALSE;
+            mPluginInstance->UseAsyncPainting(&useAsyncPainting);
+            if (useAsyncPainting) {
+              mPluginInstance->AsyncSetWindow(window);
+            }
           }
         }
       }

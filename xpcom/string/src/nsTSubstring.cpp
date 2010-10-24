@@ -605,7 +605,7 @@ nsTSubstring_CharT::Equals( const self_type& str ) const
 PRBool
 nsTSubstring_CharT::Equals( const self_type& str, const comparator_type& comp ) const
   {
-    return mLength == str.mLength && comp(mData, str.mData, mLength) == 0;
+    return mLength == str.mLength && comp(mData, str.mData, mLength, str.mLength) == 0;
   }
 
 PRBool
@@ -635,7 +635,7 @@ nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp )
 
     // XXX avoid length calculation?
     size_type length = char_traits::length(data);
-    return mLength == length && comp(mData, data, mLength) == 0;
+    return mLength == length && comp(mData, data, mLength, length) == 0;
   }
 
 PRBool

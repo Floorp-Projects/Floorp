@@ -31,6 +31,8 @@ function testURI(aURI)
   testURIWithPrivateBrowsing(aURI);
 
   testURIWithClearCookies(aURI);
+
+  testURIWithRejectCookies(aURI);
 }
 
 function testURIWithPrivateBrowsing(aURI) {
@@ -82,6 +84,29 @@ function testURIWithClearCookies(aURI) {
   storage.clear();
   do_check_eq(storage.length, 0);
   do_check_eq(storage.getItem("test-item"), null);
+}
+
+function testURIWithRejectCookies(aURI) {
+  // This test acts with chrome privileges, so it's not enough to test content.
+  function test_storage() {
+    let storage = getStorageForURI(aURI);
+    storage.setItem("test-item", "test-value");
+    print("Check that our value has been correctly stored.");
+    do_check_eq(storage.length, 1);
+    do_check_eq(storage.key(0), "test-item");
+    do_check_eq(storage.getItem("test-item"), "test-value");
+    storage.clear();
+    do_check_eq(storage.length, 0);
+    do_check_eq(storage.getItem("test-item"), null);
+  }
+
+  // Ask every time.
+  Services.prefs.setIntPref("network.cookie.lifetimePolicy", 1);
+  test_storage();
+
+  // Reject.
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 2);
+  test_storage();
 }
 
 function getStorageForURI(aURI)

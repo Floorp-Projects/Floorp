@@ -845,9 +845,8 @@ ArgGenerators = {
     }
   },
   getParameter : {
-// FIXME disabled because crashes, see bug 576620
-//    generate : function() { return [getParameterPname.random()]; },
-//    checkArgValidity : function(p) { return getParameterPname.has(p); }
+    generate : function() { return [getParameterPname.random()]; },
+    checkArgValidity : function(p) { return getParameterPname.has(p); }
   },
   getBufferParameter : {}, // FIXME
   getError : {
@@ -860,7 +859,6 @@ ArgGenerators = {
   getShaderParameter : {}, // FIXME
   getShaderInfoLog : {}, // FIXME
   getShaderSource : {}, // FIXME
-  getString : {}, // FIXME
   getTexParameter : {}, // FIXME
   getUniform : {}, // FIXME
   getUniformLocation : {}, // FIXME

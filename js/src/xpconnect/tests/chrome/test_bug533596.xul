@@ -34,11 +34,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
     var win = $('ifr').contentWindow;
     var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
-    is(utils.getClassName(win), "XPCNativeWrapper", "win is an XPCNW");
+    is(utils.getClassName(win), "Proxy", "win is a Proxy");
     ok("x" in XPCNativeWrapper.unwrap(win), "actually unwrapped");
-    is(utils.getClassName(XPCNativeWrapper.unwrap(win)), "XPCSafeJSObjectWrapper",
-       "unwrap on an NW returns the same object");
-    is(utils.getClassName(XPCNativeWrapper.unwrap(new XPCNativeWrapper(win))), "XPCSafeJSObjectWrapper",
+    is(utils.getClassName(XPCNativeWrapper.unwrap(win)), "Proxy",
+       "unwrap on an Proxy returns the same object");
+    is(utils.getClassName(XPCNativeWrapper.unwrap(new XPCNativeWrapper(win))), "Proxy",
        "unwrap on an explicit NW works too");
 
     ok(utils.getClassName(window) !== "XPCNativeWrapper", "window is not a native wrapper");

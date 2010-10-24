@@ -62,6 +62,7 @@ var nonExistingFile = fileList.files[0];
 
 // Test that plain reading works and fires events as expected, both
 // for text and binary reading
+
 var onloadHasRunText = false;
 var onloadStartHasRunText = false;
 r = new FileReader();
@@ -119,6 +120,35 @@ r.onload = getLoadHandler(testTextData,
                           convertToUTF32(testTextData).length,
                           "utf32 reading");
 r.readAsText(createFileWithData(convertToUTF32(testTextData)), "UTF-32");
+expectedTestCount++;
+
+
+// Test loading an empty file works (and doesn't crash!)
+var emptyFile = createFileWithData("");
+dump("hello nurse");
+r = new FileReader();
+r.onload = getLoadHandler("", 0, "empty no encoding reading");
+r.readAsText(emptyFile, "");
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler("", 0, "empty utf8 reading");
+r.readAsText(emptyFile, "utf8");
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler("", 0, "empty utf16 reading");
+r.readAsText(emptyFile, "utf-16");
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler("", 0, "empty binary string reading");
+r.readAsBinaryString(emptyFile);
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler(convertToDataURL(""), 0, "empt binary string reading");
+r.readAsDataURL(emptyFile);
 expectedTestCount++;
 
 

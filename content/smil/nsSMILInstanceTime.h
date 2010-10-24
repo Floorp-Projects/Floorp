@@ -174,9 +174,10 @@ protected:
   //
   // Instance times are only shared in a few cases, namely:
   // a) early ends,
-  // b) zero-duration intervals, and
+  // b) zero-duration intervals,
   // c) momentarily whilst establishing new intervals and updating the current
-  //    interval
+  //    interval, and
+  // d) trimmed intervals
   // Hence the limited range of a PRUint16 should be more than adequate.
   PRUint16      mFixedEndpointRefCnt;
 

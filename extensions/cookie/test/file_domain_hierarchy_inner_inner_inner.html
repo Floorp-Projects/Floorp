@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <META HTTP-EQUIV="Set-Cookie" CONTENT="meta3=tag3">
+  <script type="text/javascript">
+    document.cookie = "can3=has3";
+
+    // send a message to our test document, to say we're done loading
+    window.parent.parent.opener.postMessage("message", "http://mochi.test:8888");
+  </script>
+</head>
+<body>
+</body>
+</html>

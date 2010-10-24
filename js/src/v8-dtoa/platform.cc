@@ -109,3 +109,29 @@ int fpclassify(double x) {
 
 
 #endif  // _MSC_VER
+
+#ifdef SOLARIS
+
+#include <ieeefp.h>
+
+// Classify floating point number
+int fpclassify(double x) {
+
+  fpclass_t rv = fpclass(x);
+
+  switch (rv) {
+    case FP_SNAN:
+    case FP_QNAN: return FP_NAN;
+    case FP_NINF:
+    case FP_PINF: return FP_INFINITE;
+    case FP_NDENORM:
+    case FP_PDENORM: return FP_SUBNORMAL;
+    case FP_NZERO:
+    case FP_PZERO: return FP_ZERO;
+
+    ASSERT(rv == FP_NNORM || rv == FP_PNORM);
+    return FP_NORMAL;
+  }
+
+}
+#endif // SOLARIS

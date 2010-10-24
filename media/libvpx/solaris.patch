@@ -11,7 +11,7 @@ diff --git a/media/libvpx/vp8/common/loopfilter_filters.c b/media/libvpx/vp8/com
  #include "onyxc_int.h"
  
 +#ifdef __SUNPRO_C
-+#define __inline static inline
++#define __inline inline
 +#endif
  
  #define NEW_LOOPFILTER_MASK

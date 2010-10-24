@@ -45,7 +45,9 @@
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
+#if !defined(__ANDROID__)
 #include <link.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/ptrace.h>
@@ -104,12 +106,12 @@ bool DetachThread(pid_t pid) {
 }
 
 inline bool IsMappedFileOpenUnsafe(
-    const google_breakpad::MappingInfo* mapping) {
+    const google_breakpad::MappingInfo& mapping) {
   // It is unsafe to attempt to open a mapped file that lives under /dev,
   // because the semantics of the open may be driver-specific so we'd risk
   // hanging the crash dumper. And a file in /dev/ almost certainly has no
   // ELF file identifier anyways.
-  return my_strncmp(mapping->name,
+  return my_strncmp(mapping.name,
                     kMappedFileUnsafePrefix,
                     sizeof(kMappedFileUnsafePrefix) - 1) == 0;
 }
@@ -117,10 +119,15 @@ inline bool IsMappedFileOpenUnsafe(
 bool GetThreadRegisters(ThreadInfo* info) {
   pid_t tid = info->tid;
 
-  if (sys_ptrace(PTRACE_GETREGS, tid, NULL, &info->regs) == -1 ||
-      sys_ptrace(PTRACE_GETFPREGS, tid, NULL, &info->fpregs) == -1) {
+  if (sys_ptrace(PTRACE_GETREGS, tid, NULL, &info->regs) == -1) {
     return false;
   }
+
+#if !defined(__ANDROID__)
+  if (sys_ptrace(PTRACE_GETFPREGS, tid, NULL, &info->fpregs) == -1) {
+    return false;
+  }
+#endif
 
 #if defined(__i386)
   if (sys_ptrace(PTRACE_GETFPXREGS, tid, NULL, &info->fpxregs) == -1)
@@ -230,16 +237,14 @@ LinuxDumper::BuildProcPath(char* path, pid_t pid, const char* node) const {
 }
 
 bool
-LinuxDumper::ElfFileIdentifierForMapping(unsigned int mapping_id,
+LinuxDumper::ElfFileIdentifierForMapping(const MappingInfo& mapping,
                                          uint8_t identifier[sizeof(MDGUID)])
 {
-  assert(mapping_id < mappings_.size());
   my_memset(identifier, 0, sizeof(MDGUID));
-  const MappingInfo* mapping = mappings_[mapping_id];
   if (IsMappedFileOpenUnsafe(mapping)) {
     return false;
   }
-  int fd = sys_open(mapping->name, O_RDONLY, 0);
+  int fd = sys_open(mapping.name, O_RDONLY, 0);
   if (fd < 0)
     return false;
   struct kernel_stat st;
@@ -425,7 +430,7 @@ bool LinuxDumper::ThreadInfoGet(ThreadInfo* info) {
 #elif defined(__x86_64)
   memcpy(&stack_pointer, &info->regs.rsp, sizeof(info->regs.rsp));
 #elif defined(__ARM_EABI__)
-  memcpy(&stack_pointer, &info->regs.uregs[R13], sizeof(info->regs.uregs[R13]));
+  memcpy(&stack_pointer, &info->regs.ARM_sp, sizeof(info->regs.ARM_sp));
 #else
 #error "This code hasn't been ported to your platform yet."
 #endif

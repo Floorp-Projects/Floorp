@@ -1188,6 +1188,9 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 static int
 StringStuff(SprintfState* ss, const PRUnichar* sp, PRUint32 len)
 {
+    if (*sp == '\0')
+      return 0;
+
     ptrdiff_t off = ss->cur - ss->base;
     
     nsAString* str = static_cast<nsAString*>(ss->stuffclosure);

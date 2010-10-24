@@ -183,6 +183,9 @@ nsXULPrototypeCache::Observe(nsISupports* aSubject,
     else if (!strcmp(aTopic, "chrome-flush-caches")) {
         Flush();
     }
+    else if (!strcmp(aTopic, "startupcache-invalidate")) {
+        AbortFastLoads();
+    }
     else {
         NS_WARNING("Unexpected observer topic.");
     }

@@ -100,8 +100,8 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where, JSC::Ex
         return false;
 
     JSC::LinkBuffer buffer(&masm, *pool);
+    masm.finalize(buffer);
     uint8 *result = (uint8*)buffer.finalizeCodeAddendum().dataLocation();
-    masm.finalize(result);
     *where = JS_DATA_TO_FUNC_PTR(Trampolines::TrampolinePtr, result + masm.distanceOf(entry));
 
     return true;
@@ -118,31 +118,22 @@ bool
 TrampolineCompiler::generateForceReturn(Assembler &masm)
 {
     /* if (hasArgsObj() || hasCallObj()) stubs::PutActivationObjects() */
-    Jump noActObjs = masm.branchTest32(Assembler::Zero,
-                                       Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
+    Jump noActObjs = masm.branchTest32(Assembler::Zero, FrameFlagsAddress(),
                                        Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
     masm.stubCall(stubs::PutActivationObjects, NULL, 0);
     noActObjs.linkTo(masm.label(), &masm);
 
-    /*
-     * r = fp->prev
-     * f.fp = r
-     */
-    masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), Registers::ReturnReg);
-    masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, regs.fp)));
+    /* Store any known return value */
+    masm.loadValueAsComponents(UndefinedValue(), JSReturnReg_Type, JSReturnReg_Data);
+    Jump rvalClear = masm.branchTest32(Assembler::Zero,
+                                       FrameFlagsAddress(), Imm32(JSFRAME_HAS_RVAL));
+    Address rvalAddress(JSFrameReg, JSStackFrame::offsetOfReturnValue());
+    masm.loadValueAsComponents(rvalAddress, JSReturnReg_Type, JSReturnReg_Data);
+    rvalClear.linkTo(masm.label(), &masm);
 
-    Address rval(JSFrameReg, JSStackFrame::offsetOfReturnValue());
-    masm.loadValueAsComponents(rval, JSReturnReg_Type, JSReturnReg_Data);
-
-    masm.restoreReturnAddress();
-
-    masm.move(Registers::ReturnReg, JSFrameReg);
-#ifdef DEBUG
-    masm.storePtr(ImmPtr(JSStackFrame::sInvalidpc),
-                  Address(JSFrameReg, JSStackFrame::offsetOfSavedpc()));
-#endif
-
-    masm.ret();
+    /* Return to the caller */
+    masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfncode()), Registers::ReturnReg);
+    masm.jump(Registers::ReturnReg);
     return true;
 }
 

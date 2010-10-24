@@ -223,8 +223,13 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
+  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(aWindow));
+  if (pwin->IsInnerWindow()) {
+    pwin = pwin->GetOuterWindow();
+  }
+
   nsresult rv;
-  mWindow = do_GetWeakReference(aWindow, &rv);
+  mWindow = do_GetWeakReference(pwin, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundleService> service(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));

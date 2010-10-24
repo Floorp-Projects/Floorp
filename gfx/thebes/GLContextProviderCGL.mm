@@ -151,7 +151,7 @@ public:
         }
     }
 
-    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
+    PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
     {
         if (mContext) {
             [mContext makeCurrentContext];
@@ -343,10 +343,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
     [context setView:childView];
 
     // make the context transparent
-    GLint opaque = 0;
-    [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
-
-    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(ContextFormat(ContextFormat::BasicRGBA32),
+    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(ContextFormat(ContextFormat::BasicRGB24),
                                                         shareContext,
                                                         context);
     if (!glContext->Init()) {

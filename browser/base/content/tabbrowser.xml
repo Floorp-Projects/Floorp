@@ -183,6 +183,9 @@
           if (aTab.pinned)
             return;
 
+          if (aTab.hidden)
+            this.showTab(aTab);
+
           this.moveTabTo(aTab, this._numPinnedTabs);
           aTab.setAttribute("pinned", "true");
           this.tabContainer._positionPinnedTabs();
@@ -353,8 +356,6 @@
             mRequestCount: 0,
 
             destroy: function () {
-              this._cancelStalledTimer();
-              this.mTab.removeAttribute("stalled");
               delete this.mTab;
               delete this.mBrowser;
               delete this.mTabBrowser;
@@ -373,10 +374,8 @@
               if (this.mBlank)
                 return;
 
-              if (this.mTotalProgress) {
-                let value = Math.ceil(this.mTotalProgress * 100);
-                this.mTab.setAttribute("progresspercent", value);
-              }
+              if (this.mTotalProgress)
+                this.mTab.setAttribute("progress", "true");
 
               this._callProgressListeners("onProgressChange",
                                           [aWebProgress, aRequest,
@@ -432,8 +431,6 @@
                 if (!this.mBlank) {
                   if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
                     this.mTab.setAttribute("busy", "true");
-                    this.mTab.setAttribute("progresspercent", "0");
-                    this._startStalledTimer();
                     this.mTabBrowser.setTabTitleLoading(this.mTab);
                   }
 
@@ -459,9 +456,7 @@
                   this.mBlank = false;
 
                 this.mTab.removeAttribute("busy");
-                this.mTab.removeAttribute("progresspercent");
-                this.mTab.removeAttribute("stalled");
-                this._cancelStalledTimer();
+                this.mTab.removeAttribute("progress");
 
                 var location = aRequest.QueryInterface(nsIChannel).URI;
 
@@ -469,7 +464,7 @@
                 if (location.scheme == "keyword")
                   this.mBrowser.userTypedValue = null;
 
-                if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.loading"))
+                if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.connecting"))
                   this.mTabBrowser.setTabTitle(this.mTab);
 
                 if (this.mTab.selected)
@@ -565,20 +560,6 @@
                   aIID.equals(Components.interfaces.nsISupports))
                 return this;
               throw Components.results.NS_NOINTERFACE;
-            },
-
-            _startStalledTimer: function () {
-              this._cancelStalledTimer();
-              this._stalledTimer = setTimeout(function (self) { 
-                self.mTab.setAttribute("stalled", "true");
-              }, 700, this);
-            },
-
-            _cancelStalledTimer: function () {
-              if (this._stalledTimer) {
-                clearTimeout(this._stalledTimer);
-                this._stalledTimer = 0;
-              }
             }
           });
         ]]>
@@ -893,7 +874,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            aTab.label = this.mStringBundle.getString("tabs.loading");
+            aTab.label = this.mStringBundle.getString("tabs.connecting");
             aTab.crop = "end";
             this._tabAttrModified(aTab);
           ]]>
@@ -1385,19 +1366,12 @@
             if (!this._beginRemoveTab(aTab, false, null, true))
               return;
 
-            /* Don't animate if:
-                - the caller didn't opt in
-                - this is the last tab in the window
-                - this is a pinned tab
-                - a bunch of other tabs are already closing (arbitrary threshold)
-                - the fadein attribute hasn't been set yet
-                - browser.tabs.animate is false   */
-
-            if (!animate ||
+            if (!animate /* the caller didn't opt in */ ||
                 isLastTab ||
                 aTab.pinned ||
-                this._removingTabs.length > 3 ||
-                aTab.getAttribute("fadein") != "true" ||
+                this._removingTabs.length > 3 /* don't want lots of concurrent animations */ ||
+                aTab.getAttribute("fadein") != "true" /* fade-in transition hasn't been triggered yet */ ||
+                window.getComputedStyle(aTab).maxWidth == "1px" /* fade-in transition hasn't moved yet */ ||
                 !Services.prefs.getBoolPref("browser.tabs.animate")) {
               this._endRemoveTab(aTab);
               return;
@@ -1844,7 +1818,7 @@
         <body>
         <![CDATA[
           if (aTab.hidden) {
-            aTab.hidden = false;
+            aTab.removeAttribute("hidden");
             let event = document.createEvent("Events");
             event.initEvent("TabShow", true, false);
             aTab.dispatchEvent(event);
@@ -1859,7 +1833,7 @@
         <![CDATA[
           if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
               this._removingTabs.indexOf(aTab) == -1) {
-            aTab.hidden = true;
+            aTab.setAttribute("hidden", "true");
             let event = document.createEvent("Events");
             event.initEvent("TabHide", true, false);
             aTab.dispatchEvent(event);
@@ -3324,12 +3298,11 @@
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:stack class="tab-stack" flex="1">
-        <xul:vbox class="tab-progress-container">
-          <xul:progressmeter class="tab-progress" mode="normal"
-                             xbl:inherits="value=progresspercent,busy,stalled,fadein,selected"/>
-        </xul:vbox>
         <xul:hbox class="tab-content" align="center">
-          <xul:image xbl:inherits="validate,src=image,fadein,pinned,busy,stalled,selected"
+          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected"
+                     class="tab-throbber"
+                     role="presentation"/>
+          <xul:image xbl:inherits="validate,src=image,fadein,pinned,selected"
                      class="tab-icon-image"
                      role="presentation"/>
           <xul:label flex="1"
@@ -3349,6 +3322,11 @@
       <property name="pinned" readonly="true">
         <getter>
           return this.getAttribute("pinned") == "true";
+        </getter>
+      </property>
+      <property name="hidden" readonly="true">
+        <getter>
+          return this.getAttribute("hidden") == "true";
         </getter>
       </property>
 
@@ -3549,15 +3527,10 @@
       <![CDATA[
         var tab = event.target.tab;
         if (tab) {
-          var statusText = tab.linkedBrowser.currentURI.spec;
-          if (statusText == "about:blank") {
-            // XXXhack: Passing a space here (and not "")
-            // to make sure the the browser implementation would
-            // still consider it a hovered link.
-            statusText = " ";
-          }
-
-          XULBrowserWindow.setOverLink(statusText, null);
+          let overLink = tab.linkedBrowser.currentURI.spec;
+          if (overLink == "about:blank")
+            overLink = "";
+          XULBrowserWindow.setOverLink(overLink, null);
         }
       ]]></handler>
 

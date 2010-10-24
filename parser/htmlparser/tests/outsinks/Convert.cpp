@@ -91,6 +91,10 @@ Compare(nsString& str, nsString& aFileName)
       break;
     }
   }
+  // Read the rest of the file
+  while ((c = getc(file)) != EOF) {
+    inString.Append(PRUnichar(c));
+  }
   if (file != stdin)
     fclose(file);
 
@@ -98,11 +102,11 @@ Compare(nsString& str, nsString& aFileName)
     return 0;
   else
   {
-    nsAutoString left;
-    str.Left(left, different);
-    char* cstr = ToNewUTF8String(left);
-    printf("Comparison failed at char %d:\n-----\n%s\n-----\n",
-           different, cstr);
+    char* cexpected = ToNewUTF8String(inString);
+    char* cstr = ToNewUTF8String(str);
+    printf("Comparison failed at char %d:\nGot:\n-----\n%s\n-----\nExpected:\n-----\n%s\n-----\n",
+           different, cstr, cexpected);
+    Recycle(cexpected);
     Recycle(cstr);
     return 1;
   }

@@ -15,6 +15,8 @@
     {
       const READ_ONLY = Components.interfaces.nsIIDBTransaction.READ_ONLY;
       const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+      const VERSION_CHANGE =
+        Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
 
       const name = window.location.pathname;
       const description = "My Test Database";
@@ -26,14 +28,16 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("foo", "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      is(event.transaction.mode, READ_WRITE, "Correct mode");
+      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
 
-      request = event.result.add({});
+      let objectStore = db.createObjectStore("foo", "", true);
+
+      request = objectStore.add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -53,7 +57,7 @@
       // loop.
       for (let i = 0; i < 20; i++) {
         readerCount++;
-        request = db.objectStore("foo").get(key);
+        request = db.transaction("foo").objectStore("foo").get(key);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           callbackCount++;
@@ -62,13 +66,15 @@
 
       while (continueReading) {
         readerCount++;
-        request = db.objectStore("foo").get(key);
+        request = db.transaction("foo").objectStore("foo").get(key);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           is(event.transaction.mode, READ_ONLY, "Correct mode");
           callbackCount++;
           if (callbackCount == 100) {
-            request = db.objectStore("foo", READ_WRITE).add({}, readerCount);
+            request = db.transaction("foo", READ_WRITE)
+                        .objectStore("foo")
+                        .add({}, readerCount);
             request.onerror = errorHandler;
             request.onsuccess = function(event) {
               continueReading = false;

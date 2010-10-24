@@ -36,23 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/HUDService.jsm");
-
 const TEST_REPLACED_API_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console-replaced-api.html";
 
-function log(aMsg)
+function test()
 {
-  dump("*** WebConsoleTest: " + aMsg + "\n");
+  addTab(TEST_REPLACED_API_URI);
+  browser.addEventListener("load", function() {
+    browser.removeEventListener("load", arguments.callee,
+                                true);
+    testOpenWebConsole();
+  }, true);
 }
 
 function testOpenWebConsole()
 {
-  HUDService.activateHUDForContext(gBrowser.selectedTab);
+  openConsole();
   is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
@@ -72,38 +70,5 @@ function testWarning()
 
   testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
 
-  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
-  executeSoon(finishTest);
-}
-
-function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
-{
-  var message = aOutputNode.textContent.indexOf(aMatchString);
-  if (message > -1) {
-    ok(true, aSuccessErrObj.success);
-    return;
-  }
-  ok(false, aSuccessErrObj.err);
-}
-
-function finishTest()
-{
-  hud = null;
-  hudId = null;
-
-  finish();
-}
-
-let hud, hudId;
-
-content.location = TEST_REPLACED_API_URI;
-
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee,
-      true);
-    testOpenWebConsole();
-  }, true);
+  finishTest();
 }

@@ -65,7 +65,7 @@ interface nsIDocument;
  * sufficient, when combined with the imageBlockingStatus information.)
  */
 
-[scriptable, uuid(7974082c-3267-4ab1-96fa-bd47d7e3a093)]
+[scriptable, uuid(95c74255-df9a-4060-b5a0-0d111fcafe08)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -174,7 +174,7 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * nsImageLoadingContent::ImageState() to return |aState|. Call again with |aForce|
    * as PR_FALSE to revert ImageState() to its original behaviour.
    */
-  void forceImageState(in boolean aForce, in long aState);
+  void forceImageState(in boolean aForce, in unsigned long long aState);
 
   /**
     * We need to be notified when our document changes.

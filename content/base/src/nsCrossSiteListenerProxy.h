@@ -84,14 +84,9 @@ public:
   // Must be called at startup.
   static void Startup();
 
-  void AllowHTTPResult(PRUint32 aResultCode)
-  {
-    mAllowedHTTPErrors.AppendElement(aResultCode);
-  }
-
 private:
   nsresult UpdateChannel(nsIChannel* aChannel);
-  nsresult CheckRequestApproved(nsIRequest* aRequest, PRBool aIsRedirect);
+  nsresult CheckRequestApproved(nsIRequest* aRequest);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsIPrincipal> mRequestingPrincipal;
@@ -102,7 +97,6 @@ private:
   PRBool mIsPreflight;
   nsCString mPreflightMethod;
   nsTArray<nsCString> mPreflightHeaders;
-  nsTArray<PRUint32> mAllowedHTTPErrors;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mOldRedirectChannel;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;

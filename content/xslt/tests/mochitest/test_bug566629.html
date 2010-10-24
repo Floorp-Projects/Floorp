@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=566629
+-->
+<head>
+  <title>Test for Bug 566629</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566629">Mozilla Bug 566629</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 566629 **/
+
+var xsltdoc = new DOMParser().parseFromString(
+    '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"\
+                     xmlns:xhtml="http://www.w3.org/1999/xhtml">\
+       <xsl:template match="/">\
+         <xsl:value-of select="count(//body)"/>\
+         <xsl:text>,</xsl:text>\
+         <xsl:value-of select="count(//xhtml:body)"/>\
+         <xsl:text>,</xsl:text>\
+         <xsl:value-of select="count(//xsl:body)"/>\
+         <xsl:text>,</xsl:text>\
+         <xsl:value-of select="name(//body)"/>\
+         <xsl:text>,</xsl:text>\
+         <xsl:value-of select="local-name(//body)"/>\
+       </xsl:template>\
+     </xsl:stylesheet>',
+    "text/xml");
+
+var processor = new XSLTProcessor;
+processor.importStylesheet(xsltdoc);
+var result = processor.transformToFragment(document, document);
+ok(result instanceof DocumentFragment, "returned a docfragment");
+is(result.firstChild.nodeValue, "1,1,0,BODY,body",
+   "correct treatment of HTML elements in XSLT");
+
+is(document.evaluate("count(//body)", document, null, XPathResult.ANY_TYPE, null).numberValue,
+   1, "namespace-less node-test");
+is(document.evaluate("count(//a:body)", document,
+		     function() { return "http://www.w3.org/1999/xhtml" },
+		     XPathResult.ANY_TYPE, null).numberValue,
+   1, "with-namespace node-test");
+is(document.evaluate("count(//a:body)", document,
+		     function() { return "foo" },
+		     XPathResult.ANY_TYPE, null).numberValue,
+   0, "wrong-namespace node-test");
+is(document.evaluate("//bODy", document, null, XPathResult.ANY_TYPE, null).iterateNext(),
+   document.body, "case insensitive matching");
+is(document.evaluate("count(//a:bODy)", document,
+		     function() { return "http://www.w3.org/1999/xhtml" },
+		     XPathResult.ANY_TYPE, null).numberValue,
+   0, "with-namespace but wrong casing node-test");
+is(document.evaluate("name(//body)", document, null, XPathResult.ANY_TYPE, null).stringValue,
+   "BODY", "uppercase name() function");
+is(document.evaluate("local-name(//body)", document, null, XPathResult.ANY_TYPE, null).stringValue,
+   "body", "lowercase local-name() function");
+
+</script>
+</pre>
+</body>
+</html>

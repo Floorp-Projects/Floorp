@@ -189,7 +189,7 @@ public:
   nsresult DispatchAsyncEvent(const nsAString& aName);
   nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,
                                        PRUint32 aFrameBufferLength,
-                                       PRUint64 aTime);
+                                       float aTime);
 
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
@@ -296,7 +296,7 @@ public:
    * Called when data has been written to the underlying audio stream.
    */
   void NotifyAudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength,
-                            PRUint64 aTime);
+                            float aTime);
 
   /**
    * Called in order to check whether some node (this window, its document,
@@ -653,8 +653,8 @@ protected:
   // PR_TRUE if we're running the "load()" method.
   PRPackedBool mIsRunningLoadMethod;
 
-  // PR_TRUE if we're loading exclusively from the src attribute's resource.
-  PRPackedBool mIsLoadingFromSrcAttribute;
+  // PR_TRUE if we're loading the resource from the child source elements.
+  PRPackedBool mIsLoadingFromSourceChildren;
 
   // PR_TRUE if we're delaying the "load" event. They are delayed until either
   // an error occurs, or the first frame is loaded.

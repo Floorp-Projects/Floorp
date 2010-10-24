@@ -590,6 +590,18 @@ function run() {
   expression_should_not_be_parseable("-moz-touch-enabled: true");
   expression_should_not_be_parseable("-moz-maemo-classic: true");
 
+  // windows theme media queries
+  expression_should_be_parseable("-moz-windows-theme: aero");
+  expression_should_be_parseable("-moz-windows-theme: luna-blue");
+  expression_should_be_parseable("-moz-windows-theme: luna-olive");
+  expression_should_be_parseable("-moz-windows-theme: luna-silver");
+  expression_should_be_parseable("-moz-windows-theme: royale");
+  expression_should_be_parseable("-moz-windows-theme: generic");
+  expression_should_be_parseable("-moz-windows-theme: zune");
+  expression_should_be_parseable("-moz-windows-theme: garbage");
+  expression_should_not_be_parseable("-moz-windows-theme: ''");
+  expression_should_not_be_parseable("-moz-windows-theme: ");
+
   // Parsing tests
   // bug 454227
   should_apply_unbalanced("(orientation");

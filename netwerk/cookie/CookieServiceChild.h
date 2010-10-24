@@ -41,17 +41,21 @@
 
 #include "mozilla/net/PCookieServiceChild.h"
 #include "nsICookieService.h"
-#include "nsICookiePermission.h"
+#include "nsIObserver.h"
+#include "nsIPrefBranch.h"
+#include "mozIThirdPartyUtil.h"
 
 namespace mozilla {
 namespace net {
 
 class CookieServiceChild : public PCookieServiceChild
                          , public nsICookieService
+                         , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIESERVICE
+  NS_DECL_NSIOBSERVER
 
   CookieServiceChild();
   virtual ~CookieServiceChild();
@@ -77,7 +81,13 @@ protected:
                                    const char *aServerTime,
                                    bool aFromHttp);
 
-  nsCOMPtr<nsICookiePermission> mPermissionService;
+  void PrefChanged(nsIPrefBranch *aPrefBranch);
+
+  bool RequireThirdPartyCheck();
+
+  nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
+  PRUint8 mCookieBehavior;
+  bool mThirdPartySession;
 };
 
 }

@@ -277,6 +277,12 @@ public:
     virtual PContentPermissionRequestChild* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestChild* actor);
 
+    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdate(const URI& manifestURI,
+            const URI& documentURI,
+            const nsCString& clientID,
+            const bool& stickDocument);
+    virtual bool DeallocPOfflineCacheUpdate(POfflineCacheUpdateChild* offlineCacheUpdate);
+
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 
     JSContext* GetJSContext() { return mCx; }

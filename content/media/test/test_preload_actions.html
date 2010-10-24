@@ -535,6 +535,27 @@ var tests = [
       v.src = test.name;
     },    
   },
+  {
+    // 18. On a preload='none' video, call play() before load algorithms's sync
+    // has run, the play() call should override preload='none'.
+    ended:
+    function(e) {
+      ok(true, "(18) Got playback ended.");
+      var v = e.target;
+      v._finished = true;
+      maybeFinish(v, 18);
+    },
+    
+    setup:
+    function(v) {
+      v.addEventListener("ended", this.ended, false);
+      v._finished = false;
+      v.preload = "none";
+      v.src = test.name; // Schedules async section to continue load algorithm.
+      document.body.appendChild(v);
+      v.play(); // Should cause preload:none to be overridden.
+    },  
+    }
 ];
 
 function startTest(test, token) {

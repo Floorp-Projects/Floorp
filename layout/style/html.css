@@ -294,38 +294,39 @@ table[rules] {
       A border with a given value should, of course, pass that value
       as the border-width in pixels -> attr mapping */
 
-  /* 'border="0"' suppresses the border */
-table[border]:not([border="0"]) { 
+  /* :-moz-table-border-nonzero is like [border]:not([border="0"]) except it
+     also checks for other zero-like values according to HTML attribute
+     parsing rules */
+table:-moz-table-border-nonzero { 
   border: thin outset; 
 }
 
-  
 table[frame] {
   border: thin hidden;
 }
 
-/*increased specificity to compete with [border]:not([border="0"]) rule above*/
-table[frame][frame="void"]   { border-style: hidden; }
-table[frame][frame="above"]  { border-style: outset hidden hidden hidden; }
-table[frame][frame="below"]  { border-style: hidden hidden outset hidden; }
-table[frame][frame="lhs"]    { border-style: hidden hidden hidden outset; }
-table[frame][frame="rhs"]    { border-style: hidden outset hidden hidden; }
-table[frame][frame="hsides"] { border-style: outset hidden; }
-table[frame][frame="vsides"] { border-style: hidden outset; }
-table[frame][frame="box"],
-table[frame][frame="border"] { border-style: outset; }
+/* specificity must beat table:-moz-table-border-nonzero rule above */
+table[frame="void"]   { border-style: hidden; }
+table[frame="above"]  { border-style: outset hidden hidden hidden; }
+table[frame="below"]  { border-style: hidden hidden outset hidden; }
+table[frame="lhs"]    { border-style: hidden hidden hidden outset; }
+table[frame="rhs"]    { border-style: hidden outset hidden hidden; }
+table[frame="hsides"] { border-style: outset hidden; }
+table[frame="vsides"] { border-style: hidden outset; }
+table[frame="box"],
+table[frame="border"] { border-style: outset; }
 
  
 /* Internal Table Borders */
 
   /* 'border' cell borders first */
 
-table[border]:not([border="0"])> * > tr > td,
-table[border]:not([border="0"])> * > tr > th,
-table[border]:not([border="0"])> * > td,
-table[border]:not([border="0"])> * > th,
-table[border]:not([border="0"])> td,
-table[border]:not([border="0"])> th
+table:-moz-table-border-nonzero > * > tr > td,
+table:-moz-table-border-nonzero > * > tr > th,
+table:-moz-table-border-nonzero > * > td,
+table:-moz-table-border-nonzero > * > th,
+table:-moz-table-border-nonzero > td,
+table:-moz-table-border-nonzero > th
 {
   border: thin inset;
 }
@@ -667,18 +668,24 @@ canvas {
 
 /* focusable content: anything w/ tabindex >=0 is focusable */
 abbr:-moz-focusring, acronym:-moz-focusring, address:-moz-focusring,
+applet:-moz-focusring,
 b:-moz-focusring, base:-moz-focusring, big:-moz-focusring,
 blockquote:-moz-focusring, br:-moz-focusring, canvas:-moz-focusring,
 caption:-moz-focusring, center:-moz-focusring, cite:-moz-focusring,
 code:-moz-focusring, col:-moz-focusring, colgroup:-moz-focusring,
 dd:-moz-focusring, del:-moz-focusring, dfn:-moz-focusring, dir:-moz-focusring,
 div:-moz-focusring, dl:-moz-focusring, dt:-moz-focusring, em:-moz-focusring,
+embed:-moz-focusring,
 fieldset:-moz-focusring, font:-moz-focusring, form:-moz-focusring,
 h1:-moz-focusring, h2:-moz-focusring, h3:-moz-focusring, h4:-moz-focusring,
 h5:-moz-focusring, h6:-moz-focusring, hr:-moz-focusring, i:-moz-focusring,
 img:-moz-focusring, ins:-moz-focusring, kbd:-moz-focusring,
 label:-moz-focusring, legend:-moz-focusring, li:-moz-focusring,
-link:-moz-focusring, menu:-moz-focusring, ol:-moz-focusring, p:-moz-focusring,
+link:-moz-focusring,
+menu:-moz-focusring,
+object:-moz-focusring,
+ol:-moz-focusring,
+p:-moz-focusring,
 pre:-moz-focusring, q:-moz-focusring, s:-moz-focusring, samp:-moz-focusring,
 small:-moz-focusring, span:-moz-focusring, strike:-moz-focusring,
 strong:-moz-focusring, sub:-moz-focusring, sup:-moz-focusring,

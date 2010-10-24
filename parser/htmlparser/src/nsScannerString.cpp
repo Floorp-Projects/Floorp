@@ -594,7 +594,7 @@ FindInReadable( const nsAString& aPattern,
           {
               // fast inner loop (that's what it's called, not what it is) looks for a potential match
             while ( aSearchStart != aSearchEnd &&
-                    compare(*aPatternStart, *aSearchStart) )
+                    compare(aPatternStart.get(), aSearchStart.get(), 1, 1) )
               ++aSearchStart;
 
               // if we broke out of the `fast' loop because we're out of string ... we're done: no match
@@ -631,7 +631,7 @@ FindInReadable( const nsAString& aPattern,
 
                   // else if we mismatched ... it's time to advance to the next search position
                   //  and get back into the `fast' loop
-                if ( compare(*testPattern, *testSearch) )
+                if ( compare(testPattern.get(), testSearch.get(), 1, 1) )
                   {
                     ++aSearchStart;
                     break;

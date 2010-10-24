@@ -2691,8 +2691,9 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
     rectSrc.right = (float)(x2 * transform->xx + transform->x0);
     rectSrc.bottom = (float)(y2 * transform->yy + transform->y0);
 
-    if (rectSrc.left < 0 || rectSrc.top < 0 ||
-	rectSrc.right > sourceSize.width || rectSrc.bottom > sourceSize.height) {
+    if (rectSrc.left < 0 || rectSrc.top < 0 || rectSrc.right < 0 || rectSrc.bottom < 0 ||
+	rectSrc.right > sourceSize.width || rectSrc.bottom > sourceSize.height ||
+	rectSrc.left > sourceSize.width || rectSrc.top > sourceSize.height) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -2702,8 +2703,30 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
     rectDst.right = (float)x2;
     rectDst.bottom = (float)y2;
 
+    // Bug 599658 - if the src rect is inverted in either axis D2D is fine with
+    // this but it does not actually invert the bitmap. This is an easy way
+    // of doing that.
+    D2D1_MATRIX_3X2_F matrix = D2D1::IdentityMatrix();
+    bool needsTransform = false;
+    if (rectSrc.left > rectSrc.right) {
+	rectDst.left = -rectDst.left;
+	rectDst.right = -rectDst.right;
+	matrix._11 = -1.0;
+	needsTransform = true;
+    }
+    if (rectSrc.top > rectSrc.bottom) {
+	rectDst.top = -rectDst.top;
+	rectDst.bottom = -rectDst.bottom;
+	matrix._22 = -1.0;
+	needsTransform = true;
+    }
+
     D2D1_BITMAP_INTERPOLATION_MODE interpMode =
       D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+
+    if (needsTransform) {
+	dst->rt->SetTransform(matrix);
+    }
 
     if (filter == CAIRO_FILTER_NEAREST) {
       interpMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
@@ -2714,6 +2737,9 @@ _cairo_d2d_blend_surface(cairo_d2d_surface_t *dst,
 			opacity,
 			interpMode,
 			rectSrc);
+    if (needsTransform) {
+	dst->rt->SetTransform(D2D1::IdentityMatrix());
+    }
 
     return rv;
 }
@@ -3260,7 +3286,7 @@ _cairo_d2d_stroke(void			*surface,
 
     if (target_rt.get() != d2dsurf->rt.get()) {
 	D2D1_RECT_F bounds;
-	trans_geom->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, D2D1::IdentityMatrix(), &bounds);
+	trans_geom->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, mat, &bounds);
 	cairo_rectangle_int_t bound_rect;
 	_cairo_d2d_round_out_to_int_rect(&bound_rect, bounds.left, bounds.top, bounds.right, bounds.bottom);
 	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip, &bound_rect);
@@ -3763,6 +3789,89 @@ FAIL_CREATEHANDLE:
     newSurf->~cairo_d2d_surface_t();
     free(newSurf);
     return _cairo_surface_create_in_error(_cairo_error(status));
+}
+
+cairo_surface_t *
+cairo_d2d_surface_create_for_texture(cairo_device_t *device,
+				     ID3D10Texture2D *texture,
+				     cairo_content_t content)
+{
+    cairo_d2d_device_t *d2d_device = reinterpret_cast<cairo_d2d_device_t*>(device);
+    cairo_d2d_surface_t *newSurf = static_cast<cairo_d2d_surface_t*>(malloc(sizeof(cairo_d2d_surface_t)));
+    new (newSurf) cairo_d2d_surface_t();
+
+    D2D1_ALPHA_MODE alpha = D2D1_ALPHA_MODE_PREMULTIPLIED;
+    if (content == CAIRO_CONTENT_COLOR) {
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, CAIRO_CONTENT_COLOR);
+	alpha = D2D1_ALPHA_MODE_IGNORE;
+    } else {
+	_cairo_surface_init(&newSurf->base, &cairo_d2d_surface_backend, content);
+    }
+
+    D2D1_SIZE_U sizePixels;
+    HRESULT hr;
+
+    D3D10_TEXTURE2D_DESC desc;
+    RefPtr<IDXGISurface> dxgiSurface;
+    D2D1_BITMAP_PROPERTIES bitProps;
+    D2D1_RENDER_TARGET_PROPERTIES props;
+
+    texture->GetDesc(&desc);
+
+    sizePixels.width = desc.Width;
+    sizePixels.height = desc.Height;
+
+    newSurf->surface = texture;
+
+    /** Create the DXGI surface. */
+    hr = newSurf->surface->QueryInterface(IID_IDXGISurface, (void**)&dxgiSurface);
+    if (FAILED(hr)) {
+	goto FAIL_CREATE;
+    }
+
+    props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
+
+    if (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE)
+	props.usage = D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
+
+    hr = sD2DFactory->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+						    props,
+						    &newSurf->rt);
+
+    if (FAILED(hr)) {
+	goto FAIL_CREATE;
+    }
+
+    bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, 
+				      alpha));
+
+    if (content != CAIRO_CONTENT_ALPHA) {
+	/* For some reason creation of shared bitmaps for A8 UNORM surfaces
+	 * doesn't work even though the documentation suggests it does. The
+	 * function will return an error if we try */
+	hr = newSurf->rt->CreateSharedBitmap(IID_IDXGISurface,
+					     dxgiSurface,
+					     &bitProps,
+					     &newSurf->surfaceBitmap);
+
+	if (FAILED(hr)) {
+	    goto FAIL_CREATE;
+	}
+    }
+
+    newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
+
+    newSurf->device = d2d_device;
+    cairo_addref_device(device);
+    d2d_device->mVRAMUsage += _cairo_d2d_compute_surface_mem_size(newSurf);
+
+    return reinterpret_cast<cairo_surface_t*>(newSurf);
+
+FAIL_CREATE:
+    newSurf->~cairo_d2d_surface_t();
+    free(newSurf);
+    return _cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY));
 }
 
 void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t *clip)

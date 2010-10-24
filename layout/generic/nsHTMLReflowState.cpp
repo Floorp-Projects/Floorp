@@ -976,49 +976,55 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     nscoord blockYOffset = blockFrame->GetOffsetTo(aContainingBlock).y;
     PRBool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
-    NS_ASSERTION(isValid, "Can't find placeholder!");
-    NS_ASSERTION(iter.GetContainer() == blockFrame, "Found placeholder in wrong block!");
-    nsBlockFrame::line_iterator lineBox = iter.GetLine();
-
-    // How we determine the hypothetical box depends on whether the element
-    // would have been inline-level or block-level
-    if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
-      // Use the top of the inline box which the placeholder lives in as the
-      // hypothetical box's top.
-      aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
+    if (!isValid) {
+      // Give up.  We're probably dealing with somebody using
+      // position:absolute inside native-anonymous content anyway.
+      aHypotheticalBox.mTop = placeholderOffset.y;
     } else {
-      // The element would have been block-level which means it would be below
-      // the line containing the placeholder frame, unless all the frames
-      // before it are empty.  In that case, it would have been just before
-      // this line.      
-      // XXXbz the line box is not fully reflowed yet if our containing block is
-      // relatively positioned...
-      if (lineBox != iter.End()) {
-        nsIFrame * firstFrame = lineBox->mFirstChild;
-        PRBool found = PR_FALSE;
-        PRBool allEmpty = PR_TRUE;
-        while (firstFrame) { // See bug 223064
-          allEmpty = AreAllEarlierInFlowFramesEmpty(firstFrame,
-            aPlaceholderFrame, &found);
-          if (found || !allEmpty)
-            break;
-          firstFrame = firstFrame->GetNextSibling();
-        }
-        NS_ASSERTION(firstFrame, "Couldn't find placeholder!");
+      NS_ASSERTION(iter.GetContainer() == blockFrame,
+                   "Found placeholder in wrong block!");
+      nsBlockFrame::line_iterator lineBox = iter.GetLine();
 
-        if (allEmpty) {
-          // The top of the hypothetical box is the top of the line containing
-          // the placeholder, since there is nothing in the line before our
-          // placeholder except empty frames.
-          aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
-        } else {
-          // The top of the hypothetical box is just below the line containing
-          // the placeholder.
-          aHypotheticalBox.mTop = lineBox->mBounds.YMost() + blockYOffset;
-        }
+      // How we determine the hypothetical box depends on whether the element
+      // would have been inline-level or block-level
+      if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
+        // Use the top of the inline box which the placeholder lives in
+        // as the hypothetical box's top.
+        aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
       } else {
-        // Just use the placeholder's y-offset wrt the containing block
-        aHypotheticalBox.mTop = placeholderOffset.y;
+        // The element would have been block-level which means it would
+        // be below the line containing the placeholder frame, unless
+        // all the frames before it are empty.  In that case, it would
+        // have been just before this line.
+        // XXXbz the line box is not fully reflowed yet if our
+        // containing block is relatively positioned...
+        if (lineBox != iter.End()) {
+          nsIFrame * firstFrame = lineBox->mFirstChild;
+          PRBool found = PR_FALSE;
+          PRBool allEmpty = PR_TRUE;
+          while (firstFrame) { // See bug 223064
+            allEmpty = AreAllEarlierInFlowFramesEmpty(firstFrame,
+              aPlaceholderFrame, &found);
+            if (found || !allEmpty)
+              break;
+            firstFrame = firstFrame->GetNextSibling();
+          }
+          NS_ASSERTION(firstFrame, "Couldn't find placeholder!");
+
+          if (allEmpty) {
+            // The top of the hypothetical box is the top of the line
+            // containing the placeholder, since there is nothing in the
+            // line before our placeholder except empty frames.
+            aHypotheticalBox.mTop = lineBox->mBounds.y + blockYOffset;
+          } else {
+            // The top of the hypothetical box is just below the line
+            // containing the placeholder.
+            aHypotheticalBox.mTop = lineBox->mBounds.YMost() + blockYOffset;
+          }
+        } else {
+          // Just use the placeholder's y-offset wrt the containing block
+          aHypotheticalBox.mTop = placeholderOffset.y;
+        }
       }
     }
   } else {
@@ -1398,11 +1404,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
         mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
       } else {
         // Just 'margin-top' is 'auto'
-        mComputedMargin.top = availMarginSpace - mComputedMargin.bottom;
+        mComputedMargin.top = availMarginSpace;
       }
     } else {
       // Just 'margin-bottom' is 'auto'
-      mComputedMargin.bottom = availMarginSpace - mComputedMargin.top;
+      mComputedMargin.bottom = availMarginSpace;
     }
   }
 }

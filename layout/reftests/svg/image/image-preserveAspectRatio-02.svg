@@ -1,0 +1,18 @@
+<!-- Test to make sure "preserveAspectRatio" value is applied correctly on
+     <image> tag, when the width:height ratio is greater than the image's
+     nativeWidth:nativeHeight  --> 
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()"
+     style="image-rendering: -moz-crisp-edges">
+  <script xlink:href="util.js" type="text/javascript"/>
+  <script>
+    function go() {
+      var grid = generateImageGrid("blueRect10x10.png", 40, 20);
+      grid.setAttribute("transform", "translate(10, 10)");
+      document.documentElement.appendChild(grid);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</svg>

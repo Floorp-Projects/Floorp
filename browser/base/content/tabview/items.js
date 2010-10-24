@@ -187,7 +187,10 @@ Item.prototype = {
       stop: function() {
         drag.info.stop();
         drag.info = null;
-      }
+      },
+      // The minimum the mouse must move after mouseDown in order to move an 
+      // item
+      minDragDistance: 3
     };
 
     // ___ drop
@@ -323,7 +326,10 @@ Item.prototype = {
   // ----------
   // Function: pushAway
   // Pushes all other items away so none overlap this Item.
-  pushAway: function Item_pushAway() {
+  //
+  // Parameters:
+  //  immediately - boolean for doing the pushAway without animation
+  pushAway: function Item_pushAway(immediately) {
     var buffer = Math.floor(Items.defaultGutter / 2);
 
     var items = Items.getTopLevelItems();
@@ -496,7 +502,7 @@ Item.prototype = {
       var data = item.pushAwayData;
       var bounds = data.bounds;
       if (!bounds.equals(data.startBounds)) {
-        item.setBounds(bounds);
+        item.setBounds(bounds, immediately);
       }
     });
   },
@@ -555,7 +561,10 @@ Item.prototype = {
   // ----------
   // Function: snap
   // The snap function used during groupItem creation via drag-out
-  snap: function Item_snap() {
+  //
+  // Parameters:
+  //  immediately - bool for having the drag do the final positioning without animation
+  snap: function Item_snap(immediately) {
     // make the snapping work with a wider range!
     var defaultRadius = Trenches.defaultRadius;
     Trenches.defaultRadius = 2 * defaultRadius; // bump up from 10 to 20!
@@ -564,7 +573,7 @@ Item.prototype = {
     var FauxDragInfo = new Drag(this,event,false,true);
     // false == isDragging, true == isFauxDrag
     FauxDragInfo.snap('none',false);
-    FauxDragInfo.stop();
+    FauxDragInfo.stop(immediately);
 
     Trenches.defaultRadius = defaultRadius;
   },
@@ -592,63 +601,66 @@ Item.prototype = {
       // ___ mousemove
       var handleMouseMove = function(e) {
         // positioning
-        var mouse = new Point(e.pageX, e.pageY);
-        var box = self.getBounds();
-        box.left = startPos.x + (mouse.x - startMouse.x);
-        box.top = startPos.y + (mouse.y - startMouse.y);
-
-        self.setBounds(box, true);
-
-        // drag events
+        var mouse = new Point(e.pageX, e.pageY);		
         if (!startSent) {
-          if (typeof self.dragOptions.start == "function")
-            self.dragOptions.start.apply(self,
-                [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
-
-          startSent = true;
+          if(Math.abs(mouse.x - startMouse.x) > self.dragOptions.minDragDistance ||
+             Math.abs(mouse.y - startMouse.y) > self.dragOptions.minDragDistance) {
+            if (typeof self.dragOptions.start == "function")
+              self.dragOptions.start.apply(self,
+                  [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
+            startSent = true;
+          }
         }
+        if (startSent) {
+          // drag events
+          var box = self.getBounds();
+          box.left = startPos.x + (mouse.x - startMouse.x);
+          box.top = startPos.y + (mouse.y - startMouse.y);
 
-        if (typeof self.dragOptions.drag == "function")
-          self.dragOptions.drag.apply(self, [e]);
+          self.setBounds(box, true);
 
-        // drop events
-        var best = {
-          dropTarget: null,
-          score: 0
-        };
+          if (typeof self.dragOptions.drag == "function")
+            self.dragOptions.drag.apply(self, [e]);
 
-        droppables.forEach(function(droppable) {
-          var intersection = box.intersection(droppable.bounds);
-          if (intersection && intersection.area() > best.score) {
-            var possibleDropTarget = droppable.item;
-            var accept = true;
-            if (possibleDropTarget != dropTarget) {
-              var dropOptions = possibleDropTarget.dropOptions;
-              if (dropOptions && typeof dropOptions.accept == "function")
-                accept = dropOptions.accept.apply(possibleDropTarget, [self]);
+          // drop events
+          var best = {
+            dropTarget: null,
+            score: 0
+          };
+
+          droppables.forEach(function(droppable) {
+            var intersection = box.intersection(droppable.bounds);
+            if (intersection && intersection.area() > best.score) {
+              var possibleDropTarget = droppable.item;
+              var accept = true;
+              if (possibleDropTarget != dropTarget) {
+                var dropOptions = possibleDropTarget.dropOptions;
+                if (dropOptions && typeof dropOptions.accept == "function")
+                  accept = dropOptions.accept.apply(possibleDropTarget, [self]);
+              }
+
+              if (accept) {
+                best.dropTarget = possibleDropTarget;
+                best.score = intersection.area();
+              }
+            }
+          });
+
+          if (best.dropTarget != dropTarget) {
+            var dropOptions;
+            if (dropTarget) {
+              dropOptions = dropTarget.dropOptions;
+              if (dropOptions && typeof dropOptions.out == "function")
+                dropOptions.out.apply(dropTarget, [e]);
             }
 
-            if (accept) {
-              best.dropTarget = possibleDropTarget;
-              best.score = intersection.area();
+            dropTarget = best.dropTarget;
+
+            if (dropTarget) {
+              dropOptions = dropTarget.dropOptions;
+              if (dropOptions && typeof dropOptions.over == "function")
+                dropOptions.over.apply(dropTarget, [e]);
             }
-          }
-        });
-
-        if (best.dropTarget != dropTarget) {
-          var dropOptions;
-          if (dropTarget) {
-            dropOptions = dropTarget.dropOptions;
-            if (dropOptions && typeof dropOptions.out == "function")
-              dropOptions.out.apply(dropTarget, [e]);
-          }
-
-          dropTarget = best.dropTarget;
-
-          if (dropTarget) {
-            dropOptions = dropTarget.dropOptions;
-            if (dropOptions && typeof dropOptions.over == "function")
-              dropOptions.over.apply(dropTarget, [e]);
           }
         }
 
@@ -724,13 +736,11 @@ Item.prototype = {
   droppable: function Item_droppable(value) {
     try {
       var $container = iQ(this.container);
-      if (value)
-        $container.addClass('iq-droppable');
-      else {
+      if (value) {
         Utils.assert(this.dropOptions, 'dropOptions');
-
+        $container.addClass('iq-droppable');
+      } else
         $container.removeClass('iq-droppable');
-      }
     } catch(e) {
       Utils.log(e);
     }

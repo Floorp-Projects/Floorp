@@ -54,7 +54,7 @@ nsSVGElement::LengthInfo nsSVGImageElement::sLengthInfo[4] =
 
 nsSVGElement::StringInfo nsSVGImageElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_XLink }
+  { &nsGkAtoms::href, kNameSpaceID_XLink, PR_TRUE }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
@@ -212,7 +212,7 @@ nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-PRInt32
+nsEventStates
 nsSVGImageElement::IntrinsicState() const
 {
   return nsSVGImageElementBase::IntrinsicState() |
@@ -269,6 +269,17 @@ nsSVGImageElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
+}
+
+void
+nsSVGImageElement::DidAnimateString(PRUint8 aAttrEnum)
+{
+  if (aAttrEnum == HREF) {
+    LoadSVGImage(PR_TRUE, PR_FALSE);
+    return;
+  }
+
+  nsSVGImageElementBase::DidAnimateString(aAttrEnum);
 }
 
 nsresult

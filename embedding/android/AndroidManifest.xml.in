@@ -9,9 +9,10 @@
     <uses-sdk android:minSdkVersion="5"
               android:targetSdkVersion="5"/>
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> 
-    <uses-permission android:name="android.permission.INTERNET"/> 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
 
     <application android:label="@MOZ_APP_DISPLAYNAME@"
 		 android:icon="@drawable/icon"
@@ -20,7 +21,7 @@
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|orientation|mcc|mnc"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:launchMode="singleInstance">
+                  android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -76,5 +77,15 @@
             <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" />
           </intent-filter>
         </receiver>
+#if MOZ_CRASHREPORTER
+	<activity android:name="CrashReporter"
+                  android:label="@MOZ_APP_DISPLAYNAME@ Crash Reporter"
+		  android:icon="@drawable/crash_reporter"
+		  android:process="org.mozilla.@MOZ_APP_NAME@.crashReporter" >
+          <intent-filter>
+            <action android:name="org.mozilla.gecko.reportCrash" />
+          </intent-filter>
+	</activity>
+#endif
     </application>
 </manifest> 

@@ -84,8 +84,7 @@ JaegerTrampoline PROC FRAME
     ; Space for the rest of the VMFrame.
     sub     rsp, 28h
 
-    ; This is actually part of VMFrame, but we need to save 5th param for
-    ; SafePointTrampoline
+    ; This is actually part of the VMFrame.
     mov     r10, [rbp+8*5+8]
     push    r10
 
@@ -99,7 +98,14 @@ JaegerTrampoline PROC FRAME
     add     rsp, 20h
 
     ; Jump into the JIT code.
-    call    qword ptr [rsp]
+    jmp     qword ptr [rsp]
+JaegerTrampoline ENDP
+
+; void JaegerTrampolineReturn();
+JaegerTrampolineReturn PROC FRAME
+    .ENDPROLOG
+    or      rcx, rdx
+    mov     qword ptr [rbx + 30h], rcx
     sub     rsp, 20h
     lea     rcx, [rsp+20h]
     call    PopActiveVMFrame
@@ -115,7 +121,7 @@ JaegerTrampoline PROC FRAME
     pop     rbp
     mov     rax, 1
     ret
-JaegerTrampoline ENDP
+JaegerTrampolineReturn ENDP
 
 
 ; void JaegerThrowpoline()
@@ -147,20 +153,12 @@ throwpoline_exit:
 JaegerThrowpoline ENDP
 
 
-; void SafePointTrampoline();
-SafePointTrampoline PROC FRAME
-    .ENDPROLOG
-    pop    rax
-    mov    qword ptr [rbx+50h], rax  ; fp->ncode_
-    jmp    qword ptr [rsp+8]
-SafePointTrampoline ENDP
-
 
 ; void InjectJaegerReturn();
 InjectJaegerReturn PROC FRAME
     .ENDPROLOG
     mov     rcx, qword ptr [rbx+30h] ; load fp->rval_ into typeReg
-    mov     rax, qword ptr [rbx+50h] ; fp->ncode_
+    mov     rax, qword ptr [rbx+28h] ; fp->ncode_
 
     ; Reimplementation of PunboxAssembler::loadValueAsComponents()
     mov     rdx, r14

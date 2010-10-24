@@ -11,32 +11,22 @@
 // Tests that the Web Console limits the number of lines displayed according to
 // the user's preferences.
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/HUDService.jsm");
-
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 
 function test() {
-  waitForExplicitFinish();
-  content.location.href = TEST_URI;
-  waitForFocus(onFocus);
-}
-
-function onFocus() {
-  gBrowser.selectedBrowser.addEventListener("DOMContentLoaded", testLineLimit,
+  addTab(TEST_URI);
+  browser.addEventListener("DOMContentLoaded", testLineLimit,
                                             false);
 }
 
 function testLineLimit() {
-  gBrowser.selectedBrowser.removeEventListener("DOMContentLoaded",
-                                               testLineLimit, false);
+  browser.removeEventListener("DOMContentLoaded",testLineLimit, false);
 
-  HUDService.activateHUDForContext(gBrowser.selectedTab);
+  openConsole();
 
-  let hudId = HUDService.displaysIndex()[0];
-  let console = gBrowser.selectedBrowser.contentWindow.wrappedJSObject.console;
-  let hudBox = HUDService.getHeadsUpDisplay(hudId);
+  hudId = HUDService.displaysIndex()[0];
+  let console = browser.contentWindow.wrappedJSObject.console;
+  hudBox = HUDService.getHeadsUpDisplay(hudId);
 
   let prefBranch = Services.prefs.getBranch("devtools.hud.");
   prefBranch.setIntPref("loglimit", 20);
@@ -68,9 +58,8 @@ function testLineLimit() {
      "log limit is set to zero");
 
   prefBranch.clearUserPref("loglimit");
-
-  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
-  finish();
+  prefBranch = console = null;
+  finishTest();
 }
 
 function countMessageNodes() {
@@ -84,4 +73,3 @@ function countGroupNodes() {
   let hudBox = HUDService.getHeadsUpDisplay(hudId);
   return hudBox.querySelectorAll(".hud-group").length;
 }
-

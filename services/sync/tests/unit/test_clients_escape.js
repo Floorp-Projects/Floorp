@@ -51,7 +51,7 @@ function run_test() {
     do_check_eq(checkCount, serialized.length);
 
     _("Making sure the record still looks like it did before");
-    record.decrypt(passphrase);
+    record.decrypt(passphrase, Clients.cryptoMetaURL);
     do_check_eq(record.id, "ascii");
     do_check_eq(record.name, "wéävê");
 

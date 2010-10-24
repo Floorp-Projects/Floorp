@@ -355,62 +355,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   res = NS_OK;
 
   switch (aID) {
-    case eMetric_WindowTitleHeight:
-        aMetric = ::GetSystemMetrics(SM_CYCAPTION);
-        break;
-#ifndef WINCE
-    case eMetric_WindowBorderWidth:
-        aMetric = ::GetSystemMetrics(SM_CXFRAME);
-        break;
-    case eMetric_WindowBorderHeight:
-        aMetric = ::GetSystemMetrics(SM_CYFRAME);
-        break;
-#endif
-    case eMetric_Widget3DBorder:
-        aMetric = ::GetSystemMetrics(SM_CXEDGE);
-        break;
-    case eMetric_TextFieldBorder:
-        aMetric = 3;
-        break;
-    case eMetric_TextFieldHeight:
-        aMetric = 24;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-        aMetric = 10;
-        break;
-    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-        aMetric = 8;
-        break;
-    case eMetric_CheckboxSize:
-        aMetric = 12;
-        break;
-    case eMetric_RadioboxSize:
-        aMetric = 12;
-        break;
-    case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
-    case eMetric_TextVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_TextShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 1;
-        break;
-    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
-        break;
-    case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 3;
-        break;
-    case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 0;
-        break;
-    case eMetric_ListVerticalInsidePadding:
-        aMetric = 0;
-        break;
     case eMetric_CaretBlinkTime:
         aMetric = (PRInt32)::GetCaretBlinkTime();
         break;
@@ -459,11 +403,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
         aMetric = ((contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0);
         break;
-    case eMetric_IsScreenReaderActive:
-        // This will default to the Windows' default
-        // (off by default) on error.
-        aMetric = GetSystemParam(SPI_GETSCREENREADER, 0);
-      break;
 #endif
     case eMetric_ScrollArrowStyle:
         aMetric = eMetric_ScrollArrowStyleSingle;
@@ -511,42 +450,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 #endif
         break;
     case eMetric_WindowsDefaultTheme:
-        aMetric = 0;
-#ifndef WINCE
-        if (nsUXThemeData::getCurrentThemeName) {
-          WCHAR themeFileName[MAX_PATH + 1] = {L'\0'};
-          HRESULT hresult =
-            nsUXThemeData::getCurrentThemeName(themeFileName, MAX_PATH,
-                                                            NULL, 0, NULL, 0);
-
-          // WIN2K and earlier will not have getCurrentThemeName defined, so
-          // they will never make it this far.  Unless we want to save 6.0
-          // users a handful of clock cycles by skipping checks for the
-          // 5.x themes (or vice-versa), we can use a single loop for all
-          // the different Windows versions.
-          if (hresult == S_OK && nsWindow::GetWindowsVersion() <= WIN7_VERSION) {
-            LPCWSTR defThemes[] = {
-              L"luna.msstyles",
-              L"aero.msstyles"
-            };
-
-            LPWSTR curTheme = wcsrchr(themeFileName, L'\\');
-            curTheme = curTheme ? curTheme + 1 : themeFileName;
-
-            for (unsigned i = 0; i < NS_ARRAY_LENGTH(defThemes); ++i) {
-              if (!lstrcmpiW(curTheme, defThemes[i])) {
-                aMetric = 1;
-              }
-            }
-          } else {
-            res = NS_ERROR_NOT_IMPLEMENTED;
-          }
-        }
-        else
-#endif /* WINCE */
-        {
-          res = NS_ERROR_NOT_IMPLEMENTED;
-        }
+        aMetric = nsUXThemeData::IsDefaultWindowTheme();
+        break;
+    case eMetric_WindowsThemeIdentifier:
+        aMetric = nsUXThemeData::GetNativeThemeId();
         break;
     case eMetric_MacGraphiteTheme:
     case eMetric_MaemoClassic:
@@ -628,30 +535,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   res = NS_OK;
 
   switch (aID) {
-    case eMetricFloat_TextFieldVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_TextFieldHorizontalInsidePadding:
-        aMetric = 1.025f;
-        break;
-    case eMetricFloat_TextAreaVerticalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_TextAreaHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ListVerticalInsidePadding:
-        aMetric = 0.10f;
-        break;
-    case eMetricFloat_ListHorizontalInsidePadding:
-        aMetric = 0.40f;
-        break;
-    case eMetricFloat_ButtonVerticalInsidePadding:
-        aMetric = 0.25f;
-        break;
-    case eMetricFloat_ButtonHorizontalInsidePadding:
-        aMetric = 0.25f;
-        break;
     case eMetricFloat_IMEUnderlineRelativeSize:
         aMetric = 1.0f;
         break;

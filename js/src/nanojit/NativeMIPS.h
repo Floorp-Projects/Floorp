@@ -65,33 +65,112 @@ namespace nanojit
     static const int NJ_ALIGN_STACK = 8;
 
     typedef uint32_t NIns;                // REQ: Instruction count
-    typedef uint64_t RegisterMask;        // REQ: Large enough to hold LastReg-FirstReg bits
+    typedef uint64_t RegisterMask;        // REQ: Large enough to hold LastRegNum-FirstRegNum bits
 #define _rmask_(r)        (1LL<<(r))
-    typedef enum {                        // REQ: Register identifiers
-        // Register numbers for Native code generator
-        ZERO = 0,   AT = 1,   V0 = 2,   V1 = 3,   A0 = 4,   A1 = 5,   A2 = 6,   A3 = 7,
-        T0   = 8,   T1 = 9,   T2 = 10,  T3 = 11,  T4 = 12,  T5 = 13,  T6 = 14,  T7 = 15,
-        S0   = 16,  S1 = 17,  S2 = 18,  S3 = 19,  S4 = 20,  S5 = 21,  S6 = 22,  S7 = 23,
-        T8   = 24,  T9 = 25,  K0 = 26,  K1 = 27,  GP = 28,  SP = 29,  FP = 30,  RA = 31,
 
-        F0   = 32,  F1 = 33,  F2 = 34,  F3 = 35,  F4 = 36,  F5 = 37,  F6 = 38,  F7 = 39,
-        F8   = 40,  F9 = 41, F10 = 42, F11 = 43, F12 = 44, F13 = 45, F14 = 46, F15 = 47,
-        F16  = 48, F17 = 49, F18 = 50, F19 = 51, F20 = 52, F21 = 53, F22 = 54, F23 = 55,
-        F24  = 56, F25 = 57, F26 = 58, F27 = 59, F28 = 60, F29 = 61, F30 = 62, F31 = 63,
+    typedef uint32_t Register;            // REQ: Register identifiers
+    // Register numbers for Native code generator
+    static const Register
+        ZERO = { 0 },
+        AT = { 1 },
+        V0 = { 2 },
+        V1 = { 3 },
+        A0 = { 4 },
+        A1 = { 5 },
+        A2 = { 6 },
+        A3 = { 7 },
+
+        T0 = { 8 },
+        T1 = { 9 },
+        T2 = { 10 },
+        T3 = { 11 },
+        T4 = { 12 },
+        T5 = { 13 },
+        T6 = { 14 },
+        T7 = { 15 },
+
+        S0 = { 16 },
+        S1 = { 17 },
+        S2 = { 18 },
+        S3 = { 19 },
+        S4 = { 20 },
+        S5 = { 21 },
+        S6 = { 22 },
+        S7 = { 23 },
+
+        T8 = { 24 },
+        T9 = { 25 },
+        K0 = { 26 },
+        K1 = { 27 },
+        GP = { 28 },
+        SP = { 29 },
+        FP = { 30 },
+        RA = { 31 },
+
+        F0 = { 32 },
+        F1 = { 33 },
+        F2 = { 34 },
+        F3 = { 35 },
+        F4 = { 36 },
+        F5 = { 37 },
+        F6 = { 38 },
+        F7 = { 39 },
+
+        F8 = { 40 },
+        F9 = { 41 },
+        F10 = { 42 },
+        F11 = { 43 },
+        F12 = { 44 },
+        F13 = { 45 },
+        F14 = { 46 },
+        F15 = { 47 },
+
+        F16 = { 48 },
+        F17 = { 49 },
+        F18 = { 50 },
+        F19 = { 51 },
+        F20 = { 52 },
+        F21 = { 53 },
+        F22 = { 54 },
+        F23 = { 55 },
+
+        F24 = { 56 },
+        F25 = { 57 },
+        F26 = { 58 },
+        F27 = { 59 },
+        F28 = { 60 },
+        F29 = { 61 },
+        F30 = { 62 },
+        F31 = { 63 },
 
         // FP register aliases
-        FV0 = F0, FV1 = F2,
-        FA0 = F12, FA1 = F14,
-        FT0 = F4, FT1 = F6, FT2 = F8, FT3 = F10, FT4 = F16, FT5 = F18,
-        FS0 = F20, FS1 = F22, FS2 = F24, FS3 = F26, FS4 = F28, FS5 = F30,
+        FV0 = F0,
+        FV1 = F2,
+        FA0 = F12,
+        FA1 = F14,
+        FT0 = F4,
+        FT1 = F6,
+        FT2 = F8,
+        FT3 = F10,
+        FT4 = F16,
+        FT5 = F18,
+        FS0 = F20,
+        FS1 = F22,
+        FS2 = F24,
+        FS3 = F26,
+        FS4 = F28,
+        FS5 = F30,
 
-        // Wellknown register names used by code generator
-        FirstReg = ZERO,
-        LastReg = F31,
-        deprecated_UnknownReg = 127     // XXX: remove eventually, see bug 538924
+        deprecated_UnknownReg = { 127 };    // XXX: remove eventually, see bug 538924
 
-    } Register;
+    static const uint32_t FirstRegNum = ZERO;
+    static const uint32_t LastRegNum = F31;
+}
 
+#define NJ_USE_UINT32_REGISTER 1
+#include "NativeCommon.h"
+
+namespace nanojit {
     // REQ: register names
     verbose_only(extern const char* regNames[];)
 

@@ -279,6 +279,11 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
     }
 
+#elif defined NANOJIT_ARM && defined DARWIN
+    void CodeAlloc::flushICache(void *, size_t) {
+        VMPI_debugBreak();
+    }
+
 #elif defined AVMPLUS_MAC && defined NANOJIT_PPC
 
 #  ifdef NANOJIT_64BIT
@@ -339,6 +344,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #endif // AVMPLUS_MAC && NANOJIT_PPC
 
     void CodeAlloc::addBlock(CodeList* &blocks, CodeList* b) {
+        NanoAssert(b->terminator != NULL);  // should not be mucking with terminator blocks
         b->next = blocks;
         blocks = b;
     }
@@ -362,7 +368,8 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         debug_only(sanity_check();)
 
         // add terminator to heapblocks list so we can track whole blocks
-        addBlock(heapblocks, terminator);
+        terminator->next = heapblocks;
+        heapblocks = terminator;
         return b;
     }
 
@@ -375,6 +382,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     CodeList* CodeAlloc::removeBlock(CodeList* &blocks) {
         CodeList* b = blocks;
         NanoAssert(b != NULL);
+        NanoAssert(b->terminator != NULL);  // should not be mucking with terminator blocks
         blocks = b->next;
         b->next = 0;
         return b;
@@ -501,12 +509,21 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     }
     #endif
 
+    // Variant of markExec(CodeList*) that walks all heapblocks (i.e. chunks) marking
+    // each one executable.   On systems where bytesPerAlloc is low (i.e. have lots
+    // of elements in the list) this can be expensive.
     void CodeAlloc::markAllExec() {
         for (CodeList* hb = heapblocks; hb != NULL; hb = hb->next) {
-            if (!hb->isExec) {
-                hb->isExec = true;
-                markCodeChunkExec(firstBlock(hb), bytesPerAlloc);
-            }
+            markChunkExec(hb);
+        }
+    }
+
+    // make an entire chunk executable
+    void CodeAlloc::markChunkExec(CodeList* term) {
+        NanoAssert(term->terminator == NULL);
+        if (!term->isExec) {
+            term->isExec = true;
+            markCodeChunkExec(firstBlock(term), bytesPerAlloc);
         }
     }
 }

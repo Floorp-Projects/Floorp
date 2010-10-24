@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=596350
+-->
+<head>
+  <title>Test for Bug 596350</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTests();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=596350">Mozilla Bug 596350</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <object></object>
+  <object data="iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMsALGPC/xhBQAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9YGARc5KB0XV+IAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAF1JREFUGNO9zL0NglAAxPEfdLTs4BZM4DIO4C7OwQg2JoQ9LE1exdlYvBBeZ7jqch9//q1uH4TLzw4d6+ErXMMcXuHWxId3KOETnnXXV6MJpcq2MLaI97CER3N0vr4MkhoXe0rZigAAAABJRU5ErkJggg=="></object>
+  <object data="data:text/html,foo"></object>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 596350 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var testData = [
+// Object 0
+  [ 0, null, "-1" ],
+  [ 0, "1", "1" ],
+  [ 0, "-1", "-1" ],
+  [ 0, "0", "0" ],
+  [ 0, "foo", "-1" ],
+// Object 1
+  [ 1, null, "-1" ],
+  [ 1, "1", "1" ],
+// Object 2
+  [ 2, null, "0" ],
+  [ 2, "1", "1" ],
+  [ 2, "-1", "-1" ],
+];
+
+var objects = document.getElementsByTagName("object");
+
+function runTests()
+{
+  for each(var data in testData) {
+    var obj = objects[data[0]];
+
+    if (data[1]) {
+      obj.setAttribute("tabindex", data[1]);
+    }
+
+    is(obj.tabIndex, data[2], "tabIndex value should be " + data[2]);
+
+    obj.removeAttribute("tabindex");
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -481,12 +481,9 @@ struct nsStyleBackground {
     // True if the rendering of this layer might change when the size
     // of the corresponding frame changes.  This is true for any
     // non-solid-color background whose position or size depends on
-    // the frame size.
-    PRBool RenderingMightDependOnFrameSize() const {
-      return (!mImage.IsEmpty() &&
-              (mPosition.DependsOnFrameSize() ||
-               mSize.DependsOnFrameSize(mImage.GetType())));
-    }
+    // the frame size.  It's also true for SVG images whose root <svg>
+    // node has a viewBox.
+    PRBool RenderingMightDependOnFrameSize() const;
 
     // An equality operator that compares the images using URL-equality
     // rather than pointer-equality.

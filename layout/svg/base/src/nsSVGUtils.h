@@ -175,10 +175,16 @@ public:
   void SetRenderMode(RenderMode aMode) { mRenderMode = aMode; }
   RenderMode GetRenderMode() { return mRenderMode; }
 
+  void SetPaintingToWindow(PRBool aPaintingToWindow) {
+    mPaintingToWindow = aPaintingToWindow;
+  }
+  PRBool IsPaintingToWindow() { return mPaintingToWindow; }
+
 private:
   RenderMode                    mRenderMode;
   nsCOMPtr<nsIRenderingContext> mRenderingContext;
   nsRefPtr<gfxContext>          mGfxContext;
+  PRPackedBool                  mPaintingToWindow;
 };
 
 class nsAutoSVGRenderMode
@@ -599,6 +605,16 @@ public:
    * Returns aIndex-th item of nsIDOMSVGNumberList
    */
   static float GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex);
+
+  /**
+   * Given a nsIContent* that is actually an nsSVGSVGElement*, this method
+   * checks whether it currently has a valid viewBox, and returns true if so.
+   *
+   * No other type of element should be passed to this method.
+   * (In debug builds, anything non-<svg> will trigger an abort; in non-debug
+   * builds, it will trigger a PR_FALSE return-value as a safe fallback.)
+   */
+  static PRBool RootSVGElementHasViewbox(const nsIContent *aRootSVGElem);
 
 private:
   /* Computational (nil) surfaces */

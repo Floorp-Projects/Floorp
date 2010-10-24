@@ -1389,7 +1389,8 @@ nsWaveDecoder::Stop()
 }
 
 nsresult
-nsWaveDecoder::Load(nsMediaStream* aStream, nsIStreamListener** aStreamListener)
+nsWaveDecoder::Load(nsMediaStream* aStream, nsIStreamListener** aStreamListener,
+                    nsMediaDecoder* aCloneDonor)
 {
   NS_ASSERTION(aStream, "A stream should be provided");
 

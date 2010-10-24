@@ -215,11 +215,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   PluginDestructionGuard guard(mInst);
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
-  if (!plugin)
-    return rv;
-
-  PluginLibrary* library = plugin->GetLibrary();
-  if (!library)
+  if (!plugin || !plugin->GetLibrary())
     return rv;
 
   NPPluginFuncs* pluginFunctions = plugin->PluginFuncs();
@@ -231,7 +227,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
     NPPAutoPusher nppPusher(npp);
 
     NPError error;
-    NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->destroystream)(npp, &mNPStream, reason), library, mInst);
+    NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->destroystream)(npp, &mNPStream, reason), mInst);
     
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                    ("NPP DestroyStream called: this=%p, npp=%p, reason=%d, return=%d, url=%s\n",
@@ -260,11 +256,7 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
   mCallNotify = PR_FALSE; // only do this ONCE and prevent recursion
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
-  if (!plugin)
-    return;
-
-  PluginLibrary* library = plugin->GetLibrary();
-  if (!library)
+  if (!plugin || !plugin->GetLibrary())
     return;
 
   NPPluginFuncs* pluginFunctions = plugin->PluginFuncs();
@@ -273,7 +265,7 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
     NPP npp;
     mInst->GetNPP(&npp);
     
-    NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlnotify)(npp, mNotifyURL, reason, mNotifyData), library, mInst);
+    NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlnotify)(npp, mNotifyURL, reason, mNotifyData), mInst);
     
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                    ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
@@ -290,11 +282,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   PluginDestructionGuard guard(mInst);
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
-  if (!plugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = plugin->GetLibrary();
-  if (!library)
+  if (!plugin || !plugin->GetLibrary())
     return NS_ERROR_FAILURE;
 
   NPPluginFuncs* pluginFunctions = plugin->PluginFuncs();
@@ -328,7 +316,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   
   NPPAutoPusher nppPusher(npp);
   
-  NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->newstream)(npp, (char*)contentType, &mNPStream, seekable, &streamType), library, mInst);
+  NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->newstream)(npp, (char*)contentType, &mNPStream, seekable, &streamType), mInst);
   
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPP NewStream called: this=%p, npp=%p, mime=%s, seek=%d, type=%d, return=%d, url=%s\n",
@@ -464,11 +452,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   mStreamInfo = pluginInfo;
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
-  if (!plugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = plugin->GetLibrary();
-  if (!library)
+  if (!plugin || !plugin->GetLibrary())
     return NS_ERROR_FAILURE;
 
   NPPluginFuncs* pluginFunctions = plugin->PluginFuncs();
@@ -588,7 +572,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       if (pluginFunctions->writeready) {
         NPPAutoPusher nppPusher(npp);
         
-        NS_TRY_SAFE_CALL_RETURN(numtowrite, (*pluginFunctions->writeready)(npp, &mNPStream), library, mInst);
+        NS_TRY_SAFE_CALL_RETURN(numtowrite, (*pluginFunctions->writeready)(npp, &mNPStream), mInst);
         NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                        ("NPP WriteReady called: this=%p, npp=%p, "
                         "return(towrite)=%d, url=%s\n",
@@ -637,7 +621,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       NPPAutoPusher nppPusher(npp);
       
       PRInt32 writeCount = 0; // bytes consumed by plugin instance
-      NS_TRY_SAFE_CALL_RETURN(writeCount, (*pluginFunctions->write)(npp, &mNPStream, streamPosition, numtowrite, ptrStreamBuffer), library, mInst);
+      NS_TRY_SAFE_CALL_RETURN(writeCount, (*pluginFunctions->write)(npp, &mNPStream, streamPosition, numtowrite, ptrStreamBuffer), mInst);
       
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                      ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, "
@@ -734,11 +718,7 @@ nsNPAPIPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   PluginDestructionGuard guard(mInst);
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
-  if (!plugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = plugin->GetLibrary();
-  if (!library)
+  if (!plugin || !plugin->GetLibrary())
     return NS_ERROR_FAILURE;
 
   NPPluginFuncs* pluginFunctions = plugin->PluginFuncs();
@@ -749,7 +729,7 @@ nsNPAPIPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   NPP npp;
   mInst->GetNPP(&npp);
   
-  NS_TRY_SAFE_CALL_VOID((*pluginFunctions->asfile)(npp, &mNPStream, fileName), library, mInst);
+  NS_TRY_SAFE_CALL_VOID((*pluginFunctions->asfile)(npp, &mNPStream, fileName), mInst);
   
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPP StreamAsFile called: this=%p, npp=%p, url=%s, file=%s\n",

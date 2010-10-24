@@ -59,6 +59,7 @@ _TEST_FILES = \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
 		test_isSupported.xhtml \
+		test_nonAnimStrings.xhtml \
 		test_pathSeg.xhtml \
 		test_pointer-events.xhtml \
 		test_scientific.html \

@@ -1905,6 +1905,7 @@ private:
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         void* data() const { return m_buffer.data(); }
         void* executableCopy(ExecutablePool* allocator) { return m_buffer.executableCopy(allocator); }
+        bool oom() const { return m_buffer.oom(); }
 
     private:
         AssemblerBuffer m_buffer;

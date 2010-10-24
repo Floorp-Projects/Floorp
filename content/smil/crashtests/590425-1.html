@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.getElementById("frame")
+  var frameSVG = frame.contentDocument.getElementById('s');
+  var animate = frame.contentDocument.createElementNS("http://www.w3.org/2000/svg", "animate");
+  frame.parentNode.removeChild(frame);
+  frameSVG.appendChild(animate);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+<iframe id="frame" src="data:text/html,%3Cbody%3E%3Csvg id=s%3E"></iframe>
+
+</body>
+</html>

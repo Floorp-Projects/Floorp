@@ -326,7 +326,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   rv = mFixedContainer.Reflow(this, aPresContext, reflowState, aStatus,
                               reflowState.ComputedWidth(),
                               reflowState.ComputedHeight(),
-                              PR_FALSE, PR_TRUE, PR_TRUE); // XXX could be optimized
+                              PR_FALSE, PR_TRUE, PR_TRUE, // XXX could be optimized
+                              nsnull /* ignore overflow */);
 
   // If we were dirty then do a repaint
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
@@ -335,8 +336,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // XXX Should we do something to clip our children to this?
-  aDesiredSize.mOverflowArea =
-    nsRect(nsPoint(0, 0), nsSize(aDesiredSize.width, aDesiredSize.height));
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -369,6 +369,9 @@ ViewportFrame::InvalidateInternal(const nsRect& aDamageRect,
     FrameLayerBuilder::InvalidateThebesLayerContents(this, r);
     // Don't need to invalidate any more Thebes layers
     aFlags |= INVALIDATE_NO_THEBES_LAYERS;
+    if (aFlags & INVALIDATE_ONLY_THEBES_LAYERS) {
+      return;
+    }
   }
 
   nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);

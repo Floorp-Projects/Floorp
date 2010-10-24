@@ -10,9 +10,10 @@ function testBFCache() {
   function theTest() {
     var abort = false;
     var chances, gImage, gFrames;
-    gBrowser.selectedTab = gBrowser.addTab();
-    switchToTabHavingURI(TESTROOT + "image.html", true, function(aBrowser) {
-      var window = aBrowser.contentWindow;
+    gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "image.html");
+    gBrowser.selectedBrowser.addEventListener("pageshow", function () {
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
+      var window = gBrowser.contentWindow;
       // If false, we are in an optimized build, and we abort this and
       // all further tests
       if (!actOnMozImage(window.document, "img1", function(image) {
@@ -23,7 +24,7 @@ function testBFCache() {
         abort = true;
       }
       goer.next();
-    });
+    }, true);
     yield;
     if (abort) {
       finish();
@@ -35,7 +36,7 @@ function testBFCache() {
     do {
       gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       gTimer.initWithCallback(function() {
-        if (gImage.framesNotified >= 10) {
+        if (gImage.framesNotified >= 20) {
           goer.send(true);
         } else {
           chances--;
@@ -58,7 +59,7 @@ function testBFCache() {
         // Might have a few stray frames, until other page totally loads
         is(gImage.framesNotified == gFrames, true, "Must have not animated in bfcache!");
         goer.next();
-      }, 4000, Ci.nsITimer.TYPE_ONE_SHOT);
+      }, 4000, Ci.nsITimer.TYPE_ONE_SHOT); // 4 seconds - expect 40 frames
     }, 0, Ci.nsITimer.TYPE_ONE_SHOT); // delay of 0 - wait for next event loop
     yield;
 
@@ -69,7 +70,7 @@ function testBFCache() {
     do {
       gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       gTimer.initWithCallback(function() {
-        if (gImage.framesNotified - gFrames >= 10) {
+        if (gImage.framesNotified - gFrames >= 20) {
           goer.send(true);
         } else {
           chances--;
@@ -78,6 +79,19 @@ function testBFCache() {
       }, 500, Ci.nsITimer.TYPE_ONE_SHOT);
     } while (!(yield));
     is(chances > 0, true, "Must have animated once out of bfcache!");
+
+    // Finally, check that the css background image has essentially the same
+    // # of frames, implying that it animated at the same times as the regular
+    // image. We can easily retrieve regular images through their HTML image
+    // elements, which is what we did before. For the background image, we
+    // create a regular image now, and read the current frame count.
+    var doc = gBrowser.selectedBrowser.contentWindow.document;
+    var div = doc.getElementById("background_div");
+    div.innerHTML += '<img src="animated2.gif" id="img3">';
+    actOnMozImage(doc, "img3", function(image) {
+      is(Math.abs(image.framesNotified - gImage.framesNotified)/gImage.framesNotified < 0.5, true,
+         "Must have also animated the background image, and essentially the same # of frames");
+    });
 
     gBrowser.removeCurrentTab();
 
@@ -95,33 +109,35 @@ function testSharedContainers() {
     var gImages = [];
     var gFrames;
 
-    gBrowser.selectedTab = gBrowser.addTab();
-    switchToTabHavingURI(TESTROOT + "image.html", true, function(aBrowser) {
-      actOnMozImage(aBrowser.contentWindow.window.document, "img1", function(image) {
+    gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "image.html");
+    gBrowser.selectedBrowser.addEventListener("pageshow", function () {
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
+      actOnMozImage(gBrowser.contentDocument, "img1", function(image) {
         gImages[0] = image;
         gFrames = image.framesNotified; // May in theory have frames from last test
                                         // in this counter - so subtract them out
       });
       goer.next();
-    });
+    }, true);
     yield;
 
     // Load next tab somewhat later
     gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gTimer.initWithCallback(function() {
-      gBrowser.selectedTab = gBrowser.addTab();
       goer.next();
     }, 1500, Ci.nsITimer.TYPE_ONE_SHOT);
     yield;
 
-    switchToTabHavingURI(TESTROOT + "imageX2.html", true, function(aBrowser) {
+    gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "imageX2.html");
+    gBrowser.selectedBrowser.addEventListener("pageshow", function () {
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
       [1,2].forEach(function(i) {
-        actOnMozImage(aBrowser.contentWindow.window.document, "img"+i, function(image) {
+        actOnMozImage(gBrowser.contentDocument, "img"+i, function(image) {
           gImages[i] = image;
         });
       });
       goer.next();
-    });
+    }, true);
     yield;
 
     chances = 120;

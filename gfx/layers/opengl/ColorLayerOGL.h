@@ -38,6 +38,11 @@
 #ifndef GFX_COLORLAYEROGL_H
 #define GFX_COLORLAYEROGL_H
 
+#ifdef MOZ_IPC
+# include "mozilla/layers/PLayers.h"
+# include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
+
 #include "LayerManagerOGL.h"
 
 namespace mozilla {
@@ -56,13 +61,36 @@ public:
   ~ColorLayerOGL() { Destroy(); }
 
   // LayerOGL Implementation
-  virtual Layer* GetLayer();
+  virtual Layer* GetLayer() { return this; }
 
   virtual void Destroy() { mDestroyed = PR_TRUE; }
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
 };
+
+#ifdef MOZ_IPC
+class ShadowColorLayerOGL : public ShadowColorLayer,
+                            public LayerOGL
+{
+public:
+  ShadowColorLayerOGL(LayerManagerOGL *aManager)
+    : ShadowColorLayer(aManager, NULL)
+    , LayerOGL(aManager)
+  { 
+    mImplData = static_cast<LayerOGL*>(this);
+  }
+  ~ShadowColorLayerOGL() { Destroy(); }
+
+  // LayerOGL Implementation
+  virtual Layer* GetLayer() { return this; }
+
+  virtual void Destroy() { mDestroyed = PR_TRUE; }
+
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset);
+};
+#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

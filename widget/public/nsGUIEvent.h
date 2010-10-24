@@ -1063,6 +1063,9 @@ private:
   nsTextEvent()
   {
   }
+
+public:
+  PRUint32 seqno;
 #endif // MOZ_IPC
 
 public:
@@ -1091,6 +1094,9 @@ private:
   nsCompositionEvent()
   {
   }
+
+public:
+  PRUint32 seqno;
 #endif // MOZ_IPC
 
 public:
@@ -1292,11 +1298,13 @@ class nsFocusEvent : public nsEvent
 public:
   nsFocusEvent(PRBool isTrusted, PRUint32 msg)
     : nsEvent(isTrusted, msg, NS_FOCUS_EVENT),
-      fromRaise(PR_FALSE)
+      fromRaise(PR_FALSE),
+      isRefocus(PR_FALSE)
   {
   }
 
   PRPackedBool fromRaise;
+  PRPackedBool isRefocus;
 };
 
 class nsSelectionEvent : public nsGUIEvent
@@ -1309,6 +1317,9 @@ private:
   nsSelectionEvent()
   {
   }
+
+public:
+  PRUint32 seqno;
 #endif // MOZ_IPC
 
 public:

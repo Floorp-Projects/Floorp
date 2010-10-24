@@ -87,3 +87,5 @@ browser.jar:
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
+# XXXkhuey This really should live in browser/, but it's too late in the release cycle to move
++       content/browser/NetworkPanel.xhtml            (/toolkit/components/console/hudservice/NetworkPanel.xhtml)

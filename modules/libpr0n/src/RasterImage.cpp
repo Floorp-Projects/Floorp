@@ -198,7 +198,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mHasBeenDecoded(PR_FALSE),
   mWorkerPending(PR_FALSE),
   mInDecoder(PR_FALSE),
-  mError(PR_FALSE),
   mAnimationFinished(PR_FALSE)
 {
   // Set up the discard tracker node.
@@ -390,8 +389,10 @@ RasterImage::GetWidth(PRInt32 *aWidth)
 {
   NS_ENSURE_ARG_POINTER(aWidth);
 
-  if (mError)
+  if (mError) {
+    *aWidth = 0;
     return NS_ERROR_FAILURE;
+  }
 
   *aWidth = mSize.width;
   return NS_OK;
@@ -404,8 +405,10 @@ RasterImage::GetHeight(PRInt32 *aHeight)
 {
   NS_ENSURE_ARG_POINTER(aHeight);
 
-  if (mError)
+  if (mError) {
+    *aHeight = 0;
     return NS_ERROR_FAILURE;
+  }
 
   *aHeight = mSize.height;
   return NS_OK;
@@ -679,26 +682,6 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
 }
 
 PRUint32
-RasterImage::GetDataSize()
-{
-  if (mError)
-    return 0;
-
-  // Start with 0
-  PRUint32 size = 0;
-
-  // Account for any compressed source data
-  size += GetSourceDataSize();
-  NS_ABORT_IF_FALSE(StoringSourceData() || (size == 0),
-                    "Non-zero source data size when we aren't storing it?");
-
-  // Account for any uncompressed frames
-  size += GetDecodedDataSize();
-
-  return size;
-}
-
-PRUint32
 RasterImage::GetDecodedDataSize()
 {
   PRUint32 val = 0;
@@ -714,7 +697,11 @@ RasterImage::GetDecodedDataSize()
 PRUint32
 RasterImage::GetSourceDataSize()
 {
-  return mSourceData.Length();
+  PRUint32 sourceDataSize = mSourceData.Length();
+  
+  NS_ABORT_IF_FALSE(StoringSourceData() || (sourceDataSize == 0),
+                    "Non-zero source data size when we aren't storing it?");
+  return sourceDataSize;
 }
 
 void

@@ -95,15 +95,16 @@ function addPlace(aUrl, aFavicon) {
   return mDBConn.lastInsertRowID;
 }
 
-function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType) {
+function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType, aTitle) {
   let stmt = mDBConn.createStatement(
-    "INSERT INTO moz_bookmarks (fk, type, parent, keyword_id, folder_type) " +
-    "VALUES (:place_id, :type, :parent, :keyword_id, :folder_type)");
+    "INSERT INTO moz_bookmarks (fk, type, parent, keyword_id, folder_type, title) " +
+    "VALUES (:place_id, :type, :parent, :keyword_id, :folder_type, :title)");
   stmt.params["place_id"] = aPlaceId || null;
   stmt.params["type"] = aType || bs.TYPE_BOOKMARK;
   stmt.params["parent"] = aParent || bs.unfiledBookmarksFolder;
   stmt.params["keyword_id"] = aKeywordId || null;
   stmt.params["folder_type"] = aFolderType || null;
+  stmt.params["title"] = typeof(aTitle) == "string" ? aTitle : null;
   stmt.execute();
   stmt.finalize();
   return mDBConn.lastInsertRowID;
@@ -756,6 +757,53 @@ tests.push({
     stmt.reset();
     stmt.params["item_id"] = this._livemarkFailedStatusId;
     do_check_false(stmt.executeStep());
+    stmt.finalize();
+  }
+});
+
+//------------------------------------------------------------------------------
+
+tests.push({
+  name: "D.12",
+  desc: "Fix empty-named tags",
+
+  setup: function() {
+    // Add a place to ensure place_id = 1 is valid
+    let placeId = addPlace();
+    // Create a empty-named tag.
+    this._untitledTagId = addBookmark(null, bs.TYPE_FOLDER, bs.tagsFolder, null, null, "");
+    // Insert a bookmark in the tag, otherwise it will be removed.
+    addBookmark(placeId, bs.TYPE_BOOKMARK, this._untitledTagId);
+    // Create a empty-named folder.
+    this._untitledFolderId = addBookmark(null, bs.TYPE_FOLDER, bs.toolbarFolder, null, null, "");
+    // Create a titled tag.
+    this._titledTagId = addBookmark(null, bs.TYPE_FOLDER, bs.tagsFolder, null, null, "titledTag");
+    // Insert a bookmark in the tag, otherwise it will be removed.
+    addBookmark(placeId, bs.TYPE_BOOKMARK, this._titledTagId);
+    // Create a titled folder.
+    this._titledFolderId = addBookmark(null, bs.TYPE_FOLDER, bs.toolbarFolder, null, null, "titledFolder");
+  },
+
+  check: function() {
+    // Check that valid bookmark is still there
+    let stmt = mDBConn.createStatement(
+      "SELECT title FROM moz_bookmarks WHERE id = :id"
+    );
+    stmt.params["id"] = this._untitledTagId;
+    do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.title, "(notitle)");
+    stmt.reset();
+    stmt.params["id"] = this._untitledFolderId;
+    do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.title, "");
+    stmt.reset();
+    stmt.params["id"] = this._titledTagId;
+    do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.title, "titledTag");
+    stmt.reset();
+    stmt.params["id"] = this._titledFolderId;
+    do_check_true(stmt.executeStep());
+    do_check_eq(stmt.row.title, "titledFolder");
     stmt.finalize();
   }
 });

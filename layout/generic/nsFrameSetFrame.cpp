@@ -1232,8 +1232,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   mDrag.UnSet();
 
-  aDesiredSize.mOverflowArea = nsRect(0, 0,
-                                      aDesiredSize.width, aDesiredSize.height);
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -1609,8 +1608,7 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*          aPresContext,
   // computed values are.
   SizeToAvailSize(aReflowState, aDesiredSize);
 
-  aDesiredSize.mOverflowArea = nsRect(0, 0,
-                                      aDesiredSize.width, aDesiredSize.height);
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
@@ -1816,8 +1814,7 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*          aPresContext,
   // computed values are.
   SizeToAvailSize(aReflowState, aDesiredSize);
 
-  aDesiredSize.mOverflowArea = nsRect(0, 0,
-                                      aDesiredSize.width, aDesiredSize.height);
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }

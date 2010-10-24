@@ -55,5 +55,7 @@ test_bug292789.html : % : %.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	     $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
+GARBAGE += test_bug292789.html
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

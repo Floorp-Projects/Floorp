@@ -21,11 +21,11 @@
   <script type="application/javascript">
     function doTest()
     {
-      // strong roles
       testStates("link1", STATE_LINKED);
       testStates("link2", STATE_LINKED);
       testStates("link3", STATE_LINKED);
       testStates("link4", STATE_LINKED);
+      testStates("link5", 0, 0, STATE_LINKED);
 
       SimpleTest.finish();
     }
@@ -52,6 +52,7 @@
   <a id="link2" onclick="">link</a>
   <a id="link3" onmousedown="">link</a>
   <a id="link4" onmouseup="">link</a>
+  <a id="link5">not link</a>
 
 </body>
 </html>

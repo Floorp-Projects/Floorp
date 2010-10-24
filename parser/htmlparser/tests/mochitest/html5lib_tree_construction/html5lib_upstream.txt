@@ -1,0 +1,11 @@
+The test data in this directory comes from the html5lib project
+(http://code.google.com/p/html5lib/). Please avoid making 
+mozilla-central-specific changes to these files. If Gecko doesn't pass a test,
+please add the test's input data to ../html5_tree_construction_exceptions.js
+instead of removing it.
+
+If you add or edit tests, please push the test to upstream and then 
+resynchronize this directory with the upstream.
+
+See html5lib_license.txt for the license that covers the files in this
+directory.

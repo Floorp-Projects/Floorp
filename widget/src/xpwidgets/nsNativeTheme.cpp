@@ -68,11 +68,11 @@ nsNativeTheme::GetPresShell(nsIFrame* aFrame)
   return context ? context->GetPresShell() : nsnull;
 }
 
-PRInt32
+nsEventStates
 nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (!aFrame)
-    return 0;
+    return nsEventStates();
 
   PRBool isXULCheckboxRadio = 
     (aWidgetType == NS_THEME_CHECKBOX ||
@@ -82,14 +82,14 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
     aFrame = aFrame->GetParent();
 
   if (!aFrame->GetContent())
-    return 0;
+    return nsEventStates();
 
   nsIPresShell *shell = GetPresShell(aFrame);
   if (!shell)
-    return 0;
+    return nsEventStates();
 
   nsIEventStateManager* esm = shell->GetPresContext()->EventStateManager();
-  PRInt32 flags = esm->GetContentState(aFrame->GetContent(), PR_TRUE);
+  nsEventStates flags = esm->GetContentState(aFrame->GetContent(), PR_TRUE);
   
   if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {
     if (IsFocused(aFrame))
@@ -259,6 +259,29 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                                                NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
+bool
+nsNativeTheme::IsDisabled(nsIFrame* aFrame, nsEventStates aEventStates)
+{
+  if (!aFrame) {
+    return false;
+  }
+
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return PR_FALSE;
+  }
+
+  if (content->IsHTML()) {
+    return aEventStates.HasState(NS_EVENT_STATE_DISABLED);
+  }
+
+  // For XML/XUL elements, an attribute must be equal to the literal
+  // string "true" to be counted as true.  An empty string should _not_
+  // be counted as true.
+  return content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
+                              NS_LITERAL_STRING("true"), eCaseMatters);
+}
+
 PRBool
 nsNativeTheme::IsFrameRTL(nsIFrame* aFrame)
 {
@@ -293,7 +316,7 @@ nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
 nsNativeTheme::TreeSortDirection
 nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
 {
-  if (!aFrame)
+  if (!aFrame || !aFrame->GetContent())
     return eTreeSortDirection_Natural;
 
   static nsIContent::AttrValuesArray strings[] =

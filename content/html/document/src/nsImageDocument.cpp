@@ -436,6 +436,9 @@ nsImageDocument::GetImageRequest(imgIRequest** aImageRequest)
 NS_IMETHODIMP
 nsImageDocument::ShrinkToFit()
 {
+  if (!mImageContent) {
+    return NS_OK;
+  }
   if (GetZoomLevel() != mOriginalZoomLevel && mImageIsResized &&
       !nsContentUtils::IsChildOfSameType(this)) {
     return NS_OK;
@@ -495,6 +498,9 @@ nsImageDocument::ScrollImageTo(PRInt32 aX, PRInt32 aY, PRBool restoreImage)
 NS_IMETHODIMP
 nsImageDocument::RestoreImage()
 {
+  if (!mImageContent) {
+    return NS_OK;
+  }
   // Keep image content alive while changing the attributes.
   nsCOMPtr<nsIContent> imageContent = mImageContent;
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, PR_TRUE);

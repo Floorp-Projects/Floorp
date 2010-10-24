@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libEGL", "libEGL\libEGL.vcproj", "{E746FCA9-64C3-433E-85E8-9A5A67AB7ED6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B5871A7A-968C-42E3-A33B-981E6F448E78} = {B5871A7A-968C-42E3-A33B-981E6F448E78}
@@ -45,3 +45,4 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
+obal
