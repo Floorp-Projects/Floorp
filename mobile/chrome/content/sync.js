@@ -211,6 +211,42 @@ let WeaveGlue = {
     if (aTopic == "weave:service:login:finish" || aTopic == "weave:service:login:error")
       this.autoConnect = false;
 
+    // Check for a storage format update, update the user and load the Sync update page
+    if (aTopic =="weave:service:sync:error") {
+      let clientOutdated = false, remoteOutdated = false;
+      if (Weave.Status.sync == Weave.VERSION_OUT_OF_DATE) {
+        clientOutdated = true;
+      } else if (Weave.Status.sync == Weave.DESKTOP_VERSION_OUT_OF_DATE) {
+        remoteOutdated = true;
+      } else if (Weave.Status.service == Weave.SYNC_FAILED_PARTIAL) {
+        // Some engines failed, check for per-engine compat
+        for (let [engine, reason] in Iterator(Weave.Status.engines)) {
+           clientOutdated = clientOutdated || reason == Weave.VERSION_OUT_OF_DATE;
+           remoteOutdated = remoteOutdated || reason == Weave.DESKTOP_VERSION_OUT_OF_DATE;
+        }
+      }
+
+      if (clientOutdated || remoteOutdated) {
+        let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+        let brand = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+        let brandName = brand.GetStringFromName("brandShortName");
+
+        let type = clientOutdated ? "client" : "remote";
+        let message = bundle.GetStringFromName("sync.update." + type);
+        message = message.replace("#1", brandName);
+        message = message.replace("#2", Services.appinfo.version);
+        let title = bundle.GetStringFromName("sync.update.title")
+        let button = bundle.GetStringFromName("sync.update.button")
+        let close = bundle.GetStringFromName("sync.update.close")
+
+        let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
+                    Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_IS_STRING;
+        let choice = Services.prompt.confirmEx(window, title, message, flags, button, close, null, null, {});
+        if (choice == 0)
+          Browser.addTab("https://services.mozilla.com/update/", true, Browser.selectedTab);
+      }
+    }
+
     // Load the values for the string inputs
     account.value = Weave.Service.account || "";
     pass.value = Weave.Service.password || "";
