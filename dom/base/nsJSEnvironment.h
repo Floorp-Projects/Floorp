@@ -210,13 +210,8 @@ public:
   // elapsed since the previous cycle collector call.
   static PRBool IntervalCC();
 
-  // Calls IntervalCC() if user is currently inactive.
-  // If user is active and aOrMaybeCC PR_TRUE, this calls MaybeCC(PR_TRUE)
-  // If aOnlyIfNewSuspectedObjects is PR_TRUE, CC is called only if
-  // user is inactive and there are some new suspected objects.
-  
-  static void CCIfUserInactive(PRBool aOrMaybeCC = PR_TRUE,
-                               PRBool aOnlyIfNewSuspectedObjects = PR_FALSE);
+  // Calls IntervalCC() if user is currently inactive, otherwise MaybeCC(PR_TRUE)
+  static void CCIfUserInactive();
 
   static void FireGCTimer(PRBool aLoadInProgress);
 
