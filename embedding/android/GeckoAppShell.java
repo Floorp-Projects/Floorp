@@ -70,6 +70,7 @@ class GeckoAppShell
     private GeckoAppShell() { }
 
     static boolean sGeckoRunning;
+    static private GeckoEvent gPendingResize = null;
 
     static private boolean gRestartScheduled = false;
 
@@ -90,7 +91,6 @@ class GeckoAppShell
     public static native void nativeRun(String args);
 
     // helper methods
-    public static native void setInitialSize(int width, int height);
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
     public static native void onResume();
@@ -146,13 +146,25 @@ class GeckoAppShell
             combinedArgs += " " + url;
         // and go
         GeckoAppShell.nativeRun(combinedArgs);
+        if (gPendingResize != null) {
+            notifyGeckoOfEvent(gPendingResize);
+            gPendingResize = null;
+        }
     }
 
     private static GeckoEvent mLastDrawEvent;
 
     public static void sendEventToGecko(GeckoEvent e) {
-        if (sGeckoRunning)
+        if (sGeckoRunning) {
+            if (gPendingResize != null) {
+                notifyGeckoOfEvent(gPendingResize);
+                gPendingResize = null;
+            }
             notifyGeckoOfEvent(e);
+        } else {
+            if (e.mType == GeckoEvent.SIZE_CHANGED)
+                gPendingResize = e;
+        }
     }
 
     // Tell the Gecko event loop that an event is available.
