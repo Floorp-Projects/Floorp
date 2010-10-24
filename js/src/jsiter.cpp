@@ -1082,8 +1082,7 @@ stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 Class js_StopIterationClass = {
     js_StopIteration_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration) |
-    JSCLASS_FREEZE_PROTO |
-    JSCLASS_FREEZE_CTOR,
+    JSCLASS_FREEZE_PROTO,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
