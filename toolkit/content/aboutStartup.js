@@ -46,9 +46,18 @@ let brandShortName = branding.GetStringFromName("brandShortName");
 function displayTimestamp(id, µs) document.getElementById(id).textContent = formatstamp(µs);
 function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatms(msFromµs(µs));
 
-function formatStr(str, args) strings.formatStringFromName("about.startup."+ str, args, args.length);
+function formatStr(str, args)
+{
+  try {
+    return strings.formatStringFromName("about.startup."+ str, args, args.length);
+  } catch (x) {
+    return str +" "+ args.toSource();
+  }
+}
 function appVersion(version, build) formatStr("appVersion", [brandShortName, version, build]);
-function formatExtension(str, name, version) formatStr("extension"+str, [name, version]);
+function formatExtension(str, name, version) formatStr("extension"+(str.replace(/^on/, "")
+                                                                                                 .replace(/ing$/, "ed")),
+                                                                            [name, version]);
 
 function msFromµs(µs) µs / 1000;
 function formatstamp(µs) new Date(msFromµs(µs));
