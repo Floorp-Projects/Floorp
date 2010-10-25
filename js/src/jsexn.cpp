@@ -259,8 +259,6 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
     return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
-namespace {
-
 struct CopyTo
 {
     Value *dst;
@@ -269,8 +267,6 @@ struct CopyTo
         *dst++ = *src;
     }
 };
-
-}
 
 static JSBool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
