@@ -249,10 +249,11 @@ struct PropertyTable {
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do update the malloc counter on success.
+     * cope or ignore. They do however use JSRuntime's calloc method in order
+     * to update the malloc counter on success.
      */
-    bool            init(JSContext *cx, js::Shape *lastProp);
-    bool            change(JSContext *cx, int change);
+    bool            init(js::Shape *lastProp, JSContext *cx);
+    bool            change(int log2Delta, JSContext *cx);
     js::Shape       **search(jsid id, bool adding);
 };
 
