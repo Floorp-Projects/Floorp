@@ -1229,8 +1229,6 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
     return -1;
 }
 
-namespace {
-
 struct MemCmp {
     typedef jsuint Extent;
     static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, jsuint patlen) {
@@ -1254,8 +1252,6 @@ struct ManualCmp {
         return true;
     }
 };
-
-}
 
 template <class InnerMatch>
 static jsint
