@@ -796,6 +796,12 @@ mjit::Compiler::generateMethod()
             frame.pushSynced();
           END_CASE(JSOP_ARGUMENTS)
 
+          BEGIN_CASE(JSOP_FORARG)
+            iterNext();
+            jsop_setarg(GET_SLOTNO(PC), true);
+            frame.pop();
+          END_CASE(JSOP_FORARG)
+
           BEGIN_CASE(JSOP_FORLOCAL)
             iterNext();
             frame.storeLocal(GET_SLOTNO(PC), true);
@@ -1304,17 +1310,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_BINDGNAME)
 
           BEGIN_CASE(JSOP_SETARG)
-          {
-            uint32 slot = GET_SLOTNO(PC);
-            FrameEntry *top = frame.peek(-1);
-
-            bool popped = PC[JSOP_SETARG_LENGTH] == JSOP_POP;
-
-            RegisterID reg = frame.allocReg();
-            Address address = Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
-            frame.storeTo(top, address, popped);
-            frame.freeReg(reg);
-          }
+            jsop_setarg(GET_SLOTNO(PC), JSOp(PC[JSOP_SETARG_LENGTH]) == JSOP_POP);
           END_CASE(JSOP_SETARG)
 
           BEGIN_CASE(JSOP_GETLOCAL)
@@ -1404,12 +1400,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_ARGDEC)
 
-          BEGIN_CASE(JSOP_FORNAME)
-            prepareStubCall(Uses(1));
-            masm.move(ImmPtr(script->getAtom(fullAtomIndex(PC))), Registers::ArgReg1);
-            stubCall(STRICT_VARIANT(stubs::ForName));
-          END_CASE(JSOP_FORNAME)
-
           BEGIN_CASE(JSOP_INCLOCAL)
           BEGIN_CASE(JSOP_DECLOCAL)
           BEGIN_CASE(JSOP_LOCALINC)
@@ -1427,6 +1417,41 @@ mjit::Compiler::generateMethod()
             break;
           }
           END_CASE(JSOP_LOCALDEC)
+
+          BEGIN_CASE(JSOP_FORNAME)
+            // Before: ITER
+            // After:  ITER SCOPEOBJ
+            jsop_bindname(fullAtomIndex(PC), false);
+
+            // Fall through to FORPROP.
+
+          BEGIN_CASE(JSOP_FORPROP)
+            // Before: ITER OBJ
+            // After:  ITER OBJ ITER
+            frame.dupAt(-2);
+
+            // Before: ITER OBJ ITER 
+            // After:  ITER OBJ ITER VALUE
+            iterNext();
+
+            // Before: ITER OBJ ITER VALUE
+            // After:  ITER OBJ VALUE
+            frame.shimmy(1);
+
+            // Before: ITER OBJ VALUE
+            // After:  ITER VALUE
+            jsop_setprop(script->getAtom(fullAtomIndex(PC)), false);
+
+            // Before: ITER VALUE
+            // After:  ITER
+            frame.pop();
+          END_CASE(JSOP_FORPROP)
+
+          BEGIN_CASE(JSOP_FORELEM)
+            // This opcode is for the decompiler; it is succeeded by an
+            // ENUMELEM, which performs the actual array store.
+            iterNext();
+          END_CASE(JSOP_FORELEM)
 
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(fullAtomIndex(PC), true);
@@ -1477,6 +1502,29 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
+
+          BEGIN_CASE(JSOP_ENUMELEM)
+            // Normally, SETELEM transforms the stack
+            //  from: OBJ ID VALUE
+            //  to:   VALUE
+            //
+            // Here, the stack transition is
+            //  from: VALUE OBJ ID
+            //  to:
+            // So we make the stack look like a SETELEM, and re-use it.
+
+            // Before: VALUE OBJ ID
+            // After:  VALUE OBJ ID VALUE
+            frame.dupAt(-3);
+
+            // Before: VALUE OBJ ID VALUE
+            // After:  VALUE VALUE
+            jsop_setelem();
+
+            // Before: VALUE VALUE
+            // After:
+            frame.popn(2);
+          END_CASE(JSOP_ENUMELEM)
 
           BEGIN_CASE(JSOP_BLOCKCHAIN)
           END_CASE(JSOP_BLOCKCHAIN)
@@ -1792,6 +1840,12 @@ mjit::Compiler::generateMethod()
             jsop_globalinc(op, GET_SLOTNO(PC));
             break;
           END_CASE(JSOP_GLOBALINC)
+
+          BEGIN_CASE(JSOP_FORGLOBAL)
+            iterNext();
+            jsop_setglobal(GET_SLOTNO(PC));
+            frame.pop();
+          END_CASE(JSOP_FORGLOBAL)
 
           default:
            /* Sorry, this opcode isn't implemented yet. */
@@ -3285,6 +3339,12 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 {
     PICGenInfo pic(ic::PICInfo::BIND, usePropCache);
 
+    // This code does not check the frame flags to see if scopeChain has been
+    // set. Rather, it relies on the up-front analysis statically determining
+    // whether BINDNAME can be used, which reifies the scope chain at the
+    // prologue.
+    JS_ASSERT(analysis.usesScopeChain());
+
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
     pic.typeReg = Registers::ReturnReg;
@@ -3390,9 +3450,19 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 #endif
 
 void
-mjit::Compiler::jsop_getarg(uint32 index)
+mjit::Compiler::jsop_getarg(uint32 slot)
 {
-    frame.push(Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, index)));
+    frame.push(Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot)));
+}
+
+void
+mjit::Compiler::jsop_setarg(uint32 slot, bool popped)
+{
+    FrameEntry *top = frame.peek(-1);
+    RegisterID reg = frame.allocReg();
+    Address address = Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
+    frame.storeTo(top, address, popped);
+    frame.freeReg(reg);
 }
 
 void
