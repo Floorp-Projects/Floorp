@@ -845,7 +845,7 @@ NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
     *aTimestamp = cached;
     return NS_OK;
   }
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
   FILE *uptime;
   long tickspersecond = sysconf(_SC_CLK_TCK);
   unsigned long long sec, ssec;
@@ -892,10 +892,10 @@ NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
 #endif    
     return NS_OK;
   }
-  return NS_ERROR_FAILURE;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+  return NS_ERROR_FAILURE;
 }
 
 /* readonly attribute unsigned long startupTimestamp; */
