@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=413277
+-->
+<head>
+  <title>Test for Bug 413277</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=413277">Mozilla Bug 413277</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  var atts='width=100, height=100, top=100, screenY=100';
+  atts += ', left=100, screenX=100, toolbar=no';
+  atts += ', location=no, directories=no, status=no';
+  atts += ', menubar=no, scrollbars=no, resizable=no';
+  var newWindow = window.open('_blank', 'win_name', atts);
+  
+  newWindow.resizeBy(1000000, 1000000);
+  SimpleTest.is(newWindow.outerWidth, newWindow.screen.availWidth, true);
+  SimpleTest.is(newWindow.outerHeight, newWindow.screen.availHeight, true);
+  SimpleTest.is(newWindow.screenY, newWindow.screen.availTop, true);
+  SimpleTest.is(newWindow.screenX, newWindow.screen.availLeft, true);
+  
+  newWindow.close();
+</script>
+</pre>
+</body>
