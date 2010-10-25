@@ -819,8 +819,7 @@ const gFormSubmitObserver = {
       return;
     }
 
-    // Limit the message to 256 characters.
-    this.panel.firstChild.textContent = element.validationMessage.substring(0, 256);
+    this.panel.firstChild.textContent = element.validationMessage;
 
     element.focus();
 
