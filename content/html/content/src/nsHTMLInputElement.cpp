@@ -3955,6 +3955,9 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
                                                 "FormValidationPatternMismatch",
                                                 message);
       } else {
+        if (title.Length() > nsIConstraintValidation::sContentSpecifiedMaxLengthMessage) {
+          title.Truncate(nsIConstraintValidation::sContentSpecifiedMaxLengthMessage);
+        }
         const PRUnichar* params[] = { title.get() };
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                    "FormValidationPatternMismatchWithTitle",
