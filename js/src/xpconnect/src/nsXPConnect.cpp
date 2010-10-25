@@ -942,7 +942,7 @@ static JSClass xpcTempGlobalClass = {
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        const nsACString &origin, nsIPrincipal *principal,
-                       bool preferXrays, JSObject **global,
+                       bool wantXrays, JSObject **global,
                        JSCompartment **compartment)
 {
     XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
@@ -973,7 +973,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         js::SwitchToCompartment sc(cx, *compartment);
 
         xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(ToNewCString(local_origin), preferXrays);
+            new xpc::CompartmentPrivate(ToNewCString(local_origin), wantXrays);
         JS_SetCompartmentPrivate(cx, *compartment, priv);
         map.Put(local_origin, *compartment);
     }
