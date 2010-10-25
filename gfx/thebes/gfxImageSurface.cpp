@@ -64,12 +64,20 @@ gfxImageSurface::InitFromSurface(cairo_surface_t *csurf)
 
 gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
                                  long aStride, gfxImageFormat aFormat)
-  : mSize(aSize)
-  , mOwnsData(PR_FALSE)
-  , mData(aData)
-  , mFormat(aFormat)
-  , mStride(aStride)
 {
+    InitWithData(aData, aSize, aStride, aFormat);
+}
+
+void
+gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
+                              long aStride, gfxImageFormat aFormat)
+{
+    mSize = aSize;
+    mOwnsData = PR_FALSE;
+    mData = aData;
+    mFormat = aFormat;
+    mStride = aStride;
+
     if (!CheckSurfaceSize(aSize))
         return;
 

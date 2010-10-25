@@ -59,6 +59,9 @@
 
 #if defined(OS_WIN)
 #include <windowsx.h>
+#include "mozilla/gfx/SharedDIBSurface.h"
+
+using mozilla::gfx::SharedDIBSurface;
 
 // Plugin focus event for widget.
 extern const PRUnichar* kOOPPPluginFocusEventId;
@@ -494,6 +497,14 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         surface =
             new gfxXlibSurface(DefaultScreenOfDisplay(DefaultXDisplay()),
                                xdesc.XID(), incFormat, xdesc.size());
+    }
+#endif
+#ifdef XP_WIN
+    else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorWin) {
+        SurfaceDescriptorWin windesc = newSurface.get_SurfaceDescriptorWin();
+        SharedDIBSurface* dibsurf = new SharedDIBSurface();
+        if (dibsurf->Attach(windesc.handle(), windesc.size().width, windesc.size().height))
+            surface = dibsurf;
     }
 #endif
 
@@ -1332,7 +1343,7 @@ PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
     // allocate a new shared surface
     SharedSurfaceRelease();
     if (NS_FAILED(mSharedSurfaceDib.Create(reinterpret_cast<HDC>(aWindow->window),
-                                           newPort.width, newPort.height, 32)))
+                                           newPort.width, newPort.height)))
       return false;
 
     // save the new shared surface size we just allocated
