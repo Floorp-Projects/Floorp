@@ -61,7 +61,7 @@
 
 using namespace js;
 using namespace js::mjit;
-#if defined JS_POLYIC
+#if defined(JS_POLYIC) || defined(JS_MONOIC)
 using namespace js::mjit::ic;
 #endif
 
