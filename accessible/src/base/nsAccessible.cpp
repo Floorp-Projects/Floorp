@@ -2766,6 +2766,13 @@ nsAccessible::RemoveChild(nsAccessible* aChild)
   if (aChild->mParent != this || aChild->mIndexInParent == -1)
     return PR_FALSE;
 
+  if (aChild->mIndexInParent >= mChildren.Length() ||
+      mChildren[aChild->mIndexInParent] != aChild) {
+    NS_ERROR("Child is bound to parent but parent hasn't this child at its index!");
+    aChild->UnbindFromParent();
+    return PR_FALSE;
+  }
+
   for (PRUint32 idx = aChild->mIndexInParent + 1; idx < mChildren.Length(); idx++)
     mChildren[idx]->mIndexInParent--;
 
