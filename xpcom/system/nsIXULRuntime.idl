@@ -108,7 +108,15 @@ interface nsIXULRuntime : nsISupports
    */
   void invalidateCachesOnRestart();
 
+
+  /**
+   * Recorded timestamp indicating when the operating system began launching the app
+    */
   readonly attribute unsigned long long launchTimestamp;
+
+  /**
+   * Recorded timestamp indicating when app startup began (essentially XRE_Main)
+    */
   readonly attribute unsigned long long startupTimestamp;
 
   /**

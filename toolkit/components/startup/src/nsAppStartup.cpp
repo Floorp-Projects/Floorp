@@ -111,7 +111,8 @@ nsAppStartup::nsAppStartup() :
   mRunning(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mAttemptingQuit(PR_FALSE),
-  mRestart(PR_FALSE)
+  mRestart(PR_FALSE),
+  mRestoredTimestamp(0)
 { }
 
 
@@ -521,8 +522,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
     EnterLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {
     ExitLastWindowClosingSurvivalArea();
-  } else if ((!strcmp(aTopic, "sessionstore-browser-state-restored")) ||
-             (!strcmp(aTopic, "sessionstore-windows-restored"))) {
+  } else if (!strcmp(aTopic, "sessionstore-windows-restored")) {
     RecordStartupDuration();
   } else if (!strcmp(aTopic, "AddonManager-event")) {
     RecordAddonEvent(aData, aSubject);
