@@ -2775,7 +2775,7 @@ namespace nanojit
 
         case LIR_negi:
             if (lim > 0)
-                return sub(Interval(0, 0), of(ins->oprnd2(), lim-1));
+                return sub(Interval(0, 0), of(ins->oprnd1(), lim-1));
             goto overflow;
 
         case LIR_muli:
