@@ -48,6 +48,11 @@
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
+#ifdef XP_WIN
+#include "mozilla/gfx/SharedDIBSurface.h"
+
+using mozilla::gfx::SharedDIBSurface;
+#endif
 #include "gfxSharedImageSurface.h"
 #include "gfxUtils.h"
 #include "gfxAlphaRecovery.h"
@@ -1420,7 +1425,7 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow)
     else {
         // Attach to the new shared surface parent handed us.
         if (NS_FAILED(mSharedSurfaceDib.Attach((SharedDIB::Handle)aWindow.surfaceHandle,
-                                               aWindow.width, aWindow.height, 32)))
+                                               aWindow.width, aWindow.height)))
           return false;
         // Free any alpha extraction resources if needed. This will be reset
         // the next time it's used.
@@ -2037,6 +2042,12 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
         mHelperSurface = nsnull;
         mPendingForcePaint = true;
     }
+
+#ifdef XP_WIN
+    mPluginOffset.x = aWindow.x;
+    mPluginOffset.y = aWindow.y;
+#endif
+
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;
     mWindow.width = aWindow.width;
@@ -2098,14 +2109,26 @@ PluginInstanceChild::CreateOptSurface(void)
     }
 #endif
 
-    // Make common shmem implementation working for any platform
-    mCurrentSurface = new gfxSharedImageSurface();
-    if (NS_FAILED(static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->
-        Init(this, gfxIntSize(mWindow.width, mWindow.height), format))) {
-        return false;
+#ifdef XP_WIN
+    if (mSurfaceType == gfxASurface::SurfaceTypeWin32 ||
+        mSurfaceType == gfxASurface::SurfaceTypeD2D) {
+
+        SharedDIBSurface* s = new SharedDIBSurface();
+        if (!s->Create(reinterpret_cast<HDC>(mWindow.window),
+                       mWindow.width, mWindow.height))
+            return false;
+
+        mCurrentSurface = s;
+        return true;
     }
 
-    return true;
+    NS_RUNTIMEABORT("Shared-memory drawing not expected on Windows.");
+#endif
+
+    // Make common shmem implementation working for any platform
+    mCurrentSurface = new gfxSharedImageSurface();
+    return static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->
+        Init(this, gfxIntSize(mWindow.width, mWindow.height), format);
 }
 
 bool
@@ -2234,8 +2257,24 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
             needWindowUpdate = PR_TRUE;
         }
     }
-#endif
-#endif
+#endif // MAEMO
+#endif // MOZ_X11
+#ifdef XP_WIN
+    HDC dc = NULL;
+
+    if (curSurface) {
+        NS_ASSERTION(SharedDIBSurface::IsSharedDIBSurface(curSurface),
+                     "Expected (SharedDIB) image surface.");
+
+        SharedDIBSurface* dibsurf = static_cast<SharedDIBSurface*>(curSurface.get());
+        dc = dibsurf->GetHDC();
+    }
+    if (mWindow.window != dc) {
+        mWindow.window = dc;
+        needWindowUpdate = true;
+    }
+#endif // XP_WIN
+
     if (!needWindowUpdate) {
         return;
     }
@@ -2253,6 +2292,25 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     newClipRect.right = clipRect.XMost();
     newClipRect.bottom = clipRect.YMost();
     mWindow.clipRect = newClipRect;
+
+#ifdef XP_WIN
+    // Windowless plugins on Windows need a WM_WINDOWPOSCHANGED event to update
+    // their location... or at least Flash does: Silverlight uses the
+    // window.x/y passed to NPP_SetWindow
+
+    if (mPluginIface->event) {
+        WINDOWPOS winpos = {
+            0, 0,
+            mPluginOffset.x, mPluginOffset.y,
+            mWindow.width, mWindow.height
+        };
+        NPEvent pluginEvent = {
+            WM_WINDOWPOSCHANGED, 0,
+            (LPARAM) &winpos
+        };
+        mPluginIface->event(&mData, &pluginEvent);
+    }
+#endif
 
     if (mPluginIface->setwindow) {
         mPluginIface->setwindow(&mData, &mWindow);
@@ -2329,7 +2387,31 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     exposeEvent.minor_code = 0;
     mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
     mPendingPluginCall = false;
+    return;
 #endif
+
+#ifdef XP_WIN
+    NS_ASSERTION(SharedDIBSurface::IsSharedDIBSurface(aSurface),
+                 "Expected (SharedDIB) image surface.");
+
+    mPendingPluginCall = true;
+    RECT rect = {
+        aRect.x,
+        aRect.y,
+        aRect.x + aRect.width,
+        aRect.y + aRect.height
+    };
+    NPEvent paintEvent = {
+        WM_PAINT,
+        uintptr_t(mWindow.window),
+        uintptr_t(&rect)
+    };
+    mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
+    mPendingPluginCall = false;
+    return;
+#endif
+
+    NS_RUNTIMEABORT("Surface type not implemented.");
 }
 
 void
@@ -2491,6 +2573,15 @@ PluginInstanceChild::ShowPluginFrame()
         // Need to sync all pending x-paint requests
         // before giving drawable to another process
         XSync(mWsInfo.display, False);
+    } else
+#endif
+#ifdef XP_WIN
+    if (SharedDIBSurface::IsSharedDIBSurface(mCurrentSurface)) {
+        base::SharedMemoryHandle handle = NULL;
+        SharedDIBSurface* s = static_cast<SharedDIBSurface*>(mCurrentSurface.get());
+        s->ShareToProcess(PluginModuleChild::current()->OtherProcess(), &handle);
+        currSurf = SurfaceDescriptorWin(handle, mCurrentSurface->GetSize());
+        s->Flush();
     } else
 #endif
     if (gfxSharedImageSurface::IsSharedImage(mCurrentSurface)) {

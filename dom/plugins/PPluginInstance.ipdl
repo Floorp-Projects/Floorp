@@ -55,6 +55,7 @@ using mozilla::plugins::NativeWindowHandle;
 using mozilla::gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
+using base::SharedMemoryHandle;
 
 namespace mozilla {
 namespace plugins {
@@ -65,9 +66,15 @@ struct SurfaceDescriptorX11 {
   gfxIntSize size;
 };
 
+struct SurfaceDescriptorWin {
+  SharedMemoryHandle handle;
+  gfxIntSize size;
+};
+
 union SurfaceDescriptor {
   Shmem;
   SurfaceDescriptorX11;
+  SurfaceDescriptorWin;
   // Descriptor can be null here in case
   // 1) of first Show call (prevSurface is null)
   // 2) when child is going to destroy

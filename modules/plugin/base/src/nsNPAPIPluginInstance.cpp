@@ -85,7 +85,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull),
-#ifdef MOZ_X11
+#if defined(MOZ_X11) || defined(XP_WIN)
     mUsePluginLayersPref(PR_TRUE)
 #else
     mUsePluginLayersPref(PR_FALSE)
