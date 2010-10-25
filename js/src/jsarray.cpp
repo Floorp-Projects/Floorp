@@ -912,9 +912,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-namespace {
-
-JSBool
+static JSBool
 array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
 {
     JS_ASSERT(obj->isDenseArray());
@@ -930,8 +928,6 @@ array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
     *success = true;
     return true;
 }
-
-} // namespace
 
 Class js_ArrayClass = {
     "Array",

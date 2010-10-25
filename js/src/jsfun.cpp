@@ -209,8 +209,6 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     return argsobj;
 }
 
-namespace {
-
 struct STATIC_SKIP_INFERENCE PutArg
 {
     PutArg(Value *dst) : dst(dst) {}
@@ -221,8 +219,6 @@ struct STATIC_SKIP_INFERENCE PutArg
         ++dst;
     }
 };
-
-}
 
 JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
@@ -651,9 +647,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
     return true;
 }
 
-namespace {
-
-JSBool
+static JSBool
 StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     LeaveTrace(cx);
@@ -680,7 +674,7 @@ StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
@@ -707,7 +701,7 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
            js_SetProperty(cx, obj, id, vp, true);
 }
 
-JSBool
+static JSBool
 strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
     JS_ASSERT(obj->isStrictArguments());
@@ -757,7 +751,7 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject 
     return true;
 }
 
-JSBool
+static JSBool
 strictargs_enumerate(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isStrictArguments());
@@ -788,8 +782,6 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
 
     return true;
 }
-
-} // namespace
 
 static void
 args_finalize(JSContext *cx, JSObject *obj)
@@ -1611,8 +1603,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return true;
 }
 
-namespace {
-
 struct LazyFunctionDataProp {
     uint16      atomOffset;
     int8        tinyid;
@@ -1626,18 +1616,16 @@ struct PoisonPillProp {
 
 /* NB: no sentinels at ends -- use JS_ARRAY_LENGTH to bound loops. */
 
-const LazyFunctionDataProp lazyFunctionDataProps[] = {
+static const LazyFunctionDataProp lazyFunctionDataProps[] = {
     {ATOM_OFFSET(arity),     FUN_ARITY,      JSPROP_PERMANENT|JSPROP_READONLY},
     {ATOM_OFFSET(name),      FUN_NAME,       JSPROP_PERMANENT|JSPROP_READONLY},
 };
 
 /* Properties censored into [[ThrowTypeError]] in strict mode. */
-const PoisonPillProp poisonPillProps[] = {
+static const PoisonPillProp poisonPillProps[] = {
     {ATOM_OFFSET(arguments), FUN_ARGUMENTS },
     {ATOM_OFFSET(caller),    FUN_CALLER    },
 };
-
-}
 
 static JSBool
 fun_enumerate(JSContext *cx, JSObject *obj)
@@ -2238,8 +2226,6 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-namespace {
-
 struct STATIC_SKIP_INFERENCE CopyNonHoleArgs
 {
     CopyNonHoleArgs(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
@@ -2253,8 +2239,6 @@ struct STATIC_SKIP_INFERENCE CopyNonHoleArgs
         ++dst;
     }
 };
-
-}
 
 /* ES5 15.3.4.3 */
 JSBool
@@ -2360,11 +2344,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-namespace {
-
-JSBool
+static JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
-}
 
 inline bool
 JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
@@ -2424,10 +2405,8 @@ JSObject::getBoundFunctionArguments(uintN &argslen) const
     return getSlots() + FUN_CLASS_RESERVED_SLOTS;
 }
 
-namespace {
-
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
-JSBool
+static JSBool
 CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = &vp[0].toObject();
@@ -2475,7 +2454,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 }
 
 /* ES5 15.3.4.5. */
-JSBool
+static JSBool
 fun_bind(JSContext *cx, uintN argc, Value *vp)
 {
     /* Step 1. */
@@ -2532,8 +2511,6 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     /* Step 22. */
     vp->setObject(*funobj);
     return true;
-}
-
 }
 
 static JSFunctionSpec function_methods[] = {
@@ -2766,16 +2743,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
                                          filename, lineno);
 }
 
-namespace {
-
-JSBool
+static JSBool
 ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                  JSMSG_THROW_TYPE_ERROR);
     return false;
-}
-
 }
 
 JSObject *
