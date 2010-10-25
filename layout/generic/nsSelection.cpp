@@ -459,15 +459,17 @@ public:
     {
       nsWeakFrame frame =
         mContent ? mPresContext->GetPrimaryFrameFor(mContent) : nsnull;
+      if (!frame)
+        return NS_OK;
       mContent = nsnull;
 
-      mFrameSelection->HandleDrag(frame, mPoint);
+      nsPoint pt = mPoint -
+        frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
+      mFrameSelection->HandleDrag(frame, pt);
       if (!frame.IsAlive())
         return NS_OK;
 
       NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
-      nsPoint pt = mPoint -
-        frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
       mSelection->DoAutoScroll(frame, pt);
     }
     return NS_OK;
