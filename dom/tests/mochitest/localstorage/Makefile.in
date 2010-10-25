@@ -68,8 +68,6 @@ _TEST_FILES	= \
     test_localStorageBase.html \
     test_localStorageBasePrivateBrowsing.html \
     test_localStorageBaseSessionOnly.html \
-    test_localStorageDeleteSinceAPI.html \
-    test_localStorageDeleteSinceAPIPrivateBrowsing.html \
     test_localStorageCookieSettings.html \
     test_localStorageEnablePref.html \
     test_localStorageOriginsEquals.html \
