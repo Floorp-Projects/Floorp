@@ -785,7 +785,6 @@ autocompleteresult.noresults > .autocomplete-item-container {
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
-  padding-top: 8px;
   -moz-border-end: 3px solid #262629;
   background: #5e6166;
 }
@@ -817,15 +816,15 @@ documenttab {
   line-height: 0;
 
   -moz-margin-start: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   width: 121px;
   padding: 8px;
-  padding-bottom: 11px;
+  padding-bottom: 10px;
   background: url("chrome://browser/skin/images/tab-inactive-hdpi.png") bottom repeat-x;
   border-radius: 6px;
   background-clip: padding-box;
   border: 1px solid rgba(0,0,0,.1);
-  border-bottom-width: 3px;
+  border-bottom-width: 2px;
 }
 
 documenttab[selected="true"] {
