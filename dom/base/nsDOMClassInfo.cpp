@@ -5814,7 +5814,7 @@ nsDOMConstructor::Create(const PRUnichar* aName,
   nsPIDOMWindow* outerWindow = aOwner->GetOuterWindow();
   nsPIDOMWindow* currentInner =
     outerWindow ? outerWindow->GetCurrentInnerWindow() : aOwner;
-  if (!outerWindow ||
+  if (!currentInner ||
       (aOwner != currentInner &&
        !nsContentUtils::CanCallerAccess(currentInner) &&
        !(currentInner = aOwner)->IsInnerWindow())) {
