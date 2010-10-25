@@ -55,7 +55,7 @@ using mozilla::plugins::NativeWindowHandle;
 using mozilla::gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
-using base::SharedMemoryHandle;
+using mozilla::plugins::WindowsSharedMemoryHandle;
 
 namespace mozilla {
 namespace plugins {
@@ -67,7 +67,7 @@ struct SurfaceDescriptorX11 {
 };
 
 struct SurfaceDescriptorWin {
-  SharedMemoryHandle handle;
+  WindowsSharedMemoryHandle handle;
   gfxIntSize size;
 };
 
