@@ -198,8 +198,8 @@
                 <box class="statusIcon"/>
             </vbox>
 
-            <vbox>
-                <spacer flex="1"/>
+            <vbox class="controlsOverlay">
+                <spacer class="controlsSpacer" flex="1"/>
                 <hbox class="controlBar" hidden="true">
                     <button class="playButton"
                             playlabel="&playButton.playLabel;"
@@ -211,6 +211,7 @@
                         <scale class="scrubber" movetoclick="true"/>
                     </stack>
                     <vbox class="durationBox">
+                        <label class="positionLabel" role="presentation"/>
                         <label class="durationLabel" role="presentation"/>
                     </vbox>
                     <button class="muteButton"
@@ -288,6 +289,7 @@
                 volumeStack    : null,
                 volumeControl  : null,
                 durationLabel  : null,
+                positionLabel  : null,
                 scrubberThumb  : null,
                 scrubber       : null,
                 progressBar    : null,
@@ -544,17 +546,13 @@
                         this.video.removeEventListener(event, this, false);
                     this.log("--- videocontrols terminated ---");
                 },
-
-                durationChange : function (duration) {
-                    if (isNaN(duration))
-                        duration = this.maxCurrentTimeSeen;
-                    this.log("Duration is " + duration + "ms");
-
+                
+                formatTime : function(aTime) {
                     // Format the duration as "h:mm:ss" or "m:ss"
-                    var hours = Math.floor(duration / 3600000);
-                    var mins  = Math.floor(duration % 3600000 / 60000);
-                    var secs  = Math.floor(duration % 60000 / 1000);
-                    var timeString;
+                    let hours = Math.floor(aTime / 3600000);
+                    let mins  = Math.floor(aTime % 3600000 / 60000);
+                    let secs  = Math.floor(aTime % 60000 / 1000);
+                    let timeString;
                     if (secs < 10)
                         secs = "0" + secs;
                     if (hours) {
@@ -564,6 +562,16 @@
                     } else {
                         timeString = mins + ":" + secs;
                     }
+                    return timeString;
+                },
+
+                durationChange : function (duration) {
+                    if (isNaN(duration))
+                        duration = this.maxCurrentTimeSeen;
+                    this.log("Duration is " + duration + "ms");
+
+                    // Format the duration as "h:mm:ss" or "m:ss"
+                    let timeString = this.formatTime(duration);
                     this.durationLabel.setAttribute("value", timeString);
 
                     // "durationValue" property is used by scale binding to
@@ -605,6 +613,8 @@
                     }
 
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
+
+                    this.positionLabel.setAttribute("value", this.formatTime(currentTime));
                     this.scrubber.value = currentTime;
                 },
 
@@ -905,6 +915,7 @@
                     this.scrubber      = document.getAnonymousElementByAttribute(binding, "class", "scrubber");
                     this.scrubberThumb = document.getAnonymousElementByAttribute(this.scrubber, "class", "scale-thumb");
                     this.durationLabel = document.getAnonymousElementByAttribute(binding, "class", "durationLabel");
+                    this.positionLabel = document.getAnonymousElementByAttribute(binding, "class", "positionLabel");
                     this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
 
                     this.setupInitialState();
@@ -956,5 +967,159 @@
             this.Utils.onMouseInOut(event);
         </handler>
     </handlers>
+  </binding>
+  
+  <binding id="touchControls" extends="chrome://global/content/bindings/videocontrols.xml#videoControls">
+
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="mediaControlsFrame">
+        <stack flex="1">
+            <vbox flex="1" class="statusOverlay" hidden="true">
+                <box class="statusIcon"/>
+            </vbox>
+
+            <vbox class="controlsOverlay">
+                <spacer class="controlsSpacer" flex="1"/>
+                <vbox class="controlBar" hidden="true">
+                    <hbox class="buttonsBar">
+                        <spacer flex="1"/>
+                        <button class="playButton"
+                                playlabel="&playButton.playLabel;"
+                                pauselabel="&playButton.pauseLabel;"/>
+                        <spacer flex="1"/>
+                        <button class="muteButton"
+                                mutelabel="&muteButton.muteLabel;"
+                                unmutelabel="&muteButton.unmuteLabel;"/>
+                        <stack class="volumeStack" hidden="true" fadeout="true">
+                            <box class="volumeBackgroundBar"/>
+                            <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
+                        </stack>
+                    </hbox>
+                    <stack class="scrubberStack" flex="1">
+                        <box class="backgroundBar"/>
+                        <progressmeter class="bufferBar"/>
+                        <progressmeter class="progressBar" max="10000"/>
+                        <scale class="scrubber" movetoclick="true"/>
+                    </stack>
+                    <vbox class="durationBox">
+                        <label class="positionLabel" role="presentation"/>
+                        <label class="durationLabel" role="presentation"/>
+                    </vbox>
+                </vbox>
+            </vbox>
+        </stack>
+    </xbl:content>
+
+    <implementation>
+
+        <constructor>
+          this.TouchUtils.init(this);
+        </constructor>
+
+        <field name="TouchUtils">
+          <![CDATA[ ({
+            videocontrols: null,
+            controlsTimer : null,
+            controlsTimeout : 5000,
+            positionLabel: null,
+
+            get Utils() {
+              return this.videocontrols.Utils;
+            },
+            
+            get visible() {
+              return !this.Utils.controlBar.hasAttribute("fadeout") || !this.Utils.controlBar.hasAttribute("hidden");
+            },
+
+            _firstShow: false,
+            get firstShow() { return this._firstShow; },
+            set firstShow(val) {
+              this._firstShow = val;
+              this.Utils.controlBar.setAttribute("firstshow", val);
+            },
+
+            toggleControls: function() {
+              if (!this.Utils.dynamicControls || !this.visible)
+                this.showControls();
+              else
+                this.delayHideControls(0);
+            },
+
+            showControls : function() {
+              let event = document.createEvent("MouseEvents");
+              event.initEvent("mouseover", true, true);
+              this.Utils.videocontrols.dispatchEvent(event);
+
+              this.delayHideControls(this.controlsTimeout);
+            },
+            
+            delayHideControls : function(aTimeout) {
+              if (this.controlsTimer) {
+                clearTimeout(this.controlsTimer);
+                this.controlsTimer = null;
+              }
+              let self = this;
+              this.controlsTimer = setTimeout(function() {
+                self.hideControls();
+              }, aTimeout);
+            },
+
+            hideControls : function() {
+              let event = document.createEvent("MouseEvents");
+              event.initEvent("mouseout", true, true);
+              this.Utils.videocontrols.dispatchEvent(event);
+
+              if (this.firstShow)
+                this.videocontrols.addEventListener("transitionend", this, false);
+            },
+
+            handleEvent : function (aEvent) {
+              if (aEvent.type == "transitionend") {
+                this.firstShow = false;
+                this.videocontrols.removeEventListener("transitionend", this, false);
+                return;
+              }
+
+              if (this.videocontrols.randomID != this.Utils.randomID)
+                this.terminateEventListeners();
+
+            },
+
+            terminateEventListeners : function () {
+              for each (var event in this.videoEvents)
+                this.Utils.video.removeEventListener(event, this, false);
+            },
+
+            init : function (binding) {
+              this.videocontrols = binding;
+              var video = binding.parentNode;
+
+              let self = this;
+              this.Utils.playButton.addEventListener("command", function() {
+                if (!self.Utils.video.paused)
+                    self.delayHideControls(0);
+                else 
+                    self.showControls();
+              }, false);
+              this.Utils.scrubber.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
+              this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
+
+              if (!video.autoplay && this.Utils.dynamicControls)
+                this.firstShow = true;
+            }
+          }) ]]>
+        </field>
+
+    </implementation>
+
+    <handlers>
+        <handler event="mouseup">
+          if(event.originalTarget.nodeName == "vbox") {
+            if (this.TouchUtils.firstShow)
+              this.Utils.video.play();
+            this.TouchUtils.toggleControls();
+          }
+        </handler>
+    </handlers>
+
   </binding>
 </bindings>
