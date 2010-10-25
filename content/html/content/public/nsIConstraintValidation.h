@@ -64,6 +64,8 @@ public:
 
   friend class nsDOMValidityState;
 
+  static const PRUint16 sContentSpecifiedMaxLengthMessage;
+
   virtual ~nsIConstraintValidation();
 
   PRBool IsValid() const { return mValidityBitField == 0; }
