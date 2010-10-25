@@ -7095,15 +7095,13 @@ nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
-
-  if (sgo) {
-    JSObject *global = sgo->GetGlobalJSObject();
-
-    if (global) {
-      *parentObj = global;
-    }
+  if (!sgo) {
+    NS_WARNING("Refusing to create a location in the wrong scope because the "
+	       "docshell is being destroyed");
+    return NS_ERROR_UNEXPECTED;
   }
 
+  *parentObj = sgo->GetGlobalJSObject();
   return NS_OK;
 }
 
