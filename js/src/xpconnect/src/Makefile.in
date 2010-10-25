@@ -123,7 +123,6 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/content/svg/content/src \
 		-I$(topsrcdir)/layout/style \
 		-I$(topsrcdir)/layout/base \
-		-I$(topsrcdir)/dom/base \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
