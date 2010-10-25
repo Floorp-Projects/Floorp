@@ -228,8 +228,6 @@ var AddonManagerInternal = {
     if (gStarted)
       return;
 
-    this._addNotificationListeners();
-
     let appChanged = undefined;
 
     try {
@@ -438,6 +436,12 @@ var AddonManagerInternal = {
         WARN("AddonListener threw exception when calling " + aMethod + ": " + e);
       }
     });
+    let bag = Cc["@mozilla.org/hash-property-bag;1"]
+                .createInstance(Ci.nsIWritablePropertyBag2);
+    bag.setPropertyAsAString("id", args[0].id);
+    bag.setPropertyAsAString("name", args[0].name);
+    bag.setPropertyAsAString("version", args[0].version);
+    Services.obs.notifyObservers(bag, "AddonManager-event", aMethod);
   },
 
   /**
@@ -862,33 +866,7 @@ var AddonManagerInternal = {
       return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
     } catch(e) { }
     return true;
-  },
-
-  /**
-   * Adds an AddonListener that uses the observer service to notify
-   * native code of the extension events.
-   *
-   * Currently only handles that subset of the events and data that
-     * the about:startup page requires.
-   *
-   */
-  _addNotificationListeners: function()
-  {
-    function notify(msg, extension)
-    {
-      let bag = Cc["@mozilla.org/hash-property-bag;1"]
-                  .createInstance(Ci.nsIWritablePropertyBag2);
-      bag.setPropertyAsAString("id", extension.id);
-      bag.setPropertyAsAString("name", extension.name);
-      bag.setPropertyAsAString("version", extension.version);
-      Services.obs.notifyObservers(bag, "AddonManager-event", msg);
-    }
-    this.addAddonListener({ onEnabling: function(extension) { notify("Enabled", extension) },
-                            onDisabling: function(extension) { notify("Disabled", extension) },
-                            onInstalling: function(extension) { notify("Installed", extension) },
-                            onUninstalling: function(extension) { notify("Uninstalled", extension) },
-                          });
-  },
+  }
 };
 
 /**
