@@ -4240,6 +4240,7 @@ mil.to
 // tr : http://en.wikipedia.org/wiki/.tr
 *.tr
 !nic.tr
+!tsk.tr
 // Used by government in the TRNC
 // http://en.wikipedia.org/wiki/.nc.tr
 gov.nc.tr
