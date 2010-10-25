@@ -73,6 +73,8 @@
 #include "nsContentCreatorFunctions.h"
 #include "txError.h"
 
+using namespace mozilla::dom;
+
 #define TX_ENSURE_CURRENTNODE                           \
     NS_ASSERTION(mCurrentNode, "mCurrentNode is NULL"); \
     if (!mCurrentNode)                                  \
@@ -536,7 +538,8 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     ni = mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni.forget(), PR_FALSE);
+    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni.forget(),
+                  NOT_FROM_PARSER);
 
     // Set up the element and adjust state
     if (!mNoFixup) {
@@ -947,7 +950,7 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
                                        kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    return NS_NewHTMLElement(aResult, ni.forget(), PR_FALSE);
+    return NS_NewHTMLElement(aResult, ni.forget(), NOT_FROM_PARSER);
 }
 
 txTransformNotifier::txTransformNotifier()
