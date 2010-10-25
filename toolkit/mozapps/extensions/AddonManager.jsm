@@ -228,6 +228,8 @@ var AddonManagerInternal = {
     if (gStarted)
       return;
 
+    this._addNotificationListeners();
+
     let appChanged = undefined;
 
     try {
@@ -872,8 +874,6 @@ var AddonManagerInternal = {
    */
   _addNotificationListeners: function()
   {
-    const svc = Cc["@mozilla.org/observer-service;1"]
-                  .getService(Ci.nsIObserverService);
     function notify(msg, extension)
     {
       let bag = Cc["@mozilla.org/hash-property-bag;1"]
@@ -881,7 +881,7 @@ var AddonManagerInternal = {
       bag.setPropertyAsAString("id", extension.id);
       bag.setPropertyAsAString("name", extension.name);
       bag.setPropertyAsAString("version", extension.version);
-      svc.notifyObservers(bag, "AddonManager-event", msg);
+      Services.obs.notifyObservers(bag, "AddonManager-event", msg);
     }
     this.addAddonListener({ onEnabling: function(extension) { notify("Enabled", extension) },
                             onDisabling: function(extension) { notify("Disabled", extension) },
