@@ -1,0 +1,70 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>localStorage delete since API test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function cleanup()
+{
+  localStorage.clear();
+  SimpleTest.finish();
+}
+
+function doTest()
+{
+  var since = 0;
+
+  setTimeout('localStorage.key1 = "value1"',     0);
+  setTimeout('localStorage.key2 = "value2"',   100);
+  setTimeout('localStorage.key3 = "value3"',   200);
+
+  // Since now, all added/changed items will be deleted
+  setTimeout(function() {
+    // Now in microseconds...
+    since = (new Date()).getTime() * 1000;
+  }, 300);
+
+  // Rather give the timer chance to move forward, on some systems the
+  // granularity may be too grainy.
+
+  setTimeout('localStorage.key4 = "value4"',   500);
+  setTimeout('localStorage.key1 = "value1-2"', 600);
+
+  setTimeout(function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    is(localStorage.length, 4, "Expected 4 items before delete in localStorage");
+
+    try {
+      var domStorageManager = Components.classes["@mozilla.org/dom/storagemanager;1"]
+                                        .getService(Components.interfaces.nsIDOMStorageManager);
+      domStorageManager.clearStorageDataSince(since);
+    }
+    catch(ex) {
+      ok(false, ex);
+    }
+
+    is(localStorage.key1, null, "key1 deleted (if this fails see bug 600366 first)");
+    is(localStorage.key2, "value2", "key2 left");
+    is(localStorage.key3, "value3", "key3 left");
+    is(localStorage.key4, null, "key4 deleted (if this fails see bug 600366 first)");
+    is(localStorage.length, 2, "Expected 2 items after delete in localStorage");
+
+    cleanup();
+  }, 700);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="doTest();">
+
+</body>
+</html>
