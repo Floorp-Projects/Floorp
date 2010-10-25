@@ -786,6 +786,7 @@ pref("network.IDN.whitelist.es", true);
 pref("network.IDN.whitelist.fi", true);
 pref("network.IDN.whitelist.gr", true);
 pref("network.IDN.whitelist.hu", true);
+pref("network.IDN.whitelist.il", true);
 pref("network.IDN.whitelist.io", true);
 pref("network.IDN.whitelist.ir", true);
 pref("network.IDN.whitelist.is", true);
