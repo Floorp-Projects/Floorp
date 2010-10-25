@@ -205,17 +205,43 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
         "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRInt32 schemaVersion;
+  rv = mConnection->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mozStorageTransaction transaction(mConnection, PR_FALSE);
 
   // Ensure Gecko 1.9.1 storage table
-  rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-         "CREATE TABLE IF NOT EXISTS webappsstore2 ("
-         "scope TEXT, "
-         "key TEXT, "
-         "value TEXT, "
-         "secure INTEGER, "
-         "owner TEXT)"));
+  PRBool exists;
+
+  rv = mConnection->TableExists(NS_LITERAL_CSTRING("webappsstore2"),
+                                &exists);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+           "CREATE TABLE webappsstore2 ("
+           "scope TEXT, "
+           "key TEXT, "
+           "value TEXT, "
+           "secure INTEGER, "
+           "owner TEXT, "
+           "inserttime BIGINT DEFAULT 0)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    if (schemaVersion == 0) {
+      rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+           "ALTER TABLE webappsstore2 "
+           "ADD COLUMN inserttime BIGINT DEFAULT 0"));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  if (schemaVersion == 0) {
+    rv = mConnection->SetSchemaVersion(1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE UNIQUE INDEX IF NOT EXISTS scope_key_index"
@@ -223,17 +249,29 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX IF NOT EXISTS inserttime_index"
+        " ON webappsstore2(inserttime)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
          "CREATE TEMPORARY TABLE webappsstore2_temp ("
          "scope TEXT, "
          "key TEXT, "
          "value TEXT, "
          "secure INTEGER, "
-         "owner TEXT)"));
+         "owner TEXT, "
+         "inserttime BIGINT DEFAULT 0)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE UNIQUE INDEX scope_key_index_temp"
         " ON webappsstore2_temp(scope, key)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX IF NOT EXISTS inserttime_index_temp"
+        " ON webappsstore2_temp(inserttime)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
 
@@ -270,8 +308,6 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
 
   rv = mConnection->CreateFunction(NS_LITERAL_CSTRING("ISOFFLINE"), 1, function2);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool exists;
 
   // Check if there is storage of Gecko 1.9.0 and if so, upgrade that storage
   // to actual webappsstore2 table and drop the obsolete table. First process
@@ -355,8 +391,8 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
   // insert a new key
   rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
          "INSERT OR REPLACE INTO "
-         "webappsstore2_temp(scope, key, value, secure) "
-         "VALUES (:scope, :key, :value, :secure)"),
+         "webappsstore2_temp(scope, key, value, secure, inserttime) "
+         "VALUES (:scope, :key, :value, :secure, :inserttime)"),
          getter_AddRefs(mInsertKeyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -389,6 +425,14 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
          "DELETE FROM webappsstore2_view "
          "WHERE scope = :scope"),
          getter_AddRefs(mRemoveStorageStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove keys that are junger then a specific time
+  rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+         "DELETE FROM webappsstore2_view "
+         "WHERE inserttime > :time "
+         "AND NOT ISOFFLINE(scope)"),
+         getter_AddRefs(mRemoveTimeRangeStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // remove all keys
@@ -689,6 +733,9 @@ nsDOMStoragePersistentDB::SetKey(nsDOMStorage* aStorage,
   rv = binder->BindInt32ByName(NS_LITERAL_CSTRING("secure"),
                                aSecure ? 1 : 0);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = binder->BindInt64ByName(NS_LITERAL_CSTRING("inserttime"),
+                               PR_Now());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = binder.Add();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -800,6 +847,32 @@ nsDOMStoragePersistentDB::ClearStorage(nsDOMStorage* aStorage)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mRemoveStorageStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMStoragePersistentDB::RemoveTimeRange(PRInt64 since)
+{
+  nsresult rv;
+
+  rv = MaybeCommitInsertTransaction();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageStatementScoper scope(mRemoveTimeRangeStatement);
+
+  Binder binder(mRemoveTimeRangeStatement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = binder->BindInt64ByName(NS_LITERAL_CSTRING("time"),
+                                    since);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = binder.Add();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mRemoveTimeRangeStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

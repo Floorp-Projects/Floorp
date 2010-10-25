@@ -40,59 +40,15 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= dom/tests/mochitest/localstorage
+relativesrcdir	= dom/tests/mochitest/globalstorage
 
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-    frameChromeSlave.html \
-    frameMasterEqual.html \
-    frameMasterNotEqual.html \
-    frameSlaveEqual.html \
-    frameSlaveNotEqual.html \
-    frameReplace.html \
-    frameQuota.html \
-    frameQuotaSessionOnly.html \
-    frameOrder.html \
-    interOriginFrame.js \
-    interOriginTest.js \
-    interOriginTest2.js \
-    pbSwitch.js \
-    test_brokenUTF-16.html \
-    test_cookieBlock.html \
-    test_cookieSession-phase1.html \
-    test_cookieSession-phase2.html \
-    test_embededNulls.html \
-    test_localStorageBase.html \
-    test_localStorageBasePrivateBrowsing.html \
-    test_localStorageBaseSessionOnly.html \
-    test_localStorageDeleteSinceAPI.html \
-    test_localStorageDeleteSinceAPIPrivateBrowsing.html \
-    test_localStorageCookieSettings.html \
-    test_localStorageEnablePref.html \
-    test_localStorageOriginsEquals.html \
-    test_localStorageOriginsDiff.html \
-    test_localStorageOriginsPortDiffs.html \
-    test_localStorageOriginsDomainDiffs.html \
-    test_localStorageOriginsSchemaDiffs.html \
-    test_localStorageReplace.html \
-    test_localStorageQuota.html \
-    test_localStorageQuotaPrivateBrowsing.html \
-    test_localStorageQuotaSessionOnly.html \
-    test_localStorageQuotaSessionOnly2.html \
-    test_localStorageKeyOrder.html \
-    test_removeOwnersAPI.html \
-    test_removeOwnersAPISessionOnly.html \
-    test_storageConstructor.html \
-    $(NULL)
-    
-_CHROME_FILES = \
-    test_localStorageFromChrome.xhtml \
+    test_globalStorageDeleteSinceAPI.html \
     $(NULL)
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs::	$(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

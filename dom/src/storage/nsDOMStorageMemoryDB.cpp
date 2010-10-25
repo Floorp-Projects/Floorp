@@ -230,6 +230,7 @@ nsDOMStorageMemoryDB::SetKey(nsDOMStorage* aStorage,
 
   item->mValue = aValue;
   item->mSecure = aSecure;
+  item->mInsertTime = PR_Now();
 
   *aNewUsage = usage;
 
@@ -375,6 +376,34 @@ nsDOMStorageMemoryDB::RemoveOwners(const nsTArray<nsString> &aOwners,
     struc.mMatch = aMatch;
     mData.Enumerate(RemoveOwnersEnum, &struc);
   }
+
+  return NS_OK;
+}
+
+static PLDHashOperator
+RemoveTimeRangeEnum(const nsAString& keyname,
+               nsAutoPtr<nsDOMStorageMemoryDB::nsInMemoryItem>& item,
+               void *closure)
+{
+  if (item->mInsertTime > *(PRInt64*)closure)
+    return PL_DHASH_REMOVE;
+
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+RemoveTimeRangeStoragesEnum(const nsACString& key,
+                 nsAutoPtr<nsDOMStorageMemoryDB::nsInMemoryStorage>& storage,
+                 void *closure)
+{
+  storage->mTable.Enumerate(RemoveTimeRangeEnum, closure);
+  return PL_DHASH_NEXT;
+}
+
+nsresult
+nsDOMStorageMemoryDB::RemoveTimeRange(PRInt64 since)
+{
+  mData.Enumerate(RemoveTimeRangeStoragesEnum, &since);
 
   return NS_OK;
 }
