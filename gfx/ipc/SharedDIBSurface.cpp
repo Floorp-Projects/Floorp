@@ -42,7 +42,7 @@
 namespace mozilla {
 namespace gfx {
 
-static const cairo_user_data_key_t SHAREDDIB_KEY;
+static const cairo_user_data_key_t SHAREDDIB_KEY = {0};
 
 static const long kBytesPerPixel = 4;
 
