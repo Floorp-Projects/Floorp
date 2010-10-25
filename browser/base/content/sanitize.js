@@ -152,6 +152,11 @@ Sanitizer.prototype = {
               // This cookie was created after our cutoff, clear it
               cookieMgr.remove(cookie.host, cookie.name, cookie.path, false);
           }
+
+          // Also handle all DOM storage data created after the cutoff.
+          var domStorageManager = Components.classes["@mozilla.org/dom/storagemanager;1"]
+                                            .getService(Ci.nsIDOMStorageManager);
+          domStorageManager.clearStorageDataSince(this.range[0]);
         }
         else {
           // Remove everything

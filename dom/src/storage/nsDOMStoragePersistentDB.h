@@ -129,6 +129,14 @@ public:
                PRBool aIncludeSubDomains, PRBool aMatch);
 
   /**
+   * Remove all values from all scopes not marked as offline that has been
+   * created after the time specified with 'aSince'.  Used by the Clear Private
+   * Data dialog.  'aSince' value is compatible with PR_Now() function.
+   */
+  nsresult
+  RemoveTimeRange(PRInt64 aSince);
+
+  /**
    * Removes all keys from storage. Used when clearing storage.
    */
   nsresult
@@ -176,6 +184,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mRemoveKeyStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveOwnerStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveStorageStatement;
+  nsCOMPtr<mozIStorageStatement> mRemoveTimeRangeStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveAllStatement;
   nsCOMPtr<mozIStorageStatement> mGetOfflineExcludedUsageStatement;
   nsCOMPtr<mozIStorageStatement> mGetFullUsageStatement;
