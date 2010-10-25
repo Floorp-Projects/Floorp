@@ -54,12 +54,12 @@ public:
 
   // Allocate a new win32 dib section compatible with an hdc. The dib will
   // be selected into the hdc on return.
-  nsresult Create(HDC aHdc, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth);
+  nsresult Create(HDC aHdc, PRUint32 aWidth, PRUint32 aHeight);
 
   // Wrap a dib section around an existing shared memory object. aHandle should
   // point to a section large enough for the dib's memory, otherwise this call
   // will fail.
-  nsresult Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth);
+  nsresult Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight);
 
   // Destroy or release resources associated with this dib.
   nsresult Close();
@@ -67,12 +67,16 @@ public:
   // Return the HDC of the shared dib.
   HDC GetHDC() { return mSharedHdc; }
 
+  // Return the bitmap bits.
+  void* GetBits() { return mBitmapBits; }
+
 private:
   HDC                 mSharedHdc;
   HBITMAP             mSharedBmp;
   HGDIOBJ             mOldObj;
+  void*               mBitmapBits;
 
-  PRUint32 SetupBitmapHeader(PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth, BITMAPINFOHEADER *aHeader);
+  PRUint32 SetupBitmapHeader(PRUint32 aWidth, PRUint32 aHeight, BITMAPINFOHEADER *aHeader);
   nsresult SetupSurface(HDC aHdc, BITMAPINFOHEADER *aHdr);
 };
 
