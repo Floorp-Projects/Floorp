@@ -1682,12 +1682,16 @@ var FindHelperUI = {
     this._container.show(this);
     this.search("");
     this._textbox.focus();
+
+    // Prevent the view to scroll automatically while searching
+    Browser.selectedBrowser.scrollSync = false;
   },
 
   hide: function findHelperHide() {
     this._textbox.value = "";
     this._textbox.blur();
     this._container.hide(this);
+    Browser.selectedBrowser.scrollSync = true;
   },
 
   goToPrevious: function findHelperGoToPrevious() {

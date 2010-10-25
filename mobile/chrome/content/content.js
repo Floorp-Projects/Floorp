@@ -907,7 +907,12 @@ var FindHandler = {
 
     let rangeRect = selection.getRangeAt(0).getBoundingClientRect();
     let rect = new Rect(scroll.x + rangeRect.left, scroll.y + rangeRect.top, rangeRect.width, rangeRect.height);
-    sendAsyncMessage("FindAssist:Show", { rect: rect.isEmpty() ? null: rect , result: findResult });
+
+    // Ensure the potential "scroll" event fired during a search as already fired
+    let timer = new Util.Timeout(function() {
+      sendAsyncMessage("FindAssist:Show", { rect: rect.isEmpty() ? null: rect , result: findResult });
+    });
+    timer.once(0);
   }
 };
 

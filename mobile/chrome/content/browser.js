@@ -897,8 +897,9 @@ var Browser = {
 
     zoomLevel = tab.clampZoomLevel(zoomLevel);
 
-    let center = browser.transformClientToBrowser(window.innerWidth / 2,
-                                                  window.innerHeight / 2);
+    let browserRect = browser.getBoundingClientRect();
+    let center = browser.transformClientToBrowser(browserRect.width / 2,
+                                                  browserRect.height / 2);
     let rect = this._getZoomRectForPoint(center.x, center.y, zoomLevel);
     this.animatedZoomTo(rect);
   },
@@ -940,7 +941,8 @@ var Browser = {
     zoomLevel = Math.min(ZoomManager.MAX, zoomLevel);
     let oldScale = browser.scale;
     let zoomRatio = zoomLevel / oldScale;
-    let newVisW = window.innerWidth / zoomRatio, newVisH = window.innerHeight / zoomRatio;
+    let browserRect = browser.getBoundingClientRect();
+    let newVisW = browserRect.width / zoomRatio, newVisH = browserRect.height / zoomRatio;
     let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
 
     // Make sure rectangle doesn't poke out of viewport

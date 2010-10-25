@@ -838,6 +838,8 @@
         ]]>
       </constructor>
 
+      <field name="scrollSync">true</field>
+
       <field name="_messageListenerRemote"><![CDATA[
         ({
           self: this,
@@ -847,6 +849,9 @@
 
             switch (aMessage.name) {
               case "scroll":
+                if (!this.scrollSync)
+                  return;
+
                 // When CSS scroll offset changes, we must redefine our cache viewport because
                 // the cache viewport coordinate system's origin is the CSS scroll offset. Setting
                 // _pendingPixels* guarantees that _updateCacheViewport is called in scrollTo.
