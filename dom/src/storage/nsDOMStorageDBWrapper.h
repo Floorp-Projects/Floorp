@@ -178,13 +178,6 @@ public:
                PRBool aIncludeSubDomains, PRBool aMatch);
 
   /**
-   * Removes all keys that were created after the time specified by 'aSince'.
-   * 'aSince' value is compatible with PR_Now() function.
-   */
-  nsresult
-  RemoveTimeRange(PRInt64 aSince);
-
-  /**
    * Removes all keys from storage. Used when clearing storage.
    */
   nsresult
