@@ -5006,8 +5006,8 @@ BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
 
-case "$target_os" in
-darwin*|*wince*|*winmo*)
+case "${target}" in
+*android*|*darwin*|*wince*|*winmo*)
     ACCESSIBILITY=
     ;;
 *)
