@@ -53,6 +53,7 @@ _TEST_FILES	= \
     file_https.html \
     test_sessionStorageBase.html \
     test_sessionStorageClone.html \
+    test_sessionStorageDeleteSinceAPI.html \
     test_sessionStorageReplace.html \
     test_sessionStorageHttpHttps.html \
     interOriginSlave.js \

@@ -1,0 +1,73 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>globalStorage delete since API test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function cleanup()
+{
+  globalStorage[window.location.hostname].removeItem("key1");
+  globalStorage[window.location.hostname].removeItem("key2");
+  globalStorage[window.location.hostname].removeItem("key3");
+  globalStorage[window.location.hostname].removeItem("key4");
+  SimpleTest.finish();
+}
+
+function doTest()
+{
+  var since = 0;
+
+  setTimeout('globalStorage[window.location.hostname].key1 = "value1"',     0);
+  setTimeout('globalStorage[window.location.hostname].key2 = "value2"',   100);
+  setTimeout('globalStorage[window.location.hostname].key3 = "value3"',   200);
+
+  // Since now, all added/changed items will be deleted
+  setTimeout(function() {
+    // Now in microseconds...
+    since = (new Date()).getTime() * 1000;
+  }, 300);
+
+  // Rather give the timer chance to move forward, on some systems the
+  // granularity may be too grainy.
+
+  setTimeout('globalStorage[window.location.hostname].key4 = "value4"',   500);
+  setTimeout('globalStorage[window.location.hostname].key1 = "value1-2"', 600);
+
+  setTimeout(function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    is(globalStorage[window.location.hostname].length, 4, "Expected 4 items before delete");
+
+    try {
+      var domStorageManager = Components.classes["@mozilla.org/dom/storagemanager;1"]
+                                        .getService(Components.interfaces.nsIDOMStorageManager);
+      domStorageManager.clearStorageDataSince(since);
+    }
+    catch(ex) {
+      ok(false, ex);
+    }
+
+    todo(globalStorage[window.location.hostname].key1 == null, "key1 deleted (Bug 600366)");
+    is(globalStorage[window.location.hostname].key2, "value2", "key2 left");
+    is(globalStorage[window.location.hostname].key3, "value3", "key3 left");
+    todo(globalStorage[window.location.hostname].key4 == null, "key4 deleted (Bug 600366)");
+    is(globalStorage[window.location.hostname].length, 2, "Expected 2 items after delete");
+
+    cleanup();
+  }, 700);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="doTest();">
+
+</body>
+</html>
