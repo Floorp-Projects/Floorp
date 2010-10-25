@@ -311,7 +311,8 @@ class Compiler : public BaseCompiler
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
-    void jsop_getarg(uint32 index);
+    void jsop_getarg(uint32 slot);
+    void jsop_setarg(uint32 slot, bool popped);
     void jsop_this();
     void emitReturn(FrameEntry *fe);
     void emitFinalReturn(Assembler &masm);

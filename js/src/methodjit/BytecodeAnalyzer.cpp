@@ -125,6 +125,7 @@ BytecodeAnalyzer::analyze(uint32 index)
           case JSOP_DECNAME:
           case JSOP_NAMEINC:
           case JSOP_NAMEDEC:
+          case JSOP_FORNAME:
             usesScope = true;
             break;
 

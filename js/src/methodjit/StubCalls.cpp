@@ -444,55 +444,6 @@ stubs::GetGlobalName(VMFrame &f)
          THROW();
 }
 
-static inline bool
-IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
-{
-    if (iterobj->getClass() == &js_IteratorClass) {
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
-        JS_ASSERT(ni->props_cursor < ni->props_end);
-        if (ni->isKeyIter()) {
-            jsid id = *ni->currentKey();
-            if (JSID_IS_ATOM(id)) {
-                rval->setString(JSID_TO_STRING(id));
-                ni->incKeyCursor();
-                return true;
-            }
-            /* Take the slow path if we have to stringify a numeric property name. */
-        } else {
-            *rval = *ni->currentValue();
-            ni->incValueCursor();
-            return true;
-        }
-    }
-    return js_IteratorNext(cx, iterobj, rval);
-}
-
-template<JSBool strict>
-void JS_FASTCALL
-stubs::ForName(VMFrame &f, JSAtom *atom)
-{
-    JSContext *cx = f.cx;
-    JSFrameRegs &regs = f.regs;
-
-    JS_ASSERT(regs.sp - 1 >= f.fp()->base());
-    jsid id = ATOM_TO_JSID(atom);
-    JSObject *obj, *obj2;
-    JSProperty *prop;
-    if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
-        THROW();
-    {
-        AutoValueRooter tvr(cx);
-        JS_ASSERT(regs.sp[-1].isObject());
-        if (!IteratorNext(cx, &regs.sp[-1].toObject(), tvr.addr()))
-            THROW();
-        if (!obj->setProperty(cx, id, tvr.addr(), strict))
-            THROW();
-    }
-}
-
-template void JS_FASTCALL stubs::ForName<true>(VMFrame &f, JSAtom *atom);
-template void JS_FASTCALL stubs::ForName<false>(VMFrame &f, JSAtom *atom);
-
 void JS_FASTCALL
 stubs::GetElem(VMFrame &f)
 {
