@@ -76,20 +76,18 @@ namespace nanojit
     // XXX rearrange NanoAssert() expression to workaround apparent gcc 4.3 bug:
     // XXX "error: logical && with non-zero constant will always evaluate as true"
     // underrunProtect(6) is necessary for worst-case
-    inline void Assembler::MODRMs(I32 r, I32 d, R b, I32 l, I32 i) {
-        NanoAssert(unsigned(i) < 8 && REGNUM(b) < 8 && unsigned(r) < 8);
+    inline void Assembler::MODRMsib(I32 r, R b, R i, I32 s, I32 d) {
+        NanoAssert(REGNUM(i) < 8 && REGNUM(b) < 8 && unsigned(r) < 8);
         if (d == 0 && b != rEBP) {
-            _nIns -= 2;
-            _nIns[0] = uint8_t(0 << 6 | r << 3 | 4);
-            _nIns[1] = uint8_t(l << 6 | i << 3 | REGNUM(b));
+            *(--_nIns) = uint8_t(s << 6 | REGNUM(i) << 3 | REGNUM(b));
+            *(--_nIns) = uint8_t(0 << 6 | r << 3 | 4);
         } else if (isS8(d)) {
-            _nIns -= 3;
-            _nIns[0] = uint8_t(1 << 6 | r << 3 | 4);
-            _nIns[1] = uint8_t(l << 6 | i << 3 | REGNUM(b));
-            _nIns[2] = uint8_t(d);
+            *(--_nIns) = uint8_t(d);
+            *(--_nIns) = uint8_t(s << 6 | REGNUM(i) << 3 | REGNUM(b));
+            *(--_nIns) = uint8_t(1 << 6 | r << 3 | 4);
         } else {
             IMM32(d);
-            *(--_nIns) = uint8_t(l << 6 | i << 3 | REGNUM(b));
+            *(--_nIns) = uint8_t(s << 6 | REGNUM(i) << 3 | REGNUM(b));
             *(--_nIns) = uint8_t(2 << 6 | r << 3 | 4);
         }
     }
@@ -101,7 +99,7 @@ namespace nanojit
             IMM32(d);
             *(--_nIns) = uint8_t(0 << 6 | r << 3 | 5);
         } else if (b == rESP) {
-            MODRMs(r, d, b, 0, 4);
+            MODRMsib(r, b, rESP, 0, d);
         } else if (d == 0 && b != rEBP) {
             *(--_nIns) = uint8_t(0 << 6 | r << 3 | REGNUM(b));
         } else if (isS8(d)) {
@@ -110,24 +108,6 @@ namespace nanojit
         } else {
             IMM32(d);
             *(--_nIns) = uint8_t(2 << 6 | r << 3 | REGNUM(b));
-        }
-    }
-
-    inline void Assembler::MODRMsib(I32 reg, R base, R index, I32 scale, I32 disp) {
-        if (disp != 0 || base == rEBP) {
-            if (isS8(disp)) {
-                *(--_nIns) = int8_t(disp);
-            } else {
-                IMM32(disp);
-            }
-        }
-        *(--_nIns) = uint8_t(scale << 6 | REGNUM(index) << 3 | REGNUM(base));
-        if (disp == 0 && base != rEBP) {
-            *(--_nIns) = uint8_t(reg << 3 | 4);
-        } else if (isS8(disp)) {
-            *(--_nIns) = uint8_t(1 << 6 | reg << 3 | 4);
-        } else {
-            *(--_nIns) = uint8_t(2 << 6 | reg << 3 | 4);
         }
     }
 
@@ -230,9 +210,8 @@ namespace nanojit
     inline void Assembler::ALU2(I32 c, R d, R s) {
         underrunProtect(3);
         MODRM(REGNUM(d), REGNUM(s));
-        _nIns -= 2;
-        _nIns[0] = uint8_t(c>>8);
-        _nIns[1] = uint8_t(c);
+        *(--_nIns) = uint8_t(c);
+        *(--_nIns) = uint8_t(c>>8);
     }
 
     inline void Assembler::LAHF()        { count_alu(); ALU0(0x9F);                   asm_output("lahf"); }
@@ -242,7 +221,7 @@ namespace nanojit
     inline void Assembler::XOR(R l, R r) { count_alu(); ALU(0x33, REGNUM(l), r);      asm_output("xor %s,%s", gpn(l), gpn(r)); }
     inline void Assembler::ADD(R l, R r) { count_alu(); ALU(0x03, REGNUM(l), r);      asm_output("add %s,%s", gpn(l), gpn(r)); }
     inline void Assembler::SUB(R l, R r) { count_alu(); ALU(0x2b, REGNUM(l), r);      asm_output("sub %s,%s", gpn(l), gpn(r)); }
-    inline void Assembler::MUL(R l, R r) { count_alu(); ALU2(0x0faf, l, r);           asm_output("mul %s,%s", gpn(l), gpn(r)); }
+    inline void Assembler::IMUL(R l, R r){ count_alu(); ALU2(0x0faf, l, r);           asm_output("imul %s,%s", gpn(l), gpn(r)); }
     inline void Assembler::DIV(R r)      { count_alu(); ALU(0xf7, 7, r);              asm_output("idiv  edx:eax, %s", gpn(r)); }
     inline void Assembler::NOT(R r)      { count_alu(); ALU(0xf7, 2, r);              asm_output("not %s", gpn(r)); }
     inline void Assembler::NEG(R r)      { count_alu(); ALU(0xf7, 3, r);              asm_output("neg %s", gpn(r)); }
@@ -562,9 +541,8 @@ namespace nanojit
         count_push();
         if (isS8(i)) {
             underrunProtect(2);
-            _nIns -= 2;
-            _nIns[0] = 0x6a;
-            _nIns[1] = uint8_t(i);
+            *(--_nIns) = uint8_t(i);
+            *(--_nIns) = 0x6a;
             asm_output("push %d", i);
         } else {
             PUSHi32(i);
@@ -606,14 +584,12 @@ namespace nanojit
         underrunProtect(6);
         intptr_t tt = (intptr_t)t - (intptr_t)_nIns;
         if (t && isS8(tt)) {
-            _nIns -= 2;
-            _nIns[0] = uint8_t(0x70 | o);
-            _nIns[1] = uint8_t(tt);
+            *(--_nIns) = uint8_t(tt);
+            *(--_nIns) = uint8_t(0x70 | o);
         } else {
             IMM32(tt);
-            _nIns -= 2;
-            _nIns[0] = JCC32;
-            _nIns[1] = uint8_t(0x80 | o);
+            *(--_nIns) = uint8_t(0x80 | o);
+            *(--_nIns) = JCC32;
         }
         asm_output("%-5s %p", n, t);
         (void) n;
@@ -640,10 +616,9 @@ namespace nanojit
     inline void Assembler::JMP_indexed(Register x, I32 ss, NIns** addr) {
         underrunProtect(7);
         IMM32(int32_t(addr));
-        _nIns -= 3;
-        _nIns[0]   = uint8_t(0xff);                         /* jmp */
-        _nIns[1]   = uint8_t(0  << 6 | 4 << 3 | 4);         /* modrm: base=sib + disp32 */
-        _nIns[2]   = uint8_t(ss << 6 | REGNUM(x) << 3 | 5); /* sib: x<<ss + table */
+        *(--_nIns) = uint8_t(ss << 6 | REGNUM(x) << 3 | 5); /* sib: x<<ss + table */
+        *(--_nIns) = uint8_t(0  << 6 | 4 << 3 | 4);         /* modrm: base=sib + disp32 */
+        *(--_nIns) = uint8_t(0xff);                         /* jmp */
         asm_output("jmp   *(%s*%d+%p)", gpn(x), 1 << ss, (void*)addr);
     }
 
@@ -1852,7 +1827,7 @@ namespace nanojit
             case LIR_subxovi:    SUB(rr, rb); break;
             case LIR_muli:
             case LIR_muljovi:
-            case LIR_mulxovi:    MUL(rr, rb); break;
+            case LIR_mulxovi:    IMUL(rr, rb); break;
             case LIR_andi:       AND(rr, rb); break;
             case LIR_ori:        OR( rr, rb); break;
             case LIR_xori:       XOR(rr, rb); break;
