@@ -46,16 +46,16 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let gArgs, promptType, numButtons, iconClass, soundID, hasInputField = true;
-let gDelayExpired = false, gBlurred = false;
+let gArgs = window.arguments[0].QueryInterface(Ci.nsIWritablePropertyBag2)
+                               .QueryInterface(Ci.nsIWritablePropertyBag);
+
+let promptType, numButtons, iconClass, soundID, hasInputField = true;
+
 
 function earlyInit() {
     // This is called before onload fires, so we can't be certain that any elements
     // in the document have their bindings ready, so don't call any methods/properties
     // here on xul elements that come from xbl bindings.
-
-    gArgs = window.arguments[0].QueryInterface(Ci.nsIWritablePropertyBag2)
-                               .QueryInterface(Ci.nsIWritablePropertyBag);
 
     promptType = gArgs.getProperty("promptType");
 
@@ -124,7 +124,7 @@ function initTextbox(aName, aValue) {
     document.getElementById(aName + "Textbox").setAttribute("value", aValue);
 }
 
-function setLabelForNode(aNode, aLabel) {
+function setLabelForNode(aNode, aLabel, aIsLabelFlag) {
     // This is for labels which may contain embedded access keys.
     // If we end in (&X) where X represents the access key, optionally preceded
     // by spaces and/or followed by the ':' character, store the access key and
@@ -145,7 +145,11 @@ function setLabelForNode(aNode, aLabel) {
 
     // && is the magic sequence to embed an & in your label.
     aLabel = aLabel.replace(/\&\&/g, "&");
-    aNode.label = aLabel;
+    if (aIsLabelFlag) {    // Set text for <label> element
+        aNode.setAttribute("value", aLabel);
+    } else {    // Set text for other xul elements
+        aNode.label = aLabel;
+    }
 
     // XXXjag bug 325251
     // Need to set this after aNode.setAttribute("value", aLabel);
@@ -170,34 +174,44 @@ function commonDialogOnLoad() {
 
     // set the document title
     let title = gArgs.getProperty("title");
-    document.title = title;
-    // OS X doesn't have a title on modal dialogs, this is hidden on other platforms.
+#ifdef XP_MACOSX
     document.getElementById("info.title").appendChild(document.createTextNode(title));
+#else
+    document.title = title;
+#endif
 
     Services.obs.addObserver(softkbObserver, "softkb-change", false);
 
-    // Set button labels and visibility
+    // Set button visibility
     let dialog = document.documentElement;
     switch (numButtons) {
-      case 4:
-        setLabelForNode(dialog.getButton("extra2"), gArgs.getProperty("button3Label"));
-        dialog.getButton("extra2").hidden = false;
-        // fall through
-      case 3:
-        setLabelForNode(dialog.getButton("extra1"), gArgs.getProperty("button2Label"));
-        dialog.getButton("extra1").hidden = false;
-        // fall through
-      case 2:
-        if (gArgs.hasKey("button1Label"))
-            setLabelForNode(dialog.getButton("cancel"), gArgs.getProperty("button1Label"));
-        break;
-
       case 1:
         dialog.getButton("cancel").hidden = true;
         break;
+      case 4:
+        dialog.getButton("extra2").hidden = false;
+      case 3:
+        dialog.getButton("extra1").hidden = false;
     }
-    if (gArgs.hasKey("button0Label"))
-        setLabelForNode(dialog.getButton("accept"), gArgs.getProperty("button0Label"));
+
+    // Set button labels
+    switch (numButtons) {
+      case 4:
+        setLabelForNode(document.documentElement.getButton("extra2"), gArgs.getProperty("button3Label"));
+        // fall through
+      case 3:
+        setLabelForNode(document.documentElement.getButton("extra1"), gArgs.getProperty("button2Label"));
+        // fall through
+      default:
+      case 2:
+        if (gArgs.hasKey("button1Label"))
+            setLabelForNode(document.documentElement.getButton("cancel"), gArgs.getProperty("button1Label"));
+        // fall through
+      case 1:
+        if (gArgs.hasKey("button0Label"))
+            setLabelForNode(document.documentElement.getButton("accept"), gArgs.getProperty("button0Label"));
+        break;
+    }
 
     // display the main text
     // Bug 317334 - crop string length as a workaround.
@@ -234,9 +248,9 @@ function commonDialogOnLoad() {
             b = gArgs.getProperty("defaultButtonNum");
         let dButton = dlgButtons[b];
         // XXX shouldn't we set the default even when a textbox is focused?
-        dialog.defaultButton = dButton;
+        document.documentElement.defaultButton = dButton;
 #ifndef XP_MACOSX
-        dialog.getButton(dButton).focus();
+        document.documentElement.getButton(dButton).focus();
 #endif
     } else {
         if (promptType == "promptPassword")
@@ -247,13 +261,12 @@ function commonDialogOnLoad() {
 
     if (gArgs.hasKey("enableDelay") && gArgs.getProperty("enableDelay")) {
         let delayInterval = Services.prefs.getIntPref("security.dialog_enable_delay");
-        setButtonsEnabledState(dialog, false);
-        setTimeout(function () {
-                        // Don't automatically enable the buttons if we're not in the foreground
-                        if (!gBlurred)
-                            setButtonsEnabledState(dialog, true);
-                        gDelayExpired = true;
-                    }, delayInterval);
+
+        document.documentElement.getButton("accept").disabled = true;
+        document.documentElement.getButton("extra1").disabled = true;
+        document.documentElement.getButton("extra2").disabled = true;
+
+        setTimeout(commonDialogReenableButtons, delayInterval);
 
         addEventListener("blur", commonDialogBlur, false);
         addEventListener("focus", commonDialogFocus, false);
@@ -273,33 +286,46 @@ function commonDialogOnLoad() {
     Services.obs.notifyObservers(window, "common-dialog-loaded", null);
 }
 
-function setButtonsEnabledState(dialog, enabled) {
-    dialog.getButton("accept").disabled = !enabled;
-    dialog.getButton("extra1").disabled = !enabled;
-    dialog.getButton("extra2").disabled = !enabled;
-}
-
 function commonDialogOnUnload() {
     Services.obs.removeObserver(softkbObserver, "softkb-change");
 }
+
+
+var gDelayExpired = false;
+var gBlurred = false;
 
 function commonDialogBlur(aEvent) {
     if (aEvent.target != document)
         return;
     gBlurred = true;
-    let dialog = document.documentElement;
-    setButtonsEnabledState(dialog, false);
+    document.documentElement.getButton("accept").disabled = true;
+    document.documentElement.getButton("extra1").disabled = true;
+    document.documentElement.getButton("extra2").disabled = true;
 }
 
 function commonDialogFocus(aEvent) {
     if (aEvent.target != document)
         return;
     gBlurred = false;
-    let dialog = document.documentElement;
     // When refocusing the window, don't enable the buttons unless the countdown
     // delay has expired.
-    if (gDelayExpired)
-        setTimeout(setButtonsEnabledState, 250, dialog, true);
+    if (gDelayExpired) {
+        let script;
+        script  = "document.documentElement.getButton('accept').disabled = false; ";
+        script += "document.documentElement.getButton('extra1').disabled = false; ";
+        script += "document.documentElement.getButton('extra2').disabled = false;";
+        setTimeout(script, 250);
+    }
+}
+
+function commonDialogReenableButtons() {
+    // Don't automatically enable the buttons if we're not in the foreground
+    if (!gBlurred) {
+        document.documentElement.getButton("accept").disabled = false;
+        document.documentElement.getButton("extra1").disabled = false;
+        document.documentElement.getButton("extra2").disabled = false;
+    }
+    gDelayExpired = true;
 }
 
 function onCheckboxClick(aCheckboxElement) {

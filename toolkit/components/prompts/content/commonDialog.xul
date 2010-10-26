@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> 
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
@@ -7,7 +7,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
 
 <dialog id="commonDialog"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         aria-describedby="info.body"
         onload="commonDialogOnLoad();"
         onunload="commonDialogOnUnload();"
@@ -15,7 +15,7 @@
         ondialogextra1="return commonDialogOnExtra1();"
         ondialogextra2="return commonDialogOnExtra2();"
         buttonpack="center">
-
+    
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
@@ -55,12 +55,10 @@
           <image id="info.icon" class="spaced"/>
         </hbox>
         <vbox id="infoContainer">
-          <!-- Only shown on OS X, since it has no dialog title -->
-          <description id="info.title"
-#ifndef XP_MACOSX
-            style="display: none"
+#ifdef XP_MACOSX
+          <!-- Dialog title is inside dialog for OS X -->
+          <description id="info.title"/>
 #endif
-          />
           <spacer style="height: 1em"/>
           <description id="info.body" context="contentAreaContextMenu" noinitialfocus="true"/>
         </vbox>
@@ -82,8 +80,8 @@
 
 
   <!-- This method is called inline because it may unset hidden="true" on the
-       above boxes, causing their frames to be build and bindings to load.
-       So, by calling this inline, we guarantee the textboxes and checkboxes
+       above boxes, causing their frames to be build and bindings to load.  
+       So, by calling this inline, we guarantee the textboxes and checkboxes 
        above will have their bindings before initButtons is called, and the
        dialog will be intrinsically sized correctly. -->
   <script type="application/javascript">earlyInit();</script>
