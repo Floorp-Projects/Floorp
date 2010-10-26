@@ -142,31 +142,6 @@ public:
             const bool& flush);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 
-    virtual mozilla::ipc::PDocumentRendererShmemParent* AllocPDocumentRendererShmem(
-            const PRInt32& x,
-            const PRInt32& y,
-            const PRInt32& w,
-            const PRInt32& h,
-            const nsString& bgcolor,
-            const PRUint32& flags,
-            const bool& flush,
-            const gfxMatrix& aMatrix,
-            Shmem& buf);
-    virtual bool DeallocPDocumentRendererShmem(PDocumentRendererShmemParent* actor);
-
-    virtual mozilla::ipc::PDocumentRendererNativeIDParent* AllocPDocumentRendererNativeID(
-            const PRInt32& x,
-            const PRInt32& y,
-            const PRInt32& w,
-            const PRInt32& h,
-            const nsString& bgcolor,
-            const PRUint32& flags,
-            const bool& flush,
-            const gfxMatrix& aMatrix,
-            const PRUint32& nativeID);
-    virtual bool DeallocPDocumentRendererNativeID(PDocumentRendererNativeIDParent* actor);
-
-
     virtual PContentPermissionRequestParent* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
     virtual bool DeallocPContentPermissionRequest(PContentPermissionRequestParent* actor);
 

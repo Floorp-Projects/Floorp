@@ -40,8 +40,6 @@
 include protocol PContent;
 include protocol PContentDialog;
 include protocol PDocumentRenderer;
-include protocol PDocumentRendererShmem;
-include protocol PDocumentRendererNativeID;
 include protocol PContentPermissionRequest;
 include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
@@ -70,8 +68,6 @@ rpc protocol PBrowser
 
     manages PContentDialog;
     manages PDocumentRenderer;
-    manages PDocumentRendererShmem;
-    manages PDocumentRendererNativeID;
     manages PContentPermissionRequest;
     manages PRenderFrame;
     manages POfflineCacheUpdate;
@@ -273,14 +269,6 @@ child:
     LoadRemoteScript(nsString aURL);
 
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
-
-    // @param matrix the transformation matrix the context we're going to draw into should have.
-    PDocumentRendererShmem(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush,
-                           gfxMatrix matrix, Shmem buf);
-
-    // @param matrix the transformation matrix the context we're going to draw into should have.
-    PDocumentRendererNativeID(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush,
-                              gfxMatrix matrix, PRUint32 nativeID);
 
     /**
      * Sent by the chrome process when it no longer wants this remote
