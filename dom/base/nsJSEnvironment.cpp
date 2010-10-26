@@ -1232,6 +1232,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     }
   }    
 
+  if (!chromeWindow)
+    newDefaultJSOptions |= JSOPTION_ROPES;
+
   if (useTraceJIT)
     newDefaultJSOptions |= JSOPTION_JIT;
   else
