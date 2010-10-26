@@ -153,8 +153,9 @@ static const Register
     SBZ = { 0 } ;   // Used for 'should-be-zero' fields in instructions with
                     // unused register fields.
 
-static const uint32_t FirstRegNum = R0;
-static const uint32_t LastRegNum = D7;
+/* winmo builds error with C2057 and C2229 on usage of First/LastRegNum as R0/D7 */
+static const uint32_t FirstRegNum = 0; /* R0 */
+static const uint32_t LastRegNum = 23; /* D7 */
 }
 
 #define NJ_USE_UINT32_REGISTER 1
