@@ -135,7 +135,8 @@ public:
     virtual PDocumentRendererParent*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
                            const nsString& bgcolor,
-                           const PRUint32& renderFlags, const bool& flushLayout);
+                           const PRUint32& renderFlags, const bool& flushLayout,
+                           const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 
     virtual PContentPermissionRequestParent* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);

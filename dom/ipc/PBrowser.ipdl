@@ -280,11 +280,12 @@ child:
      * default background color |bgcolor|.  |renderFlags| are the
      * nsIPresShell::RenderDocument() flags to use on the remote side,
      * and if true, |flushLayout| will do just that before rendering
-     * the document.
+     * the document.  The rendered image will be of size |renderSize|.
      */
     PDocumentRenderer(nsRect documentRect, gfxMatrix transform,
                       nsString bgcolor,
-                      PRUint32 renderFlags, bool flushLayout);
+                      PRUint32 renderFlags, bool flushLayout,
+                      nsIntSize renderSize);
 
     /**
      * Sent by the chrome process when it no longer wants this remote
