@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org networking code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Christian Biesinger <cbiesinger@web.de> (Initial author)
+ *    Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,35 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/** @file
- * Helper functions for (de)serializing objects to/from ASCII strings.
- */
-
-#ifndef NSSERIALIZATIONHELPER_H_
-#define NSSERIALIZATIONHELPER_H_
-
-#include "nsStringFwd.h"
-#include "nsISerializationHelper.h"
-
-class nsISerializable;
-class nsISupports;
+#include "nsISupports.idl"
 
 /**
- * Serialize an object to an ASCII string.
+ * Simple scriptable serialization helper. Can be used as a service.
  */
-nsresult NS_SerializeToString(nsISerializable* obj,
-                              nsCSubstring& str);
 
-/**
- * Deserialize an object.
- */
-nsresult NS_DeserializeObject(const nsCSubstring& str,
-                              nsISupports** obj);
+interface nsISerializable;
 
-class nsSerializationHelper : public nsISerializationHelper
+[scriptable, uuid(31654c0f-35f3-44c6-b31e-37a11516e6bc)]
+interface nsISerializationHelper : nsISupports
 {
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISERIALIZATIONHELPER
-};
+  /**
+   * Serialize the object to a base64 string. This string can be later passed
+   * as an input to deserializeObject method.
+   */
+  ACString serializeToString(in nsISerializable serializable);
 
-#endif
+  /**
+   * Takes base64 encoded string that cointains serialization of a single
+   * object. Most commonly, input is result of previous call to
+   * serializeToString.
+   */
+  nsISupports deserializeObject(in ACString input);
+};

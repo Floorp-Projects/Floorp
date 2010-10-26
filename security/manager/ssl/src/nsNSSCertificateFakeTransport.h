@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org networking code.
+ * The Original Code is the Personal Security Manager Module
  *
  * The Initial Developer of the Original Code is
- * Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
- *
  * Contributor(s):
- *   Christian Biesinger <cbiesinger@web.de> (Initial author)
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,35 +35,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/** @file
- * Helper functions for (de)serializing objects to/from ASCII strings.
- */
+#ifndef _NS_NSSCERTIFICATECHILD_H_
+#define _NS_NSSCERTIFICATECHILD_H_
 
-#ifndef NSSERIALIZATIONHELPER_H_
-#define NSSERIALIZATIONHELPER_H_
+#include "nsIX509Cert.h"
+#include "nsIX509Cert2.h"
+#include "nsIX509Cert3.h"
+#include "nsIX509CertDB.h"
+#include "nsIX509CertList.h"
+#include "nsIASN1Object.h"
+#include "nsISMimeCert.h"
+#include "nsIIdentityInfo.h"
+#include "nsNSSShutDown.h"
+#include "nsISimpleEnumerator.h"
+#include "nsISerializable.h"
+#include "nsIClassInfo.h"
 
-#include "nsStringFwd.h"
-#include "nsISerializationHelper.h"
+#include "nsNSSCertHeader.h"
 
-class nsISerializable;
-class nsISupports;
+class nsINSSComponent;
+class nsIASN1Sequence;
 
-/**
- * Serialize an object to an ASCII string.
- */
-nsresult NS_SerializeToString(nsISerializable* obj,
-                              nsCSubstring& str);
-
-/**
- * Deserialize an object.
- */
-nsresult NS_DeserializeObject(const nsCSubstring& str,
-                              nsISupports** obj);
-
-class nsSerializationHelper : public nsISerializationHelper
+/* Certificate */
+class nsNSSCertificateFakeTransport : public nsIX509Cert3,
+                              public nsISerializable,
+                              public nsIClassInfo
 {
+public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISERIALIZATIONHELPER
+  NS_DECL_NSIX509CERT
+  NS_DECL_NSIX509CERT2
+  NS_DECL_NSIX509CERT3
+  NS_DECL_NSISERIALIZABLE
+  NS_DECL_NSICLASSINFO
+
+  nsNSSCertificateFakeTransport();
+  virtual ~nsNSSCertificateFakeTransport();
+
+private:
+  SECItem *mCertSerialization;
 };
 
-#endif
+#endif /* _NS_NSSCERTIFICATECHILD_H_ */
