@@ -40,9 +40,9 @@
 #if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
 #define jsjaeger_compiler_h__
 
+#include "jsanalyze.h"
 #include "jscntxt.h"
 #include "jstl.h"
-#include "BytecodeAnalyzer.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "BaseCompiler.h"
@@ -236,7 +236,7 @@ class Compiler : public BaseCompiler
     JSObject *globalObj;
     JSFunction *fun;
     bool isConstructing;
-    BytecodeAnalyzer analysis;
+    analyze::Script *analysis;
     Label *jumpMap;
     jsbytecode *PC;
     Assembler masm;

@@ -582,7 +582,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 
     bool popped = false;
     PC += JSOP_GLOBALINC_LENGTH;
-    if (JSOp(*PC) == JSOP_POP && !analysis[PC].nincoming) {
+    if (JSOp(*PC) == JSOP_POP && !analysis->jumpTarget(PC)) {
         popped = true;
         PC += JSOP_POP_LENGTH;
     }

@@ -93,7 +93,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
         ? fp->fun()
         : NULL),
     isConstructing(fp->isConstructing()),
-    analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
+    analysis(NULL), jumpMap(NULL), frame(cx, script, masm),
     branchPatches(ContextAllocPolicy(cx)),
 #if defined JS_MONOIC
     mics(ContextAllocPolicy(cx)),
@@ -156,13 +156,19 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);
 
-    /* Perform bytecode analysis. */
-    if (!analysis.analyze()) {
-        if (analysis.OOM())
-            return Compile_Error;
+    analyze::Script analysis;
+    PodZero(&analysis);
+
+    analysis.analyze(cx, script);
+
+    if (analysis.OOM())
+        return Compile_Error;
+    if (analysis.failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
     }
+
+    this->analysis = &analysis;
 
     uint32 nargs = fun ? fun->nargs : 0;
     if (!frame.init(nargs) || !stubcc.init(nargs))
@@ -291,10 +297,16 @@ mjit::Compiler::generatePrologue()
             stubcc.crossJump(stubcc.masm.jump(), masm.label());
         }
 
-        /* Set locals to undefined, as in initCallFrameLatePrologue */
+        /*
+         * Set locals to undefined, as in initCallFrameLatePrologue.
+         * Skip locals which aren't closed and are known to be defined before used,
+         * :FIXME: bug 604541: write undefined if we might be using the tracer, so it works.
+         */
         for (uint32 i = 0; i < script->nfixed; i++) {
-            Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
-            masm.storeValue(UndefinedValue(), local);
+            if (analysis->localHasUseBeforeDef(i) || addTraceHints) {
+                Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
+                masm.storeValue(UndefinedValue(), local);
+            }
         }
 
         /* Create the call object. */
@@ -305,7 +317,7 @@ mjit::Compiler::generatePrologue()
 
         j.linkTo(masm.label(), &masm);
 
-        if (analysis.usesScopeChain() && !fun->isHeavyweight()) {
+        if (analysis->usesScopeChain() && !fun->isHeavyweight()) {
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
@@ -400,7 +412,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     for (size_t i = 0; i < script->length; i++) {
         Label L = jumpMap[i];
-        if (analysis[i].safePoint) {
+        analyze::Bytecode *opinfo = analysis->maybeCode(i);
+        if (opinfo && opinfo->safePoint) {
             JS_ASSERT(L.isValid());
             nmap[i] = (uint8 *)(result + masm.distanceOf(L));
         }
@@ -693,22 +706,17 @@ mjit::Compiler::generateMethod()
 
     for (;;) {
         JSOp op = JSOp(*PC);
+        bool trap = (op == JSOP_TRAP);
 
-        OpcodeStatus &opinfo = analysis[PC];
-        frame.setInTryBlock(opinfo.inTryBlock);
-        if (opinfo.nincoming || opinfo.trap) {
-            frame.syncAndForgetEverything(opinfo.stackDepth);
-            opinfo.safePoint = true;
-        }
-        jumpMap[uint32(PC - script->code)] = masm.label();
-
-        if (opinfo.trap) {
+        if (trap) {
             if (!trapper.untrap(PC))
                 return Compile_Error;
             op = JSOp(*PC);
         }
 
-        if (!opinfo.visited) {
+        analyze::Bytecode *opinfo = analysis->maybeCode(PC);
+
+        if (!opinfo) {
             if (op == JSOP_STOP)
                 break;
             if (js_CodeSpec[op].length != -1)
@@ -718,10 +726,17 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
-        SPEW_OPCODE();
-        JS_ASSERT(frame.stackDepth() == opinfo.stackDepth);
+        frame.setInTryBlock(opinfo->inTryBlock);
+        if (opinfo->jumpTarget || trap) {
+            frame.syncAndForgetEverything(opinfo->stackDepth);
+            opinfo->safePoint = true;
+        }
+        jumpMap[uint32(PC - script->code)] = masm.label();
 
-        if (opinfo.trap) {
+        SPEW_OPCODE();
+        JS_ASSERT(frame.stackDepth() == opinfo->stackDepth);
+
+        if (trap) {
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(PC), Registers::ArgReg1);
             stubCall(stubs::Trap);
@@ -832,7 +847,7 @@ mjit::Compiler::generateMethod()
             /* Detect fusions. */
             jsbytecode *next = &PC[JSOP_GE_LENGTH];
             JSOp fused = JSOp(*next);
-            if ((fused != JSOP_IFEQ && fused != JSOP_IFNE) || analysis[next].nincoming)
+            if ((fused != JSOP_IFEQ && fused != JSOP_IFNE) || analysis->jumpTarget(next))
                 fused = JSOP_NOP;
 
             /* Get jump target, if any. */
@@ -1323,7 +1338,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETLOCAL)
           {
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !analysis[next].nincoming;
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             frame.storeLocal(GET_SLOTNO(PC), pop);
             if (pop) {
                 frame.pop();
@@ -1390,7 +1405,7 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_ARGINC_LENGTH];
             bool popped = false;
-            if (JSOp(*next) == JSOP_POP && !analysis[next].nincoming)
+            if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
             jsop_arginc(op, GET_SLOTNO(PC), popped);
             PC += JSOP_ARGINC_LENGTH;
@@ -1407,7 +1422,7 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_LOCALINC_LENGTH];
             bool popped = false;
-            if (JSOp(*next) == JSOP_POP && !analysis[next].nincoming)
+            if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
             /* These manually advance the PC. */
             jsop_localinc(op, GET_SLOTNO(PC), popped);
@@ -1790,7 +1805,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           BEGIN_CASE(JSOP_NOTRACE)
           {
-            if (analysis[PC].nincoming > 0)
+            if (analysis->jumpTarget(PC))
                 interruptCheckHelper();
           }
           END_CASE(JSOP_TRACE)
@@ -2008,7 +2023,7 @@ mjit::Compiler::loadReturnValue(Assembler *masm, FrameEntry *fe)
          // Load a return value from POPV or SETRVAL into the return registers,
          // otherwise return undefined.
         masm->loadValueAsComponents(UndefinedValue(), typeReg, dataReg);
-        if (analysis.usesReturnValue()) {
+        if (analysis->usesReturnValue()) {
             Jump rvalClear = masm->branchTest32(Assembler::Zero,
                                                FrameFlagsAddress(),
                                                Imm32(JSFRAME_HAS_RVAL));
@@ -3343,7 +3358,7 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
     // set. Rather, it relies on the up-front analysis statically determining
     // whether BINDNAME can be used, which reifies the scope chain at the
     // prologue.
-    JS_ASSERT(analysis.usesScopeChain());
+    JS_ASSERT(analysis->usesScopeChain());
 
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
@@ -3489,7 +3504,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
 #if defined JS_MONOIC
     jsbytecode *next = &PC[JSOP_GNAMEINC_LENGTH];
-    bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_GNAMEINC || op == JSOP_INCGNAME) ? -1 : 1;
 
     if (pop || (op == JSOP_INCGNAME || op == JSOP_DECGNAME)) {
@@ -3578,7 +3593,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
     jsbytecode *next = &PC[JSOP_NAMEINC_LENGTH];
-    bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_NAMEINC || op == JSOP_INCNAME) ? -1 : 1;
 
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
@@ -3671,7 +3686,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     FrameEntry *objFe = frame.peek(-1);
     if (!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) {
         jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
-        bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
+        bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
         int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
 
         if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
@@ -4474,7 +4489,7 @@ mjit::Compiler::enterBlock(JSObject *obj)
     // VMFrame::fp to the correct fp for the entry point. We need to copy
     // that value here to FpReg so that FpReg also has the correct sp.
     // Otherwise, we would simply be using a stale FpReg value.
-    if (analysis[PC].exceptionEntry)
+    if (analysis->getCode(PC).exceptionEntry)
         restoreFrameRegs(masm);
 
     uint32 oldFrameDepth = frame.frameDepth();

@@ -56,6 +56,7 @@
 #include "jstracer.h"
 #include "jspropertycache.h"
 #include "methodjit/MonoIC.h"
+#include "jsanalyze.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycacheinlines.h"
