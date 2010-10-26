@@ -24,20 +24,6 @@ let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                getService(Ci.nsIPromptService2);
 let ioService = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);
-let pollTimer;
-
-function pollDialog(dialog) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-    if (dialog.getButton("accept").disabled)
-        return;
-
-    ok(true, "dialog button is enabled now");
-    pollTimer.cancel();
-    pollTimer = null;
-    dialog.acceptDialog();
-    didDialog = true;
-}
 
 function checkExpectedState(doc, state) {
     let msg        = doc.getElementById("info.body").textContent;
@@ -668,27 +654,6 @@ function handleDialog(doc, testNum) {
         checkExpectedState(doc, state);
         break;
 
-      case 30:
-        // ConfirmEx (with delay, ok)
-        state = {
-            msg   : "This is the confirmEx delay text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-        };
-        is(dialog.getButton("accept").label, "OK",     "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "Cancel", "Checking cancel-button label");
-        is(dialog.getButton("accept").disabled, true,  "Checking accept-button is disabled");
-        is(dialog.getButton("cancel").disabled, false, "Checking cancel-button isn't disabled ");
-        checkExpectedState(doc, state);
-        break;
-
 
       case 100:
         // PromptAuth (no realm, ok, with checkbox)
@@ -746,14 +711,6 @@ function handleDialog(doc, testNum) {
 
     if (testNum == 28) {
         dialog._doButtonCommand("extra1");
-    } else if (testNum == 30) {
-        // Buttons are disabled at the moment, poll until they're reenabled.
-        // Can't use setInterval here, because the window's in a modal state
-        // and thus DOM events are suppressed.
-        pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        pollTimer.initWithCallback(function() { pollDialog(dialog); },
-                                   100, Ci.nsITimer.TYPE_REPEATING_SLACK);
-        return;
     } else {
         if (clickOK)
             dialog.acceptDialog();
@@ -1091,15 +1048,6 @@ startCallbackTimer();
 prompter.alert(null, "TestTitle", "This is the alert text.");
 ok(didDialog, "handleDialog was invoked");
 
-
-// ===== test 30 =====
-// ConfirmEx (delay, ok)
-testNum++;
-startCallbackTimer();
-flags = (Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS | Ci.nsIPromptService.BUTTON_DELAY_ENABLE);
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx delay text.", flags, null, null, null, null, {});
-is(clickedButton, 0, "checked expected button num click");
-ok(didDialog, "handleDialog was invoked");
 
 // promptAuth already tested via password manager but do a few specific things here.
 
