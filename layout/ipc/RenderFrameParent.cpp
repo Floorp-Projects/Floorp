@@ -174,7 +174,9 @@ IsTempLayerManager(LayerManager* aManager)
 
 RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader)
   : mFrameLoader(aFrameLoader)
-{}
+{
+  NS_ABORT_IF_FALSE(aFrameLoader, "Need a frameloader here");
+}
 
 RenderFrameParent::~RenderFrameParent()
 {}
