@@ -152,6 +152,20 @@ public:
     RebuildAll() = 0; // must be implemented by subclasses
 
     void RunnableRebuild() { Rebuild(); }
+    void RunnableLoadAndRebuild() {
+      Uninit(PR_FALSE);  // Reset results
+
+      nsCOMPtr<nsIDocument> doc = mRoot ? mRoot->GetDocument() : nsnull;
+      if (doc) {
+        PRBool shouldDelay;
+        LoadDataSources(doc, &shouldDelay);
+        if (!shouldDelay) {
+          Rebuild();
+        }
+      }
+    }
+    void UninitFalse() { Uninit(PR_FALSE); }
+    void UninitTrue() { Uninit(PR_TRUE); }
 
     /**
      * Find the <template> tag that applies for this builder
