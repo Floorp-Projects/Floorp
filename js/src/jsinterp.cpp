@@ -1473,17 +1473,17 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
 #ifdef DEBUG
 
 JS_STATIC_INTERPRET JS_REQUIRES_STACK void
-js_TraceOpcode(JSContext *cx)
+js_LogOpcode(JSContext *cx)
 {
-    FILE *tracefp;
+    FILE *logfp;
     JSStackFrame *fp;
     JSFrameRegs *regs;
     intN ndefs, n, nuses;
     JSString *str;
     JSOp op;
 
-    tracefp = (FILE *) cx->tracefp;
-    JS_ASSERT(tracefp);
+    logfp = (FILE *) cx->logfp;
+    JS_ASSERT(logfp);
     fp = cx->fp();
     regs = cx->regs;
 
@@ -1491,10 +1491,10 @@ js_TraceOpcode(JSContext *cx)
      * Operations in prologues don't produce interesting values, and
      * js_DecompileValueGenerator isn't set up to handle them anyway.
      */
-    if (cx->tracePrevPc && regs->pc >= fp->script()->main) {
-        JSOp tracePrevOp = JSOp(*cx->tracePrevPc);
-        ndefs = js_GetStackDefs(cx, &js_CodeSpec[tracePrevOp], tracePrevOp,
-                                fp->script(), cx->tracePrevPc);
+    if (cx->logPrevPc && regs->pc >= fp->script()->main) {
+        JSOp logPrevOp = JSOp(*cx->logPrevPc);
+        ndefs = js_GetStackDefs(cx, &js_CodeSpec[logPrevOp], logPrevOp,
+                                fp->script(), cx->logPrevPc);
 
         /*
          * If there aren't that many elements on the stack, then we have
@@ -1506,7 +1506,7 @@ js_TraceOpcode(JSContext *cx)
             for (n = -ndefs; n < 0; n++) {
                 char *bytes = DecompileValueGenerator(cx, n, regs->sp[n], NULL);
                 if (bytes) {
-                    fprintf(tracefp, "%s %s",
+                    fprintf(logfp, "%s %s",
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
                     cx->free(bytes);
@@ -1514,35 +1514,43 @@ js_TraceOpcode(JSContext *cx)
                     JS_ClearPendingException(cx);
                 }
             }
-            fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - fp->base()));
+            fprintf(logfp, " @ %u\n", (uintN) (regs->sp - fp->base()));
         }
-        fprintf(tracefp, "  stack: ");
+        fprintf(logfp, "  stack: ");
         for (Value *siter = fp->base(); siter < regs->sp; siter++) {
-            str = js_ValueToString(cx, *siter);
-            if (!str) {
-                fputs("<null>", tracefp);
+            if (siter->isObject() && siter->toObject().getClass() == &js_CallClass) {
+                /*
+                 * Call objects have NULL convert ops so that we catch cases
+                 * where they escape. So js_ValueToString doesn't work on them.
+                 */
+                fputs("<call>", logfp);
             } else {
-                JS_ClearPendingException(cx);
-                js_FileEscapedString(tracefp, str, 0);
+                str = js_ValueToString(cx, *siter);
+                if (!str) {
+                    fputs("<null>", logfp);
+                } else {
+                    JS_ClearPendingException(cx);
+                    js_FileEscapedString(logfp, str, 0);
+                }
             }
-            fputc(' ', tracefp);
+            fputc(' ', logfp);
         }
-        fputc('\n', tracefp);
+        fputc('\n', logfp);
     }
 
-    fprintf(tracefp, "%4u: ",
+    fprintf(logfp, "%4u: ",
             js_PCToLineNumber(cx, fp->script(),
                               fp->hasImacropc() ? fp->imacropc() : regs->pc));
     js_Disassemble1(cx, fp->script(), regs->pc,
                     regs->pc - fp->script()->code,
-                    JS_FALSE, tracefp);
+                    JS_FALSE, logfp);
     op = (JSOp) *regs->pc;
     nuses = js_GetStackUses(&js_CodeSpec[op], op, regs->pc);
     if (nuses != 0) {
         for (n = -nuses; n < 0; n++) {
             char *bytes = DecompileValueGenerator(cx, n, regs->sp[n], NULL);
             if (bytes) {
-                fprintf(tracefp, "%s %s",
+                fprintf(logfp, "%s %s",
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
                 cx->free(bytes);
@@ -1550,12 +1558,12 @@ js_TraceOpcode(JSContext *cx)
                 JS_ClearPendingException(cx);
             }
         }
-        fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - fp->base()));
+        fprintf(logfp, " @ %u\n", (uintN) (regs->sp - fp->base()));
     }
-    cx->tracePrevPc = regs->pc;
+    cx->logPrevPc = regs->pc;
 
-    /* It's nice to have complete traces when debugging a crash.  */
-    fflush(tracefp);
+    /* It's nice to have complete logs when debugging a crash.  */
+    fflush(logfp);
 }
 
 #endif /* DEBUG */
@@ -2179,13 +2187,13 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
      * expect from looking at the code.  (We do omit POPs after SETs;
      * unfortunate, but not worth fixing.)
      */
-#  define TRACE_OPCODE(OP)  JS_BEGIN_MACRO                                    \
-                                if (JS_UNLIKELY(cx->tracefp != NULL) &&       \
+#  define LOG_OPCODE(OP)    JS_BEGIN_MACRO                                      \
+                                if (JS_UNLIKELY(cx->logfp != NULL) &&       \
                                     (OP) == *regs.pc)                         \
-                                    js_TraceOpcode(cx);                       \
+                                    js_LogOpcode(cx);                         \
                             JS_END_MACRO
 # else
-#  define TRACE_OPCODE(OP)  ((void) 0)
+#  define LOG_OPCODE(OP)    ((void) 0)
 # endif
 
     /*
@@ -2230,7 +2238,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP: TRACE_OPCODE(OP); CHECK_RECORDER();
+# define BEGIN_CASE(OP)     L_##OP: LOG_OPCODE(OP); CHECK_RECORDER();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
@@ -2556,7 +2564,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
       do_op:
         CHECK_RECORDER();
-        TRACE_OPCODE(op);
+        LOG_OPCODE(op);
         switchOp = intN(op) | switchMask;
       do_switch:
         switch (switchOp) {
@@ -6906,7 +6914,7 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(regs.sp == regs.fp->base());
 
 #ifdef DEBUG
-    cx->tracePrevPc = NULL;
+    cx->logPrevPc = NULL;
 #endif
 
     if (entryFrame != regs.fp)

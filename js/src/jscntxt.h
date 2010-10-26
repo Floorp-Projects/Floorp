@@ -2014,11 +2014,11 @@ struct JSContext
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
 
-    /* Last message string and trace file for debugging. */
+    /* Last message string and log file for debugging. */
     char                *lastMessage;
 #ifdef DEBUG
-    void                *tracefp;
-    jsbytecode          *tracePrevPc;
+    void                *logfp;
+    jsbytecode          *logPrevPc;
 #endif
 
     /* Per-context optional error reporter. */

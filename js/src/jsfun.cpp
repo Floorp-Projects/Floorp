@@ -1381,7 +1381,7 @@ JS_PUBLIC_DATA(Class) js_CallClass = {
     PropertyStub,   /* setProperty */
     JS_EnumerateStub,
     (JSResolveOp)call_resolve,
-    NULL,           /* convert */
+    NULL,           /* convert: Leave it NULL so we notice if calls ever escape */
     NULL,           /* finalize */
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
