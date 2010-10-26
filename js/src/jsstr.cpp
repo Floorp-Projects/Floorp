@@ -3418,6 +3418,47 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return str;
 }
 
+static JS_ALWAYS_INLINE JSString *
+NewShortString(JSContext *cx, const jschar *chars, size_t length)
+{
+    JS_ASSERT(JSShortString::fitsIntoShortString(length));
+    JSShortString *str = js_NewGCShortString(cx);
+    if (!str)
+        return NULL;
+    jschar *storage = str->init(length);
+    js_short_strncpy(storage, chars, length);
+    storage[length] = 0;
+    return str->header();
+}
+
+static JSString *
+NewShortString(JSContext *cx, const char *chars, size_t length)
+{
+    JS_ASSERT(JSShortString::fitsIntoShortString(length));
+    JSShortString *str = js_NewGCShortString(cx);
+    if (!str)
+        return NULL;
+    jschar *storage = str->init(length);
+
+    if (js_CStringsAreUTF8) {
+#ifdef DEBUG
+        size_t oldLength = length;
+#endif
+        if (!js_InflateStringToBuffer(cx, chars, length, storage, &length))
+            return NULL;
+        JS_ASSERT(length <= oldLength);
+        storage[length] = 0;
+        str->resetLength(length);
+    } else {
+        size_t n = length;
+        jschar *p = storage;
+        while (n--)
+            *p++ = jschar(*chars++);
+        *p = 0;
+    }
+    return str->header();
+}
+
 static const size_t sMinWasteSize = 16;
 
 JSString *
@@ -3427,6 +3468,11 @@ js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb)
         return ATOM_TO_STRING(cx->runtime->atomState.emptyAtom);
 
     size_t length = cb.length();
+
+    JS_STATIC_ASSERT(JSShortString::MAX_SHORT_STRING_LENGTH < JSCharBuffer::InlineLength);
+    if (JSShortString::fitsIntoShortString(length))
+        return NewShortString(cx, cb.begin(), length);
+
     if (!cb.append('\0'))
         return NULL;
 
@@ -3519,47 +3565,6 @@ void printJSStringStats(JSRuntime *rt)
             (unsigned long)rt->totalDependentStrings, mean, sigma);
 }
 #endif
-
-JSString *
-NewShortString(JSContext *cx, const jschar *chars, size_t length)
-{
-    JS_ASSERT(JSShortString::fitsIntoShortString(length));
-    JSShortString *str = js_NewGCShortString(cx);
-    if (!str)
-        return NULL;
-    jschar *storage = str->init(length);
-    js_short_strncpy(storage, chars, length);
-    storage[length] = 0;
-    return str->header();
-}
-
-JSString *
-NewShortString(JSContext *cx, const char *chars, size_t length)
-{
-    JS_ASSERT(JSShortString::fitsIntoShortString(length));
-    JSShortString *str = js_NewGCShortString(cx);
-    if (!str)
-        return NULL;
-    jschar *storage = str->init(length);
-
-    if (js_CStringsAreUTF8) {
-#ifdef DEBUG
-        size_t oldLength = length;
-#endif
-        if (!js_InflateStringToBuffer(cx, chars, length, storage, &length))
-            return NULL;
-        JS_ASSERT(length <= oldLength);
-        storage[length] = 0;
-        str->resetLength(length);
-    } else {
-        size_t n = length;
-        jschar *p = storage;
-        while (n--)
-            *p++ = jschar(*chars++);
-        *p = 0;
-    }
-    return str->header();
-}
 
 JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
