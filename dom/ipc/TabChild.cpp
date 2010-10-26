@@ -91,6 +91,7 @@
 #include "PCOMContentPermissionRequestChild.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 using namespace mozilla::docshell;
@@ -591,16 +592,13 @@ TabChild::DispatchWidgetEvent(nsGUIEvent& event)
   return true;
 }
 
-mozilla::ipc::PDocumentRendererChild*
-TabChild::AllocPDocumentRenderer(const PRInt32& x,
-                                 const PRInt32& y,
-                                 const PRInt32& w,
-                                 const PRInt32& h,
+PDocumentRendererChild*
+TabChild::AllocPDocumentRenderer(const nsRect& documentRect,
                                  const nsString& bgcolor,
-                                 const PRUint32& flags,
-                                 const bool& flush)
+                                 const PRUint32& renderFlags,
+                                 const bool& flushLayout)
 {
-    return new mozilla::ipc::DocumentRendererChild();
+    return new DocumentRendererChild();
 }
 
 bool
@@ -611,18 +609,13 @@ TabChild::DeallocPDocumentRenderer(PDocumentRendererChild* actor)
 }
 
 bool
-TabChild::RecvPDocumentRendererConstructor(
-        mozilla::ipc::PDocumentRendererChild *__a,
-        const PRInt32& aX,
-        const PRInt32& aY,
-        const PRInt32& aW,
-        const PRInt32& aH,
-        const nsString& bgcolor,
-        const PRUint32& flags,
-        const bool& flush)
+TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
+                                           const nsRect& documentRect,
+                                           const nsString& bgcolor,
+                                           const PRUint32& renderFlags,
+                                           const bool& flushLayout)
 {
-    mozilla::ipc::DocumentRendererChild *render = 
-        static_cast<mozilla::ipc::DocumentRendererChild *>(__a);
+    DocumentRendererChild *render = static_cast<DocumentRendererChild *>(actor);
 
     nsCOMPtr<nsIWebBrowser> browser = do_QueryInterface(mWebNav);
     if (!browser)
@@ -634,14 +627,16 @@ TabChild::RecvPDocumentRendererConstructor(
         return true; // silently ignore
     }
 
-    PRUint32 width, height;
+    nsIntSize renderedSize;
     nsCString data;
-    bool ret = render->RenderDocument(window, aX, aY, aW, aH, bgcolor, flags, flush,
-                                      width, height, data);
+    bool ret = render->RenderDocument(window,
+                                      documentRect, bgcolor,
+                                      renderFlags, flushLayout,
+                                      &renderedSize, data);
     if (!ret)
         return true; // silently ignore
 
-    return PDocumentRendererChild::Send__delete__(__a, width, height, data);
+    return PDocumentRendererChild::Send__delete__(actor, renderedSize, data);
 }
 
 PContentDialogChild*

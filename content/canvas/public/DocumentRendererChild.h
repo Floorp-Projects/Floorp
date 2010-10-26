@@ -53,9 +53,10 @@ public:
     DocumentRendererChild();
     virtual ~DocumentRendererChild();
     
-    bool RenderDocument(nsIDOMWindow *window, const PRInt32& x, const PRInt32& y, const PRInt32& w, const PRInt32& h,
-			    const nsString& bgcolor, const PRUint32& flags, const PRBool& flush, 
-			    PRUint32& _width, PRUint32& _height, nsCString& data);
+    bool RenderDocument(nsIDOMWindow *window,
+                        const nsRect& documentRect, const nsString& bgcolor,
+                        PRUint32 renderFlags, PRBool flushLayout, 
+                        nsIntSize* renderedSize, nsCString& data);
 
 private:
 
