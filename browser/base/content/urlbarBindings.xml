@@ -160,7 +160,8 @@
                                    GetStringFromName("pasteAndGo.label");
           pasteAndGo.setAttribute("label", label);
           pasteAndGo.setAttribute("anonid", "paste-and-go");
-          pasteAndGo.setAttribute("oncommand", "goDoCommand('cmd_paste'); gURLBar.handleCommand();");
+          pasteAndGo.setAttribute("oncommand",
+              "gURLBar.value = ''; goDoCommand('cmd_paste'); gURLBar.handleCommand();");
           cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
         }
       ]]></constructor>
