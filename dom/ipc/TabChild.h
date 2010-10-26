@@ -199,11 +199,13 @@ public:
                                   const nsString& aJSON);
 
     virtual PDocumentRendererChild*
-    AllocPDocumentRenderer(const nsRect& documentRect, const nsString& bgcolor,
+    AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
+                           const nsString& bgcolor,
                            const PRUint32& renderFlags, const bool& flushLayout);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
+                                                  const gfxMatrix& transform,
                                                   const nsString& bgcolor,
                                                   const PRUint32& renderFlags,
                                                   const bool& flushLayout);

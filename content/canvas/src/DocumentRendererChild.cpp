@@ -101,6 +101,7 @@ FlushLayoutForTree(nsIDOMWindow* aWindow)
 bool
 DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
                                       const nsRect& documentRect,
+                                      const gfxMatrix& transform,
                                       const nsString& bgcolor,
                                       PRUint32 renderFlags,
                                       PRBool flushLayout, 
@@ -140,6 +141,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
                             4 * w,
                             gfxASurface::ImageFormatARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+    ctx->SetMatrix(transform);
 
     presShell->RenderDocument(documentRect, renderFlags, bgColor, ctx);
     *renderedSize = nsIntSize(w, h);

@@ -54,7 +54,8 @@ public:
     virtual ~DocumentRendererChild();
     
     bool RenderDocument(nsIDOMWindow *window,
-                        const nsRect& documentRect, const nsString& bgcolor,
+                        const nsRect& documentRect, const gfxMatrix& transform,
+                        const nsString& bgcolor,
                         PRUint32 renderFlags, PRBool flushLayout, 
                         nsIntSize* renderedSize, nsCString& data);
 

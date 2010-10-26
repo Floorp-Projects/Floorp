@@ -220,6 +220,7 @@ TabParent::GetSSLStatus(nsISupports ** aStatus)
 
 PDocumentRendererParent*
 TabParent::AllocPDocumentRenderer(const nsRect& documentRect,
+                                  const gfxMatrix& transform,
                                   const nsString& bgcolor,
                                   const PRUint32& renderFlags,
                                   const bool& flushLayout)
