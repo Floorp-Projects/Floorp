@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> 
 
 <!-- ***** BEGIN LICENSE BLOCK *****
  Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -37,10 +37,10 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
-
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+ 
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
       onload="dialogOnLoad()"
       ondialogaccept="return dialogOK();">
 
