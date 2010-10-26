@@ -71,7 +71,7 @@ static const double NONSEEKABLE_READAHEAD_MAX = 0.5;
 static const PRUint32 REPLAY_DELAY = 30;
 
 // When looking for a reusable block, scan forward this many blocks
-// from the desired "best" block location to look for free blocks, 
+// from the desired "best" block location to look for free blocks,
 // before we resort to scanning the whole cache. The idea is to try to
 // store runs of stream blocks close-to-consecutively in the cache if we
 // can.
@@ -556,35 +556,41 @@ nsMediaCache::Init()
 
   nsCOMPtr<nsIFile> tmp;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmp));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
+
   nsCOMPtr<nsILocalFile> tmpFile = do_QueryInterface(tmp);
+  NS_ENSURE_TRUE(tmpFile != nsnull, NS_ERROR_FAILURE);
 
   // We put the media cache file in
   // ${TempDir}/mozilla-media-cache/media_cache
-  if (!tmpFile)
-    return NS_ERROR_FAILURE;
   rv = tmpFile->AppendNative(nsDependentCString("mozilla-media-cache"));
-  if (NS_FAILED(rv))
-    return rv;
-  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
-    return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
-    return rv;
+  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  if (rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+    // Ensure the permissions are 0700. If not, we won't be able to create,
+    // read to and write from the media cache file in its subdirectory on
+    // non-Windows platforms.
+    PRUint32 perms;
+    rv = tmpFile->GetPermissions(&perms);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (perms != 0700) {
+      rv = tmpFile->SetPermissions(0700);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  } else {
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   rv = tmpFile->AppendNative(nsDependentCString("media_cache"));
-  if (NS_FAILED(rv))
-    return rv;
-  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   rv = tmpFile->OpenNSPRFileDesc(PR_RDWR | nsILocalFile::DELETE_ON_CLOSE,
                                  PR_IRWXU, &mFD);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
 #ifdef PR_LOGGING
   if (!gMediaCacheLog) {
@@ -630,7 +636,7 @@ nsMediaCache::FlushInternal()
 void
 nsMediaCache::MaybeShutdown()
 {
-  NS_ASSERTION(NS_IsMainThread(), 
+  NS_ASSERTION(NS_IsMainThread(),
                "nsMediaCache::MaybeShutdown called on non-main thread");
   if (!gMediaCache->mStreams.IsEmpty()) {
     // Don't shut down yet, streams are still alive
@@ -1498,7 +1504,7 @@ nsMediaCache::AllocateAndWriteBlock(nsMediaCacheStream* aStream, const void* aDa
   if (blockIndex >= 0) {
     FreeBlock(blockIndex);
 
-    Block* block = &mIndex[blockIndex];    
+    Block* block = &mIndex[blockIndex];
     LOG(PR_LOG_DEBUG, ("Allocated block %d to stream %p block %d(%lld)",
         blockIndex, aStream, streamBlockIndex, (long long)streamBlockIndex*BLOCK_SIZE));
 
@@ -1705,7 +1711,7 @@ nsMediaCacheStream::NotifyDataLength(PRInt64 aLength)
 }
 
 void
-nsMediaCacheStream::NotifyDataStarted(PRInt64 aOffset) 
+nsMediaCacheStream::NotifyDataStarted(PRInt64 aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -1825,7 +1831,7 @@ nsMediaCacheStream::NotifyDataReceived(PRInt64 aSize, const char* aData,
 }
 
 void
-nsMediaCacheStream::NotifyDataEnded(nsresult aStatus) 
+nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -1989,7 +1995,7 @@ nsMediaCacheStream::GetNextCachedDataInternal(PRInt64 aOffset)
   PR_ASSERT_CURRENT_THREAD_IN_MONITOR(gMediaCache->Monitor());
   if (aOffset == mStreamLength)
     return -1;
-  
+
   PRUint32 startBlockIndex = aOffset/BLOCK_SIZE;
   PRUint32 channelBlockIndex = mChannelOffset/BLOCK_SIZE;
 
@@ -2230,7 +2236,7 @@ nsMediaCacheStream::ReadFromCache(char* aBuffer,
     streamOffset += bytes;
     count += bytes;
   }
-  
+
   return NS_OK;
 }
 
