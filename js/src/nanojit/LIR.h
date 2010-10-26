@@ -1577,6 +1577,9 @@ namespace nanojit
         virtual LIns* insJtbl(LIns* index, uint32_t size) {
             return out->insJtbl(index, size);
         }
+        virtual LIns* insComment(const char* str) {
+            return out->insComment(str);
+        }
 
         // convenience functions
 
@@ -1896,6 +1899,10 @@ namespace nanojit
         LIns* insImmD(double d) {
             return add(out->insImmD(d));
         }
+
+        LIns* insComment(const char* str) {
+            return add(out->insComment(str));
+        }
     };
 
 #endif
@@ -2154,6 +2161,7 @@ namespace nanojit
             LIns*   insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to);
             LIns*   insAlloc(int32_t size);
             LIns*   insJtbl(LIns* index, uint32_t size);
+            LIns*   insComment(const char* str);
     };
 
     class LirFilter
