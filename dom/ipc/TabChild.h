@@ -197,24 +197,17 @@ public:
     virtual bool RecvLoadRemoteScript(const nsString& aURL);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const nsString& aJSON);
-    virtual mozilla::ipc::PDocumentRendererChild* AllocPDocumentRenderer(
-            const PRInt32& x,
-            const PRInt32& y,
-            const PRInt32& w,
-            const PRInt32& h,
-            const nsString& bgcolor,
-            const PRUint32& flags,
-            const bool& flush);
+
+    virtual PDocumentRendererChild*
+    AllocPDocumentRenderer(const nsRect& documentRect, const nsString& bgcolor,
+                           const PRUint32& renderFlags, const bool& flushLayout);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererChild* actor);
-    virtual bool RecvPDocumentRendererConstructor(
-            mozilla::ipc::PDocumentRendererChild *__a,
-            const PRInt32& x,
-            const PRInt32& y,
-            const PRInt32& w,
-            const PRInt32& h,
-            const nsString& bgcolor,
-            const PRUint32& flags,
-            const bool& flush);
+    virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
+                                                  const nsRect& documentRect,
+                                                  const nsString& bgcolor,
+                                                  const PRUint32& renderFlags,
+                                                  const bool& flushLayout);
+
     virtual PContentDialogChild* AllocPContentDialog(const PRUint32&,
                                                      const nsCString&,
                                                      const nsCString&,

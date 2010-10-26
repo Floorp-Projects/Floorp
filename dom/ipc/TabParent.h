@@ -132,14 +132,9 @@ public:
                       PRInt32 aCharCode, PRInt32 aModifiers,
                       PRBool aPreventDefault);
 
-    virtual mozilla::ipc::PDocumentRendererParent* AllocPDocumentRenderer(
-            const PRInt32& x,
-            const PRInt32& y,
-            const PRInt32& w,
-            const PRInt32& h,
-            const nsString& bgcolor,
-            const PRUint32& flags,
-            const bool& flush);
+    virtual PDocumentRendererParent*
+    AllocPDocumentRenderer(const nsRect& documentRect, const nsString& bgcolor,
+                           const PRUint32& renderFlags, const bool& flushLayout);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 
     virtual PContentPermissionRequestParent* AllocPContentPermissionRequest(const nsCString& aType, const IPC::URI& uri);
