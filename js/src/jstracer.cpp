@@ -2487,8 +2487,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 
     lirbuf->state = addName(lir->insParam(0, 0), "state");
 
-    if (fragment == fragment->root)
+    if (fragment == fragment->root) {
+        insComment("begin-loop");
         InitConst(loopLabel) = lir->ins0(LIR_label);
+    }
 
     // if profiling, drop a label, so the assembler knows to put a
     // frag-entry-counter increment at this point.  If there's a
@@ -2527,9 +2529,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          * the callback is to be invoked. We can use INS_CONSTPTR here as JIT-ed code is per
          * thread and cannot outlive the corresponding JSThreadData.
          */
+        insComment("begin-interruptFlags-check");
         LIns* flagptr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->interruptFlags);
         LIns* x = lir->insLoad(LIR_ldi, flagptr, 0, ACCSET_LOAD_ANY, LOAD_VOLATILE);
         guard(true, lir->insEqI_0(x), snapshot(TIMEOUT_EXIT));
+        insComment("end-interruptFlags-check");
 
         /*
          * Count the number of iterations run by a trace, so that we can blacklist if
@@ -2538,6 +2542,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          */
 #ifdef JS_METHODJIT
         if (cx->methodJitEnabled) {
+            insComment("begin-count-loop-iterations");
             LIns* counterPtr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->iterationCounter);
             LIns* counterValue = lir->insLoad(LIR_ldi, counterPtr, 0, ACCSET_LOAD_ANY,
                                               LOAD_VOLATILE);
@@ -2550,6 +2555,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
              */
             lir->insStore(counterValue, counterPtr, 0, ACCSET_STORE_ANY);
             labelForBranch(branch);
+            insComment("end-count-loop-iterations");
         }
 #endif
     }
@@ -2681,6 +2687,17 @@ TraceRecorder::addName(LIns* ins, const char* name)
         lirbuf->printer->lirNameMap->addName(ins, name);
 #endif
     return ins;
+}
+
+inline LIns*
+TraceRecorder::insComment(const char* str)
+{
+#ifdef JS_JIT_SPEW
+    return lir->insComment(str);  
+#else
+    return NULL;
+#endif
+
 }
 
 inline LIns*
@@ -5103,6 +5120,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
+            insComment("end-loop");
             lir->ins1(LIR_livep, lirbuf->state);
         }
 
@@ -12997,8 +13015,10 @@ TraceRecorder::record_JSOP_GETELEM()
         LIns* addr_ins;
 
         VMSideExit* branchExit = snapshot(BRANCH_EXIT);
+        insComment("begin-getelem(dense-array)");
         guardDenseArray(obj_ins, branchExit);
         CHECK_STATUS_A(denseArrayElement(lval, idx, vp, v_ins, addr_ins, branchExit));
+        insComment("end-getelem(dense-array)");
         set(&lval, v_ins);
         if (call)
             set(&idx, obj_ins);
@@ -13280,6 +13300,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         VMSideExit* branchExit = snapshot(BRANCH_EXIT);
         VMSideExit* mismatchExit = snapshot(MISMATCH_EXIT);
 
+        insComment("begin-setelem(dense-array)");
+
         // Make sure the array is actually dense.
         if (!obj->isDenseArray()) 
             return ARECORD_STOP;
@@ -13346,6 +13368,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         // Right, actually set the element.
         box_value_into(v, v_ins, addr_ins, 0, ACCSET_SLOTS);
+
+        insComment("end-setelem(dense-array)");
     }
 
     jsbytecode* pc = cx->regs->pc;
