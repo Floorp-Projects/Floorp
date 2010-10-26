@@ -762,6 +762,19 @@ var gCookiesWindow = {
         this._view._filterSet.reverse();
     }
 
+    // Adjust the Sort Indicator
+    var domainCol = document.getElementById("domainCol");
+    var nameCol = document.getElementById("nameCol");
+    var sortOrderString = ascending ? "ascending" : "descending";
+    if (aProperty == "rawHost") {
+      domainCol.setAttribute("sortDirection", sortOrderString);
+      nameCol.removeAttribute("sortDirection");
+    }
+    else {
+      nameCol.setAttribute("sortDirection", sortOrderString);
+      domainCol.removeAttribute("sortDirection");
+    }
+
     this._view._invalidateCache(0);
     this._view.selection.clearSelection();
     this._view.selection.select(0);

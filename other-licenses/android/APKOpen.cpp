@@ -217,7 +217,6 @@ SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(nativeRun, jstring)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER1(setSurfaceView, jobject)
-SHELL_WRAPPER2(setInitialSize, int, int)
 SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
@@ -508,7 +507,6 @@ loadLibs(const char *apkName)
   GETFUNC(nativeRun);
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(setSurfaceView);
-  GETFUNC(setInitialSize);
   GETFUNC(onResume);
   GETFUNC(onLowMemory);
   GETFUNC(callObserver);

@@ -200,13 +200,18 @@ public:
   // to. The 'position' is a zero-width rectangle.
   nsIFrame*     GetSelectionAnchorGeometry(SelectionRegion aRegion, nsRect *aRect);
 
-  nsresult      PostScrollSelectionIntoViewEvent(SelectionRegion aRegion);
+  nsresult      PostScrollSelectionIntoViewEvent(SelectionRegion aRegion, PRBool aFirstAncestorOnly);
+  enum {
+    SCROLL_SYNCHRONOUS = 1<<1,
+    SCROLL_FIRST_ANCESTOR_ONLY = 1<<2,
+    SCROLL_DO_FLUSH = 1<<3
+  };
   // aDoFlush only matters if aIsSynchronous is true.  If not, we'll just flush
   // when the scroll event fires so we make sure to scroll to the right place.
-  nsresult      ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous,
-                               PRBool aDoFlush,
+  nsresult      ScrollIntoView(SelectionRegion aRegion,
                                PRInt16 aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE,
-                               PRInt16 aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE);
+                               PRInt16 aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE,
+                               PRInt32 aFlags = 0);
   nsresult      SubtractRange(RangeData* aRange, nsIRange* aSubtract,
                               nsTArray<RangeData>* aOutput);
   nsresult      AddItem(nsIRange *aRange, PRInt32* aOutIndex = nsnull);
@@ -278,15 +283,18 @@ private:
   public:
     NS_DECL_NSIRUNNABLE
     ScrollSelectionIntoViewEvent(nsTypedSelection *aTypedSelection,
-                                 SelectionRegion aRegion) 
+                                 SelectionRegion aRegion,
+                                 PRBool aFirstAncestorOnly)
       : mTypedSelection(aTypedSelection),
-        mRegion(aRegion) {
+        mRegion(aRegion),
+        mFirstAncestorOnly(aFirstAncestorOnly) {
       NS_ASSERTION(aTypedSelection, "null parameter");
     }
     void Revoke() { mTypedSelection = nsnull; }
   private:
     nsTypedSelection *mTypedSelection;
     SelectionRegion   mRegion;
+    PRBool            mFirstAncestorOnly;
   };
 
   void setAnchorFocusRange(PRInt32 aIndex); // pass in index into mRanges;
@@ -459,15 +467,17 @@ public:
     {
       nsWeakFrame frame =
         mContent ? mPresContext->GetPrimaryFrameFor(mContent) : nsnull;
+      if (!frame)
+        return NS_OK;
       mContent = nsnull;
 
-      mFrameSelection->HandleDrag(frame, mPoint);
+      nsPoint pt = mPoint -
+        frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
+      mFrameSelection->HandleDrag(frame, pt);
       if (!frame.IsAlive())
         return NS_OK;
 
       NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
-      nsPoint pt = mPoint -
-        frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
       mSelection->DoAutoScroll(frame, pt);
     }
     return NS_OK;
@@ -1959,7 +1969,7 @@ nsFrameSelection::GetSelection(SelectionType aType) const
 nsresult
 nsFrameSelection::ScrollSelectionIntoView(SelectionType   aType,
                                           SelectionRegion aRegion,
-                                          PRBool          aIsSynchronous) const
+                                          PRInt16         aFlags) const
 {
   PRInt8 index = GetIndexFromSelectionType(aType);
   if (index < 0)
@@ -1968,10 +1978,19 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType   aType,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
+  PRInt32 flags = nsTypedSelection::SCROLL_DO_FLUSH;
+  if (aFlags & nsISelectionController::SCROLL_SYNCHRONOUS) {
+    flags |= nsTypedSelection::SCROLL_SYNCHRONOUS;
+  } else if (aFlags & nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY) {
+    flags |= nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY;
+  }
+
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  return mDomSelections[index]->ScrollIntoView(aRegion, aIsSynchronous,
-                                               PR_TRUE);
+  return mDomSelections[index]->ScrollIntoView(aRegion,
+                                               PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
+                                               PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
+                                               flags);
 }
 
 nsresult
@@ -5550,13 +5569,22 @@ nsTypedSelection::ScrollSelectionIntoViewEvent::Run()
   if (!mTypedSelection)
     return NS_OK;  // event revoked
 
+  PRInt32 flags = nsTypedSelection::SCROLL_DO_FLUSH |
+                  nsTypedSelection::SCROLL_SYNCHRONOUS;
+  if (mFirstAncestorOnly) {
+    flags |= nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY;
+  }
+
   mTypedSelection->mScrollEvent.Forget();
-  mTypedSelection->ScrollIntoView(mRegion, PR_TRUE, PR_TRUE);
+  mTypedSelection->ScrollIntoView(mRegion,
+                                  PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
+                                  PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
+                                  flags);
   return NS_OK;
 }
 
 nsresult
-nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion)
+nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion, PRBool aFirstAncestorOnly)
 {
   // If we've already posted an event, revoke it and place a new one at the
   // end of the queue to make sure that any new pending reflow events are
@@ -5565,7 +5593,7 @@ nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion)
   mScrollEvent.Revoke();
 
   nsRefPtr<ScrollSelectionIntoViewEvent> ev =
-      new ScrollSelectionIntoViewEvent(this, aRegion);
+      new ScrollSelectionIntoViewEvent(this, aRegion, aFirstAncestorOnly);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5577,14 +5605,14 @@ NS_IMETHODIMP
 nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous,
                                  PRInt16 aVPercent, PRInt16 aHPercent)
 {
-  return ScrollIntoView(aRegion, aIsSynchronous, PR_FALSE,
-                        aVPercent, aHPercent);
+  return ScrollIntoView(aRegion, aVPercent, aHPercent,
+                        aIsSynchronous ? nsTypedSelection::SCROLL_SYNCHRONOUS : 0);
 }
 
 nsresult
 nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
-                                 PRBool aIsSynchronous, PRBool aDoFlush,
-                                 PRInt16 aVPercent, PRInt16 aHPercent)
+                                 PRInt16 aVPercent, PRInt16 aHPercent,
+                                 PRInt32 aFlags)
 {
   nsresult result;
   if (!mFrameSelection)
@@ -5593,8 +5621,9 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
   if (mFrameSelection->GetBatching())
     return NS_OK;
 
-  if (!aIsSynchronous)
-    return PostScrollSelectionIntoViewEvent(aRegion);
+  if (!(aFlags & nsTypedSelection::SCROLL_SYNCHRONOUS))
+    return PostScrollSelectionIntoViewEvent(aRegion,
+      !!(aFlags & nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY));
 
   //
   // Shut the caret off before scrolling to avoid
@@ -5612,7 +5641,7 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
     // is that some callers might scroll to the wrong place.  Those should
     // either manually flush if they're in a safe position for it or use the
     // async version of this method.
-    if (aDoFlush) {
+    if (aFlags & nsTypedSelection::SCROLL_DO_FLUSH) {
       presShell->FlushPendingNotifications(Flush_Layout);
 
       // Reget the presshell, since it might have gone away.
@@ -5632,7 +5661,8 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
     if (!frame)
       return NS_ERROR_FAILURE;
 
-    presShell->ScrollFrameRectIntoView(frame, rect, aVPercent, aHPercent, 0);
+    presShell->ScrollFrameRectIntoView(frame, rect, aVPercent, aHPercent,
+      (aFlags & nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY) ? nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY: 0);
     return NS_OK;
   }
   return result;

@@ -15,7 +15,8 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
+ *
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -118,10 +119,10 @@ private:
   /**
    * Typedefs
    */
-  typedef bool (*searchFunctionPtr)(const nsDependentSubstring &aToken,
-                                    const nsAString &aSourceString);
+  typedef bool (*searchFunctionPtr)(const nsDependentCSubstring &aToken,
+                                    const nsACString &aSourceString);
 
-  typedef nsAString::const_char_iterator const_wchar_iterator;
+  typedef nsACString::const_char_iterator const_char_iterator;
 
   /**
    * Obtains the search function to match on.
@@ -134,6 +135,18 @@ private:
   static searchFunctionPtr getSearchFunction(PRInt32 aBehavior);
 
   /**
+   * Tests if aSourceString starts with aToken.
+   *
+   * @param aToken
+   *        The string to search for.
+   * @param aSourceString
+   *        The string to search.
+   * @return true if found, false otherwise.
+   */
+  static bool findBeginning(const nsDependentCSubstring &aToken,
+                            const nsACString &aSourceString);
+
+  /**
    * Searches aSourceString for aToken anywhere in the string in a case-
    * insensitive way.
    *
@@ -143,20 +156,8 @@ private:
    *        The string to search.
    * @return true if found, false otherwise.
    */
-  static bool findAnywhere(const nsDependentSubstring &aToken,
-                           const nsAString &aSourceString);
-
-  /**
-   * Tests if aSourceString starts with aToken.
-   *
-   * @param aToken
-   *        The string to search for.
-   * @param aSourceString
-   *        The string to search.
-   * @return true if found, false otherwise.
-   */
-  static bool findBeginning(const nsDependentSubstring &aToken,
-                            const nsAString &aSourceString);
+  static bool findAnywhere(const nsDependentCSubstring &aToken,
+                           const nsACString &aSourceString);
 
   /**
    * Tests if aToken is found on a word boundary in aSourceString.
@@ -167,33 +168,9 @@ private:
    *        The string to search.
    * @return true if found, false otherwise.
    */
-  static bool findOnBoundary(const nsDependentSubstring &aToken,
-                             const nsAString &aSourceString);
+  static bool findOnBoundary(const nsDependentCSubstring &aToken,
+                             const nsACString &aSourceString);
 
-  /**
-   * Obtains an iterator to the next word boundary as defined by isWordBoundary.
-   *
-   * @param aStart
-   *        An iterator pointing to the start of the string.
-   * @param aEnd
-   *        An iterator pointing to the end of the string.
-   * @return an iterator pointing to the next word boundary.
-   */
-  static const_wchar_iterator nextWordBoundary(const_wchar_iterator aStart,
-                                               const_wchar_iterator aEnd);
-  /**
-   * Determines if aChar is a word boundary.  A 'word boundary' is anything that
-   * is not used to build up a word from a string of characters.  We are very
-   * conservative here because anything that we do not list will be treated as a
-   * word boundary.  This means searching for that not-actually-a-word-boundary
-   * character can still be matched in the middle of a word.
-   *
-   * @param aChar
-   *        The Unicode character to check against.
-   * @return true if the character is considered a word boundary, false
-   *          otherwise.
-   */
-  static inline bool isWordBoundary(const PRUnichar &aChar);
 
   /**
    * Fixes a URI's spec such that it is ready to be searched.  This includes
@@ -205,7 +182,7 @@ private:
    * @param _fixedSpec
    *        An out parameter that is the fixed up string.
    */
-  static void fixupURISpec(const nsCString &aURISpec, nsString &_fixedSpec);
+  static void fixupURISpec(const nsCString &aURISpec, nsCString &_fixedSpec);
 };
 
 } // namespace places

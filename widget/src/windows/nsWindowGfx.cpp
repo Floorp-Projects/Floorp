@@ -523,7 +523,6 @@ DDRAW_FAILED:
           }
 
           nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
-          thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
           if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
             const nsIntRect* r;
             for (nsIntRegionRectIterator iter(event.region);
@@ -1045,7 +1044,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
   targetSurfaceImage->SetDeviceOffset(gfxPoint(-brx, -bry));
   
   thebesContext = new gfxContext(targetSurfaceImage);
-  thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
   thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
     
   {

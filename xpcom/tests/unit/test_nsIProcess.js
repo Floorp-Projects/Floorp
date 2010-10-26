@@ -251,11 +251,6 @@ function test_kill_2()
 }
 
 function run_test() {
-  var isOSX = ("nsILocalFileMac" in Components.interfaces);
-  if (isOSX) {
-    dump("INFO | test_nsIProcess.js | Skipping test on mac, bug 599478")
-    return;
-  }
   set_environment();
   test_kill();
   test_quick();

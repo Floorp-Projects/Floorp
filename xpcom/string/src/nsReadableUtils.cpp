@@ -802,7 +802,7 @@ FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT
           {
               // fast inner loop (that's what it's called, not what it is) looks for a potential match
             while ( aSearchStart != aSearchEnd &&
-                    compare(*aPatternStart, *aSearchStart) )
+                    compare(aPatternStart.get(), aSearchStart.get(), 1, 1) )
               ++aSearchStart;
 
               // if we broke out of the `fast' loop because we're out of string ... we're done: no match
@@ -839,7 +839,7 @@ FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT
 
                   // else if we mismatched ... it's time to advance to the next search position
                   //  and get back into the `fast' loop
-                if ( compare(*testPattern, *testSearch) )
+                if ( compare(testPattern.get(), testSearch.get(), 1, 1) )
                   {
                     ++aSearchStart;
                     break;
@@ -871,7 +871,7 @@ RFindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, Iterator
         --searchEnd;
     
           // Check last character, if a match, explore further from here
-        if ( compare(*patternEnd, *searchEnd) == 0 )
+        if ( compare(patternEnd.get(), searchEnd.get(), 1, 1) == 0 )
           {  
               // We're at a potential match, let's see if we really hit one
             IteratorT testPattern(patternEnd);
@@ -900,7 +900,7 @@ RFindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, Iterator
                 --testPattern;
                 --testSearch;
               }
-            while ( compare(*testPattern, *testSearch) == 0 );
+            while ( compare(testPattern.get(), testSearch.get(), 1, 1) == 0 );
           }
       }
 
