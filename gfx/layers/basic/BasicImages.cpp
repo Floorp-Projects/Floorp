@@ -104,8 +104,13 @@ protected:
  */
 class BasicPlanarYCbCrImage : public PlanarYCbCrImage, public BasicImageImplData {
 public:
-  BasicPlanarYCbCrImage() :
-    PlanarYCbCrImage(static_cast<BasicImageImplData*>(this))
+   /** 
+    * aScaleHint is a size that the image is expected to be rendered at.
+    * This is a hint for image backends to optimize scaling.
+    */
+  BasicPlanarYCbCrImage(const gfxIntSize& aScaleHint) :
+    PlanarYCbCrImage(static_cast<BasicImageImplData*>(this)),
+    mScaleHint(aScaleHint)
     {}
 
   virtual void SetData(const Data& aData);
@@ -115,6 +120,7 @@ public:
 protected:
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
+  gfxIntSize                           mScaleHint;
 };
 
 void
@@ -125,8 +131,13 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     NS_ERROR("Illegal width or height");
     return;
   }
-  size_t size = aData.mPicSize.width*aData.mPicSize.height*4;
-  mBuffer = new PRUint8[size];
+  // 'prescale' is true if the scaling is to be done as part of the
+  // YCbCr to RGB conversion rather than on the RGB data when rendered.
+  PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
+  gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
+                  prescale ? mScaleHint.height : aData.mPicSize.height);
+
+  mBuffer = new PRUint8[size.width * size.height * 4];
   if (!mBuffer) {
     // out of memory
     return;
@@ -149,20 +160,37 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     NS_ERROR("YCbCr format not supported");
   }
  
-  // Convert from YCbCr to RGB now
-  gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+  // Convert from YCbCr to RGB now, scaling the image if needed.
+  if (size != aData.mPicSize) {
+    gfx::ScaleYCbCrToRGB32(aData.mYChannel,
                            aData.mCbChannel,
                            aData.mCrChannel,
                            mBuffer,
-                           aData.mPicX,
-                           aData.mPicY,
                            aData.mPicSize.width,
                            aData.mPicSize.height,
+                           size.width,
+                           size.height,
                            aData.mYStride,
                            aData.mCbCrStride,
-                           aData.mPicSize.width*4,
-                           type);                                                          
-  mSize = aData.mPicSize;
+                           size.width*4,
+                           type,
+                           gfx::ROTATE_0);
+  }
+  else {
+    gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+                             aData.mCbChannel,
+                             aData.mCrChannel,
+                             mBuffer,
+                             aData.mPicX,
+                             aData.mPicY,
+                             aData.mPicSize.width,
+                             aData.mPicSize.height,
+                             aData.mYStride,
+                             aData.mCbCrStride,
+                             aData.mPicSize.width*4,
+                             type);                                                          
+  }
+  mSize = size;
 }
 
 static cairo_user_data_key_t imageSurfaceDataKey;
@@ -218,7 +246,8 @@ BasicPlanarYCbCrImage::GetAsSurface()
 class BasicImageContainer : public ImageContainer {
 public:
   BasicImageContainer(BasicLayerManager* aManager) :
-    ImageContainer(aManager), mMonitor("BasicImageContainer")
+    ImageContainer(aManager), mMonitor("BasicImageContainer"),
+    mScaleHint(-1, -1)
   {}
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
@@ -227,10 +256,12 @@ public:
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
   virtual gfxIntSize GetCurrentSize();
   virtual PRBool SetLayerManager(LayerManager *aManager);
+  virtual void SetScaleHint(const gfxIntSize& aScaleHint);
 
 protected:
   Monitor mMonitor;
   nsRefPtr<Image> mImage;
+  gfxIntSize mScaleHint;
 };
 
 /**
@@ -257,7 +288,8 @@ BasicImageContainer::CreateImage(const Image::Format* aFormats,
   if (FormatInList(aFormats, aNumFormats, Image::CAIRO_SURFACE)) {
     image = new BasicCairoImage();
   } else if (FormatInList(aFormats, aNumFormats, Image::PLANAR_YCBCR)) {
-    image = new BasicPlanarYCbCrImage();
+    MonitorAutoEnter mon(mMonitor);
+    image = new BasicPlanarYCbCrImage(mScaleHint);
   }
   return image.forget();
 }
@@ -301,6 +333,12 @@ BasicImageContainer::GetCurrentSize()
 {
   MonitorAutoEnter mon(mMonitor);
   return !mImage ? gfxIntSize(0,0) : ToImageData(mImage)->GetSize();
+}
+
+void BasicImageContainer::SetScaleHint(const gfxIntSize& aScaleHint)
+{
+  MonitorAutoEnter mon(mMonitor);
+  mScaleHint = aScaleHint;
 }
 
 PRBool
