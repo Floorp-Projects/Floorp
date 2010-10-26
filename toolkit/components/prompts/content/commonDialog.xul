@@ -11,9 +11,10 @@
         aria-describedby="info.body"
         onload="commonDialogOnLoad();"
         onunload="commonDialogOnUnload();"
-        ondialogaccept="return commonDialogOnAccept();"
-        ondialogextra1="return commonDialogOnExtra1();"
-        ondialogextra2="return commonDialogOnExtra2();"
+        ondialogaccept="Dialog.onButton0(); return true;"
+        ondialogcancel="Dialog.onButton1(); return true;"
+        ondialogextra1="Dialog.onButton2(); window.close();"
+        ondialogextra2="Dialog.onButton3(); window.close();"
         buttonpack="center">
 
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
@@ -75,16 +76,9 @@
       </row>
       <row id="checkboxContainer" hidden="true">
         <spacer/>
-        <checkbox id="checkbox" oncommand="onCheckboxClick(this);"/>
+        <checkbox id="checkbox" oncommand="Dialog.onCheckbox()"/>
       </row>
     </rows>
   </grid>
 
-
-  <!-- This method is called inline because it may unset hidden="true" on the
-       above boxes, causing their frames to be build and bindings to load.
-       So, by calling this inline, we guarantee the textboxes and checkboxes
-       above will have their bindings before initButtons is called, and the
-       dialog will be intrinsically sized correctly. -->
-  <script type="application/javascript">earlyInit();</script>
 </dialog>
