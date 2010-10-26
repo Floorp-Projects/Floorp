@@ -184,21 +184,21 @@ toolbarbutton.urlbar-button {
 
 /* add special color */
 #identity-box[mode="verifiedIdentity"] {
-  background-image: url("chrome://browser/skin/images/endcap-ssl-default-bg.png");
+  background-image: url("chrome://browser/skin/images/endcap-ev-default-bg.png");
 }
 
 #identity-box[mode="verifiedIdentity"][open="true"],
 #identity-box[mode="verifiedIdentity"]:hover:active {
-  background-image: url("chrome://browser/skin/images/endcap-ssl-active-bg.png");
+  background-image: url("chrome://browser/skin/images/endcap-ev-active-bg.png");
 }
 
 #identity-box[mode="verifiedDomain"] {
-  background-image: url("chrome://browser/skin/images/endcap-ev-default-bg.png");
+  background-image: url("chrome://browser/skin/images/endcap-ssl-default-bg.png");
 }
 
 #identity-box[mode="verifiedDomain"][open="true"],
 #identity-box[mode="verifiedDomain"]:hover:active {
-  background-image: url("chrome://browser/skin/images/endcap-ev-active-bg.png");
+  background-image: url("chrome://browser/skin/images/endcap-ssl-active-bg.png");
 }
 
 #urlbar-throbber[loading] {
@@ -920,11 +920,11 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 #identity-container[mode="verifiedIdentity"] > hbox > #identity-popup-icon {
-  list-style-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
+  list-style-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
 }
 
 #identity-container[mode="verifiedDomain"] > hbox > #identity-popup-icon {
-  list-style-image: url("chrome://browser/skin/images/identity-ev-hdpi.png");
+  list-style-image: url("chrome://browser/skin/images/identity-ssl-hdpi.png");
 }
 
 /* Popup Body Text */
