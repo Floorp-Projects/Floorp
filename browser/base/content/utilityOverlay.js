@@ -483,7 +483,7 @@ function openTroubleshootingPage()
  */
 function openFeedbackPage()
 {
-  openUILinkIn("http://input.mozilla.com/sad", "tab");
+  openUILinkIn("http://input.mozilla.com/feedback", "tab");
 }
 
 
