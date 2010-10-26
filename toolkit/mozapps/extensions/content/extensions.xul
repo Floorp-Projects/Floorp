@@ -143,9 +143,9 @@
   <!-- main header -->
   <hbox id="header" align="center">
     <button id="back-btn" class="nav-button" command="cmd_back"
-            tooltiptext="&cmd.back.tooltip;"/>
+            tooltiptext="&cmd.back.tooltip;" hidden="true" disabled="true"/>
     <button id="forward-btn" class="nav-button" command="cmd_forward"
-            tooltiptext="&cmd.forward.tooltip;"/>
+            tooltiptext="&cmd.forward.tooltip;" hidden="true" disabled="true"/>
     <spacer flex="1"/>
     <hbox id="updates-container" align="center">
       <image class="spinner"/>
