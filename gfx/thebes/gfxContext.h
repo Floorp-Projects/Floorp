@@ -637,15 +637,7 @@ public:
          * When this flag is set, snapping to device pixels is disabled.
          * It simply never does anything.
          */
-        FLAG_DISABLE_SNAPPING = (1 << 1),
-        /**
-         * When this flag is set, rendering through this context
-         * is destined to be (eventually) drawn on the screen. It can be
-         * useful to know this, for example so that windowed plugins are
-         * not unnecessarily rendered (since they will already appear
-         * on the screen, thanks to their windows).
-         */
-        FLAG_DESTINED_FOR_SCREEN = (1 << 2)
+        FLAG_DISABLE_SNAPPING = (1 << 1)
     };
 
     void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }
