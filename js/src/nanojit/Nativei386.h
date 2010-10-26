@@ -104,7 +104,8 @@ namespace nanojit
     #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
     #define NJ_F2I_SUPPORTED                1
     #define NJ_SOFTFLOAT_SUPPORTED          0
-
+    #define NJ_DIVI_SUPPORTED               1
+    
         // Preserve a 16-byte stack alignment, to support the use of
         // SSE instructions like MOVDQA (if not by Tamarin itself,
         // then by the C functions it calls).
