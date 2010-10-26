@@ -16773,11 +16773,11 @@ LoopProfile::LoopProfile(JSScript *script, jsbytecode *top, jsbytecode *bottom)
       numSelfOps(0),
       numSelfOpsMult(0),
       branchMultiplier(1),
-      prevOp(JSOP_LIMIT),
       shortLoop(false),
       maybeShortLoop(false),
       numInnerLoops(0),
-      loopStackDepth(0)
+      loopStackDepth(0),
+      sp(0)
 {
     memset(allOps, 0, sizeof(allOps));
     memset(selfOps, 0, sizeof(selfOps));
@@ -16942,7 +16942,6 @@ LoopProfile::ProfileAction
 LoopProfile::profileOperation(JSContext* cx, JSOp op)
 {
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JSOp prev = prevOp;
 
     if (profiled) {
         tm->profile = NULL;
@@ -17012,16 +17011,11 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (op == JSOP_NEW)
         increment(OP_NEW);
 
-    if (op == JSOP_INT8)
-        prevConst = GET_INT8(cx->regs->pc);
-
     if (op == JSOP_GETELEM || op == JSOP_SETELEM) {
         Value& lval = cx->regs->sp[op == JSOP_GETELEM ? -2 : -3];
         if (lval.isObject() && js_IsTypedArray(&lval.toObject()))
             increment(OP_TYPED_ARRAY);
     }
-
-    prevOp = op;
 
     if (op == JSOP_CALL) {
         increment(OP_CALL);
@@ -17063,7 +17057,8 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         JS_ASSERT(oplen != -1);
 
         if (cx->regs->pc - script->code + oplen < ptrdiff_t(script->length))
-            testPC = cx->regs->pc + oplen;
+            if (cx->regs->pc[oplen] == JSOP_IFEQ || cx->regs->pc[oplen] == JSOP_IFNE)
+                testPC = cx->regs->pc + oplen;
     }
 
     /* Check if we're exiting the loop being profiled. */
@@ -17072,23 +17067,50 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         || testOp == JSOP_AND || testOp == JSOP_OR)
     {
         ptrdiff_t len = GET_JUMP_OFFSET(testPC);
-        if (testPC + len == top && prev == JSOP_INT8
-            && (op == JSOP_LT || op == JSOP_LE) && prevConst < 8)
-        {
-            shortLoop = true;
+        if (testPC + len == top && (op == JSOP_LT || op == JSOP_LE)) {
+            StackValue v = stackAt(-1);
+            if (v.hasValue && v.value < 8)
+                shortLoop = true;
         }
+
         if (testPC + len == top && (op == JSOP_LT || op == JSOP_LE)
             && cx->regs->sp[-2].isInt32() && cx->regs->sp[-2].toInt32() < 16)
         {
             maybeShortLoop = true;
         }
+
         if (testOp != JSOP_GOTO && len > 0) {
+            bool isConst;
+            if (testOp == JSOP_IFEQ || testOp == JSOP_IFNE)
+                isConst = stackAt(-1).isConst && stackAt(-2).isConst;
+            else
+                isConst = stackAt(-1).isConst;
+
             increment(OP_FWDJUMP);
-            if (loopStackDepth == 0)
+            if (loopStackDepth == 0 && !isConst)
                 branchMultiplier *= 2;
         }
     }
 
+    if (op == JSOP_INT8) {
+        stackPush(StackValue(true, GET_INT8(cx->regs->pc)));
+    } else if (op == JSOP_STRING) {
+        stackPush(StackValue(true));
+    } else if (op == JSOP_TYPEOF || op == JSOP_TYPEOFEXPR) {
+        stackPush(StackValue(true));
+    } else if (op == JSOP_EQ || op == JSOP_NE) {
+        StackValue v1 = stackAt(-1);
+        StackValue v2 = stackAt(-2);
+        stackPush(StackValue(v1.isConst && v2.isConst));
+    } else if (op == JSOP_AND) {
+        bool b = !!js_ValueToBoolean(cx->regs->sp[-1]);
+        StackValue v = stackAt(-1);
+        if (b)
+            stackPop();
+    } else {
+        stackClear();
+    }
+    
     return ProfContinue;
 }
 
@@ -17206,7 +17228,7 @@ LoopProfile::decide(JSContext *cx)
         /* don't trace */
     } else if (shortLoop) {
         /* don't trace */
-    } else if (maybeShortLoop) {
+    } else if (maybeShortLoop && numInnerLoops < 2) {
         /* don't trace */
     } else if (isCompilationExpensive(cx, 4)) {
         /* don't trace */
@@ -17231,7 +17253,6 @@ LoopProfile::decide(JSContext *cx)
     }
 
     debug_only_printf(LC_TMProfiler, "TRACE %s:%d = %d\n", script->filename, line, traceOK);
-    debug_only_print0(LC_TMProfiler, "\n");
 
     if (traceOK) {
         /* Unblacklist the inner loops. */
@@ -17258,6 +17279,8 @@ LoopProfile::decide(JSContext *cx)
         debug_only_printf(LC_TMProfiler, "Blacklisting at %d\n", line);
         Blacklist(top);
     }
+
+    debug_only_print0(LC_TMProfiler, "\n");
 
     execOK = traceOK;
 }
