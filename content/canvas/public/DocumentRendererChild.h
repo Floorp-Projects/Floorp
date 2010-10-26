@@ -57,7 +57,7 @@ public:
                         const nsRect& documentRect, const gfxMatrix& transform,
                         const nsString& bgcolor,
                         PRUint32 renderFlags, PRBool flushLayout, 
-                        nsIntSize* renderedSize, nsCString& data);
+                        const nsIntSize& renderSize, nsCString& data);
 
 private:
 

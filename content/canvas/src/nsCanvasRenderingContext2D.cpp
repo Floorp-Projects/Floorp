@@ -3748,7 +3748,8 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
             child->SendPDocumentRendererConstructor(rect,
                                                     mThebes->CurrentMatrix(),
                                                     nsString(aBGColor),
-                                                    renderDocFlags, flush);
+                                                    renderDocFlags, flush,
+                                                    nsIntSize(mWidth, mHeight));
         if (!pdocrender)
             return NS_ERROR_FAILURE;
 

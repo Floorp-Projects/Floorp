@@ -223,7 +223,8 @@ TabParent::AllocPDocumentRenderer(const nsRect& documentRect,
                                   const gfxMatrix& transform,
                                   const nsString& bgcolor,
                                   const PRUint32& renderFlags,
-                                  const bool& flushLayout)
+                                  const bool& flushLayout,
+                                  const nsIntSize& renderSize)
 {
     return new DocumentRendererParent();
 }

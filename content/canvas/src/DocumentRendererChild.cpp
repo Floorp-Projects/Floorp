@@ -105,7 +105,8 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
                                       const nsString& bgcolor,
                                       PRUint32 renderFlags,
                                       PRBool flushLayout, 
-                                      nsIntSize* renderedSize, nsCString& data)
+                                      const nsIntSize& renderSize,
+                                      nsCString& data)
 {
     if (flushLayout)
         FlushLayoutForTree(window);
@@ -130,21 +131,18 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
 
     nsIPresShell* presShell = presContext->PresShell();
 
-    PRInt32 w = nsPresContext::AppUnitsToIntCSSPixels(documentRect.width);
-    PRInt32 h = nsPresContext::AppUnitsToIntCSSPixels(documentRect.height);
-
     // Draw directly into the output array.
-    data.SetLength(w * h * 4);
+    data.SetLength(renderSize.width * renderSize.height * 4);
+
     nsRefPtr<gfxImageSurface> surf =
         new gfxImageSurface(reinterpret_cast<uint8*>(data.BeginWriting()),
-                            gfxIntSize(w, h),
-                            4 * w,
+                            gfxIntSize(renderSize.width, renderSize.height),
+                            4 * renderSize.width,
                             gfxASurface::ImageFormatARGB32);
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     ctx->SetMatrix(transform);
 
     presShell->RenderDocument(documentRect, renderFlags, bgColor, ctx);
-    *renderedSize = nsIntSize(w, h);
 
     return true;
 }
