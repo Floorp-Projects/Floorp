@@ -360,22 +360,6 @@ CPPSRCS += 	checks.cc \
 		utils.cc \
 		$(NONE)
 
-INSTALLED_HEADERS += \
-		cached-powers.h \
-		checks.h \
-		conversions.h \
-		diy-fp.h \
-		double.h \
-		dtoa.h \
-		fast-dtoa.h \
-		globals.h \
-		include-v8.h \
-		platform.h \
-		powers-ten.h \
-		utils.h \
-		v8.h \
-		$(NULL)
-
 #
 # END enclude sources for V8 dtoa
 #############################################
