@@ -51,13 +51,14 @@ include "IPC/nsGUIEventIPC.h";
 
 using gfxMatrix;
 using IPC::URI;
-using nsIntSize;
 using nsCompositionEvent;
-using nsTextEvent;
-using nsQueryContentEvent;
-using nsSelectionEvent;
-using RemoteDOMEvent;
 using nsIMEUpdatePreference;
+using nsIntSize;
+using nsQueryContentEvent;
+using nsRect;
+using nsSelectionEvent;
+using nsTextEvent;
+using RemoteDOMEvent;
 
 namespace mozilla {
 namespace dom {
@@ -268,7 +269,20 @@ child:
 
     LoadRemoteScript(nsString aURL);
 
-    PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
+    /**
+     * Create a asynchronous request to render whatever document is
+     * loaded in the child when this message arrives.  When the
+     * request finishes, PDocumentRenderer:__delete__ is sent back to
+     * this side to notify completion.
+     *
+     * |documentRect| is the area of the remote document to draw.  The
+     * rendered area will have the default background color |bgcolor|.
+     * |renderFlags| are the nsIPresShell::RenderDocument() flags to
+     * use on the remote side, and if true, |flushLayout| will do just
+     * that before rendering the document.
+     */
+    PDocumentRenderer(nsRect documentRect, nsString bgcolor,
+                      PRUint32 renderFlags, bool flushLayout);
 
     /**
      * Sent by the chrome process when it no longer wants this remote

@@ -218,10 +218,11 @@ TabParent::GetSSLStatus(nsISupports ** aStatus)
 }
 
 
-mozilla::ipc::PDocumentRendererParent*
-TabParent::AllocPDocumentRenderer(const PRInt32& x,
-        const PRInt32& y, const PRInt32& w, const PRInt32& h, const nsString& bgcolor,
-        const PRUint32& flags, const bool& flush)
+PDocumentRendererParent*
+TabParent::AllocPDocumentRenderer(const nsRect& documentRect,
+                                  const nsString& bgcolor,
+                                  const PRUint32& renderFlags,
+                                  const bool& flushLayout)
 {
     return new DocumentRendererParent();
 }

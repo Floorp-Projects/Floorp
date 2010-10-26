@@ -3739,14 +3739,13 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
         renderDocFlags &= ~nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
     }
 
-    PRInt32 x = nsPresContext::CSSPixelsToAppUnits(aX),
-            y = nsPresContext::CSSPixelsToAppUnits(aY),
-            w = nsPresContext::CSSPixelsToAppUnits(aW),
-            h = nsPresContext::CSSPixelsToAppUnits(aH);
-
+    nsRect rect(nsPresContext::CSSPixelsToAppUnits(aX),
+                nsPresContext::CSSPixelsToAppUnits(aY),
+                nsPresContext::CSSPixelsToAppUnits(aW),
+                nsPresContext::CSSPixelsToAppUnits(aH));
     if (mIPC) {
         PDocumentRendererParent *pdocrender =
-            child->SendPDocumentRendererConstructor(x, y, w, h,
+            child->SendPDocumentRendererConstructor(rect,
                                                     nsString(aBGColor),
                                                     renderDocFlags, flush);
         if (!pdocrender)
