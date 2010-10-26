@@ -44,8 +44,10 @@ function test() {
 
   ok(!TabView.isVisible(), "Main window TabView is hidden");
 
+  ok(experienced(), "should start as experienced");
+
   prefsBranch.setBoolPref("experienced_first_run", false);
-  ok(!experienced(), "not experienced");
+  ok(!experienced(), "set to not experienced");
 
   newWindowWithTabView(checkFirstRun, part2);
 }
@@ -58,11 +60,14 @@ function experienced() {
 function checkFirstRun(win) {
   let contentWindow = win.document.getElementById("tab-view").contentWindow;
   
-  let infoItems = contentWindow.iQ(".info-item");
-  is(infoItems.length, 1, "There should be an info item");
-
+  is(win.gBrowser.tabs.length, 2, "There should be two tabs");
+  
   let groupItems = contentWindow.GroupItems.groupItems;
   is(groupItems.length, 1, "There should be one group");
+  is(groupItems[0].getChildren().length, 1, "...with one child");
+
+  let orphanTabCount = contentWindow.GroupItems.getOrphanedTabs().length;
+  is(orphanTabCount, 1, "There should also be an orphaned tab");
   
   ok(experienced(), "we're now experienced");
 }
@@ -74,12 +79,19 @@ function part2() {
 function checkNotFirstRun(win) {
   let contentWindow = win.document.getElementById("tab-view").contentWindow;
   
-  let infoItems = contentWindow.iQ(".info-item");
-  is(infoItems.length, 0, "There should be no info items");
+  is(win.gBrowser.tabs.length, 1, "There should be one tab");
+  
+  let groupItems = contentWindow.GroupItems.groupItems;
+  is(groupItems.length, 1, "There should be one group");
+  is(groupItems[0].getChildren().length, 1, "...with one child");
+
+  let orphanTabCount = contentWindow.GroupItems.getOrphanedTabs().length;
+  is(orphanTabCount, 0, "There should also be no orphaned tabs");
 }
 
 function endGame() {
   ok(!TabView.isVisible(), "Main window TabView is still hidden");
+  ok(experienced(), "should finish as experienced");
   finish();
 }
 
