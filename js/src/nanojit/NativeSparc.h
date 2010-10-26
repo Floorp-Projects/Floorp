@@ -80,6 +80,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
+#define NJ_DIVI_SUPPORTED               0    
 
     const int NJ_ALIGN_STACK = 16;
 
