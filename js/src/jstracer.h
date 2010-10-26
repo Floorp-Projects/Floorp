@@ -1221,6 +1221,7 @@ class TraceRecorder
                                                nanojit::LIns* d1, VMSideExit* exit);
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
+    nanojit::LIns* insComment(const char* str);
 
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset,
                              bool demote);
