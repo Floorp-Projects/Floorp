@@ -381,6 +381,15 @@ namespace nanojit
     }
 #endif
 
+    LIns* LirBufWriter::insComment(const char* str)
+    {
+        // Allocate space for and copy the string.  We use the same allocator
+        // as the normal LIR buffers so it has the same lifetime.
+        char* str2 = (char*)_buf->_allocator.alloc(VMPI_strlen(str) + 1);
+        VMPI_strcpy(str2, str);
+        return ins1(LIR_comment, (LIns*)str);
+    }
+
     LIns* LirBufWriter::insImmD(double d)
     {
         LInsQorD* insQorD = (LInsQorD*)_buf->makeRoom(sizeof(LInsQorD));
@@ -1456,6 +1465,7 @@ namespace nanojit
                 CASE64(LIR_immq:)
                 case LIR_immd:
                 case LIR_allocp:
+                case LIR_comment:
                     // No operands, do nothing.
                     break;
 
@@ -2034,6 +2044,10 @@ namespace nanojit
                     formatRef(&b2, i->oprnd2()),
                     i->disp(),
                     formatRef(&b3, i->oprnd1()));
+                break;
+
+            case LIR_comment:
+                VMPI_snprintf(s, n, "------------------------------ # %s", (char*)i->oprnd1());
                 break;
 
             default:
