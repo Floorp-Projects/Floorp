@@ -781,16 +781,33 @@
                 break;
 
               case "WebProgress:SecurityChange":
+                let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                                .getService(Ci.nsISerializationHelper);
+                let SSLStatus = json.SSLStatusAsString ?
+                    serhelper.deserializeObject(json.SSLStatusAsString) : null;
+
+                if (SSLStatus) {
+                  SSLStatus.QueryInterface(Ci.nsISSLStatus);
+                  if (SSLStatus) {
+                    // We must check the Extended Validation (EV) state here, on the chrome
+                    // process, because NSS is needed for that determination.
+                    let ii = SSLStatus.serverCert.QueryInterface(Ci.nsIIdentityInfo);
+                    if (ii && ii.isExtendedValidation)
+                      json.state |= Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+                  }
+                }
+
+                let data = this._getIdentityData(SSLStatus);
+                this._browser._securityUI = {
+                  SSLStatus: SSLStatus ? {serverCert: data} : null,
+                  state: json.state
+                }
+
                 args = [
                   { windowId: json.windowId, browser: this._browser },
                   {},
                   json.state
                 ];
-
-                this._browser._securityUI = {
-                  SSLStatus: json.SSLStatus,
-                  state: json.state
-                }
 
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
                              "onSecurityChange",
@@ -804,6 +821,48 @@
               if (item.flags & aFlags)
                 item.listener[aName].apply(item.listener, aArguments);
             });
+          },
+
+          /**
+           * Helper to parse out the important parts of the SSL cert for use in constructing
+           * identity UI strings
+           */
+          _getIdentityData: function(status) {
+            let result = {};
+
+            if (status) {
+              let cert = status.serverCert;
+
+              // Human readable name of Subject
+              result.subjectOrg = cert.organization;
+
+              // SubjectName fields, broken up for individual access
+              if (cert.subjectName) {
+                result.subjectNameFields = {};
+                cert.subjectName.split(",").forEach(function(v) {
+                  var field = v.split("=");
+                  if (field[1])
+                    this[field[0]] = field[1];
+                }, result.subjectNameFields);
+
+                // Call out city, state, and country specifically
+                result.city = result.subjectNameFields.L;
+                result.state = result.subjectNameFields.ST;
+                result.country = result.subjectNameFields.C;
+              }
+
+              // Human readable name of Certificate Authority
+              result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
+
+              if (!this._overrideService)
+                this._overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(Ci.nsICertOverrideService);
+
+              // Check whether this site is a security exception.
+              let currentURI = this._browser._webNavigation._currentURI;
+              result.isException = !!this._overrideService.hasMatchingOverride(currentURI.asciiHost, currentURI.port, cert, {}, {});
+            }
+
+            return result;
           }
         })
       ]]></field>
