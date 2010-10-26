@@ -3746,6 +3746,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     if (mIPC) {
         PDocumentRendererParent *pdocrender =
             child->SendPDocumentRendererConstructor(rect,
+                                                    mThebes->CurrentMatrix(),
                                                     nsString(aBGColor),
                                                     renderDocFlags, flush);
         if (!pdocrender)

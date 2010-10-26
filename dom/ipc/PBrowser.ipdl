@@ -275,13 +275,15 @@ child:
      * request finishes, PDocumentRenderer:__delete__ is sent back to
      * this side to notify completion.
      *
-     * |documentRect| is the area of the remote document to draw.  The
-     * rendered area will have the default background color |bgcolor|.
-     * |renderFlags| are the nsIPresShell::RenderDocument() flags to
-     * use on the remote side, and if true, |flushLayout| will do just
-     * that before rendering the document.
+     * |documentRect| is the area of the remote document to draw,
+     * transformed by |transform|.  The rendered area will have the
+     * default background color |bgcolor|.  |renderFlags| are the
+     * nsIPresShell::RenderDocument() flags to use on the remote side,
+     * and if true, |flushLayout| will do just that before rendering
+     * the document.
      */
-    PDocumentRenderer(nsRect documentRect, nsString bgcolor,
+    PDocumentRenderer(nsRect documentRect, gfxMatrix transform,
+                      nsString bgcolor,
                       PRUint32 renderFlags, bool flushLayout);
 
     /**
