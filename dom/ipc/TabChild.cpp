@@ -597,7 +597,8 @@ TabChild::AllocPDocumentRenderer(const nsRect& documentRect,
                                  const gfxMatrix& transform,
                                  const nsString& bgcolor,
                                  const PRUint32& renderFlags,
-                                 const bool& flushLayout)
+                                 const bool& flushLayout,
+                                 const nsIntSize& renderSize)
 {
     return new DocumentRendererChild();
 }
@@ -615,7 +616,8 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                            const gfxMatrix& transform,
                                            const nsString& bgcolor,
                                            const PRUint32& renderFlags,
-                                           const bool& flushLayout)
+                                           const bool& flushLayout,
+                                           const nsIntSize& renderSize)
 {
     DocumentRendererChild *render = static_cast<DocumentRendererChild *>(actor);
 
@@ -629,17 +631,16 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
         return true; // silently ignore
     }
 
-    nsIntSize renderedSize;
     nsCString data;
     bool ret = render->RenderDocument(window,
                                       documentRect, transform,
                                       bgcolor,
                                       renderFlags, flushLayout,
-                                      &renderedSize, data);
+                                      renderSize, data);
     if (!ret)
         return true; // silently ignore
 
-    return PDocumentRendererChild::Send__delete__(actor, renderedSize, data);
+    return PDocumentRendererChild::Send__delete__(actor, renderSize, data);
 }
 
 PContentDialogChild*

@@ -201,14 +201,16 @@ public:
     virtual PDocumentRendererChild*
     AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
                            const nsString& bgcolor,
-                           const PRUint32& renderFlags, const bool& flushLayout);
+                           const PRUint32& renderFlags, const bool& flushLayout,
+                           const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
                                                   const gfxMatrix& transform,
                                                   const nsString& bgcolor,
                                                   const PRUint32& renderFlags,
-                                                  const bool& flushLayout);
+                                                  const bool& flushLayout,
+                                                  const nsIntSize& renderSize);
 
     virtual PContentDialogChild* AllocPContentDialog(const PRUint32&,
                                                      const nsCString&,
