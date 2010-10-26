@@ -938,7 +938,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
     CERTCertificate *serverCert = SSL_PeerCertificate(fd);
     if (serverCert) {
-      nsRefPtr<nsNSSCertificate> nssc = new nsNSSCertificate(serverCert);
+      nsRefPtr<nsNSSCertificate> nssc = nsNSSCertificate::Create(serverCert);
       CERT_DestroyCertificate(serverCert);
       serverCert = nsnull;
 
@@ -946,7 +946,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       infoObject->GetPreviousCert(getter_AddRefs(prevcert));
 
       PRBool equals_previous = PR_FALSE;
-      if (prevcert) {
+      if (prevcert && nssc) {
         nsresult rv = nssc->Equals(prevcert, &equals_previous);
         if (NS_FAILED(rv)) {
           equals_previous = PR_FALSE;
@@ -1005,7 +1005,7 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
     nsRefPtr<nsNSSCertificate> nsc;
 
     if (!status || !status->mServerCert) {
-      nsc = new nsNSSCertificate(serverCert);
+      nsc = nsNSSCertificate::Create(serverCert);
     }
 
     if (SECSuccess == rv) {
