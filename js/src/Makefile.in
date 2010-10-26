@@ -126,6 +126,7 @@ DIST_INSTALL = 1
 VPATH		= $(srcdir)
 
 CPPSRCS		= \
+		jsanalyze.cpp \
 		jsapi.cpp \
 		jsarena.cpp \
 		jsarray.cpp \
@@ -181,6 +182,7 @@ INSTALLED_HEADERS = \
 		jsautocfg.h \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
+		jsanalyze.h \
 		jsapi.h \
 		jsarray.h \
 		jsarena.h \
@@ -304,7 +306,6 @@ ifdef ENABLE_METHODJIT
 VPATH += 	$(srcdir)/methodjit
 
 CPPSRCS += 	MethodJIT.cpp \
-		BytecodeAnalyzer.cpp \
 		StubCalls.cpp \
 		Compiler.cpp \
 		FrameState.cpp \
