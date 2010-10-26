@@ -193,7 +193,7 @@ nsHTMLFieldSetElement::InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
     } else {
       // If mFirstLegend is before aIndex, we do not change it.
       // Otherwise, mFirstLegend is now aChild.
-      if (aIndex <= IndexOf(mFirstLegend)) {
+      if (PRInt32(aIndex) <= IndexOf(mFirstLegend)) {
         mFirstLegend = aChild;
         firstLegendHasChanged = true;
       }

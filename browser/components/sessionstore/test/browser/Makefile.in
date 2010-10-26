@@ -114,6 +114,7 @@ _BROWSER_TEST_FILES = \
 	browser_522545.js \
 	browser_524745.js \
 	browser_528776.js \
+	browser_579868.js \
 	browser_579879.js \
 	browser_580512.js \
 	browser_586147.js \

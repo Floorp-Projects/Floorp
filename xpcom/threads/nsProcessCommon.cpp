@@ -287,8 +287,14 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
 #ifdef XP_MACOSX
     int exitCode = -1;
     int status = 0;
-    if (waitpid(process->mPid, &status, 0) == process->mPid && WIFEXITED(status))
-        exitCode = WEXITSTATUS(status);
+    if (waitpid(process->mPid, &status, 0) == process->mPid) {
+        if (WIFEXITED(status)) {
+            exitCode = WEXITSTATUS(status);
+        }
+        else if(WIFSIGNALED(status)) {
+            exitCode = 256; // match NSPR's signal exit status
+        }
+    }
 #else
     PRInt32 exitCode = -1;
     if (PR_WaitProcess(process->mProcess, &exitCode) != PR_SUCCESS)

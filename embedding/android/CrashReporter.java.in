@@ -266,13 +266,15 @@ public class CrashReporter extends Activity
   void doRestart()
   {
     try {
-      String action = "org.mozilla.gecko.restart@MOZ_APP_NAME@";
-      String amCmd = "/system/bin/am broadcast -a " + action +
-        " -n org.mozilla.@MOZ_APP_NAME@/org.mozilla.@MOZ_APP_NAME@.Restarter";
-      Log.i("GeckoCrashReporter", amCmd);
-      Runtime.getRuntime().exec(amCmd);
+      String action = "android.intent.action.MAIN";
+      Intent intent = new Intent(action);
+      intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
+                          "org.mozilla.@MOZ_APP_NAME@.App");
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      Log.i("GeckoCrashReporter", intent.toString());
+      startActivity(intent);
     } catch (Exception e) {
-      Log.i("GeckoCrashReporter", e.toString());
+      Log.e("GeckoCrashReporter", "error while trying to restart", e);
     }
   }
 
