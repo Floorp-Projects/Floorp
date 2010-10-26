@@ -73,6 +73,7 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 
 == feDisplacementMap-alpha-01.svg pass.svg
+== feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
