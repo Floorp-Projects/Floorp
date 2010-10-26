@@ -130,11 +130,24 @@
           if (!pasteAndGo)
             return;
           var controller = document.commandDispatcher.getControllerForCommand("cmd_paste");
-          var enabled = controller.isCommandEnabled("cmd_paste");
-          if (enabled)
-            pasteAndGo.removeAttribute("disabled");
-          else
-            pasteAndGo.setAttribute("disabled", "true");
+          var couldBeURL = controller.isCommandEnabled("cmd_paste");
+          if (couldBeURL) {
+            let cbSvc = Cc["@mozilla.org/widget/clipboard;1"].
+                          getService(Ci.nsIClipboard);
+            let xferable = Cc["@mozilla.org/widget/transferable;1"].
+                            createInstance(Ci.nsITransferable);
+            xferable.addDataFlavor("text/unicode");
+            cbSvc.getData(xferable, cbSvc.kGlobalClipboard);
+            let data = {};
+            xferable.getTransferData("text/unicode", data, {});
+            data = data.value.QueryInterface(Ci.nsISupportsString).data;
+            try {
+              makeURI(data);
+            } catch (ex) { // clipboard data is not a URL
+              couldBeURL = false;
+            }
+          }
+          pasteAndGo.hidden = !couldBeURL;
         }, false);
 
         var insertLocation = cxmenu.firstChild;
