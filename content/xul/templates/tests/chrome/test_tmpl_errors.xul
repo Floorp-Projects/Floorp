@@ -27,8 +27,7 @@ function checkConsole(expectedError)
 {
   var out = {};
   consoleService.getMessageArray(out, {});
-  var messages = out.value || [];
-  is(messages[0].message, expectedError, "logged message " + expectedError);
+  is(out.value[0].message, expectedError, "logged message " + expectedError);
 }
 
 // each test consists of a pre function executed before the template build, an
