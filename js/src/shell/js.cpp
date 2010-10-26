@@ -2235,7 +2235,7 @@ Tracing(JSContext *cx, uintN argc, jsval *vp)
     FILE *file;
 
     if (argc == 0) {
-        *vp = BOOLEAN_TO_JSVAL(cx->tracefp != 0);
+        *vp = BOOLEAN_TO_JSVAL(cx->logfp != 0);
         return JS_TRUE;
     }
 
@@ -2261,10 +2261,10 @@ Tracing(JSContext *cx, uintN argc, jsval *vp)
       default:
           goto bad_argument;
     }
-    if (cx->tracefp && cx->tracefp != stderr)
-      fclose((FILE *)cx->tracefp);
-    cx->tracefp = file;
-    cx->tracePrevPc = NULL;
+    if (cx->logfp && cx->logfp != stderr)
+        fclose((FILE *)cx->logfp);
+    cx->logfp = file;
+    cx->logPrevPc = NULL;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 
