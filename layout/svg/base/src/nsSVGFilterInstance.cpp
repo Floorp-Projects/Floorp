@@ -494,13 +494,19 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
       
       ColorModel desiredColorModel =
         primitive->mFE->GetInputColorModel(this, j, &input->mImage);
+      if (j == 0) {
+        // the output colour model is whatever in1 is if there is an in1
+        primitive->mImage.mColorModel = desiredColorModel;
+      }
       EnsureColorModel(input, desiredColorModel);
       NS_ASSERTION(input->mImage.mImage->Stride() == primitive->mImage.mImage->Stride(),
                    "stride mismatch");
       inputs.AppendElement(&input->mImage);
     }
 
-    primitive->mImage.mColorModel = primitive->mFE->GetOutputColorModel(this);
+    if (primitive->mInputs.Length() == 0) {
+      primitive->mImage.mColorModel = primitive->mFE->GetOutputColorModel(this);
+    }
 
     rv = primitive->mFE->Filter(this, inputs, &primitive->mImage, dataRect);
     if (NS_FAILED(rv))
