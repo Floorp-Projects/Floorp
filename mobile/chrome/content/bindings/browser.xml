@@ -849,7 +849,7 @@
 
             switch (aMessage.name) {
               case "scroll":
-                if (!this.scrollSync)
+                if (!self.scrollSync)
                   return;
 
                 // When CSS scroll offset changes, we must redefine our cache viewport because
