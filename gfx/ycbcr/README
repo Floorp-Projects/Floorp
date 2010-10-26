@@ -21,3 +21,4 @@ yv24.patch: Adds YCbCr 4:4:4 support
 row_c_fix.patch: Fix broken C fallback code (See bug 561385).
 bug572034_mac_64bit.patch: Fix x86_64 linux code so it works on OS X.
 solaris.patch: Adds Solaris support, fallback to C implementation on SPARC
+add_scale.patch: re-adds Chromium scaling code

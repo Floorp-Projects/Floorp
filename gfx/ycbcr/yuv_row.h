@@ -29,6 +29,54 @@ void FastConvertYUVToRGB32Row_C(const uint8* y_buf,
                                 unsigned int x_shift);
 
 
+// Can do 1x, half size or any scale down by an integer amount.
+// Step can be negative (mirroring, rotate 180).
+// This is the third fastest of the scalers.
+void ConvertYUVToRGB32Row(const uint8* y_buf,
+                          const uint8* u_buf,
+                          const uint8* v_buf,
+                          uint8* rgb_buf,
+                          int width,
+                          int step);
+
+// Rotate is like Convert, but applies different step to Y versus U and V.
+// This allows rotation by 90 or 270, by stepping by stride.
+// This is the forth fastest of the scalers.
+void RotateConvertYUVToRGB32Row(const uint8* y_buf,
+                                const uint8* u_buf,
+                                const uint8* v_buf,
+                                uint8* rgb_buf,
+                                int width,
+                                int ystep,
+                                int uvstep);
+
+// Doubler does 4 pixels at a time.  Each pixel is replicated.
+// This is the fastest of the scalers.
+void DoubleYUVToRGB32Row(const uint8* y_buf,
+                         const uint8* u_buf,
+                         const uint8* v_buf,
+                         uint8* rgb_buf,
+                         int width);
+
+// Handles arbitrary scaling up or down.
+// Mirroring is supported, but not 90 or 270 degree rotation.
+// Chroma is under sampled every 2 pixels for performance.
+// This is the slowest of the scalers.
+void ScaleYUVToRGB32Row(const uint8* y_buf,
+                        const uint8* u_buf,
+                        const uint8* v_buf,
+                        uint8* rgb_buf,
+                        int width,
+                        int scaled_dx);
+
+void ScaleYUVToRGB32Row_C(const uint8* y_buf,
+                          const uint8* u_buf,
+                          const uint8* v_buf,
+                          uint8* rgb_buf,
+                          int width,
+                          int scaled_dx,
+                          unsigned int x_shift);
+
 }  // extern "C"
 
 // x64 uses MMX2 (SSE) so emms is not required.

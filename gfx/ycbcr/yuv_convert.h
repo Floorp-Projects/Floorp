@@ -20,6 +20,19 @@ enum YUVType {
   YV24 = 2            // YV24 is full width and full height chroma channels.
 };
 
+// Mirror means flip the image horizontally, as in looking in a mirror.
+// Rotate happens after mirroring.
+enum Rotate {
+  ROTATE_0,           // Rotation off.
+  ROTATE_90,          // Rotate clockwise.
+  ROTATE_180,         // Rotate upside down.
+  ROTATE_270,         // Rotate counter clockwise.
+  MIRROR_ROTATE_0,    // Mirror horizontally.
+  MIRROR_ROTATE_90,   // Mirror then Rotate clockwise.
+  MIRROR_ROTATE_180,  // Mirror vertically.
+  MIRROR_ROTATE_270   // Transpose.
+};
+
 // Convert a frame of YUV to 32 bit ARGB.
 // Pass in YV16/YV12 depending on source format
 NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* yplane,
@@ -34,6 +47,22 @@ NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* yplane,
                                   int uvstride,
                                   int rgbstride,
                                   YUVType yuv_type);
+
+// Scale a frame of YUV to 32 bit ARGB.
+// Supports rotation and mirroring.
+NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* yplane,
+                                const uint8* uplane,
+                                const uint8* vplane,
+                                uint8* rgbframe,
+                                int frame_width,
+                                int frame_height,
+                                int scaled_width,
+                                int scaled_height,
+                                int ystride,
+                                int uvstride,
+                                int rgbstride,
+                                YUVType yuv_type,
+                                Rotate view_rotate);
 
 }  // namespace gfx
 }  // namespace mozilla
