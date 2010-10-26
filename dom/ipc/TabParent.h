@@ -133,7 +133,8 @@ public:
                       PRBool aPreventDefault);
 
     virtual PDocumentRendererParent*
-    AllocPDocumentRenderer(const nsRect& documentRect, const nsString& bgcolor,
+    AllocPDocumentRenderer(const nsRect& documentRect, const gfxMatrix& transform,
+                           const nsString& bgcolor,
                            const PRUint32& renderFlags, const bool& flushLayout);
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 

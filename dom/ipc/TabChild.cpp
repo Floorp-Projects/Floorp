@@ -594,6 +594,7 @@ TabChild::DispatchWidgetEvent(nsGUIEvent& event)
 
 PDocumentRendererChild*
 TabChild::AllocPDocumentRenderer(const nsRect& documentRect,
+                                 const gfxMatrix& transform,
                                  const nsString& bgcolor,
                                  const PRUint32& renderFlags,
                                  const bool& flushLayout)
@@ -611,6 +612,7 @@ TabChild::DeallocPDocumentRenderer(PDocumentRendererChild* actor)
 bool
 TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                            const nsRect& documentRect,
+                                           const gfxMatrix& transform,
                                            const nsString& bgcolor,
                                            const PRUint32& renderFlags,
                                            const bool& flushLayout)
@@ -630,7 +632,8 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
     nsIntSize renderedSize;
     nsCString data;
     bool ret = render->RenderDocument(window,
-                                      documentRect, bgcolor,
+                                      documentRect, transform,
+                                      bgcolor,
                                       renderFlags, flushLayout,
                                       &renderedSize, data);
     if (!ret)
