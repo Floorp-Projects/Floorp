@@ -1014,7 +1014,9 @@
                       key="manBookmarkKb"/>
             <menuseparator/>
             <menuitem id="BMB_bookmarkThisPage"
+#ifndef XP_MACOSX
                       class="menuitem-iconic"
+#endif
                       label="&bookmarkThisPageCmd.label;"
                       command="Browser:AddBookmarkAs"
                       key="addBookmarkAsKb"/>
