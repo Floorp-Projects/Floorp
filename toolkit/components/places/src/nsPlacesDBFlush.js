@@ -173,7 +173,7 @@ nsPlacesDBFlush.prototype = {
     this._flushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
   },
 
-  onItemAdded: function(aItemId, aParentId, aIndex, aItemType)
+  onItemAdded: function(aItemId, aParentId, aIndex, aItemType, aURI)
   {
     // Sync only if we added a TYPE_BOOKMARK item.  Note, we want to run the
     // least amount of queries as possible here for performance reasons.
