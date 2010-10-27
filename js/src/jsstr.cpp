@@ -268,8 +268,6 @@ FinishConcat(JSContext *cx, bool usingLeft, bool usingRight,
         left->convertToInteriorNode(res);
     if (usingRight)
         right->convertToInteriorNode(res);
-    if (!JS_HAS_OPTION(cx, JSOPTION_ROPES))
-        res->flatten();
     return res;
 }
 
