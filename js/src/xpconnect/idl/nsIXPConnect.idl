@@ -399,7 +399,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(74b5811e-92d1-468a-a59a-47760200370f)]
+[uuid(fb780ace-dced-432b-bb82-8df7d4f919c8)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -424,12 +424,10 @@ interface nsIXPConnect : nsISupports
      * @param aCOMObj the native object that represents the global object.
      * @param aIID the IID used to wrap the global object.
      * @param aPrincipal the principal of the code that will run in this
-     *                   compartment. Can be null. If no specific origin is
-     *                   passed, will be used to compute the origin.
-     * @param aOrigin must be passed if aPrincipal is null. If non-empty,
-     *                overrides aPrincipal's origin. (can be used to separate
-     *                code from the same principals into different
-     *                comartments, like sandboxes).
+     *                   compartment. Can be null if not on the main thread.
+     * @param aExtraPtr must be passed if aPrincipal is null. Used to separate
+     *                  code from the same principal into different
+     *                  compartments, as for sandboxes.
      * @param aFlags one of the flags below specifying what options this
      *               global object wants.
      */
@@ -439,7 +437,7 @@ interface nsIXPConnect : nsISupports
                   in nsISupports  aCOMObj,
                   in nsIIDRef     aIID,
                   in nsIPrincipal aPrincipal,
-                  in ACString     aOrigin,
+                  in nsISupports  aExtraPtr,
                   in PRUint32     aFlags);
 
     const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;
