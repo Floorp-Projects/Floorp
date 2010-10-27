@@ -40,4 +40,4 @@ script mutation-prevention-methods.js
 script object-toString-01.js
 script vacuous-accessor-unqualified-name.js
 script add-property-non-extensible.js
-script freeze-global-eval-const.js
+skip-if(!xulRuntime.shell) script freeze-global-eval-const.js # uses evalcx
