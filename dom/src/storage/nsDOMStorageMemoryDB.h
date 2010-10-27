@@ -56,7 +56,6 @@ public:
   public:
     PRBool mSecure;
     nsString mValue;
-    PRInt64 mInsertTime;
   };
 
   typedef nsClassHashtable<nsStringHashKey, nsInMemoryItem> nsStorageItemsTable;
@@ -159,14 +158,6 @@ public:
   nsresult
   RemoveOwners(const nsTArray<nsString>& aOwners,
                PRBool aIncludeSubDomains, PRBool aMatch);
-
-  /**
-   * Remove all values from all scopes not marked as offline that has been
-   * created after the time specified with 'aSince'.  Used by the Clear Private
-   * Data dialog.  'aSince' value is compatible with PR_Now() function.
-   */
-  nsresult
-  RemoveTimeRange(PRInt64 aSince);
 
   /**
    * Removes all keys from storage. Used when clearing storage.

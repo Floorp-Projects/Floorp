@@ -263,25 +263,6 @@ nsDOMStorageDBWrapper::RemoveOwner(const nsACString& aOwner,
   return rv;
 }
 
-nsresult
-nsDOMStorageDBWrapper::RemoveTimeRange(PRInt64 aSince)
-{
-  nsresult rv;
-
-  rv = mPrivateBrowsingDB.RemoveTimeRange(aSince);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_OK;
-
-  rv = mSessionOnlyDB.RemoveTimeRange(aSince);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mPersistentDB.RemoveTimeRange(aSince);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
-}
 
 nsresult
 nsDOMStorageDBWrapper::RemoveOwners(const nsTArray<nsString> &aOwners,
