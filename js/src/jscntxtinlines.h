@@ -51,14 +51,7 @@
 inline js::RegExpStatics *
 JSContext::regExpStatics()
 {
-    VOUCH_HAVE_STACK();
-    /*
-     * Whether we're on trace or not, the scope chain associated with cx->fp
-     * will lead us to the appropriate global. Although cx->fp is stale on
-     * trace, trace execution never crosses globals.
-     */
-    JS_ASSERT(hasfp());
-    JSObject *global = fp()->scopeChain().getGlobal();
+    JSObject *global = JS_GetGlobalForScopeChain(this);
     js::RegExpStatics *res = js::RegExpStatics::extractFrom(global);
     return res;
 }
