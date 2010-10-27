@@ -40,7 +40,7 @@
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(9b729267-00ed-4e5c-a3d2-b5572ca0934d)]
+[scriptable, uuid(fd91ec36-7da8-43bb-b8f2-4b57a862a467)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -58,15 +58,6 @@ interface nsIDOMStorageManager : nsISupports
    * with the "offline-app" permission will be removed from the database.
    */
   void clearOfflineApps();
-
-  /**
-   * Clears any data stored in DOM storage since the provided time
-   * @param since
-   *    Any storage value that has been inserted after the time specified
-   *    with 'since' will be deleted.  The time is in microseconds, defined
-   *    as PR_Now() function result.
-   */
-  void clearStorageDataSince(in PRInt64 since);
 
   /**
    * Returns instance of localStorage object for aURI's origin.
