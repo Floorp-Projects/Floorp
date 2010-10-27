@@ -215,10 +215,9 @@ private:
 
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
-        // Win32: Translate mouse input based on WM_WINDOWPOSCHANGED
-        // windowing events due to winless shared dib rendering. See
-        // WinlessHandleEvent for details.
-        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION     = 1 << 0,
+        // Silverlight assumes it is transparent in windowless mode. This quirk
+        // matches the logic in nsNPAPIPluginInstance::SetWindowless.
+        QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT           = 1 << 0,
         // Win32: Hook TrackPopupMenu api so that we can swap out parent
         // hwnds. The api will fail with parents not associated with our
         // child ui thread. See WinlessHandleEvent for details.
