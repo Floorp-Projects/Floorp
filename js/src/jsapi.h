@@ -916,8 +916,6 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
 #define JSOPTION_PROFILING      JS_BIT(15)      /* Profiler to make tracer/methodjit choices. */
-#define JSOPTION_ROPES          JS_BIT(16)      /* Enable rope optimization for
-                                                 * string concat. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
