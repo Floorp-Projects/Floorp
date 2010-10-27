@@ -393,12 +393,12 @@ nsXPConnect::Collect()
     // cycle collection. So to compensate for JS_BeginRequest in
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
-    JS_ASSERT(cx->thread->requestDepth >= 1);
+    JS_ASSERT(cx->thread->data.requestDepth >= 1);
     JS_ASSERT(!cx->thread->data.conservativeGC.requestThreshold);
-    if(cx->thread->requestDepth == 1)
+    if(cx->thread->data.requestDepth == 1)
         cx->thread->data.conservativeGC.requestThreshold = 1;
     JS_GC(cx);
-    if(cx->thread->requestDepth == 1)
+    if(cx->thread->data.requestDepth == 1)
         cx->thread->data.conservativeGC.requestThreshold = 0;
 }
 

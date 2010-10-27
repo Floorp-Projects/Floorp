@@ -196,10 +196,9 @@ struct JSObjectMap {
 
 /*
  * Unlike js_DefineNativeProperty, propp must be non-null. On success, and if
- * id was found, return true with *objp non-null and locked, and with a held
- * property stored in *propp. If successful but id was not found, return true
- * with both *objp and *propp null. Therefore all callers who receive a
- * non-null *propp must later call (*objp)->dropProperty(cx, *propp).
+ * id was found, return true with *objp non-null and with a property of *objp
+ * stored in *propp. If successful but id was not found, return true with both
+ * *objp and *propp null.
  */
 extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
@@ -355,10 +354,6 @@ struct JSObject : js::gc::Cell {
 
     uint32      flags;                      /* flags */
     uint32      objShape;                   /* copy of lastProp->shape, or override if different */
-
-#ifdef JS_THREADSAFE
-    JSTitle     title;
-#endif
 
     /* If prototype, lazily filled array of empty shapes for each object size. */
     js::EmptyShape **emptyShapes;
@@ -612,9 +607,21 @@ struct JSObject : js::gc::Cell {
         return slots[slot];
     }
 
+    js::Value &nativeGetSlotRef(uintN slot) {
+        JS_ASSERT(isNative());
+        JS_ASSERT(containsSlot(slot));
+        return getSlotRef(slot);
+    }
+
     const js::Value &getSlot(uintN slot) const {
         JS_ASSERT(slot < capacity);
         return slots[slot];
+    }
+
+    const js::Value &nativeGetSlot(uintN slot) const {
+        JS_ASSERT(isNative());
+        JS_ASSERT(containsSlot(slot));
+        return getSlot(slot);
     }
 
     void setSlot(uintN slot, const js::Value &value) {
@@ -622,16 +629,11 @@ struct JSObject : js::gc::Cell {
         slots[slot] = value;
     }
 
-    inline const js::Value &lockedGetSlot(uintN slot) const;
-    inline void lockedSetSlot(uintN slot, const js::Value &value);
-
-    /*
-     * These ones are for multi-threaded ("MT") objects.  Use getSlot(),
-     * getSlotRef(), setSlot() to directly manipulate slots in obj when only
-     * one thread can access obj.
-     */
-    inline js::Value getSlotMT(JSContext *cx, uintN slot);
-    inline void setSlotMT(JSContext *cx, uintN slot, const js::Value &value);
+    void nativeSetSlot(uintN slot, const js::Value &value) {
+        JS_ASSERT(isNative());
+        JS_ASSERT(containsSlot(slot));
+        return setSlot(slot, value);
+    }
 
     inline js::Value getReservedSlot(uintN index) const;
 
@@ -1105,8 +1107,6 @@ struct JSObject : js::gc::Cell {
 
     static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
-    inline void dropProperty(JSContext *cx, JSProperty *prop);
-
     inline JSCompartment *getCompartment() const;
 
     inline JSObject *getThrowTypeError() const;
@@ -1174,8 +1174,6 @@ struct JSObject_Slots12 : JSObject { js::Value fslots[12]; };
 struct JSObject_Slots16 : JSObject { js::Value fslots[16]; };
 
 #define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
-
-#define OBJ_CHECK_SLOT(obj,slot) JS_ASSERT((obj)->containsSlot(slot))
 
 #ifdef JS_THREADSAFE
 
@@ -1476,9 +1474,7 @@ const uintN JSDNP_UNQUALIFIED  = 8; /* Unqualified property set.  Only used in
 /*
  * On error, return false.  On success, if propp is non-null, return true with
  * obj locked and with a held property in *propp; if propp is null, return true
- * but release obj's lock first.  Therefore all callers who pass non-null propp
- * result parameters must later call obj->dropProperty(cx, *propp) both to drop
- * the held property, and to release the lock on obj.
+ * but release obj's lock first.
  */
 extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
@@ -1718,12 +1714,11 @@ namespace js {
 extern bool
 SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
 
-}
-
-namespace js {
-
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
+
+extern bool
+IsBuiltinEvalFunction(JSFunction *fun);
 
 }
 #endif /* jsobj_h___ */

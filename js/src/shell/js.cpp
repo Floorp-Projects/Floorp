@@ -126,10 +126,12 @@ size_t gStackChunkSize = 8192;
 #if defined(DEBUG) && defined(__SUNPRO_CC)
 /* Sun compiler uses larger stack space for js_Interpret() with debug
    Use a bigger gMaxStackSize to make "make check" happy. */
-size_t gMaxStackSize = 5000000;
+#define DEFAULT_MAX_STACK_SIZE 5000000
 #else
-size_t gMaxStackSize = 500000;
+#define DEFAULT_MAX_STACK_SIZE 500000
 #endif
+
+size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 
 
 #ifdef JS_THREADSAFE
@@ -150,6 +152,7 @@ static volatile bool gCanceled = false;
 
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
+static bool enableProfiling = false;
 
 static bool printTiming = false;
 
@@ -567,14 +570,62 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-zKPswWxCijmdb] [-t timeoutSeconds] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [-g sleep-seconds-on-startup]"
+    fprintf(gErrFile, "usage: js [options] [scriptfile] [scriptarg...]\n"
+                      "Options:\n"
+                      "  -h            Display this information\n"
+                      "  -z            Create a split global object\n"
+                      "                Warning: this option is probably not useful\n"
+                      "  -P            Deeply freeze the global object prototype\n"
+                      "  -s            Toggle JSOPTION_STRICT flag\n"
+                      "  -w            Report strict warnings\n"
+                      "  -W            Do not report strict warnings\n"
+                      "  -x            Toggle JSOPTION_XML flag\n"
+                      "  -C            Compile-only; do not execute\n"
+                      "  -i            Enable interactive read-eval-print loop\n"
+                      "  -j            Enable the TraceMonkey tracing JIT\n"
+                      "  -m            Enable the JaegerMonkey method JIT\n"
+                      "  -p            Enable loop profiling for TraceMonkey\n"
+                      "  -d            Enable debug mode\n"
+                      "  -b            Print timing statistics\n"
+                      "  -t <timeout>  Interrupt long-running execution after <timeout> seconds, where\n"
+                      "                <timeout> <= 1800.0. Negative values indicate no timeout (default).\n"
+                      "  -c <size>     Suggest stack chunk size of <size> bytes. Default is 8192.\n"
+                      "                Warning: this option is currently ignored.\n"
+                      "  -o <option>   Enable a context option flag by name\n"
+                      "                Possible values:\n"
+                      "                  anonfunfix:  JSOPTION_ANONFUNFIX\n"
+                      "                  atline:      JSOPTION_ATLINE\n"
+                      "                  tracejit:    JSOPTION_JIT\n"
+                      "                  methodjit:   JSOPTION_METHODJIT\n"
+                      "                  relimit:     JSOPTION_RELIMIT\n"
+                      "                  strict:      JSOPTION_STRICT\n"
+                      "                  werror:      JSOPTION_WERROR\n"
+                      "                  xml:         JSOPTION_XML\n"
+                      "  -v <version>  Set the JavaScript language version\n"
+                      "                Possible values:\n"
+                      "                  150:  JavaScript 1.5\n"
+                      "                  160:  JavaScript 1.6\n"
+                      "                  170:  JavaScript 1.7\n"
+                      "                  180:  JavaScript 1.8\n"
+                      "                  185:  JavaScript 1.8.5 (default)\n"
+                      "  -f <file>     Load and execute JavaScript source <file>\n"
+                      "                Note: this option switches to non-interactive mode.\n"
+                      "  -e <source>   Execute JavaScript <source>\n"
+                      "                Note: this option switches to non-interactive mode.\n"
+                      "  -S <size>     Set the maximum size of the stack to <size> bytes\n"
+                      "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
+#ifdef JS_THREADSAFE
+    fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
+#endif
 #ifdef JS_GC_ZEAL
-"[-Z gczeal] "
+    fprintf(gErrFile, "  -Z <n>        Toggle GC zeal: low if <n> is 0 (default), high if non-zero\n");
+#endif
+#ifdef MOZ_SHARK
+    fprintf(gErrFile, "  -k  Connect to Shark\n");
 #endif
 #ifdef MOZ_TRACEVIS
-"[-T TraceVisFileName] "
+    fprintf(gErrFile, "  -T  Start TraceVis\n");
 #endif
-"[scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -590,6 +641,7 @@ static const struct {
     {"atline",          JSOPTION_ATLINE},
     {"tracejit",        JSOPTION_JIT},
     {"methodjit",       JSOPTION_METHODJIT},
+    {"jitprofiling",    JSOPTION_PROFILING},
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
@@ -760,6 +812,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_METHODJIT);
             break;
 
+        case 'p':
+            enableProfiling = !enableProfiling;
+            JS_ToggleOptions(cx, JSOPTION_PROFILING);
+            break;
+           
         case 'o':
           {
             if (++i == argc)
@@ -2178,7 +2235,7 @@ Tracing(JSContext *cx, uintN argc, jsval *vp)
     FILE *file;
 
     if (argc == 0) {
-        *vp = BOOLEAN_TO_JSVAL(cx->tracefp != 0);
+        *vp = BOOLEAN_TO_JSVAL(cx->logfp != 0);
         return JS_TRUE;
     }
 
@@ -2204,10 +2261,10 @@ Tracing(JSContext *cx, uintN argc, jsval *vp)
       default:
           goto bad_argument;
     }
-    if (cx->tracefp && cx->tracefp != stderr)
-      fclose((FILE *)cx->tracefp);
-    cx->tracefp = file;
-    cx->tracePrevPc = NULL;
+    if (cx->logfp && cx->logfp != stderr)
+        fclose((FILE *)cx->logfp);
+    cx->logfp = file;
+    cx->logPrevPc = NULL;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 
@@ -2263,7 +2320,6 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
             if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
-                obj2->dropProperty(cx, prop);
                 if (!obj->getProperty(cx, id, &value))
                     return JS_FALSE;
             }
@@ -2917,13 +2973,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **obj
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
         JSProperty *prop;
-
-        if (!cpx->inner->lookupProperty(cx, id, objp, &prop))
-            return JS_FALSE;
-        if (prop)
-            cpx->inner->dropProperty(cx, prop);
-
-        return JS_TRUE;
+        return cpx->inner->lookupProperty(cx, id, objp, &prop);
     }
 
 #ifdef LAZY_STANDARD_CLASSES

@@ -597,7 +597,6 @@ DestroyThread(JSThread *thread)
 {
     /* The thread must have zero contexts. */
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
-    JS_ASSERT(!thread->titleToShare);
 
     /*
      * The conservative GC scanner should be disabled when the thread leaves
@@ -625,6 +624,13 @@ js_CurrentThread(JSRuntime *rt)
     JSThread::Map::AddPtr p = rt->threads.lookupForAdd(id);
     if (p) {
         thread = p->value;
+
+        /*
+         * If thread has no contexts, it might be left over from a previous
+         * thread with the same id but a different stack address.
+         */
+        if (JS_CLIST_IS_EMPTY(&thread->contextList))
+            thread->data.nativeStackBase = GetNativeStackBase();
     } else {
         JS_UNLOCK_GC(rt);
         thread = NewThread(id);
@@ -642,6 +648,7 @@ js_CurrentThread(JSRuntime *rt)
         JS_ASSERT(p->value == thread);
     }
     JS_ASSERT(thread->id == id);
+    JS_ASSERT(thread->data.nativeStackBase == GetNativeStackBase());
 
     return thread;
 }
@@ -1027,10 +1034,10 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     /*
      * For API compatibility we support destroying contexts with non-zero
      * cx->outstandingRequests but we assume that all JS_BeginRequest calls
-     * on this cx contributes to cx->thread->requestDepth and there is no
+     * on this cx contributes to cx->thread->data.requestDepth and there is no
      * JS_SuspendRequest calls that set aside the counter.
      */
-    JS_ASSERT(cx->outstandingRequests <= cx->thread->requestDepth);
+    JS_ASSERT(cx->outstandingRequests <= cx->thread->data.requestDepth);
 #endif
 
     if (mode != JSDCM_NEW_FAILED) {
@@ -1055,7 +1062,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
      * Typically we are called outside a request, so ensure that the GC is not
      * running before removing the context from rt->contextList, see bug 477021.
      */
-    if (cx->thread->requestDepth == 0)
+    if (cx->thread->data.requestDepth == 0)
         js_WaitForGC(rt);
 #endif
     JS_REMOVE_LINK(&cx->link);
@@ -1083,7 +1090,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
              * force or maybe run the GC, but by that point, rt->state will
              * not be JSRTS_UP, and that GC attempt will return early.
              */
-            if (cx->thread->requestDepth == 0)
+            if (cx->thread->data.requestDepth == 0)
                 JS_BeginRequest(cx);
 #endif
 
@@ -1133,7 +1140,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JSThread *t = cx->thread;
 #endif
     js_ClearContextThread(cx);
-    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->requestDepth);
+    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->data.requestDepth);
 #endif
 #ifdef JS_METER_DST_OFFSET_CACHING
     cx->dstOffsetCache.dumpStats();
@@ -1176,19 +1183,6 @@ FreeContext(JSContext *cx)
     js_free(cx);
 }
 
-JSBool
-js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
-{
-    JSCList *cl;
-
-    for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next) {
-        if (cl == &cx->link)
-            return JS_TRUE;
-    }
-    JS_RUNTIME_METER(rt, deadContexts);
-    return JS_FALSE;
-}
-
 JSContext *
 js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 {
@@ -1208,7 +1202,7 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
     JSContext *iter = cx;
 #ifdef JS_THREADSAFE
     while ((cx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-        if (cx->outstandingRequests && cx->thread->requestDepth)
+        if (cx->outstandingRequests && cx->thread->data.requestDepth)
             break;
     }
     return cx;
@@ -1832,8 +1826,8 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
 #if defined DEBUG && defined XP_UNIX
 /* For gdb usage. */
-void js_traceon(JSContext *cx)  { cx->tracefp = stderr; cx->tracePrevPc = NULL; }
-void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
+void js_logon(JSContext *cx)  { cx->logfp = stderr; cx->logPrevPc = NULL; }
+void js_logoff(JSContext *cx) { cx->logfp = NULL; }
 #endif
 
 JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
@@ -1854,16 +1848,23 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
+    JSRuntime *rt = cx->runtime;
+    JSThreadData *td = JS_THREAD_DATA(cx);
+
     JS_ASSERT_REQUEST_DEPTH(cx);
-    JS_ASSERT(JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK);
+    JS_ASSERT(td->interruptFlags != 0);
 
     /*
-     * Reset the callback flag first, then yield. If another thread is racing
+     * Reset the callback counter first, then yield. If another thread is racing
      * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
-    JS_ATOMIC_CLEAR_MASK(&JS_THREAD_DATA(cx)->interruptFlags,
-                         JSThreadData::INTERRUPT_OPERATION_CALLBACK);
+    JS_LOCK_GC(rt);
+    td->interruptFlags = 0;
+#ifdef JS_THREADSAFE
+    JS_ATOMIC_DECREMENT(&rt->interruptCounter);
+#endif
+    JS_UNLOCK_GC(rt);
 
     /*
      * Unless we are going to run the GC, we automatically yield the current
@@ -1872,7 +1873,6 @@ js_InvokeOperationCallback(JSContext *cx)
      * not yield. Operation callbacks are supposed to happen rarely (seconds,
      * not milliseconds) so it is acceptable to yield at every callback.
      */
-    JSRuntime *rt = cx->runtime;
     if (rt->gcIsNeeded) {
         js_GC(cx, GC_NORMAL);
 
@@ -1910,7 +1910,7 @@ JSBool
 js_HandleExecutionInterrupt(JSContext *cx)
 {
     JSBool result = JS_TRUE;
-    if (JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK)
+    if (JS_THREAD_DATA(cx)->interruptFlags)
         result = js_InvokeOperationCallback(cx) && result;
     return result;
 }
@@ -1918,10 +1918,31 @@ js_HandleExecutionInterrupt(JSContext *cx)
 namespace js {
 
 void
+TriggerOperationCallback(JSContext *cx)
+{
+    /*
+     * We allow for cx to come from another thread. Thus we must deal with
+     * possible JS_ClearContextThread calls when accessing cx->thread. But we
+     * assume that the calling thread is in a request so JSThread cannot be
+     * GC-ed.
+     */
+    JSThreadData *td;
+#ifdef JS_THREADSAFE
+    JSThread *thread = cx->thread;
+    if (!thread)
+        return;
+    td = &thread->data;
+#else
+    td = JS_THREAD_DATA(cx);
+#endif
+    td->triggerOperationCallback(cx->runtime);
+}
+
+void
 TriggerAllOperationCallbacks(JSRuntime *rt)
 {
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
-        i.threadData()->triggerOperationCallback();
+        i.threadData()->triggerOperationCallback(rt);
 }
 
 } /* namespace js */
@@ -2274,6 +2295,9 @@ JSContext::updateJITEnabled()
                           JSC::MacroAssemblerX86Common::HasSSE2
 # endif
                         ;
+#ifdef JS_TRACER
+    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
+#endif
 #endif
 }
 
