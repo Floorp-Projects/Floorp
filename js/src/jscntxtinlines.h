@@ -570,6 +570,10 @@ class CompartmentChecker
         }
     }
 
+    void check(JSStackFrame *fp) {
+        check(&fp->scopeChain());
+    }
+
     void check(JSString *) { /* nothing for now */ }
 };
 
