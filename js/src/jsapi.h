@@ -915,8 +915,6 @@ JS_StringToVersion(const char *string);
                                                    embedding. */
 
 #define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
-#define JSOPTION_ROPES          JS_BIT(16)      /* Enable rope optimization for
-                                                 * string concat. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
