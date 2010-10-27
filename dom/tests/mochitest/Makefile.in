@@ -54,7 +54,6 @@ DIRS	+= \
 	whatwg \
 	geolocation \
 	localstorage \
-	globalstorage \
 	sessionstorage \
 	storageevent \
 	$(NULL)
