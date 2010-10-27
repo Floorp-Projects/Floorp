@@ -2617,6 +2617,8 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
         ctx->Rectangle(GfxFromNsRect(*r));
     }
     ctx->Fill();
+
+    return true;
 }
 
 void
