@@ -1155,8 +1155,8 @@ eval(JSContext *cx, uintN argc, Value *vp)
     if (directCall) {
         /* Compile using the caller's current scope object. */
         staticLevel = caller->script()->staticLevel + 1;
-        scopeobj = js_GetScopeChainFast(cx, caller, JSOP_EVAL,
-                                        JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+        scopeobj = GetScopeChainFast(cx, caller, JSOP_EVAL,
+                                     JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
         if (!scopeobj)
             return false;
 
