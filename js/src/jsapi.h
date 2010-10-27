@@ -915,6 +915,7 @@ JS_StringToVersion(const char *string);
                                                    embedding. */
 
 #define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
+#define JSOPTION_PROFILING      JS_BIT(15)      /* Profiler to make tracer/methodjit choices. */
 #define JSOPTION_ROPES          JS_BIT(16)      /* Enable rope optimization for
                                                  * string concat. */
 
@@ -1718,6 +1719,10 @@ struct JSClass {
 /* Indicates that JSClass.mark is a tracer with JSTraceOp type. */
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
+
+/* Indicate whether the proto or ctor should be frozen. */
+#define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
+#define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
 
 /* Additional global reserved slots, beyond those for standard prototypes. */
 #define JSRESERVED_GLOBAL_SLOTS_COUNT     3
