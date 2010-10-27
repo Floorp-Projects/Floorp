@@ -546,10 +546,13 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   // Step 9. in the HTML5 spec
 
-  nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
   nsRefPtr<nsScriptLoadRequest> request;
-  if (scriptURI) {
+  if (aElement->GetScriptExternal()) {
     // external script
+    nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
+    if (!scriptURI) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
     nsTArray<PreloadInfo>::index_type i =
       mPreloads.IndexOf(scriptURI.get(), 0, PreloadURIComparator());
     if (i != nsTArray<PreloadInfo>::NoIndex) {
