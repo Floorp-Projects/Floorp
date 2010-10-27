@@ -19,8 +19,12 @@ function test() {
 }
 
 function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
+  // Test generates an available installs so just cancel it
+  AddonManager.getAllInstalls(function(aInstalls) {
+    is(aInstalls.length, 1, "Should be one available install");
+    aInstalls[0].cancel();
+
+    close_manager(gManagerWindow, finish);
   });
 }
 

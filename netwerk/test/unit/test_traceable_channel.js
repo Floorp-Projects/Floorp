@@ -26,6 +26,7 @@ TracingListener.prototype = {
       var newListener = new TracingListener();
       newListener.listener = request.setNewListener(newListener);
     } catch(e) {
+      dump("TracingListener.onStartRequest swallowing exception: " + e + "\n");
       return; // OK
     }
     do_throw("replaced channel's listener during onStartRequest.");
@@ -35,21 +36,25 @@ TracingListener.prototype = {
     dump("*** tracing listener onStopRequest\n");
     
     do_check_eq(gotOnStartRequest, true);
-    
-    var sin = Components.classes["@mozilla.org/scriptableinputstream;1"].
-        createInstance(Ci.nsIScriptableInputStream);
 
-    streamSink.close();
-    var input = pipe.inputStream;
-    sin.init(input);
-    do_check_eq(sin.available(), originalBody.length);
+    try {
+      var sin = Components.classes["@mozilla.org/scriptableinputstream;1"].
+          createInstance(Ci.nsIScriptableInputStream);
+
+      streamSink.close();
+      var input = pipe.inputStream;
+      sin.init(input);
+      do_check_eq(sin.available(), originalBody.length);
     
-    var result = sin.read(originalBody.length);
-    do_check_eq(result, originalBody);
+      var result = sin.read(originalBody.length);
+      do_check_eq(result, originalBody);
     
-    input.close();
-    
-    httpserver.stop(do_test_finished);
+      input.close();
+    } catch (e) {
+      dump("TracingListener.onStopRequest swallowing exception: " + e + "\n");
+    } finally {
+      httpserver.stop(do_test_finished);
+    }
   },
 
   QueryInterface: function(iid) {
@@ -71,10 +76,12 @@ HttpResponseExaminer.prototype = {
     Cc["@mozilla.org/observer-service;1"].
       getService(Components.interfaces.nsIObserverService).
       addObserver(this, "http-on-examine-response", true);
+    dump("Did HttpResponseExaminer.register\n");
   },
 
   // Replace channel's listener.
   observe: function(subject, topic, data) {
+    dump("In HttpResponseExaminer.observe\n");
     try {
       subject.QueryInterface(Components.interfaces.nsITraceableChannel);
       
@@ -90,6 +97,7 @@ HttpResponseExaminer.prototype = {
     } catch(e) {
       do_throw("can't replace listener " + e);
     }
+    dump("Did HttpResponseExaminer.observe\n");
   },
 
   QueryInterface: function(iid) {

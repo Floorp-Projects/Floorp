@@ -129,7 +129,7 @@ static const mmx_data_t c =
 
 #ifdef __GNUC__
 #    ifdef __ICC
-#        define MC(x)  M64 (c.mmx_ ## x)
+#        define MC(x) to_m64 (c.mmx_ ## x)
 #    else
 #        define MC(x) ((__m64)c.mmx_ ## x)
 #    endif
@@ -138,7 +138,7 @@ static const mmx_data_t c =
 #endif
 
 static force_inline __m64
-M64 (uint64_t x)
+to_m64 (uint64_t x)
 {
 #ifdef __ICC
     return _mm_cvtsi64_m64 (x);
@@ -153,7 +153,7 @@ M64 (uint64_t x)
 }
 
 static force_inline uint64_t
-UINT64 (__m64 x)
+to_uint64 (__m64 x)
 {
 #ifdef __ICC
     return _mm_cvtm64_si64 (x);
@@ -1208,10 +1208,10 @@ mmx_composite_over_n_0565 (pixman_implementation_t *imp,
 	while (w && (unsigned long)dst & 7)
 	{
 	    uint64_t d = *dst;
-	    __m64 vdest = expand565 (M64 (d), 0);
+	    __m64 vdest = expand565 (to_m64 (d), 0);
 
 	    vdest = pack_565 (over (vsrc, vsrca, vdest), vdest, 0);
-	    *dst = UINT64 (vdest);
+	    *dst = to_uint64 (vdest);
 
 	    w--;
 	    dst++;
@@ -1239,10 +1239,10 @@ mmx_composite_over_n_0565 (pixman_implementation_t *imp,
 	while (w)
 	{
 	    uint64_t d = *dst;
-	    __m64 vdest = expand565 (M64 (d), 0);
+	    __m64 vdest = expand565 (to_m64 (d), 0);
 
 	    vdest = pack_565 (over (vsrc, vsrca, vdest), vdest, 0);
-	    *dst = UINT64 (vdest);
+	    *dst = to_uint64 (vdest);
 
 	    w--;
 	    dst++;
@@ -1680,12 +1680,12 @@ mmx_composite_over_8888_0565 (pixman_implementation_t *imp,
 	{
 	    __m64 vsrc = load8888 (*src);
 	    uint64_t d = *dst;
-	    __m64 vdest = expand565 (M64 (d), 0);
+	    __m64 vdest = expand565 (to_m64 (d), 0);
 
 	    vdest = pack_565 (
 		over (vsrc, expand_alpha (vsrc), vdest), vdest, 0);
 
-	    *dst = UINT64 (vdest);
+	    *dst = to_uint64 (vdest);
 
 	    w--;
 	    dst++;
@@ -1724,11 +1724,11 @@ mmx_composite_over_8888_0565 (pixman_implementation_t *imp,
 	{
 	    __m64 vsrc = load8888 (*src);
 	    uint64_t d = *dst;
-	    __m64 vdest = expand565 (M64 (d), 0);
+	    __m64 vdest = expand565 (to_m64 (d), 0);
 
 	    vdest = pack_565 (over (vsrc, expand_alpha (vsrc), vdest), vdest, 0);
 
-	    *dst = UINT64 (vdest);
+	    *dst = to_uint64 (vdest);
 
 	    w--;
 	    dst++;
@@ -1795,7 +1795,7 @@ mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
 	    if (m)
 	    {
 		__m64 vdest = in_over (vsrc, vsrca,
-				       expand_alpha_rev (M64 (m)),
+				       expand_alpha_rev (to_m64 (m)),
 				       load8888 (*dst));
 
 		*dst = store8888 (vdest);
@@ -1826,9 +1826,9 @@ mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
 
 		vdest = *(__m64 *)dst;
 
-		dest0 = in_over (vsrc, vsrca, expand_alpha_rev (M64 (m0)),
+		dest0 = in_over (vsrc, vsrca, expand_alpha_rev (to_m64 (m0)),
 				 expand8888 (vdest, 0));
-		dest1 = in_over (vsrc, vsrca, expand_alpha_rev (M64 (m1)),
+		dest1 = in_over (vsrc, vsrca, expand_alpha_rev (to_m64 (m1)),
 				 expand8888 (vdest, 1));
 
 		*(__m64 *)dst = pack8888 (dest0, dest1);
@@ -1850,7 +1850,7 @@ mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
 		__m64 vdest = load8888 (*dst);
 
 		vdest = in_over (
-		    vsrc, vsrca, expand_alpha_rev (M64 (m)), vdest);
+		    vsrc, vsrca, expand_alpha_rev (to_m64 (m)), vdest);
 		*dst = store8888 (vdest);
 	    }
 
@@ -1910,7 +1910,7 @@ pixman_fill_mmx (uint32_t *bits,
     }
 
     fill = ((uint64_t)xor << 32) | xor;
-    vfill = M64 (fill);
+    vfill = to_m64 (fill);
 
 #ifdef __GNUC__
     __asm__ (
@@ -2073,7 +2073,7 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
 
 	    if (m)
 	    {
-		__m64 vdest = in (vsrc, expand_alpha_rev (M64 (m)));
+		__m64 vdest = in (vsrc, expand_alpha_rev (to_m64 (m)));
 
 		*dst = store8888 (vdest);
 	    }
@@ -2106,8 +2106,8 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
 
 		vdest = *(__m64 *)dst;
 
-		dest0 = in (vsrc, expand_alpha_rev (M64 (m0)));
-		dest1 = in (vsrc, expand_alpha_rev (M64 (m1)));
+		dest0 = in (vsrc, expand_alpha_rev (to_m64 (m0)));
+		dest1 = in (vsrc, expand_alpha_rev (to_m64 (m1)));
 
 		*(__m64 *)dst = pack8888 (dest0, dest1);
 	    }
@@ -2131,7 +2131,7 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
 	    {
 		__m64 vdest = load8888 (*dst);
 
-		vdest = in (vsrc, expand_alpha_rev (M64 (m)));
+		vdest = in (vsrc, expand_alpha_rev (to_m64 (m)));
 		*dst = store8888 (vdest);
 	    }
 	    else
@@ -2186,7 +2186,7 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
     vsrca = expand_alpha (vsrc);
 
     tmp = pack_565 (vsrc, _mm_setzero_si64 (), 0);
-    src16 = UINT64 (tmp);
+    src16 = to_uint64 (tmp);
 
     srcsrcsrcsrc =
 	(uint64_t)src16 << 48 | (uint64_t)src16 << 32 |
@@ -2209,12 +2209,12 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 	    if (m)
 	    {
 		uint64_t d = *dst;
-		__m64 vd = M64 (d);
+		__m64 vd = to_m64 (d);
 		__m64 vdest = in_over (
-		    vsrc, vsrca, expand_alpha_rev (M64 (m)), expand565 (vd, 0));
+		    vsrc, vsrca, expand_alpha_rev (to_m64 (m)), expand565 (vd, 0));
 
 		vd = pack_565 (vdest, _mm_setzero_si64 (), 0);
-		*dst = UINT64 (vd);
+		*dst = to_uint64 (vd);
 	    }
 
 	    w--;
@@ -2243,16 +2243,16 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
 		vdest = *(__m64 *)dst;
 
-		vm0 = M64 (m0);
+		vm0 = to_m64 (m0);
 		vdest = pack_565 (in_over (vsrc, vsrca, expand_alpha_rev (vm0),
 					   expand565 (vdest, 0)), vdest, 0);
-		vm1 = M64 (m1);
+		vm1 = to_m64 (m1);
 		vdest = pack_565 (in_over (vsrc, vsrca, expand_alpha_rev (vm1),
 					   expand565 (vdest, 1)), vdest, 1);
-		vm2 = M64 (m2);
+		vm2 = to_m64 (m2);
 		vdest = pack_565 (in_over (vsrc, vsrca, expand_alpha_rev (vm2),
 					   expand565 (vdest, 2)), vdest, 2);
-		vm3 = M64 (m3);
+		vm3 = to_m64 (m3);
 		vdest = pack_565 (in_over (vsrc, vsrca, expand_alpha_rev (vm3),
 					   expand565 (vdest, 3)), vdest, 3);
 
@@ -2273,11 +2273,11 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 	    if (m)
 	    {
 		uint64_t d = *dst;
-		__m64 vd = M64 (d);
-		__m64 vdest = in_over (vsrc, vsrca, expand_alpha_rev (M64 (m)),
+		__m64 vd = to_m64 (d);
+		__m64 vdest = in_over (vsrc, vsrca, expand_alpha_rev (to_m64 (m)),
 				       expand565 (vd, 0));
 		vd = pack_565 (vdest, _mm_setzero_si64 (), 0);
-		*dst = UINT64 (vd);
+		*dst = to_uint64 (vd);
 	    }
 
 	    w--;
@@ -2333,11 +2333,11 @@ mmx_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 	{
 	    __m64 vsrc = load8888 (*src);
 	    uint64_t d = *dst;
-	    __m64 vdest = expand565 (M64 (d), 0);
+	    __m64 vdest = expand565 (to_m64 (d), 0);
 
 	    vdest = pack_565 (over_rev_non_pre (vsrc, vdest), vdest, 0);
 
-	    *dst = UINT64 (vdest);
+	    *dst = to_uint64 (vdest);
 
 	    w--;
 	    dst++;
@@ -2394,11 +2394,11 @@ mmx_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 	{
 	    __m64 vsrc = load8888 (*src);
 	    uint64_t d = *dst;
-	    __m64 vdest = expand565 (M64 (d), 0);
+	    __m64 vdest = expand565 (to_m64 (d), 0);
 
 	    vdest = pack_565 (over_rev_non_pre (vsrc, vdest), vdest, 0);
 
-	    *dst = UINT64 (vdest);
+	    *dst = to_uint64 (vdest);
 
 	    w--;
 	    dst++;
@@ -2557,9 +2557,9 @@ mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 	    if (m)
 	    {
 		uint64_t d = *q;
-		__m64 vdest = expand565 (M64 (d), 0);
+		__m64 vdest = expand565 (to_m64 (d), 0);
 		vdest = pack_565 (in_over (vsrc, vsrca, load8888 (m), vdest), vdest, 0);
-		*q = UINT64 (vdest);
+		*q = to_uint64 (vdest);
 	    }
 
 	    twidth--;
@@ -2600,9 +2600,9 @@ mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 	    if (m)
 	    {
 		uint64_t d = *q;
-		__m64 vdest = expand565 (M64 (d), 0);
+		__m64 vdest = expand565 (to_m64 (d), 0);
 		vdest = pack_565 (in_over (vsrc, vsrca, load8888 (m), vdest), vdest, 0);
-		*q = UINT64 (vdest);
+		*q = to_uint64 (vdest);
 	    }
 
 	    twidth--;
@@ -2845,19 +2845,19 @@ mmx_composite_add_n_8_8 (pixman_implementation_t *imp,
 }
 
 static void
-mmx_composite_add_8000_8000 (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             pixman_image_t *         src_image,
-                             pixman_image_t *         mask_image,
-                             pixman_image_t *         dst_image,
-                             int32_t                  src_x,
-                             int32_t                  src_y,
-                             int32_t                  mask_x,
-                             int32_t                  mask_y,
-                             int32_t                  dest_x,
-                             int32_t                  dest_y,
-                             int32_t                  width,
-                             int32_t                  height)
+mmx_composite_add_8_8 (pixman_implementation_t *imp,
+		       pixman_op_t              op,
+		       pixman_image_t *         src_image,
+		       pixman_image_t *         mask_image,
+		       pixman_image_t *         dst_image,
+		       int32_t                  src_x,
+		       int32_t                  src_y,
+		       int32_t                  mask_x,
+		       int32_t                  mask_y,
+		       int32_t                  dest_x,
+		       int32_t                  dest_y,
+		       int32_t                  width,
+		       int32_t                  height)
 {
     uint8_t *dst_line, *dst;
     uint8_t *src_line, *src;
@@ -2963,7 +2963,7 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 	while (w >= 2)
 	{
 	    dst64 = _mm_adds_pu8 (*(__m64*)src, *(__m64*)dst);
-	    *(uint64_t*)dst = UINT64 (dst64);
+	    *(uint64_t*)dst = to_uint64 (dst64);
 	    dst += 2;
 	    src += 2;
 	    w -= 2;
@@ -3199,7 +3199,7 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 		else
 		{
 		    __m64 sa = expand_alpha (s);
-		    __m64 vm = expand_alpha_rev (M64 (m));
+		    __m64 vm = expand_alpha_rev (to_m64 (m));
 		    __m64 vdest = in_over (s, sa, vm, load8888 (*dst));
 
 		    *dst = store8888 (vdest);
@@ -3268,7 +3268,7 @@ static const pixman_fast_path_t mmx_fast_paths[] =
 
     PIXMAN_STD_FAST_PATH    (ADD,  a8r8g8b8, null,     a8r8g8b8, mmx_composite_add_8888_8888       ),
     PIXMAN_STD_FAST_PATH    (ADD,  a8b8g8r8, null,     a8b8g8r8, mmx_composite_add_8888_8888       ),
-    PIXMAN_STD_FAST_PATH    (ADD,  a8,       null,     a8,       mmx_composite_add_8000_8000       ),
+    PIXMAN_STD_FAST_PATH    (ADD,  a8,       null,     a8,       mmx_composite_add_8_8		   ),
     PIXMAN_STD_FAST_PATH    (ADD,  solid,    a8,       a8,       mmx_composite_add_n_8_8           ),
 
     PIXMAN_STD_FAST_PATH    (SRC,  solid,    a8,       a8r8g8b8, mmx_composite_src_n_8_8888        ),

@@ -48,7 +48,7 @@
 
 class jsvalRoot
 {
-public:
+  public:
     explicit jsvalRoot(JSContext *context, jsval value = JSVAL_NULL)
         : cx(context), v(value)
     {
@@ -70,7 +70,7 @@ public:
     jsval * addr() { return &v; }
     jsval value() const { return v; }
 
-private:
+  private:
     JSContext *cx;
     jsval v;
 };
@@ -78,7 +78,7 @@ private:
 /* Note: Aborts on OOM. */
 class JSAPITestString {
     js::Vector<char, 0, js::SystemAllocPolicy> chars;
-public:
+  public:
     JSAPITestString() {}
     JSAPITestString(const char *s) { *this += s; }
     JSAPITestString(const JSAPITestString &s) { *this += s; }
@@ -105,7 +105,7 @@ inline JSAPITestString operator+(JSAPITestString a, const JSAPITestString &b) { 
 
 class JSAPITest
 {
-public:
+  public:
     static JSAPITest *list;
     JSAPITest *next;
 
@@ -217,7 +217,17 @@ public:
 
     JSAPITestString messages() const { return msgs; }
 
-protected:
+    static JSClass * basicGlobalClass() {
+        static JSClass c = {
+            "global", JSCLASS_GLOBAL_FLAGS,
+            JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+            JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+            JSCLASS_NO_OPTIONAL_MEMBERS
+        };
+        return &c;
+    }
+
+  protected:
     static JSBool
     print(JSContext *cx, uintN argc, jsval *vp)
     {
@@ -271,13 +281,7 @@ protected:
     }
 
     virtual JSClass * getGlobalClass() {
-        static JSClass basicGlobalClass = {
-            "global", JSCLASS_GLOBAL_FLAGS,
-            JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-            JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-            JSCLASS_NO_OPTIONAL_MEMBERS
-        };
-        return &basicGlobalClass;
+        return basicGlobalClass();
     }
 
     virtual JSObject * createGlobal() {
@@ -300,7 +304,7 @@ protected:
 
 #define BEGIN_TEST(testname)                                            \
     class cls_##testname : public JSAPITest {                           \
-    public:                                                             \
+      public:                                                           \
         virtual const char * name() { return #testname; }               \
         virtual bool run()
 
@@ -318,7 +322,7 @@ protected:
 
 #define BEGIN_FIXTURE_TEST(fixture, testname)                           \
     class cls_##testname : public fixture {                             \
-    public:                                                             \
+      public:                                                           \
         virtual const char * name() { return #testname; }               \
         virtual bool run()
 

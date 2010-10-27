@@ -335,14 +335,8 @@ nsHTMLListBulletAccessible::
   mBulletText += ' '; // Otherwise bullets are jammed up against list text
 }
 
-NS_IMETHODIMP
-nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)
-{
-  // Since mContent is same as for list item, use |this| pointer as the unique
-  // id.
-  *aUniqueID = static_cast<void*>(this);
-  return NS_OK;
-}
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLListBulletAccessible: nsAccessNode
 
 void
 nsHTMLListBulletAccessible::Shutdown()
@@ -350,6 +344,15 @@ nsHTMLListBulletAccessible::Shutdown()
   mBulletText.Truncate();
   nsLeafAccessible::Shutdown();
 }
+
+bool
+nsHTMLListBulletAccessible::IsPrimaryForNode() const
+{
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLListBulletAccessible: nsAccessible
 
 NS_IMETHODIMP
 nsHTMLListBulletAccessible::GetName(nsAString &aName)

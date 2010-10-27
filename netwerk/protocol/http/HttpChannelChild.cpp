@@ -184,6 +184,21 @@ class StartRequestEvent : public ChannelEvent
   nsCString mSecurityInfoSerialization;
 };
 
+bool
+HttpChannelChild::RecvAssociateApplicationCache(const nsCString &groupID,
+                                                const nsCString &clientID)
+{
+  nsresult rv;
+  mApplicationCache = do_CreateInstance(
+    NS_APPLICATIONCACHE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return true;
+
+  mLoadedFromApplicationCache = PR_TRUE;
+  mApplicationCache->InitAsHandle(groupID, clientID);
+  return true;
+}
+
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const PRBool& useResponseHead,
@@ -820,29 +835,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   if (NS_FAILED(rv))
     return rv;
 
-  // Prepare uploadStream for POST data
-  nsCAutoString uploadStreamData;
-  PRInt32 uploadStreamInfo;
-
-  if (mUploadStream) {
-    // Read entire POST stream into string:
-    // This is a temporary measure until bug 564553 is implemented:  we're doing
-    // a blocking read of a potentially arbitrarily large stream, so this isn't
-    // performant/safe for large file uploads.
-    PRUint32 bytes;
-    mUploadStream->Available(&bytes);
-    if (bytes > 0) {
-      rv = NS_ReadInputStreamToString(mUploadStream, uploadStreamData, bytes);
-      if (NS_FAILED(rv))
-        return rv;
-    }
-
-    uploadStreamInfo = mUploadStreamHasHeaders ? 
-      eUploadStream_hasHeaders : eUploadStream_hasNoHeaders;
-  } else {
-    uploadStreamInfo = eUploadStream_null;
-  }
-
   const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
   if (cookieHeader) {
     mUserSetCookieHeader = cookieHeader;
@@ -878,6 +870,22 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     return NS_OK;
   }
 
+  nsCString appCacheClientId;
+  if (mInheritApplicationCache) {
+    // Pick up an application cache from the notification
+    // callbacks if available
+    nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
+    GetCallback(appCacheContainer);
+
+    if (appCacheContainer) {
+      nsCOMPtr<nsIApplicationCache> appCache;
+      rv = appCacheContainer->GetApplicationCache(getter_AddRefs(appCache));
+      if (NS_SUCCEEDED(rv) && appCache) {
+        appCache->GetClientID(appCacheClientId);
+      }
+    }
+  }
+
   //
   // Send request to the chrome process...
   //
@@ -899,10 +907,12 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
                 IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
-                mRequestHeaders, mRequestHead.Method(), uploadStreamData,
-                uploadStreamInfo, mPriority, mRedirectionLimit,
-                mAllowPipelining, mForceAllowThirdPartyCookie, mSendResumeAt,
-                mStartPos, mEntityID);
+                mRequestHeaders, mRequestHead.Method(),
+                IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
+                mPriority, mRedirectionLimit, mAllowPipelining,
+                mForceAllowThirdPartyCookie, mSendResumeAt,
+                mStartPos, mEntityID, mChooseApplicationCache, 
+                appCacheClientId);
 
   return NS_OK;
 }
@@ -1047,13 +1057,16 @@ HttpChannelChild::SetNewListener(nsIStreamListener *listener,
 NS_IMETHODIMP
 HttpChannelChild::GetApplicationCache(nsIApplicationCache **aApplicationCache)
 {
-  DROP_DEAD();
+  NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
+  return NS_OK;
 }
 NS_IMETHODIMP
 HttpChannelChild::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 {
-  // FIXME: redirects call. so stub OK for now. Fix in bug 536295.  
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+  mApplicationCache = aApplicationCache;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -1061,34 +1074,43 @@ HttpChannelChild::SetApplicationCache(nsIApplicationCache *aApplicationCache)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::GetLoadedFromApplicationCache(PRBool *retval)
+HttpChannelChild::GetLoadedFromApplicationCache(PRBool *aLoadedFromApplicationCache)
 {
-  // FIXME: stub for bug 536295
-  *retval = 0;
+  *aLoadedFromApplicationCache = mLoadedFromApplicationCache;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetInheritApplicationCache(PRBool *aInheritApplicationCache)
+HttpChannelChild::GetInheritApplicationCache(PRBool *aInherit)
 {
-  DROP_DEAD();
+  *aInherit = mInheritApplicationCache;
+  return NS_OK;
 }
 NS_IMETHODIMP
-HttpChannelChild::SetInheritApplicationCache(PRBool aInheritApplicationCache)
+HttpChannelChild::SetInheritApplicationCache(PRBool aInherit)
 {
-  // FIXME: Browser calls this early, so stub OK for now. Fix in bug 536295.  
+  mInheritApplicationCache = aInherit;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetChooseApplicationCache(PRBool *aChooseApplicationCache)
+HttpChannelChild::GetChooseApplicationCache(PRBool *aChoose)
 {
-  DROP_DEAD();
+  *aChoose = mChooseApplicationCache;
+  return NS_OK;
 }
+
 NS_IMETHODIMP
-HttpChannelChild::SetChooseApplicationCache(PRBool aChooseApplicationCache)
+HttpChannelChild::SetChooseApplicationCache(PRBool aChoose)
 {
-  // FIXME: Browser calls this early, so stub OK for now. Fix in bug 536295.  
+  mChooseApplicationCache = aChoose;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::MarkOfflineCacheEntryAsForeign()
+{
+  SendMarkOfflineCacheEntryAsForeign();
   return NS_OK;
 }
 

@@ -82,6 +82,8 @@
  *   having a hard limit (64)
 */
 
+/* Implemented in APKOpen */
+extern void report_mapping(char *name, void *base, uint32_t len, uint32_t offset);
 
 static int link_image(soinfo *si, unsigned wr_offset);
 
@@ -135,6 +137,7 @@ unsigned bitmask[4096];
 #define PT_ARM_EXIDX    0x70000001      /* .ARM.exidx segment */
 #endif
 
+#ifndef MOZ_LINKER
 #define HOODLUM(name, ret, ...)                                               \
     ret name __VA_ARGS__                                                      \
     {                                                                         \
@@ -146,6 +149,7 @@ HOODLUM(malloc, void *, (size_t size));
 HOODLUM(free, void, (void *ptr));
 HOODLUM(realloc, void *, (void *ptr, size_t size));
 HOODLUM(calloc, void *, (size_t cnt, size_t size));
+#endif
 
 static char tmp_err_buf[768];
 static char __linker_dl_err_buf[768];
@@ -944,6 +948,8 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
                       (unsigned)tmp, len, phdr->p_vaddr, phdr->p_offset);
                 goto fail;
             }
+
+            report_mapping(si->name, pbase, len, phdr->p_offset & (~PAGE_MASK));
 
             /* If 'len' didn't end on page boundary, and it's a writable
              * segment, zero-fill the rest. */

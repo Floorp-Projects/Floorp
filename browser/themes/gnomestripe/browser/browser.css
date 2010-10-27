@@ -474,11 +474,15 @@ menuitem:not([type]) {
 
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
+}
+
+#BMB_bookmarkThisPage {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
 }
 
 #BMB_unsortedBookmarks {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");  
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
 }
 
 #menu_openDownloads {

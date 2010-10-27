@@ -2,3 +2,10 @@
 <!ENTITY  incompatable_cpu_error "This device does not meet the minimum system requirements for &brandShortName;.">
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
 <!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
+<!ENTITY  crash_message "&brandShortName; has crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
+<!ENTITY  crash_help_message "Please help us fix this problem!">
+<!ENTITY  crash_send_report_message "Send Mozilla a crash report">
+<!ENTITY  crash_include_url "Include page address">
+<!ENTITY  crash_close_label "Close">
+<!ENTITY  crash_restart_label "Restart &brandShortName;">
+<!ENTITY  sending_crash_report "Sending crash report\u2026">

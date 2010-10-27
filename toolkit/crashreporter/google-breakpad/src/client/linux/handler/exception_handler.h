@@ -30,13 +30,18 @@
 #ifndef CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
 #define CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
 
-#include <vector>
 #include <string>
+#include <vector>
 
+#include <pthread.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 
+#include "client/linux/android_ucontext.h"
 #include "client/linux/crash_generation/crash_generation_client.h"
+#include "client/linux/minidump_writer/minidump_writer.h"
+#include "google_breakpad/common/minidump_format.h"
 #include "processor/scoped_ptr.h"
 
 struct sigaction;
@@ -205,6 +210,15 @@ class ExceptionHandler {
       return crash_generation_client_.get() != NULL;
   }
 
+  // Add information about a memory mapping. This can be used if
+  // a custom library loader is used that maps things in a way
+  // that the linux dumper can't handle by reading the maps file.
+  void AddMappingInfo(const std::string& name,
+                      const u_int8_t identifier[sizeof(MDGUID)],
+                      uintptr_t start_address,
+                      size_t mapping_size,
+                      size_t file_offset);
+
  private:
   void Init(const std::string &dump_path,
             const int server_fd);
@@ -260,6 +274,10 @@ class ExceptionHandler {
   // cloned process after creating it, until we have explicitly enabled 
   // ptrace. This is used to store the file descriptors for the pipe
   int fdes[2];
+
+  // Callers can add extra info about mappings for cases where the
+  // dumper code cannot extract enough information from /proc/<pid>/maps.
+  MappingList mapping_info_;
 };
 
 }  // namespace google_breakpad

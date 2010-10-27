@@ -73,6 +73,7 @@ CPPSRCS		= \
 ifdef MOZ_IPC
 CPPSRCS		+= \
 		PuppetWidget.cpp \
+		nsFilePickerProxy.cpp \
 		$(NULL)
 endif
 
@@ -80,7 +81,7 @@ ifneq (,$(filter beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
 endif
 
-ifneq (,$(filter beos qt gtk2 os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos qt gtk2 os2 cocoa windows android,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseFilePicker.cpp
 endif
 

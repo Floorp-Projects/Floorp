@@ -8,6 +8,8 @@ const EVENT_DOCUMENT_LOAD_STOPPED = nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_STOPP
 const EVENT_HIDE = nsIAccessibleEvent.EVENT_HIDE;
 const EVENT_FOCUS = nsIAccessibleEvent.EVENT_FOCUS;
 const EVENT_NAME_CHANGE = nsIAccessibleEvent.EVENT_NAME_CHANGE;
+const EVENT_MENUPOPUP_START = nsIAccessibleEvent.EVENT_MENUPOPUP_START;
+const EVENT_MENUPOPUP_END = nsIAccessibleEvent.EVENT_MENUPOPUP_END;
 const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 const EVENT_SCROLLING_START = nsIAccessibleEvent.EVENT_SCROLLING_START;
 const EVENT_SELECTION_ADD = nsIAccessibleEvent.EVENT_SELECTION_ADD;
@@ -554,7 +556,9 @@ function eventQueue(aEventType)
       styledNode.textContent = "matched";
 
       // Dump matched events into console.
-      dump("\n*****\nEQ matched: " + eventTypeToString(currType) + "\n*****\n");
+      if (gA11yEventDumpToConsole)
+        dump("\n*****\nEQ matched: " + eventTypeToString(currType) + "\n*****\n");
+
     } else {
       styledNode.textContent = "expected";
     }
@@ -932,6 +936,9 @@ var gA11yEventObserver =
           info += ". Listeners count: " + listenersArray.length;
 
         eventFromDumpArea = false;
+
+        if (gA11yEventDumpToConsole)
+          dump("\n" + info + "\n");
         dumpInfoToDOM(info);
       }
     }

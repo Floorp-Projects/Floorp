@@ -63,7 +63,8 @@ enum JSInterpMode
 {
     JSINTERP_NORMAL            =     0, /* Interpreter is running normally. */
     JSINTERP_RECORD            =     1, /* interpreter has been started to record/run traces */
-    JSINTERP_SAFEPOINT         =     2  /* interpreter should leave on a method JIT safe point */
+    JSINTERP_SAFEPOINT         =     2, /* interpreter should leave on a method JIT safe point */
+    JSINTERP_PROFILE           =     3  /* interpreter should profile a loop */
 };
 
 /* Flags used in JSStackFrame::flags_ */
@@ -1089,7 +1090,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, js::Value *vp, js::Value *vp2);
  * previous opcode.
  */
 extern JS_REQUIRES_STACK void
-js_TraceOpcode(JSContext *cx);
+js_LogOpcode(JSContext *cx);
 
 /*
  * JS_OPMETER helper functions.

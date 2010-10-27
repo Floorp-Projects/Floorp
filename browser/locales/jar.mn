@@ -45,7 +45,6 @@
 #endif
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
-    locale/browser/history/history.dtd             (%chrome/browser/history/history.dtd)
     locale/browser/migration/migration.dtd         (%chrome/browser/migration/migration.dtd)
     locale/browser/migration/migration.properties  (%chrome/browser/migration/migration.properties)
     locale/browser/preferences/advanced.dtd           (%chrome/browser/preferences/advanced.dtd)

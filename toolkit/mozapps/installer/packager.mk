@@ -170,6 +170,7 @@ DIST_FILES = \
   modules \
   res \
   lib \
+  lib.id \
   extensions \
   application.ini \
   platform.ini \
@@ -200,6 +201,11 @@ INNER_MAKE_PACKAGE	= \
     mkdir -p lib/armeabi && \
     cp lib*.so lib && \
     mv lib/libmozutils.so lib/armeabi && \
+    rm -f lib.id && \
+    for SOMELIB in lib/*.so ; \
+    do \
+      printf "`basename $$SOMELIB`:`$(_ABS_DIST)/host/bin/file_id $$SOMELIB`\n" >> lib.id ; \
+    done && \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) ) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
   $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
@@ -659,7 +665,7 @@ QUOTED_WILDCARD = $(if $(wildcard $(subst $(space),?,$(1))),"$(1)")
 CHECKSUM_ALGORITHM = 'sha512'
 
 # This variable defines where the checksum file will be located
-CHECKSUM_FILE = $(DIST)/$(PKG_PATH)/$(PKG_BASENAME).checksums
+CHECKSUM_FILE = "$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).checksums"
 
 UPLOAD_FILES= \
   $(call QUOTED_WILDCARD,$(DIST)/$(PACKAGE)) \

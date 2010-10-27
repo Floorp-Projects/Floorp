@@ -523,7 +523,6 @@ DDRAW_FAILED:
           }
 
           nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
-          thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
           if (IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
             const nsIntRect* r;
             for (nsIntRegionRectIterator iter(event.region);
@@ -732,9 +731,7 @@ DDRAW_FAILED:
         {
           gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
           LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
-          cairo_device_t *device = gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
-
-          if (!device || layerManagerD3D10->device() != cairo_d2d_device_get_device(device)) {
+          if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
             mLayerManager = nsnull;
             Invalidate(PR_FALSE);
           } else {
@@ -1047,7 +1044,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
   targetSurfaceImage->SetDeviceOffset(gfxPoint(-brx, -bry));
   
   thebesContext = new gfxContext(targetSurfaceImage);
-  thebesContext->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
   thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
     
   {

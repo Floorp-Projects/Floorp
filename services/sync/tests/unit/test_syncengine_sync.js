@@ -1150,6 +1150,9 @@ function test_canDecrypt_true() {
 
 
 function run_test() {
+  if (DISABLE_TESTS_BUG_604565)
+    return;
+
   test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
   test_syncStartup_metaGet404();
   test_syncStartup_failedMetaGet();

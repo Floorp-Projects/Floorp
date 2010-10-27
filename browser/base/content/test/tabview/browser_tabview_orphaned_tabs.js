@@ -67,7 +67,7 @@ function onTabViewWindowLoaded() {
   is(contentWindow.GroupItems.getOrphanedTabs().length, 0, "No orphaned tabs");
 
   // 2) create a group, add a blank tab 
-  let groupItem = createEmptyGroupItem(contentWindow, 200);
+  let groupItem = createEmptyGroupItem(contentWindow, 300, 300, 200);
 
   let onTabViewHidden = function() {
     newWin.removeEventListener("tabviewhidden", onTabViewHidden, false);
@@ -108,19 +108,6 @@ function onTabViewWindowLoaded() {
   ok(newTabButton[0], "New tab button exists");
 
   EventUtils.sendMouseEvent({ type: "click" }, newTabButton[0], contentWindow);
-}
-
-function createEmptyGroupItem(contentWindow, padding) {
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
-  let box = new contentWindow.Rect(pageBounds);
-  box.width = 300;
-  box.height = 300;
-
-  let emptyGroupItem = new contentWindow.GroupItem([], { bounds: box });
-
-  return emptyGroupItem;
 }
 
 function whenWindowObservesOnce(win, topic, callback) {

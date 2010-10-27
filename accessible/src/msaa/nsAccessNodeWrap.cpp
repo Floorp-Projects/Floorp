@@ -257,9 +257,7 @@ __try{
   // accessibility application can compare this to the childID we
   // return for events such as focus events, to correlate back to
   // data nodes in their internal object model.
-  void *uniqueID;
-  GetUniqueID(&uniqueID);
-  *aUniqueID = - NS_PTR_TO_INT32(uniqueID);
+  *aUniqueID = - NS_PTR_TO_INT32(UniqueID());
 
   *aNumChildren = GetNode()->GetChildCount();
 

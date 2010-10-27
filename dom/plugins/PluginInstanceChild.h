@@ -210,8 +210,7 @@ public:
 
     void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
 
-private:
-    friend class PluginModuleChild;
+    int GetQuirks() { return mQuirks; }
 
     // Quirks mode support for various plugin mime types
     enum PluginQuirks {
@@ -227,7 +226,12 @@ private:
         // flooding chromium's dispatch loop, which can cause ipc traffic
         // processing lag.
         QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
+        // Win32: Catch resets on our subclass by hooking SetWindowLong.
+        QUIRK_FLASH_HOOK_SETLONGPTR                     = 1 << 3,
     };
+
+private:
+    friend class PluginModuleChild;
 
     void InitQuirksModes(const nsCString& aMimeType);
 
@@ -247,6 +251,10 @@ private:
     void InitPopupMenuHook();
     void SetupFlashMsgThrottle();
     void UnhookWinlessFlashThrottle();
+    void HookSetWindowLongPtr();
+    static inline PRBool SetWindowLongHookCheck(HWND hWnd,
+                                                int nIndex,
+                                                LONG_PTR newLong);
     void FlashThrottleMessage(HWND, UINT, WPARAM, LPARAM, bool);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
@@ -269,6 +277,22 @@ private:
                                                       UINT message,
                                                       WPARAM wParam,
                                                       LPARAM lParam);
+#ifdef _WIN64
+    static LONG_PTR WINAPI SetWindowLongPtrAHook(HWND hWnd,
+                                                 int nIndex,
+                                                 LONG_PTR newLong);
+    static LONG_PTR WINAPI SetWindowLongPtrWHook(HWND hWnd,
+                                                 int nIndex,
+                                                 LONG_PTR newLong);
+                      
+#else
+    static LONG WINAPI SetWindowLongAHook(HWND hWnd,
+                                          int nIndex,
+                                          LONG newLong);
+    static LONG WINAPI SetWindowLongWHook(HWND hWnd,
+                                          int nIndex,
+                                          LONG newLong);
+#endif
 
     class FlashThrottleAsyncMsg : public ChildAsyncCall
     {

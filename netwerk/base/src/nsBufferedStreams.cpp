@@ -35,9 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "IPC/IPCMessageUtils.h"
+#include "mozilla/net/NeckoMessageUtils.h"
+#endif
+
 #include "nsBufferedStreams.h"
 #include "nsStreamUtils.h"
 #include "nsCRT.h"
+#include "nsNetCID.h"
+#include "nsIClassInfoImpl.h"
 
 #ifdef DEBUG_brendan
 # define METERING
@@ -246,11 +253,26 @@ nsBufferedStream::SetEOF()
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedInputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsBufferedInputStream, 
-                             nsBufferedStream,
+NS_IMPL_ADDREF_INHERITED(nsBufferedInputStream, nsBufferedStream)
+NS_IMPL_RELEASE_INHERITED(nsBufferedInputStream, nsBufferedStream)
+
+NS_IMPL_CLASSINFO(nsBufferedInputStream, NULL, nsIClassInfo::THREADSAFE,
+                  NS_BUFFEREDINPUTSTREAM_CID)
+
+NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
+    NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
+NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
+
+NS_IMPL_CI_INTERFACE_GETTER5(nsBufferedInputStream,
                              nsIInputStream,
                              nsIBufferedInputStream,
-                             nsIStreamBufferAccess)
+                             nsISeekableStream,
+                             nsIStreamBufferAccess,
+                             nsIIPCSerializable)
 
 nsresult
 nsBufferedInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -464,6 +486,42 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
     *aStream = mStream;
     NS_IF_ADDREF(*aStream);
     return NS_OK;
+}
+
+PRBool
+nsBufferedInputStream::Read(const IPC::Message *aMsg, void **aIter)
+{
+#ifdef MOZ_IPC
+    using IPC::ReadParam;
+
+    PRUint32 bufferSize;
+    IPC::InputStream inputStream;
+    if (!ReadParam(aMsg, aIter, &bufferSize) ||
+        !ReadParam(aMsg, aIter, &inputStream))
+        return PR_FALSE;
+
+    nsCOMPtr<nsIInputStream> stream(inputStream);
+    nsresult rv = Init(stream, bufferSize);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
+}
+
+void
+nsBufferedInputStream::Write(IPC::Message *aMsg)
+{
+#ifdef MOZ_IPC
+    using IPC::WriteParam;
+
+    WriteParam(aMsg, mBufferSize);
+
+    IPC::InputStream inputStream(Source());
+    WriteParam(aMsg, inputStream);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

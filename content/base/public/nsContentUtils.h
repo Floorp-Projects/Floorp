@@ -309,7 +309,7 @@ public:
    *  Returns -1 if point1 < point2, 1, if point1 > point2,
    *  0 if error or if point1 == point2.
    *  NOTE! If the two nodes aren't in the same connected subtree,
-   *  the result is undefined, but the optional aDisconnected parameter
+   *  the result is 1, and the optional aDisconnected parameter
    *  is set to PR_TRUE.
    */
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,

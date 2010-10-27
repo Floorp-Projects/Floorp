@@ -25,7 +25,7 @@ function testOnLoad() {
   sstring.data = location.search;
 
   ww.openWindow(window, "chrome://mochikit/content/browser-harness.xul", "browserTest",
-                "chrome,centerscreen,dialog,resizable,titlebar,toolbar=no,width=800,height=600", sstring);
+                "chrome,centerscreen,dialog=no,resizable,titlebar,toolbar=no,width=800,height=600", sstring);
 }
 
 function Tester(aTests, aDumper, aCallback) {

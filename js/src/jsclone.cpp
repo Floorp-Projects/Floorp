@@ -559,8 +559,6 @@ JSStructuredCloneWriter::write(const Value &v)
                 }
 
                 if (prop) {
-                    obj2->dropProperty(context(), prop);
-
                     Value val;
                     if (!writeId(id) || !obj->getProperty(context(), id, &val) || !startWrite(val))
                         return false;

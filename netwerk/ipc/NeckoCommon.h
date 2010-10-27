@@ -73,12 +73,20 @@
 
 #define DROP_DEAD()                                                            \
   do {                                                                         \
-    nsPrintfCString msg(1000,"FATAL NECKO ERROR: '%s' UNIMPLEMENTED",          \
+    nsPrintfCString msg(1000,"NECKO ERROR: '%s' UNIMPLEMENTED",                \
                         __FUNCTION__);                                         \
     NECKO_MAYBE_ABORT(msg);                                                    \
     return NS_ERROR_NOT_IMPLEMENTED;                                           \
   } while (0)
 
+#define ENSURE_CALLED_BEFORE_ASYNC_OPEN()                                      \
+  if (mIsPending || mWasOpened) {                                              \
+    nsPrintfCString msg(1000, "'%s' called after AsyncOpen: %s +%d",           \
+                        __FUNCTION__, __FILE__, __LINE__);                     \
+    NECKO_MAYBE_ABORT(msg);                                                    \
+  }                                                                            \
+  NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);                           \
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
 namespace mozilla {
 namespace net {

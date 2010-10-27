@@ -5814,7 +5814,7 @@ nsDOMConstructor::Create(const PRUnichar* aName,
   nsPIDOMWindow* outerWindow = aOwner->GetOuterWindow();
   nsPIDOMWindow* currentInner =
     outerWindow ? outerWindow->GetCurrentInnerWindow() : aOwner;
-  if (!outerWindow ||
+  if (!currentInner ||
       (aOwner != currentInner &&
        !nsContentUtils::CanCallerAccess(currentInner) &&
        !(currentInner = aOwner)->IsInnerWindow())) {
@@ -7095,15 +7095,13 @@ nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
-
-  if (sgo) {
-    JSObject *global = sgo->GetGlobalJSObject();
-
-    if (global) {
-      *parentObj = global;
-    }
+  if (!sgo) {
+    NS_WARNING("Refusing to create a location in the wrong scope because the "
+	       "docshell is being destroyed");
+    return NS_ERROR_UNEXPECTED;
   }
 
+  *parentObj = sgo->GetGlobalJSObject();
   return NS_OK;
 }
 
@@ -9756,6 +9754,14 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   *plugin_proto = nsnull;
 
   JSAutoRequest ar(cx);
+
+  // NB: We need an AutoEnterCompartment because we can be called from
+  // nsObjectFrame when the plugin loads after the JS object for our content
+  // node has been created.
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, obj)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (plugin_inst) {
     plugin_inst->GetJSObject(cx, plugin_obj);

@@ -427,6 +427,28 @@ function do_throw(text, stack) {
   throw Components.results.NS_ERROR_ABORT;
 }
 
+function do_report_unexpected_exception(ex, text) {
+  var caller_stack = Components.stack.caller;
+  text = text ? text + " - " : "";
+
+  _passed = false;
+  dump("TEST-UNEXPECTED-FAIL | " + caller_stack.filename + " | " + text +
+         "Unexpected exception " + ex + ", see following stack:\n" + ex.stack +
+         "\n");
+
+  _do_quit();
+  throw Components.results.NS_ERROR_ABORT;
+}
+
+function do_note_exception(ex, text) {
+  var caller_stack = Components.stack.caller;
+  text = text ? text + " - " : "";
+
+  dump("TEST-INFO | " + caller_stack.filename + " | " + text +
+         "Swallowed exception " + ex + ", see following stack:\n" + ex.stack +
+         "\n");
+}
+
 function do_check_neq(left, right, stack) {
   if (!stack)
     stack = Components.stack.caller;

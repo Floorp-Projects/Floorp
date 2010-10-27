@@ -43,7 +43,7 @@
 /**
  * Interface implemented by channels that support application caches.
  */
-[scriptable, uuid(9acfd21c-9c07-459f-8dae-ed2ffba23ddc)]
+[scriptable, uuid(8d9024e6-ab01-442d-8119-2f55d55d91b0)]
 interface nsIApplicationCacheChannel : nsIApplicationCacheContainer
 {
     /**
@@ -75,4 +75,11 @@ interface nsIApplicationCacheChannel : nsIApplicationCacheContainer
      * is called.
      */
     attribute boolean chooseApplicationCache;
+
+    /**
+     * A shortcut method to mark the cache item of this channel as 'foreign'.
+     * See the 'cache selection algorithm' and CACHE_SELECTION_RELOAD
+     * action handling in nsContentSink.
+     */
+    void markOfflineCacheEntryAsForeign();
 };

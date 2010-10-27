@@ -71,15 +71,13 @@ function onTabViewLoadedAndShown() {
   ok(TabView.isVisible(), "Tab View is visible");
 
   // go into private browsing and make sure Tab View becomes hidden
-  pb.privateBrowsingEnabled = true;
-  ok(!TabView.isVisible(), "Tab View is no longer visible");
-  afterAllTabsLoaded(function() {
+  togglePBAndThen(function() {
+    ok(!TabView.isVisible(), "Tab View is no longer visible");
     verifyPB();
     
     // exit private browsing and make sure Tab View is shown again
-    pb.privateBrowsingEnabled = false;
-    ok(TabView.isVisible(), "Tab View is visible again");
-    afterAllTabsLoaded(function() {
+    togglePBAndThen(function() {
+      ok(TabView.isVisible(), "Tab View is visible again");
       verifyNormal();
       
       // exit Tab View
@@ -95,14 +93,12 @@ function onTabViewHidden() {
   ok(!TabView.isVisible(), "Tab View is not visible");
   
   // go into private browsing and make sure Tab View remains hidden
-  pb.privateBrowsingEnabled = true;
-  ok(!TabView.isVisible(), "Tab View is still not visible");
-  afterAllTabsLoaded(function() {
+  togglePBAndThen(function() {
+    ok(!TabView.isVisible(), "Tab View is still not visible");
     verifyPB();
     
     // turn private browsing back off
-    pb.privateBrowsingEnabled = false;
-    afterAllTabsLoaded(function() {
+    togglePBAndThen(function() {
       verifyNormal();
       
       // clean up
@@ -137,6 +133,21 @@ function verifyNormal() {
     let browser = gBrowser.tabs[a].linkedBrowser;
     is(browser.currentURI.spec, normalURLs[a], "correct URL for normal mode");
   }
+}
+
+// ----------
+function togglePBAndThen(callback) {
+  function pbObserver(aSubject, aTopic, aData) {
+    if (aTopic != "private-browsing-transition-complete")
+      return;
+
+    Services.obs.removeObserver(pbObserver, "private-browsing-transition-complete");
+    
+    afterAllTabsLoaded(callback);
+  }
+
+  Services.obs.addObserver(pbObserver, "private-browsing-transition-complete", false);
+  pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
 }
 
 // ----------

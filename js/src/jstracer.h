@@ -243,7 +243,8 @@ enum LC_TMBits {
     LC_TMAbort    = 1<<19,
     LC_TMStats    = 1<<20,
     LC_TMRegexp   = 1<<21,
-    LC_TMTreeVis  = 1<<22
+    LC_TMTreeVis  = 1<<22,
+    LC_TMProfiler = 1<<23
 };
 
 #endif
@@ -633,7 +634,10 @@ struct TreeFragment : public LinkableFragment
     Queue<Value>            gcthings;
     Queue<const js::Shape*> shapes;
     unsigned                maxNativeStackSlots;
+    /* Gives the number of times we have entered this trace. */
     uintN                   execs;
+    /* Gives the total number of iterations executed by the trace (up to a limit). */
+    uintN                   iters;
 
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
@@ -655,6 +659,180 @@ VMFragment::toTreeFragment()
     JS_ASSERT(root == this);
     return static_cast<TreeFragment*>(this);
 }
+
+enum MonitorResult {
+    MONITOR_RECORDING,
+    MONITOR_NOT_RECORDING,
+    MONITOR_ERROR
+};
+
+const uintN PROFILE_MAX_INNER_LOOPS = 8;
+const uintN PROFILE_MAX_STACK = 6;
+
+/*
+ * A loop profile keeps track of the instruction mix of a hot loop. We use this
+ * information to predict whether tracing would be beneficial for the loop.
+ */
+class LoopProfile
+{
+public:
+    /* Instructions are divided into a few categories. */
+    enum OpKind {
+        OP_FLOAT, // Floating point arithmetic
+        OP_INT, // Integer arithmetic
+        OP_BIT, // Bit operations
+        OP_EQ, // == and !=
+        OP_EVAL, // Calls to eval()
+        OP_CALL, // JSOP_CALL instructions
+        OP_FWDJUMP, // Jumps with positive delta
+        OP_NEW, // JSOP_NEW instructions
+        OP_RECURSIVE, // Recursive calls
+        OP_TYPED_ARRAY, // Accesses to typed arrays
+        OP_LIMIT
+    };
+
+    /* The script in which the loop header lives. */
+    JSScript *script;
+
+    /* The bytecode locations of the loop header and the back edge. */
+    jsbytecode *top, *bottom;
+
+    /* Number of times we have seen this loop executed; used to decide when to profile. */
+    uintN hits;
+
+    /* Whether we have run a complete profile of the loop. */
+    bool profiled;
+
+    /* If we have profiled the loop, this saves the decision of whether to trace it. */
+    bool traceOK;
+
+    /*
+     * Sometimes loops are not good tracing opportunities, but they are nested inside
+     * loops that we want to trace. In that case, we set their traceOK flag to true,
+     * but we set execOK to false. That way, the loop is traced so that it can be
+     * integrated into the outer trace. But we never execute the trace on its only.
+     */
+    bool execOK;
+
+    /* Instruction mix for the loop and total number of instructions. */
+    uintN allOps[OP_LIMIT];
+    uintN numAllOps;
+
+    /* Instruction mix and total for the loop, excluding nested inner loops. */
+    uintN selfOps[OP_LIMIT];
+    uintN numSelfOps;
+
+    /*
+     * A prediction of the number of instructions we would have to compile
+     * for the loop. This takes into account the fact that a branch may cause us to
+     * compile every instruction after it twice. Polymorphic calls are
+     * treated as n-way branches.
+     */
+    double numSelfOpsMult;
+
+    /*
+     * This keeps track of the number of times that every succeeding instruction
+     * in the trace will have to be compiled. Every time we hit a branch, we
+     * double this number. Polymorphic calls multiply it by n (for n-way
+     * polymorphism).
+     */
+    double branchMultiplier;
+
+    /* Set to true if the loop is short (i.e., has fewer than 8 iterations). */
+    bool shortLoop;
+
+    /* Set to true if the loop may be short (has few iterations at profiling time). */
+    bool maybeShortLoop;
+
+    /*
+     * When we hit a nested loop while profiling, we record where it occurs
+     * and how many iterations we execute it.
+     */
+    struct InnerLoop {
+        JSScript *script;
+        jsbytecode *top, *bottom;
+        uintN iters;
+
+        InnerLoop() {}
+        InnerLoop(JSScript *script, jsbytecode *top, jsbytecode *bottom)
+            : script(script), top(top), bottom(bottom), iters(0) {}
+    };
+
+    /* These two variables track all the inner loops seen while profiling (up to a limit). */
+    InnerLoop innerLoops[PROFILE_MAX_INNER_LOOPS];
+    uintN numInnerLoops;
+
+    /*
+     * These two variables track the loops that we are currently nested
+     * inside while profiling. Loops get popped off here when they exit.
+     */
+    InnerLoop loopStack[PROFILE_MAX_INNER_LOOPS];
+    uintN loopStackDepth;
+
+    /*
+     * These fields keep track of values on the JS stack. If the stack grows larger
+     * than PROFILE_MAX_STACK, we continue to track sp, but we return conservative results
+     * for stackTop().
+     */
+    struct StackValue {
+        bool isConst;
+        bool hasValue;
+        int value;
+
+        StackValue() : isConst(false), hasValue(false) {}
+        StackValue(bool isConst) : isConst(isConst), hasValue(false) {}
+        StackValue(bool isConst, int value) : isConst(isConst), hasValue(true), value(value) {}
+    };
+    StackValue stack[PROFILE_MAX_STACK];
+    uintN sp;
+
+    inline void stackClear() { sp = 0; }
+    
+    inline void stackPush(const StackValue &v) {
+        if (sp < PROFILE_MAX_STACK)
+            stack[sp++] = v;
+        else
+            stackClear();
+    }
+
+    inline void stackPop() { if (sp > 0) sp--; }
+
+    inline StackValue stackAt(int pos) {
+        pos += sp;
+        if (pos >= 0 && uintN(pos) < PROFILE_MAX_STACK)
+            return stack[pos];
+        else
+            return StackValue(false);
+    }
+    
+    LoopProfile(JSScript *script, jsbytecode *top, jsbytecode *bottom);
+
+    enum ProfileAction {
+        ProfContinue,
+        ProfComplete
+    };
+
+    /* These two functions track the instruction mix. */
+    inline void increment(OpKind kind)
+    {
+        allOps[kind]++;
+        if (loopStackDepth == 0)
+            selfOps[kind]++;
+    }
+
+    inline uintN count(OpKind kind) { return allOps[kind]; }
+
+    /* Called for every back edge being profiled. */
+    MonitorResult profileLoopEdge(JSContext* cx, uintN& inlineCallCount);
+    
+    /* Called for every instruction being profiled. */
+    ProfileAction profileOperation(JSContext *cx, JSOp op);
+
+    /* Once a loop's profile is done, these decide whether it should be traced. */
+    bool isCompilationExpensive(JSContext *cx, uintN depth);
+    bool isCompilationUnprofitable(JSContext *cx, uintN depth);
+    void decide(JSContext *cx);
+};
 
 /*
  * BUILTIN_NO_FIXUP_NEEDED indicates that after the initial LeaveTree of a deep
@@ -815,12 +993,6 @@ enum TypeConsensus
     TypeConsensus_Bad           /* Typemaps are not compatible */
 };
 
-enum MonitorResult {
-    MONITOR_RECORDING,
-    MONITOR_NOT_RECORDING,
-    MONITOR_ERROR
-};
-
 enum TracePointAction {
     TPA_Nothing,
     TPA_RanStuff,
@@ -835,6 +1007,9 @@ typedef HashMap<nanojit::LIns*, JSObject*> GuardedShapeTable;
 #else
 # define AbortRecording(cx, reason) AbortRecordingImpl(cx)
 #endif
+
+void
+AbortProfiling(JSContext *cx);
 
 class TraceRecorder
 {
@@ -1441,9 +1616,9 @@ class TraceRecorder
     friend class DetermineTypesVisitor;
     friend class RecursiveSlotMap;
     friend class UpRecursiveSlotMap;
-    friend MonitorResult MonitorLoopEdge(JSContext*, uintN&);
-    friend TracePointAction MonitorTracePoint(JSContext*, uintN &inlineCallCount,
-                                              bool &blacklist);
+    friend MonitorResult RecordLoopEdge(JSContext*, uintN&);
+    friend TracePointAction RecordTracePoint(JSContext*, uintN &inlineCallCount,
+                                             bool *blacklist);
     friend AbortResult AbortRecording(JSContext*, const char*);
     friend class BoxArg;
     friend void TraceMonitor::sweep();
@@ -1497,6 +1672,7 @@ class TraceRecorder
 #define TRACING_ENABLED(cx)       ((cx)->traceJitEnabled)
 #define REGEX_JIT_ENABLED(cx)     ((cx)->traceJitEnabled || (cx)->methodJitEnabled)
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
+#define TRACE_PROFILER(cx)        (JS_TRACE_MONITOR(cx).profile)
 #define SET_TRACE_RECORDER(cx,tr) (JS_TRACE_MONITOR(cx).recorder = (tr))
 
 #define JSOP_IN_RANGE(op,lo,hi)   (uintN((op) - (lo)) <= uintN((hi) - (lo)))
@@ -1528,8 +1704,15 @@ class TraceRecorder
 extern JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount);
 
+extern JS_REQUIRES_STACK MonitorResult
+ProfileLoopEdge(JSContext* cx, uintN& inlineCallCount);
+
 extern JS_REQUIRES_STACK TracePointAction
-MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool& blacklist);
+RecordTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist);
+
+extern JS_REQUIRES_STACK TracePointAction
+MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
+                  void** traceData, uintN *traceEpoch);
 
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);

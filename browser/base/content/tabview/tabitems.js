@@ -202,11 +202,10 @@ function TabItem(tab, options) {
   this._updateDebugBounds();
 
   TabItems.register(this);
-  
-  if (!this.reconnected) {
+
+  if (!this.reconnected)
     GroupItems.newTab(this, options);
-  }
-  
+
   // tabs which were not reconnected at all or were not immediately added
   // to a group get the same treatment.
   if (!this.reconnected || (reconnected && !reconnected.addedToGroup) ) {
@@ -804,7 +803,7 @@ let TabItems = {
         let oldURL = tabItem.url;
         tabItem.url = tabUrl;
 
-        if (!tabItem.reconnected && (oldURL == 'about:blank' || !oldURL))
+        if (!tabItem.reconnected)
           this.reconnect(tabItem);
 
         tabItem.save();
@@ -1057,10 +1056,10 @@ let TabItems = {
         item.reconnected = true;
         found = {addedToGroup: tabData.groupID};
       } else {
-        // if it's not a blank tab or it belongs to a group, it would mean 
-        // the item is reconnected.
-        item.reconnected = 
-          (item.tab.linkedBrowser.currentURI.spec != 'about:blank' || item.parent);
+        // We should never have any orphaned tabs. Therefore, item is not 
+        // connected if it has no parent and GroupItems.newTab() would handle 
+        // the group creation.
+        item.reconnected = (item.parent != null);
       }
       item.save();
 

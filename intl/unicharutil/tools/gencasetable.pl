@@ -383,6 +383,38 @@ for($idx=0;$idx<8;$idx++)
       printf OUT "\n";
    }
 }
+print OUT "};\n\n";
+
+######################################################################
+#
+# Print out gASCIIToLower table
+#
+######################################################################
+print OUT "// We map x -> x, except for upper-case letters,\n";
+print OUT "// which we map to their lower-case equivalents.\n";
+print OUT "static const PRUint8 gASCIIToLower [128] = {\n";
+
+# Map x -> x, except for upper-case letters, which we map to lower-case
+# letters.
+for($idx=0; $idx < 128; $idx++)
+{
+  if ($idx % 16 == 0) {
+    print OUT "    "
+  }
+
+  if (65 <= $idx && $idx <= 90) {
+    printf OUT "0x%02x", ($idx + 0x20);
+  } else {
+    printf OUT "0x%02x", $idx;
+  }
+
+  if (($idx+1) % 16 != 0) {
+    print OUT ", ";
+  }
+  else {
+    print OUT ",\n";
+  }
+}
 print OUT "};\n";
 
 
