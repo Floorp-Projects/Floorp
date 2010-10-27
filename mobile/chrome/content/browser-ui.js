@@ -1718,6 +1718,7 @@ var FindHelperUI = {
     if (aElementRect && Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("findhelper.autozoom")) {
       let zoomLevel = Browser._getZoomLevelForRect(aElementRect);
       zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+      zoomLevel = Browser.selectedTab.clampZoomLevel(zoomLevel);
 
       let zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
       Browser.animatedZoomTo(zoomRect);
@@ -2003,6 +2004,7 @@ var FormHelperUI = {
       // Zoom to an element by keeping the caret into view
       let zoomLevel = this._getZoomLevelForRect(aElementRect);
       zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+      zoomLevel = Browser.selectedTab.clampZoomLevel(zoomLevel);
 
       zoomRect = this._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
       Browser.animatedZoomTo(zoomRect);
@@ -2049,8 +2051,6 @@ var FormHelperUI = {
   },
 
   _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
-    const margin = 30;
-
     let browser = getBrowser();
     x = x * browser.scale;
     y = y * browser.scale;
@@ -2060,7 +2060,7 @@ var FormHelperUI = {
     let oldScale = browser.scale;
     let zoomRatio = zoomLevel / oldScale;
     let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
-    let result = new Rect((x - newVisW / 2) - margin / 2, y - newVisH / 2, newVisW + margin, newVisH);
+    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
 
     // Make sure rectangle doesn't poke out of viewport
     return result.translateInside(new Rect(0, 0, browser.contentDocumentWidth * oldScale,
@@ -2068,7 +2068,8 @@ var FormHelperUI = {
   },
 
   _getZoomLevelForRect: function _getZoomLevelForRect(aRect) {
-    let zoomLevel = this.visibleScreenArea.width / aRect.width;
+    const margin = 30;
+    let zoomLevel = this.visibleScreenArea.width / (aRect.width + margin);
     return Util.clamp(zoomLevel, kBrowserFormZoomLevelMin, kBrowserFormZoomLevelMax);
   },
 
