@@ -6182,6 +6182,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
           mFlash10Quirks = StringBeginsWith(description, flash10Head);
 #endif
+
+          // Changing to windowless mode changes the NPWindow geometry.
+          mObjectFrame->FixupWindow(mObjectFrame->GetContentRect().Size());
         } else if (mWidget) {
           nsIWidget* parent = mWidget->GetParent();
           NS_ASSERTION(parent, "Plugin windows must not be toplevel");
