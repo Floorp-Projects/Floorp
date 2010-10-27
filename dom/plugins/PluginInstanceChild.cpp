@@ -2532,27 +2532,7 @@ PluginInstanceChild::ShowPluginFrame()
     nsIntRect rect = mAccumulatedInvalidRect;
     mAccumulatedInvalidRect.Empty();
 
-#ifdef MOZ_X11
-    // We can read safely from XSurface, because PluginHost is not able to modify that surface
-    if (mBackSurface && mBackSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
-        if (!mSurfaceDifferenceRect.IsEmpty()) {
-            // Read back previous content
-            nsRefPtr<gfxContext> ctx = new gfxContext(mCurrentSurface);
-            ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-            ctx->SetSource(mBackSurface);
-            // Subtract from mSurfaceDifferenceRect area which is overlapping with rect
-            nsIntRegion result;
-            result.Sub(mSurfaceDifferenceRect, nsIntRegion(rect));
-            nsIntRegionRectIterator iter(result);
-            const nsIntRect* r;
-            while ((r = iter.Next()) != nsnull) {
-                ctx->Rectangle(GfxFromNsRect(*r));
-            }
-            ctx->Fill();
-        }
-    } else
-#endif
-    {
+    if (!ReadbackDifferenceRect(rect)) {
         // Just repaint whole plugin, because we cannot read back from Shmem which is owned by another process
         rect.SetRect(0, 0, mWindow.width, mWindow.height);
     }
@@ -2609,6 +2589,42 @@ PluginInstanceChild::ShowPluginFrame()
     }
     mSurfaceDifferenceRect = rect;
     return true;
+}
+
+bool
+PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
+{
+    if (!mBackSurface)
+        return false;
+
+    // We can read safely from XSurface and SharedDIBSurface, because
+    // PluginHost is not able to modify that surface
+#if defined(MOZ_X11)
+    if (mBackSurface->GetType() != gfxASurface::SurfaceTypeXlib)
+        return false;
+#elif defined(XP_WIN)
+    if (!SharedDIBSurface::IsSharedDIBSurface(mBackSurface))
+        return false;
+#else
+    return false;
+#endif
+
+    if (mSurfaceDifferenceRect.IsEmpty())
+        return true;
+
+    // Read back previous content
+    nsRefPtr<gfxContext> ctx = new gfxContext(mCurrentSurface);
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->SetSource(mBackSurface);
+    // Subtract from mSurfaceDifferenceRect area which is overlapping with rect
+    nsIntRegion result;
+    result.Sub(mSurfaceDifferenceRect, nsIntRegion(rect));
+    nsIntRegionRectIterator iter(result);
+    const nsIntRect* r;
+    while ((r = iter.Next()) != nsnull) {
+        ctx->Rectangle(GfxFromNsRect(*r));
+    }
+    ctx->Fill();
 }
 
 void

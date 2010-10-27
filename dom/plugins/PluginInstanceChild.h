@@ -394,6 +394,11 @@ private:
     // 4) Send it to parent process.
     bool ShowPluginFrame(void);
 
+    // If we can read back safely from mBackSurface, copy
+    // mSurfaceDifferenceRect from mBackSurface to mFrontSurface.
+    // @return Whether the back surface could be read.
+    bool ReadbackDifferenceRect(const nsIntRect& rect);
+
     // Post ShowPluginFrame task
     void AsyncShowPluginFrame(void);
 
