@@ -1636,7 +1636,7 @@ void
 nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
                                           nsEventStates aOldState, PRBool aSync)
 {
-  LOG(("OBJLC [%p]: Notifying about state change: (%u, %lx) -> (%u, %lx) (sync=%i)\n",
+  LOG(("OBJLC [%p]: Notifying about state change: (%u, %llx) -> (%u, %llx) (sync=%i)\n",
        this, aOldType, aOldState.GetInternalValue(), mType,
        ObjectState().GetInternalValue(), aSync));
 

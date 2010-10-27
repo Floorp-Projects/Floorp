@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Table creation in ARIA dialog test</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function showARIADialog(aID)
+    {
+      this.node = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.node)
+      ];
+
+      this.invoke = function showARIADialog_invoke()
+      {
+        this.node.style.display = "block";
+        getNode("input").value = "hello";
+        getNode("cell").textContent = "cell1";
+        getNode("input").focus();
+      }
+
+      this.finalCheck = function showARIADialog_finalCheck()
+      {
+        var tree = {
+          role: ROLE_DIALOG,
+          children: [
+            {
+              role: ROLE_TABLE,
+              children: [
+                {
+                  role: ROLE_ROW,
+                  children: [
+                    {
+                      role: ROLE_CELL,
+                      children: [ { role: ROLE_TEXT_LEAF } ]
+                    },
+                    {
+                      role: ROLE_CELL,
+                      children: [ { role: ROLE_ENTRY } ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        };
+        testAccessibleTree(aID, tree);
+      }
+
+      this.getID = function showARIADialog_getID()
+      {
+        return "show ARIA dialog";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      // make the accessible an inaccessible
+      gQueue.push(new showARIADialog("dialog"));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Rework accessible tree update code"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
+    Mozilla Bug 570275
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="dialog" role="dialog" style="display: none;">
+    <table>
+      <tr><td id="cell"></td><td><input id="input"></td>
+    </table>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

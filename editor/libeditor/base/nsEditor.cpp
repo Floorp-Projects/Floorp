@@ -2278,7 +2278,7 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
       region = nsISelectionController::SELECTION_ANCHOR_REGION;
 
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                    region, PR_FALSE);
+                                    region, 0);
   }
 
   return NS_OK;

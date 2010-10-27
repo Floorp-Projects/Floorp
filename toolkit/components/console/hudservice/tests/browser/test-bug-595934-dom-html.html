@@ -1,0 +1,15 @@
+<html lang="en">
+  <head>
+    <title>Web Console test for bug 595934 - category: DOM:HTML</title>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript"><!--
+      window.addEventListener("load", function() {
+        document.all.foobar.style.color = "#00f";
+      }, false);
+    // --></script>
+  </head>
+  <body>
+    <p id="foobar">Web Console test for bug 595934 - category "DOM:HTML".</p>
+  </body>
+</html>

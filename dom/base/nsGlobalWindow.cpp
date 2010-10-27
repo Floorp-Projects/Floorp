@@ -242,6 +242,7 @@ using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
+nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sOuterWindowsById = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -653,7 +654,10 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
   mMayHavePaintEventListener(PR_FALSE), mMayHaveTouchEventListener(PR_FALSE),
   mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
-  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
+  mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
+  // Make sure no actual window ends up with mWindowID == 0
+  mWindowID(++gNextWindowID)
+ {}
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
 
@@ -730,7 +734,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mCleanedUp(PR_FALSE),
     mCallCleanUpAfterModalDialogCloses(PR_FALSE),
-    mWindowID(gNextWindowID++),
     mDialogAbuseCount(0),
     mDialogDisabled(PR_FALSE)
 {
@@ -771,6 +774,18 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
     mObserver = nsnull;
     SetIsProxy();
+
+    if (!sOuterWindowsById) {
+      sOuterWindowsById = new WindowByIdTable();
+      if (!sOuterWindowsById->Init()) {
+        delete sOuterWindowsById;
+        sOuterWindowsById = nsnull;
+      }
+    }
+
+    if (sOuterWindowsById) {
+      sOuterWindowsById->Put(mWindowID, this);
+    }
   }
 
   // We could have failed the first time through trying
@@ -823,8 +838,13 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
 nsGlobalWindow::~nsGlobalWindow()
 {
+  if (sOuterWindowsById) {
+    sOuterWindowsById->Remove(mWindowID);
+  }
   if (!--gRefCnt) {
     NS_IF_RELEASE(gEntropyCollector);
+    delete sOuterWindowsById;
+    sOuterWindowsById = nsnull;
   }
 #ifdef DEBUG
   nsCAutoString url;
@@ -8164,6 +8184,22 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+  if (!nsCRT::strcmp(aTopic, "offline-cache-update-added")) {
+    if (mApplicationCache)
+      return NS_OK;
+
+    // Instantiate the application object now. It observes update belonging to
+    // this window's document and correctly updates the applicationCache object
+    // state.
+    nsCOMPtr<nsIDOMOfflineResourceList> applicationCache;
+    GetApplicationCache(getter_AddRefs(applicationCache));
+    nsCOMPtr<nsIObserver> observer = do_QueryInterface(applicationCache);
+    if (observer)
+      observer->Observe(aSubject, aTopic, aData);
+
+    return NS_OK;
+  }
+
   NS_WARNING("unrecognized topic in nsGlobalWindow::Observe");
   return NS_ERROR_FAILURE;
 }
@@ -10165,6 +10201,12 @@ nsNavigator::SetDocShell(nsIDocShell *aDocShell)
     mGeolocation->Shutdown();
     mGeolocation = nsnull;
   }
+
+  if (mNotification)
+  {
+    mNotification->Shutdown();
+    mNotification = nsnull;
+  }
 }
 
 //*****************************************************************************
@@ -10552,6 +10594,13 @@ nsNavigator::LoadingNewDocument()
     mGeolocation->Shutdown();
     mGeolocation = nsnull;
   }
+
+  if (mNotification)
+  {
+    mNotification->Shutdown();
+    mNotification = nsnull;
+  }
+
 }
 
 nsresult
@@ -10715,6 +10764,11 @@ NS_IMETHODIMP nsNavigator::GetMozNotification(nsIDOMDesktopNotificationCenter **
   NS_ENSURE_ARG_POINTER(aRetVal);
   *aRetVal = nsnull;
 
+  if (mNotification) {
+    NS_ADDREF(*aRetVal = mNotification);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
     
@@ -10727,14 +10781,12 @@ NS_IMETHODIMP nsNavigator::GetMozNotification(nsIDOMDesktopNotificationCenter **
   nsIScriptContext *scx = sgo->GetContext();
   NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
 
-  nsRefPtr<nsDesktopNotificationCenter> notification =
-    new nsDesktopNotificationCenter(window->GetCurrentInnerWindow(),
-                                    scx);
-
-  if (!notification) {
+  mNotification = new nsDesktopNotificationCenter(window->GetCurrentInnerWindow(),
+                                                  scx);
+  if (!mNotification) {
     return NS_ERROR_FAILURE;
   }
 
-  *aRetVal = notification.forget().get();
+  NS_ADDREF(*aRetVal = mNotification);    
   return NS_OK; 
 }

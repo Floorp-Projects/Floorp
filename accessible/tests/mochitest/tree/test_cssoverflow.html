@@ -30,26 +30,22 @@
 
     function focusAnchor(aID)
     {
-      this.DOMNode = getNode(aID);
-      this.link = getAccessible(this.DOMNode);
-      this.linkChild = this.link.firstChild;
-      this.linkChildNode = getAccessible(this.linkChild, [nsIAccessNode]).DOMNode;
+      this.linkNode = getNode(aID);
+      this.link = getAccessible(this.linkNode);
 
       this.eventSeq = [
-//        new invokerChecker(EVENT_HIDE, this.linkChild),
-//        new invokerChecker(EVENT_SHOW, getAccessible, this.linkChildNode),
-        new invokerChecker(EVENT_FOCUS, this.link)
-      ];
-
-      this.unexpectedEventSeq = [
-        new invokerChecker(EVENT_HIDE, this.link),
-        new invokerChecker(EVENT_SHOW, getAccessible, this.DOMNode)
+        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
       ];
 
       this.invoke = function focusAnchor_invoke()
       {
-        todo(false, "enable event hide/show events");
-        getNode(aID).focus();
+        this.linkNode.focus();
+      }
+
+      this.check = function focusAnchor_check(aEvent)
+      {
+        isnot(this.link, aEvent.accessible,
+              "Focus should be fired against new link accessible!");
       }
 
       this.getID = function focusAnchor_getID()
@@ -58,34 +54,27 @@
       }
     }
 
-    function tabAnchor(aID, aPrevID)
+    function tabAnchor(aID)
     {
-      this.DOMNode = getNode(aID);
-      this.link = getAccessible(this.DOMNode);
-      this.linkChild = this.link.firstChild;
-      this.linkChildNode = getAccessible(this.linkChild, [nsIAccessNode]).DOMNode;
-      this.prevLink = getAccessible(aPrevID);
-      this.prevLinkNode = getAccessible(this.prevLink, [nsIAccessNode]).DOMNode;
+      this.linkNode = getNode(aID);
+      this.link = getAccessible(this.linkNode);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, this.prevLink),
-        new invokerChecker(EVENT_SHOW, getAccessible, this.prevLinkNode),
-        new invokerChecker(EVENT_HIDE, this.linkChild),
-        new invokerChecker(EVENT_SHOW, getAccessible, this.linkChildNode),
-        new invokerChecker(EVENT_FOCUS, this.link)
+        new invokerChecker(EVENT_FOCUS, getAccessible, this.linkNode)
       ];
 
-      this.unexpectedEventSeq = [
-        new invokerChecker(EVENT_HIDE, this.link),
-        new invokerChecker(EVENT_SHOW, getAccessible, this.DOMNode)
-      ];
-
-      this.invoke = function focusAnchor_invoke()
+      this.invoke = function tabAnchor_invoke()
       {
         synthesizeKey("VK_TAB", { shiftKey: false });
       }
 
-      this.getID = function focusAnchor_getID()
+      this.check = function tabAnchor_check(aEvent)
+      {
+        isnot(this.link, aEvent.accessible,
+              "Focus should be fired against new link accessible!");
+      }
+
+      this.getID = function tabAnchor_getID()
       {
         return "focus a:focus{overflow:scroll} #2";
       }
@@ -95,20 +84,20 @@
     // Do tests
 
     var gQueue = null;
-    // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
 
     function doTests()
     {
       gQueue = new eventQueue();
 
       // CSS 'overflow: scroll' property setting and unsetting causes accessible
-      // recreation (and fire show/hide events) if the accessible is not
-      // focused. If it's focused its children are recreated. For example,
-      // focusing the HTML:a with ':focus {overflow: scroll; }' CSS style
-      // shouldn't cause of HTML:a accessible recreation. The same time blur
-      // makes its accessible to be recreated.
-      gQueue.push(new focusAnchor("a"))
-      gQueue.push(new tabAnchor("a2", "a"));
+      // recreation (and fire show/hide events). For example, the focus and
+      // blur of HTML:a with ':focus {overflow: scroll; }' CSS style causes its
+      // accessible recreation. The focus event should be fired on new
+      // accessible.
+      gQueue.push(new focusAnchor("a"));
+      gQueue.push(new tabAnchor("a2"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -124,6 +113,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=591163"
      title="mochitest for bug 413777: focus the a:focus {overflow: scroll;} shouldn't recreate HTML a accessible">
     Mozilla Bug 591163
+  </a><br>
+  <a target="_blank"
+     title="Rework accessible tree update code"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
+    Mozilla Bug 570275
   </a><br>
 
   <p id="display"></p>

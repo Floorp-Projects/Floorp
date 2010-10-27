@@ -71,6 +71,7 @@ CPPSRCS = \
   testScriptObject.cpp \
   testSetPropertyWithNativeGetterStubSetter.cpp \
   testBug604087.cpp \
+  testThreads.cpp \
   testTrap.cpp \
   testUTF8.cpp \
   testXDR.cpp \

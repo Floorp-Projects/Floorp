@@ -154,15 +154,13 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                  */
                 JS_ASSERT(pobj->hasMethodBarrier());
                 JSObject &funobj = shape->methodObject();
-                JS_ASSERT(&funobj == &pobj->lockedGetSlot(shape->slot).toObject());
+                JS_ASSERT(&funobj == &pobj->nativeGetSlot(shape->slot).toObject());
                 vword.setFunObj(funobj);
                 break;
             }
 
-            if (!pobj->generic() &&
-                shape->hasDefaultGetter() &&
-                pobj->containsSlot(shape->slot)) {
-                const Value &v = pobj->lockedGetSlot(shape->slot);
+            if (!pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot)) {
+                const Value &v = pobj->nativeGetSlot(shape->slot);
                 JSObject *funobj;
 
                 if (IsFunctionObject(v, &funobj)) {

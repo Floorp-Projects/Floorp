@@ -861,3 +861,56 @@ mjit::ProfileStubCall(VMFrame &f)
 }
 #endif
 
+#ifdef JS_POLYIC
+static int
+PICPCComparator(const void *key, const void *entry)
+{
+    const jsbytecode *pc = (const jsbytecode *)key;
+    const ic::PICInfo *pic = (const ic::PICInfo *)entry;
+
+    if (ic::PICInfo::CALL != pic->kind)
+        return ic::PICInfo::CALL - pic->kind;
+
+    /*
+     * We can't just return |pc - pic->pc| because the pointers may be
+     * far apart and an int (or even a ptrdiff_t) may not be large
+     * enough to hold the difference. C says that pointer subtraction
+     * is only guaranteed to work for two pointers into the same array.
+     */
+    if (pc < pic->pc)
+        return -1;
+    else if (pc == pic->pc)
+        return 0;
+    else
+        return 1;
+}
+
+uintN
+mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
+{
+    ic::PICInfo *pic;
+    
+    if (mjit::JITScript *jit = script->getJIT(false)) {
+        pic = (ic::PICInfo *)bsearch(pc, jit->pics, jit->nPICs, sizeof(jit->pics[0]),
+                                     PICPCComparator);
+        if (pic)
+            return pic->stubsGenerated + 1; /* Add 1 for the inline path. */
+    }
+    
+    if (mjit::JITScript *jit = script->getJIT(true)) {
+        pic = (ic::PICInfo *)bsearch(pc, jit->pics,
+                                     jit->nPICs, sizeof(jit->pics[0]),
+                                     PICPCComparator);
+        if (pic)
+            return pic->stubsGenerated + 1; /* Add 1 for the inline path. */
+    }
+
+    return 1;
+}
+#else
+uintN
+mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
+{
+    return 1;
+}
+#endif

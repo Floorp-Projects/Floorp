@@ -428,7 +428,7 @@ protected:
   void FireOnChange();
 
   /**
-   * Visit a the group of radio buttons this radio belongs to
+   * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
    */
   nsresult VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent);

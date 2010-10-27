@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 200 200">
-<g id="g1" transform="translate(100, 100)">
-<circle cx="0" cy="0" r="50" fill="green" />
-<text x="0" y="10" font-size="24" text-anchor="middle" fill="yellow">Kibology</text>
-</g>
-</svg>

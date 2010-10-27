@@ -48,6 +48,7 @@ using RequestHeaderTuples;
 using nsHttpResponseHead;
 using nsHttpAtom;
 using IPC::URI;
+using IPC::InputStream;
 
 namespace mozilla {
 namespace net {
@@ -68,15 +69,17 @@ parent:
             PRUint32            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
-            nsCString           uploadStreamData,
-            PRInt32             uploadStreamInfo,
+            InputStream         uploadStream,
+            PRBool              uploadStreamHasHeaders,
             PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,
             PRBool              forceAllowThirdPartyCookie,
             bool                resumeAt,
             PRUint64            startPos,
-            nsCString           entityID);
+            nsCString           entityID,
+            bool                chooseApplicationCache,
+            nsCString           appCacheClientID);
 
   SetPriority(PRUint16 priority);
 
@@ -98,6 +101,21 @@ parent:
   // OnStopRequest, and send this msg (instead of __delete__) to allow
   // partial cleanup on parent. 
   DocumentChannelCleanup();
+
+  // This might have to be sync. If this fails we must fail the document load
+  // to avoid endless loop.
+  //
+  // Explanation: the document loaded was loaded from the offline cache. But
+  // the cache group id (the manifest URL) of the cache group it was loaded 
+  // from is different then the manifest the document refers to in the html 
+  // tag. If we detect this during the cache selection algorithm, we must not 
+  // load this document from the offline cache group it was just loaded from.
+  // Marking the cache entry as foreign in its cache group will prevent
+  // the document to load from the bad offline cache group. After it is marked,
+  // we reload the document to take the effect. If we fail to mark the entry 
+  // as foreign, we will end up in the same situation and reload again and
+  // again, indefinitely.
+  MarkOfflineCacheEntryAsForeign();
 
   __delete__();
 
@@ -134,6 +152,10 @@ child:
 
   // Called if redirect successful so that child can complete setup.
   Redirect3Complete();
+
+  // Associte the child with an application ids
+  AssociateApplicationCache(nsCString groupID,
+                            nsCString clientID);
 
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).

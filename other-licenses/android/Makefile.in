@@ -69,6 +69,8 @@ CSRCS = \
   rt.c \
   $(NULL)
 
+EXPORTS = APKOpen.h
+
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 
 WRAP_MALLOC_LIB =

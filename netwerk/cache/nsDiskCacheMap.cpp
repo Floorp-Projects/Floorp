@@ -847,13 +847,17 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         // write entry data to disk cache block file
         diskEntry->Swap();
         PRInt32 startBlock;
-        rv = mBlockFile[fileIndex - 1].WriteBlocks(diskEntry, size, blocks, &startBlock);
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        // update binding and cache map record
-        binding->mRecord.SetMetaBlocks(fileIndex, startBlock, blocks);
+        nsresult rv2 = mBlockFile[fileIndex - 1].WriteBlocks(diskEntry, size, blocks, &startBlock);
+        // Call UpdateRecord() even if WriteBlocks() has failed. We need to
+        // update the record because we've changed the eviction rank.
+        if (NS_SUCCEEDED(rv2)) {
+            // update binding and cache map record
+            binding->mRecord.SetMetaBlocks(fileIndex, startBlock, blocks);
+        }
         rv = UpdateRecord(&binding->mRecord);
         NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv2, rv2);
+
         // XXX we should probably write out bucket ourselves
         
         IncrementTotalSize(blocks, blockSize);

@@ -88,10 +88,9 @@ class nsChromeRegistryContent : public nsChromeRegistry
   void RegisterResource(const ResourceMapping& aResource);
   void RegisterOverride(const OverrideMapping& aOverride);
 
-  NS_OVERRIDE nsresult GetBaseURIFromPackage(const nsCString& aPackage,
+  NS_OVERRIDE nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                                  const nsCString& aProvider,
-                                 const nsCString& aPath,
-                                 nsIURI* *aResult);
+                                 const nsCString& aPath);
   NS_OVERRIDE nsresult GetFlagsFromPackage(const nsCString& aPackage, PRUint32* aFlags);
 
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;

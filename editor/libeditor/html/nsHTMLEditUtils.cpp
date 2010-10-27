@@ -432,6 +432,7 @@ nsHTMLEditUtils::IsFormWidget(nsIDOMNode *node)
       || (nodeAtom == nsEditProperty::select)
       || (nodeAtom == nsEditProperty::button)
       || (nodeAtom == nsEditProperty::output)
+      || (nodeAtom == nsEditProperty::keygen)
       || (nodeAtom == nsEditProperty::input);
 }
 
@@ -651,7 +652,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(isindex, PR_FALSE, PR_FALSE, GROUP_BLOCK | GROUP_HEAD_CONTENT,
        GROUP_NONE),
   ELEM(kbd, PR_TRUE, PR_TRUE, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
-  ELEM(keygen, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
+  ELEM(keygen, PR_FALSE, PR_FALSE, GROUP_FORMCONTROL, GROUP_NONE),
   ELEM(label, PR_TRUE, PR_FALSE, GROUP_FORMCONTROL, GROUP_INLINE_ELEMENT),
   ELEM(legend, PR_TRUE, PR_TRUE, GROUP_NONE, GROUP_INLINE_ELEMENT),
   ELEM(li, PR_TRUE, PR_FALSE, GROUP_LI, GROUP_FLOW_ELEMENT),
@@ -775,7 +776,7 @@ nsHTMLEditUtils::CanContain(PRInt32 aParent, PRInt32 aChild)
   }
 
   // Deprecated elements.
-  if (aChild == eHTMLTag_bgsound || aChild == eHTMLTag_keygen) {
+  if (aChild == eHTMLTag_bgsound) {
     return PR_FALSE;
   }
 

@@ -64,19 +64,15 @@
 // AccEvent constructors
 
 AccEvent::AccEvent(PRUint32 aEventType, nsAccessible* aAccessible,
-                   PRBool aIsAsync, EIsFromUserInput aIsFromUserInput,
-                   EEventRule aEventRule) :
-  mEventType(aEventType), mEventRule(aEventRule), mIsAsync(aIsAsync),
-  mAccessible(aAccessible)
+                   EIsFromUserInput aIsFromUserInput, EEventRule aEventRule) :
+  mEventType(aEventType), mEventRule(aEventRule), mAccessible(aAccessible)
 {
   CaptureIsFromUserInput(aIsFromUserInput);
 }
 
 AccEvent::AccEvent(PRUint32 aEventType, nsINode* aNode,
-                   PRBool aIsAsync, EIsFromUserInput aIsFromUserInput,
-                   EEventRule aEventRule) :
-  mEventType(aEventType), mEventRule(aEventRule), mIsAsync(aIsAsync),
-  mNode(aNode)
+                   EIsFromUserInput aIsFromUserInput, EEventRule aEventRule) :
+  mEventType(aEventType), mEventRule(aEventRule), mNode(aNode)
 {
   CaptureIsFromUserInput(aIsFromUserInput);
 }
@@ -218,36 +214,6 @@ AccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// AccReorderEvent
-////////////////////////////////////////////////////////////////////////////////
-
-AccReorderEvent::
-  AccReorderEvent(nsAccessible* aAccTarget, PRBool aIsAsynch,
-                  PRBool aIsUnconditional, nsINode* aReasonNode) :
-  AccEvent(::nsIAccessibleEvent::EVENT_REORDER, aAccTarget,
-           aIsAsynch, eAutoDetect, AccEvent::eCoalesceFromSameSubtree),
-  mUnconditionalEvent(aIsUnconditional), mReasonNode(aReasonNode)
-{
-}
-
-PRBool
-AccReorderEvent::IsUnconditionalEvent()
-{
-  return mUnconditionalEvent;
-}
-
-PRBool
-AccReorderEvent::HasAccessibleInReasonSubtree()
-{
-  if (!mReasonNode)
-    return PR_FALSE;
-
-  nsAccessible *accessible = GetAccService()->GetAccessible(mReasonNode);
-  return accessible || nsAccUtils::HasAccessibleChildren(mReasonNode);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // AccStateChangeEvent
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,9 +223,8 @@ AccReorderEvent::HasAccessibleInReasonSubtree()
 AccStateChangeEvent::
   AccStateChangeEvent(nsAccessible* aAccessible,
                       PRUint32 aState, PRBool aIsExtraState,
-                      PRBool aIsEnabled, PRBool aIsAsynch,
-                      EIsFromUserInput aIsFromUserInput):
-  AccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, aIsAsynch,
+                      PRBool aIsEnabled, EIsFromUserInput aIsFromUserInput):
+  AccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible,
            aIsFromUserInput, eAllowDupes),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
@@ -315,11 +280,11 @@ AccStateChangeEvent::CreateXPCOMObject()
 AccTextChangeEvent::
   AccTextChangeEvent(nsAccessible* aAccessible, PRInt32 aStart,
                      nsAString& aModifiedText, PRBool aIsInserted,
-                     PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput)
+                     EIsFromUserInput aIsFromUserInput)
   : AccEvent(aIsInserted ?
              static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_INSERTED) :
              static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_REMOVED),
-             aAccessible, aIsAsynch, aIsFromUserInput, eAllowDupes)
+             aAccessible, aIsFromUserInput, eAllowDupes)
   , mStart(aStart)
   , mIsInserted(aIsInserted)
   , mModifiedText(aModifiedText)
@@ -336,19 +301,44 @@ AccTextChangeEvent::CreateXPCOMObject()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// AccMutationEvent
+////////////////////////////////////////////////////////////////////////////////
+
+AccMutationEvent::
+  AccMutationEvent(PRUint32 aEventType, nsAccessible* aTarget,
+                   nsINode* aTargetNode, EIsFromUserInput aIsFromUserInput) :
+  AccEvent(aEventType, aTarget, aIsFromUserInput, eCoalesceFromSameSubtree)
+{
+  mNode = aTargetNode;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // AccHideEvent
 ////////////////////////////////////////////////////////////////////////////////
 
 AccHideEvent::
   AccHideEvent(nsAccessible* aTarget, nsINode* aTargetNode,
-               PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput) :
-  AccEvent(nsIAccessibleEvent::EVENT_HIDE, aTarget, aIsAsynch,
-           aIsFromUserInput, eCoalesceFromSameSubtree)
+               EIsFromUserInput aIsFromUserInput) :
+  AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget, aTargetNode,
+                   aIsFromUserInput)
 {
-  mNode = aTargetNode;
   mParent = mAccessible->GetCachedParent();
   mNextSibling = mAccessible->GetCachedNextSibling();
   mPrevSibling = mAccessible->GetCachedPrevSibling();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// AccShowEvent
+////////////////////////////////////////////////////////////////////////////////
+
+AccShowEvent::
+  AccShowEvent(nsAccessible* aTarget, nsINode* aTargetNode,
+               EIsFromUserInput aIsFromUserInput) :
+  AccMutationEvent(::nsIAccessibleEvent::EVENT_SHOW, aTarget, aTargetNode,
+                   aIsFromUserInput)
+{
 }
 
 
@@ -358,14 +348,14 @@ AccHideEvent::
 
 AccCaretMoveEvent::
   AccCaretMoveEvent(nsAccessible* aAccessible, PRInt32 aCaretOffset) :
-  AccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, PR_TRUE), // Currently always asynch
+  AccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible),
   mCaretOffset(aCaretOffset)
 {
 }
 
 AccCaretMoveEvent::
   AccCaretMoveEvent(nsINode* aNode) :
-  AccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, PR_TRUE), // Currently always asynch
+  AccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode),
   mCaretOffset(-1)
 {
 }
@@ -385,9 +375,8 @@ AccCaretMoveEvent::CreateXPCOMObject()
 
 AccTableChangeEvent::
   AccTableChangeEvent(nsAccessible* aAccessible, PRUint32 aEventType,
-                      PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols,
-                      PRBool aIsAsynch) :
-  AccEvent(aEventType, aAccessible, aIsAsynch),
+                      PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols) :
+  AccEvent(aEventType, aAccessible),
   mRowOrColIndex(aRowOrColIndex), mNumRowsOrCols(aNumRowsOrCols)
 {
 }

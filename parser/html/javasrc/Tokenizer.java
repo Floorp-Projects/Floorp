@@ -142,79 +142,77 @@ public class Tokenizer implements Locator {
 
     public static final int COMMENT_END = 36;
 
-    public static final int COMMENT_END_SPACE = 37;
+    public static final int COMMENT_END_BANG = 37;
 
-    public static final int COMMENT_END_BANG = 38;
+    public static final int NON_DATA_END_TAG_NAME = 38;
 
-    public static final int NON_DATA_END_TAG_NAME = 39;
+    public static final int MARKUP_DECLARATION_HYPHEN = 39;
 
-    public static final int MARKUP_DECLARATION_HYPHEN = 40;
+    public static final int MARKUP_DECLARATION_OCTYPE = 40;
 
-    public static final int MARKUP_DECLARATION_OCTYPE = 41;
+    public static final int DOCTYPE_UBLIC = 41;
 
-    public static final int DOCTYPE_UBLIC = 42;
+    public static final int DOCTYPE_YSTEM = 42;
 
-    public static final int DOCTYPE_YSTEM = 43;
+    public static final int AFTER_DOCTYPE_PUBLIC_KEYWORD = 43;
 
-    public static final int AFTER_DOCTYPE_PUBLIC_KEYWORD = 44;
+    public static final int BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS = 44;
 
-    public static final int BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS = 45;
+    public static final int AFTER_DOCTYPE_SYSTEM_KEYWORD = 45;
 
-    public static final int AFTER_DOCTYPE_SYSTEM_KEYWORD = 46;
+    public static final int CONSUME_CHARACTER_REFERENCE = 46;
 
-    public static final int CONSUME_CHARACTER_REFERENCE = 47;
+    public static final int CONSUME_NCR = 47;
 
-    public static final int CONSUME_NCR = 48;
+    public static final int CHARACTER_REFERENCE_TAIL = 48;
 
-    public static final int CHARACTER_REFERENCE_TAIL = 49;
+    public static final int HEX_NCR_LOOP = 49;
 
-    public static final int HEX_NCR_LOOP = 50;
+    public static final int DECIMAL_NRC_LOOP = 50;
 
-    public static final int DECIMAL_NRC_LOOP = 51;
+    public static final int HANDLE_NCR_VALUE = 51;
 
-    public static final int HANDLE_NCR_VALUE = 52;
+    public static final int HANDLE_NCR_VALUE_RECONSUME = 52;
 
-    public static final int HANDLE_NCR_VALUE_RECONSUME = 53;
+    public static final int CHARACTER_REFERENCE_HILO_LOOKUP = 53;
 
-    public static final int CHARACTER_REFERENCE_HILO_LOOKUP = 54;
+    public static final int SELF_CLOSING_START_TAG = 54;
 
-    public static final int SELF_CLOSING_START_TAG = 55;
+    public static final int CDATA_START = 55;
 
-    public static final int CDATA_START = 56;
+    public static final int CDATA_SECTION = 56;
 
-    public static final int CDATA_SECTION = 57;
+    public static final int CDATA_RSQB = 57;
 
-    public static final int CDATA_RSQB = 58;
+    public static final int CDATA_RSQB_RSQB = 58;
 
-    public static final int CDATA_RSQB_RSQB = 59;
+    public static final int SCRIPT_DATA_LESS_THAN_SIGN = 59;
 
-    public static final int SCRIPT_DATA_LESS_THAN_SIGN = 60;
+    public static final int SCRIPT_DATA_ESCAPE_START = 60;
 
-    public static final int SCRIPT_DATA_ESCAPE_START = 61;
+    public static final int SCRIPT_DATA_ESCAPE_START_DASH = 61;
 
-    public static final int SCRIPT_DATA_ESCAPE_START_DASH = 62;
+    public static final int SCRIPT_DATA_ESCAPED_DASH = 62;
 
-    public static final int SCRIPT_DATA_ESCAPED_DASH = 63;
+    public static final int SCRIPT_DATA_ESCAPED_DASH_DASH = 63;
 
-    public static final int SCRIPT_DATA_ESCAPED_DASH_DASH = 64;
+    public static final int BOGUS_COMMENT_HYPHEN = 64;
 
-    public static final int BOGUS_COMMENT_HYPHEN = 65;
+    public static final int RAWTEXT_RCDATA_LESS_THAN_SIGN = 65;
 
-    public static final int RAWTEXT_RCDATA_LESS_THAN_SIGN = 66;
+    public static final int SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN = 66;
 
-    public static final int SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN = 67;
+    public static final int SCRIPT_DATA_DOUBLE_ESCAPE_START = 67;
 
-    public static final int SCRIPT_DATA_DOUBLE_ESCAPE_START = 68;
+    public static final int SCRIPT_DATA_DOUBLE_ESCAPED = 68;
 
-    public static final int SCRIPT_DATA_DOUBLE_ESCAPED = 69;
+    public static final int SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN = 69;
 
-    public static final int SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN = 70;
+    public static final int SCRIPT_DATA_DOUBLE_ESCAPED_DASH = 70;
 
-    public static final int SCRIPT_DATA_DOUBLE_ESCAPED_DASH = 71;
+    public static final int SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH = 71;
 
-    public static final int SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH = 72;
-
-    public static final int SCRIPT_DATA_DOUBLE_ESCAPE_END = 73;
+    public static final int SCRIPT_DATA_DOUBLE_ESCAPE_END = 72;
 
     /**
      * Magic value for UTF-16 operations.
@@ -2596,75 +2594,6 @@ public class Tokenizer implements Locator {
                                  * token's data.
                                  */
                                 adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
-                                /*
-                                 * Switch to the comment state.
-                                 */
-                                state = transition(state, Tokenizer.COMMENT, reconsume, pos);
-                                continue stateloop;
-                        }
-                    }
-                case COMMENT_END_SPACE:
-                    for (;;) {
-                        if (++pos == endPos) {
-                            break stateloop;
-                        }
-                        c = checkChar(buf, pos);
-                        /*
-                         * Comment end space state
-                         * 
-                         * Consume the next input character:
-                         */
-                        switch (c) {
-                            case '>':
-                                /*
-                                 * U+003E GREATER-THAN SIGN (>) Emit the comment
-                                 * token.
-                                 */
-                                emitComment(0, pos);
-                                /*
-                                 * Switch to the data state.
-                                 */
-                                state = transition(state, Tokenizer.DATA, reconsume, pos);
-                                continue stateloop;
-                            case '-':
-                                /*
-                                 * U+002D HYPHEN-MINUS (-) Switch to the comment
-                                 * end dash state.
-                                 */
-                                appendLongStrBuf(c);
-                                /*
-                                 * Switch to the comment end dash state.
-                                 */
-                                state = transition(state, Tokenizer.COMMENT_END_DASH, reconsume, pos);
-                                continue stateloop;
-                            case ' ':
-                            case '\t':
-                            case '\u000C':
-                                /*
-                                 * U+0009 CHARACTER TABULATION U+000A LINE FEED
-                                 * (LF) U+000C FORM FEED (FF) U+0020 SPACE
-                                 * Append the input character to the comment
-                                 * token's data. Stay in the comment end space
-                                 * state.
-                                 */
-                                appendLongStrBuf(c);
-                                continue;
-                            case '\r':
-                                appendLongStrBufCarriageReturn();
-                                break stateloop;
-                            case '\n':
-                                appendLongStrBufLineFeed();
-                                continue;
-                            case '\u0000':
-                                c = '\uFFFD';
-                                // fall thru
-                            default:
-                                /*
-                                 * Anything else Append the input character to
-                                 * the comment token's data. Switch to the
-                                 * comment state.
-                                 */
-                                appendLongStrBuf(c);
                                 /*
                                  * Switch to the comment state.
                                  */
@@ -6132,7 +6061,6 @@ public class Tokenizer implements Locator {
                     break eofloop;
                 case COMMENT_START:
                 case COMMENT:
-                case COMMENT_END_SPACE:
                     /*
                      * EOF Parse error.
                      */
@@ -6997,5 +6925,19 @@ public class Tokenizer implements Locator {
             EncodingDeclarationHandler encodingDeclarationHandler) {
         this.encodingDeclarationHandler = encodingDeclarationHandler;
     }
+    
+    // [NOCPP[
+    
+    /**
+     * Sets an offset to be added to the position reported to 
+     * <code>TransitionHandler</code>.
+     * 
+     * @param offset the offset
+     */
+    public void setTransitionBaseOffset(int offset) {
+        
+    }
+    
+    // ]NOCPP]
 
 }

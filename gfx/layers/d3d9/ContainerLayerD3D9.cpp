@@ -135,9 +135,9 @@ ContainerLayerD3D9::GetFirstChildD3D9()
 }
 
 void
-ContainerLayerD3D9::RenderLayer()
+ContainerLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 {
-  float opacity = GetOpacity();
+  float opacity = GetOpacity() * aOpacity;
   nsRefPtr<IDirect3DSurface9> previousRenderTarget;
   nsRefPtr<IDirect3DTexture9> renderTexture;
   float previousRenderTargetOffset[4];
@@ -145,12 +145,13 @@ ContainerLayerD3D9::RenderLayer()
   float renderTargetOffset[] = { 0, 0, 0, 0 };
   float oldViewMatrix[4][4];
 
+  gfx3DMatrix transform = mTransform * aTransform;
+
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
-  PRBool useIntermediate = (opacity != 1.0 || !mTransform.IsIdentity());
+  PRBool useIntermediate = ShouldUseIntermediate(opacity, transform);
 
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
-    device()->GetScissorRect(&oldClipRect);
     device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
                             D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
@@ -184,38 +185,54 @@ ContainerLayerD3D9::RenderLayer()
   LayerD3D9 *layerToRender = GetFirstChildD3D9();
   while (layerToRender) {
     const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
-    RECT r;
-    if (clipRect) {
-      r.left = (LONG)(clipRect->x - renderTargetOffset[0]);
-      r.top = (LONG)(clipRect->y - renderTargetOffset[1]);
-      r.right = (LONG)(clipRect->x - renderTargetOffset[0] + clipRect->width);
-      r.bottom = (LONG)(clipRect->y - renderTargetOffset[1] + clipRect->height);
-    } else {
-      if (useIntermediate) {
+    if (clipRect || useIntermediate) {
+      RECT r;
+      device()->GetScissorRect(&oldClipRect);
+      if (clipRect) {
+        r.left = (LONG)(clipRect->x - renderTargetOffset[0]);
+        r.top = (LONG)(clipRect->y - renderTargetOffset[1]);
+        r.right = (LONG)(clipRect->x - renderTargetOffset[0] + clipRect->width);
+        r.bottom = (LONG)(clipRect->y - renderTargetOffset[1] + clipRect->height);
+      } else {
         r.left = 0;
         r.top = 0;
-      } else {
-        r.left = visibleRect.x;
-        r.top = visibleRect.y;
+        r.right = visibleRect.width;
+        r.bottom = visibleRect.height;
       }
-      r.right = r.left + visibleRect.width;
-      r.bottom = r.top + visibleRect.height;
+
+      nsRefPtr<IDirect3DSurface9> renderSurface;
+      device()->GetRenderTarget(0, getter_AddRefs(renderSurface));
+
+      D3DSURFACE_DESC desc;
+      renderSurface->GetDesc(&desc);
+
+      if (!useIntermediate) {
+        // Intersect with current clip rect.
+        r.left = NS_MAX<PRInt32>(oldClipRect.left, r.left);
+        r.right = NS_MIN<PRInt32>(oldClipRect.right, r.right);
+        r.top = NS_MAX<PRInt32>(oldClipRect.top, r.top);
+        r.bottom = NS_MAX<PRInt32>(oldClipRect.bottom, r.bottom);
+      } else {
+        // > 0 is implied during the intersection when useIntermediate == true;
+        r.left = NS_MAX<LONG>(0, r.left);
+        r.top = NS_MAX<LONG>(0, r.top);
+      }
+      r.bottom = NS_MIN<LONG>(r.bottom, desc.Height);
+      r.right = NS_MIN<LONG>(r.right, desc.Width);
+
+      device()->SetScissorRect(&r);
     }
 
-    nsRefPtr<IDirect3DSurface9> renderSurface;
-    device()->GetRenderTarget(0, getter_AddRefs(renderSurface));
+    if (!useIntermediate) {
+      layerToRender->RenderLayer(opacity, transform);
+    } else {
+      layerToRender->RenderLayer(1.0, gfx3DMatrix());
+    }
 
-    D3DSURFACE_DESC desc;
-    renderSurface->GetDesc(&desc);
+    if (clipRect || useIntermediate) {
+      device()->SetScissorRect(&oldClipRect);
+    }
 
-    r.left = NS_MAX<LONG>(0, r.left);
-    r.top = NS_MAX<LONG>(0, r.top);
-    r.bottom = NS_MIN<LONG>(r.bottom, desc.Height);
-    r.right = NS_MIN<LONG>(r.right, desc.Width);
-
-    device()->SetScissorRect(&r);
-
-    layerToRender->RenderLayer();
     Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
     layerToRender = nextSibling ? static_cast<LayerD3D9*>(nextSibling->
                                                           ImplData())
@@ -224,7 +241,6 @@ ContainerLayerD3D9::RenderLayer()
 
   if (useIntermediate) {
     device()->SetRenderTarget(0, previousRenderTarget);
-    device()->SetScissorRect(&oldClipRect);
     device()->SetVertexShaderConstantF(CBvRenderTargetOffset, previousRenderTargetOffset, 1);
     device()->SetVertexShaderConstantF(CBmProjection, &oldViewMatrix[0][0], 4);
 
@@ -235,7 +251,7 @@ ContainerLayerD3D9::RenderLayer()
                                                           visibleRect.height),
                                        1);
 
-    device()->SetVertexShaderConstantF(CBmLayerTransform, &mTransform._11, 4);
+    device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
     float opacityVector[4];
     /*
@@ -259,6 +275,33 @@ ContainerLayerD3D9::LayerManagerDestroyed()
     GetFirstChildD3D9()->LayerManagerDestroyed();
     RemoveChild(mFirstChild);
   }
+}
+
+bool
+ContainerLayerD3D9::ShouldUseIntermediate(float aOpacity,
+                                          const gfx3DMatrix &aMatrix)
+{
+  if (aOpacity == 1.0f && aMatrix.IsIdentity()) {
+    return false;
+  }
+
+  Layer *firstChild = GetFirstChild();
+
+  if (!firstChild || (!firstChild->GetNextSibling() &&
+      !firstChild->GetClipRect())) {
+    // If we forward our transform to a child without using an intermediate,
+    // we need to be sure that child does not have a clip rect, since its clip
+    // rect would be applied after our transform.
+    return false;
+  }
+
+  if (aMatrix.IsIdentity() && (!firstChild || !firstChild->GetNextSibling())) {
+    // If there's no transforms applied and a single child, opacity can always
+    // be forwarded to our only child.
+    return false;
+  }
+
+  return true;
 }
 
 } /* layers */

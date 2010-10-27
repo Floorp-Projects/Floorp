@@ -50,11 +50,16 @@ class nsSessionStorageEntry;
 class nsDOMStoragePersistentDB
 {
 public:
-  nsDOMStoragePersistentDB() {}
+  nsDOMStoragePersistentDB();
   ~nsDOMStoragePersistentDB() {}
 
   nsresult
   Init(const nsString& aDatabaseName);
+
+  nsresult
+  EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStorage);
+  nsresult
+  FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* aStorage);
 
   /**
    * Retrieve a list of all the keys associated with a particular domain.
@@ -146,14 +151,27 @@ public:
    */
   nsresult ClearAllPrivateBrowsingData();
 
+  /**
+   * We process INSERTs in a transaction because of performance.
+   * If there is currently no transaction in progress, start one.
+   */
+  nsresult EnsureInsertTransaction();
+
+  /**
+   * If there is an INSERT transaction in progress, commit it now.
+   */
+  nsresult MaybeCommitInsertTransaction();
+
 protected:
 
   nsCOMPtr<mozIStorageConnection> mConnection;
 
+  nsCOMPtr<mozIStorageStatement> mCopyToTempTableStatement;
+  nsCOMPtr<mozIStorageStatement> mCopyBackToDiskStatement;
+  nsCOMPtr<mozIStorageStatement> mDeleteTemporaryTableStatement;
   nsCOMPtr<mozIStorageStatement> mGetAllKeysStatement;
   nsCOMPtr<mozIStorageStatement> mGetKeyValueStatement;
   nsCOMPtr<mozIStorageStatement> mInsertKeyStatement;
-  nsCOMPtr<mozIStorageStatement> mUpdateKeyStatement;
   nsCOMPtr<mozIStorageStatement> mSetSecureStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveKeyStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveOwnerStatement;

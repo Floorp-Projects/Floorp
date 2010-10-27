@@ -3388,7 +3388,7 @@ NS_IMETHODIMP nsHttpChannel::OnAuthCancelled(PRBool userCancel)
 {
     LOG(("nsHttpChannel::OnAuthCancelled [this=%p]", this));
 
-    if (userCancel) {
+    if (mTransactionPump) {
         // ensure call of OnStartRequest of the current listener here,
         // it would not be called otherwise at all
         nsresult rv = CallOnStartRequest();
@@ -4530,6 +4530,25 @@ nsHttpChannel::SetChooseApplicationCache(PRBool aChoose)
     NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
     mChooseApplicationCache = aChoose;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::MarkOfflineCacheEntryAsForeign()
+{
+    if (!mApplicationCache)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsresult rv;
+
+    nsCAutoString cacheKey;
+    rv = GenerateCacheKey(mPostID, cacheKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mApplicationCache->MarkEntry(cacheKey,
+                                      nsIApplicationCache::ITEM_FOREIGN);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return NS_OK;
 }
 

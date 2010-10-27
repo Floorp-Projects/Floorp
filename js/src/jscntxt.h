@@ -155,6 +155,7 @@ typedef Queue<uint16> SlotList;
 class TypeMap;
 struct REFragment;
 typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
+class LoopProfile;
 
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
@@ -924,6 +925,12 @@ typedef HashMap<jsbytecode*,
                 DefaultHasher<jsbytecode*>,
                 SystemAllocPolicy> RecordAttemptMap;
 
+/* Holds the profile data for loops. */
+typedef HashMap<jsbytecode*,
+                LoopProfile*,
+                DefaultHasher<jsbytecode*>,
+                SystemAllocPolicy> LoopProfileMap;
+
 class Oracle;
 
 /*
@@ -987,12 +994,21 @@ struct TraceMonitor {
     nanojit::Assembler*     assembler;
     FrameInfoCache*         frameCache;
 
+    /* This gets incremented every time the monitor is flushed. */
+    uintN                   flushEpoch;
+
     Oracle*                 oracle;
     TraceRecorder*          recorder;
+
+    /* If we are profiling a loop, this tracks the current profile. Otherwise NULL. */
+    LoopProfile*            profile;
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
     TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
     RecordAttemptMap*       recordAttempts;
+
+    /* A hashtable mapping PC values to loop profiles for those loops. */
+    LoopProfileMap*         loopProfiles;
 
     /*
      * Maximum size of the code cache before we start flushing. 1/16 of this
@@ -1104,11 +1120,17 @@ struct JSPendingProxyOperation {
 };
 
 struct JSThreadData {
+#ifdef JS_THREADSAFE
+    /* The request depth for this thread. */
+    unsigned            requestDepth;
+#endif
+
     /*
-     * If this flag is set, we were asked to call back the operation callback
-     * as soon as possible.
+     * If non-zero, we were been asked to call the operation callback as soon
+     * as possible.  If the thread has an active request, this contributes
+     * towards rt->interruptCounter.
      */
-    volatile jsword     interruptFlags;
+    volatile int32      interruptFlags;
 
     /* Keeper of the contiguous stack used by all contexts in this thread. */
     js::StackSpace      stackSpace;
@@ -1193,17 +1215,8 @@ struct JSThreadData {
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
 
-    static const jsword INTERRUPT_OPERATION_CALLBACK = 0x1;
-
-    void triggerOperationCallback() {
-        /*
-         * Use JS_ATOMIC_SET in the hope that it will make sure the write will
-         * become immediately visible to other processors polling the flag.
-         * Note that we only care about visibility here, not read/write
-         * ordering.
-         */
-        JS_ATOMIC_SET_MASK(&interruptFlags, INTERRUPT_OPERATION_CALLBACK);
-    }
+    /* This must be called with the GC lock held. */
+    inline void triggerOperationCallback(JSRuntime *rt);
 };
 
 #ifdef JS_THREADSAFE
@@ -1224,30 +1237,12 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     void                *id;
 
-    /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
-    JSTitle             *titleToShare;
-
-    /*
-     * This thread is inside js_GC, either waiting until it can start GC, or
-     * waiting for GC to finish on another thread. This thread holds no locks;
-     * other threads may steal titles from it.
-     *
-     * Protected by rt->gcLock.
-     */
-    bool                gcWaiting;
-
-    /* The request depth for this thread. */
-    unsigned            requestDepth;
-
     /* Number of JS_SuspendRequest calls withot JS_ResumeRequest. */
     unsigned            suspendCount;
 
 # ifdef DEBUG
     unsigned            checkRequestDepth;
 # endif
-
-    /* Weak ref, for low-cost sealed title locking */
-    JSTitle             *lockedSealedTitle;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -1456,28 +1451,6 @@ struct JSRuntime {
     PRCondVar           *stateChange;
 
     /*
-     * State for sharing single-threaded titles, once a second thread tries to
-     * lock a title.  The titleSharingDone condvar is protected by rt->gcLock
-     * to minimize number of locks taken in JS_EndRequest.
-     *
-     * The titleSharingTodo linked list is likewise "global" per runtime, not
-     * one-list-per-context, to conserve space over all contexts, optimizing
-     * for the likely case that titles become shared rarely, and among a very
-     * small set of threads (contexts).
-     */
-    PRCondVar           *titleSharingDone;
-    JSTitle             *titleSharingTodo;
-
-/*
- * Magic terminator for the rt->titleSharingTodo linked list, threaded through
- * title->u.link.  This hack allows us to test whether a title is on the list
- * by asking whether title->u.link is non-null.  We use a large, likely bogus
- * pointer here to distinguish this value from any valid u.count (small int)
- * value.
- */
-#define NO_TITLE_SHARING_TODO   ((JSTitle *) 0xfeedbeef)
-
-    /*
      * Lock serializing trapList and watchPointList accesses, and count of all
      * mutations to trapList and watchPointList made by debugger threads.  To
      * keep the code simple, we define debuggerMutations for the thread-unsafe
@@ -1536,7 +1509,10 @@ struct JSRuntime {
     JSObject            *anynameObject;
     JSObject            *functionNamespaceObject;
 
-#ifndef JS_THREADSAFE
+#ifdef JS_THREADSAFE
+    /* Number of threads with active requests and unhandled interrupts. */
+    volatile int32      interruptCounter;
+#else
     JSThreadData        threadData;
 
 #define JS_THREAD_DATA(cx)      (&(cx)->runtime->threadData)
@@ -1596,14 +1572,7 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    /* Title lock and scope property metering. */
-    jsrefcount          claimAttempts;
-    jsrefcount          claimedTitles;
-    jsrefcount          deadContexts;
-    jsrefcount          deadlocksAvoided;
-    jsrefcount          liveShapes;
-    jsrefcount          sharedTitles;
-    jsrefcount          totalShapes;
+    /* Property metering. */
     jsrefcount          liveObjectProps;
     jsrefcount          liveObjectPropsPreSweep;
     jsrefcount          totalObjectProps;
@@ -2045,11 +2014,11 @@ struct JSContext
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
 
-    /* Last message string and trace file for debugging. */
+    /* Last message string and log file for debugging. */
     char                *lastMessage;
 #ifdef DEBUG
-    void                *tracefp;
-    jsbytecode          *tracePrevPc;
+    void                *logfp;
+    jsbytecode          *logPrevPc;
 #endif
 
     /* Per-context optional error reporter. */
@@ -2246,6 +2215,7 @@ struct JSContext
 
 #ifdef JS_METHODJIT
     bool                 methodJitEnabled;
+    bool                 profilingEnabled;
 #endif
 
     /* Caller must be holding runtime->gcLock. */
@@ -2420,7 +2390,7 @@ class AutoCheckRequestDepth {
 
 # define CHECK_REQUEST(cx)                                                    \
     JS_ASSERT((cx)->thread);                                                  \
-    JS_ASSERT((cx)->thread->requestDepth || (cx)->thread == (cx)->runtime->gcThread); \
+    JS_ASSERT((cx)->thread->data.requestDepth || (cx)->thread == (cx)->runtime->gcThread); \
     AutoCheckRequestDepth _autoCheckRequestDepth(cx);
 
 #else
@@ -3058,13 +3028,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize);
 extern void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
 
-/*
- * Return true if cx points to a context in rt->contextList, else return false.
- * NB: the caller (see jslock.c:ClaimTitle) must hold rt->gcLock.
- */
-extern JSBool
-js_ValidContextPointer(JSRuntime *rt, JSContext *cx);
-
 static JS_INLINE JSContext *
 js_ContextFromLinkField(JSCList *link)
 {
@@ -3200,7 +3163,7 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 #ifdef JS_THREADSAFE
 # define JS_ASSERT_REQUEST_DEPTH(cx)  (JS_ASSERT((cx)->thread),               \
-                                       JS_ASSERT((cx)->thread->requestDepth >= 1))
+                                       JS_ASSERT((cx)->thread->data.requestDepth >= 1))
 #else
 # define JS_ASSERT_REQUEST_DEPTH(cx)  ((void) 0)
 #endif
@@ -3212,7 +3175,27 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 #define JS_CHECK_OPERATION_LIMIT(cx)                                          \
     (JS_ASSERT_REQUEST_DEPTH(cx),                                             \
-     (!(JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK) || js_InvokeOperationCallback(cx)))
+     (!JS_THREAD_DATA(cx)->interruptFlags || js_InvokeOperationCallback(cx)))
+
+JS_ALWAYS_INLINE void
+JSThreadData::triggerOperationCallback(JSRuntime *rt)
+{
+    /*
+     * Use JS_ATOMIC_SET and JS_ATOMIC_INCREMENT in the hope that it ensures
+     * the write will become immediately visible to other processors polling
+     * the flag.  Note that we only care about visibility here, not read/write
+     * ordering: this field can only be written with the GC lock held.
+     */
+    if (interruptFlags)
+        return;
+    JS_ATOMIC_SET(&interruptFlags, 1);
+
+#ifdef JS_THREADSAFE
+    /* rt->interruptCounter does not reflect suspended threads. */
+    if (requestDepth != 0)
+        JS_ATOMIC_INCREMENT(&rt->interruptCounter);
+#endif
+}
 
 /*
  * Invoke the operation callback and return false if the current execution
@@ -3226,7 +3209,11 @@ js_HandleExecutionInterrupt(JSContext *cx);
 
 namespace js {
 
-/* Must be called with GC lock taken. */
+/* These must be called with GC lock taken. */
+
+JS_FRIEND_API(void)
+TriggerOperationCallback(JSContext *cx);
+
 void
 TriggerAllOperationCallbacks(JSRuntime *rt);
 

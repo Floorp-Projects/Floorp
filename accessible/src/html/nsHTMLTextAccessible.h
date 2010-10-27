@@ -132,14 +132,12 @@ class nsHTMLListBulletAccessible : public nsLeafAccessible
 public:
   nsHTMLListBulletAccessible(nsIContent* aContent, nsIWeakReference* aShell);
 
-  // nsIAccessNode
-  NS_IMETHOD GetUniqueID(void **aUniqueID);
-
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
 
   // nsAccessNode
   virtual void Shutdown();
+  virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
   virtual PRUint32 NativeRole();

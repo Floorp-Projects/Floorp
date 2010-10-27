@@ -1867,7 +1867,7 @@ Engine.prototype = {
           // Adjust the start index to account for the opening quote
           valueStart = quoteStart + "\"".length;
           // Find the closing quote
-          let valueEnd = lLine.indexOf("\"", valueStart);
+          var valueEnd = lLine.indexOf("\"", valueStart);
           // If there is no closing quote, just go to the end of the line
           if (valueEnd == -1)
             valueEnd = aLine.length;

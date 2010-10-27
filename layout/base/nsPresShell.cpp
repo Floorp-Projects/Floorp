@@ -734,7 +734,8 @@ public:
 
   NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
   NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
-  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
+                                     PRInt16 aFlags);
   NS_IMETHOD RepaintSelection(SelectionType aType);
 
   virtual NS_HIDDEN_(void) BeginObservingDocument();
@@ -2574,12 +2575,13 @@ PresShell::GetCurrentSelection(SelectionType aType)
 }
 
 NS_IMETHODIMP
-PresShell::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous)
+PresShell::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
+                                   PRInt16 aFlags)
 {
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous);
+  return mSelection->ScrollSelectionIntoView(aType, aRegion, aFlags);
 }
 
 NS_IMETHODIMP
@@ -3129,7 +3131,9 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
   mSelection->CommonPageMove(aForward, aExtend, scrollableFrame);
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                 nsISelectionController::SELECTION_FOCUS_REGION,
+                                 nsISelectionController::SCROLL_SYNCHRONOUS);
 }
 
 
@@ -3235,7 +3239,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 
                                  nsISelectionController::SELECTION_FOCUS_REGION,
-                                 PR_TRUE);
+                                 nsISelectionController::SCROLL_SYNCHRONOUS);
 }
 
 NS_IMETHODIMP 
@@ -3657,20 +3661,6 @@ PresShell::CancelAllPendingReflows()
   ASSERT_REFLOW_SCHEDULED_STATE();
 }
 
-#ifdef ACCESSIBILITY
-void nsIPresShell::InvalidateAccessibleSubtree(nsIContent *aContent)
-{
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->InvalidateSubtreeFor(this, aContent,
-                                       nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE);
-    }
-  }
-}
-#endif
-
 nsresult
 PresShell::RecreateFramesFor(nsIContent* aContent)
 {
@@ -3704,9 +3694,6 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   --mChangeNestCount;
   
   batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-#ifdef ACCESSIBILITY
-  InvalidateAccessibleSubtree(aContent);
-#endif
   return rv;
 }
 
@@ -4317,7 +4304,7 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
       }
 
       // only scroll one container when this flag is set
-      if (aFlags & SCROLL_FIRST_ANCESTOR_ONLY) {
+      if (aFlags & nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY) {
         break;
       }
 
@@ -5179,10 +5166,6 @@ nsIPresShell::ReconstructStyleDataInternal()
   }
   
   mFrameConstructor->PostRestyleEvent(root, eRestyle_Subtree, NS_STYLE_HINT_NONE);
-
-#ifdef ACCESSIBILITY
-  InvalidateAccessibleSubtree(nsnull);
-#endif
 }
 
 void
@@ -7198,7 +7181,8 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
     selCon = static_cast<nsISelectionController *>(this);
   if (selCon) {
     rv = selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                   nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+                                         nsISelectionController::SELECTION_FOCUS_REGION,
+                                         nsISelectionController::SCROLL_SYNCHRONOUS);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
   }
 
@@ -8063,9 +8047,6 @@ PresShell::Observe(nsISupports* aSubject,
         }
       }
       batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-#ifdef ACCESSIBILITY
-      InvalidateAccessibleSubtree(nsnull);
-#endif
     }
     return NS_OK;
   }

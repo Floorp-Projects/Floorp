@@ -104,6 +104,18 @@ js_GetStringChars(JSContext *cx, JSString *str)
 void
 JSString::flatten()
 {
+    // Diagnostic: serialize all calls to this function to see
+    // if concurrent calls are crashing us.
+    JS_LOCK_RUNTIME(asCell()->compartment()->rt);
+    // The main body of this function can be executed only if
+    // the string is a rope. With multiple threads, it's possible
+    // we waited while another one ran, and the string has
+    // already been flattened for us.
+    if (!isRope()) {
+        JS_UNLOCK_RUNTIME(asCell()->compartment()->rt);
+        return;
+    }
+
     JSString *topNode;
     jschar *chars;
     size_t capacity;
@@ -181,6 +193,8 @@ JSString::flatten()
     /* Set null terminator. */
     chars[pos] = 0;
     topNode->initFlatMutable(chars, pos, capacity);
+
+    JS_UNLOCK_RUNTIME(asCell()->compartment()->rt);
 }
 
 #ifdef JS_TRACER
@@ -980,7 +994,7 @@ str_substring(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         length = str->length();
         begin = js_DoubleToInteger(d);
-        if (argc == 1) {
+        if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
             if (!ValueToNumber(cx, vp[3], &d))
@@ -1224,8 +1238,6 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
     return -1;
 }
 
-namespace {
-
 struct MemCmp {
     typedef jsuint Extent;
     static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, jsuint patlen) {
@@ -1249,8 +1261,6 @@ struct ManualCmp {
         return true;
     }
 };
-
-}
 
 template <class InnerMatch>
 static jsint
@@ -2717,7 +2727,7 @@ str_substr(JSContext *cx, uintN argc, Value *vp)
             begin = length;
         }
 
-        if (argc == 1) {
+        if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
             if (!ValueToNumber(cx, vp[3], &d))
@@ -2814,7 +2824,7 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
             begin = length;
         }
 
-        if (argc == 1) {
+        if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
             if (!ValueToNumber(cx, vp[3], &end))

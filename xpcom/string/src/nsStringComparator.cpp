@@ -53,23 +53,17 @@
 
 
 int
-nsCaseInsensitiveCStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
+nsCaseInsensitiveCStringComparator::operator()( const char_type* lhs,
+                                                const char_type* rhs,
+                                                PRUint32 lLength,
+                                                PRUint32 rLength ) const
   {
-    PRInt32 result=PRInt32(PL_strncasecmp(lhs, rhs, aLength));
+    if (lLength != rLength)
+      return (lLength > rLength) ? 1 : -1;
+    PRInt32 result=PRInt32(PL_strncasecmp(lhs, rhs, lLength));
     //Egads. PL_strncasecmp is returning *very* negative numbers.
     //Some folks expect -1,0,1, so let's temper its enthusiasm.
     if (result<0) 
       result=-1;
     return result;
-  }
-
-int
-nsCaseInsensitiveCStringComparator::operator()( char lhs, char rhs ) const
-  {
-    if (lhs == rhs) return 0;
-    
-    lhs = tolower(lhs);
-    rhs = tolower(rhs);
-
-    return lhs - rhs;
   }

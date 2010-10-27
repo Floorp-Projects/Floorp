@@ -204,7 +204,7 @@ var bookmarksObserver = {
   },
 
   // nsINavBookmarkObserver
-  onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex) {
+  onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex, aURI) {
     var node = null;
     var index = null;
     [node, index] = getNodeForTreeItem(aItemId, gLibrary.PlacesOrganizer._places);

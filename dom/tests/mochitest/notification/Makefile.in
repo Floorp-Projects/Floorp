@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES	= \
 		test_basic_notification.html \
 		test_basic_notification_click.html \
+		test_leak_windowClose.html \
 		notification_common.js \
 		$(NULL)
 
