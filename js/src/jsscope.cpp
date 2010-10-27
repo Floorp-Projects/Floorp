@@ -895,6 +895,9 @@ JSObject::putProperty(JSContext *cx, jsid id,
      * Optimize the case of a non-frozen dictionary-mode object based on the
      * property that dictionaries exclusively own their mutable shape structs,
      * each of which has a unique shape number (not shared via a shape tree).
+     *
+     * This is more than an optimization: it is required to preserve for-in
+     * enumeration order (see bug 601399).
      */
     if (inDictionaryMode()) {
         /* FIXME bug 593129 -- slot allocation and JSObject *this must move out of here! */
@@ -903,28 +906,14 @@ JSObject::putProperty(JSContext *cx, jsid id,
                 return NULL;
         }
 
-        /*
-         * We are going to mutate shape and move it to be lastProp if it isn't
-         * already, so we must regenerate its shape.
-         */
-        shape->shape = js_GenerateShape(cx, false);
-
-        /*
-         * Set shape->slot before calling shape->insertIntoDictionary, which
-         * uses it under shape->setParent.
-         */
         shape->slot = slot;
+        if (slot != SHAPE_INVALID_SLOT && slot >= shape->slotSpan) {
+            shape->slotSpan = slot + 1;
 
-        if (shape != lastProp) {
-            if (PropertyTable *table = lastProp->table) {
-                shape->table = table;
-                lastProp->table = NULL;
+            for (Shape *temp = lastProp; temp != shape; temp = temp->parent) {
+                if (temp->slotSpan <= slot)
+                    temp->slotSpan = slot + 1;
             }
-            shape->removeFromDictionary(this);
-            shape->insertIntoDictionary(&lastProp);
-        } else {
-            if (slot != SHAPE_INVALID_SLOT && slot >= shape->slotSpan)
-                shape->slotSpan = slot + 1;
         }
 
         shape->rawGetter = getter;
@@ -935,11 +924,20 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
         /*
          * We are done updating shape and lastProp. Now we may need to update
-         * flags and objShape. In the last non-dictionary property case in the
-         * else clause just below, getChildProperty handles this for us.
+         * flags and we will need to update objShape, which is no longer "own".
+         * In the last non-dictionary property case in the else clause just
+         * below, getChildProperty handles this for us. First update flags.
          */
         updateFlags(shape);
-        updateShape(cx);
+
+        /*
+         * We have just mutated shape in place, but nothing caches it based on
+         * shape->shape unless shape is lastProp and !hasOwnShape()). Therefore
+         * we regenerate only lastProp->shape. We will clearOwnShape(), which
+         * sets objShape to lastProp->shape.
+         */
+        lastProp->shape = js_GenerateShape(cx, false);
+        clearOwnShape();
     } else {
         /*
          * Updating lastProp in a non-dictionary-mode object. Such objects
@@ -964,13 +962,11 @@ JSObject::putProperty(JSContext *cx, jsid id,
         }
 
         shape = newShape;
-    }
 
-    JS_ASSERT(shape == lastProp);
-
-    if (!shape->table) {
-        /* See JSObject::addPropertyInternal comment about ignoring OOM. */
-        shape->maybeHash(cx);
+        if (!shape->table) {
+            /* See JSObject::addPropertyInternal comment about ignoring OOM. */
+            shape->maybeHash(cx);
+        }
     }
 
     /*
