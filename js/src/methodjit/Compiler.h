@@ -40,9 +40,9 @@
 #if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
 #define jsjaeger_compiler_h__
 
+#include "jsanalyze.h"
 #include "jscntxt.h"
 #include "jstl.h"
-#include "BytecodeAnalyzer.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "BaseCompiler.h"
@@ -161,45 +161,49 @@ class Compiler : public BaseCompiler
     };
 
 #if defined JS_POLYIC
-    struct PICGenInfo {
+    struct BaseICInfo {
+        Label fastPathStart;
+        Label fastPathRejoin;
+        Label slowPathStart;
+        Call slowPathCall;
+        DataLabelPtr paramAddr;
+    };
+
+    struct PICGenInfo : public BaseICInfo {
         PICGenInfo(ic::PICInfo::Kind kind, bool usePropCache)
           : kind(kind), usePropCache(usePropCache)
         { }
         ic::PICInfo::Kind kind;
-        Label fastPathStart;
-        Label storeBack;
         Label typeCheck;
-        Label slowPathStart;
-        DataLabelPtr addrLabel;
         RegisterID shapeReg;
         RegisterID objReg;
         RegisterID idReg;
         RegisterID typeReg;
         bool usePropCache;
         Label shapeGuard;
+        jsbytecode *pc;
         JSAtom *atom;
         StateRemat objRemat;
         StateRemat idRemat;
-        Call callReturn;
         bool hasTypeCheck;
         ValueRemat vr;
 # if defined JS_CPU_X64
         ic::PICLabels labels;
 # endif
 
-        void copySimpleMembersTo(ic::PICInfo &pi) const {
-            pi.kind = kind;
-            pi.shapeReg = shapeReg;
-            pi.objReg = objReg;
-            pi.atom = atom;
-            pi.usePropCache = usePropCache;
-            if (kind == ic::PICInfo::SET) {
-                pi.u.vr = vr;
-            } else if (kind != ic::PICInfo::NAME) {
-                pi.u.get.idReg = idReg;
-                pi.u.get.typeReg = typeReg;
-                pi.u.get.hasTypeCheck = hasTypeCheck;
-                pi.u.get.objRemat = objRemat.offset;
+        void copySimpleMembersTo(ic::PICInfo &ic) const {
+            ic.kind = kind;
+            ic.shapeReg = shapeReg;
+            ic.objReg = objReg;
+            ic.atom = atom;
+            ic.usePropCache = usePropCache;
+            if (ic.isSet()) {
+                ic.u.vr = vr;
+            } else if (ic.isGet()) {
+                ic.u.get.idReg = idReg;
+                ic.u.get.typeReg = typeReg;
+                ic.u.get.hasTypeCheck = hasTypeCheck;
+                ic.setObjRemat(objRemat);
             }
         }
 
@@ -232,7 +236,7 @@ class Compiler : public BaseCompiler
     JSObject *globalObj;
     JSFunction *fun;
     bool isConstructing;
-    BytecodeAnalyzer analysis;
+    analyze::Script *analysis;
     Label *jumpMap;
     jsbytecode *PC;
     Assembler masm;
@@ -307,7 +311,8 @@ class Compiler : public BaseCompiler
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
-    void jsop_getarg(uint32 index);
+    void jsop_getarg(uint32 slot);
+    void jsop_setarg(uint32 slot, bool popped);
     void jsop_this();
     void emitReturn(FrameEntry *fe);
     void emitFinalReturn(Assembler &masm);
@@ -344,6 +349,7 @@ class Compiler : public BaseCompiler
     bool jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();
+    void jsop_eval();
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);

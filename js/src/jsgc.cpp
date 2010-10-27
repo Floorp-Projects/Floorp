@@ -757,11 +757,11 @@ MarkConservativeStackRoots(JSTracer *trc)
         JSThread *thread = r.front().value;
         ConservativeGCThreadData *ctd = &thread->data.conservativeGC;
         if (ctd->hasStackToScan()) {
-            JS_ASSERT_IF(!thread->requestDepth, thread->suspendCount);
+            JS_ASSERT_IF(!thread->data.requestDepth, thread->suspendCount);
             MarkThreadDataConservatively(trc, &thread->data);
         } else {
             JS_ASSERT(!thread->suspendCount);
-            JS_ASSERT(thread->requestDepth <= ctd->requestThreshold);
+            JS_ASSERT(thread->data.requestDepth <= ctd->requestThreshold);
         }
     }
 #else
@@ -795,8 +795,8 @@ RecordNativeStackTopForGC(JSContext *cx)
 
 #ifdef JS_THREADSAFE
     /* Record the stack top here only if we are called from a request. */
-    JS_ASSERT(cx->thread->requestDepth >= ctd->requestThreshold);
-    if (cx->thread->requestDepth == ctd->requestThreshold)
+    JS_ASSERT(cx->thread->data.requestDepth >= ctd->requestThreshold);
+    if (cx->thread->data.requestDepth == ctd->requestThreshold)
         return;
 #endif
     ctd->recordStackTop();
@@ -1630,7 +1630,7 @@ MarkRuntime(JSTracer *trc)
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter)) {
         for (AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down) {
 #ifdef JS_THREADSAFE
-            JS_ASSERT_IF(!acx->thread->requestDepth, acx->thread->suspendCount);
+            JS_ASSERT_IF(!acx->thread->data.requestDepth, acx->thread->suspendCount);
 #endif
             JS_ASSERT(JS_THREAD_DATA(acx)->conservativeGC.hasStackToScan());
             void *thing;
@@ -2337,7 +2337,7 @@ LetOtherGCFinish(JSContext *cx)
     JS_ASSERT(rt->gcThread);
     JS_ASSERT(cx->thread != rt->gcThread);
 
-    size_t requestDebit = cx->thread->requestDepth ? 1 : 0;
+    size_t requestDebit = cx->thread->data.requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
 #ifdef JS_TRACER
     JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
@@ -2359,10 +2359,6 @@ LetOtherGCFinish(JSContext *cx)
             JS_NOTIFY_REQUEST_DONE(rt);
     }
 
-    /* See comments before another call to js_ShareWaitingTitles below. */
-    cx->thread->gcWaiting = true;
-    js_ShareWaitingTitles(cx);
-
     /*
      * Check that we did not release the GC lock above and let the GC to
      * finish before we wait.
@@ -2379,7 +2375,6 @@ LetOtherGCFinish(JSContext *cx)
         JS_AWAIT_GC_DONE(rt);
     } while (rt->gcThread);
 
-    cx->thread->gcWaiting = false;
     rt->requestCount += requestDebit;
 }
 
@@ -2431,7 +2426,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
     for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
         JSThread *thread = r.front().value;
         if (thread != cx->thread)
-            thread->data.triggerOperationCallback();
+            thread->data.triggerOperationCallback(rt);
     }
 
     /*
@@ -2440,23 +2435,14 @@ AutoGCSession::AutoGCSession(JSContext *cx)
      * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
      * rt->requestCount transitions to 0.
      */
-    size_t requestDebit = cx->thread->requestDepth ? 1 : 0;
+    size_t requestDebit = cx->thread->data.requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
     if (requestDebit != rt->requestCount) {
         rt->requestCount -= requestDebit;
 
-        /*
-         * Share any title that is owned by the GC thread before we wait, to
-         * avoid a deadlock with ClaimTitle. We also set the gcWaiting flag so
-         * that ClaimTitle can claim the title ownership from the GC thread if
-         * that function is called while the GC is waiting.
-         */
-        cx->thread->gcWaiting = true;
-        js_ShareWaitingTitles(cx);
         do {
             JS_AWAIT_REQUEST_DONE(rt);
         } while (rt->requestCount > 0);
-        cx->thread->gcWaiting = false;
         rt->requestCount += requestDebit;
     }
 
@@ -2620,7 +2606,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
      * request.
      */
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread->requestDepth);
+    JS_ASSERT(cx->thread->data.requestDepth);
 
     /*
      * This is only necessary if AutoGCSession below would wait for GC to

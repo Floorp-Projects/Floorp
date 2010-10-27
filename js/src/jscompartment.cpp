@@ -38,9 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
-#include "jscntxt.h"
+#include "jsiter.h"
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "methodjit/PolyIC.h"
@@ -142,6 +143,10 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         /* If the object is already in this compartment, we are done. */
         if (obj->compartment() == this)
             return true;
+
+        /* Translate StopIteration singleton. */
+        if (obj->getClass() == &js_StopIterationClass)
+            return js_FindClassObject(cx, NULL, JSProto_StopIteration, vp);
 
         /* Don't unwrap an outer window proxy. */
         if (!obj->getClass()->ext.innerObject) {
