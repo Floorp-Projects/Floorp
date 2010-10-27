@@ -804,6 +804,7 @@ public:
    * XXX this should include image animations
    */
   virtual void Freeze() = 0;
+  PRBool IsFrozen() { return mFrozen; }
 
   /**
    * Restarts active elements (plugins) in this presentation and in the

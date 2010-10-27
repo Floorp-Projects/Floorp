@@ -2544,17 +2544,22 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   if (mWidget) {
     nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
-    NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
-    rootPC->UnregisterPluginForGeometryUpdates(this);
+    if (rootPC) {
+      rootPC->UnregisterPluginForGeometryUpdates(this);
 
-    // Make sure the plugin is hidden in case an update of plugin geometry
-    // hasn't happened since this plugin became hidden.
-    nsIWidget* parent = mWidget->GetParent();
-    if (parent) {
-      nsTArray<nsIWidget::Configuration> configurations;
-      GetEmptyClipConfiguration(&configurations);
-      parent->ConfigureChildren(configurations);
-      DidSetWidgetGeometry();
+      // Make sure the plugin is hidden in case an update of plugin geometry
+      // hasn't happened since this plugin became hidden.
+      nsIWidget* parent = mWidget->GetParent();
+      if (parent) {
+        nsTArray<nsIWidget::Configuration> configurations;
+        GetEmptyClipConfiguration(&configurations);
+        parent->ConfigureChildren(configurations);
+        DidSetWidgetGeometry();
+      }
+    }
+    else {
+      NS_ASSERTION(PresContext()->PresShell()->IsFrozen(),
+                   "unable to unregister the plugin frame");
     }
   }
 
