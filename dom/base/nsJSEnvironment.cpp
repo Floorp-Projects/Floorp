@@ -2537,7 +2537,7 @@ nsJSContext::CreateNativeGlobalForInner(
           InitClassesWithNewWrappedGlobal(mContext,
                                           aNewInner, NS_GET_IID(nsISupports),
                                           aIsChrome ? systemPrincipal.get() : aPrincipal,
-                                          EmptyCString(), flags,
+                                          nsnull, flags,
                                           getter_AddRefs(jsholder));
   if (NS_FAILED(rv))
     return rv;
