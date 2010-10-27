@@ -66,7 +66,10 @@ public:
       mFrozen(PR_FALSE),
       mDefer(PR_FALSE),
       mAsync(PR_FALSE),
-      mParserCreated(aFromParser),
+      mParserCreated(aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT ?
+                     mozilla::dom::NOT_FROM_PARSER : aFromParser),
+                     // Fragment parser-created scripts (if executable)
+                     // behave like script-created scripts.
       mCreatorParser(nsnull)
   {
   }
