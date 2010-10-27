@@ -447,8 +447,9 @@ abstract public class GeckoApp
             intent.setClassName("org.mozilla." + getAppName(),
                                 "org.mozilla." + getAppName() + ".Restarter");
             addEnvToIntent(intent);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Log.i("GeckoAppJava", intent.toString());
-            sendBroadcast(intent);
+            startActivity(intent);
         } catch (Exception e) {
             Log.i("GeckoAppJava", e.toString());
         }
