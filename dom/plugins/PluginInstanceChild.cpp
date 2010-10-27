@@ -2042,6 +2042,13 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     mSurfaceType = aSurfaceType;
     UpdateWindowAttributes(true);
 
+#ifdef XP_WIN
+    if (mQuirks & QUIRK_WINLESS_TRACKPOPUP_HOOK)
+        CreateWinlessPopupSurrogate();
+    if (mQuirks & QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)
+        SetupFlashMsgThrottle();
+#endif
+
     return true;
 }
 
