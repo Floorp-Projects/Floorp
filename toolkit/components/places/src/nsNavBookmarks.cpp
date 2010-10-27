@@ -255,12 +255,10 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT b.id "
     "FROM moz_bookmarks b "
     "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
-      "AND b.fk NOTNULL "
     "ORDER BY b.lastModified DESC, b.id DESC "));
 
   // Select all children of a given folder, sorted by position.
-  // This is a LEFT OUTER JOIN with moz_places since folders does not have
-  // a reference into that table.
+  // This is a LEFT JOIN because not all bookmarks types have a place.
   // We construct a result where the first columns exactly match those returned
   // by mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.
@@ -285,12 +283,12 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "WHERE parent = :parent AND position = :item_index"));
 
   // Get bookmark/folder/separator properties.
+  // This is a LEFT JOIN because not all bookmarks types have a place.
   RETURN_IF_STMT(mDBGetItemProperties, NS_LITERAL_CSTRING(
-    "SELECT b.id, "
-           "(SELECT url FROM moz_places WHERE id = b.fk), "
-           "b.title, b.position, b.fk, b.parent, b.type, b.folder_type, "
-           "b.dateAdded, b.lastModified "
+    "SELECT b.id, h.url, b.title, b.position, b.fk, b.parent, b.type, "
+           "b.folder_type, b.dateAdded, b.lastModified "
     "FROM moz_bookmarks b "
+    "LEFT JOIN moz_places h ON h.id = b.fk "
     "WHERE b.id = :item_id"));
 
   RETURN_IF_STMT(mDBGetItemIdForGUID, NS_LITERAL_CSTRING(
@@ -326,8 +324,7 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
         "FROM moz_items_annos a "
         "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
         "WHERE n.name = :anno_name"
-      ") "
-    "LIMIT 1"));
+      ") "));
 
   RETURN_IF_STMT(mDBGetLastBookmarkID, NS_LITERAL_CSTRING(
     "SELECT id "
@@ -358,7 +355,7 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBAdjustPosition, NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks SET position = position + :delta "
     "WHERE parent = :parent "
-      "AND position >= :from_index AND position <= :to_index"));
+      "AND position BETWEEN :from_index AND :to_index"));
 
   RETURN_IF_STMT(mDBRemoveItem, NS_LITERAL_CSTRING(
     "DELETE FROM moz_bookmarks WHERE id = :item_id"));

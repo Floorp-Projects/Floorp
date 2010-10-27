@@ -1161,11 +1161,9 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
       "FROM moz_bookmarks b "
       "JOIN moz_bookmarks t ON t.id = b.parent "
       "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
-        "AND LENGTH(t.title) > 0 "
-        "AND b.type = ") +
-          nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
-        NS_LITERAL_CSTRING(" AND t.parent = :tags_folder "
-      "ORDER BY t.title COLLATE NOCASE ASC) "
+        "AND t.parent = :tags_folder "
+      "ORDER BY t.title COLLATE NOCASE ASC "
+    ") "
   ));
 
   RETURN_IF_STMT(mDBGetItemsWithAnno, NS_LITERAL_CSTRING(
@@ -1297,18 +1295,14 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   ));
 
   // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
-  // We are not checking for duplicated ids into the unified table
-  // for perf reasons, LIMIT 1 will discard duplicates faster since we
-  // have unique place ids.
   RETURN_IF_STMT(mDBBookmarkToUrlResult, NS_LITERAL_CSTRING(
     "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
            "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
            "b.dateAdded, b.lastModified, b.parent, null "
     "FROM moz_bookmarks b "
     "JOIN moz_places h ON b.fk = h.id "
-    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+    "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE b.id = :item_id "
-    "LIMIT 1"
   ));
 
   return nsnull;
@@ -3305,7 +3299,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
             "b.dateAdded, b.lastModified, b.parent, ") +
             tagsSqlFragment + NS_LITERAL_CSTRING(
           "FROM moz_bookmarks b "
-          "JOIN moz_places h ON b.fk = h.id AND b.type = 1 "
+          "JOIN moz_places h ON b.fk = h.id "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
           "WHERE NOT EXISTS "
               "(SELECT id FROM moz_bookmarks "
@@ -3512,25 +3506,26 @@ PlacesSQLQueryBuilder::SelectAsDay()
     nsPrintfCString dateParam("dayTitle%d", i);
     mAddParams.Put(dateParam, dateName);
 
-     nsPrintfCString dayRange(1024,
-        "SELECT :%s AS dayTitle, "
-               "%s AS beginTime, "
-               "%s AS endTime "
-         "WHERE EXISTS ( "
-          "SELECT id FROM moz_historyvisits "
-          "WHERE visit_date >= %s "
-            "AND visit_date < %s "
-             "AND visit_type NOT IN (0,%d,%d) "
-             "{QUERY_OPTIONS_VISITS} "
-           "LIMIT 1 "
-        ") ",
+    nsPrintfCString dayRange(1024,
+      "SELECT :%s AS dayTitle, "
+             "%s AS beginTime, "
+             "%s AS endTime "
+       "WHERE EXISTS ( "
+        "SELECT id FROM moz_historyvisits "
+        "WHERE visit_date >= %s "
+          "AND visit_date < %s "
+           "AND visit_type NOT IN (0,%d,%d) "
+           "{QUERY_OPTIONS_VISITS} "
+         "LIMIT 1 "
+      ") ",
       dateParam.get(),
       sqlFragmentContainerBeginTime.get(),
       sqlFragmentContainerEndTime.get(),
       sqlFragmentSearchBeginTime.get(),
       sqlFragmentSearchEndTime.get(),
       nsINavHistoryService::TRANSITION_EMBED,
-      nsINavHistoryService::TRANSITION_FRAMED_LINK);
+      nsINavHistoryService::TRANSITION_FRAMED_LINK
+    );
 
     mQueryString.Append(dayRange);
 
@@ -3554,74 +3549,52 @@ PlacesSQLQueryBuilder::SelectAsSite()
   history->GetStringFromName(NS_LITERAL_STRING("localhost").get(), localFiles);
   mAddParams.Put(NS_LITERAL_CSTRING("localhost"), localFiles);
 
-  // We want just sites, but from whole database.
-  if (mConditions.IsEmpty()) {
-    mQueryString = nsPrintfCString(2048,
-      "SELECT DISTINCT null, "
-             "'place:type=%ld&sort=%ld&domain=&domainIsHost=true', "
-             ":localhost, :localhost, null, null, null, null, null, null, null "
-      "WHERE EXISTS ( "
-        "SELECT id FROM moz_places "
-        "WHERE hidden <> 1 "
-          "AND rev_host = '.' "
-          "AND visit_count > 0 "
-          "AND url BETWEEN 'file://' AND 'file:/~' "
-      ") "
-      "UNION ALL "
-      "SELECT DISTINCT null, "
-             "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true', "
-             "host, host, null, null, null, null, null, null, null "
-      "FROM ( "
-        "SELECT get_unreversed_host(rev_host) host "
-        "FROM ( "
-          "SELECT DISTINCT rev_host FROM moz_places "
-          "WHERE hidden <> 1 "
-            "AND rev_host <> '.' "
-            "AND visit_count > 0 "
-        ") "
-      "ORDER BY 1 ASC) ",
-      nsINavHistoryQueryOptions::RESULTS_AS_URI,
-      mSortingMode,
-      nsINavHistoryQueryOptions::RESULTS_AS_URI,
-      mSortingMode);
-  // Now we need to use the filters - we need them all
-  } else {
-
-    mQueryString = nsPrintfCString(4096,
-      "SELECT DISTINCT null, "
-             "'place:type=%ld&sort=%ld&domain=&domainIsHost=true"
-               "&beginTime='||:begin_time||'&endTime='||:end_time, "
-             ":localhost, :localhost, null, null, null, null, null, null, null "
-      "WHERE EXISTS( "
-        "SELECT h.id "
-        "FROM moz_places h "
-        "JOIN moz_historyvisits v ON v.place_id = h.id "
-        "WHERE h.hidden <> 1 AND h.rev_host = '.' "
-          "AND h.visit_count > 0 "
-          "AND h.url BETWEEN 'file://' AND 'file:/~' "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-      ") "
-      "UNION ALL "
-      "SELECT DISTINCT null, "
-             "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true"
-               "&beginTime='||:begin_time||'&endTime='||:end_time, "
-             "host, host, null, null, null, null, null, null, null "
-      "FROM ( "
-        "SELECT DISTINCT get_unreversed_host(rev_host) AS host "
-        "FROM moz_places h "
-        "JOIN moz_historyvisits v ON v.place_id = h.id "
-        "WHERE h.rev_host <> '.' "
-          "AND h.visit_count > 0 "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} "
-        "ORDER BY 1 ASC "
-      ") ",
-      nsINavHistoryQueryOptions::RESULTS_AS_URI,
-      mSortingMode,
-      nsINavHistoryQueryOptions::RESULTS_AS_URI,
-      mSortingMode);
+  // If there are additional conditions the query has to join on visits too.
+  nsCAutoString visitsJoin;
+  nsCAutoString additionalConditions;
+  if (!mConditions.IsEmpty()) {
+    visitsJoin.AssignLiteral("JOIN moz_historyvisits v ON v.place_id = h.id ");
+    additionalConditions.AssignLiteral("{QUERY_OPTIONS_VISITS} "
+                                       "{QUERY_OPTIONS_PLACES} "
+                                       "{ADDITIONAL_CONDITIONS} ");
   }
+
+  mQueryString = nsPrintfCString(2048,
+    "SELECT null, 'place:type=%ld&sort=%ld&domain=&domainIsHost=true', "
+           ":localhost, :localhost, null, null, null, null, null, null, null "
+    "WHERE EXISTS ( "
+      "SELECT h.id FROM moz_places h "
+      "%s "
+      "WHERE h.hidden <> 1 "
+        "AND h.visit_count > 0 "
+        "AND h.url BETWEEN 'file://' AND 'file:/~' "
+      "%s "
+      "LIMIT 1 "
+    ") "
+    "UNION ALL "
+    "SELECT null, "
+           "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true', "
+           "host, host, null, null, null, null, null, null, null "
+    "FROM ( "
+      "SELECT get_unreversed_host(h.rev_host) AS host "
+      "FROM moz_places h "
+      "%s "
+      "WHERE h.hidden <> 1 "
+        "AND h.rev_host <> '.' "
+        "AND h.visit_count > 0 "
+        "%s "
+      "GROUP BY h.rev_host "
+      "ORDER BY host ASC "
+    ") ",
+    nsINavHistoryQueryOptions::RESULTS_AS_URI,
+    mSortingMode,
+    PromiseFlatCString(visitsJoin).get(),
+    PromiseFlatCString(additionalConditions).get(),
+    nsINavHistoryQueryOptions::RESULTS_AS_URI,
+    mSortingMode,
+    PromiseFlatCString(visitsJoin).get(),
+    PromiseFlatCString(additionalConditions).get()
+  );
 
   return NS_OK;
 }
@@ -3638,13 +3611,14 @@ PlacesSQLQueryBuilder::SelectAsTag()
 
   mQueryString = nsPrintfCString(2048,
     "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%ld', "
-      "title, null, null, null, null, null, null, dateAdded, lastModified, "
-      "null, null "
-    "FROM   moz_bookmarks "
-    "WHERE  parent = %lld",
+           "title, null, null, null, null, null, null, dateAdded, "
+           "lastModified, null, null "
+    "FROM moz_bookmarks "
+    "WHERE parent = %lld",
     nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
     nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS,
-    history->GetTagsFolder());
+    history->GetTagsFolder()
+  );
 
   return NS_OK;
 }
@@ -3690,10 +3664,7 @@ PlacesSQLQueryBuilder::Where()
 
   // If we used WHERE already, we inject the conditions 
   // in place of {ADDITIONAL_CONDITIONS}
-  PRInt32 useInnerCondition;
-  useInnerCondition = mQueryString.Find("{ADDITIONAL_CONDITIONS}", 0);
-  if (useInnerCondition != kNotFound) {
-
+  if (mQueryString.Find("{ADDITIONAL_CONDITIONS}", 0) != kNotFound) {
     nsCAutoString innerCondition;
     // If we have condition AND it
     if (!mConditions.IsEmpty()) {
@@ -4150,12 +4121,12 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
 }
 
 
-// nsNavHistory::GetLastPageVisited
-//
-//    This was once used when the new window is set to "previous page." It
-//    doesn't seem to be used anymore, so we don't spend any time precompiling
-//    the statement.
-
+/**
+ * This was once used when the new window was set to "previous page".
+ * Currently it is still referenced by browser.startup.page == 2, but that value
+ * is not selectable from the UI.
+ * TODO: Should be deprecated? There is no fast alternative to get this info.
+ */
 NS_IMETHODIMP
 nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 {
@@ -4163,10 +4134,10 @@ nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT url, visit_date FROM moz_historyvisits v "
-      "JOIN moz_places h ON v.place_id = h.id "
-      "WHERE h.hidden <> 1 "
-      "ORDER BY visit_date DESC "),
+      "SELECT url FROM moz_places "
+      "WHERE hidden <> 1 "
+        "AND last_visit_date NOTNULL "
+      "ORDER BY last_visit_date DESC "),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 

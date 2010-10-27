@@ -55,10 +55,8 @@ function book_tag_sql_fragment(aName, aColumn, aForTag)
     "JOIN moz_bookmarks t ",
       "ON t.id = b.parent ",
       "AND t.parent ", (aForTag ? "" : "!"), "= :parent ",
-    "WHERE b.type = ", Ci.nsINavBookmarksService.TYPE_BOOKMARK, " ",
-      "AND b.fk = h.id ",
-    (aForTag ? "AND LENGTH(t.title) > 0" :
-               "ORDER BY b.lastModified DESC LIMIT 1"),
+    "WHERE b.fk = h.id ",
+    (aForTag ? "" : "ORDER BY b.lastModified DESC LIMIT 1"),
   ") AS ", aName].join("");
 }
 
