@@ -195,17 +195,20 @@ PluginInstanceChild::~PluginInstanceChild()
 void
 PluginInstanceChild::InitQuirksModes(const nsCString& aMimeType)
 {
-#ifdef OS_WIN
     // application/x-silverlight
     // application/x-silverlight-2
     NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
+    if (FindInReadable(silverlight, aMimeType)) {
+        mQuirks |= QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT;
+#ifdef OS_WIN
+        mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
+#endif
+    }
+
+#ifdef OS_WIN
     // application/x-shockwave-flash
     NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
-    if (FindInReadable(silverlight, aMimeType)) {
-        mQuirks |= QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION;
-        mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
-    }
-    else if (FindInReadable(flash, aMimeType)) {
+    if (FindInReadable(flash, aMimeType)) {
         mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
         mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
     }
@@ -460,7 +463,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
     case NPPVpluginTransparentBool: {
         NPError rv;
-        mIsTransparent = (NPBool) (intptr_t) aValue;
+        mIsTransparent = (!!aValue);
 
         if (!CallNPN_SetValue_NPPVpluginTransparent(mIsTransparent, &rv))
             return NPERR_GENERIC_ERROR;
@@ -2031,6 +2034,9 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     mWindow.height = aWindow.height;
     mWindow.clipRect = aWindow.clipRect;
     mWindow.type = aWindow.type;
+
+    if (mQuirks & QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT)
+        mIsTransparent = true;
 
     mLayersRendering = true;
     mSurfaceType = aSurfaceType;
