@@ -2,8 +2,18 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=601299
+
+Trigger a fastnative from a frameless context.
 -->
+<head>
+  <title>Test for Bug 601299</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="window.setTimeout(RegExp, 0); window.setTimeout(function() { ok(true); SimpleTest.finish(); }, 0);">
 <script>
-window.setTimeout(RegExp, 0);
+SimpleTest.waitForExplicitFinish();
 </script>
+</body>
 </html>
