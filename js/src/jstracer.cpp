@@ -2491,6 +2491,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         insComment("begin-loop");
         InitConst(loopLabel) = lir->ins0(LIR_label);
     }
+    insComment("begin-setup");
 
     // if profiling, drop a label, so the assembler knows to put a
     // frag-entry-counter increment at this point.  If there's a
@@ -2569,6 +2570,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
             addName(loadFromState(LIR_ldp, outermostTreeExitGuard), "outermostTreeExitGuard");
         guard(true, lir->ins2(LIR_eqp, nested_ins, INS_CONSTPTR(innermost)), NESTED_EXIT);
     }
+
+    insComment("end-setup");
 }
 
 TraceRecorder::~TraceRecorder()
@@ -7425,6 +7428,7 @@ TraceRecorder::monitorRecording(JSOp op)
 
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
+            debug_only_print0(LC_TMRecorder, "\n");
             js_Disassemble1(cx, cx->fp()->script(), cx->regs->pc,
                             cx->fp()->hasImacropc()
                                 ? 0 : cx->regs->pc - cx->fp()->script()->code,
