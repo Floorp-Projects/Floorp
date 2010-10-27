@@ -78,13 +78,14 @@ SharedDIBWin::Close()
 }
 
 nsresult
-SharedDIBWin::Create(HDC aHdc, PRUint32 aWidth, PRUint32 aHeight)
+SharedDIBWin::Create(HDC aHdc, PRUint32 aWidth, PRUint32 aHeight,
+                     bool aTransparent)
 {
   Close();
 
   // create the offscreen shared dib
-  BITMAPINFOHEADER bmih;
-  PRUint32 size = SetupBitmapHeader(aWidth, aHeight, &bmih);
+  BITMAPV4HEADER bmih;
+  PRUint32 size = SetupBitmapHeader(aWidth, aHeight, aTransparent, &bmih);
 
   nsresult rv = SharedDIB::Create(size);
   if (NS_FAILED(rv))
@@ -99,12 +100,13 @@ SharedDIBWin::Create(HDC aHdc, PRUint32 aWidth, PRUint32 aHeight)
 }
 
 nsresult
-SharedDIBWin::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight)
+SharedDIBWin::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight,
+                     bool aTransparent)
 {
   Close();
 
-  BITMAPINFOHEADER bmih;
-  SetupBitmapHeader(aWidth, aHeight, &bmih);
+  BITMAPV4HEADER bmih;
+  SetupBitmapHeader(aWidth, aHeight, aTransparent, &bmih);
 
   nsresult rv = SharedDIB::Attach(aHandle, 0);
   if (NS_FAILED(rv))
@@ -119,21 +121,28 @@ SharedDIBWin::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight)
 }
 
 PRUint32
-SharedDIBWin::SetupBitmapHeader(PRUint32 aWidth, PRUint32 aHeight, BITMAPINFOHEADER *aHeader)
+SharedDIBWin::SetupBitmapHeader(PRUint32 aWidth, PRUint32 aHeight,
+                                bool aTransparent, BITMAPV4HEADER *aHeader)
 {
-  memset((void*)aHeader, 0, sizeof(BITMAPINFOHEADER));
-  aHeader->biSize        = sizeof(BITMAPINFOHEADER);
-  aHeader->biWidth       = aWidth;
-  aHeader->biHeight      = aHeight;
-  aHeader->biPlanes      = 1;
-  aHeader->biBitCount    = 32;
-  aHeader->biCompression = BI_RGB;
+  memset((void*)aHeader, 0, sizeof(BITMAPV4HEADER));
+  aHeader->bV4Size          = sizeof(BITMAPV4HEADER);
+  aHeader->bV4Width         = aWidth;
+  aHeader->bV4Height        = aHeight;
+  aHeader->bV4Planes        = 1;
+  aHeader->bV4BitCount      = 32;
+  aHeader->bV4V4Compression = BI_BITFIELDS;
+  aHeader->bV4RedMask       = 0x00FF0000;
+  aHeader->bV4GreenMask     = 0x0000FF00;
+  aHeader->bV4BlueMask      = 0x000000FF;
 
-  return (sizeof(BITMAPINFOHEADER) + (aHeader->biHeight * aHeader->biWidth * kBytesPerPixel));
+  if (aTransparent)
+    aHeader->bV4AlphaMask     = 0xFF000000;
+
+  return (sizeof(BITMAPV4HEADER) + (aHeader->bV4Height * aHeader->bV4Width * kBytesPerPixel));
 }
 
 nsresult
-SharedDIBWin::SetupSurface(HDC aHdc, BITMAPINFOHEADER *aHdr)
+SharedDIBWin::SetupSurface(HDC aHdc, BITMAPV4HEADER *aHdr)
 {
   mSharedHdc = ::CreateCompatibleDC(aHdc);
 
@@ -145,7 +154,7 @@ SharedDIBWin::SetupSurface(HDC aHdc, BITMAPINFOHEADER *aHdr)
                                   DIB_RGB_COLORS,
                                   &mBitmapBits,
                                   mShMem->handle(),
-                                  (unsigned long)sizeof(BITMAPINFOHEADER));
+                                  (unsigned long)sizeof(BITMAPV4HEADER));
   if (!mSharedBmp)
     return NS_ERROR_FAILURE;
 

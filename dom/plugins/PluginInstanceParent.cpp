@@ -503,7 +503,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorWin) {
         SurfaceDescriptorWin windesc = newSurface.get_SurfaceDescriptorWin();
         SharedDIBSurface* dibsurf = new SharedDIBSurface();
-        if (dibsurf->Attach(windesc.handle(), windesc.size().width, windesc.size().height))
+        if (dibsurf->Attach(windesc.handle(), windesc.size().width, windesc.size().height, windesc.transparent()))
             surface = dibsurf;
     }
 #endif
@@ -1343,7 +1343,7 @@ PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
     // allocate a new shared surface
     SharedSurfaceRelease();
     if (NS_FAILED(mSharedSurfaceDib.Create(reinterpret_cast<HDC>(aWindow->window),
-                                           newPort.width, newPort.height)))
+                                           newPort.width, newPort.height, false)))
       return false;
 
     // save the new shared surface size we just allocated
