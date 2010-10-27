@@ -224,8 +224,14 @@ struct nsCSSRendering {
      */
     PAINTBG_WILL_PAINT_BORDER = 0x01,
     /**
-     * When this flag is passed, images are synchronously decoded. */
-    PAINTBG_SYNC_DECODE_IMAGES = 0x02
+     * When this flag is passed, images are synchronously decoded.
+     */
+    PAINTBG_SYNC_DECODE_IMAGES = 0x02,
+    /**
+     * When this flag is passed, painting will go to the screen so we can
+     * take advantage of the fact that it will be clipped to the viewport.
+     */
+    PAINTBG_TO_WINDOW = 0x04
   };
   static void PaintBackground(nsPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,

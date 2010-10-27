@@ -327,8 +327,8 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest* request)
 
         // Traverse up the parent chain to the top docshell that doesn't have
         // a system principal
-        while (NS_SUCCEEDED(curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem)) &&
-                            parentDocShellItem)) {
+        while (NS_SUCCEEDED(curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
+               parentDocShellItem) {
             PRBool system = PR_FALSE;
             topDoc = do_GetInterface(parentDocShellItem);
             if (topDoc) {

@@ -230,6 +230,10 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 
+#ifdef MOZ_IPC
+#include "nsXULAppAPI.h"
+#endif
+
 using namespace mozilla;
 
 // Number of documents currently loading
@@ -5928,7 +5932,13 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
         do_QueryInterface(aNewChannel);
     if (appCacheChannel) {
-        appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(newURI));
+#ifdef MOZ_IPC
+        // Permission will be checked in the parent process.
+        if (GeckoProcessType_Default != XRE_GetProcessType())
+            appCacheChannel->SetChooseApplicationCache(PR_TRUE);
+        else
+#endif
+            appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(newURI));
     }
 
     if (!(aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) && 
@@ -8581,7 +8591,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
 
         // Loads with the correct permissions should check for a matching
         // application cache.
-        appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(aURI));
+#ifdef MOZ_IPC
+        // Permission will be checked in the parent process
+        if (GeckoProcessType_Default != XRE_GetProcessType())
+            appCacheChannel->SetChooseApplicationCache(PR_TRUE);
+        else
+#endif
+            appCacheChannel->SetChooseApplicationCache(
+                ShouldCheckAppCache(aURI));
     }
 
     // Make sure to give the caller a channel if we managed to create one

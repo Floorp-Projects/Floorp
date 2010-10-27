@@ -787,7 +787,6 @@ const gFormSubmitObserver = {
   init: function()
   {
     this.panel = document.getElementById('invalid-form-popup');
-    this.panel.appendChild(document.createTextNode(""));
   },
 
   panelIsOpen: function()
@@ -820,8 +819,7 @@ const gFormSubmitObserver = {
       return;
     }
 
-    // Limit the message to 256 characters.
-    this.panel.firstChild.nodeValue = element.validationMessage.substring(0, 256);
+    this.panel.firstChild.textContent = element.validationMessage;
 
     element.focus();
 
@@ -3634,7 +3632,7 @@ var FullScreen = {
       // The user may quit fullscreen during an animation
       clearInterval(this._animationInterval);
       clearTimeout(this._animationTimeout);
-      gNavToolbox.style.marginTop = "0px";
+      gNavToolbox.style.marginTop = "";
       if (this._isChromeCollapsed)
         this.mouseoverToggle(true);
       this._isAnimating = false;
@@ -3767,7 +3765,7 @@ var FullScreen = {
       if (animateFrameAmount >= gNavToolbox.boxObject.height) {
         // We've animated enough
         clearInterval(FullScreen._animationInterval);
-        gNavToolbox.style.marginTop = "0px";
+        gNavToolbox.style.marginTop = "";
         FullScreen._isAnimating = false;
         FullScreen._shouldAnimate = false; // Just to make sure
         FullScreen.mouseoverToggle(false);
@@ -4620,10 +4618,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   if (popup != aEvent.currentTarget)
     return;
 
-  var i;
-
   // Empty the menu
-  for (i = popup.childNodes.length-1; i >= 0; --i) {
+  for (var i = popup.childNodes.length-1; i >= 0; --i) {
     var deadItem = popup.childNodes[i];
     if (deadItem.hasAttribute("toolbarId"))
       popup.removeChild(deadItem);
@@ -4631,9 +4627,9 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   var firstMenuItem = aInsertPoint || popup.firstChild;
 
-  let toolbarNodes = [document.getElementById("addon-bar")];
-  for (i = 0; i < gNavToolbox.childNodes.length; ++i)
-    toolbarNodes.push(gNavToolbox.childNodes[i]);
+  let toolbarNodes = Array.slice(gNavToolbox.childNodes);
+  toolbarNodes.push(document.getElementById("addon-bar"));
+
   toolbarNodes.forEach(function(toolbar) {
     var toolbarName = toolbar.getAttribute("toolbarname");
     if (toolbarName) {
@@ -5094,54 +5090,28 @@ function asyncOpenWebPanel(event)
    return true;
  }
 
-function handleLinkClick(event, href, linkNode)
-{
+function handleLinkClick(event, href, linkNode) {
+  if (event.button == 2) // right click
+    return false;
+
+  var where = whereToOpenLink(event);
+  if (where == "current")
+    return false;
+
   var doc = event.target.ownerDocument;
 
-  switch (event.button) {
-    case 0:    // if left button clicked
-#ifdef XP_MACOSX
-      if (event.metaKey) { // Cmd
-#else
-      if (event.ctrlKey) {
-#endif
-        openNewTabWith(href, doc, null, event, false);
-        event.stopPropagation();
-        return true;
-      }
-
-      if (event.shiftKey && event.altKey) {
-        var feedService =
-            Cc["@mozilla.org/browser/feeds/result-service;1"].
-            getService(Ci.nsIFeedResultService);
-        feedService.forcePreviewPage = true;
-        loadURI(href, null, null, false);
-        return false;
-      }
-
-      if (event.shiftKey) {
-        openNewWindowWith(href, doc, null, false);
-        event.stopPropagation();
-        return true;
-      }
-
-      if (event.altKey) {
-        saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true,
-                true, doc.documentURIObject);
-        return true;
-      }
-
-      return false;
-    case 1:    // if middle button clicked
-      var tab = gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick");
-      if (tab)
-        openNewTabWith(href, doc, null, event, false);
-      else
-        openNewWindowWith(href, doc, null, false);
-      event.stopPropagation();
-      return true;
+  if (where == "save") {
+    saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true,
+            true, doc.documentURIObject);
+    return true;
   }
-  return false;
+
+  urlSecurityCheck(href, doc.nodePrincipal);
+  openLinkIn(href, where, { fromContent: true,
+                            referrerURI: doc.documentURIObject,
+                            charset: doc.characterSet });
+  event.stopPropagation();
+  return true;
 }
 
 function middleMousePaste(event) {
@@ -5735,7 +5705,7 @@ var OfflineApps = {
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject);
+    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject, window);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -7516,6 +7486,7 @@ let gPrivateBrowsingUI = {
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
+    let docElement = document.documentElement;
     if (this._privateBrowsingService.autoStarted) {
       // Disable the menu item in auto-start mode
       document.getElementById("privateBrowsingItem")
@@ -7526,15 +7497,16 @@ let gPrivateBrowsingUI = {
 #endif
       document.getElementById("Tools:PrivateBrowsing")
               .setAttribute("disabled", "true");
+      if (window.location.href == getBrowserURL())
+        docElement.setAttribute("privatebrowsingmode", "permanent");
     }
     else if (window.location.href == getBrowserURL()) {
       // Adjust the window's title
-      let docElement = document.documentElement;
       docElement.setAttribute("title",
         docElement.getAttribute("title_privatebrowsing"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing"));
-      docElement.setAttribute("browsingmode", "private");
+      docElement.setAttribute("privatebrowsingmode", "temporary");
       gBrowser.updateTitlebar();
     }
 
@@ -7581,7 +7553,7 @@ let gPrivateBrowsingUI = {
         docElement.getAttribute("title_normal"));
       docElement.setAttribute("titlemodifier",
         docElement.getAttribute("titlemodifier_normal"));
-      docElement.setAttribute("browsingmode", "normal");
+      docElement.removeAttribute("privatebrowsingmode");
     }
 
     // Enable the menu item in after exiting the auto-start mode

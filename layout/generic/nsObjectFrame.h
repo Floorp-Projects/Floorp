@@ -239,7 +239,8 @@ protected:
                                const nsRect& aDirtyRect, nsPoint aPt);
   void PrintPlugin(nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-  void PaintPlugin(nsIRenderingContext& aRenderingContext,
+  void PaintPlugin(nsDisplayListBuilder* aBuilder,
+                   nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect, const nsRect& aPluginRect);
 
   /**

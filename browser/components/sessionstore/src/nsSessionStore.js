@@ -1268,15 +1268,32 @@ SessionStoreService.prototype = {
   },
 
   getTabValue: function sss_getTabValue(aTab, aKey) {
-    var data = aTab.__SS_extdata || {};
+    let data = {};
+    if (aTab.__SS_extdata) {
+      data = aTab.__SS_extdata;
+    }
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      // If the tab hasn't been fully restored, get the data from the to-be-restored data
+      data = aTab.linkedBrowser.__SS_data.extData;
+    }
     return data[aKey] || "";
   },
 
   setTabValue: function sss_setTabValue(aTab, aKey, aStringValue) {
-    if (!aTab.__SS_extdata) {
-      aTab.__SS_extdata = {};
+    // If the tab hasn't been restored, then set the data there, otherwise we
+    // could lose newly added data.
+    let saveTo;
+    if (aTab.__SS_extdata) {
+      saveTo = aTab.__SS_extdata;
     }
-    aTab.__SS_extdata[aKey] = aStringValue;
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      saveTo = aTab.linkedBrowser.__SS_data.extData;
+    }
+    else {
+      aTab.__SS_extdata = {};
+      saveTo = aTab.__SS_extdata;
+    }
+    saveTo[aKey] = aStringValue;
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
   },
 
@@ -1400,9 +1417,22 @@ SessionStoreService.prototype = {
     if (!browser || !browser.currentURI)
       // can happen when calling this function right after .addTab()
       return tabData;
-    else if (browser.__SS_data && browser.__SS_data._tabStillLoading)
+    else if (browser.__SS_data && browser.__SS_data._tabStillLoading) {
       // use the data to be restored when the tab hasn't been completely loaded
-      return browser.__SS_data;
+      tabData = browser.__SS_data;
+      if (aTab.pinned)
+        tabData.pinned = true;
+      else
+        delete tabData.pinned;
+      if (browser.userTypedValue) {
+        tabData.userTypedValue = browser.userTypedValue;
+        tabData.userTypedClear = browser.userTypedClear;
+      } else {
+        delete tabData.userTypedValue;
+        delete tabData.userTypedClear;
+      }
+      return tabData;
+    }
     
     var history = null;
     try {
@@ -1443,10 +1473,15 @@ SessionStoreService.prototype = {
     if (browser.userTypedValue) {
       tabData.userTypedValue = browser.userTypedValue;
       tabData.userTypedClear = browser.userTypedClear;
+    } else {
+      delete tabData.userTypedValue;
+      delete tabData.userTypedClear;
     }
 
     if (aTab.pinned)
       tabData.pinned = true;
+    else
+      delete tabData.pinned;
     tabData.hidden = aTab.hidden;
 
     var disallow = [];

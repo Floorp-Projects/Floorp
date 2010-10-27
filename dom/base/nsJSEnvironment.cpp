@@ -105,6 +105,12 @@
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
 
+#ifdef XP_MACOSX
+// AssertMacros.h defines 'check' and conflicts with AccessCheck.h
+#undef check
+#endif
+#include "AccessCheck.h"
+
 #ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
 #endif
@@ -376,10 +382,13 @@ public:
                    const nsAString& aErrorMsg,
                    const nsAString& aFileName,
                    const nsAString& aSourceLine,
-                   PRBool aDispatchEvent)
+                   PRBool aDispatchEvent,
+                   PRUint64 aWindowID)
   : mScriptGlobal(aScriptGlobal), mLineNr(aLineNr), mColumn(aColumn),
     mFlags(aFlags), mErrorMsg(aErrorMsg), mFileName(aFileName),
-    mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent) {}
+    mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent),
+    mWindowID(aWindowID)
+  {}
 
   NS_IMETHOD Run()
   {
@@ -466,10 +475,18 @@ public:
           ? "chrome javascript"
           : "content javascript";
 
-        rv = errorObject->Init(mErrorMsg.get(), mFileName.get(),
-                               mSourceLine.get(),
-                               mLineNr, mColumn, mFlags,
-                               category);
+        nsCOMPtr<nsIScriptError2> error2(do_QueryInterface(errorObject));
+        if (error2) {
+          rv = error2->InitWithWindowID(mErrorMsg.get(), mFileName.get(),
+                                        mSourceLine.get(),
+                                        mLineNr, mColumn, mFlags,
+                                        category, mWindowID);
+        } else {
+          rv = errorObject->Init(mErrorMsg.get(), mFileName.get(),
+                                 mSourceLine.get(),
+                                 mLineNr, mColumn, mFlags,
+                                 category);
+        }
 
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIConsoleService> consoleService =
@@ -492,6 +509,7 @@ public:
   nsString                        mFileName;
   nsString                        mSourceLine;
   PRBool                          mDispatchEvent;
+  PRUint64                        mWindowID;
 
   static PRBool sHandlingScriptError;
 };
@@ -571,11 +589,14 @@ NS_ScriptErrorReporter(JSContext *cx,
        */
       nsAutoString sourceLine;
       sourceLine.Assign(reinterpret_cast<const PRUnichar*>(report->uclinebuf));
+      nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
+      PRUint64 windowID = win ? win->WindowID() : 0;
       nsContentUtils::AddScriptRunner(
         new ScriptErrorEvent(globalObject, report->lineno,
                              report->uctokenptr - report->uclinebuf,
                              report->flags, msg, fileName, sourceLine,
-                             report->errorNumber != JSMSG_OUT_OF_MEMORY));
+                             report->errorNumber != JSMSG_OUT_OF_MEMORY,
+                             windowID));
     }
   }
 
@@ -932,8 +953,9 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
+  JSObject* global = ::JS_GetGlobalForScopeChain(cx);
   PRBool isTrackingChromeCodeTime =
-    ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx));
+    global && xpc::AccessCheck::isChrome(global->getCompartment());
   if (duration < (isTrackingChromeCodeTime ?
                   sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
     return JS_TRUE;
@@ -1175,6 +1197,8 @@ static const char js_tracejit_content_str[]   = JS_OPTIONS_DOT_STR "tracejit.con
 static const char js_tracejit_chrome_str[]    = JS_OPTIONS_DOT_STR "tracejit.chrome";
 static const char js_methodjit_content_str[]   = JS_OPTIONS_DOT_STR "methodjit.content";
 static const char js_methodjit_chrome_str[]    = JS_OPTIONS_DOT_STR "methodjit.chrome";
+static const char js_profiling_content_str[]   = JS_OPTIONS_DOT_STR "jitprofiling.content";
+static const char js_profiling_chrome_str[]    = JS_OPTIONS_DOT_STR "jitprofiling.chrome";
 
 int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1200,6 +1224,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   PRBool useMethodJIT = nsContentUtils::GetBoolPref(chromeWindow ?
                                                     js_methodjit_chrome_str :
                                                     js_methodjit_content_str);
+  PRBool useProfiling = nsContentUtils::GetBoolPref(chromeWindow ?
+                                                    js_profiling_chrome_str :
+                                                    js_profiling_content_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
     PRBool safeMode = PR_FALSE;
@@ -1207,6 +1234,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     if (safeMode) {
       useTraceJIT = PR_FALSE;
       useMethodJIT = PR_FALSE;
+      useProfiling = PR_FALSE;
     }
   }    
 
@@ -1219,6 +1247,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_METHODJIT;
   else
     newDefaultJSOptions &= ~JSOPTION_METHODJIT;
+
+  if (useProfiling)
+    newDefaultJSOptions |= JSOPTION_PROFILING;
+  else
+    newDefaultJSOptions &= ~JSOPTION_PROFILING;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if javascript.options.strict.debug is true

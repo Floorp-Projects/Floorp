@@ -63,7 +63,7 @@ Observer.prototype =
   },
   onEndUpdateBatch: function() {
   },
-  onItemAdded: function(id, folder, index) {
+  onItemAdded: function(id, folder, index, itemType, uri) {
   },
   onBeforeItemRemoved: function(id) {
     this.removedId = id;

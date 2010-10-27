@@ -46,22 +46,23 @@ using mozilla::MutexAutoLock;
 
 ImageContainerD3D10::ImageContainerD3D10(LayerManagerD3D10 *aManager)
   : ImageContainer(aManager)
+  , mDevice(aManager->device())
   , mActiveImageLock("mozilla.layers.ImageContainerD3D10.mActiveImageLock")
 {
 }
 
 already_AddRefed<Image>
 ImageContainerD3D10::CreateImage(const Image::Format *aFormats,
-                               PRUint32 aNumFormats)
+                                 PRUint32 aNumFormats)
 {
   if (!aNumFormats) {
     return nsnull;
   }
   nsRefPtr<Image> img;
   if (aFormats[0] == Image::PLANAR_YCBCR) {
-    img = new PlanarYCbCrImageD3D10(static_cast<LayerManagerD3D10*>(mManager));
+    img = new PlanarYCbCrImageD3D10(mDevice);
   } else if (aFormats[0] == Image::CAIRO_SURFACE) {
-    img = new CairoImageD3D10(static_cast<LayerManagerD3D10*>(mManager));
+    img = new CairoImageD3D10(mDevice);
   }
   return img.forget();
 }
@@ -212,11 +213,11 @@ ImageLayerD3D10::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
   device()->Draw(4, 0);
 }
 
-PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(mozilla::layers::LayerManagerD3D10* aManager)
+PlanarYCbCrImageD3D10::PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice)
   : PlanarYCbCrImage(static_cast<ImageD3D10*>(this))
+  , mDevice(aDevice)
   , mHasData(PR_FALSE)
 {
-  mDevice = aManager->device();
 }
 
 void
@@ -381,8 +382,8 @@ CairoImageD3D10::SetData(const CairoImage::Data &aData)
   data.pSysMem = imageSurface->Data();
   data.SysMemPitch = imageSurface->Stride();
 
-  mManager->device()->CreateTexture2D(&desc, &data, getter_AddRefs(mTexture));
-  mManager->device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+  mDevice->CreateTexture2D(&desc, &data, getter_AddRefs(mTexture));
+  mDevice->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
 }
 
 already_AddRefed<gfxASurface>

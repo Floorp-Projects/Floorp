@@ -59,7 +59,7 @@ function test() {
        "The currently selected tab should be the first tab in the groupItemOne");
 
     // create another group with a tab.
-    let groupItemTwo = createEmptyGroupItem(contentWindow, 200);
+    let groupItemTwo = createEmptyGroupItem(contentWindow, 300, 300, 200);
 
     let onTabViewHidden = function() {
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);
@@ -110,17 +110,4 @@ function testGroupSwitch(contentWindow, groupItemOne, groupItemTwo) {
   gBrowser.removeTab(newTabOne);
 
   finish();
-}
-
-function createEmptyGroupItem(contentWindow, padding) {
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
-  let box = new contentWindow.Rect(pageBounds);
-  box.width = 300;
-  box.height = 300;
-
-  let emptyGroupItem = new contentWindow.GroupItem([], { bounds: box });
-
-  return emptyGroupItem;
 }

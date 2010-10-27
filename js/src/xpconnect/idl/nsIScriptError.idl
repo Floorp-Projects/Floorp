@@ -92,6 +92,29 @@ interface nsIScriptError : nsIConsoleMessage
     AUTF8String toString();
 };
 
+/**
+ * An interface that nsIScriptError objects can implement to allow
+ * them to be initialized with a window id.
+ */
+[scriptable, uuid(35cd0f6a-f5bb-497a-ba83-9c8d089b52cd)]
+interface nsIScriptError2 : nsISupports {
+    /* Get the window id this was initialized with.  Zero will be
+       returned if init() was used instead of initWithWindowId(). */
+    readonly attribute unsigned long long outerWindowID;
+
+    /* This should be called instead of nsIScriptError.init to
+       initialize with a window id.  The window id should be for the
+       outer window associated with this error. */
+    void initWithWindowID(in wstring message,
+                          in wstring sourceName,
+                          in wstring sourceLine,
+                          in PRUint32 lineNumber,
+                          in PRUint32 columnNumber,
+                          in PRUint32 flags,
+                          in string category,
+                          in unsigned long long windowID);
+};
+
 %{ C++
 #define NS_SCRIPTERROR_CLASSNAME "Script Error"
 

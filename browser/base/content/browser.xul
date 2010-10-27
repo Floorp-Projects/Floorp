@@ -167,7 +167,9 @@
     <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
     <!-- for invalid form error message -->
-    <panel id="invalid-form-popup" noautofocus="true" hidden="true" level="parent"/>
+    <panel id="invalid-form-popup" noautofocus="true" hidden="true" level="parent">
+      <description/>
+    </panel>
 
     <panel id="editBookmarkPanel"
            orient="vertical"
@@ -1012,7 +1014,9 @@
                       key="manBookmarkKb"/>
             <menuseparator/>
             <menuitem id="BMB_bookmarkThisPage"
+#ifndef XP_MACOSX
                       class="menuitem-iconic"
+#endif
                       label="&bookmarkThisPageCmd.label;"
                       command="Browser:AddBookmarkAs"
                       key="addBookmarkAsKb"/>

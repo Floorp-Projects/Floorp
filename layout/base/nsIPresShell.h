@@ -804,6 +804,7 @@ public:
    * XXX this should include image animations
    */
   virtual void Freeze() = 0;
+  PRBool IsFrozen() { return mFrozen; }
 
   /**
    * Restarts active elements (plugins) in this presentation and in the
@@ -1188,18 +1189,6 @@ protected:
   PRPackedBool              mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
   PRPackedBool              mIsActive;
   PRPackedBool              mFrozen;
-
-#ifdef ACCESSIBILITY
-  /**
-   * Call this when there have been significant changes in the rendering for
-   * a content subtree, so the matching accessibility subtree can be invalidated
-   */
-  void InvalidateAccessibleSubtree(nsIContent *aContent);
-#endif
-
-  // Set to true when the accessibility service is being used to mirror
-  // the dom/layout trees
-  PRPackedBool              mIsAccessibilityActive;
 
   PRPackedBool              mObservesMutationsForPrint;
 

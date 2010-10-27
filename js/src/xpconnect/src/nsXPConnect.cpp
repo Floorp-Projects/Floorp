@@ -393,12 +393,12 @@ nsXPConnect::Collect()
     // cycle collection. So to compensate for JS_BeginRequest in
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
-    JS_ASSERT(cx->thread->requestDepth >= 1);
+    JS_ASSERT(cx->thread->data.requestDepth >= 1);
     JS_ASSERT(!cx->thread->data.conservativeGC.requestThreshold);
-    if(cx->thread->requestDepth == 1)
+    if(cx->thread->data.requestDepth == 1)
         cx->thread->data.conservativeGC.requestThreshold = 1;
     JS_GC(cx);
-    if(cx->thread->requestDepth == 1)
+    if(cx->thread->data.requestDepth == 1)
         cx->thread->data.conservativeGC.requestThreshold = 0;
 }
 
@@ -737,7 +737,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
         if(traceKind == JSTRACE_OBJECT) {
             JSObject *global = static_cast<JSObject*>(p), *parent;
-            while((parent = JS_GetParent(cx, global)))
+            while((parent = global->getParent()))
                 global = parent;
             char fullname[100];
             JS_snprintf(fullname, sizeof(fullname),
@@ -942,7 +942,7 @@ static JSClass xpcTempGlobalClass = {
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        const nsACString &origin, nsIPrincipal *principal,
-                       bool preferXrays, JSObject **global,
+                       bool wantXrays, JSObject **global,
                        JSCompartment **compartment)
 {
     XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
@@ -973,7 +973,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         js::SwitchToCompartment sc(cx, *compartment);
 
         xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(ToNewCString(local_origin), preferXrays);
+            new xpc::CompartmentPrivate(ToNewCString(local_origin), wantXrays);
         JS_SetCompartmentPrivate(cx, *compartment, priv);
         map.Put(local_origin, *compartment);
     }

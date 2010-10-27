@@ -70,6 +70,7 @@ class GeckoAppShell
     private GeckoAppShell() { }
 
     static boolean sGeckoRunning;
+    static private GeckoEvent gPendingResize = null;
 
     static private boolean gRestartScheduled = false;
 
@@ -90,7 +91,6 @@ class GeckoAppShell
     public static native void nativeRun(String args);
 
     // helper methods
-    public static native void setInitialSize(int width, int height);
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
     public static native void onResume();
@@ -136,8 +136,6 @@ class GeckoAppShell
         // Tell Gecko where the target surface view is for rendering
         GeckoAppShell.setSurfaceView(GeckoApp.surfaceView);
 
-        sGeckoRunning = true;
-
         // First argument is the .apk path
         String combinedArgs = apkPath + " -omnijar " + apkPath;
         if (args != null)
@@ -151,8 +149,16 @@ class GeckoAppShell
     private static GeckoEvent mLastDrawEvent;
 
     public static void sendEventToGecko(GeckoEvent e) {
-        if (sGeckoRunning)
+        if (sGeckoRunning) {
+            if (gPendingResize != null) {
+                notifyGeckoOfEvent(gPendingResize);
+                gPendingResize = null;
+            }
             notifyGeckoOfEvent(e);
+        } else {
+            if (e.mType == GeckoEvent.SIZE_CHANGED)
+                gPendingResize = e;
+        }
     }
 
     // Tell the Gecko event loop that an event is available.
@@ -325,6 +331,15 @@ class GeckoAppShell
         }
     }
 
+    static void onAppShellReady()
+    {
+        sGeckoRunning = true;
+        if (gPendingResize != null) {
+            notifyGeckoOfEvent(gPendingResize);
+            gPendingResize = null;
+        }
+    }
+
     static void onXreExit() {
         sGeckoRunning = false;
         Log.i("GeckoAppJava", "XRE exited");
@@ -332,7 +347,7 @@ class GeckoAppShell
             GeckoApp.mAppContext.doRestart();
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
-            System.exit(0);
+            GeckoApp.mAppContext.finish();
         }
 
     }

@@ -76,14 +76,11 @@
               onfocus="onTreeFocus(event);"
               onselect="onSelect(event);">
       <treecols>
-        <treecol id="FilenameColumn" label="&name.label;" flex="1"
-                     class="sortDirectionIndicator"/>
+        <treecol id="FilenameColumn" label="&name.label;" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="FileSizeColumn" label="&size.label;" flex="1"
-                     class="sortDirectionIndicator"/>
+        <treecol id="FileSizeColumn" label="&size.label;" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="LastModifiedColumn" label="&lastModified.label;" flex="1"
-                     class="sortDirectionIndicator"/>
+        <treecol id="LastModifiedColumn" label="&lastModified.label;" flex="1"/>
       </treecols>
       <treechildren/>
     </tree>

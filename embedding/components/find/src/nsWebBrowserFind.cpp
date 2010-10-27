@@ -451,7 +451,8 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
     // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView
       (nsISelectionController::SELECTION_NORMAL,
-       nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+       nsISelectionController::SELECTION_FOCUS_REGION,
+       nsISelectionController::SCROLL_SYNCHRONOUS);
   }
 }
 

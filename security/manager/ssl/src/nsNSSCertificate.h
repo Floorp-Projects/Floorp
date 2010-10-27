@@ -82,6 +82,7 @@ public:
   /* from a request? */
   virtual ~nsNSSCertificate();
   nsresult FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details);
+  static nsNSSCertificate* Create(CERTCertificate *cert = nsnull);
   static nsNSSCertificate* ConstructFromDER(char *certDER, int derLen);
 
   static char* defaultServerNickname(CERTCertificate* cert);

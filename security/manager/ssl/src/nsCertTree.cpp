@@ -579,7 +579,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
       }
     }
 
-    nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(node->cert);
+    nsCOMPtr<nsIX509Cert> pipCert = nsNSSCertificate::Create(node->cert);
     if (!pipCert)
       return NS_ERROR_OUT_OF_MEMORY;
 

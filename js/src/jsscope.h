@@ -249,30 +249,17 @@ struct PropertyTable {
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do update the malloc counter on success.
+     * cope or ignore. They do however use JSRuntime's calloc method in order
+     * to update the malloc counter on success.
      */
-    bool            init(JSContext *cx, js::Shape *lastProp);
-    bool            change(JSContext *cx, int change);
+    bool            init(js::Shape *lastProp, JSContext *cx);
+    bool            change(int log2Delta, JSContext *cx);
     js::Shape       **search(jsid id, bool adding);
 };
 
 } /* namespace js */
 
 struct JSObject;
-
-inline const js::Value &
-JSObject::lockedGetSlot(uintN slot) const
-{
-    OBJ_CHECK_SLOT(this, slot);
-    return this->getSlot(slot);
-}
-
-inline void
-JSObject::lockedSetSlot(uintN slot, const js::Value &value)
-{
-    OBJ_CHECK_SLOT(this, slot);
-    this->setSlot(slot, value);
-}
 
 namespace js {
 
@@ -860,18 +847,6 @@ Shape::isSharedPermanent() const
 {
     return (~attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0;
 }
-
-class AutoObjectLocker {
-    JSContext   * const cx;
-    JSObject    * const obj;
-  public:
-    AutoObjectLocker(JSContext *cx, JSObject *obj)
-      : cx(cx), obj(obj) {
-        JS_LOCK_OBJ(cx, obj);
-    }
-
-    ~AutoObjectLocker() { JS_UNLOCK_OBJ(cx, obj); }
-};
 
 }
 

@@ -59,9 +59,9 @@ include $(topsrcdir)/config/rules.mk
 # which is normally not desirable,
 TEST_HARNESS_PACKAGES = \
   simplejson-2.1.1 \
-  mozrunner-2.5.1 \
-  jsbridge-2.4.0 \
-  mozmill-1.5.0 \
+  mozrunner \
+  jsbridge \
+  mozmill \
   $(NULL)
 
 TEST_FILES := \

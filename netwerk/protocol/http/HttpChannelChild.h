@@ -141,6 +141,8 @@ protected:
                           const PRUint32& redirectFlags,
                           const nsHttpResponseHead& responseHead);
   bool RecvRedirect3Complete();
+  bool RecvAssociateApplicationCache(const nsCString& groupID,
+                                     const nsCString& clientID);
   bool RecvDeleteSelf();
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nsnull);

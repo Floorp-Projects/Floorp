@@ -109,13 +109,6 @@ nsPlaintextEditor::nsPlaintextEditor()
 
 nsPlaintextEditor::~nsPlaintextEditor()
 {
-  // remove the rules as an action listener.  Else we get a bad ownership loop
-  // later on.  it's ok if the rules aren't a listener; we ignore the error.
-  if (mRules) {
-    nsCOMPtr<nsIEditActionListener> mListener = do_QueryInterface(mRules);
-    RemoveEditActionListener(mListener);
-  }
-  
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
   RemoveEventListeners();

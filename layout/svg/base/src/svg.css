@@ -38,10 +38,6 @@
 
 @namespace url(http://www.w3.org/2000/svg);
 
-/* XXX see bugs #71191 and #172574 before applying xbl binding to
- * either 'svg' or 'svg:not(:root)'
- */
-
 style, script, symbol {
  display: none;
 }

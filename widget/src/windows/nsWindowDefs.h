@@ -95,6 +95,10 @@
 // ConstrainPosition window positioning slop value
 #define kWindowPositionSlop               20
 
+// Origin of the system context menu when displayed in full screen mode
+#define MOZ_SYSCONTEXT_X_POS              20
+#define MOZ_SYSCONTEXT_Y_POS              20
+
 // Drop shadow window style
 #define CS_XP_DROPSHADOW                  0x00020000
 

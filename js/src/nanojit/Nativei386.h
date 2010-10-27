@@ -215,9 +215,8 @@ namespace nanojit
             _nIns -= 4; \
             *((int32_t*)_nIns) = int32_t(i); \
         }; \
-        void MODRMs(int32_t r, int32_t d, Register b, int32_t l, int32_t i); \
         void MODRMm(int32_t r, int32_t d, Register b); \
-        void MODRMsib(int32_t reg, Register base, Register index, int32_t scale, int32_t disp); \
+        void MODRMsib(int32_t r, Register b, Register i, int32_t s, int32_t d); \
         void MODRMdm(int32_t r, int32_t addr); \
         /* d may be a register number or something else */ \
         void MODRM(int32_t d, int32_t s) { \
@@ -249,7 +248,7 @@ namespace nanojit
         void XOR(Register l, Register r); \
         void ADD(Register l, Register r); \
         void SUB(Register l, Register r); \
-        void MUL(Register l, Register r); \
+        void IMUL(Register l, Register r); \
         void DIV(Register r); \
         void NOT(Register r); \
         void NEG(Register r); \
@@ -344,9 +343,8 @@ namespace nanojit
             underrunProtect(5); \
             intptr_t tt = t ? (intptr_t)t - (intptr_t)_nIns : 0; \
             if (t && isS8(tt)) { \
-                _nIns -= 2; \
-                _nIns[0] = JMP8; \
-                _nIns[1] = uint8_t(tt & 0xff); \
+                *(--_nIns) = uint8_t(tt & 0xff); \
+                *(--_nIns) = JMP8; \
             } else { \
                 IMM32(tt); \
                 *(--_nIns) = JMP32; \

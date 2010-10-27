@@ -223,7 +223,7 @@ var bookmarksObserver = {
 
   // nsINavBookmarkObserver
   onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex,
-                                        aItemType) {
+                                        aItemType, aURI) {
     var views = getViewsForFolder(aFolderId);
     ok(views.length > 0, "Found affected views (" + views.length + "): " + views);
 

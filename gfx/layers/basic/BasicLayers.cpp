@@ -390,16 +390,6 @@ ClipToContain(gfxContext* aContext, const nsIntRect& aRect)
   aContext->SetMatrix(currentMatrix);
 }
 
-static void
-InheritContextFlags(gfxContext* aSource, gfxContext* aDest)
-{
-  if (aSource->GetFlags() & gfxContext::FLAG_DESTINED_FOR_SCREEN) {
-    aDest->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
-  } else {
-    aDest->ClearFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
-  }
-}
-
 static PRBool
 ShouldRetainTransparentSurface(PRUint32 aContentFlags,
                                gfxASurface* aTargetSurface)
@@ -493,7 +483,6 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       // from RGB to RGBA, because we might need to repaint with
       // subpixel AA)
       state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
-      InheritContextFlags(target, state.mContext);
       mXResolution = paintXRes;
       mYResolution = paintYRes;
       PaintBuffer(state.mContext,
@@ -1016,7 +1005,6 @@ BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
     mCachedSurface.Get(aContent,
                        gfxIntSize(clip.size.width, clip.size.height),
                        currentSurf);
-  InheritContextFlags(aTarget, ctx);
   /* Align our buffer for the original surface */
   ctx->Translate(-clip.pos);
   *aSavedOffset = clip.pos;

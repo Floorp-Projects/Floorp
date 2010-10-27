@@ -294,6 +294,37 @@ namespace nanojit
         emitprr(op, r, b);
     }
 
+    // disp32 modrm form with 32-bit immediate value
+    void Assembler::emitrm_imm32(uint64_t op, Register b, int32_t d, int32_t imm) {
+        NanoAssert(IsGpReg(b));
+        NanoAssert((REGNUM(b) & 7) != 4); // using RSP or R12 as base requires SIB
+        underrunProtect(4+4+8); // room for imm plus disp plus fullsize op
+        *((int32_t*)(_nIns -= 4)) = imm;
+        _nvprof("x86-bytes", 4);
+        emitrm_wide(op, RZero, d, b);
+    }
+
+    // disp32 modrm form with 16-bit immediate value
+    // p = prefix -- opcode must have a 66, F2, or F3 prefix
+    void Assembler::emitprm_imm16(uint64_t op, Register b, int32_t d, int32_t imm) {
+        NanoAssert(IsGpReg(b));
+        NanoAssert((REGNUM(b) & 7) != 4); // using RSP or R12 as base requires SIB
+        underrunProtect(2+4+8); // room for imm plus disp plus fullsize op
+        *((int16_t*)(_nIns -= 2)) = (int16_t) imm;
+        _nvprof("x86-bytes", 2);
+        emitprm(op, RZero, d, b);
+    }
+
+    // disp32 modrm form with 8-bit immediate value
+    void Assembler::emitrm_imm8(uint64_t op, Register b, int32_t d, int32_t imm) {
+        NanoAssert(IsGpReg(b));
+        NanoAssert((REGNUM(b) & 7) != 4); // using RSP or R12 as base requires SIB
+        underrunProtect(1+4+8); // room for imm plus disp plus fullsize op
+        *((int8_t*)(_nIns -= 1)) = (int8_t) imm;
+        _nvprof("x86-bytes", 1);
+        emitrm_wide(op, RZero, d, b);
+    }
+
     void Assembler::emitrr_imm(uint64_t op, Register r, Register b, int32_t imm) {
         NanoAssert(IsGpReg(r) && IsGpReg(b));
         underrunProtect(4+8); // room for imm plus fullsize op
@@ -589,6 +620,11 @@ namespace nanojit
 
     void Assembler::CALLRAX()       { emit(X64_callrax); asm_output("call (rax)"); }
     void Assembler::RET()           { emit(X64_ret);     asm_output("ret");        }
+
+    void Assembler::MOVQMI(R r, I d, I32 imm) { emitrm_imm32(X64_movqmi,r,d,imm); asm_output("movq %d(%s), %d",d,RQ(r),imm); }
+    void Assembler::MOVLMI(R r, I d, I32 imm) { emitrm_imm32(X64_movlmi,r,d,imm); asm_output("movl %d(%s), %d",d,RQ(r),imm); }
+    void Assembler::MOVSMI(R r, I d, I32 imm) { emitprm_imm16(X64_movsmi,r,d,imm); asm_output("movs %d(%s), %d",d,RQ(r),imm); }
+    void Assembler::MOVBMI(R r, I d, I32 imm) { emitrm_imm8(X64_movbmi,r,d,imm); asm_output("movb %d(%s), %d",d,RQ(r),imm); }
 
     void Assembler::MOVQSPR(I d, R r)   { emit(X64_movqspr | U64(d) << 56 | U64((REGNUM(r)&7)<<3) << 40 | U64((REGNUM(r)&8)>>1) << 24); asm_output("movq %d(rsp), %s", d, RQ(r)); }    // insert r into mod/rm and rex bytes
 
@@ -1647,9 +1683,17 @@ namespace nanojit
 
         switch (op) {
             case LIR_stq: {
-                Register r, b;
-                getBaseReg2(GpRegs, value, r, BaseRegs, base, b, d);
-                MOVQMR(r, d, b);    // gpr store
+                uint64_t c;
+                if (value->isImmQ() && (c = value->immQ(), isS32(c))) {
+                    uint64_t c = value->immQ();
+                    Register rb = getBaseReg(base, d, BaseRegs);
+                    // MOVQMI takes a 32-bit integer that gets signed extended to a 64-bit value.
+                    MOVQMI(rb, d, int32_t(c));
+                } else {
+                    Register rr, rb;
+                    getBaseReg2(GpRegs, value, rr, BaseRegs, base, rb, d);
+                    MOVQMR(rr, d, rb);    // gpr store
+                }
                 break;
             }
             case LIR_std: {
@@ -1675,28 +1719,31 @@ namespace nanojit
     }
 
     void Assembler::asm_store32(LOpcode op, LIns *value, int d, LIns *base) {
+        if (value->isImmI()) {
+            Register rb = getBaseReg(base, d, BaseRegs);
+            int c = value->immI();
+            switch (op) {
+                case LIR_sti2c: MOVBMI(rb, d, c); break;
+                case LIR_sti2s: MOVSMI(rb, d, c); break;
+                case LIR_sti:   MOVLMI(rb, d, c); break;
+                default:        NanoAssert(0);    break;
+            }
 
-        // Quirk of x86-64: reg cannot appear to be ah/bh/ch/dh for
-        // single-byte stores with REX prefix.
-        const RegisterMask SrcRegs = (op == LIR_sti2c) ? SingleByteStoreRegs : GpRegs;
+        } else {
+            // Quirk of x86-64: reg cannot appear to be ah/bh/ch/dh for
+            // single-byte stores with REX prefix.
+            const RegisterMask SrcRegs = (op == LIR_sti2c) ? SingleByteStoreRegs : GpRegs;
 
-        NanoAssert(value->isI());
-        Register b = getBaseReg(base, d, BaseRegs);
-        Register r = findRegFor(value, SrcRegs & ~rmask(b));
+            NanoAssert(value->isI());
+            Register b = getBaseReg(base, d, BaseRegs);
+            Register r = findRegFor(value, SrcRegs & ~rmask(b));
 
-        switch (op) {
-            case LIR_sti2c:
-                MOVBMR(r, d, b);
-                break;
-            case LIR_sti2s:
-                MOVSMR(r, d, b);
-                break;
-            case LIR_sti:
-                MOVLMR(r, d, b);
-                break;
-            default:
-                NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
-                break;
+            switch (op) {
+                case LIR_sti2c: MOVBMR(r, d, b); break;
+                case LIR_sti2s: MOVSMR(r, d, b); break;
+                case LIR_sti:   MOVLMR(r, d, b); break;
+                default:        NanoAssert(0);   break;
+            }
         }
     }
 

@@ -1260,6 +1260,12 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
             return NS_OK;
         }
 
+        // See bug #586908.
+        // Avoid endless loop if |uri| is the current PAC-URI. Returning OK
+        // here means that we will not use a proxy for this connection.
+        if (mPACMan && mPACMan->IsPACURI(uri))
+            return NS_OK;
+
         // Switch to new PAC file if that setting has changed. If the setting
         // hasn't changed, ConfigureFromPAC will exit early.
         nsresult rv = ConfigureFromPAC(PACURI, PR_FALSE);

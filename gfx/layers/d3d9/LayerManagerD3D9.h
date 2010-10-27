@@ -251,7 +251,7 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
-  virtual void RenderLayer() = 0;
+  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform) = 0;
 
   /* This function may be used on device resets to clear all VRAM resources
    * that a layer might be using.

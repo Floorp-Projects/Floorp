@@ -88,23 +88,6 @@ typedef struct JSThinLock {
 
 typedef PRLock JSLock;
 
-typedef struct JSTitle JSTitle;
-
-struct JSTitle {
-    JSContext       *ownercx;           /* creating context, NULL if shared */
-    JSThinLock      lock;               /* binary semaphore protecting title */
-    union {                             /* union lockful and lock-free state: */
-        jsrefcount  count;              /* lock entry count for reentrancy */
-        JSTitle     *link;              /* next link in rt->titleSharingTodo */
-    } u;
-};
-
-/*
- * Title structure is always allocated as a field of JSObject.
- */
-#define TITLE_TO_OBJECT(title)                                                 \
-    ((JSObject *)((uint8 *) (title) - offsetof(JSObject, title)))
-
 /*
  * Atomic increment and decrement for a reference counter, given jsrefcount *p.
  * NB: jsrefcount is int32, aka PRInt32, so that pratom.h functions work.
@@ -133,76 +116,24 @@ struct JSTitle {
 #define JS_LOCK_RUNTIME(rt)         js_LockRuntime(rt)
 #define JS_UNLOCK_RUNTIME(rt)       js_UnlockRuntime(rt)
 
-/*
- * NB: The JS_LOCK_OBJ and JS_UNLOCK_OBJ macros work *only* on native objects
- * (objects for which obj->isNative() returns true).  All uses of these macros in
- * the engine are predicated on obj->isNative or equivalent checks.
- */
-#define CX_OWNS_OBJECT_TITLE(cx,obj) ((obj)->title.ownercx == (cx))
-
-#define JS_LOCK_OBJ(cx,obj)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        JSObject *obj_ = (obj);                                               \
-        if (!CX_OWNS_OBJECT_TITLE(cx, obj_)) {                                \
-            js_LockObj(cx, obj_);                                             \
-            JS_SET_OBJ_INFO(obj_, __FILE__, __LINE__);                        \
-        }                                                                     \
-    JS_END_MACRO
-
-#define JS_UNLOCK_OBJ(cx,obj)                                                 \
-    JS_BEGIN_MACRO                                                            \
-        JSObject *obj_ = (obj);                                               \
-        if (!CX_OWNS_OBJECT_TITLE(cx, obj_))                                  \
-            js_UnlockObj(cx, obj_);                                           \
-    JS_END_MACRO
-
-#define JS_LOCK_TITLE(cx,title)                                               \
-    ((title)->ownercx == (cx) ? (void)0                                       \
-     : (js_LockTitle(cx, (title)),                                            \
-        JS_SET_TITLE_INFO(title,__FILE__,__LINE__)))
-
-#define JS_UNLOCK_TITLE(cx,title) ((title)->ownercx == (cx) ? (void)0         \
-                                   : js_UnlockTitle(cx, title))
-
 extern void js_Lock(JSContext *cx, JSThinLock *tl);
 extern void js_Unlock(JSContext *cx, JSThinLock *tl);
 extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
-extern void js_LockObj(JSContext *cx, JSObject *obj);
-extern void js_UnlockObj(JSContext *cx, JSObject *obj);
-extern void js_InitTitle(JSContext *cx, JSTitle *title);
-extern void js_FinishTitle(JSContext *cx, JSTitle *title);
-extern void js_LockTitle(JSContext *cx, JSTitle *title);
-extern void js_UnlockTitle(JSContext *cx, JSTitle *title);
 extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
-extern JS_FRIEND_API(jsval)
-js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
-extern void js_SetSlotThreadSafe(JSContext *, JSObject *, uint32, jsval);
 extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);
-
-/*
- * This function must be called with the GC lock held.
- */
-extern void
-js_ShareWaitingTitles(JSContext *cx);
 
 #ifdef DEBUG
 
 #define JS_IS_RUNTIME_LOCKED(rt)        js_IsRuntimeLocked(rt)
-#define JS_IS_OBJ_LOCKED(cx,obj)        js_IsObjLocked(cx,obj)
-#define JS_IS_TITLE_LOCKED(cx,title)    js_IsTitleLocked(cx,title)
 
 extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
-extern JSBool js_IsObjLocked(JSContext *cx, JSObject *obj);
-extern JSBool js_IsTitleLocked(JSContext *cx, JSTitle *title);
 
 #else
 
 #define JS_IS_RUNTIME_LOCKED(rt)        0
-#define JS_IS_OBJ_LOCKED(cx,obj)        1
-#define JS_IS_TITLE_LOCKED(cx,title)    1
 
 #endif /* DEBUG */
 
@@ -229,13 +160,8 @@ extern JSBool js_IsTitleLocked(JSContext *cx, JSTitle *title);
 
 #define JS_LOCK_RUNTIME(rt)         ((void)0)
 #define JS_UNLOCK_RUNTIME(rt)       ((void)0)
-#define JS_LOCK_OBJ(cx,obj)         ((void)0)
-#define JS_UNLOCK_OBJ(cx,obj)       ((void)0)
 
-#define CX_OWNS_OBJECT_TITLE(cx,obj)    1
 #define JS_IS_RUNTIME_LOCKED(rt)        1
-#define JS_IS_OBJ_LOCKED(cx,obj)        1
-#define JS_IS_TITLE_LOCKED(cx,title)    1
 
 #endif /* !JS_THREADSAFE */
 

@@ -69,6 +69,8 @@
 #include "nsComputedDOMStyle.h"
 #include "nsIViewObserver.h"
 #include "nsIPresShell.h"
+#include "nsStyleAnimation.h"
+#include "nsCSSProps.h"
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
 #include <gdk/gdk.h>
@@ -1439,7 +1441,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowID(PRUint64 *aWindowID)
 {
   NS_ASSERTION(mWindow->IsOuterWindow(), "How did that happen?");
-  *aWindowID = mWindow->mWindowID;
+  *aWindowID = mWindow->WindowID();
   return NS_OK;
 }
 
@@ -1451,7 +1453,7 @@ nsDOMWindowUtils::GetCurrentInnerWindowID(PRUint64 *aWindowID)
   if (!inner) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  *aWindowID = inner->mWindowID;
+  *aWindowID = inner->WindowID();
   return NS_OK;
 }
 
@@ -1491,6 +1493,74 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
     return NS_ERROR_FAILURE;
 
   mgr->GetBackendName(aType);
+
+  return NS_OK;
+}
+
+static PRBool
+ComputeAnimationValue(nsCSSProperty aProperty, nsIContent* aContent,
+                      const nsAString& aInput,
+                      nsStyleAnimation::Value& aOutput)
+{
+
+  if (!nsStyleAnimation::ComputeValue(aProperty, aContent, aInput,
+                                      PR_FALSE, aOutput)) {
+    return PR_FALSE;
+  }
+
+  // This matches TransExtractComputedValue in nsTransitionManager.cpp.
+  if (aProperty == eCSSProperty_visibility) {
+    NS_ABORT_IF_FALSE(aOutput.GetUnit() == nsStyleAnimation::eUnit_Enumerated,
+                      "unexpected unit");
+    aOutput.SetIntValue(aOutput.GetIntValue(),
+                        nsStyleAnimation::eUnit_Visibility);
+  }
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
+                                           const nsAString& aProperty,
+                                           const nsAString& aValue1,
+                                           const nsAString& aValue2,
+                                           double* aResult)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert direction-dependent properties as appropriate, e.g.,
+  // border-left to border-left-value.
+  nsCSSProperty property = nsCSSProps::LookupProperty(aProperty);
+  if (property != eCSSProperty_UNKNOWN && nsCSSProps::IsShorthand(property)) {
+    nsCSSProperty subprop0 = *nsCSSProps::SubpropertyEntryFor(property);
+    if (nsCSSProps::PropHasFlags(subprop0, CSS_PROPERTY_REPORT_OTHER_NAME) &&
+        nsCSSProps::OtherNameFor(subprop0) == property) {
+      property = subprop0;
+    } else {
+      property = eCSSProperty_UNKNOWN;
+    }
+  }
+
+  NS_ABORT_IF_FALSE(property == eCSSProperty_UNKNOWN ||
+                    !nsCSSProps::IsShorthand(property),
+                    "should not have shorthand");
+
+  nsStyleAnimation::Value v1, v2;
+  if (property == eCSSProperty_UNKNOWN ||
+      !ComputeAnimationValue(property, content, aValue1, v1) ||
+      !ComputeAnimationValue(property, content, aValue2, v2)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  if (!nsStyleAnimation::ComputeDistance(property, v1, v2, *aResult)) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -1548,5 +1618,31 @@ nsDOMWindowUtils::GetCursorType(PRInt16 *aCursor)
   // fetch cursor value from window's widget
   *aCursor = widget->GetCursor();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetDisplayDPI(float *aDPI)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  *aDPI = widget->GetDPI();
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetOuterWindowWithId(PRUint64 aWindowID,
+                                       nsIDOMWindow** aWindow)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aWindow = nsGlobalWindow::GetOuterWindowWithId(aWindowID);
+  NS_IF_ADDREF(*aWindow);
   return NS_OK;
 }

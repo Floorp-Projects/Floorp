@@ -51,42 +51,6 @@ const nsIDOMXULElement = Components.interfaces.nsIDOMXULElement;
 const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
 ////////////////////////////////////////////////////////////////////////////////
-// States
-
-const STATE_BUSY = nsIAccessibleStates.STATE_BUSY;
-const STATE_CHECKED = nsIAccessibleStates.STATE_CHECKED;
-const STATE_CHECKABLE = nsIAccessibleStates.STATE_CHECKABLE;
-const STATE_COLLAPSED = nsIAccessibleStates.STATE_COLLAPSED;
-const STATE_EXPANDED = nsIAccessibleStates.STATE_EXPANDED;
-const STATE_EXTSELECTABLE = nsIAccessibleStates.STATE_EXTSELECTABLE;
-const STATE_FOCUSABLE = nsIAccessibleStates.STATE_FOCUSABLE;
-const STATE_FOCUSED = nsIAccessibleStates.STATE_FOCUSED;
-const STATE_HASPOPUP = nsIAccessibleStates.STATE_HASPOPUP;
-const STATE_INVALID = nsIAccessibleStates.STATE_INVALID;
-const STATE_LINKED = nsIAccessibleStates.STATE_LINKED;
-const STATE_MIXED = nsIAccessibleStates.STATE_MIXED;
-const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;
-const STATE_OFFSCREEN = nsIAccessibleStates.STATE_OFFSCREEN;
-const STATE_PRESSED = nsIAccessibleStates.STATE_PRESSED;
-const STATE_READONLY = nsIAccessibleStates.STATE_READONLY;
-const STATE_REQUIRED = nsIAccessibleStates.STATE_REQUIRED;
-const STATE_SELECTABLE = nsIAccessibleStates.STATE_SELECTABLE;
-const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
-const STATE_TRAVERSED = nsIAccessibleStates.STATE_TRAVERSED;
-const STATE_UNAVAILABLE = nsIAccessibleStates.STATE_UNAVAILABLE;
-
-const EXT_STATE_ACTIVE = nsIAccessibleStates.EXT_STATE_ACTIVE;
-const EXT_STATE_DEFUNCT = nsIAccessibleStates.EXT_STATE_DEFUNCT;
-const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
-const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
-const EXT_STATE_HORIZONTAL = nsIAccessibleStates.EXT_STATE_HORIZONTAL;
-const EXT_STATE_MULTI_LINE = nsIAccessibleStates.EXT_STATE_MULTI_LINE;
-const EXT_STATE_SINGLE_LINE = nsIAccessibleStates.EXT_STATE_SINGLE_LINE;
-const EXT_STATE_SUPPORTS_AUTOCOMPLETION = 
-      nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
-const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
-
-////////////////////////////////////////////////////////////////////////////////
 // OS detect
 const MAC = (navigator.platform.indexOf("Mac") != -1)? true : false;
 const LINUX = (navigator.platform.indexOf("Linux") != -1)? true : false;
@@ -95,6 +59,8 @@ const WIN = (navigator.platform.indexOf("Win") != -1)? true : false;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible general
+
+const STATE_BUSY = nsIAccessibleStates.STATE_BUSY;
 
 const kEmbedChar = String.fromCharCode(0xfffc);
 
@@ -265,6 +231,19 @@ function isAccessible(aAccOrElmOrID, aInterfaces)
 }
 
 /**
+ * Return an accessible that contains the DOM node for the given identifier.
+ */
+function getContainerAccessible(aAccOrElmOrID)
+{
+  var node = getNode(aAccOrElmOrID);
+  if (!node)
+    return null;
+
+  while ((node = node.parentNode) && !isAccessible(node));
+  return node ? getAccessible(node) : null;
+}
+
+/**
  * Return root accessible for the given identifier.
  */
 function getRootAccessible(aAccOrElmOrID)
@@ -272,6 +251,25 @@ function getRootAccessible(aAccOrElmOrID)
   var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document,
                           [nsIAccessNode]);
   return acc ? acc.rootDocument.QueryInterface(nsIAccessible) : null;
+}
+
+/**
+ * Return tab document accessible the given accessible is contained by.
+ */
+function getTabDocAccessible(aAccOrElmOrID)
+{
+  var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document,
+                          [nsIAccessNode]);
+
+  var docAcc = acc.document.QueryInterface(nsIAccessible);
+  var containerDocAcc = docAcc.parent.QueryInterface(nsIAccessNode).document;
+
+  // Test is running is stand-alone mode.
+  if (acc.rootDocument == containerDocAcc)
+    return docAcc;
+
+  // In the case of running all tests together.
+  return containerDocAcc.QueryInterface(nsIAccessible);
 }
 
 /**
@@ -542,6 +540,15 @@ function prettyName(aIdentifier)
     } catch (e) {
       msg += "defunct";
     }
+
+    if (acc) {
+      var exp = /native\s*@\s*(0x[a-f0-9]+)/g;
+      var match = exp.exec(acc.valueOf());
+      if (match)
+        msg += ", address: " + match[1];
+      else
+        msg += ", address: " + acc.valueOf();
+    }
     msg += "]";
 
     return msg;
@@ -571,14 +578,16 @@ addLoadEvent(initialize);
 function getNodePrettyName(aNode)
 {
   try {
-    if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE && aNode.hasAttribute("id"))
-      return " '" + aNode.getAttribute("id") + "' ";
-
     if (aNode.nodeType == nsIDOMNode.DOCUMENT_NODE)
       return " 'document node' ";
 
-    return " '" + aNode.localName + " node' ";
+    var name = " '" + aNode.localName;
+    if (aNode.nodeType == nsIDOMNode.ELEMENT_NODE && aNode.hasAttribute("id"))
+      name += "@id='" + aNode.getAttribute("id") + "'";
+
+    name += " node' "
+    return name;
   } catch (e) {
-    return "no node info";
+    return "' no node info '";
   }
 }

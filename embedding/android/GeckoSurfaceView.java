@@ -116,9 +116,6 @@ class GeckoSurfaceView
 
             Log.i("GeckoAppJava", "surfaceChanged: fmt: " + format + " dim: " + width + " " + height);
 
-            if (!GeckoAppShell.sGeckoRunning)
-                return;
-
             GeckoEvent e = new GeckoEvent(GeckoEvent.SIZE_CHANGED, width, height, -1, -1);
             GeckoAppShell.sendEventToGecko(e);
 
@@ -126,8 +123,6 @@ class GeckoSurfaceView
                 GeckoAppShell.scheduleRedraw();
                 mSurfaceNeedsRedraw = false;
             }
-
-            mSurfaceChanged = true;
         } finally {
             mSurfaceLock.unlock();
         }
@@ -195,8 +190,6 @@ class GeckoSurfaceView
                 Log.e("GeckoAppJava", "endDrawing with false mSurfaceValid");
                 return;
             }
-        } catch (java.lang.IllegalArgumentException ex) {
-            mSurfaceChanged = true;
         } finally {
             mInDrawing = false;
 
@@ -290,10 +283,6 @@ class GeckoSurfaceView
 
     // Do we need to force a redraw on surfaceChanged?
     boolean mSurfaceNeedsRedraw;
-
-    // Has this surface been changed?  (That is,
-    // do we need to recreate buffers?)
-    boolean mSurfaceChanged;
 
     // Are we actively between beginDrawing/endDrawing?
     boolean mInDrawing;

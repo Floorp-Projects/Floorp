@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=606817
+-->
+<head>
+  <title>Test for Bug 606817</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=606817">Mozilla Bug 606817</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 606817 **/
+
+var messageMaxLength = 256;
+
+function checkMessage(aInput, aMsg, aWithTerminalPeriod)
+{
+  ok(aInput.validationMessage != aMsg,
+     "Original content-defined message should have been truncate");
+  is(aInput.validationMessage.length - aInput.validationMessage.indexOf("_42_"),
+     aWithTerminalPeriod ? messageMaxLength+1 : messageMaxLength,
+     "validation message should be 256 characters length");
+}
+
+var input = document.createElement("input");
+
+var msg = "";
+for (var i=0; i<75; ++i) {
+  msg += "_42_";
+}
+// msg is now 300 chars long
+
+// Testing with setCustomValidity().
+input.setCustomValidity(msg);
+checkMessage(input, msg, false);
+
+// The input is still invalid but x-moz-errormessage will be used as the message.
+input.setAttribute("x-moz-errormessage", msg);
+checkMessage(input, msg, false);
+
+// Cleaning.
+input.setCustomValidity("");
+input.removeAttribute("x-moz-errormessage");
+
+// Testing with pattern and titl.
+input.pattern = "[0-9]*";
+input.value = "foo";
+input.title = msg;
+checkMessage(input, msg, true);
+
+// Cleaning.
+input.removeAttribute("pattern");
+input.removeAttribute("title");
+input.value = "";
+
+</script>
+</pre>
+</body>
+</html>

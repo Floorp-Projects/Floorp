@@ -105,19 +105,15 @@ function softwareUpdate()
   this._controller = null;
   this._wizard = null;
 
-  this._prefsAPI = collector.getModule('PrefsAPI');
-  this._utilsAPI = collector.getModule('UtilsAPI');
+  this._PrefsAPI = collector.getModule('PrefsAPI');
+  this._UtilsAPI = collector.getModule('UtilsAPI');
 
   this._aus = Cc["@mozilla.org/updates/update-service;1"].
               getService(Ci.nsIApplicationUpdateService);
-  // nsIApplicationUpdateService2 is required for Firefox 3.6 but doesn't exist
-  // in Firefox 4.0. This will QI to nsIApplicationUpdateService2 only when it
-  // is available.
-  if ("nsIApplicationUpdateService2" in Ci) {
-    this._aus.QueryInterface(Ci.nsIApplicationUpdateService2);
-  }
   this._ums = Cc["@mozilla.org/updates/update-manager;1"].
               getService(Ci.nsIUpdateManager);
+  this._vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
+             getService(Ci.nsIVersionComparator);
 }
 
 /**
@@ -179,13 +175,13 @@ softwareUpdate.prototype = {
     controller.assertJS("subject.patchCount > 0",
                         {patchCount: patchCount > 0});
 
-// After bug 514040 is fixed remove this line and uncomment out the following
-// code
+    // XXX: After Firefox 4 has been released and we do not have to test any
+    // beta release anymore uncomment out the following code
 //    if (this.activeUpdate.patchCount == 2) {
 //      var patch0URL = this.activeUpdate.getPatchAt(0).URL;
 //      var patch1URL = this.activeUpdate.getPatchAt(1).URL;
-      // Test that the update snippet created by releng doesn't have the same
-      // url for both patches (bug 514040).
+       // Test that the update snippet created by releng doesn't have the same
+       // url for both patches (bug 514040).
 //      controller.assertJS("subject.patch0URL != subject.patch1URL",
 //                          {patch0URL: patch0URL, patch1URL: patch1URL});
 //    }
@@ -218,9 +214,7 @@ softwareUpdate.prototype = {
   assertUpdateApplied : function softwareUpdate_assertUpdateApplied(updateData) {
     // The upgraded version should be identical with the version given by
     // the update and we shouldn't have run a downgrade
-    var vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
-             getService(Ci.nsIVersionComparator);
-    var check = vc.compare(updateData.postVersion, updateData.preVersion);
+    var check = this._vc.compare(updateData.postVersion, updateData.preVersion);
   
     controller.assertJS("subject.newVersionGreater == true",
                         {newVersionGreater: check >= 0});
@@ -261,7 +255,7 @@ softwareUpdate.prototype = {
     waitForFinish = waitForFinish ? waitForFinish : true;
 
     // Check that the correct channel has been set
-    var prefChannel = this._prefsAPI.preferences.getPref('app.update.channel', '');
+    var prefChannel = this._PrefsAPI.preferences.getPref('app.update.channel', '');
     this._controller.assertJS("subject.currentChannel == subject.expectedChannel",
                               {currentChannel: channel, expectedChannel: prefChannel});
 
@@ -359,9 +353,6 @@ softwareUpdate.prototype = {
       case "download_progress":
         elem = new elementslib.ID(this._controller.window.document, "downloadProgress");
         break;
-      case "menu_update":
-        elem = new elementslib.Elem(spec.value.menus.helpMenu.checkForUpdates);
-        break;
       default:
         throw new Error(arguments.callee.name + ": Unknown element type - " + spec.type);
     }
@@ -376,10 +367,35 @@ softwareUpdate.prototype = {
    *        Mozmill controller of the browser window
    */
   openDialog: function softwareUpdate_openDialog(browserController) {
-    var updateMenu = this.getElement({type: "menu_update",
-                                      value: browserController});
-    
-    browserController.click(updateMenu);
+    // XXX: After Firefox 4 has been released and we do not have to test any
+    // beta release anymore uncomment out the following code
+
+    // With version >= 4.0b7pre the update dialog is reachable from within the
+    // about window now. It only applies to Windows and Linux.
+    var appVersion = this._UtilsAPI.appInfo.version;
+
+    if (!mozmill.isMac && this._vc.compare(appVersion, "4.0b7pre") >= 0) {
+      // Open the about window and click the update button
+      aboutItem = new elementslib.Elem(browserController.menus.helpMenu.aboutName);
+      browserController.click(aboutItem);
+
+      this._UtilsAPI.handleWindow("type", "Browser:About", function(controller) {
+        // XXX: Bug 599290 - Check for updates has been completely relocated
+        // into the about window. We can't check the in-about ui yet.
+        var updateButton = new elementslib.ID(controller.window.document,
+                                              "checkForUpdatesButton");
+        //controller.click(updateButton);
+        controller.waitForElement(updateButton, gTimeout);
+      });
+
+      // For now just call the old ui until we have a fix.
+      var updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].
+                         createInstance(Ci.nsIUpdatePrompt);
+      updatePrompt.checkForUpdates();
+    } else {
+      updateItem = new elementslib.Elem(browserController.menus.helpMenu.checkForUpdates);
+      browserController.click(updateItem);
+    }
 
     this.waitForDialogOpen(browserController);
   },
@@ -402,7 +418,7 @@ softwareUpdate.prototype = {
    *        Mozmill controller of the browser window
    */
   waitForDialogOpen : function softwareUpdate_waitForDialogOpen(browserController) {
-    this._controller = this._utilsAPI.handleWindow("type", "Update:Wizard",
+    this._controller = this._UtilsAPI.handleWindow("type", "Update:Wizard",
                                                    null, true);
     this._wizard = this.getElement({type: "wizard"});
 

@@ -45,8 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = 	  browser_405664.js \
-	                  browser_415700.js \
+	                  browser_addEngine.js \
 	                  testEngine.xml \
+	                  testEngine.src \
 	                  browser_426329.js \
 	                  426329.xml \
 	                  browser_483086.js \

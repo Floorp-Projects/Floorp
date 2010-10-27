@@ -1005,6 +1005,12 @@ nsCacheService::Init()
     if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
 
+#ifdef MOZ_IPC
+    if (mozilla::net::IsNeckoChild()) {
+        return NS_ERROR_UNEXPECTED;
+    }
+#endif
+
     if (mLock == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1500,11 +1506,12 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
     // !!! must be called with mLock held !!!
     nsresult           rv;
     nsCacheEntry *     entry = nsnull;
+    nsCacheEntry *     doomedEntry = nsnull;
     nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
     if (result) *result = nsnull;
 
     while(1) {  // Activate entry loop
-        rv = ActivateEntry(request, &entry);  // get the entry for this request
+        rv = ActivateEntry(request, &entry, &doomedEntry);  // get the entry for this request
         if (NS_FAILED(rv))  break;
 
         while(1) { // Request Access loop
@@ -1540,6 +1547,24 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
     
     if (NS_SUCCEEDED(rv))
         rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
+
+    // If doomedEntry is set, ActivatEntry() doomed an existing entry and
+    // created a new one for that cache-key. However, any pending requests
+    // on the doomed entry were not processed and we need to do that here.
+    // This must be done after adding the created entry to list of active
+    // entries (which is done in ActivateEntry()) otherwise the hashkeys crash
+    // (see bug ##561313). It is also important to do this after creating a
+    // descriptor for this request, or some other request may end up being
+    // executed first for the newly created entry.
+    // Finally, it is worth to emphasize that if doomedEntry is set,
+    // ActivateEntry() created a new entry for the request, which will be
+    // initialized by RequestAccess() and they both should have returned NS_OK.
+    if (doomedEntry) {
+        (void) ProcessPendingRequests(doomedEntry);
+        if (doomedEntry->IsNotInUse())
+            DeactivateEntry(doomedEntry);
+        doomedEntry = nsnull;
+    }
 
     if (request->mListener) {  // Asynchronous
     
@@ -1618,7 +1643,8 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
 nsresult
 nsCacheService::ActivateEntry(nsCacheRequest * request, 
-                              nsCacheEntry ** result)
+                              nsCacheEntry ** result,
+                              nsCacheEntry ** doomedEntry)
 {
     CACHE_LOG_DEBUG(("Activate entry for request %p\n", request));
     
@@ -1626,7 +1652,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     NS_ASSERTION(request != nsnull, "ActivateEntry called with no request");
     if (result) *result = nsnull;
-    if ((!request) || (!result))  return NS_ERROR_NULL_POINTER;
+    if (doomedEntry) *doomedEntry = nsnull;
+    if ((!request) || (!result) || (!doomedEntry))
+        return NS_ERROR_NULL_POINTER;
 
     // check if the request can be satisfied
     if (!mEnableMemoryDevice && !request->IsStreamBased())
@@ -1648,6 +1676,8 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         if (collision) return NS_ERROR_CACHE_IN_USE;
 
         if (entry)  entry->MarkInitialized();
+    } else {
+        NS_ASSERTION(entry->IsActive(), "Inactive entry found in mActiveEntries!");
     }
 
     if (entry) {
@@ -1665,7 +1695,10 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     {
         // this is FORCE-WRITE request or the entry has expired
-        rv = DoomEntry_Internal(entry);
+        // we doom entry without processing pending requests, but store it in
+        // doomedEntry which causes pending requests to be processed below
+        rv = DoomEntry_Internal(entry, false);
+        *doomedEntry = entry;
         if (NS_FAILED(rv)) {
             // XXX what to do?  Increment FailedDooms counter?
         }
@@ -1687,7 +1720,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         
         entry->Fetched();
         ++mTotalEntries;
-        
+
         // XXX  we could perform an early bind in some cases based on storage policy
     }
 
@@ -1767,7 +1800,9 @@ nsCacheDevice *
 nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 {
     nsCacheDevice * device = entry->CacheDevice();
-    if (device)  return device;
+    // return device if found, possibly null if the entry is doomed i.e prevent
+    // doomed entries to bind to a device (see e.g. bugs #548406 and #596443)
+    if (device || entry->IsDoomed())  return device;
 
     PRInt64 predictedDataSize = entry->PredictedDataSize();
 #ifdef NECKO_DISK_CACHE
@@ -1843,12 +1878,13 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 nsresult
 nsCacheService::DoomEntry(nsCacheEntry * entry)
 {
-    return gService->DoomEntry_Internal(entry);
+    return gService->DoomEntry_Internal(entry, true);
 }
 
 
 nsresult
-nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
+nsCacheService::DoomEntry_Internal(nsCacheEntry * entry,
+                                   PRBool doProcessPendingRequests)
 {
     if (entry->IsDoomed())  return NS_OK;
     
@@ -1871,12 +1907,15 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
     NS_ASSERTION(PR_CLIST_IS_EMPTY(entry), "doomed entry still on device list");
     PR_APPEND_LINK(entry, &mDoomedEntries);
 
-    // tell pending requests to get on with their lives...
-    rv = ProcessPendingRequests(entry);
-    
-    // All requests have been removed, but there may still be open descriptors
-    if (entry->IsNotInUse()) {
-        DeactivateEntry(entry); // tell device to get rid of it
+    // handle pending requests only if we're supposed to
+    if (doProcessPendingRequests) {
+        // tell pending requests to get on with their lives...
+        rv = ProcessPendingRequests(entry);
+
+        // All requests have been removed, but there may still be open descriptors
+        if (entry->IsNotInUse()) {
+            DeactivateEntry(entry); // tell device to get rid of it
+        }
     }
     return rv;
 }
@@ -2263,6 +2302,11 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
     nsCacheRequest *    nextRequest;
     PRBool              newWriter = PR_FALSE;
     
+    CACHE_LOG_DEBUG(("ProcessPendingRequests for %sinitialized %s %salid entry %p\n",
+                    (entry->IsInitialized()?"" : "Un"),
+                    (entry->IsDoomed()?"DOOMED" : ""),
+                    (entry->IsValid()? "V":"Inv"), entry));
+
     if (request == &entry->mRequestQ)  return NS_OK;    // no queued requests
 
     if (!entry->IsDoomed() && entry->IsInvalid()) {
@@ -2282,6 +2326,7 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
         while (request != &entry->mRequestQ) {
             if (request->AccessRequested() == nsICache::ACCESS_READ_WRITE) {
                 newWriter = PR_TRUE;
+                CACHE_LOG_DEBUG(("  promoting request %p to 1st writer\n", request));
                 break;
             }
 
@@ -2300,6 +2345,8 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
 
     while (request != &entry->mRequestQ) {
         nextRequest = (nsCacheRequest *)PR_NEXT_LINK(request);
+        CACHE_LOG_DEBUG(("  %sync request %p for %p\n",
+                        (request->mListener?"As":"S"), request, entry));
 
         if (request->mListener) {
 
@@ -2327,7 +2374,7 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
                 rv = entry->CreateDescriptor(request,
                                              accessGranted,
                                              &descriptor);
-                
+
                 // post call to listener to report error or descriptor
                 rv = NotifyListener(request, descriptor, accessGranted, rv);
                 delete request;
@@ -2398,6 +2445,7 @@ nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
 {
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
     NS_ASSERTION(entry, "### active entry = nsnull!");
+    // only called from Shutdown() so we don't worry about pending requests
     gService->ClearPendingRequests(entry);
     entry->DetachDescriptors();
     
@@ -2417,7 +2465,7 @@ nsCacheService::DoomActiveEntries()
 
     PRUint32 count = array.Length();
     for (PRUint32 i=0; i < count; ++i)
-        DoomEntry_Internal(array[i]);
+        DoomEntry_Internal(array[i], true);
 }
 
 

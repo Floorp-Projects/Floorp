@@ -1,0 +1,141 @@
+<html>
+
+<head>
+  <title>Context menu tests</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function showContextMenu(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENUPOPUP_START, getContextMenuNode()),
+      ];
+
+      this.invoke = function showContextMenu_invoke()
+      {
+        synthesizeMouse(this.DOMNode, 4, 4, { type: "contextmenu", button: 2 });
+      }
+
+      this.getID = function showContextMenu_getID()
+      {
+        return "show context menu";
+      }
+    }
+
+    function selectMenuItem()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getFocusedMenuItem)
+      ];
+
+      this.invoke = function selectMenuItem_invoke()
+      {
+        synthesizeKey("VK_DOWN", { });
+      }
+
+      this.getID = function selectMenuItem_getID()
+      {
+        return "select first menuitem";
+      }
+    }
+
+    function closeContextMenu(aID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENUPOPUP_END,
+                           getAccessible(getContextMenuNode()))
+      ];
+
+      this.invoke = function closeContextMenu_invoke()
+      {
+        synthesizeKey("VK_ESCAPE", { });
+      }
+
+      this.getID = function closeContextMenu_getID()
+      {
+        return "close context menu";
+      }
+    }
+
+    function getContextMenuNode()
+    {
+      return getRootAccessible().DOMDocument.
+        getElementById("contentAreaContextMenu");
+    }
+
+    function getFocusedMenuItem()
+    {
+      var menu = getAccessible(getAccessible(getContextMenuNode()));
+      for (var idx = 0; idx < menu.childCount; idx++) {
+        var item = menu.getChildAt(idx);
+
+        if (hasState(item, STATE_FOCUSED))
+          return getAccessible(item, [nsIAccessNode]);
+      }
+      return null;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new showContextMenu("input"));
+      gQueue.push(new selectMenuItem());
+      gQueue.push(new closeContextMenu());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=580535"
+     title="Broken accessibility in context menus">
+    Mozilla Bug 580535
+  </a><br>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input">
+
+  <div id="eventdump"></div>
+</body>
+</html>

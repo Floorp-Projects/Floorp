@@ -784,8 +784,7 @@ customMethodCalls = {
         },
     'nsIDOMNSElement_MozMatchesSelector': {
         'thisType': 'nsGenericElement',
-        'code': '    PRBool result = self->MozMatchesSelector(arg0);',
-        'canFail': False
+        'code': '    PRBool result = self->MozMatchesSelector(arg0, &rv);',
         },
     'nsIDOM3Text_': {
         'thisType': 'nsGenericTextNode'

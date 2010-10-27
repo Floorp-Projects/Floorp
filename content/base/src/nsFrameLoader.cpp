@@ -294,11 +294,11 @@ nsFrameLoader::ReallyStartLoadingInternal()
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
       TryRemoteBrowser();
-    }
 
-    if (!mRemoteBrowser) {
-      NS_WARNING("Couldn't create child process for iframe.");
-      return NS_ERROR_FAILURE;
+      if (!mRemoteBrowser) {
+        NS_WARNING("Couldn't create child process for iframe.");
+        return NS_ERROR_FAILURE;
+      }
     }
 
     // FIXME get error codes from child
@@ -623,11 +623,11 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 #endif
   {
     if (!mDocShell)
-      return false;
+      return PR_FALSE;
     nsCOMPtr<nsIPresShell> presShell;
     mDocShell->GetPresShell(getter_AddRefs(presShell));
     if (presShell)
-      return true;
+      return PR_TRUE;
 
     mDocShell->SetMarginWidth(marginWidth);
     mDocShell->SetMarginHeight(marginHeight);
@@ -698,11 +698,11 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 
   if (!mRemoteBrowser) {
     TryRemoteBrowser();
-  }
 
-  if (!mRemoteBrowser) {
-    NS_ERROR("Couldn't create child process.");
-    return false;
+    if (!mRemoteBrowser) {
+      NS_ERROR("Couldn't create child process.");
+      return false;
+    }
   }
 
   // FIXME/bug 589337: Show()/Hide() is pretty expensive for

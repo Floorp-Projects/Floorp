@@ -1255,7 +1255,7 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
                        nsIRenderingContext* aCtx)
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
-  f->PaintPlugin(*aCtx, mVisibleRect, GetBounds(aBuilder));
+  f->PaintPlugin(aBuilder, *aCtx, mVisibleRect, GetBounds(aBuilder));
 }
 
 PRBool
@@ -1779,7 +1779,8 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
+nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
+                           nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
   // Screen painting code
@@ -2014,7 +2015,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         nativeDraw.EndNativeDrawing();
       } while (nativeDraw.ShouldRenderAgain());
       nativeDraw.PaintToContext();
-    } else if (!(ctx->GetFlags() & gfxContext::FLAG_DESTINED_FOR_SCREEN)) {
+    } else if (!aBuilder->IsPaintingToWindow()) {
       // Get PrintWindow dynamically since it's not present on Win2K,
       // which we still support
       typedef BOOL (WINAPI * PrintWindowPtr)
@@ -2282,6 +2283,16 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
                "Instantiation should still be prevented!");
   mPreventInstantiation = PR_FALSE;
 
+#ifdef ACCESSIBILITY
+  if (PresContext()->PresShell()->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
+    }
+  }
+#endif
+
   return rv;
 }
 
@@ -2296,6 +2307,10 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
     return NS_OK;
   }
 
+  // XXXbz can aMimeType ever actually be null here?  If not, either
+  // the callers are wrong (and passing "" instead of null) or we can
+  // remove the codepaths dealing with null aMimeType in
+  // InstantiateEmbeddedPlugin.
   NS_ASSERTION(aMimeType || aURI, "Need a type or a URI!");
 
   // Note: If PrepareInstanceOwner() returns an error, |this| may very
@@ -2339,6 +2354,16 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   NS_ASSERTION(mPreventInstantiation,
                "Instantiation should still be prevented!");
+
+#ifdef ACCESSIBILITY
+  if (PresContext()->PresShell()->IsAccessibilityActive()) {
+    nsCOMPtr<nsIAccessibilityService> accService =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
+    }
+  }
+#endif
 
   mPreventInstantiation = PR_FALSE;
 
@@ -2519,17 +2544,22 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   if (mWidget) {
     nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
-    NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
-    rootPC->UnregisterPluginForGeometryUpdates(this);
+    if (rootPC) {
+      rootPC->UnregisterPluginForGeometryUpdates(this);
 
-    // Make sure the plugin is hidden in case an update of plugin geometry
-    // hasn't happened since this plugin became hidden.
-    nsIWidget* parent = mWidget->GetParent();
-    if (parent) {
-      nsTArray<nsIWidget::Configuration> configurations;
-      GetEmptyClipConfiguration(&configurations);
-      parent->ConfigureChildren(configurations);
-      DidSetWidgetGeometry();
+      // Make sure the plugin is hidden in case an update of plugin geometry
+      // hasn't happened since this plugin became hidden.
+      nsIWidget* parent = mWidget->GetParent();
+      if (parent) {
+        nsTArray<nsIWidget::Configuration> configurations;
+        GetEmptyClipConfiguration(&configurations);
+        parent->ConfigureChildren(configurations);
+        DidSetWidgetGeometry();
+      }
+    }
+    else {
+      NS_ASSERTION(PresContext()->PresShell()->IsFrozen(),
+                   "unable to unregister the plugin frame");
     }
   }
 

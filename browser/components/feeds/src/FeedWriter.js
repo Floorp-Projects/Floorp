@@ -259,7 +259,7 @@ FeedWriter.prototype = {
   },
 
   /**
-   * Calls doCommand for a the given XUL element within the context of the
+   * Calls doCommand for a given XUL element within the context of the
    * content document.
    *
    * @param aElement

@@ -99,7 +99,7 @@ class JS_FRIEND_API(JSWrapper) : public js::JSProxyHandler {
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                          JSWrapper *handler);
 
-    static inline JSObject *wrappedObject(JSObject *wrapper) {
+    static inline JSObject *wrappedObject(const JSObject *wrapper) {
         return wrapper->getProxyPrivate().toObjectOrNull();
     }
 

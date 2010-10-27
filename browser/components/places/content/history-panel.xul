@@ -46,8 +46,6 @@
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
 
 <!DOCTYPE page [
-<!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd">
-%historyDTD;
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
 ]>

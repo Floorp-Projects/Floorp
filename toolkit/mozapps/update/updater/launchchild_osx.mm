@@ -44,46 +44,21 @@
 #include <spawn.h>
 #include "readstrings.h"
 
-#define MAC_OS_X_VERSION_10_6_HEX 0x00001060
-#define MAC_OS_X_VERSION_10_5_HEX 0x00001050
-
-SInt32 OSXVersion()
-{
-  static SInt32 gOSXVersion = 0x0;
-  if (gOSXVersion == 0x0) {
-    OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
-    if (err != noErr) {
-      // This should probably be changed when our minimum version changes
-      printf("Couldn't determine OS X version, assuming 10.5");
-      gOSXVersion = MAC_OS_X_VERSION_10_5_HEX;
-    }
-  }
-  return gOSXVersion;
-}
-
-bool OnSnowLeopardOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
-}
-
-// We prefer an architecture based on OS and then the fallback
-// CPU_TYPE_ANY for a total of 2.
-#define CPU_ATTR_COUNT 2
+// Prefer the currently running architecture (this is the same as the
+// architecture that launched the updater) and fallback to CPU_TYPE_ANY if it
+// is no longer available after the update.
+static cpu_type_t pref_cpu_types[2] = {
+#if defined(__i386__)
+                                 CPU_TYPE_X86,
+#elif defined(__x86_64__)
+                                 CPU_TYPE_X86_64,
+#elif defined(__ppc__)
+                                 CPU_TYPE_POWERPC,
+#endif
+                                 CPU_TYPE_ANY };
 
 void LaunchChild(int argc, char **argv)
 {
-  // We prefer CPU_TYPE_X86_64 on 10.6 and CPU_TYPE_X86 on 10.5,
-  // if that isn't possible we let the OS pick the next best 
-  // thing (CPU_TYPE_ANY).
-  cpu_type_t cpu_types[CPU_ATTR_COUNT];
-  if (OnSnowLeopardOrLater()) {
-    cpu_types[0] = CPU_TYPE_X86_64;
-  }
-  else {
-    cpu_types[0] = CPU_TYPE_X86;
-  }
-  cpu_types[1] = CPU_TYPE_ANY;
-
   // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
   if (posix_spawnattr_init(&spawnattr) != 0) {
@@ -92,9 +67,9 @@ void LaunchChild(int argc, char **argv)
   }
 
   // Set spawn attributes.
-  size_t attr_count = CPU_ATTR_COUNT;
+  size_t attr_count = 2;
   size_t attr_ocount = 0;
-  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, cpu_types, &attr_ocount) != 0 ||
+  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, pref_cpu_types, &attr_ocount) != 0 ||
       attr_ocount != attr_count) {
     printf("Failed to set binary preference on posix spawn attribute.");
     posix_spawnattr_destroy(&spawnattr);

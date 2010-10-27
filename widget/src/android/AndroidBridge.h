@@ -115,6 +115,8 @@ public:
 
     void ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen, int aSelStart, int aSelLen);
 
+    void NotifyAppShellReady();
+
     void NotifyXreExit();
 
     void ScheduleRestart();
@@ -217,6 +219,7 @@ protected:
     jmethodID jEnableAccelerometer;
     jmethodID jEnableLocation;
     jmethodID jReturnIMEQueryResult;
+    jmethodID jNotifyAppShellReady;
     jmethodID jNotifyXreExit;
     jmethodID jScheduleRestart;
     jmethodID jGetOutstandingDrawEvents;

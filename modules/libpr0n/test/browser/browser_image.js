@@ -12,7 +12,7 @@ function testBFCache() {
     var chances, gImage, gFrames;
     gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "image.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function () {
-      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
       var window = gBrowser.contentWindow;
       // If false, we are in an optimized build, and we abort this and
       // all further tests
@@ -111,7 +111,7 @@ function testSharedContainers() {
 
     gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "image.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function () {
-      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
       actOnMozImage(gBrowser.contentDocument, "img1", function(image) {
         gImages[0] = image;
         gFrames = image.framesNotified; // May in theory have frames from last test
@@ -130,7 +130,7 @@ function testSharedContainers() {
 
     gBrowser.selectedTab = gBrowser.addTab(TESTROOT + "imageX2.html");
     gBrowser.selectedBrowser.addEventListener("pageshow", function () {
-      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
+      gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, true);
       [1,2].forEach(function(i) {
         actOnMozImage(gBrowser.contentDocument, "img"+i, function(image) {
           gImages[i] = image;

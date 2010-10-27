@@ -71,6 +71,9 @@
         role: ROLE_PAGETABLIST,
         children: [
           {
+            role: ROLE_PUSHBUTTON // tab scroll up button
+          },
+          {
             role: ROLE_PAGETAB,
             children: [
               {
@@ -88,6 +91,9 @@
           },
           {
             role: ROLE_PUSHBUTTON
+          },
+          {
+            role: ROLE_PUSHBUTTON // tab scroll down button
           }
         ]
       };

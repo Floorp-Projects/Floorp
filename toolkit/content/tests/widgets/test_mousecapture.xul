@@ -69,6 +69,9 @@ function selectionScrollCheck()
 
     otherWindow.removeEventListener("scroll", selectionScrollDone, false);
 
+    var selectedText = otherWindow.getSelection().toString().replace(/\r/g, "");
+    is(selectedText, "One\n\nTwo", "text is selected");
+
     // should have scrolled 20 pixels from the mousemove above and six extra
     // times from the selection scroll timer for a total of 140
     var oldScrollY = otherWindow.scrollY;
@@ -87,7 +90,7 @@ function selectionScrollCheck()
       synthesizeMouse(document.getElementById("custom"), 2, 2, { type: "mousedown" });
 
       // check to ensure that selection dragging scrolls the right scrollable area
-      otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank", "width=200,height=200,scrollbars=yes");
+      otherWindow = window.open("data:text/html,<html><p>One</p><p style='margin-top: 200px;'>Two</p><p style='margin-top: 4000px'>This is some text</p></html>", "_blank", "width=200,height=200,scrollbars=yes");
       otherWindow.addEventListener("load", function() { SimpleTest.waitForFocus(selectionScrollCheck, otherWindow); }, false);
     }
   }
@@ -95,7 +98,7 @@ function selectionScrollCheck()
   SimpleTest.executeSoon(function () {
     disableNonTestMouseEvents(true);
     synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
-    synthesizeMouse(element, 4, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
+    synthesizeMouse(element, 100, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
     otherWindow.addEventListener("scroll", selectionScrollDone, false);
   });
 }
@@ -185,7 +188,9 @@ function runTests()
 
   // check to ensure that selection dragging scrolls the right scrollable area.
   // This should open the page in a new tab.
-  otherWindow = window.open("data:text/html,<html><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
+
+  var topPos = window.innerHeight;
+  otherWindow = window.open("data:text/html,<html><p>One</p><p style='margin-top: " + topPos + "'>Two</p><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
   otherWindow.addEventListener("load", function() { SimpleTest.waitForFocus(selectionScrollCheck, otherWindow); }, false);
 }
 

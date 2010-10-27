@@ -1000,7 +1000,7 @@ JS_FRIEND_API(Class) OuterWindowProxyClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         proxy_innerObject,
-        NULL,       /* wrappedObject */
+        NULL        /* unused */
     },
     {
         proxy_LookupProperty,

@@ -665,6 +665,9 @@ nsHTMLComboboxAccessible::
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLComboboxAccessible: nsAccessible
+
 PRUint32
 nsHTMLComboboxAccessible::NativeRole()
 {
@@ -859,6 +862,9 @@ nsHTMLComboboxListAccessible::
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLComboboxAccessible: nsAccessNode
+
 nsIFrame*
 nsHTMLComboboxListAccessible::GetFrame()
 {
@@ -873,6 +879,15 @@ nsHTMLComboboxListAccessible::GetFrame()
 
   return nsnull;
 }
+
+bool
+nsHTMLComboboxListAccessible::IsPrimaryForNode() const
+{
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLComboboxAccessible: nsAccessible
 
 /**
   * As a nsHTMLComboboxListAccessible we can have the following states:
@@ -896,14 +911,6 @@ nsHTMLComboboxListAccessible::GetStateInternal(PRUint32 *aState,
   else
     *aState |= nsIAccessibleStates::STATE_INVISIBLE;
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLComboboxListAccessible::GetUniqueID(void **aUniqueID)
-{
-  // Since mContent is same for all tree item, use |this| pointer as the unique
-  // Id.
-  *aUniqueID = static_cast<void*>(this);
   return NS_OK;
 }
 

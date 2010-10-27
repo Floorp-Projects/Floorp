@@ -51,7 +51,7 @@ using namespace js;
 /* static */ inline bool
 PropertyCache::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
 {
-    return CX_OWNS_OBJECT_TITLE(cx, obj) && obj->shape() == shape;
+    return obj->shape() == shape;
 }
 
 /*
@@ -112,19 +112,15 @@ PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
     PCMETER(tests++);
     PCMETER(settests++);
     JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
-    if (entry->kpc == pc && entry->kshape == shape && CX_OWNS_OBJECT_TITLE(cx, obj))
+    if (entry->kpc == pc && entry->kshape == shape)
         return true;
 
-#ifdef DEBUG
-    JSObject *orig = obj;
-#endif
     JSAtom *atom = fullTest(cx, pc, &obj, obj2p, entry);
-    if (atom) {
-        PCMETER(misses++);
-        PCMETER(setmisses++);
-    } else {
-        JS_ASSERT(obj == orig);
-    }
+    JS_ASSERT(atom);
+
+    PCMETER(misses++);
+    PCMETER(setmisses++);
+
     *atomp = atom;
     return false;
 }

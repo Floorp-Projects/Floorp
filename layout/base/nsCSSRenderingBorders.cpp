@@ -420,18 +420,28 @@ typedef enum {
   SIDE_CLIP_RECTANGLE
 } SideClipType;
 
-// Given three points, p0, p1, and midPoint, if p0 and p1 do not form
-// a horizontal or vertical line move p1 to the point nearest the
-// midpoint, while maintaing the slope of the line.
+// Given three points, p0, p1, and midPoint, move p1 to the point
+// nearest the midpoint, while maintaing the slope of the line.  p0 and
+// p1 must be distinct.
 static void
 MaybeMoveToMidPoint(gfxPoint& aP0, gfxPoint& aP1, const gfxPoint& aMidPoint)
 {
   gfxPoint ps = aP1 - aP0;
 
-  if (ps.x != 0.0 && ps.y != 0.0) {
-    gfxFloat k = NS_MIN((aMidPoint.x - aP0.x) / ps.x,
-                        (aMidPoint.y - aP1.y) / ps.y);
-    aP1 = aP0 + ps * k;
+  if (ps.x == 0.0) {
+    if (ps.y == 0.0) {
+      NS_NOTREACHED("points should be different");
+    } else {
+      aP1.y = aMidPoint.y;
+    }
+  } else {
+    if (ps.y == 0.0) {
+      aP1.x = aMidPoint.x;
+    } else {
+      gfxFloat k = NS_MIN((aMidPoint.x - aP0.x) / ps.x,
+                          (aMidPoint.y - aP1.y) / ps.y);
+      aP1 = aP0 + ps * k;
+    }
   }
 }
 

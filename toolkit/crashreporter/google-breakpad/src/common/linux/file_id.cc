@@ -38,7 +38,11 @@
 #include <assert.h>
 #include <elf.h>
 #include <fcntl.h>
+#if defined(__ANDROID__)
+#include "client/linux/android_link.h"
+#else
 #include <link.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -56,37 +60,44 @@ FileID::FileID(const char* path) {
   strncpy(path_, path, sizeof(path_));
 }
 
-// These two functions are also used inside the crashed process, so be safe
+struct ElfClass32 {
+  typedef Elf32_Ehdr Ehdr;
+  typedef Elf32_Shdr Shdr;
+  static const int kClass = ELFCLASS32;
+};
+
+struct ElfClass64 {
+  typedef Elf64_Ehdr Ehdr;
+  typedef Elf64_Shdr Shdr;
+  static const int kClass = ELFCLASS64;
+};
+
+// These three functions are also used inside the crashed process, so be safe
 // and use the syscall/libc wrappers instead of direct syscalls or libc.
-  static bool FindElfTextSection(const void *elf_mapped_base,
-                                 const void **text_start,
-                                 int *text_size) {
-  assert(elf_mapped_base);
+template<typename ElfClass>
+static void FindElfClassTextSection(const char *elf_base,
+                                    const void **text_start,
+                                    int *text_size) {
+  typedef typename ElfClass::Ehdr Ehdr;
+  typedef typename ElfClass::Shdr Shdr;
+
+  assert(elf_base);
   assert(text_start);
   assert(text_size);
 
-  const char* elf_base =
-    static_cast<const char*>(elf_mapped_base);
-  const ElfW(Ehdr)* elf_header =
-    reinterpret_cast<const ElfW(Ehdr)*>(elf_base);
-  if (my_strncmp(elf_base, ELFMAG, SELFMAG) != 0)
-    return false;
-#if __ELF_NATIVE_CLASS == 32
-#define ELFCLASS ELFCLASS32
-#else
-#define ELFCLASS ELFCLASS64
-#endif
-  //TODO: support dumping 32-bit binaries from a 64-bit dump_syms?
-  if (elf_header->e_ident[EI_CLASS] != ELFCLASS)
-    return false;
-  *text_start = NULL;
-  *text_size = 0;
-  const ElfW(Shdr)* sections =
-    reinterpret_cast<const ElfW(Shdr)*>(elf_base + elf_header->e_shoff);
+  assert(my_strncmp(elf_base, ELFMAG, SELFMAG) == 0);
+
   const char* text_section_name = ".text";
   int name_len = my_strlen(text_section_name);
-  const ElfW(Shdr)* string_section = sections + elf_header->e_shstrndx;
-  const ElfW(Shdr)* text_section = NULL;
+
+  const Ehdr* elf_header = reinterpret_cast<const Ehdr*>(elf_base);
+  assert(elf_header->e_ident[EI_CLASS] == ElfClass::kClass);
+
+  const Shdr* sections =
+      reinterpret_cast<const Shdr*>(elf_base + elf_header->e_shoff);
+  const Shdr* string_section = sections + elf_header->e_shstrndx;
+
+  const Shdr* text_section = NULL;
   for (int i = 0; i < elf_header->e_shnum; ++i) {
     if (sections[i].sh_type == SHT_PROGBITS) {
       const char* section_name = (char*)(elf_base +
@@ -102,6 +113,30 @@ FileID::FileID(const char* path) {
     *text_start = elf_base + text_section->sh_offset;
     *text_size = text_section->sh_size;
   }
+}
+
+static bool FindElfTextSection(const void *elf_mapped_base,
+                               const void **text_start,
+                               int *text_size) {
+  assert(elf_mapped_base);
+  assert(text_start);
+  assert(text_size);
+
+  const char* elf_base =
+    static_cast<const char*>(elf_mapped_base);
+  const ElfW(Ehdr)* elf_header =
+    reinterpret_cast<const ElfW(Ehdr)*>(elf_base);
+  if (my_strncmp(elf_base, ELFMAG, SELFMAG) != 0)
+    return false;
+
+  if (elf_header->e_ident[EI_CLASS] == ELFCLASS32) {
+    FindElfClassTextSection<ElfClass32>(elf_base, text_start, text_size);
+  } else if (elf_header->e_ident[EI_CLASS] == ELFCLASS64) {
+    FindElfClassTextSection<ElfClass64>(elf_base, text_start, text_size);
+  } else {
+    return false;
+  }
+
   return true;
 }
 

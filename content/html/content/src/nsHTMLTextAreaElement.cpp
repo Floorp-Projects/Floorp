@@ -1386,20 +1386,27 @@ NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::OnValueChanged(PRBool aNotify)
 {
   // Update the validity state
+  PRBool validBefore = IsValid();
   UpdateTooLongValidityState();
   UpdateValueMissingValidityState();
 
   if (aNotify) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
-                                              NS_EVENT_STATE_INVALID |
-                                              // We could check if that is
-                                              // really needed but considering
-                                              // we are already updating the
-                                              // state for valid/invalid...
-                                              NS_EVENT_STATE_MOZ_PLACEHOLDER);
+    nsEventStates states;
+    if (validBefore != IsValid()) {
+      states |= (NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID);
+    }
+
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)
+        && !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
+      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
+    }
+
+    if (!states.IsEmpty()) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        doc->ContentStatesChanged(this, nsnull, states);
+      }
     }
   }
 }

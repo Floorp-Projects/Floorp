@@ -197,8 +197,7 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
                *aDest = UCS2_NO_MAPPING;
            } else {
               // let's try supplement mapping
-             NS_ASSERTION(( (iDestlen+1) <= (*aDestLength) ), "no enouth output memory");
-             if ( (iDestlen+1) <= (*aDestLength) )
+             if ( (iDestlen+1) < (*aDestLength) )
              {
                if(DecodeToSurrogate(aSrc, aDest))
                {
@@ -209,7 +208,13 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
                  *aDest = UCS2_NO_MAPPING;
               }
              } else {
-               *aDest = UCS2_NO_MAPPING;
+               if (*aDestLength < 2) {
+                 NS_ERROR("insufficient space in output buffer");
+                 *aDest = UCS2_NO_MAPPING;
+               } else {
+                 rv = NS_OK_UDEC_MOREOUTPUT;
+                 break;
+               }
              }
            }
         } else {

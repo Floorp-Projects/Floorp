@@ -187,11 +187,11 @@ nsPermissionManager::~nsPermissionManager()
 nsIPermissionManager*
 nsPermissionManager::GetXPCOMSingleton()
 {
-  return GetSingleton();
+  return GetSingleton().get();
 }
 
 // static
-nsIPermissionManager*
+already_AddRefed<nsPermissionManager>
 nsPermissionManager::GetSingleton()
 {
   if (gPermissionManager) {

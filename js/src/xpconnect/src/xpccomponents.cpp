@@ -3165,6 +3165,15 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_utils_Sandbox)
 #include "xpc_map_end.h" /* This #undef's the above. */
 
 #ifndef XPCONNECT_STANDALONE
+
+static bool
+WrapForSandbox(JSContext *cx, bool wantXrays, jsval *vp)
+{
+    return wantXrays
+           ? JS_WrapValue(cx, vp)
+           : xpc::WrapperFactory::WaiveXrayAndWrap(cx, vp);
+}
+
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSObject *proto,
                         bool wantXrays)
@@ -3263,7 +3272,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
 
     if (vp) {
         *vp = OBJECT_TO_JSVAL(sandbox);
-        if (!JS_WrapValue(cx, vp)) {
+        if (!WrapForSandbox(cx, wantXrays, vp)) {
             return NS_ERROR_UNEXPECTED;
         }
     }
@@ -3732,7 +3741,11 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                 v = STRING_TO_JSVAL(str);
             }
 
-            if (!ac.enter(cx, callingScope) || !JS_WrapValue(cx, &v)) {
+            xpc::CompartmentPrivate *sandboxdata =
+                static_cast<xpc::CompartmentPrivate *>
+                           (JS_GetCompartmentPrivate(cx, sandbox->getCompartment()));
+            if (!ac.enter(cx, callingScope) ||
+                !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;
             }
 

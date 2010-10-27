@@ -2304,7 +2304,8 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
 
   // if the new cookie is httponly, make sure we're not coming from script
   if (!aFromHttp && aCookie->IsHttpOnly()) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+      "cookie is httponly; coming from script");
     return;
   }
 
@@ -2316,34 +2317,60 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
   if (foundCookie) {
     oldCookie = matchIter.Cookie();
 
-    // If the old cookie is httponly, make sure we're not coming from script --
-    // but, if the old cookie has already expired, pretend like it didn't exist.
-    if (!aFromHttp && oldCookie->IsHttpOnly() &&
-        oldCookie->Expiry() > currentTime) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie is httponly; coming from script");
-      return;
-    }
+    // Check if the old cookie is stale (i.e. has already expired). If so, we
+    // need to be careful about the semantics of removing it and adding the new
+    // cookie: we want the behavior wrt adding the new cookie to be the same as
+    // if it didn't exist, but we still want to fire a removal notification.
+    if (oldCookie->Expiry() <= currentTime) {
+      if (aCookie->Expiry() <= currentTime) {
+        // The new cookie has expired and the old one is stale. Nothing to do.
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+          "cookie has already expired");
+        return;
+      }
 
-    // Remove the old cookie, regardless of whether it's expired or not, and
-    // notify.
-    RemoveCookieFromList(matchIter);
+      // Remove the stale cookie and notify.
+      RemoveCookieFromList(matchIter);
 
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
-    NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+        "stale cookie was deleted");
+      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
 
-    // If the new cookie has expired -- i.e. the intent was simply to delete
-    // the old cookie -- then we're done.
-    if (aCookie->Expiry() <= currentTime)
-      return;
+      // We've done all we need to wrt removing and notifying the stale cookie.
+      // From here on out, we pretend pretend it didn't exist, so that we
+      // preserve expected notification semantics when adding the new cookie.
+      foundCookie = PR_FALSE;
 
-    // Preserve creation time of cookie for ordering purposes.
-    if (oldCookie)
+    } else {
+      // If the old cookie is httponly, make sure we're not coming from script.
+      if (!aFromHttp && oldCookie->IsHttpOnly()) {
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+          "previously stored cookie is httponly; coming from script");
+        return;
+      }
+
+      // Remove the old cookie and notify.
+      RemoveCookieFromList(matchIter);
+
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+        "previously stored cookie was deleted");
+      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+
+      // If the new cookie has expired -- i.e. the intent was simply to delete
+      // the old cookie -- then we're done.
+      if (aCookie->Expiry() <= currentTime) {
+        return;
+      }
+
+      // Preserve creation time of cookie for ordering purposes.
       aCookie->SetCreationTime(oldCookie->CreationTime());
+    }
 
   } else {
     // check if cookie has already expired
     if (aCookie->Expiry() <= currentTime) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+        "cookie has already expired");
       return;
     }
 
@@ -2366,7 +2393,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
         // we're over both size and age limits by 10%; time to purge the table!
         // do this by:
         // 1) removing expired cookies;
-        // 2) evicting the balance of old cookies, until we reach the size limit.
+        // 2) evicting the balance of old cookies until we reach the size limit.
         // note that the cookieOldestTime indicator can be pessimistic - if it's
         // older than the actual oldest cookie, we'll just purge more eagerly.
         PurgeCookies(aCurrentTimeInUsec);

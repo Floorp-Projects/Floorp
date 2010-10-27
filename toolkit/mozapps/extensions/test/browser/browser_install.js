@@ -34,8 +34,8 @@ function end_test() {
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
       aAddon.uninstall();
+      finish();
     });
-    finish();
   });
 }
 

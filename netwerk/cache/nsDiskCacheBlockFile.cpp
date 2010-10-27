@@ -374,6 +374,8 @@ nsDiskCacheBlockFile::Write(PRInt32 offset, const void *buf, PRInt32 amount)
     const PRInt32 minPreallocate = 4*1024*1024;
     const PRInt32 maxPreallocate = 20*1000*1000;
     if (mFileSize < upTo) {
+        // maximal file size
+        const PRInt32 maxFileSize = kBitMapBytes * (mBlockSize * 8 + 1);
         if (upTo > maxPreallocate) {
             // grow the file as a multiple of minPreallocate
             mFileSize = ((upTo + minPreallocate - 1) / minPreallocate) * minPreallocate;
@@ -384,6 +386,7 @@ nsDiskCacheBlockFile::Write(PRInt32 offset, const void *buf, PRInt32 amount)
                     mFileSize *= 2;
             mFileSize = PR_MIN(maxPreallocate, PR_MAX(mFileSize, minPreallocate));
         }
+        mFileSize = PR_MIN(mFileSize, maxFileSize);
         mozilla::fallocate(mFD, mFileSize);
     }
     if (PR_Seek(mFD, offset, PR_SEEK_SET) != offset)

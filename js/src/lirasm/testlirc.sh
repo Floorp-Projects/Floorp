@@ -77,6 +77,24 @@ then
     done
 fi
 
+# little endian
+if [[ $($LIRASM --endianness 2>/dev/null) != "big-endian" ]]
+then
+    for infile in "$TESTS_DIR"/littleendian/*.in
+    do
+        runtest $infile
+    done
+fi
+
+# big endian
+if [[ $($LIRASM --endianness 2>/dev/null) == "big-endian" ]]
+then
+    for infile in "$TESTS_DIR"/bigendian/*.in
+    do
+        runtest $infile
+    done
+fi
+
 # ARM
 if [[ $(uname -m) == arm* ]]
 then

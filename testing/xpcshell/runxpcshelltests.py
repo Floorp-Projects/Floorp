@@ -488,18 +488,23 @@ class XPCShellTests(object):
             # Not sure what else to do here...
             return True
 
+          def print_stdout(stdout):
+            """Print stdout line-by-line to avoid overflowing buffers."""
+            print ">>>>>>>"
+            for line in stdout.splitlines():
+              print line
+            print "<<<<<<<"
+
           if (self.getReturnCode(proc) != 0) or \
               (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-FAIL", stdout, re.MULTILINE)) or \
               (stdout and re.search(": SyntaxError:", stdout, re.MULTILINE)):
-            print """TEST-UNEXPECTED-FAIL | %s | test failed (with xpcshell return code: %d), see following log:
-  >>>>>>>
-  %s
-  <<<<<<<""" % (test, self.getReturnCode(proc), stdout)
+            print "TEST-UNEXPECTED-FAIL | %s | test failed (with xpcshell return code: %d), see following log:" % (test, self.getReturnCode(proc))
+            print_stdout(stdout)
             failCount += 1
           else:
             print "TEST-PASS | %s | test passed" % test
             if verbose:
-              print """>>>>>>>\n%s\n<<<<<<<""" % stdout
+              print_stdout(stdout)
             passCount += 1
 
           checkForCrashes(testdir, self.symbolsPath, testName=test)

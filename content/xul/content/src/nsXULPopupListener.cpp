@@ -55,7 +55,7 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
-
+#include "nsEventStateManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"

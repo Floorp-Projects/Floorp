@@ -1920,7 +1920,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
     if (!cert)
       return NS_ERROR_FAILURE;
 
-    escrowCert = new nsNSSCertificate(cert);
+    escrowCert = nsNSSCertificate::Create(cert);
     CERT_DestroyCertificate(cert);
     nssCert = escrowCert;
     if (!nssCert)
@@ -2328,7 +2328,9 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
 
     if (nsCertAlreadyExists(&currCert->derCert)) {
       if (aDoForcedBackup) {
-        certArr[i] = new nsNSSCertificate(currCert);
+        certArr[i] = nsNSSCertificate::Create(currCert);
+        if (!certArr[i])
+          goto loser;
         NS_ADDREF(certArr[i]);
       }
       CERT_DestroyCertificate(currCert);
@@ -2359,7 +2361,9 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       goto loser;
     }
     if (aDoForcedBackup) {
-      certArr[i] = new nsNSSCertificate(currCert);
+      certArr[i] = nsNSSCertificate::Create(currCert);
+      if (!certArr[i])
+        goto loser;
       NS_ADDREF(certArr[i]);
     }
     CERT_DestroyCertificate(currCert);
@@ -2664,7 +2668,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   for (node = CERT_LIST_HEAD(certList), certsToUse = 0;
        !CERT_LIST_END(node, certList) && certsToUse < nicknames->numnicknames;
        node = CERT_LIST_NEXT(node)) {
-    nsRefPtr<nsNSSCertificate> tempCert = new nsNSSCertificate(node->cert);
+    nsRefPtr<nsNSSCertificate> tempCert = nsNSSCertificate::Create(node->cert);
     if (tempCert) {
       nsAutoString nickWithSerial, details;
       rv = tempCert->FormatUIStrings(NS_ConvertUTF8toUTF16(nicknames->nicknames[certsToUse]),

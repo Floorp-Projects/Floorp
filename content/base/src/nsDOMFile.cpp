@@ -286,7 +286,7 @@ nsDOMFile::GetAsText(const nsAString &aCharset, nsAString &aResult)
   rv = alias->GetPreferred(charsetGuess, charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return ConvertStream(stream, charset.get(), aResult);
+  return DOMFileResult(ConvertStream(stream, charset.get(), aResult));
 }
 
 NS_IMETHODIMP
@@ -338,8 +338,17 @@ nsDOMFile::GetAsDataURL(nsAString &aResult)
 
     // out buffer should be at least 4/3rds the read buf, plus a terminator
     char *base64 = PL_Base64Encode(readBuf, numEncode, nsnull);
-    AppendASCIItoUTF16(base64, aResult);
+    if (!base64) {
+      return DOMFileResult(NS_ERROR_OUT_OF_MEMORY);
+    }
+    nsDependentCString str(base64);
+    PRUint32 strLen = str.Length();
+    PRUint32 oldLength = aResult.Length();
+    AppendASCIItoUTF16(str, aResult);
     PR_Free(base64);
+    if (aResult.Length() - oldLength != strLen) {
+      return DOMFileResult(NS_ERROR_OUT_OF_MEMORY);
+    }
 
     if (leftOver) {
       memmove(readBuf, readBuf + numEncode, leftOver);
@@ -363,7 +372,11 @@ nsDOMFile::GetAsBinary(nsAString &aResult)
     char readBuf[4096];
     rv = stream->Read(readBuf, sizeof(readBuf), &numRead);
     NS_ENSURE_SUCCESS(rv, DOMFileResult(rv));
+    PRUint32 oldLength = aResult.Length();
     AppendASCIItoUTF16(Substring(readBuf, readBuf + numRead), aResult);
+    if (aResult.Length() - oldLength != numRead) {
+      return DOMFileResult(NS_ERROR_OUT_OF_MEMORY);
+    }
   } while (numRead > 0);
 
   return NS_OK;
@@ -524,7 +537,11 @@ nsDOMFile::ConvertStream(nsIInputStream *aStream,
   nsString result;
   rv = unicharStream->ReadString(8192, result, &numChars);
   while (NS_SUCCEEDED(rv) && numChars > 0) {
+    PRUint32 oldLength = aResult.Length();
     aResult.Append(result);
+    if (aResult.Length() - oldLength != result.Length()) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     rv = unicharStream->ReadString(8192, result, &numChars);
   }
 

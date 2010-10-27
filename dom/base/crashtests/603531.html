@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.getElementById("f");
+  var frameWindow = frame.contentWindow;
+  document.body.removeChild(frame);
+  document.body.setUserData("x", frameWindow, null);
+  document.body.setUserData("x", "", null);
+}
+
+</script>
+</head>
+<body onload="boom();"><iframe id="f" src="data:text/html,"></iframe></body>
+</html>
