@@ -397,6 +397,14 @@ toolbarbutton.choice-remotetabs {
   outline: 0 !important;
 }
 
+/*
+ * These rules prevent browser to steal the focus while touching the screen
+ * to allow panning/zooming of the browser view without closing the VKB
+ */
+#content-stack > deck > browser {
+  -moz-user-focus: ignore;
+}
+
 /* browser tools panel UI   ------------------------------------------------ */
 .panel-header {
   margin: 0;
