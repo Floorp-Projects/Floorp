@@ -65,7 +65,6 @@
 #include "nsDOMString.h"
 #include "nsNetCID.h"
 #include "nsIProxyObjectManager.h"
-#include "nsISupportsPrimitives.h"
 
 static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
@@ -403,13 +402,10 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
 
       PRUint32 cap = 0;
       perm->GetCapability(&cap);
-      if (!(cap & nsICookiePermission::ACCESS_SESSION))
+      if (!(cap & nsICookiePermission::ACCESS_SESSION) ||
+          nsDependentString(aData) != NS_LITERAL_STRING("deleted"))
         return NS_OK;
 
-      // In any change to ACCESS_SESSION, like add or delete, drop the session
-      // only storage in-memory database.  This ensures that it will always be
-      // newly created and therefor preloaded with data from the persistent
-      // database after we switched to ACCESS_SESSION.
       nsCAutoString host;
       perm->GetHost(host);
       if (host.IsEmpty())
@@ -440,33 +436,6 @@ nsDOMStorageManager::GetUsage(const nsAString& aDomain,
 
   return nsDOMStorage::gStorageDB->GetUsage(NS_ConvertUTF16toUTF8(aDomain),
                                             PR_FALSE, aUsage);
-}
-
-NS_IMETHODIMP
-nsDOMStorageManager::ClearStorageDataSince(PRInt64 aSince)
-{
-  nsresult rv;
-
-  rv = nsDOMStorage::InitDB();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = nsDOMStorage::gStorageDB->RemoveTimeRange(aSince);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
-  if (obsserv) {
-    nsCOMPtr<nsISupportsPRTime> time = do_CreateInstance(
-          "@mozilla.org/supports-PRTime;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = time->SetData(aSince);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = obsserv->NotifyObservers(time, NS_DOMSTORAGE_CUTOFF_OBSERVER, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -691,8 +660,6 @@ nsDOMStorage::InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &
   mQuotaDomainDBKey.Truncate();
 #endif
 
-  RegisterObservers(false);
-
   mStorageType = SessionStorage;
   return NS_OK;
 }
@@ -736,7 +703,7 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
     mCanUseChromePersist = URICanUseChromePersist(URI);
   }
 
-  RegisterObservers(true);
+  RegisterObservers();
 
   return NS_OK;
 }
@@ -764,7 +731,7 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
   mStorageType = GlobalStorage;
   mEventBroadcaster = this;
 
-  RegisterObservers(true);
+  RegisterObservers();
 
   return NS_OK;
 }
@@ -1122,12 +1089,6 @@ nsDOMStorage::SetItem(const nsAString& aKey, const nsAString& aData)
     entry = mItems.PutEntry(aKey);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
     entry->mItem = newitem;
-  }
-
-  if (!UseDB()) {
-    // This is used only for sessionStorage, no need to setup the time also when
-    // loading items from the database etc.
-    entry->mItem->SetInsertTimeToNow();
   }
 
   if ((oldValue != aData || mStorageType == GlobalStorage) && mEventBroadcaster)
@@ -1571,16 +1532,13 @@ nsDOMStorage::MaybeCommitTemporaryTable(bool force)
 }
 
 nsresult
-nsDOMStorage::RegisterObservers(bool persistent)
+nsDOMStorage::RegisterObservers()
 {
   nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
   if (obsserv) {
-    if (persistent) {
-      obsserv->AddObserver(this, "profile-before-change", PR_TRUE);
-      obsserv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-      obsserv->AddObserver(this, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, PR_TRUE);
-    }
-    obsserv->AddObserver(this, NS_DOMSTORAGE_CUTOFF_OBSERVER, PR_TRUE);
+    obsserv->AddObserver(this, "profile-before-change", PR_TRUE);
+    obsserv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    obsserv->AddObserver(this, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, PR_TRUE);
   }
   return NS_OK;
 }
@@ -1603,17 +1561,6 @@ nsDOMStorage::SetTemporaryTableLoaded(bool loaded)
   mLoadedTemporaryTable = loaded;
 }
 
-static PLDHashOperator
-StorageCutOffEnum(nsSessionStorageEntry* aEntry, void* userArg)
-{
-  PRInt64 since = *(PRInt64*)userArg;
-
-  if (aEntry->mItem->ShouldBeCutOff(since))
-    return PL_DHASH_REMOVE;
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsDOMStorage::Observe(nsISupports *subject,
                       const char *topic,
@@ -1629,30 +1576,6 @@ nsDOMStorage::Observe(nsISupports *subject,
       NS_WARNING("DOMStorage: temporary table commit failed");
     }
 
-    return NS_OK;
-  }
-
-  if (!strcmp(topic, NS_DOMSTORAGE_CUTOFF_OBSERVER)) {
-    if (UseDB()) {
-      // If this storage is using the database (localStorage, globalStorage)
-      // then just re-cache the items from the database, database is now up to
-      // date.
-      mItemsCached = PR_FALSE;
-      CacheKeysFromDB();
-    }
-    else {
-      // This is sessionStorage. In that case we need to prune the mItems hash
-      // table. Insert times are properly set in nsDOMStorage::SetItem.
-      nsresult rv;
-      nsCOMPtr<nsISupportsPRTime> time = do_QueryInterface(subject, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      PRInt64 since;
-      rv = time->GetData(&since);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mItems.EnumerateEntries(StorageCutOffEnum, &since);
-    }
     return NS_OK;
   }
 
@@ -2108,7 +2031,6 @@ nsDOMStorageItem::nsDOMStorageItem(nsDOMStorage* aStorage,
   : mSecure(aSecure),
     mKey(aKey),
     mValue(aValue),
-    mInsertTime(0),
     mStorage(aStorage)
 {
 }
