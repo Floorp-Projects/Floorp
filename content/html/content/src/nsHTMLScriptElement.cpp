@@ -345,6 +345,10 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  // nsGenericElement
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
+
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   PRBool IsOnloadEventForWindow();
@@ -454,11 +458,38 @@ nsHTMLScriptElement::SetText(const nsAString& aValue)
 
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Charset, charset)
 NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer)
-NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Async, async)
 NS_IMPL_URI_ATTR(nsHTMLScriptElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, HtmlFor, _for)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, event)
+
+nsresult
+nsHTMLScriptElement::GetAsync(PRBool* aValue)
+{
+  if (mForceAsync) {
+    *aValue = PR_TRUE;
+    return NS_OK;
+  }
+  return GetBoolAttr(nsGkAtoms::async, aValue);
+}
+
+nsresult
+nsHTMLScriptElement::SetAsync(PRBool aValue)
+{
+  mForceAsync = PR_FALSE;
+  return SetBoolAttr(nsGkAtoms::async, aValue);
+}
+
+nsresult
+nsHTMLScriptElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                  const nsAString* aValue, PRBool aNotify)
+{
+  if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {
+    mForceAsync = PR_FALSE;
+  }
+  return nsGenericHTMLElement::AfterSetAttr(aNamespaceID, aName, aValue,
+                                            aNotify);
+}
 
 nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
