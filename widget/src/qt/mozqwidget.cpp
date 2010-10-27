@@ -92,7 +92,7 @@ MozQWidget::~MozQWidget()
 
 void MozQWidget::paint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, QWidget* aWidget /*= 0*/)
 {
-    mReceiver->DoPaint(aPainter, aOption);
+    mReceiver->DoPaint(aPainter, aOption, aWidget);
 }
 
 void MozQWidget::activate()
