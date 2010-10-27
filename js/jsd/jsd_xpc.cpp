@@ -2316,7 +2316,13 @@ jsdValue::GetWrappedValue()
 
     if (result)
     {
+        JSContext *cx;
+        rv = cc->GetJSContext(&cx);
+        if (NS_FAILED(rv))
+            return rv;
         *result = JSD_GetValueWrappedJSVal (mCx, mValue);
+        if (!JS_WrapValue(cx, result))
+            return NS_ERROR_FAILURE;
         cc->SetReturnValueWasSet(PR_TRUE);
     }
 
