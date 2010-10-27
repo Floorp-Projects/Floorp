@@ -112,34 +112,22 @@ static void
 drawToDC(InstanceData* instanceData, HDC dc,
          int x, int y, int width, int height)
 {
-  HBITMAP offscreenBitmap = ::CreateCompatibleBitmap(dc, width, height);
-  if (!offscreenBitmap)
-    return;
-  HDC offscreenDC = ::CreateCompatibleDC(dc);
-  if (!offscreenDC) {
-    ::DeleteObject(offscreenBitmap);
-    return;
-  }
-
-  HBITMAP oldOffscreenBitmap =
-    (HBITMAP)::SelectObject(offscreenDC, offscreenBitmap);
-  ::SetBkMode(offscreenDC, TRANSPARENT);
-  BYTE alpha = 255;
   RECT fill = { 0, 0, width, height };
 
   switch (instanceData->scriptableObject->drawMode) {
     case DM_DEFAULT:
     {
+      int oldBkMode = ::SetBkMode(dc, TRANSPARENT);
       HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));
       if (brush) {
-        ::FillRect(offscreenDC, &fill, brush);
+        ::FillRect(dc, &fill, brush);
         ::DeleteObject(brush);
       }
       if (width > 6 && height > 6) {
         brush = ::CreateSolidBrush(RGB(192, 192, 192));
         if (brush) {
           RECT inset = { 3, 3, width - 3, height - 3 };
-          ::FillRect(offscreenDC, &inset, brush);
+          ::FillRect(dc, &inset, brush);
           ::DeleteObject(brush);
         }
       }
@@ -152,44 +140,75 @@ drawToDC(InstanceData* instanceData, HDC dc,
                         CLIP_DEFAULT_PRECIS, 5, // CLEARTYPE_QUALITY
                         DEFAULT_PITCH, "Arial");
         if (font) {
-          HFONT oldFont = (HFONT)::SelectObject(offscreenDC, font);
+          HFONT oldFont = (HFONT)::SelectObject(dc, font);
           RECT inset = { 5, 5, width - 5, height - 5 };
-          ::DrawTextA(offscreenDC, uaString, -1, &inset,
+          ::DrawTextA(dc, uaString, -1, &inset,
                       DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
-          ::SelectObject(offscreenDC, oldFont);
+          ::SelectObject(dc, oldFont);
           ::DeleteObject(font);
         }
       }
+      ::SetBkMode(dc, oldBkMode);
     }
     break;
 
     case DM_SOLID_COLOR:
     {
+      HDC offscreenDC = ::CreateCompatibleDC(dc);
+      if (!offscreenDC)
+	return;
+
+      const BITMAPV4HEADER bitmapheader = {
+	sizeof(BITMAPV4HEADER),
+	width,
+	height,
+	1, // planes
+	32, // bits
+	BI_BITFIELDS,
+	0, // unused size
+	0, 0, // unused metrics
+	0, 0, // unused colors used/important
+	0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000, // ARGB masks
+      };
+      PRUint32 *pixelData;
+      HBITMAP offscreenBitmap =
+	::CreateDIBSection(dc, reinterpret_cast<const BITMAPINFO*>(&bitmapheader),
+			   0, reinterpret_cast<void**>(&pixelData), 0, 0);
+      if (!offscreenBitmap)
+	return;
+
       PRUint32 rgba = instanceData->scriptableObject->drawColor;
+      unsigned int alpha = ((rgba & 0xFF000000) >> 24);
       BYTE r = ((rgba & 0xFF0000) >> 16);
       BYTE g = ((rgba & 0xFF00) >> 8);
       BYTE b = (rgba & 0xFF);
-      alpha = ((rgba & 0xFF000000) >> 24);
 
-      HBRUSH brush = ::CreateSolidBrush(RGB(r, g, b));
-      if (brush) {
-        ::FillRect(offscreenDC, &fill, brush);
-        ::DeleteObject(brush);
-      }
+      // Windows expects premultiplied
+      r = BYTE(float(alpha * r) / 0xFF);
+      g = BYTE(float(alpha * g) / 0xFF);
+      b = BYTE(float(alpha * b) / 0xFF);
+      PRUint32 premultiplied =
+	(alpha << 24) +	(r << 16) + (g << 8) + b;
+
+      for (PRUint32* lastPixel = pixelData + width * height;
+	   pixelData < lastPixel;
+	   ++pixelData)
+	*pixelData = premultiplied;
+
+      ::SelectObject(offscreenDC, offscreenBitmap);
+      BLENDFUNCTION blendFunc;
+      blendFunc.BlendOp = AC_SRC_OVER;
+      blendFunc.BlendFlags = 0;
+      blendFunc.SourceConstantAlpha = 255;
+      blendFunc.AlphaFormat = AC_SRC_ALPHA;
+      ::AlphaBlend(dc, x, y, width, height, offscreenDC, 0, 0, width, height,
+		   blendFunc);
+
+      ::DeleteObject(offscreenDC);
+      ::DeleteObject(offscreenBitmap);
     }
     break;
   }
-
-  BLENDFUNCTION blendFunc;
-  blendFunc.BlendOp = AC_SRC_OVER;
-  blendFunc.BlendFlags = 0;
-  blendFunc.SourceConstantAlpha = alpha;
-  blendFunc.AlphaFormat = 0;
-  ::AlphaBlend(dc, x, y, width, height, offscreenDC, 0, 0, width, height,
-               blendFunc);
-  ::SelectObject(offscreenDC, oldOffscreenBitmap);
-  ::DeleteObject(offscreenDC);
-  ::DeleteObject(offscreenBitmap);
 }
 
 void
