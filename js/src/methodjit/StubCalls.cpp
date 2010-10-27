@@ -817,7 +817,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
-        obj2 = js_GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        obj2 = GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
         if (!obj2)
             THROW();
     }
@@ -1467,8 +1467,8 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
         if (!obj)
             THROWV(NULL);
     } else {
-        JSObject *parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
-                                                JSOP_DEFLOCALFUN_LENGTH);
+        JSObject *parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
+                                             JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             THROWV(NULL);
 
@@ -1499,7 +1499,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      * bytecode at pc. ES5 finally fixed this bad old ES3 design flaw which was
      * flouted by many browser-based implementations.
      *
-     * We avoid the js_GetScopeChain call here and pass fp->scopeChain() as
+     * We avoid the GetScopeChain call here and pass fp->scopeChain() as
      * js_GetClassPrototype uses the latter only to locate the global.
      */
     JSObject *proto;
@@ -1597,7 +1597,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (FUN_NULL_CLOSURE(fun)) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = js_GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
+        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
         if (!parent)
             THROWV(NULL);
     }

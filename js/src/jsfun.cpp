@@ -358,7 +358,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
      * _DBG* opcodes used by wrappers created here must cope with unresolved
      * upvars and throw them as reference errors. Caveat debuggers!
      */
-    JSObject *scopeChain = js_GetScopeChain(cx, fp);
+    JSObject *scopeChain = GetScopeChain(cx, fp);
     if (!scopeChain)
         return NULL;
 
@@ -2928,7 +2928,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
      * Flat closures can be partial, they may need to search enclosing scope
      * objects via JSOP_NAME, etc.
      */
-    JSObject *scopeChain = js_GetScopeChainFast(cx, cx->fp(), op, oplen);
+    JSObject *scopeChain = GetScopeChainFast(cx, cx->fp(), op, oplen);
     if (!scopeChain)
         return NULL;
 

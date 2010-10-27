@@ -48,12 +48,33 @@
 #include "jsregexp.h"
 #include "jsgc.h"
 
-inline js::RegExpStatics *
-JSContext::regExpStatics()
+namespace js {
+
+static inline JSObject *
+GetGlobalForScopeChain(JSContext *cx)
 {
-    JSObject *global = JS_GetGlobalForScopeChain(this);
-    js::RegExpStatics *res = js::RegExpStatics::extractFrom(global);
-    return res;
+    /*
+     * This is essentially GetScopeChain(cx)->getGlobal(), but without
+     * falling off trace.
+     *
+     * This use of cx->fp, possibly on trace, is deliberate:
+     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
+     * trace or not, since we do not trace calls across global objects.
+     */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    if (cx->hasfp())
+        return cx->fp()->scopeChain().getGlobal();
+
+    JSObject *scope = cx->globalObject;
+    if (!scope) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return NULL;
+    }
+    OBJ_TO_INNER_OBJECT(cx, scope);
+    return scope;
+}
+
 }
 
 inline bool
@@ -78,6 +99,12 @@ JSContext::computeNextFrame(JSStackFrame *fp)
         if (end != ss->getPreviousInContext()->getCurrentFrame())
             next = NULL;
     }
+}
+
+inline js::RegExpStatics *
+JSContext::regExpStatics()
+{
+    return js::RegExpStatics::extractFrom(js::GetGlobalForScopeChain(this));
 }
 
 namespace js {
