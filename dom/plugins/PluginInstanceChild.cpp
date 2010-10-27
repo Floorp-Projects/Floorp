@@ -1366,25 +1366,6 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
     if (!mPluginIface->event)
         return false;
 
-    // Winless Silverlight quirk: winposchanged events are not used in
-    // determining the position of the plugin within the parent window,
-    // NPP_SetWindow values are used instead. Due to shared memory dib
-    // rendering, the origin of NPP_SetWindow is 0x0, so we trap
-    // winposchanged events here and do the translation internally for
-    // mouse input events.
-    if (mQuirks & QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION) {
-        if (event.event == WM_WINDOWPOSCHANGED && event.lParam) {
-            WINDOWPOS* pos = reinterpret_cast<WINDOWPOS*>(event.lParam);
-            mPluginOffset.x = pos->x;
-            mPluginOffset.y = pos->y;
-        }
-        else if (IsMouseInputEvent(event.event)) {
-            event.lParam =
-                MAKELPARAM((GET_X_LPARAM(event.lParam) - mPluginOffset.x),
-                           (GET_Y_LPARAM(event.lParam) - mPluginOffset.y));
-        }
-    }
-
     if (!NeedsNestedEventCoverage(event.event)) {
         return mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
     }
@@ -1433,13 +1414,14 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow)
     }
       
     // NPRemoteWindow's origin is the origin of our shared dib.
-    mWindow.x      = 0;
-    mWindow.y      = 0;
+    mWindow.x      = aWindow.x;
+    mWindow.y      = aWindow.y;
     mWindow.width  = aWindow.width;
     mWindow.height = aWindow.height;
     mWindow.type   = aWindow.type;
 
     mWindow.window = reinterpret_cast<void*>(mSharedSurfaceDib.GetHDC());
+    ::SetViewportOrgEx(mSharedSurfaceDib.GetHDC(), -aWindow.x, -aWindow.y, NULL);
 
     if (mPluginIface->setwindow)
         mPluginIface->setwindow(&mData, &mWindow);
@@ -2043,11 +2025,6 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
         mPendingForcePaint = true;
     }
 
-#ifdef XP_WIN
-    mPluginOffset.x = aWindow.x;
-    mPluginOffset.y = aWindow.y;
-#endif
-
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;
     mWindow.width = aWindow.width;
@@ -2281,17 +2258,21 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
 
     // The clip rect is relative to drawable top-left.
     nsIntRect clipRect;
+#ifndef XP_WIN
+    // On Windows, we translate the device context, in order for the window
+    // origin to be correct.
     mWindow.x = mWindow.y = 0;
-    clipRect.SetRect(mWindow.x, mWindow.y, mWindow.width, mWindow.height);
-    // Don't ask the plugin to draw outside the drawable.
-    // This also ensures that the unsigned clip rectangle offsets won't be -ve.
+#endif
 
-    NPRect newClipRect;
-    newClipRect.left = clipRect.x;
-    newClipRect.top = clipRect.y;
-    newClipRect.right = clipRect.XMost();
-    newClipRect.bottom = clipRect.YMost();
-    mWindow.clipRect = newClipRect;
+    // Don't ask the plugin to draw outside the drawable. The clip rect
+    // is in plugin coordinates, not window coordinates.
+    // This also ensures that the unsigned clip rectangle offsets won't be -ve.
+    clipRect.SetRect(0, 0, mWindow.width, mWindow.height);
+
+    mWindow.clipRect.left = 0;
+    mWindow.clipRect.top = 0;
+    mWindow.clipRect.right = clipRect.XMost();
+    mWindow.clipRect.bottom = clipRect.YMost();
 
 #ifdef XP_WIN
     // Windowless plugins on Windows need a WM_WINDOWPOSCHANGED event to update
@@ -2301,7 +2282,7 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     if (mPluginIface->event) {
         WINDOWPOS winpos = {
             0, 0,
-            mPluginOffset.x, mPluginOffset.y,
+            mWindow.x, mWindow.y,
             mWindow.width, mWindow.height
         };
         NPEvent pluginEvent = {
@@ -2395,17 +2376,22 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
                  "Expected (SharedDIB) image surface.");
 
     mPendingPluginCall = true;
+
+    // This rect is in the window coordinate space. aRect is in the plugin
+    // coordinate space.
     RECT rect = {
-        aRect.x,
-        aRect.y,
-        aRect.x + aRect.width,
-        aRect.y + aRect.height
+        mWindow.x + aRect.x,
+        mWindow.y + aRect.y,
+        mWindow.x + aRect.x + aRect.width,
+        mWindow.y + aRect.y + aRect.height
     };
     NPEvent paintEvent = {
         WM_PAINT,
         uintptr_t(mWindow.window),
         uintptr_t(&rect)
     };
+    ::SetViewportOrgEx((HDC) mWindow.window, -mWindow.x, -mWindow.y, NULL);
+
     mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
     mPendingPluginCall = false;
     return;

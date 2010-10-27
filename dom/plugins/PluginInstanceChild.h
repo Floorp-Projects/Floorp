@@ -323,7 +323,6 @@ private:
     HWND mCachedWinlessPluginHWND;
     HWND mWinlessPopupSurrogateHWND;
     nsIntPoint mPluginSize;
-    nsIntPoint mPluginOffset;
     WNDPROC mWinlessThrottleOldWndProc;
     HWND mWinlessHiddenMsgHWND;
 #endif
@@ -452,7 +451,8 @@ private:
     // surface which is on ParentProcess side
     nsRefPtr<gfxASurface> mBackSurface;
 
-    // Accumulated invalidate rect, while back buffer is not accessible
+    // Accumulated invalidate rect, while back buffer is not accessible,
+    // in plugin coordinates.
     nsIntRect mAccumulatedInvalidRect;
 
     // Plugin only call SetTransparent
@@ -486,7 +486,8 @@ private:
     bool mDoAlphaExtraction;
 
     // Cached rectangle rendered to previous surface(mBackSurface)
-    // Used for reading back to current surface and syncing data
+    // Used for reading back to current surface and syncing data,
+    // in plugin coordinates.
     nsIntRect mSurfaceDifferenceRect;
 
 #ifdef MOZ_X11
