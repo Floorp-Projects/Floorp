@@ -246,24 +246,37 @@ CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
     if(!self)
         return JS_TRUE;
 
-    XPCCompartmentMap& map = self->GetCompartmentMap();
     nsAutoPtr<xpc::CompartmentPrivate> priv(
         static_cast<xpc::CompartmentPrivate*>(JS_SetCompartmentPrivate(cx, compartment, nsnull)));
-    if (!priv)
+    if(!priv)
         return JS_TRUE;
 
-    nsAdoptingCString origin;
-    origin.Adopt(static_cast<char *>(priv->origin));
-
-#ifdef DEBUG
+    if(xpc::PtrAndPrincipalHashKey *key = priv->key)
     {
-        JSCompartment *current;
-        NS_ASSERTION(map.Get(origin, &current), "no compartment?");
-        NS_ASSERTION(current == compartment, "compartment mismatch");
-    }
+        XPCCompartmentMap &map = self->GetCompartmentMap();
+#ifdef DEBUG
+        {
+            JSCompartment *current;
+            NS_ASSERTION(map.Get(key, &current), "no compartment?");
+            NS_ASSERTION(current == compartment, "compartment mismatch");
+        }
 #endif
+        map.Remove(key);
+    }
+    else
+    {
+        nsISupports *ptr = priv->ptr;
+        XPCMTCompartmentMap &map = self->GetMTCompartmentMap();
+#ifdef DEBUG
+        {
+            JSCompartment *current;
+            NS_ASSERTION(map.Get(ptr, &current), "no compartment?");
+            NS_ASSERTION(current == compartment, "compartment mismatch");
+        }
+#endif
+        map.Remove(ptr);
+    }
 
-    map.Remove(origin);
     return JS_TRUE;
 }
 
@@ -1168,6 +1181,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mJSHolders.ops = nsnull;
 
     mCompartmentMap.Init();
+    mMTCompartmentMap.Init();
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
