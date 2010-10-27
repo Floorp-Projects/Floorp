@@ -1624,6 +1624,8 @@ DocumentViewerImpl::Destroy()
     mPresContext = nsnull;
   }
 
+  mWindow = nsnull;
+  mViewManager = nsnull;
   mContainer = nsnull;
 
   return NS_OK;
