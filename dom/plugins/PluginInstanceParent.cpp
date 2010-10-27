@@ -1319,8 +1319,8 @@ PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
                                              NPRemoteWindow& aRemoteWindow)
 {
     aRemoteWindow.window = nsnull;
-    aRemoteWindow.x      = 0;
-    aRemoteWindow.y      = 0;
+    aRemoteWindow.x      = aWindow->x;
+    aRemoteWindow.y      = aWindow->y;
     aRemoteWindow.width  = aWindow->width;
     aRemoteWindow.height = aWindow->height;
     aRemoteWindow.type   = aWindow->type;
