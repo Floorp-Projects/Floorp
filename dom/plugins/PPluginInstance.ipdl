@@ -69,6 +69,7 @@ struct SurfaceDescriptorX11 {
 struct SurfaceDescriptorWin {
   WindowsSharedMemoryHandle handle;
   gfxIntSize size;
+  bool transparent;
 };
 
 union SurfaceDescriptor {
