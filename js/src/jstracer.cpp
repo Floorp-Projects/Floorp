@@ -11529,6 +11529,23 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                     if (roundReturningInt(vp[2].toNumber(), &result))
                         return callFloatReturningInt(argc, &roundReturningInt_ci);
                 }
+            } else if (native == js_math_abs) {
+                LIns* a = get(&vp[2]);
+                if (isPromoteInt(a)) {
+                    a = demote(lir, a);
+                    /* abs(INT_MIN) can't be done using integers;  exit if we see it. */
+                    LIns* intMin_ins = addName(lir->insImmI(0x80000000), "INT_MIN");
+                    LIns* isIntMin_ins = addName(lir->ins2(LIR_eqi, a, intMin_ins), "isIntMin");
+                    guard(false, isIntMin_ins, MISMATCH_EXIT);
+                    LIns* neg_ins = lir->ins1(LIR_negi, a);
+                    LIns* isNeg_ins = addName(lir->ins2ImmI(LIR_lti, a, 0), "isNeg");
+                    LIns* abs_ins = addName(lir->insChoose(isNeg_ins, neg_ins, a,
+                                                           avmplus::AvmCore::use_cmov()),
+                                            "abs");
+                    set(&vp[0], i2d(abs_ins));
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                }
             }
             if (vp[1].isString()) {
                 JSString *str = vp[1].toString();
