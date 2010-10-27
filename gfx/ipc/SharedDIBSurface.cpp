@@ -47,29 +47,32 @@ static const cairo_user_data_key_t SHAREDDIB_KEY = {0};
 static const long kBytesPerPixel = 4;
 
 bool
-SharedDIBSurface::Create(HDC adc, PRUint32 aWidth, PRUint32 aHeight)
+SharedDIBSurface::Create(HDC adc, PRUint32 aWidth, PRUint32 aHeight,
+                         bool aTransparent)
 {
-  nsresult rv = mSharedDIB.Create(adc, aWidth, aHeight);
+  nsresult rv = mSharedDIB.Create(adc, aWidth, aHeight, aTransparent);
   if (NS_FAILED(rv) || !mSharedDIB.IsValid())
     return false;
 
-  InitSurface(aWidth, aHeight);
+  InitSurface(aWidth, aHeight, aTransparent);
   return true;
 }
 
 bool
-SharedDIBSurface::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight)
+SharedDIBSurface::Attach(Handle aHandle, PRUint32 aWidth, PRUint32 aHeight,
+                         bool aTransparent)
 {
-  nsresult rv = mSharedDIB.Attach(aHandle, aWidth, aHeight);
+  nsresult rv = mSharedDIB.Attach(aHandle, aWidth, aHeight, aTransparent);
   if (NS_FAILED(rv) || !mSharedDIB.IsValid())
     return false;
 
-  InitSurface(aWidth, aHeight);
+  InitSurface(aWidth, aHeight, aTransparent);
   return true;
 }
 
 void
-SharedDIBSurface::InitSurface(PRUint32 aWidth, PRUint32 aHeight)
+SharedDIBSurface::InitSurface(PRUint32 aWidth, PRUint32 aHeight,
+                              bool aTransparent)
 {
   // Windows DIBs are bottom-to-top by default, so the stride is negative
   // and the data is the beginning of the last row.
@@ -77,8 +80,10 @@ SharedDIBSurface::InitSurface(PRUint32 aWidth, PRUint32 aHeight)
   unsigned char* data = reinterpret_cast<unsigned char*>(mSharedDIB.GetBits());
   data -= (aHeight - 1) * stride;
 
+  gfxImageFormat format = aTransparent ? ImageFormatARGB32 : ImageFormatRGB24;
+
   gfxImageSurface::InitWithData(data, gfxIntSize(aWidth, aHeight),
-                                stride, ImageFormatRGB24);
+                                stride, format);
 
   cairo_surface_set_user_data(mSurface, &SHAREDDIB_KEY, this, NULL);
 }

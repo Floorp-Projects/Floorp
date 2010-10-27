@@ -1425,7 +1425,7 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow)
     else {
         // Attach to the new shared surface parent handed us.
         if (NS_FAILED(mSharedSurfaceDib.Attach((SharedDIB::Handle)aWindow.surfaceHandle,
-                                               aWindow.width, aWindow.height)))
+                                               aWindow.width, aWindow.height, false)))
           return false;
         // Free any alpha extraction resources if needed. This will be reset
         // the next time it's used.
@@ -2115,7 +2115,7 @@ PluginInstanceChild::CreateOptSurface(void)
 
         SharedDIBSurface* s = new SharedDIBSurface();
         if (!s->Create(reinterpret_cast<HDC>(mWindow.window),
-                       mWindow.width, mWindow.height))
+                       mWindow.width, mWindow.height, mIsTransparent))
             return false;
 
         mCurrentSurface = s;
@@ -2580,7 +2580,7 @@ PluginInstanceChild::ShowPluginFrame()
         base::SharedMemoryHandle handle = NULL;
         SharedDIBSurface* s = static_cast<SharedDIBSurface*>(mCurrentSurface.get());
         s->ShareToProcess(PluginModuleChild::current()->OtherProcess(), &handle);
-        currSurf = SurfaceDescriptorWin(handle, mCurrentSurface->GetSize());
+        currSurf = SurfaceDescriptorWin(handle, mCurrentSurface->GetSize(), mIsTransparent);
         s->Flush();
     } else
 #endif
