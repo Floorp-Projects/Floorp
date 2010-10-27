@@ -104,6 +104,18 @@ js_GetStringChars(JSContext *cx, JSString *str)
 void
 JSString::flatten()
 {
+    // Diagnostic: serialize all calls to this function to see
+    // if concurrent calls are crashing us.
+    JS_LOCK_RUNTIME(asCell()->compartment()->rt);
+    // The main body of this function can be executed only if
+    // the string is a rope. With multiple threads, it's possible
+    // we waited while another one ran, and the string has
+    // already been flattened for us.
+    if (!isRope()) {
+        JS_UNLOCK_RUNTIME(asCell()->compartment()->rt);
+        return;
+    }
+
     JSString *topNode;
     jschar *chars;
     size_t capacity;
@@ -181,6 +193,8 @@ JSString::flatten()
     /* Set null terminator. */
     chars[pos] = 0;
     topNode->initFlatMutable(chars, pos, capacity);
+
+    JS_UNLOCK_RUNTIME(asCell()->compartment()->rt);
 }
 
 #ifdef JS_TRACER
