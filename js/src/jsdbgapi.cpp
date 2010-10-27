@@ -1187,7 +1187,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 
     /* Force creation of argument and call objects if not yet created */
     (void) JS_GetFrameCallObject(cx, fp);
-    return js_GetScopeChain(cx, fp);
+    return GetScopeChain(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)

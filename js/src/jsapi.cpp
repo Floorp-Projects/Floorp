@@ -1881,31 +1881,8 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
 JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx)
 {
-    JSStackFrame *fp;
-
     CHECK_REQUEST(cx);
-    fp = js_GetTopStackFrame(cx);
-    if (!fp) {
-        /*
-         * There is no code active on this context. In place of an actual
-         * scope chain, use the context's global object, which is set in
-         * js_InitFunctionAndObjectClasses, and which represents the default
-         * scope chain for the embedding. See also js_FindClassObject.
-         *
-         * For embeddings that use the inner and outer object hooks, the inner
-         * object represents the ultimate global object, with the outer object
-         * acting as a stand-in.
-         */
-        JSObject *obj = cx->globalObject;
-        if (!obj) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
-            return NULL;
-        }
-
-        OBJ_TO_INNER_OBJECT(cx, obj);
-        return obj;
-    }
-    return js_GetScopeChain(cx, fp);
+    return GetScopeChain(cx);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1918,26 +1895,8 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForScopeChain(JSContext *cx)
 {
-    /*
-     * This is essentially JS_GetScopeChain(cx)->getGlobal(), but without
-     * falling off trace.
-     *
-     * This use of cx->fp, possibly on trace, is deliberate:
-     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
-     * trace or not, since we do not trace calls across global objects.
-     */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
-    if (cx->hasfp())
-        return cx->fp()->scopeChain().getGlobal();
-
-    JSObject *scope = cx->globalObject;
-    if (!scope) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
-        return NULL;
-    }
-    OBJ_TO_INNER_OBJECT(cx, scope);
-    return scope;
+    CHECK_REQUEST(cx);
+    return GetGlobalForScopeChain(cx);
 }
 
 JS_PUBLIC_API(jsval)
@@ -4172,7 +4131,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
         if (cx->hasfp())
-            parent = js_GetScopeChain(cx, cx->fp());
+            parent = GetScopeChain(cx, cx->fp());
         if (!parent)
             parent = cx->globalObject;
         JS_ASSERT(parent);

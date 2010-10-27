@@ -783,14 +783,14 @@ namespace js {
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
-} /* namespace js */
-
+extern JSObject *
+GetBlockChain(JSContext *cx, JSStackFrame *fp);
 
 extern JSObject *
-js_GetBlockChain(JSContext *cx, JSStackFrame *fp);
+GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
 
 extern JSObject *
-js_GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
+GetScopeChain(JSContext *cx);
 
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are
@@ -800,12 +800,10 @@ js_GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
  * must reflect at runtime.
  */
 extern JSObject *
-js_GetScopeChain(JSContext *cx, JSStackFrame *fp);
+GetScopeChain(JSContext *cx, JSStackFrame *fp);
 
 extern JSObject *
-js_GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
-
-namespace js {
+GetScopeChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen);
 
 /*
  * Report an error that the this value passed as |this| in the given arguments
