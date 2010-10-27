@@ -3454,7 +3454,7 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
     if (usePropCache) {
         stubcc.call(stubs::BindName);
     } else {
-        masm.move(ImmPtr(script->getAtom(index)), Registers::ArgReg1);
+        stubcc.masm.move(ImmPtr(script->getAtom(index)), Registers::ArgReg1);
         stubcc.call(stubs::BindNameNoCache);
     }
 
