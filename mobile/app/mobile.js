@@ -37,8 +37,8 @@
 #filter substitution
 
 // for browser.xml binding
-pref("toolkit.browser.cachePixelX", 800);
-pref("toolkit.browser.cachePixelY", 2000);
+pref("toolkit.browser.cachePixelX", 580);
+pref("toolkit.browser.cachePixelY", 1000);
 pref("toolkit.browser.recacheRatio", 60);
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
@@ -484,5 +484,5 @@ pref("services.sync.autoconnectDelay", 5);
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 
-// Waiting on bug 598864 
+// Waiting on bug 598864
 pref("layers.accelerate-all", false);
