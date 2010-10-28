@@ -91,14 +91,6 @@ nsAccDocManager::FindAccessibleInCache(nsINode* aNode) const
   return arg.mAccessible;
 }
 
-void
-nsAccDocManager::ShutdownDocAccessiblesInTree(nsIDocument *aDocument)
-{
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
-  ShutdownDocAccessiblesInTree(treeItem, aDocument);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccDocManager protected
@@ -130,21 +122,6 @@ nsAccDocManager::Shutdown()
     progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));
 
   ClearDocCache();
-}
-
-void
-nsAccDocManager::ShutdownDocAccessible(nsIDocument *aDocument)
-{
-  nsDocAccessible* docAccessible = mDocAccessibleCache.GetWeak(aDocument);
-  if (!docAccessible)
-    return;
-
-  // We're allowed to not remove listeners when accessible document is shutdown
-  // since we don't keep strong reference on chrome event target and listeners
-  // are removed automatically when chrome event target goes away.
-
-  docAccessible->Shutdown();
-  mDocAccessibleCache.Remove(aDocument);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,7 +293,14 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
       return NS_OK;
 
     // Shutdown this one and sub document accessibles.
-    ShutdownDocAccessiblesInTree(document);
+
+    // We're allowed to not remove listeners when accessible document is
+    // shutdown since we don't keep strong reference on chrome event target and
+    // listeners are removed automatically when chrome event target goes away.
+    nsDocAccessible* docAccessible = mDocAccessibleCache.GetWeak(document);
+    if (docAccessible)
+      docAccessible->Shutdown();
+
     return NS_OK;
   }
 
@@ -498,35 +482,6 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
 
   AddListeners(aDocument, isRootDoc);
   return docAcc;
-}
-
-void
-nsAccDocManager::ShutdownDocAccessiblesInTree(nsIDocShellTreeItem *aTreeItem,
-                                              nsIDocument *aDocument)
-{
-  nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(aTreeItem));
-
-  if (treeNode) {
-    PRInt32 subDocumentsCount = 0;
-    treeNode->GetChildCount(&subDocumentsCount);
-    for (PRInt32 idx = 0; idx < subDocumentsCount; idx++) {
-      nsCOMPtr<nsIDocShellTreeItem> treeItemChild;
-      treeNode->GetChildAt(idx, getter_AddRefs(treeItemChild));
-      NS_ASSERTION(treeItemChild, "No tree item when there should be");
-      if (!treeItemChild)
-        continue;
-
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(treeItemChild));
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      docShell->GetContentViewer(getter_AddRefs(contentViewer));
-      if (!contentViewer)
-        continue;
-
-      ShutdownDocAccessiblesInTree(treeItemChild, contentViewer->GetDocument());
-    }
-  }
-
-  ShutdownDocAccessible(aDocument);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
