@@ -143,6 +143,7 @@ namespace mjit {
 namespace ic {
 # if defined JS_POLYIC
     struct PICInfo;
+    struct GetElementIC;
 # endif
 # if defined JS_MONOIC
     struct MICInfo;
@@ -182,6 +183,7 @@ typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceI
 #endif
 #ifdef JS_POLYIC
 typedef void (JS_FASTCALL *VoidStubPIC)(VMFrame &, js::mjit::ic::PICInfo *);
+typedef void (JS_FASTCALL *VoidStubGetElemIC)(VMFrame &, js::mjit::ic::GetElementIC *);
 #endif
 
 namespace mjit {
@@ -212,6 +214,8 @@ struct JITScript {
 #ifdef JS_POLYIC
     ic::PICInfo     *pics;      /* PICs in this script */
     uint32          nPICs;      /* number of PolyICs */
+    ic::GetElementIC *getElems;
+    uint32           nGetElems;
 #endif
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */
