@@ -202,6 +202,8 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
+
+  virtual PRBool HasText() { return PR_TRUE; }
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
@@ -1407,8 +1409,8 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   // overflow their font-boxes. It'll do for now; to fix it for real, we really
   // should rewrite all the text-handling code here to use gfxTextRun (bug
   // 397294).
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
-  
+  aMetrics.SetOverflowAreasToDesiredBounds();
+
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;

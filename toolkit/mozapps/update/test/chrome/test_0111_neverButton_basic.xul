@@ -34,11 +34,10 @@ const TESTS = [ {
 } ];
 
 function runTest() {
-  debugDump("Entering runTest");
+  debugDump("entering");
 
   let url = URL_UPDATE + "?showNever=1&showDetails=1" + getVersionParams();
   setUpdateURLOverride(url);
-  debugDump("Update URL: " + url);
 
   // add the never preference for this version to verify that checking for
   // updates clears the preference.

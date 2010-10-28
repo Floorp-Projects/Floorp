@@ -61,16 +61,14 @@
   <div id="aboutLogoContainer">
     <a id="vendorURL" href="http://www.mozilla.org/">
       <img src="about:logo" alt="&brandShortName;"/>
-#expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
+      <p id="version"></p>
     </a>
   </div>
 
   <ul id="aboutPageList">
     <li>&about.credits.beforeLink;<a href="about:credits">&about.credits.linkTitle;</a>&about.credits.afterLink;</li>
     <li>&about.license.beforeTheLink;<a href="about:license">&about.license.linkTitle;</a>&about.license.afterTheLink;</li>
-    <!-- Release notes link removed pending fix for bug 349985
     <li>&about.relnotes.beforeTheLink;<a id="releaseNotesURL" href="">&about.relnotes.linkTitle;</a>&about.relnotes.afterTheLink;</li>
-    -->
     <li>&about.buildconfig.beforeTheLink;<a href="about:buildconfig">&about.buildconfig.linkTitle;</a>&about.buildconfig.afterTheLink;</li>
     <script type="application/javascript">
       // get release notes URL from prefs
@@ -84,6 +82,12 @@
         var vendorURL = formatter.formatURLPref("app.vendorURL");
         var vendor = document.getElementById("vendorURL");
         vendor.setAttribute("href", vendorURL);
+
+        var versionNum = Components.classes["@mozilla.org/xre/app-info;1"]
+                                   .getService(Components.interfaces.nsIXULAppInfo)
+                                   .version;
+        var version = document.getElementById("version");
+        version.appendChild(document.createTextNode("&about.version; " + versionNum));
       }
       catch (ex) { /* no release notes and vendor URL for you without bug 349985 being fixed */ }
 

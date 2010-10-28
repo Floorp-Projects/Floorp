@@ -351,6 +351,7 @@ user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
 user_pref("javascript.options.tracejit.content", true);
 user_pref("javascript.options.methodjit.content", true);
+user_pref("javascript.options.jitprofiling.content", true);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("network.manage-offline-status", false);
 user_pref("test.mousescroll", true);
@@ -363,6 +364,8 @@ user_pref("app.update.enabled", false);
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
 user_pref("extensions.enabledScopes", 5);
+// Disable metadata caching for installed add-ons by default
+user_pref("extensions.getAddons.cache.enabled", false);
 
 user_pref("extensions.testpilot.runStudies", false);
 
@@ -752,7 +755,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if stackFixerFunction:
           line = stackFixerFunction(line)
         self.log.info(line.rstrip())
-        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out." in line:
+        if self.UNIXISH and not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
           self.dumpScreen(utilityPath)
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)

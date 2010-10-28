@@ -117,13 +117,9 @@ Class js::regexp_statics_class = {
 static void
 SwapObjectRegExp(JSContext *cx, JSObject *obj, RegExp &newRegExp)
 {
-    RegExp *oldRegExp;
-    {
-        AutoObjectLocker lock(cx, obj);
-        oldRegExp = RegExp::extractFrom(obj);
-        obj->setPrivate(&newRegExp);
-        obj->zeroRegExpLastIndex();
-    }
+    RegExp *oldRegExp = RegExp::extractFrom(obj);
+    obj->setPrivate(&newRegExp);
+    obj->zeroRegExpLastIndex();
     if (oldRegExp)
         oldRegExp->decref(cx);
 }
@@ -302,7 +298,6 @@ RegExp::createFlagged(JSContext *cx, JSString *str, JSString *opt)
             if (!obj)                                                          \
                 return true;                                                   \
         }                                                                      \
-        AutoObjectLocker(cx, obj);                                             \
         RegExp *re = RegExp::extractFrom(obj);                                 \
         code;                                                                  \
         return true;                                                           \
@@ -577,10 +572,8 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
     static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};
     if (!InstanceOf(cx, obj, &js_RegExpClass, vp + 2))
         return false;
-    JS_LOCK_OBJ(cx, obj);
     RegExp *re = RegExp::extractFrom(obj);
     if (!re) {
-        JS_UNLOCK_OBJ(cx, obj);
         *vp = StringValue(cx->runtime->emptyString);
         return true;
     }
@@ -596,7 +589,6 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
     uint32 nflags = re->flagCount();
     jschar *chars = (jschar*) cx->malloc((length + nflags + 1) * sizeof(jschar));
     if (!chars) {
-        JS_UNLOCK_OBJ(cx, obj);
         return false;
     }
 
@@ -613,7 +605,6 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
         if (re->sticky())
             chars[length++] = 'y';
     }
-    JS_UNLOCK_OBJ(cx, obj);
     chars[length] = 0;
 
     JSString *str = js_NewString(cx, chars, length);
@@ -709,7 +700,6 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
         }
         RegExp *clone;
         {
-            AutoObjectLocker lock(cx, &sourceObj);
             RegExp *re = RegExp::extractFrom(&sourceObj);
             if (!re)
                 return false;
@@ -758,12 +748,10 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     bool ok = InstanceOf(cx, obj, &js_RegExpClass, argv);
     if (!ok)
         return JS_FALSE;
-    JS_LOCK_OBJ(cx, obj);
+
     RegExp *re = RegExp::extractFrom(obj);
-    if (!re) {
-        JS_UNLOCK_OBJ(cx, obj);
+    if (!re)
         return JS_TRUE;
-    }
 
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     re->incref(cx);
@@ -782,7 +770,6 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     } else {
         lastIndex = 0;
     }
-    JS_UNLOCK_OBJ(cx, obj);
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
     RegExpStatics *res = cx->regExpStatics();

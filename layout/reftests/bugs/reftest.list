@@ -852,12 +852,14 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 404123-1.html 404123-1-ref.html
 == 404123-2.html 404123-2-ref.html
 != 404123-3.html 404123-3-ref.html
-HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
+# may fail "randomly" on OS X, doesn't seem to be rendering usefully anyhow - bug 602469
+random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 404180-1.html 404180-1-ref.html
 == 404301-1.html 404301-1-ref.html
 == 404309-1a.html 404309-1-ref.html
 == 404309-1b.html 404309-1-ref.html
-!= data:application/xml,<foo/> data:text/plain, # ensure we pretty-print this XML instead of letting it appear blank (test for bug 404419)
+# Disabled due to compartments for now.
+#!= data:application/xml,<foo/> data:text/plain, # ensure we pretty-print this XML instead of letting it appear blank (test for bug 404419)
 == 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
 == 404666-1.html 404666-1-ref.html
 == 404666-2.html 404666-2-ref.html
@@ -970,7 +972,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
 == 421632-1.html 421632-1-ref.html
-!= 421710-1.html about:blank     # assertion test (and crash test)
+asserts-if(gtk2Widget,4) != 421710-1.html about:blank     # assertion test (and crash test), asserts are bug 602426.
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
@@ -1373,7 +1375,6 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
 != 513318-2.xul 513318-2-ref.xul
-!= 513318-3.xul 513318-3-ref.xul
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 HTTP(..) == 518172-1b.html 518172-b-ref.html
@@ -1419,6 +1420,8 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 539323-1.html 539323-1-ref.html
 == 539323-2.html 539323-2-ref.html
 == 539323-3.html 539323-3-ref.html
+== 539880-1.html 539880-1-ref.html
+== 539880-1-dynamic.html 539880-1-ref.html
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
@@ -1487,23 +1490,37 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
+== 579655-1.html 579655-1-ref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
 random-if(layersGPUAccelerated) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 580160-1.html 580160-1-ref.html
+HTTP(..) == 580863-1.html 580863-1-ref.html
 random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
 == 582037-1b.html 582037-1-ref.html
 == 582037-2a.html 582037-2-ref.html
 == 582037-2b.html 582037-2-ref.html
+asserts(0-1) == 582146-1.html about:blank
+== 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
-== 589672-1.html 589672-1-ref.html
 == 586400-1.html 586400-1-ref.html
+== 589672-1.html 589672-1-ref.html
 == 593544-1.html 593544-1-ref.html
-== 594737-1.html 594737-1-ref.html
 == 594624-1.html 594624-1-ref.html
+== 594737-1.html 594737-1-ref.html
+== 597721-1.html 597721-1-ref.html
+== 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
+== 600045-1.html 600045-1-ref.html
+== 600803-1.html 600803-1-ref.html
+== 600974-1.html 600974-1-ref.html
+== 604737.html 604737-ref.html
+== 600974-2.html 600974-1-ref.html
+== 600974-3.html 600974-1-ref.html
+== 605138-1.html 605138-1-ref.html
+== 605157-1.xhtml 605157-1-ref.xhtml

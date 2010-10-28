@@ -35,35 +35,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let tabViewShownCount = 0;
+
+// ----------
 function test() {
   waitForExplicitFinish();
   
-  let tabViewShownCount = 0;
-  let onTabViewHidden = function() {
-    ok(!TabView.isVisible(), "Tab View is hidden");
+  // verify initial state
+  ok(!TabView.isVisible(), "Tab View starts hidden");
 
-    if (tabViewShownCount == 1) {
-      document.getElementById("menu_tabview").doCommand();
-    } else if (tabViewShownCount == 2) {
-      EventUtils.synthesizeKey("e", { accelKey: true });
-    } else if (tabViewShownCount == 3) {
-      window.removeEventListener("tabviewshown", onTabViewShown, false);
-      window.removeEventListener("tabviewhidden", onTabViewHidden, false);
-      finish();
-    }
-  }
-  let onTabViewShown = function() {
-    // add the count to the message so we can track things more easily.
-    ok(TabView.isVisible(), "Tab View is visible. Count: " + tabViewShownCount);
-    tabViewShownCount++
-    executeSoon(function() { TabView.toggle(); });
-  }
-  window.addEventListener("tabviewshown", onTabViewShown, false);
-  window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  
-  ok(!TabView.isVisible(), "Tab View is hidden");
-
+  // use the Tab View button to launch it for the first time
+  window.addEventListener("tabviewshown", onTabViewLoadedAndShown, false);
   let button = document.getElementById("tabview-button");
   ok(button, "Tab View button exists");
   button.doCommand();
+}
+
+// ----------
+function onTabViewLoadedAndShown() {
+  window.removeEventListener("tabviewshown", onTabViewLoadedAndShown, false);
+  
+  ok(TabView.isVisible(), "Tab View is visible. Count: " + tabViewShownCount);
+  tabViewShownCount++;
+  
+  // kick off the series
+  window.addEventListener("tabviewshown", onTabViewShown, false);
+  window.addEventListener("tabviewhidden", onTabViewHidden, false);
+  TabView.toggle();
+}
+
+// ----------
+function onTabViewShown() {
+  // add the count to the message so we can track things more easily.
+  ok(TabView.isVisible(), "Tab View is visible. Count: " + tabViewShownCount);
+  tabViewShownCount++;
+  TabView.toggle();
+}
+
+// ---------- 
+function onTabViewHidden() {
+  ok(!TabView.isVisible(), "Tab View is hidden. Count: " + tabViewShownCount);
+
+  if (tabViewShownCount == 1) {
+    document.getElementById("menu_tabview").doCommand();
+  } else if (tabViewShownCount == 2) {
+    EventUtils.synthesizeKey("e", { accelKey: true });
+  } else if (tabViewShownCount == 3) {
+    window.removeEventListener("tabviewshown", onTabViewShown, false);
+    window.removeEventListener("tabviewhidden", onTabViewHidden, false);
+    finish();
+  }
 }

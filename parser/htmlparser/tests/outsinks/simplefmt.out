@@ -11,12 +11,12 @@ output should contain only one space (and no line breaks) between
 
 Here is a /list/:
 
-    * An item
-    * A nested ordered list:
-    *
-         1. item one
-         2. item two
-    * last item
+  * An item
+  * A nested ordered list:
+  *
+     1. item one
+     2. item two
+  * last item
 
 Here is a paragraph after the list.
 

@@ -43,13 +43,15 @@
 
 #include "xpcprivate.h"
 #include "nsCRT.h"
-#include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
 #include "nsWrapperCache.h"
 #include "xpclog.h"
 #include "jstl.h"
 #include "nsINode.h"
 #include "xpcquickstubs.h"
+#include "jsproxy.h"
+#include "AccessCheck.h"
+#include "WrapperFactory.h"
 
 /***************************************************************************/
 
@@ -443,8 +445,11 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             needsXOW = JS_TRUE;
         rv = NS_OK;
 
-        NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
-                     "Parent should never be an XPCNativeWrapper here");
+        NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
+                     "Xray wrapper being used to parent XPCWrappedNative?");
+
+        if(!ac.enter(ccx, parent))
+            return NS_ERROR_FAILURE;
 
         if(parent != plannedParent)
         {
@@ -456,9 +461,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
             newParentVal = OBJECT_TO_JSVAL(parent);
         }
-
-        if(!ac.enter(ccx, parent))
-            return NS_ERROR_FAILURE;
 
         // Take the performance hit of checking the hashtable again in case
         // the preCreate call caused the wrapper to get created through some
@@ -517,9 +519,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             nsCOMPtr<nsIXPConnectWrappedJS> wrappedjs(do_QueryInterface(Object));
             JSObject *obj;
             wrappedjs->GetJSObject(&obj);
-            if((obj->isSystem() ||
-                JS_GetGlobalForObject(ccx, obj)->isSystem()) &&
-               !Scope->GetGlobalJSObject()->isSystem())
+            if(xpc::AccessCheck::isChrome(obj->getCompartment()) &&
+               !xpc::AccessCheck::isChrome(Scope->GetGlobalJSObject()->getCompartment()))
             {
                 needsCOW = JS_TRUE;
             }
@@ -576,8 +577,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
-                 "XPCNativeWrapper being used to parent XPCWrappedNative?");
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
+                 "Xray wrapper being used to parent XPCWrappedNative?");
 
     if(!wrapper->Init(ccx, parent, isGlobal, &sciWrapper))
     {
@@ -756,11 +757,11 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(existingJSObject
-                                                    ->getParent()),
-                 "XPCNativeWrapper being used to parent XPCWrappedNative?");
-    
-    if(!wrapper->Init(ccx, existingJSObject))
+    NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(existingJSObject->getParent()),
+                 "Xray wrapper being used to parent XPCWrappedNative?");
+
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject))
     {
         NS_RELEASE(wrapper);
         return NS_ERROR_FAILURE;
@@ -1382,10 +1383,6 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
         if(JSObject* wrapper = wnxow->GetXOW())
         {
             wrapper->getClass()->finalize(cx, wrapper);
-            NS_ASSERTION(!XPCWrapper::UnwrapGeneric(cx,
-                                                    &XPCCrossOriginWrapper::XOWClass,
-                                                    wrapper),
-                         "finalize didn't do its job");
         }
     }
 
@@ -1538,14 +1535,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     if(aOldScope != aNewScope)
     {
         // Oh, so now we need to move the wrapper to a different scope.
-
-        // First notify any XOWs.
-        if(wrapper)
-        {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-            xpc->UpdateXOWs(ccx, wrapper, nsIXPConnect::XPC_XOW_CLEARSCOPE);
-        }
-
         AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
         AutoMarkingWrappedNativeProtoPtr newProto(ccx);
 
@@ -1573,11 +1562,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
         if(wrapper)
         {
-            if(!XPCCrossOriginWrapper::WrapperMoved(ccx, wrapper, aNewScope))
-            {
-                return NS_ERROR_FAILURE;
-            }
-
             Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
             Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
 
@@ -1775,17 +1759,6 @@ return_tearoff:
         JSObject *unsafeObj;
         if((unsafeObj = XPCWrapper::Unwrap(cx, cur)))
             return GetWrappedNativeOfJSObject(cx, unsafeObj, funobj, pobj2,
-                                              pTearOff);
-    }
-
-    // If we didn't find a wrapper using the given funobj and obj, try
-    // again with obj's outer object, if it's got one.
-
-    if(JSObjectOp op = obj->getClass()->ext.outerObject)
-    {
-        JSObject *outer = op(cx, obj);
-        if(outer && outer != obj)
-            return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
                                               pTearOff);
     }
 
@@ -3191,9 +3164,13 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     if(!GetFlatJSObject())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, GetFlatJSObject()))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
     AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
     AutoMarkingWrappedNativeProtoPtr newProto(ccx);
-    
+
     oldProto = GetProto();
 
     XPCNativeScriptableInfo *info = oldProto->GetScriptableInfo();
@@ -3852,6 +3829,35 @@ MorphSlimWrapper(JSContext *cx, JSObject *obj)
 static PRUint32 sSlimWrappers;
 #endif
 
+JSObject *
+ConstructProxyObject(XPCCallContext &ccx,
+                     xpcObjectHelper &aHelper,
+                     XPCWrappedNativeScope *xpcscope)
+{
+    nsISupports *identityObj = aHelper.GetCanonical();
+    nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
+
+#ifdef DEBUG
+    {
+        JSUint32 flagsInt;
+        nsresult debug_rv = classInfoHelper->GetScriptableFlags(&flagsInt);
+        XPCNativeScriptableFlags flags(flagsInt);
+        NS_ASSERTION(NS_SUCCEEDED(debug_rv) && flags.WantPreCreate(),
+                     "bad flags, cache->IsProxy() implies WantPreCreate()");
+    }
+#endif
+
+    // We re-use the PreCreate hook to create the actual proxy object.
+    JSObject* parent = xpcscope->GetGlobalJSObject();
+    nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    nsWrapperCache *cache = aHelper.GetWrapperCache();
+    JSObject *flat = cache->GetWrapper();
+    NS_ASSERTION(flat, "PreCreate is supposed to create the wrapper");
+    return flat;
+}
+
 JSBool
 ConstructSlimWrapper(XPCCallContext &ccx,
                      xpcObjectHelper &aHelper,
@@ -3884,6 +3890,21 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     if(rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS)
     {
         SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
+
+        return JS_FALSE;
+    }
+
+    if(ccx.GetJSContext()->compartment != parent->compartment())
+    {
+        SLIM_LOG_NOT_CREATED(ccx, identityObj, "wrong compartment");
+
+        return JS_FALSE;
+    }
+
+    JSAutoEnterCompartment ac;
+    if(!ac.enter(ccx, parent))
+    {
+        SLIM_LOG_NOT_CREATED(ccx, identityObj, "unable to enter compartment");
 
         return JS_FALSE;
     }

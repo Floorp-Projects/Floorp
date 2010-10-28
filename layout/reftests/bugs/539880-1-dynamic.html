@@ -1,0 +1,58 @@
+<html>
+<body>
+
+<table cellpadding="10">
+	<tr>
+		<th>0</th>
+		<td><table cellpadding="4" border="7"><tr><td>border="0"</td></tr></table></td>
+		<td><table cellpadding="4" border="7"><tr><td>border="0px"</td></tr></table></td>
+		<td><table cellpadding="4" border="7"><tr><td>border="0em"</td></tr></table></td>
+	</tr>
+	<tr>
+		<th>1</th>
+		<td><table cellpadding="4" border="0"><tr><td>border="1"</td></tr></table></td>
+		<td><table cellpadding="4" border="0"><tr><td>border="1px"</td></tr></table></td>
+		<td><table cellpadding="4" border="0"><tr><td>border="1em"</td></tr></table></td>
+	</tr>
+	<tr>
+		<th>2</th>
+		<td><table cellpadding="4" border="3em"><tr><td>border="2"</td></tr></table></td>
+		<td><table cellpadding="4" border="3em"><tr><td>border="2px"</td></tr></table></td>
+		<td><table cellpadding="4" border="3em"><tr><td>border="2em"</td></tr></table></td>
+	</tr>
+	<tr>
+		<th>3</th>
+		<td><table cellpadding="4" border="0em"><tr><td>border="3"</td></tr></table></td>
+		<td><table cellpadding="4" border="0em"><tr><td>border="3px"</td></tr></table></td>
+		<td><table cellpadding="4" border="0em"><tr><td>border="3em"</td></tr></table></td>
+	</tr>
+	<tr>
+		<th>10</th>
+		<td><table cellpadding="4" border="0foo"><tr><td>border="10"</td></tr></table></td>
+		<td><table cellpadding="4" border="0foo"><tr><td>border="10px"</td></tr></table></td>
+		<td><table cellpadding="4" border="0foo"><tr><td>border="10em"</td></tr></table></td>
+	</tr>
+</table>
+
+<script>
+
+var tables = document.getElementsByTagName("table");
+var values = [ null, "0", "0px", "0em", "1", "1px", "1em",
+               "2", "2px", "2em", "3", "3px", "3em", "10", "10px", "10em" ];
+if (tables.length == values.length) {
+  for (var i in values) {
+    var table = tables[i];
+    var value = values[i];
+    if (value != null) {
+      // flush
+      getComputedStyle(table.firstChild.firstChild.firstChild, "").borderWidth;
+
+      table.setAttribute("border", value);
+    }
+  }
+}
+
+</script>
+
+</body>
+</html>

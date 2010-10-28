@@ -139,7 +139,7 @@ public:
    * combined area (== overflow area) for the line, and handle view
    * sizing/positioning and the setting of the overflow rect.
    */
-  void RelativePositionFrames(nsRect& aCombinedArea);
+  void RelativePositionFrames(nsOverflowAreas& aOverflowAreas);
 
   //----------------------------------------
 
@@ -425,7 +425,7 @@ protected:
     // From metrics
     nscoord mAscent;
     nsRect mBounds;
-    nsRect mCombinedArea;
+    nsOverflowAreas mOverflowAreas;
 
     // From reflow-state
     nsMargin mMargin;
@@ -595,7 +595,7 @@ protected:
                             nscoord aDistanceFromTop,
                             nscoord aLineHeight);
 
-  void RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea);
+  void RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas);
 
   PRBool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
 

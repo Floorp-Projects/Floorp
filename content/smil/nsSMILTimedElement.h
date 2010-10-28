@@ -409,7 +409,7 @@ protected:
   void              ClearSpecs(TimeValueSpecList& aSpecs,
                                InstanceTimeList& aInstances,
                                RemovalTestFunction aRemove);
-  void              RewindTiming();
+  void              ClearIntervalProgress();
   void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
 
   /**
@@ -512,6 +512,18 @@ protected:
   const nsSMILInterval* GetPreviousInterval() const;
   PRBool            HasPlayed() const { return !mOldIntervals.IsEmpty(); }
   PRBool            EndHasEventConditions() const;
+
+  // Reset the current interval by first passing ownership to a temporary
+  // variable so that if Unlink() results in us receiving a callback,
+  // mCurrentInterval will be nsnull and we will be in a consistent state.
+  void ResetCurrentInterval()
+  {
+    if (mCurrentInterval) {
+      // Transfer ownership to temp var. (This sets mCurrentInterval to null.)
+      nsAutoPtr<nsSMILInterval> interval(mCurrentInterval);
+      interval->Unlink();
+    }
+  }
 
   // Hashtable callback methods
   PR_STATIC_CALLBACK(PLDHashOperator) NotifyNewIntervalCallback(

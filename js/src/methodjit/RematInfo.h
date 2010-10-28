@@ -41,7 +41,72 @@
 #define jsjaeger_remat_h__
 
 #include "jscntxt.h"
+#include "MachineRegs.h"
 #include "assembler/assembler/MacroAssembler.h"
+
+namespace js {
+namespace mjit {
+
+// Lightweight, union-able components of FrameEntry.
+struct StateRemat {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    typedef JSC::MacroAssembler::Address Address;
+
+    static const int32 CONSTANT = -int(UINT16_LIMIT * sizeof(Value));
+
+    // This union encodes the fastest rematerialization of a non-constant
+    // value. The |offset| field can be used to recover information
+    // without this struct's helpers:
+    //  1) A value in (CONSTANT, 0) is an argument slot.
+    //  2) A value in [0, fp) is a register ID.
+    //  3) A value in [fp, inf) is a local slot.
+    union {
+        RegisterID  reg_;
+        int32       offset_;
+    };
+
+    static StateRemat FromInt32(int32 i32) {
+        StateRemat sr;
+        sr.offset_ = i32;
+        return sr;
+    }
+    static StateRemat FromRegister(RegisterID reg) {
+        StateRemat sr;
+        sr.reg_ = reg;
+        JS_ASSERT(sr.inRegister());
+        return sr;
+    }
+    static StateRemat FromAddress(Address address) {
+        JS_ASSERT(address.base == JSFrameReg);
+        StateRemat sr;
+        sr.offset_ = address.offset;
+        JS_ASSERT(sr.inMemory());
+        return sr;
+    }
+
+    // Minimum number of bits needed to compactly store the int32
+    // representation in a struct or union. This prevents bloating the IC
+    // structs by an extra 8 bytes in some cases. 16 bits are needed to encode
+    // the largest local:
+    //   ((UINT16_LIMIT - 1) * sizeof(Value) + sizeof(JSStackFrame),
+    // And an extra bit for the sign on arguments.
+#define MIN_STATE_REMAT_BITS        17
+
+    bool isConstant() const { return offset_ == CONSTANT; }
+    bool inRegister() const { return offset_ >= 0 &&
+                                     offset_ <= int32(JSC::MacroAssembler::TotalRegisters); }
+    bool inMemory() const { return offset_ >= int32(sizeof(JSStackFrame)); }
+
+    int32 toInt32() const { return offset_; }
+    Address address() const {
+        JS_ASSERT(inMemory());
+        return Address(JSFrameReg, offset_);
+    }
+    RegisterID reg() const {
+        JS_ASSERT(inRegister());
+        return reg_;
+    }
+};
 
 /* Lightweight version of FrameEntry. */
 struct ValueRemat {
@@ -49,26 +114,84 @@ struct ValueRemat {
     union {
         struct {
             union {
-                RegisterID  reg;
-                JSValueType knownType;
+                int32       typeRemat_;
+                JSValueType knownType_;
             } type;
-            RegisterID data : 5;
-            bool isTypeKnown : 1;
+            int32   dataRemat_   : MIN_STATE_REMAT_BITS;
+            bool    isTypeKnown_ : 1;
         } s;
-        jsval v;
+        jsval v_;
     } u;
-    bool isConstant : 1;
-    bool isDataSynced : 1;
-    bool isTypeSynced : 1;
+    bool isConstant_    : 1;
+    bool isDataSynced   : 1;
+    bool isTypeSynced   : 1;
 
-    RegisterID dataReg() {
-        JS_ASSERT(!isConstant);
-        return u.s.data;
+    static ValueRemat FromConstant(const Value &v) {
+        ValueRemat vr;
+        vr.isConstant_ = true;
+        vr.u.v_ = Jsvalify(v);
+        return vr;
+    }
+    static ValueRemat FromKnownType(JSValueType type, RegisterID dataReg) {
+        ValueRemat vr;
+        vr.isConstant_ = false;
+        vr.u.s.type.knownType_ = type;
+        vr.u.s.isTypeKnown_ = true;
+        vr.u.s.dataRemat_ = StateRemat::FromRegister(dataReg).toInt32();
+
+        // Assert bitfields are okay.
+        JS_ASSERT(vr.dataReg() == dataReg);
+        return vr;
+    }
+    static ValueRemat FromRegisters(RegisterID typeReg, RegisterID dataReg) {
+        ValueRemat vr;
+        vr.isConstant_ = false;
+        vr.u.s.isTypeKnown_ = false;
+        vr.u.s.type.typeRemat_ = StateRemat::FromRegister(typeReg).toInt32();
+        vr.u.s.dataRemat_ = StateRemat::FromRegister(dataReg).toInt32();
+
+        // Assert bitfields are okay.
+        JS_ASSERT(vr.dataReg() == dataReg);
+        JS_ASSERT(vr.typeReg() == typeReg);
+        return vr;
     }
 
-    RegisterID typeReg() {
-        JS_ASSERT(!isConstant && !u.s.isTypeKnown);
-        return u.s.type.reg;
+    RegisterID dataReg() const {
+        JS_ASSERT(!isConstant());
+        return dataRemat().reg();
+    }
+    RegisterID typeReg() const {
+        JS_ASSERT(!isTypeKnown());
+        return typeRemat().reg();
+    }
+
+    bool isConstant() const { return isConstant_; }
+    bool isTypeKnown() const { return isConstant() || u.s.isTypeKnown_; }
+
+    StateRemat dataRemat() const {
+        JS_ASSERT(!isConstant());
+        return StateRemat::FromInt32(u.s.dataRemat_);
+    }
+    StateRemat typeRemat() const {
+        JS_ASSERT(!isTypeKnown());
+        return StateRemat::FromInt32(u.s.type.typeRemat_);
+    }
+    Value value() const {
+        JS_ASSERT(isConstant());
+        return Valueify(u.v_);
+    }
+    JSValueType knownType() const {
+        JS_ASSERT(isTypeKnown());
+        if (isConstant()) {
+            const Value v = value();
+            if (v.isDouble())
+                return JSVAL_TYPE_DOUBLE;
+            return v.extractNonDoubleType();
+        }
+        return u.s.type.knownType_;
+    }
+    bool isType(JSValueType type_) const {
+        return isTypeKnown() && knownType() == type_;
     }
 };
 
@@ -153,6 +276,9 @@ struct RematInfo {
     /* Sync state. */
     SyncState sync_;
 };
+
+} /* namespace mjit */
+} /* namespace js */
 
 #endif
 

@@ -363,6 +363,7 @@ public:
 
     size_t size() const { return m_formatter.size(); }
     unsigned char *buffer() const { return m_formatter.buffer(); }
+    bool oom() const { return m_formatter.oom(); }
 
     // Stack operations:
 
@@ -851,7 +852,7 @@ public:
     {
         js::JaegerSpew(js::JSpew_Insns,
                        IPFX "xorq       %s, %s\n", MAYBE_PAD,
-                       nameIReg(4,src), nameIReg(4, dst));
+                       nameIReg(8,src), nameIReg(8, dst));
         m_formatter.oneByteOp64(OP_XOR_EvGv, src, dst);
     }
 
@@ -2222,12 +2223,13 @@ public:
     void* executableCopy(ExecutablePool* allocator)
     {
         void* copy = m_formatter.executableCopy(allocator);
-        ASSERT(copy);
         return copy;
     }
 
     void* executableCopy(void* buffer)
     {
+        if (m_formatter.oom())
+            return NULL;
         return memcpy(buffer, m_formatter.buffer(), size());
     }
 
@@ -2541,6 +2543,7 @@ private:
 
         size_t size() const { return m_buffer.size(); }
         unsigned char *buffer() const { return m_buffer.buffer(); }
+        bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         void* data() const { return m_buffer.data(); }
         void* executableCopy(ExecutablePool* allocator) { return m_buffer.executableCopy(allocator); }

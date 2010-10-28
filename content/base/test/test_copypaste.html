@@ -15,6 +15,26 @@
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+function modifySelection(s) {
+  var g = window.getSelection();
+  var l = g.getRangeAt(0);
+  var d = document.createElement("p");
+  d.innerHTML = s;
+  d.appendChild(l.cloneContents());
+
+  var e = document.createElement("div");
+  document.body.appendChild(e);
+  e.appendChild(d);
+  var a = document.createRange();
+  a.selectNode(d);
+  g.removeAllRanges();
+  g.addRange(a);
+  window.setTimeout(function () {
+      e.parentNode.removeChild(e);
+      g.removeAllRanges();
+      g.addRange(l);
+  }, 0)
+}
 
 function testCopyPaste () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -204,7 +224,22 @@ if (false) {
   is(textarea.value, val);
   textarea.value="";
 
-  SimpleTest.finish();
+  // ============ manipulating Selection in oncopy
+
+  copyRangeToClipboard($("div11").childNodes[0],0, $("div11").childNodes[1],2);
+  testClipboardValue("text/unicode", "Xdiv11");
+  testClipboardValue("text/html", "<div><p>X<span>div</span>11</p></div>");
+  setTimeout(function(){testSelectionToString("div11")},0);
+
+  setTimeout(function(){
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    copyRangeToClipboard($("div12").childNodes[0],0, $("div12").childNodes[1],2);
+    testClipboardValue("text/unicode", "Xdiv12");
+    testClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
+    setTimeout(function(){testSelectionToString("div12")},0);
+  },0);
+
+  setTimeout(function(){SimpleTest.finish()},0);
 }
 
 
@@ -273,6 +308,8 @@ x.appendChild(document.createTextNode('div'))
 x.appendChild(document.createTextNode('10'))
 </script>
 
+<div id="div11" oncopy="modifySelection('X')"><span>div</span>11</div>
+<div id="div12" oncopy="modifySelection('X<b style=\'display:none\'>Y</b>')"><span>div</span>12</div>
 
 </div>
 </body>

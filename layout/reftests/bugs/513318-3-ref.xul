@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<window title="XUL Layout"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <vbox style="overflow:auto; height:200px">
-		<label style="color:blue;" value="Hello Kitty" />
-	</vbox>
-</window>

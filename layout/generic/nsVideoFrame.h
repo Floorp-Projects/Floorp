@@ -104,7 +104,8 @@ public:
   }
   
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements);
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                        PRUint32 aFilters);
 
   nsIContent* GetPosterImage() { return mPosterImage; }
 

@@ -527,7 +527,6 @@ class TypedArrayTemplate
                     shape = (Shape *) prop;
                     if (!js_NativeGet(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, vp))
                         return false;
-                    JS_UNLOCK_OBJ(cx, obj2);
                 }
             }
         }
@@ -927,8 +926,9 @@ class TypedArrayTemplate
                 return false;
             }
 
-            tarray->copyFrom(src, offset);
-        } else if (arg0->wrappedObject(cx)->isArray()) {
+            if (!tarray->copyFrom(cx, src, offset))
+                return false;
+        } else {
             jsuint len;
             if (!js_GetLengthProperty(cx, arg0, &len))
                 return false;
@@ -942,10 +942,6 @@ class TypedArrayTemplate
 
             if (!tarray->copyFrom(cx, arg0, len, offset))
                 return false;
-        } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
         }
 
         vp->setUndefined();
@@ -988,36 +984,18 @@ class TypedArrayTemplate
     init(JSContext *cx, JSObject *other, int32 byteOffsetInt = -1, int32 lengthInt = -1)
     {
         type = ArrayTypeID();
+        ArrayBuffer *abuf;
 
-        //printf ("Constructing with type %d other %p offset %d length %d\n", type, other, byteOffset, length);
-
-        if (other->wrappedObject(cx)->isArray()) {
-            jsuint len;
-            if (!js_GetLengthProperty(cx, other, &len))
-                return false;
-            if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), len))
-                return false;
-            if (!copyFrom(cx, other, len))
-                return false;
-        } else if (js_IsTypedArray(other)) {
+        if (js_IsTypedArray(other)) {
             TypedArray *tarray = TypedArray::fromJSObject(other);
             JS_ASSERT(tarray);
 
-            //printf ("SizeAndCount: %d %d\n", sizeof(NativeType), tarray->length);
-
             if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), tarray->length))
                 return false;
-            copyFrom(tarray);
-        } else if (other->getClass() == &ArrayBuffer::jsclass) {
-            ArrayBuffer *abuf = ArrayBuffer::fromJSObject(other);
-
-            if (!abuf) {
-                // the arg isn't a real arraybuffer
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_TYPED_ARRAY_BAD_ARGS);
+            if (!copyFrom(cx, tarray))
                 return false;
-            }
-
+        } else if (other->getClass() == &ArrayBuffer::jsclass &&
+                   ((abuf = ArrayBuffer::fromJSObject(other)) != NULL)) {
             uint32 boffset = (byteOffsetInt < 0) ? 0 : uint32(byteOffsetInt);
 
             if (boffset > abuf->byteLength || boffset % sizeof(NativeType) != 0) {
@@ -1061,9 +1039,13 @@ class TypedArrayTemplate
             length = len;
             data = abuf->offsetData(boffset);
         } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
+            jsuint len;
+            if (!js_GetLengthProperty(cx, other, &len))
+                return false;
+            if (!createBufferWithSizeAndCount(cx, sizeof(NativeType), len))
+                return false;
+            if (!copyFrom(cx, other, len))
+                return false;
         }
 
         return true;
@@ -1154,21 +1136,19 @@ class TypedArrayTemplate
         return true;
     }
 
-    void
-    copyFrom(TypedArray *tarray, jsuint offset = 0)
+    bool
+    copyFrom(JSContext *cx, TypedArray *tarray, jsuint offset = 0)
     {
         JS_ASSERT(offset <= length);
         JS_ASSERT(tarray->length <= length - offset);
-        if (tarray->buffer == buffer) {
-            copyFromWithOverlap(tarray, offset);
-            return;
-        }
+        if (tarray->buffer == buffer)
+            return copyFromWithOverlap(cx, tarray, offset);
 
         NativeType *dest = static_cast<NativeType*>(data) + offset;
 
         if (tarray->type == type) {
             memcpy(dest, tarray->data, tarray->byteLength);
-            return;
+            return true;
         }
 
         uintN srclen = tarray->length;
@@ -1226,10 +1206,12 @@ class TypedArrayTemplate
             JS_NOT_REACHED("copyFrom with a TypedArray of unknown type");
             break;
         }
+
+        return true;
     }
 
-    void
-    copyFromWithOverlap(TypedArray *tarray, jsuint offset = 0)
+    bool
+    copyFromWithOverlap(JSContext *cx, TypedArray *tarray, jsuint offset = 0)
     {
         JS_ASSERT(offset < length);
 
@@ -1237,12 +1219,16 @@ class TypedArrayTemplate
 
         if (tarray->type == type) {
             memmove(dest, tarray->data, tarray->byteLength);
-            return;
+            return true;
         }
 
         // We have to make a copy of the source array here, since
         // there's overlap, and we have to convert types.
         void *srcbuf = js_malloc(tarray->byteLength);
+        if (!srcbuf) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
         memcpy(srcbuf, tarray->data, tarray->byteLength);
 
         switch (tarray->type) {
@@ -1301,6 +1287,7 @@ class TypedArrayTemplate
         }
 
         js_free(srcbuf);
+        return true;
     }
 
     bool

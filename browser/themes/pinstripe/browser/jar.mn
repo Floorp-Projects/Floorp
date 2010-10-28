@@ -38,7 +38,6 @@ browser.jar:
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/livemark-item.png
   skin/classic/browser/pageInfo.css
-  skin/classic/browser/Popup-blocked.png
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
   skin/classic/browser/reload-stop-go.png
@@ -49,8 +48,6 @@ browser.jar:
   skin/classic/browser/section_collapsed-rtl.png
   skin/classic/browser/section_expanded.png
   skin/classic/browser/Secure-Glyph-White.png
-  skin/classic/browser/Secure-statusbar.png
-  skin/classic/browser/Secure-statusbar-broken.png
   skin/classic/browser/Secure-background.gif
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png
@@ -108,6 +105,8 @@ browser.jar:
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
+  skin/classic/browser/tabbrowser/connecting.png                         (tabbrowser/connecting.png)
+  skin/classic/browser/tabbrowser/loading.png                            (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.png                     (tabbrowser/tab-arrow-left.png)
   skin/classic/browser/tabbrowser/tab-arrow-right.png                    (tabbrowser/tab-arrow-right.png)
   skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png              (tabbrowser/tabbrowser-tabs-bkgnd.png)

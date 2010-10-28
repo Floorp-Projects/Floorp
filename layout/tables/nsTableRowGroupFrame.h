@@ -371,7 +371,7 @@ protected:
                   nsIFrame*              aKidFrame,
                   nsHTMLReflowMetrics&   aDesiredSize,
                   const nsRect&          aOriginalKidRect,
-                  const nsRect&          aOriginalKidOverflowRect);
+                  const nsRect&          aOriginalKidVisualOverflow);
 
   void CalculateRowHeights(nsPresContext*           aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -390,11 +390,11 @@ protected:
    * @return  true if we successfully reflowed all the mapped children and false
    *            otherwise, e.g. we pushed children to the next in flow
    */
-  NS_METHOD ReflowChildren(nsPresContext*         aPresContext,
-                           nsHTMLReflowMetrics&   aDesiredSize,
-                           nsRowGroupReflowState& aReflowState,
-                           nsReflowStatus&        aStatus,
-                           PRBool*                aPageBreakBeforeEnd = nsnull);
+  nsresult ReflowChildren(nsPresContext*         aPresContext,
+                          nsHTMLReflowMetrics&   aDesiredSize,
+                          nsRowGroupReflowState& aReflowState,
+                          nsReflowStatus&        aStatus,
+                          PRBool*                aPageBreakBeforeEnd = nsnull);
 
   nsresult SplitRowGroup(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,

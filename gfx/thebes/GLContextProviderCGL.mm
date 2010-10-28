@@ -151,7 +151,7 @@ public:
         }
     }
 
-    PRBool MakeCurrent(PRBool aForce = PR_FALSE)
+    PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
     {
         if (mContext) {
             [mContext makeCurrentContext];

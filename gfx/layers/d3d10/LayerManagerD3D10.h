@@ -91,6 +91,8 @@ public:
   /*
    * LayerManager implementation.
    */
+  virtual void Destroy();
+
   virtual void SetRoot(Layer *aLayer);
 
   void BeginTransaction();

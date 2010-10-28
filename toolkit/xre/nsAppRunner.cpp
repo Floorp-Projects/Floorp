@@ -2397,14 +2397,12 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
   *aCachesOK = (NS_FAILED(rv) || !buf.EqualsLiteral("1"));
   
-#ifdef DEBUG
   PRBool purgeCaches = PR_FALSE;
   if (aFlagFile) {
     aFlagFile->Exists(&purgeCaches);
   }
 
   *aCachesOK = !purgeCaches && *aCachesOK;
-#endif
   return PR_TRUE;
 }
 
@@ -3281,21 +3279,33 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 
 #if defined(MOZ_UPDATER) && !defined(ANDROID)
-  // Check for and process any available updates
-  nsCOMPtr<nsIFile> updRoot;
-  PRBool persistent;
-  rv = dirProvider.GetFile(XRE_UPDATE_ROOT_DIR, &persistent,
-                           getter_AddRefs(updRoot));
-  // XRE_UPDATE_ROOT_DIR may fail. Fallback to appDir if failed
-  if (NS_FAILED(rv))
-    updRoot = dirProvider.GetAppDir();
+    // Check for and process any available updates
+    nsCOMPtr<nsIFile> updRoot;
+    PRBool persistent;
+    rv = dirProvider.GetFile(XRE_UPDATE_ROOT_DIR, &persistent,
+                             getter_AddRefs(updRoot));
+    // XRE_UPDATE_ROOT_DIR may fail. Fallback to appDir if failed
+    if (NS_FAILED(rv))
+      updRoot = dirProvider.GetAppDir();
 
-  ProcessUpdates(dirProvider.GetGREDir(),
-                 dirProvider.GetAppDir(),
-                 updRoot,
-                 gRestartArgc,
-                 gRestartArgv,
-                 appData.version);
+    // Support for processing an update and exiting. The MOZ_PROCESS_UPDATES
+    // environment variable will be part of the updater's environment and the
+    // application that is relaunched by the updater. When the application is
+    // relaunched by the updater it will be removed below and the application
+    // will exit.
+    if (CheckArg("process-updates")) {
+      SaveToEnv("MOZ_PROCESS_UPDATES=1");
+    }
+    ProcessUpdates(dirProvider.GetGREDir(),
+                   dirProvider.GetAppDir(),
+                   updRoot,
+                   gRestartArgc,
+                   gRestartArgv,
+                   appData.version);
+    if (PR_GetEnv("MOZ_PROCESS_UPDATES")) {
+      PR_SetEnv("MOZ_PROCESS_UPDATES=");
+      return 0;
+    }
 #endif
 
     nsCOMPtr<nsIProfileLock> profileLock;
@@ -3352,32 +3362,32 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // Also check to see if something has happened to invalidate our
     // fastload caches, like an extension upgrade or installation.
  
-     // If we see .purgecaches, that means someone did a make. 
-     // Re-register components to catch potential changes.
-     // We only offer this in debug builds, though.
-     nsCOMPtr<nsILocalFile> flagFile;
-#ifdef DEBUG
-     rv = NS_ERROR_FILE_NOT_FOUND;
-     nsCOMPtr<nsIFile> fFlagFile;
-     if (gAppData->directory) {
-       rv = gAppData->directory->Clone(getter_AddRefs(fFlagFile));
-     }
-     flagFile = do_QueryInterface(fFlagFile);
-     if (flagFile) {
-       flagFile->AppendNative(FILE_INVALIDATE_CACHES);
-     }
- #endif
+    // If we see .purgecaches, that means someone did a make. 
+    // Re-register components to catch potential changes.
+    // We only offer this in debug builds, though.
+    nsCOMPtr<nsILocalFile> flagFile;
+
+    rv = NS_ERROR_FILE_NOT_FOUND;
+    nsCOMPtr<nsIFile> fFlagFile;
+    if (gAppData->directory) {
+      rv = gAppData->directory->Clone(getter_AddRefs(fFlagFile));
+    }
+    flagFile = do_QueryInterface(fFlagFile);
+    if (flagFile) {
+      flagFile->AppendNative(FILE_INVALIDATE_CACHES);
+    }
+
     PRBool cachesOK;
     PRBool versionOK = CheckCompatibility(profD, version, osABI, 
                                           dirProvider.GetGREDir(),
                                           gAppData->directory, flagFile,
                                           &cachesOK);
-     if (CheckArg("purgecaches")) {
-       cachesOK = PR_FALSE;
-     }
-     if (PR_GetEnv("MOZ_PURGE_CACHES")) {
-       cachesOK = PR_FALSE;
-     }
+    if (CheckArg("purgecaches")) {
+      cachesOK = PR_FALSE;
+    }
+    if (PR_GetEnv("MOZ_PURGE_CACHES")) {
+      cachesOK = PR_FALSE;
+    }
  
     // Every time a profile is loaded by a build with a different version,
     // it updates the compatibility.ini file saying what version last wrote
@@ -3415,11 +3425,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                    dirProvider.GetGREDir(), gAppData->directory);
     }
 
-#ifdef DEBUG
     if (flagFile) {
       flagFile->Remove(PR_TRUE);
     }
-#endif
+
     PRBool appInitiatedRestart = PR_FALSE;
 
     MOZ_SPLASHSCREEN_UPDATE(30);

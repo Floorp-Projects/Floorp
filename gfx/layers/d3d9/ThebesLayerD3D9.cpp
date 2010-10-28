@@ -172,7 +172,7 @@ ThebesLayerD3D9::InvalidateRegion(const nsIntRegion &aRegion)
 }
 
 void
-ThebesLayerD3D9::RenderLayer()
+ThebesLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 {
   if (mVisibleRegion.IsEmpty()) {
     return;
@@ -225,14 +225,15 @@ ThebesLayerD3D9::RenderLayer()
     mValidRegion = mVisibleRegion;
   }
 
-  device()->SetVertexShaderConstantF(CBmLayerTransform, &mTransform._11, 4);
+  gfx3DMatrix transform = mTransform * aTransform;
+  device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
   float opacity[4];
   /*
    * We always upload a 4 component float, but the shader will use only the
    * first component since it's declared as a 'float'.
    */
-  opacity[0] = GetOpacity();
+  opacity[0] = GetOpacity() * aOpacity;
   device()->SetPixelShaderConstantF(0, opacity, 1);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
@@ -361,9 +362,14 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion)
   nsRefPtr<gfxASurface> destinationSurface;
 
   nsRefPtr<IDirect3DTexture9> tmpTexture;
-  device()->CreateTexture(bounds.width, bounds.height, 1,
-                          0, fmt,
-                          D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+  hr = device()->CreateTexture(bounds.width, bounds.height, 1,
+                               0, fmt,
+                               D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+
+  if (FAILED(hr)) {
+    ReportFailure(NS_LITERAL_CSTRING("Failed to create temporary texture in system memory."), hr);
+    return;
+  }
 
   nsRefPtr<IDirect3DSurface9> surf;
   HDC dc;

@@ -233,7 +233,7 @@ HttpChannelParentListener::AsyncOnChannelRedirect(
                                                responseHead ? *responseHead 
                                                             : nsHttpResponseHead());
 
-  // mActiveChannel gets the response in RecvRedirect2Result and forwards it
+  // mActiveChannel gets the response in RecvRedirect2Verify and forwards it
   // to this wrapper through OnContentRedirectResultReceived
 
   return NS_OK;
@@ -287,7 +287,7 @@ HttpChannelParentListener::OnRedirectResult(PRBool succeeded)
   }
 
   if (!channelToDelete->mIPCClosed)
-    unused << HttpChannelParent::Send__delete__(channelToDelete);
+    unused << channelToDelete->SendDeleteSelf();
   mRedirectChannel = nsnull;
 
   return NS_OK;

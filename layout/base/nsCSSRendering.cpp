@@ -666,7 +666,10 @@ GetOutlineInnerRect(nsIFrame* aFrame)
     (aFrame->Properties().Get(nsIFrame::OutlineInnerRectProperty()));
   if (savedOutlineInnerRect)
     return *savedOutlineInnerRect;
-  return aFrame->GetOverflowRect();
+  // FIXME (bug 599652): We probably want something narrower than either
+  // overflow rect here, but for now use the visual overflow in order to
+  // be consistent with ComputeOutlineAndEffectsRect in nsFrame.cpp.
+  return aFrame->GetVisualOverflowRect();
 }
 
 void
@@ -1115,7 +1118,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   }
 
   nsRect frameRect =
-    nativeTheme ? aForFrame->GetOverflowRectRelativeToSelf() + aFrameArea.TopLeft() : aFrameArea;
+    nativeTheme ? aForFrame->GetVisualOverflowRectRelativeToSelf() + aFrameArea.TopLeft() : aFrameArea;
   gfxRect frameGfxRect(nsLayoutUtils::RectToGfxRect(frameRect, twipsPerPixel));
   frameGfxRect.Round();
 
@@ -2492,8 +2495,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
       }
     }
 
-    if (aRenderingContext.ThebesContext()->GetFlags() &
-        gfxContext::FLAG_DESTINED_FOR_SCREEN) {
+    if (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW) {
       // Clip background-attachment:fixed backgrounds to the viewport, if we're
       // painting to the screen. This avoids triggering tiling in common cases,
       // without affecting output since drawing is always clipped to the viewport

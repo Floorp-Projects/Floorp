@@ -28,14 +28,22 @@ function test() {
 
 function end_test() {
   Services.prefs.clearUserPref(PREF_GETADDONS_GETSEARCHRESULTS);
-  close_manager(gManagerWindow, finish);
+
+  // Test generates a lot of available installs so just cancel them all
+  AddonManager.getAllInstalls(function(aInstalls) {
+    aInstalls.forEach(function(aInstall) {
+      aInstall.cancel();
+    });
+
+    close_manager(gManagerWindow, finish);
+  });
 }
 
 function search(aRemoteSearch, aCallback) {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = SEARCH_QUERY;
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
@@ -43,7 +51,7 @@ function search(aRemoteSearch, aCallback) {
       var filter = gManagerWindow.document.getElementById("search-filter-remote");
     else
       var filter = gManagerWindow.document.getElementById("search-filter-local");
-    EventUtils.synthesizeMouse(filter, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
 
     executeSoon(aCallback);
   });

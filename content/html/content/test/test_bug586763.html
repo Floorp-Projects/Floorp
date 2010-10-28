@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=586763
+-->
+<title>Test for Bug 586763</title>
+<script type="application/javascript" src="/MochiKit/packed.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=586763">Mozilla Bug 586763</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script>
+/** Test for Bug 586763 **/
+var tests = [
+  ["ol", "start", 1],
+  ["li", "value", 0],
+  ["object", "hspace", 0],
+  ["object", "vspace", 0],
+  ["img", "hspace", 0],
+  ["img", "vspace", 0],
+  ["video", "height", 0],
+  ["video", "width", 0],
+  ["pre", "width", 0],
+  ["textarea", "cols", 20],
+  ["textarea", "rows", 2],
+  ["span", "tabIndex", -1],
+  ["frame", "tabIndex", 0],
+  ["a", "tabIndex", 0],
+  ["area", "tabIndex", 0],
+  ["button", "tabIndex", 0],
+  ["input", "tabIndex", 0],
+  ["object", "tabIndex", -1],
+  ["select", "tabIndex", 0],
+  ["textarea", "tabIndex", 0],
+];
+
+for (var i = 0; i < tests.length; i++) {
+  is(document.createElement(tests[i][0])[tests[i][1]], tests[i][2], "Reflected attribute " + tests[i][0] + "." + tests[i][1] + " should default to " + tests[i][2]);
+}
+</script>
+</pre>

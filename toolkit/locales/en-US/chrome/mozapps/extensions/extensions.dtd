@@ -11,6 +11,9 @@
 <!ENTITY installAddonFromFile.accesskey       "I">
 <!ENTITY toolsMenu.tooltip                    "Tools for all add-ons">
 
+<!ENTITY cmd.back.tooltip                     "Go back one page">
+<!ENTITY cmd.forward.tooltip                  "Go forward one page">
+
 <!-- global warnings -->
 <!ENTITY warning.safemode.label                    "All add-ons have been disabled by safe mode.">
 <!ENTITY warning.checkcompatibility.label          "Add-on compatibility checking is disabled. You may have incompatible add-ons.">
@@ -183,3 +186,8 @@
 <!ENTITY addon.errorLoadingReleaseNotes.label "Sorry, but there was an error loading the release notes.">
 
 <!ENTITY addon.createdBy.label                "By ">
+
+<!ENTITY eula.title                           "End-User License Agreement">
+<!ENTITY eula.width                           "560px">
+<!ENTITY eula.height                          "400px">
+<!ENTITY eula.accept                          "Accept and Install…">

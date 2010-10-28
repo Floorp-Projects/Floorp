@@ -101,6 +101,7 @@
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
+static const char kCacheKeyPrefix[] = "jsloader:";
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
 #if !defined(XP_BEOS) && !defined(XP_OS2)
@@ -882,6 +883,8 @@ mozJSComponentLoader::ReadScript(StartupCache* cache, nsIURI *uri,
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
+    spec.Insert(kCacheKeyPrefix, 0);
+    
     nsAutoArrayPtr<char> buf;   
     PRUint32 len;
     rv = cache->GetBuffer(spec.get(), getter_Transfers(buf), 
@@ -908,6 +911,8 @@ mozJSComponentLoader::WriteScript(StartupCache* cache, JSScript *script,
     nsCAutoString spec;
     rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    spec.Insert(kCacheKeyPrefix, 0);
 
     LOG(("Writing %s to startupcache\n", spec.get()));
     nsCOMPtr<nsIObjectOutputStream> oos;
@@ -1358,8 +1363,19 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         targetObject = JS_GetGlobalForObject(cx, targetObject);
     }
  
+    JSAutoEnterCompartment ac;
+    if (targetObject && !ac.enter(cx, targetObject)) {
+        NS_ERROR("can't enter compartment");
+        return NS_ERROR_FAILURE;
+    }
+
     JSObject *globalObj = nsnull;
     rv = ImportInto(registryLocation, targetObject, cc, &globalObj);
+
+    if (globalObj && !JS_WrapObject(cx, &globalObj)) {
+        NS_ERROR("can't wrap return value");
+        return NS_ERROR_FAILURE;
+    }
 
     jsval *retval = nsnull;
     cc->GetRetValPtr(&retval);
@@ -1525,7 +1541,11 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                       JS_GetStringBytes(symbolName));
             }
 
-            if (!JS_SetProperty(mContext, targetObj,
+            JSAutoEnterCompartment target_ac;
+
+            if (!target_ac.enter(mContext, targetObj) ||
+                !JS_WrapValue(mContext, &val) ||
+                !JS_SetProperty(mContext, targetObj,
                                 JS_GetStringBytes(symbolName), &val)) {
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),

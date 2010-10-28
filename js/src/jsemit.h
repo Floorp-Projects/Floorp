@@ -557,6 +557,8 @@ struct JSCodeGenerator : public JSTreeContext
     SlotVector      closedArgs;
     SlotVector      closedVars;
 
+    uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
+    
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
@@ -808,6 +810,7 @@ typedef enum JSSrcNoteType {
     SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
+    SRC_TRACE       = 4,        /* For JSOP_TRACE; includes distance to loop end */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,];

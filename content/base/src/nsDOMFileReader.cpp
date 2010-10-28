@@ -143,7 +143,7 @@ nsDOMFileReader::SetOnloadend(nsIDOMEventListener* aOnloadend)
 NS_IMETHODIMP
 nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
 {
-  CopyASCIItoUTF16(aCharset, mCharset);
+  mCharset = aCharset;
   return NS_OK;
 }
 
@@ -264,20 +264,20 @@ nsDOMFileReader::GetError(nsIDOMFileError** aError)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsBinaryString(nsIDOMFile* aFile)
+nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
 {
   return ReadFileContent(aFile, EmptyString(), FILE_AS_BINARY);
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsText(nsIDOMFile* aFile,
+nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
                             const nsAString &aCharset)
 {
   return ReadFileContent(aFile, aCharset, FILE_AS_TEXT);
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsDataURL(nsIDOMFile* aFile)
+nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 {
   return ReadFileContent(aFile, EmptyString(), FILE_AS_DATAURL);
 }
@@ -463,6 +463,8 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
       rv = GetAsDataURL(mFile, mFileData, mDataLen, mResult);
       break;
   }
+  
+  mResult.SetIsVoid(PR_FALSE);
 
   FreeFileData();
 
@@ -481,7 +483,7 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
 // Helper methods
 
 nsresult
-nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
+nsDOMFileReader::ReadFileContent(nsIDOMBlob* aFile,
                                  const nsAString &aCharset,
                                  eDataFormat aDataFormat)
 {
@@ -499,7 +501,7 @@ nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
 
   mFile = aFile;
   mDataFormat = aDataFormat;
-  mCharset = aCharset;
+  CopyUTF16toUTF8(aCharset, mCharset);
 
   //Establish a channel with our file
   {
@@ -580,7 +582,7 @@ nsDOMFileReader::DispatchProgressEvent(const nsAString& aType)
 }
 
 nsresult
-nsDOMFileReader::GetAsText(const nsAString &aCharset,
+nsDOMFileReader::GetAsText(const nsACString &aCharset,
                            const char *aFileData,
                            PRUint32 aDataLen,
                            nsAString& aResult)
@@ -588,7 +590,7 @@ nsDOMFileReader::GetAsText(const nsAString &aCharset,
   nsresult rv;
   nsCAutoString charsetGuess;
   if (!aCharset.IsEmpty()) {
-    CopyUTF16toUTF8(aCharset, charsetGuess);
+    charsetGuess = aCharset;
   } else {
     rv = GuessCharset(aFileData, aDataLen, charsetGuess);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -607,7 +609,7 @@ nsDOMFileReader::GetAsText(const nsAString &aCharset,
 }
 
 nsresult
-nsDOMFileReader::GetAsDataURL(nsIDOMFile *aFile,
+nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aFile,
                               const char *aFileData,
                               PRUint32 aDataLen,
                               nsAString& aResult)
@@ -625,7 +627,7 @@ nsDOMFileReader::GetAsDataURL(nsIDOMFile *aFile,
   aResult.AppendLiteral(";base64,");
 
   PRUint32 totalRead = 0;
-  do {
+  while (aDataLen > totalRead) {
     PRUint32 numEncode = 4096;
     PRUint32 amtRemaining = aDataLen - totalRead;
     if (numEncode > amtRemaining)
@@ -643,8 +645,7 @@ nsDOMFileReader::GetAsDataURL(nsIDOMFile *aFile,
     PR_Free(base64);
 
     totalRead += numEncode;
-
-  } while (aDataLen > totalRead);
+  }
 
   return NS_OK;
 }
@@ -700,7 +701,9 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
   }
 
   nsresult rv;
-  if (detector) {
+  // The charset detector doesn't work for empty (null) aFileData. Testing
+  // aDataLen instead of aFileData so that we catch potential errors.
+  if (detector && aDataLen != 0) {
     mCharset.Truncate();
     detector->Init(this);
 
@@ -712,7 +715,7 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
     rv = detector->Done();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    CopyUTF16toUTF8(mCharset, aCharset);
+    aCharset = mCharset;
   } else {
     // no charset detector available, check the BOM
     unsigned char sniffBuf[4];

@@ -126,8 +126,8 @@ OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP|J
 OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 18, JOF_BYTE)
 
 /* ECMA-compliant for-in loop with argument or local loop control. */
-OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  1,  1, 19,  JOF_QARG|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORLOCAL,  11, "forlocal",   NULL,         3,  1,  1, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  1,  1, 19,  JOF_QARG|JOF_NAME|JOF_FOR|JOF_TMPSLOT)
+OPDEF(JSOP_FORLOCAL,  11, "forlocal",   NULL,         3,  1,  1, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR|JOF_TMPSLOT)
 
 /* More long-standing bytecodes. */
 OPDEF(JSOP_DUP,       12, "dup",        NULL,         1,  1,  2,  0,  JOF_BYTE)
@@ -246,7 +246,7 @@ OPDEF(JSOP_SETLOCAL,  87,"setlocal",    NULL,         3,  1,  1,  3,  JOF_LOCAL|
 OPDEF(JSOP_UINT16,    88, "uint16",     NULL,         3,  0,  1, 16,  JOF_UINT16)
 
 /* Object and array literal support. */
-OPDEF(JSOP_NEWINIT,   89, "newinit",    NULL,         2,  0,  1, 19,  JOF_INT8)
+OPDEF(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, 19,  JOF_UINT16PAIR)
 OPDEF(JSOP_ENDINIT,   90, "endinit",    NULL,         1,  0,  0, 19,  JOF_BYTE)
 OPDEF(JSOP_INITPROP,  91, "initprop",   NULL,         3,  2,  1,  3,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING)
 OPDEF(JSOP_INITELEM,  92, "initelem",   NULL,         1,  3,  1,  3,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_DETECTING)
@@ -267,8 +267,8 @@ OPDEF(JSOP_LOCALDEC,  102,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_IMACOP,    103,"imacop",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* ECMA-compliant for/in ops. */
-OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  1,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  2,  1, 18,  JOF_ATOM|JOF_PROP|JOF_FOR)
+OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  1,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR|JOF_TMPSLOT3)
+OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  2,  1, 18,  JOF_ATOM|JOF_PROP|JOF_FOR|JOF_TMPSLOT3)
 OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  1,  2, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
 OPDEF(JSOP_POPN,      107,"popn",       NULL,         3, -1,  0,  0,  JOF_UINT16)
 
@@ -313,7 +313,7 @@ OPDEF(JSOP_EVAL,      121,"eval",       NULL,         3, -1,  1, 18,  JOF_UINT16
 /*
  * ECMA-compliant helper for 'for (x[i] in o)' loops.
  */
-OPDEF(JSOP_ENUMELEM,  122,"enumelem",   NULL,         1,  3,  0,  3,  JOF_BYTE |JOF_SET)
+OPDEF(JSOP_ENUMELEM,  122,"enumelem",   NULL,         1,  3,  0,  3,  JOF_BYTE |JOF_SET|JOF_TMPSLOT)
 
 /*
  * Getter and setter prefix bytecodes.  These modify the next bytecode, either
@@ -430,7 +430,7 @@ OPDEF(JSOP_TOXML,         176,"toxml",      NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_TOXMLLIST,     177,"toxmllist",  NULL,     1,  1,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_XMLTAGEXPR,    178,"xmltagexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_XMLELTEXPR,    179,"xmleltexpr", NULL,     1,  1,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED180,     180,"unused180",  NULL,     1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_NOTRACE,       180,"notrace",    NULL,     3,  0,  0,  0,  JOF_UINT16)
 OPDEF(JSOP_XMLCDATA,      181,"xmlcdata",   NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
@@ -582,7 +582,8 @@ OPDEF(JSOP_LAMBDA_FC,     226,"lambda_fc",     NULL,  3,  0,  1, 19,  JOF_OBJECT
  */
 OPDEF(JSOP_OBJTOP,        227,"objtop",        NULL,  3,  0,  0,  0,  JOF_UINT16)
 
-OPDEF(JSOP_TRACE,         228, "trace",         NULL,  1,  0,  0,  0,  JOF_BYTE)
+/* This opcode stores an index that is unique to the given loop. */
+OPDEF(JSOP_TRACE,         228, "trace",         NULL,  3,  0,  0,  0,  JOF_UINT16)
 
 /*
  * Debugger versions of JSOP_{GET,CALL}UPVAR and the flat closure (_FC) ops.
@@ -623,6 +624,4 @@ OPDEF(JSOP_FORGLOBAL,     246,"forglobal",     NULL,  3,  1,  1, 19,  JOF_GLOBAL
 OPDEF(JSOP_BLOCKCHAIN,    247,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
 OPDEF(JSOP_NULLBLOCKCHAIN,248,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
-OPDEF(JSOP_BEGIN,         249,"begin",         NULL,  1,  0,  0,  0,  JOF_BYTE|JOF_TMPSLOT)
-
-/* When adding bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */
+/* When changing bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */

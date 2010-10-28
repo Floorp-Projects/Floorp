@@ -46,10 +46,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOMStrings.h"
 #include "casetable.h"
+#include "nsUTF8Utils.h"
 
 #include <ctype.h>
 
-// For gUpperToTitle 
+// For gUpperToTitle
 enum {
   kUpperIdx =0,
   kTitleIdx
@@ -62,18 +63,19 @@ enum {
   kDiffIdx
 };
 
-#define IS_ASCII(u)       ( 0x0000 == ((u) & 0xFF80))
-#define IS_ASCII_UPPER(u) ((0x0041 <= (u)) && ( (u) <= 0x005a))
-#define IS_ASCII_LOWER(u) ((0x0061 <= (u)) && ( (u) <= 0x007a))
+#define IS_ASCII(u)       ((u) < 0x80)
+#define IS_ASCII_UPPER(u) (('A' <= (u)) && ( (u) <= 'Z' ))
+#define IS_ASCII_LOWER(u) (('a' <= (u)) && ( (u) <= 'z'))
 #define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
-#define IS_ASCII_SPACE(u) ( 0x0020 == (u) )
+#define IS_ASCII_SPACE(u) ( ' ' == (u) )
 
 #define IS_NOCASE_CHAR(u)  (0==(1&(gCaseBlocks[(u)>>13]>>(0x001F&((u)>>8)))))
-  
+
 // Size of Tables
 
-#define CASE_MAP_CACHE_SIZE 0x40
-#define CASE_MAP_CACHE_MASK 0x3F
+// Changing these numbers may break UTF-8 caching.  Be careful!
+#define CASE_MAP_CACHE_SIZE 0x100
+#define CASE_MAP_CACHE_MASK 0xFF
 
 struct nsCompressedMap {
   const PRUnichar *mTable;
@@ -83,75 +85,94 @@ struct nsCompressedMap {
 
   PRUnichar Map(PRUnichar aChar)
   {
-    // no need to worry about thread safety since cached values are
-    // not objects but primitive data types which could be 
-    // accessed in atomic operations. We need to access
-    // the whole 32 bit of cachedData at once in order to make it
-    // thread safe. Never access bits from mCache directly.
+    // We don't need explicit locking here since the cached values are int32s,
+    // which are read and written atomically.  The following code is threadsafe
+    // because we never access bits from mCache directly -- we always first
+    // read the entire entry into a local variable and then mask off the bits
+    // we're interested in.
 
+    // Check the 256-byte cache first and bail with our answer if we can.
     PRUint32 cachedData = mCache[aChar & CASE_MAP_CACHE_MASK];
-    if(aChar == ((cachedData >> 16) & 0x0000FFFF))
-      return (cachedData & 0x0000FFFF);
+    if (aChar == ((cachedData >> 16) & 0x0000FFFF))
+      return cachedData & 0x0000FFFF;
 
-    // try the last index first
-    // store into local variable so we can be thread safe
-    PRUint32 base = mLastBase; 
+    // Now try the last index we looked up, storing it into a local variable
+    // for thread-safety.
+    PRUint32 base = mLastBase;
     PRUnichar res = 0;
-    
-    if (( aChar <=  ((mTable[base+kSizeEveryIdx] >> 8) + 
-                  mTable[base+kLowIdx])) &&
-        ( mTable[base+kLowIdx]  <= aChar )) 
-    {
-        // Hit the last base
-        if(((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
+
+    // Does this character fit in the slot?
+    if ((aChar <= ((mTable[base+kSizeEveryIdx] >> 8) +
+                   mTable[base+kLowIdx])) &&
+        (mTable[base+kLowIdx] <= aChar)) {
+
+      // This character uses the same base as our last lookup, so the
+      // conversion is easy.
+      if (((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) &&
           (0 != ((aChar - mTable[base+kLowIdx]) % 
-                (mTable[base+kSizeEveryIdx] & 0x00FF))))
-        {
-          res = aChar;
-        } else {
-          res = aChar + mTable[base+kDiffIdx];
-        }
+                 (mTable[base+kSizeEveryIdx] & 0x00FF))))
+      {
+        res = aChar;
+      } else {
+        res = aChar + mTable[base+kDiffIdx];
+      }
+
     } else {
-        res = this->Lookup(0, (mSize/2), mSize-1, aChar);
+      // Do the full lookup.
+      res = this->Lookup(0, mSize/2, mSize-1, aChar);
     }
 
+    // Cache the result and return.
     mCache[aChar & CASE_MAP_CACHE_MASK] =
-        (((aChar << 16) & 0xFFFF0000) | (0x0000FFFF & res));
+        ((aChar << 16) & 0xFFFF0000) | (0x0000FFFF & res);
     return res;
   }
 
+  // Takes as arguments the left bound, middle, right bound, and character to
+  // search for.  Executes a binary search.
   PRUnichar Lookup(PRUint32 l,
                    PRUint32 m,
                    PRUint32 r,
                    PRUnichar aChar)
   {
-    PRUint32 base = m*3;
-    if ( aChar >  ((mTable[base+kSizeEveryIdx] >> 8) + 
+    PRUint32 base = m*3; // Every line in the table is 3 units wide.
+
+    // Is aChar past the top of the current table entry?  (The upper byte of
+    // the 'every' entry contains the offset to the end of this entry.)
+    if (aChar > ((mTable[base+kSizeEveryIdx] >> 8) + 
                   mTable[base+kLowIdx])) 
     {
-      if( l > m )
+      if (l > m || l == r)
         return aChar;
+      // Advance one round.
       PRUint32 newm = (m+r+1)/2;
-      if(newm == m)
+      if (newm == m)
         newm++;
-      return this->Lookup(m+1, newm , r, aChar);
-      
-    } else if ( mTable[base+kLowIdx]  > aChar ) {
-      if( r < m )
+      return this->Lookup(m+1, newm, r, aChar);
+
+    // Is aChar below the bottom of the current table entry?
+    } else if (mTable[base+kLowIdx] > aChar) {
+      if (r < m || l == r)
         return aChar;
+      // Advance one round
       PRUint32 newm = (l+m-1)/2;
       if(newm == m)
         newm++;
       return this->Lookup(l, newm, m-1, aChar);
 
-    } else  {
-      if(((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
-        (0 != ((aChar - mTable[base+kLowIdx]) % 
-                (mTable[base+kSizeEveryIdx] & 0x00FF))))
+    // We've found the entry aChar should live in.
+    } else {
+      // Determine if aChar falls in a gap.  (The lower byte of the 'every'
+      // entry contains n for which every nth character from the base is a
+      // character of interest.)
+      if (((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
+          (0 != ((aChar - mTable[base+kLowIdx]) % 
+                 (mTable[base+kSizeEveryIdx] & 0x00FF))))
       {
         return aChar;
       }
-      mLastBase = base; // cache the base
+      // If aChar doesn't fall in the gap, cache and convert.
+      mLastBase = base;
       return aChar + mTable[base+kDiffIdx];
     }
   }
@@ -166,6 +187,29 @@ static nsCompressedMap gLowerMap = {
   reinterpret_cast<const PRUnichar*>(&gToLower[0]),
   gToLowerItems
 };
+
+// We want ToLowerCase(PRUnichar) and ToLowerCaseASCII(PRUnichar) to be fast
+// when they're called from within the case-insensitive comparators, so we
+// define inlined versions.
+static NS_ALWAYS_INLINE PRUnichar
+ToLowerCase_inline(PRUnichar aChar)
+{
+  if (IS_ASCII(aChar)) {
+    return gASCIIToLower[aChar];
+  } else if (IS_NOCASE_CHAR(aChar)) {
+     return aChar;
+  }
+
+  return gLowerMap.Map(aChar);
+}
+
+static NS_ALWAYS_INLINE PRUnichar
+ToLowerCaseASCII_inline(const PRUnichar aChar)
+{
+  if (IS_ASCII(aChar))
+    return gASCIIToLower[aChar];
+  return aChar;
+}
 
 void
 ToLowerCase(nsAString& aString)
@@ -189,9 +233,7 @@ ToLowerCase(const nsAString& aSource,
 PRUnichar
 ToLowerCaseASCII(const PRUnichar aChar)
 {
-  if (IS_ASCII_UPPER(aChar))
-    return aChar + 0x0020;
-  return aChar;
+  return ToLowerCaseASCII_inline(aChar);
 }
 
 void
@@ -218,115 +260,58 @@ ToUpperCase(const nsAString& aSource,
 PRInt32
 nsCaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
                                               const PRUnichar* rhs,
-                                              PRUint32 aLength) const
+                                              PRUint32 lLength,
+                                              PRUint32 rLength) const
 {
-  return CaseInsensitiveCompare(lhs, rhs, aLength);
+  return (lLength == rLength) ? CaseInsensitiveCompare(lhs, rhs, lLength) :
+         (lLength > rLength) ? 1 : -1;
 }
 
 PRInt32
-nsCaseInsensitiveStringComparator::operator()(PRUnichar lhs,
-                                              PRUnichar rhs) const
+nsCaseInsensitiveUTF8StringComparator::operator()(const char* lhs,
+                                                  const char* rhs,
+                                                  PRUint32 lLength,
+                                                  PRUint32 rLength) const
 {
-  // see if they're an exact match first
-  if (lhs == rhs)
-    return 0;
-  
-  lhs = ToLowerCase(lhs);
-  rhs = ToLowerCase(rhs);
-  
-  if (lhs == rhs)
-    return 0;
-  else if (lhs < rhs)
-    return -1;
-  else
-    return 1;
+  return CaseInsensitiveCompare(lhs, rhs, lLength, rLength);
 }
 
 PRInt32
 nsASCIICaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
                                                    const PRUnichar* rhs,
-                                                   PRUint32 aLength) const
+                                                   PRUint32 lLength,
+                                                   PRUint32 rLength) const
 {
-  while (aLength) {
+  if (lLength != rLength) {
+    if (lLength > rLength)
+      return 1;
+    return -1;
+  }
+
+  while (rLength) {
     PRUnichar l = *lhs++;
     PRUnichar r = *rhs++;
     if (l != r) {
-      l = ToLowerCaseASCII(l);
-      r = ToLowerCaseASCII(r);
+      l = ToLowerCaseASCII_inline(l);
+      r = ToLowerCaseASCII_inline(r);
 
       if (l > r)
         return 1;
       else if (r > l)
         return -1;
     }
-    aLength--;
+    rLength--;
   }
 
   return 0;
 }
-
-PRInt32
-nsASCIICaseInsensitiveStringComparator::operator()(PRUnichar lhs,
-                                                   PRUnichar rhs) const
-{
-  // see if they're an exact match first
-  if (lhs == rhs)
-    return 0;
-  
-  lhs = ToLowerCaseASCII(lhs);
-  rhs = ToLowerCaseASCII(rhs);
-  
-  if (lhs == rhs)
-    return 0;
-  else if (lhs < rhs)
-    return -1;
-  else
-    return 1;
-}
-
 
 #endif // MOZILLA_INTERNAL_API
-
-PRInt32
-CaseInsensitiveCompare(const PRUnichar *a,
-                       const PRUnichar *b,
-                       PRUint32 len)
-{
-  NS_ASSERTION(a && b, "Do not pass in invalid pointers!");
-  
-  if (len) {
-    do {
-      PRUnichar c1 = *a++;
-      PRUnichar c2 = *b++;
-      
-      if (c1 != c2) {
-        c1 = ToLowerCase(c1);
-        c2 = ToLowerCase(c2);
-        if (c1 != c2) {
-          if (c1 < c2) {
-            return -1;
-          }
-          return 1;
-        }
-      }
-    } while (--len != 0);
-  }
-  return 0;
-}
 
 PRUnichar
 ToLowerCase(PRUnichar aChar)
 {
-  if (IS_ASCII(aChar)) {
-    if (IS_ASCII_UPPER(aChar))
-      return aChar + 0x0020;
-    else
-      return aChar;
-  } else if (IS_NOCASE_CHAR(aChar)) {
-     return aChar;
-  }
-
-  return gLowerMap.Map(aChar);
+  return ToLowerCase_inline(aChar);
 }
 
 void
@@ -342,7 +327,7 @@ ToUpperCase(PRUnichar aChar)
 {
   if (IS_ASCII(aChar)) {
     if (IS_ASCII_LOWER(aChar))
-      return aChar - 0x0020;
+      return aChar - 0x20;
     else
       return aChar;
   } else if (IS_NOCASE_CHAR(aChar)) {
@@ -380,7 +365,7 @@ ToTitleCase(PRUnichar aChar)
   }
 
   PRUnichar upper = gUpperMap.Map(aChar);
-  
+
   if (0x01C0 == ( upper & 0xFFC0)) {
     for (PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
       if (upper == gUpperToTitle[(i*2)+kUpperIdx]) {
@@ -391,3 +376,167 @@ ToTitleCase(PRUnichar aChar)
 
   return upper;
 }
+
+PRInt32
+CaseInsensitiveCompare(const PRUnichar *a,
+                       const PRUnichar *b,
+                       PRUint32 len)
+{
+  NS_ASSERTION(a && b, "Do not pass in invalid pointers!");
+
+  if (len) {
+    do {
+      PRUnichar c1 = *a++;
+      PRUnichar c2 = *b++;
+
+      if (c1 != c2) {
+        c1 = ToLowerCase_inline(c1);
+        c2 = ToLowerCase_inline(c2);
+        if (c1 != c2) {
+          if (c1 < c2) {
+            return -1;
+          }
+          return 1;
+        }
+      }
+    } while (--len != 0);
+  }
+  return 0;
+}
+
+// Calculates the codepoint of the UTF8 sequence starting at aStr.  Sets aNext
+// to the byte following the end of the sequence.
+//
+// If the sequence is invalid, or if computing the codepoint would take us off
+// the end of the string (as marked by aEnd), returns -1 and does not set
+// aNext.  Note that this function doesn't check that aStr < aEnd -- it assumes
+// you've done that already.
+static NS_ALWAYS_INLINE PRUint32
+GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
+{
+  // Convert to unsigned char so that stuffing chars into PRUint32s doesn't
+  // sign extend.
+  const unsigned char *str = (unsigned char*)aStr;
+
+  if (UTF8traits::isASCII(str[0])) {
+    // It's ASCII; just convert to lower-case and return it.
+    *aNext = aStr + 1;
+    return gASCIIToLower[*str];
+  }
+  if (UTF8traits::is2byte(str[0]) && NS_LIKELY(aStr + 1 < aEnd)) {
+    // It's a two-byte sequence, so it looks like
+    //  110XXXXX 10XXXXXX.
+    // This is definitely in the BMP, so we can store straightaway into a
+    // PRUint16.
+
+    PRUint16 c;
+    c  = (str[0] & 0x1F) << 6;
+    c += (str[1] & 0x3F);
+
+    if (!IS_NOCASE_CHAR(c))
+      c = gLowerMap.Map(c);
+
+    *aNext = aStr + 2;
+    return c;
+  }
+  if (UTF8traits::is3byte(str[0]) && NS_LIKELY(aStr + 2 < aEnd)) {
+    // It's a three-byte sequence, so it looks like
+    //  1110XXXX 10XXXXXX 10XXXXXX.
+    // This will just barely fit into 16-bits, so store into a PRUint16.
+
+    PRUint16 c;
+    c  = (str[0] & 0x0F) << 12;
+    c += (str[1] & 0x3F) << 6;
+    c += (str[2] & 0x3F);
+
+    if (!IS_NOCASE_CHAR(c))
+      c = gLowerMap.Map(c);
+
+    *aNext = aStr + 3;
+    return c;
+  }
+  if (UTF8traits::is4byte(str[0]) && NS_LIKELY(aStr + 3 < aEnd)) {
+    // It's a four-byte sequence, so it looks like
+    //   11110XXX 10XXXXXX 10XXXXXX 10XXXXXX.
+    // Unless this is an overlong sequence, the codepoint it encodes definitely
+    // isn't in the BMP, so we don't bother trying to convert it to lower-case.
+
+    PRUint32 c;
+    c  = (str[0] & 0x07) << 18;
+    c += (str[1] & 0x3F) << 12;
+    c += (str[2] & 0x3F) << 6;
+    c += (str[3] & 0x3F);
+
+    *aNext = aStr + 4;
+    return c;
+  }
+
+  // Hm, we don't understand this sequence.
+  return -1;
+}
+
+PRInt32 CaseInsensitiveCompare(const char *aLeft,
+                               const char *aRight,
+                               PRUint32 aLeftBytes,
+                               PRUint32 aRightBytes)
+{
+  const char *leftEnd = aLeft + aLeftBytes;
+  const char *rightEnd = aRight + aRightBytes;
+
+  while (aLeft < leftEnd && aRight < rightEnd) {
+    PRUint32 leftChar = GetLowerUTF8Codepoint(aLeft, leftEnd, &aLeft);
+    if (NS_UNLIKELY(leftChar == PRUint32(-1)))
+      return -1;
+
+    PRUint32 rightChar = GetLowerUTF8Codepoint(aRight, rightEnd, &aRight);
+    if (NS_UNLIKELY(rightChar == PRUint32(-1)))
+      return -1;
+
+    // Now leftChar and rightChar are lower-case, so we can compare them.
+    if (leftChar != rightChar) {
+      if (leftChar > rightChar)
+        return 1;
+      return -1;
+    }
+  }
+
+  // Make sure that if one string is longer than the other we return the
+  // correct result.
+  if (aLeft < leftEnd)
+    return 1;
+  if (aRight < rightEnd)
+    return -1;
+
+  return 0;
+}
+
+PRBool
+CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
+                              const char* aLeftEnd, const char* aRightEnd,
+                              const char** aLeftNext, const char** aRightNext,
+                              PRBool* aErr)
+{
+  NS_ASSERTION(aLeftNext, "Out pointer shouldn't be null.");
+  NS_ASSERTION(aRightNext, "Out pointer shouldn't be null.");
+  NS_ASSERTION(aErr, "Out pointer shouldn't be null.");
+  NS_ASSERTION(aLeft < aLeftEnd, "aLeft must be less than aLeftEnd.");
+  NS_ASSERTION(aRight < aRightEnd, "aRight must be less than aRightEnd.");
+
+  PRUint32 leftChar = GetLowerUTF8Codepoint(aLeft, aLeftEnd, aLeftNext);
+  if (NS_UNLIKELY(leftChar == PRUint32(-1))) {
+    *aErr = PR_TRUE;
+    return PR_FALSE;
+  }
+
+  PRUint32 rightChar = GetLowerUTF8Codepoint(aRight, aRightEnd, aRightNext);
+  if (NS_UNLIKELY(rightChar == PRUint32(-1))) {
+    *aErr = PR_TRUE;
+    return PR_FALSE;
+  }
+
+  // Can't have an error past this point.
+  *aErr = PR_FALSE;
+
+  return leftChar == rightChar;
+}
+

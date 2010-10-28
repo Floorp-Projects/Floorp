@@ -192,6 +192,12 @@ pref("gfx.color_management.rendering_intent", 0);
 pref("gfx.3d_video.enabled", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
+pref("gfx.downloadable_fonts.sanitize", true);
+#ifdef XP_MACOSX
+pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
+#else
+pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
+#endif
 
 pref("gfx.font_rendering.harfbuzz.level", 1);
 
@@ -586,12 +592,14 @@ pref("javascript.options.tracejit.content",  true);
 pref("javascript.options.tracejit.chrome",   true);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  false);
+pref("javascript.options.jitprofiling.content", true);
+pref("javascript.options.jitprofiling.chrome",  false);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721
 // Comment 32.
 pref("javascript.options.mem.high_water_mark", 32);
-pref("javascript.options.mem.gc_frequency",   1600);
+pref("javascript.options.mem.gc_frequency",   300);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
@@ -780,6 +788,7 @@ pref("network.IDN.whitelist.es", true);
 pref("network.IDN.whitelist.fi", true);
 pref("network.IDN.whitelist.gr", true);
 pref("network.IDN.whitelist.hu", true);
+pref("network.IDN.whitelist.il", true);
 pref("network.IDN.whitelist.io", true);
 pref("network.IDN.whitelist.ir", true);
 pref("network.IDN.whitelist.is", true);
@@ -808,8 +817,13 @@ pref("network.IDN.whitelist.xn--fiqz9s", true); // Traditional
 pref("network.IDN.whitelist.xn--fiqs8s", true); // Simplified
 // hk, Hong Kong, .<Hong Kong>
 pref("network.IDN.whitelist.xn--j6w193g", true);
+// ir, Iran, <.Iran> with variants
+pref("network.IDN.whitelist.xn--mgba3a4f16a", true);
+pref("network.IDN.whitelist.xn--mgba3a4fra", true);
 // jo, Jordan, .<Al-Ordon>
 pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+// qa, Qatar, .<Qatar>
+pref("network.IDN.whitelist.xn--wgbl6a", true);
 // ru, Russian Federation, .<RF>
 pref("network.IDN.whitelist.xn--p1ai", true);
 // sa, Saudi Arabia, .<al-Saudiah> with variants
@@ -1312,6 +1326,12 @@ pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
+#endif
+
+#ifdef XP_WIN
+// Disable oopp for java on windows. They run their own
+// process isolation which conflicts with our implementation.
+pref("dom.ipc.plugins.java.enabled", false);
 #endif
 
 #ifndef ANDROID
@@ -3229,7 +3249,7 @@ pref("gfx.direct2d.disabled", false);
 pref("gfx.direct2d.force-enabled", false);
 
 pref("layers.prefer-opengl", false);
-pref("layers.use-d3d10", false);
+pref("layers.prefer-d3d9", false);
 #endif
 #endif
 

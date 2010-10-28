@@ -432,14 +432,14 @@ function BuildConditionSandbox(aURL) {
         sandbox.nativeThemePref = true;
     }
 
-    new XPCSafeJSObjectWrapper(sandbox).prefs = {
-      __exposedProps__: {
-        getBoolPref: 'r',
-        getIntPref: 'r',
-      },
-      _prefs:      prefs,
-      getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
-      getIntPref:  function(p) { return this._prefs.getIntPref(p); }
+    sandbox.prefs = {
+        __exposedProps__: {
+            getBoolPref: 'r',
+            getIntPref: 'r',
+        },
+        _prefs:      prefs,
+        getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
+        getIntPref:  function(p) { return this._prefs.getIntPref(p); }
     }
 
     sandbox.testPluginIsOOP = function () {

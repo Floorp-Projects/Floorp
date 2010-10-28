@@ -17,3 +17,6 @@
 == textindent.html textindent-ref.html
 == lineoverflow.html lineoverflow-ref.html
 
+== overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
+== overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
+== overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html

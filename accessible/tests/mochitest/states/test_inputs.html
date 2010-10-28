@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML input states</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+  function doTest()
+  {
+    // 'required' state. Also piggyback 'unavailable' testing here.
+    var maybe_required = ["input","search","radio","checkbox","textarea"];
+    var never_required = ["submit","button","reset","image"];
+
+    var i;
+    for (i in maybe_required) {
+      testStates(maybe_required[i], STATE_REQUIRED, 0, STATE_UNAVAILABLE);
+      testStates(maybe_required[i] + "2", 0, 0, STATE_REQUIRED);
+      testStates(maybe_required[i] + "3", STATE_UNAVAILABLE);
+    }
+
+    for (i in never_required) {
+      testStates(never_required[i], 0, 0, STATE_REQUIRED);
+    }
+
+    // inherited 'unavailable' state
+    testStates("f", STATE_UNAVAILABLE);
+    testStates("f_input", STATE_UNAVAILABLE);
+    testStates("f_input_disabled", STATE_UNAVAILABLE);
+
+    // invalid/valid state
+    var invalid = ["maxlength","pattern","email","url"];
+    document.getElementById("maxlength").value = "i am too long";
+    for (i in invalid) {
+      testStates(invalid[i], STATE_INVALID);
+      testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
+    }
+
+    // invalid/valid state
+    var invalid = ["maxlength","pattern","email","url"];
+    document.getElementById("maxlength").value = "i am too long";
+    for (i in invalid) {
+      testStates(invalid[i], STATE_INVALID);
+      testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
+    }
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=559275"
+     title="map attribute required to STATE_REQUIRED">
+    Mozilla Bug 559275
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=389238"
+     title="Support disabled state on fieldset">
+    Mozilla Bug 389238
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=599163"
+     title="check disabled state instead of attribute">
+    Mozilla Bug 599163
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
+     title="Expose intrinsic invalid state to accessibility API">
+    Mozilla Bug 601205
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=601205"
+     title="Expose intrinsic invalid state to accessibility API">
+    Mozilla Bug 601205
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+
+  <form>
+    <input id="input" type="input" required>
+    <input id="input2" type="input">
+    <input id="input3" type="input" disabled>
+    <input id="search" type="search" required>
+    <input id="search2" type="search">
+    <input id="search3" type="search" disabled>
+    <input id="radio" type="radio" required>
+    <input id="radio2" type="radio">
+    <input id="radio3" type="radio" disabled>
+    <input id="checkbox" type="checkbox" required>
+    <input id="checkbox2" type="checkbox">
+    <input id="checkbox3" type="checkbox" disabled>
+    <textarea id="textarea" required></textarea>
+    <textarea id="textarea2"></textarea>
+    <textarea id="textarea3" disabled></textarea>
+  </form>
+
+  <!-- bogus required usage -->
+  <input id="submit" type="submit" required>
+  <input id="button" type="button" required>
+  <input id="reset" type="reset" required>
+  <input id="image" type="image" required>
+
+  <!-- disabled -->
+  <fieldset id="f" disabled>
+    <input id="f_input">
+    <input id="f_input_disabled" disabled>
+  </fieldset>
+
+  <!-- invalid/valid -->
+  <input id="maxlength" maxlength="1">
+  <input id="maxlength2" maxlength="100" value="foo">
+  <input id="pattern" pattern="bar" value="foo">
+  <input id="pattern2" pattern="bar" value="bar">
+  <input id="email" type="email" value="foo">
+  <input id="email2" type="email" value="foo@bar.com">
+  <input id="url" type="url" value="foo">
+  <input id="url2" type="url" value="http://mozilla.org/">
+
+  <!-- invalid/valid -->
+  <input id="maxlength" maxlength="1">
+  <input id="maxlength2" maxlength="100" value="foo">
+  <input id="pattern" pattern="bar" value="foo">
+  <input id="pattern2" pattern="bar" value="bar">
+  <input id="email" type="email" value="foo">
+  <input id="email2" type="email" value="foo@bar.com">
+  <input id="url" type="url" value="foo">
+  <input id="url2" type="url" value="http://mozilla.org/">
+
+  </body>
+</html>

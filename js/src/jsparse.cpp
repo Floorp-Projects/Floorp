@@ -828,7 +828,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
         if (source) {
             /*
              * Save eval program source in script->atomMap.vector[0] for the
-             * eval cache (see obj_eval in jsobj.cpp).
+             * eval cache (see EvalCacheLookup in jsobj.cpp).
              */
             JSAtom *atom = js_AtomizeString(cx, source, 0);
             if (!atom || !cg.atomList.add(&parser, atom))
@@ -864,11 +864,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     bool onlyXML;
     onlyXML = true;
 #endif
-
-    CG_SWITCH_TO_PROLOG(&cg);
-    if (js_Emit1(cx, &cg, JSOP_TRACE) < 0)
-        goto out;
-    CG_SWITCH_TO_MAIN(&cg);
 
     inDirectivePrologue = true;
     for (;;) {
@@ -1059,8 +1054,6 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         JS_ASSERT(prop);
         const Shape *shape = (const Shape *)prop;
         def.knownSlot = shape->slot;
-
-        globalObj->dropProperty(cx, prop);
     }
 
     js::Vector<JSScript *, 16, ContextAllocPolicy> worklist(cx);
@@ -3163,6 +3156,9 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!LeaveFunction(pn, &funtc, funAtom, lambda))
         return NULL;
 
+    if (funtc.inStrictMode())
+        fun->flags |= JSFUN_PRIMITIVE_THIS;
+
     /* If the surrounding function is not strict code, reset the lexer. */
     if (!outertc->inStrictMode())
         tokenStream.setStrictMode(false);
@@ -3483,7 +3479,6 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
     JSAtomListElement *ale = globalScope->names.lookup(atom);
     if (!ale) {
         JSContext *cx = cg->parser->context;
-        AutoObjectLocker locker(cx, globalObj);
 
         JSObject *holder;
         JSProperty *prop;
@@ -3494,8 +3489,6 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
 
         GlobalScope::GlobalDef def;
         if (prop) {
-            AutoPropertyDropper dropper(cx, globalObj, prop);
-
             /*
              * A few cases where we don't bother aggressively caching:
              *   1) Function value changes.
@@ -5763,6 +5756,7 @@ Parser::statement()
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
             obj->setParent(tc->blockChain());
+            blockbox->parent = tc->blockChainBox;
             tc->blockChainBox = blockbox;
             stmt->blockBox = blockbox;
 

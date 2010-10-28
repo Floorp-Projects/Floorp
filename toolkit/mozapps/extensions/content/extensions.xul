@@ -49,6 +49,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="addons-page" title="&addons.windowTitle;" disablechrome="true"
+      role="application"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
@@ -85,7 +86,7 @@
       <menuitem id="menuitem_uninstallItem" command="cmd_uninstallItem"
                 label="&cmd.uninstallAddon.label;"
                 accesskey="&cmd.uninstallAddon.accesskey;"/>
-      <menuseparator/>
+      <menuseparator id="addonitem-menuseparator" />
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
 #ifdef XP_WIN
                 label="&cmd.preferencesWin.label;"
@@ -113,6 +114,8 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_installFromFile"/>
+    <command id="cmd_back"/>
+    <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
@@ -138,12 +141,17 @@
   </commandset>
 
   <!-- main header -->
-  <hbox id="header" align="center" pack="end">
+  <hbox id="header" align="center">
+    <button id="back-btn" class="nav-button" command="cmd_back"
+            tooltiptext="&cmd.back.tooltip;"/>
+    <button id="forward-btn" class="nav-button" command="cmd_forward"
+            tooltiptext="&cmd.forward.tooltip;"/>
+    <spacer flex="1"/>
     <hbox id="updates-container" align="center">
       <image class="spinner"/>
       <label id="updates-noneFound" hidden="true"
              value="&updates.noneFound.label;"/>
-      <button id="updates-manualUpdatesFound" class="button-link"
+      <button id="updates-manualUpdatesFound-btn" class="button-link"
               hidden="true" label="&updates.manualUpdatesFound.label;"
               command="cmd_goToAvailableUpdates"/>
       <label id="updates-progress" hidden="true"
@@ -152,7 +160,7 @@
              value="&updates.installed.label;"/>
       <label id="updates-downloaded" hidden="true"
              value="&updates.downloaded.label;"/>
-      <button id="updates-restart" class="button-link" hidden="true"
+      <button id="updates-restart-btn" class="button-link" hidden="true"
               label="&updates.restart.label;"
               command="cmd_restartApp"/>
     </hbox>
@@ -194,39 +202,41 @@
 
   <hbox flex="1">
 
-      <!-- category list -->
-      <richlistbox id="categories" persist="last-selected">
-        <richlistitem id="category-search" value="addons://search/"
-                      class="category"
-                      name="&view.search.label;" disabled="true"/>
-        <richlistitem id="category-discover" value="addons://discover/"
-                      class="category"
-                      name="&view.discover.label;"/>
-        <richlistitem id="category-languages" value="addons://list/locale"
-                      class="category"
-                      name="&view.locales.label;"
-                      hidden="true" persist="hidden"/>
-        <richlistitem id="category-searchengines"
-                      value="addons://list/searchengine"
-                      class="category"
-                      name="&view.searchengines.label;"
-                      hidden="true" persist="hidden"/>
-        <richlistitem id="category-extensions" value="addons://list/extension"
-                      class="category"
-                      name="&view.features.label;"/>
-        <richlistitem id="category-themes" value="addons://list/theme"
-                      class="category"
-                      name="&view.appearance2.label;"/>
-        <richlistitem id="category-plugins" value="addons://list/plugin"
-                      class="category"
-                      name="&view.plugins.label;"/>
-        <richlistitem id="category-availableUpdates" value="addons://updates/available"
-                      class="category"
-                      name="&view.availableUpdates.label;" disabled="true"/>
-        <richlistitem id="category-recentUpdates" value="addons://updates/recent"
-                      class="category"
-                      name="&view.recentUpdates.label;" disabled="true"/>
-      </richlistbox>
+    <!-- category list -->
+    <richlistbox id="categories" persist="last-selected">
+      <richlistitem id="category-search" value="addons://search/"
+                    class="category"
+                    name="&view.search.label;" disabled="true"/>
+      <richlistitem id="category-discover" value="addons://discover/"
+                    class="category"
+                    name="&view.discover.label;"/>
+      <richlistitem id="category-languages" value="addons://list/locale"
+                    class="category"
+                    name="&view.locales.label;"
+                    hidden="true" persist="hidden"/>
+      <richlistitem id="category-searchengines"
+                    value="addons://list/searchengine"
+                    class="category"
+                    name="&view.searchengines.label;"
+                    hidden="true" persist="hidden"/>
+      <richlistitem id="category-extensions" value="addons://list/extension"
+                    class="category"
+                    name="&view.features.label;"/>
+      <richlistitem id="category-themes" value="addons://list/theme"
+                    class="category"
+                    name="&view.appearance2.label;"/>
+      <richlistitem id="category-plugins" value="addons://list/plugin"
+                    class="category"
+                    name="&view.plugins.label;"/>
+      <richlistitem id="category-availableUpdates" value="addons://updates/available"
+                    class="category"
+                    name="&view.availableUpdates.label;" disabled="true"/>
+      <richlistitem id="category-recentUpdates" value="addons://updates/recent"
+                    class="category"
+                    name="&view.recentUpdates.label;" disabled="true"/>
+    </richlistbox>
+
+    <box id="view-port-container" flex="1">
 
       <!-- view port -->
       <deck id="view-port" flex="1">
@@ -372,7 +382,7 @@
             <spacer flex="3"/>
           </vbox>
           <hbox id="update-actions" pack="center">
-            <button id="update-selected" hidden="true"
+            <button id="update-selected-btn" hidden="true"
                     label="&updates.updateSelected.label;"
                     tooltiptext="&updates.updateSelected.tooltip;"/>
           </hbox>
@@ -428,13 +438,13 @@
                 <hbox id="pending-container" align="center" class="pending">
                   <image class="pending-icon"/>
                   <label id="detail-pending" flex="1"/>
-                  <button class="button-link"
-                              label="&addon.restartNow.label;"
-                              command="cmd_restartApp"/>
-                  <button id="detail-undo" class="button-link"
-                              label="&addon.undoAction.label;"
-                              tooltipText="&addon.undoAction.tooltip;"
-                              command="cmd_cancelOperation"/>
+                  <button id="detail-restart-btn" class="button-link"
+                          label="&addon.restartNow.label;"
+                          command="cmd_restartApp"/>
+                  <button id="detail-undo-btn" class="button-link"
+                          label="&addon.undoAction.label;"
+                          tooltipText="&addon.undoAction.tooltip;"
+                          command="cmd_cancelOperation"/>
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
               </vbox>
@@ -462,7 +472,7 @@
                     <hbox align="center">
                       <label id="detail-contrib-suggested"/>
                       <spacer flex="1"/>
-                      <button id="detail-contrib-button" class="addon-control"
+                      <button id="detail-contrib-btn" class="addon-control"
                               label="&cmd.contribute.label;"
                               accesskey="&cmd.contribute.accesskey;"
                               tooltiptext="&cmd.contribute.tooltip;"
@@ -492,7 +502,7 @@
                                    tooltiptext="&detail.updateManual.tooltip;"
                                    value="0"/>
                           </radiogroup>
-                          <button id="detail-findUpdates" class="button-link"
+                          <button id="detail-findUpdates-btn" class="button-link"
                                   label="&detail.checkForUpdates.label;"
                                   accesskey="&detail.checkForUpdates.accesskey;"
                                   tooltiptext="&detail.checkForUpdates.tooltip;"
@@ -520,7 +530,7 @@
                     </rows>
                   </grid>
                   <hbox id="detail-controls">
-                    <button id="detail-prefs" class="addon-control"
+                    <button id="detail-prefs-btn" class="addon-control"
 #ifdef XP_WIN
                             label="&detail.showPreferencesWin.label;"
                             accesskey="&detail.showPreferencesWin.accesskey;"
@@ -532,19 +542,19 @@
 #endif
                             command="cmd_showItemPreferences"/>
                     <spacer flex="1"/>
-                    <button id="detail-uninstall" class="addon-control remove"
+                    <button id="detail-uninstall-btn" class="addon-control remove"
                             label="&cmd.uninstallAddon.label;"
                             accesskey="&cmd.uninstallAddon.accesskey;"
                             command="cmd_uninstallItem"/>
-                    <button id="detail-enable" class="addon-control enable"
+                    <button id="detail-enable-btn" class="addon-control enable"
                             label="&cmd.enableAddon.label;"
                             accesskey="&cmd.enableAddon.accesskey;"
                             command="cmd_enableItem"/>
-                    <button id="detail-disable" class="addon-control disable"
+                    <button id="detail-disable-btn" class="addon-control disable"
                             label="&cmd.disableAddon.label;"
                             accesskey="&cmd.disableAddon.accesskey;"
                             command="cmd_disableItem"/>
-                    <button id="detail-install" class="addon-control install"
+                    <button id="detail-install-btn" class="addon-control install"
                             label="&cmd.installAddon.label;"
                             accesskey="&cmd.installAddon.accesskey;"
                             command="cmd_installItem"/>
@@ -558,6 +568,7 @@
 
       </deck>
 
+    </box>
   </hbox>
 
 </page>

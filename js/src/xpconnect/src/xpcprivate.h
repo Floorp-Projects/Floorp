@@ -59,6 +59,7 @@
 #include "jsdbgapi.h"
 #include "jsgc.h"
 #include "jscompartment.h"
+#include "xpcpublic.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -661,6 +662,7 @@ public:
         IDX_PROTO                   ,
         IDX_ITERATOR                ,
         IDX_EXPOSEDPROPS            ,
+        IDX_SCRIPTONLY              ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -1380,10 +1382,10 @@ DebugCheckWrapperClass(JSObject* obj)
 // Only use these macros if IS_WRAPPER_CLASS(obj->getClass()) is true.
 #define IS_WN_WRAPPER_OBJECT(obj)                                             \
     (DebugCheckWrapperClass(obj) &&                                           \
-     obj->getSlot(JSSLOT_START(obj->getClass())).isUndefined())
+     obj->getSlot(0).isUndefined())
 #define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
     (DebugCheckWrapperClass(obj) &&                                           \
-     !obj->getSlot(JSSLOT_START(obj->getClass())).isUndefined())
+     !obj->getSlot(0).isUndefined())
 
 // Use these macros if IS_WRAPPER_CLASS(obj->getClass()) might be false.
 // Avoid calling them if IS_WRAPPER_CLASS(obj->getClass()) can only be
@@ -1519,14 +1521,6 @@ public:
 
     JSBool
     IsValid() const {return mRuntime != nsnull;}
-
-    /**
-     * Figures out what type of wrapper to create for obj if it were injected
-     * into 'this's scope.
-     */
-    XPCWrapper::WrapperType
-    GetWrapperFor(JSContext *cx, JSObject *obj, XPCWrapper::WrapperType hint,
-                  XPCWrappedNative **wn);
 
     static JSBool
     IsDyingScope(XPCWrappedNativeScope *scope);
@@ -2282,6 +2276,10 @@ private:
 };
 
 class xpcObjectHelper;
+JSObject *
+ConstructProxyObject(XPCCallContext &ccx,
+                     xpcObjectHelper &aHelper,
+                     XPCWrappedNativeScope *xpcscope);
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
                                    xpcObjectHelper &aHelper,
                                    XPCWrappedNativeScope* xpcScope,
@@ -2291,7 +2289,7 @@ extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
 static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
-  const js::Value &v = obj->getSlot(JSSLOT_START(obj->getClass()));
+  const js::Value &v = obj->getSlot(0);
   return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
 }
 
@@ -3930,16 +3928,12 @@ xpc_DumpJSObject(JSObject* obj);
 extern JSBool
 xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
 
-nsresult
-xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
-                       const nsACString &origin, nsIPrincipal *principal,
-                       JSObject **global, JSCompartment **compartment);
-
 /***************************************************************************/
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
-class nsScriptError : public nsIScriptError {
+class nsScriptError : public nsIScriptError,
+                      public nsIScriptError2 {
 public:
     nsScriptError();
 
@@ -3950,6 +3944,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
+    NS_DECL_NSISCRIPTERROR2
 
 private:
     nsString mMessage;
@@ -3959,6 +3954,7 @@ private:
     PRUint32 mColumnNumber;
     PRUint32 mFlags;
     nsCString mCategory;
+    PRUint64 mWindowID;
 };
 
 /***************************************************************************/
@@ -4386,7 +4382,8 @@ xpc_GetGlobalForObject(JSObject *obj)
 // reachable through prinOrSop, a new null principal will be created
 // and used.
 nsresult
-xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop);
+xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
+                        JSObject *proto, bool preferXray);
 
 // Helper for evaluating scripts in a sandbox object created with
 // xpc_CreateSandboxObject(). The caller is responsible of ensuring
@@ -4429,6 +4426,21 @@ xpc_SameScope(XPCWrappedNativeScope *objectscope,
 
 nsISupports *
 XPC_GetIdentityObject(JSContext *cx, JSObject *obj);
+
+namespace xpc {
+
+struct CompartmentPrivate
+{
+  CompartmentPrivate(char *origin, bool wantXrays)
+    : origin(origin),
+      wantXrays(wantXrays)
+  {
+  }
+  char *origin;
+  bool wantXrays;
+};
+
+}
 
 #ifdef XPC_IDISPATCH_SUPPORT
 

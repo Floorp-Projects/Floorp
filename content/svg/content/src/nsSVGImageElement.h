@@ -81,7 +81,7 @@ public:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
@@ -101,6 +101,7 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
   virtual StringAttributesInfo GetStringInfo();
+  virtual void DidAnimateString(PRUint8 aAttrEnum);
 
   enum { X, Y, WIDTH, HEIGHT };
   nsSVGLength2 mLengthAttributes[4];

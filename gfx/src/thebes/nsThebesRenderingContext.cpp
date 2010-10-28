@@ -524,7 +524,7 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
  * the width and height are clamped such x+width or y+height are equal
  * to CAIRO_COORD_MAX, and PR_TRUE is returned.
  */
-#define CAIRO_COORD_MAX (8388608.0)
+#define CAIRO_COORD_MAX (double(0x7fffff))
 
 static PRBool
 ConditionRect(gfxRect& r) {

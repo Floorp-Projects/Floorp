@@ -127,20 +127,6 @@ FrameState::allocReg(FrameEntry *fe, RematInfo::RematType type)
 }
 
 inline void
-FrameState::emitLoadTypeTag(FrameEntry *fe, RegisterID reg) const
-{
-    emitLoadTypeTag(this->masm, fe, reg);
-}
-
-inline void
-FrameState::emitLoadTypeTag(Assembler &masm, FrameEntry *fe, RegisterID reg) const
-{
-    if (fe->isCopy())
-        fe = fe->copyOf();
-    masm.loadTypeTag(addressOf(fe), reg);
-}
-
-inline void
 FrameState::convertInt32ToDouble(Assembler &masm, FrameEntry *fe, FPRegisterID fpreg) const
 {
     JS_ASSERT(!fe->isConstant());
@@ -255,27 +241,34 @@ FrameState::pushSynced(JSValueType type, RegisterID reg)
 inline void
 FrameState::push(Address address)
 {
-    FrameEntry *fe = rawPush();
-
-    /* :XXX: X64 */
-    fe->resetUnsynced();
-
-    /* Prevent us from clobbering this reg. */
+#ifdef JS_PUNBOX64
+    // It's okay if either of these clobbers address.base, since we guarantee
+    // eviction will not physically clobber. It's also safe, on x64, for
+    // loadValueAsComponents() to take either type or data regs as address.base.
+    RegisterID typeReg = allocReg();
+    RegisterID dataReg = allocReg();
+    masm.loadValueAsComponents(address, typeReg, dataReg);
+#elif JS_NUNBOX32
+    // Prevent us from clobbering this reg.
     bool free = freeRegs.hasReg(address.base);
     if (free)
         freeRegs.takeReg(address.base);
 
-    RegisterID dreg = allocReg(fe, RematInfo::DATA);
-    masm.loadPayload(address, dreg);
-    fe->data.setRegister(dreg);
+    RegisterID typeReg = allocReg();
 
-    /* Now it's safe to grab this register again. */
+    masm.loadTypeTag(address, typeReg);
+
+    // Allow re-use of the base register. This could avoid a spill, and
+    // is safe because the following allocReg() won't actually emit any
+    // writes to the register.
     if (free)
         freeRegs.putReg(address.base);
 
-    RegisterID treg = allocReg(fe, RematInfo::TYPE);
-    masm.loadTypeTag(address, treg);
-    fe->type.setRegister(treg);
+    RegisterID dataReg = allocReg();
+    masm.loadPayload(address, dataReg);
+#endif
+
+    pushRegs(typeReg, dataReg);
 }
 
 inline void
@@ -485,33 +478,188 @@ FrameState::shouldAvoidDataRemat(FrameEntry *fe)
 }
 
 inline void
-FrameState::syncType(const FrameEntry *fe, Address to, Assembler &masm) const
+FrameState::ensureFeSynced(const FrameEntry *fe, Assembler &masm) const
 {
-    JS_ASSERT_IF(fe->type.synced(),
-                 fe->isCopied() && addressOf(fe).offset != to.offset);
-    JS_ASSERT(fe->type.inRegister() || fe->type.isConstant());
+    Address to = addressOf(fe);
+    const FrameEntry *backing = fe;
+    if (fe->isCopy())
+        backing = fe->copyOf();
 
-    /* Store a double's type bits, even though !isTypeKnown(). */
-    if (fe->isConstant())
-        masm.storeTypeTag(ImmTag(fe->getKnownTag()), to);
-    else if (fe->isTypeKnown())
-        masm.storeTypeTag(ImmType(fe->getKnownType()), to);
-    else
-        masm.storeTypeTag(fe->type.reg(), to);
+#if defined JS_PUNBOX64
+    /* If we can, sync the type and data in one go. */
+    if (!fe->data.synced() && !fe->type.synced()) {
+        if (backing->isConstant())
+            masm.storeValue(backing->getValue(), to);
+        else if (backing->isTypeKnown())
+            masm.storeValueFromComponents(ImmType(backing->getKnownType()), backing->data.reg(), to);
+        else
+            masm.storeValueFromComponents(backing->type.reg(), backing->data.reg(), to);
+        return;
+    }
+#endif
+
+    /* 
+     * On x86_64, only one of the following two calls will have output,
+     * and a load will only occur if necessary.
+     */
+    ensureDataSynced(fe, masm);
+    ensureTypeSynced(fe, masm);
 }
 
 inline void
-FrameState::syncData(const FrameEntry *fe, Address to, Assembler &masm) const
+FrameState::ensureTypeSynced(const FrameEntry *fe, Assembler &masm) const
 {
-    JS_ASSERT_IF(addressOf(fe).base == to.base &&
-                 addressOf(fe).offset == to.offset,
-                 !fe->data.synced());
-    JS_ASSERT(fe->data.inRegister() || fe->data.isConstant());
+    if (fe->type.synced())
+        return;
 
-    if (fe->data.isConstant())
-        masm.storePayload(ImmPayload(fe->getPayload()), to);
+    Address to = addressOf(fe);
+    const FrameEntry *backing = fe;
+    if (fe->isCopy())
+        backing = fe->copyOf();
+
+#if defined JS_PUNBOX64
+    /* Attempt to store the entire Value, to prevent a load. */
+    if (backing->isConstant()) {
+        masm.storeValue(backing->getValue(), to);
+        return;
+    }
+
+    if (backing->data.inRegister()) {
+        RegisterID dreg = backing->data.reg();
+        if (backing->isTypeKnown())
+            masm.storeValueFromComponents(ImmType(backing->getKnownType()), dreg, to);
+        else
+            masm.storeValueFromComponents(backing->type.reg(), dreg, to);
+        return;
+    }
+#endif
+
+    /* Store a double's type bits, even though !isTypeKnown(). */
+    if (backing->isConstant())
+        masm.storeTypeTag(ImmTag(backing->getKnownTag()), to);
+    else if (backing->isTypeKnown())
+        masm.storeTypeTag(ImmType(backing->getKnownType()), to); 
     else
-        masm.storePayload(fe->data.reg(), to);
+        masm.storeTypeTag(backing->type.reg(), to);
+}
+
+inline void
+FrameState::ensureDataSynced(const FrameEntry *fe, Assembler &masm) const
+{
+    if (fe->data.synced())
+        return;
+
+    Address to = addressOf(fe);
+    const FrameEntry *backing = fe;
+    if (fe->isCopy())
+        backing = fe->copyOf();
+
+#if defined JS_PUNBOX64
+    if (backing->isConstant())
+        masm.storeValue(backing->getValue(), to);
+    else if (backing->isTypeKnown())
+        masm.storeValueFromComponents(ImmType(backing->getKnownType()), backing->data.reg(), to);
+    else if (backing->type.inRegister())
+        masm.storeValueFromComponents(backing->type.reg(), backing->data.reg(), to);
+    else
+        masm.storePayload(backing->data.reg(), to);
+#elif defined JS_NUNBOX32
+    if (backing->isConstant())
+        masm.storePayload(ImmPayload(backing->getPayload()), to);
+    else
+        masm.storePayload(backing->data.reg(), to);
+#endif
+}
+
+inline void
+FrameState::syncFe(FrameEntry *fe)
+{
+    FrameEntry *backing = fe;
+    if (fe->isCopy())
+        backing = fe->copyOf();
+
+    bool needTypeReg = !fe->type.synced() && backing->type.inMemory();
+    bool needDataReg = !fe->data.synced() && backing->data.inMemory();
+
+#if defined JS_NUNBOX32
+    /* Determine an ordering that won't spill known regs. */
+    if (needTypeReg && !needDataReg) {
+        syncData(fe);
+        syncType(fe);
+    } else {
+        syncType(fe);
+        syncData(fe);
+    }
+#elif defined JS_PUNBOX64
+    if (JS_UNLIKELY(needTypeReg && needDataReg)) {
+        /* Memory-to-memory moves can only occur for copies backed by memory. */
+        JS_ASSERT(backing != fe);
+
+        /* Use ValueReg to do a whole-Value mem-to-mem move. */
+        masm.loadValue(addressOf(backing), Registers::ValueReg);
+        masm.storeValue(Registers::ValueReg, addressOf(fe));
+    } else {
+        /* Store in case unpinning is necessary. */
+        MaybeRegisterID pairReg;
+
+        /* Get a register if necessary, without clobbering its pair. */
+        if (needTypeReg) {
+            if (backing->data.inRegister() && !regstate[backing->data.reg()].isPinned()) {
+                pairReg = backing->data.reg();
+                pinReg(backing->data.reg());
+            }
+            tempRegForType(backing);
+        } else if (needDataReg) {
+            if (backing->type.inRegister() && !regstate[backing->type.reg()].isPinned()) {
+                pairReg = backing->type.reg();
+                pinReg(backing->type.reg());
+            }
+            tempRegForData(backing);
+        }
+
+        ensureFeSynced(fe, masm);
+
+        if (pairReg.isSet())
+            unpinReg(pairReg.reg());
+    }
+
+    if (!fe->type.synced())
+        fe->type.sync();
+    if (!fe->data.synced())
+        fe->data.sync();
+#endif
+}
+
+inline void
+FrameState::syncType(FrameEntry *fe)
+{
+    FrameEntry *backing = fe;
+    if (fe->isCopy())
+        backing = fe->copyOf();
+
+    if (!fe->type.synced() && backing->type.inMemory())
+        tempRegForType(backing);
+
+    ensureTypeSynced(fe, masm);
+
+    if (!fe->type.synced())
+        fe->type.sync();
+}
+
+inline void
+FrameState::syncData(FrameEntry *fe)
+{
+    FrameEntry *backing = fe;
+    if (fe->isCopy())
+        backing = fe->copyOf();
+
+    if (!fe->data.synced() && backing->data.inMemory())
+        tempRegForData(backing);
+
+    ensureDataSynced(fe, masm);
+
+    if (!fe->data.synced())
+        fe->data.sync();
 }
 
 inline void
@@ -525,7 +673,17 @@ FrameState::forgetType(FrameEntry *fe)
     if (!fe->isTypeKnown())
         return;
 
-    syncType(fe, addressOf(fe), masm);
+    /*
+     * Likewise, storeLocal() may have set this FE, with a known type,
+     * to be a copy of another FE, which has an unknown type.
+     * Just forget the type, since the backing is used in all cases.
+     */
+    if (fe->isCopy()) {
+        fe->type.invalidate();
+        return;
+    }
+
+    ensureTypeSynced(fe, masm);
     fe->type.setMemory();
 }
 
@@ -565,6 +723,15 @@ FrameState::testNull(Assembler::Condition cond, FrameEntry *fe)
     if (shouldAvoidTypeRemat(fe))
         return masm.testNull(cond, addressOf(fe));
     return masm.testNull(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
+FrameState::testUndefined(Assembler::Condition cond, FrameEntry *fe)
+{
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testUndefined(cond, addressOf(fe));
+    return masm.testUndefined(cond, tempRegForType(fe));
 }
 
 inline JSC::MacroAssembler::Jump
@@ -765,16 +932,12 @@ FrameState::dataRematInfo(const FrameEntry *fe) const
 {
     if (fe->isCopy())
         fe = fe->copyOf();
-    StateRemat remat;
-    if (fe->data.inRegister()) {
-        remat.reg = fe->data.reg();
-        remat.inReg = true;
-    } else {
-        JS_ASSERT(fe->data.synced());
-        remat.offset = addressOf(fe).offset;
-        remat.inReg = false;
-    }
-    return remat;
+
+    if (fe->data.inRegister())
+        return StateRemat::FromRegister(fe->data.reg());
+
+    JS_ASSERT(fe->data.synced());
+    return StateRemat::FromAddress(addressOf(fe));
 }
 
 inline void
@@ -843,11 +1006,7 @@ FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) cons
         return;
     }
 
-    if (!fe->data.synced())
-        syncData(fe, addressOf(fe), masm);
-    if (!fe->type.synced())
-        syncType(fe, addressOf(fe), masm);
-
+    ensureFeSynced(fe, masm);
     masm.loadDouble(addressOf(fe), fpReg);
 }
 

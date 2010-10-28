@@ -46,8 +46,9 @@
 #elif defined JS_PUNBOX64
 # include "PunboxAssembler.h"
 #else
-# error "Neither JS_NUNBOX32 nor JS_PUNBOX32 is defined."
+# error "Neither JS_NUNBOX32 nor JS_PUNBOX64 is defined."
 #endif
+#include "BaseAssembler.h"
 
 /* Get a label for assertion purposes. Prevent #ifdef clutter. */
 #ifdef DEBUG

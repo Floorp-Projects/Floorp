@@ -215,10 +215,11 @@ public:
 
   // line cursor methods to speed up searching for the line(s)
   // containing a point. The basic idea is that we set the cursor
-  // property if the lines' combinedArea.ys and combinedArea.yMosts
-  // are non-decreasing (considering only non-empty combinedAreas;
-  // empty combinedAreas never participate in event handling or
-  // painting), and the block has sufficient number of lines. The
+  // property if the lines' overflowArea.VisualOverflow().ys and
+  // overflowArea.VisualOverflow().yMosts are non-decreasing
+  // (considering only non-empty overflowArea.VisualOverflow()s; empty
+  // overflowArea.VisualOverflow()s never participate in event handling
+  // or painting), and the block has sufficient number of lines. The
   // cursor property points to a "recently used" line. If we get a
   // series of requests that work on lines
   // "near" the cursor, then we can find those nearby lines quickly by
@@ -248,6 +249,11 @@ public:
   // do we have either a 'list-style-type' or 'list-style-image' that is
   // not 'none'?
   PRBool BulletIsEmpty() const;
+  virtual PRBool BulletIsEmptyExternal() const
+  {
+    return BulletIsEmpty();
+  }
+  virtual void GetBulletText(nsAString& aText) const;
 
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
@@ -338,6 +344,7 @@ protected:
   virtual ~nsBlockFrame();
 
 #ifdef DEBUG
+#ifdef _IMPL_NS_LAYOUT
   already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
   {
     return aPresContext->StyleSet()->
@@ -345,6 +352,7 @@ protected:
                               nsCSSPseudoElements::ePseudo_firstLetter,
                               mStyleContext);
   }
+#endif
 #endif
 
   /*
@@ -396,9 +404,9 @@ protected:
                                 nsHTMLReflowMetrics&     aMetrics,
                                 nscoord*                 aBottomEdgeOfChildren);
 
-  void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
-                           nsHTMLReflowMetrics&     aMetrics,
-                           nscoord                  aBottomEdgeOfChildren);
+  void ComputeOverflowAreas(const nsHTMLReflowState& aReflowState,
+                            nsHTMLReflowMetrics&     aMetrics,
+                            nscoord                  aBottomEdgeOfChildren);
 
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code
@@ -476,8 +484,8 @@ protected:
   /** Reflow pushed floats
    */
   nsresult ReflowPushedFloats(nsBlockReflowState& aState,
-                                    nsRect&             aBounds,
-                                    nsReflowStatus&     aStatus);
+                              nsOverflowAreas&    aOverflowAreas,
+                              nsReflowStatus&     aStatus);
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */

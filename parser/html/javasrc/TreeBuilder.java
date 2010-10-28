@@ -336,6 +336,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private static final int NOT_FOUND_ON_STACK = Integer.MAX_VALUE;
 
+    private static final int AAA_MAX_ITERATIONS = 10;
+
     // [NOCPP[
 
     private static final @Local String HTML_LOCAL = "html";
@@ -851,19 +853,22 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             needToDropLF = false;
         }
 
-        if (inForeign) {
-            accumulateCharacters(buf, start, length);
-            return;
-        }
         // optimize the most common case
         switch (mode) {
             case IN_BODY:
             case IN_CELL:
             case IN_CAPTION:
-                reconstructTheActiveFormattingElements();
+                if (!inForeign) {
+                    reconstructTheActiveFormattingElements();
+                }
                 // fall through
             case TEXT:
                 accumulateCharacters(buf, start, length);
+                return;
+            case IN_TABLE:
+            case IN_TABLE_BODY:
+            case IN_ROW:
+                accumulateCharactersForced(buf, start, length);
                 return;
             default:
                 int end = start + length;
@@ -888,7 +893,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      */
                                     start = i + 1;
                                     continue;
-                                case FRAMESET_OK:
                                 case IN_HEAD:
                                 case IN_HEAD_NOSCRIPT:
                                 case AFTER_HEAD:
@@ -899,10 +903,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Append the character to the current node.
                                      */
                                     continue;
+                                case FRAMESET_OK:
                                 case IN_BODY:
                                 case IN_CELL:
                                 case IN_CAPTION:
-                                    // XXX is this dead code?
                                     if (start < i) {
                                         accumulateCharacters(buf, start, i
                                                 - start);
@@ -913,7 +917,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
-                                    reconstructTheActiveFormattingElements();
+                                    if (!inForeign) {
+                                        flushCharacters();
+                                        reconstructTheActiveFormattingElements();
+                                    }
                                     /*
                                      * Append the token's character to the
                                      * current node.
@@ -925,26 +932,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 case IN_TABLE:
                                 case IN_TABLE_BODY:
                                 case IN_ROW:
-                                    reconstructTheActiveFormattingElements();
-                                    accumulateCharacter(buf[i]);
+                                    accumulateCharactersForced(buf, i, 1);
                                     start = i + 1;
                                     continue;
                                 case AFTER_BODY:
-                                    if (start < i) {
-                                        accumulateCharacters(buf, start, i
-                                                - start);
-                                        start = i;
-                                    }
-                                    /*
-                                     * Reconstruct the active formatting
-                                     * elements, if any.
-                                     */
-                                    reconstructTheActiveFormattingElements();
-                                    /*
-                                     * Append the token's character to the
-                                     * current node.
-                                     */
-                                    continue;
                                 case AFTER_AFTER_BODY:
                                 case AFTER_AFTER_FRAMESET:
                                     if (start < i) {
@@ -956,6 +947,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
+                                    flushCharacters();
                                     reconstructTheActiveFormattingElements();
                                     /*
                                      * Append the token's character to the
@@ -1014,6 +1006,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * name html, in the HTML namespace. Append
                                      * it to the Document object.
                                      */
+                                    // No need to flush characters here,
+                                    // because there's nothing to flush.
                                     appendHtmlElementToDocumentAndPush();
                                     /* Switch to the main mode */
                                     mode = BEFORE_HEAD;
@@ -1033,6 +1027,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * name "head" and no attributes had been
                                      * seen,
                                      */
+                                    flushCharacters();
                                     appendToCurrentNodeAndPushHeadElement(HtmlAttributes.EMPTY_ATTRIBUTES);
                                     mode = IN_HEAD;
                                     /*
@@ -1055,6 +1050,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Act as if an end tag token with the tag
                                      * name "head" had been seen,
                                      */
+                                    flushCharacters();
                                     pop();
                                     mode = AFTER_HEAD;
                                     /*
@@ -1073,6 +1069,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * the tag name "noscript" had been seen
                                      */
                                     err("Non-space character inside \u201Cnoscript\u201D inside \u201Chead\u201D.");
+                                    flushCharacters();
                                     pop();
                                     mode = IN_HEAD;
                                     /*
@@ -1091,6 +1088,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * name "body" and no attributes had been
                                      * seen,
                                      */
+                                    flushCharacters();
                                     appendToCurrentNodeAndPushBodyElement();
                                     mode = FRAMESET_OK;
                                     /*
@@ -1115,7 +1113,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
-                                    reconstructTheActiveFormattingElements();
+                                    if (!inForeign) {
+                                        flushCharacters();
+                                        reconstructTheActiveFormattingElements();
+                                    }
                                     /*
                                      * Append the token's character to the
                                      * current node.
@@ -1124,8 +1125,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 case IN_TABLE:
                                 case IN_TABLE_BODY:
                                 case IN_ROW:
-                                    reconstructTheActiveFormattingElements();
-                                    accumulateCharacter(buf[i]);
+                                    accumulateCharactersForced(buf, i, 1);
                                     start = i + 1;
                                     continue;
                                 case IN_COLUMN_GROUP:
@@ -1145,6 +1145,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         start = i + 1;
                                         continue;
                                     }
+                                    flushCharacters();
                                     pop();
                                     mode = IN_TABLE;
                                     i--;
@@ -1427,6 +1428,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     public final void startTag(ElementName elementName,
             HtmlAttributes attributes, boolean selfClosing) throws SAXException {
+        flushCharacters();
         // [NOCPP[
         if (errorHandler != null) {
             // ID uniqueness
@@ -2879,6 +2881,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     }
                 case AFTER_AFTER_FRAMESET:
                     switch (group) {
+                        case HTML:
+                            err("Stray \u201Chtml\u201D start tag.");
+                            if (!fragment) {
+                                addAttributesToHtml(attributes);
+                                attributes = null; // CPP
+                            }
+                            break starttagloop;
                         case NOFRAMES:
                             appendToCurrentNodeAndPushElementMayFoster(
                                     "http://www.w3.org/1999/xhtml",
@@ -3126,6 +3135,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     public final void endTag(ElementName elementName) throws SAXException {
+        flushCharacters();
         needToDropLF = false;
         int eltPos;
         int group = elementName.group;
@@ -4328,8 +4338,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void adoptionAgencyEndTag(@Local String name) throws SAXException {
         // If you crash around here, perhaps some stack node variable claimed to
         // be a weak ref isn't.
-        flushCharacters();
-        for (;;) {
+        for (int i = 0; i < AAA_MAX_ITERATIONS; ++i) {
             int formattingEltListPos = listPtr;
             while (formattingEltListPos > -1) {
                 StackNode<T> listNode = listOfActiveFormattingElements[formattingEltListPos]; // weak
@@ -4405,7 +4414,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             int bookmark = formattingEltListPos;
             int nodePos = furthestBlockPos;
             StackNode<T> lastNode = furthestBlock; // weak ref
-            for (;;) {
+            for (int j = 0; j < AAA_MAX_ITERATIONS; ++j) {
                 nodePos--;
                 StackNode<T> node = stack[nodePos]; // weak ref
                 int nodeListPos = findInListOfActiveFormattingElements(node);
@@ -4490,7 +4499,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         assert currentPtr + 1 < stack.length;
         assert position <= currentPtr + 1;
         if (position == currentPtr + 1) {
-            flushCharacters();
             push(node);
         } else {
             System.arraycopy(stack, position, stack, position + 1,
@@ -4586,7 +4594,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         assert headPointer != null;
         assert !fragment;
         assert mode == AFTER_HEAD;
-        flushCharacters();
         fatal();
         silentPush(new StackNode<T>("http://www.w3.org/1999/xhtml", ElementName.HEAD,
                 headPointer));
@@ -4616,9 +4623,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             if (isInStack(listOfActiveFormattingElements[entryPos])) {
                 break;
             }
-        }
-        if (entryPos < listPtr) {
-            flushCharacters();
         }
         while (entryPos < listPtr) {
             entryPos++;
@@ -4665,7 +4669,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void pop() throws SAXException {
-        flushCharacters();
         StackNode<T> node = stack[currentPtr];
         assert clearLastStackSlot();
         currentPtr--;
@@ -4674,7 +4677,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void silentPop() throws SAXException {
-        flushCharacters();
         StackNode<T> node = stack[currentPtr];
         assert clearLastStackSlot();
         currentPtr--;
@@ -4682,7 +4684,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void popOnEof() throws SAXException {
-        flushCharacters();
         StackNode<T> node = stack[currentPtr];
         assert clearLastStackSlot();
         currentPtr--;
@@ -4802,7 +4803,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void appendToCurrentNodeAndPushHeadElement(HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
@@ -4829,7 +4829,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void appendToCurrentNodeAndPushFormElementMayFoster(
             HtmlAttributes attributes) throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
@@ -4853,7 +4852,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushFormattingElementMayFoster(
             @NsUri String ns, ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, ns);
         // ]NOCPP]
@@ -4877,7 +4875,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElement(@NsUri String ns,
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, ns);
         // ]NOCPP]
@@ -4892,7 +4889,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFoster(@NsUri String ns,
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         @Local String popName = elementName.name;
         // [NOCPP[
         checkAttributes(attributes, ns);
@@ -4916,7 +4912,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFosterNoScoping(
             @NsUri String ns, ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         @Local String popName = elementName.name;
         // [NOCPP[
         checkAttributes(attributes, ns);
@@ -4941,7 +4936,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFosterCamelCase(
             @NsUri String ns, ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         @Local String popName = elementName.camelCaseName;
         // [NOCPP[
         checkAttributes(attributes, ns);
@@ -4966,7 +4960,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFoster(@NsUri String ns,
             ElementName elementName, HtmlAttributes attributes, T form)
             throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, ns);
         // ]NOCPP]
@@ -4988,7 +4981,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrentMayFoster(
             @NsUri String ns, @Local String name, HtmlAttributes attributes,
             T form) throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, ns);
         // ]NOCPP]
@@ -5009,7 +5001,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrentMayFoster(
             @NsUri String ns, ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         @Local String popName = elementName.name;
         // [NOCPP[
         checkAttributes(attributes, ns);
@@ -5033,7 +5024,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrentMayFosterCamelCase(
             @NsUri String ns, ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        flushCharacters();
         @Local String popName = elementName.camelCaseName;
         // [NOCPP[
         checkAttributes(attributes, ns);
@@ -5057,7 +5047,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrent(
             @NsUri String ns, @Local String name, HtmlAttributes attributes,
             T form) throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, ns);
         // ]NOCPP]
@@ -5071,7 +5060,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void appendVoidFormToCurrent(HtmlAttributes attributes) throws SAXException {
-        flushCharacters();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
@@ -5085,21 +5073,26 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         elementPopped("http://www.w3.org/1999/xhtml", "form", elt);
     }
 
-    protected void accumulateCharacters(@Const @NoLength char[] buf, int start,
-            int length) throws SAXException {
-        appendCharacters(stack[currentPtr].node, buf, start, length);
-    }
-
-    protected final void accumulateCharacter(char c) throws SAXException {
-        int newLen = charBufferLen + 1;
+    // [NOCPP[
+    
+    private final void accumulateCharactersForced(@Const @NoLength char[] buf,
+            int start, int length) throws SAXException {
+        int newLen = charBufferLen + length;
         if (newLen > charBuffer.length) {
             char[] newBuf = new char[newLen];
             System.arraycopy(charBuffer, 0, newBuf, 0, charBufferLen);
             Portability.releaseArray(charBuffer);
             charBuffer = newBuf;
         }
-        charBuffer[charBufferLen] = c;
+        System.arraycopy(buf, start, charBuffer, charBufferLen, length);
         charBufferLen = newLen;
+    }
+    
+    // ]NOCPP]
+    
+    protected void accumulateCharacters(@Const @NoLength char[] buf, int start,
+            int length) throws SAXException {
+        appendCharacters(stack[currentPtr].node, buf, start, length);
     }
 
     // ------------------------------- //
@@ -5232,6 +5225,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     // ]NOCPP]
 
     /**
+     * @see nu.validator.htmlparser.common.TokenHandler#cdataSectionAllowed()
+     */
+    @Override public boolean cdataSectionAllowed() throws SAXException {
+        return inForeign && currentPtr >= 0
+                && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml";
+    }
+
+    /**
      * The argument MUST be an interned string or <code>null</code>.
      * 
      * @param context
@@ -5314,9 +5315,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     public final void flushCharacters() throws SAXException {
         if (charBufferLen > 0) {
-            StackNode<T> current = stack[currentPtr];
-            if (current.fosterParenting && charBufferContainsNonWhitespace()) {
+            if ((mode == IN_TABLE || mode == IN_TABLE_BODY || mode == IN_ROW)
+                    && charBufferContainsNonWhitespace()) {
                 err("Misplaced non-space characters insided a table.");
+                reconstructTheActiveFormattingElements();
+                if (!stack[currentPtr].fosterParenting) {
+                    // reconstructing gave us a new current node
+                    appendCharacters(currentNode(), charBuffer, 0,
+                            charBufferLen);
+                    charBufferLen = 0;
+                    return;
+                }
                 int eltPos = findLastOrRoot(TreeBuilder.TABLE);
                 StackNode<T> node = stack[eltPos];
                 T elt = node.node;
@@ -5585,7 +5594,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * Returns the foreignFlag.
      *
-     * @see nu.validator.htmlparser.common.TokenHandler#isInForeign()
      * @return the foreignFlag
      */
     public boolean isInForeign() {

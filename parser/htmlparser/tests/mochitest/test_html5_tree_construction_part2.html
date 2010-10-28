@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=366936
+-->
+<head>
+  <meta charset=utf-8>
+  <title>Test for Bug 366936</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+	  src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" /> 
+  <script type="application/javascript;version=1.7"
+          src="parser_datreader.js"></script>
+  <script type="application/javascript"
+          src="html5_tree_construction_exceptions.js"></script>
+  <script class="testbody" type="application/javascript;version=1.7">
+   var parserDatFiles = ["tests17.dat",
+                         "tests18.dat",
+                         "tests19.dat",
+                         "tests1.dat",
+                         "tests20.dat",
+                         "tests21.dat",
+                         "tests2.dat",
+                         "tests3.dat",
+                         "tests4.dat",
+                         "tests5.dat",
+                         "tests6.dat",
+                         "tests7.dat",
+                         "tests8.dat",
+                         "tests9.dat",
+                         "tests_innerHTML_1.dat",
+                         "tricky01.dat",
+                         "webkit01.dat",
+                         "webkit02.dat"];
+
+  </script>
+  <script type="application/javascript;version=1.7"
+          src="parser_web_testrunner.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=366936"
+   target="_blank">Mozilla Bug 366936</a>
+<div id="content">
+<iframe src="" id="testframe"></iframe>  
+</div>
+See html5lib.googlecode.com for original test data<br>
+<div id="display">
+
+</div>
+</body>
+</html>
+

@@ -68,6 +68,9 @@ _CHROME_FILES =	test_bug343416.xul \
 		test_bug478536.xul \
 		window_bug478536.xul \
 		test_bug517396.xul \
+		test_bug593307.xul \
+		window_bug593307_offscreen.xul \
+		window_bug593307_centerscreen.xul \
 		test_keycodes.xul \
 		test_wheeltransaction.xul \
 		window_wheeltransaction.xul \
@@ -78,12 +81,15 @@ _CHROME_FILES =	test_bug343416.xul \
 		window_composition_text_querycontent.xul \
 		test_input_events_on_deactive_window.xul \
 		$(NULL)
+		
+# test_bug413277.html mac-only based on 604789, 605178
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _CHROME_FILES += native_menus_window.xul \
                test_native_menus.xul \
                native_mouse_mac_window.xul \
                test_native_mouse_mac.xul \
+               test_bug413277.html \
                test_bug428405.xul \
                test_bug466599.xul \
                test_bug485118.xul \

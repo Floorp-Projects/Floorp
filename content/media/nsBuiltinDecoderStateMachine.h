@@ -476,11 +476,6 @@ protected:
   // the state machine thread. Synchronised via decoder monitor.
   PRPackedBool mAudioCompleted;
 
-  // PR_TRUE if the decode thread has indicated that we need to buffer.
-  // Accessed by the decode thread and the state machine thread.
-  // Synchronised via the decoder monitor.
-  PRPackedBool mBufferExhausted;
-
   // PR_TRUE if mDuration has a value obtained from an HTTP header, or from
   // the media index/metadata. Accessed on the state machine thread.
   PRPackedBool mGotDurationFromMetaData;

@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+# include "mozilla/layers/PLayers.h"
+#endif  // MOZ_IPC
+
 #include "LayerManagerOGL.h"
 #include "ThebesLayerOGL.h"
 #include "ContainerLayerOGL.h"
@@ -69,6 +73,7 @@ int LayerManagerOGLProgram::sCurrentProgramKey = 0;
  */
 LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
   : mWidget(aWidget)
+  , mWidgetSize(-1, -1)
   , mBackBufferFBO(0)
   , mBackBufferTexture(0)
   , mBackBufferSize(-1, -1)
@@ -154,8 +159,7 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
     if (gfxInfo) {
       PRInt32 status;
       if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-        if (status != nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
-            status != nsIGfxInfo::FEATURE_AVAILABLE) {
+        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
           NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
           return PR_FALSE;
         }
@@ -373,6 +377,11 @@ LayerManagerOGL::BeginTransaction()
 void
 LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("[----- BeginTransaction"));
+  Log();
+#endif
+
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
@@ -385,6 +394,11 @@ void
 LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
                                 void* aCallbackData)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
+  Log();
+#endif
+
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
@@ -399,6 +413,11 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   mThebesLayerCallbackData = nsnull;
 
   mTarget = NULL;
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
 }
 
 already_AddRefed<ThebesLayer>
@@ -903,6 +922,73 @@ void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
     gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
   }
 }
+
+#ifdef MOZ_IPC
+
+already_AddRefed<ShadowThebesLayer>
+LayerManagerOGL::CreateShadowThebesLayer()
+{
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowThebesLayerOGL>(new ShadowThebesLayerOGL(this)).forget();
+}
+
+already_AddRefed<ShadowContainerLayer>
+LayerManagerOGL::CreateShadowContainerLayer()
+{
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowContainerLayerOGL>(new ShadowContainerLayerOGL(this)).forget();
+}
+
+already_AddRefed<ShadowImageLayer>
+LayerManagerOGL::CreateShadowImageLayer()
+{
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowImageLayerOGL>(new ShadowImageLayerOGL(this)).forget();
+}
+
+already_AddRefed<ShadowColorLayer>
+LayerManagerOGL::CreateShadowColorLayer()
+{
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowColorLayerOGL>(new ShadowColorLayerOGL(this)).forget();
+}
+
+already_AddRefed<ShadowCanvasLayer>
+LayerManagerOGL::CreateShadowCanvasLayer()
+{
+  if (LayerManagerOGL::mDestroyed) {
+    NS_WARNING("Call on destroyed layer manager");
+    return nsnull;
+  }
+  return nsRefPtr<ShadowCanvasLayerOGL>(new ShadowCanvasLayerOGL(this)).forget();
+}
+
+#else
+
+already_AddRefed<ShadowThebesLayer>
+LayerManagerOGL::CreateShadowThebesLayer() { return nsnull; }
+already_AddRefed<ShadowContainerLayer>
+LayerManagerOGL::CreateShadowContainerLayer() { return nsnull; }
+already_AddRefed<ShadowImageLayer>
+LayerManagerOGL::CreateShadowImageLayer() { return nsnull; }
+already_AddRefed<ShadowColorLayer>
+LayerManagerOGL::CreateShadowColorLayer() { return nsnull; }
+already_AddRefed<ShadowCanvasLayer>
+LayerManagerOGL::CreateShadowCanvasLayer() { return nsnull; }
+
+#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

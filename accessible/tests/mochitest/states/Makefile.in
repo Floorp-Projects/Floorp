@@ -54,6 +54,8 @@ _TEST_FILES =\
 		test_doc.html \
 		test_docarticle.html \
 		test_editablebody.html \
+		test_inputs.html \
+		test_inputs.xul \
 		test_link.html \
 		test_popup.xul \
 		test_tree.xul \

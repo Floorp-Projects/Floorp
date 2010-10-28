@@ -595,7 +595,9 @@ bool Program::setUniform1iv(GLint location, GLsizei count, const GLint *v)
     Uniform *targetUniform = mUniforms[mUniformIndex[location].index];
     targetUniform->dirty = true;
 
-    if (targetUniform->type == GL_INT)
+    if (targetUniform->type == GL_INT ||
+        targetUniform->type == GL_SAMPLER_2D ||
+        targetUniform->type == GL_SAMPLER_CUBE)
     {
         int arraySize = targetUniform->arraySize;
 
@@ -949,6 +951,8 @@ void Program::applyUniforms()
               case GL_FLOAT_MAT2: applyUniformMatrix2fv(location, arraySize, f); break;
               case GL_FLOAT_MAT3: applyUniformMatrix3fv(location, arraySize, f); break;
               case GL_FLOAT_MAT4: applyUniformMatrix4fv(location, arraySize, f); break;
+              case GL_SAMPLER_2D:
+              case GL_SAMPLER_CUBE:
               case GL_INT:        applyUniform1iv(location, arraySize, i);       break;
               case GL_INT_VEC2:   applyUniform2iv(location, arraySize, i);       break;
               case GL_INT_VEC3:   applyUniform3iv(location, arraySize, i);       break;
@@ -1737,10 +1741,16 @@ Uniform *Program::createUniform(const D3DXCONSTANT_DESC &constantDescription, st
         switch (constantDescription.Type)
         {
           case D3DXPT_SAMPLER2D:
+            switch (constantDescription.Columns)
+            {
+              case 1: return new Uniform(GL_SAMPLER_2D, name, constantDescription.Elements);
+              default: UNREACHABLE();
+            }
+            break;
           case D3DXPT_SAMPLERCUBE:
             switch (constantDescription.Columns)
             {
-              case 1: return new Uniform(GL_INT, name, constantDescription.Elements);
+              case 1: return new Uniform(GL_SAMPLER_CUBE, name, constantDescription.Elements);
               default: UNREACHABLE();
             }
             break;
@@ -2371,6 +2381,7 @@ void Program::resetInfoLog()
     if (mInfoLog)
     {
         delete [] mInfoLog;
+        mInfoLog = NULL;
     }
 }
 
