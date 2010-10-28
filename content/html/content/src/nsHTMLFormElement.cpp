@@ -375,7 +375,7 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
+NS_IMPL_URI_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Autocomplete, autocomplete,
                                 kFormDefaultAutocomplete->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
@@ -385,17 +385,6 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
 NS_IMPL_BOOL_ATTR(nsHTMLFormElement, NoValidate, novalidate)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
-
-NS_IMETHODIMP
-nsHTMLFormElement::GetMozActionUri(nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue);
-  if (aValue.IsEmpty()) {
-    // Avoid resolving action="" to the base uri, bug 297761.
-    return NS_OK;
-  }
-  return GetURIAttr(nsGkAtoms::action, nsnull, aValue);
-}
 
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
@@ -1430,18 +1419,23 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL,
   // attribute specified, it should be used. Otherwise, the action attribute
   // from the form element should be used.
   //
+  // In addition, if action="" or formaction="", we need to make sure we don't
+  // try to resolve the URL but we should submit to the current document.
+  //
   nsAutoString action;
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aOriginatingElement);
   if (formControl && formControl->IsSubmitControl() &&
       aOriginatingElement->GetAttr(kNameSpaceID_None, nsGkAtoms::formaction,
                                    action)) {
-    // Avoid resolving action="" to the base uri, bug 297761.
     if (!action.IsEmpty()) {
       static_cast<nsGenericHTMLElement*>(aOriginatingElement)->
         GetURIAttr(nsGkAtoms::formaction, nsnull, action);
     }
   } else {
-    GetMozActionUri(action);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::action, action);
+    if (!action.IsEmpty()) {
+      GetAction(action);
+    }
   }
 
   //
