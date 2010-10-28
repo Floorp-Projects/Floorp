@@ -102,6 +102,7 @@ CPPSRCS = 				\
   nsIdentityChecking.cpp \
   nsDataSignatureVerifier.cpp \
   nsRandomGenerator.cpp \
+  NSSErrorsService.cpp \
   $(NULL)
 
 ifdef MOZ_XUL
