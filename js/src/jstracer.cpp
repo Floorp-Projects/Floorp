@@ -7452,9 +7452,10 @@ TraceRecorder::monitorRecording(JSOp op)
           AbortRecording(cx, "unsupported opcode");
           status = ARECORD_ERROR;
           break;
-# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
-      case x:                                                                 \
-        status = this->record_##x();                                          \
+# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
+      case op:                                                                \
+        insComment(#op);                                                      \
+        status = this->record_##op();                                         \
         break;
 # include "jsopcode.tbl"
 # undef OPDEF
@@ -13036,10 +13037,8 @@ TraceRecorder::record_JSOP_GETELEM()
         LIns* addr_ins;
 
         VMSideExit* branchExit = snapshot(BRANCH_EXIT);
-        insComment("begin-getelem(dense-array)");
         guardDenseArray(obj_ins, branchExit);
         CHECK_STATUS_A(denseArrayElement(lval, idx, vp, v_ins, addr_ins, branchExit));
-        insComment("end-getelem(dense-array)");
         set(&lval, v_ins);
         if (call)
             set(&idx, obj_ins);
@@ -13321,8 +13320,6 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         VMSideExit* branchExit = snapshot(BRANCH_EXIT);
         VMSideExit* mismatchExit = snapshot(MISMATCH_EXIT);
 
-        insComment("begin-setelem(dense-array)");
-
         // Make sure the array is actually dense.
         if (!obj->isDenseArray()) 
             return ARECORD_STOP;
@@ -13389,8 +13386,6 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         // Right, actually set the element.
         box_value_into(v, v_ins, addr_ins, 0, ACCSET_SLOTS);
-
-        insComment("end-setelem(dense-array)");
     }
 
     jsbytecode* pc = cx->regs->pc;
