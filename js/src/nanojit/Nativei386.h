@@ -204,26 +204,37 @@ namespace nanojit
         void asm_div_mod(LIns *cond); \
         void asm_load(int d, Register r); \
         void asm_immd(Register r, uint64_t q, double d, bool canClobberCCs); \
-        void IMM8(int32_t i) { \
+        \
+        /* These function generate fragments of instructions. */ \
+        void IMM8(int32_t i) { /* Length: 1 byte. */ \
             _nIns -= 1; \
             *((int8_t*)_nIns) = int8_t(i); \
         }; \
-        void IMM16(int32_t i) { \
+        void IMM16(int32_t i) { /* Length: 2 bytes. */ \
             _nIns -= 2; \
             *((int16_t*)_nIns) = int16_t(i); \
         }; \
-        void IMM32(int32_t i) { \
+        void IMM32(int32_t i) { /* Length: 4 bytes. */ \
             _nIns -= 4; \
             *((int32_t*)_nIns) = int32_t(i); \
+        }; \
+        void MODRM(int32_t mod, int32_t ro, int32_t rm) { /* Length: 1 byte. */ \
+            NanoAssert(unsigned(mod) < 4 && unsigned(ro) < 8 && unsigned(rm) < 8); \
+            *(--_nIns) = uint8_t(mod << 6 | ro << 3 | rm); \
+        } \
+        void SIB(int32_t s, int32_t i, int32_t b) { /* Length: 1 byte. */ \
+            NanoAssert(unsigned(s) < 4 && unsigned(i) < 8 && unsigned(b) < 8); \
+            *(--_nIns) = uint8_t(s << 6 | i << 3 | b); \
+        } \
+        void MODRMr(int32_t d, int32_t s) { /* Length: 1 byte. */ \
+            NanoAssert(unsigned(d) < 8 && unsigned(s) < 8); \
+            MODRM(3, d, s); \
         }; \
         void MODRMm(int32_t r, int32_t d, Register b); \
         void MODRMsib(int32_t r, Register b, Register i, int32_t s, int32_t d); \
         void MODRMdm(int32_t r, int32_t addr); \
-        /* d may be a register number or something else */ \
-        void MODRM(int32_t d, int32_t s) { \
-            NanoAssert(unsigned(d) < 8 && unsigned(s) < 8); \
-            *(--_nIns) = uint8_t(3 << 6 | d << 3 | s); \
-        }; \
+        \
+        /* These functions generate entire instructions. */ \
         void ALU0(int32_t o); \
         void ALUm(int32_t c, int32_t r, int32_t d, Register b); \
         void ALUdm(int32_t c, Register r, int32_t addr); \
@@ -233,10 +244,9 @@ namespace nanojit
         void ALU2dm(int32_t c, Register r, int32_t addr); \
         void ALU2m(int32_t c, Register r, int32_t d, Register b); \
         void ALU2sib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
-        /* d may be a register number or something else */ \
         void ALU(int32_t c, int32_t d, Register s) { \
             underrunProtect(2); \
-            MODRM(d, REGNUM(s)); \
+            MODRMr(d, REGNUM(s)); \
             *(--_nIns) = uint8_t(c); \
         }; \
         void ALUi(int32_t c, Register r, int32_t i); \
@@ -334,7 +344,6 @@ namespace nanojit
         void NOP(); \
         void INT3(); \
         void PUSHi(int32_t i); \
-        void PUSHi32(int32_t i); \
         void PUSHr(Register r); \
         void PUSHm(int32_t d, Register b); \
         void POPr(Register r); \
