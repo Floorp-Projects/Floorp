@@ -429,8 +429,6 @@ if (!gl) {
   var simpleVertShader = document.getElementById('vshader').text;
   var simpleFragShader = document.getElementById('fshader').text;
 
-  addExternalShaders('shaders/00_shaders.txt');
-
   function addExternalShaders(filename, passMsg) {
     var files = wtu.readFileList(filename);
     for (var ii = 0; ii < files.length; ++ii) {
@@ -479,6 +477,8 @@ if (!gl) {
       }
     }
   }
+
+  addExternalShaders('shaders/00_shaders.txt');
 
   for (var ii = 0; ii < shaderInfo.length; ++ii) {
     var info = shaderInfo[ii];

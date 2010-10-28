@@ -134,7 +134,7 @@ function search(aQuery, aFinishImmediately, aCallback, aCategoryType) {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = aQuery;
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   var finishImmediately = true;
@@ -328,11 +328,11 @@ function check_filtered_results(aQuery, aSortBy, aReverseOrder) {
   list.ensureElementIsVisible(localFilter);
 
   // Check with showing local add-ons
-  EventUtils.synthesizeMouse(localFilter, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(localFilter, { }, gManagerWindow);
   check_results(aQuery, aSortBy, aReverseOrder, true);
 
   // Check with showing remote add-ons
-  EventUtils.synthesizeMouse(remoteFilter, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(remoteFilter, { }, gManagerWindow);
   check_results(aQuery, aSortBy, aReverseOrder, false);
 }
 
@@ -386,7 +386,7 @@ function get_install_item(aName) {
 function get_install_button(aItem) {
   isnot(aItem, null, "Item should not be null when checking state of install button");
   var installStatus = getAnonymousElementByAttribute(aItem, "anonid", "install-status");
-  return getAnonymousElementByAttribute(installStatus, "anonid", "install-remote");
+  return getAnonymousElementByAttribute(installStatus, "anonid", "install-remote-btn");
 }
 
 
@@ -431,15 +431,15 @@ add_test(function() {
 
       var item = result.item;
       list.ensureElementIsVisible(item);
-      EventUtils.synthesizeMouse(item, 2, 2, { clickCount: 2 }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         var name = gManagerWindow.document.getElementById("detail-name").textContent;
         is(name, item.mAddon.name, "Name in detail view should be correct");
         var version = gManagerWindow.document.getElementById("detail-version").value;
         is(version, item.mAddon.version, "Version in detail view should be correct");
 
-        EventUtils.synthesizeMouse(gManagerWindow.document.getElementById("category-search"),
-                                   2, 2, { }, gManagerWindow);
+        EventUtils.synthesizeMouseAtCenter(gManagerWindow.document.getElementById("back-btn"),
+                                           { }, gManagerWindow);
         wait_for_view_load(gManagerWindow, run_next_double_click_test);
       });
     }
@@ -454,7 +454,7 @@ add_test(function() {
   var originalHandler = sorters.handler;
 
   var sorterNames = ["name", "dateUpdated"];
-  var buttonIds = ["btn-name", "btn-date"];
+  var buttonIds = ["name-btn", "date-btn"];
   var currentIndex = 0;
   var currentReversed = false;
 
@@ -467,7 +467,7 @@ add_test(function() {
     // Simulate clicking on a specific sorter
     var buttonId = buttonIds[currentIndex];
     var sorter = getAnonymousElementByAttribute(sorters, "anonid", buttonId);
-    EventUtils.synthesizeMouse(sorter, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(sorter, { }, gManagerWindow);
   }
 
   sorters.handler = {
@@ -549,7 +549,7 @@ add_test(function() {
     installBtn = get_install_button(remoteItem);
     is(installBtn.hidden, false, "Install button should be showing before install");
     remoteItem.mAddon.install.addListener(listener);
-    EventUtils.synthesizeMouse(installBtn, 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(installBtn, { }, gManagerWindow);
   });
 });
 

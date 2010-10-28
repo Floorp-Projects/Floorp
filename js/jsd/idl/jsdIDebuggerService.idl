@@ -855,7 +855,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object.  In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(18e09893-f461-4b4b-94d3-776fb0069c6f)]
+[scriptable, uuid(7e6fb9ed-4382-421d-9a14-c80a486e983b)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */

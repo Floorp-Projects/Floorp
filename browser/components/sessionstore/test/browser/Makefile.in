@@ -20,7 +20,7 @@
 #
 # Contributor(s):
 #   Simon Bünzli <zeniko@gmail.com>
-#   Michael Kraft <morac99-firefox@yahoo.com>
+#   Michael Kraft <morac99-firefox2@yahoo.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -114,10 +114,12 @@ _BROWSER_TEST_FILES = \
 	browser_522545.js \
 	browser_524745.js \
 	browser_528776.js \
+	browser_579868.js \
 	browser_579879.js \
 	browser_580512.js \
 	browser_586147.js \
 	browser_586068-cascaded_restore.js \
+	browser_600545.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)

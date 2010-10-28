@@ -104,7 +104,8 @@ namespace nanojit
     #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
     #define NJ_F2I_SUPPORTED                1
     #define NJ_SOFTFLOAT_SUPPORTED          0
-
+    #define NJ_DIVI_SUPPORTED               1
+    
         // Preserve a 16-byte stack alignment, to support the use of
         // SSE instructions like MOVDQA (if not by Tamarin itself,
         // then by the C functions it calls).
@@ -166,7 +167,7 @@ namespace nanojit
     static const RegisterMask ScratchRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) | 1<<REGNUM(rEDX) |
                                             FpRegs;
 
-    static const RegisterMask AllowableFlagRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) |
+    static const RegisterMask AllowableByteRegs = 1<<REGNUM(rEAX) | 1<<REGNUM(rECX) |
                                                   1<<REGNUM(rEDX) | 1<<REGNUM(rEBX);
 
     static inline bool IsGpReg(Register r) {
@@ -203,52 +204,62 @@ namespace nanojit
         void asm_div_mod(LIns *cond); \
         void asm_load(int d, Register r); \
         void asm_immd(Register r, uint64_t q, double d, bool canClobberCCs); \
-        void IMM8(int32_t i) { \
+        \
+        /* These function generate fragments of instructions. */ \
+        void IMM8(int32_t i) { /* Length: 1 byte. */ \
             _nIns -= 1; \
             *((int8_t*)_nIns) = int8_t(i); \
         }; \
-        void IMM16(int32_t i) { \
+        void IMM16(int32_t i) { /* Length: 2 bytes. */ \
             _nIns -= 2; \
             *((int16_t*)_nIns) = int16_t(i); \
         }; \
-        void IMM32(int32_t i) { \
+        void IMM32(int32_t i) { /* Length: 4 bytes. */ \
             _nIns -= 4; \
             *((int32_t*)_nIns) = int32_t(i); \
         }; \
-        void MODRMs(int32_t r, int32_t d, Register b, int32_t l, int32_t i); \
-        void MODRMm(int32_t r, int32_t d, Register b); \
-        void MODRMsib(Register reg, Register base, Register index, int32_t scale, int32_t disp); \
-        void MODRMdm(int32_t r, int32_t addr); \
-        /* d may be a register number or something else */ \
-        void MODRM(int32_t d, int32_t s) { \
+        void MODRM(int32_t mod, int32_t ro, int32_t rm) { /* Length: 1 byte. */ \
+            NanoAssert(unsigned(mod) < 4 && unsigned(ro) < 8 && unsigned(rm) < 8); \
+            *(--_nIns) = uint8_t(mod << 6 | ro << 3 | rm); \
+        } \
+        void SIB(int32_t s, int32_t i, int32_t b) { /* Length: 1 byte. */ \
+            NanoAssert(unsigned(s) < 4 && unsigned(i) < 8 && unsigned(b) < 8); \
+            *(--_nIns) = uint8_t(s << 6 | i << 3 | b); \
+        } \
+        void MODRMr(int32_t d, int32_t s) { /* Length: 1 byte. */ \
             NanoAssert(unsigned(d) < 8 && unsigned(s) < 8); \
-            *(--_nIns) = uint8_t(3 << 6 | d << 3 | s); \
+            MODRM(3, d, s); \
         }; \
+        void MODRMm(int32_t r, int32_t d, Register b); \
+        void MODRMsib(int32_t r, Register b, Register i, int32_t s, int32_t d); \
+        void MODRMdm(int32_t r, int32_t addr); \
+        \
+        /* These functions generate entire instructions. */ \
         void ALU0(int32_t o); \
         void ALUm(int32_t c, int32_t r, int32_t d, Register b); \
         void ALUdm(int32_t c, Register r, int32_t addr); \
         void ALUsib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
+        void ALUsib16(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
         void ALUm16(int32_t c, int32_t r, int32_t d, Register b); \
         void ALU2dm(int32_t c, Register r, int32_t addr); \
         void ALU2m(int32_t c, Register r, int32_t d, Register b); \
         void ALU2sib(int32_t c, Register r, Register base, Register index, int32_t scale, int32_t disp); \
-        /* d may be a register number or something else */ \
         void ALU(int32_t c, int32_t d, Register s) { \
             underrunProtect(2); \
-            MODRM(d, REGNUM(s)); \
+            MODRMr(d, REGNUM(s)); \
             *(--_nIns) = uint8_t(c); \
         }; \
         void ALUi(int32_t c, Register r, int32_t i); \
         void ALUmi(int32_t c, int32_t d, Register b, int32_t i); \
         void ALU2(int32_t c, Register d, Register s); \
-        void LAHF(); \
-        void SAHF(); \
+        Register AL2AHReg(Register r); \
         void OR(Register l, Register r); \
         void AND(Register l, Register r); \
+        void AND8R(Register r); \
         void XOR(Register l, Register r); \
         void ADD(Register l, Register r); \
         void SUB(Register l, Register r); \
-        void MUL(Register l, Register r); \
+        void IMUL(Register l, Register r); \
         void DIV(Register r); \
         void NOT(Register r); \
         void NEG(Register r); \
@@ -280,6 +291,7 @@ namespace nanojit
         void INCLi(int32_t p); \
         void SETE( Register r); \
         void SETNP(Register r); \
+        void SETNPH(Register r); \
         void SETL( Register r); \
         void SETLE(Register r); \
         void SETG( Register r); \
@@ -317,16 +329,21 @@ namespace nanojit
         void LD8Ssib(Register r, int32_t disp, Register base, Register index, int32_t scale); \
         void LDi(Register r, int32_t i); \
         void ST8(Register base, int32_t disp, Register reg); \
+        void ST8sib(int32_t disp, Register base, Register index, int32_t scale, Register reg); \
         void ST16(Register base, int32_t disp, Register reg); \
+        void ST16sib(int32_t disp, Register base, Register index, int32_t scale, Register reg); \
         void ST(Register base, int32_t disp, Register reg); \
+        void STsib(int32_t disp, Register base, Register index, int32_t scale, Register reg); \
         void ST8i(Register base, int32_t disp, int32_t imm); \
+        void ST8isib(int32_t disp, Register base, Register index, int32_t scale, int32_t imm); \
         void ST16i(Register base, int32_t disp, int32_t imm); \
+        void ST16isib(int32_t disp, Register base, Register index, int32_t scale, int32_t imm); \
         void STi(Register base, int32_t disp, int32_t imm); \
+        void STisib(int32_t disp, Register base, Register index, int32_t scale, int32_t imm); \
         void RET(); \
         void NOP(); \
         void INT3(); \
         void PUSHi(int32_t i); \
-        void PUSHi32(int32_t i); \
         void PUSHr(Register r); \
         void PUSHm(int32_t d, Register b); \
         void POPr(Register r); \
@@ -337,9 +354,8 @@ namespace nanojit
             underrunProtect(5); \
             intptr_t tt = t ? (intptr_t)t - (intptr_t)_nIns : 0; \
             if (t && isS8(tt)) { \
-                _nIns -= 2; \
-                _nIns[0] = JMP8; \
-                _nIns[1] = uint8_t(tt & 0xff); \
+                *(--_nIns) = uint8_t(tt & 0xff); \
+                *(--_nIns) = JMP8; \
             } else { \
                 IMM32(tt); \
                 *(--_nIns) = JMP32; \
@@ -372,13 +388,16 @@ namespace nanojit
         void JNO(NIns* t); \
         void SSE(int32_t c, Register d, Register s); \
         void SSEm(int32_t c, Register r, int32_t d, Register b); \
+        void SSEsib(int32_t c, Register rr, int32_t d, Register rb, Register ri, int32_t scale); \
         void LDSDm(Register r, const double* addr); \
-        void SSE_LDSD(Register r, int32_t d, Register b); \
         void SSE_LDQ( Register r, int32_t d, Register b); \
         void SSE_LDSS(Register r, int32_t d, Register b); \
+        void SSE_LDQsib(Register r, int32_t d, Register rb, Register ri, int32_t scale); \
+        void SSE_LDSSsib(Register r, int32_t d, Register rb, Register ri, int32_t scale); \
         void SSE_STSD(int32_t d, Register b, Register r); \
         void SSE_STQ( int32_t d, Register b, Register r); \
         void SSE_STSS(int32_t d, Register b, Register r); \
+        void SSE_STQsib(int32_t d, Register rb, Register ri, int32_t scale, Register rv); \
         void SSE_CVTSI2SD(Register xr, Register gr); \
         void SSE_CVTSD2SI(Register gr, Register xr); \
         void SSE_CVTSD2SS(Register xr, Register gr); \

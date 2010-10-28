@@ -878,6 +878,19 @@ function run() {
                           any_elts,
                           bodychildset([1, 3]), bodychildset([0, 2]));
 
+    test_selector_in_html(":-moz-table-border-nonzero",
+                          "<p></p>" +
+                          "<p border='2'></p>" +
+                          "<table border='2'></table>" +
+                          "<table border></table>" +
+                          "<table></table>" +
+                          "<table frame='border'></table>" +
+                          "<table border='0'></table>" +
+                          "<table border='0pt'></table>" +
+                          "<table border='3pt'></table>",
+                          bodychildset([2, 3, 8]),
+                          bodychildset([0, 1, 4, 5, 6, 7]));
+
     run_deferred_tests();
 }
 

@@ -67,6 +67,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
+#define NJ_DIVI_SUPPORTED               1    
 
     static const Register RAX = { 0 };      // 1st int return, # of sse varargs
     static const Register RCX = { 1 };      // 4th int arg
@@ -320,6 +321,11 @@ namespace nanojit
         X64_jmpx    = 0xC524ff4000000004LL, // jmp [d32+x*8]
         X64_jmpxb   = 0xC024ff4000000004LL, // jmp [b+x*8]
 
+        X64_movqmi  = 0x80C7480000000003LL, // 32bit signed extended to 64-bit store imm -> qword ptr[b+disp32]  
+        X64_movlmi  = 0x80C7400000000003LL, // 32bit store imm -> dword ptr[b+disp32]
+        X64_movsmi  = 0x80C7406600000004LL, // 16bit store imm -> word ptr[b+disp32]
+        X64_movbmi  = 0x80C6400000000003LL, // 8bit store imm -> byte ptr[b+disp32]
+
         X86_and8r   = 0xC022000000000002LL, // and rl,rh
         X86_sete    = 0xC0940F0000000003LL, // no-rex version of X64_sete
         X86_setnp   = 0xC09B0F0000000003LL  // no-rex set byte if odd parity (ordered fcmp result) (PF == 0)
@@ -390,6 +396,9 @@ namespace nanojit
         void emitprm(uint64_t op, Register r, int32_t d, Register b);\
         void emitrr_imm(uint64_t op, Register r, Register b, int32_t imm);\
         void emitr_imm64(uint64_t op, Register r, uint64_t imm);\
+        void emitrm_imm32(uint64_t op, Register r, int32_t d, int32_t imm);\
+        void emitprm_imm16(uint64_t op, Register r, int32_t d, int32_t imm);\
+        void emitrm_imm8(uint64_t op, Register r, int32_t d, int32_t imm);\
         void emitrxb_imm(uint64_t op, Register r, Register x, Register b, int32_t imm);\
         void emitr_imm(uint64_t op, Register r, int32_t imm) { emitrr_imm(op, RZero, r, imm); }\
         void emitr_imm8(uint64_t op, Register b, int32_t imm8);\
@@ -598,6 +607,10 @@ namespace nanojit
         void X86_AND8R(Register r);\
         void X86_SETNP(Register r);\
         void X86_SETE(Register r);\
+        void MOVQMI(Register base, int disp, int32_t imm32); \
+        void MOVLMI(Register base, int disp, int32_t imm32); \
+        void MOVSMI(Register base, int disp, int32_t imm16); \
+        void MOVBMI(Register base, int disp, int32_t imm8); \
 
     const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 

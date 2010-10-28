@@ -40,6 +40,7 @@
 #include "gfxWindowsPlatform.h"
 #include "GfxInfo.h"
 #include "nsUnicharUtils.h"
+#include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
 
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
@@ -314,6 +315,7 @@ GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
   }
   nsresult err;
   *aAdapterDeviceID = device.ToInteger(&err, 16);
+
   return NS_OK;
 }
 
@@ -495,7 +497,7 @@ static const GfxDriverInfo driverInfo[] = {
    */
   { allWindowsVersions,
     vendorIntel, deviceFamilyIntelBlockDirect2D,
-    nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED,
+    nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
     DRIVER_LESS_THAN, allDriverVersions },
 
   /* implement the blocklist from bug 594877
@@ -505,7 +507,7 @@ static const GfxDriverInfo driverInfo[] = {
 #define IMPLEMENT_INTEL_DRIVER_BLOCKLIST(winVer, devFamily, driverVer) \
   { winVer,                                                            \
     vendorIntel, devFamily,                                            \
-    allFeatures, nsIGfxInfo::FEATURE_BLOCKED,                          \
+    allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
     DRIVER_LESS_THAN, driverVer },
 
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
@@ -529,14 +531,14 @@ static const GfxDriverInfo driverInfo[] = {
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMAX3000, V(8,15,10,1930))
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMAX4500HD, V(8,15,10,2202))
 
-  /* OpenGL on any Intel hardware is not suggested */
+  /* OpenGL on any Intel hardware is discouraged */
   { allWindowsVersions,
     vendorIntel, allDevices,
-    nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_NOT_SUGGESTED,
+    nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
     DRIVER_LESS_THAN, allDriverVersions },
   { allWindowsVersions,
     vendorIntel, allDevices,
-    nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_NOT_SUGGESTED,
+    nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
     DRIVER_LESS_THAN, allDriverVersions },
 
   /*
@@ -567,10 +569,20 @@ ParseDriverVersion(nsAString& aVersion, PRUint64 *aNumericVersion)
   return true;
 }
 
-NS_IMETHODIMP
-GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+nsresult
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion)
 {
-  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+  aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
+
+  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+  if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
+      gfxWindowsPlatform::WindowsOSVersion() < gfxWindowsPlatform::kWindowsXP)
+  {
+    *aStatus = FEATURE_BLOCKED_OS_VERSION;
+    return NS_OK;
+  }
 
   PRUint32 adapterVendor = 0;
   PRUint32 adapterDeviceID = 0;
@@ -586,6 +598,8 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
   if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
     return NS_ERROR_FAILURE;
   }
+
+  PRUint64 suggestedDriverVersion = 0;
 
   const GfxDriverInfo *info = &driverInfo[0];
   while (info->windowsVersion) {
@@ -622,6 +636,7 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
     switch (info->op) {
     case DRIVER_LESS_THAN:
       match = driverVersion < info->version;
+      suggestedDriverVersion = info->version;
       break;
     case DRIVER_LESS_THAN_OR_EQUAL:
       match = driverVersion <= info->version;
@@ -665,6 +680,28 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
   }
 
   *aStatus = status;
+
+  if (status == FEATURE_BLOCKED_DRIVER_VERSION && suggestedDriverVersion) {
+      aSuggestedDriverVersion.AppendPrintf("%lld.%lld.%lld.%lld",
+                                           (suggestedDriverVersion & 0xffff000000000000) >> 48,
+                                           (suggestedDriverVersion & 0x0000ffff00000000) >> 32,
+                                           (suggestedDriverVersion & 0x00000000ffff0000) >> 16,
+                                           (suggestedDriverVersion & 0x000000000000ffff));
+  }
+  
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+{
+  nsString s;
+  return GetFeatureStatusImpl(aFeature, aStatus, s);
+}
+
+NS_IMETHODIMP
+GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
+{
+  PRInt32 i;
+  return GetFeatureStatusImpl(aFeature, &i, aSuggestedDriverVersion);
+}

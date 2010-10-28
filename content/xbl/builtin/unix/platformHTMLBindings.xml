@@ -6,6 +6,7 @@
  
   <binding id="inputFields">
     <handlers>
+#include ../input-fields-base.inc
     <handler event="keypress" key="a" modifiers="alt"
         command="cmd_selectAll"/>
     <handler event="keypress" key="y" modifiers="accel"
@@ -18,6 +19,7 @@
 
   <binding id="textAreas">
     <handlers>
+#include ../textareas-base.inc
     <handler event="keypress" key="a" modifiers="alt"
         command="cmd_selectAll"/>
     <handler event="keypress" key="y" modifiers="accel"
@@ -69,6 +71,7 @@
 
   <binding id="editor">
     <handlers>
+#include ../editor-base.inc
       <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
       <handler event="keypress" key="z" modifiers="accel,shift" command="cmd_redo"/>
       <handler event="keypress" key="y" modifiers="accel"   command="cmd_redo"/>

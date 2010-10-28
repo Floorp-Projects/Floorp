@@ -68,6 +68,10 @@ ifndef LIBXUL_SDK
 tier_base_dirs += \
 	memory \
 	$(NULL)
+ifeq ($(OS_TARGET),Android)
+tier_base_dirs += other-licenses/android
+endif
+
 endif
 
 ifdef COMPILE_ENVIRONMENT
@@ -89,7 +93,7 @@ check::
 	$(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy $(DIST)/bin
 endif
 
-default alldep all:: $(topsrcdir)/configure $(topsrcdir)/js/src/configure config.status js/src/config.status
+default alldep all:: $(topsrcdir)/configure config.status
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
 	$(RM) -rf $(DIST)/private
@@ -104,24 +108,10 @@ $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	@echo "but your build might not succeed."
 	@exit 1
 
-$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in
-	@echo "STOP!  js/src/configure.in has changed, and your js/src/configure is out of date."
-	@echo "Please rerun autoconf in js/src and re-configure your build directory."
-	@echo "To ignore this message, touch 'js/src/configure' in the source directory,"
-	@echo "but your build might not succeed."
-	@exit 1
-
 config.status: $(topsrcdir)/configure
 	@echo "STOP!  configure has changed and needs to be run in this build directory."
 	@echo "Please rerun configure."
 	@echo "To ignore this message, touch 'config.status' in the build directory,"
-	@echo "but your build might not succeed."
-	@exit 1
-
-js/src/config.status: $(topsrcdir)/js/src/configure
-	@echo "STOP!  js/src/configure has changed and needs to be run in this build directory."
-	@echo "Please rerun js/src/configure."
-	@echo "To ignore this message, touch 'js/src/config.status' in the build directory,"
 	@echo "but your build might not succeed."
 	@exit 1
 
@@ -182,7 +172,7 @@ EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
 
 SYMBOL_INDEX_NAME = \
-  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
+  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
 
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
@@ -242,3 +232,10 @@ maybe_clobber_profiledbuild:
 endif
 
 .PHONY: maybe_clobber_profiledbuild
+
+# Look for R_386_PC32 relocations in shared libs, these
+# break x86_64 builds and SELinux users.
+ifeq ($(OS_TARGET)_$(TARGET_XPCOM_ABI),Linux_x86-gcc3)
+scheck::
+	@relcount=`find $(DIST)/bin -name "*.so" | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo "FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?"; exit 1; else echo "PASSED"; fi
+endif

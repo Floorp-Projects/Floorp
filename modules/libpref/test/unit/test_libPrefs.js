@@ -61,6 +61,42 @@ function run_test() {
             getService(Ci.nsIPrefBranch);
 
   //**************************************************************************//
+  // Nullsafety
+
+  do_check_throws(function() {
+    pb.getPrefType(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.getBoolPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.setBoolPref(null, false); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.getIntPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.setIntPref(null, 0); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.getCharPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.setCharPref(null, null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.getComplexValue(null, Components.interfaces.nsISupportsString); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.setComplexValue(null, Components.interfaces.nsISupportsString, pb); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.clearUserPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.prefHasUserValue(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.lockPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.prefIsLocked(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.unlockPref(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.deleteBranch(null); },  Cr.NS_ERROR_INVALID_ARG);
+  do_check_throws(function() {
+    pb.getChildList(null); },  Cr.NS_ERROR_INVALID_ARG);
+
+  //**************************************************************************//
   // Nonexisting user preferences
 
   do_check_eq(pb.prefHasUserValue("UserPref.nonexistent.hasUserValue"), false);

@@ -81,6 +81,10 @@
   font-family: Arial, sans-serif;
 }
 
+.positionLabel {
+  display: none;
+}
+
 .backgroundBar {
   /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
   /* margin left/right: 1/2 of scrubber thumb width, for overhang. */

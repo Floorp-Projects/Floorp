@@ -94,6 +94,8 @@ _TEST_FILES = \
 		test_bug586961.xul \
 		test_clickevent_on_input.html \
 		test_bug593959.html \
+		test_bug591815.html \
+		test_bug605242.html \
 		$(NULL)
 
 #bug 585630

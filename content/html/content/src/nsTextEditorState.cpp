@@ -73,6 +73,35 @@ static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
 
+struct SelectionState {
+  PRInt32 mStart;
+  PRInt32 mEnd;
+};
+
+class RestoreSelectionState : public nsRunnable {
+public:
+  RestoreSelectionState(nsTextControlFrame *aFrame, PRInt32 aStart, PRInt32 aEnd)
+    : mFrame(aFrame),
+      mWeakFrame(aFrame),
+      mStart(aStart),
+      mEnd(aEnd)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    if (mWeakFrame.IsAlive()) {
+      mFrame->SetSelectionRange(mStart, mEnd);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsTextControlFrame* mFrame;
+  nsWeakFrame mWeakFrame;
+  PRInt32 mStart;
+  PRInt32 mEnd;
+};
+
 /*static*/
 PRBool
 nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
@@ -155,7 +184,7 @@ public:
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
   NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
   NS_IMETHOD GetSelection(PRInt16 type, nsISelection **_retval);
-  NS_IMETHOD ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRInt16 aFlags);
   NS_IMETHOD RepaintSelection(PRInt16 type);
   NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType);
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
@@ -274,12 +303,12 @@ nsTextInputSelectionImpl::GetSelection(PRInt16 type, nsISelection **_retval)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRBool aIsSynchronous)
+nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRInt16 aFlags)
 {
   if (!mFrameSelection) 
     return NS_ERROR_FAILURE; 
 
-  return mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous); 
+  return mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aFlags);
 }
 
 NS_IMETHODIMP
@@ -456,7 +485,8 @@ nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
   }
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION,
+                                 nsISelectionController::SCROLL_SYNCHRONOUS);
 }
 
 NS_IMETHODIMP
@@ -584,6 +614,8 @@ public:
    */
   void SetFrame(nsTextControlFrame *aFrame){mFrame = aFrame;}
 
+  void SettingValue(PRBool aValue) { mSettingValue = aValue; }
+
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSISELECTIONLISTENER
@@ -620,6 +652,11 @@ protected:
    * notification (when this state changes we update undo and redo menus)
    */
   PRPackedBool    mHadRedoItems;
+  /**
+   * Whether we're in the process of a SetValue call, and should therefore
+   * refrain from calling OnValueChanged.
+   */
+  PRPackedBool mSettingValue;
 };
 
 
@@ -633,6 +670,7 @@ nsTextInputListener::nsTextInputListener(nsITextControlElement* aTxtCtrlElement)
 , mSelectionWasCollapsed(PR_TRUE)
 , mHadUndoItems(PR_FALSE)
 , mHadRedoItems(PR_FALSE)
+, mSettingValue(PR_FALSE)
 {
 }
 
@@ -842,7 +880,9 @@ nsTextInputListener::EditAction()
   // Fire input event
   mFrame->FireOnInput();
 
-  mTxtCtrlElement->OnValueChanged(PR_TRUE);
+  if (!mSettingValue) {
+    mTxtCtrlElement->OnValueChanged(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -1114,11 +1154,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   // Use async reflow and painting for text widgets to improve
   // performance.
-
-  // XXX: Using editor async updates exposes bugs 158782, 151882,
-  //      and 165130, so we're disabling it for now, until they
-  //      can be addressed.
-  // editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
+  editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
 
   PRBool shouldInitializeEditor = PR_FALSE;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
@@ -1134,9 +1170,9 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     rv = mBoundFrame->UpdateValueDisplay(PR_FALSE, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    if (aValue) {
+    if (aValue || !mEditorInitialized) {
       // Set the correct value in the root node
-      rv = mBoundFrame->UpdateValueDisplay(PR_TRUE, PR_FALSE, aValue);
+      rv = mBoundFrame->UpdateValueDisplay(PR_TRUE, !mEditorInitialized, aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1315,6 +1351,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   if (mTextListener)
     newEditor->AddEditorObserver(mTextListener);
 
+  // Restore our selection after being bound to a new frame
+  if (mSelState) {
+    nsContentUtils::AddScriptRunner(new RestoreSelectionState(mBoundFrame, mSelState->mStart, mSelState->mEnd));
+    mSelState = nsnull;
+  }
+
   return rv;
 }
 
@@ -1344,6 +1386,20 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // going to use it anymore, so retrieve it for now.
   nsAutoString value;
   GetValue(value, PR_TRUE);
+
+  // Save our selection state if needed.
+  // Note that nsTextControlFrame::GetSelectionRange attempts to initialize the
+  // editor before grabbing the range, and because this is not an acceptable
+  // side effect for unbinding from a text control frame, we need to call
+  // GetSelectionRange before calling DestroyEditor, and only if
+  // mEditorInitialized indicates that we actually have an editor available.
+  if (mEditorInitialized) {
+    mSelState = new SelectionState();
+    nsresult rv = mBoundFrame->GetSelectionRange(&mSelState->mStart, &mSelState->mEnd);
+    if (NS_FAILED(rv)) {
+      mSelState = nsnull;
+    }
+  }
 
   // Destroy our editor
   DestroyEditor();
@@ -1504,6 +1560,20 @@ nsTextEditorState::CreateRootNode()
 nsresult
 nsTextEditorState::CreatePlaceholderNode()
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
+    if (content) {
+      nsAutoString placeholderTxt;
+      content->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder,
+                       placeholderTxt);
+      nsContentUtils::RemoveNewlines(placeholderTxt);
+      NS_ASSERTION(!placeholderTxt.IsEmpty(), "CreatePlaceholderNode() shouldn't \
+be called if @placeholder is the empty string when trimmed from line breaks");
+    }
+  }
+#endif // DEBUG
+
   NS_ENSURE_TRUE(!mPlaceholderDiv, NS_ERROR_UNEXPECTED);
   NS_ENSURE_ARG_POINTER(mBoundFrame);
 
@@ -1719,6 +1789,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
         flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
         mEditor->SetFlags(flags);
 
+        mTextListener->SettingValue(PR_TRUE);
+
         // Also don't enforce max-length here
         PRInt32 savedMaxLength;
         plaintextEditor->GetMaxTextLength(&savedMaxLength);
@@ -1729,6 +1801,9 @@ nsTextEditorState::SetValue(const nsAString& aValue, PRBool aUserInput)
         } else {
           plaintextEditor->InsertText(insertValue);
         }
+
+        mTextListener->SettingValue(PR_FALSE);
+
         if (!weakFrame.IsAlive()) {
           // If the frame was destroyed because of a flush somewhere inside
           // InsertText, mBoundFrame here will be false.  But it's also possible
@@ -1825,6 +1900,10 @@ void
 nsTextEditorState::ValueWasChanged(PRBool aNotify)
 {
   // placeholder management
+  if (!mPlaceholderDiv) {
+    return;
+  }
+
   PRBool showPlaceholder = PR_FALSE;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
   if (!nsContentUtils::IsFocusedContent(content)) {
@@ -1840,6 +1919,9 @@ nsTextEditorState::ValueWasChanged(PRBool aNotify)
 void
 nsTextEditorState::UpdatePlaceholderText(PRBool aNotify)
 {
+  NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
+                                "mPlaceholderDiv isn't set");
+
   // If we don't have a placeholder div, there's nothing to do.
   if (!mPlaceholderDiv)
     return;
@@ -1858,6 +1940,9 @@ void
 nsTextEditorState::SetPlaceholderClass(PRBool aVisible,
                                        PRBool aNotify)
 {
+  NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
+                                "mPlaceholderDiv isn't set");
+
   // No need to do anything if we don't have a frame yet
   if (!mBoundFrame)
     return;

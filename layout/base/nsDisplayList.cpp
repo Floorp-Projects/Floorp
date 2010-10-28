@@ -119,7 +119,7 @@ static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
 static void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                          const nsRect& aDirtyRect) {
   nsRect dirty = aDirtyRect - aFrame->GetOffsetTo(aDirtyFrame);
-  nsRect overflowRect = aFrame->GetOverflowRect();
+  nsRect overflowRect = aFrame->GetVisualOverflowRect();
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
   aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDirtyRectProperty(),
@@ -160,6 +160,9 @@ nsDisplayListBuilder::GetBackgroundPaintFlags() {
   PRUint32 flags = 0;
   if (mSyncDecodeImages) {
     flags |= nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES;
+  }
+  if (mIsPaintingToWindow) {
+    flags |= nsCSSRendering::PAINTBG_TO_WINDOW;
   }
   return flags;
 }
@@ -320,6 +323,8 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   nsAutoTArray<nsDisplayItem*, 512> elements;
   FlattenTo(&elements);
 
+  PRBool forceTransparentSurface = PR_FALSE;
+
   for (PRInt32 i = elements.Length() - 1; i >= 0; --i) {
     nsDisplayItem* item = elements[i];
     nsDisplayItem* belowItem = i < 1 ? nsnull : elements[i - 1];
@@ -339,15 +344,18 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     if (item->ComputeVisibility(aBuilder, aVisibleRegion)) {
       anyVisible = PR_TRUE;
       nsIFrame* f = item->GetUnderlyingFrame();
-      if (item->IsOpaque(aBuilder) && f) {
+      PRBool transparentBackground = PR_FALSE;
+      if (item->IsOpaque(aBuilder, &transparentBackground) && f) {
         // Subtract opaque item from the visible region
         aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(bounds));
       }
+      forceTransparentSurface = forceTransparentSurface || transparentBackground;
     }
     AppendToBottom(item);
   }
 
   mIsOpaque = !aVisibleRegion->Intersects(mVisibleRect);
+  mForceTransparentSurface = forceTransparentSurface;
 #ifdef DEBUG
   mDidComputeVisibility = PR_TRUE;
 #endif
@@ -379,8 +387,9 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                  "Reference frame must be a display root for us to use the layer manager");
     nsIWidget* window = referenceFrame->GetNearestWidget();
     if (window) {
-      layerManager = window->GetLayerManager();
-      if (layerManager) {
+      bool allowRetaining = true;
+      layerManager = window->GetLayerManager(&allowRetaining);
+      if (layerManager && allowRetaining) {
         aBuilder->LayerBuilder()->WillBeginRetainedLayerTransaction(layerManager);
       }
     }
@@ -699,10 +708,93 @@ nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
   }
 }
 
+// Helper for RoundedRectIntersectsRect.
+static PRBool
+CheckCorner(nscoord aXOffset, nscoord aYOffset,
+            nscoord aXRadius, nscoord aYRadius)
+{
+  NS_ABORT_IF_FALSE(aXOffset > 0 && aYOffset > 0,
+                    "must not pass nonpositives to CheckCorner");
+  NS_ABORT_IF_FALSE(aXRadius >= 0 && aYRadius >= 0,
+                    "must not pass negatives to CheckCorner");
+
+  // Avoid floating point math unless we're either (1) within the
+  // quarter-ellipse area at the rounded corner or (2) outside the
+  // rounding.
+  if (aXOffset >= aXRadius || aYOffset >= aYRadius)
+    return PR_TRUE;
+
+  // Convert coordinates to a unit circle with (0,0) as the center of
+  // curvature, and see if we're inside the circle or outside.
+  float scaledX = float(aXRadius - aXOffset) / float(aXRadius);
+  float scaledY = float(aYRadius - aYOffset) / float(aYRadius);
+  return scaledX * scaledX + scaledY * scaledY < 1.0f;
+}
+
+
+/**
+ * Return whether any part of aTestRect is inside of the rounded
+ * rectangle formed by aBounds and aRadii (which are indexed by the
+ * NS_CORNER_* constants in nsStyleConsts.h).
+ *
+ * See also RoundedRectContainsRect.
+ */
+static PRBool
+RoundedRectIntersectsRect(const nsRect& aRoundedRect, nscoord aRadii[8],
+                          const nsRect& aTestRect)
+{
+  NS_ABORT_IF_FALSE(aTestRect.Intersects(aRoundedRect),
+                    "we should already have tested basic rect intersection");
+
+  // distances from this edge of aRoundedRect to opposite edge of aTestRect,
+  // which we know are positive due to the Intersects check above.
+  nsMargin insets;
+  insets.top = aTestRect.YMost() - aRoundedRect.y;
+  insets.right = aRoundedRect.XMost() - aTestRect.x;
+  insets.bottom = aRoundedRect.YMost() - aTestRect.y;
+  insets.left = aTestRect.XMost() - aRoundedRect.x;
+
+  // Check whether the bottom-right corner of aTestRect is inside the
+  // top left corner of aBounds when rounded by aRadii, etc.  If any
+  // corner is not, then fail; otherwise succeed.
+  return CheckCorner(insets.left, insets.top,
+                     aRadii[NS_CORNER_TOP_LEFT_X],
+                     aRadii[NS_CORNER_TOP_LEFT_Y]) &&
+         CheckCorner(insets.right, insets.top,
+                     aRadii[NS_CORNER_TOP_RIGHT_X],
+                     aRadii[NS_CORNER_TOP_RIGHT_Y]) &&
+         CheckCorner(insets.right, insets.bottom,
+                     aRadii[NS_CORNER_BOTTOM_RIGHT_X],
+                     aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) &&
+         CheckCorner(insets.left, insets.bottom,
+                     aRadii[NS_CORNER_BOTTOM_LEFT_X],
+                     aRadii[NS_CORNER_BOTTOM_LEFT_Y]);
+}
+
+// Check that the rounded border of aFrame, added to aToReferenceFrame,
+// intersects aRect.  Assumes that the unrounded border has already
+// been checked for intersection.
+static PRBool
+RoundedBorderIntersectsRect(nsIFrame* aFrame,
+                            const nsPoint& aFrameToReferenceFrame,
+                            const nsRect& aTestRect)
+{
+  NS_ABORT_IF_FALSE(nsRect(aFrameToReferenceFrame,
+                           aFrame->GetSize()).Intersects(aTestRect),
+                    "must intersect non-rounded rect");
+  nscoord radii[8];
+  return !aFrame->GetBorderRadii(radii) ||
+         RoundedRectIntersectsRect(nsRect(aFrameToReferenceFrame,
+                                          aFrame->GetSize()),
+                                   radii, aTestRect);
+}
+
 // Returns TRUE if aContainedRect is guaranteed to be contained in
 // the rounded rect defined by aRoundedRect and aRadii. Complex cases are
 // handled conservatively by returning FALSE in some situations where
 // a more thorough analysis could return TRUE.
+//
+// See also RoundedRectIntersectsRect.
 static PRBool RoundedRectContainsRect(const nsRect& aRoundedRect,
                                       const nscoord aRadii[8],
                                       const nsRect& aContainedRect) {
@@ -727,6 +819,24 @@ static PRBool RoundedRectContainsRect(const nsRect& aRoundedRect,
   return PR_FALSE;
 }
 
+void
+nsDisplayBackground::HitTest(nsDisplayListBuilder* aBuilder,
+                             const nsRect& aRect,
+                             HitTestState* aState,
+                             nsTArray<nsIFrame*> *aOutFrames)
+{
+  // Note that we have to check !mIsThemed here to avoid triggering the
+  // assertion in RoundedBorderIntersectsRect, since when mIsThemed, our
+  // bounds can be different from the frame bounds.
+  if (!mIsThemed &&
+      !RoundedBorderIntersectsRect(mFrame, ToReferenceFrame(), aRect)) {
+    // aRect doesn't intersect our border-radius curve.
+    return;
+  }
+
+  aOutFrames->AppendElement(mFrame);
+}
+
 PRBool
 nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                        nsRegion* aVisibleRegion)
@@ -743,10 +853,20 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 PRBool
-nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
+nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder,
+                              PRBool* aForceTransparentSurface) {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   // theme background overrides any other background
-  if (mIsThemed)
+  if (mIsThemed) {
+    if (aForceTransparentSurface) {
+      const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+      *aForceTransparentSurface = disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
+                                  disp->mAppearance == NS_THEME_WIN_GLASS;
+    }
     return mThemeTransparency == nsITheme::eOpaque;
+  }
 
   nsStyleContext* bgSC;
   if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
@@ -894,7 +1014,7 @@ nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
 
 nsRect
 nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 void
@@ -926,6 +1046,20 @@ nsDisplayOutline::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   }
 
   return PR_TRUE;
+}
+
+void
+nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
+                                const nsRect& aRect,
+                                HitTestState* aState,
+                                nsTArray<nsIFrame*> *aOutFrames)
+{
+  if (!RoundedBorderIntersectsRect(mFrame, ToReferenceFrame(), aRect)) {
+    // aRect doesn't intersect our border-radius curve.
+    return;
+  }
+
+  aOutFrames->AppendElement(mFrame);
 }
 
 void
@@ -1022,7 +1156,7 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 PRBool
@@ -1114,7 +1248,11 @@ nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 PRBool
-nsDisplayWrapList::IsOpaque(nsDisplayListBuilder* aBuilder) {
+nsDisplayWrapList::IsOpaque(nsDisplayListBuilder* aBuilder,
+                            PRBool* aForceTransparentSurface) {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   return mList.IsOpaque();
 }
 
@@ -1158,6 +1296,16 @@ PRBool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
     }
   }
   return PR_TRUE;
+}
+
+PRBool nsDisplayWrapList::HasText()
+{
+  for (nsDisplayItem* i = mList.GetBottom(); i; i = i->GetAbove()) {
+    if (i->HasText()) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 static nsresult
@@ -1243,7 +1391,11 @@ nsDisplayOpacity::~nsDisplayOpacity() {
 }
 #endif
 
-PRBool nsDisplayOpacity::IsOpaque(nsDisplayListBuilder* aBuilder) {
+PRBool nsDisplayOpacity::IsOpaque(nsDisplayListBuilder* aBuilder,
+                                  PRBool* aForceTransparentSurface) {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   // We are never opaque, if our opacity was < 1 then we wouldn't have
   // been created.
   return PR_FALSE;
@@ -1413,8 +1565,12 @@ nsDisplayClipRoundedRect::~nsDisplayClipRoundedRect()
 }
 #endif
 
-PRBool nsDisplayClipRoundedRect::IsOpaque(nsDisplayListBuilder* aBuilder)
+PRBool nsDisplayClipRoundedRect::IsOpaque(nsDisplayListBuilder* aBuilder,
+                                          PRBool* aForceTransparentSurface)
 {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   return PR_FALSE;
 }
 
@@ -1423,7 +1579,16 @@ nsDisplayClipRoundedRect::HitTest(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aRect, HitTestState* aState,
                                   nsTArray<nsIFrame*> *aOutFrames)
 {
-  // FIXME: Consider border-radius.
+  if (!RoundedRectIntersectsRect(mClip, mRadii, aRect)) {
+    // aRect doesn't intersect our border-radius curve.
+
+    // FIXME: This isn't quite sufficient for aRect having nontrivial
+    // size (which is the unusual case here), since it's possible that
+    // the part of aRect that intersects the the rounded rect isn't the
+    // part that intersects the items in mList.
+    return;
+  }
+
   mList.HitTest(aBuilder, aRect, aState, aOutFrames);
 }
 
@@ -1800,7 +1965,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
  */
 nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
 {
-  return mFrame->GetOverflowRect() + ToReferenceFrame();
+  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
 }
 
 /* The transform is opaque iff the transform consists solely of scales and
@@ -1813,8 +1978,12 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
  *
  * We need b and c to be zero.
  */
-PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder)
+PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder,
+                                    PRBool* aForceTransparentSurface)
 {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
   return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
     disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
@@ -1931,7 +2100,7 @@ nsRect nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList), mEffectsFrame(aFrame),
-      mBounds(aFrame->GetOverflowRectRelativeToSelf())
+      mBounds(aFrame->GetVisualOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplaySVGEffects);
 }
@@ -1943,8 +2112,12 @@ nsDisplaySVGEffects::~nsDisplaySVGEffects()
 }
 #endif
 
-PRBool nsDisplaySVGEffects::IsOpaque(nsDisplayListBuilder* aBuilder)
+PRBool nsDisplaySVGEffects::IsOpaque(nsDisplayListBuilder* aBuilder,
+                                     PRBool* aForceTransparentSurface)
 {
+  if (aForceTransparentSurface) {
+    *aForceTransparentSurface = PR_FALSE;
+  }
   return PR_FALSE;
 }
 

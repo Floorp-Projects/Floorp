@@ -552,7 +552,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     treeOp->Init(eTreeOpDoneCreatingElement, aElement);
     return;
   }
-  if (aName == nsHtml5Atoms::meta) {
+  if (aName == nsHtml5Atoms::meta && !fragment) {
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpProcessMeta, aElement);

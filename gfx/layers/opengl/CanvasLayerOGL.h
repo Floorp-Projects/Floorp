@@ -38,6 +38,11 @@
 #ifndef GFX_CANVASLAYEROGL_H
 #define GFX_CANVASLAYEROGL_H
 
+#ifdef MOZ_IPC
+# include "mozilla/layers/PLayers.h"
+# include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
+
 #include "LayerManagerOGL.h"
 #include "gfxASurface.h"
 
@@ -81,6 +86,47 @@ protected:
   PRPackedBool mGLBufferIsPremultiplied;
   PRPackedBool mNeedsYFlip;
 };
+
+#ifdef MOZ_IPC
+// NB: eventually we'll have separate shadow canvas2d and shadow
+// canvas3d layers, but currently they look the same from the
+// perspective of the compositor process
+class ShadowCanvasLayerOGL : public ShadowCanvasLayer,
+                             public LayerOGL
+{
+  typedef gl::TextureImage TextureImage;
+
+public:
+  ShadowCanvasLayerOGL(LayerManagerOGL* aManager);
+  virtual ~ShadowCanvasLayerOGL();
+
+  // CanvasLayer impl
+  virtual void Initialize(const Data& aData);
+  // This isn't meaningful for shadow canvas.
+  virtual void Updated(const nsIntRect&) {}
+
+  // ShadowCanvasLayer impl
+  virtual already_AddRefed<gfxSharedImageSurface>
+  Swap(gfxSharedImageSurface* aNewFront);
+
+  virtual void DestroyFrontBuffer();
+
+  // LayerOGL impl
+  void Destroy();
+  Layer* GetLayer();
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset);
+
+private:
+  nsRefPtr<TextureImage> mTexImage;
+
+
+  // XXX FIXME holding to free
+  nsRefPtr<gfxSharedImageSurface> mDeadweight;
+
+
+};
+#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

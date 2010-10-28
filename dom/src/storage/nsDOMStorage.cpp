@@ -76,6 +76,10 @@ static const PRUint32 DEFAULT_OFFLINE_APP_QUOTA = 200 * 1024;
 // ... but warn if it goes over this amount
 static const PRUint32 DEFAULT_OFFLINE_WARN_QUOTA = 50 * 1024;
 
+// Intervals to flush the temporary table after in seconds
+#define NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_INACTIVITY_TIME (5)
+#define NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_AGE (30)
+
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
 static const char kDefaultQuota[] = "dom.storage.default_quota";
@@ -414,6 +418,10 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
       return nsDOMStorage::gStorageDB->DropSessionOnlyStoragesForHost(host);
 #endif
     }
+  } else if (!strcmp(aTopic, "timer-callback")) {
+    nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
+    if (obsserv)
+      obsserv->NotifyObservers(nsnull, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, nsnull);
   }
 
   return NS_OK;
@@ -533,6 +541,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageObsolete)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageObsolete)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageObsolete)
 NS_INTERFACE_MAP_END
 
@@ -563,6 +573,7 @@ nsDOMStorage::nsDOMStorage()
   , mItemsCached(PR_FALSE)
   , mEventBroadcaster(nsnull)
   , mCanUseChromePersist(false)
+  , mLoadedTemporaryTable(false)
 {
   mSecurityChecker = this;
   mItems.Init(8);
@@ -581,6 +592,9 @@ nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
 #endif
   , mEventBroadcaster(nsnull)
   , mCanUseChromePersist(aThat.mCanUseChromePersist)
+  , mLoadedTemporaryTable(aThat.mLoadedTemporaryTable)
+  , mLastTemporaryTableAccessTime(aThat.mLastTemporaryTableAccessTime)
+  , mTemporaryTableAge(aThat.mTemporaryTableAge)
 {
   mSecurityChecker = this;
   mItems.Init(8);
@@ -686,11 +700,10 @@ nsDOMStorage::InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aD
 
   nsCOMPtr<nsIURI> URI;
   if (NS_SUCCEEDED(aPrincipal->GetURI(getter_AddRefs(URI))) && URI) {
-    PRBool isAbout;
-    mCanUseChromePersist =
-      (NS_SUCCEEDED(URI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
-      (NS_SUCCEEDED(URI->SchemeIs("about", &isAbout)) && isAbout);
+    mCanUseChromePersist = URICanUseChromePersist(URI);
   }
+
+  RegisterObservers();
 
   return NS_OK;
 }
@@ -717,6 +730,9 @@ nsDOMStorage::InitAsGlobalStorage(const nsACString &aDomainDemanded)
 
   mStorageType = GlobalStorage;
   mEventBroadcaster = this;
+
+  RegisterObservers();
+
   return NS_OK;
 }
 
@@ -794,8 +810,10 @@ nsDOMStorage::CanUseStorage(PRPackedBool* aSessionOnly)
     PRUint32 cookieBehavior = nsContentUtils::GetIntPref(kCookiesBehavior);
     PRUint32 lifetimePolicy = nsContentUtils::GetIntPref(kCookiesLifetimePolicy);
 
-    // treat ask as reject always
-    if (cookieBehavior == BEHAVIOR_REJECT || lifetimePolicy == ASK_BEFORE_ACCEPT)
+    // Treat "ask every time" as "reject always".
+    // Chrome persistent pages can bypass this check.
+    if ((cookieBehavior == BEHAVIOR_REJECT || lifetimePolicy == ASK_BEFORE_ACCEPT) &&
+        !URICanUseChromePersist(subjectURI))
       return PR_FALSE;
 
     if (lifetimePolicy == ACCEPT_SESSION)
@@ -823,6 +841,15 @@ nsDOMStorage::CacheStoragePermissions()
 
   NS_ASSERTION(mSecurityChecker, "Has non-null mSecurityChecker");
   return mSecurityChecker->CanAccess(subjectPrincipal);
+}
+
+// static
+PRBool
+nsDOMStorage::URICanUseChromePersist(nsIURI* aURI) {
+  PRBool isAbout;
+  return
+    (NS_SUCCEEDED(aURI->SchemeIs("moz-safe-about", &isAbout)) && isAbout) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("about", &isAbout)) && isAbout);
 }
 
 bool
@@ -1033,31 +1060,32 @@ nsDOMStorage::SetItem(const nsAString& aKey, const nsAString& aData)
   if (aKey.IsEmpty())
     return NS_OK;
 
+  nsresult rv;
   nsString oldValue;
   SetDOMStringToNull(oldValue);
 
-  nsresult rv;
-  nsRefPtr<nsDOMStorageItem> newitem = nsnull;
+  // First store the value to the database, we need to do this before we update
+  // the mItems cache.  SetDBValue is using the old cached value to decide
+  // on quota checking.
+  bool isCallerSecure = IsCallerSecure();
+  if (UseDB()) {
+    rv = SetDBValue(aKey, aData, isCallerSecure);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsSessionStorageEntry *entry = mItems.GetEntry(aKey);
   if (entry) {
-    if (entry->mItem->IsSecure() && !IsCallerSecure()) {
+    if (entry->mItem->IsSecure() && !isCallerSecure) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
     oldValue = entry->mItem->GetValueInternal();
     entry->mItem->SetValueInternal(aData);
   }
   else {
-    newitem = new nsDOMStorageItem(this, aKey, aData, IsCallerSecure());
+    nsRefPtr<nsDOMStorageItem> newitem =
+      new nsDOMStorageItem(this, aKey, aData, isCallerSecure);
     if (!newitem)
       return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (UseDB()) {
-    rv = SetDBValue(aKey, aData, IsCallerSecure());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (newitem) {
     entry = mItems.PutEntry(aKey);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
     entry->mItem = newitem;
@@ -1102,7 +1130,7 @@ NS_IMETHODIMP nsDOMStorage::RemoveItem(const nsAString& aKey)
                                aKey.Length() + value.Length());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mItemsCached = PR_FALSE;
+    // Before bug 536544 got fixed we were dropping mItemsCached flag here
 #endif
   }
   else if (entry) {
@@ -1225,6 +1253,23 @@ nsDOMStorage::CacheKeysFromDB()
 }
 
 nsresult
+nsDOMStorage::GetCachedValue(const nsAString& aKey, nsAString& aValue,
+                             PRBool* aSecure)
+{
+  aValue.Truncate();
+  *aSecure = PR_FALSE;
+
+  nsSessionStorageEntry *entry = mItems.GetEntry(aKey);
+  if (!entry)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  aValue = entry->mItem->GetValueInternal();
+  *aSecure = entry->mItem->IsSecure();
+
+  return NS_OK;
+}
+
+nsresult
 nsDOMStorage::GetDBValue(const nsAString& aKey, nsAString& aValue,
                          PRBool* aSecure)
 {
@@ -1281,7 +1326,7 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
                           &usage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mItemsCached = PR_FALSE;
+  // Before bug 536544 got fixed we were dropping mItemsCached flag here
 
   if (warnQuota >= 0 && usage > warnQuota) {
     // try to include the window that exceeded the warn quota
@@ -1458,6 +1503,84 @@ nsDOMStorage::BroadcastChangeNotification(const nsSubstring &aKey,
   observerService->NotifyObservers((nsIDOMStorageObsolete *)this,
                                    "dom-storage-changed",
                                    NS_ConvertUTF8toUTF16(mDomain).get());
+}
+
+nsresult
+nsDOMStorage::MaybeCommitTemporaryTable(bool force)
+{
+#ifdef MOZ_STORAGE
+  if (!UseDB())
+    return NS_OK;
+
+  if (!mLoadedTemporaryTable)
+    return NS_OK;
+
+  // If we are not forced to flush (e.g. on shutdown) then don't flush if the
+  // last table access is less then 5 seconds ago or the table itself is not
+  // older then 30 secs
+  if (!force &&
+     ((TimeStamp::Now() - mLastTemporaryTableAccessTime).ToSeconds() < 
+       NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_INACTIVITY_TIME) &&
+     ((TimeStamp::Now() - mTemporaryTableAge).ToSeconds() < 
+       NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_AGE))
+    return NS_OK;
+
+  return gStorageDB->FlushAndDeleteTemporaryTableForStorage(this);
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMStorage::RegisterObservers()
+{
+  nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
+  if (obsserv) {
+    obsserv->AddObserver(this, "profile-before-change", PR_TRUE);
+    obsserv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    obsserv->AddObserver(this, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, PR_TRUE);
+  }
+  return NS_OK;
+}
+
+bool
+nsDOMStorage::WasTemporaryTableLoaded()
+{
+  return mLoadedTemporaryTable;
+}
+
+void
+nsDOMStorage::SetTemporaryTableLoaded(bool loaded)
+{
+  if (loaded) {
+    mLastTemporaryTableAccessTime = TimeStamp::Now();
+    if (!mLoadedTemporaryTable)
+      mTemporaryTableAge = mLastTemporaryTableAccessTime;
+  }
+
+  mLoadedTemporaryTable = loaded;
+}
+
+NS_IMETHODIMP
+nsDOMStorage::Observe(nsISupports *subject,
+                      const char *topic,
+                      const PRUnichar *data)
+{
+  bool isProfileBeforeChange = !strcmp(topic, "profile-before-change");
+  bool isXPCOMShutdown = !strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  bool isFlushTimer = !strcmp(topic, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER);
+
+  if (isXPCOMShutdown || isProfileBeforeChange || isFlushTimer) {
+    nsresult rv = MaybeCommitTemporaryTable(isXPCOMShutdown || isProfileBeforeChange);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("DOMStorage: temporary table commit failed");
+    }
+
+    return NS_OK;
+  }
+
+  NS_WARNING("Unrecognized topic in nsDOMStorage::Observe");
+  return NS_OK;
 }
 
 //
@@ -2123,4 +2246,3 @@ nsDOMStorageEventObsolete::InitStorageEvent(const nsAString& aTypeArg,
 
   return NS_OK;
 }
-

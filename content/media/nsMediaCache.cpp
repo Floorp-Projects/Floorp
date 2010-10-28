@@ -49,6 +49,7 @@
 #include "nsMediaStream.h"
 #include "nsMathUtils.h"
 #include "prlog.h"
+#include "nsIPrivateBrowsingService.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaCacheLog;
@@ -89,6 +90,42 @@ using mozilla::TimeDuration;
 // size limits).
 static nsMediaCache* gMediaCache;
 
+class nsMediaCacheFlusher : public nsIObserver,
+                            public nsSupportsWeakReference {
+  nsMediaCacheFlusher() {}
+  ~nsMediaCacheFlusher();
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static void Init();
+};
+
+static nsMediaCacheFlusher* gMediaCacheFlusher;
+
+NS_IMPL_ISUPPORTS2(nsMediaCacheFlusher, nsIObserver, nsISupportsWeakReference)
+
+nsMediaCacheFlusher::~nsMediaCacheFlusher()
+{
+  gMediaCacheFlusher = nsnull;
+}
+
+void nsMediaCacheFlusher::Init()
+{
+  if (gMediaCacheFlusher) {
+    return;
+  }
+
+  gMediaCacheFlusher = new nsMediaCacheFlusher();
+  NS_ADDREF(gMediaCacheFlusher);
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(gMediaCacheFlusher, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
+  }
+}
+
 class nsMediaCache {
 public:
   friend class nsMediaCacheStream::BlockList;
@@ -119,7 +156,9 @@ public:
     MOZ_COUNT_DTOR(nsMediaCache);
   }
 
-  // Main thread only. Creates the backing cache file.
+  // Main thread only. Creates the backing cache file. If this fails,
+  // then the cache is still in a semi-valid state; mFD will be null,
+  // so all I/O on the cache file will fail.
   nsresult Init();
   // Shut down the global cache if it's no longer needed. We shut down
   // the cache as soon as there are no streams. This means that during
@@ -127,6 +166,10 @@ public:
   // many times, but that's OK since starting it up is cheap and
   // shutting it down cleans things up and releases disk space.
   static void MaybeShutdown();
+
+  // Brutally flush the cache contents. Main thread only.
+  static void Flush();
+  void FlushInternal();
 
   // Cache-file access methods. These are the lowest-level cache methods.
   // mMonitor must be held; these can be called on any thread.
@@ -328,6 +371,16 @@ protected:
 #endif
 };
 
+NS_IMETHODIMP
+nsMediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
+{
+  if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0 &&
+      NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
+    nsMediaCache::Flush();
+  }
+  return NS_OK;
+}
+
 void nsMediaCacheStream::BlockList::AddFirstBlock(PRInt32 aBlock)
 {
   NS_ASSERTION(!mEntries.GetEntry(aBlock), "Block already in list");
@@ -494,6 +547,7 @@ nsresult
 nsMediaCache::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  NS_ASSERTION(!mFD, "Cache file already open?");
 
   if (!mMonitor) {
     // the constructor failed
@@ -524,7 +578,39 @@ nsMediaCache::Init()
   }
 #endif
 
+  nsMediaCacheFlusher::Init();
+
   return NS_OK;
+}
+
+void
+nsMediaCache::Flush()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  if (!gMediaCache)
+    return;
+
+  gMediaCache->FlushInternal();
+}
+
+void
+nsMediaCache::FlushInternal()
+{
+  nsAutoMonitor mon(mMonitor);
+
+  for (PRInt32 blockIndex = 0; blockIndex < mIndex.Length(); ++blockIndex) {
+    FreeBlock(blockIndex);
+  }
+
+  // Truncate file, close it, and reopen
+  Truncate();
+  NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
+  if (mFD) {
+    PR_Close(mFD);
+    mFD = nsnull;
+  }
+  Init();
 }
 
 void
@@ -542,6 +628,7 @@ nsMediaCache::MaybeShutdown()
   // This function is static so we don't have to delete 'this'.
   delete gMediaCache;
   gMediaCache = nsnull;
+  NS_IF_RELEASE(gMediaCacheFlusher);
 }
 
 static void

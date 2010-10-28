@@ -382,6 +382,11 @@ bool Blit::setFormatConvertShaders(GLenum destFormat)
 
 IDirect3DTexture9 *Blit::copySurfaceToTexture(IDirect3DSurface9 *surface, const RECT &sourceRect)
 {
+    if (!surface)
+    {
+        return NULL;
+    }
+
     egl::Display *display = getDisplay();
     IDirect3DDevice9 *device = getDevice();
 

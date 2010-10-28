@@ -27,29 +27,23 @@
       let db = event.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
-      request = db.createObjectStore("test store", "foo");
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("test store", "foo");
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStore.name, "Correct name");
 
       is(objectStore.indexNames.length, 0, "Correct indexNames list");
 
-      request = objectStore.createIndex(indexName, "foo");
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      objectStore.createIndex(indexName, "foo");
 
       is(objectStore.indexNames.length, 1, "Correct indexNames list");
       is(objectStore.indexNames.item(0), indexName, "Correct name");
 
-      request = objectStore.removeIndex(indexName);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
+      objectStore.removeIndex(indexName);
 
       is(event.result, undefined, "Correct result");
       is(objectStore.indexNames.length, 0, "Correct indexNames list");

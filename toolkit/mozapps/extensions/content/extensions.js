@@ -235,6 +235,19 @@ var gEventManager = {
     contextMenu.addEventListener("popupshowing", function() {
       var addon = gViewController.currentViewObj.getSelectedAddon();
       contextMenu.setAttribute("addontype", addon.type);
+      
+      var menuSep = document.getElementById("addonitem-menuseparator");
+      var countEnabledMenuCmds = 0;
+      for (var i = 0; i < contextMenu.children.length; i++) {
+        if (contextMenu.children[i].nodeName == "menuitem" && 
+          gViewController.isCommandEnabled(contextMenu.children[i].command)) {
+            countEnabledMenuCmds++;
+        }
+      }
+      
+      // with only one menu item, we hide the menu separator
+      menuSep.hidden = (countEnabledMenuCmds <= 1);
+      
     }, false);
   },
 
@@ -297,12 +310,11 @@ var gEventManager = {
   },
 
   delegateInstallEvent: function(aEvent, aParams) {
-    var install = aParams[0];
-    if (install.existingAddon) {
-      // install is an update
-      let addon = install.existingAddon;
-      this.delegateAddonEvent(aEvent, [addon].concat(aParams));
-    }
+    var existingAddon = aEvent == "onExternalInstall" ? aParams[1] : aParams[0].existingAddon;
+    // If the install is an update then send the event to all listeners
+    // registered for the existing add-on
+    if (existingAddon)
+      this.delegateAddonEvent(aEvent, [existingAddon].concat(aParams));
 
     for (let i = 0; i < this._installListeners.length; i++) {
       let listener = this._installListeners[i];
@@ -531,6 +543,28 @@ var gViewController = {
   },
 
   commands: {
+    cmd_back: {
+      isEnabled: function() {
+        return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .canGoBack;
+      },
+      doCommand: function() {
+        window.history.back();
+      }
+    },
+
+    cmd_forward: {
+      isEnabled: function() {
+        return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .canGoForward;
+      },
+      doCommand: function() {
+        window.history.forward();
+      }
+    },
+
     cmd_restartApp: {
       isEnabled: function() true,
       doCommand: function() {
@@ -609,7 +643,7 @@ var gViewController = {
 
     cmd_showItemDetails: {
       isEnabled: function(aAddon) {
-        return !!aAddon;
+        return !!aAddon && (gViewController.currentViewObj != gDetailView);
       },
       doCommand: function(aAddon) {
         gViewController.loadView("addons://detail/" +
@@ -625,7 +659,7 @@ var gViewController = {
         gViewController.updateCommand("cmd_findAllUpdates");
         document.getElementById("updates-noneFound").hidden = true;
         document.getElementById("updates-progress").hidden = false;
-        document.getElementById("updates-manualUpdatesFound").hidden = true;
+        document.getElementById("updates-manualUpdatesFound-btn").hidden = true;
 
         var pendingChecks = 0;
         var numUpdated = 0;
@@ -644,7 +678,7 @@ var gViewController = {
           gUpdatesView.maybeRefresh();
 
           if (numManualUpdates > 0 && numUpdated == 0) {
-            document.getElementById("updates-manualUpdatesFound").hidden = false;
+            document.getElementById("updates-manualUpdatesFound-btn").hidden = false;
             return;
           }
 
@@ -655,7 +689,7 @@ var gViewController = {
 
           if (restartNeeded) {
             document.getElementById("updates-downloaded").hidden = false;
-            document.getElementById("updates-restart").hidden = false;
+            document.getElementById("updates-restart-btn").hidden = false;
           } else {
             document.getElementById("updates-installed").hidden = false;
           }
@@ -1765,6 +1799,10 @@ var gListView = {
     if (this._types.indexOf(aAddon.type) == -1)
       return;
 
+    // The existing list item will take care of upgrade installs
+    if (aExistingAddon)
+      return;
+
     var item = createItem(aAddon, false);
     this._listBox.insertBefore(item, this._listBox.firstChild);
   },
@@ -1850,8 +1888,7 @@ var gDetailView = {
 
     this._addon = aAddon;
     gEventManager.registerAddonListener(this, aAddon.id);
-    if (aAddon.install)
-      gEventManager.registerInstallListener(this);
+    gEventManager.registerInstallListener(this);
 
     this.node.setAttribute("type", aAddon.type);
 
@@ -1968,13 +2005,23 @@ var gDetailView = {
       this._autoUpdate.hidden = false;
       this._autoUpdate.value = aAddon.applyBackgroundUpdates;
       let hideFindUpdates = shouldAutoUpdate(this._addon);
-      document.getElementById("detail-findUpdates").hidden = hideFindUpdates;
+      document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     } else {
       this._autoUpdate.hidden = true;
-      document.getElementById("detail-findUpdates").hidden = false;
+      document.getElementById("detail-findUpdates-btn").hidden = false;
     }
 
-    document.getElementById("detail-prefs").hidden = !aIsRemote && !aAddon.optionsURL;
+    document.getElementById("detail-prefs-btn").hidden = !aIsRemote && !aAddon.optionsURL;
+    
+    var gridRows = document.querySelectorAll("#detail-grid rows row");
+    for (var i = 0, first = true; i < gridRows.length; ++i) {
+      if (first && window.getComputedStyle(gridRows[i], null).getPropertyValue("display") != "none") {
+        gridRows[i].setAttribute("first-row", true);
+        first = false;
+      } else {
+        gridRows[i].removeAttribute("first-row");
+      }
+    }
 
     this.updateState();
 
@@ -2138,8 +2185,19 @@ var gDetailView = {
     if (aProperties.indexOf("applyBackgroundUpdates") != -1) {
       this._autoUpdate.value = this._addon.applyBackgroundUpdates;
       let hideFindUpdates = shouldAutoUpdate(this._addon);
-      document.getElementById("detail-findUpdates").hidden = hideFindUpdates;
+      document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     }
+  },
+
+  onExternalInstall: function(aAddon, aExistingAddon, aNeedsRestart) {
+    // Only care about upgrades for the currently displayed add-on
+    if (!aExistingAddon || aExistingAddon.id != this._addon.id)
+      return;
+
+    if (!aNeedsRestart)
+      this._updateView(aAddon, false);
+    else
+      this.updateState();
   },
 
   onInstallCancelled: function(aInstall) {
@@ -2168,7 +2226,7 @@ var gUpdatesView = {
 
     this._categoryItem = gCategories.get("addons://updates/available");
 
-    this._updateSelected = document.getElementById("update-selected");
+    this._updateSelected = document.getElementById("update-selected-btn");
     this._updateSelected.addEventListener("command", function() {
       gUpdatesView.installSelected();
     }, false);

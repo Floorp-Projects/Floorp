@@ -572,6 +572,23 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
   return dir;
 }
 
+/**
+ * Sets the last modified time of the extension, usually to trigger an update
+ * of its metadata. If the extension is unpacked, this function assumes that
+ * the extension contains only the install.rdf file.
+ *
+ * @param aExt   a file pointing to either the packed extension or its unpacked directory.
+ * @param aTime  the time to which we set the lastModifiedTime of the extension
+ */
+function setExtensionModifiedTime(aExt, aTime) {
+  aExt.lastModifiedTime = aTime;
+  if (aExt.isDirectory()) {
+    aExt = aExt.clone();
+    aExt.append("install.rdf");
+    aExt.lastModifiedTime = aTime;
+  }
+}
+
 function registerDirectory(aKey, aDir) {
   var dirProvider = {
     getFile: function(aProp, aPersistent) {
@@ -1031,6 +1048,17 @@ do_register_cleanup(function() {
   while (entry = dirEntries.nextFile) {
     do_throw("Found unexpected file in temporary directory: " + entry.leafName);
   }
+
+  var testDir = gProfD.clone();
+  testDir.append("extensions");
+  testDir.append("trash");
+  do_check_false(testDir.exists());
+
+  testDir.leafName = "staged";
+  do_check_false(testDir.exists());
+
+  testDir.leafName = "staged-xpis";
+  do_check_false(testDir.exists());
 
   shutdownManager();
 });

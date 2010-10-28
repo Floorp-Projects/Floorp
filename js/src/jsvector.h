@@ -314,6 +314,8 @@ class Vector : AllocPolicy
 
     /* accessors */
 
+    enum { InlineLength = N };
+
     size_t length() const {
         return usingInlineStorage() ? inlineLength() : heapLength();
     }
@@ -382,6 +384,7 @@ class Vector : AllocPolicy
 
     /* Leave new elements as uninitialized memory. */
     bool growByUninitialized(size_t incr);
+    bool resizeUninitialized(size_t newLength);
 
     void clear();
 
@@ -630,6 +633,17 @@ Vector<T,N,AP>::resize(size_t newLength)
     size_t curLength = length();
     if (newLength > curLength)
         return growBy(newLength - curLength);
+    shrinkBy(curLength - newLength);
+    return true;
+}
+
+template <class T, size_t N, class AP>
+JS_ALWAYS_INLINE bool
+Vector<T,N,AP>::resizeUninitialized(size_t newLength)
+{
+    size_t curLength = length();
+    if (newLength > curLength)
+        return growByUninitialized(newLength - curLength);
     shrinkBy(curLength - newLength);
     return true;
 }

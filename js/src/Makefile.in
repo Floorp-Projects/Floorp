@@ -87,7 +87,17 @@ else
 MODULE_OPTIMIZE_FLAGS = -O2 -ip
 endif
 else # not INTEL_CXX
-MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing -fomit-frame-pointer
+
+MODULE_OPTIMIZE_FLAGS = -O3 -fstrict-aliasing
+
+# We normally want -fomit-frame-pointer, but we want an explicit
+# -fno-omit-frame-pointer if we're using a sampling profiler.
+ifndef MOZ_PROFILING
+MODULE_OPTIMIZE_FLAGS += -fomit-frame-pointer
+else
+MODULE_OPTIMIZE_FLAGS += -fno-omit-frame-pointer
+endif
+
 endif
 else # not GNU_CXX
 ifeq ($(OS_ARCH),SunOS)
@@ -116,6 +126,7 @@ DIST_INSTALL = 1
 VPATH		= $(srcdir)
 
 CPPSRCS		= \
+		jsanalyze.cpp \
 		jsapi.cpp \
 		jsarena.cpp \
 		jsarray.cpp \
@@ -171,6 +182,7 @@ INSTALLED_HEADERS = \
 		jsautocfg.h \
 		$(CURDIR)/jsautokw.h \
 		js.msg \
+		jsanalyze.h \
 		jsapi.h \
 		jsarray.h \
 		jsarena.h \
@@ -294,7 +306,6 @@ ifdef ENABLE_METHODJIT
 VPATH += 	$(srcdir)/methodjit
 
 CPPSRCS += 	MethodJIT.cpp \
-		BytecodeAnalyzer.cpp \
 		StubCalls.cpp \
 		Compiler.cpp \
 		FrameState.cpp \
@@ -349,22 +360,6 @@ CPPSRCS += 	checks.cc \
 		platform.cc \
 		utils.cc \
 		$(NONE)
-
-INSTALLED_HEADERS += \
-		cached-powers.h \
-		checks.h \
-		conversions.h \
-		diy-fp.h \
-		double.h \
-		dtoa.h \
-		fast-dtoa.h \
-		globals.h \
-		include-v8.h \
-		platform.h \
-		powers-ten.h \
-		utils.h \
-		v8.h \
-		$(NULL)
 
 #
 # END enclude sources for V8 dtoa
@@ -570,11 +565,11 @@ endif
 ifdef ENABLE_TRACEJIT
 ifndef WINCE
 check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace_test.py \
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 
 check-valgrind::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace_test.py \
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 endif

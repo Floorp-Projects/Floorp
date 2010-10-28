@@ -844,6 +844,19 @@ nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 /* virtual */ PRBool
 nsIFrame::GetBorderRadii(nscoord aRadii[8]) const
 {
+  if (IsThemed()) {
+    // When we're themed, the native theme code draws the border and
+    // background, and therefore it doesn't make sense to tell other
+    // code that's interested in border-radius that we have any radii.
+    //
+    // In an ideal world, we might have a way for the them to tell us an
+    // border radius, but since we don't, we're better off assuming
+    // zero.
+    NS_FOR_CSS_HALF_CORNERS(corner) {
+      aRadii[corner] = 0;
+    }
+    return PR_FALSE;
+  }
   nsSize size = GetSize();
   return ComputeBorderRadii(GetStyleBorder()->mBorderRadius, size, size,
                             GetSkipSides(), aRadii);
@@ -1197,8 +1210,8 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
  * Returns PR_TRUE if aFrame is overflow:hidden and we should interpret
  * that as -moz-hidden-unscrollable.
  */
-static PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
-                                          const nsStyleDisplay* aDisp)
+static inline PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
+                                                 const nsStyleDisplay* aDisp)
 {
   if (aDisp->mOverflowX != NS_STYLE_OVERFLOW_HIDDEN)
     return PR_FALSE;
@@ -1215,6 +1228,25 @@ static PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
        type == nsGkAtoms::bcTableCellFrame;
 }
 
+static inline PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame,
+                                                    const nsStyleDisplay* aDisp)
+{
+  // These conditions on aDisp need to match the conditions for which in
+  // non-paginated contexts we'd create a scrollframe for a block but in a
+  // paginated context we don't.  See nsCSSFrameConstructor::FindDisplayData
+  // for the relevant conditions.  These conditions must also match those in
+  // nsCSSFrameConstructor::ConstructNonScrollableBlock for creating block
+  // formatting context roots for forced-to-be-no-longer scrollable blocks in
+  // paginated contexts.
+  return
+    aFrame->PresContext()->IsPaginated() &&
+    aDisp->IsBlockInside() &&
+    aDisp->IsScrollableOverflow() &&
+    aDisp->IsBlockOutside() &&
+    aFrame->GetType() == nsGkAtoms::blockFrame &&
+    !aFrame->GetContent()->IsInNativeAnonymousSubtree();
+}
+
 static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
                                     nsIFrame* aFrame,
                                     const nsStyleDisplay* aDisp, nsRect* aRect) {
@@ -1224,8 +1256,10 @@ static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
   // changed -moz-hidden-unscrollable to apply to any kind of frame.
 
   // Only -moz-hidden-unscrollable is handled here (and 'hidden' for table
-  // frames). Other overflow clipping is applied by nsHTML/XULScrollFrame.
-  if (!ApplyOverflowHiddenClipping(aFrame, aDisp)) {
+  // frames, and any non-visible value for blocks in a paginated context).
+  // Other overflow clipping is applied by nsHTML/XULScrollFrame.
+  if (!ApplyOverflowHiddenClipping(aFrame, aDisp) &&
+      !ApplyPaginatedOverflowClipping(aFrame, aDisp)) {
     PRBool clip = aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP;
     if (!clip)
       return PR_FALSE;
@@ -1619,7 +1653,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->GetSelectedFramesOnly() &&
       (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-    dirty = aChild->GetOverflowRect();
+    dirty = aChild->GetVisualOverflowRect();
   } else if (!(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
     // No need to descend into aChild to catch placeholders for visible
     // positioned stuff. So see if we can short-circuit frame traversal here.
@@ -1631,7 +1665,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // area even if the scrollframe itself doesn't.
     if (aChild != aBuilder->GetIgnoreScrollFrame()) {
       nsRect childDirty;
-      if (!childDirty.IntersectRect(dirty, aChild->GetOverflowRect()))
+      if (!childDirty.IntersectRect(dirty, aChild->GetVisualOverflowRect()))
         return NS_OK;
       // Usually we could set dirty to childDirty now but there's no
       // benefit, and it can be confusing. It can especially confuse
@@ -3418,7 +3452,7 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 nsRect
 nsIFrame::ComputeTightBounds(gfxContext* aContext) const
 {
-  return GetOverflowRect();
+  return GetVisualOverflowRect();
 }
 
 nsRect
@@ -3429,7 +3463,7 @@ nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
       GetStyleDisplay()->mAppearance) {
     // Not necessarily tight, due to clipping, negative
     // outline-offset, and lots of other issues, but that's OK
-    return GetOverflowRect();
+    return GetVisualOverflowRect();
   }
 
   nsRect r(0, 0, 0, 0);
@@ -4065,6 +4099,9 @@ nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
         aDamageRect + nsPoint(aX, aY));
     // Don't need to invalidate any more Thebes layers
     aFlags |= INVALIDATE_NO_THEBES_LAYERS;
+    if (aFlags & INVALIDATE_ONLY_THEBES_LAYERS) {
+      return;
+    }
   }
   if (IsTransformed()) {
     nsRect newDamageRect;
@@ -4177,14 +4214,14 @@ nsIFrame::InvalidateRectDifference(const nsRect& aR1, const nsRect& aR2)
 void
 nsIFrame::InvalidateFrameSubtree()
 {
-  Invalidate(GetOverflowRectRelativeToSelf());
+  Invalidate(GetVisualOverflowRectRelativeToSelf());
   FrameLayerBuilder::InvalidateThebesLayersInSubtree(this);
 }
 
 void
 nsIFrame::InvalidateOverflowRect()
 {
-  Invalidate(GetOverflowRectRelativeToSelf());
+  Invalidate(GetVisualOverflowRectRelativeToSelf());
 }
 
 NS_DECLARE_FRAME_PROPERTY(DeferInvalidatesProperty, nsIFrame::DestroyRegion)
@@ -4198,6 +4235,9 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
   if ((mState & NS_FRAME_HAS_CONTAINER_LAYER) &&
       !(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
     FrameLayerBuilder::InvalidateThebesLayerContents(this, aDamageRect);
+    if (aFlags & INVALIDATE_ONLY_THEBES_LAYERS) {
+      return;
+    }
   }
 
   PRUint32 flags =
@@ -4293,6 +4333,11 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
 
       nscoord offset = outline->mOutlineOffset;
       nscoord inflateBy = NS_MAX(width + offset, 0);
+      // FIXME (bug 599652): We probably want outline to be drawn around
+      // something smaller than the visual overflow rect (perhaps the
+      // scrollable overflow rect is correct).  When we change that, we
+      // need to keep this code (and the storing of properties just
+      // above) in sync with GetOutlineInnerRect in nsCSSRendering.cpp.
       r.Inflate(inflateBy, inflateBy);
       *aAnyOutlineOrEffects = PR_TRUE;
     }
@@ -4333,8 +4378,11 @@ nsIFrame::GetRelativeOffset(const nsStyleDisplay* aDisplay) const
 }
 
 nsRect
-nsIFrame::GetOverflowRect() const
+nsIFrame::GetOverflowRect(nsOverflowType aType) const
 {
+  NS_ABORT_IF_FALSE(aType == eVisualOverflow || aType == eScrollableOverflow,
+                    "unexpected type");
+
   // Note that in some cases the overflow area might not have been
   // updated (yet) to reflect any outline set on the frame or the area
   // of child frames. That's OK because any reflow that updates these
@@ -4344,29 +4392,39 @@ nsIFrame::GetOverflowRect() const
   if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
     // there is an overflow rect, and it's not stored as deltas but as
     // a separately-allocated rect
-    return *const_cast<nsIFrame*>(this)->GetOverflowAreaProperty(PR_FALSE);
+    return static_cast<nsOverflowAreas*>(const_cast<nsIFrame*>(this)->
+             GetOverflowAreasProperty())->Overflow(aType);
   }
 
-  // Calculate the rect using deltas from the frame's border rect.
-  // Note that the mOverflow.mDeltas fields are unsigned, but we will often
-  // need to return negative values for the left and top, so take care
-  // to cast away the unsigned-ness.
-  return nsRect(-(PRInt32)mOverflow.mDeltas.mLeft,
-                -(PRInt32)mOverflow.mDeltas.mTop,
-                mRect.width + mOverflow.mDeltas.mRight +
-                              mOverflow.mDeltas.mLeft,
-                mRect.height + mOverflow.mDeltas.mBottom +
-                               mOverflow.mDeltas.mTop);
+  if (aType == eVisualOverflow &&
+      mOverflow.mType != NS_FRAME_OVERFLOW_NONE) {
+    return GetVisualOverflowFromDeltas();
+  }
+
+  return nsRect(nsPoint(0, 0), GetSize());
+}
+
+nsOverflowAreas
+nsIFrame::GetOverflowAreas() const
+{
+  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+    // there is an overflow rect, and it's not stored as deltas but as
+    // a separately-allocated rect
+    return *const_cast<nsIFrame*>(this)->GetOverflowAreasProperty();
+  }
+
+  return nsOverflowAreas(GetVisualOverflowFromDeltas(),
+                         nsRect(nsPoint(0, 0), GetSize()));
 }
 
 nsRect
-nsIFrame::GetOverflowRectRelativeToParent() const
+nsIFrame::GetScrollableOverflowRectRelativeToParent() const
 {
-  return GetOverflowRect() + mRect.TopLeft();
+  return GetScrollableOverflowRect() + mRect.TopLeft();
 }
-  
+
 nsRect
-nsIFrame::GetOverflowRectRelativeToSelf() const
+nsIFrame::GetVisualOverflowRectRelativeToSelf() const
 {
   if (IsTransformed()) {
     nsRect* preTransformBBox = static_cast<nsRect*>
@@ -4374,13 +4432,13 @@ nsIFrame::GetOverflowRectRelativeToSelf() const
     if (preTransformBBox)
       return *preTransformBBox;
   }
-  return GetOverflowRect();
+  return GetVisualOverflowRect();
 }
 
 void
 nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
 {
-  nsIFrame::CheckInvalidateSizeChange(mRect, GetOverflowRect(),
+  nsIFrame::CheckInvalidateSizeChange(mRect, GetVisualOverflowRect(),
       nsSize(aNewDesiredSize.width, aNewDesiredSize.height));
 }
 
@@ -4399,7 +4457,7 @@ InvalidateRectForFrameSizeChange(nsIFrame* aFrame, const nsRect& aRect)
 
 void
 nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
-                                    const nsRect& aOldOverflowRect,
+                                    const nsRect& aOldVisualOverflowRect,
                                     const nsSize& aNewDesiredSize)
 {
   if (aNewDesiredSize == aOldRect.Size())
@@ -4424,10 +4482,11 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutlineOrEffects;
   nsRect r = ComputeOutlineAndEffectsRect(this, &anyOutlineOrEffects,
-                                          aOldOverflowRect, aNewDesiredSize,
+                                          aOldVisualOverflowRect,
+                                          aNewDesiredSize,
                                           PR_FALSE);
   if (anyOutlineOrEffects) {
-    r.UnionRect(aOldOverflowRect, r);
+    r.UnionRect(aOldVisualOverflowRect, r);
     InvalidateRectForFrameSizeChange(this, r);
     return;
   }
@@ -4488,15 +4547,12 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 {
   if (aReflowState.mReflowDepth >  MAX_FRAME_DEPTH) {
     mState |= NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
-    ClearOverflowRect();
+    ClearOverflowRects();
     aMetrics.width = 0;
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.mCarriedOutBottomMargin.Zero();
-    aMetrics.mOverflowArea.x = 0;
-    aMetrics.mOverflowArea.y = 0;
-    aMetrics.mOverflowArea.width = 0;
-    aMetrics.mOverflowArea.height = 0;
+    aMetrics.mOverflowAreas.Clear();
     return PR_TRUE;
   }
   mState &= ~NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
@@ -4568,9 +4624,12 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsFrame* f = const_cast<nsFrame*>(this);
-  if (f->HasOverflowRect()) {
-    nsRect overflowArea = f->GetOverflowRect();
-    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+  if (f->HasOverflowAreas()) {
+    nsRect overflowArea = f->GetVisualOverflowRect();
+    fprintf(out, " [vis-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
+            overflowArea.width, overflowArea.height);
+    overflowArea = f->GetScrollableOverflowRect();
+    fprintf(out, " [scr-overflow=%d,%d,%d,%d]", overflowArea.x, overflowArea.y,
             overflowArea.width, overflowArea.height);
   }
   fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
@@ -5930,76 +5989,89 @@ nsFrame::CreateAccessible()
 }
 #endif
 
-NS_DECLARE_FRAME_PROPERTY(OverflowAreaProperty, nsIFrame::DestroyRect)
+NS_DECLARE_FRAME_PROPERTY(OverflowAreasProperty,
+                          nsIFrame::DestroyOverflowAreas)
 
 void
-nsIFrame::ClearOverflowRect()
+nsIFrame::ClearOverflowRects()
 {
-  Properties().Delete(OverflowAreaProperty());
+  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+    Properties().Delete(OverflowAreasProperty());
+  }
   mOverflow.mType = NS_FRAME_OVERFLOW_NONE;
 }
 
 /** Create or retrieve the previously stored overflow area, if the frame does 
  * not overflow and no creation is required return nsnull.
- * @param aCreateIfNecessary  create a new nsRect for the overflow area
  * @return pointer to the overflow area rectangle 
  */
-nsRect*
-nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary) 
+nsOverflowAreas*
+nsIFrame::GetOverflowAreasProperty()
 {
-  if (!((mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) ||
-        aCreateIfNecessary)) {
-    return nsnull;
-  }
-
   FrameProperties props = Properties();
-  void *value = props.Get(OverflowAreaProperty());
+  nsOverflowAreas *overflow =
+    static_cast<nsOverflowAreas*>(props.Get(OverflowAreasProperty()));
 
-  if (value) {
-    return (nsRect*)value;  // the property already exists
-  } else if (aCreateIfNecessary) {
-    // The property isn't set yet, so allocate a new rect, set the property,
-    // and return the newly allocated rect
-    nsRect*  overflow = new nsRect(0, 0, 0, 0);
-    props.Set(OverflowAreaProperty(), overflow);
-    return overflow;
+  if (overflow) {
+    return overflow; // the property already exists
   }
 
-  NS_NOTREACHED("Frame abuses GetOverflowAreaProperty()");
-  return nsnull;
+  // The property isn't set yet, so allocate a new rect, set the property,
+  // and return the newly allocated rect
+  overflow = new nsOverflowAreas;
+  props.Set(OverflowAreasProperty(), overflow);
+  return overflow;
 }
 
 /** Set the overflowArea rect, storing it as deltas or a separate rect
  * depending on its size in relation to the primary frame rect.
  */
 void
-nsIFrame::SetOverflowRect(const nsRect& aRect)
+nsIFrame::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas)
 {
-  PRUint32 l = -aRect.x, // left edge: positive delta is leftwards
-           t = -aRect.y, // top: positive is upwards
-           r = aRect.XMost() - mRect.width, // right: positive is rightwards
-           b = aRect.YMost() - mRect.height; // bottom: positive is downwards
-  if (l <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+  if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
+    nsOverflowAreas *overflow =
+      static_cast<nsOverflowAreas*>(Properties().Get(OverflowAreasProperty()));
+    *overflow = aOverflowAreas;
+
+    // Don't bother with converting to the deltas form if we already
+    // have a property.
+    return;
+  }
+
+  const nsRect& vis = aOverflowAreas.VisualOverflow();
+  PRUint32 l = -vis.x, // left edge: positive delta is leftwards
+           t = -vis.y, // top: positive is upwards
+           r = vis.XMost() - mRect.width, // right: positive is rightwards
+           b = vis.YMost() - mRect.height; // bottom: positive is downwards
+  if (aOverflowAreas.ScrollableOverflow() == nsRect(nsPoint(0, 0), GetSize()) &&
+      l <= NS_FRAME_OVERFLOW_DELTA_MAX &&
       t <= NS_FRAME_OVERFLOW_DELTA_MAX &&
       r <= NS_FRAME_OVERFLOW_DELTA_MAX &&
       b <= NS_FRAME_OVERFLOW_DELTA_MAX &&
+      // we have to check these against zero because we *never* want to
+      // set a frame as having no overflow in this function.  This is
+      // because FinishAndStoreOverflow calls this function prior to
+      // SetRect based on whether the overflow areas match aNewSize.
+      // In the case where the overflow areas exactly match mRect but
+      // do not match aNewSize, we need to store overflow in a property
+      // so that our eventual SetRect/SetSize will know that it has to
+      // reset our overflow areas.
       (l | t | r | b) != 0) {
     // It's a "small" overflow area so we store the deltas for each edge
     // directly in the frame, rather than allocating a separate rect.
-    // Note that we do NOT store in this way if *all* the deltas are zero,
-    // as that would be indistinguishable from the complete absence of
-    // an overflow rect.
-    Properties().Delete(OverflowAreaProperty());
-    mOverflow.mDeltas.mLeft   = l;
-    mOverflow.mDeltas.mTop    = t;
-    mOverflow.mDeltas.mRight  = r;
-    mOverflow.mDeltas.mBottom = b;
+    // If they're all zero, that's fine; we're setting things to
+    // no-overflow.
+    mOverflow.mVisualDeltas.mLeft   = l;
+    mOverflow.mVisualDeltas.mTop    = t;
+    mOverflow.mVisualDeltas.mRight  = r;
+    mOverflow.mVisualDeltas.mBottom = b;
   } else {
     // it's a large overflow area that we need to store as a property
     mOverflow.mType = NS_FRAME_OVERFLOW_LARGE;
-    nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
-    NS_ASSERTION(overflowArea, "should have created rect");
-    *overflowArea = aRect;
+    nsOverflowAreas* overflow = GetOverflowAreasProperty();
+    NS_ASSERTION(overflow, "should have created areas");
+    *overflow = aOverflowAreas;
   }
 }
 
@@ -6012,14 +6084,19 @@ IsInlineFrame(nsIFrame *aFrame)
 }
 
 void 
-nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
+nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
+                                 nsSize aNewSize)
 {
+  nsRect bounds(nsPoint(0, 0), aNewSize);
+
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
-  NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
-               aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
-               "Computed overflow area must contain frame bounds");
+  NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+    NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
+                 aOverflowAreas.Overflow(otype).Contains(nsRect(nsPoint(0,0), aNewSize)),
+                 "Computed overflow area must contain frame bounds");
+  }
 
   // If we clip our children, clear accumulated overflow area. The
   // children are actually clipped to the padding-box, but since the
@@ -6031,7 +6108,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
                "If one overflow is clip, the other should be too");
   if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
     // The contents are actually clipped to the padding area 
-    *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
+    aOverflowAreas.SetAllTo(bounds);
   }
 
   // Overflow area must always include the frame's top-left and bottom-right,
@@ -6039,33 +6116,43 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   // Pending a real fix for bug 426879, don't do this for inline frames
   // with zero width.
   if (aNewSize.width != 0 || !IsInlineFrame(this)) {
-    aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
-                                         nsRect(nsPoint(0, 0), aNewSize));
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = aOverflowAreas.Overflow(otype);
+      o.UnionRectIncludeEmpty(o, bounds);
+    }
   }
 
   // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
   // so we add theme background overflow here so it's not clipped.
   if (!IsBoxWrapped() && IsThemed(disp)) {
-    nsRect r(nsPoint(0, 0), aNewSize);
+    nsRect r(bounds);
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
                             disp->mAppearance, &r)) {
-      aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea, r);
+      NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+        nsRect& o = aOverflowAreas.Overflow(otype);
+        o.UnionRectIncludeEmpty(o, r);
+      }
     }
   }
-  
+
+  // Nothing in here should affect scrollable overflow.
   PRBool hasOutlineOrEffects;
-  *aOverflowArea =
+  aOverflowAreas.VisualOverflow() =
     ComputeOutlineAndEffectsRect(this, &hasOutlineOrEffects,
-                                 *aOverflowArea, aNewSize, PR_TRUE);
+                                 aOverflowAreas.VisualOverflow(), aNewSize,
+                                 PR_TRUE);
 
   // Absolute position clipping
   PRBool didHaveAbsPosClip = (GetStateBits() & NS_FRAME_HAS_CLIP) != 0;
   nsRect absPosClipRect;
   PRBool hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect, aNewSize);
   if (hasAbsPosClip) {
-    aOverflowArea->IntersectRect(*aOverflowArea, absPosClipRect);
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = aOverflowAreas.Overflow(otype);
+      o.IntersectRect(o, absPosClipRect);
+    }
     AddStateBits(NS_FRAME_HAS_CLIP);
   } else {
     RemoveStateBits(NS_FRAME_HAS_CLIP);
@@ -6074,32 +6161,30 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   /* If we're transformed, transform the overflow rect by the current transformation. */
   PRBool hasTransform = IsTransformed();
   if (hasTransform) {
-    Properties().
-      Set(nsIFrame::PreTransformBBoxProperty(), new nsRect(*aOverflowArea));
+    Properties().Set(nsIFrame::PreTransformBBoxProperty(),
+                     new nsRect(aOverflowAreas.VisualOverflow()));
     /* Since our size might not actually have been computed yet, we need to make sure that we use the
      * correct dimensions by overriding the stored bounding rectangle with the value the caller has
      * ensured us we'll use.
      */
     nsRect newBounds(nsPoint(0, 0), aNewSize);
-    *aOverflowArea = nsDisplayTransform::TransformRect(*aOverflowArea, this, nsPoint(0, 0), &newBounds);
-  }
-
-  PRBool overflowChanged;
-  if (!aOverflowArea->IsExactEqual(nsRect(nsPoint(0, 0), aNewSize))) {
-    overflowChanged = !aOverflowArea->IsExactEqual(GetOverflowRect());
-    SetOverflowRect(*aOverflowArea);
-  }
-  else {
-    if (HasOverflowRect()) {
-      // remove the previously stored overflow area 
-      ClearOverflowRect();
-      overflowChanged = PR_TRUE;
-    } else {
-      overflowChanged = PR_FALSE;
+    // Transform affects both overflow areas.
+    NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+      nsRect& o = aOverflowAreas.Overflow(otype);
+      o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
     }
   }
 
-  if (overflowChanged) {
+  PRBool visualOverflowChanged =
+    GetVisualOverflowRect() != aOverflowAreas.VisualOverflow();
+
+  if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {
+    SetOverflowAreas(aOverflowAreas);
+  } else {
+    ClearOverflowRects();
+  }
+
+  if (visualOverflowChanged) {
     if (hasOutlineOrEffects) {
       // When there's an outline or box-shadow or SVG effects,
       // changes to those styles might require repainting of the old and new
@@ -6112,7 +6197,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       // If there is no outline or other effects now, then we don't have
       // to do anything here since removing those styles can't require
       // repainting of areas that weren't in the old overflow area.
-      Invalidate(*aOverflowArea);
+      Invalidate(aOverflowAreas.VisualOverflow());
     } else if (hasAbsPosClip || didHaveAbsPosClip) {
       // If we are (or were) clipped by the 'clip' property, and our
       // overflow area changes, it might be because the clipping changed.
@@ -6120,7 +6205,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       // repaint the old overflow area, so if the overflow area has
       // changed (in particular, if it grows), we have to repaint the
       // new area here.
-      Invalidate(*aOverflowArea);
+      Invalidate(aOverflowAreas.VisualOverflow());
     } else if (hasTransform) {
       // When there's a transform, changes to that style might require
       // repainting of the old and new overflow areas in the widget.
@@ -6137,22 +6222,24 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
       // the transform will go away and the frame contents will change
       // ThebesLayers, forcing it to be invalidated, so it doesn't matter
       // that we didn't reach here.
-      InvalidateLayer(*aOverflowArea, nsDisplayItem::TYPE_TRANSFORM);
+      InvalidateLayer(aOverflowAreas.VisualOverflow(),
+                      nsDisplayItem::TYPE_TRANSFORM);
     }
   }
 }
 
 void
-nsFrame::ConsiderChildOverflow(nsRect&   aOverflowArea,
+nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
                                nsIFrame* aChildFrame)
 {
   const nsStyleDisplay* disp = GetStyleDisplay();
   // check here also for hidden as table frames (table, tr and td) currently 
   // don't wrap their content into a scrollable frame if overflow is specified
+  // FIXME: Why do we check this here rather than in
+  // FinishAndStoreOverflow (where we check NS_STYLE_OVERFLOW_CLIP)?
   if (!disp->IsTableClip()) {
-    nsRect childOverflow = aChildFrame->GetOverflowRect();
-    childOverflow.MoveBy(aChildFrame->GetPosition());
-    aOverflowArea.UnionRect(aOverflowArea, childOverflow);
+    aOverflowAreas.UnionWith(aChildFrame->GetOverflowAreas() +
+                             aChildFrame->GetPosition());
   }
 }
 
@@ -6432,8 +6519,12 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // will be enough to make them keyboard scrollable.
         nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
         if (scrollFrame) {
-          nsMargin margin = scrollFrame->GetActualScrollbarSizes();
-          if (margin.top || margin.right || margin.bottom || margin.left) {
+          nsIScrollableFrame::ScrollbarStyles styles =
+            scrollFrame->GetScrollbarStyles();
+          if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
+              styles.mVertical == NS_STYLE_OVERFLOW_AUTO ||
+              styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
+              styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO) {
             // Scroll bars will be used for overflow
             isFocusable = PR_TRUE;
             tabIndex = 0;
@@ -6763,9 +6854,10 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
   // Should we do this if IsCollapsed() is true?
   nsSize size(GetSize());
-  desiredSize.mOverflowArea.UnionRect(desiredSize.mOverflowArea,
-                                      nsRect(nsPoint(0, 0), size));
-  FinishAndStoreOverflow(&desiredSize.mOverflowArea, size);
+  desiredSize.width = size.width;
+  desiredSize.height = size.height;
+  desiredSize.UnionOverflowAreasWithDesiredBounds();
+  FinishAndStoreOverflow(desiredSize.mOverflowAreas, size);
 
   SyncLayout(aState);
 
@@ -8056,19 +8148,32 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       printf(" status=0x%x", aStatus);
     }
-    if (aFrame->HasOverflowRect()) {
-      DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
-      DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
-      DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
-      DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
-      printf(" o=(%s,%s) %s x %s", x, y, width, height);
+    if (aFrame->HasOverflowAreas()) {
+      DR_state->PrettyUC(aMetrics.VisualOverflow().x, x);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().y, y);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().width, width);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().height, height);
+      printf(" vis-o=(%s,%s) %s x %s", x, y, width, height);
 
-      nsRect storedOverflow = aFrame->GetOverflowRect();
+      nsRect storedOverflow = aFrame->GetVisualOverflowRect();
       DR_state->PrettyUC(storedOverflow.x, x);
       DR_state->PrettyUC(storedOverflow.y, y);
       DR_state->PrettyUC(storedOverflow.width, width);
       DR_state->PrettyUC(storedOverflow.height, height);
-      printf(" sto=(%s,%s) %s x %s", x, y, width, height);
+      printf(" vis-sto=(%s,%s) %s x %s", x, y, width, height);
+
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().x, x);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().y, y);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().width, width);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().height, height);
+      printf(" scr-o=(%s,%s) %s x %s", x, y, width, height);
+
+      storedOverflow = aFrame->GetScrollableOverflowRect();
+      DR_state->PrettyUC(storedOverflow.x, x);
+      DR_state->PrettyUC(storedOverflow.y, y);
+      DR_state->PrettyUC(storedOverflow.width, width);
+      DR_state->PrettyUC(storedOverflow.height, height);
+      printf(" scr-sto=(%s,%s) %s x %s", x, y, width, height);
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {

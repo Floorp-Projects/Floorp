@@ -43,10 +43,59 @@
   margin: 20px;
 }
 
-#view-port {
+#view-port-container {
+  /* Needed to allow the radius to clip the inner content, see bug 595656 */
+  overflow: hidden;
   background-color: #d2d7df;
   border: 1px solid black;
   border-radius: 5px;
+}
+
+.nav-button {
+  -moz-appearance: none;
+  min-width: 0;
+  padding: 0 4px;
+  margin: 0;
+  text-shadow: @loweredShadow@;
+  border: 1px solid @toolbarbuttonBorderColor@;
+  box-shadow: @loweredShadow@;
+  background: @toolbarbuttonBackground@;
+  background-origin: border-box;
+  list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
+}
+
+.nav-button .button-text {
+  display: none;
+}
+
+.nav-button[disabled="true"] .button-icon {
+  opacity: 0.4;
+}
+
+#back-btn:-moz-locale-dir(ltr),
+#forward-btn:-moz-locale-dir(rtl) {
+  border-top-left-radius: @toolbarbuttonCornerRadius@;
+  border-bottom-left-radius: @toolbarbuttonCornerRadius@;
+  border-right: none;
+  -moz-image-region: rect(0, 20px, 20px, 0);
+}
+
+#back-btn:-moz-locale-dir(rtl),
+#forward-btn:-moz-locale-dir(ltr) {
+  border-top-right-radius: @toolbarbuttonCornerRadius@;
+  border-bottom-right-radius: @toolbarbuttonCornerRadius@;
+  -moz-image-region: rect(0, 40px, 20px, 20px);
+}
+
+.nav-button:hover:active:not([disabled="true"]) {
+  background: @toolbarbuttonPressedBackgroundColor@;
+  text-shadow: @loweredShadow@;
+  box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
+}
+
+.nav-button:-moz-window-inactive {
+  border-color: @toolbarbuttonInactiveBorderColor@;
+  background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
 
 /*** global warnings ***/
@@ -591,7 +640,7 @@
   color: grey;
 }
 
-#detail-contrib-button {
+#detail-contrib-btn {
   color: #FFF;
   font-weight: bold;
   text-shadow: #4C9EF8 -1px -1px 1px;
@@ -600,7 +649,7 @@
   list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
 }
 
-#detail-contrib-button:hover {
+#detail-contrib-btn:hover {
   border-color: #4271FF;
   background-image: -moz-linear-gradient(#49CEFF, #4271FF);
 }
@@ -609,9 +658,14 @@
   margin-bottom: 2em;
 }
 
+.detail-row[first-row="true"],
+.detail-row-complex[first-row="true"] {
+  border-top: none;
+}
+
 .detail-row,
 .detail-row-complex {
-  border-bottom: 1px solid grey;
+  border-top: 1px solid grey;
   -moz-box-align: center;
 }
 

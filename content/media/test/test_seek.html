@@ -65,9 +65,10 @@ function startTest(test, token) {
     if (v.parentNode) {
       v.parentNode.removeChild(v);
     }
+    dump("SEEK-TEST: Finished " + name + "\n");
     manager.finished(v.token);
   }}(v, manager);
-  dump("Seek test: " + test.number + "\n");
+  dump("SEEK-TEST: Started " + name + "\n");
   window['test_seek' + test.number](v, test.duration/2, localIs, localOk, localFinish);
 }
 

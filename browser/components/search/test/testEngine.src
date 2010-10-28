@@ -1,0 +1,11 @@
+<search 
+  name="Test Sherlock"
+  description="Test Description"
+  method="GET"
+  searchform="http://example.com/searchform"
+  action="http://example.com/action"
+  queryCharset="UTF-8"
+>
+  <input name="userParam" user>
+  <input name="param" value="value">
+</search>

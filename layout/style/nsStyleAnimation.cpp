@@ -557,45 +557,87 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       return PR_TRUE;
     }
     case eUnit_Transform: {
-      const nsCSSValueList *list1 = aStartValue.GetCSSValueListValue();
-      const nsCSSValueList *list2 = aEndValue.GetCSSValueListValue();
-
-      nsStyleTransformMatrix matrix1, matrix2; // initialized to identity
-
-      PRBool dummy;
-      if (list1->mValue.GetUnit() != eCSSUnit_None) {
-        matrix1 = nsStyleTransformMatrix::ReadTransforms(list1, nsnull,
-                                                         nsnull, dummy);
+      // Call AddWeighted to normalize to the format we use for
+      // interpolation.  (This is far from ideal, but it provides good
+      // behavior for distance along a running transition.)
+      Value normValue1, normValue2;
+      if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
+                       normValue1) ||
+          !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
+                       normValue2)) {
+        return PR_FALSE;
       }
-      if (list2->mValue.GetUnit() != eCSSUnit_None) {
-        matrix2 = nsStyleTransformMatrix::ReadTransforms(list2, nsnull,
-                                                         nsnull, dummy);
+      const nsCSSValueList *list1 = normValue1.GetCSSValueListValue();
+      const nsCSSValueList *list2 = normValue2.GetCSSValueListValue();
+
+      NS_ABORT_IF_FALSE((list1->mValue.GetUnit() == eCSSUnit_None) ==
+                        (list2->mValue.GetUnit() == eCSSUnit_None),
+                        "none-ness should match after AddWeighted");
+      if (list1->mValue.GetUnit() == eCSSUnit_None) {
+        aDistance = 0;
+        return PR_TRUE;
       }
 
-      double diff;
       double squareDistance = 0.0;
-      for (PRUint32 i = 0; i < 4; ++i) {
-        diff = matrix1.GetMainMatrixEntry(i) - matrix2.GetMainMatrixEntry(i);
-        squareDistance += diff * diff;
+      for (; list1 && list2; list1 = list1->mNext, list2 = list2->mNext) {
+        NS_ABORT_IF_FALSE(list1->mValue.GetUnit() == eCSSUnit_Function &&
+                          list2->mValue.GetUnit() == eCSSUnit_Function,
+                          "unexpected unit");
+        const nsCSSValue::Array *a1 = list1->mValue.GetArrayValue(),
+                                *a2 = list2->mValue.GetArrayValue();
+        NS_ABORT_IF_FALSE(a1->Item(0).GetUnit() == eCSSUnit_Ident &&
+                          a2->Item(0).GetUnit() == eCSSUnit_Ident,
+                          "unexpected unit");
+        NS_ABORT_IF_FALSE(a1->Item(0) == a2->Item(0),
+                          "unexpected function mismatch");
+        nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
+        NS_ABORT_IF_FALSE(a1->Count() == a2->Count(),
+                          "unexpected count mismatch");
+        for (size_t i = 1, iEnd = NS_MIN(a1->Count(), a2->Count());
+             i < iEnd; ++i) {
+          const nsCSSValue &v1 = a1->Item(i), &v2 = a2->Item(i);
+          NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Pixel ||
+                            v1.GetUnit() == eCSSUnit_Percent ||
+                            v1.GetUnit() == eCSSUnit_Calc ||
+                            v1.GetUnit() == eCSSUnit_Radian ||
+                            v1.GetUnit() == eCSSUnit_Number,
+                            "unexpected unit");
+          NS_ABORT_IF_FALSE(v2.GetUnit() == eCSSUnit_Pixel ||
+                            v2.GetUnit() == eCSSUnit_Percent ||
+                            v2.GetUnit() == eCSSUnit_Calc ||
+                            v2.GetUnit() == eCSSUnit_Radian ||
+                            v2.GetUnit() == eCSSUnit_Number,
+                            "unexpected unit");
+          if (v1.GetUnit() == eCSSUnit_Pixel ||
+              v1.GetUnit() == eCSSUnit_Percent ||
+              v1.GetUnit() == eCSSUnit_Calc) {
+            NS_ABORT_IF_FALSE(v2.GetUnit() == eCSSUnit_Pixel ||
+                              v2.GetUnit() == eCSSUnit_Percent ||
+                              v2.GetUnit() == eCSSUnit_Calc,
+                              "unit mismatch");
+            CalcValue c1 = ExtractCalcValue(v1),
+                      c2 = ExtractCalcValue(v2);
+            double diff = c1.mLength - c2.mLength;
+            squareDistance += diff * diff;
+            diff = c1.mPercent - c2.mPercent;
+            squareDistance += diff * diff;
+          } else {
+            NS_ABORT_IF_FALSE(v1.GetUnit() == v2.GetUnit(), "unit mismatch");
+            double diff;
+            if (tfunc == eCSSKeyword_skewx ||
+                tfunc == eCSSKeyword_skewy ||
+                tfunc == eCSSKeyword_skew) {
+              NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Radian, "unexpected unit");
+              diff = tan(v2.GetFloatValue()) - tan(v1.GetFloatValue());
+            } else {
+              diff = v2.GetFloatValue() - v1.GetFloatValue();
+            }
+            squareDistance += diff * diff;
+          }
+        }
       }
-      diff = nsPresContext::AppUnitsToFloatCSSPixels(
-        matrix1.GetCoordXTranslation() - matrix2.GetCoordXTranslation());
-      squareDistance += diff * diff;
-      diff = nsPresContext::AppUnitsToFloatCSSPixels(
-        matrix1.GetCoordYTranslation() - matrix2.GetCoordYTranslation());
-      squareDistance += diff * diff;
-      diff = matrix1.GetWidthRelativeXTranslation() -
-             matrix2.GetWidthRelativeXTranslation();
-      squareDistance += diff * diff;
-      diff = matrix1.GetWidthRelativeYTranslation() -
-             matrix2.GetWidthRelativeYTranslation();
-      squareDistance += diff * diff;
-      diff = matrix1.GetHeightRelativeXTranslation() -
-             matrix2.GetHeightRelativeXTranslation();
-      squareDistance += diff * diff;
-      diff = matrix1.GetHeightRelativeYTranslation() -
-             matrix2.GetHeightRelativeYTranslation();
-      squareDistance += diff * diff;
+      NS_ABORT_IF_FALSE(!list1 && !list2,
+                        "list lengths should match after AddWeighted");
 
       aDistance = sqrt(squareDistance);
       return PR_TRUE;
@@ -707,36 +749,6 @@ AddCSSValuePercent(double aCoeff1, const nsCSSValue &aValue1,
                           aCoeff2 * aValue2.GetPercentValue());
 }
 
-// Add two non-canonical-form calc values (eUnit_Transform) to make
-// another non-canonical-form calc value.
-static void
-AddCSSValueNoncanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
-                            double aCoeff2, const nsCSSValue &aValue2,
-                            nsCSSValue &aResult)
-{
-  NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Percent ||
-                    aValue1.GetUnit() == eCSSUnit_Pixel ||
-                    aValue1.IsCalcUnit(), "unexpected unit");
-  NS_ABORT_IF_FALSE(aValue2.GetUnit() == eCSSUnit_Percent ||
-                    aValue2.GetUnit() == eCSSUnit_Pixel ||
-                    aValue2.IsCalcUnit(), "unexpected unit");
-  nsRefPtr<nsCSSValue::Array> a1 = nsCSSValue::Array::Create(2),
-                              a2 = nsCSSValue::Array::Create(2),
-                              atop = nsCSSValue::Array::Create(2),
-                              acalc = nsCSSValue::Array::Create(1);
-  // Don't nest the eCSSUnit_Calc in our input inside any expressions.
-  a1->Item(0).SetFloatValue(aCoeff1, eCSSUnit_Number);
-  a1->Item(1) = aValue1.GetUnit() == eCSSUnit_Calc
-                  ? aValue1.GetArrayValue()->Item(0) : aValue1;
-  a2->Item(0).SetFloatValue(aCoeff2, eCSSUnit_Number);
-  a2->Item(1) = aValue2.GetUnit() == eCSSUnit_Calc
-                  ? aValue2.GetArrayValue()->Item(0) : aValue2;
-  atop->Item(0).SetArrayValue(a1, eCSSUnit_Calc_Times_L);
-  atop->Item(1).SetArrayValue(a2, eCSSUnit_Calc_Times_L);
-  acalc->Item(0).SetArrayValue(atop, eCSSUnit_Calc_Plus);
-  aResult.SetArrayValue(acalc, eCSSUnit_Calc);
-}
-
 // Add two canonical-form calc values (eUnit_Calc) to make another
 // canonical-form calc value.
 static void
@@ -841,7 +853,7 @@ AddTransformTranslate(const nsCSSValue &aValue1, double aCoeff1,
 
   if (aValue1.GetUnit() != aValue2.GetUnit() || aValue1.IsCalcUnit()) {
     // different units; create a calc() expression
-    AddCSSValueNoncanonicalCalc(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
+    AddCSSValueCanonicalCalc(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
   } else if (aValue1.GetUnit() == eCSSUnit_Percent) {
     // both percent
     AddCSSValuePercent(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
@@ -1108,7 +1120,7 @@ AddTransformMatrix(const nsStyleTransformMatrix &aMatrix1, double aCoeff1,
 
   // append a rotate(90deg)
   arr = AppendTransformFunction(eCSSKeyword_rotate, resultTail);
-  arr->Item(1).SetFloatValue(90.0f, eCSSUnit_Degree);
+  arr->Item(1).SetFloatValue(float(M_PI_2), eCSSUnit_Radian);
 
   // append the translation for parts of the % translation components
   // that were from inside a rotation
@@ -1124,7 +1136,7 @@ AddTransformMatrix(const nsStyleTransformMatrix &aMatrix1, double aCoeff1,
 
   // append a rotate(-90deg)
   arr = AppendTransformFunction(eCSSKeyword_rotate, resultTail);
-  arr->Item(1).SetFloatValue(-90.0f, eCSSUnit_Degree);
+  arr->Item(1).SetFloatValue(-float(M_PI_2), eCSSUnit_Radian);
 
   nscoord translateXCoord = NSToCoordRound(
                               aMatrix1.GetCoordXTranslation() * aCoeff1 +
@@ -1905,8 +1917,12 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                     "we should only be able to actively animate nodes that "
                     "are in a document");
 
+  nsCSSProperty propToParse =
+    nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_REPORT_OTHER_NAME)
+      ? nsCSSProps::OtherNameFor(aProperty) : aProperty;
+
   nsRefPtr<nsStyleContext> tmpStyleContext =
-    StyleWithDeclarationAdded(aProperty, aTargetElement,
+    StyleWithDeclarationAdded(propToParse, aTargetElement,
                               aSpecifiedValue, aUseSVGMode);
   if (!tmpStyleContext) {
     return PR_FALSE;
@@ -2116,13 +2132,25 @@ StyleCoordToCSSValue(const nsStyleCoord& aCoord, nsCSSValue& aCSSValue)
 
 /*
  * Assign |aOutput = aInput|, except with any non-pixel lengths
- * replaced with the equivalent in pixels.
+ * replaced with the equivalent in pixels, and any non-canonical calc()
+ * expressions replaced with canonical ones.
  */
 static void
 SubstitutePixelValues(nsStyleContext* aStyleContext,
                       const nsCSSValue& aInput, nsCSSValue& aOutput)
 {
-  if (aInput.UnitHasArrayValue()) {
+  if (aInput.IsCalcUnit()) {
+    PRBool canStoreInRuleTree = PR_TRUE;
+    nsRuleNode::ComputedCalc c =
+      nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
+                                              aStyleContext->PresContext(),
+                                              canStoreInRuleTree);
+    nsStyleCoord::Calc c2;
+    c2.mLength = c.mLength;
+    c2.mPercent = c.mPercent;
+    c2.mHasPercent = PR_TRUE; // doesn't matter for transform translate
+    SetCalcValue(&c2, aOutput);
+  } else if (aInput.UnitHasArrayValue()) {
     const nsCSSValue::Array *inputArray = aInput.GetArrayValue();
     nsRefPtr<nsCSSValue::Array> outputArray =
       nsCSSValue::Array::Create(inputArray->Count());

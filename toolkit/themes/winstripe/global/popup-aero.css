@@ -1,0 +1,3 @@
+%define WINSTRIPE_AERO
+%include popup.css
+%undef WINSTRIPE_AERO

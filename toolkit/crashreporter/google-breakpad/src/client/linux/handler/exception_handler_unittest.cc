@@ -567,6 +567,87 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryNullPointer) {
   free(filename);
 }
 
+static bool SimpleCallback(const char* dump_path,
+                           const char* minidump_id,
+                           void* context,
+                           bool succeeded) {
+  if (!succeeded)
+    return succeeded;
+
+  string* minidump_file = reinterpret_cast<string*>(context);
+  minidump_file->append(dump_path);
+  minidump_file->append("/");
+  minidump_file->append(minidump_id);
+  minidump_file->append(".dmp");
+  return true;
+}
+
+// Test that anonymous memory maps can be annotated with names and IDs.
+TEST(ExceptionHandlerTest, ModuleInfo) {
+  // These are defined here so the parent can use them to check the
+  // data from the minidump afterwards.
+  const u_int32_t kMemorySize = sysconf(_SC_PAGESIZE);
+  const char* kMemoryName = "a fake module";
+  const u_int8_t kModuleGUID[sizeof(MDGUID)] = {
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
+  };
+  char module_identifier_buffer[37];
+  FileID::ConvertIdentifierToString(kModuleGUID,
+                                    module_identifier_buffer,
+                                    sizeof(module_identifier_buffer));
+  string module_identifier(module_identifier_buffer);
+  // Strip out dashes
+  size_t pos;
+  while ((pos = module_identifier.find('-')) != string::npos) {
+    module_identifier.erase(pos, 1);
+  }
+  // And append a zero, because module IDs include an "age" field
+  // which is always zero on Linux.
+  module_identifier += "0";
+
+  // Get some memory.
+  char* memory =
+    reinterpret_cast<char*>(mmap(NULL,
+                                 kMemorySize,
+                                 PROT_READ | PROT_WRITE,
+                                 MAP_PRIVATE | MAP_ANON,
+                                 -1,
+                                 0));
+  const u_int64_t kMemoryAddress = reinterpret_cast<u_int64_t>(memory);
+  ASSERT_TRUE(memory);
+
+  string minidump_filename;
+  ExceptionHandler handler(TEMPDIR, NULL, SimpleCallback,
+                           (void*)&minidump_filename, true);
+  // Add info about the anonymous memory mapping.
+  handler.AddMappingInfo(kMemoryName,
+                         kModuleGUID,
+                         kMemoryAddress,
+                         kMemorySize,
+                         0);
+  handler.WriteMinidump();
+
+  // Read the minidump. Load the module list, and ensure that
+  // the mmap'ed |memory| is listed with the given module name
+  // and debug ID.
+  Minidump minidump(minidump_filename);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpModuleList* module_list = minidump.GetModuleList();
+  ASSERT_TRUE(module_list);
+  const MinidumpModule* module =
+    module_list->GetModuleForAddress(kMemoryAddress);
+  ASSERT_TRUE(module);
+
+  EXPECT_EQ(kMemoryAddress, module->base_address());
+  EXPECT_EQ(kMemorySize, module->size());
+  EXPECT_EQ(kMemoryName, module->code_file());
+  EXPECT_EQ(module_identifier, module->debug_identifier());
+
+  unlink(minidump_filename.c_str());
+}
+
 static const unsigned kControlMsgSize =
     CMSG_SPACE(sizeof(int)) + CMSG_SPACE(sizeof(struct ucred));
 

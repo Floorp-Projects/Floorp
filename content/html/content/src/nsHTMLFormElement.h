@@ -188,10 +188,12 @@ public:
    * Remove an element from this form's list of elements
    *
    * @param aElement the element to remove
+   * @param aUpdateValidity If true, updates the form validity.
    * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    * @return NS_OK if the element was successfully removed.
    */
-  nsresult RemoveElement(nsGenericHTMLFormElement* aElement, PRBool aNotify);
+  nsresult RemoveElement(nsGenericHTMLFormElement* aElement,
+                         bool aUpdateValidity, PRBool aNotify);
 
   /**
    * Remove an element from the lookup table maintained by the form.
@@ -210,10 +212,12 @@ public:
    * Add an element to end of this form's list of elements
    *
    * @param aElement the element to add
+   * @param aUpdateValidity If true, the form validity will be updated.
    * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    * @return NS_OK if the element was successfully added
    */
-  nsresult AddElement(nsGenericHTMLFormElement* aElement, PRBool aNotify);
+  nsresult AddElement(nsGenericHTMLFormElement* aElement, bool aUpdateValidity,
+                      PRBool aNotify);
 
   /**    
    * Add an element to the lookup table maintained by the form.

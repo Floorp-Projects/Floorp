@@ -62,9 +62,11 @@ include $(topsrcdir)/config/rules.mk
 DEFINES += -D_IMPL_NS_LAYOUT
 
 _TEST_FILES =	\
+		border_radius_hit_testing_iframe.html \
 		bug369950-subframe.xml \
 		bug495648.rdf \
 		decoration_line_rendering.js \
+		test_border_radius_hit_testing.html \
 		test_bug66619.html \
 		test_bug114649.html \
 		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
@@ -81,6 +83,7 @@ _TEST_FILES =	\
 		test_bug445810.html \
 		test_bug449781.html \
 		test_bug450930.xhtml \
+		test_bug458898.html \
 		test_bug465448.xul \
 		test_bug469170.html \
 		test_bug471126.html \
@@ -103,6 +106,16 @@ _TEST_FILES =	\
 		     bug512295-2-ref.html \
 		     bug585922.html \
 		     bug585922-ref.html \
+		     bug597519-1.html \
+		     bug597519-1-ref.html \
+		     bug602141-1.html \
+		     bug602141-1-ref.html \
+		     bug602141-2.html \
+		     bug602141-2-ref.html \
+		     bug602141-3.html \
+		     bug602141-3-ref.html \
+		     bug602141-4.html \
+		     bug602141-4-ref.html \
 		test_bug514127.html \
 		test_bug518777.html \
 		test_bug548545.xhtml \
@@ -111,13 +124,13 @@ _TEST_FILES =	\
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
+		test_bug582771.html \
+		test_bug603550.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208
-# Test for bug 458898 doesn't pass on Windows 7. See bug 562955.
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += \
-		test_bug458898.html \
 		bidi_numeral_test.js \
 		test_bug332655-1.html \
 		test_bug332655-2.html \

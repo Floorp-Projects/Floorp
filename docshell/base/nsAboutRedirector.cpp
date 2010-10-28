@@ -64,6 +64,8 @@ struct RedirEntry {
   URI.  Perhaps we should separate the two concepts out...
  */
 static RedirEntry kRedirMap[] = {
+    { "", "chrome://global/content/about.xhtml",
+      nsIAboutModule::ALLOW_SCRIPT },
     { "about", "chrome://global/content/aboutAbout.xhtml", 0 },
     { "credits", "http://www.mozilla.org/credits/",
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },

@@ -451,9 +451,9 @@ endif
 endif
 
 ifeq ($(OS_TARGET),Android)
-LDOPTS=$(OS_LDFLAGS)
-LIBPTHREAD=
-XCFLAGS=${OS_CFLAGS}
+LDOPTS = $(OS_LDFLAGS) $(WRAP_MALLOC_LIB)
+LIBPTHREAD =
+XCFLAGS = $(OS_CFLAGS)
 endif
 
 #####################################################

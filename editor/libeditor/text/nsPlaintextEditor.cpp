@@ -109,13 +109,6 @@ nsPlaintextEditor::nsPlaintextEditor()
 
 nsPlaintextEditor::~nsPlaintextEditor()
 {
-  // remove the rules as an action listener.  Else we get a bad ownership loop
-  // later on.  it's ok if the rules aren't a listener; we ignore the error.
-  if (mRules) {
-    nsCOMPtr<nsIEditActionListener> mListener = do_QueryInterface(mRules);
-    RemoveEditActionListener(mListener);
-  }
-  
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
   RemoveEventListeners();
@@ -229,8 +222,12 @@ nsPlaintextEditor::EndEditorInit()
   if (mInitTriggerCounter == 0)
   {
     res = InitRules();
-    if (NS_SUCCEEDED(res)) 
+    if (NS_SUCCEEDED(res)) {
+      // Throw away the old transaction manager if this is not the first time that
+      // we're initializing the editor.
+      EnableUndo(PR_FALSE);
       EnableUndo(PR_TRUE);
+    }
   }
   return res;
 }

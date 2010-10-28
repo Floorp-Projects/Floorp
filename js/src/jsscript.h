@@ -249,6 +249,7 @@ struct JSScript {
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
+    JSCompartment   *compartment; /* compartment the script was compiled for */
     const char      *filename;  /* source filename or null */
     uint32          lineno;     /* base line number of script */
     uint16          nslots;     /* vars plus maximum stack depth */
@@ -276,6 +277,7 @@ struct JSScript {
         JSObject    *object;
         JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
     } u;
+
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
@@ -294,44 +296,14 @@ struct JSScript {
     js::mjit::JITScript *jitNormal;   /* Extra JIT info for normal scripts */
     js::mjit::JITScript *jitCtor;     /* Extra JIT info for constructors */
 
-    void **nmapNormal;
-    void **nmapCtor;
-
     bool hasJITCode() {
         return jitNormal || jitCtor;
     }
 
-    void setNativeMap(bool constructing, void **map) {
-        if (constructing)
-            nmapCtor = map;
-        else
-            nmapNormal = map;
-    }
-
-    void **maybeNativeMap(bool constructing) {
-        return constructing ? nmapCtor : nmapNormal;
-    }
-
-    void **nativeMap(bool constructing) {
-        void **nmap = maybeNativeMap(constructing);
-        JS_ASSERT(nmap);
-        return nmap;
-    }
-
-    void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc) {
-        void **nmap = maybeNativeMap(constructing);
-        if (!nmap)
-            return NULL;
-        JS_ASSERT(pc >= code && pc < code + length);
-        return nmap[pc - code];
-    }
-
-    void *nativeCodeForPC(bool constructing, jsbytecode *pc) {
-        void **nmap = nativeMap(constructing);
-        JS_ASSERT(pc >= code && pc < code + length);
-        JS_ASSERT(nmap[pc - code]);
-        return nmap[pc - code];
-    }
+    // These methods are implemented in MethodJIT.h.
+    inline void **nativeMap(bool constructing);
+    inline void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc);
+    inline void *nativeCodeForPC(bool constructing, jsbytecode *pc);
 
     js::mjit::JITScript *getJIT(bool constructing) {
         return constructing ? jitCtor : jitNormal;
@@ -582,6 +554,9 @@ js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
         op = JS_GetTrapOpcode(cx, script, pc);
     return op;
 }
+
+extern JSScript *
+js_CloneScript(JSContext *cx, JSScript *script);
 
 /*
  * If magic is non-null, js_XDRScript succeeds on magic number mismatch but

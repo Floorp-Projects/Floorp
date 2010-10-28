@@ -47,18 +47,18 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIArray.idl"
-#include "nsIURI.idl"
-#include "nsIVariant.idl"
 
+interface nsIArray;
+interface nsIURI;
+interface nsIVariant;
 interface nsIFile;
+
 interface nsINavHistoryContainerResultNode;
 interface nsINavHistoryQueryResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
 interface nsINavHistoryBatchCallback;
-interface nsITreeColumn;
 
 [scriptable, uuid(081452e5-be5c-4038-a5ea-f1f34cb6fd81)]
 interface nsINavHistoryResultNode : nsISupports

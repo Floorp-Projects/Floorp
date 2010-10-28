@@ -175,6 +175,11 @@ public:
   NS_IMETHOD_(nsIContent*) GetRootEditorNode() = 0;
 
   /**
+   * Create the placeholder anonymous node for the text control and returns it.
+   */
+  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode() = 0;
+
+  /**
    * Get the placeholder anonymous node for the text control.
    */
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode() = 0;

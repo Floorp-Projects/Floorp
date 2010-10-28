@@ -345,7 +345,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsFileControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                             PRUint32 aFilter)
 {
   aElements.MaybeAppendElement(mTextContent);
   aElements.MaybeAppendElement(mBrowse);
@@ -672,7 +673,7 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // Clip height only
   nsRect clipRect(aBuilder->ToReferenceFrame(this), GetSize());
-  clipRect.width = GetOverflowRect().XMost();
+  clipRect.width = GetVisualOverflowRect().XMost();
   nscoord radii[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   rv = OverflowClip(aBuilder, tempList, aLists, clipRect, radii);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -680,8 +681,8 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Disabled file controls don't pass mouse events to their children, so we
   // put an invisible item in the display list above the children
   // just to catch events
-  PRInt32 eventStates = mContent->IntrinsicState();
-  if ((eventStates & NS_EVENT_STATE_DISABLED) && IsVisibleForPainting(aBuilder)) {
+  nsEventStates eventStates = mContent->IntrinsicState();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) && IsVisibleForPainting(aBuilder)) {
     rv = aLists.Content()->AppendNewToTop(
         new (aBuilder) nsDisplayEventReceiver(aBuilder, this));
     if (NS_FAILED(rv))
@@ -719,28 +720,6 @@ nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
          (*aCallback)(tokenizer.nextToken(), aClosure));
 }
 
-PRBool FileFilterCallback(const nsAString& aVal, void* aClosure)
-{
-  PRInt32* filter = (PRInt32*)aClosure;
-
-  if (aVal.EqualsLiteral("image/*")) {
-    *filter |= nsIFilePicker::filterImages;
-  } else if (aVal.EqualsLiteral("audio/*")) {
-    *filter |= nsIFilePicker::filterAudio;
-  } else if (aVal.EqualsLiteral("video/*")) {
-    *filter |= nsIFilePicker::filterVideo;
-  }
-
-  return PR_TRUE;
-}
-
-PRInt32
-nsFileControlFrame::GetFileFilterFromAccept() const
-{
-  PRInt32 filterVal = 0;
-  this->ParseAcceptAttribute(&FileFilterCallback, (void*)&filterVal);
-  return filterVal;
-}
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation
 

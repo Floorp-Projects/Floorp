@@ -71,6 +71,4 @@ public:
     TMap(const tAllocator& a) : std::map<K, D, CMP, tAllocator>(std::map<K, D, CMP, tAllocator>::key_compare(), a) {}
 };
 
-typedef TMap<TString, TString> TPragmaTable;
-
 #endif // _COMMON_INCLUDED_

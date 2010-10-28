@@ -124,9 +124,7 @@ endif
 DEFINES += -DBINPATH=$(BINPATH)
 
 libs::
-	$(MAKE) -C $(DEPTH)/browser/locales langpack PKG_LANGPACK_PATH=
-
-UPLOAD_EXTRA_FILES += $(PKG_LANGPACK_BASENAME).xpi
+	$(MAKE) -C $(DEPTH)/browser/locales langpack
 
 ifeq (WINNT,$(OS_ARCH))
 PKGCOMP_FIND_OPTS =

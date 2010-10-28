@@ -44,7 +44,6 @@
 #endif
 
 #include "prlink.h"
-
 #include "nsWindow.h"
 #include "nsGTKToolkit.h"
 #include "nsIDeviceContext.h"
@@ -287,6 +286,7 @@ UpdateLastInputEventTime()
   }
 }
 
+#ifdef MOZ_HAVE_SHMIMAGE
 // If XShm isn't available to our client, we'll try XShm once, fail,
 // set this to false and then never try again.
 static PRBool gShmAvailable = PR_TRUE;
@@ -294,6 +294,7 @@ static PRBool UseShm()
 {
     return gfxPlatformGtk::UseClientSideRendering() && gShmAvailable;
 }
+#endif
 
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
@@ -578,8 +579,6 @@ nsWindow::nsWindow()
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
     }
-
-    memset(mKeyDownFlags, 0, sizeof(mKeyDownFlags));
 
     if (mLastDragMotionWindow == this)
         mLastDragMotionWindow = NULL;
@@ -3122,14 +3121,6 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, PRBool *aCancelled)
         return PR_FALSE;
     }
 
-    PRUint32 domVirtualKeyCode = GdkKeyCodeToDOMKeyCode(aEvent->keyval);
-
-    if (IsKeyDown(domVirtualKeyCode)) {
-        return PR_FALSE;
-    }
-
-    SetKeyDownFlag(domVirtualKeyCode);
-
     // send the key down event
     nsEventStatus status;
     nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
@@ -3159,11 +3150,11 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
-    // If the key down flag isn't set then set it so we don't send
-    // another key down event on the next key press -- DOM events are
-    // key down, key press and key up.  X only has key press and key
-    // release.  gtk2 already filters the extra key release events for
-    // us.
+    // Dispatch keydown event always.  At auto repeating, we should send
+    // KEYDOWN -> KEYPRESS -> KEYDOWN -> KEYPRESS ... -> KEYUP
+    // However, old distributions (e.g., Ubuntu 9.10) sent native key
+    // release event, so, on such platform, the DOM events will be:
+    // KEYDOWN -> KEYPRESS -> KEYUP -> KEYDOWN -> KEYPRESS -> KEYUP...
 
     PRBool isKeyDownCancelled = PR_FALSE;
     if (DispatchKeyDownEvent(aEvent, &isKeyDownCancelled) &&
@@ -3340,9 +3331,6 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
-
-    // unset the key down flag
-    ClearKeyDownFlag(event.keyCode);
 
     nsEventStatus status;
     DispatchEvent(&event, status);

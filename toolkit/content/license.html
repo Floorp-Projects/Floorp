@@ -169,6 +169,7 @@
       <li><a href="about:license#chromium">Chromium License</a></li>
       <li><a href="about:license#hunspell-nl">Dutch Spellchecking Dictionary License</a></li>
       <li><a href="about:license#expat">Expat License</a></li>
+      <li><a href="about:license#firebug">Firebug License</a></li>
       <li><a href="about:license#gfx-font-list">gfxFontList License</a></li>
       <li><a href="about:license#gears">Google Gears License</a></li>
       <li><a href="about:license#gears-istumbler">Google Gears/iStumbler License</a></li>
@@ -192,6 +193,7 @@
       <li><a href="about:license#sparkle">Sparkle License</a></li>
       <li><a href="about:license#sunsoft">SunSoft License</a></li>
       <li><a href="about:license#ucal">University of California License</a></li>      
+      <li><a href="about:license#ucambridge">University of Cambridge License</a></li>      
       <li><a href="about:license#uszeged">University of Szeged License</a></li>      
       <li><a href="about:license#hunspell-en-US">US English Spellchecking Dictionary Licenses</a></li>
       <li><a href="about:license#v8">V8 License</a></li>
@@ -1949,7 +1951,7 @@ necessary.  Here is a sample; alter the names:
 
     <h1><a name="apple"></a>Apple License</h1>
 
-    <p class="correctme">This license applies to certain files in the directories <span class="path">js/src/assembler/assembler/</span>, <span class="path">js/src/assembler/wtf/</span>, and <span class="path">widget/src/cocoa</span>.</p>
+    <p class="correctme">This license applies to certain files in the directories <span class="path">js/src/assembler/assembler/</span>, <span class="path">js/src/assembler/wtf/</span>, <span class="path">js/src/yarr/wtf</span>, <span class="path">js/src/yarr/yarr</span>, and <span class="path">widget/src/cocoa</span>.</p>
     
 <pre>
 Copyright (C) 2008, 2009 Apple Inc. All rights reserved.
@@ -2187,9 +2189,10 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
     <h1><a name="chromium"></a>Chromium License</h1>
 
-    <p class="correctme">This license applies to some files in the directory
+    <p class="correctme">This license applies to some files in the directories
       <span class="path">ipc/chromium/</span>,
-      <span class="path">dom/plugins/</span> and
+      <span class="path">dom/plugins/</span>,
+      <span class="path">gfx/ots/</span> and
       <span class="path">gfx/ycbcr</span>.
     </p>
 
@@ -2297,6 +2300,46 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</pre>
+
+
+
+    <hr>
+
+    <h1><a name="firebug"></a>Firebug License</h1>
+
+    <p class="correctme">This license applies to some code in the file
+    <span class="path">toolkit/components/console/hudservice/HUDService.jsm</span>.</p>
+
+<pre>
+Copyright (c) 2007, Parakey Inc.
+All rights reserved.
+
+Redistribution and use of this software in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above
+  copyright notice, this list of conditions and the
+  following disclaimer.
+
+* Redistributions in binary form must reproduce the above
+  copyright notice, this list of conditions and the
+  following disclaimer in the documentation and/or other
+  materials provided with the distribution.
+
+* Neither the name of Parakey Inc. nor the names of its
+  contributors may be used to endorse or promote products
+  derived from this software without specific prior
+  written permission of Parakey Inc.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
 
@@ -2757,8 +2800,9 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a name="jquery"></a>jQuery License</h1>
 
     <p class="correctme">This license applies to files in the directory
-      <span class="path">mail/jquery/</span>. (This code only ships in the
-      Thunderbird messaging software or products based on it.)</p>
+      <span class="path">mail/jquery/</span>.<br>
+      Furthermore, the file <span class="path">browser/base/content/tabview/iq.js</span>
+      incorporates work from jQuery.</p>
 
 <pre>
 Copyright (c) 2010 John Resig, http://jquery.com/
@@ -3220,6 +3264,43 @@ SUCH DAMAGE.
     
     <hr>
 
+    <h1><a name="ucambridge"></a>University of Cambridge License</h1>
+
+    <p class="correctme">This license applies to certain files in the directory <span class="path">js/src/yarr/pcre/</span>.</p>
+
+<pre>
+Copyright (c) 1997-2005 University of Cambridge. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the University of Cambridge nor the name of Apple
+      Inc. nor the names of their contributors may be used to endorse or
+      promote products derived from this software without specific prior
+      written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+</pre>
+
+    <hr>
+
     <h1><a name="uszeged"></a>University of Szeged License</h1>
 
     <p class="correctme">This license applies to certain files in the directory <span class="path">js/src/assembler/assembler/</span>.</p>
@@ -3390,6 +3471,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <li><span class="path">media/libogg/</span>, 2002</li>
       <li><span class="path">media/libtheora/</span>, 2002-2007</li>
       <li><span class="path">media/libvorbis/</span>, 2002-2004</li>
+      <li><span class="path">media/libtremor/</span>, 2002-2010</li>
     </ul>
 
 <pre>

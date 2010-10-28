@@ -108,7 +108,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -123,7 +123,7 @@ add_test(function() {
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
       isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -159,7 +159,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -175,7 +175,7 @@ add_test(function() {
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
       isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -214,7 +214,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -230,7 +230,7 @@ add_test(function() {
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
       isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -256,14 +256,14 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = "Uninstall";
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
     // Make sure to show local add-ons
-    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(gDocument.getElementById("search-filter-local"), { }, gManagerWindow);
 
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
@@ -276,7 +276,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -291,7 +291,7 @@ add_test(function() {
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
       isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -314,14 +314,14 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = "Uninstall";
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
     // Make sure to show local add-ons
-    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(gDocument.getElementById("search-filter-local"), { }, gManagerWindow);
 
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(aAddon.isActive, "Add-on should be active");
@@ -335,7 +335,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -351,7 +351,7 @@ add_test(function() {
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
       isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -375,14 +375,14 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = "Uninstall";
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
     // Make sure to show local add-ons
-    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(gDocument.getElementById("search-filter-local"), { }, gManagerWindow);
 
     AddonManager.getAddonByID(ID, function(aAddon) {
       aAddon.userDisabled = true;
@@ -398,7 +398,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -414,7 +414,7 @@ add_test(function() {
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
       isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -449,15 +449,15 @@ add_test(function() {
       var item = get_item_in_list(ID, list);
       isnot(item, null, "Should have found the add-on in the list");
 
-      EventUtils.synthesizeMouse(item, 2, 2, { clickCount: 2 }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
 
-        var button = gDocument.getElementById("detail-uninstall");
+        var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
         ok(!button.disabled, "Button should not be disabled");
 
-        EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+        EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
@@ -477,7 +477,7 @@ add_test(function() {
           button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
           isnot(button, null, "Should have an undo button");
 
-          EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
           // Force XBL to apply
           item.clientTop;
@@ -512,15 +512,15 @@ add_test(function() {
       var item = get_item_in_list(ID, list);
       isnot(item, null, "Should have found the add-on in the list");
 
-      EventUtils.synthesizeMouse(item, 2, 2, { clickCount: 2 }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
 
-        var button = gDocument.getElementById("detail-uninstall");
+        var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
         ok(!button.disabled, "Button should not be disabled");
 
-        EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+        EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
@@ -541,7 +541,7 @@ add_test(function() {
           button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
           isnot(button, null, "Should have an undo button");
 
-          EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
           // Force XBL to apply
           item.clientTop;
@@ -578,15 +578,15 @@ add_test(function() {
       var item = get_item_in_list(ID, list);
       isnot(item, null, "Should have found the add-on in the list");
 
-      EventUtils.synthesizeMouse(item, 2, 2, { clickCount: 2 }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
 
-        var button = gDocument.getElementById("detail-uninstall");
+        var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
         ok(!button.disabled, "Button should not be disabled");
 
-        EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+        EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
         wait_for_view_load(gManagerWindow, function() {
           is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
@@ -607,7 +607,7 @@ add_test(function() {
           button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
           isnot(button, null, "Should have an undo button");
 
-          EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
           // Force XBL to apply
           item.clientTop;
@@ -647,7 +647,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -679,7 +679,7 @@ add_test(function() {
           button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
           isnot(button, null, "Should have an undo button");
 
-          EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
           // Force XBL to apply
           item.clientTop;
@@ -703,14 +703,14 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = "Uninstall";
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
     // Make sure to show local add-ons
-    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(gDocument.getElementById("search-filter-local"), { }, gManagerWindow);
 
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
@@ -723,7 +723,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -742,7 +742,7 @@ add_test(function() {
         is(gCategoryUtilities.selectedCategory, "plugin", "View should have changed to plugin");
         searchBox.value = "Uninstall";
 
-        EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+        EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
         EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
         wait_for_view_load(gManagerWindow, function() {
@@ -760,7 +760,7 @@ add_test(function() {
           button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
           isnot(button, null, "Should have an undo button");
 
-          EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
           // Force XBL to apply
           item.clientTop;
@@ -799,7 +799,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -822,7 +822,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       gCategoryUtilities.openType("plugin", function() {
         is(gCategoryUtilities.selectedCategory, "plugin", "View should have changed to extension");
@@ -857,14 +857,14 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = "Uninstall";
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
     // Make sure to show local add-ons
-    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(gDocument.getElementById("search-filter-local"), { }, gManagerWindow);
 
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(aAddon.isActive, "Add-on should be active");
@@ -878,7 +878,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -901,7 +901,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       gCategoryUtilities.openType("plugin", function() {
         is(gCategoryUtilities.selectedCategory, "plugin", "View should have changed to extension");
@@ -912,7 +912,7 @@ add_test(function() {
 
           searchBox.value = "Uninstall";
 
-          EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+          EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
           EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
           wait_for_view_load(gManagerWindow, function() {
@@ -954,7 +954,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -977,7 +977,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       close_manager(gManagerWindow, function() {
         AddonManager.getAddonsByIDs([ID, ID2], function([aAddon, aAddon2]) {
@@ -1015,14 +1015,14 @@ add_test(function() {
   var searchBox = gManagerWindow.document.getElementById("header-search");
   searchBox.value = "Uninstall";
 
-  EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
   EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
     is(gCategoryUtilities.selectedCategory, "search", "View should have changed to search");
 
     // Make sure to show local add-ons
-    EventUtils.synthesizeMouse(gDocument.getElementById("search-filter-local"), 2, 2, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(gDocument.getElementById("search-filter-local"), { }, gManagerWindow);
 
     AddonManager.getAddonByID(ID, function(aAddon) {
       ok(aAddon.isActive, "Add-on should be active");
@@ -1036,7 +1036,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       // Force XBL to apply
       item.clientTop;
@@ -1059,7 +1059,7 @@ add_test(function() {
       isnot(button, null, "Should have a remove button");
       ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouse(button, 2, 2, { }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
       close_manager(gManagerWindow, function() {
         AddonManager.getAddonsByIDs([ID, ID2], function([aAddon, aAddon2]) {
@@ -1075,7 +1075,7 @@ add_test(function() {
 
             searchBox.value = "Uninstall";
 
-            EventUtils.synthesizeMouse(searchBox, 2, 2, { }, gManagerWindow);
+            EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
             EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
             wait_for_view_load(gManagerWindow, function() {

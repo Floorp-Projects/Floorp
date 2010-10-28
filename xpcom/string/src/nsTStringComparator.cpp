@@ -53,7 +53,7 @@ Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_Cha
     size_type lengthToCompare = NS_MIN(lLength, rLength);
 
     int result;
-    if ( (result = comp(leftIter.get(), rightIter.get(), lengthToCompare)) == 0 )
+    if ( (result = comp(leftIter.get(), rightIter.get(), lengthToCompare, lengthToCompare)) == 0 )
       {
         if ( lLength < rLength )
           result = -1;
@@ -67,13 +67,8 @@ Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_Cha
   }
 
 int
-nsTDefaultStringComparator_CharT::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
+nsTDefaultStringComparator_CharT::operator()( const char_type* lhs, const char_type* rhs, PRUint32 lLength, PRUint32 rLength) const
   {
-    return nsCharTraits<CharT>::compare(lhs, rhs, aLength);
+    return (lLength == rLength) ? nsCharTraits<CharT>::compare(lhs, rhs, lLength) :
+           (lLength > rLength) ? 1 : -1;
   }
-
-int
-nsTDefaultStringComparator_CharT::operator()( char_type lhs, char_type rhs) const
-  {
-    return lhs - rhs;
-  } 

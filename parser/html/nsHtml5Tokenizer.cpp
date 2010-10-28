@@ -949,12 +949,11 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
               NS_HTML5_CONTINUE(stateloop);
             }
             case '[': {
-              if (tokenHandler->isInForeign()) {
+              if (tokenHandler->cdataSectionAllowed()) {
                 clearLongStrBufAndAppend(c);
                 index = 0;
                 state = NS_HTML5TOKENIZER_CDATA_START;
                 NS_HTML5_CONTINUE(stateloop);
-              } else {
               }
             }
             default: {
@@ -1141,48 +1140,6 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           }
         }
 
-      }
-      case NS_HTML5TOKENIZER_COMMENT_END_SPACE: {
-        for (; ; ) {
-          if (++pos == endPos) {
-            NS_HTML5_BREAK(stateloop);
-          }
-          c = checkChar(buf, pos);
-          switch(c) {
-            case '>': {
-              emitComment(0, pos);
-              state = NS_HTML5TOKENIZER_DATA;
-              NS_HTML5_CONTINUE(stateloop);
-            }
-            case '-': {
-              appendLongStrBuf(c);
-              state = NS_HTML5TOKENIZER_COMMENT_END_DASH;
-              NS_HTML5_CONTINUE(stateloop);
-            }
-            case ' ':
-            case '\t':
-            case '\f': {
-              appendLongStrBuf(c);
-              continue;
-            }
-            case '\r': {
-              appendLongStrBufCarriageReturn();
-              NS_HTML5_BREAK(stateloop);
-            }
-            case '\n': {
-              appendLongStrBufLineFeed();
-              continue;
-            }
-            case '\0': {
-              c = 0xfffd;
-            }
-            default: {
-              appendLongStrBuf(c);
-              state = NS_HTML5TOKENIZER_COMMENT;
-              NS_HTML5_CONTINUE(stateloop);
-            }
-          }
-        }
       }
       case NS_HTML5TOKENIZER_COMMENT_END_BANG: {
         for (; ; ) {
@@ -3494,8 +3451,7 @@ nsHtml5Tokenizer::eof()
         NS_HTML5_BREAK(eofloop);
       }
       case NS_HTML5TOKENIZER_COMMENT_START:
-      case NS_HTML5TOKENIZER_COMMENT:
-      case NS_HTML5TOKENIZER_COMMENT_END_SPACE: {
+      case NS_HTML5TOKENIZER_COMMENT: {
 
         emitComment(0, 0);
         NS_HTML5_BREAK(eofloop);
@@ -3684,6 +3640,14 @@ nsHtml5Tokenizer::eof()
         handleNcrValue(returnState);
         state = returnState;
         continue;
+      }
+      case NS_HTML5TOKENIZER_CDATA_RSQB: {
+        tokenHandler->characters(nsHtml5Tokenizer::RSQB_RSQB, 0, 1);
+        NS_HTML5_BREAK(eofloop);
+      }
+      case NS_HTML5TOKENIZER_CDATA_RSQB_RSQB: {
+        tokenHandler->characters(nsHtml5Tokenizer::RSQB_RSQB, 0, 2);
+        NS_HTML5_BREAK(eofloop);
       }
       case NS_HTML5TOKENIZER_DATA:
       default: {

@@ -64,6 +64,7 @@ _TEST_FILES = \
   browser_bug587970.js \
   browser_bug591465.js \
   browser_bug591465.xml \
+  browser_bug596336.js \
   browser_details.js \
   browser_discovery.js \
   browser_dragdrop.js \
@@ -83,6 +84,8 @@ _TEST_FILES = \
   browser_recentupdates.js \
   browser_manualupdates.js \
   browser_globalwarnings.js \
+  browser_eula.js \
+  browser_eula.xml \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)

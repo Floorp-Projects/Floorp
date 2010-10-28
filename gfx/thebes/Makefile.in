@@ -40,6 +40,7 @@ EXPORTS	= \
 	gfxUserFontSet.h \
 	GLDefs.h \
 	GLContext.h \
+	GLContextSymbols.h \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
 	nsCoreAnimationSupport.h \
@@ -122,6 +123,7 @@ EXPORTS += \
 	gfxQPainterSurface.h \
 	gfxQtNativeRenderer.h \
 	gfxQtPlatform.h \
+	gfxPDFSurface.h \
 	$(NULL)
 
 ifdef MOZ_X11
@@ -230,6 +232,7 @@ EXTRA_DSO_LDOPTS += \
 	$(ZLIB_LIBS) \
 	$(QCMS_LIBS) \
 	$(MOZ_HARFBUZZ_LIBS) \
+	$(MOZ_OTS_LIBS) \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -349,6 +352,7 @@ CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
+CPPSRCS +=	gfxPDFSurface.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 

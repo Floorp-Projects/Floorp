@@ -129,6 +129,7 @@ nsBaseAppShell::NativeEventCallback()
   ++mEventloopNestingLevel;
   EventloopNestingState prevVal = mEventloopNestingState;
   NS_ProcessPendingEvents(thread, THREAD_EVENT_STARVATION_LIMIT);
+  mProcessedGeckoEvents = PR_TRUE;
   mEventloopNestingState = prevVal;
   mBlockNativeEvent = prevBlockNativeEvent;
 
@@ -289,6 +290,9 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   // thread's event queue before we return.  Otherwise, the thread will block
   // on its event queue waiting for an event.
   PRBool needEvent = mayWait;
+  // Reset prior to invoking DoProcessNextNativeEvent which might cause
+  // NativeEventCallback to process gecko events.
+  mProcessedGeckoEvents = PR_FALSE;
 
   if (mFavorPerf <= 0 && start > mSwitchTime + mStarvationDelay) {
     // Favor pending native events
@@ -306,7 +310,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
     }
   }
 
-  while (!NS_HasPendingEvents(thr)) {
+  while (!NS_HasPendingEvents(thr) && !mProcessedGeckoEvents) {
     // If we have been asked to exit from Run, then we should not wait for
     // events to process.  Note that an inner nested event loop causes
     // 'mayWait' to become false too, through 'mBlockedWait'.
@@ -323,7 +327,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   // Make sure that the thread event queue does not block on its monitor, as
   // it normally would do if it did not have any pending events.  To avoid
   // that, we simply insert a dummy event into its queue during shutdown.
-  if (needEvent && !NS_HasPendingEvents(thr)) {  
+  if (needEvent && !mExiting && !NS_HasPendingEvents(thr)) {  
     if (!mDummyEvent)
       mDummyEvent = new nsRunnable();
     thr->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);

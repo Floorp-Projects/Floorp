@@ -330,69 +330,6 @@ nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 &aMetric)
     rv = NS_OK;
 
     switch (aID) {
-        case eMetric_WindowTitleHeight:
-        case eMetric_WindowBorderWidth:
-        case eMetric_WindowBorderHeight:
-            aMetric = 0;
-            break;
-
-        case eMetric_Widget3DBorder:
-            aMetric = 4;
-            break;
-
-        case eMetric_TextFieldHeight:
-            aMetric = 15;
-            break;
-
-        case eMetric_TextFieldBorder:
-            aMetric = 2;
-            break;
-
-        case eMetric_TextVerticalInsidePadding:
-            aMetric = 0;
-            break;
-
-        case eMetric_TextShouldUseVerticalInsidePadding:
-            aMetric = 0;
-            break;
-
-        case eMetric_TextHorizontalInsideMinimumPadding:
-            aMetric = 15;
-            break;
-
-        case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-            aMetric = 1;
-            break;
-
-        case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-            aMetric = 10;
-            break;
-
-        case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-            aMetric = 8;
-            break;
-
-        case eMetric_CheckboxSize:
-        case eMetric_RadioboxSize:
-            aMetric = 15;
-            break;
-
-        case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-            aMetric = 15;
-            break;
-
-        case eMetric_ListHorizontalInsideMinimumPadding:
-            aMetric = 15;
-            break;
-
-        case eMetric_ListShouldUseVerticalInsidePadding:
-            aMetric = 1;
-            break;
-
-        case eMetric_ListVerticalInsidePadding:
-            aMetric = 1;
-            break;
-
         case eMetric_CaretBlinkTime:
             aMetric = 500;
             break;
@@ -431,6 +368,7 @@ nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 &aMetric)
         case eMetric_WindowsDefaultTheme:
         case eMetric_TouchEnabled:
         case eMetric_MaemoClassic:
+        case eMetric_WindowsThemeIdentifier:
             aMetric = 0;
             rv = NS_ERROR_NOT_IMPLEMENTED;
             break;
@@ -457,38 +395,6 @@ nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
     rv = NS_OK;
 
     switch (aID) {
-        case eMetricFloat_TextFieldVerticalInsidePadding:
-            aMetric = 0.25f;
-            break;
-
-        case eMetricFloat_TextFieldHorizontalInsidePadding:
-            aMetric = 0.95f; // large number on purpose so minimum padding is used
-            break;
-
-        case eMetricFloat_TextAreaVerticalInsidePadding:
-            aMetric = 0.40f;
-            break;
-
-        case eMetricFloat_TextAreaHorizontalInsidePadding:
-            aMetric = 0.40f; // large number on purpose so minimum padding is used
-            break;
-
-        case eMetricFloat_ListVerticalInsidePadding:
-            aMetric = 0.10f;
-            break;
-
-        case eMetricFloat_ListHorizontalInsidePadding:
-            aMetric = 0.40f;
-            break;
-
-        case eMetricFloat_ButtonVerticalInsidePadding:
-            aMetric = 0.25f;
-            break;
-
-        case eMetricFloat_ButtonHorizontalInsidePadding:
-            aMetric = 0.25f;
-            break;
-
         case eMetricFloat_IMEUnderlineRelativeSize:
             aMetric = 1.0f;
             break;

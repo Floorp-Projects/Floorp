@@ -84,8 +84,7 @@ public:
   virtual already_AddRefed<nsAccessible>
     CreateHTMLLabelAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
-    CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell,
-                           const nsAString& aBulletText);
+    CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
     CreateHTMLListboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
@@ -111,13 +110,20 @@ public:
   virtual nsAccessible* AddNativeRootAccessible(void* aAtkAccessible);
   virtual void RemoveNativeRootAccessible(nsAccessible* aRootAccessible);
 
-  virtual nsresult InvalidateSubtreeFor(nsIPresShell *aPresShell,
-                                        nsIContent *aContent,
-                                        PRUint32 aChangeType);
+  virtual void ContentRangeInserted(nsIPresShell* aPresShell,
+                                      nsIContent* aContainer,
+                                      nsIContent* aStartChild,
+                                      nsIContent* aEndChild);
+
+  virtual void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aContainer,
+                              nsIContent* aChild);
 
   virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
   virtual void PresShellDestroyed(nsIPresShell* aPresShell);
+
+  virtual void RecreateAccessible(nsIPresShell* aPresShell,
+                                  nsIContent* aContent);
 
   virtual void FireAccessibleEvent(PRUint32 aEvent, nsAccessible* aTarget);
 
@@ -180,11 +186,21 @@ public:
   }
 
   /**
+   * Return cached accessible for the given DOM node or cached container
+   * accessible if there's no cached accessible for the given node.
+   */
+  nsAccessible* GetCachedAccessibleOrContainer(nsINode* aNode);
+
+  /**
    * Return the first cached accessible parent of a DOM node.
    *
    * @param aDOMNode    [in] the DOM node to get an accessible for
    */
-  nsAccessible* GetCachedContainerAccessible(nsINode *aNode);
+  inline nsAccessible* GetCachedContainerAccessible(nsINode *aNode)
+  {
+    return aNode ?
+      GetCachedAccessibleOrContainer(aNode->GetNodeParent()) : nsnull;
+  }
 
   /**
    * Initialize an accessible and cache it. The method should be called for

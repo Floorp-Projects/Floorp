@@ -167,7 +167,7 @@ toolbarbutton.bookmark-item {
   color: #222;
   border: 0;
   border-radius: 10000px;
-  padding: 0 8px;
+  padding: 1px 8px;
   margin: 0 0 1px;
 }
 
@@ -214,6 +214,8 @@ toolbarbutton.bookmark-item > menupopup {
 .bookmark-item > .toolbarbutton-icon {
   width: 16px;
   min-height: 16px;
+  max-height: 16px;
+  padding: 0;
 }
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
@@ -495,10 +497,6 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   border-bottom-right-radius: 0;
 }
 
-#back-forward-dropmarker {
-  display: none;
-}
-
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-back.png") !important;
@@ -710,6 +708,13 @@ toolbar[mode="icons"] #zoom-in-button {
   -moz-image-region: rect(0, 20px, 20px, 0px);
 }
 
+/* feed button */
+
+#feed-button {
+  -moz-image-region: rect(0, 460px, 20px, 440px);
+}
+
+
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 
 #minimize-button,
@@ -771,7 +776,7 @@ toolbar[mode="icons"] #zoom-in-button {
 
 #identity-box:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
-              0 0 3px 2px -moz-mac-focusring;
+              0 0 2px 2px -moz-mac-focusring;
 }
 
 #identity-box {
@@ -903,77 +908,6 @@ toolbar[mode="icons"] #zoom-in-button {
   margin: 0;
 }
 
-/* urlbar progress */
-
-.tab-progress,
-#urlbar-progress {
-  -moz-appearance: none;
-  height: 3px;
-  margin: -2px 0 -1px;
-}
-
-#urlbar-progress[value="0"] > .progress-remainder {
-  background-image: -moz-linear-gradient(left, rgba(255,255,255,0), rgb(255,255,255), rgba(255,255,255,0)) !important;
-  background-size: 10%;
-  background-repeat: no-repeat;
-  background-position: right;
-  -moz-transition-property: background-position;
-  -moz-transition-duration: 2s;
-  -moz-transition-timing-function: linear;
-}
-
-#urlbar-progress[value="0"][slideback] > .progress-remainder {
-  background-position: left;
-}
-
-.tab-progress > .progress-bar,
-#urlbar-progress > .progress-bar {
-  -moz-appearance: none;
-  border: 0;
-  border-top: 1px solid rgba(0,0,0,.4);
-  border-bottom: 1px solid rgba(0,0,0,.3);
-  -moz-background-origin: border;
-  background-image: -moz-linear-gradient(left, rgb(107,160,193), rgb(169,223,251));
-}
-
-.tab-progress > .progress-bar:-moz-window-inactive,
-#urlbar-progress > .progress-bar:-moz-window-inactive {
-  border-top: 1px solid rgba(0,0,0,.2);
-  border-bottom: 1px solid rgba(0,0,0,.1);
-  background-image: -moz-linear-gradient(left, rgb(150,150,150), rgb(210,210,210));
-}
-
-.tab-progress > .progress-bar:-moz-locale-dir(rtl),
-#urlbar-progress > .progress-bar:-moz-locale-dir(rtl) {
-  background-image: -moz-linear-gradient(right, rgb(107,160,193), rgb(169,223,251));
-}
-
-.tab-progress > .progress-bar:-moz-window-inactive:-moz-locale-dir(rtl),
-#urlbar-progress > .progress-bar:-moz-window-inactive:-moz-locale-dir(rtl) {
-  background-image: -moz-linear-gradient(right, rgb(150,150,150), rgb(210,210,210));
-}
-
-.tab-progress > .progress-remainder,
-#urlbar-progress > .progress-remainder {
-  border-top: 1px solid rgba(0,0,0,.1);
-  border-bottom: 1px solid rgba(0,0,0,.1);
-  background-color: rgba(0,0,0,.3);
-}
-
-.urlbar-contents {
-  -moz-margin-end: -2px;
-}
-
-.urlbar-history-dropmarker {
-  -moz-margin-end: 2px;
-}
-
-/* tab progress */
-
-#tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab > .tab-stack > .tab-progress-container {
-  -moz-box-pack: end;
-}
-
 /* ----- AUTOCOMPLETE ----- */
 
 #treecolAutoCompleteImage {
@@ -1073,7 +1007,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-bottom-right-radius: 2px;
 }
 
-#urlbar > toolbarbutton:active:hover {
+#urlbar > toolbarbutton:not([disabled]):active:hover {
   box-shadow: @toolbarbuttonPressedInnerShadow@;
   padding-left: 4px;
   border-left: none;
@@ -1090,7 +1024,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 14px, 14px, 0px);
 }
 
-#urlbar-reload-button:hover {
+#urlbar-reload-button:not([disabled]):hover {
   -moz-image-region: rect(0px, 28px, 14px, 14px);
   background-image: -moz-linear-gradient(rgb(162,207,241), rgb(111,178,225) 49%, rgb(91,159,217) 51%, rgb(62,138,200));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
@@ -1102,10 +1036,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(rgb(231,162,140), rgb(209,119,100) 49%, rgb(193,92,78) 51%, rgb(173,72,58));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
               -1px -1px 1px rgba(255,255,255,.15) inset;
-}
-
-#urlbar-stop-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: .4;
 }
 
 /* STAR BUTTON */
@@ -1536,10 +1466,19 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0;
 }
 
+.tab-throbber,
 .tab-icon-image {
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://global/skin/tree/item.png");
+}
+
+.tab-throbber {
+  list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
+}
+
+.tab-throbber[progress] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
 }
 
 .tabbrowser-tab:not(:hover) > * > * > .tab-icon-image:not([selected="true"]) {
@@ -1978,8 +1917,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 /* Popup Bounding Box */
-#identity-popup,
-#notification-popup {
+#identity-popup {
   -moz-appearance: none;
   -moz-window-shadow: none;
   background-color: transparent;
@@ -2000,8 +1938,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #notification-popup {
   color: #fff;
-  margin-top: -1px;
-  margin-left: -27px;
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 #notification-popup-box {

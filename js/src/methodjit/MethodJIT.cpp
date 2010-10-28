@@ -720,15 +720,12 @@ ThreadData::Finish()
 #endif
 }
 
-extern "C" JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-                                   Value *stackLimit);
+extern "C" JSBool
+JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit);
 
-static inline JSBool
-EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
+JSBool
+mjit::EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit)
 {
-    JS_ASSERT(cx->regs);
-    JS_CHECK_RECURSION(cx, return JS_FALSE;);
-
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
     JSScript *script = fp->script();
@@ -738,10 +735,7 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
     prof.start();
 #endif
 
-    Value *stackLimit = cx->stack().getStackLimit(cx);
-    if (!stackLimit)
-        return false;
-
+    JS_ASSERT(cx->regs->fp  == fp);
     JSFrameRegs *oldRegs = cx->regs;
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
@@ -761,6 +755,18 @@ EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
     return ok;
 }
 
+static inline JSBool
+CheckStackAndEnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code)
+{
+    JS_CHECK_RECURSION(cx, return JS_FALSE;);
+
+    Value *stackLimit = cx->stack().getStackLimit(cx);
+    if (!stackLimit)
+        return false;
+
+    return EnterMethodJIT(cx, fp, code, stackLimit);
+}
+
 JSBool
 mjit::JaegerShot(JSContext *cx)
 {
@@ -775,7 +781,7 @@ mjit::JaegerShot(JSContext *cx)
 
     JS_ASSERT(cx->regs->pc == script->code);
 
-    return EnterMethodJIT(cx, cx->fp(), jit->invokeEntry);
+    return CheckStackAndEnterMethodJIT(cx, cx->fp(), jit->invokeEntry);
 }
 
 JSBool
@@ -785,7 +791,7 @@ js::mjit::JaegerShotAtSafePoint(JSContext *cx, void *safePoint)
     JS_ASSERT(!TRACE_RECORDER(cx));
 #endif
 
-    return EnterMethodJIT(cx, cx->fp(), safePoint);
+    return CheckStackAndEnterMethodJIT(cx, cx->fp(), safePoint);
 }
 
 template <typename T>
@@ -805,13 +811,20 @@ mjit::JITScript::release()
     code.m_executablePool->release();
 
 #if defined JS_POLYIC
-    for (uint32 i = 0; i < nPICs; i++) {
-        pics[i].releasePools();
-        Destroy(pics[i].execPools);
-    }
+    for (uint32 i = 0; i < nPICs; i++)
+        pics[i].finish();
+    for (uint32 i = 0; i < nGetElems; i++)
+        getElems[i].finish();
 #endif
 
 #if defined JS_MONOIC
+    for (JSC::ExecutablePool **pExecPool = execPools.begin();
+         pExecPool != execPools.end();
+         ++pExecPool)
+    {
+        (*pExecPool)->release();
+    }
+    
     for (uint32 i = 0; i < nCallICs; i++)
         callICs[i].releasePools();
 #endif
@@ -829,7 +842,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitArityCheckNormal = NULL;
         cx->free(script->jitNormal);
         script->jitNormal = NULL;
-        script->nmapNormal = NULL;
     }
 
     if (script->jitCtor) {
@@ -837,7 +849,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitArityCheckCtor = NULL;
         cx->free(script->jitCtor);
         script->jitCtor = NULL;
-        script->nmapCtor = NULL;
     }
 }
 
@@ -850,3 +861,56 @@ mjit::ProfileStubCall(VMFrame &f)
 }
 #endif
 
+#ifdef JS_POLYIC
+static int
+PICPCComparator(const void *key, const void *entry)
+{
+    const jsbytecode *pc = (const jsbytecode *)key;
+    const ic::PICInfo *pic = (const ic::PICInfo *)entry;
+
+    if (ic::PICInfo::CALL != pic->kind)
+        return ic::PICInfo::CALL - pic->kind;
+
+    /*
+     * We can't just return |pc - pic->pc| because the pointers may be
+     * far apart and an int (or even a ptrdiff_t) may not be large
+     * enough to hold the difference. C says that pointer subtraction
+     * is only guaranteed to work for two pointers into the same array.
+     */
+    if (pc < pic->pc)
+        return -1;
+    else if (pc == pic->pc)
+        return 0;
+    else
+        return 1;
+}
+
+uintN
+mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
+{
+    ic::PICInfo *pic;
+    
+    if (mjit::JITScript *jit = script->getJIT(false)) {
+        pic = (ic::PICInfo *)bsearch(pc, jit->pics, jit->nPICs, sizeof(jit->pics[0]),
+                                     PICPCComparator);
+        if (pic)
+            return pic->stubsGenerated + 1; /* Add 1 for the inline path. */
+    }
+    
+    if (mjit::JITScript *jit = script->getJIT(true)) {
+        pic = (ic::PICInfo *)bsearch(pc, jit->pics,
+                                     jit->nPICs, sizeof(jit->pics[0]),
+                                     PICPCComparator);
+        if (pic)
+            return pic->stubsGenerated + 1; /* Add 1 for the inline path. */
+    }
+
+    return 1;
+}
+#else
+uintN
+mjit::GetCallTargetCount(JSScript *script, jsbytecode *pc)
+{
+    return 1;
+}
+#endif

@@ -143,9 +143,12 @@ namespace mjit {
 namespace ic {
 # if defined JS_POLYIC
     struct PICInfo;
+    struct GetElementIC;
 # endif
 # if defined JS_MONOIC
     struct MICInfo;
+    struct EqualityICInfo;
+    struct TraceICInfo;
     struct CallICInfo;
 # endif
 }
@@ -175,9 +178,12 @@ typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *
 typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 typedef void (JS_FASTCALL *VoidStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
+typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceICInfo *);
 #endif
 #ifdef JS_POLYIC
 typedef void (JS_FASTCALL *VoidStubPIC)(VMFrame &, js::mjit::ic::PICInfo *);
+typedef void (JS_FASTCALL *VoidStubGetElemIC)(VMFrame &, js::mjit::ic::GetElementIC *);
 #endif
 
 namespace mjit {
@@ -187,6 +193,7 @@ struct CallSite;
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
+    void            **nmap;     /* pc -> JIT code map, sparse */
 
     js::mjit::CallSite *callSites;
     uint32          nCallSites;
@@ -195,10 +202,20 @@ struct JITScript {
     uint32          nMICs;      /* number of MonoICs */
     ic::CallICInfo  *callICs;   /* CallICs in this script. */
     uint32          nCallICs;   /* number of call ICs */
+    ic::EqualityICInfo *equalityICs;
+    uint32          nEqualityICs;
+    ic::TraceICInfo *traceICs;
+    uint32          nTraceICs;
+
+    // Additional ExecutablePools that IC stubs were generated into.
+    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
+    ExecPoolVector execPools;
 #endif
 #ifdef JS_POLYIC
     ic::PICInfo     *pics;      /* PICs in this script */
     uint32          nPICs;      /* number of PolyICs */
+    ic::GetElementIC *getElems;
+    uint32           nGetElems;
 #endif
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */
@@ -215,6 +232,12 @@ struct JITScript {
     void purgePICs();
     void release();
 };
+
+/*
+ * Execute the given mjit code. This is a low-level call and callers must
+ * provide the same guarantees as JaegerShot/CheckStackAndEnterMethodJIT.
+ */
+JSBool EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit);
 
 /* Execute a method that has been JIT compiled. */
 JSBool JaegerShot(JSContext *cx);
@@ -258,9 +281,41 @@ struct CallSite
     uint32 id;
 };
 
+/* Re-enables a tracepoint in the method JIT. */
+void
+EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index);
+
+uintN
+GetCallTargetCount(JSScript *script, jsbytecode *pc);
+
 } /* namespace mjit */
 
 } /* namespace js */
+
+inline void *
+JSScript::maybeNativeCodeForPC(bool constructing, jsbytecode *pc)
+{
+    js::mjit::JITScript *jit = getJIT(constructing);
+    if (!jit)
+        return NULL;
+    JS_ASSERT(pc >= code && pc < code + length);
+    return jit->nmap[pc - code];
+}
+
+inline void **
+JSScript::nativeMap(bool constructing)
+{
+    return getJIT(constructing)->nmap;
+}
+
+inline void *
+JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
+{
+    void **nmap = nativeMap(constructing);
+    JS_ASSERT(pc >= code && pc < code + length);
+    JS_ASSERT(nmap[pc - code]);
+    return nmap[pc - code];
+}
 
 #ifdef _MSC_VER
 extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);

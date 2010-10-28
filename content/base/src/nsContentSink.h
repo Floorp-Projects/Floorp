@@ -145,8 +145,8 @@ class nsContentSink : public nsICSSLoaderObserver,
   void NotifyAppend(nsIContent* aContent, PRUint32 aStartIndex);
 
   // nsIDocumentObserver
-  virtual void BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
-  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType);
+  NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
+  NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
 
   virtual void UpdateChildCounts() = 0;
 

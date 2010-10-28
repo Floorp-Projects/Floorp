@@ -43,11 +43,10 @@
   // for |#ifdef NS_DEBUG|
 struct nsSize;
 
-
-// {3fd2930f-1040-4d08-b638-0b3f134e6b6f}
+// 2e89c566-0a31-4c93-bdff-222651df45a0
 #define NS_ILOOKANDFEEL_IID \
-{ 0xc23ca876, 0x6ecf, 0x49c6, \
-    { 0xb2, 0xb4, 0x5b, 0xe5, 0x16, 0xb5, 0x0e, 0x28 } }
+{ 0x2e89c566, 0x0a31, 0x4c93, \
+  { 0xbd, 0xff, 0x22, 0x26, 0x51, 0xdf, 0x45, 0xa0 } }
 
 class nsILookAndFeel: public nsISupports {
 public:
@@ -179,38 +178,17 @@ public:
   // When modifying this list, also modify nsXPLookAndFeel::sIntPrefs
   // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
   typedef enum {
-    eMetric_WindowTitleHeight,
-    eMetric_WindowBorderWidth,
-    eMetric_WindowBorderHeight,
-    eMetric_Widget3DBorder,
-    eMetric_TextFieldBorder,                              // Native border size
-    eMetric_TextFieldHeight,
-    eMetric_TextVerticalInsidePadding,                    // needed only because of GTK
-    eMetric_TextShouldUseVerticalInsidePadding,           // needed only because of GTK
-    eMetric_TextHorizontalInsideMinimumPadding,  
-    eMetric_TextShouldUseHorizontalInsideMinimumPadding,  // needed only because of GTK
-    eMetric_ButtonHorizontalInsidePaddingNavQuirks,  
-    eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks, 
-    eMetric_CheckboxSize,
-    eMetric_RadioboxSize,
-    
-    eMetric_ListShouldUseHorizontalInsideMinimumPadding,  // needed only because of GTK
-    eMetric_ListHorizontalInsideMinimumPadding,         
-
-    eMetric_ListShouldUseVerticalInsidePadding,           // needed only because of GTK
-    eMetric_ListVerticalInsidePadding,                    // needed only because of GTK
-
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
     eMetric_CaretWidth,                                   // pixel width of caret
     eMetric_ShowCaretDuringSelection,                       // show the caret when text is selected?
     eMetric_SelectTextfieldsOnKeyFocus,                   // select textfields when focused via tab/accesskey?
     eMetric_SubmenuDelay,                                 // delay before submenus open
     eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
+    eMetric_ScrollbarsCanOverlapContent,                  // can scrollbars float above content?
     eMetric_SkipNavigatingDisabledMenuItem,               // skip navigating to disabled menu item?
     eMetric_DragThresholdX,                               // begin a drag if the mouse is moved further than the threshold while the button is down
     eMetric_DragThresholdY,
     eMetric_UseAccessibilityTheme,                        // Accessibility theme being used?
-    eMetric_IsScreenReaderActive,                         // Screen reader being used?
 
     eMetric_ScrollArrowStyle,                             // position of scroll arrows in a scrollbar
     eMetric_ScrollSliderStyle,                            // is scroll thumb proportional or fixed?
@@ -326,8 +304,26 @@ public:
     /**
      * If this metric != 0, support window dragging on the menubar.
      */
-    eMetric_MenuBarDrag
+    eMetric_MenuBarDrag,
+    /**
+     * Return the appropriate WindowsThemeIdentifier for the current theme.
+     */
+    eMetric_WindowsThemeIdentifier
   } nsMetricID;
+
+  /**
+   * Windows themes we currently detect.
+   */
+  enum WindowsThemeIdentifier {
+    eWindowsTheme_Generic = 0, // unrecognized theme
+    eWindowsTheme_Classic,
+    eWindowsTheme_Aero,
+    eWindowsTheme_LunaBlue,
+    eWindowsTheme_LunaOlive,
+    eWindowsTheme_LunaSilver,
+    eWindowsTheme_Royale,
+    eWindowsTheme_Zune
+  };
 
   enum {
     eMetric_ScrollArrowStartBackward = 0x1000,
@@ -352,14 +348,6 @@ public:
   // When modifying this list, also modify nsXPLookAndFeel::sFloatPrefs
   // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
   typedef enum {
-    eMetricFloat_TextFieldVerticalInsidePadding,
-    eMetricFloat_TextFieldHorizontalInsidePadding,
-    eMetricFloat_TextAreaVerticalInsidePadding,
-    eMetricFloat_TextAreaHorizontalInsidePadding,
-    eMetricFloat_ListVerticalInsidePadding,
-    eMetricFloat_ListHorizontalInsidePadding,
-    eMetricFloat_ButtonVerticalInsidePadding,
-    eMetricFloat_ButtonHorizontalInsidePadding,
     eMetricFloat_IMEUnderlineRelativeSize,
     eMetricFloat_SpellCheckerUnderlineRelativeSize,
 

@@ -36,20 +36,22 @@ const CERT_ATTRS = ["nickname", "emailAddress", "subjectName", "commonName",
                     "issuerCommonName", "issuerOrganization",
                     "issuerOrganizationUnit", "dbKey", "windowTitle"];
 
-function runTest() {
-  debugDump("Entering runTest");
+var gRequest;
 
-  var request = AUS_Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(AUS_Ci.nsIXMLHttpRequest);
-  request.open("GET", "https://example.com/", true);
-  request.channel.notificationCallbacks = new BadCertHandler(true);
-  request.onload = function(event) { testXHRLoad(event); };
-  request.onerror = function(event) { testXHRError(event); };
-  request.send(null);
+function runTest() {
+  debugDump("entering");
+
+  gRequest = AUS_Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+             createInstance(AUS_Ci.nsIXMLHttpRequest);
+  gRequest.open("GET", "https://example.com/", true);
+  gRequest.channel.notificationCallbacks = new BadCertHandler(true);
+  gRequest.onload = function(event) { testXHRLoad(event); };
+  gRequest.onerror = function(event) { testXHRError(event); };
+  gRequest.send(null);
 }
 
 function testXHRError(aEvent) {
-  debugDump("Entering testXHRError");
+  debugDump("entering");
 
   ok(true, "Entering testXHRError - something went wrong");
 
@@ -66,11 +68,12 @@ function testXHRError(aEvent) {
 
   ok(false, "XHR onerror called: " + status);
 
+  gRequest = null;
   finishTestDefault();
 }
 
 function testXHRLoad(aEvent) {
-  debugDump("Entering testXHRLoad");
+  debugDump("entering");
 
   var channel = aEvent.target.channel;
   var cert = channel.securityInfo.QueryInterface(AUS_Ci.nsISSLStatusProvider).
@@ -83,10 +86,19 @@ function testXHRLoad(aEvent) {
   let url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
             getVersionParams();
   gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
+  debugDump("setting default pref " + PREF_APP_UPDATE_URL + " to " + url);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
-  debugDump("Default Update URL: " + url);
 
+  gRequest = null;
   gUP.checkForUpdates();
+}
+
+function finishTest() {
+  if (gRequest) {
+    gRequest.abort();
+    gRequest = null;
+  }
+  finishTestDefault();
 }
 
 ]]>

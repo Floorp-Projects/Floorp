@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test EXSLT Regular Expression Extension
+http://www.exslt.org/regexp/index.html
+-->
+<head>
+  <title>Test for EXSLT Regular Expression Extensions</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+  var tests = [
+    { descr: "Testing regexp:test",
+      expr: "regexp:test('XSLT is great', 'XSLT', '')",
+      expResult: "true" },
+
+    { descr: "Testing regexp:match",
+      expr: "regexp:match('XSLT is great', 'XSL.', '')[1]",
+      expResult: "XSLT" },
+
+    { descr: "Testing regexp:replace",
+      expr: "regexp:replace('Food is great', 'Fo.d', '', 'XSLT')",
+      expResult: "XSLT is great" }
+  ];
+
+  for each(test in tests) {
+    var style =
+      '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" ' +
+                      'xmlns:regexp="http://exslt.org/regular-expressions" '+
+                      'version="1.0">' +
+        '<xsl:output method="html"/>' +
+        '<xsl:template match="/">' +
+          '<xsl:value-of select="'+test.expr+'" /> ' +
+        '</xsl:template>' +
+      '</xsl:stylesheet>';
+    var styleDoc = new DOMParser().parseFromString (style, "text/xml");
+
+    var data = '<root/>';
+    var originalDoc = new DOMParser().parseFromString(data, "text/xml");
+
+    var processor = new XSLTProcessor();
+    processor.importStylesheet(styleDoc);
+
+    var fragment = processor.transformToFragment(originalDoc, document);
+    var content = document.getElementById("content");
+    content.appendChild(fragment);
+    is(content.innerHTML, test.expResult, test.descr);
+
+    content.innerHTML = '';
+  }
+
+</script>
+</pre>
+</body>
+</html>

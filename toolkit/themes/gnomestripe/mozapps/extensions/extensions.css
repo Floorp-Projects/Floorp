@@ -39,11 +39,50 @@
   margin: 20px 20px;
 }
 
-#view-port {
+#view-port-container {
+  /* Needed to allow the radius to clip the inner content, see bug 595656 */
+  overflow: hidden;
   background-color: -moz-field;
   color: -moz-fieldtext;
   border: 1px solid threedshadow;
   border-radius: 5px;
+}
+
+.nav-button {
+  -moz-appearance: toolbarbutton;
+  min-width: 0;
+}
+
+#back-btn:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
+}
+
+#forward-btn:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
+}
+
+#back-btn:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
+}
+
+#forward-btn:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
+}
+
+#back-btn[disabled="true"]:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
+}
+
+#forward-btn[disabled="true"]:-moz-locale-dir(ltr) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+
+#back-btn[disabled="true"]:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
+}
+
+#forward-btn[disabled="true"]:-moz-locale-dir(rtl) {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
 /*** global warnings ***/
@@ -568,9 +607,14 @@
   margin-bottom: 2em;
 }
 
+.detail-row[first-row="true"],
+.detail-row-complex[first-row="true"] {
+  border-top: none;
+}
+
 .detail-row,
 .detail-row-complex {
-  border-bottom: 1px solid grey;
+  border-top: 1px solid grey;
   -moz-box-align: center;
 }
 

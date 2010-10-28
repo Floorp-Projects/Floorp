@@ -42,6 +42,10 @@
 
 #include "Layers.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/layers/ShadowLayers.h"
+#endif
+
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -69,12 +73,23 @@ namespace mozilla {
 namespace layers {
 
 class LayerOGL;
+class ShadowThebesLayer;
+class ShadowContainerLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
+class ShadowColorLayer;
 
 /**
  * This is the LayerManager used for OpenGL 2.1. For now this will render on
  * the main thread.
  */
-class THEBES_API LayerManagerOGL : public LayerManager {
+class THEBES_API LayerManagerOGL :
+#ifdef MOZ_IPC
+    public ShadowLayerManager
+#else
+    public LayerManager
+#endif
+{
   typedef mozilla::gl::GLContext GLContext;
 
 public:
@@ -134,6 +149,12 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
+
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
+  virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer();
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
+  virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer();
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("OpenGL"); }
@@ -445,6 +466,7 @@ public:
 
   typedef mozilla::gl::GLContext GLContext;
 
+  LayerManagerOGL* OGLManager() const { return mOGLManager; }
   GLContext *gl() const { return mOGLManager->gl(); }
 
   void ApplyFilter(gfxPattern::GraphicsFilter aFilter);

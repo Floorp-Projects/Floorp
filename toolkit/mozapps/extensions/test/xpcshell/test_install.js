@@ -947,6 +947,346 @@ function check_test_13(install) {
     AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
       do_check_eq(a2.version, "2.0");
 
+      a2.uninstall();
+
+      restartManager();
+
+      run_test_14();
+    });
+  });
+}
+
+// Check that cancelling the install from onDownloadStarted actually cancels it
+function run_test_14() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_eq(install.file, null);
+
+    prepare_test({ }, [
+      "onDownloadStarted"
+    ], check_test_14);
+    install.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_14(install) {
+  prepare_test({ }, [
+    "onDownloadCancelled"
+  ]);
+
+  install.cancel();
+
+  ensure_test_completed();
+
+  install.addListener({
+    onDownloadProgress: function() {
+      do_throw("Download should not have continued");
+    },
+    onDownloadEnded: function() {
+      do_throw("Download should not have continued");
+    }
+  });
+
+  // Allow the listener to return to see if it continues downloading. The
+  // The listener only really tests if we give it time to see progress, the
+  // file check isn't ideal either
+  do_execute_soon(function() {
+    do_check_eq(install.file, null);
+
+    run_test_15();
+  });
+}
+
+// Checks that cancelling the install from onDownloadEnded actually cancels it
+function run_test_15() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_eq(install.file, null);
+
+    prepare_test({ }, [
+      "onDownloadStarted",
+      "onDownloadEnded"
+    ], check_test_15);
+    install.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_15(install) {
+  prepare_test({ }, [
+    "onDownloadCancelled"
+  ]);
+
+  install.cancel();
+
+  ensure_test_completed();
+
+  install.addListener({
+    onInstallStarted: function() {
+      do_throw("Install should not have continued");
+    }
+  });
+
+  // Allow the listener to return to see if it starts installing
+  do_execute_soon(run_test_16);
+}
+
+// Verify that the userDisabled value carries over to the upgrade by default
+function run_test_16() {
+  restartManager();
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallStarted: function() {
+        do_check_false(aInstall.addon.userDisabled);
+        aInstall.addon.userDisabled = true;
+      },
+
+      onInstallEnded: function() {
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_true(a2.userDisabled);
+          do_check_false(a2.isActive);
+
+          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url, function(aInstall) {
+            aInstall.addListener({
+              onInstallEnded: function() {
+                do_check_true(aInstall.addon.userDisabled);
+
+                restartManager();
+
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+                  do_check_true(a2.userDisabled);
+                  do_check_false(a2.isActive);
+
+                  a2.uninstall();
+                  restartManager();
+
+                  run_test_17();
+                });
+              }
+            });
+            aInstall.install();
+          }, "application/x-xpinstall");
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Verify that changing the userDisabled value before onInstallEnded works
+function run_test_17() {
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function() {
+        do_check_false(aInstall.addon.userDisabled);
+
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_false(a2.userDisabled);
+          do_check_true(a2.isActive);
+
+          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url, function(aInstall) {
+            aInstall.addListener({
+              onInstallStarted: function() {
+                do_check_false(aInstall.addon.userDisabled);
+                aInstall.addon.userDisabled = true;
+              },
+
+              onInstallEnded: function() {
+                restartManager();
+
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+                  do_check_true(a2.userDisabled);
+                  do_check_false(a2.isActive);
+
+                  a2.uninstall();
+                  restartManager();
+
+                  run_test_18();
+                });
+              }
+            });
+            aInstall.install();
+          }, "application/x-xpinstall");
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Verify that changing the userDisabled value before onInstallEnded works
+function run_test_18() {
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallStarted: function() {
+        do_check_false(aInstall.addon.userDisabled);
+        aInstall.addon.userDisabled = true;
+      },
+
+      onInstallEnded: function() {
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_true(a2.userDisabled);
+          do_check_false(a2.isActive);
+
+          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          AddonManager.getInstallForURL(url, function(aInstall) {
+            aInstall.addListener({
+              onInstallStarted: function() {
+                do_check_true(aInstall.addon.userDisabled);
+                aInstall.addon.userDisabled = false;
+              },
+
+              onInstallEnded: function() {
+                restartManager();
+
+                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+                  do_check_false(a2.userDisabled);
+                  do_check_true(a2.isActive);
+
+                  a2.uninstall();
+                  restartManager();
+
+                  run_test_19();
+                });
+              }
+            });
+            aInstall.install();
+          }, "application/x-xpinstall");
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Checks that metadata is downloaded for new installs and is visible before and
+// after restart
+function run_test_19() {
+  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
+  Services.prefs.setCharPref("extensions.getAddons.get.url",
+                             "http://localhost:4444/data/test_install.xml");
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function(aInstall, aAddon) {
+        do_check_eq(aAddon.fullDescription, "Repository description");
+
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_eq(a2.fullDescription, "Repository description");
+
+          a2.uninstall();
+          restartManager();
+
+          run_test_20();
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Do the same again to make sure it works when the data is already in the cache
+function run_test_20() {
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function(aInstall, aAddon) {
+        do_check_eq(aAddon.fullDescription, "Repository description");
+
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_eq(a2.fullDescription, "Repository description");
+
+          a2.uninstall();
+          restartManager();
+
+          Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
+          run_test_21();
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Verify that installing an add-on that is already pending install cancels the
+// first install
+function run_test_21() {
+  installAllFiles([do_get_addon("test_install2_1")], function() {
+    AddonManager.getAllInstalls(function(aInstalls) {
+      do_check_eq(aInstalls.length, 1);
+
+      prepare_test({
+        "addon2@tests.mozilla.org": [
+          "onOperationCancelled",
+          "onInstalling"
+        ]
+      }, [
+        "onNewInstall",
+        "onDownloadStarted",
+        "onDownloadEnded",
+        "onInstallStarted",
+        "onInstallCancelled",
+        "onInstallEnded",
+      ], check_test_21);
+
+      let url = "http://localhost:4444/addons/test_install2_1.xpi";
+      AddonManager.getInstallForURL(url, function(aInstall) {
+        aInstall.install();
+      }, "application/x-xpinstall");
+    });
+  });
+}
+
+function check_test_21(aInstall) {
+  AddonManager.getAllInstalls(function(aInstalls) {
+    do_check_eq(aInstalls.length, 1);
+    do_check_eq(aInstalls[0], aInstall);
+
+    prepare_test({
+      "addon2@tests.mozilla.org": [
+        "onOperationCancelled"
+      ]
+    }, [
+      "onInstallCancelled",
+    ]);
+
+    aInstall.cancel();
+
+    ensure_test_completed();
+
+    restartManager();
+
+    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+      do_check_eq(a2, null);
+
       end_test();
     });
   });

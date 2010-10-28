@@ -8,7 +8,6 @@
         setTimeAndSnapshot(2, false)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
-    A simple case of a deleting interval.
     Originally we have an interval from -1.5s to 0.5s. We'll ignore 'a's begin
     time of t=0s because we are restart="whenNotActive".
     At time t=0.1s, 'a' will create a new interval from 1.0 to 1.1s and we'll

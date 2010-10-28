@@ -45,22 +45,35 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
                  browser_tabview_apptabs.js \
-                 browser_tabview_bug587040.js \
+                 browser_tabview_bug580412.js \
+                 browser_tabview_bug587043.js \
                  browser_tabview_bug587990.js \
+                 browser_tabview_bug590606.js \
                  browser_tabview_bug591706.js \
+                 browser_tabview_bug594176.js \
                  browser_tabview_bug595191.js \
                  browser_tabview_bug595518.js \
+                 browser_tabview_bug595804.js \
+                 browser_tabview_bug595930.js \
                  browser_tabview_bug595943.js \
+                 browser_tabview_bug598600.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
-                 browser_tabview_multiwindow_search.js \
+                 browser_tabview_orphaned_tabs.js \
+                 browser_tabview_privatebrowsing.js \
                  browser_tabview_search.js \
                  browser_tabview_snapping.js \
+                 browser_tabview_startup_transitions.js \
                  browser_tabview_undo_group.js \
                  browser_tabview_firstrun_pref.js \
+                 search1.html \
+                 search2.html \
                  $(NULL)
+
+# compartments: test disabled
+#                 browser_tabview_multiwindow_search.js \
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

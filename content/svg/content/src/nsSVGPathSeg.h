@@ -49,13 +49,13 @@
   { 0x0dfd1b3c, 0x5638, 0x4813, \
     { 0xa6, 0xf8, 0x5a, 0x32, 0x5a, 0x35, 0xd0, 0x6e } }
 
-#define NS_ENSURE_NATIVE_PATH_SEG(obj, retval)                 \
-  {                                                            \
-    nsresult rv;                                               \
-    if (retval)                                                \
-      *retval = nsnull;                                        \
-    nsCOMPtr<nsSVGPathSeg> path = do_QueryInterface(obj, &rv); \
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);    \
+#define NS_ENSURE_NATIVE_PATH_SEG(obj, retval)            \
+  {                                                       \
+    nsCOMPtr<nsSVGPathSeg> path = do_QueryInterface(obj); \
+    if (!path) {                                          \
+      *retval = nsnull;                                   \
+      return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;             \
+    }                                                     \
   }
 
 class nsSVGPathSegList;

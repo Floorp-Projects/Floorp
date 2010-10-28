@@ -1,462 +1,200 @@
 <?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject
-	ProjectType="Visual C++"
-	Version="9.00"
-	Name="translator_common"
-	ProjectGUID="{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}"
-	RootNamespace="compiler"
-	Keyword="Win32Proj"
-	TargetFrameworkVersion="131072"
-	>
-	<Platforms>
-		<Platform
-			Name="Win32"
-		/>
-	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
-	<Configurations>
-		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\common"
-			ConfigurationType="4"
-			CharacterSet="0"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="4"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\common"
-			ConfigurationType="4"
-			CharacterSet="0"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="2"
-				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-	</Configurations>
-	<References>
-	</References>
-	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
-			<File
-				RelativePath=".\debug.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\glslang.l"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Executing flex on $(InputPath)"
-						CommandLine="@echo on&#x0D;&#x0A;if EXIST &quot;$(InputDir)Gen_glslang.cpp&quot; del &quot;$(InputDir)Gen_glslang.cpp&quot;&#x0D;&#x0A;&quot;$(InputDir)tools\flex.exe&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;rename &quot;$(InputDir)lex.yy.c&quot; Gen_$(InputName).cpp&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
-						AdditionalDependencies="glslang_tab.h"
-						Outputs="$(InputDir)Gen_glslang.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Executing flex on $(InputPath)"
-						CommandLine="@echo on&#x0D;&#x0A;if EXIST &quot;$(InputDir)Gen_glslang.cpp&quot; del &quot;$(InputDir)Gen_glslang.cpp&quot;&#x0D;&#x0A;&quot;$(InputDir)tools\flex.exe&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;rename &quot;$(InputDir)lex.yy.c&quot; Gen_$(InputName).cpp&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
-						AdditionalDependencies="glslang_tab.h"
-						Outputs="$(InputDir)Gen_glslang.cpp"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\glslang.y"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Executing Bison on $(InputPath)"
-						CommandLine="@echo on&#x0D;&#x0A;SET BISON_SIMPLE=tools\bison.simple&#x0D;&#x0A;SET BISON_HAIRY=tools\bison.simple&#x0D;&#x0A;if EXIST &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot; del &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot;&#x0D;&#x0A;tools\bison.exe -d -t -v $(InputName).y&#x0D;&#x0A;rename &quot;$(InputDir)$(InputName)_tab.c&quot; Gen_$(InputName)_tab.cpp&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
-						Outputs="$(InputDir)Gen_$(InputName)_tab.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Executing Bison on $(InputPath)"
-						CommandLine="@echo on&#x0D;&#x0A;SET BISON_SIMPLE=tools\bison.simple&#x0D;&#x0A;SET BISON_HAIRY=tools\bison.simple&#x0D;&#x0A;if EXIST &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot; del &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot;&#x0D;&#x0A;tools\bison.exe -d -t -v $(InputName).y&#x0D;&#x0A;rename &quot;$(InputDir)$(InputName)_tab.c&quot; Gen_$(InputName)_tab.cpp&#x0D;&#x0A;@echo off&#x0D;&#x0A;"
-						Outputs="$(InputDir)Gen_$(InputName)_tab.cpp"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\InfoSink.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Initialize.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\InitializeDll.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Intermediate.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\intermOut.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\IntermTraverse.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ossource_win.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\parseConst.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseHelper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PoolAlloc.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\QualifierAlive.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RemoveTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ShaderLang.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolTable.cpp"
-				>
-			</File>
-			<Filter
-				Name="preprocessor"
-				>
-				<File
-					RelativePath=".\preprocessor\atom.c"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\cpp.c"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\cppstruct.c"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\memory.c"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\scanner.c"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\symbols.c"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\tokens.c"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="generated"
-				>
-				<File
-					RelativePath=".\Gen_glslang.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Gen_glslang_tab.cpp"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\BaseTypes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Common.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConstantUnion.h"
-				>
-			</File>
-			<File
-				RelativePath=".\debug.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InfoSink.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Initialize.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InitializeDll.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InitializeGlobals.h"
-				>
-			</File>
-			<File
-				RelativePath=".\InitializeParseContext.h"
-				>
-			</File>
-			<File
-				RelativePath=".\intermediate.h"
-				>
-			</File>
-			<File
-				RelativePath=".\localintermediate.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MMap.h"
-				>
-			</File>
-			<File
-				RelativePath=".\osinclude.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParseHelper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PoolAlloc.h"
-				>
-			</File>
-			<File
-				RelativePath=".\QualifierAlive.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RemoveTree.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\GLSLANG\ResourceLimits.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\GLSLANG\ShaderLang.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ShHandle.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SymbolTable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Types.h"
-				>
-			</File>
-			<File
-				RelativePath=".\unistd.h"
-				>
-			</File>
-			<Filter
-				Name="preprocessor"
-				>
-				<File
-					RelativePath=".\preprocessor\atom.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\compile.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\cpp.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\memory.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\parser.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\preprocess.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\scanner.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\slglobals.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\symbols.h"
-					>
-				</File>
-				<File
-					RelativePath=".\preprocessor\tokens.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="generated"
-				>
-				<File
-					RelativePath=".\glslang_tab.h"
-					>
-				</File>
-			</Filter>
-		</Filter>
-	</Files>
-	<Globals>
-	</Globals>
+<VisualStudioProject ProjectType="Visual C++" Version="8.00" Name="translator_common" ProjectGUID="{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}" RootNamespace="compiler" Keyword="Win32Proj" TargetFrameworkVersion="131072">
+  <Platforms>
+    <Platform Name="Win32" />
+  </Platforms>
+  <ToolFiles>
+  </ToolFiles>
+  <Configurations>
+    <Configuration Name="Debug|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(ConfigurationName)\common" ConfigurationType="4" CharacterSet="0">
+      <Tool Name="VCPreBuildEventTool" />
+      <Tool Name="VCCustomBuildTool" />
+      <Tool Name="VCXMLDataGeneratorTool" />
+      <Tool Name="VCWebServiceProxyGeneratorTool" />
+      <Tool Name="VCMIDLTool" />
+      <Tool Name="VCCLCompilerTool" Optimization="0" AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include" PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX" MinimalRebuild="true" BasicRuntimeChecks="3" RuntimeLibrary="1" UsePrecompiledHeader="0" WarningLevel="3" Detect64BitPortabilityProblems="false" DebugInformationFormat="4" />
+      <Tool Name="VCManagedResourceCompilerTool" />
+      <Tool Name="VCResourceCompilerTool" />
+      <Tool Name="VCPreLinkEventTool" />
+      <Tool Name="VCLibrarianTool" />
+      <Tool Name="VCALinkTool" />
+      <Tool Name="VCXDCMakeTool" />
+      <Tool Name="VCBscMakeTool" />
+      <Tool Name="VCFxCopTool" />
+      <Tool Name="VCPostBuildEventTool" />
+    </Configuration>
+    <Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)" IntermediateDirectory="$(ConfigurationName)\common" ConfigurationType="4" CharacterSet="0" WholeProgramOptimization="1">
+      <Tool Name="VCPreBuildEventTool" />
+      <Tool Name="VCCustomBuildTool" />
+      <Tool Name="VCXMLDataGeneratorTool" />
+      <Tool Name="VCWebServiceProxyGeneratorTool" />
+      <Tool Name="VCMIDLTool" />
+      <Tool Name="VCCLCompilerTool" Optimization="2" InlineFunctionExpansion="2" AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)../;$(ProjectDir)../../include" PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_SECURE_SCL=0" RuntimeLibrary="0" UsePrecompiledHeader="0" WarningLevel="3" Detect64BitPortabilityProblems="false" DebugInformationFormat="3" />
+      <Tool Name="VCManagedResourceCompilerTool" />
+      <Tool Name="VCResourceCompilerTool" />
+      <Tool Name="VCPreLinkEventTool" />
+      <Tool Name="VCLibrarianTool" />
+      <Tool Name="VCALinkTool" />
+      <Tool Name="VCXDCMakeTool" />
+      <Tool Name="VCBscMakeTool" />
+      <Tool Name="VCFxCopTool" />
+      <Tool Name="VCPostBuildEventTool" />
+    </Configuration>
+  </Configurations>
+  <References>
+  </References>
+  <Files>
+    <Filter Name="Source Files" Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx" UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+      <File RelativePath=".\Compiler.cpp">
+      </File>
+      <File RelativePath=".\debug.cpp">
+      </File>
+      <File RelativePath=".\glslang.l">
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCCustomBuildTool" Description="Executing flex on $(InputPath)" CommandLine="@echo on&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_glslang.cpp&quot; del &quot;$(InputDir)Gen_glslang.cpp&quot;&#xD;&#xA;&quot;$(InputDir)tools\flex.exe&quot; &quot;$(InputPath)&quot;&#xD;&#xA;rename &quot;$(InputDir)lex.yy.c&quot; Gen_$(InputName).cpp&#xD;&#xA;@echo off&#xD;&#xA;" AdditionalDependencies="glslang_tab.h" Outputs="$(InputDir)Gen_glslang.cpp" />
+        </FileConfiguration>
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCCustomBuildTool" Description="Executing flex on $(InputPath)" CommandLine="@echo on&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_glslang.cpp&quot; del &quot;$(InputDir)Gen_glslang.cpp&quot;&#xD;&#xA;&quot;$(InputDir)tools\flex.exe&quot; &quot;$(InputPath)&quot;&#xD;&#xA;rename &quot;$(InputDir)lex.yy.c&quot; Gen_$(InputName).cpp&#xD;&#xA;@echo off&#xD;&#xA;" AdditionalDependencies="glslang_tab.h" Outputs="$(InputDir)Gen_glslang.cpp" />
+        </FileConfiguration>
+      </File>
+      <File RelativePath=".\glslang.y">
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCCustomBuildTool" Description="Executing Bison on $(InputPath)" CommandLine="@echo on&#xD;&#xA;SET BISON_SIMPLE=tools\bison.simple&#xD;&#xA;SET BISON_HAIRY=tools\bison.simple&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot; del &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot;&#xD;&#xA;tools\bison.exe -d -t -v $(InputName).y&#xD;&#xA;rename &quot;$(InputDir)$(InputName)_tab.c&quot; Gen_$(InputName)_tab.cpp&#xD;&#xA;@echo off&#xD;&#xA;" Outputs="$(InputDir)Gen_$(InputName)_tab.cpp" />
+        </FileConfiguration>
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCCustomBuildTool" Description="Executing Bison on $(InputPath)" CommandLine="@echo on&#xD;&#xA;SET BISON_SIMPLE=tools\bison.simple&#xD;&#xA;SET BISON_HAIRY=tools\bison.simple&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot; del &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot;&#xD;&#xA;tools\bison.exe -d -t -v $(InputName).y&#xD;&#xA;rename &quot;$(InputDir)$(InputName)_tab.c&quot; Gen_$(InputName)_tab.cpp&#xD;&#xA;@echo off&#xD;&#xA;" Outputs="$(InputDir)Gen_$(InputName)_tab.cpp" />
+        </FileConfiguration>
+      </File>
+      <File RelativePath=".\InfoSink.cpp">
+      </File>
+      <File RelativePath=".\Initialize.cpp">
+      </File>
+      <File RelativePath=".\InitializeDll.cpp">
+      </File>
+      <File RelativePath=".\Intermediate.cpp">
+      </File>
+      <File RelativePath=".\intermOut.cpp">
+      </File>
+      <File RelativePath=".\IntermTraverse.cpp">
+      </File>
+      <File RelativePath=".\ossource_win.cpp">
+      </File>
+      <File RelativePath=".\parseConst.cpp">
+      </File>
+      <File RelativePath=".\ParseHelper.cpp">
+      </File>
+      <File RelativePath=".\PoolAlloc.cpp">
+      </File>
+      <File RelativePath=".\QualifierAlive.cpp">
+      </File>
+      <File RelativePath=".\RemoveTree.cpp">
+      </File>
+      <File RelativePath=".\ShaderLang.cpp">
+      </File>
+      <File RelativePath=".\SymbolTable.cpp">
+      </File>
+      <File RelativePath=".\VariableInfo.cpp">
+      </File>
+      <Filter Name="preprocessor">
+        <File RelativePath=".\preprocessor\atom.c">
+        </File>
+        <File RelativePath=".\preprocessor\cpp.c">
+        </File>
+        <File RelativePath=".\preprocessor\cppstruct.c">
+        </File>
+        <File RelativePath=".\preprocessor\memory.c">
+        </File>
+        <File RelativePath=".\preprocessor\scanner.c">
+        </File>
+        <File RelativePath=".\preprocessor\symbols.c">
+        </File>
+        <File RelativePath=".\preprocessor\tokens.c">
+        </File>
+      </Filter>
+      <Filter Name="generated">
+        <File RelativePath=".\Gen_glslang.cpp">
+        </File>
+        <File RelativePath=".\Gen_glslang_tab.cpp">
+        </File>
+      </Filter>
+    </Filter>
+    <Filter Name="Header Files" Filter="h;hpp;hxx;hm;inl;inc;xsd" UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+      <File RelativePath=".\BaseTypes.h">
+      </File>
+      <File RelativePath=".\Common.h">
+      </File>
+      <File RelativePath=".\ConstantUnion.h">
+      </File>
+      <File RelativePath=".\debug.h">
+      </File>
+      <File RelativePath=".\InfoSink.h">
+      </File>
+      <File RelativePath=".\Initialize.h">
+      </File>
+      <File RelativePath=".\InitializeDll.h">
+      </File>
+      <File RelativePath=".\InitializeGlobals.h">
+      </File>
+      <File RelativePath=".\InitializeParseContext.h">
+      </File>
+      <File RelativePath=".\intermediate.h">
+      </File>
+      <File RelativePath=".\localintermediate.h">
+      </File>
+      <File RelativePath=".\MMap.h">
+      </File>
+      <File RelativePath=".\osinclude.h">
+      </File>
+      <File RelativePath=".\ParseHelper.h">
+      </File>
+      <File RelativePath=".\PoolAlloc.h">
+      </File>
+      <File RelativePath=".\QualifierAlive.h">
+      </File>
+      <File RelativePath=".\RemoveTree.h">
+      </File>
+      <File RelativePath="..\..\include\GLSLANG\ResourceLimits.h">
+      </File>
+      <File RelativePath="..\..\include\GLSLANG\ShaderLang.h">
+      </File>
+      <File RelativePath=".\ShHandle.h">
+      </File>
+      <File RelativePath=".\SymbolTable.h">
+      </File>
+      <File RelativePath=".\Types.h">
+      </File>
+      <File RelativePath=".\unistd.h">
+      </File>
+      <File RelativePath=".\VariableInfo.h">
+      </File>
+      <Filter Name="preprocessor">
+        <File RelativePath=".\preprocessor\atom.h">
+        </File>
+        <File RelativePath=".\preprocessor\compile.h">
+        </File>
+        <File RelativePath=".\preprocessor\cpp.h">
+        </File>
+        <File RelativePath=".\preprocessor\memory.h">
+        </File>
+        <File RelativePath=".\preprocessor\parser.h">
+        </File>
+        <File RelativePath=".\preprocessor\preprocess.h">
+        </File>
+        <File RelativePath=".\preprocessor\scanner.h">
+        </File>
+        <File RelativePath=".\preprocessor\slglobals.h">
+        </File>
+        <File RelativePath=".\preprocessor\symbols.h">
+        </File>
+        <File RelativePath=".\preprocessor\tokens.h">
+        </File>
+      </Filter>
+      <Filter Name="generated">
+        <File RelativePath=".\glslang_tab.h">
+        </File>
+      </Filter>
+    </Filter>
+  </Files>
+  <Globals>
+  </Globals>
 </VisualStudioProject>

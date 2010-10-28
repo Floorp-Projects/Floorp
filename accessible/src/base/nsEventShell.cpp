@@ -68,12 +68,12 @@ nsEventShell::FireEvent(AccEvent* aEvent)
 
 void
 nsEventShell::FireEvent(PRUint32 aEventType, nsAccessible *aAccessible,
-                        PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput)
+                        EIsFromUserInput aIsFromUserInput)
 {
   NS_ENSURE_TRUE(aAccessible,);
 
   nsRefPtr<AccEvent> event = new AccEvent(aEventType, aAccessible,
-                                          aIsAsynch, aIsFromUserInput);
+                                          aIsFromUserInput);
 
   FireEvent(event);
 }
@@ -147,9 +147,9 @@ nsAccEventQueue::Push(AccEvent* aEvent)
 
   // Associate text change with hide event if it wasn't stolen from hiding
   // siblings during coalescence.
-  AccHideEvent* hideEvent = downcast_accEvent(aEvent);
-  if (hideEvent && !hideEvent->mTextChangeEvent)
-    CreateTextChangeEventFor(hideEvent);
+  AccMutationEvent* showOrHideEvent = downcast_accEvent(aEvent);
+  if (showOrHideEvent && !showOrHideEvent->mTextChangeEvent)
+    CreateTextChangeEventFor(showOrHideEvent);
 
   // Process events.
   PrepareFlush();
@@ -209,10 +209,10 @@ nsAccEventQueue::WillRefresh(mozilla::TimeStamp aTime)
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
       mDocument->ProcessPendingEvent(accEvent);
 
-      AccHideEvent* hideEvent = downcast_accEvent(accEvent);
-      if (hideEvent) {
-        if (hideEvent->mTextChangeEvent)
-          mDocument->ProcessPendingEvent(hideEvent->mTextChangeEvent);
+      AccMutationEvent* showOrhideEvent = downcast_accEvent(accEvent);
+      if (showOrhideEvent) {
+        if (showOrhideEvent->mTextChangeEvent)
+          mDocument->ProcessPendingEvent(showOrhideEvent->mTextChangeEvent);
       }
     }
 
@@ -267,7 +267,7 @@ nsAccEventQueue::CoalesceEvents()
         // accessibles can't be created at this point because of lazy frame
         // construction (bug 570275).
 
-        // Coalesce hide events for sibling targets.
+        // Coalesce hide and show events for sibling targets.
         if (tailEvent->mEventType == nsIAccessibleEvent::EVENT_HIDE) {
           AccHideEvent* tailHideEvent = downcast_accEvent(tailEvent);
           AccHideEvent* thisHideEvent = downcast_accEvent(thisEvent);
@@ -280,76 +280,42 @@ nsAccEventQueue::CoalesceEvents()
 
             return;
           }
+        } else if (tailEvent->mEventType == nsIAccessibleEvent::EVENT_SHOW) {
+          if (thisEvent->mAccessible->GetParent() ==
+              tailEvent->mAccessible->GetParent()) {
+            tailEvent->mEventRule = thisEvent->mEventRule;
+
+            // Coalesce text change events for show events.
+            if (tailEvent->mEventRule != AccEvent::eDoNotEmit) {
+              AccShowEvent* tailShowEvent = downcast_accEvent(tailEvent);
+              AccShowEvent* thisShowEvent = downcast_accEvent(thisEvent);
+              CoalesceTextChangeEventsFor(tailShowEvent, thisShowEvent);
+            }
+
+            return;
+          }
         }
 
         // Ignore events unattached from DOM since we don't coalesce them.
         if (!thisEvent->mNode->IsInDoc())
           continue;
 
-        // Coalesce show and reorder events by sibling targets.
+        // Coalesce earlier event for the same target.
+        if (thisEvent->mNode == tailEvent->mNode) {
+          thisEvent->mEventRule = AccEvent::eDoNotEmit;
+          return;
+        }
+
+        // Coalesce events by sibling targets (this is a case for reorder
+        // events).
         if (thisEvent->mNode->GetNodeParent() ==
             tailEvent->mNode->GetNodeParent()) {
           tailEvent->mEventRule = thisEvent->mEventRule;
           return;
         }
 
-        // Specifies if this event target can be descendant of tail node.
-        PRBool thisCanBeDescendantOfTail = PR_FALSE;
-
-        // Coalesce depending on whether this event was coalesced or not.
-        if (thisEvent->mEventRule == AccEvent::eDoNotEmit) {
-          // If this event was coalesced then do not emit tail event iff tail
-          // event has the same target or its target is contained by this event
-          // target. Note, we don't need to check whether tail event target
-          // contains this event target since this event was coalesced already.
-
-          // As well we don't need to apply the calculated rule for siblings of
-          // tail node because tail event rule was applied to possible tail
-          // node siblings while this event was coalesced.
-
-          if (thisEvent->mNode == tailEvent->mNode) {
-            thisEvent->mEventRule = AccEvent::eDoNotEmit;
-            return;
-          }
-
-        } else {
-          // If this event wasn't coalesced already then try to coalesce it or
-          // tail event. If this event is coalesced by tail event then continue
-          // search through events other events that can be coalesced by tail
-          // event.
-
-          // If tail and this events have the same target then coalesce tail
-          // event because more early event we should fire early and then stop
-          // processing.
-          if (thisEvent->mNode == tailEvent->mNode) {
-            // Coalesce reorder events by special way since reorder events can
-            // be conditional events (be or not be fired in the end).
-            if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
-              CoalesceReorderEventsFromSameSource(thisEvent, tailEvent);
-              if (tailEvent->mEventRule != AccEvent::eDoNotEmit)
-                continue;
-            }
-            else {
-              tailEvent->mEventRule = AccEvent::eDoNotEmit;
-            }
-
-            return;
-          }
-
-          // This and tail events can be anywhere in the tree, make assumptions
-          // for mutation events.
-
-          // More older show event target (thisNode) can't be contained by
-          // recent.
-          // show event target (tailNode), i.e be a descendant of tailNode.
-          // XXX: target of older show event caused by DOM node appending can be
-          // contained by target of recent show event caused by style change.
-          // XXX: target of older show event caused by style change can be
-          // contained by target of recent show event caused by style change.
-          thisCanBeDescendantOfTail =
-            tailEvent->mEventType != nsIAccessibleEvent::EVENT_SHOW ||
-            tailEvent->mIsAsync;
-        }
+        // This and tail events can be anywhere in the tree, make assumptions
+        // for mutation events.
 
         // Coalesce tail event if tail node is descendant of this node. Stop
         // processing if tail event is coalesced since all possible descendants
@@ -359,53 +325,19 @@ nsAccEventQueue::CoalesceEvents()
         // this check for hide events.
         if (tailEvent->mEventType != nsIAccessibleEvent::EVENT_HIDE &&
             nsCoreUtils::IsAncestorOf(thisEvent->mNode, tailEvent->mNode)) {
-
-          if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
-            CoalesceReorderEventsFromSameTree(thisEvent, tailEvent);
-            if (tailEvent->mEventRule != AccEvent::eDoNotEmit)
-              continue;
-
-            return;
-          }
-
           tailEvent->mEventRule = AccEvent::eDoNotEmit;
           return;
         }
 
-#ifdef DEBUG
-        if (tailEvent->mEventType == nsIAccessibleEvent::EVENT_HIDE &&
-            nsCoreUtils::IsAncestorOf(thisEvent->mNode, tailEvent->mNode)) {
-          NS_NOTREACHED("More older hide event target is an ancestor of recent hide event target!");
-        }
-#endif
-
         // If this node is a descendant of tail node then coalesce this event,
-        // check other events in the queue.
-        if (thisCanBeDescendantOfTail &&
-            nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
-
-          if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
-            CoalesceReorderEventsFromSameTree(tailEvent, thisEvent);
-            if (tailEvent->mEventRule != AccEvent::eDoNotEmit)
-              continue;
-
-            return;
-          }
-
-          // Do not emit thisEvent, also apply this result to sibling nodes of
-          // thisNode.
+        // check other events in the queue. Do not emit thisEvent, also apply
+        // this result to sibling nodes of thisNode.
+        if (nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
           thisEvent->mEventRule = AccEvent::eDoNotEmit;
           ApplyToSiblings(0, index, thisEvent->mEventType,
                           thisEvent->mNode, AccEvent::eDoNotEmit);
           continue;
         }
-
-#ifdef DEBUG
-        if (!thisCanBeDescendantOfTail &&
-            nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
-          NS_NOTREACHED("Older event target is a descendant of recent event target!");
-        }
-#endif
 
       } // for (index)
 
@@ -455,46 +387,11 @@ nsAccEventQueue::ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
   for (PRUint32 index = aStart; index < aEnd; index ++) {
     AccEvent* accEvent = mEvents[index];
     if (accEvent->mEventType == aEventType &&
-        accEvent->mEventRule != AccEvent::eDoNotEmit &&
+        accEvent->mEventRule != AccEvent::eDoNotEmit && accEvent->mNode &&
         accEvent->mNode->GetNodeParent() == aNode->GetNodeParent()) {
       accEvent->mEventRule = aEventRule;
     }
   }
-}
-
-void
-nsAccEventQueue::CoalesceReorderEventsFromSameSource(AccEvent* aAccEvent1,
-                                                     AccEvent* aAccEvent2)
-{
-  // Do not emit event2 if event1 is unconditional.
-  AccReorderEvent* reorderEvent1 = downcast_accEvent(aAccEvent1);
-  if (reorderEvent1->IsUnconditionalEvent()) {
-    aAccEvent2->mEventRule = AccEvent::eDoNotEmit;
-    return;
-  }
-
-  // Do not emit event1 if event2 is unconditional.
-  AccReorderEvent* reorderEvent2 = downcast_accEvent(aAccEvent2);
-  if (reorderEvent2->IsUnconditionalEvent()) {
-    aAccEvent1->mEventRule = AccEvent::eDoNotEmit;
-    return;
-  }
-
-  // Do not emit event2 if event1 is valid, otherwise do not emit event1.
-  if (reorderEvent1->HasAccessibleInReasonSubtree())
-    aAccEvent2->mEventRule = AccEvent::eDoNotEmit;
-  else
-    aAccEvent1->mEventRule = AccEvent::eDoNotEmit;
-}
-
-void
-nsAccEventQueue::CoalesceReorderEventsFromSameTree(AccEvent* aAccEvent,
-                                                   AccEvent* aDescendantAccEvent)
-{
-  // Do not emit descendant event if this event is unconditional.
-  AccReorderEvent* reorderEvent = downcast_accEvent(aAccEvent);
-  if (reorderEvent->IsUnconditionalEvent())
-    aDescendantAccEvent->mEventRule = AccEvent::eDoNotEmit;
 }
 
 void
@@ -523,7 +420,35 @@ nsAccEventQueue::CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
 }
 
 void
-nsAccEventQueue::CreateTextChangeEventFor(AccHideEvent* aEvent)
+nsAccEventQueue::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
+                                             AccShowEvent* aThisEvent)
+{
+  AccTextChangeEvent* textEvent = aThisEvent->mTextChangeEvent;
+  if (!textEvent)
+    return;
+
+  if (aTailEvent->mAccessible->GetIndexInParent() ==
+      aThisEvent->mAccessible->GetIndexInParent() + 1) {
+    // If tail target was inserted after this target, i.e. tail target is next
+    // sibling of this target.
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
+                                          0, PR_UINT32_MAX);
+
+  } else if (aTailEvent->mAccessible->GetIndexInParent() ==
+             aThisEvent->mAccessible->GetIndexInParent() -1) {
+    // If tail target was inserted before this target, i.e. tail target is
+    // previous sibling of this target.
+    nsAutoString startText;
+    aTailEvent->mAccessible->AppendTextTo(startText, 0, PR_UINT32_MAX);
+    textEvent->mModifiedText = startText + textEvent->mModifiedText;
+    textEvent->mStart -= startText.Length();
+  }
+
+  aTailEvent->mTextChangeEvent.swap(aThisEvent->mTextChangeEvent);
+}
+
+void
+nsAccEventQueue::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
   nsRefPtr<nsHyperTextAccessible> textAccessible = do_QueryObject(
     GetAccService()->GetContainerAccessible(aEvent->mNode,
@@ -551,7 +476,6 @@ nsAccEventQueue::CreateTextChangeEventFor(AccHideEvent* aEvent)
     return;
 
   aEvent->mTextChangeEvent =
-    new AccTextChangeEvent(textAccessible, offset, text, PR_FALSE,
-                           aEvent->mIsAsync,
+    new AccTextChangeEvent(textAccessible, offset, text, aEvent->IsShow(),
                            aEvent->mIsFromUserInput ? eFromUserInput : eNoUserInput);
 }
