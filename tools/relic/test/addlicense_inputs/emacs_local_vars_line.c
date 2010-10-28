@@ -5,10 +5,12 @@
 
 #if defined(VMS)
 #include <sys/timeb.h>
-#elif defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
 #include <sys/time.h>
 #elif defined(WIN32)
 #include <windows.h>
+#elif defined(XP_OS2_VACPP)
+#include <sys/timeb.h>
 #else
 #error "Architecture not supported"
 #endif
@@ -35,7 +37,7 @@ int main(int argc, char **argv)
     now *= 1000000;
     now += (1000 * b.millitm);
     fprintf(stdout, "%Ld", now);
-#elif defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
     long long now;
     struct timeval tv;
 #ifdef HAVE_SVID_GETTOD
@@ -68,6 +70,33 @@ int main(int argc, char **argv)
     now = (now - 116444736000000000i64) / 10i64;
     fprintf(stdout, "%I64d", now);
 #endif
+
+#elif defined(XP_OS2_VACPP)
+/* no long long or i64 so we use a string */
+#include <string.h>
+  char buf[24];
+  char tbuf[7];
+  time_t now;
+  long mtime;
+  int i;
+
+  struct timeb b;
+  ftime(&b);
+  now = b.time;
+  _ltoa(now, buf, 10);
+
+  mtime = b.millitm * 1000;
+  if (mtime == 0){
+    ++now;
+    strcat(buf, "000000");
+  } else {
+     _ltoa(mtime, tbuf, 10);
+     for (i = strlen(tbuf); i < 6; ++i)
+       strcat(buf, "0");
+     strcat(buf, tbuf);
+  }
+  fprintf(stdout, "%s", buf);
+
 #else
 #error "Architecture not supported"
 #endif
