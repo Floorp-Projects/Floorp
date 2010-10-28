@@ -93,10 +93,16 @@ class PunboxAssembler : public JSC::MacroAssembler
         return address;
     }
 
-    void loadInlineSlot(RegisterID objReg, uint32 slot,
-                        RegisterID typeReg, RegisterID dataReg) {
-        Address address(objReg, JSObject::getFixedSlotOffset(slot));
-        loadValueAsComponents(address, typeReg, dataReg);
+    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, bool inlineAccess,
+                  RegisterID type, RegisterID data) {
+        JS_ASSERT(type != data);
+        Address address(obj, JSObject::getFixedSlotOffset(slot));
+        if (!inlineAccess) {
+            loadPtr(Address(obj, offsetof(JSObject, slots)), clobber);
+            address = Address(clobber, slot * sizeof(Value));
+        }
+        
+        loadValueAsComponents(address, type, data);
     }
 
     template <typename T>
