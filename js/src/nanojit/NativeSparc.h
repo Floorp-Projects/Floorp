@@ -303,6 +303,7 @@ namespace nanojit
     void LoadOperationI(Register rs1, int32_t simm13, Register rd, int32_t op3, const char* opcode); \
     void MOVcc(Register rs, int32_t cc2, int32_t cc1, int32_t cc0, Register rd, int32_t cond, const char *opcode); \
     void MOVccI(int32_t simm11, int32_t cc2, int32_t cc1, int32_t cc0, Register rd, int32_t cond, const char *opcode); \
+    void FMOVDcc(Register rs, int32_t opt_cc, Register rd, int32_t cond, const char *opcode); \
     void ShiftOperation(Register rs1, Register rs2, Register rd, int32_t op3, const char* opcode); \
     void ShiftOperationI(Register rs1, int32_t shcnt32, Register rd, int32_t op3, const char* opcode); \
     void Store(Register rd, Register rs1, Register rs2, int32_t op3, const char* opcode); \
@@ -379,21 +380,35 @@ namespace nanojit
     void MOVCS(Register rs, Register rd); \
     void MOVVC(Register rs, Register rd); \
     void MOVEI(int32_t simm11, Register rd); \
-    void MOVFEI(int32_t simm11, Register rd); \
     void MOVNEI(int32_t simm11, Register rd); \
     void MOVLI(int32_t simm11, Register rd); \
-    void MOVFLI(int32_t simm11, Register rd); \
     void MOVLEI(int32_t simm11, Register rd); \
-    void MOVFLEI(int32_t simm11, Register rd); \
     void MOVGI(int32_t simm11, Register rd); \
-    void MOVFGI(int32_t simm11, Register rd); \
     void MOVGEI(int32_t simm11, Register rd); \
-    void MOVFGEI(int32_t simm11, Register rd); \
     void MOVLEUI(int32_t simm11, Register rd); \
     void MOVGUI(int32_t simm11, Register rd); \
     void MOVCCI(int32_t simm11, Register rd); \
     void MOVCSI(int32_t simm11, Register rd); \
     void MOVVSI(int32_t simm11, Register rd); \
+    void MOVFEI(int32_t simm11, Register rd); \
+    void MOVFLI(int32_t simm11, Register rd); \
+    void MOVFLEI(int32_t simm11, Register rd); \
+    void MOVFGI(int32_t simm11, Register rd); \
+    void MOVFGEI(int32_t simm11, Register rd); \
+    void FMOVDNE(Register rs, Register rd); \
+    void FMOVDL(Register rs, Register rd); \
+    void FMOVDLE(Register rs, Register rd); \
+    void FMOVDLEU(Register rs, Register rd); \
+    void FMOVDG(Register rs, Register rd); \
+    void FMOVDGU(Register rs, Register rd); \
+    void FMOVDGE(Register rs, Register rd); \
+    void FMOVDCC(Register rs, Register rd); \
+    void FMOVDCS(Register rs, Register rd); \
+    void FMOVDFNE(Register rs, Register rd); \
+    void FMOVDFUG(Register rs, Register rd); \
+    void FMOVDFUGE(Register rs, Register rd); \
+    void FMOVDFUL(Register rs, Register rd); \
+    void FMOVDFULE(Register rs, Register rd); \
     void NOP(); \
     void RDY(Register rd); \
     void RESTORE(Register rs1, Register rs2, Register rd); \

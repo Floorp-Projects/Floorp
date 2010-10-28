@@ -322,21 +322,41 @@ namespace nanojit
     inline void Assembler::MOVCS (Register rs, Register rd) { MOVcc(rs, 1, 0, 0, rd, 0x5, "movcs");  }
     inline void Assembler::MOVVC (Register rs, Register rd) { MOVcc(rs, 1, 0, 0, rd, 0xf, "movvc");  }
     inline void Assembler::MOVEI  (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x1, "move");   }
-    inline void Assembler::MOVFEI (int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0x9, "movfe");  }
     inline void Assembler::MOVNEI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x9, "movne");  }
     inline void Assembler::MOVLI  (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x3, "movl");   }
-    inline void Assembler::MOVFLI (int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0x4, "movfl");  }
     inline void Assembler::MOVLEI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x2, "movle");  }
-    inline void Assembler::MOVFLEI(int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0xd, "movfle"); }
     inline void Assembler::MOVGI  (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0xa, "movg");   }
-    inline void Assembler::MOVFGI (int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0x6, "movfg");  }
     inline void Assembler::MOVGEI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0xb, "movge");  }
-    inline void Assembler::MOVFGEI(int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0xb, "movfge"); }
     inline void Assembler::MOVLEUI(int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x4, "movleu"); }
     inline void Assembler::MOVGUI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0xc, "movgu");  }
     inline void Assembler::MOVCCI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0xd, "movcc");  }
     inline void Assembler::MOVCSI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x5, "movcs");  }
     inline void Assembler::MOVVSI (int32_t simm11, Register rd) { MOVccI(simm11, 1, 0, 0, rd, 0x7, "movvs");  }
+    inline void Assembler::MOVFEI (int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0x9, "movfe");  }
+    inline void Assembler::MOVFLI (int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0x4, "movfl");  }
+    inline void Assembler::MOVFLEI(int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0xd, "movfle"); }
+    inline void Assembler::MOVFGI (int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0x6, "movfg");  }
+    inline void Assembler::MOVFGEI(int32_t simm11, Register rd) { MOVccI(simm11, 0, 0, 0, rd, 0xb, "movfge"); }
+
+    inline void Assembler::FMOVDcc(Register rs, int32_t opt_cc, Register rd, int32_t cond, const char *opcode) {
+        Format_4_5(rd, 0x35, cond, opt_cc, 0x2, rs);
+        asm_output("%s %s, %s", opcode, gpn(rs), gpn(rd));
+    }
+
+    inline void Assembler::FMOVDNE  (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0x9, "fmovdne"); }
+    inline void Assembler::FMOVDL   (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0x3, "fmovdl");  }
+    inline void Assembler::FMOVDLE  (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0x2, "fmovdle"); }
+    inline void Assembler::FMOVDLEU (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0x4, "fmovdleu");}
+    inline void Assembler::FMOVDG   (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0xa, "fmovdg");  }
+    inline void Assembler::FMOVDGU  (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0xc, "fmovdgu"); }
+    inline void Assembler::FMOVDGE  (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0xb, "fmovdfge");}
+    inline void Assembler::FMOVDCC  (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0xd, "fmovdcc"); }
+    inline void Assembler::FMOVDCS  (Register rs, Register rd) { FMOVDcc(rs, 0x4, rd, 0x5, "fmovdcs"); }
+    inline void Assembler::FMOVDFNE (Register rs, Register rd) { FMOVDcc(rs, 0x0, rd, 0x1, "fmovdfne"); }
+    inline void Assembler::FMOVDFUG (Register rs, Register rd) { FMOVDcc(rs, 0x0, rd, 0x5, "fmovdfug"); }
+    inline void Assembler::FMOVDFUGE(Register rs, Register rd) { FMOVDcc(rs, 0x0, rd, 0xc, "fmovdfuge");}
+    inline void Assembler::FMOVDFUL (Register rs, Register rd) { FMOVDcc(rs, 0x0, rd, 0x3, "fmovdful"); }
+    inline void Assembler::FMOVDFULE(Register rs, Register rd) { FMOVDcc(rs, 0x0, rd, 0xe, "fmovdfule");}
 
     inline void Assembler::NOP() {
         Format_2(0, 0x4, 0);
@@ -1242,30 +1262,55 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(condval->isCmp());
-        NanoAssert(op == LIR_cmovi && iftrue->isI() && iffalse->isI());
+        NanoAssert(op == LIR_cmovi && iftrue->isI() && iffalse->isI() ||
+                  (op == LIR_cmovd && iftrue->isD() && iffalse->isD()));
 
-        const Register rr = deprecated_prepResultReg(ins, GpRegs);
+        RegisterMask rm = (op == LIR_cmovi) ? GpRegs : FpRegs;
+        const Register rr = deprecated_prepResultReg(ins, rm);
+        const Register iffalsereg = findRegFor(iffalse, rm & ~rmask(rr));
+        bool isIcc = true;
 
-        // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
-        // (This is true on Intel, is it true on all architectures?)
-        const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
         if (op == LIR_cmovi) {
             switch (condval->opcode()) {
                 // note that these are all opposites...
-            case LIR_eqi:  MOVNE (iffalsereg, rr); break;
-            case LIR_lti:  MOVGE (iffalsereg, rr); break;
-            case LIR_lei:  MOVG  (iffalsereg, rr); break;
-            case LIR_gti:  MOVLE (iffalsereg, rr); break;
-            case LIR_gei:  MOVL  (iffalsereg, rr); break;
-            case LIR_ltui: MOVCC (iffalsereg, rr); break;
-            case LIR_leui: MOVGU (iffalsereg, rr); break;
-            case LIR_gtui: MOVLEU(iffalsereg, rr); break;
-            case LIR_geui: MOVCS (iffalsereg, rr); break;
+                case LIR_eqi:  MOVNE (iffalsereg, rr); break;
+                case LIR_lti:  MOVGE (iffalsereg, rr); break;
+                case LIR_lei:  MOVG  (iffalsereg, rr); break;
+                case LIR_gti:  MOVLE (iffalsereg, rr); break;
+                case LIR_gei:  MOVL  (iffalsereg, rr); break;
+                case LIR_ltui: MOVCC (iffalsereg, rr); break;
+                case LIR_leui: MOVGU (iffalsereg, rr); break;
+                case LIR_gtui: MOVLEU(iffalsereg, rr); break;
+                case LIR_geui: MOVCS (iffalsereg, rr); break;
                 debug_only( default: NanoAssert(0); break; )
-                    }
+            }
+        } else {
+            switch (condval->opcode()) {
+                // note that these are all opposites...
+                case LIR_eqi:  FMOVDNE  (iffalsereg, rr); break;
+                case LIR_lti:  FMOVDGE  (iffalsereg, rr); break;
+                case LIR_lei:  FMOVDG   (iffalsereg, rr); break;
+                case LIR_gti:  FMOVDLE  (iffalsereg, rr); break;
+                case LIR_gei:  FMOVDL   (iffalsereg, rr); break;
+                case LIR_ltui: FMOVDCC  (iffalsereg, rr); break;
+                case LIR_leui: FMOVDGU  (iffalsereg, rr); break;
+                case LIR_gtui: FMOVDLEU (iffalsereg, rr); break;
+                case LIR_geui: FMOVDCS  (iffalsereg, rr); break;
+                case LIR_eqd:  FMOVDFNE (iffalsereg, rr); isIcc = false; break;
+                case LIR_led:  FMOVDFUG (iffalsereg, rr); isIcc = false; break;
+                case LIR_ltd:  FMOVDFUGE(iffalsereg, rr); isIcc = false; break;
+                case LIR_ged:  FMOVDFUL (iffalsereg, rr); isIcc = false; break;
+                case LIR_gtd:  FMOVDFULE(iffalsereg, rr); isIcc = false; break;
+                debug_only( default: NanoAssert(0); break; )
+            }
         }
+
         /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
-        asm_cmp(condval);
+        if (isIcc)
+            asm_cmp(condval);
+        else
+            asm_cmpd(condval);
+
     }
 
     void Assembler::asm_param(LIns* ins)
@@ -1392,6 +1437,7 @@ namespace nanojit
     }
 
     void Assembler::asm_d2i(LIns* ins) {
+        underrunProtect(28);
         LIns *lhs = ins->oprnd1();
         Register rr = prepareResultReg(ins, GpRegs);
         Register ra = findRegFor(lhs, FpRegs);
@@ -1399,6 +1445,7 @@ namespace nanojit
         LDSW32(FP, d, rr);
         STF32(ra, d, FP);
         FDTOI(ra, ra);
+        freeResourcesOf(ins);
     }
 
     void Assembler::asm_nongp_copy(Register r, Register s)
