@@ -40,31 +40,57 @@
 
     function doTest()
     {
-      var bulletText = String.fromCharCode(0x2022) + " ";
+      const discBulletText = String.fromCharCode(0x2022) + " ";
+      const circleBulletText = String.fromCharCode(0x25e6) + " ";
+      const squareBulletText = String.fromCharCode(0x25aa) + " ";
 
       // list1
-      var accTree = {
+      var discAccTree = {
         role: ROLE_LIST,
         children: [
-          new listItemTree(bulletText, "Oranges"),
-          new listItemTree(bulletText, "Apples"),
-          new listItemTree(bulletText, "Bananas")
+          new listItemTree(discBulletText, "Oranges"),
+          new listItemTree(discBulletText, "Apples"),
+          new listItemTree(discBulletText, "Bananas")
         ]
       };
 
-      testAccessibleTree("list1", accTree);
+      testAccessibleTree("list1", discAccTree);
 
       // list2
-      accTree = {
+      var circleAccTree = {
+        role: ROLE_LIST,
+        children: [
+          new listItemTree(circleBulletText, "Oranges"),
+          new listItemTree(circleBulletText, "Apples"),
+          new listItemTree(circleBulletText, "Bananas")
+        ]
+      };
+
+      testAccessibleTree("list2", circleAccTree);
+
+      // list3
+      var squareAccTree = {
+        role: ROLE_LIST,
+        children: [
+          new listItemTree(squareBulletText, "Oranges"),
+          new listItemTree(squareBulletText, "Apples"),
+          new listItemTree(squareBulletText, "Bananas")
+        ]
+      };
+
+      testAccessibleTree("list3", squareAccTree);
+
+      // list4
+      var nestedAccTree = {
         role: ROLE_LIST,
         children: [
           new listItemTree("1. ", "Oranges"),
           new listItemTree("2. ", "Apples"),
-          new listItemTree("3. ", "Bananas", accTree)
+          new listItemTree("3. ", "Bananas", circleAccTree)
         ]
       };
 
-      testAccessibleTree("list2", accTree);
+      testAccessibleTree("list4", nestedAccTree);
 
       SimpleTest.finish();
     }
@@ -80,18 +106,35 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
     Mozilla Bug 342045
   </a>
+  <a target="_blank"
+     title="Bullets of nested not ordered lists have one and the same character."
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=604587">
+    Mozilla Bug 604587
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
   <ul id="list1">
-    <li id="li1">Oranges</li>
-    <li id="li2">Apples</li>
-    <li id="li3">Bananas</li>
+    <li id="l1_li1">Oranges</li>
+    <li id="l1_li2">Apples</li>
+    <li id="l1_li3">Bananas</li>
   </ul>
 
-  <ol id="list2">
+  <ul id="list2" style="list-style-type: circle">
+    <li id="l2_li1">Oranges</li>
+    <li id="l2_li2">Apples</li>
+    <li id="l2_li3">Bananas</li>
+  </ul>
+
+  <ul id="list3" style="list-style-type: square">
+    <li id="l3_li1">Oranges</li>
+    <li id="l3_li2">Apples</li>
+    <li id="l3_li3">Bananas</li>
+  </ul>
+
+  <ol id="list4">
     <li id="li4">Oranges</li>
     <li id="li5">Apples</li>
     <li id="li6">Bananas<ul>

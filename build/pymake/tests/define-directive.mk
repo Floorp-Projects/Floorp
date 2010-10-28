@@ -50,6 +50,16 @@ value \
 endef
 endef
 
+# Test ridiculous spacing
+ define TEST10
+  	define TEST11
+      baz
+endef
+define TEST12
+  foo
+  endef
+    	endef
+
 all:
 	$(COMMANDS)
 	$(COMMANDS2)

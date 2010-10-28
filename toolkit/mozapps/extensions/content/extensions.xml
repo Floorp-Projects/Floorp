@@ -166,12 +166,12 @@
           <xul:hbox class="end-cap"/>
         </xul:hbox>
         <xul:hbox class="status-container">
-          <xul:button anonid="pause" class="pause"
+          <xul:button anonid="pause-btn" class="pause"
                       tooltiptext="&progress.pause.tooltip;"/>
           <xul:spacer flex="1"/>
           <xul:label anonid="status" class="status"/>
           <xul:spacer flex="1"/>
-          <xul:button anonid="cancel" class="cancel"
+          <xul:button anonid="cancel-btn" class="cancel"
                       tooltiptext="&progress.cancel.tooltip;"/>
         </xul:hbox>
       </xul:stack>
@@ -189,10 +189,10 @@
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
       </field>
       <field name="_pause">
-        document.getAnonymousElementByAttribute(this, "anonid", "pause");
+        document.getAnonymousElementByAttribute(this, "anonid", "pause-btn");
       </field>
       <field name="_cancel">
-        document.getAnonymousElementByAttribute(this, "anonid", "cancel");
+        document.getAnonymousElementByAttribute(this, "anonid", "cancel-btn");
       </field>
       <field name="_status">
         document.getAnonymousElementByAttribute(this, "anonid", "status");
@@ -238,14 +238,14 @@
   <!-- Sorters - displays and controls the sort state of a list. -->
   <binding id="sorters">
     <content orient="horizontal">
-      <xul:button anonid="btn-name" class="sorter"
+      <xul:button anonid="name-btn" class="sorter"
                   label="&sort.name.label;" tooltiptext="&sort.name.tooltip;"
                   oncommand="this.parentNode._handleChange('name');"/>
-      <xul:button anonid="btn-date" class="sorter"
+      <xul:button anonid="date-btn" class="sorter"
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
                   oncommand="this.parentNode._handleChange('dateUpdated');"/>
-      <xul:button anonid="btn-relevance" class="sorter" hidden="true"
+      <xul:button anonid="relevance-btn" class="sorter" hidden="true"
                   label="&sort.relevance.label;"
                   tooltiptext="&sort.relevance.tooltip;"
                   oncommand="this.parentNode._handleChange('relevancescore');"/>
@@ -264,13 +264,13 @@
 
       <field name="handler">null</field>
       <field name="_btnName">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-name");
+        document.getAnonymousElementByAttribute(this, "anonid", "name-btn");
       </field>
       <field name="_btnDate">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-date");
+        document.getAnonymousElementByAttribute(this, "anonid", "date-btn");
       </field>
       <field name="_btnRelevance">
-        document.getAnonymousElementByAttribute(this, "anonid", "btn-relevance");
+        document.getAnonymousElementByAttribute(this, "anonid", "relevance-btn");
       </field>
 
       <property name="sortBy">
@@ -472,11 +472,11 @@
     <content>
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
-      <xul:button anonid="install-remote" hidden="true"
+      <xul:button anonid="install-remote-btn" hidden="true"
                   class="addon-control" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).installRemote();"/>
-      <xul:button anonid="restart-install" hidden="true"
+      <xul:button anonid="restart-install-btn" hidden="true"
                   class="addon-control" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).restartInstall();"/>
@@ -505,7 +505,7 @@
       </field>
       <field name="_installRemote">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "install-remote");
+                                                "install-remote-btn");
       </field>
       <field name="_restartNeeded">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -513,11 +513,11 @@
       </field>
       <field name="_restartInstall">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "restart-install");
+                                                "restart-install-btn");
       </field>
       <field name="_undo">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "undo");
+                                                "undo-btn");
       </field>
 
       <method name="initWithInstall">
@@ -600,6 +600,18 @@
         <body><![CDATA[
           if (this.mControl.getAttribute("remote") != "true")
             return;
+
+          if (this.mControl.mAddon.eula) {
+            var eula = {
+              name: this.mControl.mAddon.name,
+              text: this.mControl.mAddon.eula,
+              accepted: false
+            };
+            window.openDialog("chrome://mozapps/content/extensions/eula.xul", "_blank",
+                              "chrome,dialog,modal,centerscreen,resizable=no", eula);
+            if (!eula.accepted)
+              return;
+          }
 
           delete this.mControl.mAddon;
           this.mControl.mInstall = this.mInstall;
@@ -734,10 +746,10 @@
                 class="pending">
         <xul:image class="pending-icon"/>
         <xul:label anonid="pending" flex="1"/>
-        <xul:button class="button-link"
+        <xul:button anonid="restart-btn" class="button-link"
                     label="&addon.restartNow.label;"
                     oncommand="document.getBindingParent(this).restart();"/>
-        <xul:button anonid="undo" class="button-link"
+        <xul:button anonid="undo-btn" class="button-link"
                     label="&addon.undoAction.label;"
                     tooltipText="&addon.undoAction.tooltip;"
                     oncommand="document.getBindingParent(this).undo();"/>
@@ -768,7 +780,7 @@
             <xul:vbox flex="1">
               <xul:hbox align="center" class="description-container">
                 <xul:label flex="1" anonid="description" class="description" crop="end"/>
-                <xul:button class="details button-link"
+                <xul:button anonid="details-btn" class="details button-link"
                             label="&addon.details.label;"
                             tooltiptext="&addon.details.tooltip;"
                             oncommand="document.getBindingParent(this).showInDetailView();"/>
@@ -782,7 +794,7 @@
                 <xul:vbox anonid="relnotes"/>
               </xul:vbox>
               <xul:hbox pack="start">
-                <xul:button anonid="relnotes-toggle" class="relnotes-toggle"
+                <xul:button anonid="relnotes-toggle-btn" class="relnotes-toggle"
                             hidden="true" label="&cmd.showReleaseNotes.label;"
                             tooltiptext="&cmd.showReleaseNotes.tooltip;"
                             showlabel="&cmd.showReleaseNotes.label;"
@@ -844,50 +856,12 @@
     <implementation>
       <constructor><![CDATA[
         this._installStatus.mControl = this;
-        this._installStatus.mAddon = this.mAddon;
 
         this.setAttribute("contextmenu", "addonitem-popup");
 
         this._showStatus("none");
-        this._updateDates();
-        this._updateState();
 
-        var iconURL = this.mAddon.iconURL;
-        if (iconURL)
-          this._icon.src = iconURL;
-
-        if (this.mAddon.version)
-          this._version.value = this.mAddon.version;
-        else
-          this._version.hidden = true;
-
-        this._creator.setCreator(this.mAddon.creator);
-
-        if (this.mAddon.description)
-          this._description.value = this.mAddon.description;
-        else
-          this._description.hidden = true;
-
-        if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
-            (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
-             !AddonManager.autoUpdateDefault)) {
-          var self = this;
-          AddonManager.getAllInstalls(function(aInstallsList) {
-            // This can return after the binding has been destroyed,
-            // so try to detect that and return early
-            if (!("onNewInstall" in self))
-              return;
-            for (let i = 0; i < aInstallsList.length; i++) {
-              let install = aInstallsList[i];
-              if (install.existingAddon &&
-                  install.existingAddon.id == self.mAddon.id &&
-                  install.state == AddonManager.STATE_AVAILABLE) {
-                self.onNewInstall(install);
-                self.onIncludeUpdateChanged();
-              }
-            }
-          });
-        }
+        this._initWithAddon(this.mAddon);
 
         gEventManager.registerAddonListener(this, this.mAddon.id);
       ]]></constructor>
@@ -997,7 +971,7 @@
       <field name="_relNotesLoaded">false</field>
       <field name="_relNotesToggle">
         document.getAnonymousElementByAttribute(this, "anonid",
-                                                "relnotes-toggle");
+                                                "relnotes-toggle-btn");
       </field>
       <field name="_relNotesLoading">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1036,6 +1010,63 @@
         ]]></setter>
       </property>
 
+      <method name="_initWithAddon">
+        <parameter name="aAddon"/>
+        <body><![CDATA[
+          this.mAddon = aAddon;
+
+          this._installStatus.mAddon = this.mAddon;
+          this._updateDates();
+          this._updateState();
+
+          this.setAttribute("name", aAddon.name);
+
+          if (aAddon.size)
+            this.setAttribute("size", aAddon.size);
+          else
+            this.removeAttribute("size");
+
+          var iconURL = this.mAddon.iconURL;
+          if (iconURL)
+            this._icon.src = iconURL;
+          else
+            this._icon.src = null;
+
+          if (this.mAddon.version)
+            this._version.value = this.mAddon.version;
+          else
+            this._version.hidden = true;
+
+          this._creator.setCreator(this.mAddon.creator);
+
+          if (this.mAddon.description)
+            this._description.value = this.mAddon.description;
+          else
+            this._description.hidden = true;
+
+          if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
+              (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
+               !AddonManager.autoUpdateDefault)) {
+            var self = this;
+            AddonManager.getAllInstalls(function(aInstallsList) {
+              // This can return after the binding has been destroyed,
+              // so try to detect that and return early
+              if (!("onNewInstall" in self))
+                return;
+              for (let i = 0; i < aInstallsList.length; i++) {
+                let install = aInstallsList[i];
+                if (install.existingAddon &&
+                    install.existingAddon.id == self.mAddon.id &&
+                    install.state == AddonManager.STATE_AVAILABLE) {
+                  self.onNewInstall(install);
+                  self.onIncludeUpdateChanged();
+                }
+              }
+            });
+          }
+        ]]></body>
+      </method>
+
       <method name="_showStatus">
         <parameter name="aType"/>
         <body><![CDATA[
@@ -1066,10 +1097,13 @@
                                  );
           }
 
-          if (this.mAddon.updateDate)
+          if (this.mAddon.updateDate) {
             this._dateUpdated.value = formatDate(this.mAddon.updateDate);
-          else
+            this.setAttribute("dateUpdated", this.mAddon.updateDate.getTime() / 1000);
+          } else {
             this._dateUpdated.value = this._dateUpdated.getAttribute("unknown");
+            this.removeAttribute("dateUpdated");
+          }
         ]]></body>
       </method>
 
@@ -1412,6 +1446,23 @@
         ]]></body>
       </method>
 
+      <method name="onExternalInstall">
+        <parameter name="aAddon"/>
+        <parameter name="aExistingAddon"/>
+        <parameter name="aNeedsRestart"/>
+        <body><![CDATA[
+          if (aExistingAddon.id != this.mAddon.id)
+            return;
+
+          // If the install completed without needing a restart then switch to
+          // using the new Addon
+          if (!aNeedsRestart)
+            this._initWithAddon(aAddon);
+          else
+            this._updateState();
+        ]]></body>
+      </method>
+
       <method name="onNewInstall">
         <parameter name="aInstall"/>
         <body><![CDATA[
@@ -1444,8 +1495,15 @@
       </method>
 
       <method name="onInstallEnded">
+        <parameter name="aInstall"/>
+        <parameter name="aAddon"/>
         <body><![CDATA[
-          this._updateState();
+          // If the install completed without needing a restart then switch to
+          // using the new Addon
+          if (!(aAddon.pendingOperations & AddonManager.PENDING_INSTALL))
+            this._initWithAddon(aAddon);
+          else
+            this._updateState();
         ]]></body>
       </method>
     </implementation>
@@ -1459,7 +1517,6 @@
 
 
   <!-- Addon - uninstalled - An uninstalled addon that can be re-installed. -->
-  <!-- XXXunf this doesn't take into account restart-less uninstalls. bug 561263 -->
   <binding id="addon-uninstalled"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
@@ -1520,6 +1577,51 @@
         <body><![CDATA[
           if (!this.isPending("uninstall"))
             this.removeAttribute("pending");
+        ]]></body>
+      </method>
+
+      <method name="onExternalInstall">
+        <parameter name="aAddon"/>
+        <parameter name="aExistingAddon"/>
+        <parameter name="aNeedsRestart"/>
+        <body><![CDATA[
+          if (aExistingAddon.id != this.mAddon.id)
+            return;
+
+          // Make sure any newly installed add-on has the correct disabled state
+          if (this.hasAttribute("wasDisabled"))
+            aAddon.userDisabled = this.getAttribute("wasDisabled") == "true";
+
+          // If the install completed without needing a restart then switch to
+          // using the new Addon
+          if (!aNeedsRestart)
+            this.mAddon = aAddon;
+
+          this.removeAttribute("restartrequired");
+          this.removeAttribute("pending");
+        ]]></body>
+      </method>
+
+      <method name="onInstallStarted">
+        <parameter name="aInstall"/>
+        <body><![CDATA[
+          // Make sure any newly installed add-on has the correct disabled state
+          if (this.hasAttribute("wasDisabled"))
+            aInstall.addon.userDisabled = this.getAttribute("wasDisabled") == "true";
+        ]]></body>
+      </method>
+
+      <method name="onInstallEnded">
+        <parameter name="aInstall"/>
+        <parameter name="aAddon"/>
+        <body><![CDATA[
+          // If the install completed without needing a restart then switch to
+          // using the new Addon
+          if (!(aAddon.pendingOperations & AddonManager.PENDING_INSTALL))
+            this.mAddon = aAddon;
+
+          this.removeAttribute("restartrequired");
+          this.removeAttribute("pending");
         ]]></body>
       </method>
     </implementation>

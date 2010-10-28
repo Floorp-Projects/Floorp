@@ -57,6 +57,7 @@ public:
            : mFD(nsnull)
            , mBitMap(nsnull)
            , mBlockSize(0)
+           , mFileSize(0)
            , mBitMapDirty(PR_FALSE)
             {}
     ~nsDiskCacheBlockFile() { (void) Close(PR_TRUE); }

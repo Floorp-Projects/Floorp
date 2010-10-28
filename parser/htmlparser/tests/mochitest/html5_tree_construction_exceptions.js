@@ -11,5 +11,4 @@ var html5Exceptions = {
   "<!doctype html><summary><article></summary>a" : true, // Bug 596171
   "<!doctype html><p><figcaption>" : true, // http://www.w3.org/Bugs/Public/show_bug.cgi?id=10589
   "<!doctype html><figcaption><article></figcaption>a" : true, // http://www.w3.org/Bugs/Public/show_bug.cgi?id=10589
-  "<!doctype html><svg>a</svg><frameset><frame>" : true, // Bug 596168
 }

@@ -68,6 +68,10 @@ ifndef LIBXUL_SDK
 tier_base_dirs += \
 	memory \
 	$(NULL)
+ifeq ($(OS_TARGET),Android)
+tier_base_dirs += other-licenses/android
+endif
+
 endif
 
 ifdef COMPILE_ENVIRONMENT
@@ -168,7 +172,7 @@ EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
 
 SYMBOL_INDEX_NAME = \
-  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
+  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
 
 buildsymbols:
 ifdef MOZ_CRASHREPORTER

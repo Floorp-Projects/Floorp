@@ -26,14 +26,14 @@
 
       let db = event.result;
 
-      request = db.createObjectStore("foo", "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
       event.transaction.oncomplete = continueToNextStep;
 
-      let objectStore = event.result;
+      let objectStore = db.createObjectStore("foo", "", true);
 
       let firstKey;
       for (let i = 0; i < entryCount; i++) {
@@ -51,7 +51,7 @@
 
       let seenEntryCount = 0;
 
-      request = db.objectStore("foo").openCursor();
+      request = db.transaction("foo").objectStore("foo").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         let cursor = event.result;
@@ -68,21 +68,21 @@
       is(seenEntryCount, entryCount, "Correct entry count");
 
       try {
-        db.objectStore("foo").clear();
+        db.transaction("foo").objectStore("foo").clear();
         ok(false, "clear should throw on READ_ONLY transactions");
       }
       catch (e) {
         ok(true, "clear should throw on READ_ONLY transactions");
       }
 
-      request = db.objectStore("foo", READ_WRITE).clear();
+      request = db.transaction("foo", READ_WRITE).objectStore("foo").clear();
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
       ok(event.result === null, "Correct event.result");
 
-      request = db.objectStore("foo").openCursor();
+      request = db.transaction("foo").objectStore("foo").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         let cursor = event.result;
@@ -93,7 +93,7 @@
       }
       yield;
 
-      request = db.objectStore("foo", READ_WRITE).add({});
+      request = db.transaction("foo", READ_WRITE).objectStore("foo").add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

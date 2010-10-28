@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+
+
+function f() {
+  for (var j in { a:1, b:2, c:3, d:4, e:5 }) {
+  }
+}
+
+function boom()
+{
+  f();
+  Function.prototype.__defineGetter__("xxx", function(){});
+}
+
+</script></head>
+
+<body onload="boom();"></body>
+</html>

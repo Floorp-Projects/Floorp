@@ -41,45 +41,36 @@
 // Tests that the page's resources are displayed in the console as they're
 // loaded
 
-const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
 const TEST_NETWORK_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-network.html" + "?_date=" + Date.now();
 
 function test() {
-  addTab(TEST_NETWORK_URI);
-  browser.addEventListener("DOMContentLoaded", onLoad, false);
+  addTab("data:text/html,Web Console basic network logging test");
+  browser.addEventListener("load", onLoad, true);
 }
 
-function onLoad() {
-  browser.removeEventListener("DOMContentLoaded", onLoad, false);
+function onLoad(aEvent) {
+  browser.removeEventListener(aEvent.type, arguments.callee, true);
   openConsole();
   hudId = HUDService.displaysIndex()[0];
-  // Now reload with the console visible.
-  // HUDService.clearDisplay(hudId);
-  browser.addEventListener("DOMContentLoaded", testBasicNetLogging,
-                            false);
-  browser.contentWindow.wrappedJSObject.document.location = TEST_NETWORK_URI;
+
+  browser.addEventListener("load", testBasicNetLogging, true);
+  content.location = TEST_NETWORK_URI;
 }
 
-function testBasicNetLogging() {
-  browser.removeEventListener("DOMContentLoaded", testBasicNetLogging,
-                              false);
+function testBasicNetLogging(aEvent) {
+  browser.removeEventListener(aEvent.type, arguments.callee, true);
+
   hudBox = HUDService.getHeadsUpDisplay(hudId);
-  outputNode = hudBox.querySelector(".hud-output-node");
-  log(outputNode);
-  let testOutput = [];
-  let nodes = outputNode.querySelectorAll(".hud-msg-node");
-  log(nodes);
 
-  executeSoon(function (){
+  executeSoon(function() {
+    let text = hudBox.querySelector(".hud-output-node").textContent;
 
-    ok(nodes.length == 2, "2 children in output");
-    ok(nodes[0].textContent.indexOf("test-network") > -1, "found test-network");
-    // TODO: Need to figure out why these 2 are never logged - see bug 603251
-    // ok(testOutput[1].indexOf("testscript") > -1, "found testscript");
-    // ok(testOutput[2].indexOf("test-image") > -1, "found test-image");
-    ok(nodes[1].textContent.indexOf("network console") > -1, "found network console");
+    isnot(text.indexOf("test-network.html"), -1, "found test-network.html");
+    isnot(text.indexOf("testscript.js"), -1, "found testscript.js");
+    isnot(text.indexOf("test-image.png"), -1, "found test-image.png");
+    isnot(text.indexOf("network console"), -1, "found network console");
+
     finishTest();
   });
 }
-
 

@@ -182,6 +182,102 @@ function _dump_exception_stack(stack) {
   });
 }
 
+/**
+ * Overrides idleService with a mock.  Idle is commonly used for maintenance
+ * tasks, thus if a test uses a service that requires the idle service, it will
+ * start handling them.
+ * This behaviour would cause random failures and slowdown tests execution,
+ * for example by running database vacuum or cleanups for each test.
+ *
+ * @note Idle service is overridden by default.  If a test requires it, it will
+ *       have to call do_get_idle() function at least once before use.
+ */
+_fakeIdleService = {
+  get registrar() {
+    delete this.registrar;
+    return this.registrar =
+      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  },
+  contractID: "@mozilla.org/widget/idleservice;1",
+  get CID() this.registrar.contractIDToCID(this.contractID),
+
+  activate: function FIS_activate()
+  {
+    if (!this.originalFactory) {
+      // Save original factory.
+      this.originalFactory =
+        Components.manager.getClassObject(Components.classes[this.contractID],
+                                          Components.interfaces.nsIFactory);
+      // Unregister original factory.
+      this.registrar.unregisterFactory(this.CID, this.originalFactory);
+      // Replace with the mock.
+      this.registrar.registerFactory(this.CID, "Fake Idle Service",
+                                     this.contractID, this.factory
+      );
+    }
+  },
+
+  deactivate: function FIS_deactivate()
+  {
+    if (this.originalFactory) {
+      // Unregister the mock.
+      this.registrar.unregisterFactory(this.CID, this.factory);
+      // Restore original factory.
+      this.registrar.registerFactory(this.CID, "Idle Service",
+                                     this.contractID, this.originalFactory);
+      delete this.originalFactory;
+    }
+  },
+
+  factory: {
+    // nsIFactory
+    createInstance: function (aOuter, aIID)
+    {
+      if (aOuter) {
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      }
+      return _fakeIdleService.QueryInterface(aIID);
+    },
+    lockFactory: function (aLock) {
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    QueryInterface: function(aIID) {
+      if (aIID.equals(Components.interfaces.nsIFactory) ||
+          aIID.equals(Components.interfaces.nsISupports)) {
+        return this;
+      }
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+  },
+
+  // nsIIdleService
+  get idleTime() 0,
+  addIdleObserver: function () {},
+  removeIdleObserver: function () {},
+
+  QueryInterface: function(aIID) {
+    // Useful for testing purposes, see test_get_idle.js.
+    if (aIID.equals(Components.interfaces.nsIFactory)) {
+      return this.factory;
+    }
+    if (aIID.equals(Components.interfaces.nsIIdleService) ||
+        aIID.equals(Components.interfaces.nsISupports)) {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+}
+
+/**
+ * Restores the idle service factory if needed and returns the service's handle.
+ * @return A handle to the idle service.
+ */
+function do_get_idle() {
+  _fakeIdleService.deactivate();
+  return Components.classes[_fakeIdleService.contractID]
+                   .getService(Components.interfaces.nsIIdleService);
+}
+
 function _execute_test() {
   // Map resource://test/ to the current working directory.
   let (ios = Components.classes["@mozilla.org/network/io-service;1"]
@@ -192,6 +288,10 @@ function _execute_test() {
     let curDirURI = ios.newFileURI(do_get_cwd());
     protocolHandler.setSubstitution("test", curDirURI);
   }
+
+  // Override idle service by default.
+  // Call do_get_idle() to restore the factory and get the service.
+  _fakeIdleService.activate();
 
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
@@ -229,6 +329,9 @@ function _execute_test() {
   var func;
   while ((func = _cleanupFunctions.pop()))
     func();
+
+  // Restore idle service to avoid leaks.
+  _fakeIdleService.deactivate();
 
   if (!_passed)
     return;
@@ -322,6 +425,28 @@ function do_throw(text, stack) {
 
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;
+}
+
+function do_report_unexpected_exception(ex, text) {
+  var caller_stack = Components.stack.caller;
+  text = text ? text + " - " : "";
+
+  _passed = false;
+  dump("TEST-UNEXPECTED-FAIL | " + caller_stack.filename + " | " + text +
+         "Unexpected exception " + ex + ", see following stack:\n" + ex.stack +
+         "\n");
+
+  _do_quit();
+  throw Components.results.NS_ERROR_ABORT;
+}
+
+function do_note_exception(ex, text) {
+  var caller_stack = Components.stack.caller;
+  text = text ? text + " - " : "";
+
+  dump("TEST-INFO | " + caller_stack.filename + " | " + text +
+         "Swallowed exception " + ex + ", see following stack:\n" + ex.stack +
+         "\n");
 }
 
 function do_check_neq(left, right, stack) {

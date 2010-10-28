@@ -6,15 +6,13 @@
     <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="application/x-javascript">
-      var bodyOnLoad = false;
-      function checkOnLoad()
+      function onLoadFired()
       {
-        ok(bodyOnLoad, "Body onload event should fire");
+        ok(true, "Body onload event should fire");
         SimpleTest.finish();
       }
       SimpleTest.waitForExplicitFinish();
-      setTimeout(checkOnLoad, 500);
     </script>
   </head>
-  <body onload="bodyOnLoad = true;"/>
+  <body onload="onLoadFired();"/>
 </html>

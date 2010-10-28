@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=604067
+-->
+<head>
+  <title>Test for Bug 604067</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=604067">Mozilla Bug 604067</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 604067 **/
+
+var f = document.createElement("iframe");
+
+function check() {
+  var v = document.body.getElementsByTagName("iframe")[0].contentDocument.body.getElementsByTagName("video")[0];
+  ok(v.error && v.error.code == MediaError.MEDIA_ERR_DECODE, "Must have error set to MEDIA_ERR_DECODE");
+  SimpleTest.finish();
+}
+
+// Find an error test that we'd think we should be able to play (if it
+// wasn't already known to fail).
+var t = getPlayableVideo(gErrorTests);
+if (t != null) {
+  f.src = t.name;
+  f.addEventListener("load", function() {setTimeout(check, 0);}, false);
+  document.body.appendChild(f);
+  SimpleTest.waitForExplicitFinish();
+} else {
+  todo(false, "No types supported");
+}
+
+</script>
+</pre>
+</body>
+</html>

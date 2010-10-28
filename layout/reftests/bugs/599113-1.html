@@ -1,0 +1,29 @@
+<html class="reftest-wait">
+<head>
+<script>
+  function doTest() {
+    window.scrollTo(0,101);
+    // make sure we serve the invalidate the scroll caused, so the invalidate
+    // doesn't get served later in our test (which would just make us pass when
+    // we should actually fail)
+    setTimeout("continueTest();", 0);
+  }
+  function continueTest() {
+    document.getElementById("x").style.background = "blue";
+    // make sure the invalidate for that change happens now, while we are
+    // scrolled down
+    document.documentElement.offsetLeft;
+    setTimeout("finishTest();", 0);
+  }
+  function finishTest() {
+    window.scrollTo(0,0);
+    document.documentElement.removeAttribute('class');
+  }
+  document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+<body style="overflow: hidden;">
+<div id="x" style="position: absolute; left: 0px; top: 0px; width: 100px; height: 100px; background: red;"></div>
+<div style="height: 10000px;"></div>
+</body>
+</html>

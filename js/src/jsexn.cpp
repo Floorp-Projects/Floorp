@@ -46,7 +46,7 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -101,7 +101,7 @@ Class js_ErrorClass = {
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
-    Exception,      /* construct   */
+    NULL,           /* construct   */
     NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
     JS_CLASS_TRACE(exn_trace)
@@ -259,8 +259,6 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
     return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
-namespace {
-
 struct CopyTo
 {
     Value *dst;
@@ -269,8 +267,6 @@ struct CopyTo
         *dst++ = *src;
     }
 };
-
-}
 
 static JSBool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
@@ -463,8 +459,6 @@ exn_enumerate(JSContext *cx, JSObject *obj)
         atom = *(JSAtom **)((uint8 *)atomState + offsets[i]);
         if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
             return JS_FALSE;
-        if (prop)
-            pobj->dropProperty(cx, prop);
     }
     return JS_TRUE;
 }

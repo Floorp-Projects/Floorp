@@ -41,12 +41,12 @@ const Cr = Components.results;
 const Cc = Components.classes;
 const Cu = Components.utils;
 
-let gArgs = window.arguments[0].QueryInterface(Ci.nsIWritablePropertyBag2)
-                               .QueryInterface(Ci.nsIWritablePropertyBag);
-
-let listBox;
+let gArgs, listBox;
 
 function dialogOnLoad() {
+    gArgs = window.arguments[0].QueryInterface(Ci.nsIWritablePropertyBag2)
+                               .QueryInterface(Ci.nsIWritablePropertyBag);
+
     let promptType = gArgs.getProperty("promptType");
     if (promptType != "select") {
         Cu.reportError("selectDialog opened for unknown type: " + promptType);

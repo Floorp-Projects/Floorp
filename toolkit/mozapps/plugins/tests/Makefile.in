@@ -49,16 +49,12 @@ USE_STATIC_LIBS = 1
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
+  browser_bug435788.js \
   pfs_bug435788_1.rdf \
   pfs_bug435788_2.rdf \
   GoodExtension.xpi \
   BadExtension.xpi \
   $(NULL)
-ifneq ($(OS_ARCH),Darwin)
-_BROWSER_FILES += \
-  browser_bug435788.js
-endif
-
 endif
 
 CPPSRCS = \

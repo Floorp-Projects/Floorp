@@ -124,6 +124,8 @@ _TEST_FILES =	\
 		test_flush_on_paint.html \
 		test_mozPaintCount.html \
 		test_scroll_selection_into_view.html \
+		test_bug582771.html \
+		test_bug603550.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208

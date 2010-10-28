@@ -37,29 +37,26 @@
       let event = yield;
 
       let db = event.result;
+
       for (let i = 0; i < objectStoreInfo.length; i++) {
         // Create our object stores.
         let info = objectStoreInfo[i];
-        request = info.hasOwnProperty("autoIncrement") ?
-                  db.createObjectStore(info.name, info.keyPath,
-                                       info.autoIncrement) :
-                  db.createObjectStore(info.name, info.keyPath);
+
+        ok(true, "1");
+        request = db.setVersion("1");
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
 
-        let objectStore = event.result;
+        ok(true, "2");
+        let objectStore = info.hasOwnProperty("autoIncrement") ?
+                          db.createObjectStore(info.name, info.keyPath,
+                                               info.autoIncrement) :
+                          db.createObjectStore(info.name, info.keyPath);
+
         // Create the indexes on 'data' on the object store.
-        request = objectStore.createIndex("data_index", "data", false);
-        request.onerror = errorHandler;
-        request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
-        let index = event.result;
-        request = objectStore.createIndex("unique_data_index", "data", true);
-        request.onerror = errorHandler;
-        request.onsuccess = grabEventAndContinueHandler;
-        event = yield;
-        let uniqueIndex = event.result;
+        let index = objectStore.createIndex("data_index", "data", false);
+        let uniqueIndex = objectStore.createIndex("unique_data_index", "data", true);
 
         // Populate the object store with one entry of data.
         request = info.hasOwnProperty("key") ?
@@ -68,12 +65,14 @@
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
+        ok(true, "3");
 
         // Use a cursor to update 'data' to END_DATA.
         request = objectStore.openCursor();
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
+        ok(true, "4");
 
         let cursor = event.result;
         let obj = cursor.value;
@@ -82,12 +81,14 @@
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
+        ok(true, "5");
 
         // Check both indexes to make sure that they were updated.
         request = index.getObject(END_DATA);
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
+        ok(true, "6");
         SimpleTest.ok(obj.data, event.result.data,
                       "Non-unique index was properly updated.");
 
@@ -95,6 +96,8 @@
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
+
+        ok(true, "7");
         SimpleTest.ok(obj.data, event.result.data,
                       "Unique index was properly updated.");
       }

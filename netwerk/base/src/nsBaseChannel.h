@@ -281,22 +281,24 @@ private:
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
   nsCOMPtr<nsIURI>                    mOriginalURI;
   nsCOMPtr<nsIURI>                    mURI;
-  nsCOMPtr<nsILoadGroup>              mLoadGroup;
   nsCOMPtr<nsISupports>               mOwner;
   nsCOMPtr<nsISupports>               mSecurityInfo;
-  nsCOMPtr<nsIStreamListener>         mListener;
-  nsCOMPtr<nsISupports>               mListenerContext;
   nsCOMPtr<nsIChannel>                mRedirectChannel;
   nsCString                           mContentType;
   nsCString                           mContentCharset;
   PRUint32                            mLoadFlags;
-  nsresult                            mStatus;
   PRPackedBool                        mQueriedProgressSink;
   PRPackedBool                        mSynthProgressEvents;
   PRPackedBool                        mWasOpened;
   PRPackedBool                        mWaitingOnAsyncRedirect;
   PRPackedBool                        mOpenRedirectChannel;
   PRUint32                            mRedirectFlags;
+
+protected:
+  nsCOMPtr<nsILoadGroup>              mLoadGroup;
+  nsCOMPtr<nsIStreamListener>         mListener;
+  nsCOMPtr<nsISupports>               mListenerContext;
+  nsresult                            mStatus;
 };
 
 #endif // !nsBaseChannel_h__

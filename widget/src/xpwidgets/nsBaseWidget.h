@@ -115,7 +115,7 @@ public:
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
-  virtual LayerManager*   GetLayerManager();
+  virtual LayerManager*   GetLayerManager(bool* aAllowRetaining = nsnull);
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(PRBool aModal); 
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
@@ -202,6 +202,15 @@ public:
   };
   friend class AutoLayerManagerSetup;
 
+  class AutoUseBasicLayerManager {
+  public:
+    AutoUseBasicLayerManager(nsBaseWidget* aWidget);
+    ~AutoUseBasicLayerManager();
+  private:
+    nsBaseWidget* mWidget;
+  };
+  friend class AutoUseBasicLayerManager;
+
 protected:
 
   virtual void            ResolveIconName(const nsAString &aIconName,
@@ -255,6 +264,7 @@ protected:
   nsIDeviceContext* mContext;
   nsIToolkit*       mToolkit;
   nsRefPtr<LayerManager> mLayerManager;
+  nsRefPtr<LayerManager> mBasicLayerManager;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;
@@ -262,6 +272,7 @@ protected:
   nsBorderStyle     mBorderStyle;
   PRPackedBool      mOnDestroyCalled;
   PRPackedBool      mUseAcceleratedRendering;
+  PRPackedBool      mTemporarilyUseBasicLayerManager;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped

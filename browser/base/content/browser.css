@@ -106,6 +106,14 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   visibility: collapse;
 }
 
+#feed-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
 #main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
@@ -254,9 +262,7 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
 
 /* ::::: Unified Back-/Forward Button ::::: */
 #back-button > .toolbarbutton-menu-dropmarker,
-#forward-button > .toolbarbutton-menu-dropmarker,
-#back-forward-dropmarker > .toolbarbutton-icon,
-#back-forward-dropmarker > .toolbarbutton-text {
+#forward-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 .unified-nav-current {

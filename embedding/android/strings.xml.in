@@ -9,4 +9,11 @@
   <string name="incompatable_cpu_error">&incompatable_cpu_error;</string>
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
+  <string name="crash_message">&crash_message;</string>
+  <string name="crash_help_message">&crash_help_message;</string>
+  <string name="crash_send_report_message">&crash_send_report_message;</string>
+  <string name="crash_include_url">&crash_include_url;</string>
+  <string name="crash_close_label">&crash_close_label;</string>
+  <string name="crash_restart_label">&crash_restart_label;</string>
+  <string name="sending_crash_report">&sending_crash_report;</string>
 </resources>

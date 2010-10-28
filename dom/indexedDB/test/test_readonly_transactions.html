@@ -28,13 +28,12 @@
       let db = event.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
-      request = db.createObjectStore(osName, "", true);
+      request = db.setVersion("1");
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        is(event.transaction.mode, READ_WRITE, "Correct mode");
-        testGenerator.next();
-      };
-      yield;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      db.createObjectStore(osName, "", true);
 
       let key1, key2;
 
@@ -49,7 +48,7 @@
       }
       yield;
 
-      request = db.objectStore(osName, READ_WRITE).add({});
+      request = db.transaction(osName, READ_WRITE).objectStore(osName).add({});
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -68,7 +67,9 @@
       }
       yield;
 
-      request = db.objectStore(osName, READ_WRITE).put({}, key2);
+      request = db.transaction(osName, READ_WRITE)
+                  .objectStore(osName)
+                  .put({}, key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -86,7 +87,9 @@
       }
       yield;
 
-      request = db.objectStore(osName, READ_WRITE).put({}, key1);
+      request = db.transaction(osName, READ_WRITE)
+                  .objectStore(osName)
+                  .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -104,7 +107,9 @@
       }
       yield;
 
-      request = db.objectStore(osName, READ_WRITE).remove(key2);
+      request = db.transaction(osName, READ_WRITE)
+                  .objectStore(osName)
+                  .remove(key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -121,7 +126,7 @@
       }
 
       try {
-        request = db.objectStore(osName).add({});
+        request = db.transaction(osName).objectStore(osName).add({});
         ok(false, "Adding to a readonly transaction should fail!");
       }
       catch (e) {
@@ -137,7 +142,7 @@
       }
 
       try {
-        request = db.objectStore(osName).put({});
+        request = db.transaction(osName).objectStore(osName).put({});
         ok(false, "Adding or modifying a readonly transaction should fail!");
       }
       catch (e) {
@@ -153,7 +158,7 @@
       }
 
       try {
-        request = db.objectStore(osName).put({}, key1);
+        request = db.transaction(osName).objectStore(osName).put({}, key1);
         ok(false, "Modifying a readonly transaction should fail!");
       }
       catch (e) {
@@ -169,7 +174,7 @@
       }
 
       try {
-        request = db.objectStore(osName).remove(key2);
+        request = db.transaction(osName).objectStore(osName).remove(key2);
         ok(false, "Removing from a readonly transaction should fail!");
       }
       catch (e) {

@@ -62,7 +62,7 @@ PR_BEGIN_MACRO                                                  \
     res = pref->GetBoolPref("plugin.dont_try_safe_calls", &gSkipPluginSafeCalls);\
 PR_END_MACRO
 
-#define NS_TRY_SAFE_CALL_RETURN(ret, fun, library, pluginInst) \
+#define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
 PR_BEGIN_MACRO                                     \
   PRIntervalTime startTime = PR_IntervalNow();     \
   if(gSkipPluginSafeCalls)                         \
@@ -85,7 +85,7 @@ PR_BEGIN_MACRO                                     \
   NS_NotifyPluginCall(startTime);		   \
 PR_END_MACRO
 
-#define NS_TRY_SAFE_CALL_VOID(fun, library, pluginInst) \
+#define NS_TRY_SAFE_CALL_VOID(fun, pluginInst) \
 PR_BEGIN_MACRO                              \
   PRIntervalTime startTime = PR_IntervalNow();     \
   if(gSkipPluginSafeCalls)                  \
@@ -109,14 +109,14 @@ PR_END_MACRO
 
 #else // vanilla calls
 
-#define NS_TRY_SAFE_CALL_RETURN(ret, fun, library, pluginInst) \
+#define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst) \
 PR_BEGIN_MACRO                                     \
   PRIntervalTime startTime = PR_IntervalNow();     \
   ret = fun;                                       \
   NS_NotifyPluginCall(startTime);		   \
 PR_END_MACRO
 
-#define NS_TRY_SAFE_CALL_VOID(fun, library, pluginInst) \
+#define NS_TRY_SAFE_CALL_VOID(fun, pluginInst) \
 PR_BEGIN_MACRO                              \
   PRIntervalTime startTime = PR_IntervalNow();     \
   fun;                                      \

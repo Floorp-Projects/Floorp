@@ -12,7 +12,8 @@
 == test012.xul reference-green-window.xul
 == test013.xul reference-green-window.xul
 == test014.xul reference-green-window.xul
-== test015.xul reference-green-window.xul
+# Disabled due to compartments for now.
+#== test015.xul reference-green-window.xul
 == test016.xul reference-green-window.xul
 == test017.xul reference-green-window.xul
 == test018.xul reference-green-window.xul

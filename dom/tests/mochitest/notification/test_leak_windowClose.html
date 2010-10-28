@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=605309
+-->
+<head>
+  <title>Test for leak when window closes</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script>
+function boom()
+{
+  document.documentElement.focus();
+  var x = navigator.mozNotification;
+  document.documentElement.addEventListener('', function(){x}, false);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("load", boom, false);
+</script>
+</head>
+<body>
+<p> I like to write tests </p>
+</body>
+</html>

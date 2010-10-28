@@ -1212,12 +1212,27 @@ History::RegisterVisitedCallback(nsIURI* aURI,
     // Links wanting to know about this URI.  Therefore, we should query the
     // database now.
     nsresult rv = VisitedQuery::Start(aURI);
+
+    // In IPC builds, we are passed a NULL Link from
+    // ContentParent::RecvStartVisitedQuery.  Since we won't be adding a NULL
+    // entry to our list of observers, and the code after this point assumes
+    // that aLink is non-NULL, we will need to return now.
     if (NS_FAILED(rv) || !aLink) {
       // Remove our array from the hashtable so we don't keep it around.
       mObservers.RemoveEntry(aURI);
       return rv;
     }
   }
+#ifdef MOZ_IPC
+  // In IPC builds, we are passed a NULL Link from
+  // ContentParent::RecvStartVisitedQuery.  All of our code after this point
+  // assumes aLink is non-NULL, so we have to return now.
+  else if (!aLink) {
+    NS_ASSERTION(XRE_GetProcessType() == GeckoProcessType_Default,
+                 "We should only ever get a null Link in the default process!");
+    return NS_OK;
+  }
+#endif
 
   // Sanity check that Links are not registered more than once for a given URI.
   // This will not catch a case where it is registered for two different URIs.

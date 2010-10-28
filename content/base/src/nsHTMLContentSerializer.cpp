@@ -395,28 +395,63 @@ nsHTMLContentSerializer::AppendElementEnd(nsIContent *aElement,
 }
 
 static const PRUint16 kValNBSP = 160;
-static const char kEntityNBSP[] = "&nbsp;";
-
-static const PRUint16 kGTVal = 62;
 static const char* kEntities[] = {
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "&amp;", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "&lt;", "", "&gt;"
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, "&amp;", nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  "&lt;", nsnull, "&gt;", nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  "&nbsp;"
 };
 
 static const char* kAttrEntities[] = {
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "&quot;", "", "", "", "&amp;", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "", "",
-  "&lt;", "", "&gt;"
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, "&quot;", nsnull, nsnull, nsnull, "&amp;", nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  "&lt;", nsnull, "&gt;", nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+  "&nbsp;"
 };
+
+PRUint32 FindNextBasicEntity(const nsAString& aStr,
+                             const PRUint32 aLen,
+                             PRUint32 aIndex,
+                             const char** aEntityTable,
+                             const char** aEntity)
+{
+  for (; aIndex < aLen; ++aIndex) {
+    // for each character in this chunk, check if it
+    // needs to be replaced
+    PRUnichar val = aStr[aIndex];
+    if (val <= kValNBSP && aEntityTable[val]) {
+      *aEntity = aEntityTable[val];
+      return aIndex;
+    }
+  }
+  return aIndex;
+}
 
 void
 nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
@@ -431,10 +466,30 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     return;
   }
 
-  if (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities  |
-                nsIDocumentEncoder::OutputEncodeLatin1Entities |
-                nsIDocumentEncoder::OutputEncodeHTMLEntities   |
-                nsIDocumentEncoder::OutputEncodeW3CEntities)) {
+  PRBool nonBasicEntities =
+    !!(mFlags & (nsIDocumentEncoder::OutputEncodeLatin1Entities |
+                 nsIDocumentEncoder::OutputEncodeHTMLEntities   |
+                 nsIDocumentEncoder::OutputEncodeW3CEntities));
+
+  if (!nonBasicEntities &&
+      (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities))) {
+    const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
+    PRUint32 start = 0;
+    const PRUint32 len = aStr.Length();
+    for (PRUint32 i = 0; i < len; ++i) {
+      const char* entity = nsnull;
+      i = FindNextBasicEntity(aStr, len, i, entityTable, &entity);
+      PRUint32 normalTextLen = i - start; 
+      if (normalTextLen) {
+        aOutputStr.Append(Substring(aStr, start, normalTextLen));
+      }
+      if (entity) {
+        aOutputStr.AppendASCII(entity);
+        start = i + 1;
+      }
+    }
+    return;
+  } else if (nonBasicEntities) {
     nsIParserService* parserService = nsContentUtils::GetParserService();
 
     if (!parserService) {
@@ -470,11 +525,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
       // needs to be replaced
       for (; c < fragmentEnd; c++, advanceLength++) {
         PRUnichar val = *c;
-        if (val == kValNBSP) {
-          fullConstEntityText = kEntityNBSP;
-          break;
-        }
-        else if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
+        if (val <= kValNBSP && entityTable[val]) {
           fullConstEntityText = entityTable[val];
           break;
         } else if (val > 127 &&

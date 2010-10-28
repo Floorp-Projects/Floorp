@@ -47,8 +47,8 @@
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsbit.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsprvtd.h"
 
 #ifdef JS_ARENAMETER
 static JSArenaStats *arena_stats_list;

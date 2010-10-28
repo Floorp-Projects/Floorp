@@ -604,7 +604,8 @@
             label = this._stringBundle.getString("cmd_pasteAndSearch");
             element.setAttribute("label", label);
             element.setAttribute("anonid", "paste-and-search");
-            element.setAttribute("oncommand", "goDoCommand('cmd_paste'); document.getElementById('searchbar').handleSearchCommand();");
+            element.setAttribute("oncommand",
+                "BrowserSearch.searchBar.value = ''; goDoCommand('cmd_paste'); BrowserSearch.searchBar.handleSearchCommand();");
             cxmenu.insertBefore(element, insertLocation.nextSibling);
             pasteAndSearch = element;
           }

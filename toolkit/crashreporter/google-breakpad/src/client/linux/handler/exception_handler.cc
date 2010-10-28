@@ -73,20 +73,28 @@
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
+#if !defined(__ANDROID__)
 #include <sys/signal.h>
+#endif
 #include <sys/syscall.h>
+#if !defined(__ANDROID__)
 #include <sys/ucontext.h>
 #include <sys/user.h>
+#endif
 #include <sys/wait.h>
+#if !defined(__ANDROID__)
 #include <ucontext.h>
+#endif
 #include <unistd.h>
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 #include "common/memory.h"
+#include "client/linux/minidump_writer/linux_dumper.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
 #include "common/linux/guid_creator.h"
 #include "common/linux/eintr_wrapper.h"
@@ -186,7 +194,7 @@ bool ExceptionHandler::InstallHandlers() {
   stack.ss_sp = signal_stack;
   stack.ss_size = kSigStackSize;
 
-  if (sigaltstack(&stack, NULL) == -1)
+  if (sys_sigaltstack(&stack, NULL) == -1)
     return false;
 
   struct sigaction sa;
@@ -310,7 +318,7 @@ bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
     return false;
 
   // Allow ourselves to be dumped.
-  prctl(PR_SET_DUMPABLE, 1);
+  sys_prctl(PR_SET_DUMPABLE, 1);
   CrashContext context;
   memcpy(&context.siginfo, info, sizeof(siginfo_t));
   memcpy(&context.context, uc, sizeof(struct ucontext));
@@ -431,8 +439,11 @@ void ExceptionHandler::WaitForContinueSignal() {
 // Runs on the cloned process.
 bool ExceptionHandler::DoDump(pid_t crashing_process, const void* context,
                               size_t context_size) {
-  return google_breakpad::WriteMinidump(
-      next_minidump_path_c_, crashing_process, context, context_size);
+  return google_breakpad::WriteMinidump(next_minidump_path_c_,
+                                        crashing_process,
+                                        context,
+                                        context_size,
+                                        mapping_info_);
 }
 
 // static
@@ -507,6 +518,23 @@ bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
 
   return callback ? callback(eh.dump_path_c_, eh.next_minidump_id_c_,
                              callback_context, true) : true;
+}
+
+void ExceptionHandler::AddMappingInfo(const std::string& name,
+                                      const u_int8_t identifier[sizeof(MDGUID)],
+                                      uintptr_t start_address,
+                                      size_t mapping_size,
+                                      size_t file_offset) {
+   MappingInfo info;
+   info.start_addr = start_address;
+   info.size = mapping_size;
+   info.offset = file_offset;
+   strncpy(info.name, name.c_str(), std::min(name.size() + 1, sizeof(info)));
+ 
+   std::pair<MappingInfo, u_int8_t[sizeof(MDGUID)]> mapping;
+   mapping.first = info;
+   memcpy(mapping.second, identifier, sizeof(MDGUID));
+   mapping_info_.push_back(mapping);
 }
 
 }  // namespace google_breakpad

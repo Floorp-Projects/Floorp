@@ -150,7 +150,7 @@ sa_stream_open(sa_stream_t *s) {
                          s->n_channels,
                          s->rate,
                          1,
-                         250000) < 0) {
+                         500000) < 0) {
     snd_pcm_close(s->output_unit);
     s->output_unit = NULL;
     pthread_mutex_unlock(&sa_alsa_mutex);

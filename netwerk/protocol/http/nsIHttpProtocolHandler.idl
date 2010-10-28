@@ -39,7 +39,7 @@
 
 #include "nsIProxiedProtocolHandler.idl"
 
-[scriptable, uuid(36709064-d2c8-40cb-b754-d30d970be639)]
+[scriptable, uuid(7516a8d3-0a6f-4476-88f5-fb9973450c5f)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
     /**
@@ -60,16 +60,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * @return The complete version (major and minor) string. (eg. "5.0")
      */
     readonly attribute ACString appVersion;
-
-    /**
-     * @return The vendor name.
-     */
-    readonly attribute ACString vendor;
-
-    /**
-     * @return The vendor sub string.
-     */
-    readonly attribute ACString vendorSub;
 
     /**
      * @return The product name.

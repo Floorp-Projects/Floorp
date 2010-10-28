@@ -51,10 +51,16 @@ CPPSRCS = \
   MozillaRuntimeMain.cpp \
   $(NULL)
 
+ifeq (Android,$(OS_TARGET))
+WRAP_MALLOC_CFLAGS =
+WRAP_MALLOC_LIB =
+CPPSRCS = MozillaRuntimeMainAndroid.cpp
+else
 LIBS += \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
   $(NULL)
+endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 
@@ -92,7 +98,9 @@ OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 v
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
 endif
 
+ifneq (Android,$(OS_TARGET))
 LIBS += $(JEMALLOC_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

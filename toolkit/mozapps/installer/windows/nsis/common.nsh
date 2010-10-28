@@ -4824,7 +4824,8 @@
       IfErrors continue +1
       ; If the uninstall.log does not exist don't perform post update
       ; operations. This prevents updating the registry for zip builds.
-      IfFileExists "$EXEDIR\uninstall.log" +1 finish
+      IfFileExists "$EXEDIR\uninstall.log" +2 +1
+      Quit ; Nothing initialized so no need to call OnEndCommon
       ${PostUpdate}
       ClearErrors
       ${GetOptions} "$R0" "/UninstallLog=" $R2
@@ -6155,6 +6156,7 @@
       Push $R5
       Push $R4
       Push $R3 ; stack: $R3, $R5, $R6, $R7, $R8, $R9
+      Push $R2
 
       StrCpy $R7 "$QUICKLAUNCH\User Pinned"
       StrCpy $R3 "false"
@@ -6208,8 +6210,16 @@
       ${EndUnless}
       FindClose $R6
 
+      ; installed shortcuts
+      ${GetSMProgramsDirRelPath} $R2
+      ${If} "$R2" != ""
+        ApplicationID::Set "$SMPROGRAMS\$R2\${BrandFullName}.lnk" "${AppUserModelID}"
+        ApplicationID::Set "$SMPROGRAMS\$R2\${BrandFullName} ($(SAFE_MODE)).lnk" "${AppUserModelID}"
+      ${EndIf}
+
       StrCpy $R9 $R3
 
+      Pop $R2
       Pop $R3  ; stack: $R4, $R5, $R6, $R7, $R8, $R9
       Pop $R4  ; stack: $R5, $R6, $R7, $R8, $R9
       Pop $R5  ; stack: $R6, $R7, $R8, $R9

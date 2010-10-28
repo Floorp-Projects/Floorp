@@ -84,7 +84,9 @@ _MOCHITEST_FILES = \
   test_streamatclose.html \
   neverending.sjs \
   test_newstreamondestroy.html \
+  test_crashing.html \
   $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
+  test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
   test_propertyAndMethod.html \
@@ -106,12 +108,11 @@ _MOCHICHROME_FILES = \
   test_npruntime.xul   \
   test_privatemode.xul \
   test_wmode.xul \
+  test_bug479979.xul \
   $(NULL)
 
 # Temporarily disable the tests on Linux, see bug 573290 and bug 583591.
 ifneq ($(OS_ARCH),Linux)
-# Temporarily disable the tests on Mac OS X, see bug 599087.
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_CRASHREPORTER
 _MOCHICHROME_FILES += \
   test_crash_notify.xul \
@@ -119,20 +120,6 @@ _MOCHICHROME_FILES += \
   test_crash_submit.xul \
   $(NULL)
 endif
-endif
-endif
-
-# Temporarily disable these tests on Mac OS X, see bug 599076 and bug 599267
-# and bug 599378.
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-_MOCHITEST_FILES += \
-  test_crashing.html \
-  test_hanging.html \
-  $(NULL)
-
-_MOCHICHROME_FILES += \
-  test_bug479979.xul \
-  $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

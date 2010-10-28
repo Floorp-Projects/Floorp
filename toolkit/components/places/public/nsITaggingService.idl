@@ -52,9 +52,9 @@ interface nsITaggingService : nsISupports
    * @param aURI
    *        the URL to tag.
    * @param aTags
-   *        Array of tags to set for the given URL. Each element within the
-   *        array can be either a tag name or a concrete itemId of a tag
-   *        container.
+   *        Array of tags to set for the given URL.  Each element within the
+   *        array can be either a tag name (non-empty string) or a concrete
+   *        itemId of a tag container.
    */
   void tagURI(in nsIURI aURI, in nsIVariant aTags);
 
@@ -65,9 +65,9 @@ interface nsITaggingService : nsISupports
    * @param aURI
    *        the URL to un-tag.
    * @param aTags
-   *        Array of tags to unset. pass null to remove all tags from the given
-   *        url. Each element within the array can be either a tag name or a
-   *        concrete itemId of a tag container.
+   *        Array of tags to unset.  Pass null to remove all tags from the given
+   *        url.  Each element within the array can be either a tag name
+   *        (non-empty string) or a concrete itemId of a tag container.
    */
   void untagURI(in nsIURI aURI, in nsIVariant aTags);
 

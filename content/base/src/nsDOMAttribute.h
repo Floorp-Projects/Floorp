@@ -65,7 +65,8 @@ class nsDOMAttribute : public nsIAttribute,
 public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap,
                  already_AddRefed<nsINodeInfo> aNodeInfo,
-                 const nsAString& aValue);
+                 const nsAString& aValue,
+                 PRBool aNsAware);
   virtual ~nsDOMAttribute();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

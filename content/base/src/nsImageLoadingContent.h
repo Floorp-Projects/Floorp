@@ -96,7 +96,7 @@ protected:
    * be an image (eg an HTML <input> of type other than "image") should just
    * not call this method when computing their intrinsic state.
    */
-  PRInt32 ImageState() const;
+  nsEventStates ImageState() const;
 
   /**
    * LoadImage is called by subclasses when the appropriate
@@ -315,7 +315,7 @@ private:
    * When mIsImageStateForced is true, this holds the ImageState that we'll
    * return in ImageState().
    */
-  PRInt32 mForcedImageState;
+  nsEventStates mForcedImageState;
 
   PRInt16 mImageBlockingStatus;
   PRPackedBool mLoadingEnabled : 1;

@@ -71,6 +71,7 @@ DEFINES += \
   -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
   -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
   -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
+  -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
   $(NULL)
 
 GARBAGE += \
@@ -82,9 +83,7 @@ GARBAGE += \
   R.java \
   $(NULL)
 
-GARBAGE_DIRS += classes
-
-DIRS = utils
+GARBAGE_DIRS += classes res
 
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
@@ -97,13 +96,20 @@ endif
 
 RES_LAYOUT = \
   res/layout/notification_progress.xml \
-  res/layout/notification_progress_text.xml
+  res/layout/notification_progress_text.xml \
   $(NULL)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
 DEFAULT_STRINGSPATH = android_strings.dtd
+
+ifdef MOZ_CRASHREPORTER
+PROCESSEDJAVAFILES += CrashReporter.java
+MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/crash_reporter.png
+RES_LAYOUT += res/layout/crash_reporter.xml
+endif
+
 
 include $(topsrcdir)/config/rules.mk
 
@@ -129,13 +135,11 @@ res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-hdpi
 	cp $(ICON_PATH_HDPI) $@
 
-ifdef MOZ_ANDROID_DRAWABLES
 RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
 
 $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
 	$(NSINSTALL) $^ res/drawable/
-endif
 
 $(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
 	$(NSINSTALL) -D res/layout

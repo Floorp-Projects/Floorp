@@ -4340,6 +4340,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   return NS_OK;
 }
 
+
 // nsNavHistory::AddObserver
 
 NS_IMETHODIMP
@@ -5688,6 +5689,72 @@ nsNavHistory::FinalizeInternalStatements()
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
+                                        PRUint32 aQueryCount,
+                                        nsINavHistoryQueryOptions* aOptions,
+                                        mozIStorageStatementCallback* aCallback,
+                                        mozIStoragePendingStatement** _stmt)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aQueries);
+  NS_ENSURE_ARG(aOptions);
+  NS_ENSURE_ARG(aCallback);
+  NS_ENSURE_ARG_POINTER(_stmt);
+
+  nsCOMArray<nsNavHistoryQuery> queries;
+  for (PRUint32 i = 0; i < aQueryCount; i ++) {
+    nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[i]);
+    NS_ENSURE_STATE(query);
+    queries.AppendObject(query);
+  }
+  NS_ENSURE_ARG_MIN(queries.Count(), 1);
+
+  nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
+  NS_ENSURE_ARG(options);
+
+  nsCString queryString;
+  PRBool paramsPresent = PR_FALSE;
+  nsNavHistory::StringHash addParams;
+  addParams.Init(HISTORY_DATE_CONT_MAX);
+  nsresult rv = ConstructQueryString(queries, options, queryString,
+                                     paramsPresent, addParams);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDBConn->CreateStatement(queryString, getter_AddRefs(statement));
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    nsCAutoString lastErrorString;
+    (void)mDBConn->GetLastErrorString(lastErrorString);
+    PRInt32 lastError = 0;
+    (void)mDBConn->GetLastError(&lastError);
+    printf("Places failed to create a statement from this query:\n%s\nStorage error (%d): %s\n",
+           PromiseFlatCString(queryString).get(),
+           lastError,
+           PromiseFlatCString(lastErrorString).get());
+  }
+#endif
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (paramsPresent) {
+    // bind parameters
+    PRInt32 i;
+    for (i = 0; i < queries.Count(); i++) {
+      rv = BindQueryClauseParameters(statement, i, queries[i], options);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  addParams.EnumerateRead(BindAdditionalParameter, statement.get());
+
+  rv = statement->ExecuteAsync(aCallback, _stmt);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 
 // nsPIPlacesHistoryListenersNotifier ******************************************
 

@@ -61,6 +61,29 @@ pixman_have_vmx (void)
     return have_vmx;
 }
 
+#elif defined (__OpenBSD__)
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <machine/cpu.h>
+
+static pixman_bool_t
+pixman_have_vmx (void)
+{
+    if (!initialized)
+    {
+	int mib[2] = { CTL_MACHDEP, CPU_ALTIVEC };
+	size_t length = sizeof(have_vmx);
+	int error =
+	    sysctl (mib, 2, &have_vmx, &length, NULL, 0);
+
+	if (error != 0)
+	    have_vmx = FALSE;
+
+	initialized = TRUE;
+    }
+    return have_vmx;
+}
+
 #elif defined (__linux__)
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -123,7 +146,7 @@ pixman_have_vmx (void)
     return have_vmx;
 }
 
-#else /* !__APPLE__ && !__linux__ */
+#else /* !__APPLE__ && !__OpenBSD__ && !__linux__ */
 #include <signal.h>
 #include <setjmp.h>
 

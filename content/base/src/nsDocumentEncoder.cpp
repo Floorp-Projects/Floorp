@@ -109,6 +109,9 @@ protected:
                                       nsAString& aStr,
                                       PRBool aDontSerializeRoot);
   nsresult SerializeNodeEnd(nsINode* aNode, nsAString& aStr);
+  // This serializes the content of aNode.
+  nsresult SerializeToStringIterative(nsINode* aNode,
+                                      nsAString& aStr);
   nsresult SerializeRangeToString(nsIRange *aRange,
                                   nsAString& aOutputString);
   nsresult SerializeRangeNodes(nsIRange* aRange, 
@@ -364,19 +367,19 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
   // or the caller did fixup themselves and aNode is already fixed
   if (!node)
     node = aNode;
+  
+  if (node->IsElement()) {
+    mozilla::dom::Element* originalElement =
+      aOriginalNode && aOriginalNode->IsElement() ?
+        aOriginalNode->AsElement() : nsnull;
+    mSerializer->AppendElementStart(node->AsElement(),
+                                    originalElement, aStr);
+    return NS_OK;
+  }
 
   PRUint16 type;
   node->GetNodeType(&type);
   switch (type) {
-    case nsIDOMNode::ELEMENT_NODE:
-    {
-      nsIContent* originalElement =
-        aOriginalNode && aOriginalNode->IsElement() ?
-          static_cast<nsIContent*>(aOriginalNode) : nsnull;
-      mSerializer->AppendElementStart(static_cast<nsIContent*>(node),
-                                      originalElement, aStr);
-      break;
-    }
     case nsIDOMNode::TEXT_NODE:
     {
       mSerializer->AppendText(static_cast<nsIContent*>(node),
@@ -481,6 +484,33 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   }
 
   return FlushText(aStr, PR_FALSE);
+}
+
+nsresult
+nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
+                                              nsAString& aStr)
+{
+  nsresult rv;
+
+  nsINode* node = aNode->GetFirstChild();
+  while (node) {
+    nsINode* current = node;
+    rv = SerializeNodeStart(current, 0, -1, aStr, current);
+    NS_ENSURE_SUCCESS(rv, rv);
+    node = current->GetFirstChild();
+    while (!node && current && current != aNode) {
+      rv = SerializeNodeEnd(current, aStr);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Check if we have siblings.
+      node = current->GetNextSibling();
+      if (!node) {
+        // Perhaps parent node has siblings.
+        current = current->GetNodeParent();
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 PRBool 
@@ -1058,7 +1088,12 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
 
       mRange = nsnull;
   } else if (mNode) {
-    rv = SerializeToStringRecursive(mNode, output, mNodeIsContainer);
+    if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mStream &&
+        mNodeIsContainer) {
+      rv = SerializeToStringIterative(mNode, output);
+    } else {
+      rv = SerializeToStringRecursive(mNode, output, mNodeIsContainer);
+    }
     mNode = nsnull;
   } else {
     rv = mSerializer->AppendDocumentStart(mDocument, output);

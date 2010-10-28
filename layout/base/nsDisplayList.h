@@ -55,6 +55,7 @@
 #include "Layers.h"
 #include "nsRegion.h"
 #include "FrameLayerBuilder.h"
+#include "nsThemeConstants.h"
 
 #include <stdlib.h>
 
@@ -226,7 +227,7 @@ public:
    * Call this if we're doing normal painting to the window.
    */
   void SetPaintingToWindow(PRBool aToWindow) { mIsPaintingToWindow = aToWindow; }
-  PRBool IsPaintingToWindow() { return mIsPaintingToWindow; }
+  PRBool IsPaintingToWindow() const { return mIsPaintingToWindow; }
   /**
    * Display the caret if needed.
    */
@@ -517,7 +518,14 @@ public:
    * @return PR_TRUE if the item is definitely opaque --- i.e., paints
    * every pixel within its bounds opaquely
    */
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) { return PR_FALSE; }
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull)
+  {
+    if (aForceTransparentSurface) {
+      *aForceTransparentSurface = PR_FALSE;
+    }
+    return PR_FALSE;
+  }
   /**
    * If this returns true, then aColor is set to the uniform color
    * @return PR_TRUE if the item is guaranteed to paint every pixel in its
@@ -894,6 +902,15 @@ public:
     NS_ASSERTION(mDidComputeVisibility, "Need to have called ComputeVisibility");
     return mIsOpaque;
   }
+
+  /**
+   * Returns true if during ComputeVisibility any display item
+   * set the surface to be transparent.
+   */
+  PRBool NeedsTransparentSurface() const {
+    NS_ASSERTION(mDidComputeVisibility, "Need to have called ComputeVisibility");
+    return mForceTransparentSurface;
+  }
   /**
    * Paint the list to the rendering context. We assume that (0,0) in aCtx
    * corresponds to the origin of the reference frame. For best results,
@@ -964,6 +981,10 @@ private:
   // is empty (i.e. everything that was visible is covered by some
   // opaque content in this list).
   PRPackedBool mIsOpaque;
+  // This is set to true by ComputeVisibility if any display item in this
+  // list needs to force the surface to be transparent (e.g. if the
+  // item "punch holes" on the surface by clearing part of its area).
+  PRPackedBool mForceTransparentSurface;
 #ifdef DEBUG
   PRPackedBool mDidComputeVisibility;
 #endif
@@ -1291,7 +1312,11 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) { return mBounds; }
 
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aOutTransparentBackground = nsnull) {
+    if (aOutTransparentBackground) {
+      *aOutTransparentBackground = PR_FALSE;
+    }
     return (NS_GET_A(mColor) == 255);
   }
 
@@ -1308,6 +1333,7 @@ public:
 private:
   nsRect  mBounds;
   nscolor mColor;
+  PRBool  mTransparentBackground;
 };
 
 /**
@@ -1326,7 +1352,8 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion);
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
@@ -1461,7 +1488,8 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
@@ -1544,7 +1572,8 @@ public:
   virtual ~nsDisplayOpacity();
 #endif
   
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -1641,7 +1670,8 @@ public:
   virtual ~nsDisplayClipRoundedRect();
 #endif
 
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -1710,7 +1740,8 @@ public:
   virtual ~nsDisplaySVGEffects();
 #endif
   
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
@@ -1768,7 +1799,8 @@ public:
   virtual void HitTest(nsDisplayListBuilder *aBuilder, const nsRect& aRect,
                        HitTestState *aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
-  virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder,
+                          PRBool* aForceTransparentSurface = nsnull);
   virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager);

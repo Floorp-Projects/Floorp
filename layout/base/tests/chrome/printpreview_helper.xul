@@ -104,7 +104,7 @@ function startTest1() {
 
   // Note this timeout is needed so that we can check that timers run
   // after print preview, but not during it.
-  window.frames[0].counter = counter;
+  window.frames[0].wrappedJSObject.counter = counter;
   window.frames[0].counterTimeout = "document.body.firstChild.nextSibling.innerHTML = ++counter + ' timers';" +
                                     "window.setTimeout(counterTimeout, 0);";
   window.frames[0].setTimeout(window.frames[0].counterTimeout, 0);
@@ -216,6 +216,17 @@ function runTest4() {
 }
 
 function runTest4end() {
+  printpreview();
+  exitprintpreview();
+
+  runTest5();
+}
+
+// This is a crash test for bug 595337
+function runTest5() {
+  window.frames[0].document.body.innerHTML =
+    '<iframe style="position: fixed; visibility: hidden; bottom: 10em;"></iframe>' +
+    '<input contenteditable="true" style="display: table; page-break-before: left; width: 10000px;">';
   printpreview();
   exitprintpreview();
   SimpleTest.finish();

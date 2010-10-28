@@ -41,10 +41,50 @@
 
 interface nsIURI;
 
-[scriptable, uuid(dba13d2e-ea4f-4011-9b66-a8b0e61a7f84)]
+[scriptable, function, uuid(17675af5-0569-4f5b-987f-ff4bb60f73ee)]
+interface nsIIndexedDatabaseUsageCallback : nsISupports
+{
+  /**
+   *
+   */
+  void onUsageResult(in nsIURI aURI,
+                     in unsigned long long aUsage);
+};
+
+[scriptable, uuid(415f5684-6c84-4a8b-b777-d01f5df778f2)]
 interface nsIIndexedDatabaseManager : nsISupports
 {
-  unsigned long long getUsageForURI(in nsIURI aURI);
+  /**
+   * Schedules an asynchronous callback that will return the total amount of
+   * disk space being used by databases for the given origin.
+   *
+   * @param aURI
+   *        The URI whose usage is being queried.
+   * @param aCallback
+   *        The callback that will be called when the usage is available.
+   */
+  void getUsageForURI(in nsIURI aURI,
+                      in nsIIndexedDatabaseUsageCallback aCallback);
 
+  /**
+   * Cancels an asynchronous usage check initiated by a previous call to
+   * getUsageForURI().
+   *
+   * @param aURI
+   *        The URI whose usage is being queried.
+   * @param aCallback
+   *        The callback that will be called when the usage is available.
+   */
+  void cancelGetUsageForURI(in nsIURI aURI,
+                            in nsIIndexedDatabaseUsageCallback aCallback);
+
+
+  /**
+   * Removes all databases stored for the given URI. The files may not be
+   * deleted immediately depending on prohibitive concurrent operations.
+   *
+   * @param aURI
+   *        The URI whose databases are to be cleared.
+   */
   void clearDatabasesForURI(in nsIURI aURI);
 };

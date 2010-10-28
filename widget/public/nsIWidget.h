@@ -117,10 +117,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// 8bd36c8c-8218-4859-bfbc-ca5d78b52f7d
+// cc443f0b-af39-415d-9c4b-7e06eaa8b13b
 #define NS_IWIDGET_IID \
-  { 0x8bd36c8c, 0x8218, 0x4859, \
-    { 0xbf, 0xbc, 0xca, 0x5d, 0x78, 0xb5, 0x2f, 0x7d } }
+  { 0xcc443f0b, 0xaf39, 0x415d, \
+    { 0x9c, 0x4b, 0x7e, 0x06, 0xea, 0xa8, 0xb1, 0x3b } }
 
 /*
  * Window shadow styles
@@ -855,10 +855,11 @@ class nsIWidget : public nsISupports {
     /**
      * Return the widget's LayerManager. The layer tree for that
      * LayerManager is what gets rendered to the widget.
-     * The layer manager is guaranteed to be the same for the lifetime
-     * of the widget.
+     *
+     * @param aAllowRetaining an outparam that states whether the returned
+     * layer manager should be used for retained layers
      */
-    virtual LayerManager* GetLayerManager() = 0;
+    virtual LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull) = 0;
 
     /** 
      * Internal methods

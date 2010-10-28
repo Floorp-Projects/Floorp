@@ -148,6 +148,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_TREMOR
+tier_platform_dirs += \
+		media/libtremor \
+		$(NULL)
+endif
+
 ifdef MOZ_WEBM
 tier_platform_dirs += \
 		media/libnestegg \
@@ -284,11 +290,6 @@ endif
 
 ifdef MOZ_MAPINFO
 tier_platform_dirs	+= tools/codesighs
-endif
-
-ifdef MOZ_SERVICES_SYNC
-tier_platform_dirs += services/crypto
-tier_platform_dirs += services/sync
 endif
 
 ifdef ENABLE_TESTS

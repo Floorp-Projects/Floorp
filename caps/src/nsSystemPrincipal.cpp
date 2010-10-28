@@ -189,7 +189,7 @@ nsSystemPrincipal::GetURI(nsIURI** aURI)
 NS_IMETHODIMP 
 nsSystemPrincipal::GetOrigin(char** aOrigin)
 {
-    *aOrigin = ToNewCString(NS_LITERAL_CSTRING("[System]"));
+    *aOrigin = ToNewCString(NS_LITERAL_CSTRING("[System Principal]"));
     return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

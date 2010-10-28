@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=582771
+-->
+<head>
+  <title>Test for Bug 582771</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .test {
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
+    -moz-user-select: none;
+  }
+  </style>
+</head>
+<body onload="setTimeout('runTest()', 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=582771">Mozilla Bug 582771</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 582771 **/
+
+SimpleTest.waitForExplicitFinish();
+var d1;
+var d2;
+var d1mousemovecount = 0;
+var d2mousemovecount = 0;
+
+function sendMouseMove(el) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var rect = el.getBoundingClientRect();
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent('mousemove', rect.left + 5, rect.top + 5, 0, 0, 0);
+}
+
+function sendMouseDown(el) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var rect = el.getBoundingClientRect();
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent('mousedown', rect.left + 5, rect.top + 5, 0, 1, 0);
+}
+
+function sendMouseUp(el) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var rect = el.getBoundingClientRect();
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent('mouseup', rect.left + 5, rect.top + 5, 0, 1, 0);
+}
+
+function log(s) {
+  document.getElementById("l").textContent += s + "\n";
+}
+
+function d2Listener(e) {
+  log(e.type + ", " + e.target.id);
+  is(e.target, d2, "d2 should have got mousemove.");
+  ++d2mousemovecount;
+}
+
+function d1Listener(e) {
+  log(e.type + ", " + e.target.id);
+  d1.setCapture(true);
+}
+
+function d1Listener2(e) {
+  log(e.type + ", " + e.target.id);
+  d2.setCapture(true);
+}
+
+function d1MouseMoveListener(e) {
+  log(e.type + ", " + e.target.id);
+  ++d1mousemovecount;
+}
+
+function runTest() {
+  d1 = document.getElementById("d1");
+  d2 = document.getElementById("d2");
+  d2.addEventListener("mousemove", d2Listener, true);
+  document.body.offsetLeft;
+  sendMouseMove(d2);
+  is(d2mousemovecount, 1, "Should have got mousemove");
+
+  // This shouldn't enable capturing, since we're not in a right kind of 
+  // event listener.
+  d1.setCapture(true);
+  sendMouseDown(d1);
+  sendMouseMove(d2);
+  sendMouseUp(d1);
+  is(d2mousemovecount, 2, "Should have got mousemove");
+
+  d1.addEventListener("mousedown", d1Listener, true);
+  d1.addEventListener("mousemove", d1MouseMoveListener, true);
+  sendMouseDown(d1);
+  sendMouseMove(d2);
+  is(d2mousemovecount, 2, "Shouldn't have got mousemove");
+  is(d1mousemovecount, 1, "Should have got mousemove");
+  sendMouseUp(d1);
+  d1.removeEventListener("mousedown", d1Listener, true);
+  d1.removeEventListener("mousemove", d1MouseMoveListener, true);
+
+  // Nothing should be capturing the event.
+  sendMouseMove(d2);
+  is(d2mousemovecount, 3, "Should have got mousemove");
+
+  
+  d1.addEventListener("mousemove", d1Listener2, true);
+  sendMouseDown(d1);
+  sendMouseMove(d1); // This should call setCapture to d2!
+  d1.removeEventListener("mousemove", d1Listener2, true);
+  d1.addEventListener("mousemove", d1MouseMoveListener, true);
+  sendMouseMove(d1); // This should send mouse event to d2.
+  is(d1mousemovecount, 1, "Shouldn't have got mousemove");
+  is(d2mousemovecount, 4, "Should have got mousemove");
+  sendMouseUp(d1);
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+<div class="test" id="d1">&nbsp;</div><br><div class="test" id="d2">&nbsp;</div>
+<pre id="l"></pre>
+</body>
+</html>

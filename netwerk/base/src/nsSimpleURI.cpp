@@ -38,6 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "IPCMessageUtils.h"
+#endif
+
 #include "nsSimpleURI.h"
 #include "nscore.h"
 #include "nsCRT.h"
@@ -72,7 +76,7 @@ nsSimpleURI::~nsSimpleURI()
 NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
-NS_INTERFACE_TABLE4(nsSimpleURI, nsIURI, nsISerializable, nsIClassInfo, nsIMutable)
+NS_INTERFACE_TABLE5(nsSimpleURI, nsIURI, nsISerializable, nsIIPCSerializable, nsIClassInfo, nsIMutable)
 NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (aIID.Equals(kThisSimpleURIImplementationCID))
     foundInterface = static_cast<nsIURI*>(this);
@@ -114,6 +118,36 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIIPCSerializable methods:
+
+PRBool
+nsSimpleURI::Read(const IPC::Message *aMsg, void **aIter)
+{
+#ifdef MOZ_IPC
+    bool isMutable;
+    if (!ReadParam(aMsg, aIter, &isMutable) ||
+        !ReadParam(aMsg, aIter, &mScheme) ||
+        !ReadParam(aMsg, aIter, &mPath))
+        return PR_FALSE;
+
+    mMutable = isMutable;
+    return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
+}
+
+void
+nsSimpleURI::Write(IPC::Message *aMsg)
+{
+#ifdef MOZ_IPC
+    WriteParam(aMsg, bool(mMutable));
+    WriteParam(aMsg, mScheme);
+    WriteParam(aMsg, mPath);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
