@@ -48,7 +48,7 @@
 #include "jsprf.h"
 #include "jsstdint.h"
 #include "jslong.h"
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsutil.h"
 #include "jspubtd.h"
 #include "jsstr.h"
 

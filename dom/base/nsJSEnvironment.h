@@ -143,6 +143,7 @@ public:
   virtual nsresult InitContext();
   virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
                                      nsIScriptGlobalObject *aCurrentInner);
+  virtual nsresult SetOuterObject(void *aOuterObject);
   virtual nsresult InitOuterWindow();
   virtual PRBool IsContextInitialized();
   virtual void FinalizeContext();
@@ -311,12 +312,9 @@ private:
   PRTime mModalStateTime;
   PRUint32 mModalStateDepth;
 
-  // mGlobalWrapperRef is used only to hold a strong reference to the
-  // global object wrapper while the nsJSContext is alive. This cuts
-  // down on the number of rooting and unrooting calls XPConnect has
-  // to make when the global object is touched in JS.
-
-  nsCOMPtr<nsISupports> mGlobalWrapperRef;
+  // mGlobalObjectRef ensures that the outer window stays alive as long as the
+  // context does. It is eventually collected by the cycle collector.
+  nsCOMPtr<nsISupports> mGlobalObjectRef;
 
   static int JSOptionChangedCallback(const char *pref, void *data);
 

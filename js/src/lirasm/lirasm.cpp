@@ -2235,6 +2235,7 @@ usageAndQuit(const string& progname)
         "  --[no-]optimize  enable or disable optimization of the LIR (default=off)\n"
         "  --random [N]     generate a random LIR block of size N (default=1000)\n"
         "  --word-size      prints the word size (32 or 64) for this build of lirasm and exits\n"
+        "  --endianness     prints endianness (little-endian or big-endian) for this build of librasm and exits\n"
         " i386-specific options:\n"
         "  --sse            use SSE2 instructions\n"
         " ARM-specific options:\n"
@@ -2311,6 +2312,15 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
         }
         else if (arg == "--word-size") {
             cout << sizeof(void*) * 8 << "\n";
+            exit(0);
+        }
+        else if (arg == "--endianness") {
+            int32_t x = 0x01020304;
+            if (*(char*)&x == 0x1) {
+              cout << "big-endian" << "\n";
+            } else {
+              cout << "little-endian" << "\n";
+            }
             exit(0);
         }
 

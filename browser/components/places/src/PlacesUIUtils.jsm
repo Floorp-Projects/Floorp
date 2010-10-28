@@ -1381,7 +1381,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
     },
 
    /**
-    * Transaction for editing a the description of a bookmark or a folder.
+    * Transaction for editing the description of a bookmark or a folder.
     *
     * @param aItemId
     *        id of the item to edit.

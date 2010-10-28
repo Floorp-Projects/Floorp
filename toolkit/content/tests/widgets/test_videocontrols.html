@@ -57,8 +57,6 @@ function runTest(event) {
       is(event.type, "canplaythrough", "checking event type");
       is(video.paused, true, "checking video play state");
       is(video.muted, false, "checking video mute state");
-      // Don't respond to any more canplaythroughs
-      event.target.removeEventListener("canplaythrough", runTest, false);
 
       // Click the play button
       synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
@@ -213,11 +211,36 @@ function runTest(event) {
   testnum++;
 }
 
+var canplaythroughsavedevent = null;
+var gotcanplaythroughevent = false;
+var gotloadevent = false;
+
+function canplaythroughevent(event) {
+  canplaythroughsavedevent = event;
+  gotcanplaythroughevent = true;
+  video.removeEventListener("canplaythrough",  canplaythroughevent, false);
+  maybeStartTest();
+}
+
+function loadevent(event) {
+  gotloadevent = true;
+  maybeStartTest();
+}
+
+// setTimeout so that test starts after paint suppression ends
+function maybeStartTest() {
+  if (!gotcanplaythroughevent || !gotloadevent)
+    return;
+
+  setTimeout("runTest(canplaythroughsavedevent);", 0);
+}
+
 var testnum = 1;
 var video = document.getElementById("video");
 
 // Kick off test once video has loaded.
-video.addEventListener("canplaythrough",  runTest, false);
+video.addEventListener("canplaythrough",  canplaythroughevent, false);
+window.addEventListener("load",  loadevent, false);
 
 // Other events expected by the test.
 video.addEventListener("play",  runTest, false);

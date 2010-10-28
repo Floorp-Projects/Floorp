@@ -108,7 +108,7 @@ public:
   PRUint32 GetAttrCount() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual void BeginAddingChildren();
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -187,7 +187,7 @@ protected:
    * The intrinsic state of the element.
    * @see nsIContent::IntrinsicState()
    */
-  PRInt32 mIntrinsicState;
+  nsEventStates mIntrinsicState;
 
   // Temporary owner used by GetAttrNameAt
   nsAttrName mTmpAttrName;

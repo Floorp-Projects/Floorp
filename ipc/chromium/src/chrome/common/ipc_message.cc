@@ -28,9 +28,9 @@ Message::Message()
 }
 
 #if !defined(CHROMIUM_MOZILLA_BUILD)
-Message::Message(int32 routing_id, uint16 type, PriorityValue priority)
+Message::Message(int32 routing_id, msgid_t type, PriorityValue priority)
 #else
-Message::Message(int32 routing_id, uint16 type, PriorityValue priority,
+Message::Message(int32 routing_id, msgid_t type, PriorityValue priority,
                  const char* const name)
 #endif
     : Pickle(sizeof(Header)) {

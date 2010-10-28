@@ -137,7 +137,7 @@ namespace nanojit {
 
     #ifdef NJ_NO_VARIADIC_MACROS
         static void asm_output(const char *f, ...) {}
-        #define gpn(r)                    regNames[(r)]
+        #define gpn(r)                    regNames[(REGNUM(n))]
     #elif defined(NJ_VERBOSE)
         // Used for printing native instructions.  Like Assembler::outputf(),
         // but only outputs if LC_Native is set.  Also prepends the output
@@ -150,7 +150,7 @@ namespace nanojit {
                 output();                               \
             } \
         } while (0) /* no semi */
-        #define gpn(r)                  regNames[(r)]
+        #define gpn(r)                  regNames[(REGNUM(r))]
     #else
         #define asm_output(...)
         #define gpn(r)

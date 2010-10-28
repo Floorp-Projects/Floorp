@@ -2004,6 +2004,8 @@ public:
    * @param aFlags INVALIDATE_NO_THEBES_LAYERS: don't invalidate the
    * ThebesLayers of any container layer owned by an ancestor. Set this
    * only if ThebesLayers definitely don't need to be updated.
+   * @param aFlags INVALIDATE_ONLY_THEBES_LAYERS: invalidate only in the
+   * ThebesLayers of the nearest container layer.
    * @param aFlags INVALIDATE_EXCLUDE_CURRENT_PAINT: if the invalidation
    * occurs while we're painting (to be precise, while
    * BeginDeferringInvalidatesForDisplayRoot is active on the display root),
@@ -2024,7 +2026,8 @@ public:
     INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
                              INVALIDATE_REASON_SCROLL_REPAINT,
     INVALIDATE_NO_THEBES_LAYERS = 0x10,
-    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x20
+    INVALIDATE_ONLY_THEBES_LAYERS = 0x20,
+    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,

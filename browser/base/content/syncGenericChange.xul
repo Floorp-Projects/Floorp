@@ -135,10 +135,12 @@
     </vbox>
 
     <hbox id="passphraseBackupButtons" pack="center">
-      <button label="&button.syncKeyBackup.print.label;"
+      <button id="printSyncKeyButton"
+              label="&button.syncKeyBackup.print.label;"
               accesskey="&button.syncKeyBackup.print.accesskey;"
               oncommand="gSyncUtils.passphrasePrint('passphraseBox');"/>
-      <button label="&button.syncKeyBackup.save.label;"
+      <button id="saveSyncKeyButton"
+              label="&button.syncKeyBackup.save.label;"
               accesskey="&button.syncKeyBackup.save.accesskey;"
               oncommand="gSyncUtils.passphraseSave('passphraseBox');"/>
     </hbox>

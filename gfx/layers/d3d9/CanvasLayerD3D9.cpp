@@ -227,7 +227,7 @@ CanvasLayerD3D9::GetLayer()
 }
 
 void
-CanvasLayerD3D9::RenderLayer()
+CanvasLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 {
   if (!mTexture) {
     Updated(mBounds);
@@ -246,7 +246,8 @@ CanvasLayerD3D9::RenderLayer()
 
   device()->SetVertexShaderConstantF(CBvLayerQuad, quad, 1);
 
-  device()->SetVertexShaderConstantF(CBmLayerTransform, &mTransform._11, 4);
+  gfx3DMatrix transform = mTransform * aTransform;
+  device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
   float opacity[4];
   /*

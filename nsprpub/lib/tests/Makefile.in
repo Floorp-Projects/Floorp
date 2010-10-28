@@ -52,11 +52,11 @@ CSRCS = \
 	getopt.c \
 	string.c
 
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINCE WINNT OS2,$(OS_ARCH)))
 CSRCS += arena.c
 endif
 
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINCE WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -75,9 +75,9 @@ LIBPR = -lnspr$(MOD_MAJOR_VERSION)
 LIBPLC = -lplc$(MOD_MAJOR_VERSION)
 LIBPLDS = -lplds$(MOD_MAJOR_VERSION)
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINCE WINNT, $(OS_ARCH)))
   LDOPTS = -NOLOGO -DEBUG -INCREMENTAL:NO
-  ifeq ($(OS_TARGET), WIN95)
+  ifeq (,$(filter-out WIN95 WINCE WINMO, $(OS_TARGET)))
   LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
   LIBPLC= $(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
   LIBPLDS= $(dist_libdir)/plds$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
@@ -162,6 +162,10 @@ EXTRA_LIBS = -lsocket -lnsl
 export LD_RUN_PATH = $(PWD)/$(dist_libdir)
 endif
 
+ifeq ($(OS_TARGET),Android)
+LDOPTS = $(OS_LDFLAGS) $(WRAP_MALLOC_LIB)
+endif
+
 #####################################################
 #
 # The rules
@@ -206,10 +210,14 @@ $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 ifeq ($(OS_ARCH), WINNT)
 	link $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) wsock32.lib -out:$@
 else
+ifeq ($(OS_ARCH), WINCE)
+	$(LD) $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) ws2.lib -out:$@
+else
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC)  $(LIBPLDS) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPLDS) $(LIBPR) $(EXTRA_LIBS) -o $@
+endif
 endif
 endif
 endif

@@ -56,7 +56,7 @@ fname:
  * aliases for better readability and maintainability.
  */
 
-pixman_asm_function pixman_composite_add_8000_8000_asm_armv6
+pixman_asm_function pixman_composite_add_8_8_asm_armv6
 	push	{r4, r5, r6, r7, r8, r9, r10, r11}
 	mov	r10, r1
 	sub	sp, sp, #4

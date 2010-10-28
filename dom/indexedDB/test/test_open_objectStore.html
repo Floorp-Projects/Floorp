@@ -26,22 +26,24 @@
       let db = event.result;
       is(db.objectStoreNames.length, 0, "Bad objectStores list");
 
-      request = db.createObjectStore(objectStoreName, "foo");
+      request = db.setVersion("1");
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        // Break out of our transaction
-        SimpleTest.executeSoon(function() {
-          testGenerator.next();
-        });
-      };
-      yield;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(db.objectStoreNames.length, 0, "Bad objectStores list");
+
+      let objectStore = db.createObjectStore(objectStoreName, "foo");
 
       is(db.objectStoreNames.length, 1, "Bad objectStores list");
       is(db.objectStoreNames.item(0), objectStoreName, "Bad name");
 
-      let objectStore = db.objectStore(objectStoreName);
+      continueToNextStep();
+      yield;
+
+      objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
+
       is(objectStore.name, objectStoreName, "Bad name");
-      is(objectStore.mode, nsIIDBObjectStore.READ_ONLY, "Bad mode");
       is(objectStore.keyPath, "foo", "Bad keyPath");
       if(objectStore.indexNames.length, 0, "Bad indexNames");
 

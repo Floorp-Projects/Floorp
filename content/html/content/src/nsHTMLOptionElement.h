@@ -74,6 +74,8 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLOptionElement
+  using nsGenericElement::SetText;
+  using nsGenericElement::GetText;
   NS_DECL_NSIDOMHTMLOPTIONELEMENT
 
   // nsIJSNativeInitializer
@@ -89,7 +91,7 @@ public:
   void SetSelectedInternal(PRBool aValue, PRBool aNotify);
 
   // nsIContent
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsEventStates IntrinsicState() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 

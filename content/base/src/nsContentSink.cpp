@@ -74,7 +74,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"
-#include "nsIApplicationCacheService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsICookieService.h"
@@ -943,29 +942,6 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
 }
 
 nsresult
-nsContentSink::GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey)
-{
-  aCacheKey.Truncate();
-
-  nsresult rv;
-  nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupports> cacheKey;
-  rv = cachingChannel->GetCacheKey(getter_AddRefs(cacheKey));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupportsCString> cacheKeyString = 
-        do_QueryInterface(cacheKey, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = cacheKeyString->GetData(aCacheKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
 nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
                                  nsIURI *aManifestURI,
                                  PRBool aFetchedWithHTTPGetOrEquiv,
@@ -994,17 +970,8 @@ nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!equal) {
-      // This is a foreign entry, mark it as such and force a reload to avoid
-      // loading the foreign entry.  The next attempt will not choose this
-      // cache entry (because it has been marked foreign).
-
-      nsCAutoString cachekey;
-      rv = GetChannelCacheKey(mDocument->GetChannel(), cachekey);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aLoadApplicationCache->MarkEntry(cachekey,
-                                            nsIApplicationCache::ITEM_FOREIGN);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // This is a foreign entry, force a reload to avoid loading the foreign
+      // entry. The entry will be marked as foreign to avoid loading it again.
 
       *aAction = CACHE_SELECTION_RELOAD;
     }
@@ -1219,6 +1186,13 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
   case CACHE_SELECTION_RELOAD: {
     // This situation occurs only for toplevel documents, see bottom
     // of SelectDocAppCache method.
+    // The document has been loaded from a different offline cache group than
+    // the manifest it refers to, i.e. this is a foreign entry, mark it as such 
+    // and force a reload to avoid loading it.  The next attempt will not 
+    // choose it.
+
+    applicationCacheChannel->MarkOfflineCacheEntryAsForeign();
+
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
 
     webNav->Stop(nsIWebNavigation::STOP_ALL);

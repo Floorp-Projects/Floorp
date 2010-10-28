@@ -44,20 +44,57 @@ namespace xpc {
 
 class WrapperFactory {
   public:
-    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0) };
+    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0),
+           IS_XRAY_WRAPPER_FLAG = (1<<1),
+           SCRIPT_ACCESS_ONLY_FLAG = (1<<2),
+           PARTIALLY_TRANSPARENT = (1<<3),
+           SOW_FLAG = (1<<4) };
 
     // Return true if any of any of the nested wrappers have the flag set.
-    bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
+    static bool HasWrapperFlag(JSObject *wrapper, uintN flag) {
         uintN flags = 0;
         wrapper->unwrap(&flags);
         return !!(flags & flag);
     }
 
+    static bool IsXrayWrapper(JSObject *wrapper) {
+        return HasWrapperFlag(wrapper, IS_XRAY_WRAPPER_FLAG);
+    }
+
+    static bool IsPartiallyTransparent(JSObject *wrapper) {
+        return HasWrapperFlag(wrapper, PARTIALLY_TRANSPARENT);
+    }
+
+    static bool HasWaiveXrayFlag(JSObject *wrapper) {
+        return HasWrapperFlag(wrapper, WAIVE_XRAY_WRAPPER_FLAG);
+    }
+
+    // Prepare a given object for wrapping in a new compartment.
+    static JSObject *PrepareForWrapping(JSContext *cx,
+                                        JSObject *scope,
+                                        JSObject *obj,
+                                        uintN flags);
+
     // Rewrap an object that is about to cross compartment boundaries.
     static JSObject *Rewrap(JSContext *cx,
                             JSObject *obj,
                             JSObject *wrappedProto,
+                            JSObject *parent,
                             uintN flags);
+
+    // Return true if this is a location object.
+    static bool IsLocationObject(JSObject *obj);
+
+    // Wrap a location object.
+    static JSObject *WrapLocationObject(JSContext *cx, JSObject *obj);
+
+    // Wrap wrapped object into a waiver wrapper and then re-wrap it.
+    static bool WaiveXrayAndWrap(JSContext *cx, jsval *vp);
+
+    // Wrap a (same compartment) object in a SOW.
+    static JSObject *WrapSOWObject(JSContext *cx, JSObject *obj);
 };
+
+extern JSWrapper WaiveXrayWrapperWrapper;
 
 }

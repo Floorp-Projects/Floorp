@@ -66,6 +66,7 @@
 #include "nsILineInputStream.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
+#include "mozIThirdPartyUtil.h"
 
 #include "nsTArray.h"
 #include "nsCOMArray.h"
@@ -100,7 +101,7 @@ static nsCookieService *gCookieService;
 static const char kHttpOnlyPrefix[] = "#HttpOnly_";
 
 static const char kCookieFileName[] = "cookies.sqlite";
-#define COOKIES_SCHEMA_VERSION 3
+#define COOKIES_SCHEMA_VERSION 4
 
 static const PRInt64 kCookieStaleThreshold = 60 * PR_USEC_PER_SEC; // 1 minute in microseconds
 static const PRInt64 kCookiePurgeAge = 30 * 24 * 60 * 60 * PR_USEC_PER_SEC; // 30 days in microseconds
@@ -174,27 +175,6 @@ struct nsListIter
 
   nsCookieEntry            *entry;
   nsCookieEntry::IndexType  index;
-};
-
-// stores temporary data for enumerating over the hash entries,
-// since enumeration is done using callback functions.
-struct nsEnumerationData
-{
-  nsEnumerationData(PRInt64 aCurrentTime, PRInt64 aOldestTime)
-   : currentTime(aCurrentTime)
-   , oldestTime(aOldestTime)
-  {
-  }
-
-  // the current time, in seconds
-  PRInt64 currentTime;
-
-  // oldest lastAccessed time in the cookie list. use aOldestTime = LL_MAXINT
-  // to enable this search, LL_MININT to disable it.
-  PRInt64 oldestTime;
-
-  // an iterator object that points to the desired cookie
-  nsListIter iter;
 };
 
 /******************************************************************************
@@ -284,10 +264,9 @@ LogCookie(nsCookie *aCookie)
     PR_LOG(sCookieLog, PR_LOG_DEBUG,
       ("expires: %s%s", timeString, aCookie->IsSession() ? " (at end of session)" : ""));
 
-    PR_ExplodeTime(aCookie->CreationID(), PR_GMTParameters, &explodedTime);
+    PR_ExplodeTime(aCookie->CreationTime(), PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
-    PR_LOG(sCookieLog, PR_LOG_DEBUG,
-      ("created: %s (id %lld)", timeString, aCookie->CreationID()));
+    PR_LOG(sCookieLog, PR_LOG_DEBUG,("created: %s", timeString));
 
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
@@ -730,9 +709,10 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   }
 
   // open a connection to the cookie database, and only cache our connection
-  // and statements upon success. The connection is opened shared such that
-  // the main and background threads can operate on the db concurrently.
-  rv = mStorageService->OpenDatabase(cookieFile, getter_AddRefs(mDBState->dbConn));
+  // and statements upon success. The connection is opened unshared to eliminate
+  // cache contention between the main and background threads.
+  rv = mStorageService->OpenUnsharedDatabase(cookieFile,
+    getter_AddRefs(mDBState->dbConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Grow cookie db in 512KB increments
@@ -750,6 +730,9 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
     rv = mDBState->dbConn->GetSchemaVersion(&dbSchemaVersion);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Start a transaction for the whole migration block.
+    mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
+
     switch (dbSchemaVersion) {
     // upgrading.
     // every time you increment the database schema, you need to implement
@@ -765,8 +748,6 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
 
     case 2:
       {
-        mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
-
         // Add the baseDomain column and index to the table.
         rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE moz_cookies ADD baseDomain TEXT"));
@@ -782,7 +763,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
 
         nsCOMPtr<mozIStorageStatement> update;
         rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-          "UPDATE moz_cookies SET baseDomain = ?1 WHERE id = ?2"),
+          "UPDATE moz_cookies SET baseDomain = :baseDomain WHERE id = :id"),
           getter_AddRefs(update));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -804,9 +785,11 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
 
           mozStorageStatementScoper scoper(update);
 
-          rv = update->BindUTF8StringByIndex(0, baseDomain);
+          rv = update->BindUTF8StringByName(NS_LITERAL_CSTRING("baseDomain"),
+                                            baseDomain);
           NS_ASSERT_SUCCESS(rv);
-          rv = update->BindInt64ByIndex(1, id);
+          rv = update->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                                       id);
           NS_ASSERT_SUCCESS(rv);
 
           rv = update->ExecuteStep(&hasResult);
@@ -817,12 +800,103 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain)"));
         NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // Fall through to the next upgrade.
 
-        // Update the schema version.
-        rv = mDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
+    case 3:
+      {
+        // Add the creationTime column to the table, and create a unique index
+        // on (name, host, path). Before we do this, we have to purge the table
+        // of expired cookies such that we know that the (name, host, path)
+        // index is truly unique -- otherwise we can't create the index. Note
+        // that we can't just execute a statement to delete all rows where the
+        // expiry column is in the past -- doing so would rely on the clock
+        // (both now and when previous cookies were set) being monotonic.
+
+        // Select the whole table, and order by the fields we're interested in.
+        // This means we can simply do a linear traversal of the results and
+        // check for duplicates as we go.
+        nsCOMPtr<mozIStorageStatement> select;
+        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT id, name, host, path FROM moz_cookies "
+            "ORDER BY name ASC, host ASC, path ASC, expiry ASC"),
+          getter_AddRefs(select));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<mozIStorageStatement> deleteExpired;
+        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
+          "DELETE FROM moz_cookies WHERE id = :id"),
+          getter_AddRefs(deleteExpired));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Read the first row.
+        PRBool hasResult;
+        rv = select->ExecuteStep(&hasResult);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (hasResult) {
+          nsCString name1, host1, path1;
+          PRInt64 id1 = select->AsInt64(0);
+          select->GetUTF8String(1, name1);
+          select->GetUTF8String(2, host1);
+          select->GetUTF8String(3, path1);
+
+          nsCString name2, host2, path2;
+          while (1) {
+            // Read the second row.
+            rv = select->ExecuteStep(&hasResult);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (!hasResult)
+              break;
+
+            PRInt64 id2 = select->AsInt64(0);
+            select->GetUTF8String(1, name2);
+            select->GetUTF8String(2, host2);
+            select->GetUTF8String(3, path2);
+
+            // If the two rows match in (name, host, path), we know the earlier
+            // row has an earlier expiry time. Delete it.
+            if (name1 == name2 && host1 == host2 && path1 == path2) {
+              mozStorageStatementScoper scoper(deleteExpired);
+
+              rv = deleteExpired->BindInt64ByName(NS_LITERAL_CSTRING("id"), id1);
+              NS_ASSERT_SUCCESS(rv);
+
+              rv = deleteExpired->ExecuteStep(&hasResult);
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
+
+            // Make the second row the first for the next iteration.
+            name1 = name2;
+            host1 = host2;
+            path1 = path2;
+            id1 = id2;
+          }
+        }
+
+        // Add the creationTime column to the table.
+        rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "ALTER TABLE moz_cookies ADD creationTime INTEGER"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Copy the id of each row into the new creationTime column.
+        rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "UPDATE moz_cookies SET creationTime = "
+            "(SELECT id WHERE id = moz_cookies.id)"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Create a unique index on (name, host, path) to allow fast lookup.
+        rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "CREATE UNIQUE INDEX moz_uniqueid "
+          "ON moz_cookies (name, host, path)"));
         NS_ENSURE_SUCCESS(rv, rv);
       }
       // Fall through to the next upgrade.
+
+      // No more upgrades. Update the schema version.
+      rv = mDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
+      NS_ENSURE_SUCCESS(rv, rv);
 
     case COOKIES_SCHEMA_VERSION:
       break;
@@ -861,6 +935,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
             "path, "
             "expiry, "
             "lastAccessed, "
+            "creationTime, "
             "isSecure, "
             "isHttpOnly "
           "FROM moz_cookies"), getter_AddRefs(stmt));
@@ -881,13 +956,12 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   // make operations on the table asynchronous, for performance
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
 
-  // open in exclusive mode for performance
-  mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
+  // Use write-ahead-logging for performance.
+  mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA journal_mode = WAL"));
 
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_cookies ("
-      "id, "
       "baseDomain, "
       "name, "
       "value, "
@@ -895,19 +969,33 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
       "path, "
       "expiry, "
       "lastAccessed, "
+      "creationTime, "
       "isSecure, "
       "isHttpOnly"
-    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"),
+    ") VALUES ("
+      ":baseDomain, "
+      ":name, "
+      ":value, "
+      ":host, "
+      ":path, "
+      ":expiry, "
+      ":lastAccessed, "
+      ":creationTime, "
+      ":isSecure, "
+      ":isHttpOnly"
+    ")"),
     getter_AddRefs(mDBState->stmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_cookies WHERE id = ?1"),
+    "DELETE FROM moz_cookies "
+    "WHERE name = :name AND host = :host AND path = :path"),
     getter_AddRefs(mDBState->stmtDelete));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_cookies SET lastAccessed = ?1 WHERE id = ?2"),
+    "UPDATE moz_cookies SET lastAccessed = :lastAccessed "
+    "WHERE name = :name AND host = :host AND path = :path"),
     getter_AddRefs(mDBState->stmtUpdate));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -956,8 +1044,10 @@ nsCookieService::CreateTable()
       "path TEXT, "
       "expiry INTEGER, "
       "lastAccessed INTEGER, "
+      "creationTime INTEGER, "
       "isSecure INTEGER, "
-      "isHttpOnly INTEGER"
+      "isHttpOnly INTEGER, "
+      "CONSTRAINT moz_uniqueid UNIQUE (name, host, path)"
     ")"));
   if (NS_FAILED(rv)) return rv;
 
@@ -1096,11 +1186,13 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG(aCookie);
 
-  nsCOMPtr<nsIURI> originatingURI;
-  GetOriginatingURI(aChannel, getter_AddRefs(originatingURI));
+  // Determine whether the request is foreign. Failure is acceptable.
+  PRBool isForeign = true;
+  if (RequireThirdPartyCheck())
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsCAutoString result;
-  GetCookieStringInternal(aHostURI, originatingURI, aHttpBound, result);
+  GetCookieStringInternal(aHostURI, isForeign, aHttpBound, result);
   *aCookie = result.IsEmpty() ? nsnull : ToNewCString(result);
   return NS_OK;
 }
@@ -1136,19 +1228,21 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG(aCookieHeader);
 
-  nsCOMPtr<nsIURI> originatingURI;
-  GetOriginatingURI(aChannel, getter_AddRefs(originatingURI));
+  // Determine whether the request is foreign. Failure is acceptable.
+  PRBool isForeign = true;
+  if (RequireThirdPartyCheck())
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
-  SetCookieStringInternal(aHostURI, originatingURI, cookieString,
+  SetCookieStringInternal(aHostURI, isForeign, cookieString,
                           serverTime, aFromHttp);
   return NS_OK;
 }
 
 void
 nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
-                                         nsIURI          *aOriginatingURI,
+                                         bool             aIsForeign,
                                          const nsCString &aCookieHeader,
                                          const nsCString &aServerTime,
                                          PRBool           aFromHttp) 
@@ -1170,7 +1264,7 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   }
 
   // check default prefs
-  CookieStatus cookieStatus = CheckPrefs(aHostURI, aOriginatingURI, baseDomain,
+  CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, baseDomain,
                                          requireHostMatch, aCookieHeader.get());
   // fire a notification if cookie was rejected (but not if there was an error)
   switch (cookieStatus) {
@@ -1251,6 +1345,12 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
   PRBool boolval;
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
     mThirdPartySession = boolval;
+
+  // Lazily instantiate the third party service if necessary.
+  if (!mThirdPartyUtil && RequireThirdPartyCheck()) {
+    mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    NS_ABORT_IF_FALSE(mThirdPartyUtil, "require ThirdPartyUtil service");
+  }
 }
 
 /******************************************************************************
@@ -1267,6 +1367,13 @@ nsCookieService::RemoveAll()
   if (mDBState->dbConn) {
     NS_ASSERTION(mDBState == &mDefaultDBState, "not in default DB state");
 
+    // Cancel any pending read. No further results will be received by our
+    // read listener.
+    if (mDefaultDBState.pendingRead) {
+      CancelAsyncRead(PR_TRUE);
+      mDefaultDBState.syncConn = nsnull;
+    }
+
     // XXX Ignore corruption for now. See bug 547031.
     nsCOMPtr<mozIStorageStatement> stmt;
     nsresult rv = mDefaultDBState.dbConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1282,43 +1389,27 @@ nsCookieService::RemoveAll()
   return NS_OK;
 }
 
-// helper struct for passing arguments into hash enumeration callback.
-struct nsGetEnumeratorData
-{
-  nsGetEnumeratorData(nsCOMArray<nsICookie> *aArray, PRInt64 aTime)
-   : array(aArray)
-   , currentTime(aTime) {}
-
-  nsCOMArray<nsICookie> *array;
-  PRInt64 currentTime;
-};
-
 static PLDHashOperator
 COMArrayCallback(nsCookieEntry *aEntry,
                  void          *aArg)
 {
-  nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(aArg);
+  nsCOMArray<nsICookie> *data = static_cast<nsCOMArray<nsICookie> *>(aArg);
 
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
-    nsCookie *cookie = cookies[i];
-
-    // only append non-expired cookies
-    if (cookie->Expiry() > data->currentTime)
-      data->array->AppendObject(cookie);
+    data->AppendObject(cookies[i]);
   }
+
   return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
 nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
 {
-  nsCOMArray<nsICookie> cookieList(mDBState->cookieCount);
-  nsGetEnumeratorData data(&cookieList, PR_Now() / PR_USEC_PER_SEC);
-
   EnsureReadComplete();
 
-  mDBState->hostTable.EnumerateEntries(COMArrayCallback, &data);
+  nsCOMArray<nsICookie> cookieList(mDBState->cookieCount);
+  mDBState->hostTable.EnumerateEntries(COMArrayCallback, &cookieList);
 
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
@@ -1350,7 +1441,7 @@ nsCookieService::Add(const nsACString &aHost,
     nsCookie::Create(aName, aValue, host, aPath,
                      aExpiry,
                      currentTimeInUsec,
-                     nsCookie::GenerateCreationID(currentTimeInUsec),
+                     nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
                      aIsSession,
                      aIsSecure,
                      aIsHttpOnly);
@@ -1382,8 +1473,7 @@ nsCookieService::Remove(const nsACString &aHost,
                  host,
                  PromiseFlatCString(aName),
                  PromiseFlatCString(aPath),
-                 matchIter,
-                 PR_Now() / PR_USEC_PER_SEC)) {
+                 matchIter)) {
     nsRefPtr<nsCookie> cookie = matchIter.Cookie();
     RemoveCookieFromList(matchIter);
     NotifyChanged(cookie, NS_LITERAL_STRING("deleted").get());
@@ -1415,21 +1505,23 @@ nsCookieService::Remove(const nsACString &aHost,
 nsresult
 nsCookieService::Read()
 {
-  // Let the reading begin!
+  // Let the reading begin! Note that our query specifies that 'baseDomain'
+  // not be NULL -- see below for why.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDefaultDBState.dbConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT "
-      "id, "
       "name, "
       "value, "
       "host, "
       "path, "
       "expiry, "
       "lastAccessed, "
+      "creationTime, "
       "isSecure, "
       "isHttpOnly, "
       "baseDomain "
-    "FROM moz_cookies"), getter_AddRefs(stmt));
+    "FROM moz_cookies "
+    "WHERE baseDomain NOTNULL"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<ReadCookieDBListener> readListener = new ReadCookieDBListener;
@@ -1441,6 +1533,18 @@ nsCookieService::Read()
   if (!mDefaultDBState.readSet.IsInitialized())
     mDefaultDBState.readSet.Init();
 
+  // Queue up an operation to delete any rows with a NULL 'baseDomain'
+  // column. This takes care of any cookies set by browsers that don't
+  // understand the 'baseDomain' column, where the database schema version
+  // is from one that does. (This would occur when downgrading.)
+  rv = mDefaultDBState.dbConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_cookies WHERE baseDomain ISNULL"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStoragePendingStatement> handle;
+  rv = stmt->ExecuteAsync(mRemoveListener, getter_AddRefs(handle));
+  NS_ASSERT_SUCCESS(rv);
+
   return NS_OK;
 }
 
@@ -1450,29 +1554,27 @@ template<class T> nsCookie*
 nsCookieService::GetCookieFromRow(T &aRow)
 {
   // Skip reading 'baseDomain' -- up to the caller.
-  PRInt64 creationID = aRow->AsInt64(0);
-
   nsCString name, value, host, path;
-  nsresult rv = aRow->GetUTF8String(1, name);
+  nsresult rv = aRow->GetUTF8String(0, name);
   NS_ASSERT_SUCCESS(rv);
-  rv = aRow->GetUTF8String(2, value);
+  rv = aRow->GetUTF8String(1, value);
   NS_ASSERT_SUCCESS(rv);
-  rv = aRow->GetUTF8String(3, host);
+  rv = aRow->GetUTF8String(2, host);
   NS_ASSERT_SUCCESS(rv);
-  rv = aRow->GetUTF8String(4, path);
+  rv = aRow->GetUTF8String(3, path);
   NS_ASSERT_SUCCESS(rv);
 
-  PRInt64 expiry = aRow->AsInt64(5);
-  PRInt64 lastAccessed = aRow->AsInt64(6);
+  PRInt64 expiry = aRow->AsInt64(4);
+  PRInt64 lastAccessed = aRow->AsInt64(5);
+  PRInt64 creationTime = aRow->AsInt64(6);
   PRBool isSecure = 0 != aRow->AsInt32(7);
   PRBool isHttpOnly = 0 != aRow->AsInt32(8);
 
-  // Create a new nsCookie and assign the data. We are guaranteed that the
-  // creationID is unique, since we're reading it from the db itself.
+  // Create a new nsCookie and assign the data.
   return nsCookie::Create(name, value, host, path,
                           expiry,
                           lastAccessed,
-                          creationID,
+                          creationTime,
                           PR_FALSE,
                           isSecure,
                           isHttpOnly);
@@ -1481,9 +1583,11 @@ nsCookieService::GetCookieFromRow(T &aRow)
 void
 nsCookieService::AsyncReadComplete()
 {
-  NS_ASSERTION(mDBState == &mDefaultDBState, "not in default db state");
-  NS_ASSERTION(mDBState->pendingRead, "no pending read");
-  NS_ASSERTION(mDBState->readListener, "no read listener");
+  // We may be in the private browsing DB state, with a pending read on the
+  // default DB state. (This would occur if we started up in private browsing
+  // mode.) As long as we do all our operations on the default state, we're OK.
+  NS_ASSERTION(mDefaultDBState.pendingRead, "no pending read");
+  NS_ASSERTION(mDefaultDBState.readListener, "no read listener");
 
   // Merge the data read on the background thread with the data synchronously
   // read on the main thread. Note that transactions on the cookie table may
@@ -1497,7 +1601,8 @@ nsCookieService::AsyncReadComplete()
     if (mDefaultDBState.readSet.GetEntry(tuple.baseDomain))
       continue;
 
-    AddCookieToList(tuple.baseDomain, tuple.cookie, NULL, PR_FALSE);
+    AddCookieToList(tuple.baseDomain, tuple.cookie, &mDefaultDBState, NULL,
+      PR_FALSE);
   }
 
   mDefaultDBState.stmtReadDomain = nsnull;
@@ -1516,9 +1621,11 @@ nsCookieService::AsyncReadComplete()
 void
 nsCookieService::CancelAsyncRead(PRBool aPurgeReadSet)
 {
-  NS_ASSERTION(mDBState == &mDefaultDBState, "not in default db state");
-  NS_ASSERTION(mDBState->pendingRead, "no pending read");
-  NS_ASSERTION(mDBState->readListener, "no read listener");
+  // We may be in the private browsing DB state, with a pending read on the
+  // default DB state. (This would occur if we started up in private browsing
+  // mode.) As long as we do all our operations on the default state, we're OK.
+  NS_ASSERTION(mDefaultDBState.pendingRead, "no pending read");
+  NS_ASSERTION(mDefaultDBState.readListener, "no read listener");
 
   // Cancel the pending read, kill the read listener, and empty the array
   // of data already read in on the background thread.
@@ -1548,9 +1655,14 @@ nsCookieService::GetSyncDBConn()
   mDefaultDBState.dbConn->GetDatabaseFile(getter_AddRefs(cookieFile));
   NS_ASSERTION(cookieFile, "no cookie file on connection");
 
-  mStorageService->OpenDatabase(cookieFile,
+  mStorageService->OpenUnsharedDatabase(cookieFile,
     getter_AddRefs(mDefaultDBState.syncConn));
-  NS_ASSERTION(mDefaultDBState.syncConn, "can't open sync db connection");
+  if (!mDefaultDBState.syncConn) {
+    NS_ERROR("can't open sync db connection");
+    COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      ("GetSyncDBConn(): can't open sync db connection"));
+  }
+
   return mDefaultDBState.syncConn;
 }
 
@@ -1577,13 +1689,13 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
     // Cache the statement, since it's likely to be used again.
     rv = mDefaultDBState.syncConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT "
-        "id, "
         "name, "
         "value, "
         "host, "
         "path, "
         "expiry, "
         "lastAccessed, "
+        "creationTime, "
         "isSecure, "
         "isHttpOnly "
       "FROM moz_cookies "
@@ -1613,7 +1725,7 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
       break;
 
     nsCookie* newCookie = GetCookieFromRow(mDefaultDBState.stmtReadDomain);
-    AddCookieToList(aBaseDomain, newCookie, NULL, PR_FALSE);
+    AddCookieToList(aBaseDomain, newCookie, &mDefaultDBState, NULL, PR_FALSE);
     ++readCount;
   }
 
@@ -1645,13 +1757,13 @@ nsCookieService::EnsureReadComplete()
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDefaultDBState.syncConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT "
-      "id, "
       "name, "
       "value, "
       "host, "
       "path, "
       "expiry, "
       "lastAccessed, "
+      "creationTime, "
       "isSecure, "
       "isHttpOnly, "
       "baseDomain "
@@ -1677,7 +1789,7 @@ nsCookieService::EnsureReadComplete()
       continue;
 
     nsCookie* newCookie = GetCookieFromRow(stmt);
-    AddCookieToList(baseDomain, newCookie, NULL, PR_FALSE);
+    AddCookieToList(baseDomain, newCookie, &mDefaultDBState, NULL, PR_FALSE);
     ++readCount;
   }
 
@@ -1693,6 +1805,13 @@ nsCookieService::EnsureReadComplete()
 NS_IMETHODIMP
 nsCookieService::ImportCookies(nsIFile *aCookieFile)
 {
+  // Make sure we're in the default DB state. We don't want people importing
+  // cookies into a private browsing session!
+  if (mDBState != &mDefaultDBState) {
+    NS_WARNING("Trying to import cookies in a private browsing session!");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIInputStream> fileInputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), aCookieFile);
@@ -1710,7 +1829,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   PRInt32 numInts;
   PRInt64 expires;
   PRBool isDomain, isHttpOnly = PR_FALSE;
-  PRUint32 originalCookieCount = mDBState->cookieCount;
+  PRUint32 originalCookieCount = mDefaultDBState.cookieCount;
 
   PRInt64 currentTimeInUsec = PR_Now();
   PRInt64 currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
@@ -1747,8 +1866,8 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   // We will likely be adding a bunch of cookies to the DB, so we use async
   // batching with storage to make this super fast.
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  if (originalCookieCount == 0 && mDBState->dbConn) {
-    mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  if (originalCookieCount == 0 && mDefaultDBState.dbConn) {
+    mDefaultDBState.stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
   }
 
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
@@ -1798,9 +1917,8 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     if (NS_FAILED(rv))
       continue;
 
-    // Create a new nsCookie and assign the data.
-    // We don't know the cookie creation time, so just use the current time
-    // to generate a unique creationID.
+    // Create a new nsCookie and assign the data. We don't know the cookie
+    // creation time, so just use the current time to generate a unique one.
     nsRefPtr<nsCookie> newCookie =
       nsCookie::Create(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
                        Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
@@ -1808,7 +1926,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
                        Substring(buffer, pathIndex, secureIndex - pathIndex - 1),
                        expires,
                        lastAccessedCounter,
-                       nsCookie::GenerateCreationID(currentTimeInUsec),
+                       nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
                        PR_FALSE,
                        Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).EqualsLiteral(kTrue),
                        isHttpOnly);
@@ -1821,7 +1939,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     lastAccessedCounter--;
 
     if (originalCookieCount == 0) {
-      AddCookieToList(baseDomain, newCookie, paramsArray);
+      AddCookieToList(baseDomain, newCookie, &mDefaultDBState, paramsArray);
     }
     else {
       AddInternal(baseDomain, newCookie, currentTimeInUsec, NULL, NULL, PR_TRUE);
@@ -1833,17 +1951,18 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     PRUint32 length;
     paramsArray->GetLength(&length);
     if (length) {
-      rv = mDBState->stmtInsert->BindParameters(paramsArray);
+      rv = mDefaultDBState.stmtInsert->BindParameters(paramsArray);
       NS_ASSERT_SUCCESS(rv);
       nsCOMPtr<mozIStoragePendingStatement> handle;
-      rv = mDBState->stmtInsert->ExecuteAsync(mInsertListener,
+      rv = mDefaultDBState.stmtInsert->ExecuteAsync(mInsertListener,
                                               getter_AddRefs(handle));
       NS_ASSERT_SUCCESS(rv);
     }
   }
 
 
-  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mDBState->cookieCount));
+  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported",
+    mDefaultDBState.cookieCount));
 
   return NS_OK;
 }
@@ -1862,8 +1981,8 @@ class CompareCookiesForSending
 public:
   PRBool Equals(const nsCookie* aCookie1, const nsCookie* aCookie2) const
   {
-    // CreationID is unique, so two id's can never be equal.
-    return PR_FALSE;
+    return aCookie1->CreationTime() == aCookie2->CreationTime() &&
+           aCookie2->Path().Length() == aCookie1->Path().Length();
   }
 
   PRBool LessThan(const nsCookie* aCookie1, const nsCookie* aCookie2) const
@@ -1877,14 +1996,13 @@ public:
     // required for backwards compatibility since some websites erroneously
     // depend on receiving cookies in the order in which they were sent to the
     // browser!  see bug 236772.
-    // note: CreationID is unique, so two id's can never be equal.
-    return aCookie1->CreationID() < aCookie2->CreationID();
+    return aCookie1->CreationTime() < aCookie2->CreationTime();
   }
 };
 
 void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
-                                         nsIURI *aOriginatingURI,
+                                         bool aIsForeign,
                                          PRBool aHttpBound,
                                          nsCString &aCookieString)
 {
@@ -1911,7 +2029,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   }
 
   // check default prefs
-  CookieStatus cookieStatus = CheckPrefs(aHostURI, aOriginatingURI, baseDomain,
+  CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, baseDomain,
                                          requireHostMatch, nsnull);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
@@ -2131,7 +2249,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                      cookieAttributes.path,
                      cookieAttributes.expiryTime,
                      currentTimeInUsec,
-                     nsCookie::GenerateCreationID(currentTimeInUsec),
+                     nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
                      cookieAttributes.isSession,
                      cookieAttributes.isSecure,
                      cookieAttributes.isHttpOnly);
@@ -2186,53 +2304,87 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
 
   // if the new cookie is httponly, make sure we're not coming from script
   if (!aFromHttp && aCookie->IsHttpOnly()) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie is httponly; coming from script");
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+      "cookie is httponly; coming from script");
     return;
   }
 
   nsListIter matchIter;
   PRBool foundCookie = FindCookie(aBaseDomain, aCookie->Host(),
-    aCookie->Name(), aCookie->Path(), matchIter, currentTime);
+    aCookie->Name(), aCookie->Path(), matchIter);
 
   nsRefPtr<nsCookie> oldCookie;
   if (foundCookie) {
     oldCookie = matchIter.Cookie();
 
-    // if the old cookie is httponly, make sure we're not coming from script
-    if (!aFromHttp && oldCookie->IsHttpOnly()) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie is httponly; coming from script");
-      return;
-    }
+    // Check if the old cookie is stale (i.e. has already expired). If so, we
+    // need to be careful about the semantics of removing it and adding the new
+    // cookie: we want the behavior wrt adding the new cookie to be the same as
+    // if it didn't exist, but we still want to fire a removal notification.
+    if (oldCookie->Expiry() <= currentTime) {
+      if (aCookie->Expiry() <= currentTime) {
+        // The new cookie has expired and the old one is stale. Nothing to do.
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+          "cookie has already expired");
+        return;
+      }
 
-    RemoveCookieFromList(matchIter);
+      // Remove the stale cookie and notify.
+      RemoveCookieFromList(matchIter);
 
-    // check if the cookie has expired
-    if (aCookie->Expiry() <= currentTime) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+        "stale cookie was deleted");
       NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
-      return;
-    }
 
-    // preserve creation time of cookie
-    if (oldCookie)
-      aCookie->SetCreationID(oldCookie->CreationID());
+      // We've done all we need to wrt removing and notifying the stale cookie.
+      // From here on out, we pretend pretend it didn't exist, so that we
+      // preserve expected notification semantics when adding the new cookie.
+      foundCookie = PR_FALSE;
+
+    } else {
+      // If the old cookie is httponly, make sure we're not coming from script.
+      if (!aFromHttp && oldCookie->IsHttpOnly()) {
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+          "previously stored cookie is httponly; coming from script");
+        return;
+      }
+
+      // Remove the old cookie and notify.
+      RemoveCookieFromList(matchIter);
+
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+        "previously stored cookie was deleted");
+      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+
+      // If the new cookie has expired -- i.e. the intent was simply to delete
+      // the old cookie -- then we're done.
+      if (aCookie->Expiry() <= currentTime) {
+        return;
+      }
+
+      // Preserve creation time of cookie for ordering purposes.
+      aCookie->SetCreationTime(oldCookie->CreationTime());
+    }
 
   } else {
     // check if cookie has already expired
     if (aCookie->Expiry() <= currentTime) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+        "cookie has already expired");
       return;
     }
 
     // check if we have to delete an old cookie.
-    nsEnumerationData data(currentTime, LL_MAXINT);
-    if (CountCookiesFromHostInternal(aBaseDomain, data) >= mMaxCookiesPerHost) {
-      // remove the oldest cookie from the domain
-      oldCookie = data.iter.Cookie();
-      COOKIE_LOGEVICTED(oldCookie, "Too many cookies for this domain");
-      RemoveCookieFromList(data.iter);
+    nsCookieEntry *entry = mDBState->hostTable.GetEntry(aBaseDomain);
+    if (entry && entry->GetCookies().Length() >= mMaxCookiesPerHost) {
+      nsListIter iter;
+      FindStaleCookie(entry, currentTime, iter);
 
-      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+      // remove the oldest cookie from the domain
+      COOKIE_LOGEVICTED(iter.Cookie(), "Too many cookies for this domain");
+      RemoveCookieFromList(iter);
+
+      NotifyChanged(iter.Cookie(), NS_LITERAL_STRING("deleted").get());
 
     } else if (mDBState->cookieCount >= ADD_TEN_PERCENT(mMaxNumberOfCookies)) {
       PRInt64 maxAge = aCurrentTimeInUsec - mDBState->cookieOldestTime;
@@ -2241,7 +2393,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
         // we're over both size and age limits by 10%; time to purge the table!
         // do this by:
         // 1) removing expired cookies;
-        // 2) evicting the balance of old cookies, until we reach the size limit.
+        // 2) evicting the balance of old cookies until we reach the size limit.
         // note that the cookieOldestTime indicator can be pessimistic - if it's
         // older than the actual oldest cookie, we'll just purge more eagerly.
         PurgeCookies(aCurrentTimeInUsec);
@@ -2251,7 +2403,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
 
   // Add the cookie to the db. We do not supply a params array for batching
   // because this might result in removals and additions being out of order.
-  AddCookieToList(aBaseDomain, aCookie, NULL);
+  AddCookieToList(aBaseDomain, aCookie, mDBState, NULL);
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
@@ -2593,52 +2745,16 @@ static inline PRBool IsSubdomainOf(const nsCString &a, const nsCString &b)
   return PR_FALSE;
 }
 
-PRBool
-nsCookieService::IsForeign(const nsCString &aBaseDomain,
-                           PRBool           aRequireHostMatch,
-                           nsIURI          *aFirstURI)
+bool
+nsCookieService::RequireThirdPartyCheck()
 {
-  nsCAutoString firstHost;
-  if (NS_FAILED(aFirstURI->GetAsciiHost(firstHost))) {
-    // assume foreign
-    return PR_TRUE;
-  }
-
-  // trim any trailing dot
-  if (!firstHost.IsEmpty() && firstHost.Last() == '.')
-    firstHost.Truncate(firstHost.Length() - 1);
-
-  // check whether the host is either an IP address, an alias such as
-  // 'localhost', an eTLD such as 'co.uk', or the empty string. in these
-  // cases, require an exact string match for the domain. note that the base
-  // domain parameter will be equivalent to the host in this case.
-  if (aRequireHostMatch)
-    return !firstHost.Equals(aBaseDomain);
-
-  // ensure the originating domain is also derived from the host's base domain.
-  return !IsSubdomainOf(firstHost, aBaseDomain);
-}
-
-void
-nsCookieService::GetOriginatingURI(nsIChannel *aChannel,
-                                   nsIURI **aURI)
-{
-  // Determine the originating URI. We only need to do this if we're
-  // rejecting or altering the lifetime of third-party cookies.
-  if (mCookieBehavior != BEHAVIOR_REJECTFOREIGN && !mThirdPartySession)
-    return;
-
-  if (!mPermissionService) {
-    NS_WARNING("nsICookiePermission unavailable! Cookie may be rejected");
-    return;
-  }
-
-  mPermissionService->GetOriginatingURI(aChannel, aURI);
+  // 'true' iff we need to perform a third party test.
+  return mCookieBehavior == BEHAVIOR_REJECTFOREIGN || mThirdPartySession;
 }
 
 CookieStatus
 nsCookieService::CheckPrefs(nsIURI          *aHostURI,
-                            nsIURI          *aOriginatingURI,
+                            bool             aIsForeign,
                             const nsCString &aBaseDomain,
                             PRBool           aRequireHostMatch,
                             const char      *aCookieHeader)
@@ -2679,16 +2795,13 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     return STATUS_REJECTED;
   }
 
-  if (mCookieBehavior == BEHAVIOR_REJECTFOREIGN || mThirdPartySession) {
+  if (RequireThirdPartyCheck() && aIsForeign) {
     // check if cookie is foreign
-    if (!aOriginatingURI ||
-        IsForeign(aBaseDomain, aRequireHostMatch, aOriginatingURI)) {
-      if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
-        return STATUS_ACCEPT_SESSION;
+    if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
+      return STATUS_ACCEPT_SESSION;
 
-      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
-      return STATUS_REJECTED;
-    }
+    COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
+    return STATUS_REJECTED;
   }
 
   // if nothing has complained, accept cookie
@@ -2905,18 +3018,18 @@ class CompareCookiesByAge {
 public:
   PRBool Equals(const nsListIter &a, const nsListIter &b) const
   {
-    // CreationID is unique, so two id's can never be equal.
-    return PR_FALSE;
+    return a.Cookie()->LastAccessed() == b.Cookie()->LastAccessed() &&
+           a.Cookie()->CreationTime() == b.Cookie()->CreationTime();
   }
 
   PRBool LessThan(const nsListIter &a, const nsListIter &b) const
   {
-    // compare by LastAccessed time, and tiebreak by CreationID.
+    // compare by lastAccessed time, and tiebreak by creationTime.
     PRInt64 result = a.Cookie()->LastAccessed() - b.Cookie()->LastAccessed();
     if (result != 0)
       return result < 0;
 
-    return a.Cookie()->CreationID() < b.Cookie()->CreationID();
+    return a.Cookie()->CreationTime() < b.Cookie()->CreationTime();
   }
 };
 
@@ -2982,7 +3095,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
 #ifdef PR_LOGGING
   PRUint32 initialCookieCount = mDBState->cookieCount;
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
-    ("PurgeCookies(): beginning purge with %ld cookies and %lld age",
+    ("PurgeCookies(): beginning purge with %ld cookies and %lld oldest age",
      mDBState->cookieCount, aCurrentTimeInUsec - mDBState->cookieOldestTime));
 #endif
 
@@ -3030,7 +3143,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   for (nsPurgeData::ArrayType::index_type i = purgeList.Length(); i--; ) {
     nsCookie *cookie = purgeList[i].Cookie();
     removedList->AppendElement(cookie, PR_FALSE);
-    COOKIE_LOGEVICTED(cookie, "Cookie expired or too old");
+    COOKIE_LOGEVICTED(cookie, "Cookie too old");
 
     RemoveCookieFromList(purgeList[i], paramsArray);
   }
@@ -3057,7 +3170,7 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
     ("PurgeCookies(): %ld expired; %ld purged; %ld remain; %lld oldest age",
      initialCookieCount - postExpiryCookieCount,
-     mDBState->cookieCount - postExpiryCookieCount,
+     postExpiryCookieCount - mDBState->cookieCount,
      mDBState->cookieCount,
      aCurrentTimeInUsec - mDBState->cookieOldestTime));
 }
@@ -3083,41 +3196,38 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsListIter iter;
-  *aFoundCookie = FindCookie(baseDomain, host, name, path, iter,
-                             PR_Now() / PR_USEC_PER_SEC);
+  *aFoundCookie = FindCookie(baseDomain, host, name, path, iter);
   return NS_OK;
 }
 
-// count the number of cookies in a base domain, and simultaneously find the
-// oldest cookie in that domain.
-PRUint32
-nsCookieService::CountCookiesFromHostInternal(const nsCString   &aBaseDomain,
-                                              nsEnumerationData &aData)
+// For a given base domain, find either an expired cookie or the oldest cookie
+// by lastAccessed time.
+void
+nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
+                                 PRInt64 aCurrentTime,
+                                 nsListIter &aIter)
 {
-  EnsureReadDomain(aBaseDomain);
+  aIter.entry = NULL;
 
-  nsCookieEntry *entry = mDBState->hostTable.GetEntry(aBaseDomain);
-  if (!entry)
-    return 0;
-
-  PRUint32 countFromHost = 0;
-  const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
+  PRInt64 oldestTime;
+  const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
     nsCookie *cookie = cookies[i];
 
-    // only count non-expired cookies
-    if (cookie->Expiry() > aData.currentTime) {
-      ++countFromHost;
+    // If we found an expired cookie, we're done.
+    if (cookie->Expiry() > aCurrentTime) {
+      aIter.entry = aEntry;
+      aIter.index = i;
+      return;
+    }
 
-      // check if we've found the oldest cookie so far
-      if (aData.oldestTime > cookie->LastAccessed()) {
-        aData.oldestTime = cookie->LastAccessed();
-        aData.iter = nsListIter(entry, i);
-      }
+    // Check if we've found the oldest cookie so far.
+    if (!aIter.entry || oldestTime > cookie->LastAccessed()) {
+      oldestTime = cookie->LastAccessed();
+      aIter.entry = aEntry;
+      aIter.index = i;
     }
   }
-
-  return countFromHost;
 }
 
 // count the number of cookies stored by a particular host. this is provided by the
@@ -3135,9 +3245,11 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // we don't care about finding the oldest cookie here, so disable the search
-  nsEnumerationData data(PR_Now() / PR_USEC_PER_SEC, LL_MININT);
-  *aCountFromHost = CountCookiesFromHostInternal(baseDomain, data);
+  EnsureReadDomain(baseDomain);
+
+  // Return a count of all cookies, including expired.
+  nsCookieEntry *entry = mDBState->hostTable.GetEntry(baseDomain);
+  *aCountFromHost = entry ? entry->GetCookies().Length() : 0;
   return NS_OK;
 }
 
@@ -3156,22 +3268,16 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
-  PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;
-
   EnsureReadDomain(baseDomain);
 
   nsCookieEntry *entry = mDBState->hostTable.GetEntry(baseDomain);
   if (!entry)
     return NS_NewEmptyEnumerator(aEnumerator);
 
+  nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
   const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
-    nsCookie *cookie = cookies[i];
-
-    // only append non-expired cookies
-    if (cookie->Expiry() > currentTime)
-      cookieList.AppendObject(cookie);
+    cookieList.AppendObject(cookies[i]);
   }
 
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
@@ -3183,8 +3289,7 @@ nsCookieService::FindCookie(const nsCString      &aBaseDomain,
                             const nsAFlatCString &aHost,
                             const nsAFlatCString &aName,
                             const nsAFlatCString &aPath,
-                            nsListIter           &aIter,
-                            PRInt64               aCurrentTime)
+                            nsListIter           &aIter)
 {
   EnsureReadDomain(aBaseDomain);
 
@@ -3196,8 +3301,7 @@ nsCookieService::FindCookie(const nsCString      &aBaseDomain,
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
     nsCookie *cookie = cookies[i];
 
-    if (cookie->Expiry() > aCurrentTime &&
-        aHost.Equals(cookie->Host()) &&
+    if (aHost.Equals(cookie->Host()) &&
         aPath.Equals(cookie->Path()) &&
         aName.Equals(cookie->Name())) {
       aIter = nsListIter(entry, i);
@@ -3226,7 +3330,16 @@ nsCookieService::RemoveCookieFromList(const nsListIter              &aIter,
     nsCOMPtr<mozIStorageBindingParams> params;
     paramsArray->NewBindingParams(getter_AddRefs(params));
 
-    nsresult rv = params->BindInt64ByIndex(0, aIter.Cookie()->CreationID());
+    nsresult rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
+                                               aIter.Cookie()->Name());
+    NS_ASSERT_SUCCESS(rv);
+
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("host"),
+                                      aIter.Cookie()->Host());
+    NS_ASSERT_SUCCESS(rv);
+
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
+                                      aIter.Cookie()->Path());
     NS_ASSERT_SUCCESS(rv);
 
     rv = paramsArray->AddParams(params);
@@ -3272,34 +3385,44 @@ bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
   NS_ASSERT_SUCCESS(rv);
 
   // Bind our values to params
-  rv = params->BindInt64ByIndex(0, aCookie->CreationID());
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("baseDomain"),
+                                    aBaseDomain);
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(1, aBaseDomain);
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
+                                    aCookie->Name());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(2, aCookie->Name());
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("value"),
+                                    aCookie->Value());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(3, aCookie->Value());
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("host"),
+                                    aCookie->Host());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(4, aCookie->Host());
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
+                                    aCookie->Path());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(5, aCookie->Path());
+  rv = params->BindInt64ByName(NS_LITERAL_CSTRING("expiry"),
+                               aCookie->Expiry());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt64ByIndex(6, aCookie->Expiry());
+  rv = params->BindInt64ByName(NS_LITERAL_CSTRING("lastAccessed"),
+                               aCookie->LastAccessed());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt64ByIndex(7, aCookie->LastAccessed());
+  rv = params->BindInt64ByName(NS_LITERAL_CSTRING("creationTime"),
+                               aCookie->CreationTime());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt32ByIndex(8, aCookie->IsSecure());
+  rv = params->BindInt32ByName(NS_LITERAL_CSTRING("isSecure"),
+                               aCookie->IsSecure());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt32ByIndex(9, aCookie->IsHttpOnly());
+  rv = params->BindInt32ByName(NS_LITERAL_CSTRING("isHttpOnly"),
+                               aCookie->IsHttpOnly());
   NS_ASSERT_SUCCESS(rv);
 
   // Bind the params to the array.
@@ -3310,27 +3433,28 @@ bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
 void
 nsCookieService::AddCookieToList(const nsCString               &aBaseDomain,
                                  nsCookie                      *aCookie,
+                                 DBState                       *aDBState,
                                  mozIStorageBindingParamsArray *aParamsArray,
                                  PRBool                         aWriteToDB)
 {
-  NS_ASSERTION(!(mDBState->dbConn && !aWriteToDB && aParamsArray),
+  NS_ASSERTION(!(aDBState->dbConn && !aWriteToDB && aParamsArray),
                "Not writing to the DB but have a params array?");
-  NS_ASSERTION(!(!mDBState->dbConn && aParamsArray),
+  NS_ASSERTION(!(!aDBState->dbConn && aParamsArray),
                "Do not have a DB connection but have a params array?");
 
-  nsCookieEntry *entry = mDBState->hostTable.PutEntry(aBaseDomain);
+  nsCookieEntry *entry = aDBState->hostTable.PutEntry(aBaseDomain);
   NS_ASSERTION(entry, "can't insert element into a null entry!");
 
   entry->GetCookies().AppendElement(aCookie);
-  ++mDBState->cookieCount;
+  ++aDBState->cookieCount;
 
   // keep track of the oldest cookie, for when it comes time to purge
-  if (aCookie->LastAccessed() < mDBState->cookieOldestTime)
-    mDBState->cookieOldestTime = aCookie->LastAccessed();
+  if (aCookie->LastAccessed() < aDBState->cookieOldestTime)
+    aDBState->cookieOldestTime = aCookie->LastAccessed();
 
   // if it's a non-session cookie and hasn't just been read from the db, write it out.
-  if (aWriteToDB && !aCookie->IsSession() && mDBState->dbConn) {
-    mozIStorageStatement *stmt = mDBState->stmtInsert;
+  if (aWriteToDB && !aCookie->IsSession() && aDBState->dbConn) {
+    mozIStorageStatement *stmt = aDBState->stmtInsert;
     nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
     if (!paramsArray) {
       stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
@@ -3366,9 +3490,20 @@ nsCookieService::UpdateCookieInList(nsCookie                      *aCookie,
     aParamsArray->NewBindingParams(getter_AddRefs(params));
 
     // Bind our parameters.
-    nsresult rv = params->BindInt64ByIndex(0, aLastAccessed);
+    nsresult rv = params->BindInt64ByName(NS_LITERAL_CSTRING("lastAccessed"),
+                                          aLastAccessed);
     NS_ASSERT_SUCCESS(rv);
-    rv = params->BindInt64ByIndex(1, aCookie->CreationID());
+
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
+                                      aCookie->Name());
+    NS_ASSERT_SUCCESS(rv);
+
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("host"),
+                                      aCookie->Host());
+    NS_ASSERT_SUCCESS(rv);
+
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
+                                      aCookie->Path());
     NS_ASSERT_SUCCESS(rv);
 
     // Add our bound parameters to the array.

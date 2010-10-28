@@ -55,7 +55,16 @@ extern "C" __declspec(dllimport) void CacheRangeFlush(LPVOID pAddr, DWORD dwLeng
 #endif
 
 #define JIT_ALLOCATOR_PAGE_SIZE (ExecutableAllocator::pageSize)
-#define JIT_ALLOCATOR_LARGE_ALLOC_SIZE (ExecutableAllocator::pageSize * 4)
+#if WTF_PLATFORM_WIN_OS || WTF_PLATFORM_WINCE
+/*
+ * In practice, VirtualAlloc allocates in 64K chunks. (Technically, it
+ * allocates in page chunks, but the starting address is always a multiple
+ * of 64K, so each allocation uses up 64K of address space.
+ */
+# define JIT_ALLOCATOR_LARGE_ALLOC_SIZE (ExecutableAllocator::pageSize * 16)
+#else
+# define JIT_ALLOCATOR_LARGE_ALLOC_SIZE (ExecutableAllocator::pageSize * 4)
+#endif
 
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
 #define PROTECTION_FLAGS_RW (PROT_READ | PROT_WRITE)

@@ -232,7 +232,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 }
 
 NS_IMETHODIMP
-inDOMUtils::SetContentState(nsIDOMElement *aElement, PRInt32 aState)
+inDOMUtils::SetContentState(nsIDOMElement *aElement, nsEventStates::InternalType aState)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   
@@ -241,14 +241,14 @@ inDOMUtils::SetContentState(nsIDOMElement *aElement, PRInt32 aState)
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
   
-    return esm->SetContentState(content, aState);
+    return esm->SetContentState(content, nsEventStates(aState));
   }
   
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
+inDOMUtils::GetContentState(nsIDOMElement *aElement, nsEventStates::InternalType* aState)
 {
   *aState = 0;
 
@@ -258,7 +258,9 @@ inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
   if (esm) {
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
-    *aState = esm->GetContentState(content);
+    // NOTE: if this method is removed,
+    // please remove GetInternalValue from nsEventStates
+    *aState = esm->GetContentState(content).GetInternalValue();
     return NS_OK;
   }
 

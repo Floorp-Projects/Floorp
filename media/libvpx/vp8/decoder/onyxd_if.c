@@ -323,9 +323,13 @@ int vp8dx_receive_compressed_data(VP8D_PTR ptr, unsigned long size, const unsign
 
     pbi->common.error.error_code = VPX_CODEC_OK;
 
+    cm->new_fb_idx = get_free_fb (cm);
+
     if (setjmp(pbi->common.error.jmp))
     {
         pbi->common.error.setjmp = 0;
+        if (cm->fb_idx_ref_cnt[cm->new_fb_idx] > 0)
+          cm->fb_idx_ref_cnt[cm->new_fb_idx]--;
         return -1;
     }
 
@@ -341,8 +345,6 @@ int vp8dx_receive_compressed_data(VP8D_PTR ptr, unsigned long size, const unsign
     pbi->Source = source;
     pbi->source_sz = size;
 
-    cm->new_fb_idx = get_free_fb (cm);
-
     retcode = vp8_decode_frame(pbi);
 
     if (retcode < 0)
@@ -352,6 +354,8 @@ int vp8dx_receive_compressed_data(VP8D_PTR ptr, unsigned long size, const unsign
 #endif
         pbi->common.error.error_code = VPX_CODEC_ERROR;
         pbi->common.error.setjmp = 0;
+        if (cm->fb_idx_ref_cnt[cm->new_fb_idx] > 0)
+          cm->fb_idx_ref_cnt[cm->new_fb_idx]--;
         return retcode;
     }
 

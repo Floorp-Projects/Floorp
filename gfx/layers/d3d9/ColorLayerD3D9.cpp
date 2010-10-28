@@ -48,7 +48,7 @@ ColorLayerD3D9::GetLayer()
 }
 
 void
-ColorLayerD3D9::RenderLayer()
+ColorLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 {
   // XXX we might be able to improve performance by using
   // IDirect3DDevice9::Clear
@@ -63,14 +63,15 @@ ColorLayerD3D9::RenderLayer()
                        visibleRect.height),
     1);
 
-  device()->SetVertexShaderConstantF(CBmLayerTransform, &mTransform._11, 4);
+  gfx3DMatrix transform = mTransform * aTransform;
+  device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
 
   float color[4];
   // color is premultiplied, so we need to adjust all channels
-  color[0] = (float)(mColor.r * GetOpacity());
-  color[1] = (float)(mColor.g * GetOpacity());
-  color[2] = (float)(mColor.b * GetOpacity());
-  color[3] = (float)(mColor.a * GetOpacity());
+  color[0] = (float)(mColor.r * GetOpacity() * aOpacity);
+  color[1] = (float)(mColor.g * GetOpacity() * aOpacity);
+  color[2] = (float)(mColor.b * GetOpacity() * aOpacity);
+  color[3] = (float)(mColor.a * GetOpacity() * aOpacity);
 
   device()->SetPixelShaderConstantF(0, color, 1);
 

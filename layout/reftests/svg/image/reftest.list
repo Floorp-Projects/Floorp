@@ -1,17 +1,22 @@
 # Tests of the SVG <image> element
 
-== image-fill-01.svg      ../pass.svg
-== image-opacity-01.svg   image-opacity-01-ref.svg
-== image-opacity-02.svg   image-opacity-02-ref.svg
-== image-rotate-01.svg    image-rotate-01-ref.svg
-== image-rotate-02a.svg   image-rotate-02-ref.svg
-== image-rotate-02b.svg   image-rotate-02-ref.svg
-== image-scaling-01.svg   ../pass.svg
-== image-scaling-02.svg   ../pass.svg
-== image-translate-01.svg image-translate-01-ref.svg
-== image-x-01.svg         image-x-01-ref.svg
-== image-xy-01.svg        image-xy-01-ref.svg
-== image-y-01.svg         image-y-01-ref.svg
+== image-fill-01.svg          ../pass.svg
+== image-filter-01.svg        image-filter-01-ref.svg
+== image-opacity-01.svg       image-opacity-01-ref.svg
+== image-opacity-02.svg       image-opacity-02-ref.svg
+== image-rotate-01.svg        image-rotate-01-ref.svg
+== image-rotate-02a.svg       image-rotate-02-ref.svg
+== image-rotate-02b.svg       image-rotate-02-ref.svg
+== image-scaling-01.svg       ../pass.svg
+== image-scaling-02.svg       ../pass.svg
+== image-svg-inline-01.html   ../pass.svg
+== image-translate-01.svg     image-translate-01-ref.svg
+== image-x-01.svg             image-x-01-ref.svg
+== image-xy-01.svg            image-xy-01-ref.svg
+== image-y-01.svg             image-y-01-ref.svg
+== image-zoom-01a.svg         image-zoom-01-ref.svg
+== image-zoom-01b.svg         image-zoom-01-ref.svg
+== image-zoom-02.svg          image-zoom-02-ref.svg
 
 # Tests for <image> with preserveAspectRatio
 # NOTE: The reference cases in the following tests trigger 20 assertions each

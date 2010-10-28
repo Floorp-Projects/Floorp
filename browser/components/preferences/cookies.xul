@@ -79,10 +79,10 @@
           hidecolumnpicker="true" seltype="single">
       <treecols>
         <treecol id="domainCol" label="&cookiedomain.label;" flex="2" primary="true"
-                 class="sortDirectionIndicator" persist="width" onclick="gCookiesWindow.sort('rawHost');" />
+                 persist="width" onclick="gCookiesWindow.sort('rawHost');"/>
         <splitter class="tree-splitter"/>
         <treecol id="nameCol" label="&cookiename.label;" flex="1"
-                 class="sortDirectionIndicator" persist="width" 
+                 persist="width"
                  onclick="gCookiesWindow.sort('name');"/>
       </treecols>
       <treechildren id="cookiesChildren"/>

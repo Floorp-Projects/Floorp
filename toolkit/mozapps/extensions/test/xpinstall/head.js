@@ -165,7 +165,7 @@ var Harness = {
       }
     }
     else if (window.document.location.href == PROMPT_URL) {
-        var promptType = window.gArgs.getProperty("promptType");
+        var promptType = window.args.promptType;
         switch (promptType) {
           case "alert":
           case "alertCheck":

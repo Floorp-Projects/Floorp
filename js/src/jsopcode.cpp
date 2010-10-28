@@ -50,8 +50,8 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
-#include "jsarena.h" /* Added by JSIFY */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -4117,8 +4117,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
                         JS_NOT_REACHED("should see block chain operation");
                     }
-                    LOCAL_ASSERT(*pc == JSOP_NULL);
-                    pc += JSOP_NULL_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_PUSH);
+                    pc += JSOP_PUSH_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
@@ -4492,7 +4492,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_NEWINIT:
               {
-                i = GET_INT8(pc);
+                i = GET_UINT16(pc);
                 LOCAL_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
                 todo = ss->sprinter.offset;
@@ -5160,17 +5160,14 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
             /*
              * The value may have come from beyond stackBase + pcdepth, meaning
              * that it came from a temporary slot pushed by the interpreter or
-             * arguments pushed for an InvokeFromEngine call. Only update pc if
-             * beneath stackBase + pcdepth. If above, we don't know whether the
-             * value is associated with the current pc or from a fast native
-             * whose arguments have been pushed, so just print the value.
+             * arguments pushed for an Invoke call. Only update pc if beneath
+             * stackBase + pcdepth. If above, the value may or may not be
+             * produced by the current pc. Since it takes a fairly contrived
+             * combination of calls to produce a situation where this is not
+             * what we want, we just use the current pc.
              */
-            if (sp >= stackBase + pcdepth) {
-                pcdepth = -1;
-                goto release_pcstack;
-            }
-
-            pc = pcstack[sp - stackBase];
+            if (sp < stackBase + pcdepth)
+                pc = pcstack[sp - stackBase];
         }
 
       release_pcstack:

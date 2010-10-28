@@ -114,8 +114,6 @@ class InlineFrameAssembler {
 
         AdjustedFrame adj(sizeof(JSStackFrame) + frameDepth * sizeof(Value));
         masm.store32(Imm32(JSFRAME_FUNCTION | flags), adj.addrOf(JSStackFrame::offsetOfFlags()));
-        masm.loadPtr(Address(funObjReg, offsetof(JSObject, parent)), t0);
-        masm.storePtr(t0, adj.addrOf(JSStackFrame::offsetOfScopeChain()));
         masm.storePtr(JSFrameReg, adj.addrOf(JSStackFrame::offsetOfPrev()));
 
         DataLabelPtr ncodePatch =

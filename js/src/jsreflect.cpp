@@ -61,6 +61,7 @@
 #include "jsval.h"
 #include "jsvalue.h"
 #include "jsobjinlines.h"
+#include "jsobj.h"
 #include "jsarray.h"
 #include "jsnum.h"
 
@@ -160,12 +161,13 @@ typedef Vector<Value, 8> NodeVector;
 class NodeBuilder
 {
     JSContext    *cx;
-    char const   *src;   /* source filename or null          */
-    Value        srcval; /* source filename JS value or null */
+    bool         saveLoc; /* save source location information? */
+    char const   *src;    /* source filename or null           */
+    Value        srcval;  /* source filename JS value or null  */
 
   public:
-    NodeBuilder(JSContext *c, char const *s)
-        : cx(c), src(s) {
+    NodeBuilder(JSContext *c, bool l, char const *s)
+        : cx(c), saveLoc(l), src(s) {
     }
 
     bool init() {
@@ -533,7 +535,7 @@ NodeBuilder::newArray(NodeVector &elts, Value *dst)
 bool
 NodeBuilder::setNodeLoc(JSObject *node, TokenPos *pos)
 {
-    if (!pos)
+    if (!saveLoc || !pos)
         return setProperty(node, "loc", NullValue());
 
     JSObject *loc, *to;
@@ -1202,7 +1204,7 @@ class ASTSerializer
 {
     JSContext     *cx;
     NodeBuilder   builder;
-    uintN         lineno;
+    uint32        lineno;
 
     Value atomContents(JSAtom *atom) {
         return Valueify(ATOM_TO_JSVAL(atom ? atom : cx->runtime->atomState.emptyAtom));
@@ -1283,8 +1285,8 @@ class ASTSerializer
     bool xml(JSParseNode *pn, Value *dst);
 
   public:
-    ASTSerializer(JSContext *c, char const *src, uintN ln)
-        : cx(c), builder(c, src), lineno(ln) {
+    ASTSerializer(JSContext *c, bool l, char const *src, uint32 ln)
+        : cx(c), builder(c, l, src), lineno(ln) {
     }
 
     bool init() {
@@ -2703,7 +2705,7 @@ bool
 ASTSerializer::functionArgs(JSParseNode *pn, JSParseNode *pnargs, JSParseNode *pndestruct,
                             JSParseNode *pnbody, NodeVector &args)
 {
-    uintN i = 0;
+    uint32 i = 0;
     JSParseNode *arg = pnargs ? pnargs->pn_head : NULL;
     JSParseNode *destruct = pndestruct ? pndestruct->pn_head : NULL;
     Value node;
@@ -2777,7 +2779,7 @@ Class js_ReflectClass = {
 };
 
 static JSBool
-reflect_parse(JSContext *cx, uintN argc, jsval *vp)
+reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 {
     if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -2789,18 +2791,57 @@ reflect_parse(JSContext *cx, uintN argc, jsval *vp)
     if (!src)
         return JS_FALSE;
 
-    const char *filename = NULL;
-    if (argc > 1) {
-        JSString *str = js_ValueToString(cx, Valueify(JS_ARGV(cx, vp)[1]));
-        if (!str)
-            return JS_FALSE;
-        filename = js_GetStringBytes(NULL, str);
-    }
+    char *filename = NULL;
+    AutoReleaseNullablePtr filenamep(cx, filename);
+    uint32 lineno = 1;
+    bool loc = true;
 
-    uintN lineno = 1;
-    if (argc > 2) {
-        if (!ValueToECMAUint32(cx, Valueify(JS_ARGV(cx, vp)[2]), &lineno))
+    if (argc > 1) {
+        Value arg = Valueify(JS_ARGV(cx, vp)[1]);
+
+        if (!arg.isObject()) {
+            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
+                                     JSDVG_SEARCH_STACK, arg, NULL, "not an object", NULL);
             return JS_FALSE;
+        }
+
+        JSObject *config = &arg.toObject();
+
+        Value prop;
+
+        /* config.loc */
+        if (!GetPropertyDefault(cx, config, ATOM_TO_JSID(cx->runtime->atomState.locAtom),
+                                BooleanValue(true), &prop)) {
+            return JS_FALSE;
+        }
+
+        loc = js_ValueToBoolean(prop);
+
+        if (loc) {
+            /* config.source */
+            if (!GetPropertyDefault(cx, config, ATOM_TO_JSID(cx->runtime->atomState.sourceAtom),
+                                    NullValue(), &prop)) {
+                return JS_FALSE;
+            }
+
+            if (!prop.isNullOrUndefined()) {
+                JSString *str = js_ValueToString(cx, prop);
+                if (!str)
+                    return JS_FALSE;
+
+                filename = js_DeflateString(cx, str->chars(), str->length());
+                if (!filename)
+                    return JS_FALSE;
+                filenamep.reset(filename);
+            }
+
+            /* config.line */
+            if (!GetPropertyDefault(cx, config, ATOM_TO_JSID(cx->runtime->atomState.lineAtom),
+                                    Int32Value(1), &prop) ||
+                !ValueToECMAUint32(cx, prop, &lineno)) {
+                return JS_FALSE;
+            }
+        }
     }
 
     const jschar *chars;
@@ -2817,7 +2858,7 @@ reflect_parse(JSContext *cx, uintN argc, jsval *vp)
     if (!pn)
         return JS_FALSE;
 
-    ASTSerializer serialize(cx, filename, lineno);
+    ASTSerializer serialize(cx, loc, filename, lineno);
     if (!serialize.init())
         return JS_FALSE;
 

@@ -260,9 +260,9 @@ function test()
     checkThrows(function() a.set(new Array(0x7fffffff)));
     checkThrows(function() a.set([1,2,3], 2147483647));
 
-    checkThrows(function() a.set(ArrayBuffer.prototype));
-    checkThrows(function() a.set(UInt16Array.prototype));
-    checkThrows(function() a.set(Int32Array.prototype));
+    a.set(ArrayBuffer.prototype);
+    a.set(Int16Array.prototype);
+    a.set(Int32Array.prototype);
 
     a.set([1,2,3]);
     a.set([4,5,6], 3);
@@ -305,12 +305,16 @@ function test()
     a = new Uint8Array(0x100);
     checkThrows(function() Uint32Array.prototype.slice.apply(a, [0, 0x100]));
 
-    checkThrows(function() new Int32Array(ArrayBuffer.prototype));
-    checkThrows(function() new Int32Array(Int32Array.prototype));
-    checkThrows(function() new Int32Array(Float64Array.prototype));
-    checkThrows(function() new Int32Array(ArrayBuffer));
-    checkThrows(function() new Int32Array(Int32Array));
-    checkThrows(function() new Int32Array(Float64Array));
+    // The prototypes are objects that don't have a length property, so they act
+    // like empty arrays.
+    check(function() new Int32Array(ArrayBuffer.prototype).length == 0);
+    check(function() new Int32Array(Int32Array.prototype).length == 0);
+    check(function() new Int32Array(Float64Array.prototype).length == 0);
+
+    // ArrayBuffer, Int32Array and Float64Array are native functions and have a .length
+    // checkThrows(function() new Int32Array(ArrayBuffer));
+    // checkThrows(function() new Int32Array(Int32Array));
+    // checkThrows(function() new Int32Array(Float64Array));
 
     check(function() Int32Array.BYTES_PER_ELEMENT == 4);
     check(function() (new Int32Array(4)).BYTES_PER_ELEMENT == 4);

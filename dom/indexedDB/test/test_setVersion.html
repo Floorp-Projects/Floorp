@@ -15,6 +15,7 @@
 function testSteps()
 {
   const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+  const VERSION_CHANGE = Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
 
   const name = window.location.pathname;
   const description = "My Test Database";
@@ -43,57 +44,11 @@ function testSteps()
     event = yield;
 
     is(db.version, version, "Database version number updated correctly");
-    is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
-  }
+    is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
 
-  SimpleTest.executeSoon(function() { testGenerator.next(); });
-  yield;
-
-  let objectStoreNumber = 0;
-  let callbackCount = 0;
-  let lastObjectStore = 0;
-
-  for (; objectStoreNumber < 20;) {
-    request = db.createObjectStore(objectStoreNumber++, "");
-    request.onerror = errorHandler;
-    request.onsuccess = function(event) {
-      is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
-      callbackCount++;
-    }
-  }
-
-  let continueCreating = true;
-  while (continueCreating) {
-    request = db.createObjectStore(objectStoreNumber++, "");
-    request.onerror = errorHandler;
-    request.onsuccess = function(event) {
-      is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
-      callbackCount++;
-      if (parseInt(event.result.name) == 21) {
-        ok(objectStoreNumber > callbackCount, "more outstanding creates");
-        lastObjectStore = objectStoreNumber;
-
-        setTimeout(function() { continueCreating = false; }, 1000);
-
-        request = db.setVersion("11");
-        request.onerror = errorHandler;
-        request.onsuccess = function() {
-          is(event.transaction.mode, READ_WRITE, "Not FULL_LOCK");
-          is(callbackCount, lastObjectStore,
-             "Version callback happened before other creates");
-        }
-      }
-    }
-    setTimeout(function() { testGenerator.next(); }, 10);
+    SimpleTest.executeSoon(function() { testGenerator.next(); });
     yield;
   }
-
-  while (callbackCount < objectStoreNumber) {
-    setTimeout(function() { testGenerator.next(); }, 10);
-    yield;
-  }
-
-  ok(callbackCount > lastObjectStore, "More callbacks after version");
 
   finishTest();
   yield;

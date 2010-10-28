@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=556007
+-->
+<head>
+  <title>Test for Bug 556007</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=556007">Mozilla Bug 556007</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 556007 **/
+
+function test0() {
+  var input = document.createElement("input");
+  ok("list" in input, "list should be an input element IDL attribute");
+}
+
+// Default .list returns null.
+function test1(aContent, aInput) {
+  return null;
+}
+
+// Regular test case.
+function test2(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+  aInput.setAttribute('list', 'd');
+
+  return datalist;
+}
+
+// If none of the element is in doc.
+function test3(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+
+  return null;
+}
+
+// If one of the elemnet isn't in doc.
+function test4(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aContent.appendChild(aInput);
+  aInput.setAttribute('list', 'd');
+
+  return null;
+}
+
+// If one of the elemnet isn't in doc.
+function test5(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aContent.appendChild(datalist);
+  aInput.setAttribute('list', 'd');
+
+  return null;
+}
+
+// If datalist is added before input.
+function test6(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aContent.appendChild(datalist);
+  aContent.appendChild(aInput);
+  aInput.setAttribute('list', 'd');
+
+  return datalist;
+}
+
+// If setAttribute is set before datalist and input are in doc.
+function test7(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+
+  aContent.appendChild(datalist);
+  aContent.appendChild(aInput);
+
+  return datalist;
+}
+
+// If setAttribute is set before datalist is in doc.
+function test8(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aContent.appendChild(aInput);
+  aInput.setAttribute('list', 'd');
+
+  aContent.appendChild(datalist);
+
+  return datalist;
+}
+
+// If setAttribute is set before datalist is created.
+function test9(aContent, aInput) {
+  aContent.appendChild(aInput);
+  aInput.setAttribute('list', 'd');
+
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+  aContent.appendChild(datalist);
+
+  return datalist;
+}
+
+// If another datalist is added _after_ the first one, with the same id.
+function test10(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+  var datalist2 = document.createElement("datalist");
+  datalist2.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+  aContent.appendChild(datalist2);
+
+  return datalist;
+}
+
+// If another datalist is added _before_ the first one with the same id.
+function test11(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+  var datalist2 = document.createElement("datalist");
+  datalist2.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+  aContent.insertBefore(datalist2, datalist);
+
+  return datalist2;
+}
+
+// If datalist changes it's id.
+function test12(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+
+  datalist.id = 'foo';
+
+  return null;
+}
+
+// If datalist is removed.
+function test13(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+  aContent.removeChild(datalist);
+
+  return null;
+}
+
+// If id contain spaces.
+function test14(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = 'a b c d';
+
+  aInput.setAttribute('list', 'a b c d');
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+
+  return datalist;
+}
+
+// If id is the empty string.
+function test15(aContent, aInput) {
+  var datalist = document.createElement("datalist");
+  datalist.id = '';
+
+  aInput.setAttribute('list', '');
+  aContent.appendChild(aInput);
+  aContent.appendChild(datalist);
+
+  return null;
+}
+
+// If the id doesn't point to a datalist.
+function test16(aContent, aInput) {
+  var input = document.createElement("input");
+  input.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+  aContent.appendChild(aInput);
+  aContent.appendChild(input);
+
+  return null;
+}
+
+// If the first element with the id isn't a datalist.
+function test17(aContent, aInput) {
+  var input = document.createElement("input");
+  input.id = 'd';
+  var datalist = document.createElement("datalist");
+  datalist.id = 'd';
+
+  aInput.setAttribute('list', 'd');
+  aContent.appendChild(aInput);
+  aContent.appendChild(input);
+  aContent.appendChild(datalist);
+
+  return null;
+}
+
+var tests = [ test1, test2, test3, test4, test5, test6, test7, test8, test9,
+              test10, test11, test12, test13, test14, test15, test16, test17 ];
+
+test0();
+
+for each (var test in tests) {
+  var content = document.getElementById('content');
+
+  // Clean-up.
+  content.textContent = '';
+
+  var input = document.createElement("input");
+  var res = test(content, input);
+
+  is(input.list, res, "input.list should be " + res);
+}
+
+</script>
+</pre>
+</body>
+</html>

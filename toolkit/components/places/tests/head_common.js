@@ -508,21 +508,3 @@ let (randomFailingSyncTests = [
     sync.observe(null, "places-debug-stop-sync", null);
   }
 }
-
-// These tests are randomly failing if idle-daily is executed in the middle,
-// thus we make history ignore the notification for them.  See bug 602872.
-let (randomFailingIdleTests = [
-  "test_redirectsMode.js",
-  "test_tags.js",
-  "test_history_sidebar.js",
-  "test_removeVisitsByTimeframe.js",
-  "test_history_removeAllPages.js", // Needs stable frecency.
-  "test_database_sync_after_shutdown_with_removeAllPages.js", // Needs stable frecency.
-]) {
-  let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
-  if (randomFailingIdleTests.indexOf(currentTestFilename) != -1) {
-    print("Test " + currentTestFilename +
-          " is known random due to idle-daily, remove observer.");
-    Services.obs.removeObserver(PlacesUtils.history, "idle-daily");
-  }
-}

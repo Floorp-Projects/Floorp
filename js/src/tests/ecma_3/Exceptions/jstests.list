@@ -1,6 +1,7 @@
 url-prefix ../../jsreftest.html?test=ecma_3/Exceptions/
 script 15.11.1.1.js
 script 15.11.4.4-1.js
+script 15.11.5.js
 script 15.11.7.6-001.js
 script 15.11.7.6-002.js
 script 15.11.7.6-003.js

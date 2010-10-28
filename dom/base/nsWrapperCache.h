@@ -78,7 +78,8 @@ public:
   void SetWrapper(JSObject* aWrapper)
   {
     NS_ASSERTION(!PreservingWrapper(), "Clearing a preserved wrapper!");
-    mWrapperPtrBits = reinterpret_cast<PtrBits>(aWrapper);
+    mWrapperPtrBits = reinterpret_cast<PtrBits>(aWrapper) |
+                      (mWrapperPtrBits & WRAPPER_IS_PROXY);
   }
 
   void ClearWrapper()
@@ -99,12 +100,23 @@ public:
 
   PRBool PreservingWrapper()
   {
-    return mWrapperPtrBits & WRAPPER_BIT_PRESERVED;
+    return (mWrapperPtrBits & WRAPPER_BIT_PRESERVED) != 0;
+  }
+
+  void SetIsProxy()
+  {
+      mWrapperPtrBits |= WRAPPER_IS_PROXY;
+  }
+
+  PRBool IsProxy()
+  {
+      return (mWrapperPtrBits & WRAPPER_IS_PROXY) != 0;
   }
 
 private:
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
-  enum { kWrapperBitMask = 0x1 };
+  enum { WRAPPER_IS_PROXY = 1 << 1 };
+  enum { kWrapperBitMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_PROXY) };
 
   PtrBits mWrapperPtrBits;
 };

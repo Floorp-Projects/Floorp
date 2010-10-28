@@ -99,49 +99,57 @@ typedef int NIns;
 const size_t LARGEST_BRANCH_PATCH = 2 * sizeof(NIns);
 
 /* ARM registers */
-typedef enum {
-    R0  = 0,
-    R1  = 1,
-    R2  = 2,
-    R3  = 3,
-    R4  = 4,
-    R5  = 5,
-    R6  = 6,
-    R7  = 7,
-    R8  = 8,
-    R9  = 9,
-    R10 = 10,
-    FP  = 11,
-    IP  = 12,
-    SP  = 13,
-    LR  = 14,
-    PC  = 15,
+typedef uint32_t Register;
+static const Register
+    R0  = { 0 },
+    R1  = { 1 },
+    R2  = { 2 },
+    R3  = { 3 },
+    R4  = { 4 },
+    R5  = { 5 },
+    R6  = { 6 },
+    R7  = { 7 },
+    R8  = { 8 },
+    R9  = { 9 },
+    R10 = { 10 },
+    FP  = { 11 },
+    IP  = { 12 },
+    SP  = { 13 },
+    LR  = { 14 },
+    PC  = { 15 },
 
     // VFP regs (we currently only use D0-D6 and S14)
-    D0 = 16,
-    D1 = 17,
-    D2 = 18,
-    D3 = 19,
-    D4 = 20,
-    D5 = 21,
-    D6 = 22,
+    D0 = { 16 },
+    D1 = { 17 },
+    D2 = { 18 },
+    D3 = { 19 },
+    D4 = { 20 },
+    D5 = { 21 },
+    D6 = { 22 },
     // S14 overlaps with D7 and is hard-coded into i2d and u2f operations, but
     // D7 is still listed here for completeness and to facilitate assertions.
-    D7 = 23,
+    D7 = { 23 },
     // D8-D15 are caller-saved registers that we don't currently handle.
 
     FirstFloatReg = D0,
     LastFloatReg = D6,
 
-    FirstReg = R0,
-    LastReg = D6,
-    deprecated_UnknownReg = 32,     // XXX: remove eventually, see bug 538924
+    deprecated_UnknownReg = { 32 },     // XXX: remove eventually, see bug 538924
 
-    S14 = 24,
+    S14 = { 24 },
 
-    SBZ = 0         // Used for 'should-be-zero' fields in instructions with
+    SBZ = { 0 } ;   // Used for 'should-be-zero' fields in instructions with
                     // unused register fields.
-} Register;
+
+static const uint32_t FirstRegNum = R0;
+static const uint32_t LastRegNum = D6;
+}
+
+#define NJ_USE_UINT32_REGISTER 1
+#include "NativeCommon.h"
+
+namespace nanojit
+{
 
 /* ARM condition codes */
 typedef enum {

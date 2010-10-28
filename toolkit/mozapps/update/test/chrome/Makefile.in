@@ -44,7 +44,7 @@ relativesrcdir = toolkit/mozapps/update/test/chrome
 include $(DEPTH)/config/autoconf.mk
 
 _OTHER_FILES = \
-  ../unit/data/empty.mar \
+  ../unit/data/simple.mar \
   $(NULL)
 
 _CHROME_FILES = \

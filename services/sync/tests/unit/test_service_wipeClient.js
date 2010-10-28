@@ -1,5 +1,8 @@
-Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/util.js");
+
+Svc.DefaultPrefs.set("registerEngines", "");
+Cu.import("resource://services-sync/service.js");
 
 
 function CanDecryptEngine() {

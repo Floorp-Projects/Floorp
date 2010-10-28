@@ -34,8 +34,7 @@ function test()
                 window_B.close();
 
                 var doc = window_C.gBrowser.getBrowserForTab(window_C.gBrowser.tabs[0])
-                            .docShell.contentViewer.DOMDocument.wrappedJSObject;
-                var elems = document.documentElement.childNodes;
+                            .docShell.contentViewer.DOMDocument;
                 var calls = doc.defaultView.test_panels();
                 window_C.close();
                 finish();

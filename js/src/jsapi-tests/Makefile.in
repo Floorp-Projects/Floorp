@@ -50,6 +50,7 @@ CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
   testClassGetter.cpp \
+  testCloneScript.cpp \
   testConservativeGC.cpp \
   testContexts.cpp \
   testDebugger.cpp \
@@ -59,6 +60,7 @@ CPPSRCS = \
   testExtendedEq.cpp \
   testFuncCallback.cpp \
   testGCChunkAlloc.cpp \
+  testGetPropertyDefault.cpp \
   testIntString.cpp \
   testIsAboutToBeFinalized.cpp \
   testLookup.cpp \
@@ -68,7 +70,10 @@ CPPSRCS = \
   testSameValue.cpp \
   testScriptObject.cpp \
   testSetPropertyWithNativeGetterStubSetter.cpp \
+  testBug604087.cpp \
+  testThreads.cpp \
   testTrap.cpp \
+  testUTF8.cpp \
   testXDR.cpp \
   $(NULL)
 

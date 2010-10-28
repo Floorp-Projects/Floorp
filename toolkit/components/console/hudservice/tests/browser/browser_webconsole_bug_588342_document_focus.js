@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+const TEST_URI = "data:text/html,Web Console test for bug 588342";
 let fm, notificationBox, input;
 
 function test()
@@ -57,16 +57,14 @@ function runTest() {
       if (!DOMNodeRemoved && !notificationBox.querySelector(".hud-box")) {
         DOMNodeRemoved = true;
         document.removeEventListener(aEvent.type, domNodeRemoved, false);
-        is(fm.focusedWindow, browser.contentWindow.wrappedJSObject,
+        is(fm.focusedWindow, browser.contentWindow,
            "content document has focus");
         input = notificationBox = fm = null;
+        finishTest();
       }
-      finishTest();
     });
   }
-  document.addEventListener("DOMNodeRemoved", domNodeRemoved , false);
-  fm = notificationBox = input = null;
-  finishTest();
+  document.addEventListener("DOMNodeRemoved", domNodeRemoved, false);
+  HUDService.deactivateHUDForContext(tab);
 }
-
 

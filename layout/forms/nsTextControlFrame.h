@@ -118,7 +118,8 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
-  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements);
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                        PRUint32 aFilter);
 
   // Utility methods to set current widget state
 
@@ -382,6 +383,8 @@ private:
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   PRPackedBool mFireChangeEventState;
   PRPackedBool mInSecureKeyboardInputMode;
+  // Keep track if we have asked a placeholder node creation.
+  PRPackedBool mUsePlaceholder;
 
 #ifdef DEBUG
   PRPackedBool mInEditorInitialization;

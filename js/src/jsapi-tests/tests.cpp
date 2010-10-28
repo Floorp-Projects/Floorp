@@ -48,6 +48,8 @@ int main(int argc, char *argv[])
     int failures = 0;
     const char *filter = (argc == 2) ? argv[1] : NULL;
 
+    JS_SetCStringsAreUTF8();
+
     for (JSAPITest *test = JSAPITest::list; test; test = test->next) {
         const char *name = test->name();
         if (filter && strcmp(filter, name) != 0)

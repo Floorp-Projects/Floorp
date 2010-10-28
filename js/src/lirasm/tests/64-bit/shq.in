@@ -1,0 +1,32 @@
+; Only the bottom 6 bits of the shift amount in lshq/rshq/rshuq are used.
+
+two = immq 2
+
+sh1 = immi 1
+sh2 = immi 65           ;                               0100_0001b
+sh3 = immi 268435393    ; 0000_1111_1111_1111_1111_1111_1100_0001b
+
+a1 = lshq two sh1       ; --> 4
+a2 = lshq two sh2       ; --> 4
+a3 = lshq two sh3       ; --> 4
+
+b1 = rshq two sh1       ; --> 1
+b2 = rshq two sh2       ; --> 1
+b3 = rshq two sh3       ; --> 1
+
+c1 = rshuq two sh1      ; --> 1
+c2 = rshuq two sh2      ; --> 1
+c3 = rshuq two sh3      ; --> 1
+
+s0 = immq 0
+s1 = addq s0 a1
+s2 = addq s1 a2
+s3 = addq s2 a3
+s4 = addq s3 b1
+s5 = addq s4 b2
+s6 = addq s5 b3
+s7 = addq s6 c1
+s8 = addq s7 c2
+s9 = addq s8 c2         ; --> 18
+
+retq s9

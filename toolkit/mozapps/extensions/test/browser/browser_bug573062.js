@@ -82,9 +82,9 @@ function test() {
 
     // Check the buttons in the details view.
     function checkTooltips2(aItem, aEnable, aDisable, aRemove) {
-        let detailEnable = aWindow.document.getElementById("detail-enable");
-    let detailDisable = aWindow.document.getElementById("detail-disable");
-    let detailUninstall = aWindow.document.getElementById("detail-uninstall");
+        let detailEnable = aWindow.document.getElementById("detail-enable-btn");
+    let detailDisable = aWindow.document.getElementById("detail-disable-btn");
+    let detailUninstall = aWindow.document.getElementById("detail-uninstall-btn");
       ok(detailEnable.getAttribute("tooltiptext") == aEnable);
       ok(detailDisable.getAttribute("tooltiptext") == aDisable);
       ok(detailUninstall.getAttribute("tooltiptext")  == aRemove);

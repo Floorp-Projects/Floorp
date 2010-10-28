@@ -81,7 +81,11 @@
 
 // Because the QPainter backend has some problems with glyphs rendering
 // it is better to use image or xlib cairo backends by default
+#if (MOZ_PLATFORM_MAEMO == 6)
 #define DEFAULT_RENDER_MODE RENDER_BUFFERED
+#else
+#define DEFAULT_RENDER_MODE RENDER_DIRECT
+#endif
 
 static QPaintEngine::Type sDefaultQtPaintEngineType = QPaintEngine::X11;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
@@ -146,6 +150,9 @@ gfxQtPlatform::gfxQtPlatform()
         case 1:
             mRenderMode = RENDER_BUFFERED;
             break;
+        case 2:
+            mRenderMode = RENDER_DIRECT;
+            break;
         default:
             mRenderMode = RENDER_QPAINTER;
     }
@@ -207,7 +214,7 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     }
 #endif
 
-    if (mRenderMode == RENDER_BUFFERED &&
+    if ((mRenderMode == RENDER_BUFFERED || mRenderMode == RENDER_DIRECT) &&
         sDefaultQtPaintEngineType != QPaintEngine::X11) {
       newSurface = new gfxImageSurface(size, imageFormat);
       return newSurface.forget();

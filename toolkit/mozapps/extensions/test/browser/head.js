@@ -6,29 +6,32 @@ Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-const RELATIVE_DIR = "browser/toolkit/mozapps/extensions/test/browser/";
+var pathParts = gTestPath.split("/");
+// Drop the test filename
+pathParts.splice(pathParts.length - 1);
+
+var gTestInWindow = /-window$/.test(pathParts[pathParts.length - 1]);
+
+// Drop the UI type
+pathParts.splice(pathParts.length - 1);
+pathParts.push("browser");
+
+const RELATIVE_DIR = pathParts.slice(4).join("/") + "/";
 
 const TESTROOT = "http://example.com/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/" + RELATIVE_DIR;
+const CHROMEROOT = pathParts.join("/") + "/";
 
 const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
-const CHROME_NAME = "mochikit";
-
-function getChromeRoot(path) {
-  if (path === undefined) {
-    return "chrome://" + CHROME_NAME + "/content/" + RELATIVE_DIR;
-  }
-  return getRootDirectory(path);
-}
 
 var gPendingTests = [];
 var gTestsRun = 0;
 var gTestStart = null;
 
-var gUseInContentUI = ("switchToTabHavingURI" in window);
+var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
@@ -41,6 +44,25 @@ registerCleanupFunction(function() {
   }
   catch (e) {
   }
+
+  // Throw an error if the add-ons manager window is open anywhere
+  var windows = Services.wm.getEnumerator("Addons:Manager");
+  if (windows.hasMoreElements())
+    ok(false, "Found unexpected add-ons manager window still open");
+  while (windows.hasMoreElements())
+    windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
+
+  // We can for now know that getAllInstalls actually calls its callback before
+  // it returns so this will complete before the next test start.
+  AddonManager.getAllInstalls(function(aInstalls) {
+    aInstalls.forEach(function(aInstall) {
+      if (aInstall instanceof MockInstall)
+        return;
+
+      ok(false, "Should not have seen an install of " + aInstall.sourceURI.spec + " in state " + aInstall.state);
+      aInstall.cancel();
+    });
+  });
 });
 
 function add_test(test) {
@@ -68,21 +90,40 @@ function run_next_test() {
 }
 
 function get_addon_file_url(aFilename) {
-  var chromeroot = getChromeRoot(gTestPath);
   try {
     var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
              getService(Ci.nsIChromeRegistry);
-    var fileurl = cr.convertChromeURL(makeURI(chromeroot + "addons/" + aFilename));
+    var fileurl = cr.convertChromeURL(makeURI(CHROMEROOT + "addons/" + aFilename));
     return fileurl.QueryInterface(Ci.nsIFileURL);
   } catch(ex) {
-    var jar = getJar(chromeroot + "addons/" + aFilename);
+    var jar = getJar(CHROMEROOT + "addons/" + aFilename);
     var tmpDir = extractJarToTmp(jar);
     tmpDir.append(aFilename);
 
-    var ios = Components.classes["@mozilla.org/network/io-service;1"].
-                getService(Components.interfaces.nsIIOService);
-    return ios.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
+    return Services.io.newFileURI(tmpDir).QueryInterface(Ci.nsIFileURL);
   }
+}
+
+function get_test_items_in_list(aManager) {
+  var tests = "@tests.mozilla.org";
+
+  let view = aManager.document.getElementById("view-port").selectedPanel;
+  let listid = view.id == "search-view" ? "search-list" : "addon-list";
+  let item = aManager.document.getElementById(listid).firstChild;
+  let items = [];
+
+  while (item) {
+    if (item.localName != "richlistitem") {
+      item = item.nextSibling;
+      continue;
+    }
+
+    if (!item.mAddon || item.mAddon.id.substring(item.mAddon.id.length - tests.length) == tests)
+      items.push(item);
+    item = item.nextSibling;
+  }
+
+  return items;
 }
 
 function check_all_in_list(aManager, aIds, aIgnoreExtras) {
@@ -181,10 +222,10 @@ function open_manager(aView, aCallback, aLoadCallback) {
     return;
   }
 
-  openDialog(MANAGER_URI).addEventListener("load", function() {
-    this.removeEventListener("load", arguments.callee, false);
+  openDialog(MANAGER_URI).addEventListener("pageshow", function() {
+    this.removeEventListener("pageshow", arguments.callee, true);
     setup_manager(this);
-  }, false);
+  }, true);
 }
 
 function close_manager(aManagerWindow, aCallback) {
@@ -207,6 +248,29 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
 
   close_manager(aManagerWindow, function() {
     open_manager(aView, aCallback, aLoadCallback);
+  });
+}
+
+function wait_for_window_open(aCallback) {
+  Services.wm.addListener({
+    onOpenWindow: function(aWindow) {
+      Services.wm.removeListener(this);
+
+      let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowInternal);
+      domwindow.addEventListener("load", function() {
+        domwindow.removeEventListener("load", arguments.callee, false);
+        executeSoon(function() {
+          aCallback(domwindow);
+        });
+      }, false);
+    },
+
+    onCloseWindow: function(aWindow) {
+    },
+
+    onWindowTitleChange: function(aWindow, aTitle) {
+    }
   });
 }
 
@@ -400,6 +464,11 @@ MockProvider.prototype = {
    *         The add-on to add
    */
   addAddon: function MP_addAddon(aAddon) {
+    var oldAddons = this.addons.filter(function(aOldAddon) aOldAddon.id == aAddon.id);
+    var oldAddon = oldAddons.length > 0 ? oldAddons[0] : null;
+
+    this.addons = this.addons.filter(function(aOldAddon) aOldAddon.id != aAddon.id);
+
     this.addons.push(aAddon);
     aAddon._provider = this;
 
@@ -409,7 +478,7 @@ MockProvider.prototype = {
     let requiresRestart = (aAddon.operationsRequiringRestart &
                            AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             null, requiresRestart)
+                                             oldAddon, requiresRestart)
   },
 
   /**

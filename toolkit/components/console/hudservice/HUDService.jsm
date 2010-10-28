@@ -120,6 +120,10 @@ const SEARCH_DELAY = 200;
 // "devtools.hud.loglimit" preference.
 const DEFAULT_LOG_LIMIT = 200;
 
+// Constants used for defining the direction of JSTerm input history navigation.
+const HISTORY_BACK = -1;
+const HISTORY_FORWARD = 1;
+
 // The maximum number of bytes a Network ResponseListener can hold.
 const RESPONSE_BODY_LIMIT = 1048576; // 1 MB
 
@@ -228,7 +232,7 @@ ResponseListener.prototype =
 
     if (HUDService.saveRequestAndResponseBodies &&
         this.receivedData.length < RESPONSE_BODY_LIMIT) {
-    this.receivedData += data;
+      this.receivedData += data;
     }
 
     binaryOutputStream.writeBytes(data, aCount);
@@ -696,10 +700,10 @@ function NetworkPanel(aParent, aHttpActivity)
     close: "true"
   });
 
-  // Create the browser that displays the NetworkPanel XHTML.
-  this.browser = createAndAppendElement(this.panel, "browser", {
+  // Create the iframe that displays the NetworkPanel XHTML.
+  this.iframe = createAndAppendElement(this.panel, "iframe", {
     src: "chrome://browser/content/NetworkPanel.xhtml",
-    disablehistory: "true",
+    type: "content",
     flex: "1"
   });
 
@@ -710,7 +714,7 @@ function NetworkPanel(aParent, aHttpActivity)
     self.panel.removeEventListener("popuphidden", onPopupHide, false);
     self.panel.parentNode.removeChild(self.panel);
     self.panel = null;
-    self.browser = null;
+    self.iframe = null;
     self.document = null;
     self.httpActivity = null;
 
@@ -723,7 +727,7 @@ function NetworkPanel(aParent, aHttpActivity)
   // Set the document object and update the content once the panel is loaded.
   this.panel.addEventListener("load", function onLoad() {
     self.panel.removeEventListener("load", onLoad, true)
-    self.document = self.browser.contentWindow.document;
+    self.document = self.iframe.contentWindow.document;
     self.update();
   }, true);
 
@@ -1184,14 +1188,14 @@ NetworkPanel.prototype =
   },
 
   /**
-   * Updates the content of the NetworkPanel's browser.
+   * Updates the content of the NetworkPanel's iframe.
    *
    * @returns void
    */
   update: function NP_update()
   {
     /**
-     * After the browser contentWindow is ready, the document object is set.
+     * After the iframe's contentWindow is ready, the document object is set.
      * If the document object isn't set yet, then the page is loaded and nothing
      * can be updated.
      */
@@ -2964,7 +2968,7 @@ HUD_SERVICE.prototype =
     }
 
     let _browser = gBrowser.
-      getBrowserForDocument(aContentWindow.top.document.wrappedJSObject);
+      getBrowserForDocument(aContentWindow.top.document);
     let nBox = gBrowser.getNotificationBox(_browser);
     let nBoxId = nBox.getAttribute("id");
     let hudId = "hud_" + nBoxId;
@@ -3818,7 +3822,7 @@ function findCompletionBeginning(aStr)
  */
 function JSPropertyProvider(aScope, aInputValue)
 {
-  let obj = aScope;
+  let obj = XPCNativeWrapper.unwrap(aScope);
 
   // Analyse the aInputValue and find the beginning of the last part that
   // should be completed.
@@ -4467,20 +4471,19 @@ JSTerm.prototype = {
             break;
           case 38:
             // up arrow: history previous
-            if (self.caretInFirstLine()){
-              self.historyPeruse(true);
-              if (aEvent.cancelable) {
-                let inputEnd = self.inputNode.value.length;
-                self.inputNode.setSelectionRange(inputEnd, inputEnd);
+            if (self.caretAtStartOfInput()) {
+              let updated = self.historyPeruse(HISTORY_BACK);
+              if (updated && aEvent.cancelable) {
+                self.inputNode.setSelectionRange(0, 0);
                 aEvent.preventDefault();
               }
             }
             break;
           case 40:
             // down arrow: history next
-            if (self.caretInLastLine()){
-              self.historyPeruse(false);
-              if (aEvent.cancelable) {
+            if (self.caretAtEndOfInput()) {
+              let updated = self.historyPeruse(HISTORY_FORWARD);
+              if (updated && aEvent.cancelable) {
                 let inputEnd = self.inputNode.value.length;
                 self.inputNode.setSelectionRange(inputEnd, inputEnd);
                 aEvent.preventDefault();
@@ -4532,15 +4535,25 @@ JSTerm.prototype = {
     return handleKeyDown;
   },
 
-  historyPeruse: function JST_historyPeruse(aFlag) {
+  /**
+   * Go up/down the history stack of input values.
+   *
+   * @param number aDirection
+   *        History navigation direction: HISTORY_BACK or HISTORY_FORWARD.
+   *
+   * @returns boolean
+   *          True if the input value changed, false otherwise.
+   */
+  historyPeruse: function JST_historyPeruse(aDirection)
+  {
     if (!this.history.length) {
-      return;
+      return false;
     }
 
     // Up Arrow key
-    if (aFlag) {
+    if (aDirection == HISTORY_BACK) {
       if (this.historyPlaceHolder <= 0) {
-        return;
+        return false;
       }
 
       let inputVal = this.history[--this.historyPlaceHolder];
@@ -4549,14 +4562,13 @@ JSTerm.prototype = {
       }
     }
     // Down Arrow key
-    else {
+    else if (aDirection == HISTORY_FORWARD) {
       if (this.historyPlaceHolder == this.history.length - 1) {
         this.historyPlaceHolder ++;
         this.setInputValue("");
-        return;
       }
       else if (this.historyPlaceHolder >= (this.history.length)) {
-        return;
+        return false;
       }
       else {
         let inputVal = this.history[++this.historyPlaceHolder];
@@ -4565,6 +4577,11 @@ JSTerm.prototype = {
         }
       }
     }
+    else {
+      throw new Error("Invalid argument 0");
+    }
+
+    return true;
   },
 
   refocus: function JSTF_refocus()
@@ -4573,17 +4590,28 @@ JSTerm.prototype = {
     this.inputNode.focus();
   },
 
-  caretInFirstLine: function JSTF_caretInFirstLine()
+  /**
+   * Check if the caret is at the start of the input.
+   *
+   * @returns boolean
+   *          True if the caret is at the start of the input.
+   */
+  caretAtStartOfInput: function JST_caretAtStartOfInput()
   {
-    var firstLineBreak = this.codeInputString.indexOf("\n");
-    return ((firstLineBreak == -1) ||
-            (this.inputNode.selectionStart <= firstLineBreak));
+    return this.inputNode.selectionStart == this.inputNode.selectionEnd &&
+        this.inputNode.selectionStart == 0;
   },
 
-  caretInLastLine: function JSTF_caretInLastLine()
+  /**
+   * Check if the caret is at the end of the input.
+   *
+   * @returns boolean
+   *          True if the caret is at the end of the input, or false otherwise.
+   */
+  caretAtEndOfInput: function JST_caretAtEndOfInput()
   {
-    var lastLineBreak = this.codeInputString.lastIndexOf("\n");
-    return (this.inputNode.selectionEnd > lastLineBreak);
+    return this.inputNode.selectionStart == this.inputNode.selectionEnd &&
+        this.inputNode.selectionStart == this.inputNode.value.length;
   },
 
   history: [],
@@ -5437,15 +5465,81 @@ HUDConsoleObserver = {
 
     if (aSubject instanceof Ci.nsIScriptError) {
       switch (aSubject.category) {
+        // We ignore chrome-originating errors as we only
+        // care about content.
         case "XPConnect JavaScript":
+          // nsXPCWrappedJSClass::CheckForException()
+          // nsXPCComponents_Utils::ReportError()
         case "component javascript":
         case "chrome javascript":
-          // we ignore these CHROME-originating errors as we only
-          // care about content
+          // ScriptErrorEvent in nsJSEnvironment.cpp
+        case "chrome registration":
+          // nsChromeRegistry::LogMessageWithContext()
+        case "XBL":
+          // nsXBLService
+        case "XBL Prototype Handler":
+          // nsXBLPrototypeHandler::ReportKeyConflict()
+        case "XBL Content Sink":
+          // nsXBLContentSink
+        case "xbl javascript":
+          // XBL_ProtoErrorReporter in nsXBLDocumentInfo.cpp
+        case "FrameConstructor":
+          // nsCSSFrameConstructor::ProcessChildren()
           return;
+
+        // Display the messages from the following categories.
         case "HUDConsole":
         case "CSS Parser":
+          // nsCSSScanner::OutputError()
+        case "CSS Loader":
+          // SheetLoadData::OnStreamComplete()
         case "content javascript":
+          // ScriptErrorEvent in nsJSEnvironment.cpp
+        case "DOM Events":
+          // nsHtml5StreamParser::ContinueAfterScripts()
+          // ReportUseOfDeprecatedMethod() in nsGlobalWindow.cpp,
+          // nsHTMLDocument.cpp, nsDOMEvent.cpp
+          // nsDOMEvent::ReportWrongPropertyAccessWarning()
+          // nsHTMLDocument::WriteCommon()
+        case "DOM:HTML":
+          // PrintWarningOnConsole() in nsDOMClassInfo.cpp
+        case "DOM Window":
+          // nsGlobalWindow::Close()
+          // TODO: This message is never displayed because its origin cannot be
+          // determined, no sourceName is given. See bug 603711.
+        case "SVG":
+          // nsSVGUtils::ReportToConsole()
+          // nsSVGElement::ReportAttributeParseFailure()
+        case "ImageMap":
+          // logMessage() in nsImageMap.cpp
+        case "HTML":
+          // SendJSWarning() in nsFormSubmission.cpp
+        case "Canvas":
+          // nsCanvasRenderingContext2D::SetStyleFromStringOrInterface()
+          // TODO: This message is never displayed because its origin cannot be
+          // determined, no sourceName is given. See bug 603714.
+        case "DOM3 Load":
+          // ReportUseOfDeprecatedMethod() in nsXMLDocument.cpp
+          // TODO: This message is generally not displayed because its origin
+          // (sourceName) points to the previous URI of the document object -
+          // not the URI of the page in which the script tries to load the new
+          // URI. See bug 603720.
+        case "DOM":
+          // nsDocument::ReportEmptyGetElementByIdArg()
+          //   TODO: This message is never displayed because its origin cannot
+          //   be determined, no sourceName is given. See bug 603723.
+          // nsXMLDocument::Load() - for chrome code.
+        case "malformed-xml":
+          // nsExpatDriver::HandleError()
+          // TODO: This message is only displayed when its origin (sourceName)
+          // is the same as the tab location for which a Web Console is open.
+          // See bug 603727.
+        case "DOM Worker javascript":
+          // nsReportErrorRunnable and DOMWorkerErrorReporter in
+          // nsDOMThreadService.cpp
+          // TODO: This message is never displayed because its origin
+          // (sourceName) points us only to the script that thrown the exception
+          // - no way to associate it to a specific tab. See bug 603730.
           HUDService.reportConsoleServiceContentScriptError(aSubject);
           return;
         default:

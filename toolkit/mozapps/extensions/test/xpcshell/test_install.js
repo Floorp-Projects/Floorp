@@ -1228,10 +1228,66 @@ function run_test_20() {
           restartManager();
 
           Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
-          end_test();
+          run_test_21();
         });
       }
     });
     aInstall.install();
   }, "application/x-xpinstall");
+}
+
+// Verify that installing an add-on that is already pending install cancels the
+// first install
+function run_test_21() {
+  installAllFiles([do_get_addon("test_install2_1")], function() {
+    AddonManager.getAllInstalls(function(aInstalls) {
+      do_check_eq(aInstalls.length, 1);
+
+      prepare_test({
+        "addon2@tests.mozilla.org": [
+          "onOperationCancelled",
+          "onInstalling"
+        ]
+      }, [
+        "onNewInstall",
+        "onDownloadStarted",
+        "onDownloadEnded",
+        "onInstallStarted",
+        "onInstallCancelled",
+        "onInstallEnded",
+      ], check_test_21);
+
+      let url = "http://localhost:4444/addons/test_install2_1.xpi";
+      AddonManager.getInstallForURL(url, function(aInstall) {
+        aInstall.install();
+      }, "application/x-xpinstall");
+    });
+  });
+}
+
+function check_test_21(aInstall) {
+  AddonManager.getAllInstalls(function(aInstalls) {
+    do_check_eq(aInstalls.length, 1);
+    do_check_eq(aInstalls[0], aInstall);
+
+    prepare_test({
+      "addon2@tests.mozilla.org": [
+        "onOperationCancelled"
+      ]
+    }, [
+      "onInstallCancelled",
+    ]);
+
+    aInstall.cancel();
+
+    ensure_test_completed();
+
+    restartManager();
+
+    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+      do_check_eq(a2, null);
+
+      end_test();
+    });
+  });
 }

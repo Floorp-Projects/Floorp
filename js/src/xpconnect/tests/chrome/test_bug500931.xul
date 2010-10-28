@@ -26,9 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
   function go() {
     var ifr = document.getElementById("ifr");
     var doc = ifr.contentDocument;
-    ok(doc.toString().indexOf("XPCNativeWrapper") >= 0, "doc is an XPCNativeWrapper");
+    ok(doc.toString().indexOf("XrayWrapper") >= 0, "doc is an XrayWrapper");
     var weak = Components.utils.getWeakReference(doc);
-    ok(weak.get().toString().indexOf("XPCNativeWrapper") >= 0, "weak reference returns a wrapper");
+    ok(weak.get().toString().indexOf("XrayWrapper") >= 0, "weak reference returns a wrapper");
     SimpleTest.finish();
   }
 

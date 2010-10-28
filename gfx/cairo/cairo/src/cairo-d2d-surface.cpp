@@ -1151,6 +1151,9 @@ struct cached_bitmap {
 	_cairo_d2d_release_factory();
     }
 
+    /* Device this cached bitmap was created with, we should really have a per
+     * device cache, see bug 607408 */
+    cairo_d2d_device_t *device;
     /** The cached bitmap */
     RefPtr<ID2D1Bitmap> bitmap;
     /** The cached bitmap is dirty and needs its data refreshed */
@@ -1717,6 +1720,13 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		 */
 		return NULL;
 	    }
+            if (srcSurf->device != d2dsurf->device) {
+		/* This code does not work if the source surface does not use
+		 * the same device. Some work could be done to do something
+		 * fairly efficient here, for now, fallback.
+		 */
+		return NULL;
+	    }
 
 	    _cairo_d2d_update_surface_bitmap(srcSurf);
 	    _cairo_d2d_flush(srcSurf);
@@ -1857,6 +1867,9 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		    (cached_bitmap*)cairo_surface_get_user_data(
 		    surfacePattern->surface,
 		    key);
+		if (cachebitmap && cachebitmap->device != d2dsurf->device) {
+		    cachebitmap = NULL;
+		}
 	    }
 
 	    if (cachebitmap) {
@@ -1926,6 +1939,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		    /* We can cache it if it isn't a partial bitmap */
 		    cachebitmap->dirty = false;
 		    cachebitmap->bitmap = sourceBitmap;
+		    cachebitmap->device = d2dsurf->device;
                     /*
                      * This will start out with two references, one on the snapshot
                      * and one more in the user data structure.
