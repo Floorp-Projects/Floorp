@@ -1032,6 +1032,15 @@ js_EqualStrings(JSString *str1, JSString *str2);
 extern int32 JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2);
 
+namespace js {
+/*
+ * Return true if the string matches the given sequence of ASCII bytes.
+ */
+extern JSBool
+MatchStringAndAscii(JSString *str, const char *asciiBytes);
+
+} /* namespacejs */
+
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.
  * The patlen argument must be positive and no greater than sBMHPatLenMax.
@@ -1178,31 +1187,42 @@ js_str_charCodeAt(JSContext *cx, uintN argc, js::Value *vp);
 extern int
 js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char);
 
+namespace js {
+
+extern size_t
+PutEscapedStringImpl(char *buffer, size_t size, FILE *fp, JSString *str, uint32 quote);
+
 /*
- * Write str into buffer escaping any non-printable or non-ASCII character.
- * Guarantees that a NUL is at the end of the buffer. Returns the length of
- * the written output, NOT including the NUL. If buffer is null, just returns
- * the length of the output. If quote is not 0, it must be a single or double
- * quote character that will quote the output.
- *
- * The function is only defined for debug builds.
+ * Write str into buffer escaping any non-printable or non-ASCII character
+ * using \escapes for JS string literals.
+ * Guarantees that a NUL is at the end of the buffer unless size is 0. Returns
+ * the length of the written output, NOT including the NUL. Thus, a return
+ * value of size or more means that the output was truncated. If buffer
+ * is null, just returns the length of the output. If quote is not 0, it must
+ * be a single or double quote character that will quote the output.
 */
-#define js_PutEscapedString(buffer, bufferSize, str, quote)                   \
-    js_PutEscapedStringImpl(buffer, bufferSize, NULL, str, quote)
+inline size_t
+PutEscapedString(char *buffer, size_t size, JSString *str, uint32 quote)
+{
+    size_t n = PutEscapedStringImpl(buffer, size, NULL, str, quote);
+
+    /* PutEscapedStringImpl can only fail with a file. */
+    JS_ASSERT(n != size_t(-1));
+    return n;
+}
 
 /*
  * Write str into file escaping any non-printable or non-ASCII character.
- * Returns the number of bytes written to file. If quote is not 0, it must
- * be a single or double quote character that will quote the output.
- *
- * The function is only defined for debug builds.
+ * If quote is not 0, it must be a single or double quote character that
+ * will quote the output.
 */
-#define js_FileEscapedString(file, str, quote)                                \
-    (JS_ASSERT(file), js_PutEscapedStringImpl(NULL, 0, file, str, quote))
+inline bool
+FileEscapedString(FILE *fp, JSString *str, uint32 quote)
+{
+    return PutEscapedStringImpl(NULL, 0, fp, str, quote) != size_t(-1);
+}
 
-extern JS_FRIEND_API(size_t)
-js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
-                        JSString *str, uint32 quote);
+} /* namespace js */
 
 extern JSBool
 js_String(JSContext *cx, uintN argc, js::Value *vp);

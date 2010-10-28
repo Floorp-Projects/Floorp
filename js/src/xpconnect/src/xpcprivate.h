@@ -1765,9 +1765,6 @@ public:
 
     inline JSBool HasAncestor(const nsIID* iid) const;
 
-    const char* GetMemberName(XPCCallContext& ccx,
-                              const XPCNativeMember* member) const;
-
     PRUint16 GetMemberCount() const
         {NS_ASSERTION(!IsMarked(), "bad"); return mMemberCount;}
     XPCNativeMember* GetMemberAt(PRUint16 i)

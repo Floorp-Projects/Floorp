@@ -2647,9 +2647,9 @@ JS_EXPORT_API(void) DumpJSValue(jsval val)
     }
     else if(JSVAL_IS_STRING(val)) {
         printf("Value is a string: ");
-        JSString* string = JSVAL_TO_STRING(val);
-        char* bytes = JS_GetStringBytes(string);
-        printf("<%s>\n", bytes);
+        putc('<', stdout);
+        JS_FileEscapedString(stdout, JSVAL_TO_STRING(val), 0);
+        fputs(">\n", stdout);
     }
     else if(JSVAL_IS_BOOLEAN(val)) {
         printf("Value is boolean: ");

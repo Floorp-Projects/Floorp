@@ -120,8 +120,9 @@ NativeInterfaceSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
     }
 
 #ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
-    printf("- Destroying XPCNativeInterface for %s\n",
-            JS_GetStringBytes(JSVAL_TO_STRING(iface->GetName())));
+    fputs("- Destroying XPCNativeInterface for ", stdout);
+    JS_PutString(JSVAL_TO_STRING(iface->GetName()), stdout);
+    putc('\n', stdout);
 #endif
 
     XPCNativeInterface::DestroyInstance(iface);
@@ -160,7 +161,9 @@ NativeSetSweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
     for(PRUint16 k = 0; k < count; k++)
     {
         XPCNativeInterface* iface = set->GetInterfaceAt(k);
-        printf("    %s\n",JS_GetStringBytes(JSVAL_TO_STRING(iface->GetName())));
+        fputs("    ", stdout);
+        JS_PutString(JSVAL_TO_STRING(iface->GetName()), stdout);
+        putc('\n', stdout);
     }
 #endif
 

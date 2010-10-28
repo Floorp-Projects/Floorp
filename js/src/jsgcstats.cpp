@@ -339,7 +339,7 @@ GCMarker::dumpConservativeRoots()
           case JSTRACE_STRING: {
             JSString *str = (JSString *) i->thing;
             char buf[50];
-            js_PutEscapedString(buf, sizeof buf, str, '"');
+            PutEscapedString(buf, sizeof buf, str, '"');
             fprintf(fp, "string %s", buf);
             break;
           }

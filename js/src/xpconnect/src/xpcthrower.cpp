@@ -179,35 +179,31 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
     if(ccx.HasInterfaceAndMember())
     {
         XPCNativeInterface* iface = ccx.GetInterface();
+        jsid id = JSID_VOID;
 #ifdef XPC_IDISPATCH_SUPPORT
         NS_ASSERTION(ccx.GetIDispatchMember() == nsnull || 
                         ccx.GetMember() == nsnull,
                      "Both IDispatch member and regular XPCOM member "
                      "were set in XPCCallContext");
-        char const * name;
         if(ccx.GetIDispatchMember())
         {
             XPCDispInterface::Member * member = 
                 reinterpret_cast<XPCDispInterface::Member*>(ccx.GetIDispatchMember());
             if(member && JSID_IS_STRING(member->GetName()))
             {
-                name = JS_GetStringBytes(JSID_TO_STRING(member->GetName()));
+                id = member->GetName();
             }
-            else
-                name = "Unknown";
         }
         else
-            name = iface->GetMemberName(ccx, ccx.GetMember());
+#endif
+        {
+            id = ccx.GetMember()->GetName();
+        }
+        const char *name = JSID_IS_VOID(id) ? "Unknown" : JS_GetStringBytes(JSID_TO_STRING(id));
         sz = JS_smprintf("%s [%s.%s]",
                          *psz,
                          iface->GetNameString(),
                          name);
-#else
-        sz = JS_smprintf("%s [%s.%s]",
-                         *psz,
-                         iface->GetNameString(),
-                         iface->GetMemberName(ccx, ccx.GetMember()));
-#endif
     }
 
     if(sz)
