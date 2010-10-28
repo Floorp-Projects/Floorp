@@ -1523,37 +1523,35 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
         for (jsuint i = 0; i < symbolCount; ++i) {
             jsval val;
-            JSString *symbolName;
+            jsid symbolId;
 
             if (!JS_GetElement(mContext, symbolsObj, i, &val) ||
-                !JSVAL_IS_STRING(val)) {
+                !JSVAL_IS_STRING(val) ||
+                !JS_ValueToId(mContext, val, &symbolId)) {
                 return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
                                       PromiseFlatCString(aLocation).get(), i);
             }
 
-            symbolName = JSVAL_TO_STRING(val);
-            if (!JS_GetProperty(mContext, mod->global,
-                                JS_GetStringBytes(symbolName), &val)) {
+            if (!JS_GetPropertyById(mContext, mod->global, symbolId, &val)) {
                 return ReportOnCaller(cxhelper, ERROR_GETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
-                                      JS_GetStringBytes(symbolName));
+                                      JS_GetStringBytes(JSID_TO_STRING(symbolId)));
             }
 
             JSAutoEnterCompartment target_ac;
 
             if (!target_ac.enter(mContext, targetObj) ||
                 !JS_WrapValue(mContext, &val) ||
-                !JS_SetProperty(mContext, targetObj,
-                                JS_GetStringBytes(symbolName), &val)) {
+                !JS_SetPropertyById(mContext, targetObj, symbolId, &val)) {
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
-                                      JS_GetStringBytes(symbolName));
+                                      JS_GetStringBytes(JSID_TO_STRING(symbolId)));
             }
 #ifdef DEBUG
             if (i == 0) {
                 logBuffer.AssignLiteral("Installing symbols [ ");
             }
-            logBuffer.Append(JS_GetStringBytes(symbolName));
+            logBuffer.Append(JS_GetStringBytes(JSID_TO_STRING(symbolId)));
             logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
                 LOG(("%s] from %s\n", PromiseFlatCString(logBuffer).get(),

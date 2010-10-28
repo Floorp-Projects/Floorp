@@ -404,12 +404,12 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     if (JSID_IS_STRING(id)) {
         JSString* str = JSID_TO_STRING(id);
-        if (strcmp(JS_GetStringBytes(str), "HOTLOOP") == 0) {
+        if (MatchStringAndAscii(str, "HOTLOOP")) {
             *vp = INT_TO_JSVAL(HOTLOOP);
             return JS_TRUE;
         }
 
-        if (strcmp(JS_GetStringBytes(str), "profiler") == 0) {
+        if (MatchStringAndAscii(str, "profiler")) {
             *vp = BOOLEAN_TO_JSVAL(cx->profilingEnabled);
             return JS_TRUE;
         }
@@ -2665,11 +2665,16 @@ ValueToNative(const Value &v, JSValueType type, double* slot)
       case JSVAL_TYPE_FUNOBJ: {
         JS_ASSERT(IsFunctionObject(v));
         JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
-        debug_only_printf(LC_TMTracer,
-                          "function<%p:%s> ", (void*)*(JSObject **)slot,
-                          fun->atom
-                          ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
-                          : "unnamed");
+#if defined JS_JIT_SPEW
+        if (LogController.lcbits & LC_TMTracer) {
+            char funName[40];
+            if (fun->atom)
+                JS_PutEscapedString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
+            else
+                strcpy(funName, "unnamed");
+            LogController.printf("function<%p:%s> ", (void*)*(JSObject **)slot, funName);
+        }
+#endif
         return;
       }
       default:
@@ -2846,16 +2851,20 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
       case JSVAL_TYPE_MAGIC:
         debug_only_printf(LC_TMTracer, "magic<%d> ", v.whyMagic());
         break;
-      case JSVAL_TYPE_FUNOBJ: {
+      case JSVAL_TYPE_FUNOBJ:
         JS_ASSERT(IsFunctionObject(v));
-        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
-        debug_only_printf(LC_TMTracer,
-                          "function<%p:%s> ", (void*) &v.toObject(),
-                          fun->atom
-                          ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
-                          : "unnamed");
+#if defined JS_JIT_SPEW
+        if (LogController.lcbits & LC_TMTracer) {
+            JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
+            char funName[40];
+            if (fun->atom)
+                JS_PutEscapedString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
+            else
+                strcpy(funName, "unnamed");
+            LogController.printf("function<%p:%s> ", (void*) &v.toObject(), funName);
+        }
+#endif
         break;
-      }
       case JSVAL_TYPE_STRORNULL:
         debug_only_printf(LC_TMTracer, "nullablestr<%p> ", v.isNull() ? NULL : (void *)v.toString());
         break;
@@ -9170,7 +9179,8 @@ DumpShape(JSObject* obj, const char* prefix)
         const Shape &shape = r.front();
 
         if (JSID_IS_ATOM(shape.id)) {
-            fprintf(shapefp, " %s", JS_GetStringBytes(JSID_TO_STRING(shape.id)));
+            putc(' ', shapefp);
+            JS_PutString(JSID_TO_STRING(shape.id), shapefp);
         } else {
             JS_ASSERT(!JSID_IS_OBJECT(shape.id));
             fprintf(shapefp, " %d", JSID_TO_INT(shape.id));

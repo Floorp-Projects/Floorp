@@ -162,14 +162,14 @@ PointerHolderClass = {
 };
 
 static JSObject *
-GeneratePropertyOp(JSContext *cx, JSObject *obj, jsval idval, uintN argc,
-                   const char *name, JSPropertyOp pop)
+GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc,
+                   JSPropertyOp pop)
 {
     // The JS engine provides two reserved slots on function objects for
     // XPConnect to use. Use them to stick the necessary info here.
     JSFunction *fun =
-        JS_NewFunction(cx, reinterpret_cast<JSNative>(PropertyOpForwarder),
-                       argc, 0, obj, name);
+        JS_NewFunctionById(cx, reinterpret_cast<JSNative>(PropertyOpForwarder),
+                           argc, 0, obj, id);
     if(!fun)
         return JS_FALSE;
 
@@ -189,13 +189,13 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsval idval, uintN argc,
     JS_SetPrivate(cx, ptrobj, popp);
 
     JS_SetReservedSlot(cx, funobj, 0, OBJECT_TO_JSVAL(ptrobj));
-    JS_SetReservedSlot(cx, funobj, 1, idval);
+    JS_SetReservedSlot(cx, funobj, 1, js::IdToJsval(id));
     return funobj;
 }
 
 static JSBool
-ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
-                 const char *name, JSPropertyOp getter, JSPropertyOp setter,
+ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id,
+                 JSPropertyOp getter, JSPropertyOp setter,
                  JSObject **getterobjp, JSObject **setterobjp)
 {
     // Generate both getter and setter and stash them in the prototype.
@@ -206,7 +206,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
     JSObject *getterobj;
     if(getter)
     {
-        getterobj = GeneratePropertyOp(cx, obj, idval, 0, name, getter);
+        getterobj = GeneratePropertyOp(cx, obj, id, 0, getter);
         if(!getterobj)
             return JS_FALSE;
         roots[0] = OBJECT_TO_JSVAL(getterobj);
@@ -218,7 +218,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
     JSObject *setterobj;
     if (setter)
     {
-        setterobj = GeneratePropertyOp(cx, obj, idval, 1, name, setter);
+        setterobj = GeneratePropertyOp(cx, obj, id, 1, setter);
         if(!setterobj)
             return JS_FALSE;
         roots[1] = OBJECT_TO_JSVAL(setterobj);
@@ -231,7 +231,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsval idval, jsid interned_id,
         *getterobjp = getterobj;
     if(setterobjp)
         *setterobjp = setterobj;
-    return JS_DefinePropertyById(cx, obj, interned_id, JSVAL_VOID,
+    return JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, getterobj),
                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, setterobj),
                                  attrs);
@@ -253,10 +253,10 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
         return JS_FALSE;
 
     jsval idval = JS_ARGV(cx, vp)[0];
-    jsid interned_id;
+    jsid id;
     JSPropertyDescriptor desc;
-    if(!JS_ValueToId(cx, idval, &interned_id) ||
-       !JS_GetPropertyDescriptorById(cx, obj, interned_id, JSRESOLVE_QUALIFIED, &desc))
+    if(!JS_ValueToId(cx, idval, &id) ||
+       !JS_GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED, &desc))
         return JS_FALSE;
 
     // No property at all means no getters or setters possible.
@@ -291,10 +291,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
     // we are only going to expose quickstubbed properties to script.
     // Also be careful not to overwrite existing properties!
 
-    const char *name = JSVAL_IS_STRING(idval)
-                       ? JS_GetStringBytes(JSVAL_TO_STRING(idval))
-                       : nsnull;
-    if(!name ||
+    if(!JSID_IS_STRING(id) ||
        !IS_PROTO_CLASS(desc.obj->getClass()) ||
        (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(desc.getter || desc.setter) ||
@@ -305,8 +302,7 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
     }
 
     JSObject *getterobj, *setterobj;
-    if(!ReifyPropertyOps(cx, obj, idval, interned_id, name,
-                         desc.getter, desc.setter, &getterobj, &setterobj))
+    if(!ReifyPropertyOps(cx, obj, id, desc.getter, desc.setter, &getterobj, &setterobj))
         return JS_FALSE;
 
     JSObject *wantedobj = wantGetter ? getterobj : setterobj;
@@ -335,7 +331,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     JSPropertyOp getter, setter;
     JSObject *obj2;
     jsval v;
-    jsid interned_id;
+    jsid id;
 
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -343,17 +339,15 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
         return JS_FALSE;
     JSNative forward = wantGetter ? Jsvalify(js_obj_defineGetter)
                                   : Jsvalify(js_obj_defineSetter);
-    jsval id = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
-    if(!JSVAL_IS_STRING(id))
+    jsval idval = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    if(!JSVAL_IS_STRING(idval))
         return forward(cx, argc, vp);
-    JSString *str = JSVAL_TO_STRING(id);
 
-    const char *name = JS_GetStringBytes(str);
-    if(!JS_ValueToId(cx, id, &interned_id) ||
-       !JS_LookupPropertyWithFlagsById(cx, obj, interned_id,
+    if(!JS_ValueToId(cx, idval, &id) ||
+       !JS_LookupPropertyWithFlagsById(cx, obj, id,
                                        JSRESOLVE_QUALIFIED, &obj2, &v) ||
        (obj2 &&
-        !JS_GetPropertyAttrsGetterAndSetterById(cx, obj2, interned_id, &attrs,
+        !JS_GetPropertyAttrsGetterAndSetterById(cx, obj2, id, &attrs,
                                                 &found, &getter, &setter)))
         return JS_FALSE;
 
@@ -366,8 +360,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
         return forward(cx, argc, vp);
 
     // Reify the getter and setter...
-    if(!ReifyPropertyOps(cx, obj, id, interned_id, name, getter, setter,
-                         nsnull, nsnull))
+    if(!ReifyPropertyOps(cx, obj, id, getter, setter, nsnull, nsnull))
         return JS_FALSE;
 
     return forward(cx, argc, vp);
@@ -490,10 +483,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv)
  * rather than "[nsIDOMNode.appendChild]".
  */
 static void
-GetMemberInfo(JSObject *obj,
-              jsid memberId,
-              const char **ifaceName,
-              const char **memberName)
+GetMemberInfo(JSObject *obj, jsid memberId, const char **ifaceName)
 {
     // Get the interface name.  From DefinePropertyIfFound (in
     // xpcwrappednativejsops.cpp) and XPCThrower::Verbosify.
@@ -527,31 +517,27 @@ GetMemberInfo(JSObject *obj,
                 *ifaceName = iface->GetNameString();
         }
     }
-
-    *memberName = (JSID_IS_STRING(memberId)
-                   ? JS_GetStringBytes(JSID_TO_STRING(memberId))
-                   : "unknown");
 }
 
 static void
-GetMethodInfo(JSContext *cx,
-              jsval *vp,
-              const char **ifaceName,
-              const char **memberName)
+GetMethodInfo(JSContext *cx, jsval *vp, const char **ifaceNamep, jsid *memberIdp)
 {
     JSObject *funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
                  "JSNative callee should be Function object");
     JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
     jsid methodId = str ? INTERNED_STRING_TO_JSID(str) : JSID_VOID;
-
-    GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceName, memberName);
+    GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceNamep);
+    *memberIdp = methodId;
 }
 
 static JSBool
 ThrowCallFailed(JSContext *cx, nsresult rv,
-                const char *ifaceName, const char *memberName)
+                const char *ifaceName, jsid memberId, const char *memberName)
 {
+    /* Only one memberId or memberName should be given. */
+    JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
+    
     // From XPCThrower::ThrowBadResult.
     char* sz;
     const char* format;
@@ -575,6 +561,11 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
         format = "";
     }
 
+    if (!memberName) {
+        memberName = JSID_IS_STRING(memberId)
+                     ? JS_GetStringBytes(JSID_TO_STRING(memberId))
+                     : "unknown";
+    }
     if(nsXPCException::NameAndFormatForNSResult(rv, &name, nsnull)
         && name)
     {
@@ -599,17 +590,18 @@ JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
                               jsid memberId)
 {
-    const char *ifaceName, *memberName;
-    GetMemberInfo(obj, memberId, &ifaceName, &memberName);
-    return ThrowCallFailed(cx, rv, ifaceName, memberName);
+    const char *ifaceName;
+    GetMemberInfo(obj, memberId, &ifaceName);
+    return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
 }
 
 JSBool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
 {
-    const char *ifaceName, *memberName;
-    GetMethodInfo(cx, vp, &ifaceName, &memberName);
-    return ThrowCallFailed(cx, rv, ifaceName, memberName);
+    const char *ifaceName;
+    jsid memberId;
+    GetMethodInfo(cx, vp, &ifaceName, &memberId);
+    return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
 }
 
 JSBool
@@ -624,13 +616,16 @@ xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
                                    const char *ifaceName,
                                    const char *memberName)
 {
-    ThrowCallFailed(cx, rv, ifaceName, memberName);
+    ThrowCallFailed(cx, rv, ifaceName, JSID_VOID, memberName);
 }
 
 static void
-ThrowBadArg(JSContext *cx, nsresult rv,
-            const char *ifaceName, const char *memberName, uintN paramnum)
+ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
+            jsid memberId, const char *memberName, uintN paramnum)
 {
+    /* Only one memberId or memberName should be given. */
+    JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
+
     // From XPCThrower::ThrowBadParam.
     char* sz;
     const char* format;
@@ -638,6 +633,11 @@ ThrowBadArg(JSContext *cx, nsresult rv,
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
 
+    if (!memberName) {
+        memberName = JSID_IS_STRING(memberId)
+                     ? JS_GetStringBytes(JSID_TO_STRING(memberId))
+                     : "unknown";
+    }
     sz = JS_smprintf("%s arg %u [%s.%s]",
                      format, (unsigned int) paramnum, ifaceName, memberName);
 
@@ -650,9 +650,10 @@ ThrowBadArg(JSContext *cx, nsresult rv,
 void
 xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, uintN paramnum)
 {
-    const char *ifaceName, *memberName;
-    GetMethodInfo(cx, vp, &ifaceName, &memberName);
-    ThrowBadArg(cx, rv, ifaceName, memberName, paramnum);
+    const char *ifaceName;
+    jsid memberId;
+    GetMethodInfo(cx, vp, &ifaceName, &memberId);
+    ThrowBadArg(cx, rv, ifaceName, memberId, NULL, paramnum);
 }
 
 void
@@ -665,16 +666,16 @@ void
 xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
                              const char *ifaceName, const char *memberName)
 {
-    ThrowBadArg(cx, rv, ifaceName, memberName, paramnum);
+    ThrowBadArg(cx, rv, ifaceName, JSID_VOID, memberName, paramnum);
 }
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
                           JSObject *obj, jsid propId)
 {
-    const char *ifaceName, *memberName;
-    GetMemberInfo(obj, propId, &ifaceName, &memberName);
-    ThrowBadArg(cx, rv, ifaceName, memberName, 0);
+    const char *ifaceName;
+    GetMemberInfo(obj, propId, &ifaceName);
+    ThrowBadArg(cx, rv, ifaceName, propId, NULL, 0);
 }
 
 JSBool

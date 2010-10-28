@@ -1596,7 +1596,7 @@ js_LogOpcode(JSContext *cx)
                     fputs("<null>", logfp);
                 } else {
                     JS_ClearPendingException(cx);
-                    js_FileEscapedString(logfp, str, 0);
+                    FileEscapedString(logfp, str, 0);
                 }
             }
             fputc(' ', logfp);

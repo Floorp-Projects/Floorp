@@ -3487,7 +3487,8 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
-    if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom, eval, 1, JSFUN_STUB_GSOPS))
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
+    if (!js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS))
         return NULL;
 
     return proto;
@@ -6134,7 +6135,7 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         if (JSID_IS_INT(id)) {
             JS_snprintf(buf, bufsize, "%ld", (long)JSID_TO_INT(id));
         } else if (JSID_IS_ATOM(id)) {
-            js_PutEscapedString(buf, bufsize, JSID_TO_STRING(id), 0);
+            PutEscapedString(buf, bufsize, JSID_TO_STRING(id), 0);
         } else {
             JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
         }
@@ -6362,11 +6363,13 @@ dumpValue(const Value &v)
     else if (v.isObject() && v.toObject().isFunction()) {
         JSObject *funobj = &v.toObject();
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-        fprintf(stderr, "<%s %s at %p (JSFunction at %p)>",
-                fun->atom ? "function" : "unnamed",
-                fun->atom ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom)) : "function",
-                (void *) funobj,
-                (void *) fun);
+        if (fun->atom) {
+            fputs("<function ", stderr);
+            FileEscapedString(stderr, ATOM_TO_STRING(fun->atom), 0);
+        } else {
+            fputs("<unnamed function", stderr);
+        }
+        fprintf(stderr, " at %p (JSFunction at %p)>", (void *) funobj, (void *) fun);
     } else if (v.isObject()) {
         JSObject *obj = &v.toObject();
         Class *clasp = obj->getClass();

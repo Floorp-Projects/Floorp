@@ -2906,7 +2906,7 @@ js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun)
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
+js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
                   uintN nargs, uintN attrs)
 {
     PropertyOp gsop;
@@ -2926,13 +2926,11 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
     }
     fun = js_NewFunction(cx, NULL, native, nargs,
                          attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
-                         obj, atom);
+                         obj, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
     if (!fun)
         return NULL;
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectValue(*fun),
-                             gsop, gsop, attrs & ~JSFUN_FLAGS_MASK)) {
+    if (!obj->defineProperty(cx, id, ObjectValue(*fun), gsop, gsop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
-    }
     return fun;
 }
 

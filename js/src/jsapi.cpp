@@ -2189,7 +2189,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
                     JS_snprintf(buf, bufsize, "%p", fun);
                 } else {
                     if (fun->atom)
-                        js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
+                        PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
                 }
             } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
                 JS_snprintf(buf, bufsize, "%p", obj->getPrivate());
@@ -2200,7 +2200,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
           }
 
           case JSTRACE_STRING:
-            js_PutEscapedString(buf, bufsize, (JSString *)thing, 0);
+            PutEscapedString(buf, bufsize, (JSString *)thing, 0);
             break;
 
 #if JS_HAS_XML_SUPPORT
@@ -4126,6 +4126,18 @@ JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
     return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom);
 }
 
+JS_PUBLIC_API(JSFunction *)
+JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSObject *parent,
+                   jsid id)
+{
+    JS_ASSERT(JSID_IS_STRING(id));
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->defaultCompartment);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, parent);
+
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, JSID_TO_ATOM(id));
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
@@ -4340,7 +4352,9 @@ JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
-    return atom ? js_DefineFunction(cx, obj, atom, Valueify(call), nargs, attrs) : NULL;
+    if (!atom)
+        return NULL;
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4352,7 +4366,19 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    return atom ? js_DefineFunction(cx, obj, atom, Valueify(call), nargs, attrs) : NULL;
+    if (!atom)
+        return NULL;
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs);
+}
+
+extern JS_PUBLIC_API(JSFunction *)
+JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
+                    uintN nargs, uintN attrs)
+{
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->defaultCompartment);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    return js_DefineFunction(cx, obj, id, Valueify(call), nargs, attrs);
 }
 
 inline static void
@@ -5254,6 +5280,13 @@ JS_GetStringBytesZ(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsAndLength(JSString *str, size_t *lengthp)
+{
+    *lengthp = str->length();
+    return str->chars();
+}
+
+JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str)
 {
     assertSameCompartment(cx, str);
@@ -5264,6 +5297,24 @@ JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2)
 {
     return js_CompareStrings(str1, str2);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_MatchStringAndAscii(JSString *str, const char *asciiBytes)
+{
+    return MatchStringAndAscii(str, asciiBytes);
+}
+
+JS_PUBLIC_API(size_t)
+JS_PutEscapedString(char *buffer, size_t size, JSString *str, char quote)
+{
+    return PutEscapedString(buffer, size, str, quote);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_FileEscapedString(FILE *fp, JSString *str, char quote)
+{
+    return FileEscapedString(fp, str, quote);
 }
 
 JS_PUBLIC_API(JSString *)

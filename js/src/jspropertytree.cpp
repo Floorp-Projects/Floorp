@@ -488,7 +488,7 @@ Shape::dump(JSContext *cx, FILE *fp) const
         if (!str)
             fputs("<error>", fp);
         else
-            js_FileEscapedString(fp, str, '"');
+            FileEscapedString(fp, str, '"');
     }
 
     fprintf(fp, " g/s %p/%p slot %u attrs %x ",

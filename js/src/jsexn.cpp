@@ -1040,8 +1040,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         /* Make a constructor function for the current name. */
         JSProtoKey protoKey = GetExceptionProtoKey(i);
-        JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
-        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, JSFUN_CONSTRUCTOR);
+        
+        jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
+        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 3, JSFUN_CONSTRUCTOR);
         if (!fun)
             return NULL;
         roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
@@ -1056,8 +1057,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
 
         /* Add the name property to the prototype. */
-        if (!JS_DefineProperty(cx, proto, js_name_str,
-                               STRING_TO_JSVAL(ATOM_TO_STRING(atom)),
+        if (!JS_DefineProperty(cx, proto, js_name_str, STRING_TO_JSVAL(JSID_TO_STRING(id)),
                                NULL, NULL, JSPROP_ENUMERATE)) {
             return NULL;
         }
