@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <script>
+            var xhr = new XMLHttpRequest();
+            var readystatechange = function() {};
+            xhr.onreadystatechange = readystatechange;
+
+            function testme(obj) {
+                netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+                const Ci = Components.interfaces;
+                const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIDOMWindowUtils);
+
+                return utils.getClassName(obj) != "Proxy" &&
+                       typeof obj.QueryInterface == 'function';
+            }
+        </script>
+    </head>

@@ -35,26 +35,35 @@ function runTest() {
     is(lastlocation.iframeprop, 42, 'can read the new prop');
     ok(firstlocation !== lastlocation, 'got a new location object');
     // firstlocation should still work.
+    ok(firstlocation.href.indexOf('file_location.html'), 'can read location.href');
     firstlocation.href = 'http://example.com/tests/dom/tests/mochitest/dom-level0/file_location.html';
     return;
   }
 
   if (count == 3) {
+    var permissionDenied = false;
     try {
-      isnot($('ifr').contentWindow.location.iframeprop, 42, "shouldn't see this");
+      var foo = $('ifr').contentWindow.location.href == '';
     } catch (e) {
-      ok(/Permission denied/.test(e), "correctly threw a security error");
+      permissionDenied = /Permission denied/.test(e.message);
     }
+    ok(permissionDenied, 'correctly threw a permission denied security error when reading location.href');
 
-    // XXX this doesn't work - file a bug on me!
-    //firstlocation.href = 'http://mochi.test:8888/tests/dom/tests/mochitest/dom-level0/file_location.html';
-    todo(false, 'can use old same-origin location object to set cross-origin frame');
-    $('ifr').contentWindow.location = 'file_location.html';
+    permissionDenied = false;
+    try {
+      var foo = $('ifr').contentWindow.location.iframeprop == 42;
+    } catch (e) {
+      permissionDenied = /Permission denied/.test(e.message);
+    }
+    ok(permissionDenied, 'correctly threw a permission denied security error an expando on location');
+
+    firstlocation.href = 'http://mochi.test:8888/tests/dom/tests/mochitest/dom-level0/file_location.html';
     return;
   }
 
   is(lastlocation.iframeprop, 42, 'can still read old values of the location object');
   ok(lastlocation !== $('ifr').contentWindow.location, 'location objects are distinct');
+  ok(firstlocation.href.indexOf('file_location.html'), 'can read location.href');
 
   SimpleTest.finish();
 }

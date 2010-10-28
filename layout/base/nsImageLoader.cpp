@@ -237,7 +237,7 @@ nsImageLoader::DoRedraw(const nsRect* aDamageRect)
 
   if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
     // The canvas's background covers the whole viewport.
-    bounds = mFrame->GetOverflowRect();
+    bounds = mFrame->GetVisualOverflowRect();
   }
 
   // XXX this should be ok, but there is some crappy ass bug causing it not to work

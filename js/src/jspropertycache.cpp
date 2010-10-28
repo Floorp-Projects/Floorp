@@ -154,15 +154,13 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                  */
                 JS_ASSERT(pobj->hasMethodBarrier());
                 JSObject &funobj = shape->methodObject();
-                JS_ASSERT(&funobj == &pobj->lockedGetSlot(shape->slot).toObject());
+                JS_ASSERT(&funobj == &pobj->nativeGetSlot(shape->slot).toObject());
                 vword.setFunObj(funobj);
                 break;
             }
 
-            if (!pobj->generic() &&
-                shape->hasDefaultGetter() &&
-                pobj->containsSlot(shape->slot)) {
-                const Value &v = pobj->lockedGetSlot(shape->slot);
+            if (!pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot)) {
+                const Value &v = pobj->nativeGetSlot(shape->slot);
                 JSObject *funobj;
 
                 if (IsFunctionObject(v, &funobj)) {
@@ -308,7 +306,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     // The method JIT's implementation of instanceof contains an internal lookup
     // of the prototype property.
-    if (op == JSOP_INSTANCEOF || op == JSOP_BEGIN)
+    if (op == JSOP_INSTANCEOF)
         return cx->runtime->atomState.classPrototypeAtom;
 
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;

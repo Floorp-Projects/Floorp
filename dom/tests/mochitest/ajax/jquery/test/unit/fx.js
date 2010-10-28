@@ -78,7 +78,7 @@ test("stop()", function() {
 
 test("stop() - several in queue", function() {
 // Merge from jquery test 1.3.2
-	expect(3);
+	expect(2);
 	stop();
 
 	var $foo = $("#nothiddendiv");
@@ -89,7 +89,8 @@ test("stop() - several in queue", function() {
 	$foo.animate({ width:'hide' }, 1000);
 	$foo.animate({ width:'show' }, 1000);
 	setTimeout(function(){
-		equals( $foo.queue().length, 3, "All 3 still in the queue" );
+		// Unreliable. See bug 484994.
+		// equals( $foo.queue().length, 3, "All 3 still in the queue" );
 		var nw = $foo.width();
 		ok( nw != w, "An animation occurred " + nw + "px " + w + "px");
 		$foo.stop();

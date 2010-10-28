@@ -1,4 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Function/
+script 10.2.1.1.6.js
 script 15.3.4.3-01.js
 script arguments-caller-callee.js
 script function-caller.js

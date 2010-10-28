@@ -57,6 +57,57 @@ panel[titlebar] {
   -moz-appearance: none; /* to disable rounded corners */
 }
 
+panel[type="arrow"] {
+  -moz-appearance: none;
+  background: transparent;
+  -moz-transition: opacity 300ms;
+}
+
+.panel-arrowcontent {
+  -moz-appearance: none;
+  color: white;
+  background: -moz-linear-gradient(rgba(85,85,85,1), rgba(75,75,75,.97) 5px, rgba(58,58,58,.97) 17px, rgba(43,43,43,.97) 40px, rgba(40,40,40,.97) 80px, rgba(40,40,40,.97));
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.15) inset,
+              0 1px 0 rgba(255,255,255,.05) inset,
+              0 0 0 1px rgba(0,0,0,.25);
+  padding: 6px;
+  margin: 1px;
+}
+
+.panel-arrow {
+  opacity: 0.97;
+}
+
+.panel-arrow[side="top"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-up.png");
+  margin-left: 6px;
+  margin-right: 6px;
+  margin-bottom: -2px;
+}
+
+.panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-down.png");
+  margin-left: 6px;
+  margin-right: 6px;
+  margin-top: -2px;
+}
+
+.panel-arrow[side="left"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
+  margin-top: 6px;
+  margin-bottom: 6px;
+  margin-right: -2px;
+}
+
+.panel-arrow[side="right"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
+  -moz-transform: scaleX(-1);
+  margin-top: 6px;
+  margin-bottom: 6px;
+  margin-left: -2px;
+}
+
 /* ::::: tooltip ::::: */
 
 tooltip {

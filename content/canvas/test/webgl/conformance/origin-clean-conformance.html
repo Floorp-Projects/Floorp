@@ -1,0 +1,132 @@
+<!--
+Copyright (c) 2009 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>WebGL Origin Restrictions Conformance Tests</title>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
+<script src="../resources/js-test-pre.js"></script>
+<script src="resources/webgl-test.js"></script>
+<script>
+// This function returns the last 2 words of the domain of a URL
+// This is probably not the correct check but it will do for now.
+function getBaseDomain(str) {
+  str = str.replace("\\", "/");
+  var pos = str.indexOf("://");
+  if (pos >= 0) {
+    str = str.substr(pos + 3);
+  }
+  var parts = str.split('/');
+  var domain = parts[0].match(/\w+\.\w+$/);
+  return domain || '';
+}
+
+// Checks if function throws an exception.
+function causedException(func) {
+  var hadException = false;
+  try {
+    func();
+  } catch(e) {
+    //debug(e);
+    hadException = true;
+  }
+  //debug ("hadException: " + hadException);
+  return hadException;
+}
+
+window.onload = function() {
+  description("This test ensures WebGL implementations follow proper origin restrictions.");
+  debug("");
+  var img = document.getElementById("img");
+  imgDomain = getBaseDomain(img.src);
+  pageDomain = getBaseDomain(window.location.toString());
+  assertMsg(imgDomain != pageDomain,
+            "img domain (" + imgDomain + ") and page domain (" + pageDomain + ") are not the same.");
+
+  function makeReadPixels(gl) {
+    return function() {
+      var buf = new Uint8Array(4);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    };
+  }
+
+  function makeToDataURL(canvas) {
+    return function() {
+      var data = canvas.toDataURL();
+    }
+  }
+
+  debug("");
+  debug("check that copying an img from another origin clears the origin-clean flag.");
+  var canvas1 = document.getElementById("canvas1");
+  var gl1 = create3DContext(canvas1);
+  assertMsg(!causedException(makeReadPixels(gl1)),
+            "should not throw exception by readPixels for origin clean canvas.");
+  assertMsg(!causedException(makeToDataURL(canvas1)),
+            "should not throw exception by toDataURL for origin clean canvas.");
+
+  var tex = gl1.createTexture();
+  gl1.bindTexture(gl1.TEXTURE_2D, tex);
+  gl1.texImage2D(gl1.TEXTURE_2D, 0, gl1.RGBA, gl1.RGBA, gl1.UNSIGNED_BYTE, img);
+
+  assertMsg(causedException(makeReadPixels(gl1)),
+            "should throw exception by readPixels for NON origin clean canvas.");
+  assertMsg(causedException(makeToDataURL(canvas1)),
+            "should throw exception by toDataURL for NON origin clean canvas.");
+
+  debug("");
+  debug("check that copying from 1 unclean 3d canvas to another clears the origin-clean flag on the second canvas.");
+  var canvas2 = document.getElementById("canvas2");
+  var gl2 = create3DContext(canvas2);
+
+  assertMsg(!causedException(makeReadPixels(gl2)),
+            "should not throw exception by readPixels for origin clean canvas.");
+  assertMsg(!causedException(makeToDataURL(canvas2)),
+            "should not throw exception by toDataURL for origin clean canvas.");
+
+  var tex = gl2.createTexture();
+  gl2.bindTexture(gl2.TEXTURE_2D, tex);
+  gl2.texImage2D(
+     gl2.TEXTURE_2D, 0, gl2.RGBA, gl2.RGBA, gl2.UNSIGNED_BYTE, canvas1);
+
+  assertMsg(causedException(makeReadPixels(gl2)),
+            "should throw exception by readPixels for NON origin clean canvas.");
+  assertMsg(causedException(makeToDataURL(canvas2)),
+            "should throw exception by toDataURL for NON origin clean canvas.");
+
+  debug("");
+  debug("check that copying from 1 unclean 3d canvas to a 2d canvas clears the origin-clean flag on the 2d canvas.");
+  var canvas3 = document.getElementById("canvas3");
+  var ctx2d = canvas3.getContext("2d");
+  assertMsg(!causedException(makeToDataURL(canvas3)),
+            "should not throw exception by toDataURL for origin clean canvas.");
+  ctx2d.drawImage(canvas2, 0, 0);
+  assertMsg(causedException(makeToDataURL(canvas3)),
+            "should throw exception by toDataURL for NON origin clean canvas.");
+
+
+  // TODO: Should check video?
+
+  debug("");
+  successfullyParsed = true;
+  shouldBeTrue("successfullyParsed");
+  debug('<br /><span class="pass">TEST COMPLETE</span>');
+  notifyFinishedToHarness();
+}
+</script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<canvas id="canvas1"></canvas>
+<canvas id="canvas2"></canvas>
+<canvas id="canvas3"></canvas>
+<img id="img" src="http://www.opengl.org/img/opengl_logo.jpg" style="display:none;"/>
+</body>
+</html>

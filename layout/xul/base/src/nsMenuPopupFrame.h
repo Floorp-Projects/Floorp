@@ -92,6 +92,15 @@ enum nsPopupState {
   ePopupInvisible
 };
 
+// How a popup may be flipped. Flipping to the outside edge is like how
+// a submenu would work. The entire popup is flipped to the opposite side
+// of the anchor.
+enum FlipStyle {
+  FlipStyle_None = 0,
+  FlipStyle_Outside = 1,
+  FlipStyle_Inside = 2
+};
+
 // values are selected so that the direction can be flipped just by
 // changing the sign
 #define POPUPALIGNMENT_NONE 0
@@ -345,8 +354,8 @@ protected:
   // return the position where the popup should be, when it should be
   // anchored at anchorRect. aHFlip and aVFlip will be set if the popup may be
   // flipped in that direction if there is not enough space available.
-  nsPoint AdjustPositionForAnchorAlign(const nsRect& anchorRect, PRBool& aHFlip, PRBool& aVFlip);
-
+  nsPoint AdjustPositionForAnchorAlign(const nsRect& anchorRect,
+                                       FlipStyle& aHFlip, FlipStyle& aVFlip);
 
   // check if the popup will fit into the available space and resize it. This
   // method handles only one axis at a time so is called twice, once for
@@ -361,13 +370,13 @@ protected:
   //   aMarginBegin - the left or top margin of the popup
   //   aMarginEnd - the right or bottom margin of the popup
   //   aOffsetForContextMenu - the additional offset to add for context menus
-  //   aFlip - whether to flip or resize the popup when there isn't space
+  //   aFlip - how to flip or resize the popup when there isn't space
   //   aFlipSide - pointer to where current flip mode is stored
   nscoord FlipOrResize(nscoord& aScreenPoint, nscoord aSize, 
                        nscoord aScreenBegin, nscoord aScreenEnd,
                        nscoord aAnchorBegin, nscoord aAnchorEnd,
                        nscoord aMarginBegin, nscoord aMarginEnd,
-                       nscoord aOffsetForContextMenu, PRBool aFlip,
+                       nscoord aOffsetForContextMenu, FlipStyle aFlip,
                        PRPackedBool* aFlipSide);
 
   // Move the popup to the position specified in its |left| and |top| attributes.
@@ -404,6 +413,7 @@ protected:
   // popup alignment relative to the anchor node
   PRInt8 mPopupAlignment;
   PRInt8 mPopupAnchor;
+  PRPackedBool mFlipBoth; // flip in both directions
 
   PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
   PRPackedBool mIsContextMenu; // true for context menus

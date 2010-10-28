@@ -40,9 +40,9 @@
 #if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
 #define jsjaeger_compiler_h__
 
+#include "jsanalyze.h"
 #include "jscntxt.h"
 #include "jstl.h"
-#include "BytecodeAnalyzer.h"
 #include "MethodJIT.h"
 #include "CodeGenIncludes.h"
 #include "BaseCompiler.h"
@@ -81,8 +81,7 @@ class Compiler : public BaseCompiler
         ic::MICInfo::Kind kind;
         jsbytecode *jumpTarget;
         Jump traceHint;
-        MaybeJump slowTraceHintOne;
-        MaybeJump slowTraceHintTwo;
+        MaybeJump slowTraceHint;
         union {
             struct {
                 bool typeConst;
@@ -92,6 +91,30 @@ class Compiler : public BaseCompiler
                 uint32 pcOffs;
             } tracer;
         } u;
+    };
+
+    struct EqualityGenInfo {
+        DataLabelPtr addrLabel;
+        Label stubEntry;
+        Call stubCall;
+        BoolStub stub;
+        MaybeJump jumpToStub;
+        Label fallThrough;
+        jsbytecode *jumpTarget;
+        ValueRemat lvr, rvr;
+        Assembler::Condition cond;
+        JSC::MacroAssembler::RegisterID tempReg;
+    };
+    
+    struct TraceGenInfo {
+        bool initialized;
+        Label stubEntry;
+        DataLabelPtr addrLabel;
+        jsbytecode *jumpTarget;
+        Jump traceHint;
+        MaybeJump slowTraceHint;
+
+        TraceGenInfo() : initialized(false) {}
     };
 
     /* InlineFrameAssembler wants to see this. */
@@ -137,48 +160,71 @@ class Compiler : public BaseCompiler
         bool hasSlowNcode;
     };
 
-#if defined JS_POLYIC
-    struct PICGenInfo {
-        PICGenInfo(ic::PICInfo::Kind kind) : kind(kind)
+    struct BaseICInfo {
+        BaseICInfo(JSOp op) : op(op)
+        { }
+        Label fastPathStart;
+        Label fastPathRejoin;
+        Label slowPathStart;
+        Call slowPathCall;
+        DataLabelPtr paramAddr;
+        JSOp op;
+
+        void copyTo(ic::BaseIC &to, JSC::LinkBuffer &full, JSC::LinkBuffer &stub) {
+            to.fastPathStart = full.locationOf(fastPathStart);
+            to.fastPathRejoin = full.locationOf(fastPathRejoin);
+            to.slowPathStart = stub.locationOf(slowPathStart);
+            to.slowPathCall = stub.locationOf(slowPathCall);
+            to.op = op;
+            JS_ASSERT(to.op == op);
+        }
+    };
+
+    struct GetElementICInfo : public BaseICInfo {
+        GetElementICInfo(JSOp op) : BaseICInfo(op)
+        { }
+        RegisterID  typeReg;
+        RegisterID  objReg;
+        ValueRemat  id;
+        MaybeJump   typeGuard;
+        Jump        claspGuard;
+    };
+
+    struct PICGenInfo : public BaseICInfo {
+        PICGenInfo(ic::PICInfo::Kind kind, JSOp op, bool usePropCache)
+          : BaseICInfo(op), kind(kind), usePropCache(usePropCache)
         { }
         ic::PICInfo::Kind kind;
-        Label fastPathStart;
-        Label storeBack;
         Label typeCheck;
-        Label slowPathStart;
-        DataLabelPtr addrLabel;
         RegisterID shapeReg;
         RegisterID objReg;
         RegisterID idReg;
         RegisterID typeReg;
+        bool usePropCache;
         Label shapeGuard;
+        jsbytecode *pc;
         JSAtom *atom;
-        StateRemat objRemat;
-        StateRemat idRemat;
-        Call callReturn;
         bool hasTypeCheck;
         ValueRemat vr;
 # if defined JS_CPU_X64
         ic::PICLabels labels;
 # endif
 
-        void copySimpleMembersTo(ic::PICInfo &pi) const {
-            pi.kind = kind;
-            pi.shapeReg = shapeReg;
-            pi.objReg = objReg;
-            pi.atom = atom;
-            if (kind == ic::PICInfo::SET) {
-                pi.u.vr = vr;
-            } else if (kind != ic::PICInfo::NAME) {
-                pi.u.get.idReg = idReg;
-                pi.u.get.typeReg = typeReg;
-                pi.u.get.hasTypeCheck = hasTypeCheck;
-                pi.u.get.objRemat = objRemat.offset;
+        void copySimpleMembersTo(ic::PICInfo &ic) const {
+            ic.kind = kind;
+            ic.shapeReg = shapeReg;
+            ic.objReg = objReg;
+            ic.atom = atom;
+            ic.usePropCache = usePropCache;
+            if (ic.isSet()) {
+                ic.u.vr = vr;
+            } else if (ic.isGet()) {
+                ic.u.get.typeReg = typeReg;
+                ic.u.get.hasTypeCheck = hasTypeCheck;
             }
         }
 
     };
-#endif
 
     struct Defs {
         Defs(uint32 ndefs)
@@ -206,7 +252,7 @@ class Compiler : public BaseCompiler
     JSObject *globalObj;
     JSFunction *fun;
     bool isConstructing;
-    BytecodeAnalyzer analysis;
+    analyze::Script *analysis;
     Label *jumpMap;
     jsbytecode *PC;
     Assembler masm;
@@ -215,9 +261,12 @@ class Compiler : public BaseCompiler
 #if defined JS_MONOIC
     js::Vector<MICGenInfo, 64> mics;
     js::Vector<CallGenInfo, 64> callICs;
+    js::Vector<EqualityGenInfo, 64> equalityICs;
+    js::Vector<TraceGenInfo, 64> traceICs;
 #endif
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 16> pics;
+    js::Vector<GetElementICInfo> getElemICs;
 #endif
     js::Vector<CallPatchInfo, 64> callPatches;
     js::Vector<InternalCallSite, 64> callSites;
@@ -266,20 +315,21 @@ class Compiler : public BaseCompiler
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID fpReg);
 #ifdef JS_POLYIC
-    void passPICAddress(PICGenInfo &pic);
+    void passICAddress(BaseICInfo *ic);
 #endif
 #ifdef JS_MONOIC
     void passMICAddress(MICGenInfo &mic);
 #endif
-    void constructThis();
+    bool constructThis();
 
     /* Opcode handlers. */
-    void jumpAndTrace(Jump j, jsbytecode *target, Jump *slowOne = NULL, Jump *slowTwo = NULL);
-    void jsop_bindname(uint32 index);
+    void jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
+    void jsop_bindname(uint32 index, bool usePropCache);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
-    void jsop_getprop_slow();
-    void jsop_getarg(uint32 index);
+    void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
+    void jsop_getarg(uint32 slot);
+    void jsop_setarg(uint32 slot, bool popped);
     void jsop_this();
     void emitReturn(FrameEntry *fe);
     void emitFinalReturn(Assembler &masm);
@@ -291,8 +341,8 @@ class Compiler : public BaseCompiler
     void inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
-    void jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
-    void jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
+    bool jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
+    bool jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
@@ -302,20 +352,21 @@ class Compiler : public BaseCompiler
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_unbrand();
-    void jsop_getprop(JSAtom *atom, bool typeCheck = true);
-    void jsop_length();
-    void jsop_setprop(JSAtom *atom);
-    void jsop_setprop_slow(JSAtom *atom);
+    bool jsop_getprop(JSAtom *atom, bool typeCheck = true, bool usePropCache = true);
+    bool jsop_length();
+    bool jsop_setprop(JSAtom *atom, bool usePropCache = true);
+    void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);
     bool jsop_callprop_slow(JSAtom *atom);
     bool jsop_callprop(JSAtom *atom);
     bool jsop_callprop_obj(JSAtom *atom);
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
-    void jsop_instanceof();
+    bool jsop_instanceof();
     void jsop_name(JSAtom *atom);
-    void jsop_xname(JSAtom *atom);
+    bool jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();
+    void jsop_eval();
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);
@@ -365,14 +416,7 @@ class Compiler : public BaseCompiler
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
-    void jsop_getelem();
-    void jsop_getelem_known_type(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
-    void jsop_getelem_with_pic(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
-    void jsop_getelem_nopic(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
-    void jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID objReg, RegisterID idReg,
-                          RegisterID shapeReg);
-    void jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID objReg,
-                            MaybeRegisterID &idReg, RegisterID shapeReg);
+    bool jsop_getelem();
     void jsop_stricteq(JSOp op);
     void jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);

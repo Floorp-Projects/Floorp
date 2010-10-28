@@ -62,6 +62,7 @@ VPATH += $(srcdir)/src/compiler/preprocessor
 VPATH += $(srcdir)/generated
 
 CPPSRCS = \
+	Compiler.cpp \
         InfoSink.cpp \
         Initialize.cpp \
         InitializeDll.cpp \
@@ -76,6 +77,7 @@ CPPSRCS = \
         RemoveTree.cpp \
         ShaderLang.cpp \
         SymbolTable.cpp \
+	VariableInfo.cpp \
 	debug.cpp \
 	ossource_nspr.cpp \
 	$(NULL)
@@ -128,3 +130,43 @@ include $(topsrcdir)/config/rules.mk
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 
+ifdef _MSC_VER
+# disabled for now, but we should be building it in the future once
+# bug 529938 is fixed
+#BUILD_ANGLE = 1
+endif
+
+ifdef BUILD_ANGLE
+ifdef MOZ_DEBUG
+ANGLE_DIR = Debug
+else
+ANGLE_DIR = Release
+endif
+
+ANGLE_DEP_PATTERNS = \
+	src/common/*.cpp src/common/*.h \
+	src/compiler/*.cpp src/compiler/*.h \
+	src/compiler/preprocessor/*.cpp src/compiler/preprocessor/*.h \
+	src/libEGL/*.cpp src/libEGL/*.h \
+	src/libGLESv2/*.cpp src/libGLESv2/*.h \
+	$(NULL)
+
+ANGLE_DEPS = $(filter-out Gen_glslang.cpp Gen_glslang_tab.cpp glslang_tab.h,$(wildcard $(ANGLE_DEP_PATTERNS)))
+
+libs:: angle-build/libGLESv2.dll angle-build/libEGL.dll
+	$(INSTALL) $(IFLAGS2) angle-build/libGLESv2.dll angle-build/libEGL.dll $(DIST)/bin
+
+angle-build/libGLESv2.dll angle-build/libEGL.dll: $(GLOBAL_DEPS) $(ANGLE_DEPS)
+	@echo "=== Building ANGLE via devenv.exe ==="
+	@rm -rf angle-build
+	@mkdir angle-build
+	@cp -r $(srcdir)/src $(srcdir)/include angle-build
+	@(cd angle-build/src \
+	&& echo "Upgrading solution..." \
+	&& devenv angle.sln //upgrade \
+	&& echo "Building solution, target $(ANGLE_DIR)|Win32..." \
+	&& devenv angle.sln //useenv //build "$(ANGLE_DIR)|Win32" \
+	&& echo "Copying dlls..." \
+	&& cp $(ANGLE_DIR)/*.dll ..)
+
+endif

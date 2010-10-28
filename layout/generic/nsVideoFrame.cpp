@@ -136,7 +136,8 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsVideoFrame::AppendAnonymousContentTo(nsBaseContentList& aElements)
+nsVideoFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+                                       PRUint32 aFliter)
 {
   aElements.MaybeAppendElement(mPosterImage);
   aElements.MaybeAppendElement(mVideoControls);
@@ -335,7 +336,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                                        aReflowState.ComputedHeight()));
     }
   }
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
+  aMetrics.SetOverflowAreasToDesiredBounds();
 
   FinishAndStoreOverflow(&aMetrics);
 

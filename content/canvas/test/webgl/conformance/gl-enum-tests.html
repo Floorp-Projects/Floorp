@@ -33,7 +33,7 @@ if (!gl) {
   debug("");
   debug("Checking gl enums.");
 
-  var buffer = new ArrayBuffer(1);
+  var buffer = new ArrayBuffer(2);
   var buf = new Uint16Array(buffer);
   var tex = gl.createTexture();
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());

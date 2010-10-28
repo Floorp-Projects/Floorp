@@ -95,7 +95,7 @@ private:
    * Notify all elements (in mElements) that the first legend of the fieldset
    * has now changed.
    */
-  void NotifyElementsForFirstLegendChange();
+  void NotifyElementsForFirstLegendChange(PRBool aNotify);
 
   // This function is used to generate the nsContentList (listed form elements).
   static PRBool MatchListedElements(nsIContent* aContent, PRInt32 aNamespaceID,

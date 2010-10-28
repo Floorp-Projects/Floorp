@@ -123,6 +123,7 @@ var ContentPrefTest = {
     if (!profileDir) {
       this._dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(this);
       profileDir = this._dirSvc.get("ProfD", Ci.nsIFile);
+      this._dirSvc.unregisterProvider(this);
     }
 
     return profileDir;

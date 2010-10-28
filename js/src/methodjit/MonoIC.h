@@ -69,8 +69,7 @@ struct MICInfo {
 #endif
     {
         GET,
-        SET,
-        TRACER
+        SET
     };
 
     /* Used by multiple MICs. */
@@ -87,11 +86,6 @@ struct MICInfo {
     uint32 patchValueOffset;
 #endif
 
-    /* Used by TRACER. */
-    JSC::CodeLocationJump traceHint;
-    JSC::CodeLocationJump slowTraceHintOne;
-    JSC::CodeLocationJump slowTraceHintTwo;
-
     /* Used by all MICs. */
     Kind kind : 3;
     union {
@@ -101,16 +95,50 @@ struct MICInfo {
             bool typeConst : 1;
             bool dataConst : 1;
         } name;
-        /* Used by TRACER. */
-        struct {
-            bool hasSlowTraceHintOne : 1;
-            bool hasSlowTraceHintTwo : 1;
-        } hints;
     } u;
 };
 
+struct TraceICInfo {
+    TraceICInfo() {}
+
+    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationLabel jumpTarget;
+    JSC::CodeLocationJump traceHint;
+    JSC::CodeLocationJump slowTraceHint;
+#ifdef DEBUG
+    jsbytecode *jumpTargetPC;
+#endif
+    
+    /* This data is used by the tracing JIT. */
+    void *traceData;
+    uintN traceEpoch;
+
+    bool hasSlowTraceHint : 1;
+};
+
+static const uint16 BAD_TRACEIC_INDEX = (uint16)0xffff;
+
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
 void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
+
+struct EqualityICInfo {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationCall stubCall;
+    BoolStub stub;
+    JSC::CodeLocationLabel target;
+    JSC::CodeLocationLabel fallThrough;
+    JSC::CodeLocationJump jumpToStub;
+
+    ValueRemat lvr, rvr;
+
+    bool generated : 1;
+    JSC::MacroAssembler::RegisterID tempReg : 5;
+    Assembler::Condition cond;
+};
+
+JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
 
 /* See MonoIC.cpp, CallCompiler for more information on call ICs. */
 struct CallICInfo {

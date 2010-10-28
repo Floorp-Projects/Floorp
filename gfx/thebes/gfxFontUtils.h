@@ -227,10 +227,7 @@ public:
         }
         Block *block = mBlocks[blockIndex];
         if (!block) {
-            block = new Block;
-            if (NS_UNLIKELY(!block)) // OOM
-                return;
-            mBlocks[blockIndex] = block;
+            return;
         }
         block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] &= ~(1 << (aIndex & 0x7));
     }
@@ -248,22 +245,12 @@ public:
 
         for (PRUint32 i = startIndex; i <= endIndex; ++i) {
             const PRUint32 blockFirstBit = i * BLOCK_SIZE_BITS;
-            const PRUint32 blockLastBit = blockFirstBit + BLOCK_SIZE_BITS - 1;
 
             Block *block = mBlocks[i];
             if (!block) {
-                PRBool fullBlock = PR_FALSE;
-                if (aStart <= blockFirstBit && aEnd >= blockLastBit)
-                    fullBlock = PR_TRUE;
-
-                block = new Block(fullBlock ? 0xFF : 0);
-
-                if (NS_UNLIKELY(!block)) // OOM
-                    return;
-                mBlocks[i] = block;
-
-                if (fullBlock)
-                    continue;
+                // any nonexistent block is implicitly all clear,
+                // so there's no need to even create it
+                continue;
             }
 
             const PRUint32 start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
@@ -366,6 +353,21 @@ struct AutoSwap_PRUint24 {
 private:
     AutoSwap_PRUint24() { }
     PRUint8  value[3];
+};
+
+struct SFNTHeader {
+    AutoSwap_PRUint32    sfntVersion;            // Fixed, 0x00010000 for version 1.0.
+    AutoSwap_PRUint16    numTables;              // Number of tables.
+    AutoSwap_PRUint16    searchRange;            // (Maximum power of 2 <= numTables) x 16.
+    AutoSwap_PRUint16    entrySelector;          // Log2(maximum power of 2 <= numTables).
+    AutoSwap_PRUint16    rangeShift;             // NumTables x 16-searchRange.        
+};
+
+struct TableDirEntry {
+    AutoSwap_PRUint32    tag;                    // 4 -byte identifier.
+    AutoSwap_PRUint32    checkSum;               // CheckSum for this table.
+    AutoSwap_PRUint32    offset;                 // Offset from beginning of TrueType font file.
+    AutoSwap_PRUint32    length;                 // Length of this table.        
 };
 
 struct HeadTable {

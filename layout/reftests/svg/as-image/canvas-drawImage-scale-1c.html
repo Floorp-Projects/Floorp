@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript">
+      function go() {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        // Draw some orange
+        ctx.fillStyle = "orange";
+        ctx.fillRect(0, 0, 100, 100);
+
+        // Instantiate an image. Once it has loaded, draw it & take snapshot.
+        var image = new Image();
+        image.onload = function() {
+          ctx.scale(2, 2);  // Scale our image-drawing by 2
+          ctx.drawImage(image, 0, 0);
+          document.documentElement.removeAttribute("class");
+        }
+        image.src ="lime50x50.svg";
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <canvas id="canvas" width="200" height="200"></canvas>
+</body>
+</html>

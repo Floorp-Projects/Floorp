@@ -1,21 +1,17 @@
-# HG changeset patch
-# User Vladimir Vukicevic <vladimir@pobox.com>
-# Date 1280525409 25200
-# Node ID d683bc8242ec4b6e19196fc6f6d090a6da2fa07d
-# Parent  3693726d10c60b8b2637407709d595151c191a64
-[mq]: angle-shared.patch
-
 diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
 --- a/gfx/angle/include/GLSLANG/ShaderLang.h
 +++ b/gfx/angle/include/GLSLANG/ShaderLang.h
-@@ -6,8 +6,24 @@
+@@ -1,16 +1,32 @@
+ //
+ // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
  #ifndef _COMPILER_INTERFACE_INCLUDED_
  #define _COMPILER_INTERFACE_INCLUDED_
  
 +#include "nscore.h"
 +
- #include "ResourceLimits.h"
- 
 +#ifdef WIN32
 +# if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
 +#  ifdef ANGLE_BUILD
@@ -33,7 +29,17 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  //
  // This is the platform independent interface between an OGL driver
  // and the shading language compiler.
-@@ -20,11 +36,11 @@ extern "C" {
+ //
+ 
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -72,21 +88,21 @@ typedef enum {
+   SH_OBJECT_CODE         = 0x002,
+   SH_ATTRIBUTES_UNIFORMS = 0x004
+ } ShCompileOptions;
+ 
+ //
  // Driver must call this first, once, before doing any other
  // compiler operations.
  //
@@ -44,37 +50,187 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  //
 -int ShFinalize();
 +ANGLE_API int ShFinalize();
- //
- // Types of languages the compiler can consume.
- //
-@@ -70,8 +86,8 @@ typedef void* ShHandle;
- //
- // Driver calls these to create and destroy compiler objects.
- //
--ShHandle ShConstructCompiler(EShLanguage, EShSpec, const TBuiltInResource*);
--void ShDestruct(ShHandle);
-+ANGLE_API ShHandle ShConstructCompiler(EShLanguage, EShSpec, const TBuiltInResource*);
-+ANGLE_API void ShDestruct(ShHandle);
  
  //
- // The return value of ShCompile is boolean, indicating
-@@ -80,7 +96,7 @@ void ShDestruct(ShHandle);
- // The info-log should be written by ShCompile into 
- // ShHandle, so it can answer future queries.
+ // Implementation dependent built-in resources (constants and extensions).
+ // The names for these resources has been obtained by stripping gl_/GL_.
+ //
+ typedef struct
+ {
+     // Constants.
+@@ -102,17 +118,17 @@ typedef struct
+     // Extensions.
+     // Set to 1 to enable the extension, else 0.
+     int OES_standard_derivatives;
+ } ShBuiltInResources;
+ 
+ //
+ // Initialize built-in resources with minimum expected values.
+ //
+-void ShInitBuiltInResources(ShBuiltInResources* resources);
++ANGLE_API void ShInitBuiltInResources(ShBuiltInResources* resources);
+ 
+ //
+ // ShHandle held by but opaque to the driver.  It is allocated,
+ // managed, and de-allocated by the compiler. It's contents 
+ // are defined by and used by the compiler.
+ //
+ // If handle creation fails, 0 will be returned.
+ //
+@@ -122,19 +138,19 @@ typedef void* ShHandle;
+ // Driver calls these to create and destroy compiler objects.
+ //
+ // Returns the handle of constructed compiler.
+ // Parameters:
+ // type: Specifies the type of shader - SH_FRAGMENT_SHADER or SH_VERTEX_SHADER.
+ // spec: Specifies the language spec the compiler must conform to -
+ //       SH_GLES2_SPEC or SH_WEBGL_SPEC.
+ // resources: Specifies the built-in resources.
+-ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
++ANGLE_API ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
+                              const ShBuiltInResources* resources);
+-void ShDestruct(ShHandle handle);
++ANGLE_API void ShDestruct(ShHandle handle);
+ 
+ //
+ // Compiles the given shader source.
+ // If the function succeeds, the return value is nonzero, else zero.
+ // Parameters:
+ // handle: Specifies the handle of compiler to be used.
+ // shaderStrings: Specifies an array of pointers to null-terminated strings
+ //                containing the shader source code.
+@@ -144,17 +160,17 @@ void ShDestruct(ShHandle handle);
+ // SH_INTERMEDIATE_TREE: Writes intermediate tree to info log.
+ //                       Can be queried by calling ShGetInfoLog().
+ // SH_OBJECT_CODE: Translates intermediate tree to glsl or hlsl shader.
+ //                 Can be queried by calling ShGetObjectCode().
+ // SH_ATTRIBUTES_UNIFORMS: Extracts attributes and uniforms.
+ //                         Can be queried by calling ShGetActiveAttrib() and
+ //                         ShGetActiveUniform().
  //
 -int ShCompile(
 +ANGLE_API int ShCompile(
-     const ShHandle,
+     const ShHandle handle,
      const char* const shaderStrings[],
      const int numStrings,
-@@ -92,8 +108,8 @@ int ShCompile(
- // All the following return 0 if the information is not
- // available in the object passed down, or the object is bad.
- //
--const char* ShGetInfoLog(const ShHandle);
--const char* ShGetObjectCode(const ShHandle);
-+ANGLE_API const char* ShGetInfoLog(const ShHandle);
-+ANGLE_API const char* ShGetObjectCode(const ShHandle);
+     int compileOptions
+     );
+ 
+ // Returns a parameter from a compiled shader.
+ // Parameters:
+@@ -170,53 +186,53 @@ int ShCompile(
+ //                                 variable name including the null
+ //                                 termination character.
+ // SH_ACTIVE_UNIFORMS: the number of active uniform variables.
+ // SH_ACTIVE_UNIFORM_MAX_LENGTH: the length of the longest active uniform
+ //                               variable name including the null
+ //                               termination character.
+ // 
+ // params: Requested parameter
+-void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
++ANGLE_API void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
+ 
+ // Returns nul-terminated information log for a compiled shader.
+ // Parameters:
+ // handle: Specifies the compiler
+ // infoLog: Specifies an array of characters that is used to return
+ //          the information log. It is assumed that infoLog has enough memory
+ //          to accomodate the information log. The size of the buffer required
+ //          to store the returned information log can be obtained by calling
+ //          ShGetInfo with SH_INFO_LOG_LENGTH.
+-void ShGetInfoLog(const ShHandle handle, char* infoLog);
++ANGLE_API void ShGetInfoLog(const ShHandle handle, char* infoLog);
+ 
+ // Returns null-terminated object code for a compiled shader.
+ // Parameters:
+ // handle: Specifies the compiler
+ // infoLog: Specifies an array of characters that is used to return
+ //          the object code. It is assumed that infoLog has enough memory to
+ //          accomodate the object code. The size of the buffer required to
+ //          store the returned object code can be obtained by calling
+ //          ShGetInfo with SH_OBJECT_CODE_LENGTH.
+-void ShGetObjectCode(const ShHandle handle, char* objCode);
++ANGLE_API void ShGetObjectCode(const ShHandle handle, char* objCode);
+ 
+ // Returns information about an active attribute variable.
+ // Parameters:
+ // handle: Specifies the compiler
+ // index: Specifies the index of the attribute variable to be queried.
+ // length: Returns the number of characters actually written in the string
+ //         indicated by name (excluding the null terminator) if a value other
+ //         than NULL is passed.
+ // size: Returns the size of the attribute variable.
+ // type: Returns the data type of the attribute variable.
+ // name: Returns a null terminated string containing the name of the
+ //       attribute variable. It is assumed that name has enough memory to
+ //       accomodate the attribute variable name. The size of the buffer
+ //       required to store the attribute variable name can be obtained by
+ //       calling ShGetInfo with SH_ACTIVE_ATTRIBUTE_MAX_LENGTH.
+-void ShGetActiveAttrib(const ShHandle handle,
++ANGLE_API void ShGetActiveAttrib(const ShHandle handle,
+                        int index,
+                        int* length,
+                        int* size,
+                        ShDataType* type,
+                        char* name);
+ 
+ // Returns information about an active uniform variable.
+ // Parameters:
+@@ -227,17 +243,17 @@ void ShGetActiveAttrib(const ShHandle ha
+ //         other than NULL is passed.
+ // size: Returns the size of the uniform variable.
+ // type: Returns the data type of the uniform variable.
+ // name: Returns a null terminated string containing the name of the
+ //       uniform variable. It is assumed that name has enough memory to
+ //       accomodate the uniform variable name. The size of the buffer required
+ //       to store the uniform variable name can be obtained by calling
+ //       ShGetInfo with SH_ACTIVE_UNIFORMS_MAX_LENGTH.
+-void ShGetActiveUniform(const ShHandle handle,
++ANGLE_API void ShGetActiveUniform(const ShHandle handle,
+                         int index,
+                         int* length,
+                         int* size,
+                         ShDataType* type,
+                         char* name);
  
  #ifdef __cplusplus
  }
+diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
+--- a/gfx/angle/include/GLSLANG/ShaderLang.h
++++ b/gfx/angle/include/GLSLANG/ShaderLang.h
+@@ -1,31 +1,35 @@
+ //
+ // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ #ifndef _COMPILER_INTERFACE_INCLUDED_
+ #define _COMPILER_INTERFACE_INCLUDED_
+ 
++#ifdef MOZILLA_VERSION
+ #include "nscore.h"
+ 
+ #ifdef WIN32
+ # if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
+ #  ifdef ANGLE_BUILD
+ #   define ANGLE_API NS_EXPORT
+ #  else
+ #   define ANGLE_API NS_IMPORT
+ #  endif
+ # else
+ #  define ANGLE_API  /*nothing*/
+ # endif
+ #else
+ # define ANGLE_API NS_EXTERNAL_VIS
+ #endif
++#else
++#define ANGLE_API /*nothing*/
++#endif
+ 
+ //
+ // This is the platform independent interface between an OGL driver
+ // and the shading language compiler.
+ //
+ 
+ #ifdef __cplusplus
+ extern "C" {

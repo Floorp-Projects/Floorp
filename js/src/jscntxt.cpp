@@ -508,6 +508,16 @@ JSThreadData::init()
     return true;
 }
 
+MathCache *
+JSThreadData::allocMathCache(JSContext *cx)
+{
+    JS_ASSERT(!mathCache);
+    mathCache = new MathCache;
+    if (!mathCache)
+        js_ReportOutOfMemory(cx);
+    return mathCache;
+}
+
 void
 JSThreadData::finish()
 {
@@ -528,6 +538,7 @@ JSThreadData::finish()
     jmData.Finish();
 #endif
     stackSpace.finish();
+    delete mathCache;
 }
 
 void
@@ -586,7 +597,6 @@ DestroyThread(JSThread *thread)
 {
     /* The thread must have zero contexts. */
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
-    JS_ASSERT(!thread->titleToShare);
 
     /*
      * The conservative GC scanner should be disabled when the thread leaves
@@ -614,6 +624,13 @@ js_CurrentThread(JSRuntime *rt)
     JSThread::Map::AddPtr p = rt->threads.lookupForAdd(id);
     if (p) {
         thread = p->value;
+
+        /*
+         * If thread has no contexts, it might be left over from a previous
+         * thread with the same id but a different stack address.
+         */
+        if (JS_CLIST_IS_EMPTY(&thread->contextList))
+            thread->data.nativeStackBase = GetNativeStackBase();
     } else {
         JS_UNLOCK_GC(rt);
         thread = NewThread(id);
@@ -631,6 +648,7 @@ js_CurrentThread(JSRuntime *rt)
         JS_ASSERT(p->value == thread);
     }
     JS_ASSERT(thread->id == id);
+    JS_ASSERT(thread->data.nativeStackBase == GetNativeStackBase());
 
     return thread;
 }
@@ -1163,19 +1181,6 @@ FreeContext(JSContext *cx)
     /* Finally, free cx itself. */
     cx->~JSContext();
     js_free(cx);
-}
-
-JSBool
-js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
-{
-    JSCList *cl;
-
-    for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next) {
-        if (cl == &cx->link)
-            return JS_TRUE;
-    }
-    JS_RUNTIME_METER(rt, deadContexts);
-    return JS_FALSE;
 }
 
 JSContext *
@@ -1821,8 +1826,8 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
 #if defined DEBUG && defined XP_UNIX
 /* For gdb usage. */
-void js_traceon(JSContext *cx)  { cx->tracefp = stderr; cx->tracePrevPc = NULL; }
-void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
+void js_logon(JSContext *cx)  { cx->logfp = stderr; cx->logPrevPc = NULL; }
+void js_logoff(JSContext *cx) { cx->logfp = NULL; }
 #endif
 
 JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
@@ -2033,8 +2038,39 @@ JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
     compartment(rt->defaultCompartment),
     regs(NULL),
-    busyArrays(this)
+    busyArrays(thisInInitializer())
 {}
+
+void
+JSContext::resetCompartment()
+{
+    JSObject *scopeobj;
+    if (hasfp()) {
+        scopeobj = &fp()->scopeChain();
+    } else {
+        scopeobj = globalObject;
+        if (!scopeobj) {
+            compartment = runtime->defaultCompartment;
+            return;
+        }
+
+        /*
+         * Innerize. Assert, but check anyway, that this succeeds. (It
+         * can only fail due to bugs in the engine or embedding.)
+         */
+        OBJ_TO_INNER_OBJECT(this, scopeobj);
+        if (!scopeobj) {
+            /*
+             * Bug. Return NULL, not defaultCompartment, to crash rather
+             * than open a security hole.
+             */
+            JS_ASSERT(0);
+            compartment = NULL;
+            return;
+        }
+    }
+    compartment = scopeobj->getCompartment();
+}
 
 void
 JSContext::pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &newregs)
@@ -2212,6 +2248,7 @@ ComputeIsJITBroken()
                 "SGH-I897",     // Samsung i9000, Captivate device
                 "SCH-I500",     // Samsung i9000, Fascinate device
                 "SPH-D700",     // Samsung i9000, Epic device
+                "GT-I9000",     // Samsung i9000, UK/Europe device
                 NULL
             };
             for (const char** hw = &blacklist[0]; *hw; ++hw) {
@@ -2258,6 +2295,9 @@ JSContext::updateJITEnabled()
                           JSC::MacroAssemblerX86Common::HasSSE2
 # endif
                         ;
+#ifdef JS_TRACER
+    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
+#endif
 #endif
 }
 

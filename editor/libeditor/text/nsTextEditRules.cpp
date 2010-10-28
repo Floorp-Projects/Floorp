@@ -658,8 +658,14 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
   // handle docs with a max length
   // NOTE, this function copies inString into outString for us.
-  nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString, aMaxLength, nsnull);
+  PRBool truncated = PR_FALSE;
+  nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString,
+                                           aMaxLength, &truncated);
   NS_ENSURE_SUCCESS(res, res);
+  if (truncated && outString->IsEmpty()) {
+    *aCancel = PR_TRUE;
+    return NS_OK;
+  }
   
   PRUint32 start = 0;
   PRUint32 end = 0;  
@@ -789,15 +795,6 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
       nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
       selPrivate->SetInterlinePosition(endsWithLF);
 
-      // If the last character is a linefeed character, make sure that we inject
-      // a BR element for correct caret positioning.
-      if (endsWithLF) {
-        nsCOMPtr<nsIDOMNode> mozBR;
-        res = CreateMozBR(curNode, curOffset, address_of(mozBR));
-        NS_ENSURE_SUCCESS(res, res);
-        curNode = mozBR;
-        curOffset = 0;
-      }
       aSelection->Collapse(curNode, curOffset);
     }
   }

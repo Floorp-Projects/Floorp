@@ -78,6 +78,7 @@ namespace nanojit
         , _branchStateMap(alloc)
         , _patches(alloc)
         , _labels(alloc)
+        , _noise(NULL)
     #if NJ_USES_IMMD_POOL
         , _immDPool(alloc)
     #endif
@@ -288,14 +289,18 @@ namespace nanojit
         eip = end;
     }
 
-    void Assembler::reset()
+    void Assembler::clearNInsPtrs()
     {
         _nIns = 0;
         _nExitIns = 0;
         codeStart = codeEnd = 0;
         exitStart = exitEnd = 0;
         codeList = 0;
+    }
 
+    void Assembler::reset()
+    {
+        clearNInsPtrs();
         nativePageReset();
         registerResetAll();
         arReset();
@@ -514,7 +519,7 @@ namespace nanojit
                 evict(ins);
                 r = registerAlloc(ins, allow, hint(ins));
             } else
-#elif defined(NANOJIT_PPC) || defined(NANOJIT_MIPS)
+#elif defined(NANOJIT_PPC) || defined(NANOJIT_MIPS) || defined(NANOJIT_SPARC)
             if (((rmask(r)&GpRegs) && !(allow&GpRegs)) ||
                 ((rmask(r)&FpRegs) && !(allow&FpRegs)))
             {
@@ -756,6 +761,36 @@ namespace nanojit
         // slot (if not).
     }
 
+    // If we have this:
+    //
+    //   W = ld(addp(B, lshp(I, k)))[d] , where int(1) <= k <= int(3)
+    //
+    // then we set base=B, index=I, scale=k.
+    //
+    // Otherwise, we must have this:
+    //
+    //   W = ld(addp(B, I))[d]
+    //
+    // and we set base=B, index=I, scale=0.
+    //
+    void Assembler::getBaseIndexScale(LIns* addp, LIns** base, LIns** index, int* scale)
+    {
+        NanoAssert(addp->isop(LIR_addp));
+
+        *base = addp->oprnd1();
+        LIns* rhs = addp->oprnd2();
+        int k;
+
+        if (rhs->opcode() == LIR_lshp && rhs->oprnd2()->isImmI() &&
+            (k = rhs->oprnd2()->immI(), (1 <= k && k <= 3)))
+        {
+            *index = rhs->oprnd1();
+            *scale = k;
+        } else {
+            *index = rhs;
+            *scale = 0;
+        }
+    }
     void Assembler::patch(GuardRecord *lr)
     {
         if (!lr->jmp) // the guard might have been eliminated as redundant
@@ -1083,17 +1118,22 @@ namespace nanojit
         }
     }
 
+    void Assembler::cleanupAfterError()
+    {
+        _codeAlloc.freeAll(codeList);
+        if (_nExitIns)
+            _codeAlloc.free(exitStart, exitEnd);
+        _codeAlloc.free(codeStart, codeEnd);
+        codeList = NULL;
+    }
+
     void Assembler::endAssembly(Fragment* frag)
     {
         // don't try to patch code if we are in an error state since we might have partially
         // overwritten the code cache already
         if (error()) {
             // something went wrong, release all allocated code memory
-            _codeAlloc.freeAll(codeList);
-            if (_nExitIns)
-                _codeAlloc.free(exitStart, exitEnd);
-            _codeAlloc.free(codeStart, codeEnd);
-            codeList = NULL;
+            cleanupAfterError();
             return;
         }
 
@@ -1993,6 +2033,9 @@ namespace nanojit
                 }
                #endif // VMCFG_VTUNE
 
+                case LIR_comment: 
+                    // Do nothing.
+                    break;
             }
 
 #ifdef NJ_VERBOSE
@@ -2005,7 +2048,10 @@ namespace nanojit
             if (_logc->lcbits & LC_AfterDCE) {
                 InsBuf b;
                 LInsPrinter* printer = _thisfrag->lirbuf->printer;
-                outputf("    %s", printer->formatIns(&b, ins));
+                if (ins->isop(LIR_comment)) 
+                    outputf("%s", printer->formatIns(&b, ins));
+                else
+                    outputf("    %s", printer->formatIns(&b, ins));
             }
 #endif
 

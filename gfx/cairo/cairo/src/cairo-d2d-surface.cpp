@@ -3286,7 +3286,7 @@ _cairo_d2d_stroke(void			*surface,
 
     if (target_rt.get() != d2dsurf->rt.get()) {
 	D2D1_RECT_F bounds;
-	trans_geom->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, D2D1::IdentityMatrix(), &bounds);
+	trans_geom->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, mat, &bounds);
 	cairo_rectangle_int_t bound_rect;
 	_cairo_d2d_round_out_to_int_rect(&bound_rect, bounds.left, bounds.top, bounds.right, bounds.bottom);
 	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip, &bound_rect);

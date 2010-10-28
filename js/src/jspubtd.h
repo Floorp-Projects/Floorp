@@ -49,15 +49,15 @@
 JS_BEGIN_EXTERN_C
 
 /* Scalar typedefs. */
-typedef int32     jsint;
-typedef uint32    jsuint;
+typedef JSInt32   jsint;
+typedef JSUint32  jsuint;
 typedef float64   jsdouble;
-typedef int32     jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
+typedef JSInt32   jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
 
 #ifdef WIN32
 typedef wchar_t   jschar;
 #else
-typedef uint16    jschar;
+typedef JSUint16  jschar;
 #endif
 
 
@@ -559,7 +559,16 @@ typedef JSBool
  * destination compartment.
  */
 typedef JSObject *
-(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, uintN flags);
+(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
+                         uintN flags);
+
+/*
+ * Callback used by the wrap hook to ask the embedding to prepare an object
+ * for wrapping in a context. This might include unwrapping other wrappers
+ * or even finding a more suitable object for the new compartment.
+ */
+typedef JSObject *
+(* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags);
 
 typedef enum {
     JSCOMPARTMENT_NEW, /* XXX Does it make sense to have a NEW? */

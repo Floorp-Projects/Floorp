@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_poly_ic_h__ && defined JS_METHODJIT && defined JS_POLYIC
+#if !defined jsjaeger_poly_ic_h__ && defined JS_METHODJIT
 #define jsjaeger_poly_ic_h__
 
 #include "jscntxt.h"
@@ -46,7 +46,9 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
+#include "BaseAssembler.h"
 #include "RematInfo.h"
+#include "BaseCompiler.h"
 
 namespace js {
 namespace mjit {
@@ -54,6 +56,7 @@ namespace ic {
 
 /* Maximum number of stubs for a given callsite. */
 static const uint32 MAX_PIC_STUBS = 16;
+static const uint32 MAX_GETELEM_IC_STUBS = 17;
 
 /* SetPropCompiler */
 #if defined JS_CPU_X86
@@ -159,26 +162,6 @@ union PICLabels {
         int32 stubShapeJump : 8;
     } getprop;
 
-    /* GetElemCompiler */
-    struct {
-        /* Offset from storeBack to beginning of 'mov dslots, addr' */
-        int32 dslotsLoadOffset : 8;
-
-        /* Offset from shapeGuard to end of shape comparison. */
-        int32 inlineShapeOffset : 8;
-        
-        /* Offset from shapeGuard to end of atom comparison. */
-        int32 inlineAtomOffset : 8;
-
-        /* Offset from storeBack to end of value load. */
-        int32 inlineValueOffset : 8;
-
-        /* Offset from lastStubStart to end of shape jump. */
-        // TODO: We can redefine the location of lastStubStart to be
-        // after the jump -- at which point this is always 0.
-        int32 stubShapeJump : 8;
-    } getelem;
-
     /* BindNameCompiler */
     struct {
         /* Offset from shapeGuard to end of shape jump. */
@@ -187,9 +170,179 @@ union PICLabels {
 };
 #endif
 
-struct PICInfo {
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
+enum LookupStatus {
+    Lookup_Error = 0,
+    Lookup_Uncacheable,
+    Lookup_Cacheable
+};
 
+struct BaseIC : public MacroAssemblerTypedefs {
+    // Address of inline fast-path.
+    CodeLocationLabel fastPathStart;
+
+    // Address to rejoin to the fast-path.
+    CodeLocationLabel fastPathRejoin;
+
+    // Start of the slow path.
+    CodeLocationLabel slowPathStart;
+
+    // Slow path stub call.
+    CodeLocationCall slowPathCall;
+
+    // Address of the start of the last generated stub, if any.
+    CodeLocationLabel lastStubStart;
+
+    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
+
+    // ExecutablePools that IC stubs were generated into.
+    ExecPoolVector execPools;
+
+    // Return the start address of the last path in this PIC, which is the
+    // inline path if no stubs have been generated yet.
+    CodeLocationLabel lastPathStart() {
+        return stubsGenerated > 0 ? lastStubStart : fastPathStart;
+    }
+
+    // Whether or not the callsite has been hit at least once.
+    bool hit : 1;
+    bool slowCallPatched : 1;
+
+    // Number of stubs generated.
+    uint32 stubsGenerated : 5;
+
+    // Offset from start of stub to jump target of second shape guard as Nitro
+    // asm data location. This is 0 if there is only one shape guard in the
+    // last stub.
+    int secondShapeGuard : 11;
+
+    // Opcode this was compiled for.
+    JSOp op : 9;
+
+    // Release ExecutablePools referred to by this PIC.
+    void releasePools() {
+        for (JSC::ExecutablePool **pExecPool = execPools.begin();
+             pExecPool != execPools.end();
+             ++pExecPool) {
+            (*pExecPool)->release();
+        }
+    }
+
+    void init() {
+        new (&execPools) ExecPoolVector(SystemAllocPolicy());
+    }
+    void finish() {
+        releasePools();
+        this->~BaseIC();
+    }
+
+    void reset() {
+        hit = false;
+        slowCallPatched = false;
+        stubsGenerated = 0;
+        secondShapeGuard = 0;
+        releasePools();
+        execPools.clear();
+    }
+    bool shouldUpdate(JSContext *cx);
+    void spew(JSContext *cx, const char *event, const char *reason);
+    LookupStatus disable(JSContext *cx, const char *reason, void *stub);
+    bool isCallOp();
+};
+
+struct GetElementIC : public BaseIC {
+    // On stub entry:
+    //   If hasInlineTypeCheck() is true, and inlineTypeCheckPatched is false,
+    //     - typeReg contains the type of the |id| parameter.
+    //   If hasInlineTypeCheck() is true, and inlineTypeCheckPatched is true,
+    //     - typeReg contains the shape of |objReg| iff typeRegHasBaseShape
+    //       is true.
+    //   Otherwise, typeReg is garbage.
+    //
+    // On stub exit, typeReg must contain the type of the result value.
+    RegisterID typeReg   : 5;
+
+    // On stub entry, objReg contains the object pointer for the |obj| parameter.
+    // On stub exit, objReg must contain the payload of the result value.
+    RegisterID objReg    : 5;
+
+    // Offset from the fast path to the inline type check.
+    // This is only set if hasInlineTypeCheck() is true.
+    unsigned inlineTypeGuard  : 8;
+
+    // Offset from the fast path to the inline clasp guard. This is always
+    // set; if |id| is known to not be int32, then it's an unconditional
+    // jump to the slow path.
+    unsigned inlineClaspGuard : 8;
+
+    // This is usable if hasInlineTypeGuard() returns true, which implies
+    // that a dense array fast path exists. The inline type guard serves as
+    // the head of the chain of all string-based element stubs.
+    bool inlineTypeGuardPatched : 1;
+
+    // This is always usable, and specifies whether the inline clasp guard
+    // has been patched. If hasInlineTypeGuard() is true, it guards against
+    // a dense array, and guarantees the inline type guard has passed.
+    // Otherwise, there is no inline type guard, and the clasp guard is just
+    // an unconditional jump.
+    bool inlineClaspGuardPatched : 1;
+
+    ////////////////////////////////////////////
+    // State for string-based property stubs. //
+    ////////////////////////////////////////////
+
+    // True if typeReg is guaranteed to have the shape of objReg.
+    bool typeRegHasBaseShape : 1;
+
+    // These offsets are used for string-key dependent stubs, such as named
+    // property accesses. They are separated from the int-key dependent stubs,
+    // in order to guarantee that the id type needs only one guard per type.
+    int atomGuard : 8;          // optional, non-zero if present
+    int firstShapeGuard : 8;    // always set
+    int secondShapeGuard : 8;   // optional, non-zero if present
+
+    bool hasLastStringStub : 1;
+    CodeLocationLabel lastStringStub;
+
+    // A limited ValueRemat instance. It may contains either:
+    //  1) A constant, or
+    //  2) A known type and data reg, or
+    //  3) A data reg.
+    // The sync bits are not set, and the type reg is never set and should not
+    // be used, as it is encapsulated more accurately in |typeReg|. Also, note
+    // carefully that the data reg is immutable.
+    ValueRemat idRemat;
+
+    bool hasInlineTypeGuard() const {
+        return !idRemat.isTypeKnown();
+    }
+    bool shouldPatchInlineTypeGuard() {
+        return hasInlineTypeGuard() && !inlineTypeGuardPatched;
+    }
+    bool shouldPatchUnconditionalClaspGuard() {
+        return !hasInlineTypeGuard() && !inlineClaspGuardPatched;
+    }
+
+    void init() {
+        BaseIC::init();
+        reset();
+    }
+    void reset() {
+        BaseIC::reset();
+        inlineTypeGuardPatched = false;
+        inlineClaspGuardPatched = false;
+        typeRegHasBaseShape = false;
+        hasLastStringStub = false;
+    }
+    void purge();
+    LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
+    LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
+                               Value *vp);
+    LookupStatus disable(JSContext *cx, const char *reason);
+    LookupStatus error(JSContext *cx);
+    bool shouldUpdate(JSContext *cx);
+};
+
+struct PICInfo : public BaseIC {
     // Operation this is a PIC for.
     enum Kind
 #ifdef _MSC_VER
@@ -202,33 +355,19 @@ struct PICInfo {
         SETMETHOD,  // JSOP_SETMETHOD
         NAME,       // JSOP_NAME
         BIND,       // JSOP_BINDNAME
-        GETELEM,    // JSOP_GETELEM
         XNAME       // JSOP_GETXPROP
     };
 
     union {
-        // This struct comes out to 93 bits with GCC.
         struct {
             RegisterID typeReg  : 5;  // reg used for checking type
             bool hasTypeCheck   : 1;  // type check and reg are present
 
             // Reverse offset from slowPathStart to the type check slow path.
             int32 typeCheckOffset;
-
-            // Remat info for the object reg.
-            uint32 objRemat     : 20;
-            bool objNeedsRemat  : 1;
-            RegisterID idReg    : 5;  // only used in GETELEM PICs.
-            uint32 idRemat      : 20;
-            bool idNeedsRemat   : 1;
         } get;
         ValueRemat vr;
     } u;
-
-    // Offset from start of stub to jump target of second shape guard as Nitro
-    // asm data location. This is 0 if there is only one shape guard in the
-    // last stub.
-    int secondShapeGuard : 11;
 
     Kind kind : 3;
 
@@ -236,27 +375,23 @@ struct PICInfo {
     // last stub.
     bool shapeRegHasBaseShape : 1;
 
+    // True if can use the property cache.
+    bool usePropCache : 1;
+
     // State flags.
-    bool hit : 1;                   // this PIC has been executed
     bool inlinePathPatched : 1;     // inline path has been patched
 
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
 
-    // Number of stubs generated.
-    uint32 stubsGenerated : 5;
-
     // Offset from start of fast path to initial shape guard.
     uint32 shapeGuard;
     
-    // Return address of slow path call, as an offset from slowPathStart.
-    uint32 callReturn;
-
-    inline bool isSet() {
+    inline bool isSet() const {
         return kind == SET || kind == SETMETHOD;
     }
-    inline bool isGet() {
-        return kind == GET || kind == CALL || kind == GETELEM;
+    inline bool isGet() const {
+        return kind == GET || kind == CALL;
     }
     inline RegisterID typeReg() {
         JS_ASSERT(isGet());
@@ -265,22 +400,6 @@ struct PICInfo {
     inline bool hasTypeCheck() {
         JS_ASSERT(isGet());
         return u.get.hasTypeCheck;
-    }
-    inline uint32 objRemat() {
-        JS_ASSERT(isGet());
-        return u.get.objRemat;
-    }
-    inline uint32 idRemat() {
-        JS_ASSERT(isGet());
-        return u.get.idRemat;
-    }
-    inline bool objNeedsRemat() {
-        JS_ASSERT(isGet());
-        return u.get.objNeedsRemat;
-    }
-    inline bool idNeedsRemat() {
-        JS_ASSERT(isGet());
-        return u.get.idNeedsRemat;
     }
     inline bool shapeNeedsRemat() {
         return !shapeRegHasBaseShape;
@@ -295,70 +414,36 @@ struct PICInfo {
     PICLabels labels;
 #endif
 
+    // Where in the script did we generate this PIC?
+    jsbytecode *pc;
+    
     // Index into the script's atom table.
     JSAtom *atom;
 
-    // Address of inline fast-path.
-    JSC::CodeLocationLabel fastPathStart;
-
-    // Address of store back at the end of the inline fast-path.
-    JSC::CodeLocationLabel storeBack;
-
-    // Offset from callReturn to the start of the slow case.
-    JSC::CodeLocationLabel slowPathStart;
-
-    // Address of the start of the last generated stub, if any.
-    JSC::CodeLocationLabel lastStubStart;
-
-    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
-
-    // ExecutablePools that PIC stubs were generated into.
-    ExecPoolVector execPools;
-
-    // Return the start address of the last path in this PIC, which is the
-    // inline path if no stubs have been generated yet.
-    JSC::CodeLocationLabel lastPathStart() {
-        return stubsGenerated > 0 ? lastStubStart : fastPathStart;
-    }
-
-    bool shouldGenerate() {
-        return stubsGenerated < MAX_PIC_STUBS || !inlinePathPatched;
-    }
-
-    // Release ExecutablePools referred to by this PIC.
-    void releasePools() {
-        for (JSC::ExecutablePool **pExecPool = execPools.begin();
-             pExecPool != execPools.end();
-             ++pExecPool)
-        {
-            (*pExecPool)->release();
-        }
+    void init() {
+        BaseIC::init();
+        reset();
     }
 
     // Reset the data members to the state of a fresh PIC before any patching
     // or stub generation was done.
     void reset() {
-        hit = false;
         inlinePathPatched = false;
-        if (kind == GET || kind == CALL || kind == GETELEM) {
-            u.get.objNeedsRemat = false;
-        }
-        secondShapeGuard = 0;
         shapeRegHasBaseShape = true;
-        stubsGenerated = 0;
-        releasePools();
-        execPools.clear();
+        BaseIC::reset();
     }
 };
 
+#ifdef JS_POLYIC
 void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *);
-void JS_FASTCALL GetElem(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL SetProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL CallProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL Name(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL XName(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL BindName(VMFrame &f, ic::PICInfo *);
+void JS_FASTCALL GetElement(VMFrame &f, ic::GetElementIC *);
+#endif
 
 } /* namespace ic */
 } /* namespace mjit */

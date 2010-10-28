@@ -264,7 +264,7 @@ NS_INTERFACE_TABLE_HEAD(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 
-NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLElement, TabIndex, tabindex, -1)
 NS_IMPL_BOOL_ATTR(nsGenericHTMLElement, Hidden, hidden)
 
 nsresult
@@ -2310,7 +2310,7 @@ nsGenericHTMLElement::GetIsContentEditable(PRBool* aContentEditable)
 
 //----------------------------------------------------------------------
 
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLFrameElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR(nsGenericHTMLFrameElement, TabIndex, tabindex)
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
@@ -2370,7 +2370,7 @@ nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
     GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
     GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
 
-    mForm->RemoveElement(this, aNotify);
+    mForm->RemoveElement(this, true, aNotify);
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, nameVal);
@@ -2425,36 +2425,9 @@ nsGenericHTMLFrameElement::IsHTMLFocusable(PRBool aWithMouse,
     return PR_TRUE;
   }
 
-  // If there is no subdocument, docshell or content viewer, it's not tabbable
-  PRBool isFocusable = PR_FALSE;
-  nsIDocument *doc = GetCurrentDoc();
-  if (doc) {
-    // XXXbz should this use GetOwnerDoc() for GetSubDocumentFor?
-    // sXBL/XBL2 issue!
-    nsIDocument *subDoc = doc->GetSubDocumentFor(this);
-    if (subDoc) {
-      nsCOMPtr<nsISupports> container = subDoc->GetContainer();
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-      if (docShell) {
-        nsCOMPtr<nsIContentViewer> contentViewer;
-        docShell->GetContentViewer(getter_AddRefs(contentViewer));
-        if (contentViewer) {
-          isFocusable = PR_TRUE;
-          nsCOMPtr<nsIContentViewer> zombieViewer;
-          contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-          if (zombieViewer) {
-            // If there are 2 viewers for the current docshell, that 
-            // means the current document is a zombie document.
-            // Only navigate into the frame/iframe if it's not a zombie.
-            isFocusable = PR_FALSE;
-          }
-        }
-      }
-    }
-  }
+  *aIsFocusable = nsContentUtils::IsSubDocumentTabbable(this);
 
-  *aIsFocusable = isFocusable;
-  if (!isFocusable && aTabIndex) {
+  if (!*aIsFocusable && aTabIndex) {
     *aTabIndex = -1;
   }
 
@@ -2569,7 +2542,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->RemoveElementFromTable(this, tmp);
       }
 
-      mForm->RemoveElement(this, aNotify);
+      mForm->RemoveElement(this, false, aNotify);
 
       // Removing the element from the form can make it not be the default
       // control anymore.  Go ahead and notify on that change, though we might
@@ -2627,7 +2600,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->AddElementToTable(this, tmp);
       }
 
-      mForm->AddElement(this, aNotify);
+      mForm->AddElement(this, false, aNotify);
 
       // Adding the element to the form can make it be the default control .
       // Go ahead and notify on that change.
@@ -2757,13 +2730,13 @@ nsGenericHTMLFormElement::IsSubmittableControl() const
          type & NS_FORM_INPUT_ELEMENT;
 }
 
-PRInt32
+nsEventStates
 nsGenericHTMLFormElement::IntrinsicState() const
 {
   // If you add attribute-dependent states here, you need to add them them to
   // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
   // implement IntrinsicState() and are affected by that attribute.
-  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLElement::IntrinsicState();
 
   if (CanBeDisabled()) {
     // :enabled/:disabled
@@ -2940,7 +2913,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     SetFlags(ADDED_TO_FORM);
 
     // Notify only if we just found this mForm.
-    mForm->AddElement(this, !hadForm);
+    mForm->AddElement(this, true, !hadForm);
 
     if (!nameVal.IsEmpty()) {
       mForm->AddElementToTable(this, nameVal);
@@ -2976,12 +2949,15 @@ nsGenericHTMLFormElement::UpdateFieldSet()
 }
 
 void
-nsGenericHTMLFormElement::FieldSetDisabledChanged(PRInt32 aStates)
+nsGenericHTMLFormElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotify)
 {
+  if (!aNotify) {
+    return;
+  }
+
   aStates |= NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED;
 
   nsIDocument* doc = GetCurrentDoc();
-  // TODO: should we use aNotify ?!
   if (doc) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, aStates);
@@ -3481,7 +3457,7 @@ nsGenericHTMLElement::IsEditableRoot() const
 static void
 MakeContentDescendantsEditable(nsIContent *aContent, nsIDocument *aDocument)
 {
-  PRInt32 stateBefore = aContent->IntrinsicState();
+  nsEventStates stateBefore = aContent->IntrinsicState();
 
   aContent->UpdateEditableState();
 

@@ -124,6 +124,8 @@
 
 #include "nsIMemoryReporter.h"
 
+#include "nsStyleUtil.h"
+
 #ifdef MOZ_IPC
 #  include <algorithm>
 #  include "mozilla/dom/ContentParent.h"
@@ -514,12 +516,12 @@ protected:
 #ifdef MOZ_IPC
     PRPackedBool mIPC;
 
+    // for rendering with NativeID protocol, we should track backbuffer ownership
+    PRPackedBool mIsBackSurfaceReadable;
     // We always have a front buffer. We hand the mBackSurface to the other
     // process to render to,
     // and then sync data from mBackSurface to mSurface when it finishes.
     nsRefPtr<gfxASurface> mBackSurface;
-    // for rendering with NativeID protocol, we should track backbuffer ownership
-    PRPackedBool mIsBackSurfaceReadable;
 #endif
 
     // the canvas element we're a context of
@@ -812,6 +814,18 @@ protected:
     }
 
     friend struct nsCanvasBidiProcessor;
+
+private:
+#ifdef MOZ_IPC
+    void DeallocShmemIfShared(nsRefPtr<gfxASurface> &aSurface) {
+      ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
+      if (allocator && gfxSharedImageSurface::IsSharedImage(aSurface)) {
+          Shmem mem = static_cast<gfxSharedImageSurface*>(aSurface.get())->GetShmem();
+          allocator->DeallocShmem(mem);
+      }
+    }
+#endif
+
 };
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
@@ -872,11 +886,7 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     Reset();
 
 #ifdef MOZ_IPC
-    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
-    if (allocator && gfxSharedImageSurface::IsSharedImage(mBackSurface)) {
-        Shmem mem = static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem();
-        allocator->DeallocShmem(mem);
-    }
+    DeallocShmemIfShared(mBackSurface);
     mBackSurface = nsnull;
 #endif
 
@@ -893,11 +903,7 @@ nsresult
 nsCanvasRenderingContext2D::Reset()
 {
 #ifdef MOZ_IPC
-    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
-    if (allocator && gfxSharedImageSurface::IsSharedImage(mSurface)) {
-        Shmem &mem = static_cast<gfxSharedImageSurface*>(mSurface.get())->GetShmem();
-        allocator->DeallocShmem(mem);
-    }
+    DeallocShmemIfShared(mSurface);
 #endif
 
     // only do this for non-docshell created contexts,
@@ -988,6 +994,8 @@ nsCanvasRenderingContext2D::GetStyleAsStringOrInterface(nsAString& aStr,
 void
 nsCanvasRenderingContext2D::StyleColorToString(const nscolor& aColor, nsAString& aStr)
 {
+    // We can't reuse the normal CSS color stringification code,
+    // because the spec calls for a different algorithm for canvas.
     if (NS_GET_A(aColor) == 255) {
         CopyUTF8toUTF16(nsPrintfCString(100, "#%02x%02x%02x",
                                         NS_GET_R(aColor),
@@ -995,15 +1003,15 @@ nsCanvasRenderingContext2D::StyleColorToString(const nscolor& aColor, nsAString&
                                         NS_GET_B(aColor)),
                         aStr);
     } else {
-        // "%0.5f" in nsPrintfCString would use the locale-specific
-        // decimal separator. That's why we have to do this:
-        PRUint32 alpha = NS_GET_A(aColor) * 100000 / 255;
-        CopyUTF8toUTF16(nsPrintfCString(100, "rgba(%d, %d, %d, 0.%d)",
+        CopyUTF8toUTF16(nsPrintfCString(100, "rgba(%d, %d, %d, ",
                                         NS_GET_R(aColor),
                                         NS_GET_G(aColor),
-                                        NS_GET_B(aColor),
-                                        alpha),
+                                        NS_GET_B(aColor)),
                         aStr);
+        nsString tmp;
+        tmp.AppendFloat(nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor)));
+        aStr.Append(tmp);
+        aStr.Append(')');
     }
 }
 
@@ -1903,7 +1911,7 @@ nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
     return NS_OK;
 }
 
-static const gfxFloat SIGMA_MAX = 25;
+static const gfxFloat SIGMA_MAX = 100;
 
 gfxContext*
 nsCanvasRenderingContext2D::ShadowInitialize(const gfxRect& extents, gfxAlphaBoxBlur& blur)
@@ -1911,7 +1919,7 @@ nsCanvasRenderingContext2D::ShadowInitialize(const gfxRect& extents, gfxAlphaBox
     gfxIntSize blurRadius;
 
     float shadowBlur = CurrentState().shadowBlur;
-    gfxFloat sigma = shadowBlur > 8 ? sqrt(shadowBlur * 2) : (shadowBlur / 2);
+    gfxFloat sigma = shadowBlur / 2;
     // limit to avoid overly huge temp images
     if (sigma > SIGMA_MAX)
         sigma = SIGMA_MAX;
@@ -1956,13 +1964,25 @@ nsCanvasRenderingContext2D::ShadowFinalize(gfxAlphaBoxBlur& blur)
 nsresult
 nsCanvasRenderingContext2D::DrawPath(Style style, gfxRect *dirtyRect)
 {
-    /*
-     * Need an intermediate surface when:
-     * - globalAlpha != 1 and gradients/patterns are used (need to paint_with_alpha)
-     * - certain operators are used
-     */
-    PRBool doUseIntermediateSurface = NeedToUseIntermediateSurface() ||
-                                      NeedIntermediateSurfaceToHandleGlobalAlpha(style);
+    PRBool doUseIntermediateSurface = PR_FALSE;
+    
+    if (mSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+      if (style != STYLE_FILL) {
+        // D2D does all operators correctly even if transparent areas of SOURCE
+        // affect dest. We need to use an intermediate surface for STROKE because
+        // we can't clip to the actual stroke shape easily, but prefer a geometric
+        // clip over an intermediate surface for a FILL.
+        doUseIntermediateSurface = NeedIntermediateSurfaceToHandleGlobalAlpha(style);
+      }
+    } else {
+      /*
+       * Need an intermediate surface when:
+       * - globalAlpha != 1 and gradients/patterns are used (need to paint_with_alpha)
+       * - certain operators are used
+       */
+      doUseIntermediateSurface = NeedToUseIntermediateSurface() ||
+                                 NeedIntermediateSurfaceToHandleGlobalAlpha(style);
+    }
 
     PRBool doDrawShadow = NeedToDrawShadow();
 
@@ -2014,14 +2034,31 @@ nsCanvasRenderingContext2D::DrawPath(Style style, gfxRect *dirtyRect)
         mThebes->NewPath();
         mThebes->AppendPath(path);
 
-        // don't want operators to be applied twice
-        mThebes->SetOperator(gfxContext::OPERATOR_SOURCE);
+        // don't want operators to be applied twice,
+        if (mSurface->GetType() != gfxASurface::SurfaceTypeD2D) {
+            mThebes->SetOperator(gfxContext::OPERATOR_SOURCE);
+        } else {
+            // In the case of D2D OPERATOR_OVER is much faster. So we can just
+            // use that since it's the same as SOURCE for a transparent
+            // destinations. It would be nice if cairo backends could make this
+            // optimization internally but I see no very good way of doing this.
+            mThebes->SetOperator(gfxContext::OPERATOR_OVER);
+        }
     }
 
     ApplyStyle(style);
-    if (style == STYLE_FILL)
-        mThebes->Fill();
-    else
+
+    if (style == STYLE_FILL) {
+        if (!doUseIntermediateSurface &&
+            CurrentState().globalAlpha != 1.0 &&
+            !CurrentState().StyleIsColor(style))
+        {
+            mThebes->Clip();
+            mThebes->Paint(CurrentState().globalAlpha);
+        } else {
+            mThebes->Fill();
+        }
+    } else
         mThebes->Stroke();
 
     // XXX do some more work to calculate the extents of shadows
@@ -3301,8 +3338,10 @@ nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
 {
-    if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(x,y)) {
+        *retVal = PR_FALSE;
+        return NS_OK;
+    }
 
     *retVal = mThebes->PointInFill(gfxPoint(x,y));
     return NS_OK;

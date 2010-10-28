@@ -41,9 +41,8 @@ const Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
-                                               Ci.nsIPrefLocalizedString).data;
+                                                Ci.nsIPrefLocalizedString).data;
 
 // We use a preferences whitelist to make sure we only show preferences that
 // are useful for support and won't compromise the user's privacy.  Note that
@@ -91,9 +90,14 @@ window.onload = function () {
 
   // Update the application basics section.
   document.getElementById("application-box").textContent = Services.appinfo.name;
-  document.getElementById("version-box").textContent = Services.appinfo.version;
   document.getElementById("useragent-box").textContent = navigator.userAgent;
   document.getElementById("supportLink").href = supportUrl;
+  let version = Services.appinfo.version;
+  try {
+    version += " (" + Services.prefs.getCharPref("app.support.vendor") + ")";
+  } catch (e) {
+  }
+  document.getElementById("version-box").textContent = version;
 
   // Update the other sections.
   populatePreferencesSection();
@@ -153,9 +157,13 @@ function populateGraphicsSection() {
   let bundle = Services.strings.createBundle("chrome://global/locale/aboutSupport.properties");
   let graphics_tbody = document.getElementById("graphics-tbody");
 
+  var gfxInfo = null;
   try {
     // nsIGfxInfo is currently only implemented on Windows
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+  } catch(e) {}
+
+  if (gfxInfo) {
     let trGraphics = [];
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("adapterDescription")),
@@ -187,19 +195,54 @@ function populateGraphicsSection() {
       createHeader(bundle.GetStringFromName("driverDate")),
       createElement("td", gfxInfo.adapterDriverDate),
     ]));
+
+    var d2dEnabled = false;
+    try {
+      d2dEnabled = gfxInfo.D2DEnabled;
+    } catch(e) {}
+    var d2dMessage = d2dEnabled;
+    if (!d2dEnabled) {
+      var d2dStatus = -1; // different from any status value defined in the IDL
+      try {
+        d2dStatus = gfxInfo.getFeatureStatus(gfxInfo.FEATURE_DIRECT2D);
+      } catch(e) {
+        window.dump(e + '\n');
+      }  
+      if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DEVICE ||
+          d2dStatus == gfxInfo.FEATURE_DISCOURAGED)
+      {
+        d2dMessage = bundle.GetStringFromName("blockedGraphicsCard");
+      }
+      else if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DRIVER_VERSION)
+      {
+        var d2dSuggestedDriverVersion = null;
+        try {
+          gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
+        } catch(e) {
+          window.dump(e + '\n');
+        }
+        if (d2dSuggestedDriverVersion) {
+          d2dMessage = bundle.GetStringFromName("tryNewerDriverVersion").replace("%1", d2dSuggestedDriverVersion);
+        }
+      }
+    }
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("direct2DEnabled")),
-      createElement("td", gfxInfo.D2DEnabled),
+      createElement("td", d2dMessage),
     ]));
+
+    var dwEnabled = false;
+    try {
+      dwEnabled = gfxInfo.DWriteEnabled;
+    } catch(e) {}
     trGraphics.push(createParentElement("tr", [
       createHeader(bundle.GetStringFromName("directWriteEnabled")),
-      createElement("td", gfxInfo.DWriteEnabled),
+      createElement("td", dwEnabled),
     ]));
 
     appendChildren(graphics_tbody, trGraphics);
 
-  } catch (e) {
-  }
+  } // end if (gfxInfo)
 
   let windows = Services.ww.getWindowEnumerator();
   let acceleratedWindows = 0;

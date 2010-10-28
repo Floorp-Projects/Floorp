@@ -46,20 +46,35 @@
 #include "jsstaticcheck.h"
 #include "jsxml.h"
 #include "jsregexp.h"
+#include "jsgc.h"
 
-inline js::RegExpStatics *
-JSContext::regExpStatics()
+namespace js {
+
+static inline JSObject *
+GetGlobalForScopeChain(JSContext *cx)
 {
-    VOUCH_HAVE_STACK();
     /*
-     * Whether we're on trace or not, the scope chain associated with cx->fp
-     * will lead us to the appropriate global. Although cx->fp is stale on
-     * trace, trace execution never crosses globals.
+     * This is essentially GetScopeChain(cx)->getGlobal(), but without
+     * falling off trace.
+     *
+     * This use of cx->fp, possibly on trace, is deliberate:
+     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
+     * trace or not, since we do not trace calls across global objects.
      */
-    JS_ASSERT(hasfp());
-    JSObject *global = fp()->scopeChain().getGlobal();
-    js::RegExpStatics *res = js::RegExpStatics::extractFrom(global);
-    return res;
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    if (cx->hasfp())
+        return cx->fp()->scopeChain().getGlobal();
+
+    JSObject *scope = cx->globalObject;
+    if (!scope) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return NULL;
+    }
+    OBJ_TO_INNER_OBJECT(cx, scope);
+    return scope;
+}
+
 }
 
 inline bool
@@ -84,6 +99,12 @@ JSContext::computeNextFrame(JSStackFrame *fp)
         if (end != ss->getPreviousInContext()->getCurrentFrame())
             next = NULL;
     }
+}
+
+inline js::RegExpStatics *
+JSContext::regExpStatics()
+{
+    return js::RegExpStatics::extractFrom(js::GetGlobalForScopeChain(this));
 }
 
 namespace js {
@@ -352,12 +373,12 @@ StackSpace::popInvokeFrame(const InvokeFrameGuard &fg)
     }
 }
 
-JS_REQUIRES_STACK JS_ALWAYS_INLINE
-InvokeFrameGuard::~InvokeFrameGuard()
+JS_ALWAYS_INLINE void
+InvokeFrameGuard::pop()
 {
-    if (JS_UNLIKELY(!pushed()))
-        return;
+    JS_ASSERT(pushed());
     cx_->stack().popInvokeFrame(*this);
+    cx_ = NULL;
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
@@ -508,10 +529,8 @@ class CompartmentChecker
      * compartment mismatches.
      */
     static void fail(JSCompartment *c1, JSCompartment *c2) {
-#ifdef DEBUG_jorendorff
         printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
-        // JS_NOT_REACHED("compartment mismatch");
-#endif
+        JS_NOT_REACHED("compartment mismatched");
     }
 
     void check(JSCompartment *c) {
@@ -527,7 +546,7 @@ class CompartmentChecker
 
     void check(JSObject *obj) {
         if (obj)
-            check(obj->getCompartment(context));
+            check(obj->getCompartment());
     }
 
     void check(const js::Value &v) {
@@ -564,8 +583,15 @@ class CompartmentChecker
     }
 
     void check(JSScript *script) {
-        if (script && script->u.object)
-            check(script->u.object);
+        if (script && script != JSScript::emptyScript()) {
+            check(script->compartment);
+            if (script->u.object)
+                check(script->u.object);
+        }
+    }
+
+    void check(JSStackFrame *fp) {
+        check(&fp->scopeChain());
     }
 
     void check(JSString *) { /* nothing for now */ }

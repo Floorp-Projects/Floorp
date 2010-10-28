@@ -264,8 +264,8 @@ public:
   // The current Y coordinate in the block
   nscoord mY;
 
-  // The combined area of all floats placed so far
-  nsRect mFloatCombinedArea;
+  // The overflow areas of all floats placed so far
+  nsOverflowAreas mFloatOverflowAreas;
 
   nsFloatCacheFreeList mFloatCacheFreeList;
 

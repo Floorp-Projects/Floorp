@@ -55,6 +55,7 @@ EXPORTS_mozilla/net = \
   NeckoChild.h        \
   NeckoCommon.h       \
   NeckoMessageUtils.h \
+  ChannelEventQueue.h \
   $(NULL)
 
 CPPSRCS =               \

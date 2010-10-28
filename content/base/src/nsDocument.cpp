@@ -2358,116 +2358,9 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   RetrieveRelevantHeaders(aChannel);
 
   mChannel = aChannel;
-  
-  nsresult rv = CheckFrameOptions();
+
+  nsresult rv = InitCSP();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = InitCSP();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-// Check if X-Frame-Options permits this document to be loaded as a subdocument.
-nsresult nsDocument::CheckFrameOptions()
-{
-  nsAutoString xfoHeaderValue;
-  this->GetHeaderData(nsGkAtoms::headerXFO, xfoHeaderValue);
-
-  // return early if header does not have one of the two values with meaning
-  if (!xfoHeaderValue.LowerCaseEqualsLiteral("deny") &&
-      !xfoHeaderValue.LowerCaseEqualsLiteral("sameorigin"))
-    return NS_OK;
-
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
-
-  if (docShell) {
-    PRBool framingAllowed = true;
-
-    // We need to check the location of this window and the location of the top
-    // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
-    // document must be same-origin with top window.  X-F-O: DENY requires that
-    // the document must never be framed.
-    nsCOMPtr<nsIDOMWindow> thisWindow = do_GetInterface(docShell);
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    thisWindow->GetTop(getter_AddRefs(topWindow));
-
-    // if the document is in the top window, it's not in a frame.
-    if (thisWindow == topWindow)
-      return NS_OK;
-
-    // Find the top docshell in our parent chain that doesn't have the system
-    // principal and use it for the principal comparison.  Finding the top
-    // content-type docshell doesn't work because some chrome documents are
-    // loaded in content docshells (see bug 593387).
-    nsIPrincipal* thisPrincipal = NodePrincipal();
-    nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(do_QueryInterface(docShell));
-    nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem,
-                                  curDocShellItem = thisDocShellItem;
-    nsCOMPtr<nsIDocument> topDoc;
-    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-    if (!ssm)
-      return NS_ERROR_CONTENT_BLOCKED;
-
-    // Traverse up the parent chain to the top docshell that doesn't have
-    // a system principal
-    curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem));
-    while (parentDocShellItem) {
-      PRBool system = PR_FALSE;
-      topDoc = do_GetInterface(parentDocShellItem);
-      if (topDoc) {
-        if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),
-                                                &system)) && system) {
-          break;
-        }
-      }
-      else {
-        return NS_ERROR_CONTENT_BLOCKED;
-      }
-      curDocShellItem = parentDocShellItem;
-      curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem));
-    }
-
-    // If this document has the top non-SystemPrincipal docshell it is not being
-    // framed or it is being framed by a chrome document, which we allow.
-    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
-    if (curDocShellItem == thisDocShellItem)
-      return NS_OK;
-
-    // If the value of the header is DENY, then the document
-    // should never be permitted to load as a subdocument.
-    if (xfoHeaderValue.LowerCaseEqualsLiteral("deny")) {
-      framingAllowed = false;
-    }
-
-    else if (xfoHeaderValue.LowerCaseEqualsLiteral("sameorigin")) {
-      // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
-      // parent chain must be from the same origin as this document.
-      nsCOMPtr<nsIURI> uri = static_cast<nsIDocument*>(this)->GetDocumentURI();
-      nsCOMPtr<nsIDOMDocument> topDOMDoc;
-      topWindow->GetDocument(getter_AddRefs(topDOMDoc));
-      topDoc = do_QueryInterface(topDOMDoc);
-      if (topDoc) {
-        nsCOMPtr<nsIURI> topUri = topDoc->GetDocumentURI();
-        nsresult rv = ssm->CheckSameOriginURI(uri, topUri, PR_TRUE);
-
-        if (NS_FAILED(rv)) {
-          framingAllowed = false;
-        }
-      }
-    }
-
-    if (!framingAllowed) {
-      // cancel the load and display about:blank
-      mChannel->Cancel(NS_BINDING_ABORTED);
-      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-      if (webNav) {
-        webNav->LoadURI(NS_LITERAL_STRING("about:blank").get(),
-                        0, nsnull, nsnull, nsnull);
-      }
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
-  }
 
   return NS_OK;
 }
@@ -4313,14 +4206,14 @@ nsDocument::EndLoad()
 
 void
 nsDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2,
-                                 PRInt32 aStateMask)
+                                 nsEventStates aStateMask)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStatesChanged,
                                (this, aContent1, aContent2, aStateMask));
 }
 
 void
-nsDocument::DocumentStatesChanged(PRInt32 aStateMask)
+nsDocument::DocumentStatesChanged(nsEventStates aStateMask)
 {
   // Invalidate our cached state.
   mGotDocumentState &= ~aStateMask;
@@ -4601,7 +4494,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  attribute = new nsDOMAttribute(nsnull, nodeInfo.forget(), value);
+  attribute = new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_FALSE);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aReturn);
@@ -4624,7 +4517,7 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
 
   nsAutoString value;
   nsDOMAttribute* attribute =
-    new nsDOMAttribute(nsnull, nodeInfo.forget(), value);
+    new nsDOMAttribute(nsnull, nodeInfo.forget(), value, PR_TRUE);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aResult);
@@ -7841,16 +7734,16 @@ nsDocument::MaybePreLoadImage(nsIURI* uri)
   }
 }
 
-PRInt32
+nsEventStates
 nsDocument::GetDocumentState()
 {
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_RTL_LOCALE)) {
+  if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
     if (IsDocumentRightToLeft()) {
       mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
     }
     mGotDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
   }
-  if (!(mGotDocumentState & NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+  if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
     nsIPresShell* shell = GetShell();
     if (shell && shell->GetPresContext() &&
         shell->GetPresContext()->IsTopLevelWindowInactive()) {

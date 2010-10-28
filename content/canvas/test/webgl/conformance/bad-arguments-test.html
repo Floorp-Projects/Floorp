@@ -50,13 +50,13 @@ assertMsg(loc != null, "getUniformLocation succeeded");
 
 var arguments = [
   { value: "foo",
-    throw: true },
+    throws: true },
   { value: 0,
-    throw: true },
+    throws: true },
   { value: null,
-    throw: false },
+    throws: false },
   { value: undefined,
-    throw: false }
+    throws: false }
 ];
 
 var argument;
@@ -67,7 +67,7 @@ function shouldBeEmptyString(command) {
 
 for (var i = 0; i < arguments.length; ++i) {
   var func, func2, func3;
-  if (arguments[i].throw) {
+  if (arguments[i].throws) {
     func = shouldThrow;
     func2 = shouldThrow;
     func3 = shouldThrow;

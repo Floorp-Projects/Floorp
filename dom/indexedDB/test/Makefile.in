@@ -76,11 +76,13 @@ TEST_FILES = \
   test_request_readyState.html \
   test_transaction_abort.html \
   test_setVersion.html \
+  test_setVersion_abort.html \
+  test_setVersion_events.html \
   test_writer_starvation.html \
   $(NULL)
 
 
-ifneq (mobile,$(MOZ_BUILD_APP))
+ifeq (browser,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
   browserHelpers.js \
   browser_permissionsPrompt.html \

@@ -12,7 +12,7 @@ load 291702-2.xul
 load 291702-3.xul
 load 294371-1.xul
 load 311457-1.html
-asserts(1) load 321056-1.xhtml # Bug 385845
+load 321056-1.xhtml
 load 326834-1.html
 load 322786-1.xul
 load 326879-1.xul
@@ -74,3 +74,4 @@ load 536931-1.xhtml
 asserts(1) load 538308-1.xul
 load 557174-1.xml
 load menulist-focused.xhtml
+load 564705-1.xul 

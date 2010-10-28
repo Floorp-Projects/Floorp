@@ -448,17 +448,17 @@ nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
 
 // This is a macro so that we don't evaluate the boolean last arg
 // unless we have to; it can be expensive
-#define IMAGE_OK(_state, _loadingOK)                        \
-   (((_state) & BAD_STATES) == 0 ||                         \
-    (((_state) & BAD_STATES) == NS_EVENT_STATE_LOADING &&   \
-     (_loadingOK)))
+#define IMAGE_OK(_state, _loadingOK)                                           \
+   (!(_state).HasAtLeastOneOfStates(BAD_STATES) ||                                    \
+    (!(_state).HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED) && \
+     (_state).HasState(NS_EVENT_STATE_LOADING) && (_loadingOK)))
 
 /* static */
 PRBool
 nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
                                         nsStyleContext* aStyleContext)
 {
-  PRInt32 state = aContent->IntrinsicState();
+  nsEventStates state = aContent->IntrinsicState();
   if (IMAGE_OK(state,
                HaveFixedSize(aStyleContext->GetStylePosition()))) {
     // Image is fine; do the image frame thing
@@ -857,7 +857,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
-  aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
+  aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
 
   // Now that that's all done, check whether we're resizing... if we are,
@@ -1261,7 +1261,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               getter_AddRefs(currentRequest));
     }
 
-    PRInt32 contentState = mContent->IntrinsicState();
+    nsEventStates contentState = mContent->IntrinsicState();
     PRBool imageOK = IMAGE_OK(contentState, PR_TRUE);
 
     nsCOMPtr<imgIContainer> imgCon;
@@ -1311,12 +1311,26 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
+  if (ShouldDisplaySelection()) {
+    rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
+                                 nsISelectionDisplay::DISPLAY_IMAGES);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
+
+  return NS_OK;
+}
+
+bool
+nsImageFrame::ShouldDisplaySelection()
+{
   // XXX what on EARTH is this code for?
   nsresult result;
   nsPresContext* presContext = PresContext();
   PRInt16 displaySelection = presContext->PresShell()->GetSelectionFlags();
   if (!(displaySelection & nsISelectionDisplay::DISPLAY_IMAGES))
-    return NS_OK;//no need to check the blue border, we cannot be drawn selected
+    return false;//no need to check the blue border, we cannot be drawn selected
 //insert hook here for image selection drawing
 #if IMAGE_EDITOR_CHECK
   //check to see if this frame is in an editor context
@@ -1354,7 +1368,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                 range->GetEndContainer(getter_AddRefs(rangeNode));
                 range->GetEndOffset(&rangeOffset);
                 if ((rangeNode == parentNode) && (rangeOffset == (thisOffset +1))) //+1 since that would mean this whole content is selected only
-                  return NS_OK; //do not allow nsFrame do draw any further selection
+                  return false; //do not allow nsFrame do draw any further selection
               }
             }
           }
@@ -1363,14 +1377,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 #endif
-  
-  rv = DisplaySelectionOverlay(aBuilder, &replacedContent,
-                               nsISelectionDisplay::DISPLAY_IMAGES);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
-
-  return NS_OK;
+  return true;
 }
 
 NS_IMETHODIMP

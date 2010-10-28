@@ -45,6 +45,7 @@ include svg-integration/reftest.list
 == dynamic-filter-contents-01.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-gradient-contents-02.svg pass.svg
+== dynamic-inner-svg-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
 == dynamic-marker-01.svg pass.svg
 == dynamic-marker-02.svg dynamic-marker-02-ref.svg
@@ -65,6 +66,7 @@ include svg-integration/reftest.list
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
+skip-if(gtk2Widget) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 569770
 == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
@@ -116,6 +118,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundin
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
+== objectBoundingBox-and-pattern-02.svg pass.svg
 == opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
@@ -195,6 +198,6 @@ random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fai
 == viewport-percent-graphic-user-01.svg pass.svg
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
-fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
+== svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml
 fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg

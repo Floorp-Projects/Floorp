@@ -45,17 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = \
 		dir_bug534293 \
+		html5lib_tree_construction \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	parser_datreader.js \
 		parser_web_testrunner.js \
-		html5lib_tree_dat1.txt \
-		html5lib_tree_dat2.txt \
-		html5lib_tree_dat3.txt \
 		html5_tree_construction_exceptions.js \
 		test_html5_tree_construction.html \
+		test_html5_tree_construction_part2.html \
 		test_bug174351.html \
 	 	test_bug339350.xhtml \
 		test_bug358797.html \
@@ -71,6 +70,8 @@ _TEST_FILES =	parser_datreader.js \
 		invalidchar.xml \
 		file_bug534293.sjs \
 		file_bug534293-slow.sjs \
+		test_bug599584.html \
+		iframe_bug599584.html \
 		$(NULL)
 
 # Disabled test due to orange on Linux

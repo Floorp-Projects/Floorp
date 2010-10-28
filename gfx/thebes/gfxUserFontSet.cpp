@@ -49,6 +49,11 @@
 
 #include "woff.h"
 
+#include "opentype-sanitiser.h"
+#include "ots-memory-stream.h"
+
+using namespace mozilla;
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gUserFontsLog = PR_NewLogModule("userfonts");
 #endif /* PR_LOGGING */
@@ -201,7 +206,7 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
 // block (in which case the passed-in block is NS_Free'd).
 // aLength is updated if necessary to the new length of the data.
 // Returns NULL and NS_Free's the incoming data in case of errors.
-const PRUint8*
+static const PRUint8*
 PrepareOpenTypeData(const PRUint8* aData, PRUint32* aLength)
 {
     switch(gfxFontUtils::DetermineFontDataType(aData, *aLength)) {
@@ -247,6 +252,177 @@ PrepareOpenTypeData(const PRUint8* aData, PRUint32* aLength)
     return nsnull;
 }
 
+// Based on ots::ExpandingMemoryStream from ots-memory-stream.h,
+// adapted to use Mozilla allocators and to allow the final
+// memory buffer to be adopted by the client.
+class ExpandingMemoryStream : public ots::OTSStream {
+public:
+    ExpandingMemoryStream(size_t initial, size_t limit)
+        : mLength(initial), mLimit(limit), mOff(0) {
+        mPtr = NS_Alloc(mLength);
+    }
+
+    ~ExpandingMemoryStream() {
+        NS_Free(mPtr);
+    }
+
+    // return the buffer, and give up ownership of it
+    // so the caller becomes responsible to call NS_Free
+    // when finished with it
+    void* forget() {
+        void* p = mPtr;
+        mPtr = nsnull;
+        return p;
+    }
+
+    bool WriteRaw(const void *data, size_t length) {
+        if ((mOff + length > mLength) ||
+            (mLength > std::numeric_limits<size_t>::max() - mOff)) {
+            if (mLength == mLimit) {
+                return false;
+            }
+            size_t newLength = (mLength + 1) * 2;
+            if (newLength < mLength) {
+                return false;
+            }
+            if (newLength > mLimit) {
+                newLength = mLimit;
+            }
+            mPtr = NS_Realloc(mPtr, newLength);
+            mLength = newLength;
+            return WriteRaw(data, length);
+        }
+        std::memcpy(static_cast<char*>(mPtr) + mOff, data, length);
+        mOff += length;
+        return true;
+    }
+
+    bool Seek(off_t position) {
+        if (position < 0) {
+            return false;
+        }
+        if (static_cast<size_t>(position) > mLength) {
+            return false;
+        }
+        mOff = position;
+        return true;
+    }
+
+    off_t Tell() const {
+        return mOff;
+    }
+
+private:
+    void*        mPtr;
+    size_t       mLength;
+    const size_t mLimit;
+    off_t        mOff;
+};
+
+// Call the OTS library to sanitize an sfnt before attempting to use it.
+// Returns a newly-allocated block, or NULL in case of fatal errors.
+static const PRUint8*
+SanitizeOpenTypeData(const PRUint8* aData, PRUint32 aLength,
+                     PRUint32& aSaneLength, bool aIsCompressed)
+{
+    // limit output/expansion to 256MB
+    ExpandingMemoryStream output(aIsCompressed ? aLength * 2 : aLength,
+                                 1024 * 1024 * 256);
+    if (ots::Process(&output, aData, aLength,
+        gfxPlatform::GetPlatform()->PreserveOTLTablesWhenSanitizing())) {
+        aSaneLength = output.Tell();
+        return static_cast<PRUint8*>(output.forget());
+    } else {
+        aSaneLength = 0;
+        return nsnull;
+    }
+}
+
+// Find the GDEF, GSUB, GPOS tables in aFontData (if present)
+// and cache copies in the given font entry.
+// The sfnt table directory has already been accepted by the OTS
+// sanitizer before this is called, so we can assume entries are valid.
+//
+// This is a temporary workaround until OTS has full support for the
+// G*** tables, so that they can safely be left in the main font.
+// When http://code.google.com/p/chromium/issues/detail?id=27131 gets fixed,
+// we should remove this hack.
+static void
+CacheLayoutTablesFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
+                          gfxFontEntry* aFontEntry)
+{
+    const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
+    PRUint16 numTables = sfntHeader->numTables;
+    
+    // table directory entries begin immediately following SFNT header
+    const TableDirEntry *dirEntry = 
+        reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
+
+    while (numTables-- > 0) {
+        switch (dirEntry->tag) {
+        case TRUETYPE_TAG('G','D','E','F'):
+        case TRUETYPE_TAG('G','P','O','S'):
+        case TRUETYPE_TAG('G','S','U','B'): {
+                nsTArray<PRUint8> buffer;
+                if (!buffer.AppendElements(aFontData + dirEntry->offset,
+                                           dirEntry->length)) {
+                    NS_WARNING("failed to cache font table - out of memory?");
+                    break;
+                }
+                aFontEntry->PreloadFontTable(dirEntry->tag, buffer);
+            }
+            break;
+
+        default:
+            if (dirEntry->tag > TRUETYPE_TAG('G','S','U','B')) {
+                // directory entries are required to be sorted,
+                // so we can terminate as soon as we find a tag > 'GSUB'
+                numTables = 0;
+            }
+            break;
+        }
+        ++dirEntry;
+    }
+}
+
+// OTS drops the OT Layout tables when decoding a WOFF file, so retrieve them
+// separately and cache them (unchecked) in the font entry; harfbuzz will
+// sanitize them when it needs to use them.
+static void
+PreloadTableFromWOFF(const PRUint8* aFontData, PRUint32 aLength,
+                     PRUint32 aTableTag, gfxFontEntry* aFontEntry)
+{
+    PRUint32 status = eWOFF_ok;
+    PRUint32 len = woffGetTableSize(aFontData, aLength, aTableTag, &status);
+    if (WOFF_SUCCESS(status) && len > 0) {
+        nsTArray<PRUint8> buffer;
+        if (!buffer.AppendElements(len)) {
+            NS_WARNING("failed to cache font table - out of memory?");
+            return;
+        }
+        woffGetTableToBuffer(aFontData, aLength, aTableTag,
+                             buffer.Elements(), buffer.Length(),
+                             &len, &status);
+        if (WOFF_FAILURE(status)) {
+            NS_WARNING("failed to cache font table - WOFF decoding error?");
+            return;
+        }
+        aFontEntry->PreloadFontTable(aTableTag, buffer);
+    }
+}
+
+static void
+CacheLayoutTablesFromWOFF(const PRUint8* aFontData, PRUint32 aLength,
+                          gfxFontEntry* aFontEntry)
+{
+    PreloadTableFromWOFF(aFontData, aLength, TRUETYPE_TAG('G','D','E','F'),
+                         aFontEntry);
+    PreloadTableFromWOFF(aFontData, aLength, TRUETYPE_TAG('G','P','O','S'),
+                         aFontEntry);
+    PreloadTableFromWOFF(aFontData, aLength, TRUETYPE_TAG('G','S','U','B'),
+                         aFontEntry);
+}
+
 // This is called when a font download finishes.
 // Ownership of aFontData passes in here, and the font set must
 // ensure that it is eventually deleted via NS_Free().
@@ -255,7 +431,8 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
                                const PRUint8 *aFontData, PRUint32 aLength, 
                                nsresult aDownloadStatus)
 {
-    NS_ASSERTION(aFontToLoad->mIsProxy, "trying to load font data for wrong font entry type");
+    NS_ASSERTION(aFontToLoad->mIsProxy,
+                 "trying to load font data for wrong font entry type");
 
     if (!aFontToLoad->mIsProxy) {
         NS_Free((void*)aFontData);
@@ -268,34 +445,90 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
     if (NS_SUCCEEDED(aDownloadStatus)) {
         gfxFontEntry *fe = nsnull;
 
-        // Unwrap/decompress or otherwise munge the downloaded data
+        // Unwrap/decompress/sanitize or otherwise munge the downloaded data
         // to make a usable sfnt structure.
-        // This may cause aFontData to point to a new buffer, or be NULL.
-        aFontData = PrepareOpenTypeData(aFontData, &aLength);
-        if (aFontData &&
-            gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
-            // Here ownership of aFontData is passed to the platform,
-            // which will delete it when no longer required
-            fe = gfxPlatform::GetPlatform()->MakePlatformFont(pe,
-                                                              aFontData,
-                                                              aLength);
-            if (fe) {
-                if (pe->mFeatureSettings) {
-                    fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
-                    fe->mFeatureSettings->AppendElements(*pe->mFeatureSettings);
-                }
-                fe->mLanguageOverride = pe->mLanguageOverride;
+
+        if (gfxPlatform::GetPlatform()->SanitizeDownloadedFonts()) {
+            gfxUserFontType fontType =
+                gfxFontUtils::DetermineFontDataType(aFontData, aLength);
+
+            // Call the OTS sanitizer; this will also decode WOFF to sfnt
+            // if necessary. The original data in aFontData is left unchanged.
+            PRUint32 saneLen;
+            const PRUint8* saneData =
+                SanitizeOpenTypeData(aFontData, aLength, saneLen,
+                                     fontType == GFX_USERFONT_WOFF);
+#ifdef DEBUG
+            if (!saneData) {
+                char buf[1000];
+                sprintf(buf, "downloaded font rejected for \"%s\"",
+                        NS_ConvertUTF16toUTF8(pe->FamilyName()).get());
+                NS_WARNING(buf);
             }
-            aFontData = nsnull; // the platform may have freed the data now!
+#endif
+            if (saneData) {
+                // Here ownership of saneData is passed to the platform,
+                // which will delete it when no longer required
+                fe = gfxPlatform::GetPlatform()->MakePlatformFont(pe,
+                                                                  saneData,
+                                                                  saneLen);
+                if (fe) {
+                    // if aFontData includes OpenType layout tables, we need to
+                    // cache them in the font entry for harfbuzz to use,
+                    // as they will have been dropped from the sanitized sfnt
+                    // (temporary hack, see CacheLayoutTablesFromSFNT)
+                    switch (fontType) {
+                    case GFX_USERFONT_OPENTYPE:
+                        CacheLayoutTablesFromSFNT(aFontData, aLength, fe);
+                        break;
+
+                    case GFX_USERFONT_WOFF:
+                        CacheLayoutTablesFromWOFF(aFontData, aLength, fe);
+                        break;
+
+                    default:
+                        break;
+                    }
+                } else {
+                    NS_WARNING("failed to make platform font from download");
+                }
+            }
         } else {
-            // the data was unusable, so just discard it
-            // (error will be reported below, if logging is enabled)
+            // FIXME: this code can be removed once we remove the pref to
+            // disable the sanitizer; the PrepareOpenTypeData and
+            // ValidateSFNTHeaders functions will then be obsolete.
+            aFontData = PrepareOpenTypeData(aFontData, &aLength);
+
             if (aFontData) {
-                NS_Free((void*)aFontData);
+                if (gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
+                    // Here ownership of aFontData is passed to the platform,
+                    // which will delete it when no longer required
+                    fe = gfxPlatform::GetPlatform()->MakePlatformFont(pe,
+                                                                      aFontData,
+                                                                      aLength);
+                    aFontData = nsnull; // we must NOT free this below!
+                } else {
+                    // the data was unusable, so just discard it
+                    // (error will be reported below, if logging is enabled)
+                    NS_WARNING("failed to make platform font from download");
+                }
             }
         }
 
+        if (aFontData) {
+            NS_Free((void*)aFontData);
+            aFontData = nsnull;
+        }
+
         if (fe) {
+            // copy OpenType feature/language settings from the proxy to the
+            // newly-created font entry
+            if (pe->mFeatureSettings) {
+                fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
+                fe->mFeatureSettings->AppendElements(*pe->mFeatureSettings);
+            }
+            fe->mLanguageOverride = pe->mLanguageOverride;
+
             static_cast<gfxMixedFontFamily*>(pe->mFamily)->ReplaceFontEntry(pe, fe);
             IncrementGeneration();
 #ifdef PR_LOGGING
@@ -322,9 +555,6 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
         }
     } else {
         // download failed
-        if (aFontData) {
-            NS_Free((void*)aFontData);
-        }
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
             nsCAutoString fontURI;
@@ -335,6 +565,10 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
                  aDownloadStatus));
         }
 #endif
+    }
+
+    if (aFontData) {
+        NS_Free((void*)aFontData);
     }
 
     // error occurred, load next src

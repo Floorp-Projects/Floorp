@@ -316,6 +316,10 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
     return PR_FALSE;
   }
 
+  if (!aPluginTag) {
+    return PR_FALSE;
+  }
+
 #ifdef XP_MACOSX
   // Only allow on Mac OS X 10.6 or higher.
   if (OSXVersion() < 0x00001060) {
@@ -324,8 +328,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   // Blacklist Flash 10.0 or lower since it may try to negotiate Carbon/Quickdraw
   // which are not supported out of process. Also blacklist Flash 10.1 if this
   // machine has an Intel GMA9XX GPU because Flash will negotiate Quickdraw graphics.
-  if (aPluginTag && 
-      aPluginTag->mFileName.EqualsIgnoreCase("flash player.plugin")) {
+  if (aPluginTag->mFileName.EqualsIgnoreCase("flash player.plugin")) {
     // If the first '.' is before position 2 or the version 
     // starts with 10.0 then we are dealing with Flash 10 or less.
     if (aPluginTag->mVersion.FindChar('.') < 2) {
@@ -384,6 +387,15 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 #else
   nsCAutoString prefGroupKey("dom.ipc.plugins.enabled.");
 #endif
+
+  // Java plugins include a number of different file names,
+  // so use the mime type (mIsJavaPlugin) and a special pref.
+  PRBool javaIsEnabled;
+  if (aPluginTag->mIsJavaPlugin &&
+      NS_SUCCEEDED(prefs->GetBoolPref("dom.ipc.plugins.java.enabled", &javaIsEnabled)) &&
+      !javaIsEnabled) {
+    return PR_FALSE;
+  }
 
   PRUint32 prefCount;
   char** prefNames;
@@ -593,10 +605,15 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   if (!pluginHost) return NPERR_GENERIC_ERROR;
 
   nsCOMPtr<nsIPluginStreamListener> listener;
+  // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
+  // the listener's destructor will do the notification while we are about to
+  // return a failure code.
+  // Call SetCallNotify(true) bellow after we are sure we cannot return a failure 
+  // code.
   if (!target)
     ((nsNPAPIPluginInstance*)inst)->NewNotifyStream(getter_AddRefs(listener),
                                                     notifyData,
-                                                    bDoNotify, relativeURL);
+                                                    PR_FALSE, relativeURL);
 
   switch (type) {
   case eNPPStreamTypeInternal_Get:
@@ -614,6 +631,15 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     }
   default:
     NS_ERROR("how'd I get here");
+  }
+
+  if (listener) {
+    // SetCallNotify(bDoNotify) here, see comment above.
+    // XXX Not sure of this cast here, we should probably have an interface API
+    // for this.
+    nsNPAPIPluginStreamListener* npAPIPluginStreamListener = 
+      static_cast<nsNPAPIPluginStreamListener*>(listener.get());
+    npAPIPluginStreamListener->SetCallNotify(bDoNotify);
   }
 
   return NPERR_NO_ERROR;
@@ -840,7 +866,7 @@ nsPluginThreadRunnable::Run()
   if (mFunc) {
     PluginDestructionGuard guard(mInstance);
 
-    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull, nsnull);
+    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull);
   }
 
   return NS_OK;

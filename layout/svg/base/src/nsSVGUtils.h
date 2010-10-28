@@ -175,10 +175,16 @@ public:
   void SetRenderMode(RenderMode aMode) { mRenderMode = aMode; }
   RenderMode GetRenderMode() { return mRenderMode; }
 
+  void SetPaintingToWindow(PRBool aPaintingToWindow) {
+    mPaintingToWindow = aPaintingToWindow;
+  }
+  PRBool IsPaintingToWindow() { return mPaintingToWindow; }
+
 private:
   RenderMode                    mRenderMode;
   nsCOMPtr<nsIRenderingContext> mRenderingContext;
   nsRefPtr<gfxContext>          mGfxContext;
+  PRPackedBool                  mPaintingToWindow;
 };
 
 class nsAutoSVGRenderMode

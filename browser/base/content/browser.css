@@ -37,14 +37,14 @@ tabbrowser {
   min-width: 1px;
 }
 
-.tab-progress:not([fadein]):not([pinned]),
+.tab-throbber:not([fadein]):not([pinned]),
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),
 .tab-close-button:not([fadein]):not([pinned]) {
   opacity: 0 !important;
 }
 
-.tab-progress,
+.tab-throbber,
 .tab-label,
 .tab-icon-image,
 .tab-close-button {
@@ -106,6 +106,14 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   visibility: collapse;
 }
 
+#feed-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+#feed-menu > .feed-menuitem:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
 #main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
@@ -146,13 +154,8 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
-#urlbar-progress {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-progress");
-}
-
 /* Some child nodes want to be ordered based on the locale's direction, while
    everything else should be ltr. */
-#urlbar-progress:-moz-locale-dir(rtl),
 .urlbar-input-box:-moz-locale-dir(rtl) {
   direction: rtl;
 }
@@ -162,15 +165,6 @@ html|*.urlbar-input {
 }
 
 /* over-link in location bar */
-
-/* Delay transitions on mouseout.  (Mouseover transitions are delayed by a
-   timeout in urlbarBindings.xml.) */
-.urlbar-textbox-container:not([overlinkstate]),
-.urlbar-over-link-layer:not([overlinkstate]),
-.urlbar-textbox-container-children:not([overlinkstate]),
-.urlbar-over-link-box:not([overlinkstate]) {
-  -moz-transition-delay: 100ms;
-}
 
 .urlbar-over-link-layer[overlinkstate="fade-in"],
 .urlbar-textbox-container:not([overlinkstate]) {
@@ -268,9 +262,7 @@ richlistitem[type~="action"]:-moz-locale-dir(rtl) > .ac-url-box {
 
 /* ::::: Unified Back-/Forward Button ::::: */
 #back-button > .toolbarbutton-menu-dropmarker,
-#forward-button > .toolbarbutton-menu-dropmarker,
-#back-forward-dropmarker > .toolbarbutton-icon,
-#back-forward-dropmarker > .toolbarbutton-text {
+#forward-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 .unified-nav-current {

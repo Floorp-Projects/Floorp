@@ -129,7 +129,7 @@ ClientEngine.prototype = {
 
     // Generate a client name if we don't have a useful one yet
     let user = Svc.Env.get("USER") || Svc.Env.get("USERNAME") ||
-               Svc.Prefs.get("username");
+               Svc.Prefs.get("account") || Svc.Prefs.get("username");
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
     let app = brand.get("brandShortName");
 

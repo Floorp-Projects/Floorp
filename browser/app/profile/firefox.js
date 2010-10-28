@@ -330,6 +330,7 @@ pref("browser.search.log", false);
 // Ordering of Search Engines in the Engine list. 
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
+pref("browser.search.order.3",                "chrome://browser-region/locale/region.properties");
 
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
@@ -791,9 +792,9 @@ pref("browser.sessionstore.interval", 15000);
 pref("browser.sessionstore.postdata", 0);
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
-pref("browser.sessionstore.privacy_level", 1);
+pref("browser.sessionstore.privacy_level", 0);
 // the same as browser.sessionstore.privacy_level, but for saving deferred session data
-pref("browser.sessionstore.privacy_level_deferred", 2);
+pref("browser.sessionstore.privacy_level_deferred", 0);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
 // how many windows can be reopened (per session) - on non-OS X platforms this
@@ -802,7 +803,11 @@ pref("browser.sessionstore.max_windows_undo", 3);
 // number of crashes that can occur before the about:sessionrestore page is displayed
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("browser.sessionstore.max_resumed_crashes", 1);
-// number of tabs to restore concurrently
+// The number of tabs that can restore concurrently:
+// < 0 = All tabs can restore at the same time
+//   0 = Only the selected tab in each window will be restored
+//       Other tabs won't be restored until they are selected
+//   N = The number of tabs to restore at the same time
 pref("browser.sessionstore.max_concurrent_tabs", 3);
 
 // allow META refresh by default
@@ -944,7 +949,6 @@ pref("dom.ipc.plugins.enabled.i386.flash player.plugin", true);
 pref("dom.ipc.plugins.enabled.i386.javaplugin2_npapi.plugin", true);
 // x86_64 ipc preferences
 pref("dom.ipc.plugins.enabled.x86_64", true);
-pref("dom.ipc.plugins.enabled.x86_64.test.plugin", false);
 #elifdef MOZ_IPC
 pref("dom.ipc.plugins.enabled", true);
 #else
@@ -961,7 +965,7 @@ pref("browser.taskbar.lists.frequent.enabled", true);
 pref("browser.taskbar.lists.recent.enabled", false);
 pref("browser.taskbar.lists.maxListItemCount", 7);
 pref("browser.taskbar.lists.tasks.enabled", true);
-pref("browser.taskbar.lists.refreshInSeconds", 30);
+pref("browser.taskbar.lists.refreshInSeconds", 120);
 #endif
 #endif
 
@@ -1050,3 +1054,5 @@ pref("devtools.inspector.enabled", false);
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
 
+// Whether the Panorama should animate going in/out of tabs
+pref("browser.panorama.animate_zoom", true);

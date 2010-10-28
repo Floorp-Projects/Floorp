@@ -87,12 +87,11 @@ function runTest()
     // Point the uniform sampler to texture unit 0
     gl.uniform1i(textureLoc, 0);
     // Draw the triangles
-    wtu.drawQuad(gl, [255, 255, 255, 255]);
+    wtu.drawQuad(gl, [100, 100, 100, 255]);
 
     // Spot check a couple of 2x2 regions in the upper and lower left
-    // corners; they should be the background color rather than
-    // garbage
-    color = [0, 0, 0]
+    // corners; they should be the rgb values in the texture.
+    color = [255, 255, 255]
     debug("Checking lower left corner");
     wtu.checkCanvasRect(gl, 1, gl.canvas.height - 3, 2, 2, color,
                         "shouldBe " + color);

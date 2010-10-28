@@ -146,6 +146,7 @@ namespace JSC {
         typedef SegmentedVector<int, 64> Jumps;
 
         unsigned char *buffer() const { return m_buffer.buffer(); }
+        bool oom() const { return m_buffer.oom(); }
 
         // ARM conditional constants
         typedef enum {
@@ -213,7 +214,7 @@ namespace JSC {
             FMSTAT = 0x0ef1fa10
 #if WTF_ARM_ARCH_VERSION >= 5
            ,CLZ = 0x016f0f10,
-            BKPT = 0xe120070,
+            BKPT = 0xe1200070,
             BLX = 0x012fff30
 #endif
 #if WTF_ARM_ARCH_VERSION >= 7
@@ -252,9 +253,9 @@ namespace JSC {
         };
 
         enum {
-            padForAlign8  = 0x00,
-            padForAlign16 = 0x0000,
-            padForAlign32 = 0xee120070
+            padForAlign8  = (int)0x00,
+            padForAlign16 = (int)0x0000,
+            padForAlign32 = (int)0xe12fff7f  // 'bkpt 0xffff'
         };
 
         typedef enum {
@@ -306,7 +307,7 @@ namespace JSC {
             }
 
             int m_offset : 31;
-            int m_used : 1;
+            bool m_used : 1;
         };
 
         // Instruction formating
@@ -1283,7 +1284,7 @@ namespace JSC {
                     // Deal with special encodings.
                     if ((type == LSL) && (imm == 0)) {
                         // "LSL #0" doesn't shift at all (and is the default).
-                        sprintf(out, rm);
+                        sprintf(out, "%s", rm);
                         return;
                     }
 

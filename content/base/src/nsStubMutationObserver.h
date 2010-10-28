@@ -46,6 +46,7 @@
 #define nsStubMutationObserver_h_
 
 #include "nsIMutationObserver.h"
+#include "nsIMutationObserver2.h"
 
 /**
  * There are two advantages to inheriting from nsStubMutationObserver
@@ -60,6 +61,10 @@
  */
 class nsStubMutationObserver : public nsIMutationObserver {
   NS_DECL_NSIMUTATIONOBSERVER
+};
+
+class nsStubMutationObserver2 : public nsIMutationObserver2 {
+  NS_DECL_NSIMUTATIONOBSERVER2
 };
 
 #endif /* !defined(nsStubMutationObserver_h_) */

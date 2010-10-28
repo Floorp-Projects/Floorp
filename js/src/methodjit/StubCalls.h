@@ -48,9 +48,8 @@ namespace mjit {
 namespace stubs {
 
 void JS_FASTCALL This(VMFrame &f);
-void JS_FASTCALL ComputeThis(VMFrame &f);
-JSObject * JS_FASTCALL NewInitArray(VMFrame &f);
-JSObject * JS_FASTCALL NewInitObject(VMFrame &f);
+JSObject * JS_FASTCALL NewInitArray(VMFrame &f, uint32 count);
+JSObject * JS_FASTCALL NewInitObject(VMFrame &f, uint32 count);
 JSObject * JS_FASTCALL NewArray(VMFrame &f, uint32 len);
 void JS_FASTCALL Trap(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Debugger(VMFrame &f, jsbytecode *pc);
@@ -66,6 +65,8 @@ void JS_FASTCALL SlowNew(VMFrame &f, uint32 argc);
 void JS_FASTCALL SlowCall(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedNew(VMFrame &f, uint32 argc);
 void * JS_FASTCALL UncachedCall(VMFrame &f, uint32 argc);
+void JS_FASTCALL EnterScript(VMFrame &f);
+void JS_FASTCALL LeaveScript(VMFrame &f);
 
 /*
  * Result struct for UncachedXHelper.
@@ -103,9 +104,8 @@ void JS_FASTCALL Throw(VMFrame &f);
 void JS_FASTCALL PutCallObject(VMFrame &f);
 void JS_FASTCALL PutActivationObjects(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
-void JS_FASTCALL WrapPrimitiveThis(VMFrame &f);
 #if JS_MONOIC
-void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::MICInfo *mic);
+void * JS_FASTCALL InvokeTracer(VMFrame &f, ic::TraceICInfo *tic);
 #else
 void * JS_FASTCALL InvokeTracer(VMFrame &f);
 #endif
@@ -114,6 +114,7 @@ void * JS_FASTCALL LookupSwitch(VMFrame &f, jsbytecode *pc);
 void * JS_FASTCALL TableSwitch(VMFrame &f, jsbytecode *origPc);
 
 void JS_FASTCALL BindName(VMFrame &f);
+void JS_FASTCALL BindNameNoCache(VMFrame &f, JSAtom *atom);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetPropNoCache(VMFrame &f, JSAtom *atom);
@@ -121,6 +122,7 @@ template<JSBool strict> void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom)
 template<JSBool strict> void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
+void JS_FASTCALL GetPropNoCache(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL CallElem(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
@@ -205,7 +207,6 @@ void JS_FASTCALL Iter(VMFrame &f, uint32 flags);
 void JS_FASTCALL IterNext(VMFrame &f);
 JSBool JS_FASTCALL IterMore(VMFrame &f);
 void JS_FASTCALL EndIter(VMFrame &f);
-template<JSBool strict> void JS_FASTCALL ForName(VMFrame &f, JSAtom *atom);
 
 JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 JSString * JS_FASTCALL TypeOf(VMFrame &f);

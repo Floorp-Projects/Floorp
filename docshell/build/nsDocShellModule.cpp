@@ -57,7 +57,7 @@
 #ifdef MOZ_ENABLE_DBUS
 #include "nsDBusHandlerApp.h"
 #endif 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
 #include "nsExternalSharingAppService.h"
 #endif
 
@@ -113,7 +113,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(PlatformLocalHandlerApp_t)
 #ifdef MOZ_ENABLE_DBUS
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDBusHandlerApp)
 #endif 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalSharingAppService)
 #endif
 
@@ -140,7 +140,7 @@ NS_DEFINE_NAMED_CID(NS_LOCALHANDLERAPP_CID);
 #ifdef MOZ_ENABLE_DBUS
 NS_DEFINE_NAMED_CID(NS_DBUSHANDLERAPP_CID);
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
 NS_DEFINE_NAMED_CID(NS_EXTERNALSHARINGAPPSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SHENTRY_CID);
@@ -167,7 +167,7 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
 #ifdef MOZ_ENABLE_DBUS
   { &kNS_DBUSHANDLERAPP_CID, false, NULL, nsDBusHandlerAppConstructor },
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
   { &kNS_EXTERNALSHARINGAPPSERVICE_CID, false, NULL, nsExternalSharingAppServiceConstructor },
 #endif
   { &kNS_SHENTRY_CID, false, NULL, nsSHEntryConstructor },
@@ -183,6 +183,7 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { "@mozilla.org/docshell;1", &kNS_DOCSHELL_CID },
   { NS_URIFIXUP_CONTRACTID, &kNS_DEFAULTURIFIXUP_CID },
   { NS_WEBNAVIGATION_INFO_CONTRACTID, &kNS_WEBNAVIGATION_INFO_CID },
+  { NS_ABOUT_MODULE_CONTRACTID_PREFIX "", &kNS_ABOUT_REDIRECTOR_MODULE_CID },
   { NS_ABOUT_MODULE_CONTRACTID_PREFIX "about", &kNS_ABOUT_REDIRECTOR_MODULE_CID },
   { NS_ABOUT_MODULE_CONTRACTID_PREFIX "config", &kNS_ABOUT_REDIRECTOR_MODULE_CID },
 #ifdef MOZ_CRASHREPORTER
@@ -211,7 +212,7 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
 #ifdef MOZ_ENABLE_DBUS
   { NS_DBUSHANDLERAPP_CONTRACTID, &kNS_DBUSHANDLERAPP_CID },
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
   { NS_EXTERNALSHARINGAPPSERVICE_CONTRACTID, &kNS_EXTERNALSHARINGAPPSERVICE_CID },
 #endif
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
