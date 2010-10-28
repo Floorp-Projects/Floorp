@@ -299,6 +299,7 @@ function Content() {
     addEventListener("DOMActivate", this, true);
 
   addEventListener("MozApplicationManifest", this, false);
+  addEventListener("command", this, false);
 
   this._progressController = new ProgressController(this);
   this._progressController.start();
@@ -326,6 +327,35 @@ Content.prototype = {
           manifest: doc.documentElement.getAttribute("manifest"),
           charset: doc.characterSet
         });
+        break;
+      }
+      case "command": {
+        // Don't trust synthetic events
+        if (!aEvent.isTrusted)
+          return;
+    
+        let ot = aEvent.originalTarget;
+        let errorDoc = ot.ownerDocument;
+    
+        // If the event came from an ssl error page, it is probably either the "Add
+        // Exception…" or "Get me out of here!" button
+        if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+          let perm = errorDoc.getElementById("permanentExceptionButton");
+          let temp = errorDoc.getElementById("temporaryExceptionButton"); 
+          if (ot == temp || ot == perm) {
+            let action = (ot == perm ? "permanent" : "temporary");
+            sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: action });
+          }
+          else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
+            sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: "leave" });
+          }
+        }
+        else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
+          if (ot == errorDoc.getElementById("errorTryAgain")) {
+            // Make sure we're online before attempting to load
+            Util.forceOnline();
+          }
+        }
         break;
       }
     }
