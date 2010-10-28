@@ -228,7 +228,7 @@ spinbuttons {
   background-image: url("chrome://browser/skin/images/button-bg.png");
   background-size: auto 100%;
   border: 1px solid #cacdd5;
-  list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
+  list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
 }
 
 .spinbuttons-up:hover:active:not([disabled=true]),
@@ -238,7 +238,7 @@ spinbuttons {
 
 .spinbuttons-up {
   border-radius: 0px 8px 8px 0px;
-  list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
+  list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
 }
 
 .spinbuttons-up:-moz-locale-dir(rtl) {
