@@ -1270,9 +1270,19 @@ namespace nanojit
 
     void Assembler::asm_param(LIns* ins)
     {
+        underrunProtect(12);
         uint32_t a = ins->paramArg();
-        uint32_t kind = ins->paramKind();
-        deprecated_prepResultReg(ins, rmask(argRegs[a]));
+        NanoAssertMsg(ins->paramKind() == 0, "savedRegs are not used on SPARC");
+
+        if (a < sizeof(argRegs)/sizeof(argRegs[0])) { // i0 - i5
+            prepareResultReg(ins, rmask(argRegs[a]));
+        } else {
+            // Incoming arg is on stack
+            Register r = prepareResultReg(ins, GpRegs);
+            int32_t d = a * sizeof (intptr_t) + kLinkageAreaSize;
+            LDSW32(FP, d, r);
+        }
+        freeResourcesOf(ins);
     }
 
     void Assembler::asm_immi(LIns* ins)
