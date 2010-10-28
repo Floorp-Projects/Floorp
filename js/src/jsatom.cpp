@@ -627,7 +627,7 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
             fputs("<uninitialized>", fp);
         } else {
             JSString *key = AtomEntryToKey(entry);
-            js_FileEscapedString(fp, key, '"');
+            FileEscapedString(fp, key, '"');
             uintN flags = AtomEntryFlags(entry);
             if (flags != 0) {
                 fputs((flags & (ATOM_PINNED | ATOM_INTERNED))

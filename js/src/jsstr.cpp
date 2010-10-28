@@ -3885,6 +3885,30 @@ js_CompareStrings(JSString *str1, JSString *str2)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_CompareStrings, STRING, STRING, 1, nanojit::ACCSET_NONE)
 
+namespace js {
+
+JSBool
+MatchStringAndAscii(JSString *str, const char *asciiBytes)
+{
+    size_t length = strlen(asciiBytes);
+#ifdef DEBUG
+    for (size_t i = 0; i != length; ++i)
+        JS_ASSERT(unsigned(asciiBytes[i]) <= 127);
+#endif
+    if (length != str->length())
+        return false;
+    const jschar *chars = str->chars();
+    for (size_t i = 0; i != length; ++i) {
+        if (unsigned(asciiBytes[i]) != unsigned(chars[i]))
+            return false;
+    }
+    return true;
+}
+
+} /* namespacejs */
+
+
+
 size_t
 js_strlen(const jschar *s)
 {
@@ -6039,11 +6063,10 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     return ucs4Char;
 }
 
-#if defined DEBUG || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
+namespace js {
 
-JS_FRIEND_API(size_t)
-js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
-                        JSString *str, uint32 quote)
+size_t
+PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, JSString *str, uint32 quote)
 {
     const jschar *chars, *charsEnd;
     size_t n;
@@ -6055,13 +6078,16 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
     } state;
 
     JS_ASSERT(quote == 0 || quote == '\'' || quote == '"');
-    JS_ASSERT_IF(buffer, bufferSize != 0);
     JS_ASSERT_IF(!buffer, bufferSize == 0);
     JS_ASSERT_IF(fp, !buffer);
 
+    if (bufferSize == 0)
+        buffer = NULL;
+    else
+        bufferSize--;
+
     str->getCharsAndEnd(chars, charsEnd);
     n = 0;
-    --bufferSize;
     state = FIRST_QUOTE;
     shift = 0;
     hex = 0;
@@ -6135,11 +6161,16 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
             break;
         }
         if (buffer) {
-            if (n == bufferSize)
-                break;
-            buffer[n] = c;
+            JS_ASSERT(n <= bufferSize);
+            if (n != bufferSize) {
+                buffer[n] = c;
+            } else {
+                buffer[n] = '\0';
+                buffer = NULL;
+            }
         } else if (fp) {
-            fputc(c, fp);
+            if (fputc(c, fp) < 0)
+                return size_t(-1);
         }
         n++;
     }
@@ -6149,4 +6180,4 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
     return n;
 }
 
-#endif
+} /* namespace js */

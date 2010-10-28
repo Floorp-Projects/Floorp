@@ -445,7 +445,7 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
-    fputs(JS_GetStringBytes(str), gOutFile);
+    JS_FileEscapedString(gOutFile, str, 0);
     fflush(gOutFile);
     return JS_TRUE;
 }

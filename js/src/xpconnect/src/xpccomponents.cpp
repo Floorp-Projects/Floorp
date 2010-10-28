@@ -2533,15 +2533,13 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         }
 
         JSString* str = JS_ValueToString(cx, argv[1]);
-        if(!str)
+        jsid id;
+        if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
         jsval val;
-        if(!JS_GetProperty(cx, ifacesObj, JS_GetStringBytes(str), &val) ||
-           JSVAL_IS_PRIMITIVE(val))
-        {
+        if(!JS_GetPropertyById(cx, ifacesObj, id, &val) || JSVAL_IS_PRIMITIVE(val))
             return ThrowAndFail(NS_ERROR_XPC_BAD_IID, cx, _retval);
-        }
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         if(NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
@@ -2589,15 +2587,13 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         }
 
         JSString* str = JS_ValueToString(cx, argv[0]);
-        if(!str)
+        jsid id;
+        if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
         jsval val;
-        if(!JS_GetProperty(cx, classesObj, JS_GetStringBytes(str), &val) ||
-           JSVAL_IS_PRIMITIVE(val))
-        {
+        if(!JS_GetPropertyById(cx, classesObj, id, &val) || JSVAL_IS_PRIMITIVE(val))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CID, cx, _retval);
-        }
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         if(NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),

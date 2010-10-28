@@ -8908,7 +8908,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 #ifdef DEBUG_brendanXXX
                 printf("1: %d, %d => ", i, j);
                 if (accum)
-                    js_FileEscapedString(stdout, accum, 0);
+                    FileEscapedString(stdout, accum, 0);
                 else
                     fputs("NULL", stdout);
                 fputc('\n', stdout);
@@ -8944,7 +8944,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 return JS_FALSE;
 #ifdef DEBUG_brendanXXX
             printf("2: %d, %d => ", i, j);
-            js_FileEscapedString(stdout, str, 0);
+            FileEscapedString(stdout, str, 0);
             printf(" (%u)\n", str->length());
 #endif
             ++j;

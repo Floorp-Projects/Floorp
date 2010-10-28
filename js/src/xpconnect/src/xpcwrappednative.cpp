@@ -3438,11 +3438,11 @@ static void DEBUG_PrintShadowObjectInfo(const char* header,
 static void ReportSingleMember(jsval ifaceName,
                                jsval memberName)
 {
-    if(JSVAL_IS_STRING(memberName))
-        printf("%s::%s", JS_GetStringBytes(JSVAL_TO_STRING(ifaceName)),
-                         JS_GetStringBytes(JSVAL_TO_STRING(memberName)));
-    else
-        printf("%s", JS_GetStringBytes(JSVAL_TO_STRING(ifaceName)));
+    JS_FileEscapedString(stdout, ifaceName, 0);
+    if(JSVAL_IS_STRING(memberName)) {
+        fputs("::", stdout);
+        JS_FileEscapedString(stdout, memberName, 0);
+    }
 }
 
 static void ShowHeader(JSBool* printedHeader,
@@ -3472,8 +3472,9 @@ static void ShowOneShadow(jsval ifaceName1,
 
 static void ShowDuplicateInterface(jsval ifaceName)
 {
-    printf(" ! %s appears twice in the nsIClassInfo interface set!\n",
-           JS_GetStringBytes(JSVAL_TO_STRING(ifaceName)));
+    fputs(" ! ", stdout);
+    JS_FileEscapedString(stdout, ifaceName, 0);
+    fputs(" appears twice in the nsIClassInfo interface set!\n", stdout);
 }
 
 static JSBool InterfacesAreRelated(XPCNativeInterface* iface1,
