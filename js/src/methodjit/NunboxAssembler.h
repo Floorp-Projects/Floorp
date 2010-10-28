@@ -90,22 +90,15 @@ class NunboxAssembler : public JSC::MacroAssembler
         return BaseIndex(address.base, address.index, address.scale, address.offset + TAG_OFFSET);
     }
 
-    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, bool inlineAccess,
-                  RegisterID type, RegisterID data) {
-        JS_ASSERT(type != data);
-        Address address(obj, JSObject::getFixedSlotOffset(slot));
-        RegisterID activeAddressReg = obj;
-        if (!inlineAccess) {
-            loadPtr(Address(obj, offsetof(JSObject, slots)), clobber);
-            address = Address(clobber, slot * sizeof(Value));
-            activeAddressReg = clobber;
-        }
-        if (activeAddressReg == type) {
-            loadPayload(address, data);
-            loadTypeTag(address, type);
+    void loadInlineSlot(RegisterID objReg, uint32 slot,
+                        RegisterID typeReg, RegisterID dataReg) {
+        Address address(objReg, JSObject::getFixedSlotOffset(slot));
+        if (objReg == typeReg) {
+            loadPayload(address, dataReg);
+            loadTypeTag(address, typeReg);
         } else {
-            loadTypeTag(address, type);
-            loadPayload(address, data);
+            loadTypeTag(address, typeReg);
+            loadPayload(address, dataReg);
         }
     }
 
