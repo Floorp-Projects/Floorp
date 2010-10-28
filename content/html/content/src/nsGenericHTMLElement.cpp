@@ -2131,12 +2131,14 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsAString& 
 {
   nsCOMPtr<nsIURI> uri;
   PRBool hadAttr = GetURIAttr(aAttr, aBaseAttr, PR_FALSE, getter_AddRefs(uri));
-
-  // If the content attribute isn't set or the URL is invalid, the default value
-  // should be returned. The default default value is the empty string and it
-  // looks like no attribute have a specified default value.
-  if (!hadAttr || !uri) {
+  if (!hadAttr) {
     aResult.Truncate();
+    return NS_OK;
+  }
+
+  if (!uri) {
+    // Just return the attr value
+    GetAttr(kNameSpaceID_None, aAttr, aResult);
     return NS_OK;
   }
 

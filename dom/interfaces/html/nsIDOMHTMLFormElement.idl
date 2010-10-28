@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(0884ce23-e069-499e-a13c-a91c8ae0fc98)]
+[scriptable, uuid(653dc482-d6db-4e85-bdd9-151fd110e7b1)]
 interface nsIDOMHTMLFormElement : nsIDOMHTMLElement
 {
            attribute DOMString            name;
@@ -65,4 +65,7 @@ interface nsIDOMHTMLFormElement : nsIDOMHTMLElement
 
   void                      submit();
   void                      reset();
+
+  // This property returns the resolved action URI.
+  readonly attribute DOMString            mozActionUri;
 };
