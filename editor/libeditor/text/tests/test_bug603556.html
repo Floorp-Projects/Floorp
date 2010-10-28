@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=603556
+-->
+<head>
+  <title>Test for Bug 603556</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=603556">Mozilla Bug 603556</a>
+<p id="display"></p>
+<div id="content">
+  <div id="src">testing</div>
+  <input maxlength="4">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 603556 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var i = document.querySelector("input");
+  var src = document.getElementById("src");
+  SimpleTest.waitForClipboard(src.textContent,
+    function() {
+      getSelection().selectAllChildren(src);
+      synthesizeKey("C", {accelKey: true});
+    },
+    function() {
+      i.focus();
+      synthesizeKey("V", {accelKey: true});
+      is(i.value, src.textContent.substr(0, i.maxLength),
+         "Pasting should paste maxlength chars worth of the clipboard contents");
+      SimpleTest.finish();
+    },
+    function() {
+      SimpleTest.finish();
+    }
+  );
+});
+
+</script>
+</pre>
+</body>
+</html>

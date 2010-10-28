@@ -1265,14 +1265,6 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
                 top = (char*)((PRUptrdiff)top & ~0x3f);
             }
 #endif
-#if defined(GC_LEAK_DETECTOR)
-            /*
-             * sorry, it is not safe to allocate the thread on the stack,
-             * because we assign to this object before the GC can learn
-             * about this thread. we'll just leak thread objects instead.
-             */
-            thread = PR_NEW(PRThread);
-#endif
             stack->thr = thread;
             memset(thread, 0, sizeof(PRThread));
             thread->threadAllocatedOnStack = 1;

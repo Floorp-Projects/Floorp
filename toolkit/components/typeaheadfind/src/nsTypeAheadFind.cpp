@@ -562,7 +562,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, PRBool aIsLinksOnly,
         SetSelectionModeAndRepaint(nsISelectionController::SELECTION_ATTENTION);
         selectionController->ScrollSelectionIntoView(
           nsISelectionController::SELECTION_NORMAL, 
-          nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+          nsISelectionController::SELECTION_FOCUS_REGION,
+          nsISelectionController::SCROLL_SYNCHRONOUS);
       }
 
       mCurrentWindow = window;

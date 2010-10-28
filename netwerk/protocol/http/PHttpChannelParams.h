@@ -49,8 +49,9 @@
 #include "nsHttpHeaderArray.h"
 #include "nsHttpResponseHead.h"
 
-#include "nsIStringStream.h"
-#include "nsISupportsPrimitives.h"
+#include "nsIIPCSerializable.h"
+#include "nsIClassInfo.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {
@@ -195,56 +196,6 @@ struct ParamTraits<nsHttpResponseHead>
   }
 };
 
-template<>
-struct ParamTraits<nsIStringInputStream*>
-{
-  typedef nsIStringInputStream* paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    nsCAutoString value;
-    nsCOMPtr<nsISupportsCString> cstr(do_QueryInterface(aParam));
-
-    if (cstr) {
-      cstr->GetData(value);
-    } else {
-      PRUint32 length;
-      aParam->Available(&length);
-      value.SetLength(length);
-      NS_ASSERTION(value.Length() == length, "SetLength failed");
-      char *c = value.BeginWriting();
-      PRUint32 bytesRead;
-#ifdef DEBUG
-      nsresult rv = 
-#endif
-      aParam->Read(c, length, &bytesRead);
-      NS_ASSERTION(NS_SUCCEEDED(rv) && bytesRead == length, "Read failed");
-    }
-
-    WriteParam(aMsg, value);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    nsCAutoString value;
-    if (!ReadParam(aMsg, aIter, &value))
-      return false;
-
-    nsresult rv;
-
-    nsCOMPtr<nsIStringInputStream> stream
-      (do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
-    if (NS_FAILED(rv))
-      return false;
-
-    rv = stream->SetData(value.get(), value.Length());
-    if (NS_FAILED(rv))
-      return false;
-
-    stream.forget(aResult);
-    return true;
-  }
-};
 } // namespace IPC
 
 #endif // mozilla_net_PHttpChannelParams_h

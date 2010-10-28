@@ -43,6 +43,9 @@
 #include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "nsIFilePicker.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
@@ -65,7 +68,6 @@
 #include "nsConsoleMessage.h"
 
 #ifdef MOZ_PERMISSIONS
-#include "nsPermission.h"
 #include "nsPermissionManager.h"
 #endif
 
@@ -196,10 +198,10 @@ ContentParent::IsAlive()
 }
 
 bool
-ContentParent::RecvReadPrefs(nsCString* prefs)
+ContentParent::RecvReadPrefsArray(nsTArray<PrefTuple> *prefs)
 {
     EnsurePrefService();
-    mPrefService->SerializePreferences(*prefs);
+    mPrefService->MirrorPreferences(prefs);
     return true;
 }
 
@@ -218,21 +220,22 @@ bool
 ContentParent::RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions)
 {
 #ifdef MOZ_PERMISSIONS
-    nsPermissionManager *permissionManager =
-        (nsPermissionManager*)nsPermissionManager::GetSingleton();
+    nsRefPtr<nsPermissionManager> permissionManager =
+        nsPermissionManager::GetSingleton();
     NS_ABORT_IF_FALSE(permissionManager,
                  "We have no permissionManager in the Chrome process !");
 
-    nsISimpleEnumerator *enumerator;
-    nsresult rv = permissionManager->GetEnumerator(&enumerator);
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not get enumerator!");
     while(1) {
         PRBool hasMore;
         enumerator->HasMoreElements(&hasMore);
         if (!hasMore)
             break;
-        nsISupports *supp;
-        enumerator->GetNext((nsISupports**)&supp);
+
+        nsCOMPtr<nsISupports> supp;
+        enumerator->GetNext(getter_AddRefs(supp));
         nsCOMPtr<nsIPermission> perm = do_QueryInterface(supp);
 
         nsCString host;
@@ -301,10 +304,14 @@ ContentParent::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, "nsPref:changed")) {
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
-        nsCString prefBuffer;
-        nsCOMPtr<nsIPrefServiceInternal> prefs = do_GetService("@mozilla.org/preferences-service;1");
-        prefs->SerializePreference(strData, prefBuffer);
-        if (!SendPreferenceUpdate(prefBuffer))
+
+        PrefTuple pref;
+        nsCOMPtr<nsIPrefServiceInternal> prefService =
+          do_GetService("@mozilla.org/preferences-service;1");
+
+        prefService->MirrorPreference(strData, &pref);
+
+        if (!SendPreferenceUpdate(pref))
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
@@ -444,6 +451,78 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
     nsCOMPtr<nsIURI> ourURI(uri);
     IHistory *history = nsContentUtils::GetHistory(); 
     history->SetURITitle(ourURI, title);
+    return true;
+}
+
+bool
+ContentParent::RecvShowFilePicker(const PRInt16& mode,
+                                  const PRInt16& selectedType,
+                                  const nsString& title,
+                                  const nsString& defaultFile,
+                                  const nsString& defaultExtension,
+                                  const nsTArray<nsString>& filters,
+                                  const nsTArray<nsString>& filterNames,
+                                  nsTArray<nsString>* files,
+                                  PRInt16* retValue,
+                                  nsresult* result)
+{
+    nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
+    if (!filePicker) {
+        *result = NS_ERROR_NOT_AVAILABLE;
+        return true;
+    }
+
+    // as the parent given to the content process would be meaningless in this
+    // process, always use active window as the parent
+    nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+    nsCOMPtr<nsIDOMWindow> window;
+    ww->GetActiveWindow(getter_AddRefs(window));
+
+    // initialize the "real" picker with all data given
+    *result = filePicker->Init(window, title, mode);
+    if (NS_FAILED(*result))
+        return true;
+    
+    PRUint32 count = filters.Length();
+    for (PRUint32 i = 0; i < count; ++i) {
+        filePicker->AppendFilter(filterNames[i], filters[i]);
+    }
+
+    filePicker->SetDefaultString(defaultFile);
+    filePicker->SetDefaultExtension(defaultExtension);
+    filePicker->SetFilterIndex(selectedType);
+
+    // and finally open the dialog
+    *result = filePicker->Show(retValue);
+    if (NS_FAILED(*result))
+        return true;
+
+    if (mode == nsIFilePicker::modeOpenMultiple) {
+        nsCOMPtr<nsISimpleEnumerator> fileIter;
+        *result = filePicker->GetFiles(getter_AddRefs(fileIter));
+
+        nsCOMPtr<nsILocalFile> singleFile;
+        PRBool loop = PR_TRUE;
+        while (NS_SUCCEEDED(fileIter->HasMoreElements(&loop)) && loop) {
+            fileIter->GetNext(getter_AddRefs(singleFile));
+            if (singleFile) {
+                nsAutoString filePath;
+                singleFile->GetPath(filePath);
+                files->AppendElement(filePath);
+            }
+        }
+        return true;
+    }
+    nsCOMPtr<nsILocalFile> file;
+    filePicker->GetFile(getter_AddRefs(file));
+
+    // even with NS_OK file can be null if nothing was selected 
+    if (file) {                                 
+        nsAutoString filePath;
+        file->GetPath(filePath);
+        files->AppendElement(filePath);
+    }
+
     return true;
 }
 

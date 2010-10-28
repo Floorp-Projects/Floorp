@@ -72,8 +72,7 @@ nsAccDocManager::GetDocAccessible(nsIDocument *aDocument)
   // Ensure CacheChildren is called before we query cache.
   nsAccessNode::GetApplicationAccessible()->EnsureChildren();
 
-  nsDocAccessible *docAcc =
-    mDocAccessibleCache.GetWeak(static_cast<void*>(aDocument));
+  nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
   if (docAcc)
     return docAcc;
 
@@ -81,23 +80,15 @@ nsAccDocManager::GetDocAccessible(nsIDocument *aDocument)
 }
 
 nsAccessible*
-nsAccDocManager::FindAccessibleInCache(void *aUniqueID) const
+nsAccDocManager::FindAccessibleInCache(nsINode* aNode) const
 {
   nsSearchAccessibleInCacheArg arg;
-    arg.mUniqueID = aUniqueID;
+  arg.mNode = aNode;
 
   mDocAccessibleCache.EnumerateRead(SearchAccessibleInDocCache,
                                     static_cast<void*>(&arg));
 
   return arg.mAccessible;
-}
-
-void
-nsAccDocManager::ShutdownDocAccessiblesInTree(nsIDocument *aDocument)
-{
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
-  ShutdownDocAccessiblesInTree(treeItem, aDocument);
 }
 
 
@@ -131,22 +122,6 @@ nsAccDocManager::Shutdown()
     progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));
 
   ClearDocCache();
-}
-
-void
-nsAccDocManager::ShutdownDocAccessible(nsIDocument *aDocument)
-{
-  nsDocAccessible* docAccessible =
-    mDocAccessibleCache.GetWeak(static_cast<void*>(aDocument));
-  if (!docAccessible)
-    return;
-
-  // We're allowed to not remove listeners when accessible document is shutdown
-  // since we don't keep strong reference on chrome event target and listeners
-  // are removed automatically when chrome event target goes away.
-
-  docAccessible->Shutdown();
-  mDocAccessibleCache.Remove(static_cast<void*>(aDocument));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,8 +190,7 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
   if (!IsEventTargetDocument(document))
     return NS_OK;
 
-  nsDocAccessible *docAcc =
-    mDocAccessibleCache.GetWeak(static_cast<void*>(document));
+  nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(document);
   if (!docAcc)
     return NS_OK;
 
@@ -319,7 +293,14 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
       return NS_OK;
 
     // Shutdown this one and sub document accessibles.
-    ShutdownDocAccessiblesInTree(document);
+
+    // We're allowed to not remove listeners when accessible document is
+    // shutdown since we don't keep strong reference on chrome event target and
+    // listeners are removed automatically when chrome event target goes away.
+    nsDocAccessible* docAccessible = mDocAccessibleCache.GetWeak(document);
+    if (docAccessible)
+      docAccessible->Shutdown();
+
     return NS_OK;
   }
 
@@ -346,9 +327,7 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
 {
   // Document accessible can be created before we were notified the DOM document
   // was loaded completely. However if it's not created yet then create it.
-  nsDocAccessible *docAcc =
-    mDocAccessibleCache.GetWeak(static_cast<void*>(aDocument));
-
+  nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
   if (!docAcc) {
     docAcc = CreateDocOrRootAccessible(aDocument);
     NS_ASSERTION(docAcc, "Can't create document accessible!");
@@ -365,16 +344,8 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
   // documents
   // b) document load event on sub documents causes screen readers to act is if
   // entire page is reloaded.
-  if (!IsEventTargetDocument(aDocument)) {
-    // XXX: AT doesn't update their virtual buffer once frame is loaded and it
-    // has dynamic content added after frame load. There's something wrong how
-    // we handle this changes.
-    if (!nsCoreUtils::IsRootDocument(aDocument)) {
-      docAcc->InvalidateCacheSubtree(nsnull,
-                                     nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE);
-    }
+  if (!IsEventTargetDocument(aDocument))
     return;
-  }
 
   // Fire complete/load stopped if the load event type is given.
   if (aLoadEventType) {
@@ -437,9 +408,10 @@ nsAccDocManager::AddListeners(nsIDocument *aDocument,
 nsDocAccessible*
 nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
 {
-  // Ignore temporary, hiding and svg resource documents.
+  // Ignore temporary, hiding, resource documents and documents without
+  // docshell.
   if (aDocument->IsInitialDocument() || !aDocument->IsVisible() ||
-      aDocument->GetDisplayDocument())
+      aDocument->IsResourceDoc() || !aDocument->IsActive())
     return nsnull;
 
   // Ignore documents without presshell.
@@ -492,7 +464,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
     return nsnull;
 
   // Cache and addref document accessible.
-  if (!mDocAccessibleCache.Put(static_cast<void*>(aDocument), docAcc)) {
+  if (!mDocAccessibleCache.Put(aDocument, docAcc)) {
     delete docAcc;
     return nsnull;
   }
@@ -502,7 +474,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   // while initialized.
   if (!outerDocAcc->AppendChild(docAcc) ||
       !GetAccService()->InitAccessible(docAcc, nsAccUtils::GetRoleMapEntry(aDocument))) {
-    mDocAccessibleCache.Remove(static_cast<void*>(aDocument));
+    mDocAccessibleCache.Remove(aDocument);
     return nsnull;
   }
 
@@ -512,40 +484,11 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   return docAcc;
 }
 
-void
-nsAccDocManager::ShutdownDocAccessiblesInTree(nsIDocShellTreeItem *aTreeItem,
-                                              nsIDocument *aDocument)
-{
-  nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(aTreeItem));
-
-  if (treeNode) {
-    PRInt32 subDocumentsCount = 0;
-    treeNode->GetChildCount(&subDocumentsCount);
-    for (PRInt32 idx = 0; idx < subDocumentsCount; idx++) {
-      nsCOMPtr<nsIDocShellTreeItem> treeItemChild;
-      treeNode->GetChildAt(idx, getter_AddRefs(treeItemChild));
-      NS_ASSERTION(treeItemChild, "No tree item when there should be");
-      if (!treeItemChild)
-        continue;
-
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(treeItemChild));
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      docShell->GetContentViewer(getter_AddRefs(contentViewer));
-      if (!contentViewer)
-        continue;
-
-      ShutdownDocAccessiblesInTree(treeItemChild, contentViewer->GetDocument());
-    }
-  }
-
-  ShutdownDocAccessible(aDocument);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccDocManager static
 
 PLDHashOperator
-nsAccDocManager::ClearDocCacheEntry(const void* aKey,
+nsAccDocManager::ClearDocCacheEntry(const nsIDocument* aKey,
                                     nsRefPtr<nsDocAccessible>& aDocAccessible,
                                     void* aUserArg)
 {
@@ -559,7 +502,7 @@ nsAccDocManager::ClearDocCacheEntry(const void* aKey,
 }
 
 PLDHashOperator
-nsAccDocManager::SearchAccessibleInDocCache(const void* aKey,
+nsAccDocManager::SearchAccessibleInDocCache(const nsIDocument* aKey,
                                             nsDocAccessible* aDocAccessible,
                                             void* aUserArg)
 {
@@ -569,7 +512,7 @@ nsAccDocManager::SearchAccessibleInDocCache(const void* aKey,
   if (aDocAccessible) {
     nsSearchAccessibleInCacheArg* arg =
       static_cast<nsSearchAccessibleInCacheArg*>(aUserArg);
-    arg->mAccessible = aDocAccessible->GetCachedAccessible(arg->mUniqueID);
+    arg->mAccessible = aDocAccessible->GetCachedAccessible(arg->mNode);
     if (arg->mAccessible)
       return PL_DHASH_STOP;
   }

@@ -65,6 +65,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIAnimationFrameListener.h"
+#include "nsEventStates.h"
 
 class nsIContent;
 class nsPresContext;
@@ -120,8 +121,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x73d79167, 0xacba, 0x46eb, \
-  { 0xad, 0x45, 0xa3, 0x4b, 0x92, 0xf6, 0x01, 0x5b } }
+{ 0x7fb1e97d, 0xbd2c, 0x47cf, \
+  { 0xa3, 0x05, 0x5b, 0x31, 0xd4, 0x1d, 0x3a, 0x52 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -129,9 +130,9 @@ class Element;
 // Document states
 
 // RTL locale: specific to the XUL localedir attribute
-#define NS_DOCUMENT_STATE_RTL_LOCALE              (1 << 0)
+#define NS_DOCUMENT_STATE_RTL_LOCALE              NS_DEFINE_EVENT_STATE_MACRO(0)
 // Window activation status
-#define NS_DOCUMENT_STATE_WINDOW_INACTIVE         (1 << 1)
+#define NS_DOCUMENT_STATE_WINDOW_INACTIVE         NS_DEFINE_EVENT_STATE_MACRO(1)
 
 //----------------------------------------------------------------------
 
@@ -723,12 +724,12 @@ public:
   // either may be nsnull, but not both
   virtual void ContentStatesChanged(nsIContent* aContent1,
                                     nsIContent* aContent2,
-                                    PRInt32 aStateMask) = 0;
+                                    nsEventStates aStateMask) = 0;
 
   // Notify that a document state has changed.
   // This should only be called by callers whose state is also reflected in the
   // implementation of nsDocument::GetDocumentState.
-  virtual void DocumentStatesChanged(PRInt32 aStateMask) = 0;
+  virtual void DocumentStatesChanged(nsEventStates aStateMask) = 0;
 
   // Observation hooks for style data to propagate notifications
   // to document observers
@@ -1415,7 +1416,7 @@ public:
    * Document state bits have the form NS_DOCUMENT_STATE_* and are declared in
    * nsIDocument.h.
    */
-  virtual PRInt32 GetDocumentState() = 0;
+  virtual nsEventStates GetDocumentState() = 0;
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 

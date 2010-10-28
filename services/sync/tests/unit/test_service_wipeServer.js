@@ -1,8 +1,10 @@
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/resource.js");
+
+Svc.DefaultPrefs.set("registerEngines", "");
+Cu.import("resource://services-sync/service.js");
 
 function FakeCollection() {
   this.deleted = false;

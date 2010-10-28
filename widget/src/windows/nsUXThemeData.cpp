@@ -72,7 +72,7 @@ PRPackedBool
 nsUXThemeData::sHaveCompositor = PR_FALSE;
 
 PRBool nsUXThemeData::sTitlebarInfoPopulated = PR_FALSE;
-SIZE nsUXThemeData::sCommandButtons[3];
+SIZE nsUXThemeData::sCommandButtons[4];
 
 nsUXThemeData::OpenThemeDataPtr nsUXThemeData::openTheme = NULL;
 nsUXThemeData::CloseThemeDataPtr nsUXThemeData::closeTheme = NULL;
@@ -265,6 +265,8 @@ nsUXThemeData::InitTitlebarInfo()
   sCommandButtons[0].cy = GetSystemMetrics(SM_CYSIZE);
   sCommandButtons[1].cx = sCommandButtons[2].cx = sCommandButtons[0].cx;
   sCommandButtons[1].cy = sCommandButtons[2].cy = sCommandButtons[0].cy;
+  sCommandButtons[3].cx = sCommandButtons[0].cx * 3;
+  sCommandButtons[3].cy = sCommandButtons[0].cy;
 
   // Use system metrics for pre-vista
   if (nsWindow::GetWindowsVersion() < VISTA_VERSION)
@@ -278,9 +280,18 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   if (sTitlebarInfoPopulated || !aWnd)
     return;
 
-  // Compositor enabled, we won't use these.
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (nsUXThemeData::CheckForCompositor()) {
+    RECT captionButtons;
+    if (FAILED(nsUXThemeData::dwmGetWindowAttributePtr(aWnd,
+                                                       DWMWA_CAPTION_BUTTON_BOUNDS,
+                                                       &captionButtons,
+                                                       sizeof(captionButtons)))) {
+      NS_WARNING("DWMWA_CAPTION_BUTTON_BOUNDS query failed to find usable metrics.");
+      return;
+    }
+    sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cx = captionButtons.right - captionButtons.left - 3;
+    sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy = (captionButtons.bottom - captionButtons.top) - 1;
     sTitlebarInfoPopulated = PR_TRUE;
     return;
   }

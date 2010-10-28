@@ -2465,10 +2465,19 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
         jsClass = aObj->getClass();
     } while (1);
 
-    NS_ASSERTION(!aAllowShortCircuit ||
-                 result == doGetObjectPrincipal(origObj, PR_FALSE),
-                 "Principal mismatch.  Not good");
-    
+#ifdef DEBUG
+    if (aAllowShortCircuit) {
+        nsIPrincipal *principal = doGetObjectPrincipal(origObj, PR_FALSE);
+
+        // Location is always wrapped (even for same-compartment), so we can
+        // loosen the check to same-origin instead of same-principal.
+        NS_ASSERTION(strcmp(jsClass->name, "Location") == 0 ?
+                     NS_SUCCEEDED(CheckSameOriginPrincipal(result, principal)) :
+                     result == principal,
+                     "Principal mismatch.  Not good");
+    }
+#endif
+
     return result;
 }
 

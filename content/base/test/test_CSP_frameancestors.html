@@ -23,6 +23,7 @@ var path = "/tests/content/base/test/";
 var framesThatShouldLoad = {
   aa_allow: -1,    /* innermost frame allows a */
   //aa_block: -1,    /* innermost frame denies a */
+  //aa2_block: -1,    /* innermost frame denies a */
   ab_allow: -1,    /* innermost frame allows a */
   //ab_block: -1,    /* innermost frame denies a */
   aba_allow: -1,   /* innermost frame allows b,a */
@@ -33,7 +34,7 @@ var framesThatShouldLoad = {
   //abb2_block: -1,  /* innermost frame denies a */
 };
 
-var expectedViolationsLeft = 6;
+var expectedViolationsLeft = 7;
 
 // This is used to watch the blocked data bounce off CSP and allowed data 
 // get sent out to the wire.

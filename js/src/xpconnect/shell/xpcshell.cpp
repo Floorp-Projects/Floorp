@@ -1311,6 +1311,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'j':
             JS_ToggleOptions(cx, JSOPTION_JIT);
             break;
+        case 'm':
+            JS_ToggleOptions(cx, JSOPTION_METHODJIT);
+            break;
 #ifdef MOZ_SHARK
         case 'k':
             JS_ConnectShark();

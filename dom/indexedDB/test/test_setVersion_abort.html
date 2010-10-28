@@ -1,0 +1,61 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+
+function testSteps()
+{
+  const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+  const VERSION_CHANGE = Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
+
+  const name = window.location.pathname;
+  const description = "My Test Database";
+
+  let request = moz_indexedDB.open(name, description);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  let event = yield;
+
+  let db = event.result;
+
+  request = db.setVersion("1");
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  let objectStore = db.createObjectStore("foo", "");
+  let index = objectStore.createIndex("bar", "baz");
+
+  is(db.version, "1", "Correct version");
+  is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+  is(objectStore.indexNames.length, 1, "Correct indexNames length");
+
+  event.transaction.oncomplete = unexpectedSuccessHandler;
+  event.transaction.onabort = grabEventAndContinueHandler;
+  event.transaction.abort();
+
+  event = yield;
+
+  is(db.version, "", "Correct version");
+  is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+
+  finishTest();
+  yield;
+}
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

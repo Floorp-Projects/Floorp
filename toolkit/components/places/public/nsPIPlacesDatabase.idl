@@ -40,17 +40,39 @@
 #include "nsISupports.idl"
 
 interface mozIStorageConnection;
+interface nsINavHistoryQuery;
+interface nsINavHistoryQueryOptions;
+interface mozIStorageStatementCallback;
+interface mozIStoragePendingStatement;
 
 /**
  * This is a private interface used by Places components to get access to the
  * database.  If outside consumers wish to use this, they should only read from
  * the database so they do not break any internal invariants.
  */
-[scriptable, uuid(5fd91813-229c-4d30-851b-700afa39a987)]
+[scriptable, uuid(6eb7ed3d-13ca-450b-b370-15c75e2f3dab)]
 interface nsPIPlacesDatabase : nsISupports
 {
   /**
    * The database connection used by Places.
    */
   readonly attribute mozIStorageConnection DBConnection;
+
+  /**
+   * Asynchronously executes the statement created from queries.
+   *
+   * @see nsINavHistoryService::executeQueries
+   * @note THIS IS A TEMPORARY API.  Don't rely on it, since it will be replaced
+   *       in future versions by a real async querying API.
+   * @note Results obtained from this method differ from results obtained from
+   *       executeQueries, because there is additional filtering and sorting
+   *       done by the latter.  Thus you should use executeQueries, unless you
+   *       are absolutely sure that the returned results are fine for
+   *       your use-case.
+   */
+  mozIStoragePendingStatement asyncExecuteLegacyQueries(
+    [array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries,
+    in unsigned long aQueryCount,
+    in nsINavHistoryQueryOptions aOptions,
+    in mozIStorageStatementCallback aCallback);
 };

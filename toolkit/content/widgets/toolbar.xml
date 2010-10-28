@@ -259,6 +259,7 @@
         </setter>
       </property>
 
+      <field name="_newElementCount">0</field>
       <method name="_getToolbarItem">
         <parameter name="aId"/>
         <body>
@@ -273,7 +274,10 @@
               case "spring":
               case "spacer":
                 newItem = document.createElementNS(XUL_NS, "toolbar" + aId);
-                newItem.id = aId + Date.now() + this.childNodes.length;
+                // Due to timers resolution Date.now() can be the same for
+                // elements created in small timeframes.  So ids are
+                // differentiated through a unique count suffix.
+                newItem.id = aId + Date.now() + (++this._newElementCount);
                 if (aId == "spring")
                   newItem.flex = 1;
                 break;

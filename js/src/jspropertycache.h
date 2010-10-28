@@ -236,11 +236,7 @@ class PropertyCache
     /*
      * Test for cached information about a property set on *objp at pc.
      *
-     * On a fast hit, set *entryp to the entry and return true.
-     *
-     * On a slow hit, set *entryp to the entry, set *obj2p to the object that
-     * owns the property (either obj or a prototype), set *atomp to NULL, and
-     * return false.
+     * On a hit, set *entryp to the entry and return true.
      *
      * On a miss, set *atomp to the name of the property being set and return false.
      */

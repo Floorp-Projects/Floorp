@@ -212,6 +212,7 @@ class ReentrancyGuard
  * Round x up to the nearest power of 2.  This function assumes that the most
  * significant bit of x is not set, which would lead to overflow.
  */
+STATIC_POSTCONDITION_ASSUME(return >= x)
 JS_ALWAYS_INLINE size_t
 RoundUpPow2(size_t x)
 {

@@ -453,7 +453,7 @@ add_test(function() {
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
 
-        var button = gDocument.getElementById("detail-uninstall");
+        var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
         ok(!button.disabled, "Button should not be disabled");
 
@@ -516,7 +516,7 @@ add_test(function() {
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
 
-        var button = gDocument.getElementById("detail-uninstall");
+        var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
         ok(!button.disabled, "Button should not be disabled");
 
@@ -582,7 +582,7 @@ add_test(function() {
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
 
-        var button = gDocument.getElementById("detail-uninstall");
+        var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
         ok(!button.disabled, "Button should not be disabled");
 

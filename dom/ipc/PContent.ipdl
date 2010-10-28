@@ -45,8 +45,11 @@ include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 
 include "nsGeoPositionIPCSerialiser.h";
+include "PPrefTuple.h";
 
 using GeoPosition;
+using PrefTuple;
+using nsTArray<PrefTuple>;
 
 using ChromePackage;
 using ResourceMapping;
@@ -76,7 +79,7 @@ child:
 
     async NotifyVisited(URI uri);
 
-    PreferenceUpdate(nsCString pref);
+    PreferenceUpdate(PrefTuple pref);
 
     NotifyAlertsObserver(nsCString topic, nsString data);
 
@@ -93,11 +96,17 @@ parent:
     async StartVisitedQuery(URI uri);
     async VisitURI(URI uri, URI referrer, PRUint32 flags);
     async SetURITitle(URI uri, nsString title);
+    
+    // filepicker remoting
+    sync ShowFilePicker(PRInt16 mode, PRInt16 selectedType, 
+                        nsString title, nsString defaultFile, nsString defaultExtension,
+                        nsString[] filters, nsString[] filterNames)
+        returns (nsString[] files, PRInt16 retValue, nsresult result);
 
     async LoadURIExternal(URI uri);
 
-    // PrefService messages
-    sync ReadPrefs() returns (nsCString retValue);
+    // PrefService message
+    sync ReadPrefsArray() returns (nsTArray<PrefTuple> retValue);
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);

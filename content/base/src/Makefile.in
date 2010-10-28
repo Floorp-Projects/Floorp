@@ -148,6 +148,7 @@ CPPSRCS		= \
 		nsFileDataProtocolHandler.cpp \
 		nsFrameMessageManager.cpp \
 		nsInProcessTabChildGlobal.cpp \
+		ThirdPartyUtil.cpp \
 		$(NULL)
 
 GQI_SRCS = contentbase.gqi

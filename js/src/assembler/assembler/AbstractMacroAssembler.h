@@ -446,6 +446,11 @@ public:
         return m_assembler.buffer();
     }
 
+    bool oom()
+    {
+        return m_assembler.oom();
+    }
+
     void* executableCopy(void* buffer)
     {
         return m_assembler.executableCopy(buffer);

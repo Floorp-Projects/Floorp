@@ -70,6 +70,7 @@ function GroupItem(listOfEls, options) {
     options = {};
 
   this._inited = false;
+  this._uninited = false;
   this._children = []; // an array of Items
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
   this.isAGroupItem = true;
@@ -366,12 +367,20 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: save
   // Saves this groupItem to persistent storage.
   save: function GroupItem_save() {
-    if (!this._inited) // too soon to save now
+    if (!this._inited || this._uninited) // too soon/late to save
       return;
 
     var data = this.getStorageData();
     if (GroupItems.groupItemStorageSanity(data))
       Storage.saveGroupItem(gWindow, data);
+  },
+
+  // ----------
+  // Function: deleteData
+  // Deletes the groupItem in the persistent storage.
+  deleteData: function GroupItem_deleteData() {
+    this._uninited = true;
+    Storage.deleteGroupItem(gWindow, this.id);
   },
 
   // ----------
@@ -561,13 +570,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     });
 
-    Storage.deleteGroupItem(gWindow, this.id);
+    this.deleteData();
   },
 
   // ----------
   // Function: closeAll
   // Closes the groupItem and all of its children.
   closeAll: function GroupItem_closeAll() {
+    let closeCenter = this.getBounds().center();
     if (this._children.length > 0) {
       this._children.forEach(function(child) {
         iQ(child.container).hide();
@@ -588,6 +598,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!this.locked.close)
         this.close();
     }
+    // Find closest tab to make active
+    UI.setActiveTab( UI.getClosestTab(closeCenter) );
   },
 
   // ----------
@@ -644,7 +656,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.$undoContainer = null;
       Items.unsquish();
 
-      Storage.deleteGroupItem(gWindow, self.id);
+      self.deleteData();
     };
 
     this.$undoContainer.click(function(e) {
@@ -951,19 +963,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: showExpandControl
   // Show the control which expands a stacked groupItem into a quick-look view.
   showExpandControl: function GroupItem_showExpandControl() {
-    var childBB = this.getChild(0).getBounds();
-    var dT = childBB.top - this.getBounds().top;
-    var dL = childBB.left - this.getBounds().left;
-
+    let parentBB = this.getBounds();
+    let childBB = this.getChild(0).getBounds();
+    let padding = 7;
     this.$expander
         .show()
         .css({
           opacity: .2,
-          top: dT + childBB.height + Math.min(7, (this.getBounds().bottom-childBB.bottom)/2),
-          // TODO: Why the magic -6? because the childBB.width seems to be over-sizing itself.
-          // But who can blame an object for being a bit optimistic when self-reporting size.
-          // It has to impress the ladies somehow. Bug 586549
-          left: dL + childBB.width/2 - this.$expander.width()/2 - 6,
+          top: childBB.top + childBB.height - parentBB.top + padding,
+          left: parentBB.width/2 - this.$expander.width()/2
         });
   },
 
@@ -2073,7 +2081,7 @@ let GroupItems = {
           child.close();
         });
 
-        Storage.deleteGroupItem(gWindow, groupItem.id);
+        groupItem.deleteData();
       }
     });
   }

@@ -1,0 +1,9 @@
+#!/usr/bin/python
+
+import sys
+
+msgid = int(sys.argv[1])
+protocol = (msgid >> 16)
+msg = (msgid - (protocol << 16))
+
+print 'protocol', protocol, 'message', msg

@@ -73,13 +73,14 @@ AutoScriptRetrapper::untrap(jsbytecode *pc)
 }
 
 Recompiler::PatchableAddress
-Recompiler::findPatch(void **location)
+Recompiler::findPatch(JITScript *jit, void **location)
 { 
-    for (uint32 i = 0; i < script->jit->nCallSites; i++) {
-        if (script->jit->callSites[i].codeOffset + (uint8*)script->jit->invoke == *location) {
+    uint8* codeStart = (uint8 *)jit->code.m_code.executableAddress();
+    for (uint32 i = 0; i < jit->nCallSites; i++) {
+        if (jit->callSites[i].codeOffset + codeStart == *location) {
             PatchableAddress result;
             result.location = location;
-            result.callSite = script->jit->callSites[i];
+            result.callSite = jit->callSites[i];
             return result;
         }
     }
@@ -116,17 +117,27 @@ Recompiler::Recompiler(JSContext *cx, JSScript *script)
 bool
 Recompiler::recompile()
 {
-    JS_ASSERT(script->ncode && script->ncode != JS_UNJITTABLE_METHOD);
+    JS_ASSERT(script->hasJITCode());
 
-    Vector<PatchableAddress> toPatch(cx);
+    Vector<PatchableAddress> normalPatches(cx);
+    Vector<PatchableAddress> ctorPatches(cx);
 
     /* Scan the stack, saving the ncode elements of the frames. */
-    JSStackFrame *firstFrame = NULL;
+    JSStackFrame *firstCtorFrame = NULL;
+    JSStackFrame *firstNormalFrame = NULL;
     for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (!firstFrame && i.fp()->maybeScript() == script)
-            firstFrame = i.fp();
-        if (script->isValidJitCode(i.fp()->nativeReturnAddress())) {
-            if (!toPatch.append(findPatch(i.fp()->addressOfNativeReturnAddress())))
+        if (!firstCtorFrame && i.fp()->maybeScript() == script && i.fp()->isConstructing())
+            firstCtorFrame = i.fp();
+        else if (!firstNormalFrame && i.fp()->maybeScript() == script && !i.fp()->isConstructing())
+            firstNormalFrame = i.fp();
+        void **addr = i.fp()->addressOfNativeReturnAddress();
+        if (!*addr)
+            continue;
+        if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
+            if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
+                return false;
+        } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
+            if (!normalPatches.append(findPatch(script->jitNormal, addr)))
                 return false;
         }
     }
@@ -136,29 +147,41 @@ Recompiler::recompile()
          f != NULL;
          f = f->previous) {
 
-        void **machineReturn = f->returnAddressLocation();
-        if (script->isValidJitCode(*machineReturn)) {
-            if (!toPatch.append(findPatch(machineReturn)))
+        void **addr = f->returnAddressLocation();
+        if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
+            if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
+                return false;
+        } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
+            if (!normalPatches.append(findPatch(script->jitNormal, addr)))
                 return false;
         }
     }
 
     ReleaseScriptCode(cx, script);
 
-    /* No need to actually compile or fixup if no frames on the stack */
-    if (!firstFrame)
-        return true;
+    if (normalPatches.length() && !recompile(firstNormalFrame, normalPatches))
+        return false;
 
+    if (ctorPatches.length() && !recompile(firstCtorFrame, ctorPatches))
+        return false;
+
+    return true;
+}
+
+bool
+Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches)
+{
     /* If we get this far, the script is live, and we better be safe to re-jit. */
     JS_ASSERT(cx->compartment->debugMode);
+    JS_ASSERT(fp);
 
-    Compiler c(cx, script, firstFrame->maybeFun(), &firstFrame->scopeChain());
-    if (c.Compile() != Compile_Okay)
+    Compiler c(cx, fp);
+    if (c.compile() != Compile_Okay)
         return false;
 
     /* Perform the earlier scanned patches */
-    for (uint32 i = 0; i < toPatch.length(); i++)
-        applyPatch(c, toPatch[i]);
+    for (uint32 i = 0; i < patches.length(); i++)
+        applyPatch(c, patches[i]);
 
     return true;
 }

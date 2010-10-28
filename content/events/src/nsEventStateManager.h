@@ -118,9 +118,9 @@ public:
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
   NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
 
-  virtual PRInt32 GetContentState(nsIContent *aContent,
-                                  PRBool aFollowLabels = PR_FALSE);
-  virtual PRBool SetContentState(nsIContent *aContent, PRInt32 aState);
+  virtual nsEventStates GetContentState(nsIContent *aContent,
+                                        PRBool aFollowLabels = PR_FALSE);
+  virtual PRBool SetContentState(nsIContent *aContent, nsEventStates aState);
   NS_IMETHOD ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
 
@@ -150,11 +150,17 @@ public:
 
   NS_IMETHOD_(PRBool) IsHandlingUserInputExternal() { return IsHandlingUserInput(); }
   
+  nsPresContext* GetPresContext() { return mPresContext; }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
                                            nsIEventStateManager)
 
   static nsIDocument* sMouseOverDocument;
 
+  static nsIEventStateManager* GetActiveEventStateManager() { return sActiveESM; }
+
+  static void SetGlobalActiveContent(nsEventStateManager* aNewESM,
+                                     nsIContent* aContent);
 protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
@@ -409,8 +415,7 @@ protected:
 
   static nsEventStateManager* sActiveESM;
   
-  static void SetGlobalActiveContent(nsEventStateManager* aNewESM,
-                                     nsIContent* aContent);
+  static void ClearGlobalActiveContent();
 
   // Functions used for click hold context menus
   PRBool mClickHoldContextMenu;

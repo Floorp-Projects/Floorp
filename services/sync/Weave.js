@@ -80,12 +80,16 @@ WeaveService.prototype = {
                   .QueryInterface(Ci.nsIResProtocolHandler);
 
     // Only create alias if resource://services-sync doesn't already exist.
-    if (resProt.hasSubstitution("services-sync"))
-      return;
-
-    let uri = ioService.newURI("resource:///modules/services-sync/",
-                               null, null);
-    resProt.setSubstitution("services-sync", uri);
+    if (!resProt.hasSubstitution("services-sync")) {
+      let uri = ioService.newURI("resource:///modules/services-sync/",
+                                 null, null);
+      resProt.setSubstitution("services-sync", uri);
+    }
+    if (!resProt.hasSubstitution("services-crypto")) {
+      let uri = ioService.newURI("resource:///modules/services-crypto/",
+                                 null, null);
+      resProt.setSubstitution("services-crypto", uri);
+    }
   }
 };
 

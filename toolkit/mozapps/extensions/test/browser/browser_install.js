@@ -34,8 +34,8 @@ function end_test() {
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
       aAddon.uninstall();
+      finish();
     });
-    finish();
   });
 }
 
@@ -105,7 +105,7 @@ function installSearchResult(aCallback) {
     ok(!!item, "Should see the search result in the list");
 
     let status = get_node(item, "install-status");
-    EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote"), {}, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote-btn"), {}, gManagerWindow);
 
     item.mInstall.addListener({
       onInstallEnded: function() {
@@ -116,24 +116,7 @@ function installSearchResult(aCallback) {
 }
 
 function get_list_item_count() {
-  var tests = "@tests.mozilla.org";
-
-  let view = gManagerWindow.document.getElementById("view-port").selectedPanel;
-  let listid = view.id == "search-view" ? "search-list" : "addon-list";
-  let item = gManagerWindow.document.getElementById(listid).firstChild;
-  let count = 0;
-
-  while (item) {
-    if (!item.mAddon || item.mAddon.id.substring(item.mAddon.id.length - tests.length) == tests)
-      count++;
-    item = item.nextSibling;
-  }
-
-  // Remove the show all results item
-  if (view.id == "search-view")
-    count--;
-
-  return count;
+  return get_test_items_in_list(gManagerWindow).length;
 }
 
 function check_undo_install() {
@@ -146,7 +129,7 @@ function check_undo_install() {
   is_element_visible(get_node(item, "pending"), "Pending message should be visible");
   is(get_node(item, "pending").textContent, "Install Tests will be installed after you restart " + gApp + ".", "Pending message should be correct");
 
-  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo"), {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo-btn"), {}, gManagerWindow);
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 
@@ -164,7 +147,7 @@ function check_undo_upgrade() {
   is_element_visible(get_node(item, "pending"), "Pending message should be visible");
   is(get_node(item, "pending").textContent, "Install Tests will be updated after you restart " + gApp + ".", "Pending message should be correct");
 
-  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo"), {}, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(get_node(item, "undo-btn"), {}, gManagerWindow);
 
   is(get_list_item_count(), 1, "Should be only one item in the list");
 

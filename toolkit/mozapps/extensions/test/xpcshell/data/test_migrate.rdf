@@ -6,7 +6,8 @@
      enable at the next restart. Additionally addon1 and 2 have had
      compatibility updates applies to make them compatible with the app and
      toolkit respectively, addon3 and 4 have not. addon5 is disabled however
-     at the same time as the migration a new version should be detected.
+     at the same time as the migration a new version should be detected. addon6
+     is pending install and needs a compatibility update to be compatible.
      It also contains two themes in the profile -->
 
 <RDF:RDF xmlns:NS1="http://www.mozilla.org/2004/em-rdf#"
@@ -44,6 +45,10 @@
                    NS1:id="xpcshell@tests.mozilla.org"
                    NS1:minVersion="1"
                    NS1:maxVersion="2" />
+  <RDF:Description RDF:about="rdf:#$TpnM4"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:updatedMinVersion="1"
+                   NS1:updatedMaxVersion="2" />
   <RDF:Description RDF:about="urn:mozilla:item:addon1@tests.mozilla.org"
                    NS1:installLocation="app-profile"
                    NS1:version="1.0"
@@ -83,6 +88,14 @@
     <NS1:type NC:parseType="Integer">2</NS1:type>
     <NS1:targetApplication RDF:resource="rdf:#$w8dNC7"/>
   </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon6@tests.mozilla.org"
+                   NS1:name="Test 6"
+                   NS1:version="1.0"
+                   NS1:newVersion="1.0"
+                   NS1:installLocation="app-profile">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$TpnM4"/>
+  </RDF:Description>
   <RDF:Description RDF:about="urn:mozilla:item:theme1@tests.mozilla.org"
                    NS1:installLocation="app-profile"
                    NS1:version="1.0"
@@ -105,6 +118,7 @@
     <RDF:li RDF:resource="urn:mozilla:item:addon3@tests.mozilla.org"/>
     <RDF:li RDF:resource="urn:mozilla:item:addon4@tests.mozilla.org"/>
     <RDF:li RDF:resource="urn:mozilla:item:addon5@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon6@tests.mozilla.org"/>
     <RDF:li RDF:resource="urn:mozilla:item:theme1@tests.mozilla.org"/>
     <RDF:li RDF:resource="urn:mozilla:item:theme2@tests.mozilla.org"/>
   </RDF:Seq>

@@ -97,8 +97,9 @@ private:
     JSContext *cx;
     JSScript *script;
     
-    PatchableAddress findPatch(void **location);
+    PatchableAddress findPatch(JITScript *jit, void **location);
     void applyPatch(Compiler& c, PatchableAddress& toPatch);
+    bool recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches);
 };
 
 } /* namespace mjit */

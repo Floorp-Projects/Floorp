@@ -38,9 +38,9 @@
 #include "nsIDOMWindow.idl"
 
 interface nsIDOMOfflineResourceList;
-interface nsIDOMFile;
+interface nsIDOMBlob;
 
-[scriptable, uuid(63239526-27b0-44ff-be4e-ee1c8ee2212e)]
+[scriptable, uuid(efff0d88-3b94-4375-bdeb-676a847ecd7d)]
 interface nsIDOMWindow2 : nsIDOMWindow
 {
   /**
@@ -59,6 +59,6 @@ interface nsIDOMWindow2 : nsIDOMWindow
    * Create and revoke blob urls. createBlobURL will always return a new URL
    * with the lifetime of the current Document.
    */
-  DOMString createBlobURL(in nsIDOMFile file);
+  DOMString createBlobURL(in nsIDOMBlob blob);
   void revokeBlobURL(in DOMString URL);
 };

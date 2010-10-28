@@ -44,7 +44,7 @@ interface nsIAtom;
 interface nsIDOMElement;
 interface nsIDOMDocument;
 
-[scriptable, uuid(0ad87068-c6fd-4122-a515-ffe8c4773b10)]
+[scriptable, uuid(3697f9ed-d8bc-4c00-890f-7a702d5b4005)]
 interface nsIXTFElementWrapper : nsISupports
 {  
   readonly attribute nsIDOMElement elementNode;
@@ -60,7 +60,7 @@ interface nsIXTFElementWrapper : nsISupports
    * Sets the intrinsic state for the element.
    * @see nsIContent::IntrinsicState().
    */
-  void setIntrinsicState(in long newState);
+  void setIntrinsicState(in unsigned long long newState);
 
   /**
    * This sets the name of the class attribute.

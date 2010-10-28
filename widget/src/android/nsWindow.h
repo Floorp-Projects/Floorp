@@ -162,7 +162,7 @@ public:
     NS_IMETHOD OnIMESelectionChange(void);
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
-    LayerManager* GetLayerManager();
+    LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull);
     gfxASurface* GetThebesSurface();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);

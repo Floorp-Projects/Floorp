@@ -73,21 +73,22 @@ public:
    * Search through all document accessibles for an accessible with the given
    * unique id.
    */
-  nsAccessible *FindAccessibleInCache(void *aUniqueID) const;
-
-  /**
-   * Shutdown document accessibles in the tree starting from the given one.
-   *
-   * @param  aDocument  [in] the DOM document of start document accessible
-   */
-  void ShutdownDocAccessiblesInTree(nsIDocument *aDocument);
+  nsAccessible* FindAccessibleInCache(nsINode* aNode) const;
 
   /**
    * Return document accessible from the cache. Convenient method for testing.
    */
   inline nsDocAccessible* GetDocAccessibleFromCache(nsIDocument* aDocument) const
   {
-    return mDocAccessibleCache.GetWeak(static_cast<void*>(aDocument));
+    return mDocAccessibleCache.GetWeak(aDocument);
+  }
+
+  /**
+   * Called by document accessible when it gets shutdown.
+   */
+  inline void NotifyOfDocumentShutdown(nsIDocument* aDocument)
+  {
+    mDocAccessibleCache.Remove(aDocument);
   }
 
 protected:
@@ -102,11 +103,6 @@ protected:
    * Shutdown the manager.
    */
   void Shutdown();
-
-  /**
-   * Shutdown the document accessible.
-   */
-  void ShutdownDocAccessible(nsIDocument* aDocument);
 
 private:
   nsAccDocManager(const nsAccDocManager&);
@@ -156,20 +152,14 @@ private:
    */
   nsDocAccessible *CreateDocOrRootAccessible(nsIDocument *aDocument);
 
-  /**
-   * Shutdown document accessibles in the tree starting from given tree item.
-   */
-  void ShutdownDocAccessiblesInTree(nsIDocShellTreeItem *aTreeItem,
-                                    nsIDocument *aDocument);
-
-  typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible>
+  typedef nsRefPtrHashtable<nsPtrHashKey<const nsIDocument>, nsDocAccessible>
     nsDocAccessibleHashtable;
 
   /**
    * Shutdown and remove the document accessible from cache.
    */
   static PLDHashOperator
-    ClearDocCacheEntry(const void* aKey,
+    ClearDocCacheEntry(const nsIDocument* aKey,
                        nsRefPtr<nsDocAccessible>& aDocAccessible,
                        void* aUserArg);
 
@@ -184,11 +174,11 @@ private:
   struct nsSearchAccessibleInCacheArg
   {
     nsAccessible *mAccessible;
-    void *mUniqueID;
+    nsINode* mNode;
   };
 
   static PLDHashOperator
-    SearchAccessibleInDocCache(const void* aKey,
+    SearchAccessibleInDocCache(const nsIDocument* aKey,
                                nsDocAccessible* aDocAccessible,
                                void* aUserArg);
 

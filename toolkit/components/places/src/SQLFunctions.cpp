@@ -43,8 +43,160 @@
 #include "nsEscape.h"
 #include "mozIPlacesAutoComplete.h"
 #include "SQLFunctions.h"
+#include "nsUTF8Utils.h"
 
 using namespace mozilla::storage;
+
+////////////////////////////////////////////////////////////////////////////////
+//// Anonymous Helpers
+
+namespace {
+
+  typedef nsACString::const_char_iterator const_char_iterator;
+
+  /**
+   * Get a pointer to the word boundary after aStart if aStart points to an
+   * ASCII letter (i.e. [a-zA-Z]).  Otherwise, return aNext, which we assume
+   * points to the next character in the UTF-8 sequence.
+   *
+   * We define a word boundary as anything that's not [a-z] -- this lets us
+   * match CamelCase words.
+   *
+   * @param aStart the beginning of the UTF-8 sequence
+   * @param aNext the next character in the sequence
+   * @param aEnd the first byte which is not part of the sequence
+   *
+   * @return a pointer to the next word boundary after aStart
+   */
+  static
+  NS_ALWAYS_INLINE const_char_iterator
+  nextWordBoundary(const_char_iterator const aStart,
+                   const_char_iterator const aNext,
+                   const_char_iterator const aEnd) {
+
+    const_char_iterator cur = aStart;
+    if (('a' <= *cur && *cur <= 'z') ||
+        ('A' <= *cur && *cur <= 'Z')) {
+
+      // Since we'll halt as soon as we see a non-ASCII letter, we can do a
+      // simple byte-by-byte comparison here and avoid the overhead of a
+      // UTF8CharEnumerator.
+      do {
+        cur++;
+      } while (cur < aEnd && 'a' <= *cur && *cur <= 'z');
+    }
+    else {
+      cur = aNext;
+    }
+
+    return cur;
+  }
+
+  enum FindInStringBehavior {
+    eFindOnBoundary,
+    eFindAnywhere
+  };
+
+  /**
+   * findAnywhere and findOnBoundary do almost the same thing, so it's natural
+   * to implement them in terms of a single function.  They're both
+   * performance-critical functions, however, and checking aBehavior makes them
+   * a bit slower.  Our solution is to define findInString as NS_ALWAYS_INLINE
+   * and rely on the compiler to optimize out the aBehavior check.
+   *
+   * @param aToken
+   *        The token we're searching for
+   * @param aSourceString
+   *        The string in which we're searching
+   * @param aBehavior
+   *        eFindOnBoundary if we should only consider matchines which occur on
+   *        word boundaries, or eFindAnywhere if we should consider matches
+   *        which appear anywhere.
+   *
+   * @return true if aToken was found in aSourceString, false otherwise.
+   */
+  static
+  NS_ALWAYS_INLINE bool
+  findInString(const nsDependentCSubstring &aToken,
+               const nsACString &aSourceString,
+               FindInStringBehavior aBehavior)
+  {
+    // CaseInsensitiveUTF8CharsEqual assumes that there's at least one byte in
+    // the both strings, so don't pass an empty token here.
+    NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
+
+    // We cannot match anything if there is nothing to search.
+    if (aSourceString.IsEmpty()) {
+      return false;
+    }
+
+    const_char_iterator tokenStart(aToken.BeginReading()),
+                        tokenEnd(aToken.EndReading()),
+                        sourceStart(aSourceString.BeginReading()),
+                        sourceEnd(aSourceString.EndReading());
+
+    do {
+      // We are on a word boundary (if aBehavior == eFindOnBoundary).  See if
+      // aToken matches sourceStart.
+
+      // Check whether the first character in the token matches the character
+      // at sourceStart.  At the same time, get a pointer to the next character
+      // in both the token and the source.
+      const_char_iterator sourceNext, tokenCur;
+      PRBool error;
+      if (CaseInsensitiveUTF8CharsEqual(sourceStart, tokenStart,
+                                        sourceEnd, tokenEnd,
+                                        &sourceNext, &tokenCur, &error)) {
+
+        // We don't need to check |error| here -- if
+        // CaseInsensitiveUTF8CharCompare encounters an error, it'll also
+        // return false and we'll catch the error outside the if.
+
+        const_char_iterator sourceCur = sourceNext;
+        while (true) {
+          if (tokenCur >= tokenEnd) {
+            // We matched the whole token!
+            return true;
+          }
+
+          if (sourceCur >= sourceEnd) {
+            // We ran into the end of source while matching a token.  This
+            // means we'll never find the token we're looking for.
+            return false;
+          }
+
+          if (!CaseInsensitiveUTF8CharsEqual(sourceCur, tokenCur,
+                                             sourceEnd, tokenEnd,
+                                             &sourceCur, &tokenCur, &error)) {
+            // sourceCur doesn't match tokenCur (or there's an error), so break
+            // out of this loop.
+            break;
+          }
+        }
+      }
+
+      // If something went wrong above, get out of here!
+      if (NS_UNLIKELY(error)) {
+        return false;
+      }
+
+      // We didn't match the token.  If we're searching for matches on word
+      // boundaries, skip to the next word boundary.  Otherwise, advance
+      // forward one character, using the sourceNext pointer we saved earlier.
+
+      if (aBehavior == eFindOnBoundary) {
+        sourceStart = nextWordBoundary(sourceStart, sourceNext, sourceEnd);
+      }
+      else {
+        sourceStart = sourceNext;
+      }
+
+    } while (sourceStart < sourceEnd);
+
+    return false;
+  }
+
+} // End anonymous namespace
 
 namespace mozilla {
 namespace places {
@@ -73,115 +225,85 @@ namespace places {
   /* static */
   void
   MatchAutoCompleteFunction::fixupURISpec(const nsCString &aURISpec,
-                                          nsString &_fixedSpec)
+                                          nsCString &_fixedSpec)
   {
     nsCString unescapedSpec;
     (void)NS_UnescapeURL(aURISpec, esc_SkipControl | esc_AlwaysCopy,
                          unescapedSpec);
 
-    // If this unescaped string is valid UTF-8, we'll convert it.  Otherwise,
-    // we will simply convert our original string.
+    // If this unescaped string is valid UTF-8, we'll use it.  Otherwise,
+    // we will simply use our original string.
     NS_ASSERTION(_fixedSpec.IsEmpty(),
                  "Passing a non-empty string as an out parameter!");
     if (IsUTF8(unescapedSpec))
-      CopyUTF8toUTF16(unescapedSpec, _fixedSpec);
+      _fixedSpec.Assign(unescapedSpec);
     else
-      CopyUTF8toUTF16(aURISpec, _fixedSpec);
+      _fixedSpec.Assign(aURISpec);
 
-    if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("http://")))
+    if (StringBeginsWith(_fixedSpec, NS_LITERAL_CSTRING("http://")))
       _fixedSpec.Cut(0, 7);
-    else if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("https://")))
+    else if (StringBeginsWith(_fixedSpec, NS_LITERAL_CSTRING("https://")))
       _fixedSpec.Cut(0, 8);
-    else if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("ftp://")))
+    else if (StringBeginsWith(_fixedSpec, NS_LITERAL_CSTRING("ftp://")))
       _fixedSpec.Cut(0, 6);
 
-    if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("www.")))
+    if (StringBeginsWith(_fixedSpec, NS_LITERAL_CSTRING("www.")))
       _fixedSpec.Cut(0, 4);
   }
 
   /* static */
   bool
-  MatchAutoCompleteFunction::findAnywhere(const nsDependentSubstring &aToken,
-                                          const nsAString &aSourceString)
+  MatchAutoCompleteFunction::findAnywhere(const nsDependentCSubstring &aToken,
+                                          const nsACString &aSourceString)
   {
-    return !!CaseInsensitiveFindInReadable(aToken, aSourceString);
+    // We can't use FindInReadable here; it works only for ASCII.
+
+    return findInString(aToken, aSourceString, eFindAnywhere);
   }
 
   /* static */
   bool
-  MatchAutoCompleteFunction::findBeginning(const nsDependentSubstring &aToken,
-                                           const nsAString &aSourceString)
+  MatchAutoCompleteFunction::findOnBoundary(const nsDependentCSubstring &aToken,
+                                            const nsACString &aSourceString)
   {
-    return !!StringBeginsWith(aSourceString, aToken,
-                              nsCaseInsensitiveStringComparator());
+    return findInString(aToken, aSourceString, eFindOnBoundary);
   }
 
   /* static */
   bool
-  MatchAutoCompleteFunction::findOnBoundary(const nsDependentSubstring &aToken,
-                                            const nsAString &aSourceString)
+  MatchAutoCompleteFunction::findBeginning(const nsDependentCSubstring &aToken,
+                                           const nsACString &aSourceString)
   {
-    // We cannot match anything if there is nothing to search.
-    if (aSourceString.IsEmpty())
-      return false;
+    NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
 
-    // Define a const instance of this class so it is created once.
-    const nsCaseInsensitiveStringComparator caseInsensitiveCompare;
+    // We can't use StringBeginsWith here, unfortunately.  Although it will
+    // happily take a case-insensitive UTF8 comparator, it eventually calls
+    // nsACString::Equals, which checks that the two strings contain the same
+    // number of bytes before calling the comparator.  This is clearly not what
+    // we want.
 
-    const_wchar_iterator tokenStart(aToken.BeginReading()),
-                         tokenEnd(aToken.EndReading()),
-                         sourceStart(aSourceString.BeginReading()),
-                         sourceEnd(aSourceString.EndReading());
+    const_char_iterator tokenStart(aToken.BeginReading()),
+                        tokenEnd(aToken.EndReading()),
+                        sourceStart(aSourceString.BeginReading()),
+                        sourceEnd(aSourceString.EndReading());
 
-    // The start of aSourceString is considered a word boundary, so start there.
-    do {
-      // We are on a word boundary, so start by copying the iterators.
-      const_wchar_iterator testTokenItr(tokenStart),
-                           testSourceItr(sourceStart);
+    PRBool dummy;
+    while (sourceStart < sourceEnd &&
+           CaseInsensitiveUTF8CharsEqual(sourceStart, tokenStart,
+                                         sourceEnd, tokenEnd,
+                                         &sourceStart, &tokenStart, &dummy)) {
 
-      // Keep trying to match the token one by one until it doesn't match.
-      while (!caseInsensitiveCompare(*testTokenItr, *testSourceItr)) {
-        // We matched something, so move down one.
-        testTokenItr++;
-        testSourceItr++;
-
-        // Matched the full token, so we are done!
-        if (testTokenItr == tokenEnd)
-          return true;
-
-        // However, if we ran into the end of the source while matching the
-        // token, we will not find it.
-        if (testSourceItr == sourceEnd)
-          return false;
+      // We found the token!
+      if (tokenStart >= tokenEnd) {
+        return true;
       }
+    }
 
-      // Always advance our starting iterator, and if we are not currently on a
-      // word boundary, advance to the next word boundary.
-      if (!isWordBoundary(ToLowerCase(*sourceStart++)))
-        sourceStart = nextWordBoundary(sourceStart, sourceEnd);
-    } while (sourceStart != sourceEnd);
+    // We don't need to check CaseInsensitiveUTF8CharsEqual's error condition
+    // (stored in |dummy|), since the function will return false if it
+    // encounters an error.
 
     return false;
-  }
-
-  /* static */
-  MatchAutoCompleteFunction::const_wchar_iterator
-  MatchAutoCompleteFunction::nextWordBoundary(const_wchar_iterator aStart,
-                                              const_wchar_iterator aEnd)
-  {
-    while (aStart != aEnd && !isWordBoundary(*aStart))
-      aStart++;
-    return aStart;
-  }
-
-  /* static */
-  bool
-  MatchAutoCompleteFunction::isWordBoundary(const PRUnichar &aChar)
-  {
-    // Only check lowercase alphabetic characters so we can match CamelCase
-    // words.  This means that matches will happen after an upper-case
-    // character.
-    return !(PRUnichar('a') <= aChar && aChar <= PRUnichar('z'));
   }
 
   /* static */
@@ -217,15 +339,15 @@ namespace places {
     #define HAS_BEHAVIOR(aBitName) \
       (searchBehavior & mozIPlacesAutoComplete::BEHAVIOR_##aBitName)
 
-    nsAutoString searchString;
-    (void)aArguments->GetString(kArgSearchString, searchString);
+    nsCAutoString searchString;
+    (void)aArguments->GetUTF8String(kArgSearchString, searchString);
     nsCString url;
     (void)aArguments->GetUTF8String(kArgIndexURL, url);
 
     // We only want to filter javascript: URLs if we are not supposed to search
     // for them, and the search does not start with "javascript:".
     if (!HAS_BEHAVIOR(JAVASCRIPT) &&
-        !StringBeginsWith(searchString, NS_LITERAL_STRING("javascript:")) &&
+        !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:")) &&
         StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:"))) {
       NS_IF_ADDREF(*_result = new IntegerVariant(0));
       NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
@@ -235,8 +357,8 @@ namespace places {
     PRInt32 visitCount = aArguments->AsInt32(kArgIndexVisitCount);
     bool typed = aArguments->AsInt32(kArgIndexTyped) ? true : false;
     bool bookmark = aArguments->AsInt32(kArgIndexBookmark) ? true : false;
-    nsAutoString tags;
-    (void)aArguments->GetString(kArgIndexTags, tags);
+    nsCAutoString tags;
+    (void)aArguments->GetUTF8String(kArgIndexTags, tags);
     PRInt32 openPageCount = aArguments->AsInt32(kArgIndexOpenPageCount);
 
     // Make sure we match all the filter requirements.  If a given restriction
@@ -255,21 +377,21 @@ namespace places {
     }
 
     // Clean up our URI spec and prepare it for searching.
-    nsString fixedURI;
+    nsCString fixedURI;
     fixupURISpec(url, fixedURI);
 
     // Obtain our search function.
     PRInt32 matchBehavior = aArguments->AsInt32(kArgIndexMatchBehavior);
     searchFunctionPtr searchFunction = getSearchFunction(matchBehavior);
 
-    nsAutoString title;
-    (void)aArguments->GetString(kArgIndexTitle, title);
+    nsCAutoString title;
+    (void)aArguments->GetUTF8String(kArgIndexTitle, title);
 
     // Determine if every token matches either the bookmark title, tags, page
     // title, or page URL.
-    nsWhitespaceTokenizer tokenizer(searchString);
+    nsCWhitespaceTokenizer tokenizer(searchString);
     while (matches && tokenizer.hasMoreTokens()) {
-      const nsDependentSubstring &token = tokenizer.nextToken();
+      const nsDependentCSubstring &token = tokenizer.nextToken();
 
       bool matchTags = searchFunction(token, tags);
       bool matchTitle = searchFunction(token, title);

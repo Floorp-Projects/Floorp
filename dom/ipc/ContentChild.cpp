@@ -85,6 +85,7 @@
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
+using namespace mozilla::docshell;
 
 namespace mozilla {
 namespace dom {
@@ -383,10 +384,14 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
 }
 
 bool
-ContentChild::RecvPreferenceUpdate(const nsCString& aPref)
+ContentChild::RecvPreferenceUpdate(const PrefTuple& aPref)
 {
     nsCOMPtr<nsIPrefServiceInternal> prefs = do_GetService("@mozilla.org/preferences-service;1");
-    prefs->ReadPrefBuffer(aPref);
+    if (!prefs)
+        return false;
+
+    prefs->SetPreference(&aPref);
+
     return true;
 }
 
@@ -445,8 +450,8 @@ bool
 ContentChild::RecvAddPermission(const IPC::Permission& permission)
 {
 #if MOZ_PERMISSIONS
-  nsPermissionManager *permissionManager =
-    (nsPermissionManager*)nsPermissionManager::GetSingleton();
+  nsRefPtr<nsPermissionManager> permissionManager =
+    nsPermissionManager::GetSingleton();
   NS_ABORT_IF_FALSE(permissionManager, 
                    "We have no permissionManager in the Content process !");
 

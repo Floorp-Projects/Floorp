@@ -255,10 +255,13 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       nsSVGUtils::SetClipRect(ctx, GetCanvasTM(), clipRect);
     }
 
-    // NOTE: To ensure that |width| and |height| don't accidentally
-    // scale the user-unit size in SVG images, we apply those attributes
-    // via |destRect|, not via our gfxContext's transform.
-    ctx->SetMatrix(GetImageTransform());
+    nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
+    gfxFloat pageZoomFactor =
+      nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPx);
+
+    // NOTE: We need to cancel out the effects of Full-Page-Zoom, or else
+    // it'll get applied an extra time by DrawSingleUnscaledImage.
+    ctx->Multiply(GetImageTransform().Scale(pageZoomFactor, pageZoomFactor));
 
     // fill-opacity doesn't affect <image>, so if we're allowed to
     // optimize group opacity, the opacity used for compositing the
@@ -274,7 +277,9 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
 
     nsRect dirtyRect; // only used if aDirtyRect is non-null
     if (aDirtyRect) {
-      dirtyRect = aDirtyRect->ToAppUnits(PresContext()->AppUnitsPerDevPixel());
+      dirtyRect = aDirtyRect->ToAppUnits(appUnitsPerDevPx);
+      // Adjust dirtyRect to match our local coordinate system.
+      dirtyRect.MoveBy(-mRect.TopLeft());
     }
 
     // XXXbholley - I don't think huge images in SVGs are common enough to

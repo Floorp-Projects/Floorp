@@ -14,7 +14,9 @@ load 123049-1.html
 load 123946-1.html
 load 128855-1.html
 load 133410-1.html
-load 143862-1.html
+load 143862-1a.html
+load 143862-1b.html
+load 143862-1c.html
 load 143862-2.html
 load 147320-1.html
 load 148245-1.html
@@ -308,5 +310,6 @@ load 567292-1.xhtml
 load 569018-1.html
 load 572003.xul
 load 572582-1.xhtml
+load 579655.html
 load 580494-1.html
 load 580834-1.xhtml

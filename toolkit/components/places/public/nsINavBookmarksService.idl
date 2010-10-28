@@ -49,8 +49,7 @@ interface nsINavHistoryBatchCallback;
 /**
  * Observer for bookmark changes.
  */
-
-[scriptable, uuid(1f7e9032-b2c0-4561-b35b-94ba3f8344e2)]
+[scriptable, uuid(76f892d9-31ea-4061-b38c-6b40fad57e9d)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -80,9 +79,13 @@ interface nsINavBookmarkObserver : nsISupports
    * @param aItemType
    *        The type of the item that was added (one of the TYPE_* constants
    *        defined above).
+   * @param aURI
+   *        The URI of the item that was added when aItemType is TYPE_BOOKMARK,
+   *        null otherwise.
    */
   void onItemAdded(in long long aItemId, in long long aParentId,
-                   in long aIndex, in unsigned short aItemType);
+                   in long aIndex, in unsigned short aItemType,
+                   in nsIURI aURI);
 
   /**
    * Notify this observer that an item is about to be removed.  Called before

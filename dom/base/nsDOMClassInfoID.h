@@ -165,6 +165,17 @@ NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
     }                                                                         \
   } else
 
+#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(_class, condition)   \
+  if ((condition) &&                                                          \
+      (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||                               \
+       aIID.Equals(NS_GET_IID(nsXPCClassInfo)))) {                            \
+    foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
+    if (!foundInterface) {                                                    \
+      *aInstancePtr = nsnull;                                                 \
+      return NS_ERROR_OUT_OF_MEMORY;                                          \
+    }                                                                         \
+  } else
+
 #else
 
 // See nsIDOMClassInfo.h

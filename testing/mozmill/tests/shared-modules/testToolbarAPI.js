@@ -49,10 +49,12 @@ const MODULE_REQUIRES = ['UtilsAPI'];
 const TIMEOUT = 5000;
 
 const AUTOCOMPLETE_POPUP = '/id("main-window")/id("mainPopupSet")/id("PopupAutoCompleteRichResult")';
+const NOTIFICATION_POPUP = '/id("main-window")/id("mainPopupSet")/id("notification-popup")';
 const URLBAR_CONTAINER = '/id("main-window")/id("tab-view-deck")/{"flex":"1"}' +
                          '/id("navigator-toolbox")/id("nav-bar")/id("urlbar-container")';
-const URLBAR_INPUTBOX = URLBAR_CONTAINER + '/id("urlbar")/anon({"class":"autocomplete-textbox-container"})' +
-                                         '/anon({"anonid":"textbox-input-box"})';
+const URLBAR_INPUTBOX = URLBAR_CONTAINER + '/id("urlbar")/anon({"anonid":"stack"})' + 
+                                           '/anon({"anonid":"textbox-container"})' + 
+                                           '/anon({"anonid":"textbox-input-box"})';
 const CONTEXT_MENU = URLBAR_INPUTBOX + '/anon({"anonid":"input-box-contextmenu"})';
 
 /**
@@ -403,6 +405,10 @@ locationBar.prototype = {
       case "identityBox":
         elem = new elementslib.ID(this._controller.window.document, "identity-box");
         break;
+      case "notification_element":
+        elem = new elementslib.Lookup(this._controller.window.document, NOTIFICATION_POPUP +
+                                      spec.subtype);
+        break;
       case "starButton":
         elem = new elementslib.ID(this._controller.window.document, "star-button");
         break;
@@ -418,6 +424,27 @@ locationBar.prototype = {
     }
 
     return elem;
+  },
+
+  /**
+   * Retrieves the specified element of the door hanger notification bar
+   *
+   * @param {string} aType
+   *        Type of the notification bar to look for
+   * @param {string} aLookupString
+   *        Lookup string of the notification bar's child element
+   *        [optional - default: ""]
+   *
+   * @return The created element
+   * @type {ElemBase}
+   */
+  getNotificationElement : function locationBar_getNotificationElement(aType, aLookupString)
+  {
+    var lookup = '/id("' + aType + '")';
+    lookup = aLookupString ? lookup + aLookupString : lookup;
+
+    // Get the notification and fetch the child element if wanted
+    return this.getElement({type: "notification_element", subtype: lookup});
   },
 
   /**

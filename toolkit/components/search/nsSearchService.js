@@ -1867,7 +1867,7 @@ Engine.prototype = {
           // Adjust the start index to account for the opening quote
           valueStart = quoteStart + "\"".length;
           // Find the closing quote
-          valueEnd = lLine.indexOf("\"", valueStart);
+          var valueEnd = lLine.indexOf("\"", valueStart);
           // If there is no closing quote, just go to the end of the line
           if (valueEnd == -1)
             valueEnd = aLine.length;
@@ -1879,7 +1879,7 @@ Engine.prototype = {
 
       LOG("_parseAsSherlock::getInputs: Lines:\n" + aLines);
       // Filter out everything but non-inputs
-      lines = aLines.filter(function (line) {
+      let lines = aLines.filter(function (line) {
         return /^\s*<input/i.test(line);
       });
       LOG("_parseAsSherlock::getInputs: Filtered lines:\n" + lines);

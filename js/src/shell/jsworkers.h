@@ -52,6 +52,8 @@
  */
 namespace js {
     namespace workers {
+        class ThreadPool;
+
         class WorkerHooks {
         public:
             virtual JSObject *newGlobalObject(JSContext *cx) = 0;
@@ -63,17 +65,17 @@ namespace js {
 	 * Requires request. rootp must point to a GC root.
 	 *
 	 * On success, *rootp receives a pointer to an object, and init returns
-         * true. The caller must keep the object rooted and must pass it to
-         * js::workers::finish later.
+         * a non-null value. The caller must keep the object rooted and must
+         * pass it to js::workers::finish later.
 	 */
-        JSBool init(JSContext *cx, WorkerHooks *hooks, JSObject *global, JSObject **rootp);
+        ThreadPool *init(JSContext *cx, WorkerHooks *hooks, JSObject *global, JSObject **rootp);
 
         /* Asynchronously signal for all workers to terminate.
          *
          * Call this before calling finish() to shut down without waiting for
          * all messages to be proceesed.
          */
-        void terminateAll(JSContext *cx, JSObject *workersobj);
+        void terminateAll(JSRuntime *rt, ThreadPool *tp);
 
 	/*
 	 * Finish running any workers, shut down the thread pool, and free all
@@ -82,7 +84,7 @@ namespace js {
 	 *
 	 * Requires request.
 	 */
-	void finish(JSContext *cx, JSObject *workersobj);
+	void finish(JSContext *cx, ThreadPool *tp);
     }
 }
 

@@ -2,38 +2,83 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// setup a profile directory
-var dir = do_get_profile();
+// Test that the permissionmanager 'added', 'changed', 'deleted', and 'cleared'
+// notifications behave as expected.
 
-// initialize the permission manager service
-var pm = Cc["@mozilla.org/permissionmanager;1"]
-          .getService(Ci.nsIPermissionManager);
+let test_generator = do_run_test();
 
-var ios = Cc["@mozilla.org/network/io-service;1"]
-          .getService(Ci.nsIIOService);
-var permURI = ios.newURI("http://example.com", null, null);
+function run_test() {
+  do_test_pending();
+  test_generator.next();
+}
 
-var theTime = (new Date()).getTime();
+function continue_test()
+{
+  do_run_generator(test_generator);
+}
 
-var numadds = 0;
-var numchanges = 0;
-var numdeletes = 0;
-var needsToClear = true;
+function do_run_test() {
+  // Set up a profile.
+  let profile = do_get_profile();
 
-// will listen for stuff.
-var observer = {
-  QueryInterface: 
-  function(iid) {
-    if (iid.equals(Ci.nsISupports) || 
-        iid.equals(Ci.nsIObserver))
-      return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE; 
-  },
+  let pm = Services.permissions;
+  let permURI = NetUtil.newURI("http://example.com");
+  let now = Number(Date.now());
+  let permType = "test/expiration-perm";
 
-  observe:
-  function(subject, topic, data) {
-    if (topic !== "perm-changed")
-      return;
+  let observer = new permission_observer(test_generator, now, permType);
+  Services.obs.addObserver(observer, "perm-changed", false);
+
+  // Add a permission, to test the 'add' notification. Note that we use
+  // do_execute_soon() so that we can use our generator to continue the test
+  // where we left off.
+  do_execute_soon(function() {
+    pm.add(permURI, permType, pm.ALLOW_ACTION, pm.EXPIRE_TIME, now + 100000);
+  });
+  yield;
+
+  // Alter a permission, to test the 'changed' notification.
+  do_execute_soon(function() {
+    pm.add(permURI, permType, pm.ALLOW_ACTION, pm.EXPIRE_TIME, now + 200000);
+  });
+  yield;
+
+  // Remove a permission, to test the 'deleted' notification.
+  do_execute_soon(function() {
+    pm.remove(permURI.asciiHost, permType);
+  });
+  yield;
+
+  // Clear permissions, to test the 'cleared' notification.
+  do_execute_soon(function() {
+    pm.removeAll();
+  });
+  yield;
+
+  Services.obs.removeObserver(observer, "perm-changed");
+  do_check_eq(observer.adds, 1);
+  do_check_eq(observer.changes, 1);
+  do_check_eq(observer.deletes, 1);
+  do_check_true(observer.cleared);
+
+  do_finish_generator_test(test_generator);
+}
+
+function permission_observer(generator, now, type) {
+  // Set up our observer object.
+  this.generator = generator;
+  this.pm = Services.permissions;
+  this.now = now;
+  this.type = type;
+  this.adds = 0;
+  this.changes = 0;
+  this.deletes = 0;
+  this.cleared = false;
+}
+
+permission_observer.prototype = {
+  observe: function(subject, topic, data) {
+    do_check_eq(topic, "perm-changed");
 
     // "deleted" means a permission was deleted. aPermission is the deleted permission.
     // "added"   means a permission was added. aPermission is the added permission.
@@ -41,83 +86,53 @@ var observer = {
     // "cleared" means the entire permission list was cleared. aPermission is null.
     if (data == "added") {
       var perm = subject.QueryInterface(Ci.nsIPermission);
-      numadds++;
-      switch (numadds) {
-        case 1: /* first add */
-          do_check_eq(pm.EXPIRE_TIME, perm.expireType);
-          do_check_eq(theTime + 10000, perm.expireTime);
-          break;
-        case 2: /* second add (permission-notify) */
-          do_check_eq(pm.EXPIRE_NEVER, perm.expireType);
-          do_check_eq(pm.DENY_ACTION, perm.capability);
+      this.adds++;
+      switch (this.adds) {
+        case 1:
+          do_check_eq(this.type, perm.type);
+          do_check_eq(this.pm.EXPIRE_TIME, perm.expireType);
+          do_check_eq(this.now + 100000, perm.expireTime);
           break;
         default:
           do_throw("too many add notifications posted.");
       }
-      do_test_finished();
 
     } else if (data == "changed") {
-      var perm = subject.QueryInterface(Ci.nsIPermission);
-      numchanges++;
-      switch (numchanges) {
+      let perm = subject.QueryInterface(Ci.nsIPermission);
+      this.changes++;
+      switch (this.changes) {
         case 1:
-          do_check_eq(pm.EXPIRE_TIME, perm.expireType);
-          do_check_eq(theTime + 20000, perm.expireTime);
+          do_check_eq(this.type, perm.type);
+          do_check_eq(this.pm.EXPIRE_TIME, perm.expireType);
+          do_check_eq(this.now + 200000, perm.expireTime);
           break;
         default:
           do_throw("too many change notifications posted.");
       }
-      do_test_finished();
 
     } else if (data == "deleted") {
       var perm = subject.QueryInterface(Ci.nsIPermission);
-      numdeletes++;
-      switch (numdeletes) {
+      this.deletes++;
+      switch (this.deletes) {
         case 1:
-          do_check_eq("test/permission-notify", perm.type);
+          do_check_eq(this.type, perm.type);
           break;
         default:
           do_throw("too many delete notifications posted.");
       }
-      do_test_finished();
 
     } else if (data == "cleared") {
       // only clear once: at the end
-      do_check_true(needsToClear);
-      needsToClear = false;
-      do_test_finished();
+      do_check_false(this.cleared);
+      do_check_eq(do_count_enumerator(Services.permissions.enumerator), 0);
+      this.cleared = true;
+
     } else {
-      dump("subject: " + subject + "  data: " + data + "\n");
+      do_throw("unexpected data '" + data + "'!");
     }
+
+    // Continue the test.
+    do_run_generator(this.generator);
   },
 };
 
-function run_test() {
-
-  var obs = Cc["@mozilla.org/observer-service;1"].getService()
-            .QueryInterface(Ci.nsIObserverService);
-
-  obs.addObserver(observer, "perm-changed", false);
-
-  // add a permission
-  do_test_pending(); // for 'add' notification
-  pm.add(permURI, "test/expiration-perm", pm.ALLOW_ACTION, pm.EXPIRE_TIME, theTime + 10000);
-
-  do_test_pending(); // for 'change' notification
-  pm.add(permURI, "test/expiration-perm", pm.ALLOW_ACTION, pm.EXPIRE_TIME, theTime + 20000);
-
-  do_test_pending(); // for 'add' notification
-  pm.add(permURI, "test/permission-notify", pm.DENY_ACTION);
-
-  do_test_pending(); // for 'deleted' notification
-  pm.remove(permURI.asciiHost, "test/permission-notify");
-
-  do_test_pending(); // for 'cleared' notification
-  pm.removeAll();
-
-  do_timeout(100, cleanup);
-}
-
-function cleanup() {
-  obs.removeObserver(observer, "perm-changed");
-}

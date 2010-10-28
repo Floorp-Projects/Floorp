@@ -276,7 +276,7 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
   }
 }
 
-PRInt32
+nsEventStates
 nsSVGAElement::IntrinsicState() const
 {
   return Link::LinkState() | nsSVGAElementBase::IntrinsicState();

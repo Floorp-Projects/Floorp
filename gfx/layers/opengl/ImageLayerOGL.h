@@ -38,6 +38,11 @@
 #ifndef GFX_IMAGELAYEROGL_H
 #define GFX_IMAGELAYEROGL_H
 
+#ifdef MOZ_IPC
+# include "mozilla/layers/PLayers.h"
+# include "mozilla/layers/ShadowLayers.h"
+#endif  // MOZ_IPC
+
 #include "LayerManagerOGL.h"
 #include "ImageLayers.h"
 #include "yuv_convert.h"
@@ -231,6 +236,44 @@ public:
   gfxIntSize mSize;
   nsRefPtr<GLContext> mASurfaceAsGLContext;
 };
+
+
+#ifdef MOZ_IPC
+class ShadowImageLayerOGL : public ShadowImageLayer,
+                            public LayerOGL
+{
+  typedef gl::TextureImage TextureImage;
+
+public:
+  ShadowImageLayerOGL(LayerManagerOGL* aManager);
+  virtual ~ShadowImageLayerOGL();
+
+  // ShadowImageLayer impl
+  virtual PRBool Init(gfxSharedImageSurface* aFront, const nsIntSize& aSize);
+
+  virtual already_AddRefed<gfxSharedImageSurface>
+  Swap(gfxSharedImageSurface* aNewFront);
+
+  virtual void DestroyFrontBuffer();
+
+  // LayerOGL impl
+  virtual void Destroy();
+
+  virtual Layer* GetLayer();
+
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset);
+
+private:
+  nsRefPtr<TextureImage> mTexImage;
+
+
+  // XXX FIXME holding to free
+  nsRefPtr<gfxSharedImageSurface> mDeadweight;
+
+
+};
+#endif
 
 } /* layers */
 } /* mozilla */

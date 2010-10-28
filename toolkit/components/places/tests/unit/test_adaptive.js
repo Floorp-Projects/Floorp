@@ -58,28 +58,25 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = {
   constructor: AutoCompleteInput,
 
-  minResultsForPopup: 0,
-  timeout: 10,
-  searchParam: "",
-  textValue: "",
-  disableAutoComplete: false,
-  completeDefaultIndex: false,
+  get minResultsForPopup() 0,
+  get timeout() 10,
+  get searchParam() "",
+  get textValue() "",
+  get disableAutoComplete() false,
+  get completeDefaultIndex() false,
 
   get searchCount() this.searches.length,
-
   getSearchAt: function (aIndex) this.searches[aIndex],
 
+  onSearchBegin: function () {},
   onSearchComplete: function() {},
 
-  popupOpen: false,
-
+  get popupOpen() false,
   popup: {
-    setSelectedIndex: function (aIndex) {},
+    set selectedIndex(aIndex) aIndex,
     invalidate: function () {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
-
-  onSearchBegin: function () {},
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
 }
@@ -119,12 +116,16 @@ function ensure_results(expected, searchTerm)
  */
 function setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
 {
-  // Bump up the visit count for the uri.
-  for (let i = 0; i < aCount; i++) {
-    PlacesUtils.history.addVisit(aURI, d1, null,
-                                 PlacesUtils.history.TRANSITION_TYPED,
-                                 false, 0);
-  }
+  PlacesUtils.history.runInBatchMode({
+    runBatched: function() {
+      // Bump up the visit count for the uri.
+      for (let i = 0; i < aCount; i++) {
+        PlacesUtils.history.addVisit(aURI, d1, null,
+                                     PlacesUtils.history.TRANSITION_TYPED,
+                                     false, 0);
+      }
+    }
+  }, this);
 
   // Make a nsIAutoCompleteController and friends for instrumentation feedback.
   let thing = {
@@ -152,8 +153,9 @@ function setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
                                          "test_book");
 
     // And add the tag if we need to.
-    if (aBookmark == "tag")
-      PlacesUtils.tagging.tagURI(aURI, "test_tag");
+    if (aBookmark == "tag") {
+      PlacesUtils.tagging.tagURI(aURI, ["test_tag"]);
+    }
   }
 }
 
@@ -162,10 +164,14 @@ function setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
  */
 function doAdaptiveDecay()
 {
-  for (let i = 0; i < 10; i++) {
-    PlacesUtils.history.QueryInterface(Ci.nsIObserver)
-                       .observe(null, "idle-daily", null);
-  }
+  PlacesUtils.history.runInBatchMode({
+    runBatched: function() {
+      for (let i = 0; i < 10; i++) {
+        PlacesUtils.history.QueryInterface(Ci.nsIObserver)
+                           .observe(null, "idle-daily", null);
+      }
+    }
+  }, this);
 }
 
 let uri1 = uri("http://site.tld/1");
@@ -379,6 +385,10 @@ let tests = [
  * Test adaptive autocomplete.
  */
 function run_test() {
+  // doAdaptiveDecay notifies idle-daily to fix frecency.  Unfortunately this
+  // also causes a vacuum at each iteration.  Thus disable vacuum for this test.
+  Services.prefs.setIntPref("places.last_vacuum", parseInt(Date.now()/1000));
+
   do_test_pending();
   next_test();
 }

@@ -1,0 +1,218 @@
+diff --git a/mozmill/mozmill/extension/resource/stdlib/EventUtils.js b/mozmill/mozmill/extension/resource/stdlib/EventUtils.js
+index 27fbbc7..0329d47 100644
+--- a/mozmill/mozmill/extension/resource/stdlib/EventUtils.js
++++ b/mozmill/mozmill/extension/resource/stdlib/EventUtils.js
+@@ -1,3 +1,24 @@
++// Export all available functions for Mozmill
++var EXPORTED_SYMBOLS = ["sendMouseEvent", "sendChar", "sendString", "sendKey",
++                         "__doEventDispatch", "_parseModifiers", "synthesizeMouse",
++                         "synthesizeMouseScroll", "synthesizeKey", "_expectEvent",
++                         "_checkExpectedEvent", "synthesizeMouseExpectEvent",
++                         "synthesizeDragStart", "synthesizeDrop",
++                         "disableNonTestMouseEvents", "_getDOMWindowUtils",
++                         "synthesizeComposition", "synthesizeText",
++                         "synthesizeQuerySelectedText", "synthesizeQueryTextContent",
++                         "synthesizeQueryCaretRect", "synthesizeQueryTextRect",
++                         "synthesizeQueryEditorRect", "synthesizeCharAtPoint",
++                         "synthesizeSelectionSet"];
++
++/**
++ * Get the array with available key events
++ */
++function getKeyEvent(aWindow) {
++  var win = aWindow.wrappedJSObject ? aWindow.wrappedJSObject : aWindow;
++  return win.KeyEvent;
++}
++
+ /**
+  * EventUtils provides some utility methods for creating and sending DOM events.
+  * Current methods:
+@@ -29,9 +50,6 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
+     aTarget = aWindow.document.getElementById(aTarget);
+   }
+ 
+-  // For events to trigger the UA's default actions they need to be "trusted"
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserWrite');
+-
+   var event = aWindow.document.createEvent('MouseEvent');
+ 
+   var typeArg          = aEvent.type;
+@@ -107,14 +125,17 @@ function sendString(aStr, aTarget) {
+  * Returns true if the keypress event was accepted (no calls to preventDefault
+  * or anything like that), false otherwise.
+  */
+-function sendKey(aKey, aTarget) {
++function sendKey(aKey, aTarget, aWindow) {
++  if (!aWindow)
++    aWindow = window;
++
+   keyName = "DOM_VK_" + aKey.toUpperCase();
+ 
+-  if (!KeyEvent[keyName]) {
++  if (!getKeyEvent(aWindow)[keyName]) {
+     throw "Unknown key: " + keyName;
+   }
+ 
+-  return __doEventDispatch(aTarget, 0, KeyEvent[keyName], false);
++  return __doEventDispatch(aTarget, 0, getKeyEvent(aWindow)[keyName], false);
+ }
+ 
+ /**
+@@ -130,9 +151,6 @@ function __doEventDispatch(aTarget, aCharCode, aKeyCode, aHasShift) {
+     aTarget = "target";
+   }
+ 
+-  // Make our events trusted
+-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+-
+   var event = document.createEvent("KeyEvents");
+   event.initKeyEvent("keydown", true, true, document.defaultView,
+                      false, false, aHasShift, false,
+@@ -171,6 +189,10 @@ function __doEventDispatch(aTarget, aCharCode, aKeyCode, aHasShift) {
+  */
+ function _parseModifiers(aEvent)
+ {
++  var hwindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
++                          .getService(Components.interfaces.nsIAppShellService)
++                          .hiddenDOMWindow;
++
+   const masks = Components.interfaces.nsIDOMNSEvent;
+   var mval = 0;
+   if (aEvent.shiftKey)
+@@ -182,8 +204,8 @@ function _parseModifiers(aEvent)
+   if (aEvent.metaKey)
+     mval |= masks.META_MASK;
+   if (aEvent.accelKey)
+-    mval |= (navigator.platform.indexOf("Mac") >= 0) ? masks.META_MASK :
+-                                                       masks.CONTROL_MASK;
++    mval |= (hwindow.navigator.platform.indexOf("Mac") >= 0) ? masks.META_MASK :
++                                                               masks.CONTROL_MASK;
+ 
+   return mval;
+ }
+@@ -203,8 +225,6 @@ function _parseModifiers(aEvent)
+  */
+ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   if (!aWindow)
+     aWindow = window;
+ 
+@@ -253,8 +273,6 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+  */
+ function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   if (!aWindow)
+     aWindow = window;
+ 
+@@ -302,8 +320,6 @@ function synthesizeMouseScroll(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+  */
+ function synthesizeKey(aKey, aEvent, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   if (!aWindow)
+     aWindow = window;
+ 
+@@ -312,7 +328,7 @@ function synthesizeKey(aKey, aEvent, aWindow)
+   if (utils) {
+     var keyCode = 0, charCode = 0;
+     if (aKey.indexOf("VK_") == 0)
+-      keyCode = KeyEvent["DOM_" + aKey];
++      keyCode = getKeyEvent(aWindow)["DOM_" + aKey];
+     else
+       charCode = aKey.charCodeAt(0);
+ 
+@@ -555,8 +571,6 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
+ 
+ function disableNonTestMouseEvents(aDisable)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils =
+     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+            getInterface(Components.interfaces.nsIDOMWindowUtils);
+@@ -582,8 +596,6 @@ function _getDOMWindowUtils(aWindow)
+  */
+ function synthesizeComposition(aIsCompositionStart, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return;
+@@ -635,8 +647,6 @@ function synthesizeComposition(aIsCompositionStart, aWindow)
+  */
+ function synthesizeText(aEvent, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return;
+@@ -685,8 +695,6 @@ function synthesizeText(aEvent, aWindow)
+  */
+ function synthesizeQuerySelectedText(aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return nsnull;
+@@ -707,8 +715,6 @@ function synthesizeQuerySelectedText(aWindow)
+  */
+ function synthesizeQueryTextContent(aOffset, aLength, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return nsnull;
+@@ -728,8 +734,6 @@ function synthesizeQueryTextContent(aOffset, aLength, aWindow)
+  */
+ function synthesizeQueryCaretRect(aOffset, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return nsnull;
+@@ -751,8 +755,6 @@ function synthesizeQueryCaretRect(aOffset, aWindow)
+  */
+ function synthesizeQueryTextRect(aOffset, aLength, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return nsnull;
+@@ -770,8 +772,6 @@ function synthesizeQueryTextRect(aOffset, aLength, aWindow)
+  */
+ function synthesizeQueryEditorRect(aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return nsnull;
+@@ -789,8 +789,6 @@ function synthesizeQueryEditorRect(aWindow)
+  */
+ function synthesizeCharAtPoint(aX, aY, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return nsnull;
+@@ -813,8 +811,6 @@ function synthesizeCharAtPoint(aX, aY, aWindow)
+  */
+ function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow)
+ {
+-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+-
+   var utils = _getDOMWindowUtils(aWindow);
+   if (!utils) {
+     return false;

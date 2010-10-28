@@ -188,13 +188,23 @@ ContentSecurityPolicy.prototype = {
     if (!aChannel)
       return;
     // grab the request line
-    var internalChannel = aChannel.QueryInterface(Ci.nsIHttpChannelInternal);
-    var reqMaj = {};
-    var reqMin = {};
-    var reqVersion = internalChannel.getRequestVersion(reqMaj, reqMin);
-    this._request = aChannel.requestMethod + " " 
-                  + aChannel.URI.asciiSpec
-                  + " HTTP/" + reqMaj.value + "." + reqMin.value;
+    var internalChannel = null;
+    try {
+      internalChannel = aChannel.QueryInterface(Ci.nsIHttpChannelInternal);
+    } catch (e) {
+      CSPdebug("No nsIHttpChannelInternal for " + aChannel.URI.asciiSpec);
+    }
+
+    this._request = aChannel.requestMethod + " " + aChannel.URI.asciiSpec;
+
+    // We will only be able to provide the HTTP version information if aChannel
+    // implements nsIHttpChannelInternal
+    if (internalChannel) {
+      var reqMaj = {};
+      var reqMin = {};
+      var reqVersion = internalChannel.getRequestVersion(reqMaj, reqMin);
+      this._request += " HTTP/" + reqMaj.value + "." + reqMin.value;
+    }
 
     // grab the request headers
     var self = this;
@@ -216,6 +226,13 @@ ContentSecurityPolicy.prototype = {
   function csp_refinePolicy(aPolicy, selfURI) {
     CSPdebug("REFINE POLICY: " + aPolicy);
     CSPdebug("         SELF: " + selfURI.asciiSpec);
+    // For nested schemes such as view-source: make sure we are taking the
+    // innermost URI to use as 'self' since that's where we will extract the
+    // scheme, host and port from
+    if (selfURI instanceof Ci.nsINestedURI) {
+      CSPdebug("        INNER: " + selfURI.innermostURI.asciiSpec);
+      selfURI = selfURI.innermostURI;
+    }
 
     // stay uninitialized until policy merging is done
     this._isInitialized = false;
@@ -379,7 +396,8 @@ ContentSecurityPolicy.prototype = {
                           aExtra) {
 
     // don't filter chrome stuff
-    if (aContentLocation.scheme === 'chrome') {
+    if (aContentLocation.scheme === 'chrome' ||
+        aContentLocation.scheme === 'resource') {
       return Ci.nsIContentPolicy.ACCEPT;
     }
 

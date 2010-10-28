@@ -394,7 +394,7 @@ Bookmark.prototype = {
   onEndUpdateBatch : function bm_oeub() {
   },
 
-  onItemAdded : function bm_oia(aId, aFolder, aIndex) {
+  onItemAdded : function bm_oia(aId, aFolder, aIndex, aItemType, aURI) {
     // bookmark object doesn't exist at this point
   },
 
@@ -547,7 +547,7 @@ BookmarkFolder.prototype = {
   onEndUpdateBatch : function bmf_oeub() {
   },
 
-  onItemAdded : function bmf_oia(aId, aFolder, aIndex) {
+  onItemAdded : function bmf_oia(aId, aFolder, aIndex, aItemType, aURI) {
     // handle root folder events
     if (!this._parent)
       this._events.dispatch("add", aId);

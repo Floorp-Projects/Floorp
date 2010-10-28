@@ -44,7 +44,7 @@ add_test(function() {
   var emptyNotice = gManagerWindow.document.getElementById("empty-availableUpdates-msg");
   is_element_visible(emptyNotice, "Empty notice should be visible");
   
-  var updateSelected = gManagerWindow.document.getElementById("update-selected");
+  var updateSelected = gManagerWindow.document.getElementById("update-selected-btn");
   is_element_hidden(updateSelected, "Update Selected button should be hidden");
 
   info("Adding updates");
@@ -85,7 +85,7 @@ add_test(function() {
   var emptyNotice = gManagerWindow.document.getElementById("empty-availableUpdates-msg");
   is_element_hidden(emptyNotice, "Empty notice should be hidden");
 
-  var updateSelected = gManagerWindow.document.getElementById("update-selected");
+  var updateSelected = gManagerWindow.document.getElementById("update-selected-btn");
   is_element_visible(updateSelected, "Update Selected button should be visible");
   is(updateSelected.disabled, false, "Update Selected button should be enabled by default");
 
@@ -136,7 +136,7 @@ add_test(function() {
 
 
 add_test(function() {
-  var updateSelected = gManagerWindow.document.getElementById("update-selected");
+  var updateSelected = gManagerWindow.document.getElementById("update-selected-btn");
   is(updateSelected.disabled, false, "Update Selected button should now be enabled");
 
   var item1 = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");

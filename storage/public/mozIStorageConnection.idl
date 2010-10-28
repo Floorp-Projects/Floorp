@@ -64,6 +64,14 @@ interface nsIFile;
 [scriptable, uuid(ad035628-4ffb-42ff-a256-0ed9e410b859)]
 interface mozIStorageConnection : nsISupports {
   /**
+   * The default size for SQLite database pages used by mozStorage for new
+   * databases.
+   * This value must stay in sync with the SQLITE_DEFAULT_PAGE_SIZE define in
+   * /db/sqlite3/src/Makefile.in
+   */
+  const long DEFAULT_PAGE_SIZE = 32768;
+
+  /**
    * Closes a database connection.  Callers must finalize all statements created
    * for this connection prior to calling this method.  It is illegal to use
    * call this method if any asynchronous statements have been executed on this

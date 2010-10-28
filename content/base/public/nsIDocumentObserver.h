@@ -39,6 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsIMutationObserver.h"
+#include "nsEventStates.h"
 
 class nsIAtom;
 class nsIContent;
@@ -48,8 +49,8 @@ class nsString;
 class nsIDocument;
 
 #define NS_IDOCUMENT_OBSERVER_IID \
-{ 0x4e14e321, 0xa4bb, 0x49f8, \
-  { 0xa5, 0x7a, 0x23, 0x63, 0x66, 0x8d, 0x14, 0xd0 } }
+{ 0x3d005225, 0x210f, 0x4b07, \
+  { 0xb1, 0xd9, 0x96, 0x02, 0x05, 0x74, 0xc4, 0x37 } }
 
 typedef PRUint32 nsUpdateType;
 
@@ -115,7 +116,7 @@ public:
   virtual void ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
-                                    PRInt32 aStateMask) = 0;
+                                    nsEventStates aStateMask) = 0;
 
   /**
    * Notification that the state of the document has changed.
@@ -124,7 +125,7 @@ public:
    * @param aStateMask the state that changed
    */
   virtual void DocumentStatesChanged(nsIDocument* aDocument,
-                                     PRInt32 aStateMask) = 0;
+                                     nsEventStates aStateMask) = 0;
 
   /**
    * A StyleSheet has just been added to the document.  This method is
@@ -233,36 +234,73 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 
-#define NS_DECL_NSIDOCUMENTOBSERVER                                          \
-    virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
-    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
-    virtual void BeginLoad(nsIDocument* aDocument);                          \
-    virtual void EndLoad(nsIDocument* aDocument);                            \
+#define NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                              \
+    virtual void BeginUpdate(nsIDocument* aDocument,                         \
+                             nsUpdateType aUpdateType);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                \
+    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                \
+    virtual void BeginLoad(nsIDocument* aDocument);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                  \
+    virtual void EndLoad(nsIDocument* aDocument);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED                     \
     virtual void ContentStatesChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent1,                 \
                                       nsIContent* aContent2,                 \
-                                      PRInt32 aStateMask);                   \
+                                      nsEventStates aStateMask);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                    \
     virtual void DocumentStatesChanged(nsIDocument* aDocument,               \
-                                       PRInt32 aStateMask);                  \
+                                       nsEventStates aStateMask);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                          \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
                                  nsIStyleSheet* aStyleSheet,                 \
-                                 PRBool aDocumentSheet);                     \
+                                 PRBool aDocumentSheet);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                        \
     virtual void StyleSheetRemoved(nsIDocument* aDocument,                   \
                                    nsIStyleSheet* aStyleSheet,               \
-                                   PRBool aDocumentSheet);                   \
+                                   PRBool aDocumentSheet);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED         \
     virtual void StyleSheetApplicableStateChanged(nsIDocument* aDocument,    \
                                                   nsIStyleSheet* aStyleSheet,\
-                                                  PRBool aApplicable);       \
+                                                  PRBool aApplicable);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
     virtual void StyleRuleChanged(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
                                   nsIStyleRule* aOldStyleRule,               \
-                                  nsIStyleRule* aNewStyleRule);              \
+                                  nsIStyleRule* aNewStyleRule);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                           \
     virtual void StyleRuleAdded(nsIDocument* aDocument,                      \
                                 nsIStyleSheet* aStyleSheet,                  \
-                                nsIStyleRule* aStyleRule);                   \
+                                nsIStyleRule* aStyleRule);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                         \
     virtual void StyleRuleRemoved(nsIDocument* aDocument,                    \
                                   nsIStyleSheet* aStyleSheet,                \
-                                  nsIStyleRule* aStyleRule);                 \
+                                  nsIStyleRule* aStyleRule);
+
+#define NS_DECL_NSIDOCUMENTOBSERVER                                          \
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                                  \
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                    \
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                    \
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                      \
+    NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATESCHANGED                         \
+    NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                        \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                              \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                            \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED             \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                             \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                               \
+    NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED                             \
     NS_DECL_NSIMUTATIONOBSERVER
 
 
@@ -292,13 +330,13 @@ void                                                                      \
 _class::ContentStatesChanged(nsIDocument* aDocument,                      \
                              nsIContent* aContent1,                       \
                              nsIContent* aContent2,                       \
-                             PRInt32 aStateMask)                          \
+                             nsEventStates aStateMask)                    \
 {                                                                         \
 }                                                                         \
                                                                           \
 void                                                                      \
 _class::DocumentStatesChanged(nsIDocument* aDocument,                     \
-                              PRInt32 aStateMask)                         \
+                              nsEventStates aStateMask)                   \
 {                                                                         \
 }
 

@@ -363,11 +363,11 @@ SearchEventHandlerClass.prototype = {
     var matches = matcher.matched();
     var others =  matcher.matchedTabsFromOtherWindows();
     if (event.which == event.DOM_VK_RETURN && (matches.length > 0 || others.length > 0)) {
-      if (matches.length > 0)
+      hideSearch(event);
+      if (matches.length > 0) 
         matches[0].zoomIn();
       else
         TabUtils.focus(others[0]);
-      hideSearch(event);    
     }
   },
 
@@ -429,7 +429,8 @@ var TabHandlers = {
     // by the number of matches within the window.
     var item = iQ("<div/>")
       .addClass("inlineMatch")
-      .click(function(){
+      .click(function(event){
+        hideSearch(event);
         TabUtils.focus(tab);
       });
     

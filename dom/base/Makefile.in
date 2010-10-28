@@ -125,6 +125,10 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += \
+		-I$(srcdir)/../../js/src/xpconnect/wrappers \
+		$(NULL)
+
 ifdef MOZ_X11
 CXXFLAGS += $(TK_CFLAGS)
 LDFLAGS += $(TK_LIBS)

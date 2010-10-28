@@ -51,8 +51,10 @@ MODULE = crashreporter
 # link with -lmozalloc, and it really doesn't matter here anyway.
 STL_FLAGS =
 
+ifneq ($(OS_TARGET),Android)
 PROGRAM = crashreporter$(BIN_SUFFIX)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
+endif
 
 LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 
@@ -83,7 +85,7 @@ LIBS += \
 LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
-ifeq ($(OS_ARCH),Linux)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += crashreporter_gtk_common.cpp crashreporter_unix_common.cpp
 
 ifdef MOZ_PLATFORM_MAEMO

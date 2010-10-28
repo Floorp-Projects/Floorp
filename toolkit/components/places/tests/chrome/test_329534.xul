@@ -69,7 +69,7 @@ var observer =
   // nsINavBookmarkObserver
   onBeginUpdateBatch: function(){},
   onEndUpdateBatch: function(){},
-  onItemAdded: function(bookmarkId, folderId, index, itemType) {
+  onItemAdded: function(bookmarkId, folderId, index, itemType, uri) {
     if ( status == 0 ) {
       runTest1( folderId );
     } else {

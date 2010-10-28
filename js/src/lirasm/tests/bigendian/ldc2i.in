@@ -1,0 +1,26 @@
+full = immi 1288908529 ; 0x4cd32ef1
+p = allocp 4
+sti full p 0
+
+n0chk = immi -15 ; sign_extend(0xf1)
+n1chk = immi  46 ; sign_extend(0x2e)
+n2chk = immi -45 ; sign_extend(0xd3)
+n3chk = immi  76 ; sign_extend(0x4c)
+
+n0 = ldc2i p 3
+n1 = ldc2i p 2
+n2 = ldc2i p 1
+n3 = ldc2i p 0
+
+; Collate the results.
+r0 = xori n0chk n0
+r1 = xori n1chk n1
+r2 = xori n2chk n2
+r3 = xori n3chk n3
+
+r0_1 = ori r0 r1
+r2_3 = ori r2 r3
+
+r = ori r0_1 r2_3
+reti r
+

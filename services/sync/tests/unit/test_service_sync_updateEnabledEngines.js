@@ -1,10 +1,14 @@
-Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
+
+Svc.DefaultPrefs.set("registerEngines", "");
+Cu.import("resource://services-sync/service.js");
+
+initTestLogging();
 
 function SteamEngine() {
   SyncEngine.call(this, "Steam");
@@ -338,6 +342,9 @@ function test_dependentEnginesDisabledLocally() {
 }
 
 function run_test() {
+  if (DISABLE_TESTS_BUG_604565)
+    return;
+
   test_newAccount();
   test_enabledLocally();
   test_disabledLocally();
