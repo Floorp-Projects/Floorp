@@ -329,7 +329,6 @@ var Browser = {
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
-    Elements.browsers.addEventListener("command", this._handleContentCommand, true);
     Elements.browsers.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
 
     // Login Manager and Form History initialization
@@ -373,6 +372,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
+    messageManager.addMessageListener("Browser:CertException", this);
 
     // broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -448,7 +448,9 @@ var Browser = {
     messageManager.removeMessageListener("Browser:FormSubmit", this);
     messageManager.removeMessageListener("Browser:KeyPress", this);
     messageManager.removeMessageListener("Browser:ZoomToPoint:Return", this);
+    messageManager.removeMessageListener("scroll", this);
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
+    messageManager.removeMessageListener("Browser:CertException", this);
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
@@ -727,60 +729,39 @@ var Browser = {
   },
 
   /**
-   * Handle command event bubbling up from content.  This allows us to do chrome-
-   * privileged things based on buttons in, e.g., unprivileged error pages.
-   * Obviously, care should be taken not to trust events that web pages could have
-   * synthesized.
+   * Handle cert exception event bubbling up from content.
    */
-  _handleContentCommand: function _handleContentCommand(aEvent) {
-    // Don't trust synthetic events
-    if (!aEvent.isTrusted)
-      return;
+  _handleCertException: function _handleCertException(aMessage) {
+    let json = aMessage.json;
+    if (json.action == "leave") {
+      // Get the start page from the *default* pref branch, not the user's
+      let defaultPrefs = Services.prefs.getDefaultBranch(null);
+      let url = "about:blank";
+      try {
+        url = defaultPrefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
+        // If url is a pipe-delimited set of pages, just take the first one.
+        if (url.indexOf("|") != -1)
+          url = url.split("|")[0];
+      } catch (e) { /* Fall back on about blank */ }
 
-    var ot = aEvent.originalTarget;
-    var errorDoc = ot.ownerDocument;
-
-    // If the event came from an ssl error page, it is probably either the "Add
-    // Exception…" or "Get me out of here!" button
-    if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
-      if (ot == errorDoc.getElementById("temporaryExceptionButton") ||
-          ot == errorDoc.getElementById("permanentExceptionButton")) {
-        try {
-          // add a new SSL exception for this URL
-          let uri = Services.io.newURI(errorDoc.location.href, null, null);
-          let sslExceptions = new SSLExceptions();
-
-          if (ot == errorDoc.getElementById("permanentExceptionButton")) {
-            sslExceptions.addPermanentException(uri);
-          } else {
-            sslExceptions.addTemporaryException(uri);
-          }
-        } catch (e) {
-          dump("EXCEPTION handle content command: " + e + "\n" );
-        }
-
-        // automatically reload after the exception was added
-        errorDoc.location.reload();
+      this.loadURI(url);
+    } else {
+      // Handle setting an cert exception and reloading the page
+      try {
+        // Add a new SSL exception for this URL
+        let uri = Services.io.newURI(json.url, null, null);
+        let sslExceptions = new SSLExceptions();
+  
+        if (json.action == "permanent")
+          sslExceptions.addPermanentException(uri);
+        else
+          sslExceptions.addTemporaryException(uri);
+      } catch (e) {
+        dump("EXCEPTION handle content command: " + e + "\n" );
       }
-      else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
-        // Get the start page from the *default* pref branch, not the user's
-        var defaultPrefs = Services.prefs.getDefaultBranch(null);
-        var url = "about:blank";
-        try {
-          url = defaultPrefs.getCharPref("browser.startup.homepage");
-          // If url is a pipe-delimited set of pages, just take the first one.
-          if (url.indexOf("|") != -1)
-            url = url.split("|")[0];
-        } catch (e) { /* Fall back on about blank */ }
-
-        Browser.selectedBrowser.loadURI(url, null, null, false);
-      }
-    }
-    else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
-      if (ot == errorDoc.getElementById("errorTryAgain")) {
-        // Make sure we're online before attempting to load
-        Util.forceOnline();
-      }
+  
+      // Automatically reload after the exception was added
+      aMessage.target.reload();
     }
   },
 
@@ -1021,7 +1002,7 @@ var Browser = {
 
     switch (aMessage.name) {
       case "Browser:ViewportMetadata":
-        let tab = Browser.getTabForBrowser(browser);
+        let tab = this.getTabForBrowser(browser);
         // Some browser such as iframes loaded dynamically into the chrome UI
         // does not have any assigned tab
         if (tab)
@@ -1043,15 +1024,18 @@ var Browser = {
       case "Browser:ZoomToPoint:Return":
         // JSON-ified rect needs to be recreated so the methods exist
         let rect = Rect.fromRect(json.rect);
-        if (!Browser.zoomToPoint(json.x, json.y, rect))
-          Browser.zoomFromPoint(json.x, json.y);
+        if (!this.zoomToPoint(json.x, json.y, rect))
+          this.zoomFromPoint(json.x, json.y);
         break;
 
       case "scroll":
         if (browser == this.selectedBrowser) {
-          Browser.hideTitlebar();
-          Browser.hideSidebars();
+          this.hideTitlebar();
+          this.hideSidebars();
         }
+        break;
+      case "Browser:CertException":
+        this._handleCertException(aMessage);
         break;
     }
   }
