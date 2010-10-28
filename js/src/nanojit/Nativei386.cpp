@@ -79,48 +79,44 @@ namespace nanojit
     typedef Register R;
     typedef int32_t  I32;
 
-    // XXX rearrange NanoAssert() expression to workaround apparent gcc 4.3 bug:
-    // XXX "error: logical && with non-zero constant will always evaluate as true"
-    // underrunProtect(6) is necessary for worst-case
+    // Length: 2--6 bytes.
     inline void Assembler::MODRMsib(I32 r, R b, R i, I32 s, I32 d) {
-        NanoAssert(REGNUM(i) < 8 && REGNUM(b) < 8 && unsigned(r) < 8);
         if (d == 0 && b != rEBP) {
-            *(--_nIns) = uint8_t(s << 6 | REGNUM(i) << 3 | REGNUM(b));
-            *(--_nIns) = uint8_t(0 << 6 | r << 3 | 4);
+            SIB(s, REGNUM(i), REGNUM(b));
+            MODRM(0, r, 4);                 // amode == (b + i<<s)
         } else if (isS8(d)) {
             *(--_nIns) = uint8_t(d);
-            *(--_nIns) = uint8_t(s << 6 | REGNUM(i) << 3 | REGNUM(b));
-            *(--_nIns) = uint8_t(1 << 6 | r << 3 | 4);
+            SIB(s, REGNUM(i), REGNUM(b));
+            MODRM(1, r, 4);                 // amode == d8(b + i<<s)
         } else {
             IMM32(d);
-            *(--_nIns) = uint8_t(s << 6 | REGNUM(i) << 3 | REGNUM(b));
-            *(--_nIns) = uint8_t(2 << 6 | r << 3 | 4);
+            SIB(s, REGNUM(i), REGNUM(b));
+            MODRM(2, r, 4);                 // amode == d32(b + i<<s)
         }
     }
 
-    // underrunProtect(6) is necessary for worst-case
+    // Length: 1--6 bytes.
     inline void Assembler::MODRMm(I32 r, I32 d, R b) {
-        NanoAssert(unsigned(r) < 8 && (b == UnspecifiedReg || REGNUM(b) < 8));
         if (b == UnspecifiedReg) {
             IMM32(d);
-            *(--_nIns) = uint8_t(0 << 6 | r << 3 | 5);
+            MODRM(0, r, 5);                 // amode == (d32)
         } else if (b == rESP) {
-            MODRMsib(r, b, rESP, 0, d);
+            MODRMsib(r, b, rESP, 0, d);     // amode == d(b)
         } else if (d == 0 && b != rEBP) {
-            *(--_nIns) = uint8_t(0 << 6 | r << 3 | REGNUM(b));
+            MODRM(0, r, REGNUM(b));         // amode == (r)
         } else if (isS8(d)) {
             *(--_nIns) = uint8_t(d);
-            *(--_nIns) = uint8_t(1 << 6 | r << 3 | REGNUM(b));
+            MODRM(1, r, REGNUM(b));         // amode == d8(b)
         } else {
             IMM32(d);
-            *(--_nIns) = uint8_t(2 << 6 | r << 3 | REGNUM(b));
+            MODRM(2, r, REGNUM(b));         // amode == d32(b)
         }
     }
 
+    // Length: 5 bytes.
     inline void Assembler::MODRMdm(I32 r, I32 addr) {
-        NanoAssert(unsigned(r) < 8);
         IMM32(addr);
-        *(--_nIns) = uint8_t(r << 3 | 5);
+        MODRM(0, r, 5);                     // amode == d32(r)
     }
 
     inline void Assembler::ALU0(I32 o) {
@@ -186,14 +182,14 @@ namespace nanojit
         NanoAssert(REGNUM(r) < 8);
         if (isS8(i)) {
             *(--_nIns) = uint8_t(i);
-            MODRM(c>>3, REGNUM(r));
+            MODRMr(c>>3, REGNUM(r));
             *(--_nIns) = uint8_t(0x83);
         } else {
             IMM32(i);
             if ( r == rEAX) {
                 *(--_nIns) = uint8_t(c);
             } else {
-                MODRM(c >> 3, REGNUM(r));
+                MODRMr(c >> 3, REGNUM(r));
                 *(--_nIns) = uint8_t(0x81);
             }
         }
@@ -215,7 +211,7 @@ namespace nanojit
 
     inline void Assembler::ALU2(I32 c, R d, R s) {
         underrunProtect(3);
-        MODRM(REGNUM(d), REGNUM(s));
+        MODRMr(REGNUM(d), REGNUM(s));
         *(--_nIns) = uint8_t(c);
         *(--_nIns) = uint8_t(c>>8);
     }
@@ -261,7 +257,7 @@ namespace nanojit
     inline void Assembler::SHIFT(I32 c, R r, I32 i) {
         underrunProtect(3);
         *--_nIns = uint8_t(i);
-        MODRM(c, REGNUM(r));
+        MODRMr(c, REGNUM(r));
         *--_nIns = 0xc1;
     }
 
@@ -284,13 +280,12 @@ namespace nanojit
     inline void Assembler::CMPi(R r, I32 i)    { count_alu(); ALUi(0x3d, r, i); asm_output("cmp %s,%d", gpn(r), i); }
 
     inline void Assembler::LEA(R r, I32 d, R b)    { count_alu(); ALUm(0x8d, REGNUM(r), d, b);  asm_output("lea %s,%d(%s)", gpn(r), d, gpn(b)); }
-    // lea %r, d(%i*4)
     // This addressing mode is not supported by the MODRMsib function.
     inline void Assembler::LEAmi4(R r, I32 d, R i) {
         count_alu();
         IMM32(int32_t(d));
-        *(--_nIns) = uint8_t(2 << 6 | REGNUM(i) << 3 | 5);
-        *(--_nIns) = uint8_t(0 << 6 | REGNUM(r) << 3 | 4);
+        SIB(2, REGNUM(i), 5);
+        MODRM(0, REGNUM(r), 4);             // amode == d(i*4)
         *(--_nIns) = 0x8d;
         asm_output("lea %s, %p(%s*4)", gpn(r), (void*)d, gpn(i));
     }
@@ -557,16 +552,11 @@ namespace nanojit
             *(--_nIns) = 0x6a;
             asm_output("push %d", i);
         } else {
-            PUSHi32(i);
+            underrunProtect(5);
+            IMM32(i);
+            *(--_nIns) = 0x68;
+            asm_output("push %d", i);
         }
-    }
-
-    inline void Assembler::PUSHi32(I32 i) {
-        count_push();
-        underrunProtect(5);
-        IMM32(i);
-        *(--_nIns) = 0x68;
-        asm_output("push %d", i);
     }
 
     inline void Assembler::PUSHr(R r) {
@@ -627,10 +617,10 @@ namespace nanojit
 
     inline void Assembler::JMP_indexed(Register x, I32 ss, NIns** addr) {
         underrunProtect(7);
-        IMM32(int32_t(addr));
-        *(--_nIns) = uint8_t(ss << 6 | REGNUM(x) << 3 | 5); /* sib: x<<ss + table */
-        *(--_nIns) = uint8_t(0  << 6 | 4 << 3 | 4);         /* modrm: base=sib + disp32 */
-        *(--_nIns) = uint8_t(0xff);                         /* jmp */
+        IMM32(int32_t(addr));           
+        SIB(ss, REGNUM(x), 5);          
+        MODRM(0, 4, 4);                 // amode == addr(table + x<<ss)
+        *(--_nIns) = uint8_t(0xff);     // jmp
         asm_output("jmp   *(%s*%d+%p)", gpn(x), 1 << ss, (void*)addr);
     }
 
@@ -665,7 +655,7 @@ namespace nanojit
     // sse instructions
     inline void Assembler::SSE(I32 c, R d, R s) {
         underrunProtect(9);
-        MODRM(REGNUM(d)&7, REGNUM(s)&7);
+        MODRMr(REGNUM(d)&7, REGNUM(s)&7);
         *(--_nIns) = uint8_t(c & 0xff);
         *(--_nIns) = uint8_t((c >>  8) & 0xff);
         *(--_nIns) = uint8_t((c >> 16) & 0xff);
@@ -691,10 +681,11 @@ namespace nanojit
         count_ldq();
         underrunProtect(8);
         IMM32(int32_t(addr));
-        *(--_nIns) = uint8_t((REGNUM(r) & 7) << 3 | 5);
+        MODRM(0, REGNUM(r) & 7, 5);     // amode == addr(r)
         *(--_nIns) = 0x10;
         *(--_nIns) = 0x0f;
         *(--_nIns) = 0xf2;
+        // *addr is a constant, so we can print it here.
         asm_output("movsd %s,(%p) // =%f", gpn(r), (void*)addr, *addr);
     }
 
@@ -705,14 +696,14 @@ namespace nanojit
     {
         count_ldq();
         SSEsib(0xf30f7e, rr, d, rb, ri, scale);
-        asm_output("movq %s,%d(%s+%s*%d)", gpn(rr), d, gpn(rb), gpn(ri), SIBIDX(scale));
+        asm_output("movq %s,%d(%s+%s*%c)", gpn(rr), d, gpn(rb), gpn(ri), SIBIDX(scale));
     }
 
     inline void Assembler::SSE_LDSSsib(R rr, I32 d, R rb, R ri, I32 scale)
     {
         count_ld();
         SSEsib(0xf30f10, rr, d, rb, ri, scale);
-        asm_output("movss %s,%d(%s+%s*%d)", gpn(rr), d, gpn(rb), gpn(ri), SIBIDX(scale));
+        asm_output("movss %s,%d(%s+%s*%c)", gpn(rr), d, gpn(rb), gpn(ri), SIBIDX(scale));
     }
 
     inline void Assembler::SSE_STSD(I32 d, R b, R r) { count_stq(); SSEm(0xf20f11, r, d, b); asm_output("movsd %d(%s),%s", d, gpn(b), gpn(r)); }
@@ -722,7 +713,7 @@ namespace nanojit
     inline void Assembler::SSE_STQsib(I32 d, R rb, R ri, I32 scale, R rv) {
         count_stq();
         SSEsib(0x660fd6, rv, d, rb, ri, scale);
-        asm_output("movq %d(%s+%s*%d),%s", d, gpn(rb), gpn(ri), scale, gpn(rv));
+        asm_output("movq %d(%s+%s*%c),%s", d, gpn(rb), gpn(ri), SIBIDX(scale), gpn(rv));
     }
 
     inline void Assembler::SSE_CVTSI2SD(R xr, R gr)  { count_fpu(); SSE(0xf20f2a, xr, gr); asm_output("cvtsi2sd %s,%s", gpn(xr), gpn(gr)); }
@@ -765,11 +756,12 @@ namespace nanojit
         NanoAssert(IsXmmReg(r));
         const double* daddr = addr;
         IMM32(int32_t(daddr));
-        *(--_nIns) = uint8_t((REGNUM(r) & 7) << 3 | 5);
+        MODRM(0, REGNUM(r) & 7, 5);     // amode == daddr(r)
         *(--_nIns) = 0x58;
         *(--_nIns) = 0x0f;
         *(--_nIns) = 0xf2;
-        asm_output("addsd %s,%p // =%f", gpn(r), (void*)daddr, *daddr);
+        // *daddr is a constant, so we can print it here.
+        asm_output("addsd %s,(%p) // =%f", gpn(r), (void*)daddr, *daddr);
     }
 
     inline void Assembler::SSE_SUBSD(R rd, R rs) {
@@ -804,11 +796,11 @@ namespace nanojit
         count_fpuld();
         underrunProtect(8);
         IMM32(int32_t(maskaddr));
-        *(--_nIns) = uint8_t((REGNUM(r) & 7) << 3 | 5);
+        MODRM(0, REGNUM(r) & 7, 5);     // amode == maskaddr(r)
         *(--_nIns) = 0x57;
         *(--_nIns) = 0x0f;
         *(--_nIns) = 0x66;
-        asm_output("xorpd %s,[%p]", gpn(r), (void*)maskaddr);
+        asm_output("xorpd %s,(%p)", gpn(r), (void*)maskaddr);
     }
 
     inline void Assembler::SSE_XORPDr(R rd, R rs) {
