@@ -50,8 +50,6 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MachineRegs.h"
 #include "CodeGenIncludes.h"
-#include "jsobjinlines.h"
-#include "jsscopeinlines.h"
 
 namespace js {
 namespace mjit {
@@ -211,9 +209,9 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         load32(Address(obj, offsetof(JSObject, objShape)), shape);
     }
 
-    Jump guardShape(RegisterID objReg, JSObject *obj) {
-        return branch32(NotEqual, Address(objReg, offsetof(JSObject, objShape)),
-                        Imm32(obj->shape()));
+    Jump guardShape(RegisterID obj, uint32 shape) {
+        return branch32(NotEqual, Address(obj, offsetof(JSObject, objShape)),
+                        Imm32(shape));
     }
 
     Jump testFunction(Condition cond, RegisterID fun) {
@@ -428,24 +426,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             loadPayload(remat.address(), reg);
         else
             move(remat.reg(), reg);
-    }
-
-    void loadDynamicSlot(RegisterID objReg, uint32 slot,
-                         RegisterID typeReg, RegisterID dataReg) {
-        loadPtr(Address(objReg, offsetof(JSObject, slots)), dataReg);
-        loadValueAsComponents(Address(dataReg, slot * sizeof(Value)), typeReg, dataReg);
-    }
-
-    void loadObjProp(JSObject *obj, RegisterID objReg,
-                     const js::Shape *shape,
-                     RegisterID typeReg, RegisterID dataReg)
-    {
-        if (shape->isMethod())
-            loadValueAsComponents(ObjectValue(shape->methodObject()), typeReg, dataReg);
-        else if (obj->hasSlotsArray())
-            loadDynamicSlot(objReg, shape->slot, typeReg, dataReg);
-        else
-            loadInlineSlot(objReg, shape->slot, typeReg, dataReg);
     }
 };
 
