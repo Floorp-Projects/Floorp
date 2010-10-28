@@ -216,7 +216,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
     int secondShapeGuard : 11;
 
     // Opcode this was compiled for.
-    JSOp op : 8;
+    JSOp op : 9;
 
     // Release ExecutablePools referred to by this PIC.
     void releasePools() {
