@@ -2681,7 +2681,8 @@ NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
    // Tell the PresShell to scroll to the primary frame of the content.
    NS_ENSURE_SUCCESS(presShell->ScrollContentIntoView(content,
                                                       NS_PRESSHELL_SCROLL_TOP,
-                                                      NS_PRESSHELL_SCROLL_ANYWHERE),
+                                                      NS_PRESSHELL_SCROLL_ANYWHERE,
+                                                      nsIPresShell::SCROLL_OVERFLOW_HIDDEN),
                      NS_ERROR_FAILURE);
    return NS_OK;
 }
