@@ -112,11 +112,11 @@ static void
 drawToDC(InstanceData* instanceData, HDC dc,
          int x, int y, int width, int height)
 {
-  RECT fill = { 0, 0, width, height };
-
   switch (instanceData->scriptableObject->drawMode) {
     case DM_DEFAULT:
     {
+      const RECT fill = { x, y, width, height };
+
       int oldBkMode = ::SetBkMode(dc, TRANSPARENT);
       HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));
       if (brush) {
@@ -126,7 +126,7 @@ drawToDC(InstanceData* instanceData, HDC dc,
       if (width > 6 && height > 6) {
         brush = ::CreateSolidBrush(RGB(192, 192, 192));
         if (brush) {
-          RECT inset = { 3, 3, width - 3, height - 3 };
+          RECT inset = { x + 3, y + 3, x + width - 3, y + height - 3 };
           ::FillRect(dc, &inset, brush);
           ::DeleteObject(brush);
         }
@@ -141,7 +141,7 @@ drawToDC(InstanceData* instanceData, HDC dc,
                         DEFAULT_PITCH, "Arial");
         if (font) {
           HFONT oldFont = (HFONT)::SelectObject(dc, font);
-          RECT inset = { 5, 5, width - 5, height - 5 };
+          RECT inset = { x + 5, y + 5, x + width - 5, y + height - 5 };
           ::DrawTextA(dc, uaString, -1, &inset,
                       DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
           ::SelectObject(dc, oldFont);
