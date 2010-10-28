@@ -81,6 +81,7 @@
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 #include "jsstrinlines.h"
+#include "jsautooplen.h"        // generated headers last
 
 using namespace js;
 using namespace js::gc;
@@ -1971,6 +1972,7 @@ struct ReplaceData
     JSString           *str;           /* 'this' parameter object as a string */
     RegExpGuard        g;              /* regexp parameter object and private data */
     JSObject           *lambda;        /* replacement function object or null */
+    JSObject           *elembase;      /* object for function(a){return b[a]} replace */
     JSString           *repstr;        /* replacement string */
     jschar             *dollar;        /* null or pointer to first $ in repstr */
     jschar             *dollarEnd;     /* limit pointer for js_strchr_limit */
@@ -2068,6 +2070,58 @@ class PreserveRegExpStatics
 static bool
 FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t *sizep)
 {
+    JSObject *base = rdata.elembase;
+    if (base) {
+        /*
+         * The base object is used when replace was passed a lambda which looks like
+         * 'function(a) { return b[a]; }' for the base object b.  b will not change
+         * in the course of the replace unless we end up making a scripted call due
+         * to accessing a scripted getter or a value with a scripted toString.
+         */
+        JS_ASSERT(rdata.lambda);
+        JS_ASSERT(!base->getOps()->lookupProperty);
+        JS_ASSERT(!base->getOps()->getProperty);
+
+        Value match;
+        if (!res->createLastMatch(cx, &match))
+            return false;
+        JSString *str = match.toString();
+
+        JSAtom *atom;
+        if (str->isAtomized()) {
+            atom = STRING_TO_ATOM(str);
+        } else {
+            atom = js_AtomizeString(cx, str, 0);
+            if (!atom)
+                return false;
+        }
+        jsid id = ATOM_TO_JSID(atom);
+
+        JSObject *holder;
+        JSProperty *prop = NULL;
+        if (js_LookupPropertyWithFlags(cx, base, id, JSRESOLVE_QUALIFIED, &holder, &prop) < 0)
+            return false;
+
+        /* Only handle the case where the property exists and is on this object. */
+        if (prop && holder == base) {
+            Shape *shape = (Shape *) prop;
+            if (shape->slot != SHAPE_INVALID_SLOT && shape->hasDefaultGetter()) {
+                Value value = base->getSlot(shape->slot);
+                if (value.isString()) {
+                    rdata.repstr = value.toString();
+                    *sizep = rdata.repstr->length();
+                    return true;
+                }
+            }
+        }
+
+        /*
+         * Couldn't handle this property, fall through and despecialize to the
+         * general lambda case.
+         */
+        rdata.elembase = NULL;
+    }
+
     JSObject *lambda = rdata.lambda;
     if (lambda) {
         /*
@@ -2438,10 +2492,46 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
     /* Extract replacement string/function. */
     if (argc >= optarg && js_IsCallable(vp[3])) {
         rdata.lambda = &vp[3].toObject();
+        rdata.elembase = NULL;
         rdata.repstr = NULL;
         rdata.dollar = rdata.dollarEnd = NULL;
+
+        if (rdata.lambda->isFunction()) {
+            JSFunction *fun = rdata.lambda->getFunctionPrivate();
+            if (fun->isInterpreted()) {
+                /*
+                 * Pattern match the script to check if it is is indexing into a
+                 * particular object, e.g. 'function(a) { return b[a]; }'.  Avoid
+                 * calling the script in such cases, which are used by javascript
+                 * packers (particularly the popular Dean Edwards packer) to efficiently
+                 * encode large scripts.  We only handle the code patterns generated
+                 * by such packers here.
+                 */
+                JSScript *script = fun->u.i.script;
+                jsbytecode *pc = script->code;
+
+                Value table = UndefinedValue();
+                if (JSOp(*pc) == JSOP_GETFCSLOT) {
+                    table = rdata.lambda->getFlatClosureUpvar(GET_UINT16(pc));
+                    pc += JSOP_GETFCSLOT_LENGTH;
+                }
+
+                if (table.isObject() &&
+                    JSOp(*pc) == JSOP_GETARG && GET_SLOTNO(pc) == 0 &&
+                    JSOp(*(pc + JSOP_GETARG_LENGTH)) == JSOP_GETELEM &&
+                    JSOp(*(pc + JSOP_GETARG_LENGTH + JSOP_GETELEM_LENGTH)) == JSOP_RETURN) {
+                    Class *clasp = table.toObject().getClass();
+                    if (clasp->isNative() &&
+                        !clasp->ops.lookupProperty &&
+                        !clasp->ops.getProperty) {
+                        rdata.elembase = &table.toObject();
+                    }
+                }
+            }
+        }
     } else {
         rdata.lambda = NULL;
+        rdata.elembase = NULL;
         rdata.repstr = ArgToRootedString(cx, argc, vp, 1);
         if (!rdata.repstr)
             return false;
@@ -3514,8 +3604,9 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 
     jschar *chars = base->chars() + start;
 
-    if (length == 1 && *chars < UNIT_STRING_LIMIT)
-        return const_cast<JSString *>(&JSString::unitStringTable[*chars]);
+    JSString *staticStr = JSString::lookupStaticString(chars, length);
+    if (staticStr)
+        return staticStr;
 
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())
