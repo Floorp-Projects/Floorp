@@ -978,12 +978,11 @@ LoginManager.prototype = {
     },
 
     _getActionOrigin : function (form) {
-        var uriString = form.action;
+        var uriString = form.mozActionUri;
 
-        // If uriString equals the empty string that means actian attribute is
-        // missing or invalid and it will submit to the baseURI.
+        // A blank or mission action submits to where it came from.
         if (uriString == "")
-            uriString = form.baseURI;
+            uriString = form.baseURI; // ala bug 297761
 
         return this._getPasswordOrigin(uriString, true);
     },
