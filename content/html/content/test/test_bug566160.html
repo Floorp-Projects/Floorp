@@ -83,8 +83,41 @@ var gTestResults = {
 
 var gPendingLoad = 0; // Has to be set after depending on the frames number.
 
+function checkFormActionAttribute(aElement)
+{
+  ok("formAction" in aElement, "formAction IDL attribute should be available in "
+     + aElement);
+
+  is(aElement.formAction, "", "formAction IDL attribute should be " +
+     "undefined by default");
+  is(aElement.getAttribute('formaction'), null, "formaction content attribute " +
+     "should be the empty string by default");
+
+  aElement.formAction = "foo";
+  is(aElement.getAttribute('formaction'), "foo", "formaction content attribute " +
+     "should be 'foo'.");
+  is(aElement.formAction, "foo", "formAction IDL attribute should reflect " +
+     "the content attribute");
+
+  aElement.setAttribute('formaction', 'bar');
+  is(aElement.getAttribute('formaction'), "bar", "formaction content attribute " +
+     "should be 'foo'.");
+  is(aElement.formAction, "bar", "formAction IDL attribute should reflect " +
+     "the content attribute");
+
+  aElement.removeAttribute('formaction');
+  is(aElement.formAction, "", "formAction IDL attribute should be " +
+     "undefined by default");
+  is(aElement.getAttribute('formaction'), null, "formaction content attribute " +
+     "should be the empty string by default");
+}
+
 function runTests()
 {
+  // First of all, let's check if .formAction and @formaction work correctly.
+  checkFormActionAttribute(document.createElement('input'));
+  checkFormActionAttribute(document.createElement('button'));
+
   // We add a load event for the frames which will be called when the forms
   // will be submitted.
   var frames = [ document.getElementById('frame1'),
