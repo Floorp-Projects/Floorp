@@ -79,8 +79,20 @@ function show() {
   waitForPaint(invalidate);
 }
 
+function doubleForDoublePass() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  if (SimpleTest.testPluginIsOOP())
+    return 1;
+
+  if (!Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
+    return 1;
+
+  return 2;
+}
+
 function invalidate() {
-  var paintCount = 1;
+  var paintCount = 1 * doubleForDoublePass();
+
   is(clipped.getPaintCount(), paintCount, "partially clipped plugin painted once");  
   
   clipped.setColor("FF00FF00"); // plugin invalidates
@@ -89,7 +101,7 @@ function invalidate() {
 }
 
 function done() {
-  var paintCount = 2;
+  var paintCount = 2 * doubleForDoublePass();
   is(clipped.getPaintCount(), paintCount, "painted after invalidate");
 
   SimpleTest.finish();  
