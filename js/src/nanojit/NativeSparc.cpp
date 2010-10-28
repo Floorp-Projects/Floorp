@@ -1107,7 +1107,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_addi || op == LIR_addxovi) && lhs->isop(LIR_allocp) && rhs->isImmI()) {
+        else if ((op == LIR_addi || op == LIR_addxovi || op == LIR_addjovi) && lhs->isop(LIR_allocp) && rhs->isImmI()) {
             // add alloc+const, use lea
             Register rr = deprecated_prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->immI();
@@ -1128,9 +1128,9 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_addi || op == LIR_addxovi)
+                if (op == LIR_addi || op == LIR_addxovi || op == LIR_addjovi)
                     ADDCC(rr, rb, rr);
-                else if (op == LIR_subi || op == LIR_subxovi)
+                else if (op == LIR_subi || op == LIR_subxovi || op == LIR_subjovi)
                     SUBCC(rr, rb, rr);
                 else if (op == LIR_muli)
                     SMULCC(rr, rb, rr);
@@ -1158,9 +1158,9 @@ namespace nanojit
         else
             {
                 int c = rhs->immI();
-                if (op == LIR_addi || op == LIR_addxovi)
+                if (op == LIR_addi || op == LIR_addxovi || op == LIR_addjovi)
                     ADDCC(rr, L2, rr);
-                else if (op == LIR_subi || op == LIR_subxovi)
+                else if (op == LIR_subi || op == LIR_subxovi || op == LIR_subjovi)
                     SUBCC(rr, L2, rr);
                 else if (op == LIR_andi)
                     AND(rr, L2, rr);
