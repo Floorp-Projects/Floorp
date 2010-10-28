@@ -55,6 +55,9 @@ namespace nanojit
             "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
             "f0"
         };
+
+        const char *gpRegNames8lo[] = { "al", "cl", "dl", "bl" };
+        const char *gpRegNames8hi[] = { "ah", "ch", "dh", "bh" };
     #endif
 
     #define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
@@ -69,6 +72,9 @@ namespace nanojit
         0, /* ABI_STDCALL */
         0  /* ABI_CDECL */
     };
+
+    #define RB(r)       gpRegNames8lo[REGNUM(r)]
+    #define RBhi(r)     gpRegNames8hi[REGNUM(r)]
 
     typedef Register R;
     typedef int32_t  I32;
@@ -214,8 +220,12 @@ namespace nanojit
         *(--_nIns) = uint8_t(c>>8);
     }
 
-    inline void Assembler::LAHF()        { count_alu(); ALU0(0x9F);                   asm_output("lahf"); }
-    inline void Assembler::SAHF()        { count_alu(); ALU0(0x9E);                   asm_output("sahf"); }
+    inline Register Assembler::AL2AHReg(R r) {
+        NanoAssert(REGNUM(r) < 4);          // one of: al, cl, dl, bl
+        Register r2 = { REGNUM(r) | 4 };    // convert to one of: ah, ch, dh, bh
+        return r2;
+    }
+
     inline void Assembler::OR(R l, R r)  { count_alu(); ALU(0x0b, REGNUM(l), r);      asm_output("or %s,%s", gpn(l), gpn(r)); }
     inline void Assembler::AND(R l, R r) { count_alu(); ALU(0x23, REGNUM(l), r);      asm_output("and %s,%s", gpn(l), gpn(r)); }
     inline void Assembler::XOR(R l, R r) { count_alu(); ALU(0x33, REGNUM(l), r);      asm_output("xor %s,%s", gpn(l), gpn(r)); }
@@ -225,6 +235,7 @@ namespace nanojit
     inline void Assembler::DIV(R r)      { count_alu(); ALU(0xf7, 7, r);              asm_output("idiv  edx:eax, %s", gpn(r)); }
     inline void Assembler::NOT(R r)      { count_alu(); ALU(0xf7, 2, r);              asm_output("not %s", gpn(r)); }
     inline void Assembler::NEG(R r)      { count_alu(); ALU(0xf7, 3, r);              asm_output("neg %s", gpn(r)); }
+    inline void Assembler::AND8R(R r)    { count_alu(); ALU(0x22, REGNUM(r), AL2AHReg(r)); asm_output("andb %s, %s", RB(r), RBhi(r)); }
 
     inline void Assembler::SHR(R r, R s) {
         count_alu();
@@ -295,6 +306,7 @@ namespace nanojit
 
     inline void Assembler::SETE( R r)  { count_alu(); ALU2(0x0f94, r, r);   asm_output("sete %s",  gpn(r)); }
     inline void Assembler::SETNP(R r)  { count_alu(); ALU2(0x0f9B, r, r);   asm_output("setnp %s", gpn(r)); }
+    inline void Assembler::SETNPH(R r) { count_alu(); ALU2(0x0f9B, AL2AHReg(r), AL2AHReg(r)); asm_output("setnp %s", RBhi(r)); }
     inline void Assembler::SETL( R r)  { count_alu(); ALU2(0x0f9C, r, r);   asm_output("setl %s",  gpn(r)); }
     inline void Assembler::SETLE(R r)  { count_alu(); ALU2(0x0f9E, r, r);   asm_output("setle %s", gpn(r)); }
     inline void Assembler::SETG( R r)  { count_alu(); ALU2(0x0f9F, r, r);   asm_output("setg %s",  gpn(r)); }
@@ -1681,7 +1693,16 @@ namespace nanojit
             // asm_cmpd() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise
             // for LIR_led/LIR_ged.
             switch (opcode) {
-            case LIR_eqd:   SETNP(r);       break;
+            case LIR_eqd:   
+                if (ins->oprnd1() == ins->oprnd2()) {
+                    SETNP(r);
+                } else {
+                    // result = ZF & !PF, must do logic on flags
+                    AND8R(r);       // and      rl,rh    rl &= rh
+                    SETNPH(r);      // setnp    rh       rh = !PF
+                    SETE(r);        // sete     rl       rl = ZF
+                }
+                break;
             case LIR_ltd:
             case LIR_gtd:   SETA(r);        break;
             case LIR_led:
@@ -2602,7 +2623,7 @@ namespace nanojit
 
     NIns* Assembler::asm_branchd(bool branchOnFalse, LIns *cond, NIns *targ)
     {
-        NIns* at;
+        NIns* at = 0;
         LOpcode opcode = cond->opcode();
 
         if (_config.i386_sse2) {
@@ -2612,7 +2633,14 @@ namespace nanojit
             if (branchOnFalse) {
                 // op == LIR_xf
                 switch (opcode) {
-                case LIR_eqd:   JP(targ);       break;
+                case LIR_eqd:
+                    if (cond->oprnd1() == cond->oprnd2()) {
+                        JP(targ);
+                    } else {
+                        JP(targ);
+                        JNE(targ);
+                    }
+                    break;
                 case LIR_ltd:
                 case LIR_gtd:   JNA(targ);      break;
                 case LIR_led:
@@ -2622,7 +2650,20 @@ namespace nanojit
             } else {
                 // op == LIR_xt
                 switch (opcode) {
-                case LIR_eqd:   JNP(targ);      break;
+                case LIR_eqd:
+                    if (cond->oprnd1() == cond->oprnd2()) {
+                        JNP(targ);
+                    } else {
+                        // jp skip (2byte)
+                        // je target
+                        // skip: ...
+                        underrunProtect(16); // underrun of 7 needed but we write 2 instr --> 16
+                        NIns *skip = _nIns;
+                        JE(targ);      
+                        at = _nIns;
+                        JP(skip);
+                    }
+                    break;
                 case LIR_ltd:
                 case LIR_gtd:   JA(targ);       break;
                 case LIR_led:
@@ -2637,7 +2678,8 @@ namespace nanojit
                 JNP(targ);
         }
 
-        at = _nIns;
+        if (!at)
+            at = _nIns; 
         asm_cmpd(cond);
 
         return at;
@@ -2664,59 +2706,41 @@ namespace nanojit
                 LIns* t = lhs; lhs = rhs; rhs = t;
             }
 
-            if (condop == LIR_eqd) {
-                if (lhs == rhs) {
-                    // We can generate better code for LIR_eqd when lhs==rhs (NaN test).
 
-                    // ucomisd    ZPC  outcome (SETNP/JNP succeeds if P==0)
-                    // -------    ---  -------
-                    // UNORDERED  111  SETNP/JNP fails
-                    // EQUAL      100  SETNP/JNP succeeds
+            // LIR_eqd, if lhs == rhs:
+            //   ucomisd       ZPC   outcome (SETNP/JNP succeeds if P==0)
+            //   -------       ---   -------
+            //   UNORDERED     111   SETNP/JNP fails
+            //   EQUAL         100   SETNP/JNP succeeds
+            //
+            // LIR_eqd, if lsh != rhs;
+            //   ucomisd       ZPC   outcome (SETP/JP succeeds if P==0, 
+            //                                SETE/JE succeeds if Z==0)
+            //   -------       ---   -------
+            //   UNORDERED     111   SETP/JP succeeds (and skips to fail target)
+            //   EQUAL         100   SETP/JP fails, SETE/JE succeeds
+            //   GREATER_THAN  000   SETP/JP fails, SETE/JE fails
+            //   LESS_THAN     001   SETP/JP fails, SETE/JE fails
+            //
+            // LIR_gtd:
+            //   ucomisd       ZPC   outcome (SETA/JA succeeds if CZ==00)
+            //   -------       ---   -------
+            //   UNORDERED     111   SETA/JA fails
+            //   EQUAL         100   SETA/JA fails
+            //   GREATER_THAN  000   SETA/JA succeeds
+            //   LESS_THAN     001   SETA/JA fails
+            //
+            // LIR_ged:
+            //   ucomisd       ZPC   outcome (SETAE/JAE succeeds if C==0)
+            //   -------       ---   -------
+            //   UNORDERED     111   SETAE/JAE fails
+            //   EQUAL         100   SETAE/JAE succeeds
+            //   GREATER_THAN  000   SETAE/JAE succeeds
+            //   LESS_THAN     001   SETAE/JAE fails
 
-                    Register r = findRegFor(lhs, XmmRegs);
-                    SSE_UCOMISD(r, r);
-                } else {
-                    // LAHF puts the flags into AH like so:  SF:ZF:0:AF:0:PF:1:CF (aka. SZ0A_0P1C).
-                    // We then mask out the bits as follows.
-                    // - LIR_eqd: mask == 0x44 == 0100_0100b, which extracts 0Z00_0P00 from AH.
-                    int mask = 0x44;
-
-                    // ucomisd       ZPC   lahf/test(0x44) SZP   outcome
-                    // -------       ---   ---------       ---   -------
-                    // UNORDERED     111   0100_0100       001   SETNP/JNP fails
-                    // EQUAL         100   0100_0000       000   SETNP/JNP succeeds
-                    // GREATER_THAN  000   0000_0000       011   SETNP/JNP fails
-                    // LESS_THAN     001   0000_0000       011   SETNP/JNP fails
-
-                    evictIfActive(rEAX);
-                    Register ra, rb;
-                    findRegFor2(XmmRegs, lhs, ra, XmmRegs, rhs, rb);
-
-                    TEST_AH(mask);
-                    LAHF();
-                    SSE_UCOMISD(ra, rb);
-                }
-            } else {
-                // LIR_gtd:
-                //   ucomisd       ZPC   outcome (SETA/JA succeeds if CZ==00)
-                //   -------       ---   -------
-                //   UNORDERED     111   SETA/JA fails
-                //   EQUAL         100   SETA/JA fails
-                //   GREATER_THAN  000   SETA/JA succeeds
-                //   LESS_THAN     001   SETA/JA fails
-                //
-                // LIR_ged:
-                //   ucomisd       ZPC   outcome (SETAE/JAE succeeds if C==0)
-                //   -------       ---   -------
-                //   UNORDERED     111   SETAE/JAE fails
-                //   EQUAL         100   SETAE/JAE succeeds
-                //   GREATER_THAN  000   SETAE/JAE succeeds
-                //   LESS_THAN     001   SETAE/JAE fails
-
-                Register ra, rb;
-                findRegFor2(XmmRegs, lhs, ra, XmmRegs, rhs, rb);
-                SSE_UCOMISD(ra, rb);
-            }
+            Register ra, rb;
+            findRegFor2(XmmRegs, lhs, ra, XmmRegs, rhs, rb);
+            SSE_UCOMISD(ra, rb);
 
         } else {
             // First, we convert (a > b) into (b < a), and (a >= b) into (b <= a).
@@ -2745,7 +2769,7 @@ namespace nanojit
             // - LIR_ltd: mask == 0x05 == 0000_0101b, which extracts 0000_0P0C from AH.
             // - LIR_led: mask == 0x41 == 0100_0001b, which extracts 0Z00_000C from AH.
             //
-            // LIR_eqd (very similar to the sse2 case above):
+            // LIR_eqd:
             //   ucomisd  C3:C2:C0   lahf/test(0x44) SZP   outcome
             //   -------  --------   ---------       ---   -------
             //   UNORDERED     111   0100_0100       001   SETNP fails
