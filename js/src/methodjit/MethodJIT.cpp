@@ -811,10 +811,10 @@ mjit::JITScript::release()
     code.m_executablePool->release();
 
 #if defined JS_POLYIC
-    for (uint32 i = 0; i < nPICs; i++) {
-        pics[i].releasePools();
-        Destroy(pics[i].execPools);
-    }
+    for (uint32 i = 0; i < nPICs; i++)
+        pics[i].finish();
+    for (uint32 i = 0; i < nGetElems; i++)
+        getElems[i].finish();
 #endif
 
 #if defined JS_MONOIC
