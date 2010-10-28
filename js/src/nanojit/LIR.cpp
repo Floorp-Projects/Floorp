@@ -2943,6 +2943,7 @@ namespace nanojit
     }
 
 #if NJ_SOFTFLOAT_SUPPORTED
+    static int32_t FASTCALL d2i(double d)           { return (int32_t) d; }
     static double FASTCALL i2d(int32_t i)           { return i; }
     static double FASTCALL ui2d(uint32_t u)         { return u; }
     static double FASTCALL negd(double a)           { return -a; }
@@ -2956,6 +2957,7 @@ namespace nanojit
     static int32_t FASTCALL led(double a, double b) { return a <= b; }
     static int32_t FASTCALL ged(double a, double b) { return a >= b; }
 
+    #define SIG_I_D     CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_D)
     #define SIG_D_I     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_I)
     #define SIG_D_UI    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_UI)
     #define SIG_D_D     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)
@@ -2966,6 +2968,7 @@ namespace nanojit
         static const CallInfo name##_ci = \
             { (intptr_t)&name, typesig, ABI_FASTCALL, /*isPure*/1, ACCSET_NONE verbose_only(, #name) }
 
+    SF_CALLINFO(d2i,  SIG_I_D);
     SF_CALLINFO(i2d,  SIG_D_I);
     SF_CALLINFO(ui2d, SIG_D_UI);
     SF_CALLINFO(negd, SIG_D_D);
@@ -2982,6 +2985,7 @@ namespace nanojit
     SoftFloatOps::SoftFloatOps()
     {
         memset(opmap, 0, sizeof(opmap));
+        opmap[LIR_d2i] = &d2i_ci;
         opmap[LIR_i2d] = &i2d_ci;
         opmap[LIR_ui2d] = &ui2d_ci;
         opmap[LIR_negd] = &negd_ci;
@@ -3020,6 +3024,11 @@ namespace nanojit
         return split(call, args);
     }
 
+    LIns* SoftFloatFilter::callI1(const CallInfo *call, LIns *a) {
+        LIns *args[] = { split(a) };
+        return out->insCall(call, args);
+    }
+    
     LIns* SoftFloatFilter::callD2(const CallInfo *call, LIns *a, LIns *b) {
         LIns *args[] = { split(b), split(a) };
         return split(call, args);
@@ -3032,8 +3041,12 @@ namespace nanojit
 
     LIns* SoftFloatFilter::ins1(LOpcode op, LIns *a) {
         const CallInfo *ci = softFloatOps.opmap[op];
-        if (ci)
-            return callD1(ci, a);
+        if (ci) {
+            if (ci->returnType() == ARGTYPE_D)            
+                return callD1(ci, a);
+            else
+                return callI1(ci, a);
+        }
         if (op == LIR_retd)
             return out->ins1(op, split(a));
         return out->ins1(op, a);
