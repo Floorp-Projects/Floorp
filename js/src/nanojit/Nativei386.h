@@ -242,10 +242,10 @@ namespace nanojit
         void ALUi(int32_t c, Register r, int32_t i); \
         void ALUmi(int32_t c, int32_t d, Register b, int32_t i); \
         void ALU2(int32_t c, Register d, Register s); \
-        void LAHF(); \
-        void SAHF(); \
+        Register AL2AHReg(Register r); \
         void OR(Register l, Register r); \
         void AND(Register l, Register r); \
+        void AND8R(Register r); \
         void XOR(Register l, Register r); \
         void ADD(Register l, Register r); \
         void SUB(Register l, Register r); \
@@ -281,6 +281,7 @@ namespace nanojit
         void INCLi(int32_t p); \
         void SETE( Register r); \
         void SETNP(Register r); \
+        void SETNPH(Register r); \
         void SETL( Register r); \
         void SETLE(Register r); \
         void SETG( Register r); \
