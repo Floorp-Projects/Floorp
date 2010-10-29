@@ -18,15 +18,13 @@ function run_test() {
   _("Got trace:", trace);
   do_check_neq(trace, "");
 
-  let errorPos = trace.indexOf('Error("3")@:0');
   let bazPos = trace.indexOf("baz(2)@test_utils_stackTrace.js:4");
   let barPos = trace.indexOf("bar(1)@test_utils_stackTrace.js:3");
   let fooPos = trace.indexOf("foo(0)@test_utils_stackTrace.js:2");
-  _("String positions:", errorPos, bazPos, barPos, fooPos);
+  _("String positions:", bazPos, barPos, fooPos);
 
   _("Make sure the desired messages show up");
-  do_check_true(errorPos >= 0);
-  do_check_true(bazPos > errorPos);
+  do_check_true(bazPos >= 0);
   do_check_true(barPos > bazPos);
   do_check_true(fooPos > barPos);
 }
