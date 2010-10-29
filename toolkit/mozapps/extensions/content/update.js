@@ -401,6 +401,7 @@ var gInstallingPage = {
   /////////////////////////////////////////////////////////////////////////////
   // InstallListener
   onDownloadStarted: function(aInstall) {
+    var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("downloadingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
     actionItem.value = label;
@@ -421,6 +422,7 @@ var gInstallingPage = {
   },
 
   onInstallStarted: function(aInstall) {
+    var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("installingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
     actionItem.value = label;
