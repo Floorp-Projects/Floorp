@@ -14,7 +14,7 @@
  * The Original Code is the about:startup page.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
@@ -46,6 +46,14 @@ let brandShortName = branding.GetStringFromName("brandShortName");
 function displayTimestamp(id, µs) document.getElementById(id).textContent = formatstamp(µs);
 function displayDuration(id, µs) document.getElementById(id).nextSibling.textContent = formatms(msFromµs(µs));
 
+function getStr(str)
+{
+  try {
+    return strings.getStringFromName("about.startup."+ str);
+  } catch (x) {
+    return str;
+  }
+}
 function formatStr(str, args)
 {
   try {
@@ -56,8 +64,8 @@ function formatStr(str, args)
 }
 function appVersion(version, build) formatStr("appVersion", [brandShortName, version, build]);
 function formatExtension(str, name, version) formatStr("extension"+(str.replace(/^on/, "")
-                                                                                                 .replace(/ing$/, "ed")),
-                                                                            [name, version]);
+                                                                       .replace(/ing$/, "ed")),
+                                                       [name, version]);
 
 function msFromµs(µs) µs / 1000;
 function formatstamp(µs) new Date(msFromµs(µs));
@@ -75,6 +83,8 @@ function green(r) color(r, "#00F");
 function majorMark(x, l) label(major(mark(range(x))), l);
 function minorMark(x, l) label(minor(mark(range(x))), l);
 function extensionMark(x, l) label(green(mark(range(x))), l);
+
+function clamp(min, value, max) Math.max(min, (Math.min(value, max)));
 
 ///// First, display the timings from the current startup
 let launched, startup, restored;
@@ -125,10 +135,10 @@ var overviewOpts = $.extend(true, {}, options,
                                       },
                             });
 
-var series = [{ label: "Launch Time",
+var series = [{ label: getStr("duration.launch"),
                 data: []
               },
-              { label: "Startup Time",
+              { label: getStr("duration.startup"),
                 data: []
               }
              ];
@@ -197,9 +207,13 @@ function populateMeasurements()
                                                                  build)));
         }
         else
+        {
           if (lastbuild != build)
+          {
             options.grid.markings.push(minorMark(stamp, appVersion(version,
                                                                    build)));
+          }
+        }
 
         lastver = version;
         lastbuild = build;
@@ -230,7 +244,9 @@ function populateMeasurements()
                                       - 110;
       $("#graph").height(Math.max(350, height));
 
-      options.xaxis.min = Date.now() - 604800000; // 7 days in milliseconds
+      options.xaxis.min = clamp(Date.now() - 3600000,    // 1 hour in milliseconds
+                                series[0].data[0][0],
+                                Date.now() - 604800000); // 7 days in milliseconds
       var max = 0;
       for each (let [stamp, d] in series[0].data)
         if (stamp >= options.xaxis.min && d > max)
@@ -250,7 +266,7 @@ function populateMeasurements()
 
 function populateEvents()
 {
-  let s = "SELECT timestamp, id, name, version, action FROM events";
+  let s = "SELECT timestamp, extid, name, version, action FROM events";
   var query = db.createStatement(s);
   let lastver, lastbuild;
   let hasresults;
@@ -265,7 +281,7 @@ function populateEvents()
         {
           hasresults = true;
           let stamp = row.getResultByName("timestamp"),
-              id = row.getResultByName("id"),
+              id = row.getResultByName("extid"),
               extension = extensions.get(id),
               name = extension ? extension.name : row.getResultByName("name"),
               version = row.getResultByName("version"),

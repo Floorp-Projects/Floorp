@@ -31,7 +31,7 @@ startup process. -->
 <!ENTITY about.startup.duration.startup "Startup Time">
 
 <!-- LOCALIZATION NOTE (about.startup.duration.ready): The total time
-that the user had to wait between when they lauched firefox and it was
+that the user had to wait between when they launched firefox and it was
 ready to use. -->
 <!ENTITY about.startup.duration.ready "Elapsed Time">
 
