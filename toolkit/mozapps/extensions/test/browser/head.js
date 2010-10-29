@@ -186,7 +186,9 @@ function get_addon_element(aManager, aId) {
   return null;
 }
 
-function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
+function wait_for_view_load(aManagerWindow, aCallback, aForceWait, aLongerTimeout) {
+  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
+
   if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
     aCallback(aManagerWindow);
     return;
@@ -212,8 +214,6 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
 }
 
 function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
-  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
-
   function setup_manager(aManagerWindow) {
     if (aLoadCallback)
       aLoadCallback(aManagerWindow);
@@ -225,7 +225,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
     wait_for_manager_load(aManagerWindow, function() {
-      wait_for_view_load(aManagerWindow, aCallback);
+      wait_for_view_load(aManagerWindow, aCallback, null, aLongerTimeout);
     });
   }
 
