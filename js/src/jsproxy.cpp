@@ -1042,9 +1042,7 @@ proxy_Construct(JSContext *cx, uintN argc, Value *vp)
 static JSType
 proxy_TypeOf_fun(JSContext *cx, JSObject *obj)
 {
-    return obj->unwrap()->isRegExp()
-           ? JSTYPE_OBJECT
-           : JSTYPE_FUNCTION;
+    return JSTYPE_FUNCTION;
 }
 
 JS_FRIEND_API(Class) FunctionProxyClass = {
