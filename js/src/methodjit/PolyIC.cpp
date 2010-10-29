@@ -50,6 +50,7 @@
 #include "jsscopeinlines.h"
 #include "jspropertycache.h"
 #include "jspropertycacheinlines.h"
+#include "jsinterpinlines.h"
 #include "jsautooplen.h"
 
 #if defined JS_POLYIC
@@ -1944,6 +1945,12 @@ DisabledGetElem(VMFrame &f, ic::GetElementIC *ic)
     stubs::GetElem(f);
 }
 
+static void JS_FASTCALL
+DisabledCallElem(VMFrame &f, ic::GetElementIC *ic)
+{
+    stubs::CallElem(f);
+}
+
 bool
 GetElementIC::shouldUpdate(JSContext *cx)
 {
@@ -1960,7 +1967,10 @@ LookupStatus
 GetElementIC::disable(JSContext *cx, const char *reason)
 {
     slowCallPatched = true;
-    BaseIC::disable(cx, reason, JS_FUNC_TO_DATA_PTR(void *, DisabledGetElem));
+    void *stub = (op == JSOP_GETELEM)
+                 ? JS_FUNC_TO_DATA_PTR(void *, DisabledGetElem)
+                 : JS_FUNC_TO_DATA_PTR(void *, DisabledCallElem);
+    BaseIC::disable(cx, reason, stub);
     return Lookup_Uncacheable;
 }
 
@@ -1986,7 +1996,10 @@ GetElementIC::purge()
 
     if (slowCallPatched) {
         RepatchBuffer repatcher(slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.relink(slowPathCall, FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::GetElement)));
+        if (op == JSOP_GETELEM)
+            repatcher.relink(slowPathCall, FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::GetElement)));
+        else if (op == JSOP_CALLELEM)
+            repatcher.relink(slowPathCall, FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::CallElement)));
     }
 
     reset();
@@ -2053,6 +2066,13 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
         protoGuard = masm.guardShape(holderReg, holder);
     }
 
+    if (op == JSOP_CALLELEM) {
+        // Emit a write of |obj| to the top of the stack, before we lose it.
+        Value *thisVp = &cx->regs->sp[-1];
+        Address thisSlot(JSFrameReg, JSStackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
+        masm.storeValueFromComponents(ImmType(JSVAL_TYPE_OBJECT), objReg, thisSlot);
+    }
+
     // Load the value.
     const Shape *shape = getprop.shape;
     masm.loadObjProp(holder, holderReg, shape, typeReg, objReg);
@@ -2073,9 +2093,9 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
     CodeLocationLabel cs = buffer.finalizeCodeAddendum();
 #if DEBUG
     char *chars = js_DeflateString(cx, v.toString()->chars(), v.toString()->length());
-    JaegerSpew(JSpew_PICs, "generated getelem stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
-               cs.executableAddress(), id, chars, holder->shape(), cx->fp()->script()->filename,
-               js_FramePCToLineNumber(cx, cx->fp()));
+    JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
+               js_CodeName[op], cs.executableAddress(), id, chars, holder->shape(),
+               cx->fp()->script()->filename, js_FramePCToLineNumber(cx, cx->fp()));
     cx->free(chars);
 #endif
 
@@ -2156,6 +2176,63 @@ GetElementIC::update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Valu
     if (v.isString())
         return attachGetProp(cx, obj, v, id, vp);
     return disable(cx, "unhandled object and key type");
+}
+
+void JS_FASTCALL
+ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
+{
+    JSContext *cx = f.cx;
+
+    // Right now, we don't optimize for strings.
+    if (!f.regs.sp[-2].isObject()) {
+        ic->disable(cx, "non-object");
+        stubs::CallElem(f);
+        return;
+    }
+
+    Value thisv = f.regs.sp[-2];
+    JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
+    if (!thisObj)
+        THROW();
+
+    jsid id;
+    Value idval = f.regs.sp[-1];
+    if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32()))
+        id = INT_TO_JSID(idval.toInt32());
+    else if (!js_InternNonIntElementId(cx, thisObj, idval, &id))
+        THROW();
+
+    if (ic->shouldUpdate(cx)) {
+#ifdef DEBUG
+        f.regs.sp[-2] = MagicValue(JS_GENERIC_MAGIC);
+#endif
+        LookupStatus status = ic->update(cx, thisObj, idval, id, &f.regs.sp[-2]);
+        if (status != Lookup_Uncacheable) {
+            if (status == Lookup_Error)
+                THROW();
+
+            // If the result can be cached, the value was already retrieved.
+            JS_ASSERT(!f.regs.sp[-2].isMagic());
+            f.regs.sp[-1].setObject(*thisObj);
+            return;
+        }
+    }
+
+    /* Get or set the element. */
+    if (!js_GetMethod(cx, thisObj, id, JSGET_NO_METHOD_BARRIER, &f.regs.sp[-2]))
+        THROW();
+
+#if JS_HAS_NO_SUCH_METHOD
+    if (JS_UNLIKELY(f.regs.sp[-2].isUndefined()) && thisv.isObject()) {
+        f.regs.sp[-2] = f.regs.sp[-1];
+        f.regs.sp[-1].setObject(*thisObj);
+        if (!js_OnUnknownMethod(cx, f.regs.sp - 2))
+            THROW();
+    } else
+#endif
+    {
+        f.regs.sp[-1] = thisv;
+    }
 }
 
 void JS_FASTCALL
