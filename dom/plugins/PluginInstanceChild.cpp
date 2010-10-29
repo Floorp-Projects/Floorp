@@ -1052,7 +1052,6 @@ PluginInstanceChild::CreatePluginWindow()
         return false;
 
     // Apparently some plugins require an ASCII WndProc.
-    printf("setting DefWindowProcA\n");
     SetWindowLongPtrA(mPluginWindowHWND, GWLP_WNDPROC,
                       reinterpret_cast<LONG_PTR>(DefWindowProcA));
 

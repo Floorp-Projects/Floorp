@@ -76,18 +76,19 @@ public:
   nsAccessible* FindAccessibleInCache(nsINode* aNode) const;
 
   /**
-   * Shutdown document accessibles in the tree starting from the given one.
-   *
-   * @param  aDocument  [in] the DOM document of start document accessible
-   */
-  void ShutdownDocAccessiblesInTree(nsIDocument *aDocument);
-
-  /**
    * Return document accessible from the cache. Convenient method for testing.
    */
   inline nsDocAccessible* GetDocAccessibleFromCache(nsIDocument* aDocument) const
   {
     return mDocAccessibleCache.GetWeak(aDocument);
+  }
+
+  /**
+   * Called by document accessible when it gets shutdown.
+   */
+  inline void NotifyOfDocumentShutdown(nsIDocument* aDocument)
+  {
+    mDocAccessibleCache.Remove(aDocument);
   }
 
 protected:
@@ -102,11 +103,6 @@ protected:
    * Shutdown the manager.
    */
   void Shutdown();
-
-  /**
-   * Shutdown the document accessible.
-   */
-  void ShutdownDocAccessible(nsIDocument* aDocument);
 
 private:
   nsAccDocManager(const nsAccDocManager&);
@@ -155,12 +151,6 @@ private:
    * Create document or root accessible.
    */
   nsDocAccessible *CreateDocOrRootAccessible(nsIDocument *aDocument);
-
-  /**
-   * Shutdown document accessibles in the tree starting from given tree item.
-   */
-  void ShutdownDocAccessiblesInTree(nsIDocShellTreeItem *aTreeItem,
-                                    nsIDocument *aDocument);
 
   typedef nsRefPtrHashtable<nsPtrHashKey<const nsIDocument>, nsDocAccessible>
     nsDocAccessibleHashtable;

@@ -1,5 +1,7 @@
 // ----------------------------------------------------------------------------
 // Test whether a request for auth for an XPI switches to the appropriate tab
+var gNewTab;
+
 function test() {
   Harness.authenticationCallback = get_auth_info;
   Harness.downloadFailedCallback = download_failed;

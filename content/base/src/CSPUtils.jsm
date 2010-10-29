@@ -380,8 +380,7 @@ CSPRep.prototype = {
   },
 
   /**
-   * Generates string representation of the policy.  Should be fairly similar
-   * to the original.
+   * Generates canonical string representation of the policy.
    */
   toString:
   function csp_toString() {
@@ -607,8 +606,7 @@ CSPSourceList.prototype = {
   },
 
   /**
-   * Generates string representation of the Source List.
-   * Should be fairly similar to the original.
+   * Generates canonical string representation of the Source List.
    */
   toString:
   function() {
@@ -639,7 +637,7 @@ CSPSourceList.prototype = {
   },
 
   /**
-   * Makes a new instance that resembles this object.
+   * Makes a new deep copy of this object.
    * @returns
    *      a new CSPSourceList
    */
@@ -951,7 +949,7 @@ CSPSource.fromString = function(aStr, self, enforceSelfChecks) {
         // Allow scheme-only sources!  These default to wildcard host/port,
         // especially since host and port don't always matter.
         // Example: "javascript:" and "data:" 
-        if (!sObj._host) sObj._host = "*";
+        if (!sObj._host) sObj._host = CSPHost.fromString("*");
         if (!sObj._port) sObj._port = "*";
       } else {
         // some host was defined.
@@ -1050,8 +1048,7 @@ CSPSource.prototype = {
   },
 
   /**
-   * Generates string representation of the Source.
-   * Should be fairly similar to the original.
+   * Generates canonical string representation of the Source.
    */
   toString:
   function() {
@@ -1069,7 +1066,7 @@ CSPSource.prototype = {
   },
 
   /**
-   * Makes a new instance that resembles this object.
+   * Makes a new deep copy of this object.
    * @returns
    *      a new CSPSource
    */
@@ -1172,13 +1169,28 @@ CSPSource.prototype = {
       return null;
     }
 
+    // NOTE: Both sources must have a host, if they don't, something funny is
+    // going on.  The fromString() factory method should have set the host to
+    // * if there's no host specified in the input. Regardless, if a host is
+    // not present either the scheme is hostless or any host should be allowed.
+    // This means we can use the other source's host as the more restrictive
+    // host expression, or if neither are present, we can use "*", but the
+    // error should still be reported.
+
     // host
-    if (!this._host)
-      newSource._host = that._host;
-    else if (!that._host)
-      newSource._host = this._host;
-    else // both this and that have hosts
+    if (this._host && that._host) {
       newSource._host = this._host.intersectWith(that._host);
+    } else if (this._host) {
+      CSPError("intersecting source with undefined host: " + that.toString());
+      newSource._host = this._host.clone();
+    } else if (that._host) {
+      CSPError("intersecting source with undefined host: " + this.toString());
+      newSource._host = that._host.clone();
+    } else {
+      CSPError("intersecting two sources with undefined hosts: " +
+               this.toString() + " and " + that.toString());
+      newSource._host = CSPHost.fromString("*");
+    }
 
     return newSource;
   },
@@ -1266,8 +1278,7 @@ CSPHost.fromString = function(aStr) {
 
 CSPHost.prototype = {
   /**
-   * Generates string representation of the Source.
-   * Should be fairly similar to the original.
+   * Generates canonical string representation of the Host.
    */
   toString:
   function() {
@@ -1275,7 +1286,7 @@ CSPHost.prototype = {
   },
 
   /**
-   * Makes a new instance that resembles this object.
+   * Makes a new deep copy of this object.
    * @returns
    *      a new CSPHost
    */
@@ -1297,7 +1308,7 @@ CSPHost.prototype = {
    */
   permits:
   function(aHost) {
-    if (!aHost) return false;
+    if (!aHost) aHost = CSPHost.fromString("*");
 
     if (!(aHost instanceof CSPHost)) {
       // -- compare CSPHost to String

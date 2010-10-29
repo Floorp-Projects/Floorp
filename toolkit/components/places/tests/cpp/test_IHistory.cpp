@@ -551,6 +551,34 @@ test_visituri_transition_embed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//// IPC-only Tests
+
+#ifdef MOZ_IPC
+void
+test_two_null_links_same_uri()
+{
+  // Tests that we do not crash when we have had two NULL Links passed to
+  // RegisterVisitedCallback and then the visit occurs (bug 607469).  This only
+  // happens in IPC builds.
+  nsCOMPtr<nsIURI> testURI(new_test_uri());
+
+  nsCOMPtr<IHistory> history(do_get_IHistory());
+  nsresult rv = history->RegisterVisitedCallback(testURI, NULL);
+  do_check_success(rv);
+  rv = history->RegisterVisitedCallback(testURI, NULL);
+  do_check_success(rv);
+
+  rv = history->VisitURI(testURI, NULL, mozilla::IHistory::TOP_LEVEL);
+  do_check_success(rv);
+
+  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  finisher->WaitForNotification();
+
+  run_next_test();
+}
+#endif // MOZ_IPC
+
+////////////////////////////////////////////////////////////////////////////////
 //// Test Harness
 
 /**
@@ -571,6 +599,11 @@ Test gTests[] = {
   TEST(test_visituri_creates_visit),
   TEST(test_visituri_transition_typed),
   TEST(test_visituri_transition_embed),
+
+  // The rest of these tests are tests that are only run in IPC builds.
+#ifdef MOZ_IPC
+  TEST(test_two_null_links_same_uri),
+#endif // MOZ_IPC
 };
 
 const char* file = __FILE__;

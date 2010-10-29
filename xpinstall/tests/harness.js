@@ -127,15 +127,16 @@ var Harness = {
       }
     }
     else if (window.document.location.href == PROMPT_URL) {
-      switch (window.gCommonDialogParam.GetInt(3)) {
-        case 0: if (window.opener.document.location.href == ADDONS_URL) {
+      switch (window.args.promptType) {
+        default:
+                if (window.opener.document.location.href == ADDONS_URL) {
                   // A prompt opened by the add-ons manager is liable to be an
                   // xpinstall error, just close it, we'll see the error in
                   // onInstallEnded anyway.
                   window.document.documentElement.acceptDialog();
                 }
                 break;
-        case 2: if (window.gCommonDialogParam.GetInt(4) != 1) {
+        case "promptUserAndPass":
                   // This is a login dialog, hopefully an authentication prompt
                   // for the xpi.
                   if (this.authenticationCallback) {
@@ -152,7 +153,6 @@ var Harness = {
                   else {
                     window.document.documentElement.cancelDialog();
                   }
-                }
                 break;
       }
     }

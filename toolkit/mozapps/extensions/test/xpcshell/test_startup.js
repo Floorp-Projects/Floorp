@@ -85,10 +85,18 @@ registerDirectory("XREUSysExt", userDir.parent);
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+var gFastLoadService = AM_Cc["@mozilla.org/fast-load-service;1"].
+                       getService(AM_Ci.nsIFastLoadService);
+var gFastLoadFile = null;
+
 // Set up the profile
 function run_test() {
   do_test_pending();
   startupManager();
+
+  gFastLoadFile = gFastLoadService.newFastLoadFile("XUL");
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -127,6 +135,9 @@ function run_test_1() {
   writeInstallRDFForExtension(addon5, profileDir);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
@@ -203,6 +214,8 @@ function run_test_2() {
   dest.remove(true);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -257,6 +270,8 @@ function run_test_3() {
   writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -308,6 +323,8 @@ function run_test_4() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_SYSTEM);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -340,6 +357,8 @@ function run_test_5() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -378,6 +397,8 @@ function run_test_6() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -420,6 +441,8 @@ function run_test_7() {
   dest.remove(true);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -467,6 +490,8 @@ function run_test_8() {
   Services.prefs.setIntPref("extensions.enabledScopes", 0);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -508,6 +533,8 @@ function run_test_9() {
   writeInstallRDFForExtension(addon2, profileDir);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -558,6 +585,8 @@ function run_test_10() {
   writeInstallRDFForExtension(addon1, userDir);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -608,6 +637,8 @@ function run_test_11() {
   dest.remove(true);
 
   restartManager();
+  do_check_false(gFastLoadFile.exists());
+  gFastLoadFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
