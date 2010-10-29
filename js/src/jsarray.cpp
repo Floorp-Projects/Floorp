@@ -688,7 +688,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     uint32 i;
 
@@ -754,8 +754,7 @@ array_typeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-array_setProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp,
-                  JSBool strict)
+array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     uint32 i;
 
@@ -782,8 +781,7 @@ array_setProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
 }
 
 static JSBool
-slowarray_setProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp,
-                      JSBool strict)
+slowarray_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     JS_ASSERT(obj->isSlowArray());
 
@@ -851,7 +849,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     }
 
     Value tmp = *value;
-    return array_setProperty(cx, obj, obj, id, &tmp, false);
+    return array_setProperty(cx, obj, id, &tmp, false);
 }
 
 static JSBool
