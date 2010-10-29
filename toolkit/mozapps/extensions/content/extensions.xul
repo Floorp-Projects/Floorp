@@ -49,7 +49,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="addons-page" title="&addons.windowTitle;" disablechrome="true"
-      role="application"
+      role="application" windowtype="Addons:Manager"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
@@ -143,9 +143,9 @@
   <!-- main header -->
   <hbox id="header" align="center">
     <button id="back-btn" class="nav-button" command="cmd_back"
-            tooltiptext="&cmd.back.tooltip;"/>
+            tooltiptext="&cmd.back.tooltip;" hidden="true" disabled="true"/>
     <button id="forward-btn" class="nav-button" command="cmd_forward"
-            tooltiptext="&cmd.forward.tooltip;"/>
+            tooltiptext="&cmd.forward.tooltip;" hidden="true" disabled="true"/>
     <spacer flex="1"/>
     <hbox id="updates-container" align="center">
       <image class="spinner"/>

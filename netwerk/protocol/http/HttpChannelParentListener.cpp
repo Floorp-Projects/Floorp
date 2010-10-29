@@ -143,6 +143,12 @@ HttpChannelParentListener::GetInterface(const nsIID& aIID, void **result)
     return mActiveChannel->mTabParent->QueryInterface(aIID, result);
   }
 
+  if (aIID.Equals(NS_GET_IID(nsISecureBrowserUI))) {
+    if (!mActiveChannel && !mActiveChannel->mTabParent)
+      return NS_NOINTERFACE;
+    return mActiveChannel->mTabParent->QueryInterface(aIID, result);
+  }
+
   if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
     if (!mActiveChannel)
       return NS_NOINTERFACE;

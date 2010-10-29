@@ -1,4 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Fenntrolysis.
+ * The Original Code is the utilities for tabview.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,20 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PBrowser;
+function createEmptyGroupItem(contentWindow, width, height, padding, noAnimation) {
+  let pageBounds = contentWindow.Items.getPageBounds();
+  pageBounds.inset(padding, padding);
 
-namespace mozilla {
-namespace ipc {
+  let box = new contentWindow.Rect(pageBounds);
+  box.width = width;
+  box.height = height;
+  
+  let immediately = noAnimation ? true: false;
+  let emptyGroupItem = 
+    new contentWindow.GroupItem([], { bounds: box, immediately: immediately });
 
-protocol PDocumentRendererShmem
-{
-  manager PBrowser;
-
-parent:
-    // Returns the offset, width and height, in pixels, of the area in the
-    // buffer that was drawn.
-    __delete__(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, Shmem data);
-};
-
-} // namespace ipc
-} // namespace mozilla
+  return emptyGroupItem;
+}

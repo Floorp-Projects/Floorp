@@ -57,6 +57,7 @@ public class CrashReporter extends Activity
 {
   static final String kMiniDumpPathKey = "upload_file_minidump";
   static final String kPageURLKey = "URL";
+  static final String kNotesKey = "Notes";
   ProgressDialog mProgressDialog;
   File mPendingMinidumpFile;
   File mPendingExtrasFile;
@@ -230,10 +231,35 @@ public class CrashReporter extends Activity
         if (key.equals(kPageURLKey)) {
           if (includeURLCheckbox.isChecked())
             sendPart(os, boundary, key, extras.get(key));
-        } else if (!key.equals("ServerURL")){
+        } else if (!key.equals("ServerURL") && !key.equals(kNotesKey)) {
           sendPart(os, boundary, key, extras.get(key));
         }
       }
+
+      // Add some extra information to notes so its displayed by 
+      // crash-stats.mozilla.org. Remove this when bug 607942 is fixed.
+      String notes = extras.containsKey(kNotesKey) ? extras.get(kNotesKey) + 
+        "\n" : "";
+      if (@MOZ_MIN_CPU_VERSION@ < 7)
+        notes += "nothumb Build\n";
+      notes += Build.MANUFACTURER + " ";
+      notes += Build.MODEL + "\n";
+      notes += Build.FINGERPRINT;
+      sendPart(os, boundary, kNotesKey, notes);
+
+      sendPart(os, boundary, "Min_ARM_Version", "@MOZ_MIN_CPU_VERSION@");
+      sendPart(os, boundary, "Android_Manufacturer", Build.MANUFACTURER);
+      sendPart(os, boundary, "Android_Model", Build.MODEL);
+      sendPart(os, boundary, "Android_Board", Build.BOARD);
+      sendPart(os, boundary, "Android_Brand", Build.BRAND);
+      sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI); 
+      sendPart(os, boundary, "Android_CPU_ABI2", Build.CPU_ABI2);
+      sendPart(os, boundary, "Android_Device", Build.DEVICE);
+      sendPart(os, boundary, "Android_Display", Build.DISPLAY);
+      sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
+      sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+      sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
+
       sendFile(os, boundary, kMiniDumpPathKey, minidumpFile);
       os.write(("\r\n--" + boundary + "--\r\n").getBytes());
       os.flush();
