@@ -42,17 +42,17 @@ function runTests()
 
   // List of tests to run, each test consists of form action URL and expected result URL
   var tests = [
-    [jarUrl, jarUrl + "?$PARAMS", null],
-    [jarUrl + "?jarTest1=jarTest2", jarUrl + "?$PARAMS", null],
-    [jarUrl + "?jarTest3=jarTest4#jarTest5", jarUrl + "?$PARAMS#jarTest5", null],
-    ["data:text/html,<html></html>", "data:text/html,<html></html>?$PARAMS", null],
-    ["data:text/html,<html>How%20about%20this?</html>", "data:text/html,<html>How%20about%20this?$PARAMS", null],
-    [httpUrl, httpUrl + "?$PARAMS", null],
-    [httpUrl + "?httpTest1=httpTest2", httpUrl + "?$PARAMS", null ],
-    [httpUrl + "?httpTest3=httpTest4#httpTest5", httpUrl + "?$PARAMS#httpTest5", null],
-    ["", documentURL + "?$PARAMS", null],
-    [" ", documentURL + "?$PARAMS", document.location],
-    ["../", previousDir + "?$PARAMS", previousDir],
+    [jarUrl, jarUrl + "?$PARAMS"],
+    [jarUrl + "?jarTest1=jarTest2", jarUrl + "?$PARAMS"],
+    [jarUrl + "?jarTest3=jarTest4#jarTest5", jarUrl + "?$PARAMS#jarTest5"],
+    ["data:text/html,<html></html>", "data:text/html,<html></html>?$PARAMS"],
+    ["data:text/html,<html>How%20about%20this?</html>", "data:text/html,<html>How%20about%20this?$PARAMS"],
+    [httpUrl, httpUrl + "?$PARAMS"],
+    [httpUrl + "?httpTest1=httpTest2", httpUrl + "?$PARAMS"],
+    [httpUrl + "?httpTest3=httpTest4#httpTest5", httpUrl + "?$PARAMS#httpTest5"],
+    ["", documentURL + "?$PARAMS"],
+    [" ", documentURL + "?$PARAMS"],
+    ["../", previousDir + "?$PARAMS"],
   ];
 
   var currentTest = -1;
@@ -67,10 +67,6 @@ function runTests()
     }
 
     form.setAttribute("action", tests[currentTest][0]);
-    is(form.action, tests[currentTest][0],
-       "action IDL attribute should reflect the action content attribute");
-    is(form.mozActionUri, tests[currentTest][2] ? tests[currentTest][2] : tests[currentTest][0],
-       "mozActionUri IDL attribute should resolve the action URI");
     form.key.value = "value" + currentTest;
     form.submit();
   }

@@ -45,6 +45,16 @@ struct mapping_info {
   size_t offset;
 };
 
-extern struct mapping_info * lib_mapping;
+const struct mapping_info * getLibraryMapping();
+
+#define MAX_LIB_CACHE_ENTRIES 32
+#define MAX_LIB_CACHE_NAME_LEN 32
+
+struct lib_cache_info {
+  char name[MAX_LIB_CACHE_NAME_LEN];
+  int fd;
+};
+
+const struct lib_cache_info * getLibraryCache();
 
 #endif /* APKOpen_h */
