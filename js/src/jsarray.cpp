@@ -688,7 +688,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     uint32 i;
 

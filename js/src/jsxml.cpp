@@ -4743,7 +4743,7 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
 }
 
 static JSBool
-xml_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
         vp->setUndefined();
