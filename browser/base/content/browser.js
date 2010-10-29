@@ -3985,27 +3985,6 @@ var XULBrowserWindow = {
                         encodeURIComponent);
     gURLBar.setOverLink(link);
   },
-  
-  // Called before links are navigated to to allow us to retarget them if needed.
-  onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
-    // Don't modify non-default targets or targets that aren't in top-level app
-    // tab docshells (isAppTab will be false for app tab subframes).
-    if (originalTarget != "" || !isAppTab)
-      return originalTarget;
-
-    let docURI = linkNode.ownerDocument.documentURIObject;
-    try {
-      let docURIDomain = Services.eTLD.getBaseDomain(docURI, 0);
-      let linkURIDomain = Services.eTLD.getBaseDomain(linkURI, 0);
-      // External links from within app tabs should always open in new tabs
-      // instead of replacing the app tab's page (Bug 575561)
-      if (docURIDomain != linkURIDomain)
-        return "_blank";
-    } catch(e) {
-      // If getBaseDomain fails, we return originalTarget below.
-    }
-    return originalTarget;
-  },
 
   onLinkIconAvailable: function (aIconURL) {
     if (gProxyFavIcon && gBrowser.userTypedValue === null)
