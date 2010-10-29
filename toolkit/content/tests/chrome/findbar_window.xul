@@ -76,9 +76,7 @@
 
       setOverLink: function(aStatusText, aLink) {
         gStatusText = aStatusText;
-      },
-
-      onBeforeLinkTraversal: function() { }
+      }
     };
 
     function ok(condition, message) {
