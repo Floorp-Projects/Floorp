@@ -312,23 +312,18 @@ nsEditor::PostCreate()
   NotifyDocumentListeners(eDocumentStateChanged);
   
   // update nsTextStateManager and caret if we have focus
-  if (HasFocus()) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    NS_ASSERTION(fm, "no focus manager?");
+  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+  if (focusedContent) {
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    NS_ASSERTION(ps, "no pres shell even though we have focus");
+    nsPresContext* pc = ps->GetPresContext(); 
 
-    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
-    if (focusedContent) {
-      nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-      NS_ASSERTION(ps, "no pres shell even though we have focus");
-      nsPresContext* pc = ps->GetPresContext(); 
+    nsIMEStateManager::OnTextStateBlur(pc, nsnull);
+    nsIMEStateManager::OnTextStateFocus(pc, focusedContent);
 
-      nsIMEStateManager::OnTextStateBlur(pc, nsnull);
-      nsIMEStateManager::OnTextStateFocus(pc, focusedContent);
-
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
-      if (target) {
-        InitializeSelection(target);
-      }
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
+    if (target) {
+      InitializeSelection(target);
     }
   }
   return NS_OK;
@@ -489,7 +484,8 @@ nsEditor::SetFlags(PRUint32 aFlags)
 
   // Might be changing editable state, so, we need to reset current IME state
   // if we're focused and the flag change causes IME state change.
-  if (HasFocus()) {
+  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+  if (focusedContent) {
     // Use "enable" for the default value because if IME is disabled
     // unexpectedly, it makes serious a11y problem.
     PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
@@ -5260,19 +5256,19 @@ nsEditor::GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent)
   return static_cast<nsKeyEvent*>(nativeEvent);
 }
 
-PRBool
-nsEditor::HasFocus()
+already_AddRefed<nsIContent>
+nsEditor::GetFocusedContent()
 {
   nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
   if (!piTarget) {
-    return PR_FALSE;
+    return nsnull;
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE(fm, PR_FALSE);
+  NS_ENSURE_TRUE(fm, nsnull);
 
   nsCOMPtr<nsIContent> content = fm->GetFocusedContent();
-  return SameCOMIdentity(content, piTarget);
+  return SameCOMIdentity(content, piTarget) ? content.forget() : nsnull;
 }
 
 PRBool
