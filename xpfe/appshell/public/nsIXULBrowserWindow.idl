@@ -38,8 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIURI.idl"
-#include "nsIDOMNode.idl"
 
 interface nsIRequest;
 interface nsIDOMElement;
@@ -67,13 +65,5 @@ interface nsIXULBrowserWindow : nsISupports
    * over.
    */
   void setOverLink(in AString link, in nsIDOMElement element);
-
-  /**
-   * Determines the appropriate target for a link.
-   */
-  AString onBeforeLinkTraversal(in AString originalTarget,
-                                in nsIURI linkURI,
-                                in nsIDOMNode linkNode,
-                                in PRBool isAppTab);
 };
 

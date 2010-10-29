@@ -71,7 +71,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(98cdbcc4-2d81-4191-a63f-b6c52085edbc)]
+[scriptable, uuid(74470127-87eb-4f79-8293-1616fe9cb689)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -529,17 +529,11 @@ interface nsIDocShell : nsISupports
    */
   attribute boolean isActive;
 
+
   /**
    * The ID of the docshell in the session history.
    */
   readonly attribute unsigned long long historyID;
-
-  /**
-   * Sets whether a docshell is an app tab. An app tab docshell may behave
-   * differently than a non-app tab docshell in some cases, such as when
-   * handling link clicks. Docshells are not app tabs unless told otherwise.
-   */
-  attribute boolean isAppTab;
 };
 
 [uuid(5f7a2184-31b6-4d67-9c75-0c17477766e2)]
