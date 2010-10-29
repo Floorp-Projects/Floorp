@@ -1294,10 +1294,10 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
             f.cx->fp()->setReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
             *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                         JS_METHODJIT_DATA(f.cx).trampolines.forceReturnFast);
+                                         f.cx->jaegerCompartment()->forceReturnFastTrampoline());
 #else
             *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                         JS_METHODJIT_DATA(f.cx).trampolines.forceReturn);
+                                         f.cx->jaegerCompartment()->forceReturnTrampoline());
 #endif
             break;
 
@@ -1334,10 +1334,10 @@ stubs::Trap(VMFrame &f, jsbytecode *pc)
         f.cx->fp()->setReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
         *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                     JS_METHODJIT_DATA(f.cx).trampolines.forceReturnFast);
+                                     f.cx->jaegerCompartment()->forceReturnFastTrampoline());
 #else
         *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                     JS_METHODJIT_DATA(f.cx).trampolines.forceReturn);
+                                     f.cx->jaegerCompartment()->forceReturnTrampoline());
 #endif
         break;
 

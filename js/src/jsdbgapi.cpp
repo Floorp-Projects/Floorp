@@ -131,7 +131,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
              * correctness. We set the debug flag to false so that the caller
              * will not later attempt to use debugging features.
              */
-            mjit::Recompiler recompiler(cx, script);
+            js::mjit::Recompiler recompiler(cx, script);
             if (!recompiler.recompile()) {
                 cx->compartment->debugMode = JS_FALSE;
                 return JS_FALSE;
@@ -281,7 +281,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
-        mjit::Recompiler recompiler(cx, script);
+        js::mjit::Recompiler recompiler(cx, script);
         if (!recompiler.recompile())
             return JS_FALSE;
     }
