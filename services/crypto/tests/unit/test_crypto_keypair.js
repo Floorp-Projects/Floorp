@@ -1,7 +1,7 @@
 let cryptoSvc;
 try {
-  Components.utils.import("resource://services-crypto/threaded.js");
-  cryptoSvc = new ThreadedCrypto();
+  Components.utils.import("resource://services-crypto/WeaveCrypto.js");
+  cryptoSvc = new WeaveCrypto();
 } catch (ex) {
   // Fallback to binary WeaveCrypto
   cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"]

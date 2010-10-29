@@ -44,7 +44,7 @@ for (var x = 0; x < totalResults; x++)
 function testPassed() {
   if (successCallbackCalled + failureCallbackCalled != totalResults)
     return;
-  is(failureCallbackCalled, 0, "if nothing crashed, all okay");
+  is(failureCallbackCalled, 0, "no failure callbacks should have been received");
   reset_prompt();
   SimpleTest.finish();
 }

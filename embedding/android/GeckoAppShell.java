@@ -136,8 +136,6 @@ class GeckoAppShell
         // Tell Gecko where the target surface view is for rendering
         GeckoAppShell.setSurfaceView(GeckoApp.surfaceView);
 
-        sGeckoRunning = true;
-
         // First argument is the .apk path
         String combinedArgs = apkPath + " -omnijar " + apkPath;
         if (args != null)
@@ -146,10 +144,6 @@ class GeckoAppShell
             combinedArgs += " " + url;
         // and go
         GeckoAppShell.nativeRun(combinedArgs);
-        if (gPendingResize != null) {
-            notifyGeckoOfEvent(gPendingResize);
-            gPendingResize = null;
-        }
     }
 
     private static GeckoEvent mLastDrawEvent;
@@ -334,6 +328,15 @@ class GeckoAppShell
         try {
             GeckoApp.surfaceView.inputConnection.mQueryResult.put(result);
         } catch (InterruptedException e) {
+        }
+    }
+
+    static void onAppShellReady()
+    {
+        sGeckoRunning = true;
+        if (gPendingResize != null) {
+            notifyGeckoOfEvent(gPendingResize);
+            gPendingResize = null;
         }
     }
 

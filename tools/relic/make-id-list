@@ -8,7 +8,11 @@
 # to make them all use the same variant of each name.
 #
 # Procedure:
+# Need to be in the top-level dir otherwise relic exclusions don't work.
+# Edit relic to set quiet to 1 on line 1471 or thereabouts
 # relic -I -f * > names.txt
+# Tidy up names.txt
+# and make one unified file if you ran relic over multiple trees.
 # make-id-list < names.txt > final.txt
 
 my %equivalents = (
@@ -24,22 +28,26 @@ my %equivalents = (
   "IBM Corp" => "IBM Corporation",
   "International Business Machines Corporation" => "IBM Corporation",
 
+  "Mozilla.com" => "Mozilla Corporation",
+  "Mozilla Corp" => "Mozilla Corporation",
+  
   "None" => "Mozilla Foundation",
   "a mozilla.org contributor" => "Mozilla Foundation",
   "person recorded in the version control logs" => "Mozilla Foundation",
   "Mozilla" => "Mozilla Foundation",
-  "Mozilla.com" => "Mozilla Corporation",
   "Mozilla.org" => "Mozilla Foundation",
   "Mozilla Organization" => "Mozilla Foundation",
   "mozilla.org" => "Mozilla Foundation",
-  
+  "example Inc" => "Mozilla Foundation",
+  "SeaMonkey team" => "Mozilla Foundation",  
   "mozilla.org SeaMonkey project" => "Mozilla Foundation",
   "SeaMonkey project" => "Mozilla Foundation",
   "SeaMonkey project at mozilla.org" => "Mozilla Foundation",
   "Mozilla Calendar Squad" => "Mozilla Foundation",
+  "mozilla.org code" => "Mozilla Foundation",
   
-  "Mozilla Corp" => "Mozilla Corporation",
-
+  "Mozilla Messaging Corporation" => "Mozilla Messaging",
+  
   "Netscape" => "Netscape Communications Corporation",
   "Netscape Corp" => "Netscape Communications Corporation",
   "Netscape Communications" => "Netscape Communications Corporation",
@@ -70,6 +78,7 @@ my %equivalents = (
 
   "bmlk\@gmx.de" => "Bernd Mielke",
   "davel\@mozilla.com" => "Dave Liebreich",
+  "dschaffe\@adobe.com" => "Dan Schaffer",
   "Digital Creations 2" => "Digital Creations 2 Inc",
   "Douglas F. Turner II" => "Doug Turner",
   "Kenneth Herron" => "Ken Herron",
@@ -88,6 +97,8 @@ my %equivalents = (
   "Richard L Walsh" => "Richard L. Walsh",
   "timeless" => "Josh Soref",
   "Olivier Parniere BT Global Services / Etat francais Ministere de la Defense" => "Olivier Parniere",
+  "Craig Toppper" => "Craig Topper",
+  "Mook" => "Mark 'Mook' Yen",
   
   "Frank Schoenheit" => "Frank Sch&ouml;nheit",
   "Frank Schönheit" => "Frank Sch&ouml;nheit",
@@ -98,13 +109,9 @@ my %equivalents = (
   "Vincent BÃ©ron" => "Vincent B&eacute;ron",
   "Tomas Mšller" => "Tomas M&uuml;ller",
   "DÃ£o Gottwald" => "D&atilde;o Gottwald",
-  "László Németh" => "L&aacute;szl&oacute; N&eacutre;meth",
+  "László Németh" => "L&aacute;szl&oacute; N&eacute;meth",
   "Björn Jacke" => "Bj&ouml;rn Jacke",
-  
-  "example Inc" => "Mozilla Foundation",
-  "SeaMonkey team" => "Mozilla Foundation",
-  "person recorded in the version control logs" => "Mozilla Foundation",
-  "None" => "Mozilla Foundation"
+  "Å½iga Sancin" => "&#x017d;iga Sancin",
 );
 
 # 'indevs' == "Initial Developers"
@@ -119,13 +126,14 @@ while (<>)
     # Chop off email addresses and suchlike
     $indev =~ s/[<,\(].*$//;
     $indev =~ s/^The\s+//i;
+    $indev =~ s/\.?\s*Portions created.*$//;
 
     # Trim whitespace
     $indev =~ s/^\s*//;
     $indev =~ s/\s*$//;
 
     $indev = $equivalents{$indev} || $indev;
-    $indevs{$indev} = 1;
+    $indevs{$indev} = 1 if $indev;
   }
 }
 

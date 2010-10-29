@@ -326,7 +326,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
 #endif
 }
 
-void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
+void FrameState::loadForReturn(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg)
 {
     JS_ASSERT(dataReg != typeReg && dataReg != tempReg && typeReg != tempReg);
 
@@ -338,25 +338,51 @@ void FrameState::loadTo(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, 
     if (fe->isCopy())
         fe = fe->copyOf();
 
+    MaybeRegisterID maybeType = maybePinType(fe);
+    MaybeRegisterID maybeData = maybePinData(fe);
+
     if (fe->isTypeKnown()) {
-        RegisterID data = tempRegForData(fe);
-        if (data != dataReg)
-            masm.move(data, dataReg);
+        // If the data is in memory, or in the wrong reg, load/move it.
+        if (!maybeData.isSet())
+            masm.loadPayload(addressOf(fe), dataReg);
+        else if (maybeData.reg() != dataReg)
+            masm.move(maybeData.reg(), dataReg);
         masm.move(ImmType(fe->getKnownType()), typeReg);
         return;
     }
 
-#ifdef JS_PUNBOX64 
-    // If the value is synced, and requires at least one load, we can do
-    // better on x64.
+    // If both halves of the value are in memory, make this easier and load
+    // both pieces into their respective registers.
     if (fe->type.inMemory() && fe->data.inMemory()) {
         masm.loadValueAsComponents(addressOf(fe), typeReg, dataReg);
         return;
     }
-#endif
 
-    RegisterID data = tempRegForData(fe);
-    RegisterID type = tempRegForType(fe);
+    // Now, we should be guaranteed that at least one part is in a register.
+    JS_ASSERT(maybeType.isSet() || maybeData.isSet());
+
+    // Make sure we have two registers while making sure not clobber either half.
+    // Here we are allowed to mess up the FrameState invariants, because this
+    // is specialized code for a path that is about to discard the entire frame.
+    if (!maybeType.isSet()) {
+        JS_ASSERT(maybeData.isSet());
+        if (maybeData.reg() != typeReg)
+            maybeType = typeReg;
+        else
+            maybeType = tempReg;
+        masm.loadTypeTag(addressOf(fe), maybeType.reg());
+    } else if (!maybeData.isSet()) {
+        JS_ASSERT(maybeType.isSet());
+        if (maybeType.reg() != dataReg)
+            maybeData = dataReg;
+        else
+            maybeData = tempReg;
+        masm.loadPayload(addressOf(fe), maybeData.reg());
+    }
+
+    RegisterID type = maybeType.reg();
+    RegisterID data = maybeData.reg();
+
     if (data == typeReg && type == dataReg) {
         masm.move(type, tempReg);
         masm.move(data, dataReg);
@@ -1305,32 +1331,39 @@ FrameState::shift(int32 n)
 void
 FrameState::pinEntry(FrameEntry *fe, ValueRemat &vr)
 {
+    if (fe->isConstant()) {
+        vr = ValueRemat::FromConstant(fe->getValue());
+    } else {
+        // Pin the type register so it can't spill.
+        MaybeRegisterID maybePinnedType = maybePinType(fe);
+
+        // Get and pin the data register.
+        RegisterID dataReg = tempRegForData(fe);
+        pinReg(dataReg);
+
+        if (fe->isTypeKnown()) {
+            vr = ValueRemat::FromKnownType(fe->getKnownType(), dataReg);
+        } else {
+            // The type might not be loaded yet, so unpin for simplicity.
+            maybeUnpinReg(maybePinnedType);
+
+            vr = ValueRemat::FromRegisters(tempRegForType(fe), dataReg);
+            pinReg(vr.typeReg());
+        }
+    }
+
+    // Set these bits last, since allocation could have caused a sync.
     vr.isDataSynced = fe->data.synced();
     vr.isTypeSynced = fe->type.synced();
-    if (fe->isConstant()) {
-        vr.isConstant = true;
-        vr.u.v = Jsvalify(fe->getValue());
-    } else {
-        vr.isConstant = false;
-        vr.u.s.isTypeKnown = fe->isTypeKnown();
-        if (vr.u.s.isTypeKnown) {
-            vr.u.s.type.knownType = fe->getKnownType();
-        } else {
-            vr.u.s.type.reg = tempRegForType(fe);
-            pinReg(vr.u.s.type.reg);
-        }
-        vr.u.s.data = tempRegForData(fe);
-        pinReg(vr.u.s.data);
-    }
 }
 
 void
 FrameState::unpinEntry(const ValueRemat &vr)
 {
-    if (!vr.isConstant) {
-        if (!vr.u.s.isTypeKnown)
-            unpinReg(vr.u.s.type.reg);
-        unpinReg(vr.u.s.data);
+    if (!vr.isConstant()) {
+        if (!vr.isTypeKnown())
+            unpinReg(vr.typeReg());
+        unpinReg(vr.dataReg());
     }
 }
 
@@ -1341,17 +1374,17 @@ FrameState::ensureValueSynced(Assembler &masm, FrameEntry *fe, const ValueRemat 
     if (!vr.isDataSynced || !vr.isTypeSynced)
         masm.storeValue(vr, addressOf(fe));
 #elif defined JS_NUNBOX32
-    if (vr.isConstant) {
+    if (vr.isConstant()) {
         if (!vr.isDataSynced || !vr.isTypeSynced)
-            masm.storeValue(Valueify(vr.u.v), addressOf(fe));
+            masm.storeValue(vr.value(), addressOf(fe));
     } else {
         if (!vr.isDataSynced)
-            masm.storePayload(vr.u.s.data, addressOf(fe));
+            masm.storePayload(vr.dataReg(), addressOf(fe));
         if (!vr.isTypeSynced) {
-            if (vr.u.s.isTypeKnown)
-                masm.storeTypeTag(ImmType(vr.u.s.type.knownType), addressOf(fe));
+            if (vr.isTypeKnown())
+                masm.storeTypeTag(ImmType(vr.knownType()), addressOf(fe));
             else
-                masm.storeTypeTag(vr.u.s.type.reg, addressOf(fe));
+                masm.storeTypeTag(vr.typeReg(), addressOf(fe));
         }
     }
 #endif
@@ -1591,5 +1624,34 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
         unpinReg(backingLeft->data.reg());
     if (backingRight->data.inRegister())
         unpinReg(backingRight->data.reg());
+}
+
+MaybeRegisterID
+FrameState::maybePinData(FrameEntry *fe)
+{
+    fe = fe->isCopy() ? fe->copyOf() : fe;
+    if (fe->data.inRegister()) {
+        pinReg(fe->data.reg());
+        return fe->data.reg();
+    }
+    return MaybeRegisterID();
+}
+
+MaybeRegisterID
+FrameState::maybePinType(FrameEntry *fe)
+{
+    fe = fe->isCopy() ? fe->copyOf() : fe;
+    if (fe->type.inRegister()) {
+        pinReg(fe->type.reg());
+        return fe->type.reg();
+    }
+    return MaybeRegisterID();
+}
+
+void
+FrameState::maybeUnpinReg(MaybeRegisterID reg)
+{
+    if (reg.isSet())
+        unpinReg(reg.reg());
 }
 

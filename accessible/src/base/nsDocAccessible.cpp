@@ -675,6 +675,10 @@ nsDocAccessible::Shutdown()
     mParent->RemoveChild(this);
   }
 
+  PRUint32 childDocCount = mChildDocuments.Length();
+  for (PRUint32 idx = 0; idx < childDocCount; idx++)
+    mChildDocuments[idx]->Shutdown();
+
   mChildDocuments.Clear();
 
   mWeakShell = nsnull;  // Avoid reentrancy
@@ -686,6 +690,8 @@ nsDocAccessible::Shutdown()
   mDocument = nsnull;
 
   nsHyperTextAccessibleWrap::Shutdown();
+
+  GetAccService()->NotifyOfDocumentShutdown(kungFuDeathGripDoc);
 }
 
 nsIFrame*

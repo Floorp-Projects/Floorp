@@ -61,6 +61,19 @@
 #define NS_NETUTIL_CONTRACTID \
     "@mozilla.org/network/util;1"
 
+// serialization scriptable helper
+#define NS_SERIALIZATION_HELPER_CLASSNAME \
+  "nsSerializationHelper"
+#define NS_SERIALIZATION_HELPER_CONTRACTID \
+  "@mozilla.org/network/serialization-helper;1"
+#define NS_SERIALIZATION_HELPER_CID                  \
+{ /* D6EF593D-A429-4b14-A887-D9E2F765D9ED */         \
+  0xd6ef593d,                                        \
+  0xa429,                                            \
+  0x4b14,                                           \
+  { 0xa8, 0x87, 0xd9, 0xe2, 0xf7, 0x65, 0xd9, 0xed } \
+}
+
 // service implementing nsIProtocolProxyService and nsPIProtocolProxyService.
 #define NS_PROTOCOLPROXYSERVICE_CLASSNAME \
     "nsProtocolProxyService"

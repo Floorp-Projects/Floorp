@@ -69,6 +69,7 @@ private:
   typedef mozilla::Mutex Mutex;
 
   nsRefPtr<Image> mActiveImage;
+  nsRefPtr<ID3D10Device1> mDevice;
 
   Mutex mActiveImageLock;
 };
@@ -100,7 +101,7 @@ class THEBES_API PlanarYCbCrImageD3D10 : public PlanarYCbCrImage,
                                          public ImageD3D10
 {
 public:
-  PlanarYCbCrImageD3D10(LayerManagerD3D10 *aManager);
+  PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice);
   ~PlanarYCbCrImageD3D10() {}
 
   virtual void SetData(const Data &aData);
@@ -134,9 +135,9 @@ class THEBES_API CairoImageD3D10 : public CairoImage,
                                    public ImageD3D10
 {
 public:
-  CairoImageD3D10(LayerManagerD3D10 *aManager)
+  CairoImageD3D10(ID3D10Device1 *aDevice)
     : CairoImage(static_cast<ImageD3D10*>(this))
-    , mManager(aManager)
+    , mDevice(aDevice)
   { }
   ~CairoImageD3D10();
 
@@ -144,10 +145,10 @@ public:
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
+  nsRefPtr<ID3D10Device1> mDevice;
   nsRefPtr<ID3D10Texture2D> mTexture;
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
   gfxIntSize mSize;
-  LayerManagerD3D10 *mManager;
 };
 
 } /* layers */

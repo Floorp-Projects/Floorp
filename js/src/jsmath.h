@@ -87,6 +87,9 @@ extern js::Class js_MathClass;
 extern JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj);
 
+extern bool
+js_IsMathFunction(JSNative native);
+
 extern void
 js_InitRandom(JSContext *cx);
 

@@ -4,6 +4,8 @@
 
 %define customToolbarColor hsl(214,44%,87%)
 %define glassToolbarBorderColor rgb(40%,40%,40%)
+%define glassActiveBorderColor rgb(37, 44, 51)
+%define glassInactiveBorderColor rgb(102, 102, 102)
 
 @media all and (-moz-windows-default-theme) {
   #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
@@ -29,6 +31,12 @@
     -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
                 0 0 2px 1px rgba(255,255,255,.25) inset;
+  }
+
+  #main-window[privatebrowsingmode=temporary] #appmenu-button:not(:-moz-window-inactive) {
+    -moz-border-left-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
+    -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
+    -moz-border-right-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
   }
 
   #appmenu-button:-moz-window-inactive {
@@ -83,6 +91,24 @@
 
   #main-window[chromemargin^="0,"][sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox {
     margin-top: -7px;
+  }
+
+  /* Artificially draw window borders that are covered by lwtheme, see bug 591930. */
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content:-moz-lwtheme {
+    border-top: 2px solid;
+    -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
+  }
+
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content:-moz-lwtheme:-moz-window-inactive {
+    -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
+  }
+
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container:-moz-lwtheme {
+    margin-top: -1px;
+  }
+
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox:-moz-lwtheme {
+    margin-top: -2px;
   }
 
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {

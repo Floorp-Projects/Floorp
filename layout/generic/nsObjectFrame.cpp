@@ -365,6 +365,7 @@ public:
   static void RemoveFromCARefreshTimer(nsPluginInstanceOwner *aPluginInstance);
   void SetupCARefresh();
   void* FixUpPluginWindow(PRInt32 inPaintState);
+  void HidePluginWindow();
   // Set a flag that (if true) indicates the plugin port info has changed and
   // SetWindow() needs to be called.
   void SetPluginPortChanged(PRBool aState) { mPluginPortChanged = aState; }
@@ -1102,8 +1103,6 @@ nsObjectFrame::CallSetWindow()
   if (IsHidden())
     return;
 
-  PRBool windowless = (window->type == NPWindowTypeDrawable);
-
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPortFromWidget();
 
@@ -1255,7 +1254,7 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
                        nsIRenderingContext* aCtx)
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
-  f->PaintPlugin(*aCtx, mVisibleRect, GetBounds(aBuilder));
+  f->PaintPlugin(aBuilder, *aCtx, mVisibleRect, GetBounds(aBuilder));
 }
 
 PRBool
@@ -1779,7 +1778,8 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
+nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
+                           nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
   // Screen painting code
@@ -2014,7 +2014,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         nativeDraw.EndNativeDrawing();
       } while (nativeDraw.ShouldRenderAgain());
       nativeDraw.PaintToContext();
-    } else if (!(ctx->GetFlags() & gfxContext::FLAG_DESTINED_FOR_SCREEN)) {
+    } else if (!aBuilder->IsPaintingToWindow()) {
       // Get PrintWindow dynamically since it's not present on Win2K,
       // which we still support
       typedef BOOL (WINAPI * PrintWindowPtr)
@@ -2462,7 +2462,11 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
     
     if (DoDelayedStop(aInstanceOwner, aDelayedStop))
       return;
-    
+
+#if defined(XP_MACOSX)
+    aInstanceOwner->HidePluginWindow();
+#endif
+
     inst->Stop();
 
     nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
@@ -2543,17 +2547,21 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   if (mWidget) {
     nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
-    NS_ASSERTION(rootPC, "unable to unregister the plugin frame");
-    rootPC->UnregisterPluginForGeometryUpdates(this);
+    if (rootPC) {
+      rootPC->UnregisterPluginForGeometryUpdates(this);
 
-    // Make sure the plugin is hidden in case an update of plugin geometry
-    // hasn't happened since this plugin became hidden.
-    nsIWidget* parent = mWidget->GetParent();
-    if (parent) {
-      nsTArray<nsIWidget::Configuration> configurations;
-      GetEmptyClipConfiguration(&configurations);
-      parent->ConfigureChildren(configurations);
-      DidSetWidgetGeometry();
+      // Make sure the plugin is hidden in case an update of plugin geometry
+      // hasn't happened since this plugin became hidden.
+      nsIWidget* parent = mWidget->GetParent();
+      if (parent) {
+        nsTArray<nsIWidget::Configuration> configurations;
+        GetEmptyClipConfiguration(&configurations);
+        parent->ConfigureChildren(configurations);
+      }
+    }
+    else {
+      NS_ASSERTION(PresContext()->PresShell()->IsFrozen(),
+                   "unable to unregister the plugin frame");
     }
   }
 
@@ -6421,6 +6429,19 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 #endif
 
   return nsnull;
+}
+
+void
+nsPluginInstanceOwner::HidePluginWindow()
+{
+  if (!mPluginWindow || !mInstance) {
+    return;
+  }
+
+  mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
+  mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
+  mWidgetVisible = PR_FALSE;
+  mInstance->SetWindow(mPluginWindow);
 }
 
 #endif // XP_MACOSX

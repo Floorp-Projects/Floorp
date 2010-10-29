@@ -61,4 +61,6 @@ skip-if(gtk2Widget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomen
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
 # skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html # Bug 512206
 
+== border-radius.html border-radius-ref.html
+
 == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html

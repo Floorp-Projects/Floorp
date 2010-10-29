@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=297761
+-->
+<head>
+  <title>Test for Bug 297761</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=297761">Mozilla Bug 297761</a>
+<p id="display"></p>
+<div id="content">
+  <iframe src="file_bug297761.html"></iframe>
+  <iframe src="file_bug297761.html"></iframe>
+  <iframe src="file_bug297761.html"></iframe>
+  <iframe src="file_bug297761.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 297761 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var nbTests = 4;
+var curTest = 0;
+
+function nextTest()
+{
+  if (curTest == 3) {
+    frames[curTest].document.forms[0].submit();
+  } else {
+    var el = null;
+    if (curTest == 2) {
+      el = frames[curTest].document.getElementById('i');
+    } else {
+      el = frames[curTest].document.forms[0].elements[curTest];
+    }
+
+    el.focus();
+    el.click();
+  }
+}
+
+function frameLoaded(aFrame)
+{
+  var documentLocation = location.href.replace(/\.html.*/, "\.html");
+  is(aFrame.contentWindow.location.href.replace(/\?x=0&y=0/, ""),
+     documentLocation.replace(/test_bug/, "file_bug"),
+     "form should have been submitted to the document location");
+
+  if (++curTest == nbTests) {
+    SimpleTest.finish();
+  } else {
+    nextTest();
+  }
+}
+
+function runTest()
+{
+  // Initialize event handlers.
+  var frames = document.getElementsByTagName('iframe');
+  for (var i=0; i<nbTests; ++i) {
+    frames[i].setAttribute('onload', "frameLoaded(this);");
+  }
+
+  nextTest();
+}
+
+addLoadEvent(runTest);
+
+</script>
+</pre>
+</body>
+</html>

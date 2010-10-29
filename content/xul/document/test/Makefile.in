@@ -57,6 +57,8 @@ _TEST_FILES	= \
 		$(NULL)
 
 _CHROME_FILES = \
+		test_bug583948.xul \
+		window_bug583948.xul \
 		test_bug497875.xul \
 		     bug497875-iframe.xul \
 		$(NULL)

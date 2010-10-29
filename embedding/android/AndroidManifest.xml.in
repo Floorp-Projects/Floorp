@@ -72,11 +72,12 @@
             </intent-filter>
         </activity>
 
-        <receiver android:enabled="true" android:name="Restarter">
+        <activity android:enabled="true" android:name="Restarter">
           <intent-filter>
-            <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" />
+            <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" 
+		    android:process="@MOZ_APP_NAME@Restarter"/>
           </intent-filter>
-        </receiver>
+        </activity>
 #if MOZ_CRASHREPORTER
 	<activity android:name="CrashReporter"
                   android:label="@MOZ_APP_DISPLAYNAME@ Crash Reporter"

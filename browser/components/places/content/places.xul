@@ -391,7 +391,7 @@
         <vbox id="defaultView" flex="1">
           <vbox id="searchModifiers" hidden="true">
             <toolbar id="organizerScopeBar" class="chromeclass-toolbar" align="center">
-              <label id="scopeBarTitle" value="&search.label;"/>
+              <label id="scopeBarTitle" value="&search.in.label;"/>
               <toolbarbutton id="scopeBarAll" type="radio" group="scopeBar"
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                              label="&search.scopeBookmarks.label;"

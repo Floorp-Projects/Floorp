@@ -47,7 +47,7 @@ try {
 var observer = {
   onBeginUpdateBatch: function() {},
   onEndUpdateBatch: function() {},
-  onItemAdded: function(id, folder, index, itemType) {
+  onItemAdded: function(id, folder, index, itemType, uri) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;

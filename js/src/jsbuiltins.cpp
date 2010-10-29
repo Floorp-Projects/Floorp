@@ -185,12 +185,11 @@ JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, ACCSET
 static inline JSBool
 AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyAtom)
 {
-    JS_LOCK_OBJ(cx, obj);
     JS_ASSERT(shape->previous() == obj->lastProperty());
 
     if (obj->nativeEmpty()) {
         if (!obj->ensureClassReservedSlotsForEmptyObject(cx))
-            goto exit_trace;
+            return false;
     }
 
     uint32 slot;
@@ -201,20 +200,12 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, Shape* shape, bool isDefinitelyA
         JS_ASSERT(obj->getSlot(slot).isUndefined());
     } else {
         if (!obj->allocSlot(cx, &slot))
-            goto exit_trace;
+            return false;
         JS_ASSERT(slot == shape->slot);
     }
 
     obj->extend(cx, shape, isDefinitelyAtom);
-    if (js_IsPropertyCacheDisabled(cx))
-        goto exit_trace;
-
-    JS_UNLOCK_OBJ(cx, obj);
-    return true;
-
-  exit_trace:
-    JS_UNLOCK_OBJ(cx, obj);
-    return false;
+    return !js_IsPropertyCacheDisabled(cx);
 }
 
 JSBool FASTCALL
@@ -247,8 +238,6 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
     JSProperty* prop;
     if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
         return JS_NEITHER;
-    if (prop)
-        obj2->dropProperty(cx, prop);
     return prop != NULL;
 }
 

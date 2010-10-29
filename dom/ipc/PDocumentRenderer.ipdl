@@ -37,6 +37,8 @@
 
 include protocol PBrowser;
 
+using nsIntSize;
+
 namespace mozilla {
 namespace ipc {
 
@@ -46,7 +48,7 @@ protocol PDocumentRenderer
 
 parent:
     // Returns the width and height, in pixels, of the returned ARGB32 data.
-    __delete__(PRUint32 w, PRUint32 h, nsCString data);
+    __delete__(nsIntSize renderedSize, nsCString data);
 };
 
 } // namespace ipc
