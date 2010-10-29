@@ -950,6 +950,7 @@ class Writer
         return lir->ins2ImmI(nj::LIR_muli, x, imm);
     }
 
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
     nj::LIns *divi(nj::LIns *x, nj::LIns *y) const {
         return lir->ins2(nj::LIR_divi, x, y);
     }
@@ -957,6 +958,7 @@ class Writer
     nj::LIns *modi(nj::LIns *x) const {
         return lir->ins1(nj::LIR_modi, x);
     }
+#endif
 
     nj::LIns *andi(nj::LIns *x, nj::LIns *y) const {
         return lir->ins2(nj::LIR_andi, x, y);
