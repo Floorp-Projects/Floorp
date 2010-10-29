@@ -493,7 +493,7 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
     {
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
@@ -535,7 +535,8 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+    obj_setProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp,
+                    JSBool strict)
     {
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
@@ -620,7 +621,7 @@ class TypedArrayTemplate
             return true;
 
         Value tmp = *v;
-        return obj_setProperty(cx, obj, id, &tmp, false);
+        return obj_setProperty(cx, obj, obj, id, &tmp, false);
     }
 
     static JSBool

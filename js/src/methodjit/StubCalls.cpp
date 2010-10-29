@@ -257,7 +257,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
             else
                 defineHow = JSDNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, strict))
+            if (!js_SetPropertyHelper(cx, obj, obj, id, defineHow, &rval, strict))
                 THROW();
         } else {
             if (!obj->setProperty(cx, id, &rval, strict))
@@ -2209,7 +2209,7 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
                           : JSDNP_CACHE_RESULT;
         if (!(JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-              ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval, false)
+              ? js_SetPropertyHelper(cx, obj, obj, id, defineHow, &rval, false)
               : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                         JSPROP_ENUMERATE, 0, 0, NULL,
                                         defineHow))) {
