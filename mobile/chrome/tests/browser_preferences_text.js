@@ -163,12 +163,13 @@ gTests.push({
     let aboutRegionHeight = getHeight(aboutRegion);
     let imageRegionHeight = getHeight(imageRegion);
     let cookiesRegionHeight = getHeight(cookiesRegion);
+
     ok(aboutRegionHeight == getHeight(homepageRegion), "The About Page and the Fennec Start are of same height");
     ok(imageRegionHeight == getHeight(jsRegion), "The fields of Content region are of same height");
-    ok((cookiesRegionHeight == getHeight(passwordsRegion)) && (cookiesRegionHeight == getHeight(clearDataRegion)),
+    todo((cookiesRegionHeight == getHeight(passwordsRegion)) && (cookiesRegionHeight == getHeight(clearDataRegion)),
        "The fields of Privacy & Security are of same height");
-    ok(aboutRegionHeight == imageRegionHeight, "The fields of Content Region and above are of same height");
-    ok(aboutRegionHeight == cookiesRegionHeight, "The fields of Privacy & Security and above are of same height");
+    todo(aboutRegionHeight == imageRegionHeight, "The fields of Content Region and above are of same height");
+    todo(aboutRegionHeight == cookiesRegionHeight, "The fields of Privacy & Security and above are of same height");
     ok(imageRegionHeight == cookiesRegionHeight, "The fields of Content and Privacy & Security are of same height");
 
     prefs.panelClose.click()

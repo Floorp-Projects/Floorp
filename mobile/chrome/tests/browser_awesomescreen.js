@@ -227,7 +227,7 @@ gTests.push({
       aPanel.doCommand();
       // XXX for some reason the selectionStart == 0 && selectionEnd = edit.textLength
       // even if visually there is no selection at all
-      todo_is(edit.selectionStart == edit.textLenght && edit.selectionEnd == edit.textLength, true, "urlbar text should not be selected on a simple show");
+      todo_is(edit.selectionStart == edit.textLength && edit.selectionEnd == edit.textLength, true, "urlbar text should not be selected on a simple show");
 
       edit.click();
       is(edit.selectionStart == 0 && edit.selectionEnd == edit.textLength, true, "urlbar text should be selected on a click");
@@ -240,9 +240,9 @@ gTests.push({
       aPanel.doCommand();
       // XXX for some reason the selectionStart == 0 && selectionEnd = edit.textLength
       // even if visually there is no selection at all
-      todo_is(edit.selectionStart == edit.textLenght && edit.selectionEnd == edit.textLength, true, "urlbar text should not be selected on a simple show");
+      todo_is(edit.selectionStart == edit.textLength && edit.selectionEnd == edit.textLength, true, "urlbar text should not be selected on a simple show");
       edit.click();
-      is(edit.selectionStart == 0 && edit.selectionEnd == edit.textLength, true, "urlbar text should be selected on a click");
+      is(edit.selectionStart == edit.selectionEnd, true, "urlbar text should not be selected on a click");
     });
     edit.clickSelectsAll = oldClickSelectsAll;
 

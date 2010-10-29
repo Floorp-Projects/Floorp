@@ -490,7 +490,7 @@ menulist {
   color: #000 !important;
   border-radius: 8px;
   margin: 8px;
-  padding: 10px;
+  padding: 6px 10px;
   background-image: url("chrome://browser/skin/images/button-bg.png");
   background-size: auto 100%;
   border: 1px solid #cacdd5;

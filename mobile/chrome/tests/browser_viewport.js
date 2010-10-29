@@ -61,7 +61,7 @@ let loadUrl = function loadUrl(tab, url, callback) {
 };
 
 let gTestData = [
-  { metadata: "", width: 980, scale: 0.8163 },
+  { metadata: "", width: 980, scale: 1 },
   { metadata: "width=device-width, initial-scale=1", width: 533.33, scale: 1.5 },
   { metadata: "width=320, initial-scale=1", width: 533.33, scale: 1.5 },
   { metadata: "initial-scale=1.0, user-scalable=no", width: 533.33, scale: 1.5, disableZoom: true },

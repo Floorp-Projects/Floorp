@@ -218,12 +218,13 @@ gTests.push({
     browser.messageManager.addMessageListener("Browser:ContextMenu", dumpMessages);
 
     let link = browser.contentDocument.getElementById("link-single");
+    let bcr  = link.getBoundingClientRect();
     let linkRect = link.getBoundingClientRect();
 
     clearContextTypes();
-    EventUtils.synthesizeMouseForContent(link, 1, 1, { type: "mousedown" }, window);
+    EventUtils.synthesizeMouseForContent(link, bcr.width/2, bcr.height/2, { type: "mousedown" }, window);
     setTimeout(function() {
-      EventUtils.synthesizeMouseForContent(link, 1, 1, { type: "mouseup" }, window);
+      EventUtils.synthesizeMouseForContent(link, bcr.width/2, bcr.height/2, { type: "mouseup" }, window);
       ok(checkContextTypes(["link","link-saveable"]), "Plain link context types");
       clearContextTypes();
 
