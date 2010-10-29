@@ -708,7 +708,7 @@ Assembler::asm_arg_64(LIns* arg, ParameterRegisters& params)
         }
 
 #ifndef NJ_ARM_EABI
-    } else if (r == R3) {
+    } else if (params.r == R3) {
         // We only have one register left, but the legacy ABI requires that we
         // put 32 bits of the argument in the register (R3) and the remaining
         // 32 bits on the stack.
