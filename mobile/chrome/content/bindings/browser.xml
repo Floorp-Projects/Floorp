@@ -248,6 +248,7 @@
                   json.status
                 ];
 
+                this._browser.updateWindowId(json.windowId);
                 this._notify(json.notifyFlags, "onStateChange", args);
                 break;
 
@@ -260,6 +261,7 @@
                   json.curTotal,
                   json.maxTotal
                 ];
+                this._browser.updateWindowId(json.windowId);
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_PROGRESS,
                              "onProgressChange",
                              args);
@@ -274,12 +276,10 @@
                   locationURI
                 ];
 
-                if (this._browser.contentWindowId != json.windowId) {
-                  this._browser.contentWindowId = json.windowId;
+                if (this._browser.updateWindowId(json.windowId)) {
                   this._browser._documentURI = json.documentURI;
                   this._browser._searchEngines = [];
                 }
-
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
                              "onLocationChange",
                              args);
@@ -293,6 +293,7 @@
                   json.status,
                   json.message
                 ];
+                this._browser.updateWindowId(json.windowId);
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_STATUS,
                              "onStatusChange",
                              args);
@@ -309,7 +310,7 @@
                   SSLStatus: json.SSLStatus,
                   state: json.state
                 }
-
+                this._browser.updateWindowId(json.windowId);
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
                              "onSecurityChange",
                              args);
@@ -578,6 +579,16 @@
         ]]>
       </constructor>
 
+      <method name="updateWindowId">
+         <parameter name="aNewId"/>
+         <body><![CDATA[
+            if (this.contentWindowId != aNewId) {
+               this.contentWindowId = aNewId;
+               return true;
+            }
+            return false;
+         ]]></body>
+      </method>
     </implementation>
   </binding>
 
@@ -727,6 +738,7 @@
                   json.status
                 ];
 
+                this._browser.updateWindowId(json.windowId);
                 this._notify(json.notifyFlags, "onStateChange", args);
                 break;
 
@@ -739,6 +751,7 @@
                   json.curTotal,
                   json.maxTotal
                 ];
+                this._browser.updateWindowId(json.windowId);
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_PROGRESS,
                              "onProgressChange",
                              args);
@@ -756,8 +769,7 @@
                   locationURI
                 ];
 
-                if (this._browser.contentWindowId != json.windowId) {
-                  this._browser.contentWindowId = json.windowId;
+                if (this._browser.updateWindowId(json.windowId)) {
                   this._browser._documentURI = json.documentURI;
                   this._browser._searchEngines = [];
                 }
@@ -775,6 +787,7 @@
                   json.status,
                   json.message
                 ];
+                this._browser.updateWindowId(json.windowId);
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_STATUS,
                              "onStatusChange",
                              args);
@@ -808,7 +821,7 @@
                   {},
                   json.state
                 ];
-
+                this._browser.updateWindowId(json.windowId);
                 this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
                              "onSecurityChange",
                              args);
