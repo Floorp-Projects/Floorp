@@ -120,16 +120,6 @@ public:
   // anything into this canvas before changing the shmem state, it will be
   // lost.
   NS_IMETHOD SetIsIPC(PRBool isIPC) = 0;
-
-  // Swap this back buffer with the front, and copy its contents to the new
-  // back. x, y, w, and h specify the area of |back| that is dirty.
-  NS_IMETHOD Swap(mozilla::ipc::Shmem& back,
-                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
-
-  // Sync back and front buffer, move ownership of back buffer to parent
-  NS_IMETHOD Swap(PRUint32 nativeID,
-                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

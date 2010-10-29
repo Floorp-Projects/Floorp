@@ -3,17 +3,13 @@
  */
 
 /**
- * Tests that history navigation works for the add-ons manager. Only used if
- * in-content UI is supported for this application.
+ * Tests that history navigation works for the add-ons manager.
  */
 
 function test() {
-  // XXX
-  ok(true, "Test temporarily disabled due to timeouts\n");
-  return;
-
-  if (!gUseInContentUI)
-    return;
+  // Set the timeout to 300 seconds since this test can easily take 220 seconds
+  // to run on a Windows debug build when it runs in a tab.
+  requestLongerTimeout(10);
 
   waitForExplicitFinish();
 
@@ -42,15 +38,45 @@ function end_test() {
   finish();
 }
 
+function go_back(aManager) {
+  if (gUseInContentUI) {
+    gBrowser.goBack();
+  } else {
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("back-btn"),
+                                       { }, aManager);
+  }
+}
+
+function go_forward(aManager) {
+  if (gUseInContentUI) {
+    gBrowser.goForward();
+  } else {
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("forward-btn"),
+                                       { }, aManager);
+  }
+}
+
+function check_state(aManager, canGoBack, canGoForward) {
+  var doc = aManager.document;
+
+  if (gUseInContentUI) {
+    is(gBrowser.canGoBack, canGoBack, "canGoBack should be correct");
+    is(gBrowser.canGoForward, canGoForward, "canGoForward should be correct");
+  }
+
+  if (!is_hidden(doc.getElementById("back-btn"))) {
+    is(!doc.getElementById("back-btn").disabled, canGoBack, "Back button should have the right state");
+    is(!doc.getElementById("forward-btn").disabled, canGoForward, "Forward button should have the right state");
+  }
+}
+
 function is_in_list(aManager, view, canGoBack, canGoForward) {
   var doc = aManager.document;
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
   is(doc.getElementById("view-port").selectedPanel.id, "list-view", "Should be on the right view");
-  is(gBrowser.canGoBack, canGoBack, "canGoBack should be correct");
-  is(!doc.getElementById("back-btn").disabled, canGoBack, "Back button should have the right state");
-  is(gBrowser.canGoForward, canGoForward, "canGoForward should be correct");
-  is(!doc.getElementById("forward-btn").disabled, canGoForward, "Forward button should have the right state");
+
+  check_state(aManager, canGoBack, canGoForward);
 }
 
 function is_in_search(aManager, query, canGoBack, canGoForward) {
@@ -59,10 +85,8 @@ function is_in_search(aManager, query, canGoBack, canGoForward) {
   is(doc.getElementById("categories").selectedItem.value, "addons://search/", "Should be on the right category");
   is(doc.getElementById("view-port").selectedPanel.id, "search-view", "Should be on the right view");
   is(doc.getElementById("header-search").value, query, "Should have used the right query");
-  is(gBrowser.canGoBack, canGoBack, "canGoBack should be correct");
-  is(!doc.getElementById("back-btn").disabled, canGoBack, "Back button should have the right state");
-  is(gBrowser.canGoForward, canGoForward, "canGoForward should be correct");
-  is(!doc.getElementById("forward-btn").disabled, canGoForward, "Forward button should have the right state");
+
+  check_state(aManager, canGoBack, canGoForward);
 }
 
 function is_in_detail(aManager, view, canGoBack, canGoForward) {
@@ -70,10 +94,8 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
   is(doc.getElementById("view-port").selectedPanel.id, "detail-view", "Should be on the right view");
-  is(gBrowser.canGoBack, canGoBack, "canGoBack should be correct");
-  is(!doc.getElementById("back-btn").disabled, canGoBack, "Back button should have the right state");
-  is(gBrowser.canGoForward, canGoForward, "canGoForward should be correct");
-  is(!doc.getElementById("forward-btn").disabled, canGoForward, "Forward button should have the right state");
+
+  check_state(aManager, canGoBack, canGoForward);
 }
 
 // Tests simple forward and back navigation and that the right heading and
@@ -89,19 +111,19 @@ add_test(function() {
       info("Part 2");
       is_in_list(aManager, "addons://list/plugin", true, false);
 
-      gBrowser.goBack();
+      go_back(aManager);
 
       wait_for_view_load(aManager, function(aManager) {
         info("Part 3");
         is_in_list(aManager, "addons://list/extension", false, true);
 
-        gBrowser.goForward();
+        go_forward(aManager);
 
         wait_for_view_load(aManager, function(aManager) {
           info("Part 4");
           is_in_list(aManager, "addons://list/plugin", true, false);
 
-          gBrowser.goBack();
+          go_back(aManager);
 
           wait_for_view_load(aManager, function(aManager) {
             info("Part 5");
@@ -114,7 +136,7 @@ add_test(function() {
               info("Part 6");
               is_in_detail(aManager, "addons://list/extension", true, false);
 
-              gBrowser.goBack();
+              go_back(aManager);
 
               wait_for_view_load(aManager, function(aManager) {
                 info("Part 7");
@@ -131,7 +153,13 @@ add_test(function() {
 });
 
 // Tests that browsing to the add-ons manager from a website and going back works
+// Only relevant for in-content UI
 add_test(function() {
+  if (!gUseInContentUI) {
+    run_next_test();
+    return;
+  }
+
   info("Part 1");
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI("http://example.com/");
@@ -156,7 +184,7 @@ add_test(function() {
           info("Part 3");
           is_in_list(aManager, "addons://list/extension", true, false);
 
-          gBrowser.goBack();
+          go_back(aManager);
           gBrowser.addEventListener("pageshow", function() {
             gBrowser.removeEventListener("pageshow", arguments.callee, false);
             info("Part 4");
@@ -164,7 +192,7 @@ add_test(function() {
             ok(!gBrowser.canGoBack, "Should not be able to go back");
             ok(gBrowser.canGoForward, "Should be able to go forward");
 
-            gBrowser.goForward();
+            go_forward(aManager);
             gBrowser.addEventListener("pageshow", function() {
               gBrowser.removeEventListener("pageshow", arguments.callee, false);
               wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
@@ -193,7 +221,7 @@ add_test(function() {
       info("Part 2");
       is_in_list(aManager, "addons://list/extension", true, false);
 
-      gBrowser.goBack();
+      go_back(aManager);
 
       wait_for_view_load(aManager, function(aManager) {
         info("Part 3");
@@ -219,13 +247,13 @@ add_test(function() {
       info("Part 2");
       is_in_list(aManager, "addons://list/plugin", true, false);
 
-      gBrowser.goBack();
+      go_back(aManager);
 
       wait_for_view_load(aManager, function(aManager) {
         info("Part 3");
         is_in_list(aManager, "addons://list/extension", false, true);
 
-        gBrowser.goForward();
+        go_forward(aManager);
 
         wait_for_view_load(aManager, function(aManager) {
           info("Part 4");
@@ -240,7 +268,13 @@ add_test(function() {
 
 // Tests than navigating to a website and then going back returns to the
 // previous view
+// Only relevant for in-content UI
 add_test(function() {
+  if (!gUseInContentUI) {
+    run_next_test();
+    return;
+  }
+
   open_manager("addons://list/plugin", function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/plugin", false, false);
@@ -256,7 +290,7 @@ add_test(function() {
         ok(gBrowser.canGoBack, "Should be able to go back");
         ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
-        gBrowser.goBack();
+        go_back(aManager);
 
         gBrowser.addEventListener("pageshow", function(event) {
           if (event.target.location != "about:addons")
@@ -267,7 +301,7 @@ add_test(function() {
             info("Part 3");
             is_in_list(aManager, "addons://list/plugin", false, true);
 
-            gBrowser.goForward();
+            go_forward(aManager);
             gBrowser.addEventListener("pageshow", function(event) {
               if (event.target.location != "http://example.com/")
                 return;
@@ -278,7 +312,7 @@ add_test(function() {
                 ok(gBrowser.canGoBack, "Should be able to go back");
                 ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
-                gBrowser.goBack();
+                go_back(aManager);
 
                 gBrowser.addEventListener("pageshow", function(event) {
                   if (event.target.location != "about:addons")
@@ -309,7 +343,7 @@ add_test(function() {
     var search = aManager.document.getElementById("header-search");
     search.focus();
     search.value = "bar";
-    EventUtils.synthesizeKey("VK_RETURN", {});
+    EventUtils.synthesizeKey("VK_RETURN", {}, aManager);
 
     wait_for_view_load(aManager, function(aManager) {
       info("Part 2");
@@ -323,13 +357,13 @@ add_test(function() {
         info("Part 3");
         is_in_detail(aManager, "addons://search/", true, false);
 
-        gBrowser.goBack();
+        go_back(aManager);
         wait_for_view_load(aManager, function(aManager) {
           info("Part 4");
           is_in_search(aManager, "bar", true, true);
           check_all_in_list(aManager, ["test2@tests.mozilla.org", "test3@tests.mozilla.org"]);
 
-          gBrowser.goForward();
+          go_forward(aManager);
           wait_for_view_load(aManager, function(aManager) {
             info("Part 5");
             is_in_detail(aManager, "addons://search/", true, false);
@@ -342,8 +376,15 @@ add_test(function() {
   });
 });
 
-// Tests that going back to a detail view loaded from a search result works
+// Tests that going back from a webpage to a detail view loaded from a search
+// result works
+// Only relevant for in-content UI
 add_test(function() {
+  if (!gUseInContentUI) {
+    run_next_test();
+    return;
+  }
+
   open_manager(null, function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
@@ -376,7 +417,7 @@ add_test(function() {
             ok(gBrowser.canGoBack, "Should be able to go back");
             ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
-            gBrowser.goBack();
+            go_back(aManager);
             gBrowser.addEventListener("pageshow", function(event) {
                 if (event.target.location != "about:addons")
                 return;
@@ -386,7 +427,7 @@ add_test(function() {
                 info("Part 5");
                 is_in_detail(aManager, "addons://search/", true, true);
 
-                gBrowser.goBack();
+                go_back(aManager);
                 wait_for_view_load(aManager, function(aManager) {
                   info("Part 6");
                   is_in_search(aManager, "bar", true, true);
@@ -404,7 +445,13 @@ add_test(function() {
 });
 
 // Tests that refreshing a list view does not affect the history
+// Only relevant for in-content UI
 add_test(function() {
+  if (!gUseInContentUI) {
+    run_next_test();
+    return;
+  }
+
   open_manager(null, function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
@@ -417,7 +464,7 @@ add_test(function() {
 
       gBrowser.reload();
       gBrowser.addEventListener("pageshow", function(event) {
-          if (event.target.location != "about:addons")
+        if (event.target.location != "about:addons")
           return;
         gBrowser.removeEventListener("pageshow", arguments.callee, false);
 
@@ -425,7 +472,7 @@ add_test(function() {
           info("Part 3");
           is_in_list(aManager, "addons://list/plugin", true, false);
 
-          gBrowser.goBack();
+          go_back(aManager);
           wait_for_view_load(aManager, function(aManager) {
             info("Part 4");
             is_in_list(aManager, "addons://list/extension", false, true);
@@ -439,7 +486,13 @@ add_test(function() {
 });
 
 // Tests that refreshing a detail view does not affect the history
+// Only relevant for in-content UI
 add_test(function() {
+  if (!gUseInContentUI) {
+    run_next_test();
+    return;
+  }
+
   open_manager(null, function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
@@ -453,7 +506,7 @@ add_test(function() {
 
       gBrowser.reload();
       gBrowser.addEventListener("pageshow", function(event) {
-          if (event.target.location != "about:addons")
+        if (event.target.location != "about:addons")
           return;
         gBrowser.removeEventListener("pageshow", arguments.callee, false);
 
@@ -461,7 +514,7 @@ add_test(function() {
           info("Part 3");
           is_in_detail(aManager, "addons://list/extension", true, false);
 
-          gBrowser.goBack();
+          go_back(aManager);
           wait_for_view_load(aManager, function(aManager) {
             info("Part 4");
             is_in_list(aManager, "addons://list/extension", false, true);
@@ -492,11 +545,33 @@ add_test(function() {
                                          { }, aManager);
 
       wait_for_view_load(aManager, function() {
-        // TODO until bug 590661 is fixed the back button will be enabled
-        is_in_list(aManager, "addons://list/extension", true, false);
+        if (gUseInContentUI) {
+          // TODO until bug 590661 is fixed the back button will be enabled
+          // when displaying in content
+          is_in_list(aManager, "addons://list/extension", true, false);
+        } else {
+          is_in_list(aManager, "addons://list/extension", false, false);
+        }
 
         close_manager(aManager, run_next_test);
       });
     });
+  });
+});
+
+// Tests that the back and forward buttons only show up for windowed mode
+add_test(function() {
+  open_manager(null, function(aManager) {
+    var doc = aManager.document;
+
+    if (gUseInContentUI) {
+      is_element_hidden(doc.getElementById("back-btn"), "Back button should be hidden");
+      is_element_hidden(doc.getElementById("forward-btn"), "Forward button should be hidden");
+    } else {
+      is_element_visible(doc.getElementById("back-btn"), "Back button should not be hidden");
+      is_element_visible(doc.getElementById("forward-btn"), "Forward button should not be hidden");
+    }
+
+    close_manager(aManager, run_next_test);
   });
 });
