@@ -50,7 +50,6 @@ function checkServices() {
   checkService("prefs", Ci.nsIPrefService);
   checkService("contentPrefs", Ci.nsIContentPrefService);
   checkService("wm", Ci.nsIWindowMediator);
-  checkService("obs", Ci.nsIObserverService);
   checkService("perms", Ci.nsIPermissionManager);
   checkService("io", Ci.nsIIOService);
   checkService("io", Ci.nsIIOService2);
@@ -67,8 +66,6 @@ function checkServices() {
   checkService("scriptloader", Ci.mozIJSSubScriptLoader);
   checkService("ww", Ci.nsIWindowWatcher);
   checkService("tm", Ci.nsIThreadManager);
-  checkService("droppedLinkHandler", Ci.nsIDroppedLinkHandler);
   checkService("strings", Ci.nsIStringBundleService);
   checkService("urlFormatter", Ci.nsIURLFormatter);
-  checkService("eTLD", Ci.nsIEffectiveTLDService);
 }
