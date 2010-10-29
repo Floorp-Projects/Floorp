@@ -77,6 +77,7 @@
 #include "jsversion.h"
 
 #include "jscntxtinlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
@@ -85,6 +86,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
 JS_STATIC_ASSERT(JSString::MAX_LENGTH <= JSVAL_INT_MAX);
@@ -730,15 +732,15 @@ const char js_decodeURIComponent_str[] = "decodeURIComponent";
 const char js_encodeURIComponent_str[] = "encodeURIComponent";
 
 static JSFunctionSpec string_functions[] = {
-    JS_FN(js_escape_str,             str_escape,                1,0),
-    JS_FN(js_unescape_str,           str_unescape,              1,0),
+    JS_FN_TYPE(js_escape_str,             str_escape,                1,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_unescape_str,           str_unescape,              1,0, JS_TypeHandlerString),
 #if JS_HAS_UNEVAL
-    JS_FN(js_uneval_str,             str_uneval,                1,0),
+    JS_FN_TYPE(js_uneval_str,             str_uneval,                1,0, JS_TypeHandlerString),
 #endif
-    JS_FN(js_decodeURI_str,          str_decodeURI,             1,0),
-    JS_FN(js_encodeURI_str,          str_encodeURI,             1,0),
-    JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1,0),
-    JS_FN(js_encodeURIComponent_str, str_encodeURI_Component,   1,0),
+    JS_FN_TYPE(js_decodeURI_str,          str_decodeURI,             1,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_encodeURI_str,          str_encodeURI,             1,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_decodeURIComponent_str, str_decodeURI_Component,   1,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_encodeURIComponent_str, str_encodeURI_Component,   1,0, JS_TypeHandlerString),
 
     JS_FS_END
 };
@@ -1193,6 +1195,7 @@ js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 
 out_of_range:
+    cx->markTypeCallerOverflow();
     vp->setDouble(js_NaN);
     return JS_TRUE;
 }
@@ -1868,7 +1871,8 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     }
 
     /* For this non-global match, produce a RegExp.exec-style array. */
-    JSObject *obj = js_NewSlowArrayObject(cx);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
+    JSObject *obj = js_NewSlowArrayObject(cx, type);
     if (!obj)
         return false;
     vp->setObject(*obj);
@@ -1893,7 +1897,8 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 
     JSObject *&arrayobj = *static_cast<MatchArgType>(p);
     if (!arrayobj) {
-        arrayobj = js_NewArrayObject(cx, 0, NULL);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
+        arrayobj = js_NewArrayObject(cx, 0, NULL, type);
         if (!arrayobj)
             return false;
     }
@@ -2691,9 +2696,11 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
 
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_STRING_SPLIT_ARRAY);
+
     if (argc == 0) {
         Value v = StringValue(str);
-        JSObject *aobj = js_NewArrayObject(cx, 1, &v);
+        JSObject *aobj = js_NewArrayObject(cx, 1, &v, type);
         if (!aobj)
             return false;
         vp->setObject(*aobj);
@@ -2776,7 +2783,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (j == -2)
         return false;
 
-    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
+    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin(), type);
     if (!aobj)
         return false;
     vp->setObject(*aobj);
@@ -3102,60 +3109,111 @@ JS_DEFINE_TRCINFO_1(str_concat,
     (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
+static void type_StringMatch(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (!site->returnTypes)
+        return;
+
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
+    cx->addTypeProperty(type, NULL, TYPE_STRING);
+    cx->addTypeProperty(type, "index", TYPE_INT32);
+    cx->addTypeProperty(type, "input", TYPE_STRING);
+
+    site->returnTypes->addType(cx, TYPE_NULL);
+    site->returnTypes->addType(cx, (jstype) type);
+#endif
+}
+
+static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (!site->returnTypes)
+        return;
+
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_STRING_SPLIT_ARRAY);
+    cx->addTypeProperty(type, NULL, TYPE_STRING);
+
+    site->returnTypes->addType(cx, (jstype) type);
+#endif
+}
+
+// handler for the String.replace function, whose second argument may be
+// a function which is passed substrings of the first argument.
+static void type_StringReplace(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes)
+        site->returnTypes->addType(cx, TYPE_STRING);
+
+    if (site->argumentCount <= 1)
+        return;
+
+    // monitor all calls to String.replace which take a function, see FindReplaceLength.
+    cx->compartment->types.monitorBytecode(site->code);
+#endif
+}
+
 static const uint16 GENERIC_PRIMITIVE = JSFUN_GENERIC_NATIVE | JSFUN_PRIMITIVE_THIS;
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN("quote",             str_quote,             0,GENERIC_PRIMITIVE),
-    JS_FN(js_toSource_str,     str_toSource,          0,JSFUN_PRIMITIVE_THIS),
+    JS_FN_TYPE("quote",             str_quote,             0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toSource_str,     str_toSource,          0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
 #endif
 
     /* Java-like methods. */
-    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
-    JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
-    JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
-    JS_FN("charAt",            js_str_charAt,         1,GENERIC_PRIMITIVE),
-    JS_FN("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE),
-    JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
-    JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
-    JS_FN("trim",              str_trim,              0,GENERIC_PRIMITIVE),
-    JS_FN("trimLeft",          str_trimLeft,          0,GENERIC_PRIMITIVE),
-    JS_FN("trimRight",         str_trimRight,         0,GENERIC_PRIMITIVE),
-    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,GENERIC_PRIMITIVE),
-    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,GENERIC_PRIMITIVE),
-    JS_FN("localeCompare",     str_localeCompare,     1,GENERIC_PRIMITIVE),
+    JS_FN_TYPE(js_toString_str,     js_str_toString,       0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE(js_valueOf_str,      js_str_toString,       0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toJSON_str,       js_str_toString,       0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("substring",         str_substring,         2,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("charAt",            js_str_charAt,         1,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE, JS_TypeHandlerInt),
+    JS_FN_TYPE("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE, JS_TypeHandlerInt),
+    JS_FN_TYPE("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE, JS_TypeHandlerInt),
+    JS_FN_TYPE("trim",              str_trim,              0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("trimLeft",          str_trimLeft,          0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("trimRight",         str_trimRight,         0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("toLocaleLowerCase", str_toLocaleLowerCase, 0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("toLocaleUpperCase", str_toLocaleUpperCase, 0,GENERIC_PRIMITIVE, JS_TypeHandlerString),
+    JS_FN_TYPE("localeCompare",     str_localeCompare,     1,GENERIC_PRIMITIVE, JS_TypeHandlerInt),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN("match",             str_match,             1,GENERIC_PRIMITIVE),
-    JS_FN("search",            str_search,            1,GENERIC_PRIMITIVE),
-    JS_FN("replace",           str_replace,           2,GENERIC_PRIMITIVE),
-    JS_FN("split",             str_split,             2,GENERIC_PRIMITIVE),
+    JS_FN_TYPE("match",             str_match,             1,GENERIC_PRIMITIVE, type_StringMatch),
+    JS_FN_TYPE("search",            str_search,            1,GENERIC_PRIMITIVE, JS_TypeHandlerInt),
+    JS_FN_TYPE("replace",           str_replace,           2,GENERIC_PRIMITIVE, type_StringReplace),
+    JS_FN_TYPE("split",             str_split,             2,GENERIC_PRIMITIVE, type_StringSplit),
 #if JS_HAS_PERL_SUBSTR
-    JS_FN("substr",            str_substr,            2,GENERIC_PRIMITIVE),
+    JS_FN_TYPE("substr",            str_substr,            2,GENERIC_PRIMITIVE, JS_TypeHandlerString),
 #endif
 
     /* Python-esque sequence methods. */
-    JS_TN("concat",            str_concat,            1,GENERIC_PRIMITIVE, &str_concat_trcinfo),
-    JS_FN("slice",             str_slice,             2,GENERIC_PRIMITIVE),
+    JS_TN("concat",                 str_concat,            1,GENERIC_PRIMITIVE, &str_concat_trcinfo, JS_TypeHandlerString),
+    JS_FN_TYPE("slice",             str_slice,             2,GENERIC_PRIMITIVE, JS_TypeHandlerString),
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    JS_FN("bold",              str_bold,              0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("italics",           str_italics,           0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("fixed",             str_fixed,             0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("fontsize",          str_fontsize,          1,JSFUN_PRIMITIVE_THIS),
-    JS_FN("fontcolor",         str_fontcolor,         1,JSFUN_PRIMITIVE_THIS),
-    JS_FN("link",              str_link,              1,JSFUN_PRIMITIVE_THIS),
-    JS_FN("anchor",            str_anchor,            1,JSFUN_PRIMITIVE_THIS),
-    JS_FN("strike",            str_strike,            0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("small",             str_small,             0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("big",               str_big,               0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("blink",             str_blink,             0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("sup",               str_sup,               0,JSFUN_PRIMITIVE_THIS),
-    JS_FN("sub",               str_sub,               0,JSFUN_PRIMITIVE_THIS),
+    JS_FN_TYPE("bold",              str_bold,              0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("italics",           str_italics,           0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("fixed",             str_fixed,             0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("fontsize",          str_fontsize,          1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("fontcolor",         str_fontcolor,         1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("link",              str_link,              1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("anchor",            str_anchor,            1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("strike",            str_strike,            0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("small",             str_small,             0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("big",               str_big,               0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("blink",             str_blink,             0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("sup",               str_sup,               0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("sub",               str_sub,               0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
 #endif
 
     JS_FS_END
@@ -3371,7 +3429,8 @@ js_String(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (IsConstructing(vp)) {
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_STRING);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass, type);
         if (!obj)
             return false;
         obj->setPrimitiveThis(StringValue(str));
@@ -3442,9 +3501,22 @@ JS_DEFINE_TRCINFO_1(str_fromCharCode,
     (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, nanojit::ACCSET_NONE)))
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo),
+    JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo, JS_TypeHandlerString),
     JS_FS_END
 };
+
+static void type_NewString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+    if (site->isNew) {
+        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_STRING);
+        site->returnTypes->addType(cx, (jstype) object);
+    } else {
+        JS_TypeHandlerString(cx, jsfun, jssite);
+    }
+#endif
+}
 
 JSObject *
 js_InitStringClass(JSContext *cx, JSObject *obj)
@@ -3452,21 +3524,27 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     /* Define the escape, unescape functions in the global object. */
-    if (!JS_DefineFunctions(cx, obj, string_functions))
+    if (!JS_DefineFunctionsWithPrefix(cx, obj, string_functions, js_String_str))
         return NULL;
 
     proto = js_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
+                         type_NewString,
                          NULL, string_methods,
                          NULL, string_static_methods);
     if (!proto)
         return NULL;
     proto->setPrimitiveThis(StringValue(cx->runtime->emptyString));
-    if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+    jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+    if (!js_DefineNativeProperty(cx, proto, lengthId,
                                  UndefinedValue(), NULL, NULL,
                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
                                  NULL)) {
         return JS_FALSE;
     }
+
+    cx->addTypePropertyId(proto->getTypeObject(), lengthId, TYPE_INT32);
+    TypeObject *stringType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_STRING);
+    cx->addTypeProperty(stringType, NULL, TYPE_STRING);
 
     return proto;
 }

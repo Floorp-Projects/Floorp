@@ -48,10 +48,12 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 namespace js {
 
@@ -1019,6 +1021,8 @@ JS_FRIEND_API(Class) OuterWindowProxyClass = {
     }
 };
 
+static const char proxy_type_str[] = "Proxy:new";
+
 JSBool
 proxy_Call(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1090,8 +1094,9 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
         clasp = &FunctionProxyClass;
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_PROXY);
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type);
     if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))
         return NULL;
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
@@ -1225,11 +1230,11 @@ proxy_fix(JSContext *cx, uintN argc, Value *vp)
 #endif
 
 static JSFunctionSpec static_methods[] = {
-    JS_FN("create",         proxy_create,          2, 0),
-    JS_FN("createFunction", proxy_createFunction,  3, 0),
+    JS_FN_TYPE("create",         proxy_create,          2, 0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("createFunction", proxy_createFunction,  3, 0, JS_TypeHandlerDynamic),
 #ifdef DEBUG
-    JS_FN("isTrapping",     proxy_isTrapping,      1, 0),
-    JS_FN("fix",            proxy_fix,             1, 0),
+    JS_FN_TYPE("isTrapping",     proxy_isTrapping,      1, 0, JS_TypeHandlerBool),
+    JS_FN_TYPE("fix",            proxy_fix,             1, 0, JS_TypeHandlerBool),
 #endif
     JS_FS_END
 };
@@ -1283,7 +1288,8 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
 
-        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent());
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_PROXY);
+        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent(), type);
         if (!newobj)
             return false;
 
@@ -1351,8 +1357,9 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
      * Make a blank object from the recipe fix provided to us.  This must have
      * number of fixed slots as the proxy so that we can swap their contents.
      */
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_PROXY);
     gc::FinalizeKind kind = gc::FinalizeKind(proxy->arena()->header()->thingKind);
-    JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
+    JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type, kind);
     if (!newborn)
         return NULL;
     AutoObjectRooter tvr2(cx, newborn);
@@ -1395,14 +1402,15 @@ Class js_ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj);
+    TypeObject *type = cx->getTypeObject(js_ProxyClass.name, false);
+    JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj, type);
     if (!module)
         return NULL;
-    if (!JS_DefineProperty(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
-                           JS_PropertyStub, JS_PropertyStub, 0)) {
+    if (!JS_DefinePropertyWithType(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
+                                   JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
     }
-    if (!JS_DefineFunctions(cx, module, static_methods))
+    if (!JS_DefineFunctionsWithPrefix(cx, module, static_methods, "Proxy"))
         return NULL;
     return module;
 }

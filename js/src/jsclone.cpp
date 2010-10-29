@@ -713,11 +713,18 @@ JSStructuredCloneReader::startRead(Value *vp)
         break;
       }
 
-      case SCTAG_ARRAY_OBJECT:
+      case SCTAG_ARRAY_OBJECT: {
+        types::TypeObject *objType = context()->getFixedTypeObject(types::TYPE_OBJECT_CLONE_ARRAY);
+        JSObject *obj = js_NewArrayObject(context(), 0, NULL, objType);
+        if (!obj || !objs.append(ObjectValue(*obj)))
+            return false;
+        vp->setObject(*obj);
+        break;
+      }
+
       case SCTAG_OBJECT_OBJECT: {
-        JSObject *obj = (tag == SCTAG_ARRAY_OBJECT)
-                        ? js_NewArrayObject(context(), 0, NULL)
-                        : NewBuiltinClassInstance(context(), &js_ObjectClass);
+        types::TypeObject *objType = context()->getFixedTypeObject(types::TYPE_OBJECT_CLONE_OBJECT);
+        JSObject *obj = NewBuiltinClassInstance(context(), &js_ObjectClass, objType);
         if (!obj || !objs.append(ObjectValue(*obj)))
             return false;
         vp->setObject(*obj);

@@ -61,10 +61,12 @@
 #include "jsvector.h"
 #include "jstypedarray.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /*
  * ArrayBuffer
@@ -99,6 +101,8 @@ ArrayBuffer::class_finalize(JSContext *cx, JSObject *obj)
     delete abuf;
 }
 
+static const char arraybuffer_type_str[] = "ArrayBuffer:new";
+
 /*
  * new ArrayBuffer(byteLength)
  */
@@ -113,7 +117,8 @@ ArrayBuffer::create(JSContext *cx, uintN argc, Value *argv, Value *rval)
 {
     /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
+    JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass, type);
     if (!obj)
         return false;
 
@@ -716,7 +721,8 @@ class TypedArrayTemplate
     {
         /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-        JSObject *obj = NewBuiltinClassInstance(cx, slowClass());
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
+        JSObject *obj = NewBuiltinClassInstance(cx, slowClass(), type);
         if (!obj)
             return false;
 
@@ -861,7 +867,8 @@ class TypedArrayTemplate
         // note the usage of NewObject here -- we don't want the
         // constructor to be called!
         JS_ASSERT(slowClass() != &js_FunctionClass);
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
+        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL, type);
         if (!nobj) {
             delete ntarray;
             return false;
@@ -890,8 +897,10 @@ class TypedArrayTemplate
         }
 
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
-        if (!tarray)
+        if (!tarray) {
+            vp->setUndefined();
             return true;
+        }
 
         // these are the default values
         int32_t offset = 0;
@@ -1431,19 +1440,35 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
  * shared TypedArray
  */
 
+static void typedarray_TypeBuffer(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes) {
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
+        site->returnTypes->addType(cx, (jstype) type);
+    }
+#endif
+}
+
 JSPropertySpec TypedArray::jsprops[] = {
     { js_length_str,
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getLength), Jsvalify(TypedArray::prop_getLength) },
+      Jsvalify(TypedArray::prop_getLength), Jsvalify(TypedArray::prop_getLength),
+      JS_TypeHandlerInt },
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteLength), Jsvalify(TypedArray::prop_getByteLength) },
+      Jsvalify(TypedArray::prop_getByteLength), Jsvalify(TypedArray::prop_getByteLength),
+      JS_TypeHandlerInt },
     { "byteOffset",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteOffset), Jsvalify(TypedArray::prop_getByteOffset) },
+      Jsvalify(TypedArray::prop_getByteOffset), Jsvalify(TypedArray::prop_getByteOffset),
+      JS_TypeHandlerInt },
     { "buffer",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getBuffer), Jsvalify(TypedArray::prop_getBuffer) },
+      Jsvalify(TypedArray::prop_getBuffer), Jsvalify(TypedArray::prop_getBuffer),
+      typedarray_TypeBuffer },
     {0,0,0,0,0}
 };
 
@@ -1453,8 +1478,8 @@ JSPropertySpec TypedArray::jsprops[] = {
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
-    JS_FN("slice", _typedArray::fun_slice, 2, 0),                              \
-    JS_FN("set", _typedArray::fun_set, 2, 0),                                  \
+    JS_FN_TYPE("slice", _typedArray::fun_slice, 2, 0, JS_TypeHandlerThis),     \
+    JS_FN_TYPE("set",   _typedArray::fun_set,   2, 0, JS_TypeHandlerVoid),     \
     JS_FS_END                                                                  \
 }
 
@@ -1513,6 +1538,7 @@ do {                                                                           \
     proto = js_InitClass(cx, obj, NULL,                                        \
                          &TypedArray::slowClasses[TypedArray::_type],          \
                          _typedArray::class_constructor, 3,                    \
+                         JS_TypeHandlerNew,                                    \
                          _typedArray::jsprops,                                 \
                          _typedArray::jsfuncs,                                 \
                          NULL, NULL);                                          \
@@ -1591,7 +1617,7 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
     INIT_TYPED_ARRAY_CLASS(Uint8ClampedArray,TYPE_UINT8_CLAMPED);
 
     proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::jsclass,
-                         ArrayBuffer::class_constructor, 1,
+                         ArrayBuffer::class_constructor, 1, JS_TypeHandlerNew,
                          ArrayBuffer::jsprops, NULL, NULL, NULL);
     if (!proto)
         return NULL;

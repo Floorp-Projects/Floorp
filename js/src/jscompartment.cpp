@@ -74,6 +74,9 @@ JSCompartment::init()
 #ifdef JS_GCMETER
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
+#ifdef JS_TYPE_INFERENCE
+    types.init();
+#endif
     return crossCompartmentWrappers.init();
 }
 

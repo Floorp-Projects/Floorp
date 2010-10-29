@@ -74,6 +74,7 @@
 
 using namespace js;
 using namespace js::mjit;
+using namespace js::types;
 using namespace JSC;
 
 void JS_FASTCALL
@@ -575,7 +576,7 @@ stubs::SetElem(VMFrame &f)
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
-                        obj->setArrayLength(i + 1);
+                        obj->setArrayLength(cx, i + 1);
                 }
                 obj->setDenseArrayElement(i, regs.sp[-1]);
                 goto end_setelem;
@@ -1270,7 +1271,8 @@ stubs::Mod(VMFrame &f)
 JSObject *JS_FASTCALL
 stubs::NewArray(VMFrame &f, uint32 len)
 {
-    JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len);
+    TypeObject *type = f.cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_ARRAY);
+    JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len, type);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -1372,9 +1374,11 @@ JSObject * JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
+
+    TypeObject *type = f.cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_ARRAY);
     gc::FinalizeKind kind = GuessObjectGCKind(count, true);
 
-    JSObject *obj = NewArrayWithKind(cx, kind);
+    JSObject *obj = NewArrayWithKind(cx, type, kind);
     if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
     return obj;
@@ -1384,9 +1388,11 @@ JSObject * JS_FASTCALL
 stubs::NewInitObject(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
+
+    TypeObject *type = f.cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
     gc::FinalizeKind kind = GuessObjectGCKind(count, false);
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
     if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
 

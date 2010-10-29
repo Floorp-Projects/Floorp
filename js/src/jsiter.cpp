@@ -76,12 +76,15 @@
 #endif
 
 #include "jscntxtinlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
+#include "jsautooplen.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 static void iterator_finalize(JSContext *cx, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
@@ -165,7 +168,8 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
     Value vec[2] = { IdToValue(id), val };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
-    JSObject *aobj = js_NewArrayObject(cx, 2, vec);
+    TypeObject *aobjType = cx->getFixedTypeObject(TYPE_OBJECT_KEY_VALUE_PAIR);
+    JSObject *aobj = js_NewArrayObject(cx, 2, vec, aobjType);
     if (!aobj)
         return false;
     rval->setObject(*aobj);
@@ -447,6 +451,8 @@ Compare(T *a, T *b, size_t c)
 static inline JSObject *
 NewIteratorObject(JSContext *cx, uintN flags)
 {
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
+
     if (flags & JSITER_ENUMERATE) {
         /*
          * Non-escaping native enumerator objects do not need map, proto, or
@@ -459,12 +465,12 @@ NewIteratorObject(JSContext *cx, uintN flags)
         JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
         if (!obj)
             return false;
-        obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
+        obj->init(cx, &js_IteratorClass, NULL, NULL, type, NULL, false);
         obj->setMap(cx->runtime->emptyEnumeratorShape);
         return obj;
     }
 
-    return NewBuiltinClassInstance(cx, &js_IteratorClass);
+    return NewBuiltinClassInstance(cx, &js_IteratorClass, type);
 }
 
 NativeIterator *
@@ -787,7 +793,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
 
 static JSFunctionSpec iterator_methods[] = {
-    JS_FN(js_next_str,      iterator_next,  0,JSPROP_ROPERM),
+    JS_FN_TYPE(js_next_str,      iterator_next,  0,JSPROP_ROPERM, JS_TypeHandlerDynamic),
     JS_FS_END
 };
 
@@ -1185,7 +1191,8 @@ RebaseRegsFromTo(JSFrameRegs *regs, JSStackFrame *from, JSStackFrame *to)
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass);
+    TypeObject *objType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass, objType);
     if (!obj)
         return NULL;
 
@@ -1275,6 +1282,12 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
              * expression.
              */
             gen->regs.sp[-1] = arg;
+
+            jsbytecode *yieldpc = gen->regs.pc - JSOP_YIELD_LENGTH;
+            JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD);
+
+            JSScript *script = gen->floatingFrame()->script();
+            script->typeMonitorResult(cx, yieldpc, 0, arg, true);
         }
         gen->state = JSGEN_RUNNING;
         break;
@@ -1421,6 +1434,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
             gen->state = JSGEN_CLOSED;
+            vp->setUndefined();
             return JS_TRUE;
         }
     } else if (gen->state == JSGEN_CLOSED) {
@@ -1434,6 +1448,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
+            vp->setUndefined();
             return JS_TRUE;
         }
     }
@@ -1470,14 +1485,25 @@ generator_close(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSFunctionSpec generator_methods[] = {
-    JS_FN(js_next_str,      generator_next,     0,JSPROP_ROPERM),
-    JS_FN(js_send_str,      generator_send,     1,JSPROP_ROPERM),
-    JS_FN(js_throw_str,     generator_throw,    1,JSPROP_ROPERM),
-    JS_FN(js_close_str,     generator_close,    0,JSPROP_ROPERM),
+    JS_FN_TYPE(js_next_str,      generator_next,     0,JSPROP_ROPERM, JS_TypeHandlerDynamic),
+    JS_FN_TYPE(js_send_str,      generator_send,     1,JSPROP_ROPERM, JS_TypeHandlerDynamic),
+    JS_FN_TYPE(js_throw_str,     generator_throw,    1,JSPROP_ROPERM, JS_TypeHandlerDynamic),
+    JS_FN_TYPE(js_close_str,     generator_close,    0,JSPROP_ROPERM, JS_TypeHandlerVoid),
     JS_FS_END
 };
 
 #endif /* JS_HAS_GENERATORS */
+
+static void type_GeneratorNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    TypeObject *generator = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
+    if (site->returnTypes)
+        site->returnTypes->addType(cx, (types::jstype) generator);
+#endif
+}
 
 JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj)
@@ -1490,19 +1516,28 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2,
+    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2, type_GeneratorNew,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
 
+    TypeObject *iterType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
+    cx->addTypePrototype(iterType, proto->getTypeObject());
+
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */
-    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
+    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0, NULL,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
     }
 #endif
 
-    return js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
-                        NULL, NULL, NULL, NULL);
+    proto = js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0, NULL,
+                         NULL, NULL, NULL, NULL);
+    if (!proto)
+        return NULL;
+
+    cx->addTypeProperty(obj->getTypeObject(), js_StopIteration_str, ObjectValue(*proto));
+
+    return proto;
 }

@@ -138,11 +138,11 @@ extern bool
 js_InitContextBusyArrayTable(JSContext *cx);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector);
+js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector, js::types::TypeObject *type);
 
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *
-js_NewSlowArrayObject(JSContext *cx);
+js_NewSlowArrayObject(JSContext *cx, js::types::TypeObject *type);
 
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
@@ -249,7 +249,8 @@ js_Array(JSContext *cx, uintN argc, js::Value *vp);
  * It would be useful to find out what is causing this insanity.
  */
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector);
+js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector,
+                              js::types::TypeObject *type);
 
 /*
  * Makes a fast clone of a dense array as long as the array only contains

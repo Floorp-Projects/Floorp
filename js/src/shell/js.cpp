@@ -93,6 +93,7 @@
 
 #include "jsworkers.h"
 
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -731,11 +732,13 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
      * Create arguments early and define it to root it, so it's safe from any
      * GC calls nested below, and so it is available to -f <file> arguments.
      */
-    argsObj = JS_NewArrayObject(cx, 0, NULL);
+    js::types::TypeObject *argstype = cx->getFixedTypeObject(js::types::TYPE_OBJECT_ARGUMENTS);
+    argsObj = js_NewArrayObject(cx, 0, NULL, argstype);
     if (!argsObj)
         return 1;
-    if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
-                           NULL, NULL, 0)) {
+
+    if (!JS_DefinePropertyWithType(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),
+                                   NULL, NULL, 0)) {
         return 1;
     }
 
@@ -1057,6 +1060,7 @@ Load(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
     }
 
+    *vp = Jsvalify(UndefinedValue());
     return JS_TRUE;
 }
 
@@ -4195,103 +4199,110 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+static void type_Bailout(JSContext *cx, JSTypeFunction *fun, JSTypeCallsite *site)
+{
+#ifdef JS_TYPE_INFERENCE
+    cx->compartment->types.ignoreWarnings = true;
+#endif
+}
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
-    JS_FN("version",        Version,        0,0),
-    JS_FN("revertVersion",  RevertVersion,  0,0),
-    JS_FN("options",        Options,        0,0),
-    JS_FN("load",           Load,           1,0),
-    JS_FN("readline",       ReadLine,       0,0),
-    JS_FN("print",          Print,          0,0),
-    JS_FN("putstr",         PutStr,         0,0),
-    JS_FN("dateNow",        Now,            0,0),
-    JS_FN("help",           Help,           0,0),
-    JS_FN("quit",           Quit,           0,0),
-    JS_FN("assertEq",       AssertEq,       2,0),
-    JS_FN("assertJit",      AssertJit,      0,0),
-    JS_FN("gc",             ::GC,           0,0),
+    JS_FN_TYPE("version",        Version,        0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("revertVersion",  RevertVersion,  0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("options",        Options,        0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("load",           Load,           1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("readline",       ReadLine,       0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("print",          Print,          0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("putstr",         PutStr,         0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("dateNow",        Now,            0,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("help",           Help,           0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("quit",           Quit,           0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("assertEq",       AssertEq,       2,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("assertJit",      AssertJit,      0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("gc",             ::GC,           0,0, JS_TypeHandlerString),
 #ifdef JS_GCMETER
-    JS_FN("gcstats",        GCStats,        0,0),
+    JS_FN_TYPE("gcstats",        GCStats,        0,0, JS_TypeHandlerVoid),
 #endif
-    JS_FN("gcparam",        GCParameter,    2,0),
-    JS_FN("countHeap",      CountHeap,      0,0),
-    JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
-    JS_FN("finalizeCount",  FinalizeCount, 0,0),
+    JS_FN_TYPE("gcparam",        GCParameter,    2,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("countHeap",      CountHeap,      0,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("makeFinalizeObserver", MakeFinalizeObserver, 0,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("finalizeCount",  FinalizeCount,  0,0, JS_TypeHandlerInt),
 #ifdef JS_GC_ZEAL
-    JS_FN("gczeal",         GCZeal,         1,0),
+    JS_FN_TYPE("gczeal",         GCZeal,         1,0, JS_TypeHandlerVoid),
 #endif
-    JS_FN("setDebug",       SetDebug,       1,0),
-    JS_FN("setDebuggerHandler", SetDebuggerHandler, 1,0),
-    JS_FN("setThrowHook",   SetThrowHook,   1,0),
-    JS_FN("trap",           Trap,           3,0),
-    JS_FN("untrap",         Untrap,         2,0),
-    JS_FN("line2pc",        LineToPC,       0,0),
-    JS_FN("pc2line",        PCToLine,       0,0),
-    JS_FN("stackQuota",     StackQuota,     0,0),
-    JS_FN("stringsAreUTF8", StringsAreUTF8, 0,0),
-    JS_FN("testUTF8",       TestUTF8,       1,0),
-    JS_FN("throwError",     ThrowError,     0,0),
+    JS_FN_TYPE("setDebug",       SetDebug,       1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("setDebuggerHandler", SetDebuggerHandler, 1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("setThrowHook",   SetThrowHook,   1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("trap",           Trap,           3,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("untrap",         Untrap,         2,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("line2pc",        LineToPC,       0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("pc2line",        PCToLine,       0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("stackQuota",     StackQuota,     0,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("stringsAreUTF8", StringsAreUTF8, 0,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("testUTF8",       TestUTF8,       1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("throwError",     ThrowError,     0,0, JS_TypeHandlerVoid),
 #ifdef DEBUG
-    JS_FN("dis",            Disassemble,    1,0),
-    JS_FN("disfile",        DisassFile,     1,0),
-    JS_FN("dissrc",         DisassWithSrc,  1,0),
-    JS_FN("dumpHeap",       DumpHeap,       0,0),
-    JS_FN("dumpObject",     DumpObject,     1,0),
-    JS_FN("notes",          Notes,          1,0),
-    JS_FN("tracing",        Tracing,        0,0),
-    JS_FN("stats",          DumpStats,      1,0),
+    JS_FN_TYPE("dis",            Disassemble,    1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("disfile",        DisassFile,     1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("dissrc",         DisassWithSrc,  1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("dumpHeap",       DumpHeap,       0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("dumpObject",     DumpObject,     1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("notes",          Notes,          1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("tracing",        Tracing,        0,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("stats",          DumpStats,      1,0, JS_TypeHandlerVoid),
 #endif
 #ifdef TEST_CVTARGS
-    JS_FN("cvtargs",        ConvertArgs,    0,0),
+    JS_FN_TYPE("cvtargs",        ConvertArgs,    0,0, JS_TypeHandlerVoid),
 #endif
-    JS_FN("build",          BuildDate,      0,0),
-    JS_FN("clear",          Clear,          0,0),
-    JS_FN("intern",         Intern,         1,0),
-    JS_FN("clone",          Clone,          1,0),
-    JS_FN("getpda",         GetPDA,         1,0),
-    JS_FN("getslx",         GetSLX,         1,0),
-    JS_FN("toint32",        ToInt32,        1,0),
-    JS_FN("evalcx",         EvalInContext,  1,0),
-    JS_FN("evalInFrame",    EvalInFrame,    2,0),
-    JS_FN("shapeOf",        ShapeOf,        1,0),
+    JS_FN_TYPE("build",          BuildDate,      0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("clear",          Clear,          0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("intern",         Intern,         1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("clone",          Clone,          1,0, type_Bailout),
+    JS_FN_TYPE("getpda",         GetPDA,         1,0, JS_TypeHandlerMissing),
+    JS_FN_TYPE("getslx",         GetSLX,         1,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("toint32",        ToInt32,        1,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("evalcx",         EvalInContext,  1,0, type_Bailout),
+    JS_FN_TYPE("evalInFrame",    EvalInFrame,    2,0, type_Bailout),
+    JS_FN_TYPE("shapeOf",        ShapeOf,        1,0, JS_TypeHandlerInt),
 #ifdef MOZ_SHARK
-    JS_FN("startShark",     js_StartShark,      0,0),
-    JS_FN("stopShark",      js_StopShark,       0,0),
-    JS_FN("connectShark",   js_ConnectShark,    0,0),
-    JS_FN("disconnectShark",js_DisconnectShark, 0,0),
+    JS_FN_TYPE("startShark",     js_StartShark,      0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("stopShark",      js_StopShark,       0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("connectShark",   js_ConnectShark,    0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("disconnectShark",js_DisconnectShark, 0,0, JS_TypeHandlerVoid),
 #endif
 #ifdef MOZ_CALLGRIND
-    JS_FN("startCallgrind", js_StartCallgrind,  0,0),
-    JS_FN("stopCallgrind",  js_StopCallgrind,   0,0),
-    JS_FN("dumpCallgrind",  js_DumpCallgrind,   1,0),
+    JS_FN_TYPE("startCallgrind", js_StartCallgrind,  0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("stopCallgrind",  js_StopCallgrind,   0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("dumpCallgrind",  js_DumpCallgrind,   1,0, JS_TypeHandlerVoid),
 #endif
 #ifdef MOZ_VTUNE
-    JS_FN("startVtune",     js_StartVtune,    1,0),
-    JS_FN("stopVtune",      js_StopVtune,     0,0),
-    JS_FN("pauseVtune",     js_PauseVtune,    0,0),
-    JS_FN("resumeVtune",    js_ResumeVtune,   0,0),
+    JS_FN_TYPE("startVtune",     js_StartVtune,    1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("stopVtune",      js_StopVtune,     0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("pauseVtune",     js_PauseVtune,    0,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("resumeVtune",    js_ResumeVtune,   0,0, JS_TypeHandlerVoid),
 #endif
 #ifdef MOZ_TRACEVIS
-    JS_FN("startTraceVis",  StartTraceVisNative, 1,0),
-    JS_FN("stopTraceVis",   StopTraceVisNative,  0,0),
+    JS_FN_TYPE("startTraceVis",  StartTraceVisNative, 1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("stopTraceVis",   StopTraceVisNative,  0,0, JS_TypeHandlerVoid),
 #endif
 #ifdef DEBUG_ARRAYS
-    JS_FN("arrayInfo",      js_ArrayInfo,   1,0),
+    JS_FN_TYPE("arrayInfo",      js_ArrayInfo,   1,0, JS_TypeHandlerVoid),
 #endif
 #ifdef JS_THREADSAFE
-    JS_FN("sleep",          Sleep_fn,       1,0),
-    JS_FN("scatter",        Scatter,        1,0),
+    JS_FN_TYPE("sleep",          Sleep_fn,       1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("scatter",        Scatter,        1,0, JS_TypeHandlerMissing),
 #endif
-    JS_FN("snarf",          Snarf,          0,0),
-    JS_FN("read",           Snarf,          0,0),
-    JS_FN("compile",        Compile,        1,0),
-    JS_FN("parse",          Parse,          1,0),
-    JS_FN("timeout",        Timeout,        1,0),
-    JS_FN("elapsed",        Elapsed,        0,0),
-    JS_FN("parent",         Parent,         1,0),
-    JS_FN("wrap",           Wrap,           1,0),
-    JS_FN("serialize",      Serialize,      1,0),
-    JS_FN("deserialize",    Deserialize,    1,0),
+    JS_FN_TYPE("snarf",          Snarf,          0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("read",           Snarf,          0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("compile",        Compile,        1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("parse",          Parse,          1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("timeout",        Timeout,        1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("elapsed",        Elapsed,        0,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("parent",         Parent,         1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("wrap",           Wrap,           1,0, JS_TypeHandlerMissing),
+    JS_FN_TYPE("serialize",      Serialize,      1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("deserialize",    Deserialize,    1,0, JS_TypeHandlerDynamic),
     JS_FS_END
 };
 
@@ -4517,14 +4528,15 @@ split_setup(JSContext *cx, JSBool evalcx)
         return NULL;
 
     if (!evalcx) {
-        if (!JS_DefineFunctions(cx, inner, shell_functions))
+        if (!JS_DefineFunctionsWithPrefix(cx, inner, shell_functions, "Shell"))
             return NULL;
 
         /* Create a dummy arguments object. */
         arguments = JS_NewArrayObject(cx, 0, NULL);
         if (!arguments ||
-            !JS_DefineProperty(cx, inner, "arguments", OBJECT_TO_JSVAL(arguments),
-                               NULL, NULL, 0)) {
+            !JS_DefinePropertyWithType(cx, inner, "arguments",
+                                       OBJECT_TO_JSVAL(arguments),
+                                       NULL, NULL, 0)) {
             return NULL;
         }
     }
@@ -4629,7 +4641,7 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec its_methods[] = {
-    {"bindMethod",      its_bindMethod, 2,0},
+    {"bindMethod",      its_bindMethod, 2,0, type_Bailout},
     {NULL,NULL,0,0}
 };
 
@@ -5251,7 +5263,7 @@ NewGlobalObject(JSContext *cx)
 #endif
     if (!JS::RegisterPerfMeasurement(cx, glob))
         return NULL;
-    if (!JS_DefineFunctions(cx, glob, shell_functions))
+    if (!JS_DefineFunctionsWithPrefix(cx, glob, shell_functions, "Shell"))
         return NULL;
 
     JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
@@ -5259,7 +5271,7 @@ NewGlobalObject(JSContext *cx)
         return NULL;
     if (!JS_DefineProperties(cx, it, its_props))
         return NULL;
-    if (!JS_DefineFunctions(cx, it, its_methods))
+    if (!JS_DefineFunctionsWithPrefix(cx, it, its_methods, "Shell"))
         return NULL;
 
     if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,

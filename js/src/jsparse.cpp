@@ -89,6 +89,7 @@
 #endif
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
@@ -1051,6 +1052,15 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
             return false;
         }
 
+        if (!rval.isUndefined()) {
+            cx->addTypePropertyId(globalObj->getTypeObject(), id, rval);
+            if (rval.isObject() && rval.toObject().isFunction()) {
+                JSFunction *fun = rval.toObject().getFunctionPrivate();
+                if (fun->isInterpreted())
+                    fun->u.i.script->setTypeNesting(script, script->code);
+            }
+        }
+
         JS_ASSERT(prop);
         const Shape *shape = (const Shape *)prop;
         def.knownSlot = shape->slot;
@@ -1835,7 +1845,7 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
     parent = tc->inFunction() ? NULL : tc->scopeChain;
 
     fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
-                         parent, atom);
+                         parent, atom, NULL, NULL);
 
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();

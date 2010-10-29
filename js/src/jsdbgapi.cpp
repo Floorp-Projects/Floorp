@@ -65,6 +65,7 @@
 #include "jswrapper.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -759,7 +760,8 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
     }
 
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             setter ? CastAsObject(setter)->getParent() : NULL, atom);
+                             setter ? CastAsObject(setter)->getParent() : NULL, atom,
+                             JS_TypeHandlerMissing, JS_TYPE_FUNCTION_LINE(cx));
     if (!wrapper)
         return NULL;
     return CastAsPropertyOp(FUN_OBJECT(wrapper));
@@ -1365,6 +1367,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!script)
         return false;
 
+    script->setTypeNesting(fp->script(), fp->pc(cx));
     bool ok = Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL, Valueify(rval));
 
     js_DestroyScript(cx, script);
