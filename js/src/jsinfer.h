@@ -42,10 +42,13 @@
 #ifndef jsinfer_h___
 #define jsinfer_h___
 
-#include <sys/time.h>
 #include "jsarena.h"
 #include "jstl.h"
 #include "jsprvtd.h"
+
+#ifndef _MSC_VER
+#include <sys/time.h>
+#endif
 
 /* Define to get detailed output of inference actions. */
 
@@ -726,9 +729,14 @@ struct TypeCompartment
 
     uint64 currentTime()
     {
+#ifndef _MSC_VER
         timeval current;
         gettimeofday(&current, NULL);
         return current.tv_sec * (uint64_t) 1000000 + current.tv_usec;
+#else
+        /* Timing not available on Windows. */
+        return 0;
+#endif
     }
 
     TypeObject *makeFixedTypeObject(JSContext *cx, FixedTypeObjectName which);
