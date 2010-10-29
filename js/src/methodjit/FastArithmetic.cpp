@@ -941,7 +941,7 @@ mjit::Compiler::jsop_mod()
 #endif
 }
 
-void
+bool
 mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
@@ -972,7 +972,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         break;
       default:
         JS_NOT_REACHED("wat");
-        return;
+        return false;
     }
 
     if (target) {
@@ -1068,7 +1068,8 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
             else
                 fast = masm.branch32(cond, lvr.dataReg(), rvr.dataReg());
 
-            jumpInScript(fast, target);
+            if (!jumpInScript(fast, target))
+                return false;
         } else {
             Jump j = masm.jump();
             stubcc.linkExitDirect(j, stubEntry);
@@ -1094,7 +1095,8 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
          * in the middle of an in-progress slow path.
          */
-        jumpAndTrace(fast, target, &stubBranch);
+        if (!jumpAndTrace(fast, target, &stubBranch))
+            return false;
     } else {
         /* No fusing. Compare, set, and push a boolean. */
 
@@ -1144,6 +1146,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, resultReg);
         stubcc.rejoin(Changes(1));
     }
+    return true;
 }
 
 /*
@@ -1250,7 +1253,7 @@ DoubleCondForOp(JSOp op, JSOp fused)
     }
 }
 
-void
+bool
 mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
@@ -1296,7 +1299,8 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
          * in the middle of an in-progress slow path.
          */
-        jumpAndTrace(j, target, &sj);
+        if (!jumpAndTrace(j, target, &sj))
+            return false;
     } else {
         if (lhsNotNumber.isSet())
             stubcc.linkExit(lhsNotNumber.get(), Uses(2));
@@ -1319,9 +1323,10 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
 
         stubcc.rejoin(Changes(1));
     }
+    return true;
 }
 
-void
+bool
 mjit::Compiler::jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
 #ifdef DEBUG
@@ -1332,11 +1337,11 @@ mjit::Compiler::jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target,
 #endif
 
     /* :TODO: optimize this?  */
-    emitStubCmpOp(stub, target, fused);
+    return emitStubCmpOp(stub, target, fused);
 }
 
 /* See jsop_binary_full() for more information on how this works. */
-void
+bool
 mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
@@ -1467,7 +1472,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
             break;
           default:
             JS_NOT_REACHED("unrecognized op");
-            return;
+            return false;
         }
 
         /* Emit the i32 path. */
@@ -1501,7 +1506,8 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
          * in the middle of an in-progress slow path.
          */
-        jumpAndTrace(fast, target, &j);
+        if (!jumpAndTrace(fast, target, &j))
+            return false;
 
         /* Rejoin from the double path. */
         if (hasDoublePath)
@@ -1557,7 +1563,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
             break;
           default:
             JS_NOT_REACHED("unrecognized op");
-            return;
+            return false;
         }
 
         /* Emit the compare & set. */
@@ -1586,5 +1592,6 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
             stubcc.crossJump(doubleDone.get(), masm.label());
         stubcc.rejoin(Changes(1));
     }
+    return true;
 }
 

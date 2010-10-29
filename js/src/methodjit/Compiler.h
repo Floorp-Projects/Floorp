@@ -302,16 +302,16 @@ class Compiler : public BaseCompiler
 
     /* Non-emitting helpers. */
     uint32 fullAtomIndex(jsbytecode *pc);
-    void jumpInScript(Jump j, jsbytecode *pc);
+    bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
     void addCallSite(uint32 id, bool stub);
 
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
-    void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
+    bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     void iter(uintN flags);
     void iterNext();
-    void iterMore();
+    bool iterMore();
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID fpReg);
 #ifdef JS_POLYIC
@@ -323,7 +323,7 @@ class Compiler : public BaseCompiler
     bool constructThis();
 
     /* Opcode handlers. */
-    void jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
+    bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
     void jsop_bindname(uint32 index, bool usePropCache);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
@@ -380,10 +380,10 @@ class Compiler : public BaseCompiler
                              MaybeRegisterID &mreg);
     void maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
                               MaybeRegisterID &mreg);
-    void jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
-    void jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
-    void jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
-    void jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
 
     void emitLeftDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
                             MaybeJump &lhsNotDouble, MaybeJump &rhsNotNumber,
@@ -411,17 +411,17 @@ class Compiler : public BaseCompiler
     void jsop_bitnot();
     void jsop_not();
     void jsop_typeof();
-    void booleanJumpScript(JSOp op, jsbytecode *target);
-    void jsop_ifneq(JSOp op, jsbytecode *target);
-    void jsop_andor(JSOp op, jsbytecode *target);
+    bool booleanJumpScript(JSOp op, jsbytecode *target);
+    bool jsop_ifneq(JSOp op, jsbytecode *target);
+    bool jsop_andor(JSOp op, jsbytecode *target);
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
     bool jsop_getelem(bool isCall);
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
-    void jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
-    void jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
 #define STUB_CALL_TYPE(type)                                            \
