@@ -3631,7 +3631,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 #ifdef JS_TYPE_INFERENCE
     size_t protoLen = strlen(clasp->name) + 15;
     char *protoName = (char*) alloca(protoLen);
-    snprintf(protoName, protoLen, "%s:prototype", clasp->name);
+    JS_snprintf(protoName, protoLen, "%s:prototype", clasp->name);
     if (clasp == &js_FunctionClass)
         protoType = cx->getTypeFunctionHandler(protoName, JS_TypeHandlerVoid);
     else

@@ -63,7 +63,7 @@ class JSProxyHandler;
 class AutoPropDescArrayRooter;
 
 namespace mjit { class Compiler; }
-namespace types { class TypeObject; }
+namespace types { struct TypeObject; }
 
 static inline PropertyOp
 CastAsPropertyOp(JSObject *object)

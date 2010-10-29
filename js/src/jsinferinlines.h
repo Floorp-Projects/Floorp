@@ -42,6 +42,7 @@
 #include "jsanalyze.h"
 #include "jscompartment.h"
 #include "jsinfer.h"
+#include "jsprf.h"
 
 #ifndef jsinferinlines_h___
 #define jsinferinlines_h___
@@ -222,7 +223,7 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
 {
 #ifdef JS_TYPE_INFERENCE
     char name[8];
-    snprintf(name, 16, "#%u", script->analysis->id);
+    JS_snprintf(name, 16, "#%u", script->analysis->id);
 
     js::types::TypeFunction *typeFun =
         compartment->types.getTypeObject(this, script->analysis, name, true)->asFunction();
@@ -690,7 +691,7 @@ Bytecode::getInitObject(JSContext *cx, bool isArray)
 {
     if (!initObject) {
         char name[32];
-        snprintf(name, 32, "#%u:%u", script->id, offset);
+        JS_snprintf(name, 32, "#%u:%u", script->id, offset);
         initObject = cx->compartment->types.getTypeObject(cx, script, name, false);
         initObject->isInitObject = true;
     }
@@ -1257,7 +1258,7 @@ TypeFunction::getNewObject(JSContext *cx)
 
     unsigned len = strlen(baseName) + 10;
     char *newName = (char *) alloca(len);
-    snprintf(newName, len, "%s:new", baseName);
+    JS_snprintf(newName, len, "%s:new", baseName);
     newObject = cx->compartment->types.getTypeObject(cx, script ? script->analysis : NULL,
                                                      newName, false);
 
