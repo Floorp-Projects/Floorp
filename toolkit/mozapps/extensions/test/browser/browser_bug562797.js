@@ -7,9 +7,7 @@
  */
 
 function test() {
-  // Set the timeout to 300 seconds since this test can easily take 220 seconds
-  // to run on a Windows debug build when it runs in a tab.
-  requestLongerTimeout(10);
+  requestLongerTimeout(2);
 
   waitForExplicitFinish();
 

@@ -211,7 +211,9 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
   }, false);
 }
 
-function open_manager(aView, aCallback, aLoadCallback) {
+function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
+  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
+
   function setup_manager(aManagerWindow) {
     if (aLoadCallback)
       aLoadCallback(aManagerWindow);
@@ -241,7 +243,9 @@ function open_manager(aView, aCallback, aLoadCallback) {
   }, true);
 }
 
-function close_manager(aManagerWindow, aCallback) {
+function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
+  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
+
   ok(aManagerWindow != null, "Should have an add-ons manager window to close");
   is(aManagerWindow.location, MANAGER_URI, "Should be closing window with correct URI");
 
