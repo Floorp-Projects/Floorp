@@ -127,7 +127,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return true;
     }
     if (desc.attrs & JSPROP_GETTER) {
-        return ExternalGetOrSet(cx, receiver, id, CastAsObjectJsval(desc.getter),
+        return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.getter),
                                 JSACC_READ, 0, NULL, vp);
     }
     if (!(desc.attrs & JSPROP_SHARED))
@@ -136,7 +136,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         vp->setUndefined();
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
-    return CallJSPropertyOp(cx, desc.getter, receiver, id, vp);
+    return CallJSPropertyOp(cx, desc.getter, proxy, id, vp);
 }
 
 bool
@@ -150,12 +150,12 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (desc.obj) {
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
-                return ExternalGetOrSet(cx, receiver, id, CastAsObjectJsval(desc.setter),
+                return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
                                         JSACC_WRITE, 1, vp, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
-            return CallJSPropertyOpSetter(cx, desc.setter, receiver, id, vp);
+            return CallJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
         }
         if (desc.attrs & JSPROP_READONLY)
             return true;
@@ -167,12 +167,12 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     if (desc.obj) {
         if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
             if (desc.attrs & JSPROP_SETTER) {
-                return ExternalGetOrSet(cx, receiver, id, CastAsObjectJsval(desc.setter),
+                return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
                                         JSACC_WRITE, 1, vp, vp);
             }
             if (desc.attrs & JSPROP_SHORTID)
                 id = INT_TO_JSID(desc.shortid);
-            return CallJSPropertyOpSetter(cx, desc.setter, receiver, id, vp);
+            return CallJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
         }
         if (desc.attrs & JSPROP_READONLY)
             return true;
@@ -862,17 +862,16 @@ proxy_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 }
 
 static JSBool
-proxy_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+proxy_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return JSProxy::get(cx, obj, receiver, id, vp);
+    return JSProxy::get(cx, obj, obj, id, vp);
 }
 
 static JSBool
-proxy_SetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp,
-                  JSBool strict)
+proxy_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    // FIXME (bug 596351): throwing away strict.
-    return JSProxy::set(cx, obj, receiver, id, vp);
+    // TODO: throwing away strict
+    return JSProxy::set(cx, obj, obj, id, vp);
 }
 
 static JSBool

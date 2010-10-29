@@ -3021,14 +3021,13 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
-with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+with_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     return obj->getProto()->getProperty(cx, id, vp);
 }
 
 static JSBool
-with_SetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp,
-                 JSBool strict)
+with_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
     return obj->getProto()->setProperty(cx, id, vp, strict);
 }
@@ -4932,7 +4931,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
 }
 
 static JS_ALWAYS_INLINE bool
-js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
+js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
                                     uintN getHow, Value *vp,
                                     const Shape **shapeOut, JSObject **holderOut)
 {
@@ -5018,11 +5017,8 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
         return JS_TRUE;
     }
 
-    if (!obj2->isNative()) {
-        return obj2->isProxy()
-               ? JSProxy::get(cx, obj2, receiver, id, vp)
-               : obj2->getProperty(cx, id, vp);
-    }
+    if (!obj2->isNative())
+        return obj2->getProperty(cx, id, vp);
 
     shape = (Shape *) prop;
     *shapeOut = shape;
@@ -5033,41 +5029,39 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
     }
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
-    if (!js_NativeGetInline(cx, receiver, obj2, shape, getHow, vp))
+    if (!js_NativeGetInline(cx, obj, obj2, shape, getHow, vp))
         return JS_FALSE;
 
     return JS_TRUE;
 }
 
-bool
-js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
+extern bool
+js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id,
                               uint32 getHow, Value *vp,
                               const Shape **shapeOut, JSObject **holderOut)
 {
-    return js_GetPropertyHelperWithShapeInline(cx, obj, receiver, id, getHow, vp,
-                                               shapeOut, holderOut);
+    return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, shapeOut, holderOut);
 }
 
 static JS_ALWAYS_INLINE JSBool
-js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
-                           uint32 getHow, Value *vp)
+js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
 {
     const Shape *shape;
     JSObject *holder;
-    return js_GetPropertyHelperWithShapeInline(cx, obj, receiver, id, getHow, vp, &shape, &holder);
+    return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, &shape, &holder);
 }
 
-JSBool
+extern JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
 {
-    return js_GetPropertyHelperInline(cx, obj, obj, id, getHow, vp);
+    return js_GetPropertyHelperInline(cx, obj, id, getHow, vp);
 }
 
 JSBool
-js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+js_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
-    return js_GetPropertyHelperInline(cx, obj, receiver, id, JSGET_METHOD_BARRIER, vp);
+    return js_GetPropertyHelperInline(cx, obj, id, JSGET_METHOD_BARRIER, vp);
 }
 
 JSBool
@@ -5103,7 +5097,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
     if (obj->isXML())
         return js_GetXMLMethod(cx, obj, id, vp);
 #endif
-    return op(cx, obj, obj, id, vp);
+    return op(cx, obj, id, vp);
 }
 
 JS_FRIEND_API(bool)
@@ -5158,7 +5152,7 @@ JSObject::reportNotExtensible(JSContext *cx, uintN report)
  * (defineHow & JSDNP_CACHE_RESULT).
  */
 JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, uintN defineHow,
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      Value *vp, JSBool strict)
 {
     int protoIndex;
@@ -5184,11 +5178,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, 
     if (protoIndex < 0)
         return JS_FALSE;
     if (prop) {
-        if (!pobj->isNative()) {
-            if (pobj->isProxy())
-                return JSProxy::set(cx, pobj, receiver, id, vp);
+        if (!pobj->isNative())
             prop = NULL;
-        }
     } else {
         /* We should never add properties to lexical blocks.  */
         JS_ASSERT(!obj->isBlock());
@@ -5245,7 +5236,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, 
         }
 
         attrs = shape->attributes();
-        if (pobj != receiver) {
+        if (pobj != obj) {
             /*
              * We found id in a prototype object: prepare to share or shadow.
              *
@@ -5264,7 +5255,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, 
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return JS_TRUE;
 
-                return shape->set(cx, receiver, vp);
+                return shape->set(cx, obj, vp);
             }
 
             /* Restore attrs to the ECMA default for new properties. */
@@ -5386,9 +5377,9 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, 
 }
 
 JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp, JSBool strict)
+js_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    return js_SetPropertyHelper(cx, obj, receiver, id, 0, vp, strict);
+    return js_SetPropertyHelper(cx, obj, id, 0, vp, strict);
 }
 
 JSBool
