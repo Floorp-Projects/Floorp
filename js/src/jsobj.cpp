@@ -3023,7 +3023,7 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 static JSBool
-with_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     return obj->getProto()->getProperty(cx, id, vp);
 }
@@ -4933,7 +4933,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
 }
 
 static JS_ALWAYS_INLINE bool
-js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
+js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
                                     uintN getHow, Value *vp,
                                     const Shape **shapeOut, JSObject **holderOut)
 {
@@ -5019,8 +5019,11 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
         return JS_TRUE;
     }
 
-    if (!obj2->isNative())
-        return obj2->getProperty(cx, id, vp);
+    if (!obj2->isNative()) {
+        return obj2->isProxy()
+               ? JSProxy::get(cx, obj2, receiver, id, vp)
+               : obj2->getProperty(cx, id, vp);
+    }
 
     shape = (Shape *) prop;
     *shapeOut = shape;
@@ -5031,39 +5034,41 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, jsid id,
     }
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
-    if (!js_NativeGetInline(cx, obj, obj2, shape, getHow, vp))
+    if (!js_NativeGetInline(cx, receiver, obj2, shape, getHow, vp))
         return JS_FALSE;
 
     return JS_TRUE;
 }
 
-extern bool
-js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id,
+bool
+js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
                               uint32 getHow, Value *vp,
                               const Shape **shapeOut, JSObject **holderOut)
 {
-    return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, shapeOut, holderOut);
+    return js_GetPropertyHelperWithShapeInline(cx, obj, receiver, id, getHow, vp,
+                                               shapeOut, holderOut);
 }
 
 static JS_ALWAYS_INLINE JSBool
-js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
+                           uint32 getHow, Value *vp)
 {
     const Shape *shape;
     JSObject *holder;
-    return js_GetPropertyHelperWithShapeInline(cx, obj, id, getHow, vp, &shape, &holder);
-}
-
-extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
-{
-    return js_GetPropertyHelperInline(cx, obj, id, getHow, vp);
+    return js_GetPropertyHelperWithShapeInline(cx, obj, receiver, id, getHow, vp, &shape, &holder);
 }
 
 JSBool
-js_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+{
+    return js_GetPropertyHelperInline(cx, obj, obj, id, getHow, vp);
+}
+
+JSBool
+js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
-    return js_GetPropertyHelperInline(cx, obj, id, JSGET_METHOD_BARRIER, vp);
+    return js_GetPropertyHelperInline(cx, obj, receiver, id, JSGET_METHOD_BARRIER, vp);
 }
 
 JSBool
@@ -5099,7 +5104,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
     if (obj->isXML())
         return js_GetXMLMethod(cx, obj, id, vp);
 #endif
-    return op(cx, obj, id, vp);
+    return op(cx, obj, obj, id, vp);
 }
 
 JS_FRIEND_API(bool)
@@ -5180,8 +5185,26 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     if (protoIndex < 0)
         return JS_FALSE;
     if (prop) {
-        if (!pobj->isNative())
+        if (!pobj->isNative()) {
+            if (pobj->isProxy()) {
+                AutoPropertyDescriptorRooter pd(cx);
+                if (!pobj->getProxyHandler()->getPropertyDescriptor(cx, pobj, id, true, &pd))
+                    return false;
+
+                if (pd.attrs & JSPROP_SHARED)
+                    return CallSetter(cx, obj, id, pd.setter, pd.attrs, pd.shortid, vp);
+
+                if (pd.attrs & JSPROP_READONLY) {
+                    if (strict)
+                        return obj->reportReadOnly(cx, id);
+                    if (JS_HAS_STRICT_OPTION(cx))
+                        return obj->reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+                    return true;
+                }
+            }
+
             prop = NULL;
+        }
     } else {
         /* We should never add properties to lexical blocks.  */
         JS_ASSERT(!obj->isBlock());

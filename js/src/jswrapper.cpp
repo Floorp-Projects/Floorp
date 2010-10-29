@@ -204,13 +204,14 @@ JSWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 bool
 JSWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
 {
-    GET(JS_GetPropertyById(cx, wrappedObject(wrapper), id, Jsvalify(vp)));
+    GET(wrappedObject(wrapper)->getProperty(cx, receiver, id, vp));
 }
 
 bool
 JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
 {
-    SET(JS_SetPropertyById(cx, wrappedObject(wrapper), id, Jsvalify(vp)));
+    // FIXME (bug 596351): Need deal with strict mode.
+    SET(wrappedObject(wrapper)->setProperty(cx, id, vp, false));
 }
 
 bool
