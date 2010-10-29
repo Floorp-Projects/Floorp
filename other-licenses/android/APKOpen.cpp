@@ -34,29 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * This custom library loading code is only meant to be called
- * during initialization. As a result, it takes no special 
- * precautions to be threadsafe. Any of the library loading functions
- * like mozload should not be available to other code.
- */
-
 #include <jni.h>
 #include <android/log.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <sys/limits.h>
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <endian.h>
 #include <unistd.h>
 #include <zlib.h>
-#include <linux/ashmem.h>
 #include "dlfcn.h"
 #include "APKOpen.h"
 
@@ -119,27 +109,7 @@ struct cdir_end {
 
 static size_t zip_size;
 static int zip_fd;
-static struct mapping_info * lib_mapping;
-
-NS_EXPORT const struct mapping_info *
-getLibraryMapping()
-{
-  return lib_mapping;
-}
-
-static int
-createAshmem(size_t bytes)
-{
-  int fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
-  if (fd < 0)
-    return -1;
-
-  if (!ioctl(fd, ASHMEM_SET_SIZE, bytes))
-    return fd;
-
-  close(fd);
-  return -1;
-}
+NS_EXPORT struct mapping_info * lib_mapping;
 
 static void * map_file (const char *file)
 {
@@ -350,80 +320,6 @@ extractLib(const struct cdir_entry *entry, void * data, void * dest)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "File not fully uncompressed! %d / %d", strm.total_out, letoh32(entry->uncompressed_size));
 }
 
-static int cache_count = 0;
-static struct lib_cache_info *cache_mapping = NULL;
-
-NS_EXPORT const struct lib_cache_info *
-getLibraryCache()
-{
-  return cache_mapping;
-}
-
-static void
-ensureLibCache()
-{
-  if (!cache_mapping)
-    cache_mapping = (struct lib_cache_info *)calloc(MAX_LIB_CACHE_ENTRIES,
-                                                    sizeof(*cache_mapping));
-}
-
-static void
-fillLibCache(const char *buf)
-{
-  ensureLibCache();
-
-  char * str = strdup(buf);
-  if (!str)
-    return;
-
-  char * saveptr;
-  char * nextstr = str;
-  do {
-    struct lib_cache_info *info = &cache_mapping[cache_count];
-
-    char * name = strtok_r(nextstr, ":", &saveptr);
-    if (!name)
-      break;
-    nextstr = NULL;
-
-    char * fd_str = strtok_r(NULL, ";", &saveptr);
-    if (!fd_str)
-      break;
-
-    long int fd = strtol(fd_str, NULL, 10);
-    if (fd == LONG_MIN || fd == LONG_MAX)
-      break;
-    strncpy(info->name, name, MAX_LIB_CACHE_NAME_LEN - 1);
-    info->fd = fd;
-  } while (cache_count++ < MAX_LIB_CACHE_ENTRIES);
-  free(str);
-}
-
-static int
-lookupLibCacheFd(const char *libName)
-{
-  if (!cache_mapping)
-    return -1;
-
-  int count = cache_count;
-  while (count--) {
-    struct lib_cache_info *info = &cache_mapping[count];
-    if (!strcmp(libName, info->name))
-      return info->fd;
-  }
-  return -1;
-}
-
-static void
-addLibCacheFd(const char *libName, int fd)
-{
-  ensureLibCache();
-
-  struct lib_cache_info *info = &cache_mapping[cache_count++];
-  strncpy(info->name, libName, MAX_LIB_CACHE_NAME_LEN - 1);
-  info->fd = fd;
-}
-
 static void * mozload(const char * path, void *zip,
                       struct cdir_entry *cdir_start, uint16_t cdir_entries)
 {
@@ -442,7 +338,9 @@ static void * mozload(const char * path, void *zip,
     snprintf(fullpath, 256, "/data/data/org.mozilla.fennec/%s", path + 4);
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
     extractFile(fullpath, entry, data);
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "%s: 1", fullpath);
     handle = __wrap_dlopen(fullpath, RTLD_LAZY);
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "%s: 2", fullpath);
     if (!handle)
       __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't load %s because %s", fullpath, __wrap_dlerror());
 #ifdef DEBUG
@@ -460,48 +358,32 @@ static void * mozload(const char * path, void *zip,
 
   int fd = zip_fd;
   void * buf = NULL;
-  uint32_t lib_size = letoh32(entry->uncompressed_size);
   if (letoh16(file->compression) == DEFLATE) {
-    int cache_fd = lookupLibCacheFd(path + 4);
-    fd = cache_fd;
-    if (fd < 0)
-      fd = createAshmem(lib_size);
-#ifdef DEBUG
-    else
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s from cache", path + 4);
-#endif
-    if (fd < 0) {
-      __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get an ashmem buffer");
-      return NULL;
-    }
-    buf = mmap(NULL, lib_size,
-               PROT_READ | PROT_WRITE,
-               MAP_SHARED, fd, 0);
+    fd = -1;
+    buf = mmap(NULL, letoh32(entry->uncompressed_size),
+               PROT_READ | PROT_WRITE | PROT_EXEC,
+               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (buf == (void *)-1) {
       __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't mmap decompression buffer");
-      close(fd);
       return NULL;
     }
 
     offset = 0;
 
-    if (cache_fd < 0) {
-      extractLib(entry, data, buf);
-      addLibCacheFd(path + 4, fd);
-    }
+    extractLib(entry, data, buf);
     data = buf;
   }
 
 #ifdef DEBUG
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d (0x%08x) and offset %d (0x%08x)", path, lib_size, lib_size, offset, offset);
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d and offset %d", path, letoh32(entry->uncompressed_size), offset);
 #endif
 
   handle = moz_mapped_dlopen(path, RTLD_LAZY, fd, data,
-                             lib_size, offset);
+                             letoh32(entry->uncompressed_size), offset);
   if (!handle)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't load %s because %s", path, __wrap_dlerror());
   if (buf)
-    munmap(buf, lib_size);
+    munmap(buf, letoh32(entry->uncompressed_size));
 
 #ifdef DEBUG
   gettimeofday(&t1, 0);
@@ -668,11 +550,7 @@ ChildProcessInit(int argc, char* argv[])
     break;
   }
 
-  fillLibCache(argv[argc - 1]);
   loadLibs(argv[i]);
-
-  // don't pass the last arg - it's only recognized by the lib cache
-  argc--;
 
   typedef GeckoProcessType (*XRE_StringToChildProcessType_t)(char*);
   typedef nsresult (*XRE_InitChildProcess_t)(int, char**, GeckoProcessType);
