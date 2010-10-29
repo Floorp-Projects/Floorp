@@ -1416,6 +1416,11 @@ struct JSRuntime {
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
 
+    /*
+     * Right now, we only support runtime-wide debugging.
+     */
+    JSBool              debugMode;
+
 #ifdef JS_TRACER
     /* True if any debug hooks not supported by the JIT are enabled. */
     bool debuggerInhibitsJIT() const {
