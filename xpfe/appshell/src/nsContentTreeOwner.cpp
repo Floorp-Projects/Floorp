@@ -124,6 +124,7 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome3)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
    // NOTE: This is using aggregation because there are some properties and
@@ -427,6 +428,29 @@ nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
   if (aPersistSizeMode)
     *aPersistSizeMode = persistString.Find("sizemode") >= 0 ? PR_TRUE : PR_FALSE;
 
+  return NS_OK;
+}
+
+//*****************************************************************************
+// nsContentTreeOwner::nsIWebBrowserChrome3
+//*****************************************************************************   
+
+NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(const nsAString &originalTarget,
+                                                        nsIURI *linkURI,
+                                                        nsIDOMNode *linkNode,
+                                                        PRBool isAppTab,
+                                                        nsAString &_retval)
+{
+  NS_ENSURE_STATE(mXULWindow);
+
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
+  mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
+
+  if (xulBrowserWindow)
+    return xulBrowserWindow->OnBeforeLinkTraversal(originalTarget, linkURI,
+                                                   linkNode, isAppTab, _retval);
+  
+  _retval = originalTarget;
   return NS_OK;
 }
 

@@ -27,6 +27,7 @@ function get_item(items, url) {
       return items[i];
   }
   ok(false, "Item for " + url + " was not listed");
+  return null;
 }
 
 function confirm_install(window) {
@@ -40,7 +41,7 @@ function confirm_install(window) {
   var introStringNode = window.document.getElementById("itemWarningIntro");
   is(introStringNode.textContent, expectedIntroString, "Should have the correct intro string");
 
-  items = window.document.getElementById("itemList").childNodes;
+  var items = window.document.getElementById("itemList").childNodes;
   is(items.length, 5, "Should be 5 items listed in the confirmation dialog");
   let item = get_item(items, TESTROOT + "signed.xpi");
   if (item) {

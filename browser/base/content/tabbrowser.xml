@@ -191,6 +191,8 @@
           this.tabContainer._positionPinnedTabs();
           this.tabContainer.adjustTabstrip();
 
+          this.getBrowserForTab(aTab).docShell.isAppTab = true;
+
           let event = document.createEvent("Events");
           event.initEvent("TabPinned", true, false);
           aTab.dispatchEvent(event);
@@ -209,6 +211,8 @@
           aTab.style.MozMarginStart = "";
           this.tabContainer._positionPinnedTabs();
           this.tabContainer.adjustTabstrip();
+
+          this.getBrowserForTab(aTab).docShell.isAppTab = false;
 
           let event = document.createEvent("Events");
           event.initEvent("TabUnpinned", true, false);

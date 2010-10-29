@@ -543,7 +543,10 @@ nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
     return;
 
   NS_LOG_ACCDOCDESTROY("presshell destroyed", doc)
-  ShutdownDocAccessible(doc);
+
+  nsDocAccessible* docAccessible = GetDocAccessibleFromCache(doc);
+  if (docAccessible)
+    docAccessible->Shutdown();
 }
 
 void

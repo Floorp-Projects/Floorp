@@ -5006,8 +5006,8 @@ BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
 
-case "$target_os" in
-darwin*|*wince*|*winmo*)
+case "${target}" in
+*android*|*darwin*|*wince*|*winmo*)
     ACCESSIBILITY=
     ;;
 *)
@@ -8512,31 +8512,6 @@ if test "$MOZ_TREE_CAIRO"; then
           AC_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
 
-        AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
-        if test -z "$HAS_DDRAW"; then
-            AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
-            DDRAW_SURFACE_FEATURE=
-        else
-            DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
-        fi
-
-        if test -z "$OGLES_SDK_DIR"; then
-            OGLES_SURFACE_FEATURE=
-        else
-            AC_TRY_COMPILE([
-              #include <EGL/egl.h>
-              #include <EGL/eglext.h>
-              #include <GLES2/gl2.h>
-              #include <GLES2/gl2ext.h>
-            ], [ EGLDisplay _cairo_ddraw_egl_dpy = EGL_NO_DISPLAY;], HAS_OGLES=1, HAS_OGLES=)
-            if test -z "$HAS_OGLES"; then
-              AC_MSG_WARN([OpenGL ES2 headers not found, disabling OpenGL acceleration surfaces.])
-              OGLES_SURFACE_FEATURE=
-            else
-              OGLES_SURFACE_FEATURE="#define CAIRO_DDRAW_USE_GL 1"
-            fi
-        fi
-
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
@@ -8581,8 +8556,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(QUARTZ_IMAGE_SURFACE_FEATURE)
     AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
-    AC_SUBST(DDRAW_SURFACE_FEATURE)
-    AC_SUBST(OGLES_SURFACE_FEATURE)    
     AC_SUBST(OS2_SURFACE_FEATURE)
     AC_SUBST(BEOS_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)

@@ -160,8 +160,8 @@ extern soinfo libdl_info;
 #define LIBLAST 0x70000000
 #define LIBINC  0x00100000
 #else
-#define LIBBASE 0x90000000
-#define LIBLAST 0xA0000000
+#define LIBBASE 0x70000000
+#define LIBLAST 0x80000000
 #define LIBINC  0x00100000
 #endif
 

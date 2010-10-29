@@ -3106,7 +3106,8 @@ NS_IMETHODIMP
 nsNavHistoryQueryResultNode::OnItemAdded(PRInt64 aItemId,
                                          PRInt64 aFolder,
                                          PRInt32 aIndex,
-                                         PRUint16 aItemType)
+                                         PRUint16 aItemType,
+                                         nsIURI* aURI)
 {
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
       mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
@@ -3804,7 +3805,8 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
                                           PRInt64 aParentFolder,
                                           PRInt32 aIndex,
-                                          PRUint16 aItemType)
+                                          PRUint16 aItemType,
+                                          nsIURI* aURI)
 {
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
 
@@ -3837,11 +3839,9 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   // in results and views.
   PRBool isQuery = PR_FALSE;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
-    nsCOMPtr<nsIURI> itemURI;
-    rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(itemURI));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(aURI, "Got a null URI when we are a bookmark?!");
     nsCAutoString itemURISpec;
-    rv = itemURI->GetSpec(itemURISpec);
+    rv = aURI->GetSpec(itemURISpec);
     NS_ENSURE_SUCCESS(rv, rv);
     isQuery = IsQueryURI(itemURISpec);
   }
@@ -3851,7 +3851,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     // don't update items when we aren't displaying them, but we still need
     // to adjust bookmark indices to account for the insertion
     ReindexRange(aIndex, PR_INT32_MAX, 1);
-    return NS_OK; 
+    return NS_OK;
   }
 
   if (!StartIncrementalUpdate())
@@ -4157,8 +4157,18 @@ nsNavHistoryFolderResultNode::OnItemMoved(PRInt64 aItemId, PRInt64 aOldParent,
     // moving between two different folders, just do a remove and an add
     if (aOldParent == mItemId)
       OnItemRemoved(aItemId, aOldParent, aOldIndex, aItemType);
-    if (aNewParent == mItemId)
-      OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType);
+    if (aNewParent == mItemId) {
+      nsCOMPtr<nsIURI> itemURI;
+      if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
+        nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+        NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+        nsresult rv =
+          bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(itemURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      OnItemAdded(aItemId, aNewParent, aNewIndex, aItemType, itemURI);
+    }
   }
   return NS_OK;
 }
@@ -4616,13 +4626,18 @@ NS_IMETHODIMP
 nsNavHistoryResult::OnItemAdded(PRInt64 aItemId,
                                 PRInt64 aParentId,
                                 PRInt32 aIndex,
-                                PRUint16 aItemType)
+                                PRUint16 aItemType,
+                                nsIURI* aURI)
 {
   ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aParentId,
-      OnItemAdded(aItemId, aParentId, aIndex, aItemType));
-  ENUMERATE_HISTORY_OBSERVERS(OnItemAdded(aItemId, aParentId, aIndex, aItemType));
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnItemAdded(aItemId, aParentId, aIndex,
-                                                aItemType));
+    OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI)
+  );
+  ENUMERATE_HISTORY_OBSERVERS(
+    OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI)
+  );
+  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
+    OnItemAdded(aItemId, aParentId, aIndex, aItemType, aURI)
+  );
   return NS_OK;
 }
 

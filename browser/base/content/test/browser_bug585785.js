@@ -1,5 +1,4 @@
 var tab;
-var performedTest = false;
 
 function test() {
   waitForExplicitFinish();
@@ -7,25 +6,31 @@ function test() {
   tab = gBrowser.addTab();
   isnot(tab.getAttribute("fadein"), "true", "newly opened tab is yet to fade in");
 
-  // Remove the tab right before the opening animation's first frame
+  // Try to remove the tab right before the opening animation's first frame
   window.mozRequestAnimationFrame(checkAnimationState);
-  executeSoon(checkAnimationState);
 }
 
 function checkAnimationState() {
-  if (performedTest)
-    return;
-
   if (tab.getAttribute("fadein") != "true") {
     window.mozRequestAnimationFrame(checkAnimationState);
-    executeSoon(checkAnimationState);
     return;
   }
 
-  performedTest = true;
-
   info(window.getComputedStyle(tab).maxWidth);
-  gBrowser.removeTab(tab, {animate:true});
-  ok(!tab.parentNode, "tab successfully removed");
-  finish();
+  gBrowser.removeTab(tab, { animate: true });
+  if (!tab.parentNode) {
+    ok(true, "tab removed synchronously since the opening animation hasn't moved yet");
+    finish();
+    return;
+  }
+
+  info("tab didn't close immediately, so the tab opening animation must have started moving");
+  info("waiting for the tab to close asynchronously");
+  tab.addEventListener("transitionend", function (event) {
+    if (event.propertyName == "max-width")
+      executeSoon(function () {
+        ok(!tab.parentNode, "tab removed asynchronously");
+        finish();
+      });
+  }, false);
 }

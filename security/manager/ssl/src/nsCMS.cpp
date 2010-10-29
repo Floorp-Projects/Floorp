@@ -203,7 +203,7 @@ NS_IMETHODIMP nsCMSMessage::GetSignerCert(nsIX509Cert **scert)
   if (si->cert) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerCert got signer cert\n"));
 
-    *scert = new nsNSSCertificate(si->cert);
+    *scert = nsNSSCertificate::Create(si->cert);
     if (*scert) {
       (*scert)->AddRef();
     }

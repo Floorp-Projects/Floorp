@@ -128,7 +128,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
     if (!nssCert)
       return NS_ERROR_FAILURE;
 
-    status->mServerCert = new nsNSSCertificate(nssCert);
+    status->mServerCert = nsNSSCertificate::Create(nssCert);
     CERT_DestroyCertificate(nssCert);
 
     status->mHaveCertErrorBits = PR_TRUE;

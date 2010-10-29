@@ -108,8 +108,6 @@ JSString::flatten()
     jschar *chars;
     size_t capacity;
     JS_ASSERT(isRope());
-    if (!isRope())
-        JS_CRASH(0xe0 | (mLengthAndFlags & TYPE_FLAGS_MASK));
 
     /*
      * This can be called from any string in the rope, so first traverse to the
@@ -131,7 +129,7 @@ JSString::flatten()
      * interior node with a NULL parent, so that we end up at NULL when we are
      * done processing it.
      */
-    topNode->convertToInteriorNode((JSString *) 0x2);
+    topNode->convertToInteriorNode(NULL);
     JSString *str = topNode, *next;
     size_t pos = 0;
 
@@ -139,7 +137,7 @@ JSString::flatten()
      * Traverse the tree, making each interior string dependent on the resulting
      * string.
      */
-    while (str != (JSString *) 0x2) {
+    while (str) {
         switch (str->ropeTraversalCount()) {
           case 0:
             next = str->ropeLeft();
@@ -299,9 +297,6 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         buf[length] = 0;
         return shortStr->header();
     }
-
-    left->checkCompartment(cx, 0xd0);
-    right->checkCompartment(cx, 0xd4);
 
     /*
      * We need to enforce a tree structure in ropes: every node needs to have a
@@ -985,7 +980,7 @@ str_substring(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         length = str->length();
         begin = js_DoubleToInteger(d);
-        if (argc == 1) {
+        if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
             if (!ValueToNumber(cx, vp[3], &d))
@@ -1229,8 +1224,6 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
     return -1;
 }
 
-namespace {
-
 struct MemCmp {
     typedef jsuint Extent;
     static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, jsuint patlen) {
@@ -1254,8 +1247,6 @@ struct ManualCmp {
         return true;
     }
 };
-
-}
 
 template <class InnerMatch>
 static jsint
@@ -2722,7 +2713,7 @@ str_substr(JSContext *cx, uintN argc, Value *vp)
             begin = length;
         }
 
-        if (argc == 1) {
+        if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
             if (!ValueToNumber(cx, vp[3], &d))
@@ -2819,7 +2810,7 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
             begin = length;
         }
 
-        if (argc == 1) {
+        if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
             if (!ValueToNumber(cx, vp[3], &end))

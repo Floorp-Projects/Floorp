@@ -248,3 +248,6 @@ patch -p3 < reduce-warnings-1.patch
 patch -p3 < subpixel-qword.patch
 # Patch to compile with Sun Studio on Solaris
 patch -p3 < solaris.patch
+# Patch to fix frame buffer reference counting and parition length overflow
+#  checks.
+patch -p3 < frame_buf_ref.patch

@@ -46,6 +46,20 @@
 #include "prlog.h"
 #include "nsThreadUtilsInternal.h"
 
+#define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
+                      _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
+                      !(_POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700)
+
+#if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \
+  && defined(_GNU_SOURCE)
+# define MOZ_CANARY
+# include <unistd.h>
+# include <execinfo.h>
+# include <signal.h>
+# include <fcntl.h>
+# include "nsXULAppAPI.h"
+#endif
+
 #include "mozilla/FunctionTimer.h"
 #if defined(NS_FUNCTION_TIMER) && defined(_MSC_VER)
 #include "nsTimerImpl.h"
@@ -500,6 +514,51 @@ nsThread::HasPendingEvents(PRBool *result)
   return NS_OK;
 }
 
+#ifdef MOZ_CANARY
+void canary_alarm_handler (int signum);
+
+class Canary {
+//XXX ToDo: support nested loops
+public:
+  Canary() {
+    if (sOutputFD != 0 && NS_IsMainThread() && 
+        XRE_GetProcessType() == GeckoProcessType_Default) {
+      if (sOutputFD == -1) {
+        const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NONBLOCK;
+        const mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        char* env_var_flag = getenv("MOZ_KILL_CANARIES");
+        sOutputFD = env_var_flag ? (env_var_flag[0] ?
+                                    open(env_var_flag, flags, mode) :
+                                    STDERR_FILENO) : 0;
+        if (sOutputFD == 0)
+          return;
+      }
+      signal(SIGALRM, canary_alarm_handler);
+      ualarm(15000, 0);      
+    }
+  }
+
+  ~Canary() {
+    if (sOutputFD != 0 && NS_IsMainThread() && 
+        XRE_GetProcessType() == GeckoProcessType_Default)
+      ualarm(0, 0);
+  }
+  static int sOutputFD;
+};
+
+int Canary::sOutputFD = -1;
+
+void canary_alarm_handler (int signum)
+{
+  void *array[30];
+  const char msg[29] = "event took too long to run:\n";
+  // use write to be safe in the signal handler
+  write(Canary::sOutputFD, msg, sizeof(msg)); 
+  backtrace_symbols_fd(array, backtrace(array, 30), Canary::sOutputFD);
+}
+
+#endif
+
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
 {
@@ -518,6 +577,9 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
 
   ++mRunningEvent;
 
+#ifdef MOZ_CANARY
+  Canary canary;
+#endif
   nsresult rv = NS_OK;
 
   {
