@@ -1188,7 +1188,7 @@ NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
 
 /**
  * A macro to implement getter and setter for action and form action content
- * attributes. It's very similar to NS_IMPL_URI_ATTR expected that if the
+ * attributes. It's very similar to NS_IMPL_URI_ATTR excepted that if the
  * content attribute is the empty string, the empty string is returned.
  */
 #define NS_IMPL_ACTION_ATTR(_class, _method, _atom)                 \
