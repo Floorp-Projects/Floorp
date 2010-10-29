@@ -1050,7 +1050,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         Jump fast;
         MaybeJump firstStubJump;
 
-        if (lhsInt || rhsInt || (!lhs->isTypeKnown() && !rhs->isTypeKnown())) {
+        if ((!lhs->isTypeKnown() || lhsInt) && (!rhs->isTypeKnown() || rhsInt)) {
             if (!lhsInt) {
                 Jump lhsFail = masm.testInt32(Assembler::NotEqual, lvr.typeReg());
                 stubcc.linkExitDirect(lhsFail, stubEntry);
@@ -1102,13 +1102,17 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         JS_ASSERT(!lhs->isType(JSVAL_TYPE_STRING) && !rhs->isType(JSVAL_TYPE_STRING));
 
         /* Test the types. */
-        if (!lhsInt) {
-            Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
-            stubcc.linkExit(lhsFail, Uses(2));
-        }
-        if (!rhsInt) {
-            Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
-            stubcc.linkExit(rhsFail, Uses(2));
+        if ((lhs->isTypeKnown() && !lhsInt) || (rhs->isTypeKnown() && !rhsInt)) {
+            stubcc.linkExit(masm.jump(), Uses(2));
+        } else {
+            if (!lhsInt) {
+                Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
+                stubcc.linkExit(lhsFail, Uses(2));
+            }
+            if (!rhsInt) {
+                Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
+                stubcc.linkExit(rhsFail, Uses(2));
+            }
         }
 
         stubcc.leave();

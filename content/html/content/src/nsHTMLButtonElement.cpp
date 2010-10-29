@@ -439,7 +439,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               if (NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
                 nsIEventStateManager* esm =
                   aVisitor.mPresContext->EventStateManager();
-                nsEventStateManager::SetGlobalActiveContent(
+                nsEventStateManager::SetActiveManager(
                   static_cast<nsEventStateManager*>(esm), this);
               }
               nsIFocusManager* fm = nsFocusManager::GetFocusManager();

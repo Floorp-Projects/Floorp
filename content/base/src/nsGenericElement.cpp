@@ -3568,17 +3568,17 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     }
   }
 
-  PRUint32 childCount = aChildArray.ChildCount();
-  NS_ENSURE_TRUE(aIndex <= childCount, NS_ERROR_ILLEGAL_VALUE);
-
   // The id-handling code, and in the future possibly other code, need to
   // react to unexpected attribute changes.
   nsMutationGuard::DidMutate();
 
-  PRBool isAppend = (aIndex == childCount);
-
+  // Do this before checking the child-count since this could cause mutations
   nsIDocument* doc = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+
+  PRUint32 childCount = aChildArray.ChildCount();
+  NS_ENSURE_TRUE(aIndex <= childCount, NS_ERROR_ILLEGAL_VALUE);
+  PRBool isAppend = (aIndex == childCount);
 
   rv = aChildArray.InsertChildAt(aKid, aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4019,6 +4019,8 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
   nsresult res = NS_OK;
   PRInt32 insPos;
 
+  mozAutoDocConditionalContentUpdateBatch batch(GetCurrentDoc(), PR_TRUE);
+
   // Figure out which index to insert at
   if (aRefChild) {
     insPos = IndexOf(aRefChild);
@@ -4079,11 +4081,6 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
                    "ownerDocument changed again after adopting!");
     }
   }
-
-  // We want an update batch when we expect several mutations to be performed,
-  // which is when we're replacing a node, or when we're inserting a fragment.
-  mozAutoDocConditionalContentUpdateBatch batch(GetCurrentDoc(),
-    aReplace || nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
 
   // If we're replacing
   if (aReplace) {
@@ -5328,7 +5325,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
           nsIEventStateManager* esm =
             aVisitor.mPresContext->EventStateManager();
-          nsEventStateManager::SetGlobalActiveContent(
+          nsEventStateManager::SetActiveManager(
             static_cast<nsEventStateManager*>(esm), this);
         }
       }

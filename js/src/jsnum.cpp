@@ -104,14 +104,12 @@ JS_STATIC_ASSERT(uintptr_t(PTRDIFF_MAX) + uintptr_t(1) == uintptr_t(PTRDIFF_MIN)
 
 #endif /* JS_HAVE_STDINT_H */
 
-namespace {
-
 /*
  * If we're accumulating a decimal number and the number is >= 2^53, then the
  * fast result from the loop in GetPrefixInteger may be inaccurate. Call
  * js_strtod_harder to get the correct answer.
  */
-bool
+static bool
 ComputeAccurateDecimalInteger(JSContext *cx, const jschar *start, const jschar *end, jsdouble *dp)
 {
     size_t length = end - start;
@@ -186,7 +184,7 @@ class BinaryDigitReader
  * down.  An example occurs when reading the number 0x1000000000000081, which
  * rounds to 0x1000000000000000 instead of 0x1000000000000100.
  */
-jsdouble
+static jsdouble
 ComputeAccurateBinaryBaseInteger(JSContext *cx, const jschar *start, const jschar *end, int base)
 {
     BinaryDigitReader bdr(base, start, end);
@@ -225,8 +223,6 @@ ComputeAccurateBinaryBaseInteger(JSContext *cx, const jschar *start, const jscha
 
     return value;
 }
-
-} // namespace
 
 namespace js {
 
@@ -346,9 +342,7 @@ ParseFloat(JSContext* cx, JSString* str)
 }
 #endif
 
-namespace {
-
-bool
+static bool
 ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int maybeRadix,
                      bool stripPrefix, jsdouble *dp)
 {
@@ -401,7 +395,7 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
     return true;
 }
 
-jsdouble
+static jsdouble
 ParseIntDoubleHelper(jsdouble d)
 {
     if (!JSDOUBLE_IS_FINITE(d))
@@ -412,8 +406,6 @@ ParseIntDoubleHelper(jsdouble d)
         return -floor(-d);
     return 0;
 }
-
-} // namespace
 
 /* See ECMA 15.1.2.2. */
 static JSBool

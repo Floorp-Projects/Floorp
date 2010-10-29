@@ -3288,14 +3288,17 @@ RENDER_AGAIN:
     case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
     {
-      // inset the caption area so it doesn't overflow.
       RECT rect = widgetRect;
       PRInt32 offset = GetSystemMetrics(SM_CXFRAME);
+      rect.bottom -= 1;
+
+      // first fill the area to the color of the window background
+      FillRect(hdc, &rect, (HBRUSH)(COLOR_3DFACE+1));
+
+      // inset the caption area so it doesn't overflow.
       rect.top += offset;
       rect.left += offset;
       rect.right -= offset;
-      rect.bottom -= 1;
-
       // if enabled, draw a gradient titlebar background, otherwise
       // fill with a solid color.
       BOOL bFlag = TRUE;

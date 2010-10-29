@@ -655,7 +655,7 @@ nsTextControlFrame::ScrollOnFocusEvent::Run()
       mFrame->mScrollEvent.Forget();
       selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                       nsISelectionController::SELECTION_FOCUS_REGION,
-                                      PR_TRUE);
+                                      nsISelectionController::SCROLL_SYNCHRONOUS);
     }
   }
   return NS_OK;
@@ -856,7 +856,7 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   // Scroll the selection into view (see bug 231389)
   return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                          nsISelectionController::SELECTION_FOCUS_REGION,
-                                         PR_FALSE);
+                                         nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
 }
 
 nsresult
@@ -1370,11 +1370,11 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   // than descending from the root frame of the frame hierarchy.
   if (first) {
     first->AddStateBits(NS_FRAME_REFLOW_ROOT);
-  }
 
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
-  txtCtrl->InitializeKeyboardEventListeners();
+    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+    NS_ASSERTION(txtCtrl, "Content not a text control element");
+    txtCtrl->InitializeKeyboardEventListeners();
+  }
   return rv;
 }
 

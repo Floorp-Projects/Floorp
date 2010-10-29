@@ -4431,13 +4431,13 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
-  CompartmentPrivate(char *origin, bool preferXrays)
+  CompartmentPrivate(char *origin, bool wantXrays)
     : origin(origin),
-      preferXrays(preferXrays)
+      wantXrays(wantXrays)
   {
   }
   char *origin;
-  bool preferXrays;
+  bool wantXrays;
 };
 
 }

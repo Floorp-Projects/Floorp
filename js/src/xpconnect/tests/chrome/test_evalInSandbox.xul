@@ -43,27 +43,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
              "return value was rewrapped correctly");
       }
 
+      function checkCrossOriginXrayedSandbox(sandbox)
+      {
+        ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
+           "wrappers inside eIS are Xrays");
+        ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
+           "must not see expandos");
+        ok('wrappedJSObject' in Cu.evalInSandbox("this.document", sandbox),
+           "wrappers returned from the sandbox are Xrays");
+        ok(!("foo" in Cu.evalInSandbox("this.document", sandbox)),
+           "must not see expandos in wrappers returned from the sandbox");
+
+        ok('wrappedJSObject' in sandbox.document,
+           "values obtained from the sandbox are Xrays");
+        ok(!("foo" in sandbox.document),
+           "must not see expandos in wrappers obtained from the sandbox");
+
+      }
+
       function checkCrossOrigin(ifr) {
         var win = ifr.contentWindow;
         var sandbox =
           new Cu.Sandbox(win, { sandboxPrototype: win, wantXrays: true } );
 
         checkCrossOriginSandbox(sandbox);
-
-        ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
-           "wrappers inside eIS are XPCNativeWrappers");
-        ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
-           "must not see expandos");
+        checkCrossOriginXrayedSandbox(sandbox);
 
         sandbox =
           new Cu.Sandbox(win, { sandboxPrototype: win } );
 
         checkCrossOriginSandbox(sandbox);
-
-        ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
-           "wrappers inside eIS are XPCNativeWrappers");
-        ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),
-           "must not see expandos");
+        checkCrossOriginXrayedSandbox(sandbox);
 
         sandbox =
           new Cu.Sandbox(win, { sandboxPrototype: win, wantXrays: false } );
@@ -72,6 +82,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
         ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
            "can see expandos");
+        ok(("foo" in Cu.evalInSandbox("this.document", sandbox)),
+           "must see expandos in wrappers returned from the sandbox");
+
+        ok(("foo" in sandbox.document),
+           "must see expandos in wrappers obtained from the sandbox");
 
         testDone();
       }

@@ -467,7 +467,7 @@ static void setup_token_decoder(VP8D_COMP *pbi,
             partition_size = user_data_end - partition;
         }
 
-        if (partition + partition_size > user_data_end)
+        if (user_data_end - partition < partition_size)
             vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
                                "Truncated packet or corrupt partition "
                                "%d length", i + 1);
@@ -569,12 +569,15 @@ int vp8_decode_frame(VP8D_COMP *pbi)
     MACROBLOCKD *const xd  = & pbi->mb;
     const unsigned char *data = (const unsigned char *)pbi->Source;
     const unsigned char *const data_end = data + pbi->source_sz;
-    int first_partition_length_in_bytes;
+    unsigned int first_partition_length_in_bytes;
 
     int mb_row;
     int i, j, k, l;
     const int *const mb_feature_data_bits = vp8_mb_feature_data_bits;
 
+    if (data_end - data < 3)
+        vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
+                           "Truncated packet");
     pc->frame_type = (FRAME_TYPE)(data[0] & 1);
     pc->version = (data[0] >> 1) & 7;
     pc->show_frame = (data[0] >> 4) & 1;
@@ -582,7 +585,7 @@ int vp8_decode_frame(VP8D_COMP *pbi)
         (data[0] | (data[1] << 8) | (data[2] << 16)) >> 5;
     data += 3;
 
-    if (data + first_partition_length_in_bytes > data_end)
+    if (data_end - data < first_partition_length_in_bytes)
         vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
                            "Truncated packet or corrupt partition 0 length");
     vp8_setup_version(pc);

@@ -22,4 +22,4 @@ js1_8/extensions/regress-476414-02.js
 js1_8/extensions/regress-476427.js
 js1_8/regress/regress-464096.js
 js1_8_1/regress/regress-452498-168-2.js
-js1_8_1/trace/regress-451673.js
+js1_8_1/jit/regress-451673.js

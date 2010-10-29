@@ -45,13 +45,9 @@ TESTXPI = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/
 
 include $(DEPTH)/config/autoconf.mk
 
-_TEST_FILES = \
+_MAIN_TEST_FILES = \
   head.js \
   browser_bug557943.js \
-  browser_bug557956.js \
-  browser_bug557956.rdf \
-  browser_bug557956_8_2.xpi \
-  browser_bug557956_9_2.xpi \
   browser_bug562797.js \
   browser_bug562890.js \
   browser_bug562899.js \
@@ -63,28 +59,39 @@ _TEST_FILES = \
   browser_bug581076.js \
   browser_bug587970.js \
   browser_bug591465.js \
-  browser_bug591465.xml \
   browser_bug596336.js \
   browser_details.js \
   browser_discovery.js \
   browser_dragdrop.js \
   browser_list.js \
   browser_searching.js \
-  browser_searching.xml \
-  browser_searching_empty.xml \
   browser_sorting.js \
   browser_uninstalling.js \
-  browser_updatessl.js \
-  browser_updatessl.rdf \
   browser_install.js \
-  browser_install.rdf \
-  browser_install.xml \
-  browser_install1_3.xpi \
-  browser_installssl.js \
   browser_recentupdates.js \
   browser_manualupdates.js \
   browser_globalwarnings.js \
   browser_eula.js \
+  $(NULL)
+
+_TEST_FILES = \
+  head.js \
+  browser_bug557956.js \
+  browser_updatessl.js \
+  browser_installssl.js \
+  $(NULL)
+
+_TEST_RESOURCES = \
+  browser_bug557956.rdf \
+  browser_bug557956_8_2.xpi \
+  browser_bug557956_9_2.xpi \
+  browser_bug591465.xml \
+  browser_searching.xml \
+  browser_searching_empty.xml \
+  browser_updatessl.rdf \
+  browser_install.rdf \
+  browser_install.xml \
+  browser_install1_3.xpi \
   browser_eula.xml \
   redirect.sjs \
   releaseNotes.xhtml \
@@ -94,7 +101,14 @@ _TEST_FILES = \
 
 include $(topsrcdir)/config/rules.mk
 
+libs:: $(_MAIN_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)-window
+
 libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+
+libs:: $(_TEST_RESOURCES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
 libs::

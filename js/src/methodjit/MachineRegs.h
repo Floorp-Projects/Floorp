@@ -51,11 +51,18 @@ struct Registers {
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
-// TODO: Eliminate scratch register (requires rewriting register allocation mechanism)
+    // Homed and scratch registers for working with Values on x64.
 #if defined(JS_CPU_X64)
     static const RegisterID TypeMaskReg = JSC::X86Registers::r13;
     static const RegisterID PayloadMaskReg = JSC::X86Registers::r14;
     static const RegisterID ValueReg = JSC::X86Registers::r15;
+#endif
+
+    // Register that homes the current JSStackFrame.
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
+#elif defined(JS_CPU_ARM)
+    static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
 #endif
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
@@ -355,6 +362,8 @@ struct FPRegisters {
 
     uint32 freeFPMask;
 };
+
+static const JSC::MacroAssembler::RegisterID JSFrameReg = Registers::JSFrameReg;
 
 } /* namespace mjit */
 

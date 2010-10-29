@@ -35,6 +35,7 @@
 
 //load('CSPUtils.jsm');
 Components.utils.import('resource://gre/modules/CSPUtils.jsm');
+Components.utils.import('resource://gre/modules/NetUtil.jsm');
 
 // load the HTTP server
 do_load_httpd_js();
@@ -190,6 +191,7 @@ test(
 
       //"funny characters (#) should not work for host.");
       do_check_eq(null, CSPSource.fromString("a#2-c.com"));
+
       //print(" --- Stop ignoring errors that print ---\n");
 
       //"failed to parse host with port.");
@@ -229,6 +231,16 @@ test(
       do_check_true(src.permits("https://foobar.com"));
       //"src should reject other hosts"
       do_check_false(src.permits("https://a.com"));
+
+      src = CSPSource.create("javascript:", "https://foobar.com:443");
+      //"hostless schemes should be parseable."
+      var aUri = NetUtil.newURI("javascript:alert('foo');");
+      do_check_true(src.permits(aUri));
+      //"src should reject other hosts"
+      do_check_false(src.permits("https://a.com"));
+      //"nothing else should be allowed"
+      do_check_false(src.permits("https://foobar.com"));
+
     });
 
 ///////////////////// Test the source list //////////////////////

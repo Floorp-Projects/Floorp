@@ -24,8 +24,6 @@ a failed attempt to open the stream.
 
 bug495558_alsa_endian.patch adds support for big endian ALSA platforms.
 
-bug526411_latency.patch: reduce requested latency to 250ms to match OGGPLAY_AUDIO_OFFSET.
-
 sydney_aix.patch: Bug 499266 - add support for AIX 5.x
 
 bug562488_oss_destroy_crash.patch: Fix crash in OSS backend when destroying stream.

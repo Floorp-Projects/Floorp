@@ -167,7 +167,9 @@ nsresult
 nsCacheEntry::RequestAccess(nsCacheRequest * request, nsCacheAccessMode *accessGranted)
 {
     nsresult  rv = NS_OK;
-    
+
+    if (IsDoomed()) return NS_ERROR_CACHE_ENTRY_DOOMED;
+
     if (!IsInitialized()) {
         // brand new, unbound entry
         request->mKey = nsnull;  // steal ownership of the key string
@@ -179,8 +181,6 @@ nsCacheEntry::RequestAccess(nsCacheRequest * request, nsCacheAccessMode *accessG
         PR_APPEND_LINK(request, &mRequestQ);
         return rv;
     }
-    
-    if (IsDoomed()) return NS_ERROR_CACHE_ENTRY_DOOMED;
 
     if (IsStreamData() != request->IsStreamBased()) {
         *accessGranted = nsICache::ACCESS_NONE;
@@ -225,6 +225,9 @@ nsCacheEntry::CreateDescriptor(nsCacheRequest *           request,
         return NS_ERROR_OUT_OF_MEMORY;
 
     PR_APPEND_LINK(descriptor, &mDescriptorQ);
+
+    CACHE_LOG_DEBUG(("  descriptor %p created for request %p on entry %p\n",
+                    descriptor, request, this));
 
     NS_ADDREF(*result = descriptor);
     return NS_OK;

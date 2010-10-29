@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(bc5795ab-bcb5-448b-b3c7-a111bead7c26)]
+[scriptable, uuid(ff11fa25-788f-444f-8f69-dcdf14348fb3)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -94,20 +94,27 @@ interface nsISelectionController : nsISelectionDisplay
    */
     nsISelection getSelection(in short type);
 
+   const short SCROLL_SYNCHRONOUS = 1<<1;
+   const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
+
    /**
    * ScrollSelectionIntoView scrolls a region of the selection,
    * so that it is visible in the scrolled view.
    *
    * @param aType the selection to scroll into view. //SelectionType
    * @param aRegion the region inside the selection to scroll into view. //SelectionRegion
-   * @param aIsSynchronous when true, scrolls the selection into view
-   * before returning. If false, posts a request which is processed
+   * @param aFlags the scroll flags.  Valid bits include:
+   * SCROLL_SYNCHRONOUS: when set, scrolls the selection into view
+   * before returning. If not set, posts a request which is processed
    * at some point after the method returns.
+   * SCROLL_FIRST_ANCESTOR_ONLY: if set, only the first ancestor will be scrolled
+   * into view.
    *
    * Note that if isSynchronous is true, then this might flush the pending
    * reflow. It's dangerous for some objects. See bug 418470 comment 12.
    */
-    void scrollSelectionIntoView(in short type, in short region, in boolean isSynchronous);
+    void scrollSelectionIntoView(in short type, in short region, in short flags);
+
    /**
    * RepaintSelection repaints the selection specified by aType.
    *

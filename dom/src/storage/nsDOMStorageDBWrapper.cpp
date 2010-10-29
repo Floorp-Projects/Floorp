@@ -69,6 +69,17 @@ void ReverseString(const nsCSubstring& source, nsCSubstring& result)
   }
 }
 
+nsDOMStorageDBWrapper::nsDOMStorageDBWrapper()
+{
+}
+
+nsDOMStorageDBWrapper::~nsDOMStorageDBWrapper()
+{
+  if (mFlushTimer) {
+    mFlushTimer->Cancel();
+  }
+}
+
 nsresult
 nsDOMStorageDBWrapper::Init()
 {
@@ -86,7 +97,40 @@ nsDOMStorageDBWrapper::Init()
   rv = mPrivateBrowsingDB.Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mFlushTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mFlushTimer->Init(nsDOMStorageManager::gStorageManager, 5000,
+                         nsITimer::TYPE_REPEATING_SLACK);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
+}
+
+nsresult
+nsDOMStorageDBWrapper::EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStorage)
+{
+  if (aStorage->CanUseChromePersist())
+    return mChromePersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
+    return NS_OK;
+  if (aStorage->SessionOnly())
+    return NS_OK;
+
+  return mPersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
+}
+
+nsresult
+nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* aStorage)
+{
+  if (aStorage->CanUseChromePersist())
+    return mChromePersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
+  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
+    return NS_OK;
+  if (aStorage->SessionOnly())
+    return NS_OK;
+
+  return mPersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
 }
 
 nsresult
