@@ -1794,7 +1794,7 @@ JSScript::makeAnalysis(JSContext *cx)
 
 #ifdef JS_TYPES_DEBUG_SPEW
     char name[40];
-    snprintf(name, sizeof(name), "#%u:locals", analysis->id);
+    JS_snprintf(name, sizeof(name), "#%u:locals", analysis->id);
     analysis->localTypes.name = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), 0));
     fprintf(cx->typeOut(), "newScript: %s\n", name);
 #endif
