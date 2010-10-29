@@ -1044,9 +1044,10 @@
           else
             this._description.hidden = true;
 
-          if (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
-              (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
-               !AddonManager.autoUpdateDefault)) {
+          if (!("applyBackgroundUpdates" in this.mAddon) ||
+              (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
+               (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
+                !AddonManager.autoUpdateDefault))) {
             var self = this;
             AddonManager.getAllInstalls(function(aInstallsList) {
               // This can return after the binding has been destroyed,
