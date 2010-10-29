@@ -2566,7 +2566,7 @@ Tab.prototype = {
     this._listener = new ProgressController(this);
     browser.webProgress.addProgressListener(this._listener, flags);
 
-   return browser;
+    return browser;
   },
 
   _destroyBrowser: function _destroyBrowser() {
