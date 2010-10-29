@@ -57,6 +57,7 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsnum.h"
+#include "jsinferinlines.h"
 #include "jsscopeinlines.h"
 #include "jsstr.h"
 
@@ -279,10 +280,15 @@ JSObject::getArrayLength() const
 }
 
 inline void
-JSObject::setArrayLength(uint32 length)
+JSObject::setArrayLength(JSContext *cx, uint32 length)
 {
     JS_ASSERT(isArray());
     setPrivate((void*) length);
+
+    if (length > INT32_MAX) {
+        cx->addTypePropertyId(getTypeObject(), ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                              js::types::TYPE_DOUBLE);
+    }
 }
 
 inline uint32
@@ -586,7 +592,7 @@ JSObject::setWithThis(JSObject *thisp)
 
 inline void
 JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *parent,
-               void *priv, bool useHoles)
+               js::types::TypeObject *type, void *priv, bool useHoles)
 {
     clasp = aclasp;
     flags = 0;
@@ -615,6 +621,11 @@ JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *pare
     JS_ASSERT(capacity == numFixedSlots());
     ClearValueRange(slots, capacity, useHoles);
 
+#ifdef JS_TYPE_INFERENCE
+    JS_ASSERT_IF(aclasp != &js_FunctionClass, type);
+    typeObject = type;
+#endif
+
     emptyShapes = NULL;
 }
 
@@ -636,10 +647,11 @@ JSObject::initSharingEmptyShape(JSContext *cx,
                                 js::Class *aclasp,
                                 JSObject *proto,
                                 JSObject *parent,
+                                js::types::TypeObject *type,
                                 void *privateValue,
                                 /* js::gc::FinalizeKind */ unsigned kind)
 {
-    init(cx, aclasp, proto, parent, privateValue, false);
+    init(cx, aclasp, proto, parent, type, privateValue, false);
 
     JS_ASSERT(!isDenseArray());
 
@@ -787,7 +799,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
  */
 static inline JSObject *
 NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
-                       JSObject *parent, gc::FinalizeKind kind)
+                       JSObject *parent, js::types::TypeObject *type, gc::FinalizeKind kind)
 {
     JS_ASSERT(proto);
     JS_ASSERT(proto->isNative());
@@ -805,7 +817,7 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
          * the parent of the prototype's constructor.
          */
         bool useHoles = (clasp == &js_ArrayClass);
-        obj->init(cx, clasp, proto, parent, NULL, useHoles);
+        obj->init(cx, clasp, proto, parent, type, NULL, useHoles);
 
         JS_ASSERT(proto->canProvideEmptyShape(clasp));
         js::EmptyShape *empty = proto->getEmptyShape(cx, clasp, kind);
@@ -820,10 +832,11 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 }
 
 static inline JSObject *
-NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
+NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
+                       js::types::TypeObject *type)
 {
     gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
-    return NewNativeClassInstance(cx, clasp, proto, parent, kind);
+    return NewNativeClassInstance(cx, clasp, proto, parent, type, kind);
 }
 
 bool
@@ -837,7 +850,7 @@ FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject
  * right default proto and parent for clasp in cx.
  */
 static inline JSObject *
-NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
+NewBuiltinClassInstance(JSContext *cx, Class *clasp, js::types::TypeObject *type, gc::FinalizeKind kind)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
@@ -866,14 +879,14 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
             return NULL;
     }
 
-    return NewNativeClassInstance(cx, clasp, proto, global, kind);
+    return NewNativeClassInstance(cx, clasp, proto, global, type, kind);
 }
 
 static inline JSObject *
-NewBuiltinClassInstance(JSContext *cx, Class *clasp)
+NewBuiltinClassInstance(JSContext *cx, Class *clasp, js::types::TypeObject *type)
 {
     gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
-    return NewBuiltinClassInstance(cx, clasp, kind);
+    return NewBuiltinClassInstance(cx, clasp, type, kind);
 }
 
 static inline JSProtoKey
@@ -925,7 +938,7 @@ namespace detail
 template <bool withProto, bool isFunction>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-          gc::FinalizeKind kind)
+          js::types::TypeObject *type, gc::FinalizeKind kind)
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (withProto == WithProto::Class && !proto) {
@@ -955,7 +968,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
      * the parent of the prototype's constructor.
      */
     obj->init(cx, clasp, proto,
-              (!parent && proto) ? proto->getParent() : parent,
+              (!parent && proto) ? proto->getParent() : parent, type,
               NULL, clasp == &js_ArrayClass);
 
     if (clasp->isNative()) {
@@ -974,51 +987,53 @@ out:
 } /* namespace detail */
 
 static JS_ALWAYS_INLINE JSObject *
-NewFunction(JSContext *cx, JSObject *parent)
+NewFunction(JSContext *cx, JSObject *parent, js::types::TypeObject *type)
 {
-    return detail::NewObject<WithProto::Class, true>(cx, &js_FunctionClass, NULL, parent,
+    return detail::NewObject<WithProto::Class, true>(cx, &js_FunctionClass, NULL, parent, type,
                                                      gc::FINALIZE_OBJECT2);
 }
 
 template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-               gc::FinalizeKind kind)
+               js::types::TypeObject *type, gc::FinalizeKind kind)
 {
-    return detail::NewObject<withProto, false>(cx, clasp, proto, parent, kind);
+    return detail::NewObject<withProto, false>(cx, clasp, proto, parent, type, kind);
 }
 
 template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
-NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
+NewNonFunction(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+               js::types::TypeObject *type)
 {
     gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
-    return detail::NewObject<withProto, false>(cx, clasp, proto, parent, kind);
+    return detail::NewObject<withProto, false>(cx, clasp, proto, parent, type, kind);
 }
 
 template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
 NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-          gc::FinalizeKind kind)
+          js::types::TypeObject *type, gc::FinalizeKind kind)
 {
     if (clasp == &js_FunctionClass)
-        return detail::NewObject<withProto, true>(cx, clasp, proto, parent, kind);
-    return detail::NewObject<withProto, false>(cx, clasp, proto, parent, kind);
+        return detail::NewObject<withProto, true>(cx, clasp, proto, parent, type, kind);
+    return detail::NewObject<withProto, false>(cx, clasp, proto, parent, type, kind);
 }
 
 template <WithProto::e withProto>
 static JS_ALWAYS_INLINE JSObject *
-NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
+NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+          js::types::TypeObject *type)
 {
     gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
-    return NewObject<withProto>(cx, clasp, proto, parent, kind);
+    return NewObject<withProto>(cx, clasp, proto, parent, type, kind);
 }
 
 /* Creates a new array with a zero length and the given finalize kind. */
 static inline JSObject *
-NewArrayWithKind(JSContext* cx, gc::FinalizeKind kind)
+NewArrayWithKind(JSContext* cx, js::types::TypeObject *type, gc::FinalizeKind kind)
 {
-    return NewNonFunction<WithProto::Class>(cx, &js_ArrayClass, NULL, NULL, kind);
+    return NewNonFunction<WithProto::Class>(cx, &js_ArrayClass, NULL, NULL, type, kind);
 }
 
 /*

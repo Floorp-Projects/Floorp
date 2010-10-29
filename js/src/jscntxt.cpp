@@ -521,9 +521,11 @@ JSThreadData::allocMathCache(JSContext *cx)
 void
 JSThreadData::finish()
 {
+#ifndef JS_TYPE_INFERENCE /* :FIXME: GC disabled during type inference */
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
         JS_ASSERT(!scriptsToGC[i]);
+#endif
 #endif
 
     if (dtoaState)
@@ -1092,6 +1094,24 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
              */
             if (cx->thread->data.requestDepth == 0)
                 JS_BeginRequest(cx);
+#endif
+
+#ifdef JS_TYPE_INFERENCE
+            {
+                /*
+                 * Dump remaining type inference results first.  This printing
+                 * depends on atoms still existing.  FIXME note that since the
+                 * inference doesn't mark the atoms it depends on, a GC can
+                 * totally hose it.
+                 */
+                AutoLockGC lock(rt);
+                JSCompartment **compartment = rt->compartments.begin();
+                JSCompartment **end = rt->compartments.end();
+                while (compartment < end) {
+                    (*compartment)->types.print(cx, *compartment);
+                    compartment++;
+                }
+            }
 #endif
 
             Shape::finishRuntimeState(cx);

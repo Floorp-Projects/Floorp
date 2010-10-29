@@ -864,7 +864,6 @@ struct CallArgs
 {
     Value *argv_;
     uintN argc_;
-  protected:
     CallArgs() {}
     CallArgs(Value *argv, uintN argc) : argv_(argv), argc_(argc) {}
   public:

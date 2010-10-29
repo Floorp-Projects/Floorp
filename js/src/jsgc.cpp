@@ -2076,7 +2076,6 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
         if (compartment->marked) {
             compartment->marked = false;
             *write++ = compartment;
-            /* Remove dead wrappers from the compartment map. */
             compartment->sweep(cx);
         } else {
             JS_ASSERT(compartment->freeLists.isEmpty());
@@ -2534,6 +2533,14 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
+#ifdef JS_TYPE_INFERENCE
+    /*
+     * GC is disabled if type inference is active, as type objects do not currently
+     * root the atoms they refer to.
+     */
+    return;
+#endif
+
     JSRuntime *rt = cx->runtime;
 
     /*

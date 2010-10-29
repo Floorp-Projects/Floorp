@@ -62,7 +62,8 @@ extern Class regexp_statics_class;
 static inline JSObject *
 regexp_statics_construct(JSContext *cx, JSObject *parent)
 {
-    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent);
+    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_REGEXP_STATICS);
+    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent, type);
     if (!obj)
         return NULL;
     RegExpStatics *res = cx->create<RegExpStatics>();
@@ -236,7 +237,8 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
      *  0:              matched string
      *  1..parenCount:  paren matches
      */
-    JSObject *array = js_NewSlowArrayObject(cx);
+    types::TypeObject *arrayType = cx->getFixedTypeObject(types::TYPE_OBJECT_REGEXP_MATCH_ARRAY);
+    JSObject *array = js_NewSlowArrayObject(cx, arrayType);
     if (!array)
         return NULL;
 
@@ -379,7 +381,8 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     RegExp *re = RegExp::create(cx, str, flags);
     if (!re)
         return NULL;
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
+    types::TypeObject *objType = cx->getFixedTypeObject(types::TYPE_OBJECT_NEW_REGEXP);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass, objType);
     if (!obj) {
         re->decref(cx);
         return NULL;

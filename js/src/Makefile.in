@@ -205,6 +205,8 @@ INSTALLED_HEADERS = \
 		jsgcstats.h \
 		jscompartment.h \
 		jshash.h \
+		jsinfer.h \
+		jsinferinlines.h \
 		jsinterp.h \
 		jsinttypes.h \
 		jsiter.h \
@@ -475,6 +477,10 @@ ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 INSTALLED_HEADERS += jscpucfg.h
 endif
 
+ifdef JS_TYPE_INFERENCE
+CPPSRCS += jsinfer.cpp
+endif
+
 EXPORTS = $(INSTALLED_HEADERS)
 
 DASH_R		= -r
@@ -640,6 +646,11 @@ endif
 # BeOS and HP-UX do not require the extra linking of "-lm"
 ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
+endif
+
+# zlib is needed for recording executions in type inference
+ifdef JS_TYPE_INFERENCE
+EXTRA_LIBS      += -lz
 endif
 
 # Prevent floating point errors caused by VC++ optimizations

@@ -449,7 +449,8 @@ JSClass jitstats_class = {
 void
 InitJITStatsClass(JSContext *cx, JSObject *glob)
 {
-    JS_InitClass(cx, glob, NULL, &jitstats_class, NULL, 0, jitstats_props, NULL, NULL, NULL);
+    JS_InitClass(cx, glob, NULL, &jitstats_class, NULL, 0,
+                 jitstats_props, NULL, NULL, NULL);
 }
 
 #define AUDIT(x) (jitstats.x++)

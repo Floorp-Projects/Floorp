@@ -63,6 +63,7 @@
 #include "jsgc.h"
 #include "jsgcchunk.h"
 #include "jshashtable.h"
+#include "jsinfer.h"
 #include "jsinterp.h"
 #include "jsmath.h"
 #include "jsobj.h"
@@ -2363,6 +2364,89 @@ private:
      */
     JS_FRIEND_API(void) checkMallocGCPressure(void *p);
 
+public:
+
+    /*
+     * Definitions for type inference.  The implementations of these are no-ops
+     * when inference is not enabled.
+     */
+
+    /* Get the type object shared by all globals in the compartment. */
+    inline js::types::TypeObject *
+    getGlobalTypeObject();
+
+    /* Get a fixed singleton type object. */
+    inline js::types::TypeObject *
+    getFixedTypeObject(js::types::FixedTypeObjectName which);
+
+    inline FILE *typeOut();
+    inline const char *getTypeId(jsid id);
+
+    /*
+     * Get a type object or function with the specified name.  Fetching the same
+     * name repeatedly will produce the same value.
+     */
+
+    /* Get a function or non-function object. */
+    inline js::types::TypeObject *
+    getTypeObject(const char *name, bool isFunction);
+
+    /* Get a function with the specified handler. */
+    inline js::types::TypeFunction *
+    getTypeFunctionHandler(const char *name, JSTypeHandler handler);
+
+    /* Set the type information for fun to the specified script. */
+    inline void
+    setTypeFunctionScript(JSFunction *fun, JSScript *script);
+
+    /* Get a type object for the immediate allocation site in this context. */
+    inline js::types::TypeObject *
+    getTypeCallerInitObject(bool isArray);
+
+    /* Whether the immediate caller is being monitored for side effects. */
+    inline bool isTypeCallerMonitored();
+
+    /* Mark the immediate allocation site as having produced an unexpected value. */
+    inline void markTypeCallerUnexpected(js::types::jstype type);
+    inline void markTypeCallerUnexpected(const js::Value &value);
+    inline void markTypeCallerOverflow();
+
+    /*
+     * Monitor a javascript call, either on entry to the interpreter or made
+     * from within the interpreter.
+     */
+    inline void typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
+                                const js::CallArgs &args, bool constructing, bool force);
+    inline void typeMonitorEntry(JSScript *script, const js::Value &thisv,
+                                 bool constructing, bool force);
+
+    /*
+     * Mark a function as the constructor for a builtin class, whose 'prototype'
+     * field is specified manually with setTypeFunctionPrototype.
+     */
+    inline void markTypeBuiltinFunction(js::types::TypeObject *fun);
+
+    /*
+     * Add proto as the 'prototype' field of a function.  inherit indicates that
+     * this function inherits properties from Function.prototype and the prototype
+     * inherits properties from Object.prototype.
+     */
+    inline void setTypeFunctionPrototype(js::types::TypeObject *fun,
+                                         js::types::TypeObject *proto, bool inherit);
+
+    /* Add proto as a possible prototype object of obj. */
+    inline void addTypePrototype(js::types::TypeObject *obj, js::types::TypeObject *proto);
+
+    /* Add a possible value for the named property of obj. */
+    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
+    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
+    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
+    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
+
+    /* Alias two properties in the type information for obj. */
+    inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
+
+  private:
     /* To silence MSVC warning about using 'this' in a member initializer. */
     JSContext *thisInInitializer() { return this; }
 };

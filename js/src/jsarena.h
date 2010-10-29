@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include "jstypes.h"
 #include "jscompat.h"
+#include "jsstaticcheck.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -287,5 +288,63 @@ JS_DumpArenaStats(FILE *fp);
 #endif /* !JS_ARENAMETER */
 
 JS_END_EXTERN_C
+
+namespace js {
+
+template <typename T>
+inline T *
+ArenaArray(JSArenaPool &pool, unsigned count)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, count * sizeof(T));
+    return (T *) v;
+}
+
+template <typename T>
+inline T *
+ArenaNew(JSArenaPool &pool)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
+    return new (v) T();
+}
+
+template <typename T, typename A>
+inline T *
+ArenaNew(JSArenaPool &pool, const A &a)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
+    return new (v) T(a);
+}
+
+template <typename T, typename A, typename B>
+inline T *
+ArenaNew(JSArenaPool &pool, const A &a, const B &b)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
+    return new (v) T(a, b);
+}
+
+template <typename T, typename A, typename B, typename C>
+inline T *
+ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
+    return new (v) T(a, b, c);
+}
+
+template <typename T, typename A, typename B, typename C, typename D>
+inline T *
+ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
+    return new (v) T(a, b, c, d);
+}
+
+} /* namespace js */
 
 #endif /* jsarena_h___ */

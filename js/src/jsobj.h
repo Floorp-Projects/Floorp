@@ -62,9 +62,8 @@ namespace js {
 class JSProxyHandler;
 class AutoPropDescArrayRooter;
 
-namespace mjit {
-class Compiler;
-}
+namespace mjit { class Compiler; }
+namespace types { class TypeObject; }
 
 static inline PropertyOp
 CastAsPropertyOp(JSObject *object)
@@ -364,6 +363,15 @@ struct JSObject : js::gc::Cell {
     jsuword     capacity;                   /* capacity of slots */
     js::Value   *slots;                     /* dynamically allocated slots,
                                                or pointer to fixedSlots() */
+
+#ifdef JS_TYPE_INFERENCE
+    /* Type information for this object. */
+    js::types::TypeObject *typeObject;
+
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
+#endif
 
     /*
      * Return an immutable, shareable, empty shape with the same clasp as this
@@ -689,6 +697,21 @@ struct JSObject : js::gc::Cell {
         privateData = data;
     }
 
+    /* Get the type information for this object. */
+    js::types::TypeObject* getTypeObject()
+    {
+#ifdef JS_TYPE_INFERENCE
+        return typeObject;
+#else
+        return NULL;
+#endif
+    }
+
+    /* Get the default, until-overridden 'prototype' field of this function. */
+    inline js::types::TypeObject* getTypeFunctionPrototype(JSContext *cx);
+
+    /* Get the object constructed when invoking 'new' on this function. */
+    inline js::types::TypeObject* getTypeFunctionNewObject(JSContext *cx);
 
     /*
      * ES5 meta-object properties and operations.
@@ -728,7 +751,7 @@ struct JSObject : js::gc::Cell {
      */
 
     inline uint32 getArrayLength() const;
-    inline void setArrayLength(uint32 length);
+    inline void setArrayLength(JSContext *cx, uint32 length);
 
     inline uint32 getDenseArrayCapacity();
     inline js::Value* getDenseArrayElements();
@@ -971,7 +994,7 @@ struct JSObject : js::gc::Cell {
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *parent,
-              void *priv, bool useHoles);
+              js::types::TypeObject *type, void *priv, bool useHoles);
 
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thindKind);
@@ -984,6 +1007,7 @@ struct JSObject : js::gc::Cell {
                                       js::Class *clasp,
                                       JSObject *proto,
                                       JSObject *parent,
+                                      js::types::TypeObject *type,
                                       void *priv,
                                       /* gc::FinalizeKind */ unsigned kind);
 
@@ -1359,6 +1383,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              js::Class *clasp, js::Native constructor, uintN nargs,
+             JSTypeHandler ctorHandler,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
@@ -1402,7 +1427,8 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key,
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
-                   JSObject *parent, uintN argc, js::Value *argv);
+                   JSObject *parent, js::types::TypeObject *type,
+                   uintN argc, js::Value *argv);
 
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.

@@ -157,19 +157,23 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);
 
-    analyze::Script analysis;
-    PodZero(&analysis);
+#ifdef JS_TYPE_INFERENCE
+    this->analysis = script->analyze(cx);
+#else
+    analyze::Script analysis_;
+    PodZero(&analysis_);
+    analysis_.init(script);
+    analysis_.analyze(cx);
 
-    analysis.analyze(cx, script);
+    this->analysis = &analysis_;
+#endif
 
-    if (analysis.OOM())
+    if (analysis->OOM())
         return Compile_Error;
-    if (analysis.failed()) {
+    if (analysis->failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
     }
-
-    this->analysis = &analysis;
 
     uint32 nargs = fun ? fun->nargs : 0;
     if (!frame.init(nargs) || !stubcc.init(nargs))

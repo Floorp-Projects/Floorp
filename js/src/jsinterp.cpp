@@ -80,6 +80,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsprobes.h"
@@ -101,6 +102,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
@@ -590,6 +592,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
                 vp[0] = IdToValue(id);
         }
 #endif
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NOSUCHMETHOD);
         obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
         if (!obj)
             return false;
@@ -601,10 +604,12 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
          * NoSuchMethod helper objects own no manually allocated resources.
          */
         obj->map = NULL;
-        obj->init(cx, &js_NoSuchMethodClass, NULL, NULL, NULL, false);
+        obj->init(cx, &js_NoSuchMethodClass, NULL, NULL, type, NULL, false);
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
+
+        cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0, *vp, true);
     }
     return true;
 }
@@ -621,10 +626,12 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NOSUCHMETHOD_ARGUMENTS);
+
     args.callee() = obj->getSlot(JSSLOT_FOUND_FUNCTION);
     args.thisv() = vp[1];
     args[0] = obj->getSlot(JSSLOT_SAVED_ID);
-    JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
+    JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2, type);
     if (!argsobj)
         return JS_FALSE;
     args[1].setObject(*argsobj);
@@ -764,6 +771,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
     JSBool ok;
     {
+        cx->typeMonitorCall(NULL, NULL, args, flags & JSFRAME_CONSTRUCTING, true);
+
         AutoPreserveEnumerators preserve(cx);
         ok = RunScript(cx, script, fp);
     }
@@ -1004,6 +1013,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     void *hookData = NULL;
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, frame.fp(), JS_TRUE, 0, cx->debugHooks->executeHookData);
+
+    cx->typeMonitorEntry(script, frame.fp()->thisValue(), false, true);
 
     /* Run script until JSOP_STOP or error. */
     AutoPreserveEnumerators preserve(cx);
@@ -1911,6 +1922,20 @@ namespace reprmeter {
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp->setReturnValue(*--regs.sp)
 
+/* Definitions for performing runtime checks required by type inference. */
+
+/* Mark the current opcode as having produced a float. */
+#define TYPE_MONITOR_OVERFLOW(cx)                                             \
+    script->typeMonitorOverflow(cx, regs.pc, 0)
+
+/* Mark the current opcode's result as possibly needing monitoring. */
+#define TYPE_MONITOR_RESULT(cx, index, val, force)                            \
+    script->typeMonitorResult(cx, regs.pc, index, val, force)
+
+/* Mark an assignment at the current opcode as possibly needing monitoring. */
+#define TYPE_MONITOR_ASSIGN(cx, obj, id, rval)                                \
+    script->typeMonitorAssign(cx, regs.pc, obj, id, rval)
+
 #define POP_BOOLEAN(cx, vp, b)                                                \
     JS_BEGIN_MACRO                                                            \
         vp = &regs.sp[-1];                                                    \
@@ -2275,6 +2300,17 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
 # define END_EMPTY_CASES
 
+/* Instrument every opcode to record popped types or cross check inferred types. */
+#ifdef JS_TYPE_INFERENCE
+#undef DO_OP
+#define DO_OP()                                                         \
+    JS_BEGIN_MACRO                                                      \
+        script->typeCheckBytecode(cx, regs.pc, regs.sp);                \
+        CHECK_RECORDER();                                               \
+        JS_EXTENSION_(goto *jumpTable[op]);                             \
+    JS_END_MACRO
+#endif
+
 #else /* !JS_THREADED_INTERP */
 
     register intN switchMask = 0;
@@ -2589,6 +2625,11 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         regs.pc += len;
         op = (JSOp) *regs.pc;
 
+#ifdef JS_TYPE_INFERENCE
+        // record types seen by every opcode.
+        script->typeScript->checkByteCode(regs.pc, regs.sp);
+#endif
+
       do_op:
         CHECK_RECORDER();
         LOG_OPCODE(op);
@@ -2839,6 +2880,8 @@ BEGIN_CASE(JSOP_STOP)
         script = regs.fp->script();
         argv = regs.fp->maybeFormalArgs();
         atoms = FrameAtomBase(cx, regs.fp);
+
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 
         /* Resume execution in the calling frame. */
         JS_ASSERT(inlineCallCount);
@@ -3109,6 +3152,7 @@ BEGIN_CASE(JSOP_FORNAME)
             goto error;
         if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
+        TYPE_MONITOR_ASSIGN(cx, obj, id, tvr.value());
     }
 }
 END_CASE(JSOP_FORNAME)
@@ -3128,6 +3172,7 @@ BEGIN_CASE(JSOP_FORPROP)
             goto error;
         if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
+        TYPE_MONITOR_ASSIGN(cx, obj, id, tvr.value());
     }
     regs.sp--;
 }
@@ -3145,6 +3190,7 @@ BEGIN_CASE(JSOP_FORELEM)
     PUSH_NULL();
     if (!IteratorNext(cx, &regs.sp[-2].toObject(), &regs.sp[-1]))
         goto error;
+    TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], true);
 END_CASE(JSOP_FORELEM)
 
 BEGIN_CASE(JSOP_DUP)
@@ -3339,6 +3385,7 @@ BEGIN_CASE(JSOP_IMACOP)
         i = i OP j;                                                           \
         regs.sp--;                                                            \
         regs.sp[-1].setInt32(i);                                              \
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);                       \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_BITOR)
@@ -3548,6 +3595,7 @@ END_CASE(JSOP_GE)
         i = i OP (j & 31);                                                    \
         regs.sp--;                                                            \
         regs.sp[-1].setInt32(i);                                              \
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);                       \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_LSH)
@@ -3573,6 +3621,7 @@ BEGIN_CASE(JSOP_URSH)
 
     regs.sp--;
     regs.sp[-1].setNumber(uint32(u));
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());
 }
 END_CASE(JSOP_URSH)
 
@@ -3636,6 +3685,7 @@ BEGIN_CASE(JSOP_ADD)
             regs.sp[-1].setNumber(l);
         }
     }
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());
 }
 END_CASE(JSOP_ADD)
 
@@ -3649,6 +3699,7 @@ END_CASE(JSOP_ADD)
         double d = d1 OP d2;                                                  \
         regs.sp--;                                                            \
         regs.sp[-1].setNumber(d);                                             \
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());     \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_SUB)
@@ -3688,6 +3739,7 @@ BEGIN_CASE(JSOP_DIV)
         d1 /= d2;
         regs.sp[-1].setNumber(d1);
     }
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 }
 END_CASE(JSOP_DIV)
 
@@ -3715,6 +3767,7 @@ BEGIN_CASE(JSOP_MOD)
             regs.sp[-1].setDouble(d1);
         }
     }
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());
 }
 END_CASE(JSOP_MOD)
 
@@ -3756,12 +3809,14 @@ BEGIN_CASE(JSOP_NEG)
         d = -d;
         regs.sp[-1].setDouble(d);
     }
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());
 }
 END_CASE(JSOP_NEG)
 
 BEGIN_CASE(JSOP_POS)
     if (!ValueToNumber(cx, &regs.sp[-1]))
         goto error;
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
@@ -3952,11 +4007,14 @@ do_incop:
             goto error;
         regs.fp->setAssigning();
         JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
+        TYPE_MONITOR_ASSIGN(cx, obj, id, regs.sp[-1]);
         regs.fp->clearAssigning();
         if (!ok)
             goto error;
         regs.sp--;
     }
+
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());
 
     if (cs->nuses == 0) {
         /* regs.sp[-1] already contains the result of name increment. */
@@ -4150,6 +4208,7 @@ BEGIN_CASE(JSOP_GETXPROP)
             }
         } while (0);
 
+        TYPE_MONITOR_RESULT(cx, 0, rval, rval.isUndefined());
         regs.sp[-1] = rval;
         assertSameCompartment(cx, regs.sp[-1]);
         JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
@@ -4178,6 +4237,8 @@ BEGIN_CASE(JSOP_LENGTH)
         i = -2;
         goto do_getprop_with_lval;
     }
+    /* REVIEW: is length deletable on array or arguments objects? */
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 END_CASE(JSOP_LENGTH)
 
 }
@@ -4270,6 +4331,8 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-2], regs.sp[-2].isUndefined());
+    TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], false);
 }
 END_CASE(JSOP_CALLPROP)
 
@@ -4292,6 +4355,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
     VALUE_TO_OBJECT(cx, &lref, obj);
 
     JS_ASSERT_IF(op == JSOP_SETGNAME, obj == regs.fp->scopeChain().getGlobal());
+
+    TYPE_MONITOR_ASSIGN(cx, obj, ATOM_TO_JSID(atoms[GET_INDEX(regs.pc)]), rval);
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -4499,6 +4564,9 @@ BEGIN_CASE(JSOP_GETELEM)
     regs.sp--;
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
+    if (copyFrom->isUndefined() && rref.isInt32())
+        cx->addTypeProperty(obj->getTypeObject(), NULL, *copyFrom);
+    TYPE_MONITOR_RESULT(cx, 0, *copyFrom, copyFrom->isUndefined());
 }
 END_CASE(JSOP_GETELEM)
 
@@ -4530,6 +4598,9 @@ BEGIN_CASE(JSOP_CALLELEM)
     {
         regs.sp[-1] = thisv;
     }
+
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-2], false);
+    TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], false);
 }
 END_CASE(JSOP_CALLELEM)
 
@@ -4540,6 +4611,7 @@ BEGIN_CASE(JSOP_SETELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value rval;
+    TYPE_MONITOR_ASSIGN(cx, obj, id, regs.sp[-1]);
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayCapacity();
@@ -4549,7 +4621,7 @@ BEGIN_CASE(JSOP_SETELEM)
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
-                        obj->setArrayLength(i + 1);
+                        obj->setArrayLength(cx, i + 1);
                 }
                 obj->setDenseArrayElement(i, regs.sp[-1]);
                 goto end_setelem;
@@ -4559,7 +4631,8 @@ BEGIN_CASE(JSOP_SETELEM)
     rval = regs.sp[-1];
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
-  end_setelem:;
+  end_setelem:
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 }
 END_SET_CASE_STORE_RVAL(JSOP_SETELEM, 3)
 
@@ -4571,6 +4644,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     Value rval = regs.sp[-3];
+    TYPE_MONITOR_ASSIGN(cx, obj, id, rval);
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
@@ -4618,7 +4692,8 @@ BEGIN_CASE(JSOP_NEW)
     CHECK_INTERRUPT_HANDLER();
     TRACE_0(NativeCallComplete);
 
-  end_new:;
+  end_new:
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 }
 END_CASE(JSOP_NEW)
 
@@ -4640,6 +4715,7 @@ BEGIN_CASE(JSOP_EVAL)
     regs.sp = vp + 1;
     if (!ok)
         goto error;
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 }
 END_CASE(JSOP_EVAL)
 
@@ -4670,6 +4746,9 @@ BEGIN_CASE(JSOP_APPLY)
                 js_ReportOverRecursed(cx);
                 goto error;
             }
+
+            cx->typeMonitorCall(script, regs.pc, CallArgs(vp + 2, argc),
+                                flags & JSFRAME_CONSTRUCTING, false);
 
             /* Get pointer to new frame/slots, prepare arguments. */
             StackSpace &stack = cx->stack();
@@ -4745,7 +4824,8 @@ BEGIN_CASE(JSOP_APPLY)
     JS_RUNTIME_METER(rt, nonInlineCalls);
     TRACE_0(NativeCallComplete);
 
-  end_call:;
+  end_call:
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 }
 END_CASE(JSOP_CALL)
 
@@ -4810,6 +4890,7 @@ BEGIN_CASE(JSOP_CALLNAME)
             NATIVE_GET(cx, obj, obj2, shape, JSGET_METHOD_BARRIER, &rval);
             PUSH_COPY(rval);
         }
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
 
         /*
          * Push results, the same as below, but with a prop$ hit there
@@ -4823,8 +4904,10 @@ BEGIN_CASE(JSOP_CALLNAME)
                   clasp == &js_BlockClass ||
                   clasp == &js_DeclEnvClass);
 #endif
-        if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
+        if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME) {
             PUSH_UNDEFINED();
+            TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], false);
+        }
         len = JSOP_NAME_LENGTH;
         DO_NEXT_OP(len);
     }
@@ -4859,10 +4942,13 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
+    TYPE_MONITOR_RESULT(cx, 0, rval, rval.isUndefined());
 
     /* obj must be on the scope chain, thus not a function. */
-    if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
+    if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME) {
         SLOW_PUSH_THISV(cx, obj);
+        TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], false);
+    }
 }
 END_CASE(JSOP_NAME)
 
@@ -5162,6 +5248,7 @@ BEGIN_CASE(JSOP_ARGSUB)
     if (!js_GetArgsProperty(cx, regs.fp, id, &rval))
         goto error;
     PUSH_COPY(rval);
+    TYPE_MONITOR_RESULT(cx, 0, rval, false);
 }
 END_CASE(JSOP_ARGSUB)
 
@@ -5172,6 +5259,7 @@ BEGIN_CASE(JSOP_ARGCNT)
     if (!js_GetArgsProperty(cx, regs.fp, id, &rval))
         goto error;
     PUSH_COPY(rval);
+    TYPE_MONITOR_RESULT(cx, 0, rval, false);
 }
 END_CASE(JSOP_ARGCNT)
 
@@ -5182,8 +5270,11 @@ BEGIN_CASE(JSOP_CALLARG)
     JS_ASSERT(slot < regs.fp->numFormalArgs());
     METER_SLOT_OP(op, slot);
     PUSH_COPY(argv[slot]);
-    if (op == JSOP_CALLARG)
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], true);
+    if (op == JSOP_CALLARG) {
         PUSH_UNDEFINED();
+        TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], true);
+    }
 }
 END_CASE(JSOP_GETARG)
 
@@ -5231,9 +5322,12 @@ BEGIN_CASE(JSOP_CALLUPVAR)
 
     const Value &rval = GetUpvar(cx, script->staticLevel, uva->vector[index]);
     PUSH_COPY(rval);
+    TYPE_MONITOR_RESULT(cx, 0, rval, rval.isUndefined());
 
-    if (op == JSOP_CALLUPVAR)
+    if (op == JSOP_CALLUPVAR) {
         PUSH_UNDEFINED();
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
+    }
 }
 END_CASE(JSOP_GETUPVAR)
 
@@ -5300,6 +5394,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
     JSObject *obj = regs.fp->scopeChain().getGlobal();
     JS_ASSERT(obj->containsSlot(slot));
     PUSH_COPY(obj->getSlot(slot));
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], regs.sp[-1].isUndefined());
     if (op == JSOP_CALLGLOBAL)
         PUSH_UNDEFINED();
 }
@@ -5874,7 +5969,8 @@ BEGIN_CASE(JSOP_NEWARRAY)
 {
     len = GET_UINT16(regs.pc);
     cx->assertValidStackDepth(len);
-    JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len);
+    TypeObject *objType = script->getTypeInitObject(cx, regs.pc, true);
+    JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len, objType);
     if (!obj)
         goto error;
     regs.sp -= len - 1;
@@ -5888,16 +5984,17 @@ BEGIN_CASE(JSOP_NEWINIT)
     jsint count = GET_UINT16(regs.pc + UINT16_LEN);
 
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
+    TypeObject *type = script->getTypeInitObject(cx, regs.pc, i == JSProto_Array);
     JSObject *obj;
 
     gc::FinalizeKind kind = GuessObjectGCKind(count, i == JSProto_Array);
 
     if (i == JSProto_Array) {
-        obj = NewArrayWithKind(cx, kind);
+        obj = NewArrayWithKind(cx, type, kind);
         if (!obj)
             goto error;
     } else {
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
         if (!obj)
             goto error;
     }
@@ -5961,6 +6058,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
                   obj->shape() == obj->lastProperty()->shape);
         obj->extend(cx, shape);
 
+        TYPE_MONITOR_ASSIGN(cx, obj, shape->id, rval);
+
         /*
          * No method change check here because here we are adding a new
          * property, not updating an existing slot's value that might
@@ -5975,6 +6074,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
         JSAtom *atom;
         LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
+
+        TYPE_MONITOR_ASSIGN(cx, obj, id, rval);
 
         /* No need to check for duplicate property; the compiler already did. */
 
@@ -6045,7 +6146,8 @@ BEGIN_CASE(JSOP_DEFSHARP)
         obj = &lref.toObject();
     } else {
         JS_ASSERT(lref.isUndefined());
-        obj = js_NewArrayObject(cx, 0, NULL);
+        TypeObject *objType = cx->getFixedTypeObject(TYPE_OBJECT_SHARP_ARRAY);
+        obj = js_NewArrayObject(cx, 0, NULL, objType);
         if (!obj)
             goto error;
         regs.fp->slots()[slot].setObject(*obj);
@@ -6165,6 +6267,7 @@ BEGIN_CASE(JSOP_EXCEPTION)
     JS_ASSERT(cx->throwing);
     PUSH_COPY(cx->exception);
     cx->throwing = JS_FALSE;
+    TYPE_MONITOR_RESULT(cx, 0, cx->exception, false);
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
     if (interpMode == JSINTERP_PROFILE) {
         leaveOnSafePoint = true;
@@ -6385,11 +6488,13 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
+    TYPE_MONITOR_ASSIGN(cx, obj, id, rval);
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
     regs.sp -= 2;
     regs.sp[-1] = rval;
+    TYPE_MONITOR_RESULT(cx, 0, rval, false);
 }
 END_CASE(JSOP_SETXMLNAME)
 
@@ -6405,8 +6510,11 @@ BEGIN_CASE(JSOP_XMLNAME)
     if (!obj->getProperty(cx, id, &rval))
         goto error;
     regs.sp[-1] = rval;
-    if (op == JSOP_CALLXMLNAME)
+    TYPE_MONITOR_RESULT(cx, 0, rval, false);
+    if (op == JSOP_CALLXMLNAME) {
         SLOW_PUSH_THISV(cx, obj);
+        TYPE_MONITOR_RESULT(cx, 1, regs.sp[-1], false);
+    }
 }
 END_CASE(JSOP_XMLNAME)
 

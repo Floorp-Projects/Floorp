@@ -409,6 +409,19 @@ typedef JSBool
 typedef JSBool
 (* JSNative)(JSContext *cx, uintN argc, jsval *vp);
 
+/*
+ * Typedefs for type information on contexts, functions, objects and call sites.
+ * These are values from the js::types namespace and need to be cast before
+ * they can be used.
+ */
+typedef struct JSTypeFunction JSTypeFunction;
+typedef struct JSTypeObject JSTypeObject;
+typedef struct JSTypeCallsite JSTypeCallsite;
+
+/* Typedef for handlers describing type information of native functions. */
+typedef void
+(* JSTypeHandler)(JSContext *cx, JSTypeFunction *fun, JSTypeCallsite *callsite);
+
 /* Callbacks and their arguments. */
 
 typedef enum JSContextOp {
