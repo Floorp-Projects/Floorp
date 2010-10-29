@@ -93,19 +93,14 @@ function test() {
         win.addEventListener("load", function() {
           win.removeEventListener("load", arguments.callee, false);
 
-          // ensure that the test is run after delayedStartup
-          let _delayedStartup = win.delayedStartup;
-          win.delayedStartup = function() {
-            _delayedStartup.apply(win, arguments);
-            win.delayedStartup = _delayedStartup;
-
+          executeSoon(function() {
             is(win.document.title, expected_title, "The window title for " + url +
                " detached tab is correct (" + (insidePB ? "inside" : "outside") +
                " private browsing mode)");
             win.close();
 
             setTimeout(funcNext, 0);
-          };
+          });
         }, false);
       });
     }, false);
