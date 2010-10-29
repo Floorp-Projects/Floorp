@@ -122,7 +122,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
     for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
          &script->links != &cx->compartment->scripts;
          script = (JSScript *)script->links.next) {
-        if (script->debugMode != debug &&
+        if (script->debugMode != (bool) debug &&
             script->hasJITCode() &&
             !IsScriptLive(cx, script)) {
             /*
