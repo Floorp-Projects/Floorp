@@ -451,7 +451,7 @@ js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
 }
 /* This function and its callees do not touch any object's .clasp field. */
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32,
-                     0, nanojit::ACCSET_STORE_ANY & ~ACCSET_OBJ_CLASP)
+                     0, nanojit::ACCSET_STORE_ANY & ~tjit::ACCSET_OBJ_CLASP)
 #endif
 
 static JSBool
@@ -828,7 +828,7 @@ js_Array_dense_setelem_hole(JSContext* cx, JSObject* obj, jsint i)
 }
 /* storeAccSet == ACCSET_OBJ_PRIVATE: because it can set 'length'. */
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_Array_dense_setelem_hole, CONTEXT, OBJECT, INT32,
-                     0, ACCSET_OBJ_PRIVATE)
+                     0, tjit::ACCSET_OBJ_PRIVATE)
 #endif
 
 static JSBool
