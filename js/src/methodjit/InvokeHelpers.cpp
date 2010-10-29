@@ -515,7 +515,7 @@ js_InternalThrow(VMFrame &f)
             cx->throwing = JS_FALSE;
             cx->fp()->setReturnValue(rval);
             return JS_FUNC_TO_DATA_PTR(void *,
-                   JS_METHODJIT_DATA(cx).trampolines.forceReturn);
+                   cx->jaegerCompartment()->forceReturnTrampoline());
 
           case JSTRAP_THROW:
             cx->exception = rval;
