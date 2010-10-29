@@ -145,7 +145,6 @@ _BROWSER_FILES = \
                  browser_bug561636.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
-                 browser_bug575561.js \
                  browser_bug577121.js \
                  browser_bug579872.js \
                  browser_bug580956.js \
@@ -219,8 +218,6 @@ _BROWSER_FILES = \
                  file_bug550565_favicon.ico \
                  browser_overLinkInLocationBar.js \
                  browser_aboutHome.js \
-                 app_bug575561.html \
-                 app_subframe_bug575561.html \
                  $(NULL)
 
 # compartment-disabled
