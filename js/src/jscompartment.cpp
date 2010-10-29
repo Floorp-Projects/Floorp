@@ -44,7 +44,6 @@
 #include "jsiter.h"
 #include "jsproxy.h"
 #include "jsscope.h"
-#include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
 
@@ -62,9 +61,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-#ifdef JS_METHODJIT
-    delete jaegerCompartment;
-#endif
 }
 
 bool
@@ -78,16 +74,7 @@ JSCompartment::init()
 #ifdef JS_GCMETER
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
-    if (!crossCompartmentWrappers.init())
-        return false;
-
-#ifdef JS_METHODJIT
-    if (!(jaegerCompartment = new mjit::JaegerCompartment))
-        return false;
-    return jaegerCompartment->Initialize();
-#else
-    return true;
-#endif
+    return crossCompartmentWrappers.init();
 }
 
 bool

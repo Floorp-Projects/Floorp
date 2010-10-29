@@ -47,7 +47,6 @@
 #include "jsxml.h"
 #include "jsregexp.h"
 #include "jsgc.h"
-#include "jscompartment.h"
 
 namespace js {
 
@@ -77,13 +76,6 @@ GetGlobalForScopeChain(JSContext *cx)
 }
 
 }
-
-#ifdef JS_METHODJIT
-inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
-{
-    return compartment->jaegerCompartment;
-}
-#endif
 
 inline bool
 JSContext::ensureGeneratorStackSpace()

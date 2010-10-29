@@ -93,7 +93,8 @@ class BaseCompiler : public MacroAssemblerTypedefs
   public:
     static JSC::ExecutablePool *
     GetExecPool(JSContext *cx, size_t size) {
-        JSC::ExecutablePool *pool = cx->jaegerCompartment()->poolForSize(size);
+        ThreadData *jaegerData = &JS_METHODJIT_DATA(cx);
+        JSC::ExecutablePool *pool = jaegerData->execAlloc->poolForSize(size);
         if (!pool)
             js_ReportOutOfMemory(cx);
         return pool;
