@@ -99,7 +99,7 @@ testNode = nodeList.item(0);
 
       // its not clear that this test is valid
       // mozilla returns a fully expanded uri
-      is(vfaction, "...", "formLink");
+      is(vfaction, formNode.ownerDocument.location.href.replace(/button\.html/, "..."), "formLink");
        
 }
 
