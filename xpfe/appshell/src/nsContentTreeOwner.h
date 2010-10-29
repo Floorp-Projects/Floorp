@@ -49,7 +49,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIWebBrowserChrome3.h"
+#include "nsIWebBrowserChrome2.h"
 #include "nsIWindowProvider.h"
 
 class nsXULWindow;
@@ -58,7 +58,7 @@ class nsSiteWindow2;
 class nsContentTreeOwner : public nsIDocShellTreeOwner,
                            public nsIBaseWindow,
                            public nsIInterfaceRequestor,
-                           public nsIWebBrowserChrome3,
+                           public nsIWebBrowserChrome2,
                            public nsIWindowProvider
 {
 friend class nsXULWindow;
@@ -72,7 +72,6 @@ public:
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIWEBBROWSERCHROME
    NS_DECL_NSIWEBBROWSERCHROME2
-   NS_DECL_NSIWEBBROWSERCHROME3
    NS_DECL_NSIWINDOWPROVIDER
 
 protected:
