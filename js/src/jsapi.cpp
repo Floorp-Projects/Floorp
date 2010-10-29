@@ -653,6 +653,9 @@ JSRuntime::init(uint32 maxbytes)
     if (!debuggerLock)
         return false;
 #endif
+
+    debugMode = JS_FALSE;
+
     return propertyTree.init() && js_InitThreads(this);
 }
 
