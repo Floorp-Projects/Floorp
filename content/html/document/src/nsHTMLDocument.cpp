@@ -219,6 +219,27 @@ ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
                                   "DOM Events");
 }
 
+static nsresult
+RemoveFromAgentSheets(nsCOMArray<nsIStyleSheet> &aAgentSheets, const nsAString& url)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRInt32 i = 0; i < aAgentSheets.Count(); ++i) {
+    nsIStyleSheet* sheet = aAgentSheets[i];
+    nsIURI* sheetURI = sheet->GetSheetURI();
+
+    PRBool equals = PR_FALSE;
+    uri->Equals(sheetURI, &equals);
+    if (equals) {
+      aAgentSheets.RemoveObjectAt(i);
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 {
@@ -3115,12 +3136,24 @@ nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
     EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
 
-    nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(aEditor);
-    if (editorss) {
-      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-      if (oldState == eDesignMode)
-        editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
-    }
+    nsCOMPtr<nsPIDOMWindow> window = GetWindow();
+    if (!window)
+      return;
+
+    nsCOMPtr<nsIPresShell> presShell = GetShell();
+    if (!presShell)
+      return;
+
+    nsCOMArray<nsIStyleSheet> agentSheets;
+    presShell->GetAgentStyleSheets(agentSheets);
+
+    RemoveFromAgentSheets(agentSheets, NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
+    if (oldState == eDesignMode)
+      RemoveFromAgentSheets(agentSheets, NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+
+    presShell->SetAgentStyleSheets(agentSheets);
+
+    presShell->ReconstructStyleData();
   }
 }
 
@@ -3246,17 +3279,37 @@ nsHTMLDocument::EditingStateChanged()
     if (!editor)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
+    nsCOMPtr<nsIPresShell> presShell = GetShell();
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+    nsCOMArray<nsIStyleSheet> agentSheets;
+    rv = presShell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsRefPtr<nsCSSStyleSheet> sheet;
+    rv = LoadChromeSheetSync(uri, PR_TRUE, getter_AddRefs(sheet));
+    NS_ENSURE_TRUE(sheet, rv);
+
+    rv = agentSheets.AppendObject(sheet);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Should we update the editable state of all the nodes in the document? We
     // need to do this when the designMode value changes, as that overrides
     // specific states on the elements.
     if (designMode) {
       // designMode is being turned on (overrides contentEditable).
-      editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+      rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = CSSLoader()->LoadSheetSync(uri, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
+      NS_ENSURE_TRUE(sheet, rv);
+
+      rv = agentSheets.AppendObject(sheet);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // We need to flush styles here because we're setting an XBL binding in
       // designmode.css.
@@ -3271,7 +3324,7 @@ nsHTMLDocument::EditingStateChanged()
     }
     else if (oldState == eDesignMode) {
       // designMode is being turned off (contentEditable is still on).
-      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+      RemoveFromAgentSheets(agentSheets, NS_LITERAL_STRING("resource://gre/res/designmode.css"));
 
       rv = editSession->RestoreJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3282,6 +3335,11 @@ nsHTMLDocument::EditingStateChanged()
       // contentEditable is being turned on (and designMode is off).
       updateState = PR_FALSE;
     }
+
+    rv = presShell->SetAgentStyleSheets(agentSheets);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    presShell->ReconstructStyleData();
   }
 
   mEditingState = newState;
