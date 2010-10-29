@@ -75,7 +75,7 @@ static void*
 GeckoStart(void *data)
 {
 #ifdef MOZ_CRASHREPORTER
-    const struct mapping_info *info = getLibraryMapping();
+    struct mapping_info *info = lib_mapping;
     while (info->name) {
       CrashReporter::AddLibraryMapping(info->name, info->file_id, info->base,
                                        info->len, info->offset);
