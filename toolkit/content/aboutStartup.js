@@ -38,6 +38,8 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/Services.jsm");
+let dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"]
+                    .getService(Ci.nsIScriptableDateFormat);
 
 let strings = Services.strings.createBundle("chrome://global/locale/aboutStartup.properties");
 let branding = Services.strings.createBundle("chrome://branding/locale/brand.properties");
@@ -66,9 +68,14 @@ function appVersion(version, build) formatStr("appVersion", [brandShortName, ver
 function formatExtension(str, name, version) formatStr("extension"+(str.replace(/^on/, "")
                                                                        .replace(/ing$/, "ed")),
                                                        [name, version]);
+function formatDate(date) dateService.FormatDateTime("", dateService.dateFormatLong,
+                                                     dateService.timeFormatSeconds,
+                                                     date.getFullYear(), date.getMonth()+1,
+                                                     date.getDate(), date.getHours(),
+                                                     date.getMinutes(), date.getSeconds());
 
 function msFromµs(µs) µs / 1000;
-function formatstamp(µs) new Date(msFromµs(µs));
+function formatstamp(µs) formatDate(new Date(msFromµs(µs)));
 function formatµs(µs) µs + " µs";
 function formatms(ms) formatStr("milliseconds", [ms]);
 
@@ -244,9 +251,10 @@ function populateMeasurements()
                                       - 110;
       $("#graph").height(Math.max(350, height));
 
-      options.xaxis.min = clamp(Date.now() - 3600000,    // 1 hour in milliseconds
-                                series[0].data[0][0],
-                                Date.now() - 604800000); // 7 days in milliseconds
+      options.xaxis.min = Date.now() - clamp(3600000,    // 1 hour in milliseconds
+                                             Date.now() - series[0].data[0][0],
+                                             604800000); // 7 days in milliseconds
+
       var max = 0;
       for each (let [stamp, d] in series[0].data)
         if (stamp >= options.xaxis.min && d > max)
