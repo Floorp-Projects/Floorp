@@ -108,7 +108,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     callPatches(ContextAllocPolicy(cx)),
     callSites(ContextAllocPolicy(cx)), 
     doubleList(ContextAllocPolicy(cx)),
-    stubcc(cx, *this, frame, script),
+    stubcc(cx, *thisFromCtor(), frame, script),
     debugMode(cx->compartment->debugMode)
 #if defined JS_TRACER
     ,addTraceHints(cx->traceJitEnabled)

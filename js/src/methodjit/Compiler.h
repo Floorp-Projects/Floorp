@@ -277,6 +277,7 @@ class Compiler : public BaseCompiler
     bool debugMode;
     bool addTraceHints;
 
+    Compiler *thisFromCtor() { return this; }
   public:
     // Special atom index used to indicate that the atom is 'length'. This
     // follows interpreter usage in JSOP_LENGTH.
