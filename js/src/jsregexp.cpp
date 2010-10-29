@@ -55,6 +55,7 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
@@ -66,6 +67,7 @@ using namespace nanojit;
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /*
  * RegExpStatics allocates memory -- in order to keep the statics stored
@@ -130,7 +132,8 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
     JS_ASSERT(proto);
     JS_ASSERT(proto->getClass() == &js_RegExpClass);
-    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
+    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent(), type);
     if (!clone)
         return NULL;
     RegExpStatics *res = cx->regExpStatics();
@@ -354,6 +357,19 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uint32 flags, JSObject **o
         return true;
     }
 
+    static const struct LazyProp {
+        const char *name;
+        uint16 atomOffset;
+        PropertyOp getter;
+        jstype type;
+    } lazyRegExpProps[] = {
+        { js_source_str,     ATOM_OFFSET(source),     source_getter, TYPE_STRING },
+        { js_global_str,     ATOM_OFFSET(global),     global_getter, TYPE_BOOLEAN },
+        { js_ignoreCase_str, ATOM_OFFSET(ignoreCase), ignoreCase_getter, TYPE_BOOLEAN },
+        { js_multiline_str,  ATOM_OFFSET(multiline),  multiline_getter, TYPE_BOOLEAN },
+        { js_sticky_str,     ATOM_OFFSET(sticky),     sticky_getter, TYPE_BOOLEAN }
+    };
+
     for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
         const LazyProp &lazy = lazyRegExpProps[i];
         JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
@@ -433,22 +449,23 @@ const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSP
 const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
 
 static JSPropertySpec regexp_static_props[] = {
-    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter, static_input_setter},
+    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter,
+                                                     static_input_setter, JS_TypeHandlerString},
     {"multiline",    0, REGEXP_STATIC_PROP_ATTRS,    static_multiline_getter,
-                                                     static_multiline_setter},
-    {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL},
-    {"lastParen",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastParen_getter,    NULL},
-    {"leftContext",  0, RO_REGEXP_STATIC_PROP_ATTRS, static_leftContext_getter,  NULL},
-    {"rightContext", 0, RO_REGEXP_STATIC_PROP_ATTRS, static_rightContext_getter, NULL},
-    {"$1",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren1_getter,       NULL},
-    {"$2",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren2_getter,       NULL},
-    {"$3",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren3_getter,       NULL},
-    {"$4",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren4_getter,       NULL},
-    {"$5",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren5_getter,       NULL},
-    {"$6",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren6_getter,       NULL},
-    {"$7",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren7_getter,       NULL},
-    {"$8",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren8_getter,       NULL},
-    {"$9",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren9_getter,       NULL},
+                                                     static_multiline_setter, JS_TypeHandlerBool},
+    {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL, JS_TypeHandlerString},
+    {"lastParen",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastParen_getter,    NULL, JS_TypeHandlerString},
+    {"leftContext",  0, RO_REGEXP_STATIC_PROP_ATTRS, static_leftContext_getter,  NULL, JS_TypeHandlerString},
+    {"rightContext", 0, RO_REGEXP_STATIC_PROP_ATTRS, static_rightContext_getter, NULL, JS_TypeHandlerString},
+    {"$1",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren1_getter,       NULL, JS_TypeHandlerString},
+    {"$2",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren2_getter,       NULL, JS_TypeHandlerString},
+    {"$3",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren3_getter,       NULL, JS_TypeHandlerString},
+    {"$4",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren4_getter,       NULL, JS_TypeHandlerString},
+    {"$5",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren5_getter,       NULL, JS_TypeHandlerString},
+    {"$6",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren6_getter,       NULL, JS_TypeHandlerString},
+    {"$7",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren7_getter,       NULL, JS_TypeHandlerString},
+    {"$8",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren8_getter,       NULL, JS_TypeHandlerString},
+    {"$9",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren9_getter,       NULL, JS_TypeHandlerString},
     {0,0,0,0,0}
 };
 
@@ -492,7 +509,8 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRString(xdr, &source) || !JS_XDRUint32(xdr, &flagsword))
         return false;
     if (xdr->mode == JSXDR_DECODE) {
-        JSObject *obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass);
+        TypeObject *type = xdr->cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
+        JSObject *obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass, type);
         if (!obj)
             return false;
         obj->clearParent();
@@ -835,12 +853,12 @@ js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  regexp_toString,    0,0),
+    JS_FN_TYPE(js_toSource_str,  regexp_toString,    0,0, JS_TypeHandlerString),
 #endif
-    JS_FN(js_toString_str,  regexp_toString,    0,0),
-    JS_FN("compile",        regexp_compile,     2,0),
-    JS_FN("exec",           js_regexp_exec,     1,0),
-    JS_FN("test",           js_regexp_test,     1,0),
+    JS_FN_TYPE(js_toString_str,  regexp_toString,    0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("compile",        regexp_compile,     2,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("exec",           js_regexp_exec,     1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("test",           js_regexp_test,     1,0, JS_TypeHandlerBool),
     JS_FS_END
 };
 
@@ -863,7 +881,8 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Otherwise, replace obj with a new RegExp object. */
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass, type);
     if (!obj)
         return false;
 
@@ -885,6 +904,7 @@ JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, regexp_construct, 1,
+                                   JS_TypeHandlerNew,
                                    NULL, regexp_methods, regexp_static_props, NULL);
     if (!proto)
         return NULL;
@@ -903,6 +923,18 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         !InitRegExpClassCompile(cx, proto)) {
         return NULL;
     }
+
+    TypeObject *regexpType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
+    cx->addTypeProperty(regexpType, "source", TYPE_STRING);
+    cx->addTypeProperty(regexpType, "global", TYPE_BOOLEAN);
+    cx->addTypeProperty(regexpType, "ignoreCase", TYPE_BOOLEAN);
+    cx->addTypeProperty(regexpType, "multiline", TYPE_BOOLEAN);
+    cx->addTypeProperty(regexpType, "lastIndex", TYPE_INT32);
+
+    TypeObject *arrayType = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
+    cx->addTypeProperty(arrayType, NULL, TYPE_STRING);
+    cx->addTypeProperty(arrayType, "index", TYPE_INT32);
+    cx->addTypeProperty(arrayType, "input", TYPE_STRING);
 
     return proto;
 }

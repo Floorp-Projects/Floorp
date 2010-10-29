@@ -63,11 +63,13 @@
 #include "jsstaticcheck.h"
 
 #include "jscntxtinlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /* Forward declarations for js_ErrorClass's initializer. */
 static JSBool
@@ -708,6 +710,9 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     JSString *message, *filename;
     JSStackFrame *fp;
 
+    /* Use the common error type for the object. */
+    TypeObject *objtype = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ERROR);
+
     /*
      * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
      * called as functions, without operator new.  But as we do not give
@@ -721,7 +726,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     JSObject *errProto = &protov.toObject();
-    JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
+    JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent(), objtype);
     if (!obj)
         return JS_FALSE;
 
@@ -965,9 +970,9 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   exn_toSource,           0,0),
+    JS_FN_TYPE(js_toSource_str,   exn_toSource,           0,0, JS_TypeHandlerString),
 #endif
-    JS_FN(js_toString_str,   exn_toString,           0,0),
+    JS_FN_TYPE(js_toString_str,   exn_toString,           0,0, JS_TypeHandlerString),
     JS_FS_END
 };
 
@@ -987,6 +992,16 @@ GetExceptionProtoKey(intN exn)
     JS_ASSERT(JSEXN_ERR <= exn);
     JS_ASSERT(exn < JSEXN_LIMIT);
     return (JSProtoKey) (JSProto_Error + exn);
+}
+
+static void error_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    // whether they are called with/without 'new', the error functions always
+    // return an error object.
+    types::TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ERROR);
+    Valueify(jssite)->returnTypes->addType(cx, (types::jstype) object);
+#endif
 }
 
 JSObject *
@@ -1015,13 +1030,24 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     error_proto = NULL;   /* quell GCC overwarning */
 #endif
 
+    /*
+     * use a single type object for Error and all exceptions which
+     * inherit properties from it.
+     */
+    TypeObject *protoType = cx->getTypeObject("Error.prototype", false);
+    TypeObject *errorType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ERROR);
+    cx->addTypePrototype(protoType, obj_proto->getTypeObject());
+    cx->addTypePrototype(errorType, protoType);
+
     jsval empty = STRING_TO_JSVAL(cx->runtime->emptyString);
 
     /* Initialize the prototypes first. */
     for (intN i = JSEXN_ERR; i != JSEXN_LIMIT; i++) {
         /* Make the prototype for the current constructor name. */
         JSObject *proto =
-            NewNonFunction<WithProto::Class>(cx, &js_ErrorClass, (i != JSEXN_ERR) ? error_proto : obj_proto, obj);
+            NewNonFunction<WithProto::Class>(cx, &js_ErrorClass,
+                                             (i != JSEXN_ERR) ? error_proto : obj_proto,
+                                             obj, protoType);
         if (!proto)
             return NULL;
         if (i == JSEXN_ERR) {
@@ -1036,13 +1062,26 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* So exn_finalize knows whether to destroy private data. */
         proto->setPrivate(NULL);
 
-        /* Make a constructor function for the current name. */
+        /* Get the text name of this function, needs to be in sync with jsatom.h.  Blech. */
         JSProtoKey protoKey = GetExceptionProtoKey(i);
+        const char *fullName = js_common_atom_names[1 + 2 + JSTYPE_LIMIT + 1 + protoKey];
+
+        /*
+         * Mark the function as a builtin before constructing and adding it to the global
+         * object, which could trigger accesses on its properties.
+         */
+        cx->markTypeBuiltinFunction(cx->getTypeObject(fullName, true));
+
+        /* Make a constructor function for the current name. */
         JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
-        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, JSFUN_CONSTRUCTOR);
+        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, JSFUN_CONSTRUCTOR,
+                                            error_TypeNew, fullName);
         if (!fun)
             return NULL;
         roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
+
+        /* This is a builtin class, specify its 'prototype' field for inference. */
+        cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, true);
 
         /* Make this constructor make objects of class Exception. */
         FUN_CLASP(fun) = &js_ErrorClass;
@@ -1054,9 +1093,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
 
         /* Add the name property to the prototype. */
-        if (!JS_DefineProperty(cx, proto, js_name_str,
-                               STRING_TO_JSVAL(ATOM_TO_STRING(atom)),
-                               NULL, NULL, JSPROP_ENUMERATE)) {
+        if (!JS_DefinePropertyWithType(cx, proto, js_name_str,
+                                       STRING_TO_JSVAL(ATOM_TO_STRING(atom)),
+                                       NULL, NULL, JSPROP_ENUMERATE)) {
             return NULL;
         }
 
@@ -1065,16 +1104,20 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             return NULL;
 
         /* Set default values. */
-        if (!JS_DefineProperty(cx, proto, js_message_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
-            !JS_DefineProperty(cx, proto, js_fileName_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
-            !JS_DefineProperty(cx, proto, js_lineNumber_str, JSVAL_ZERO, NULL, NULL,
-                               JSPROP_ENUMERATE)) {
+        if (!JS_DefinePropertyWithType(cx, proto, js_message_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
+            !JS_DefinePropertyWithType(cx, proto, js_fileName_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
+            !JS_DefinePropertyWithType(cx, proto, js_lineNumber_str, JSVAL_ZERO, NULL, NULL,
+                                       JSPROP_ENUMERATE)) {
             return NULL;
         }
     }
 
-    if (!JS_DefineFunctions(cx, error_proto, exception_methods))
+    if (!JS_DefineFunctionsWithPrefix(cx, error_proto, exception_methods, "Error"))
         return NULL;
+
+    /* Add 'stack' to the prototype of Error so that it is propagated to the
+     * individual error objects. */
+    JS_AddTypeProperty(cx, error_proto, "stack", empty);
 
     return error_proto;
 }
@@ -1114,6 +1157,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     jsval tv[4];
     JSBool ok;
     JSObject *errProto, *errObject;
+    TypeObject *errType;
     JSString *messageStr, *filenameStr;
 
     /*
@@ -1172,7 +1216,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
+    errType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ERROR);
+    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent(), errType);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;

@@ -63,10 +63,12 @@
 #include "json.h"
 
 #include "jsatominlines.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -556,7 +558,8 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, const Value &space,
     if (!scx.initializeGap(cx, space) || !scx.initializeStack())
         return JS_FALSE;
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON_STRINGIFY);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type);
     if (!obj)
         return JS_FALSE;
 
@@ -609,6 +612,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
 
                 if (!obj->defineProperty(cx, index, propValue.value(), NULL, NULL, JSPROP_ENUMERATE))
                     return false;
+                cx->addTypeProperty(obj->getTypeObject(), NULL, propValue.value());
             }
         } else {
             AutoIdVector props(cx);
@@ -627,6 +631,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
                                              JSPROP_ENUMERATE)) {
                         return false;
                     }
+                    cx->addTypePropertyId(obj->getTypeObject(), idName, propValue.value());
                 }
             }
         }
@@ -660,8 +665,8 @@ JSONParseError(JSONParser *jp, JSContext *cx)
 static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
-
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON_REVIVE);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type);
     if (!obj)
         return false;
 
@@ -680,7 +685,8 @@ js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= false*/
     if (!cx)
         return NULL;
 
-    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON_ARRAY);
+    JSObject *arr = js_NewArrayObject(cx, 0, NULL, type);
     if (!arr)
         return NULL;
 
@@ -790,6 +796,7 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, const Value &value)
             jsid index;
             if (!js_IndexToId(cx, len, &index))
                 return JS_FALSE;
+            cx->addTypeProperty(parent->getTypeObject(), NULL, value);
             ok = parent->defineProperty(cx, index, value, NULL, NULL, JSPROP_ENUMERATE);
         }
     } else {
@@ -845,7 +852,9 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
 static JSBool
 OpenObject(JSContext *cx, JSONParser *jp)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    // TODO: need better type objects following the structure of the JSON.
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON_OBJECT);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type);
     if (!obj)
         return JS_FALSE;
 
@@ -856,7 +865,8 @@ static JSBool
 OpenArray(JSContext *cx, JSONParser *jp)
 {
     // Add an array to an existing array or object
-    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON_ARRAY);
+    JSObject *arr = js_NewArrayObject(cx, 0, NULL, type);
     if (!arr)
         return JS_FALSE;
 
@@ -915,7 +925,7 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
         return JSONParseError(jp, cx);
     }
 
-    return PushPrimitive(cx, jp, DoubleValue(val));
+    return PushPrimitive(cx, jp, NumberValue(val));
 }
 
 static JSBool
@@ -1239,26 +1249,25 @@ json_toSource(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec json_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  json_toSource,      0, 0),
+    JS_FN_TYPE(js_toSource_str,  json_toSource,      0, 0, JS_TypeHandlerString),
 #endif
-    JS_FN("parse",          js_json_parse,      2, 0),
-    JS_FN("stringify",      js_json_stringify,  3, 0),
+    JS_FN_TYPE("parse",          js_json_parse,      2, 0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("stringify",      js_json_stringify,  3, 0, JS_TypeHandlerString),
     JS_FS_END
 };
 
 JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *JSON;
-
-    JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
+    TypeObject *type = cx->getTypeObject(js_JSON_str, false);
+    JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj, type);
     if (!JSON)
         return NULL;
-    if (!JS_DefineProperty(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
-                           JS_PropertyStub, JS_PropertyStub, 0))
+    if (!JS_DefinePropertyWithType(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
+                                   JS_PropertyStub, JS_PropertyStub, 0))
         return NULL;
 
-    if (!JS_DefineFunctions(cx, JSON, json_static_methods))
+    if (!JS_DefineFunctionsWithPrefix(cx, JSON, json_static_methods, js_JSON_str))
         return NULL;
 
     return JSON;

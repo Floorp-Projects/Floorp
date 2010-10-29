@@ -295,7 +295,8 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    if (!closure->initSharingEmptyShape(cx, &js_FunctionClass, proto, parent,
+    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_NULL_CLOSURE);
+    if (!closure->initSharingEmptyShape(cx, &js_FunctionClass, proto, parent, type,
                                         fun, gc::FINALIZE_OBJECT2)) {
         return NULL;
     }

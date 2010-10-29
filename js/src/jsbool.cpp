@@ -47,6 +47,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jsinfer.h"
 #include "jsversion.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -54,10 +55,12 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::types;
 
 Class js_BooleanClass = {
     "Boolean",
@@ -120,11 +123,11 @@ bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  bool_toSource,  0, JSFUN_PRIMITIVE_THIS),
+    JS_FN_TYPE(js_toSource_str,  bool_toSource,  0, JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
 #endif
-    JS_FN(js_toString_str,  bool_toString,  0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,   bool_valueOf,   0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,    bool_valueOf,   0, JSFUN_PRIMITIVE_THIS),
+    JS_FN_TYPE(js_toString_str,  bool_toString,  0, JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE(js_valueOf_str,   bool_valueOf,   0, JSFUN_PRIMITIVE_THIS, JS_TypeHandlerBool),
+    JS_FN_TYPE(js_toJSON_str,    bool_valueOf,   0, JSFUN_PRIMITIVE_THIS, JS_TypeHandlerBool),
     JS_FS_END
 };
 
@@ -135,7 +138,8 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
     bool b = argc != 0 ? js_ValueToBoolean(argv[0]) : false;
 
     if (IsConstructing(vp)) {
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_BooleanClass);
+        TypeObject *objType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_BOOLEAN);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_BooleanClass, objType);
         if (!obj)
             return false;
         obj->setPrimitiveThis(BooleanValue(b));
@@ -146,13 +150,24 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static void type_NewBoolean(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+    if (site->isNew) {
+        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_BOOLEAN);
+        site->returnTypes->addType(cx, (jstype) object);
+    } else {
+        JS_TypeHandlerBool(cx, jsfun, jssite);
+    }
+#endif
+}
+
 JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
-    proto = js_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
-                         NULL, boolean_methods, NULL, NULL);
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1, type_NewBoolean,
+                                   NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
     proto->setPrimitiveThis(BooleanValue(false));

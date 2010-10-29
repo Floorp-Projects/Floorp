@@ -47,6 +47,7 @@
 #include "jsprvtd.h"
 #include "jsdbgapi.h"
 #include "jsclist.h"
+#include "jsinfer.h"
 
 /*
  * Type of try note associated with each catch or finally block, and also with
@@ -179,11 +180,8 @@ enum JITScriptStatus {
 };
 
 namespace js {
-namespace mjit {
-
-struct JITScript;
-
-}
+namespace mjit { struct JITScript; }
+namespace analyze { class Script; }
 }
 #endif
 
@@ -285,6 +283,42 @@ struct JSScript {
     uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
 
   public:
+
+    /* Analysis and type information for this script. */
+    js::analyze::Script *analysis;
+
+    /* Analyze this script if not already done. */
+    js::analyze::Script *analyze(JSContext *cx);
+
+    /* Get empty analysis information for this script. */
+    js::analyze::Script *makeAnalysis(JSContext *cx);
+
+    /* Check that correct types were inferred for the values popped by this bytecode. */
+    void typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp);
+
+    /* Mark this script as having been created at the specified script/pc. */
+    inline void setTypeNesting(JSScript *parent, const jsbytecode *pc);
+
+    /* Get a type object for an allocation site in this script. */
+    inline js::types::TypeObject *
+    getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
+
+    /*
+     * Monitor a bytecode pushing some value, if necessary.  If force is set,
+     * the result may have been unexpected by the inference.
+     */
+    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
+                                  js::types::jstype type, bool force);
+    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
+                                  const js::Value &rval, bool force);
+
+    /* Monitor a bytecode assigning to an object's property, if necessary. */
+    inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
+                                  JSObject *obj, jsid id, const js::Value &rval);
+
+    /* Override the value of an argument to this script by assigning to arguments[...]. */
+    inline void typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
+
 #ifdef JS_METHODJIT
     // Fast-cached pointers to make calls faster. These are also used to
     // quickly test whether there is JIT code; a NULL value means no

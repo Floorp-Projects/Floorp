@@ -55,6 +55,9 @@
 #include "jsnum.h"
 #include "jslibmath.h"
 
+#include "jsinferinlines.h"
+#include "jsobjinlines.h"
+
 using namespace js;
 
 #ifndef M_E
@@ -122,12 +125,15 @@ js_math_abs(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fabs(x);
     vp->setNumber(z);
+    if (vp[2].isInt32() && !vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -265,12 +271,15 @@ js_math_ceil(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_math_ceil_impl(x);
     vp->setNumber(z);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -339,12 +348,15 @@ js_math_floor(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_math_floor_impl(x);
     vp->setNumber(z);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -382,6 +394,7 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NegativeInfinity);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     argv = vp + 2;
@@ -412,6 +425,7 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_PositiveInfinity);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     argv = vp + 2;
@@ -592,12 +606,15 @@ js_math_round(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         vp->setDouble(js_NaN);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = js_copysign(floor(x + 0.5), x);
     vp->setNumber(z);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -828,28 +845,42 @@ JS_DEFINE_TRCINFO_1(js_math_ceil,
 
 #endif /* JS_TRACER */
 
+static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    types::TypeCallsite *site = Valueify(jssite);
+
+    if (!site->returnTypes)
+        return;
+
+    // the zero-argument case will be handled as an overflow in the actual natives.
+    for (size_t ind = 0; ind < site->argumentCount; ind++)
+        site->argumentTypes[ind]->addArith(cx, site->pool(), site->code, site->returnTypes);
+#endif
+}
+
 static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  math_toSource,        0, 0),
+    JS_FN_TYPE(js_toSource_str,  math_toSource,        0, 0, JS_TypeHandlerString),
 #endif
-    JS_TN("abs",            js_math_abs,          1, 0, &js_math_abs_trcinfo),
-    JS_TN("acos",           math_acos,            1, 0, &math_acos_trcinfo),
-    JS_TN("asin",           math_asin,            1, 0, &math_asin_trcinfo),
-    JS_TN("atan",           math_atan,            1, 0, &math_atan_trcinfo),
-    JS_TN("atan2",          math_atan2,           2, 0, &math_atan2_trcinfo),
-    JS_TN("ceil",           js_math_ceil,         1, 0, &js_math_ceil_trcinfo),
-    JS_TN("cos",            math_cos,             1, 0, &math_cos_trcinfo),
-    JS_TN("exp",            math_exp,             1, 0, &math_exp_trcinfo),
-    JS_TN("floor",          js_math_floor,        1, 0, &js_math_floor_trcinfo),
-    JS_TN("log",            math_log,             1, 0, &math_log_trcinfo),
-    JS_TN("max",            js_math_max,          2, 0, &js_math_max_trcinfo),
-    JS_TN("min",            js_math_min,          2, 0, &js_math_min_trcinfo),
-    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo),
-    JS_TN("random",         math_random,          0, 0, &math_random_trcinfo),
-    JS_TN("round",          js_math_round,        1, 0, &js_math_round_trcinfo),
-    JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo),
-    JS_TN("sqrt",           math_sqrt,            1, 0, &math_sqrt_trcinfo),
-    JS_TN("tan",            math_tan,             1, 0, &math_tan_trcinfo),
+    JS_TN("abs",            math_abs,             1, 0, &js_math_abs_trcinfo, math_TypeArith),
+    JS_TN("acos",           math_acos,            1, 0, &math_acos_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("asin",           math_asin,            1, 0, &math_asin_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("atan",           math_atan,            1, 0, &math_atan_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("atan2",          math_atan2,           2, 0, &math_atan2_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("ceil",           js_math_ceil,         1, 0, &js_math_ceil_trcinfo, JS_TypeHandlerInt),
+    JS_TN("cos",            math_cos,             1, 0, &math_cos_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("exp",            math_exp,             1, 0, &math_exp_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("floor",          js_math_floor,        1, 0, &js_math_floor_trcinfo, JS_TypeHandlerInt),
+    JS_TN("log",            math_log,             1, 0, &math_log_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("max",            js_math_max,          2, 0, &js_math_max_trcinfo, math_TypeArith),
+    JS_TN("min",            js_math_min,          2, 0, &js_math_min_trcinfo, math_TypeArith),
+    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("random",         math_random,          0, 0, &math_random_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("round",          js_math_round,        1, 0, &js_math_round_trcinfo, JS_TypeHandlerInt),
+    JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("sqrt",           math_sqrt,            1, 0, &math_sqrt_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("tan",            math_tan,             1, 0, &math_tan_trcinfo, JS_TypeHandlerFloat),
     JS_FS_END
 };
 
@@ -866,19 +897,19 @@ js_IsMathFunction(JSNative native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *Math;
-
-    Math = JS_NewObject(cx, Jsvalify(&js_MathClass), NULL, obj);
+    types::TypeObject *type = cx->getTypeObject(js_Math_str, false);
+    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj, type);
     if (!Math)
         return NULL;
-    if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
-                           JS_PropertyStub, JS_PropertyStub, 0)) {
+    if (!JS_DefinePropertyWithType(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
+                                   JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
     }
 
-    if (!JS_DefineFunctions(cx, Math, math_static_methods))
+    if (!JS_DefineFunctionsWithPrefix(cx, Math, math_static_methods, js_Math_str))
         return NULL;
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
         return NULL;
+
     return Math;
 }

@@ -71,9 +71,11 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::types;
 
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.
@@ -1430,6 +1432,8 @@ date_getYear(JSContext *cx, uintN argc, Value *vp)
         vp->setInt32(year);
     } else {
         *vp = yearVal;
+        if (!vp->isInt32())
+            cx->markTypeCallerOverflow();
     }
 
     return JS_TRUE;
@@ -1443,6 +1447,8 @@ date_getFullYear(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1456,6 +1462,8 @@ date_getUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = YearFromTime(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1469,6 +1477,8 @@ date_getMonth(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1482,6 +1492,8 @@ date_getUTCMonth(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = MonthFromTime(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1495,6 +1507,8 @@ date_getDate(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1508,6 +1522,8 @@ date_getUTCDate(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = DateFromTime(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1521,6 +1537,8 @@ date_getDay(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1534,6 +1552,8 @@ date_getUTCDay(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = WeekDay(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1547,6 +1567,8 @@ date_getHours(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1560,6 +1582,8 @@ date_getUTCHours(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = HourFromTime(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1573,6 +1597,8 @@ date_getMinutes(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1586,6 +1612,8 @@ date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
 
     if (JSDOUBLE_IS_FINITE(result))
         result = MinFromTime(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1601,6 +1629,8 @@ date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     *vp = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
 
@@ -1610,12 +1640,13 @@ static JSBool
 date_getUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
-
     if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
         result = msFromTime(result);
+    else
+        cx->markTypeCallerOverflow();
 
     vp->setNumber(result);
     return JS_TRUE;
@@ -1639,6 +1670,10 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
      * daylight savings time.
      */
     result = (utctime - localtime) / msPerMinute;
+
+    if (!JSDOUBLE_IS_FINITE(result))
+        cx->markTypeCallerOverflow();
+
     vp->setNumber(result);
     return JS_TRUE;
 }
@@ -2412,62 +2447,62 @@ JS_DEFINE_TRCINFO_1(date_now,
     (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, nanojit::ACCSET_STORE_ANY)))
 
 static JSFunctionSpec date_static_methods[] = {
-    JS_FN("UTC",                 date_UTC,                MAXARGS,0),
-    JS_FN("parse",               date_parse,              1,0),
-    JS_TN("now",                 date_now,                0,0, &date_now_trcinfo),
+    JS_FN_TYPE("UTC",                 date_UTC,                MAXARGS,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("parse",               date_parse,              1,0, JS_TypeHandlerFloat),
+    JS_TN("now", date_now, 0,0, &date_now_trcinfo, JS_TypeHandlerFloat),
     JS_FS_END
 };
 
 static JSFunctionSpec date_methods[] = {
-    JS_FN("getTime",             date_getTime,            0,0),
-    JS_FN("getTimezoneOffset",   date_getTimezoneOffset,  0,0),
-    JS_FN("getYear",             date_getYear,            0,0),
-    JS_FN("getFullYear",         date_getFullYear,        0,0),
-    JS_FN("getUTCFullYear",      date_getUTCFullYear,     0,0),
-    JS_FN("getMonth",            date_getMonth,           0,0),
-    JS_FN("getUTCMonth",         date_getUTCMonth,        0,0),
-    JS_FN("getDate",             date_getDate,            0,0),
-    JS_FN("getUTCDate",          date_getUTCDate,         0,0),
-    JS_FN("getDay",              date_getDay,             0,0),
-    JS_FN("getUTCDay",           date_getUTCDay,          0,0),
-    JS_FN("getHours",            date_getHours,           0,0),
-    JS_FN("getUTCHours",         date_getUTCHours,        0,0),
-    JS_FN("getMinutes",          date_getMinutes,         0,0),
-    JS_FN("getUTCMinutes",       date_getUTCMinutes,      0,0),
-    JS_FN("getSeconds",          date_getUTCSeconds,      0,0),
-    JS_FN("getUTCSeconds",       date_getUTCSeconds,      0,0),
-    JS_FN("getMilliseconds",     date_getUTCMilliseconds, 0,0),
-    JS_FN("getUTCMilliseconds",  date_getUTCMilliseconds, 0,0),
-    JS_FN("setTime",             date_setTime,            1,0),
-    JS_FN("setYear",             date_setYear,            1,0),
-    JS_FN("setFullYear",         date_setFullYear,        3,0),
-    JS_FN("setUTCFullYear",      date_setUTCFullYear,     3,0),
-    JS_FN("setMonth",            date_setMonth,           2,0),
-    JS_FN("setUTCMonth",         date_setUTCMonth,        2,0),
-    JS_FN("setDate",             date_setDate,            1,0),
-    JS_FN("setUTCDate",          date_setUTCDate,         1,0),
-    JS_FN("setHours",            date_setHours,           4,0),
-    JS_FN("setUTCHours",         date_setUTCHours,        4,0),
-    JS_FN("setMinutes",          date_setMinutes,         3,0),
-    JS_FN("setUTCMinutes",       date_setUTCMinutes,      3,0),
-    JS_FN("setSeconds",          date_setSeconds,         2,0),
-    JS_FN("setUTCSeconds",       date_setUTCSeconds,      2,0),
-    JS_FN("setMilliseconds",     date_setMilliseconds,    1,0),
-    JS_FN("setUTCMilliseconds",  date_setUTCMilliseconds, 1,0),
-    JS_FN("toUTCString",         date_toGMTString,        0,0),
-    JS_FN(js_toLocaleString_str, date_toLocaleString,     0,0),
-    JS_FN("toLocaleDateString",  date_toLocaleDateString, 0,0),
-    JS_FN("toLocaleTimeString",  date_toLocaleTimeString, 0,0),
-    JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
-    JS_FN("toDateString",        date_toDateString,       0,0),
-    JS_FN("toTimeString",        date_toTimeString,       0,0),
-    JS_FN("toISOString",         date_toISOString,        0,0),
-    JS_FN(js_toJSON_str,         date_toJSON,             1,0),
+    JS_FN_TYPE("getTime",             date_getTime,            0,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("getTimezoneOffset",   date_getTimezoneOffset,  0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getYear",             date_getYear,            0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getFullYear",         date_getFullYear,        0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCFullYear",      date_getUTCFullYear,     0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getMonth",            date_getMonth,           0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCMonth",         date_getUTCMonth,        0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getDate",             date_getDate,            0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCDate",          date_getUTCDate,         0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getDay",              date_getDay,             0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCDay",           date_getUTCDay,          0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getHours",            date_getHours,           0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCHours",         date_getUTCHours,        0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getMinutes",          date_getMinutes,         0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCMinutes",       date_getUTCMinutes,      0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getSeconds",          date_getUTCSeconds,      0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCSeconds",       date_getUTCSeconds,      0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getMilliseconds",     date_getUTCMilliseconds, 0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("getUTCMilliseconds",  date_getUTCMilliseconds, 0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("setTime",             date_setTime,            1,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setYear",             date_setYear,            1,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setFullYear",         date_setFullYear,        3,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCFullYear",      date_setUTCFullYear,     3,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setMonth",            date_setMonth,           2,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCMonth",         date_setUTCMonth,        2,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setDate",             date_setDate,            1,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCDate",          date_setUTCDate,         1,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setHours",            date_setHours,           4,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCHours",         date_setUTCHours,        4,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setMinutes",          date_setMinutes,         3,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCMinutes",       date_setUTCMinutes,      3,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setSeconds",          date_setSeconds,         2,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCSeconds",       date_setUTCSeconds,      2,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setMilliseconds",     date_setMilliseconds,    1,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("setUTCMilliseconds",  date_setUTCMilliseconds, 1,0, JS_TypeHandlerFloat),
+    JS_FN_TYPE("toUTCString",         date_toGMTString,        0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toLocaleString_str, date_toLocaleString,     0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("toLocaleDateString",  date_toLocaleDateString, 0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("toLocaleTimeString",  date_toLocaleTimeString, 0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("toLocaleFormat",      date_toLocaleFormat,     0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("toDateString",        date_toDateString,       0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("toTimeString",        date_toTimeString,       0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("toISOString",         date_toISOString,        0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toJSON_str,         date_toJSON,             1,0, JS_TypeHandlerString),
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       date_toSource,           0,0),
+    JS_FN_TYPE(js_toSource_str,       date_toSource,           0,0, JS_TypeHandlerString),
 #endif
-    JS_FN(js_toString_str,       date_toString,           0,0),
-    JS_FN(js_valueOf_str,        date_valueOf,            0,0),
+    JS_FN_TYPE(js_toString_str,       date_toString,           0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_valueOf_str,        date_valueOf,            0,0, JS_TypeHandlerDynamic),
     JS_FS_END
 };
 
@@ -2522,12 +2557,25 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static void type_NewDate(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+    if (site->isNew) {
+        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_DATE);
+        site->returnTypes->addType(cx, (jstype) object);
+    } else {
+        JS_TypeHandlerString(cx, jsfun, jssite);
+    }
+#endif
+}
+
 JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj)
 {
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS, type_NewDate,
                                    NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;
@@ -2551,6 +2599,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
                            PropertyStub, PropertyStub, 0)) {
         return NULL;
     }
+    cx->addTypePropertyId(proto->getTypeObject(), toGMTStringId, toUTCStringFun.value());
 
     return proto;
 }
@@ -2558,7 +2607,8 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass);
+    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_NEW_DATE);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass, type);
     if (!obj || !obj->ensureSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
         return NULL;
     if (!SetUTCTime(cx, obj, msec_time))

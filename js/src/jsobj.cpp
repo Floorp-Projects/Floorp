@@ -78,6 +78,7 @@
 #include "jsdbgapi.h"
 #include "json.h"
 
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -104,6 +105,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 JS_FRIEND_DATA(const JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
 
@@ -1232,6 +1234,10 @@ eval(JSContext *cx, uintN argc, Value *vp)
             return false;
     }
 
+    /* set where this script is nested, if there is a caller frame. */
+    if (callerFrame)
+        script->setTypeNesting(callerFrame->script(), callerFrame->pc(cx));
+
     assertSameCompartment(cx, scopeobj, script);
 
     /*
@@ -1553,6 +1559,10 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
+
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_GETSET);
+    cx->addTypePropertyId(obj->getTypeObject(), id, (jstype) type);
+
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
@@ -1583,6 +1593,10 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
+
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_GETSET);
+    cx->addTypePropertyId(obj->getTypeObject(), id, (jstype) type);
+
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
@@ -1663,7 +1677,8 @@ js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs,
                                const Value &value, Value *vp)
 {
     /* We have our own property, so start creating the descriptor. */
-    JSObject *desc = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    TypeObject *descType = cx->getFixedTypeObject(TYPE_OBJECT_PROPERTY_DESCRIPTOR);
+    JSObject *desc = NewBuiltinClassInstance(cx, &js_ObjectClass, descType);
     if (!desc)
         return false;
     vp->setObject(*desc);    /* Root and return. */
@@ -1801,8 +1816,11 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
+    TypeObject *aobjType = cx->getFixedTypeObject(TYPE_OBJECT_PROPERTY_ARRAY);
+    cx->addTypeProperty(aobjType, NULL, TYPE_STRING);
+
     JS_ASSERT(props.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin());
+    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin(), aobjType);
     if (!aobj)
         return JS_FALSE;
     vp->setObject(*aobj);
@@ -2292,7 +2310,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
-            obj->setArrayLength(index + 1);
+            obj->setArrayLength(cx, index + 1);
         }
 
         *rval = true;
@@ -2306,6 +2324,10 @@ static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwError,
                bool *rval)
 {
+    /* Add this to the type information for the object.
+     * TODO: handle getters and setters. */
+    cx->addTypePropertyId(obj->getTypeObject(), desc.id, desc.value);
+
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
 
@@ -2354,7 +2376,10 @@ obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 
     /* 15.2.3.6 step 4 */
     JSBool junk;
-    return js_DefineOwnProperty(cx, obj, nameidr.id(), descval, &junk);
+    if (!js_DefineOwnProperty(cx, obj, nameidr.id(), descval, &junk))
+        return JS_FALSE;
+
+    return JS_TRUE;
 }
 
 static bool
@@ -2441,11 +2466,15 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
+    TypeObject *type = cx->getTypeCallerInitObject(false);
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, v.toObjectOrNull(),
-                                                        vp->toObject().getGlobal());
+                                                     vp->toObject().getGlobal(), type);
     if (!obj)
         return JS_FALSE;
     vp->setObject(*obj); /* Root and prepare for eventual return. */
+
+    if (v.isObject())
+        cx->addTypePrototype(type, v.toObject().getTypeObject());
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2510,7 +2539,10 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
          }
     }
 
-    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin());
+    TypeObject *aobjType = cx->getFixedTypeObject(TYPE_OBJECT_PROPERTY_ARRAY);
+    cx->addTypeProperty(aobjType, NULL, TYPE_STRING);
+
+    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin(), aobjType);
     if (!aobj)
         return false;
 
@@ -2686,41 +2718,41 @@ const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,             obj_toSource,                0,0),
+    JS_FN_TYPE(js_toSource_str,             obj_toSource,                0,0, JS_TypeHandlerString),
 #endif
-    JS_FN(js_toString_str,             obj_toString,                0,JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
+    JS_FN_TYPE(js_toString_str,             obj_toString,                0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toLocaleString_str,       obj_toLocaleString,          0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_valueOf_str,              obj_valueOf,                 0,0, JS_TypeHandlerThis),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                   2,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
+    JS_FN_TYPE(js_watch_str,                obj_watch,                   2,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE(js_unwatch_str,              obj_unwatch,                 1,0, JS_TypeHandlerVoid),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0),
-    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
+    JS_FN_TYPE(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0, JS_TypeHandlerBool),
 #if OLD_GETTER_SETTER_METHODS
-    JS_FN(js_defineGetter_str,         js_obj_defineGetter,         2,0),
-    JS_FN(js_defineSetter_str,         js_obj_defineSetter,         2,0),
-    JS_FN(js_lookupGetter_str,         obj_lookupGetter,            1,0),
-    JS_FN(js_lookupSetter_str,         obj_lookupSetter,            1,0),
+    JS_FN_TYPE(js_defineGetter_str,         js_obj_defineGetter,         2,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE(js_defineSetter_str,         js_obj_defineSetter,         2,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE(js_lookupGetter_str,         obj_lookupGetter,            1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE(js_lookupSetter_str,         obj_lookupSetter,            1,0, JS_TypeHandlerDynamic),
 #endif
     JS_FS_END
 };
 
 static JSFunctionSpec object_static_methods[] = {
-    JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
-    JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
-    JS_FN("keys",                      obj_keys,                    1,0),
-    JS_FN("defineProperty",            obj_defineProperty,          3,0),
-    JS_FN("defineProperties",          obj_defineProperties,        2,0),
-    JS_FN("create",                    obj_create,                  2,0),
-    JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
-    JS_FN("isExtensible",              obj_isExtensible,            1,0),
-    JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
-    JS_FN("freeze",                    obj_freeze,                  1,0),
-    JS_FN("isFrozen",                  obj_isFrozen,                1,0),
-    JS_FN("seal",                      obj_seal,                    1,0),
-    JS_FN("isSealed",                  obj_isSealed,                1,0),
+    JS_FN_TYPE("getPrototypeOf",            obj_getPrototypeOf,          1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("keys",                      obj_keys,                    1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("defineProperty",            obj_defineProperty,          3,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("defineProperties",          obj_defineProperties,        2,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("create",                    obj_create,                  2,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("isExtensible",              obj_isExtensible,            1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("preventExtensions",         obj_preventExtensions,       1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("freeze",                    obj_freeze,                  1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("isFrozen",                  obj_isFrozen,                1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("seal",                      obj_seal,                    1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("isSealed",                  obj_isSealed,                1,0, JS_TypeHandlerBool),
     JS_FS_END
 };
 
@@ -2739,8 +2771,9 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
     if (!obj) {
         /* Make an object whether this was called with 'new' or not. */
         JS_ASSERT(!argc || vp[2].isNull() || vp[2].isUndefined());
+        TypeObject *type = cx->getTypeCallerInitObject(false);
         gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
         if (!obj)
             return JS_FALSE;
     }
@@ -2766,15 +2799,17 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
+    TypeObject *type = callee->isFunction() ? callee->getTypeFunctionNewObject(cx) : callee->getTypeObject();
     gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
-    return NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
+    return NewObject<WithProto::Class>(cx, newclasp, proto, parent, type, kind);
 }
 
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
+    TypeObject *type = callee->getTypeFunctionNewObject(cx);
     gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
+    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), type, kind);
 }
 
 JSObject *
@@ -2803,7 +2838,8 @@ NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
     if (!obj)
         return NULL;
 
-    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), NULL, kind))
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
+    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), type, NULL, kind))
         return NULL;
     return obj;
 }
@@ -2822,8 +2858,9 @@ JS_DEFINE_TRCINFO_1(js_Object,
 JSObject* FASTCALL
 js_InitializerObject(JSContext* cx, int32 count)
 {
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
     gc::FinalizeKind kind = GuessObjectGCKind(count, false);
-    return NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+    return NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
 }
 
 JS_DEFINE_CALLINFO_2(extern, OBJECT, js_InitializerObject, CONTEXT, INT32, 0,
@@ -2870,7 +2907,8 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
              * No ctor.prototype was set, so we inline-expand and optimize
              * fun_resolve's prototype creation code.
              */
-            proto = NewNativeClassInstance(cx, clasp, proto, parent);
+            TypeObject *typeProto = ctor->getTypeFunctionPrototype(cx);
+            proto = NewNativeClassInstance(cx, clasp, proto, parent, typeProto);
             if (!proto)
                 return NULL;
             if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
@@ -2887,8 +2925,9 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
      * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
      * from easily or unconditionally calling NewNativeClassInstance here.
      */
+    TypeObject *type = ctor->getTypeFunctionNewObject(cx);
     gc::FinalizeKind kind = NewObjectGCKind(cx, clasp);
-    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
+    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type, kind);
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, CLASS, OBJECT, 0,
@@ -3114,9 +3153,10 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     if (!obj)
         return NULL;
 
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_WITH);
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, &js_WithClass, proto, parent, priv, false);
+    obj->init(cx, &js_WithClass, proto, parent, type, priv, false);
     obj->setMap(cx->runtime->emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
@@ -3142,7 +3182,8 @@ js_NewBlockObject(JSContext *cx)
     if (!blockObj)
         return NULL;
 
-    blockObj->init(cx, &js_BlockClass, NULL, NULL, NULL, false);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_BLOCK);
+    blockObj->init(cx, &js_BlockClass, NULL, NULL, type, NULL, false);
     blockObj->setMap(cx->runtime->emptyBlockShape);
     return blockObj;
 }
@@ -3159,10 +3200,11 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     if (!clone)
         return NULL;
 
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_BLOCK);
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
 
     /* The caller sets parent on its own. */
-    clone->init(cx, &js_BlockClass, proto, NULL, priv, false);
+    clone->init(cx, &js_BlockClass, proto, NULL, type, priv, false);
 
     clone->setMap(proto->map);
     if (!clone->ensureInstanceReservedSlots(cx, count + 1))
@@ -3476,17 +3518,37 @@ Class js_BlockClass = {
     ConvertStub
 };
 
+static void object_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->argumentCount == 0) {
+        TypeObject *object = site->getInitObject(cx, true);
+        if (site->returnTypes)
+            site->returnTypes->addType(cx, (jstype) object);
+    } else {
+        // the value is converted to an object. just monitor the call to see
+        // what value is produced.
+        cx->compartment->types.monitorBytecode(site->code);
+    }
+#endif
+}
+
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
+                                   object_TypeNew,
                                    object_props, object_methods, NULL, object_static_methods);
     if (!proto)
         return NULL;
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
-    if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom, eval, 1, JSFUN_STUB_GSOPS))
+    if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom, eval, 1,
+                           JSFUN_STUB_GSOPS, JS_TypeHandlerDynamic, js_eval_str)) {
         return NULL;
+    }
 
     return proto;
 }
@@ -3529,6 +3591,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              Class *clasp, Native constructor, uintN nargs,
+             JSTypeHandler ctorHandler,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
@@ -3536,6 +3599,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     JSProtoKey key;
     JSFunction *fun;
     bool named = false;
+    const char *prefix;
 
     atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
     if (!atom)
@@ -3562,6 +3626,18 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         return NULL;
     }
 
+    /* Create type information for the prototype object. */
+    TypeObject *protoType = NULL;
+#ifdef JS_TYPE_INFERENCE
+    size_t protoLen = strlen(clasp->name) + 15;
+    char *protoName = (char*) alloca(protoLen);
+    snprintf(protoName, protoLen, "%s:prototype", clasp->name);
+    if (clasp == &js_FunctionClass)
+        protoType = cx->getTypeFunctionHandler(protoName, JS_TypeHandlerVoid);
+    else
+        protoType = cx->getTypeObject(protoName, false);
+#endif
+
     /*
      * Create a prototype object for this class.
      *
@@ -3583,7 +3659,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * (3) is not enough without addressing the bootstrapping dependency on (1)
      * and (2).
      */
-    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, parent_proto, obj);
+    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, parent_proto, obj, protoType);
     if (!proto)
         return NULL;
 
@@ -3611,9 +3687,16 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         ctor = proto;
     } else {
-        fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom);
+        if (!ctorHandler)
+            ctorHandler = JS_TypeHandlerMissing;
+
+        fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom,
+                             ctorHandler, clasp->name);
         if (!fun)
-            goto bad;
+            return NULL;
+
+        cx->markTypeBuiltinFunction(fun->getTypeObject());
+        cx->addTypePropertyId(obj->getTypeObject(), ATOM_TO_JSID(atom), ObjectValue(*fun));
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
@@ -3652,13 +3735,53 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (ctor->getClass() == clasp)
             ctor->setProto(proto);
+
+#ifdef JS_TYPE_INFERENCE
+        if (clasp == &js_FunctionClass) {
+            /*
+             * Fixup the type information for the prototype class. protoType
+             * was ignored when proto was constructed.
+             */
+            proto->typeObject = protoType;
+            cx->markTypeBuiltinFunction(proto->getTypeObject());
+
+            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, false);
+
+            /* Make the Function.prototype.prototype function. */
+            TypeFunction *protoProto = cx->getTypeFunctionHandler("Function:prototype:prototype",
+                                                                  JS_TypeHandlerVoid);
+            cx->setTypeFunctionPrototype(proto->getTypeObject(), protoProto, false);
+        } else if (clasp == &js_ObjectClass) {
+            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, false);
+
+            /* The global object has properties of Object.prototype. */
+            cx->addTypePrototype(cx->getGlobalTypeObject(), protoType);
+        } else {
+            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, true);
+
+            if (clasp != &js_ArrayClass) {
+                /*
+                 * Force construction of the 'new' type object for the class, to do the
+                 * correct propagation if it is accessed using getFixedTypeObject.
+                 */
+                fun->getTypeObject()->asFunction()->getNewObject(cx);
+            }
+        }
+#endif
     }
+
+    /* Get the type prefix for the class methods. This is normally the
+     * class name, with an exception for the Iterator class which is folded
+     * together with Generator. */
+    prefix = clasp->name;
+    if (clasp == &js_GeneratorClass)
+        prefix = js_IteratorClass.name;
 
     /* Add properties and methods to the prototype and the constructor. */
     if ((ps && !JS_DefineProperties(cx, proto, ps)) ||
-        (fs && !JS_DefineFunctions(cx, proto, fs)) ||
+        (fs && !JS_DefineFunctionsWithPrefix(cx, proto, fs, prefix)) ||
         (static_ps && !JS_DefineProperties(cx, ctor, static_ps)) ||
-        (static_fs && !JS_DefineFunctions(cx, ctor, static_fs))) {
+        (static_fs && !JS_DefineFunctionsWithPrefix(cx, ctor, static_fs, prefix))) {
         goto bad;
     }
 
@@ -4001,7 +4124,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
 
 JSObject *
 js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
-                   uintN argc, Value *argv)
+                   TypeObject *type, uintN argc, Value *argv)
 {
     AutoArrayRooter argtvr(cx, argc, argv);
 
@@ -4035,7 +4158,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
             proto = rval.toObjectOrNull();
     }
 
-    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
+    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent, type);
     if (!obj)
         return NULL;
 
@@ -5870,16 +5993,21 @@ js_PrimitiveToObject(JSContext *cx, Value *vp)
     JS_ASSERT(v.isPrimitive());
 
     Class *clasp;
+    FixedTypeObjectName name;
     if (v.isNumber()) {
         clasp = &js_NumberClass;
+        name = TYPE_OBJECT_NEW_NUMBER;
     } else if (v.isString()) {
         clasp = &js_StringClass;
+        name = TYPE_OBJECT_NEW_STRING;
     } else {
         JS_ASSERT(v.isBoolean());
         clasp = &js_BooleanClass;
+        name = TYPE_OBJECT_NEW_BOOLEAN;
     }
 
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    TypeObject *type = cx->getFixedTypeObject(name);
+    JSObject *obj = NewBuiltinClassInstance(cx, clasp, type);
     if (!obj)
         return JS_FALSE;
 

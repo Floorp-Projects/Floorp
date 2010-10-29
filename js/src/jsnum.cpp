@@ -71,11 +71,13 @@
 #include "jstracer.h"
 #include "jsvector.h"
 
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
 using namespace js;
+using namespace js::types;
 
 #ifndef JS_HAVE_STDINT_H /* Native support is innocent until proven guilty. */
 
@@ -414,6 +416,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     /* Fast paths and exceptional cases. */
     if (argc == 0) {
         vp->setDouble(js_NaN);
+        cx->markTypeCallerOverflow();
         return true;
     }
 
@@ -423,7 +426,9 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
             return true;
         }
         if (vp[2].isDouble()) {
-            vp->setDouble(ParseIntDoubleHelper(vp[2].toDouble()));
+            vp->setNumber(ParseIntDoubleHelper(vp[2].toDouble()));
+            if (!vp->isInt32())
+                cx->markTypeCallerOverflow();
             return true;
         }
     }
@@ -443,6 +448,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         if (radix != 0) {
             if (radix < 2 || radix > 36) {
                 vp->setDouble(js_NaN);
+                cx->markTypeCallerOverflow();
                 return true;
             }
             if (radix != 16)
@@ -460,6 +466,8 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 15. */
     vp->setNumber(number);
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
     return true;
 }
 
@@ -504,10 +512,10 @@ JS_DEFINE_TRCINFO_1(num_parseFloat,
 #endif /* JS_TRACER */
 
 static JSFunctionSpec number_functions[] = {
-    JS_FN(js_isNaN_str,         num_isNaN,           1,0),
-    JS_FN(js_isFinite_str,      num_isFinite,        1,0),
-    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, &num_parseFloat_trcinfo),
-    JS_TN(js_parseInt_str,      num_parseInt,        2,0, &num_parseInt_trcinfo),
+    JS_FN_TYPE(js_isNaN_str,         num_isNaN,           1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE(js_isFinite_str,      num_isFinite,        1,0, JS_TypeHandlerBool),
+    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, &num_parseFloat_trcinfo, JS_TypeHandlerFloat),
+    JS_TN(js_parseInt_str,      num_parseInt,        2,0, &num_parseInt_trcinfo, JS_TypeHandlerInt),
     JS_FS_END
 };
 
@@ -539,8 +547,9 @@ Number(JSContext *cx, uintN argc, Value *vp)
 
     if (!isConstructing)
         return true;
-    
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass);
+
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NUMBER);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass, type);
     if (!obj)
         return false;
     obj->setPrimitiveThis(vp[0]);
@@ -867,15 +876,15 @@ JS_DEFINE_TRCINFO_2(num_toString,
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       num_toSource,          0, JSFUN_PRIMITIVE_THIS),
+    JS_FN_TYPE(js_toSource_str,       num_toSource,       0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
 #endif
-    JS_TN(js_toString_str,       num_toString,          1, JSFUN_PRIMITIVE_THIS, &num_toString_trcinfo),
-    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,        js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,         js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toFixed",             num_toFixed,           1, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toExponential",       num_toExponential,     1, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toPrecision",         num_toPrecision,       1, JSFUN_PRIMITIVE_THIS),
+    JS_TN(js_toString_str,            num_toString,       1,JSFUN_PRIMITIVE_THIS, &num_toString_trcinfo, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toLocaleString_str, num_toLocaleString, 0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE(js_valueOf_str,        js_num_valueOf,     0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerFloat),
+    JS_FN_TYPE(js_toJSON_str,         js_num_valueOf,     0,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerThis),
+    JS_FN_TYPE("toFixed",             num_toFixed,        1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("toExponential",       num_toExponential,  1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
+    JS_FN_TYPE("toPrecision",         num_toPrecision,    1,JSFUN_PRIMITIVE_THIS, JS_TypeHandlerString),
     JS_FS_END
 };
 
@@ -983,6 +992,19 @@ js_FinishRuntimeNumberState(JSContext *cx)
     rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
 }
 
+static void type_NewNumber(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+    if (site->isNew) {
+        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NUMBER);
+        site->returnTypes->addType(cx, (jstype) object);
+    } else {
+        JS_TypeHandlerFloat(cx, jsfun, jssite);
+    }
+#endif
+}
+
 JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj)
 {
@@ -992,10 +1014,10 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    if (!JS_DefineFunctions(cx, obj, number_functions))
+    if (!JS_DefineFunctionsWithPrefix(cx, obj, number_functions, js_Number_str))
         return NULL;
 
-    proto = js_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1,
+    proto = js_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1, type_NewNumber,
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
@@ -1005,18 +1027,19 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 
     /* ECMA 15.1.1.1 */
     rt = cx->runtime;
-    if (!JS_DefineProperty(cx, obj, js_NaN_str, Jsvalify(rt->NaNValue),
-                           JS_PropertyStub, JS_PropertyStub,
-                           JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!JS_DefinePropertyWithType(cx, obj, js_NaN_str, Jsvalify(rt->NaNValue),
+                                   JS_PropertyStub, JS_PropertyStub,
+                                   JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
     }
 
     /* ECMA 15.1.1.2 */
-    if (!JS_DefineProperty(cx, obj, js_Infinity_str, Jsvalify(rt->positiveInfinityValue),
-                           JS_PropertyStub, JS_PropertyStub,
-                           JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!JS_DefinePropertyWithType(cx, obj, js_Infinity_str, Jsvalify(rt->positiveInfinityValue),
+                                   JS_PropertyStub, JS_PropertyStub,
+                                   JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
     }
+
     return proto;
 }
 

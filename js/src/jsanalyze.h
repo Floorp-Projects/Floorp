@@ -43,6 +43,7 @@
 
 #include "jsarena.h"
 #include "jscntxt.h"
+#include "jsinfer.h"
 #include "jsscript.h"
 
 struct JSScript;
@@ -82,26 +83,78 @@ struct Bytecode
     uint32 defineCount;
     uint32 *defineArray;
 
-    Bytecode()
+    Bytecode(Script *script, unsigned offset)
     {
         PodZero(this);
+
+#ifdef JS_TYPE_INFERENCE
+        this->script = script;
+        this->offset = offset;
+#endif
     }
 
   private:
-    bool mergeDefines(JSContext *cx,
-                      Script *script, bool initial, uint32 newDepth,
+    bool mergeDefines(JSContext *cx, Script *script, bool initial,
+                      uint32 newDepth, types::TypeStack *newStack,
                       uint32 *newArray, uint32 newCount);
 
     /* Whether a local variable is in the define set at this bytecode. */
     bool isDefined(uint32 slot)
     {
         JS_ASSERT(analyzed);
-        for (size_t ind = 0; ind < defineCount; ind++) {
+        for (unsigned ind = 0; ind < defineCount; ind++) {
             if (defineArray[ind] == slot)
                 return true;
         }
         return false;
     }
+
+#ifdef JS_TYPE_INFERENCE
+  public:
+
+    Script *script;
+    unsigned offset;
+
+    /* Contents of the stack when this instruction is executed. */
+    types::TypeStack *inStack;
+
+    /* Array of stack nodes pushed by this instruction. */
+    types::TypeStack *pushedArray;
+
+    /* Any new object created at this bytecode. */
+    types::TypeObject *initObject;
+
+    /* Whether this bytecode needs to have its effects monitored dynamically. */
+    bool monitorNeeded;
+
+    /*
+     * For logging, whether we've generated warnings due to a mismatch between the
+     * actual and inferred types at this bytecode.
+     */
+    bool missingTypes;
+
+    /* Pool which constraints on this instruction should use. */
+    inline JSArenaPool &pool();
+
+    /* Get the type set for the Nth value popped by this instruction. */
+    inline types::TypeSet *popped(unsigned num);
+
+    /* Get the type set for the Nth value pushed by this instruction. */
+    inline types::TypeSet *pushed(unsigned num);
+
+    /* Mark a trivially determined fixed type for a value pushed by this instruction. */
+    inline void setFixed(JSContext *cx, unsigned num, types::jstype type);
+
+    /*
+     * Get the new object at this bytecode. propagation will be performed from
+     * either Object or Array, per isArray.
+     */
+    inline types::TypeObject* getInitObject(JSContext *cx, bool isArray);
+
+    void print(JSContext *cx, FILE *out);
+
+#endif /* JS_TYPE_INFERENCE */
+
 };
 
 /* Information about a script. */
@@ -110,7 +163,7 @@ class Script
     friend struct Bytecode;
 
     JSScript *script;
-    Bytecode **code;
+    Bytecode **codeArray;
 
     /* Maximum number of locals to consider for a script. */
     static const unsigned LOCAL_LIMIT = 50;
@@ -130,7 +183,8 @@ class Script
     /* Pool for allocating analysis structures which will not outlive this script. */
     JSArenaPool pool;
 
-    void analyze(JSContext *cx, JSScript *script);
+    void init(JSScript *script);
+    void analyze(JSContext *cx);
     void destroy();
 
     /*
@@ -151,26 +205,32 @@ class Script
     /* Whether there are NAME bytecodes which can access the frame's scope chain. */
     bool usesScopeChain() const { return usesScope; }
 
+    /* Whether the script has been analyzed. */
+    bool hasAnalyzed() const { return !!codeArray; }
+
+    /* Script being analyzed. */
+    JSScript *getScript() const { return script; }
+
     /* Accessors for bytecode information. */
 
     Bytecode& getCode(uint32 offset) {
         JS_ASSERT(offset < script->length);
-        JS_ASSERT(code[offset]);
-        return *code[offset];
+        JS_ASSERT(codeArray[offset]);
+        return *codeArray[offset];
     }
-    Bytecode& getCode(jsbytecode *pc) { return getCode(pc - script->code); }
+    Bytecode& getCode(const jsbytecode *pc) { return getCode(pc - script->code); }
 
     Bytecode* maybeCode(uint32 offset) {
         JS_ASSERT(offset < script->length);
-        return code[offset];
+        return codeArray[offset];
     }
-    Bytecode* maybeCode(jsbytecode *pc) { return maybeCode(pc - script->code); }
+    Bytecode* maybeCode(const jsbytecode *pc) { return maybeCode(pc - script->code); }
 
     bool jumpTarget(uint32 offset) {
         JS_ASSERT(offset < script->length);
-        return code[offset] && code[offset]->jumpTarget;
+        return codeArray[offset] && codeArray[offset]->jumpTarget;
     }
-    bool jumpTarget(jsbytecode *pc) { return jumpTarget(pc - script->code); }
+    bool jumpTarget(const jsbytecode *pc) { return jumpTarget(pc - script->code); }
 
     /* Accessors for local variable information. */
 
@@ -202,10 +262,141 @@ class Script
 
     inline bool addJump(JSContext *cx, unsigned offset,
                         unsigned *currentOffset, unsigned *forwardJump,
-                        unsigned stackDepth, uint32 *defineArray, unsigned defineCount);
+                        unsigned stackDepth, types::TypeStack *stack,
+                        uint32 *defineArray, unsigned defineCount);
 
     inline void setLocal(uint32 local, uint32 offset);
+
+#ifdef JS_TYPE_INFERENCE
+  public:
+
+    /* Unique identifier within the compartment. */
+    unsigned id;
+
+    /* Function this script is the body for, if there is one. */
+    types::TypeFunction *function;
+
+    /* Argument count and name from the function. */
+    unsigned argCount;
+    jsid thisName;
+
+    /* List of objects associated with this script. */
+    types::TypeObject *objects;
+
+    /*
+     * Location where the definition of this script occurs, representing any
+     * nesting for scope lookups.  NULL for global scripts.
+     */
+    JSScript *parent;
+    const jsbytecode *parentpc;
+
+    /*
+     * Variables defined by this script.  This includes local variables defined
+     * with 'var' or 'let', formal arguments, unnamed arguments, and properties
+     * of the script itself (*not* properties of the script's prototype).
+     */
+    types::VariableSet localTypes;
+
+    /* Types of the 'this' variable in this script. */
+    types::TypeSet thisTypes;
+
+    /* Array of local variable names, computed by js_GetLocalNameArray. */
+    jsuword *localNames;
+
+    /* Whether this script is considered to be compiled, and types have been frozen. */
+    bool compiled;
+
+    /* Whether this script needs recompilation. */
+    bool recompileNeeded;
+
+    void setFunction(JSContext *cx, JSFunction *fun);
+
+    inline bool isEval() { return parent && !function; }
+
+    /*
+     * Get the non-eval script which this one is nested in, returning this script
+     * if it was not produced as the result of an eval.
+     */
+    inline Script *evalParent();
+
+    /* Bytecode where this script is nested. */
+    inline Bytecode *parentCode();
+
+    void print(JSContext *cx);
+
+    /* Helpers */
+
+    /* Analyzes a bytecode, generating type constraints describing its behavior. */
+    void analyzeTypes(JSContext *cx, Bytecode *codeType);
+
+    /*
+     * Add new constraints for a bytecode monitoring changes on type sets which can
+     * affect what the bytecode does.  Performed after analysis has finished and the
+     * type sets hopefully won't change further.
+     */
+    void freezeTypes(JSContext *cx, Bytecode *codeType);
+    void freezeAllTypes(JSContext *cx);
+
+    /*
+     * Get the name to use for the local with specified index.  Stack indicates the
+     * point of the access, for looking up let variables.
+     */
+    inline jsid getLocalId(unsigned index, types::TypeStack *stack);
+
+    /* Get the name to use for the argument with the specified index. */
+    inline jsid getArgumentId(unsigned index);
+
+    /* Get the type set to use for a stack slot at a fixed stack depth. */
+    inline types::TypeSet *getStackTypes(unsigned index, types::TypeStack *stack);
+
+#endif /* JS_TYPE_INFERENCE */
+
 };
+
+static inline unsigned
+GetBytecodeLength(jsbytecode *pc)
+{
+    JSOp op = (JSOp)*pc;
+    JS_ASSERT(op < JSOP_LIMIT);
+    JS_ASSERT(op != JSOP_TRAP);
+
+    if (js_CodeSpec[op].length != -1)
+        return js_CodeSpec[op].length;
+    return js_GetVariableBytecodeLength(pc);
+}
+
+static inline unsigned
+GetUseCount(JSScript *script, unsigned offset)
+{
+    JS_ASSERT(offset < script->length);
+    jsbytecode *pc = script->code + offset;
+    if (js_CodeSpec[*pc].nuses == -1)
+        return js_GetVariableStackUses(JSOp(*pc), pc);
+    return js_CodeSpec[*pc].nuses;
+}
+
+static inline unsigned
+GetDefCount(JSScript *script, unsigned offset)
+{
+    JS_ASSERT(offset < script->length);
+    jsbytecode *pc = script->code + offset;
+    if (js_CodeSpec[*pc].ndefs == -1)
+        return js_GetEnterBlockStackDefs(NULL, script, pc);
+
+    /*
+     * Add an extra pushed value for OR/AND opcodes, so that they are included
+     * in the pushed array of stack values for type inference.
+     */
+    switch (JSOp(*pc)) {
+      case JSOP_OR:
+      case JSOP_ORX:
+      case JSOP_AND:
+      case JSOP_ANDX:
+        return 1;
+      default:
+        return js_CodeSpec[*pc].ndefs;
+    }
+}
 
 } /* namespace analyze */
 } /* namespace js */

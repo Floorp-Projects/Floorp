@@ -70,6 +70,10 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#ifdef JS_TYPE_INFERENCE
+#include "jsinferinlines.h"
+#endif
+
 using namespace js;
 using namespace js::gc;
 
@@ -188,7 +192,14 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
             return JS_TRUE;
         }
 
-        *scriptp = JSScript::emptyScript();
+        script = JSScript::emptyScript();
+
+#ifdef JS_TYPE_INFERENCE
+        if (!script->analysis)
+            script->makeAnalysis(cx);
+#endif
+
+        *scriptp = script;
         return JS_TRUE;
     }
 
@@ -1150,6 +1161,21 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                 }
                 fun->freezeLocalNames(cx);
                 fun->u.i.script = empty;
+
+#ifdef JS_TYPE_INFERENCE
+                // set type information for the script and function. if we see
+                // the empty script multiple times it will always have the same
+                // function, and the locals/args from the first place we saw
+                // the empty script. won't affect analysis.
+                if (!empty->analysis)
+                    empty->makeAnalysis(cx);
+                analyze::Script *analysis = empty->analysis;
+                if (!analysis->function) {
+                    cx->setTypeFunctionScript(fun, empty);
+                    analysis->function = fun->getTypeObject()->asFunction();
+                }
+                fun->typeObject = analysis->function;
+#endif
             }
 
             JS_RUNTIME_METER(cx->runtime, liveEmptyScripts);
@@ -1229,6 +1255,11 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->upvarMap.vector = NULL;
     }
 
+#ifdef JS_TYPE_INFERENCE
+    /* Make empty type information for the script. */
+    script->makeAnalysis(cx);
+#endif
+
     if (cg->globalUses.length()) {
         memcpy(script->globals()->vector, &cg->globalUses[0],
                cg->globalUses.length() * sizeof(GlobalSlotArray::Entry));
@@ -1256,6 +1287,9 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
         fun->freezeLocalNames(cx);
         fun->u.i.script = script;
+
+        cx->setTypeFunctionScript(fun, script);
+
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
 #endif
@@ -1424,7 +1458,8 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
     JS_ASSERT(!script->u.object);
     JS_ASSERT(script != JSScript::emptyScript());
 
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
+    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_SCRIPT);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL, type);
     if (!obj)
         return JS_FALSE;
     obj->setPrivate(script);
@@ -1731,3 +1766,39 @@ JSScript::copyClosedSlotsTo(JSScript *other)
     memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
 }
 
+js::analyze::Script *
+JSScript::analyze(JSContext *cx)
+{
+    if (!analysis)
+        makeAnalysis(cx);
+    if (!analysis)
+        return NULL;
+    analysis->analyze(cx);
+    return analysis;
+}
+
+js::analyze::Script *
+JSScript::makeAnalysis(JSContext *cx)
+{
+    JS_ASSERT(!analysis);
+    analysis = (js::analyze::Script *) cx->calloc(sizeof(js::analyze::Script));
+    if (!analysis)
+        return NULL;
+
+    analysis->init(this);
+
+#ifdef JS_TYPE_INFERENCE
+    analysis->id = ++cx->compartment->types.scriptCount;
+    analysis->localTypes.pool = &analysis->pool;
+    analysis->thisTypes.setPool(&analysis->pool);
+
+#ifdef JS_TYPES_DEBUG_SPEW
+    char name[40];
+    snprintf(name, sizeof(name), "#%u:locals", analysis->id);
+    analysis->localTypes.name = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), 0));
+    fprintf(cx->typeOut(), "newScript: %s\n", name);
+#endif
+#endif /* JS_TYPE_INFERENCE */
+
+    return analysis;
+}

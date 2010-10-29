@@ -60,6 +60,7 @@
 #include "jsbool.h"
 #include "jsval.h"
 #include "jsvalue.h"
+#include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsobj.h"
 #include "jsarray.h"
@@ -192,7 +193,8 @@ class NodeBuilder
     }
 
     bool newObject(JSObject **dst) {
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
+        types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_REFLECT_OBJECT);
+        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL, type);
         if (!nobj)
             return false;
 
@@ -495,7 +497,8 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 
     Value tv;
 
-    JSObject *node = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
+    types::TypeObject *nodeType = cx->getFixedTypeObject(types::TYPE_OBJECT_REFLECT_OBJECT);
+    JSObject *node = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL, nodeType);
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -510,7 +513,8 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 bool
 NodeBuilder::newArray(NodeVector &elts, Value *dst)
 {
-    JSObject *array = js_NewArrayObject(cx, 0, NULL);
+    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_REFLECT_ARRAY);
+    JSObject *array = js_NewArrayObject(cx, 0, NULL, type);
     if (!array)
         return false;
 
@@ -2881,7 +2885,8 @@ static JSFunctionSpec static_methods[] = {
 JSObject *
 js_InitReflectClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ReflectClass, NULL, obj);
+    types::TypeObject *type = cx->getTypeObject(js_ReflectClass.name, false);
+    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ReflectClass, NULL, obj, type);
     if (!Reflect)
         return NULL;
 

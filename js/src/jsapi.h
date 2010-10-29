@@ -1816,6 +1816,9 @@ struct JSPropertySpec {
     uint8           flags;
     JSPropertyOp    getter;
     JSPropertyOp    setter;
+
+    /* For properties with primitive types, handler below specifying that type. */
+    JSTypeHandler   handler;
 };
 
 struct JSFunctionSpec {
@@ -1823,6 +1826,9 @@ struct JSFunctionSpec {
     JSNative        call;
     uint16          nargs;
     uint16          flags;
+
+    /* Optional callback giving type information for calls to this function. */
+    JSTypeHandler   handler;
 };
 
 /*
@@ -1837,15 +1843,32 @@ struct JSFunctionSpec {
  * JSFUN_STUB_GSOPS.
  */
 #define JS_FS(name,call,nargs,flags)                                          \
-    {name, call, nargs, flags}
+    JS_FS_TYPE(name,call,nargs,flags,NULL)
+#define JS_FS_TYPE(name,call,nargs,flags,handler)                             \
+    {name, (JSNative) call, nargs, flags, handler}
+
 #define JS_FN(name,call,nargs,flags)                                          \
-    {name, call, nargs, (flags) | JSFUN_STUB_GSOPS}
+    JS_FN_TYPE(name,call,nargs,flags,NULL)
+#define JS_FN_TYPE(name,call,nargs,flags,handler)                             \
+    {name, (JSNative) call, nargs, (flags) | JSFUN_STUB_GSOPS, handler}
 
 extern JS_PUBLIC_API(JSObject *)
+JS_InitClassWithType(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+                     JSClass *clasp, JSNative constructor, uintN nargs,
+                     JSTypeHandler ctorHandler,
+                     JSPropertySpec *ps, JSFunctionSpec *fs,
+                     JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+
+static JS_ALWAYS_INLINE JSObject*
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
+{
+    return JS_InitClassWithType(cx, obj, parent_proto, clasp, constructor,
+                                nargs, NULL,
+                                ps, fs, static_ps, static_fs);
+}
 
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)
@@ -1905,7 +1928,14 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+JS_NewObjectWithType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
+                     JSTypeObject *type);
+
+static JS_ALWAYS_INLINE JSObject*
+JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+{
+    return JS_NewObjectWithType(cx, clasp, proto, parent, NULL);
+}
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
@@ -1916,8 +1946,16 @@ JS_IsExtensible(JSObject *obj);
  * proto if proto's actual parameter value is null.
  */
 extern JS_PUBLIC_API(JSObject *)
+JS_NewObjectWithGivenProtoAndType(JSContext *cx, JSClass *clasp,
+                                  JSObject *proto, JSObject *parent,
+                                  JSTypeObject *type);
+
+static JS_ALWAYS_INLINE JSObject*
 JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent);
+                           JSObject *parent)
+{
+    return JS_NewObjectWithGivenProtoAndType(cx, clasp, proto, parent, NULL);
+}
 
 /*
  * Freeze obj, and all objects it refers to, recursively. This will not recurse
@@ -1934,15 +1972,45 @@ extern JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
+JS_ConstructObjectWithType(JSContext *cx, JSClass *clasp, JSObject *proto,
+                           JSObject *parent, JSTypeObject *type);
+
+static JS_ALWAYS_INLINE JSObject*
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent);
+                   JSObject *parent)
+{
+    return JS_ConstructObjectWithType(cx, clasp, proto, parent, NULL);
+}
 
 extern JS_PUBLIC_API(JSObject *)
+JS_ConstructObjectWithArgumentsAndType(JSContext *cx, JSClass *clasp, JSObject *proto,
+                                       JSObject *parent, JSTypeObject *type,
+                                       uintN argc, jsval *argv);
+
+static JS_ALWAYS_INLINE JSObject*
 JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                JSObject *parent, uintN argc, jsval *argv);
+                                JSObject *parent, uintN argc, jsval *argv)
+{
+    return JS_ConstructObjectWithArgumentsAndType(cx, clasp, proto, parent,
+                                                  NULL, argc, argv);
+}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
+
+/*
+ * Make type information to use when creating a JS object. Calling this
+ * multiple times with the same name will return the same type object.
+ * If monitorNeeded is set then the object may have properties not set via
+ * JS_DefineTypeProperty or JS_DefineFunction, and will have its accesses
+ * monitored. isArray specifies whether to use Array.prototype
+ * or Object.prototype as the type object's prototype.
+ */
+extern JS_PUBLIC_API(JSTypeObject *)
+JS_MakeTypeObject(JSContext *cx, const char *name, JSBool monitorNeeded, JSBool isArray);
+
+extern JS_PUBLIC_API(JSTypeObject *)
+JS_MakeTypeFunction(JSContext *cx, const char *name, JSTypeHandler handler);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
@@ -1964,6 +2032,32 @@ JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp);
+
+/* Add properties to the type information for obj. */
+
+extern JS_PUBLIC_API(void)
+JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value);
+
+extern JS_PUBLIC_API(void)
+JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value);
+
+static JS_ALWAYS_INLINE JSBool
+JS_DefinePropertyWithType(JSContext *cx, JSObject *obj,
+                          const char *name, jsval value,
+                          JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+{
+    JS_AddTypeProperty(cx, obj, name, value);
+    return JS_DefineProperty(cx, obj, name, value, getter, setter, attrs);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JS_DefinePropertyWithTypeById(JSContext *cx, JSObject *obj,
+                              jsid id, jsval value,
+                              JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
+{
+    JS_AddTypePropertyById(cx, obj, id, value);
+    return JS_DefinePropertyById(cx, obj, id, value, getter, setter, attrs);
+}
 
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
@@ -2180,7 +2274,14 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
                      jsval *rval);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector);
+JS_NewArrayObjectWithType(JSContext *cx, jsint length, jsval *vector,
+                          JSTypeObject *type);
+
+static JS_ALWAYS_INLINE JSObject*
+JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
+{
+    return JS_NewArrayObjectWithType(cx, length, vector, NULL);
+}
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj);
@@ -2318,8 +2419,17 @@ JS_GetSecurityCallbacks(JSContext *cx);
  * Functions and scripts.
  */
 extern JS_PUBLIC_API(JSFunction *)
+JS_NewFunctionWithType(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+                       JSObject *parent, const char *name,
+                       JSTypeHandler handler, const char *fullName);
+
+static JS_ALWAYS_INLINE JSFunction*
 JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
-               JSObject *parent, const char *name);
+               JSObject *parent, const char *name)
+{
+    return JS_NewFunctionWithType(cx, call, nargs, flags, parent, name,
+                                  NULL, NULL);
+}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);
@@ -2366,19 +2476,94 @@ extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
+JS_DefineFunctionsWithPrefix(JSContext *cx, JSObject *obj, JSFunctionSpec *fs,
+                             const char *namePrefix);
+
+static JS_ALWAYS_INLINE JSBool
+JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
+{
+    return JS_DefineFunctionsWithPrefix(cx, obj, fs, NULL);
+}
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
-                  uintN nargs, uintN attrs);
+JS_DefineFunctionWithType(JSContext *cx, JSObject *obj,
+                          const char *name, JSNative call,
+                          uintN nargs, uintN attrs,
+                          JSTypeHandler handler, const char *fullName);
+
+static JS_ALWAYS_INLINE JSFunction*
+JS_DefineFunction(JSContext *cx, JSObject *obj,
+                  const char *name, JSNative call,
+                  uintN nargs, uintN attrs)
+{
+    return JS_DefineFunctionWithType(cx, obj, name, call, nargs, attrs,
+                                     NULL, NULL);
+}
 
 extern JS_PUBLIC_API(JSFunction *)
+JS_DefineUCFunctionWithType(JSContext *cx, JSObject *obj,
+                            const jschar *name, size_t namelen, JSNative call,
+                            uintN nargs, uintN attrs,
+                            JSTypeHandler handler, const char *fullName);
+
+static JS_ALWAYS_INLINE JSFunction*
 JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, JSNative call,
-                    uintN nargs, uintN attrs);
+                    uintN nargs, uintN attrs)
+{
+    return JS_DefineUCFunctionWithType(cx, obj, name, namelen, call,
+                                       nargs, attrs, NULL, NULL);
+}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
+
+/* Frequently used type handlers */
+
+/*
+ * Handler which does not describe a function's return value at all. The return
+ * value will be observed at runtime and its type used to augment the results
+ * of the inference.
+ */
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerDynamic(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+/*
+ * As for TypeHandlerDynamic, but emits a warning when a call to the function
+ * is found in some script.  For functions which do something interesting
+ * but don't have a correct handler yet, or functions which scripts should
+ * not be able to invoke.
+ */
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerMissing(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+/* Handlers whose return types are particular primitives. */
+
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerVoid(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerNull(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerBool(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerInt(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerFloat(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerString(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+/* Handler whose return type is the new object for the native function. */
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerNew(JSContext*, JSTypeFunction*, JSTypeCallsite*);
+
+/* Handler whose return type is the same as its 'this' type. */
+extern JS_PUBLIC_API(void)
+JS_TypeHandlerThis(JSContext*, JSTypeFunction*, JSTypeCallsite*);
 
 /*
  * Given a buffer, return JS_FALSE if the buffer might become a valid
@@ -3338,6 +3523,68 @@ JS_IsConstructing_PossiblyWithGivenThisObject(JSContext *cx, const jsval *vp,
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
+
+/************************************************************************/
+
+/*
+ * Defines to tag type information for objects with the file/line at which
+ * they were allocated, helpful for debugging.
+ */
+
+#if JS_TYPE_INFERENCE && DEBUG
+
+#define JS_TYPE_FUNCTION_LINE(CX)                                             \
+    ({ size_t len = strlen(__FILE__) + 10;                                    \
+       char *name = (char*) alloca(len);                                      \
+       snprintf(name, len, "%s:%d", __FILE__, __LINE__);                      \
+       name; })
+
+#define JS_TYPE_OBJECT_LINE(CX)                                               \
+    ({ size_t len = strlen(__FILE__) + 10;                                    \
+       char *name = (char*) alloca(len);                                      \
+       snprintf(name, len, "%s:%d", __FILE__, __LINE__);                      \
+       JS_MakeTypeObject(CX, name, JS_FALSE, JS_FALSE); })
+
+#define JS_NewObject(cx,clasp,proto,parent)                                   \
+    JS_NewObjectWithType(cx, clasp, proto, parent, JS_TYPE_OBJECT_LINE(cx))
+
+#define JS_NewObjectWithGivenProto(cx,clasp,proto,parent)                     \
+    JS_NewObjectWithGivenProtoAndType(cx, clasp, proto, parent,               \
+                                      JS_TYPE_OBJECT_LINE(cx))
+
+#define JS_ConstructObject(cx,clasp,proto,parent)                             \
+    JS_ConstructObjectWithType(cx, clasp, proto, parent,                      \
+                               JS_TYPE_OBJECT_LINE(cx))
+
+#define JS_ConstructObjectWithArguments(cx,clasp,proto,parent,argc,argv)      \
+    JS_ConstructObjectWithArgumentsAndType(cx, clasp, proto, parent,          \
+                                           JS_TYPE_OBJECT_LINE(cx),           \
+                                           argc, argv);
+
+#define JS_NewArrayObject(cx,length,vector)                                   \
+    JS_NewArrayObjectWithType(cx, length, vector, JS_TYPE_OBJECT_LINE(cx))
+
+#define JS_NewFunction(cx,call,nargs,flags,parent,name)                       \
+    JS_NewFunctionWithType(cx, call, nargs, flags, parent, name,              \
+                           NULL, JS_TYPE_FUNCTION_LINE(cx))
+
+#define JS_DefineFunction(cx,obj,name,call,nargs,attrs)                       \
+    JS_DefineFunctionWithType(cx, obj, name, call, nargs, attrs,              \
+                              NULL, JS_TYPE_FUNCTION_LINE(cx))
+
+#define JS_DefineUCFunction(cx,obj,name,namelen,call,nargs,attrs)             \
+    JS_DefineUCFunctionWithType(cx, obj, name, namelen, call, nargs, attrs,   \
+                                NULL, JS_TYPE_FUNCTION_LINE(cx))
+
+#define JS_DefineFunctions(cx,obj,fs)                                         \
+    JS_DefineFunctionsWithPrefix(cx, obj, fs, JS_TYPE_FUNCTION_LINE(cx))
+
+#else /* JS_TYPE_INFERENCE && DEBUG */
+
+#define JS_TYPE_FUNCTION_LINE(cx) NULL
+#define JS_TYPE_OBJECT_LINE(cx) NULL
+
+#endif /* JS_TYPE_INFERENCE && DEBUG */
 
 /************************************************************************/
 

@@ -72,6 +72,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
@@ -81,6 +82,7 @@
 
 using namespace js;
 using namespace js::gc;
+using namespace js::types;
 
 /*
  * NOTES
@@ -219,9 +221,9 @@ AppendString(JSCharBuffer &cb, JSString *str)
  * HAS_EQUALITY bit.
  */
 static inline JSObject *
-NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
+NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp, TypeObject *type)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
+    JSObject *obj = NewBuiltinClassInstance(cx, clasp, type);
     if (obj && clasp->ext.equality)
         obj->flags |= JSObject::HAS_EQUALITY;
     return obj;
@@ -264,7 +266,7 @@ namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 }
 
 JS_FRIEND_DATA(Class) js_NamespaceClass = {
-    "Namespace",
+    js_Namespace_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
@@ -296,8 +298,8 @@ JS_FRIEND_DATA(Class) js_NamespaceClass = {
     (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED)
 
 static JSPropertySpec namespace_props[] = {
-    {js_prefix_str, 0, NAMESPACE_ATTRS, NamePrefix_getter, 0},
-    {js_uri_str,    0, NAMESPACE_ATTRS, NameURI_getter,    0},
+    {js_prefix_str, 0, NAMESPACE_ATTRS, NamePrefix_getter, 0, JS_TypeHandlerString},
+    {js_uri_str,    0, NAMESPACE_ATTRS, NameURI_getter,    0, JS_TypeHandlerString},
     {0,0,0,0,0}
 };
 
@@ -314,7 +316,7 @@ namespace_toString(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSFunctionSpec namespace_methods[] = {
-    JS_FN(js_toString_str,  namespace_toString,        0,0),
+    JS_FN_TYPE(js_toString_str,  namespace_toString,        0,0, JS_TypeHandlerString),
     JS_FS_END
 };
 
@@ -323,7 +325,8 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
 {
     JSObject *obj;
 
-    obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+    obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass, type);
     if (!obj)
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefix()));
@@ -383,7 +386,7 @@ qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 }
 
 JS_FRIEND_DATA(Class) js_QNameClass = {
-    "QName",
+    js_QName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
@@ -510,7 +513,7 @@ qname_toString(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSFunctionSpec qname_methods[] = {
-    JS_FN(js_toString_str,  qname_toString,    0,0),
+    JS_FN_TYPE(js_toString_str,  qname_toString,    0,0, JS_TypeHandlerString),
     JS_FS_END
 };
 
@@ -534,7 +537,8 @@ static JSObject *
 NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
             Class *clasp = &js_QNameClass)
 {
-    JSObject *obj = NewBuiltinClassInstanceXML(cx, clasp);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+    JSObject *obj = NewBuiltinClassInstanceXML(cx, clasp, type);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -560,7 +564,8 @@ js_ConstructXMLQNameObject(JSContext *cx, const Value &nsval, const Value &lnval
         argv[0] = nsval;
     }
     argv[1] = lnval;
-    return js_ConstructObject(cx, &js_QNameClass, NULL, NULL, 2, argv);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+    return js_ConstructObject(cx, &js_QNameClass, NULL, NULL, type, 2, argv);
 }
 
 static JSBool
@@ -647,7 +652,8 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             return JS_TRUE;
         }
 
-        obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+        obj = NewBuiltinClassInstanceXML(cx, &js_NamespaceClass, type);
         if (!obj)
             return JS_FALSE;
     }
@@ -755,7 +761,8 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
          * Create and return a new QName or AttributeName object exactly as if
          * constructed.
          */
-        obj = NewBuiltinClassInstanceXML(cx, clasp);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+        obj = NewBuiltinClassInstanceXML(cx, clasp, type);
         if (!obj)
             return JS_FALSE;
     }
@@ -1143,11 +1150,11 @@ static const char js_prettyIndent_str[]     = "prettyIndent";
 #define XSF_PRETTY_PRINTING                JS_BIT(3)
 
 static JSPropertySpec xml_static_props[] = {
-    {js_ignoreComments_str, 0, JSPROP_PERMANENT, NULL, NULL},
-    {js_ignoreProcessingInstructions_str, 0, JSPROP_PERMANENT, NULL, NULL},
-    {js_ignoreWhitespace_str, 0, JSPROP_PERMANENT, NULL, NULL},
-    {js_prettyPrinting_str, 0, JSPROP_PERMANENT, NULL, NULL},
-    {js_prettyIndent_str, 0, JSPROP_PERMANENT, NULL, NULL},
+    {js_ignoreComments_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
+    {js_ignoreProcessingInstructions_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
+    {js_ignoreWhitespace_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
+    {js_prettyPrinting_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
+    {js_prettyIndent_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerInt},
     {0,0,0,0,0}
 };
 
@@ -2229,8 +2236,9 @@ GetNamespace(JSContext *cx, JSObject *qn, const JSXMLArray *inScopeNSes)
     if (!match) {
         argv[0] = prefix ? STRING_TO_JSVAL(prefix) : JSVAL_VOID;
         argv[1] = STRING_TO_JSVAL(uri);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
         ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, NULL,
-                                2, Valueify(argv));
+                                type, 2, Valueify(argv));
         if (!ns)
             return NULL;
         match = ns;
@@ -2845,6 +2853,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
     JSAtom *atomizedName;
     JSString *name;
     JSObject *obj;
+    TypeObject *type;
     Class *clasp;
     uint32 index;
 
@@ -2899,7 +2908,8 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
 
 construct:
     v = STRING_TO_JSVAL(name);
-    obj = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, 1, Valueify(&v));
+    type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+    obj = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, type, 1, Valueify(&v));
     if (!obj)
         return NULL;
 
@@ -5761,7 +5771,8 @@ FindInScopeNamespaces(JSContext *cx, JSXML *xml, JSXMLArray *nsarray)
 static bool
 NamespacesToJSArray(JSContext *cx, JSXMLArray *array, jsval *rval)
 {
-    JSObject *arrayobj = js_NewArrayObject(cx, 0, NULL);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NAMESPACE_ARRAY);
+    JSObject *arrayobj = js_NewArrayObject(cx, 0, NULL, type);
     if (!arrayobj)
         return false;
     *rval = OBJECT_TO_JSVAL(arrayobj);
@@ -6385,8 +6396,10 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
     JSString *namestr;
 
     NON_LIST_XML_METHOD_PROLOG;
-    if (!JSXML_HAS_NAME(xml))
+    if (!JSXML_HAS_NAME(xml)) {
+        vp[0] = JSVAL_VOID;
         return JS_TRUE;
+    }
 
     if (argc == 0) {
         namestr = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
@@ -6408,6 +6421,7 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
     if (!xml)
         return JS_FALSE;
     xml->name->setQNameLocalName(namestr ? STRING_TO_JSVAL(namestr) : JSVAL_VOID);
+    vp[0] = JSVAL_VOID;
     return JS_TRUE;
 }
 
@@ -6436,7 +6450,8 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
-    nameqn = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, 1, Valueify(&name));
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+    nameqn = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, type, 1, Valueify(&name));
     if (!nameqn)
         return JS_FALSE;
 
@@ -6480,8 +6495,10 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
 
         /* XXXbe have to test membership to see whether GetNamespace added */
-        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL))
+        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL)) {
+            vp[0] = JSVAL_VOID;
             return JS_TRUE;
+        }
     } else {
         /*
          * At this point, we know prefix of nameqn is null, so its uri can't
@@ -6504,6 +6521,7 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
             ns = XMLARRAY_MEMBER(nsarray, i, JSObject);
             if (ns && js_EqualStrings(GetURI(ns), GetURI(nameqn))) {
                 nameqn->setNamePrefix(ns->getNamePrefix());
+                vp[0] = JSVAL_VOID;
                 return JS_TRUE;
             }
         }
@@ -6535,8 +6553,9 @@ xml_setNamespace(JSContext *cx, uintN argc, jsval *vp)
     if (!xml)
         return JS_FALSE;
 
+    TypeObject *nstype = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
     ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, obj,
-                            argc == 0 ? 0 : 1, Valueify(vp + 2));
+                            nstype, argc == 0 ? 0 : 1, Valueify(vp + 2));
     if (!ns)
         return JS_FALSE;
     vp[0] = OBJECT_TO_JSVAL(ns);
@@ -6544,7 +6563,8 @@ xml_setNamespace(JSContext *cx, uintN argc, jsval *vp)
 
     qnargv[0] = OBJECT_TO_JSVAL(ns);
     qnargv[1] = OBJECT_TO_JSVAL(xml->name);
-    qn = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, 2, Valueify(qnargv));
+    TypeObject *qntype = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+    qn = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, qntype, 2, Valueify(qnargv));
     if (!qn)
         return JS_FALSE;
 
@@ -6712,47 +6732,122 @@ xml_valueOf(JSContext *cx, uintN argc, jsval *vp)
     return !JSVAL_IS_NULL(*vp);
 }
 
+JS_PUBLIC_API(void)
+type_XMLNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes) {
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_XML);
+        site->returnTypes->addType(cx, (types::jstype) type);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+type_QNameNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes) {
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_QNAME);
+        site->returnTypes->addType(cx, (types::jstype) type);
+    }
+    JS_TypeHandlerNull(cx, jsfun, jssite);
+#endif
+}
+
+JS_PUBLIC_API(void)
+type_NamespaceNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes) {
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+        site->returnTypes->addType(cx, (types::jstype) type);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+type_NamespaceArray(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes) {
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NAMESPACE_ARRAY);
+        site->returnTypes->addType(cx, (types::jstype) type);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+type_XMLSettings(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+#ifdef JS_TYPE_INFERENCE
+    TypeCallsite *site = Valueify(jssite);
+
+    if (site->returnTypes) {
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_XML_SETTINGS);
+        site->returnTypes->addType(cx, (types::jstype) type);
+    }
+#endif
+}
+
+// function returns an XML object if found, null or void (sometimes both possible) if not found.
+JS_PUBLIC_API(void)
+type_XMLOptional(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
+{
+    type_XMLNew(cx, jsfun, jssite);
+    JS_TypeHandlerNull(cx, jsfun, jssite);
+    JS_TypeHandlerVoid(cx, jsfun, jssite);
+}
+
 static JSFunctionSpec xml_methods[] = {
-    JS_FN("addNamespace",          xml_addNamespace,          1,0),
-    JS_FN("appendChild",           xml_appendChild,           1,0),
-    JS_FN(js_attribute_str,        xml_attribute,             1,0),
-    JS_FN("attributes",            xml_attributes,            0,0),
-    JS_FN("child",                 xml_child,                 1,0),
-    JS_FN("childIndex",            xml_childIndex,            0,0),
-    JS_FN("children",              xml_children,              0,0),
-    JS_FN("comments",              xml_comments,              0,0),
-    JS_FN("contains",              xml_contains,              1,0),
-    JS_FN("copy",                  xml_copy,                  0,0),
-    JS_FN("descendants",           xml_descendants,           1,0),
-    JS_FN("elements",              xml_elements,              1,0),
-    JS_FN("hasOwnProperty",        xml_hasOwnProperty,        1,0),
-    JS_FN("hasComplexContent",     xml_hasComplexContent,     1,0),
-    JS_FN("hasSimpleContent",      xml_hasSimpleContent,      1,0),
-    JS_FN("inScopeNamespaces",     xml_inScopeNamespaces,     0,0),
-    JS_FN("insertChildAfter",      xml_insertChildAfter,      2,0),
-    JS_FN("insertChildBefore",     xml_insertChildBefore,     2,0),
-    JS_FN(js_length_str,           xml_length,                0,0),
-    JS_FN(js_localName_str,        xml_localName,             0,0),
-    JS_FN(js_name_str,             xml_name,                  0,0),
-    JS_FN(js_namespace_str,        xml_namespace,             1,0),
-    JS_FN("namespaceDeclarations", xml_namespaceDeclarations, 0,0),
-    JS_FN("nodeKind",              xml_nodeKind,              0,0),
-    JS_FN("normalize",             xml_normalize,             0,0),
-    JS_FN(js_xml_parent_str,       xml_parent,                0,0),
-    JS_FN("processingInstructions",xml_processingInstructions,1,0),
-    JS_FN("prependChild",          xml_prependChild,          1,0),
-    JS_FN("propertyIsEnumerable",  xml_propertyIsEnumerable,  1,0),
-    JS_FN("removeNamespace",       xml_removeNamespace,       1,0),
-    JS_FN("replace",               xml_replace,               2,0),
-    JS_FN("setChildren",           xml_setChildren,           1,0),
-    JS_FN("setLocalName",          xml_setLocalName,          1,0),
-    JS_FN("setName",               xml_setName,               1,0),
-    JS_FN("setNamespace",          xml_setNamespace,          1,0),
-    JS_FN(js_text_str,             xml_text,                  0,0),
-    JS_FN(js_toSource_str,         xml_toSource,              0,0),
-    JS_FN(js_toString_str,         xml_toString,              0,0),
-    JS_FN(js_toXMLString_str,      xml_toXMLString,           0,0),
-    JS_FN(js_valueOf_str,          xml_valueOf,               0,0),
+    JS_FN_TYPE("addNamespace",          xml_addNamespace,          1,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("appendChild",           xml_appendChild,           1,0, JS_TypeHandlerThis),
+    JS_FN_TYPE(js_attribute_str,        xml_attribute,             1,0, type_XMLOptional),
+    JS_FN_TYPE("attributes",            xml_attributes,            0,0, type_XMLOptional),
+    JS_FN_TYPE("child",                 xml_child,                 1,0, type_XMLNew),
+    JS_FN_TYPE("childIndex",            xml_childIndex,            0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE("children",              xml_children,              0,0, type_XMLNew),
+    JS_FN_TYPE("comments",              xml_comments,              0,0, type_XMLNew),
+    JS_FN_TYPE("contains",              xml_contains,              1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("copy",                  xml_copy,                  0,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("descendants",           xml_descendants,           1,0, type_XMLNew),
+    JS_FN_TYPE("elements",              xml_elements,              1,0, type_XMLNew),
+    JS_FN_TYPE("hasOwnProperty",        xml_hasOwnProperty,        1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("hasComplexContent",     xml_hasComplexContent,     1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("hasSimpleContent",      xml_hasSimpleContent,      1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("inScopeNamespaces",     xml_inScopeNamespaces,     0,0, type_NamespaceArray),
+    JS_FN_TYPE("insertChildAfter",      xml_insertChildAfter,      2,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("insertChildBefore",     xml_insertChildBefore,     2,0, JS_TypeHandlerThis),
+    JS_FN_TYPE(js_length_str,           xml_length,                0,0, JS_TypeHandlerInt),
+    JS_FN_TYPE(js_localName_str,        xml_localName,             0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_name_str,             xml_name,                  0,0, type_QNameNew),
+    JS_FN_TYPE(js_namespace_str,        xml_namespace,             1,0, type_NamespaceNew),
+    JS_FN_TYPE("namespaceDeclarations", xml_namespaceDeclarations, 0,0, type_NamespaceArray),
+    JS_FN_TYPE("nodeKind",              xml_nodeKind,              0,0, JS_TypeHandlerString),
+    JS_FN_TYPE("normalize",             xml_normalize,             0,0, JS_TypeHandlerThis),
+    JS_FN_TYPE(js_xml_parent_str,       xml_parent,                0,0, type_XMLOptional),
+    JS_FN_TYPE("processingInstructions",xml_processingInstructions,1,0, type_XMLNew),
+    JS_FN_TYPE("prependChild",          xml_prependChild,          1,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("propertyIsEnumerable",  xml_propertyIsEnumerable,  1,0, JS_TypeHandlerBool),
+    JS_FN_TYPE("removeNamespace",       xml_removeNamespace,       1,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("replace",               xml_replace,               2,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("setChildren",           xml_setChildren,           1,0, JS_TypeHandlerThis),
+    JS_FN_TYPE("setLocalName",          xml_setLocalName,          1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("setName",               xml_setName,               1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("setNamespace",          xml_setNamespace,          1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE(js_text_str,             xml_text,                  0,0, type_XMLNew),
+    JS_FN_TYPE(js_toSource_str,         xml_toSource,              0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toString_str,         xml_toString,              0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_toXMLString_str,      xml_toXMLString,           0,0, JS_TypeHandlerString),
+    JS_FN_TYPE(js_valueOf_str,          xml_valueOf,               0,0, JS_TypeHandlerThis),
     JS_FS_END
 };
 
@@ -6777,6 +6872,7 @@ CopyXMLSettings(JSContext *cx, JSObject *from, JSObject *to)
         }
         if (!JS_SetProperty(cx, to, name, &v))
             return false;
+        JS_AddTypeProperty(cx, to, name, v);
     }
 
     return true;
@@ -6804,7 +6900,8 @@ xml_settings(JSContext *cx, uintN argc, jsval *vp)
     JSObject *settings;
     JSObject *obj;
 
-    settings = JS_NewObject(cx, NULL, NULL, NULL);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_XML_SETTINGS);
+    settings = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL, type);
     if (!settings)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(settings);
@@ -6826,11 +6923,14 @@ xml_setSettings(JSContext *cx, uintN argc, jsval *vp)
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
         ok = SetDefaultXMLSettings(cx, obj);
     } else {
-        if (JSVAL_IS_PRIMITIVE(v))
+        if (JSVAL_IS_PRIMITIVE(v)) {
+            vp[0] = JSVAL_VOID;
             return JS_TRUE;
+        }
         settings = JSVAL_TO_OBJECT(v);
         ok = CopyXMLSettings(cx, settings, obj);
     }
+    vp[0] = JSVAL_VOID;
     return ok;
 }
 
@@ -6847,9 +6947,9 @@ xml_defaultSettings(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec xml_static_methods[] = {
-    JS_FN("settings",         xml_settings,          0,0),
-    JS_FN("setSettings",      xml_setSettings,       1,0),
-    JS_FN("defaultSettings",  xml_defaultSettings,   0,0),
+    JS_FN_TYPE("settings",         xml_settings,          0,0, type_XMLSettings),
+    JS_FN_TYPE("setSettings",      xml_setSettings,       1,0, JS_TypeHandlerVoid),
+    JS_FN_TYPE("defaultSettings",  xml_defaultSettings,   0,0, type_XMLSettings),
     JS_FS_END
 };
 
@@ -7023,9 +7123,8 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class)
 static JSObject *
 NewXMLObject(JSContext *cx, JSXML *xml)
 {
-    JSObject *obj;
-
-    obj = NewNonFunction<WithProto::Class>(cx, &js_XMLClass, NULL, NULL);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_XML);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_XMLClass, NULL, NULL, type);
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
@@ -7054,21 +7153,26 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
 JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2,
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+    TypeObject *arrayType = cx->getFixedTypeObject(TYPE_OBJECT_NAMESPACE_ARRAY);
+    cx->addTypeProperty(arrayType, NULL, (js::types::jstype) type);
+
+    /* :FIXME: handler is broken here and below when called with other object as 'this'. */
+    return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2, JS_TypeHandlerNew,
                         namespace_props, namespace_methods, NULL, NULL);
 }
 
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
+    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2, JS_TypeHandlerNew,
                         qname_props, qname_methods, NULL, NULL);
 }
 
 JSObject *
 js_InitAttributeNameClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_AttributeNameClass, AttributeName, 2,
+    return js_InitClass(cx, obj, NULL, &js_AttributeNameClass, AttributeName, 2, JS_TypeHandlerNew,
                         qname_props, qname_methods, NULL, NULL);
 }
 
@@ -7093,11 +7197,12 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     jsval cval, vp[3];
 
     /* Define the isXMLName function. */
-    if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
+    if (!JS_DefineFunctionWithType(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0,
+                                   JS_TypeHandlerBool, js_isXMLName_str))
         return NULL;
 
     /* Define the XML class constructor and prototype. */
-    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
+    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1, type_XMLNew,
                          NULL, xml_methods,
                          xml_static_props, xml_static_methods);
     if (!proto)
@@ -7133,14 +7238,20 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     if (!xml_setSettings(cx, 1, vp))
         return NULL;
 
+    cx->markTypeBuiltinFunction(cx->getTypeObject(js_XMLList_str, true));
+
     /* Define the XMLList function and give it the same prototype as XML. */
-    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
+    fun = JS_DefineFunctionWithType(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR,
+                                    type_XMLNew, js_XMLList_str);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
                               JSPROP_READONLY | JSPROP_PERMANENT)) {
         return NULL;
     }
+
+    cx->setTypeFunctionPrototype(fun->getTypeObject(), proto->getTypeObject(), true);
+
     return proto;
 }
 
@@ -7226,7 +7337,8 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         obj = tmp;
     }
 
-    ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, obj, 0, NULL);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+    ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, obj, type, 0, NULL);
     if (!ns)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
@@ -7244,7 +7356,8 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
     Value argv[2];
     argv[0].setString(cx->runtime->emptyString);
     argv[1] = v;
-    JSObject *ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, NULL, 2, argv);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+    JSObject *ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, NULL, type, 2, argv);
     if (!ns)
         return JS_FALSE;
 
@@ -7336,7 +7449,8 @@ js_GetAnyName(JSContext *cx, jsid *idp)
     if (!obj) {
         JSRuntime *rt = cx->runtime;
 
-        obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+        obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL, type);
         if (!obj)
             return false;
 
@@ -7350,8 +7464,9 @@ js_GetAnyName(JSContext *cx, jsid *idp)
          * but no big deal: we want to customize toString anyway for
          * clearer diagnostics.
          */
-        if (!JS_DefineFunction(cx, obj, js_toString_str,
-                               anyname_toString, 0, 0))
+        if (!JS_DefineFunctionWithType(cx, obj, js_toString_str,
+                                       anyname_toString, 0, 0,
+                                       JS_TypeHandlerString, "AnyName.toString"))
             return false;
 
         JS_ASSERT(!obj->getProto());
@@ -7381,8 +7496,9 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     nameobj = &nameval.toObject();
     if (nameobj->getClass() == &js_AnyNameClass) {
         v = ATOM_TO_JSVAL(cx->runtime->atomState.starAtom);
-        nameobj = js_ConstructObject(cx, &js_QNameClass, NULL, NULL, 1,
-                                     Valueify(&v));
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NAMESPACE);
+        nameobj = js_ConstructObject(cx, &js_QNameClass, NULL, NULL,
+                                     type, 1, Valueify(&v));
         if (!nameobj)
             return JS_FALSE;
     } else {
@@ -7617,7 +7733,8 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
                 return JS_FALSE;
         }
 
-        filterobj = NewNonFunction<WithProto::Given>(cx, &js_XMLFilterClass, NULL, NULL);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_XML);
+        filterobj = NewNonFunction<WithProto::Given>(cx, &js_XMLFilterClass, NULL, NULL, type);
         if (!filterobj)
             return JS_FALSE;
 

@@ -460,8 +460,16 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_TMPSTR|ATOM_NOCOPY)));
     JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
 
-    if (str->isAtomized())
+    if (str->isAtomized()) {
+        JSAtomState *state = &cx->runtime->atomState;
+        AtomSet &atoms = state->atoms;
+
+        AutoLockDefaultCompartment lock(cx);
+        AtomSet::AddPtr p = atoms.lookupForAdd(str);
+
+        AddAtomEntryFlags(*p, flags & (ATOM_PINNED | ATOM_INTERNED));
         return STRING_TO_ATOM(str);
+    }
 
     const jschar *chars;
     size_t length;
