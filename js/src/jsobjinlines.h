@@ -153,7 +153,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     funobj->setMethodObj(*this);
 
     vp->setObject(*funobj);
-    if (!js_SetPropertyHelper(cx, this, shape.id, 0, vp, false))
+    if (!js_SetPropertyHelper(cx, this, this, shape.id, 0, vp, false))
         return false;
 
 #ifdef DEBUG

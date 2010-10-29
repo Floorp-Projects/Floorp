@@ -4422,7 +4422,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
             else
                 defineHow = JSDNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode))
+            if (!js_SetPropertyHelper(cx, obj, obj, id, defineHow, &rval, script->strictModeCode))
                 goto error;
         } else {
             if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
@@ -5980,7 +5980,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
                           ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
                           : JSDNP_CACHE_RESULT;
         if (!(JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-              ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
+              ? js_SetPropertyHelper(cx, obj, obj, id, defineHow, &rval, script->strictModeCode)
               : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                         JSPROP_ENUMERATE, 0, 0, NULL,
                                         defineHow))) {
