@@ -10,6 +10,7 @@ const SEARCH_URL = TESTROOT + "browser_details.xml";
 
 var gManagerWindow;
 var gCategoryUtilities;
+var gProvider;
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;

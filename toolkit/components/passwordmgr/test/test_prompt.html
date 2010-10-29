@@ -124,6 +124,33 @@ ok(true, "whee, done!");
   SimpleTest.finish();
 }
 
+function addNotificationCallback(cb)
+{
+  storageObserver.notificationCallbacks.push(cb);
+}
+
+var storageObserver = {
+  notificationCallbacks: [],
+
+  QueryInterface : function (iid) {
+    const interfaces = [Ci.nsIObserver,
+                        Ci.nsISupports, Ci.nsISupportsWeakReference];
+
+    if (!interfaces.some( function(v) { return iid.equals(v) } ))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  },
+
+  observe : function (subject, topic, data) {
+   if (this.notificationCallbacks.length)
+      this.notificationCallbacks.splice(0, 1)[0]();
+  }
+};
+
+var observerService = Cc["@mozilla.org/observer-service;1"]
+                      .getService(Ci.nsIObserverService);
+observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
+
 /*
  * handleDialog
  *
@@ -417,12 +444,6 @@ function handleLoad() {
         is(username, "mochiuser1", "Checking for echoed username");
         is(password, "mochipass1-new", "Checking for echoed password");
 
-        // Check for the popup notification, and change the password.
-        popup = getPopup(popupNotifications, "password-change");
-        ok(popup, "got popup notification");
-        clickPopupButton(popup, kChangeButton);
-        popup.remove();
-
         // Housekeeping: change it back
         function resetIt() {
           netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -430,7 +451,13 @@ function handleLoad() {
                         "mochiuser1", "mochipass1-new", "", "");
           pwmgr.modifyLogin(tmpLogin, login3A);
         }
-        setTimeout(resetIt, 0);
+        addNotificationCallback(resetIt);
+
+        // Check for the popup notification, and change the password.
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got popup notification");
+        clickPopupButton(popup, kChangeButton);
+        popup.remove();
 
         // Same as last test, but for a realm we haven't already authenticated
         // to (but have an existing saved login for, so that we'll trigger
@@ -445,30 +472,30 @@ function handleLoad() {
         is(username, "mochiuser3", "Checking for echoed username");
         is(password, "mochipass3-new", "Checking for echoed password");
 
+        // Housekeeping: change it back to the original login4. Actually,
+        // just delete it and we'll re-add it as the next test.
+        function clearIt() {
+          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+          tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                        "mochiuser3", "mochipass3-new", "", "");
+          pwmgr.removeLogin(tmpLogin);
+
+          // Trigger a new prompt, so we can test adding a new login.
+          startCallbackTimer();
+          iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+        }
+        addNotificationCallback(clearIt);
+
         // Check for the popup notification, and change the password.
         popup = getPopup(popupNotifications, "password-change");
         ok(popup, "got popup notification");
         clickPopupButton(popup, kChangeButton);
         popup.remove();
 
-        // Housekeeping: change it back to the original login4. Actually,
-        // just delete it and we'll re-add it as the next test.
-        function clearIt() {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-            tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                          "mochiuser3", "mochipass3-new", "", "");
-            pwmgr.removeLogin(tmpLogin);
-        }
-        setTimeout(clearIt, 0);
-
         // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
         var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
                       getService(Ci.nsIHttpAuthManager);
         authMgr.clearAll();
-
-        // Trigger a new prompt, so we can test adding a new login.
-        startCallbackTimer();
-        iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
         break;
 
     case 1005:
@@ -477,17 +504,17 @@ function handleLoad() {
         is(username, "mochiuser3", "Checking for echoed username");
         is(password, "mochipass3-old", "Checking for echoed password");
 
+        function finishIt() {
+          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+          finishTest();
+        }
+        addNotificationCallback(finishIt);
+
         // Check for the popup notification, and change the password.
         popup = getPopup(popupNotifications, "password-save");
         ok(popup, "got popup notification");
         clickPopupButton(popup, kRememberButton);
         popup.remove();
-        
-        function finishIt() {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-            finishTest();
-        }
-        setTimeout(finishIt, 0);
         break;
 
     default:

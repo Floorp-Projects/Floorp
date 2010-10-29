@@ -1039,8 +1039,8 @@ Svc.__defineGetter__("Crypto", function() {
   let cryptoSvc;
   try {
     let ns = {};
-    Cu.import("resource://services-crypto/threaded.js", ns);
-    cryptoSvc = new ns.ThreadedCrypto();
+    Cu.import("resource://services-crypto/WeaveCrypto.js", ns);
+    cryptoSvc = new ns.WeaveCrypto();
   } catch (ex) {
     // Fallback to binary WeaveCrypto
     cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].

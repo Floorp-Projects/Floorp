@@ -17,13 +17,13 @@ function getChromeRoot(path) {
 }
 
 function extractChromeRoot(path) {
-  var path = getChromeRoot(path);
-  var jar = getJar(path);
+  var chromeRootPath = getChromeRoot(path);
+  var jar = getJar(chromeRootPath);
   if (jar) {
     var tmpdir = extractJarToTmp(jar);
     return "file://" + tmpdir.path + "/";
   }
-  return path;
+  return chromeRootPath;
 }
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
@@ -165,7 +165,7 @@ var Harness = {
       }
     }
     else if (window.document.location.href == PROMPT_URL) {
-        var promptType = window.gArgs.getProperty("promptType");
+        var promptType = window.args.promptType;
         switch (promptType) {
           case "alert":
           case "alertCheck":

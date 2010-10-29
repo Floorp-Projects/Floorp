@@ -159,8 +159,10 @@ public:
 
   static nsIEventStateManager* GetActiveEventStateManager() { return sActiveESM; }
 
-  static void SetGlobalActiveContent(nsEventStateManager* aNewESM,
-                                     nsIContent* aContent);
+  // Sets aNewESM to be the active event state manager, and
+  // if aContent is non-null, marks the object as active.
+  static void SetActiveManager(nsEventStateManager* aNewESM,
+                               nsIContent* aContent);
 protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
@@ -415,7 +417,7 @@ protected:
 
   static nsEventStateManager* sActiveESM;
   
-  static void ClearGlobalActiveContent();
+  static void ClearGlobalActiveContent(nsEventStateManager* aClearer);
 
   // Functions used for click hold context menus
   PRBool mClickHoldContextMenu;

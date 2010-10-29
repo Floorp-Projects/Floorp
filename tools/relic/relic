@@ -188,6 +188,7 @@ _g_skip_files = [
     "gfx/cairo/cairo/COPYING-MPL-1.1",
     
     # Files containing global licensing information
+    "xpfe/global/resources/content/license.html",
     "toolkit/content/license.html",
     
     # Ben Bucksch - files are tri-licensed with an extra clause.
@@ -338,29 +339,30 @@ _g_basename_to_comment_info = {
     "awk_pkginfo-sparc": (["#"], ),
     "pkgdepend_64bit": (["#"], ),
     "WIN32": (["#"], ),
+    "WIN16": (["#"], ),
     "Makefile.linux": (["#"], ),
 
     "README": ([""], ["#"]),
     "copyright": ([""], ),
 
-    "xptcstubs_asm_ppc_darwin.s.m4": (["/*", " *", "*/"], ),
-    "xptcstubs_asm_mips.s.m4": (["/*", " *", "*/"], ),
+    "xptcstubs_asm_ppc_darwin.s.m4": (["/*", "*", "*/"], ),
+    "xptcstubs_asm_mips.s.m4": (["/*", "*", "*/"], ),
 
-    "nsIDocCharsetTest.txt": (["<!--", "   -", "-->"], ),
-    "nsIFontListTest.txt": (["<!--", "   -", "-->"], ),
-    "ComponentListTest.txt": (["<!--", "   -", "-->"], ),
-    "nsIWebBrowserPersistTest1.txt": (["<!--", "   -", "-->"], ),
-    "nsIWebBrowserPersistTest2.txt": (["<!--", "   -", "-->"], ),
-    "nsIWebBrowserPersistTest3.txt": (["<!--", "   -", "-->"], ),
-    "plugins.txt": (["<!--", "   -", "-->"], ),
-    "NsISHistoryTestCase1.txt": (["<!--", "   -", "-->"], ),
-    "EmbedSmokeTest.txt": (["<!--", "   -", "-->"], ),
+    "nsIDocCharsetTest.txt": (["<!--", "-", "-->"], ),
+    "nsIFontListTest.txt": (["<!--", "-", "-->"], ),
+    "ComponentListTest.txt": (["<!--", "-", "-->"], ),
+    "nsIWebBrowserPersistTest1.txt": (["<!--", "-", "-->"], ),
+    "nsIWebBrowserPersistTest2.txt": (["<!--", "-", "-->"], ),
+    "nsIWebBrowserPersistTest3.txt": (["<!--", "-", "-->"], ),
+    "plugins.txt": (["<!--", "-", "-->"], ),
+    "NsISHistoryTestCase1.txt": (["<!--", "-", "-->"], ),
+    "EmbedSmokeTest.txt": (["<!--", "-", "-->"], ),
 
-    "lineterm_LICENSE": (["/*", " *", "*/"], ),
-    "XMLterm_LICENSE": (["/*", " *", "*/"], ),
-    "BrowserView.cpp.mod": (["/*", " *", "*/"], ),
-    "header_template": (["/*", " *", "*/"], ),
-    "cpp_template": (["/*", " *", "*/"], ),
+    "lineterm_LICENSE": (["/*", "*", "*/"], ),
+    "XMLterm_LICENSE": (["/*", "*", "*/"], ),
+    "BrowserView.cpp.mod": (["/*", "*", "*/"], ),
+    "header_template": (["/*", "*", "*/"], ),
+    "cpp_template": (["/*", "*", "*/"], ),
 
     "abcFormat470.txt": (["//"], ),
     "opcodes.tbl": (["//"], ),
@@ -377,70 +379,71 @@ _g_ext_to_comment_info = {
     ".FP":    (["", ]),
     ".spec":  (["", ]),
 
-    ".CPP":    (["/*", " *", "*/"], ),
-    ".cpp":    (["/*", " *", "*/"], ),
-    ".H":      (["/*", " *", "*/"], ),
-    ".h":      (["/*", " *", "*/"], ),
-    ".hxx":    (["/*", " *", "*/"], ),
-    ".c":      (["/*", " *", "*/"], ),
-    ".css":    (["/*", " *", "*/"], ['#']),
-    ".js":     (["/*", " *", "*/"], ['#']),
-    ".idl":    (["/*", " *", "*/"], ),
-    ".ut":     (["/*", " *", "*/"], ),
-    ".rc":     (["/*", " *", "*/"], ),
-    ".rc2":    (["/*", " *", "*/"], ),
-    ".RC":     (["/*", " *", "*/"], ),
-    ".Prefix": (["/*", " *", "*/"], ),
-    ".prefix": (["/*", " *", "*/"], ),
-    ".cfg":    (["/*", " *", "*/"], ["#"]),
-    ".cp":     (["/*", " *", "*/"], ),
-    ".cs":     (["/*", " *", "*/"], ),
-    ".java":   (["/*", " *", "*/"], ),
-    ".jst":    (["/*", " *", "*/"], ),
-    ".tbl":    (["/*", " *", "*/"], ),
-    ".tab":    (["/*", " *", "*/"], ),
-    ".cc":     (["/*", " *", "*/"], ),
-    ".msg":    (["/*", " *", "*/"], ),
-    ".y":      (["/*", " *", "*/"], ),
-    ".r":      (["/*", " *", "*/"], ),
-    ".mm":     (["/*", " *", "*/"], ),
-    ".x-ccmap":(["/*", " *", "*/"], ),
-    ".ccmap":  (["/*", " *", "*/"], ),
-    ".sql":    (["/*", " *", "*/"], ),
-    ".pch++":  (["/*", " *", "*/"], ),
-    ".xpm":    (["/*", " *", "*/"], ),
-    ".uih":    (["/*", " *", "*/"], ),
-    ".uil":    (["/*", " *", "*/"], ),
-    ".ccmap":  (["/*", " *", "*/"], ),
-    ".map":    (["/*", " *", "*/"], ),
-    ".win98":  (["/*", " *", "*/"], ),
-    ".php":    (["/*", " *", "*/"], ),
-    ".m":      (["/*", " *", "*/"], ),
-    ".jnot":   (["/*", " *", "*/"], ),
-    ".l":      (["/*", " *", "*/"], ),
-    ".htp":    (["/*", " *", "*/"], ),
-    ".xs":     (["/*", " *", "*/"], ),
-    ".as":     (["/*", " *", "*/"], ),
-    ".api":    (["/*", " *", "*/"], ['#']),
+    ".CPP":    (["/*", "*", "*/"], ),
+    ".cpp":    (["/*", "*", "*/"], ),
+    ".H":      (["/*", "*", "*/"], ),
+    ".h":      (["/*", "*", "*/"], ),
+    ".hxx":    (["/*", "*", "*/"], ),
+    ".c":      (["/*", "*", "*/"], ),
+    ".css":    (["/*", "*", "*/"], ['#']),
+    ".js":     (["/*", "*", "*/"], ['#']),
+    ".idl":    (["/*", "*", "*/"], ),
+    ".ut":     (["/*", "*", "*/"], ),
+    ".rc":     (["/*", "*", "*/"], ),
+    ".rc2":    (["/*", "*", "*/"], ),
+    ".RC":     (["/*", "*", "*/"], ),
+    ".Prefix": (["/*", "*", "*/"], ),
+    ".prefix": (["/*", "*", "*/"], ),
+    ".cfg":    (["/*", "*", "*/"], ["#"]),
+    ".cp":     (["/*", "*", "*/"], ),
+    ".cs":     (["/*", "*", "*/"], ),
+    ".java":   (["/*", "*", "*/"], ),
+    ".jst":    (["/*", "*", "*/"], ),
+    ".tbl":    (["/*", "*", "*/"], ),
+    ".tab":    (["/*", "*", "*/"], ),
+    ".cc":     (["/*", "*", "*/"], ),
+    ".msg":    (["/*", "*", "*/"], ),
+    ".y":      (["/*", "*", "*/"], ),
+    ".r":      (["/*", "*", "*/"], ),
+    ".mm":     (["/*", "*", "*/"], ),
+    ".x-ccmap":(["/*", "*", "*/"], ),
+    ".ccmap":  (["/*", "*", "*/"], ),
+    ".sql":    (["/*", "*", "*/"], ),
+    ".pch++":  (["/*", "*", "*/"], ),
+    ".xpm":    (["/*", "*", "*/"], ),
+    ".uih":    (["/*", "*", "*/"], ),
+    ".uil":    (["/*", "*", "*/"], ),
+    ".ccmap":  (["/*", "*", "*/"], ),
+    ".map":    (["/*", "*", "*/"], ),
+    ".win98":  (["/*", "*", "*/"], ),
+    ".php":    (["/*", "*", "*/"], ),
+    ".m":      (["/*", "*", "*/"], ),
+    ".jnot":   (["/*", "*", "*/"], ),
+    ".l":      (["/*", "*", "*/"], ),
+    ".htp":    (["/*", "*", "*/"], ),
+    ".xs":     (["/*", "*", "*/"], ),
+    ".as":     (["/*", "*", "*/"], ),
+    ".api":    (["/*", "*", "*/"], ['#']),
+    ".applescript": (["(*", "*", "*)"], ["--"], ["#"]),
 
-    ".html": (["<!--", "   -", "-->"], ["#"]),
-    ".xml":  (["<!--", "   -", "-->"], ["#"]),
-    ".xbl":  (["<!--", "   -", "-->"], ["#"]),
-    ".xsl":  (["<!--", "   -", "-->"], ),
-    ".xul":  (["<!--", "   -", "-->"], ["#"]),
-    ".dtd":  (["<!--", "   -", "-->"], ["#"]),
-    ".rdf":  (["<!--", "   -", "-->"], ["#"]),
-    ".htm":  (["<!--", "   -", "-->"], ),
-    ".out":  (["<!--", "   -", "-->"], ),
-    ".resx": (["<!--", "   -", "-->"], ),
-    ".bl":   (["<!--", "   -", "-->"], ),
-    ".xif":  (["<!--", "   -", "-->"], ),
-    ".xhtml":(["<!--", "   -", "-->"], ["#"]),
+    ".html": (["<!--", "-", "-->"], ["#"]),
+    ".xml":  (["<!--", "-", "-->"], ["#"]),
+    ".xbl":  (["<!--", "-", "-->"], ["#"]),
+    ".xsl":  (["<!--", "-", "-->"], ),
+    ".xul":  (["<!--", "-", "-->"], ["#"]),
+    ".dtd":  (["<!--", "-", "-->"], ["#"]),
+    ".rdf":  (["<!--", "-", "-->"], ["#"]),
+    ".htm":  (["<!--", "-", "-->"], ),
+    ".out":  (["<!--", "-", "-->"], ),
+    ".resx": (["<!--", "-", "-->"], ),
+    ".bl":   (["<!--", "-", "-->"], ),
+    ".xif":  (["<!--", "-", "-->"], ),
+    ".xhtml":(["<!--", "-", "-->"], ["#"]),
 
-    ".inc":  (["<!--", "   -", "-->"], 
+    ".inc":  (["<!--", "-", "-->"], 
               ["#"],
               ["@!"],
-              ["/*", " *", "*/"]),
+              ["/*", "*", "*/"]),
 
     ".properties": (["#"], ),
     ".win":        (["#"], ),
@@ -522,7 +525,7 @@ _g_ext_to_comment_info = {
     ".3x":  (['.\\"'], ),
 	    
     # What a mess...
-    ".s": (["#"], ["//"], ["/*", " *", "*/"], ["!"], [";"], ["/"]),
+    ".s": (["#"], ["//"], ["/*", "*", "*/"], ["!"], [";"], ["/"]),
 }
 _g_shebang_pattern_to_comment_info = [
     (re.compile(ur'\A#!.*/bin/(ba)?sh.*$', re.IGNORECASE), (["#"], )),
@@ -896,8 +899,9 @@ def _get_license_info(filename, show_initial=0, quick=0):
     lines = content.splitlines()
     for comment_delims in comment_delim_sets:
         if len(comment_delims) == 3:
-            prefix_pattern = "%s|%s|" % (re.escape(comment_delims[0]),
-                                         re.escape(comment_delims[1]))
+            # Note: allow for whitespace before continuation character
+            prefix_pattern = "%s|\s*%s|" % (re.escape(comment_delims[0]),
+                                            re.escape(comment_delims[1]))
             suffix_pattern = "%s" % re.escape(comment_delims[2])
         elif len(comment_delims) == 2:
             prefix_pattern = "%s|" % re.escape(comment_delims[0])
@@ -1466,11 +1470,11 @@ def _make_backup_path(path):
     raise RelicError("Could not find an unused backup path for '%s'." % path)
 
 
-def _relicensing_error(err, path, cache=None, quiet=0):
+def _relicensing_error(err, path, cache=None, quiet=1):
     """Handle an error during relicensing.
     
         "err" may be an error string or an exception instance.
-        "path" is the path of the file on which this error occurred.
+        "path" is the path of the file on which this error occured.
         "cache" is a mapping of path to errors on which errors may be
             stored for later reporting.
         "quiet" optionally allows one to silence the stdout output when

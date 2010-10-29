@@ -365,6 +365,7 @@ public:
   static void RemoveFromCARefreshTimer(nsPluginInstanceOwner *aPluginInstance);
   void SetupCARefresh();
   void* FixUpPluginWindow(PRInt32 inPaintState);
+  void HidePluginWindow();
   // Set a flag that (if true) indicates the plugin port info has changed and
   // SetWindow() needs to be called.
   void SetPluginPortChanged(PRBool aState) { mPluginPortChanged = aState; }
@@ -1101,8 +1102,6 @@ nsObjectFrame::CallSetWindow()
 
   if (IsHidden())
     return;
-
-  PRBool windowless = (window->type == NPWindowTypeDrawable);
 
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPortFromWidget();
@@ -2463,7 +2462,11 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
     
     if (DoDelayedStop(aInstanceOwner, aDelayedStop))
       return;
-    
+
+#if defined(XP_MACOSX)
+    aInstanceOwner->HidePluginWindow();
+#endif
+
     inst->Stop();
 
     nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
@@ -2554,7 +2557,6 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
         nsTArray<nsIWidget::Configuration> configurations;
         GetEmptyClipConfiguration(&configurations);
         parent->ConfigureChildren(configurations);
-        DidSetWidgetGeometry();
       }
     }
     else {
@@ -6427,6 +6429,19 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 #endif
 
   return nsnull;
+}
+
+void
+nsPluginInstanceOwner::HidePluginWindow()
+{
+  if (!mPluginWindow || !mInstance) {
+    return;
+  }
+
+  mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
+  mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
+  mWidgetVisible = PR_FALSE;
+  mInstance->SetWindow(mPluginWindow);
 }
 
 #endif // XP_MACOSX

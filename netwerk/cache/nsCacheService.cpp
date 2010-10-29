@@ -793,14 +793,6 @@ nsCacheService::DispatchToCacheIOThread(nsIRunnable* event)
 PRBool
 nsCacheProfilePrefObserver::DiskCacheEnabled()
 {
-#ifdef MOZ_IPC
-    // Bad Things (tm) are likely to happen if child and parent both write to
-    // disk cache.  
-    // - TODO: remove once we turn off caching entirely in child (bug 559714)
-    if (mozilla::net::IsNeckoChild())
-        return PR_FALSE;
-#endif
-
     if ((mDiskCacheCapacity == 0) || (!mDiskCacheParentDirectory))  return PR_FALSE;
     return mDiskCacheEnabled;
 }
@@ -858,13 +850,6 @@ nsCacheProfilePrefObserver::MemoryCacheEnabled()
 PRInt32
 nsCacheProfilePrefObserver::MemoryCacheCapacity()
 {
-#ifdef MOZ_IPC
-    // For now use small memory cache (1 MB) on child, just for FTP/wyciwyg
-    // - TODO: remove once we turn off caching entirely in child (bug 559714)
-    if (mozilla::net::IsNeckoChild())
-        return 1024; 
-#endif
-
     PRInt32 capacity = mMemoryCacheCapacity;
     if (capacity >= 0) {
         CACHE_LOG_DEBUG(("Memory cache capacity forced to %d\n", capacity));

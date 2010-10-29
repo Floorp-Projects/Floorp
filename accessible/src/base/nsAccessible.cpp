@@ -2368,7 +2368,8 @@ nsAccessible::DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex)
 
   // Scroll into view.
   presShell->ScrollContentIntoView(aContent, NS_PRESSHELL_SCROLL_ANYWHERE,
-                                   NS_PRESSHELL_SCROLL_ANYWHERE);
+                                   NS_PRESSHELL_SCROLL_ANYWHERE,
+                                   nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 
   // Fire mouse down and mouse up events.
   PRBool res = nsCoreUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, presShell,
