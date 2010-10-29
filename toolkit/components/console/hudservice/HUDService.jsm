@@ -3907,159 +3907,152 @@ function JSPropertyProvider(aScope, aInputValue)
  */
 function JSTermHelper(aJSTerm)
 {
-  return {
-    /**
-     * Returns the result of document.getElementById(aId).
-     *
-     * @param string aId
-     *        A string that is passed to window.document.getElementById.
-     * @returns nsIDOMNode or null
-     */
-    $: function JSTH_$(aId)
-    {
-      try {
-        return aJSTerm._window.document.getElementById(aId);
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-    },
-
-    /**
-     * Returns the result of document.querySelectorAll(aSelector).
-     *
-     * @param string aSelector
-     *        A string that is passed to window.document.querySelectorAll.
-     * @returns array of nsIDOMNode
-     */
-    $$: function JSTH_$$(aSelector)
-    {
-      try {
-        return aJSTerm._window.document.querySelectorAll(aSelector);
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-    },
-
-    /**
-     * Runs a xPath query and returns all matched nodes.
-     *
-     * @param string aXPath
-     *        xPath search query to execute.
-     * @param [optional] nsIDOMNode aContext
-     *        Context to run the xPath query on. Uses window.document if not set.
-     * @returns array of nsIDOMNode
-     */
-    $x: function JSTH_$x(aXPath, aContext)
-    {
-      let nodes = [];
-      let doc = aJSTerm._window.wrappedJSObject.document;
-      let aContext = aContext || doc;
-
-      try {
-        let results = doc.evaluate(aXPath, aContext, null,
-                                    Ci.nsIDOMXPathResult.ANY_TYPE, null);
-
-        let node;
-        while (node = results.iterateNext()) {
-          nodes.push(node);
-        }
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-
-      return nodes;
-    },
-
-    /**
-     * Clears the output of the JSTerm.
-     */
-    clear: function JSTH_clear()
-    {
-      aJSTerm.clearOutput();
-    },
-
-    /**
-     * Returns the result of Object.keys(aObject).
-     *
-     * @param object aObject
-     *        Object to return the property names from.
-     * @returns array of string
-     */
-    keys: function JSTH_keys(aObject)
-    {
-      try {
-        return Object.keys(XPCNativeWrapper.unwrap(aObject));
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-    },
-
-    /**
-     * Returns the values of all properties on aObject.
-     *
-     * @param object aObject
-     *        Object to display the values from.
-     * @returns array of string
-     */
-    values: function JSTH_values(aObject)
-    {
-      let arrValues = [];
-      let obj = XPCNativeWrapper.unwrap(aObject);
-
-      try {
-        for (let prop in obj) {
-          arrValues.push(obj[prop]);
-        }
-      }
-      catch (ex) {
-        aJSTerm.console.error(ex.message);
-      }
-      return arrValues;
-    },
-
-    /**
-     * Inspects the passed aObject. This is done by opening the PropertyPanel.
-     *
-     * @param object aObject
-     *        Object to inspect.
-     * @returns void
-     */
-    inspect: function JSTH_inspect(aObject)
-    {
-      let obj = XPCNativeWrapper.unwrap(aObject);
-      aJSTerm.openPropertyPanel(null, obj);
-    },
-
-    /**
-     * Prints aObject to the output.
-     *
-     * @param object aObject
-     *        Object to print to the output.
-     * @returns void
-     */
-    pprint: function JSTH_pprint(aObject)
-    {
-      if (aObject === null || aObject === undefined || aObject === true || aObject === false) {
-        aJSTerm.console.error(HUDService.getStr("helperFuncUnsupportedTypeError"));
-        return;
-      }
-      let output = [];
-      if (typeof aObject != "string") {
-        aObject = XPCNativeWrapper.unwrap(aObject);
-      }
-      let pairs = namesAndValuesOf(aObject);
-
-      pairs.forEach(function(pair) {
-        output.push("  " + pair.display);
-      });
-
-      aJSTerm.writeOutput(output.join("\n"));
+  /**
+   * Returns the result of document.getElementById(aId).
+   *
+   * @param string aId
+   *        A string that is passed to window.document.getElementById.
+   * @returns nsIDOMNode or null
+   */
+  aJSTerm.sandbox.$ = function JSTH_$(aId)
+  {
+    try {
+      return aJSTerm._window.document.getElementById(aId);
     }
-  }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+  };
+
+  /**
+   * Returns the result of document.querySelectorAll(aSelector).
+   *
+   * @param string aSelector
+   *        A string that is passed to window.document.querySelectorAll.
+   * @returns array of nsIDOMNode
+   */
+  aJSTerm.sandbox.$$ = function JSTH_$$(aSelector)
+  {
+    try {
+      return aJSTerm._window.document.querySelectorAll(aSelector);
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+  };
+
+  /**
+   * Runs a xPath query and returns all matched nodes.
+   *
+   * @param string aXPath
+   *        xPath search query to execute.
+   * @param [optional] nsIDOMNode aContext
+   *        Context to run the xPath query on. Uses window.document if not set.
+   * @returns array of nsIDOMNode
+   */
+  aJSTerm.sandbox.$x = function JSTH_$x(aXPath, aContext)
+  {
+    let nodes = [];
+    let doc = aJSTerm._window.document;
+    let aContext = aContext || doc;
+
+    try {
+      let results = doc.evaluate(aXPath, aContext, null,
+                                  Ci.nsIDOMXPathResult.ANY_TYPE, null);
+
+      let node;
+      while (node = results.iterateNext()) {
+        nodes.push(node);
+      }
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+
+    return nodes;
+  };
+
+  /**
+   * Clears the output of the JSTerm.
+   */
+  aJSTerm.sandbox.clear = function JSTH_clear()
+  {
+    aJSTerm.clearOutput();
+  };
+
+  /**
+   * Returns the result of Object.keys(aObject).
+   *
+   * @param object aObject
+   *        Object to return the property names from.
+   * @returns array of string
+   */
+  aJSTerm.sandbox.keys = function JSTH_keys(aObject)
+  {
+    try {
+      return Object.keys(aObject);
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+  };
+
+  /**
+   * Returns the values of all properties on aObject.
+   *
+   * @param object aObject
+   *        Object to display the values from.
+   * @returns array of string
+   */
+  aJSTerm.sandbox.values = function JSTH_values(aObject)
+  {
+    let arrValues = [];
+
+    try {
+      for (let prop in aObject) {
+        arrValues.push(aObject[prop]);
+      }
+    }
+    catch (ex) {
+      aJSTerm.console.error(ex.message);
+    }
+    return arrValues;
+  };
+
+  /**
+   * Inspects the passed aObject. This is done by opening the PropertyPanel.
+   *
+   * @param object aObject
+   *        Object to inspect.
+   * @returns void
+   */
+  aJSTerm.sandbox.inspect = function JSTH_inspect(aObject)
+  {
+    aJSTerm.openPropertyPanel(null, aObject);
+  };
+
+  /**
+   * Prints aObject to the output.
+   *
+   * @param object aObject
+   *        Object to print to the output.
+   * @returns void
+   */
+  aJSTerm.sandbox.pprint = function JSTH_pprint(aObject)
+  {
+    if (aObject === null || aObject === undefined || aObject === true || aObject === false) {
+      aJSTerm.console.error(HUDService.getStr("helperFuncUnsupportedTypeError"));
+      return;
+    }
+    let output = [];
+    let pairs = namesAndValuesOf(aObject);
+
+    pairs.forEach(function(pair) {
+      output.push("  " + pair.display);
+    });
+
+    aJSTerm.writeOutput(output.join("\n"));
+  };
 }
 
 /**
@@ -4146,11 +4139,10 @@ JSTerm.prototype = {
   createSandbox: function JST_setupSandbox()
   {
     // create a JS Sandbox out of this.context
-    this.sandbox = new Cu.Sandbox(this._window);
-    this.sandbox.window = this._window;
+    this.sandbox = new Cu.Sandbox(this._window,
+      { sandboxPrototype: this._window, wantXrays: false });
     this.sandbox.console = this.console;
-    this.sandbox.__helperFunctions__ = JSTermHelper(this);
-    this.sandbox.__proto__ = this._window.wrappedJSObject;
+    JSTermHelper(this);
   },
 
   get _window()
@@ -4168,8 +4160,7 @@ JSTerm.prototype = {
    */
   evalInSandbox: function JST_evalInSandbox(aString)
   {
-    let execStr = "with(__helperFunctions__) { with(window) {" + aString + "} }";
-    return Cu.evalInSandbox(execStr,  this.sandbox, "default", "HUD Console", 1);
+    return Cu.evalInSandbox(aString, this.sandbox, "1.8", "HUD Console", 1);
   },
 
 

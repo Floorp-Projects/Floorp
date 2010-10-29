@@ -90,25 +90,29 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
              (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA &&
               (mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
         {
-            if (mTransformType == TRANSLATION_ONLY) {
-                mRenderState = RENDER_STATE_NATIVE_DRAWING;
+            // grab the DC. This can fail if there is a complex clipping path,
+            // in which case we'll have to fall back.
+            mWinSurface = static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()));
+            mDC = mWinSurface->GetDCWithClip(mContext);
 
-                mTranslation = m.GetTranslation();
+            if (mDC) {
+                if (mTransformType == TRANSLATION_ONLY) {
+                    mRenderState = RENDER_STATE_NATIVE_DRAWING;
 
-                mWinSurface = static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()));
-            } else if (((mTransformType == AXIS_ALIGNED_SCALE)
-                        && (mNativeDrawFlags & CAN_AXIS_ALIGNED_SCALE)) ||
-                       (mNativeDrawFlags & CAN_COMPLEX_TRANSFORM))
-            {
-                mWorldTransform.eM11 = (FLOAT) m.xx;
-                mWorldTransform.eM12 = (FLOAT) m.yx;
-                mWorldTransform.eM21 = (FLOAT) m.xy;
-                mWorldTransform.eM22 = (FLOAT) m.yy;
-                mWorldTransform.eDx  = (FLOAT) m.x0;
-                mWorldTransform.eDy  = (FLOAT) m.y0;
+                    mTranslation = m.GetTranslation();
+                } else if (((mTransformType == AXIS_ALIGNED_SCALE)
+                            && (mNativeDrawFlags & CAN_AXIS_ALIGNED_SCALE)) ||
+                           (mNativeDrawFlags & CAN_COMPLEX_TRANSFORM))
+                {
+                    mWorldTransform.eM11 = (FLOAT) m.xx;
+                    mWorldTransform.eM12 = (FLOAT) m.yx;
+                    mWorldTransform.eM21 = (FLOAT) m.xy;
+                    mWorldTransform.eM22 = (FLOAT) m.yy;
+                    mWorldTransform.eDx  = (FLOAT) m.x0;
+                    mWorldTransform.eDy  = (FLOAT) m.y0;
 
-                mRenderState = RENDER_STATE_NATIVE_DRAWING;
-                mWinSurface = static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()));
+                    mRenderState = RENDER_STATE_NATIVE_DRAWING;
+                }
             }
         }
 
@@ -155,9 +159,6 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 
     if (mRenderState == RENDER_STATE_NATIVE_DRAWING) {
         // we can just do native drawing directly to the context's surface
-
-        // grab the DC
-        mDC = mWinSurface->GetDCWithClip(mContext);
 
         // do we need to use SetWorldTransform?
         if (mTransformType != TRANSLATION_ONLY) {

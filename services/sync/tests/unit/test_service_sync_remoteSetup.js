@@ -3,6 +3,9 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
 
 function run_test() {
+  if (DISABLE_TESTS_BUG_604565)
+    return;
+
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 

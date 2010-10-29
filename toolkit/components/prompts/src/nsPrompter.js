@@ -322,6 +322,25 @@ let PromptUtils = {
         return text;
     },
 
+    objectToPropBag : function (obj) {
+        let bag = Cc["@mozilla.org/hash-property-bag;1"].
+                  createInstance(Ci.nsIWritablePropertyBag2);
+        bag.QueryInterface(Ci.nsIWritablePropertyBag);
+
+        for (let propName in obj)
+            bag.setProperty(propName, obj[propName]);
+
+        return bag;
+    },
+
+    propBagToObject : function (propBag, obj) {
+        // Here we iterate over the object's original properties, not the bag
+        // (ie, the prompt can't return more/different properties than were
+        // passed in). This just helps ensure that the caller provides default
+        // values, lest the prompt forget to set them.
+        for (let propName in obj)
+            obj[propName] = propBag.getProperty(propName);
+    },
 };
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function () {
@@ -343,8 +362,19 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "ellipsis", function () {
 
 
 
-const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
-const SELECT_DIALOG = "chrome://global/content/selectDialog.xul";
+function openModalWindow(domWin, uri, args) {
+    // XXX do we want to do modal state if we fall back to .activeWindow?
+    if (!domWin)
+        domWin = Services.ww.activeWindow;
+
+    // XXX domWin may still be null here if there are _no_ windows open.
+
+    // Note that we don't need to fire DOMWillOpenModalDialog and
+    // DOMModalDialogClosed events here, wwatcher's OpenWindowJSInternal
+    // will do that. Similarly for enterModalState / leaveModalState.
+
+    Services.ww.openWindow(domWin, uri, "_blank", "centerscreen,chrome,modal,titlebar", args);
+}
 
 function ModalPrompter(domWin) {
     this.domWin = domWin;
@@ -358,25 +388,15 @@ ModalPrompter.prototype = {
     /* ---------- internal methods ---------- */
 
 
-    newPropBag : function () {
-        let bag = Cc["@mozilla.org/hash-property-bag;1"].
-                  createInstance(Ci.nsIWritablePropertyBag2);
-        return bag.QueryInterface(Ci.nsIWritablePropertyBag);
-    },
+    openPrompt : function (args) {
+        const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
+        const SELECT_DIALOG = "chrome://global/content/selectDialog.xul";
 
-    openPrompt : function (uri, args) {
-        // XXX do we want to do modal state if we fall back to .activeWindow?
-        let domWin = this.domWin;
-        if (!domWin)
-            domWin = Services.ww.activeWindow;
+        let uri = (args.promptType == "select") ? SELECT_DIALOG : COMMON_DIALOG;
 
-        // XXX domWin may still be null here if there are _no_ windows open.
-
-        // Note that we don't need to fire DOMWillOpenModalDialog and
-        // DOMModalDialogClosed events here, wwatcher's OpenWindowJSInternal
-        // will do that. Similarly for enterModalState / leaveModalState.
-
-        Services.ww.openWindow(domWin, uri, "_blank", "centerscreen,chrome,modal,titlebar", args);
+        let propBag = PromptUtils.objectToPropBag(args);
+        openModalWindow(this.domWin, uri, propBag);
+        PromptUtils.propBagToObject(propBag, args);
     },
 
 
@@ -421,66 +441,70 @@ ModalPrompter.prototype = {
         if (!title)
             title = PromptUtils.getLocalizedString("Alert");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "alert");
-        args.setProperty("title", title);
-        args.setProperty("text",  text);
+        let args = {
+            promptType: "alert",
+            title:      title,
+            text:       text,
+        };
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
     },
 
     alertCheck : function (title, text, checkLabel, checkValue) {
         if (!title)
             title = PromptUtils.getLocalizedString("Alert");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "alertCheck");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("checkLabel", checkLabel);
-        args.setProperty("checked",    checkValue.value);
+        let args = {
+            promptType: "alertCheck",
+            title:      title,
+            text:       text,
+            checkLabel: checkLabel,
+            checked:    checkValue.value,
+        };
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Checkbox state always returned, even if cancel clicked.
-        checkValue.value = args.getProperty("checked");
+        checkValue.value = args.checked;
     },
 
     confirm : function (title, text) {
         if (!title)
             title = PromptUtils.getLocalizedString("Confirm");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "confirm");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("ok",         false);
+        let args = {
+            promptType: "confirm",
+            title:      title,
+            text:       text,
+            ok:         false,
+        };
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Did user click Ok or Cancel?
-        return args.getProperty("ok");
+        return args.ok;
     },
 
     confirmCheck : function (title, text, checkLabel, checkValue) {
         if (!title)
             title = PromptUtils.getLocalizedString("ConfirmCheck");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "confirmCheck");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("checkLabel", checkLabel);
-        args.setProperty("checked",    checkValue.value);
-        args.setProperty("ok",         false);
+        let args = {
+            promptType: "confirmCheck",
+            title:      title,
+            text:       text,
+            checkLabel: checkLabel,
+            checked:    checkValue.value,
+            ok:         false,
+        };
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Checkbox state always returned, even if cancel clicked.
-        checkValue.value = args.getProperty("checked");
+        checkValue.value = args.checked;
 
         // Did user click Ok or Cancel?
-        return args.getProperty("ok");
+        return args.ok;
     },
 
     confirmEx : function (title, text, flags, button0, button1, button2,
@@ -489,60 +513,62 @@ ModalPrompter.prototype = {
         if (!title)
             title = PromptUtils.getLocalizedString("Confirm");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "confirmEx");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("checkLabel", checkLabel);
-        args.setProperty("checked",    checkValue.value);
-        args.setProperty("ok",         false);
-        args.setProperty("buttonNumClicked", 1);
+        let args = {
+            promptType:  "confirmEx",
+            title:       title,
+            text:        text,
+            checkLabel:  checkLabel,
+            checked:     checkValue.value,
+            ok:          false,
+            buttonNumClicked: 1,
+        };
 
         let [label0, label1, label2, defaultButtonNum, isDelayEnabled] =
             PromptUtils.confirmExHelper(flags, button0, button1, button2);
 
-        args.setProperty("defaultButtonNum", defaultButtonNum);
-        args.setProperty("enableDelay", isDelayEnabled);
+        args.defaultButtonNum = defaultButtonNum;
+        args.enableDelay = isDelayEnabled;
 
         if (label0) {
-            args.setProperty("button0Label", label0);
+            args.button0Label = label0;
             if (label1) {
-                args.setProperty("button1Label", label1);
+                args.button1Label = label1;
                 if (label2) {
-                    args.setProperty("button2Label", label2);
+                    args.button2Label = label2;
                 }
             }
         }
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Checkbox state always returned, even if cancel clicked.
-        checkValue.value = args.getProperty("checked");
+        checkValue.value = args.checked;
 
         // Get the number of the button the user clicked.
-        return args.getProperty("buttonNumClicked");
+        return args.buttonNumClicked;
     },
 
     nsIPrompt_prompt : function (title, text, value, checkLabel, checkValue) {
         if (!title)
             title = PromptUtils.getLocalizedString("Prompt");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "prompt");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("value",      value.value);
-        args.setProperty("checkLabel", checkLabel);
-        args.setProperty("checked",    checkValue.value);
-        args.setProperty("ok",         false);
+        let args = {
+            promptType: "prompt",
+            title:      title,
+            text:       text,
+            value:      value.value,
+            checkLabel: checkLabel,
+            checked:    checkValue.value,
+            ok:         false,
+        };
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Did user click Ok or Cancel?
-        let ok  = args.getProperty("ok");
+        let ok  = args.ok;
         if (ok) {
-            checkValue.value = args.getProperty("checked");
-            value.value      = args.getProperty("value");
+            checkValue.value = args.checked;
+            value.value      = args.value;
         }
 
         return ok;
@@ -552,24 +578,25 @@ ModalPrompter.prototype = {
         if (!title)
             title = PromptUtils.getLocalizedString("PromptUsernameAndPassword2");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "promptUserAndPass");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("user",       user.value);
-        args.setProperty("pass",       pass.value);
-        args.setProperty("checkLabel", checkLabel);
-        args.setProperty("checked",    checkValue.value);
-        args.setProperty("ok",         false);
+        let args = {
+            promptType: "promptUserAndPass",
+            title:      title,
+            text:       text,
+            user:       user.value,
+            pass:       pass.value,
+            checkLabel: checkLabel,
+            checked:    checkValue.value,
+            ok:         false,
+        };
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Did user click Ok or Cancel?
-        let ok  = args.getProperty("ok");
+        let ok  = args.ok;
         if (ok) {
-            checkValue.value = args.getProperty("checked");
-            user.value       = args.getProperty("user");
-            pass.value       = args.getProperty("pass");
+            checkValue.value = args.checked;
+            user.value       = args.user;
+            pass.value       = args.pass;
         }
 
         return ok;
@@ -579,22 +606,23 @@ ModalPrompter.prototype = {
         if (!title)
             title = PromptUtils.getLocalizedString("PromptPassword2");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "promptPassword");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("pass",       pass.value);
-        args.setProperty("checkLabel", checkLabel);
-        args.setProperty("checked",    checkValue.value);
-        args.setProperty("ok",         false);
+        let args = {
+            promptType: "promptPassword",
+            title:      title,
+            text:       text,
+            pass:       pass.value,
+            checkLabel: checkLabel,
+            checked:    checkValue.value,
+            ok:         false,
+        }
 
-        this.openPrompt(COMMON_DIALOG, args);
+        this.openPrompt(args);
 
         // Did user click Ok or Cancel?
-        let ok  = args.getProperty("ok");
+        let ok  = args.ok;
         if (ok) {
-            checkValue.value = args.getProperty("checked");
-            pass.value       = args.getProperty("pass");
+            checkValue.value = args.checked;
+            pass.value       = args.pass;
         }
 
         return ok;
@@ -604,19 +632,21 @@ ModalPrompter.prototype = {
         if (!title)
             title = PromptUtils.getLocalizedString("Select");
 
-        let args = this.newPropBag();
-        args.setProperty("promptType", "select");
-        args.setProperty("title",      title);
-        args.setProperty("text",       text);
-        args.setProperty("list",       list);
-        args.setProperty("ok",         false);
+        let args = {
+            promptType: "select",
+            title:      title,
+            text:       text,
+            list:       list,
+            selected:   -1,
+            ok:         false,
+        };
 
-        this.openPrompt(SELECT_DIALOG, args);
+        this.openPrompt(args);
 
         // Did user click Ok or Cancel?
-        let ok  = args.getProperty("ok");
+        let ok  = args.ok;
         if (ok)
-            selected.value = args.getProperty("selected");
+            selected.value = args.selected;
 
         return ok;
     },

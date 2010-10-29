@@ -27,6 +27,7 @@ function get_item(items, url) {
       return items[i];
   }
   ok(false, "Item for " + url + " was not listed");
+  return null;
 }
 
 function confirm_install(window) {

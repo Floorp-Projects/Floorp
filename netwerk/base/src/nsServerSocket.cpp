@@ -99,7 +99,7 @@ nsServerSocket::~nsServerSocket()
 void
 nsServerSocket::OnMsgClose()
 {
-  LOG(("nsServerSocket::OnMsgClose [this=%p]\n", this));
+  SOCKET_LOG(("nsServerSocket::OnMsgClose [this=%p]\n", this));
 
   if (NS_FAILED(mCondition))
     return;
@@ -116,7 +116,7 @@ nsServerSocket::OnMsgClose()
 void
 nsServerSocket::OnMsgAttach()
 {
-  LOG(("nsServerSocket::OnMsgAttach [this=%p]\n", this));
+  SOCKET_LOG(("nsServerSocket::OnMsgAttach [this=%p]\n", this));
 
   if (NS_FAILED(mCondition))
     return;

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
+ *   Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -254,56 +255,18 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToLine(PRInt32 line)
 NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
 {
     NS_ENSURE_ARG_POINTER(child);
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (!sf)
-       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIPresShell> shell = GetPresShell(PR_FALSE);
     if (!shell) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsIFrame* scrolledBox = GetScrolledBox(this);
-    if (!scrolledBox)
-       return NS_ERROR_FAILURE;
-
-    nsRect rect, crect;
-    nsCOMPtr<nsIDOMDocument> doc;
-    child->GetOwnerDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDocument> nsDoc(do_QueryInterface(doc));
-    if(!nsDoc)
-      return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIBoxObject> childBoxObject;
-    nsDoc->GetBoxObjectFor(child, getter_AddRefs(childBoxObject));
-    if(!childBoxObject)
-      return NS_ERROR_UNEXPECTED;
-
-    PRInt32 x,y;
-    childBoxObject->GetX(&x);
-    childBoxObject->GetY(&y);
-    // get the twips rectangle from the boxobject (which has pixels)    
-    rect.x = nsPresContext::CSSPixelsToAppUnits(x);
-    rect.y = nsPresContext::CSSPixelsToAppUnits(y);
-
-    // TODO: make sure the child is inside the box
-
-    // get our current info
-    nsPoint cp = sf->GetScrollPosition();
-    nsIntRect prect;
-    GetOffsetRect(prect);
-    crect = prect.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
-    nscoord newx=cp.x, newy=cp.y;
-
-    // we only scroll in the direction of the scrollbox orientation
-    // always scroll to left or top edge of child element
-    if (scrolledBox->IsHorizontal()) {
-        newx = rect.x - crect.x;
-    } else {
-        newy = rect.y - crect.y;
-    }
-    // scroll away
-    sf->ScrollTo(nsPoint(newx, newy), nsIScrollableFrame::INSTANT);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(child);
+    shell->ScrollContentIntoView(content,
+                                 NS_PRESSHELL_SCROLL_TOP,
+                                 NS_PRESSHELL_SCROLL_LEFT,
+                                 nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
+                                 nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     return NS_OK;
 }
 
@@ -347,68 +310,17 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
 {
     NS_ENSURE_ARG_POINTER(child);
 
-    // Start with getting info about the child, since that will flush
-    // layout and possibly destroy scrollable views, presshells, etc.
-    nsCOMPtr<nsIDOMDocument> doc;
-    // XXXbz sXBL/XBL2 issue -- which document?
-    child->GetOwnerDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDocument> nsDoc(do_QueryInterface(doc));
-    if(!nsDoc)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIBoxObject> childBoxObject;
-    nsDoc->GetBoxObjectFor(child, getter_AddRefs(childBoxObject));
-    if(!childBoxObject)
+    nsCOMPtr<nsIPresShell> shell = GetPresShell(PR_FALSE);
+    if (!shell) {
       return NS_ERROR_UNEXPECTED;
-
-    PRInt32 x, y, width, height;
-    childBoxObject->GetX(&x);
-    childBoxObject->GetY(&y);
-    childBoxObject->GetWidth(&width);
-    childBoxObject->GetHeight(&height);
-
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (!sf)
-       return NS_ERROR_FAILURE;
-
-    nsIFrame* scrolledBox = GetScrolledBox(this);
-    if (!scrolledBox)
-       return NS_ERROR_FAILURE;
-
-    nsRect rect, crect;
-    // get the twips rectangle from the boxobject (which has pixels)    
-    rect.x = nsPresContext::CSSPixelsToAppUnits(x);
-    rect.y = nsPresContext::CSSPixelsToAppUnits(y);
-    rect.width = nsPresContext::CSSPixelsToAppUnits(width);
-    rect.height = nsPresContext::CSSPixelsToAppUnits(height);
-
-    // TODO: make sure the child is inside the box
-
-    // get our current info
-    nsPoint cp = sf->GetScrollPosition();
-    nsIntRect prect;
-    GetOffsetRect(prect);
-    crect = prect.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
-
-    nscoord newx=cp.x, newy=cp.y;
-
-    // we only scroll in the direction of the scrollbox orientation
-    if (scrolledBox->IsHorizontal()) {
-        if ((rect.x - crect.x) + rect.width > cp.x + crect.width) {
-            newx = cp.x + (((rect.x - crect.x) + rect.width)-(cp.x + crect.width));
-        } else if (rect.x - crect.x < cp.x) {
-            newx = rect.x - crect.x;
-        }
-    } else {
-        if ((rect.y - crect.y) + rect.height > cp.y + crect.height) {
-            newy = cp.y + (((rect.y - crect.y) + rect.height)-(cp.y + crect.height));
-        } else if (rect.y - crect.y < cp.y) {
-            newy = rect.y - crect.y;
-        }
     }
-    
-    // scroll away
-    sf->ScrollTo(nsPoint(newx, newy), nsIScrollableFrame::INSTANT);
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(child);
+    shell->ScrollContentIntoView(content,
+                                 NS_PRESSHELL_SCROLL_ANYWHERE,
+                                 NS_PRESSHELL_SCROLL_ANYWHERE,
+                                 nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
+                                 nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     return NS_OK;
 }
 
