@@ -4484,7 +4484,7 @@ JS_DefineFunctionsWithPrefix(JSContext *cx, JSObject *obj, JSFunctionSpec *fs,
 
             size_t genericLen = strlen(namePrefix) + strlen(fs->name) + 12;
             char *genericName = (char*) alloca(genericLen);
-            snprintf(genericName, genericLen, "%s.generic.%s", namePrefix, fs->name);
+            JS_snprintf(genericName, genericLen, "%s.generic.%s", namePrefix, fs->name);
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             fun = JS_DefineFunctionWithType(cx, ctor, fs->name,
@@ -4514,7 +4514,7 @@ JS_DefineFunctionsWithPrefix(JSContext *cx, JSObject *obj, JSFunctionSpec *fs,
         JS_ASSERT(namePrefix);
         size_t fullLen = strlen(namePrefix) + strlen(fs->name) + 2;
         char *fullName = (char*) alloca(fullLen);
-        snprintf(fullName, fullLen, "%s.%s", namePrefix, fs->name);
+        JS_snprintf(fullName, fullLen, "%s.%s", namePrefix, fs->name);
 #else
         char *fullName = NULL;
 #endif

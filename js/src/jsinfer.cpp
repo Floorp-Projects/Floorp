@@ -1021,7 +1021,7 @@ TypeCompartment::init()
     prefix[0] = 0;
     strcpy(prefix, ".XXXXXX");
     mktemp(prefix);
-    snprintf(buf, sizeof(buf), "infer%s.txt", prefix);
+    JS_snprintf(buf, sizeof(buf), "infer%s.txt", prefix);
     out = fopen(buf, "w");
     */
 
@@ -1353,7 +1353,7 @@ TypeFunction::fillProperties(JSContext *cx)
     const char *baseName = cx->getTypeId(name);
     unsigned len = strlen(baseName) + 15;
     char *prototypeName = (char *)alloca(len);
-    snprintf(prototypeName, len, "%s:prototype", baseName);
+    JS_snprintf(prototypeName, len, "%s:prototype", baseName);
     prototypeObject = cx->getTypeObject(prototypeName, false);
 
     TypeSet *prototypeTypes = propertySet.getVariable(cx, id_prototype(cx));
@@ -2732,8 +2732,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
 
         /* Model sharp values as local variables. */
         char name[24];
-        snprintf(name, sizeof(name), "#%d:%d",
-                 GET_UINT16(pc), GET_UINT16(pc + UINT16_LEN));
+        JS_snprintf(name, sizeof(name), "#%d:%d",
+                    GET_UINT16(pc), GET_UINT16(pc + UINT16_LEN));
         JSAtom *atom = js_Atomize(cx, name, strlen(name), ATOM_PINNED);
         jsid id = ATOM_TO_JSID(atom);
 
@@ -2744,8 +2744,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
 
       case JSOP_USESHARP: {
         char name[24];
-        snprintf(name, sizeof(name), "#%d:%d",
-                 GET_UINT16(pc), GET_UINT16(pc + UINT16_LEN));
+        JS_snprintf(name, sizeof(name), "#%d:%d",
+                    GET_UINT16(pc), GET_UINT16(pc + UINT16_LEN));
         JSAtom *atom = js_Atomize(cx, name, strlen(name), ATOM_PINNED);
         jsid id = ATOM_TO_JSID(atom);
 
