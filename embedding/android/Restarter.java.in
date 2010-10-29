@@ -38,17 +38,19 @@
 #filter substitution
 package org.mozilla.@MOZ_APP_NAME@;
 
+import android.app.*;
 import android.content.*;
 import android.util.*;
 import android.os.*;
 import java.io.*;
 
-public class Restarter extends BroadcastReceiver {
+public class Restarter extends Activity {
     @Override
-    public void onReceive(Context aContext, Intent aIntent) {
+    public void onCreate(Bundle savedInstanceState) {
         Log.i("Restarter", "trying to restart @MOZ_APP_NAME@");
         try {
             boolean stillRunning;
+            int spinCountdown = 8;
             do {
                 stillRunning = false;
                 java.lang.Process p = Runtime.getRuntime().exec("/system/bin/ps");
@@ -68,7 +70,11 @@ public class Restarter extends BroadcastReceiver {
                         }
                     }
                 }
-            } while(stillRunning);
+                if (stillRunning)
+                    spinCountdown--;
+                else
+                    spinCountdown = 0;
+            } while(spinCountdown != 0);
         } catch (Exception e) {
             Log.i("Restarter", e.toString());
         }
@@ -77,12 +83,12 @@ public class Restarter extends BroadcastReceiver {
             Intent intent = new Intent(action);
             intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
                                 "org.mozilla.@MOZ_APP_NAME@.App");
-            Bundle b = aIntent.getExtras();
+            Bundle b = getIntent().getExtras();
             if (b != null)
                 intent.putExtras(b);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Log.i("GeckoAppJava", intent.toString());
-            aContext.startActivity(intent);
+            startActivity(intent);
         } catch (Exception e) {
             Log.i("Restarter", e.toString());
         }

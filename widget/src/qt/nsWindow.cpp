@@ -128,11 +128,22 @@ static const float GESTURES_BLOCK_MOUSE_FOR = 200;
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 
+#include "nsShmImage.h"
+extern "C" {
+#include "pixman.h"
+}
+
+using namespace mozilla;
+
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
 
 // Cached offscreen surface
 static nsRefPtr<gfxASurface> gBufferSurface;
+#ifdef MOZ_HAVE_SHMIMAGE
+// If we're using xshm rendering, mThebesSurface wraps gShmImage
+nsRefPtr<nsShmImage> gShmImage;
+#endif
 
 static int gBufferPixmapUsageCount = 0;
 static gfxIntSize gBufferMaxSize(0, 0);
@@ -268,7 +279,7 @@ _gfximage_to_qformat(gfxASurface::gfxImageFormat aFormat)
 }
 
 static bool
-UpdateOffScreenBuffers(int aDepth, QSize aSize)
+UpdateOffScreenBuffers(int aDepth, QSize aSize, QWidget* aWidget = nsnull)
 {
     gfxIntSize size(aSize.width(), aSize.height());
     if (gBufferSurface) {
@@ -290,8 +301,22 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize)
     if (format == gfxASurface::ImageFormatUnknown)
         format = gfxASurface::ImageFormatRGB24;
 
+#ifdef MOZ_HAVE_SHMIMAGE
+    if (aWidget) {
+        if (gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType() ==
+            gfxASurface::SurfaceTypeImage) {
+            gShmImage = nsShmImage::Create(gBufferMaxSize,
+                                           (Visual*)aWidget->x11Info().visual(),
+                                           aDepth);
+            gBufferSurface = gShmImage->AsSurface();
+            return true;
+        }
+    }
+#endif
+
     gBufferSurface = gfxPlatform::GetPlatform()->
         CreateOffscreenSurface(gBufferMaxSize, gfxASurface::ContentFromFormat(format));
+
     return true;
 }
 
@@ -343,6 +368,9 @@ nsWindow::Destroy(void)
         --gBufferPixmapUsageCount == 0) {
 
         gBufferSurface = nsnull;
+#ifdef MOZ_HAVE_SHMIMAGE
+        gShmImage = nsnull;
+#endif
     }
 
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
@@ -941,8 +969,23 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef MOZ_X11
+static already_AddRefed<gfxASurface>
+GetSurfaceForQWidget(QWidget* aDrawable)
+{
+    gfxASurface* result =
+        new gfxXlibSurface(aDrawable->x11Info().display(),
+                           aDrawable->handle(),
+                           (Visual*)aDrawable->x11Info().visual(),
+                           gfxIntSize(aDrawable->size().width(),
+                           aDrawable->size().height()));
+    NS_IF_ADDREF(result);
+    return result;
+}
+#endif
+
 nsEventStatus
-nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
+nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, QWidget* aWidget)
 {
     if (mIsDestroyed) {
         LOG(("Expose event on destroyed window [%p] window %p\n",
@@ -993,6 +1036,11 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     } else if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
         targetSurface = new gfxQPainterSurface(aPainter);
 #endif
+    } else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
+        if (!UpdateOffScreenBuffers(depth, aWidget->size(), aWidget)) {
+            return nsEventStatus_eIgnore;
+        }
+        targetSurface = gBufferSurface;
     }
 
     if (NS_UNLIKELY(!targetSurface))
@@ -1001,17 +1049,30 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
     // We will paint to 0, 0 position in offscrenn buffer
-    if (renderMode == gfxQtPlatform::RENDER_BUFFERED)
+    if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
         ctx->Translate(gfxPoint(-r.x(), -r.y()));
+    }
+    else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
+        // This is needed for rotate transformation on Meego
+        // This will work very slow if pixman does not handle rotation very well
+        gfxMatrix matr(aPainter->transform().m11(),
+                       aPainter->transform().m12(),
+                       aPainter->transform().m21(),
+                       aPainter->transform().m22(),
+                       aPainter->transform().dx(),
+                       aPainter->transform().dy());
+        ctx->SetMatrix(matr);
+        NS_ASSERTION(PIXMAN_VERSION < PIXMAN_VERSION_ENCODE(0, 21, 2) && aPainter->transform().isRotating(), "Old pixman and rotate transform, it is going to be slow");
+    }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.refPoint.x = r.x();
-    event.refPoint.y = r.y();
+    event.refPoint.x = rect.x;
+    event.refPoint.y = rect.y;
     event.region = nsIntRegion(rect);
     {
-      AutoLayerManagerSetup
-          setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
-      status = DispatchEvent(&event);
+        AutoLayerManagerSetup
+            setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+        status = DispatchEvent(&event);
     }
 
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
@@ -1046,6 +1107,30 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
                        _gfximage_to_qformat(imgs->Format()));
             aPainter->drawImage(QPoint(rect.x, rect.y), img,
                                 QRect(0, 0, rect.width, rect.height));
+        }
+    } else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
+        QRect trans = aPainter->transform().mapRect(r).toRect();
+        if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+            nsRefPtr<gfxASurface> widgetSurface = GetSurfaceForQWidget(aWidget);
+            nsRefPtr<gfxContext> ctx = new gfxContext(widgetSurface);
+            ctx->SetSource(gBufferSurface);
+            ctx->Rectangle(gfxRect(trans.x(), trans.y(), trans.width(), trans.height()), PR_TRUE);
+            ctx->Clip();
+            ctx->Fill();
+        } else if (gBufferSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+#ifdef MOZ_HAVE_SHMIMAGE
+            if (gShmImage) {
+                gShmImage->Put(aWidget, trans);
+            } else
+#endif
+            if (gBufferSurface) {
+                nsRefPtr<gfxASurface> widgetSurface = GetSurfaceForQWidget(aWidget);
+                nsRefPtr<gfxContext> ctx = new gfxContext(widgetSurface);
+                ctx->SetSource(gBufferSurface);
+                ctx->Rectangle(gfxRect(trans.x(), trans.y(), trans.width(), trans.height()), PR_TRUE);
+                ctx->Clip();
+                ctx->Fill();
+            }
         }
     }
 
@@ -2475,6 +2560,11 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
             newView->setViewport(new QGLWidget());
         }
 
+        if (gfxQtPlatform::GetPlatform()->GetRenderMode() == gfxQtPlatform::RENDER_DIRECT) {
+            // Disable double buffer and system background rendering
+            newView->viewport()->setAttribute(Qt::WA_PaintOnScreen, true);
+            newView->viewport()->setAttribute(Qt::WA_NoSystemBackground, true);
+        }
         // Enable gestures:
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         newView->viewport()->grabGesture(Qt::PinchGesture);
@@ -2528,8 +2618,8 @@ nsWindow::GetThebesSurface()
     if (mThebesSurface)
         return mThebesSurface;
 
-    gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
 #ifdef CAIRO_HAS_QT_SURFACE
+    gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
         mThebesSurface = new gfxQPainterSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR);
     }

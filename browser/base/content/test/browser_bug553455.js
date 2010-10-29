@@ -608,6 +608,15 @@ function test() {
   Services.obs.addObserver(XPInstallObserver, "addon-install-complete", false);
 
   registerCleanupFunction(function() {
+    // Make sure no more test parts run in case we were timed out
+    TESTS = [];
+
+    AddonManager.getAllInstalls(function(aInstalls) {
+      aInstalls.forEach(function(aInstall) {
+        aInstall.cancel();
+      });
+    });
+
     Services.prefs.clearUserPref("extensions.logging.enabled");
 
     Services.obs.removeObserver(XPInstallObserver, "addon-install-started");

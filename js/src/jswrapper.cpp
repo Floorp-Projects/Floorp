@@ -255,7 +255,7 @@ JSWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
     JSString *str;
     if (!enter(cx, wrapper, JSID_VOID, GET))
         return NULL;
-    str = JSProxyHandler::obj_toString(cx, wrapper);
+    str = obj_toStringHelper(cx, wrappedObject(wrapper));
     leave(cx, wrapper);
     return str;
 }
