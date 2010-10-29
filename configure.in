@@ -622,9 +622,6 @@ case "$target" in
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
-        # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
-        # MSVC warning C4800 is ubiquitous, useless, and annoying.
-        CXXFLAGS="$CXXFLAGS -wd4345 -wd4800"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
@@ -2743,11 +2740,6 @@ alpha*-*-osf*)
 *-solaris*) 
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
-    if test -z "$CROSS_COMPILE" && pkginfo -q SUNWpr && pkginfo -q SUNWprd; then
-       NO_NSPR_CONFIG_SYSTEM_LDFLAGS="-L/usr/lib/mps -R/usr/lib/mps -lnspr4"
-       NO_NSPR_CONFIG_SYSTEM_CFLAGS="-I/usr/include/mps"
-       NO_NSPR_CONFIG_SYSTEM_VERSION=["`pkgparam SUNWpr SUNW_PRODVERS | sed -e 's/^[1-9][0-9]*\.[0-9][0-9]*$/&.0/'`"]
-    fi
     SYSTEM_MAKEDEPEND=
     MOZ_FIX_LINK_PATHS=
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
@@ -3806,9 +3798,9 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
-                lchown localtime_r lstat64 memmove random rint sbrk snprintf \
-                stat64 statvfs statvfs64 strerror strtok_r truncate64])
+AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64 setbuf isatty)
+AC_CHECK_FUNCS(flockfile getpagesize)
+AC_CHECK_FUNCS(localtime_r strtok_r)
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock, and -lrt
 _SAVE_LDFLAGS=$LDFLAGS
@@ -5268,6 +5260,7 @@ cairo-cocoa)
     MOZ_WIDGET_TOOLKIT=cocoa
     AC_DEFINE(MOZ_WIDGET_COCOA)
     MOZ_USER_DIR="Mozilla"
+    AC_DEFINE(XP_MACOSX)
     TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
     TK_CFLAGS="-DNO_X11"
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
@@ -7068,7 +7061,6 @@ if test -n "$MOZ_THUMB2"; then
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
-        AC_DEFINE(MOZ_THUMB2)
         CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
@@ -8026,6 +8018,7 @@ dnl ========================================================
 dnl C++ rtti
 dnl Should be smarter and check that the compiler does indeed have rtti
 dnl ========================================================
+
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
 [  --enable-cpp-rtti       Enable C++ RTTI ],
 [ _MOZ_USE_RTTI=1 ],
@@ -9096,7 +9089,7 @@ if test "$USING_HCC"; then
    AC_SUBST(CXX)
 fi
 
-AC_MSG_CHECKING([for posix_fallocate])
+AC_MSG_CHECKING([for posix_fallocate])       
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
   #include <fcntl.h>],
                  [posix_fallocate(0, 0, 0);],
@@ -9167,7 +9160,6 @@ dnl ========================================================
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
 elif test "$OS_ARCH" = "Darwin"; then
-  AC_DEFINE(XP_MACOSX)
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 elif test "$OS_ARCH" = "OpenVMS"; then
