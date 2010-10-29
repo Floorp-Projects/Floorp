@@ -738,6 +738,21 @@ CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id,
     return op(cx, obj, id, vp);
 }
 
+inline bool
+CallSetter(JSContext *cx, JSObject *obj, jsid id, PropertyOp op, uintN attrs, uintN shortid,
+           js::Value *vp)
+{
+    if (attrs & JSPROP_SETTER)
+        return ExternalGetOrSet(cx, obj, id, CastAsObjectJsval(op), JSACC_WRITE, 1, vp, vp);
+
+    if (attrs & JSPROP_GETTER)
+        return js_ReportGetterOnlyAssignment(cx);
+
+    if (attrs & JSPROP_SHORTID)
+        id = INT_TO_JSID(shortid);
+    return CallJSPropertyOpSetter(cx, op, obj, id, vp);
+}
+
 }  /* namespace js */
 
 #endif /* jscntxtinlines_h___ */
