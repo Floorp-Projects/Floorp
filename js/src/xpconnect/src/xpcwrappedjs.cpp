@@ -43,6 +43,7 @@
 
 #include "xpcprivate.h"
 #include "nsAtomicRefcnt.h"
+#include "nsThreadUtils.h"
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
@@ -290,6 +291,7 @@ nsXPCWrappedJS::GetJSObject(JSObject** aJSObj)
 {
     NS_PRECONDITION(aJSObj, "bad param");
     NS_PRECONDITION(mJSObj, "bad wrapper");
+
     if(!(*aJSObj = mJSObj))
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -433,7 +435,8 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
       mClass(aClass),
       mRoot(root ? root : this),
       mNext(nsnull),
-      mOuter(root ? nsnull : aOuter)
+      mOuter(root ? nsnull : aOuter),
+      mThread(do_GetCurrentThread())
 {
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -568,6 +571,8 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
 {
     if(!IsValid())
         return NS_ERROR_UNEXPECTED;
+    if (NS_GetCurrentThread() != mThread)
+        return NS_ERROR_NOT_SAME_THREAD;
     return GetClass()->CallMethod(this, methodIndex, info, params);
 }
 
