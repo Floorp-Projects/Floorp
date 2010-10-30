@@ -108,12 +108,6 @@ IsScriptLive(JSContext *cx, JSScript *script)
 }
 #endif
 
-JS_PUBLIC_API(void)
-JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
-{
-    rt->debugMode = debug;
-}
-
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
 {
