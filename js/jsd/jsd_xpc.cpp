@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jsdbgapi.h"
+#include "jslock.h"
 #include "jsd_xpc.h"
 
 #include "nsIXPConnect.h"
@@ -2424,11 +2425,17 @@ jsdService::AsyncOn (jsdIActivationCallback *activationCallback)
 
 NS_IMETHODIMP
 jsdService::RecompileForDebugMode (JSRuntime *rt, JSBool mode) {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+
   JSContext *cx;
   JSContext *iter = NULL;
 
+  jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
+
   while ((cx = JS_ContextIterator (rt, &iter))) {
+    if (JS_GetContextThread(cx) == currentThreadId) {
       JS_SetDebugMode(cx, mode);
+    }
   }
 
   return NS_OK;

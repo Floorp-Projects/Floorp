@@ -2414,6 +2414,12 @@ nsXPConnect::Peek(JSContext * *_retval)
 void 
 nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
     if (gDebugMode != gDesiredDebugMode) {
+        // This can happen if a Worker is running, but we don't have the ability
+        // to debug workers right now, so just return.
+        if (!NS_IsMainThread()) {
+            return;
+        }
+
         nsresult rv;
         const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
         nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
