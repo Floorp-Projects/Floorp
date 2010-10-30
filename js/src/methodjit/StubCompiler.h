@@ -127,6 +127,7 @@ class StubCompiler
     STUB_CALL_TYPE(VoidStubPC);
 #ifdef JS_POLYIC
     STUB_CALL_TYPE(VoidStubPIC);
+    STUB_CALL_TYPE(VoidStubGetElemIC);
 #endif
 #ifdef JS_MONOIC
     STUB_CALL_TYPE(VoidStubMIC);
@@ -169,7 +170,7 @@ class StubCompiler
 
     /* Finish all native code patching. */
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
-    void jumpInScript(Jump j, jsbytecode *target);
+    bool jumpInScript(Jump j, jsbytecode *target);
     void crossJump(Jump j, Label l);
 
   private:

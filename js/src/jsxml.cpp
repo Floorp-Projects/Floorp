@@ -1763,7 +1763,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, NULL, filename, lineno)) {
-            JSObject *scopeChain = JS_GetScopeChain(cx);
+            JSObject *scopeChain = GetScopeChain(cx);
             if (!scopeChain)
                 return NULL;
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
@@ -7210,7 +7210,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     JSObject *ns, *obj, *tmp;
     jsval v;
 
-    JSObject *scopeChain = JS_GetScopeChain(cx);
+    JSObject *scopeChain = GetScopeChain(cx);
 
     obj = NULL;
     for (tmp = scopeChain; tmp; tmp = tmp->getParent()) {

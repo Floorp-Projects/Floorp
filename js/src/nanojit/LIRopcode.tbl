@@ -132,7 +132,7 @@ OP___(lived,    11, Op1,  V,    0)  // extend live range of a double
 OP___(file,     12, Op1,  V,    0)  // source filename for debug symbols
 OP___(line,     13, Op1,  V,    0)  // source line number for debug symbols
 
-OP_UN(14)
+OP___(comment,  14, Op1,  V,    0)  // a comment shown, on its own line, in LIR dumps
 OP_UN(15)
 OP_UN(16)
 

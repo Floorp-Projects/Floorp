@@ -827,4 +827,13 @@ interface nsIXPConnect : nsISupports
      */
     [noscript,notxpcom] void getCaller(out JSContextPtr aJSContext,
                                        out JSObjectPtr aObject);
+
+    /**
+     * When we place the browser in JS debug mode, there can't be any
+     * JS on the stack. This is because we currently activate debugMode 
+     * on all scripts in the JSRuntime when the debugger is activated.
+     * This method will turn debug mode on or off when the context 
+     * stack reaches zero length.
+     */
+    [noscript] void setDebugModeWhenPossible(in PRBool mode);
 };
