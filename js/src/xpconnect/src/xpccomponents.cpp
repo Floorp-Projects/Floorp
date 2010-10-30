@@ -3544,7 +3544,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
                                     &sandbox, &jsVersionStr,
                                     &filenameStr, &lineNo);
 
-    if (!ok)
+    if (!ok || !sandbox)
         return NS_ERROR_INVALID_ARG;
 
     JSVersion jsVersion = JSVERSION_DEFAULT;
