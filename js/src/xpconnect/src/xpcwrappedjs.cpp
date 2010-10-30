@@ -436,7 +436,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
       mRoot(root ? root : this),
       mNext(nsnull),
       mOuter(root ? nsnull : aOuter),
-      mThread(do_GetCurrentThread())
+      mMainThread(NS_IsMainThread())
 {
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -571,8 +571,9 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
 {
     if(!IsValid())
         return NS_ERROR_UNEXPECTED;
-    if (NS_GetCurrentThread() != mThread)
+    if (NS_IsMainThread() != mMainThread) {
         return NS_ERROR_NOT_SAME_THREAD;
+    }
     return GetClass()->CallMethod(this, methodIndex, info, params);
 }
 
