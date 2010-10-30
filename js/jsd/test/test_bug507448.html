@@ -16,7 +16,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507448
   
 </div>
 <pre id="test">
+<script>
+  function f() {}
+  function g(a,b) {}
+  function h(me, too, here) { var x = 1; }
+  function annoying(a, b, a, b, b, a) {}
+  function manyLocals(a, b, c, d, e, f, g, h, i, j, k, l, m) {
+    var n, o, p, q, r, s, t, u, v, w, x, y, z;
+  }
+</script>
+<script>
+function testJSD() {
+  ok(jsd.isOn, "JSD needs to be running for this test.");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  assertArraysEqual(jsd.wrapValue(f).script.getParameterNames(), []);
+  assertArraysEqual(jsd.wrapValue(g).script.getParameterNames(), ["a", "b"]);
+  assertArraysEqual(jsd.wrapValue(h).script.getParameterNames(), ["me", "too", "here"]);
+  assertArraysEqual(jsd.wrapValue(annoying).script.getParameterNames(),
+                    ["a", "b", "a", "b", "b", "a"]);
+  assertArraysEqual(jsd.wrapValue(manyLocals).script.getParameterNames(),
+                    "abcdefghijklm".split(""));
+
+  if (!jsdOnAtStart) {
+    // turn JSD off if it wasn't on when this test started
+    jsd.off();
+    ok(!jsd.isOn, "JSD shouldn't be running at the end of this test.");
+  }
+  SimpleTest.finish();
+}
+</script>
 <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
 
 /** Test for Bug 507448 **/
 function assertArraysEqual(arr1, arr2) {
@@ -34,35 +65,20 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
 var jsd = Components.classes['@mozilla.org/js/jsd/debugger-service;1']
                     .getService(jsdIDebuggerService);
-var jsdOn = jsd.isOn;
-if (!jsdOn) {
-  jsd.on();
-  ok(jsd.isOn, "JSD should be running.");
-}
-</script>
-<script>
-  function f() {}
-  function g(a,b) {}
-  function h(me, too, here) { var x = 1; }
-  function annoying(a, b, a, b, b, a) {}
-  function manyLocals(a, b, c, d, e, f, g, h, i, j, k, l, m) {
-    var n, o, p, q, r, s, t, u, v, w, x, y, z;
-  }
-</script>
-<script>
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  assertArraysEqual(jsd.wrapValue(f).script.getParameterNames(), []);
-  assertArraysEqual(jsd.wrapValue(g).script.getParameterNames(), ["a", "b"]);
-  assertArraysEqual(jsd.wrapValue(h).script.getParameterNames(), ["me", "too", "here"]);
-  assertArraysEqual(jsd.wrapValue(annoying).script.getParameterNames(),
-                    ["a", "b", "a", "b", "b", "a"]);
-  assertArraysEqual(jsd.wrapValue(manyLocals).script.getParameterNames(),
-                    "abcdefghijklm".split(""));
 
-  if (!jsdOn) {
-    jsd.off();
-    ok(!jsd.isOn, "JSD shouldn't be running anymore.");
-  }
+var jsdOnAtStart = jsd.isOn;
+if (jsdOnAtStart) {
+  testJSD();
+} else {
+  jsd.asyncOn(
+    {
+      debuggerActivated: function() {
+          testJSD();
+      }
+    }  
+  );
+}
+
 </script>
 </pre>
 </body>
