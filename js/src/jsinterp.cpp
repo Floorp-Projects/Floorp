@@ -4919,7 +4919,6 @@ END_CASE(JSOP_RESETBASE)
 BEGIN_CASE(JSOP_DOUBLE)
 {
     JS_ASSERT(!regs.fp->hasImacropc());
-    JS_ASSERT(size_t(atoms - script->atomMap.vector) <= script->atomMap.length);
     double dbl;
     LOAD_DOUBLE(0, dbl);
     PUSH_DOUBLE(dbl);
