@@ -4512,16 +4512,18 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
-  CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays)
+  CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays, bool cycleCollectionEnabled)
     : key(key),
       ptr(nsnull),
-      wantXrays(wantXrays)
+      wantXrays(wantXrays),
+      cycleCollectionEnabled(cycleCollectionEnabled)
   {
   }
-  CompartmentPrivate(nsISupports *ptr, bool wantXrays)
+  CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
     : key(nsnull),
       ptr(ptr),
-      wantXrays(wantXrays)
+      wantXrays(wantXrays),
+      cycleCollectionEnabled(cycleCollectionEnabled)
   {
   }
 
@@ -4529,7 +4531,24 @@ struct CompartmentPrivate
   nsAutoPtr<PtrAndPrincipalHashKey> key;
   nsCOMPtr<nsISupports> ptr;
   bool wantXrays;
+  bool cycleCollectionEnabled;
 };
+
+inline bool
+CompartmentParticipatesInCycleCollection(JSContext *cx, JSCompartment *compartment)
+{
+   CompartmentPrivate *priv =
+       static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, compartment));
+   NS_ASSERTION(priv, "This should never be null!");
+
+   return priv->cycleCollectionEnabled;
+}
+
+inline bool
+ParticipatesInCycleCollection(JSContext *cx, js::gc::Cell *cell)
+{
+   return CompartmentParticipatesInCycleCollection(cx, cell->compartment());
+}
 
 }
 
