@@ -413,25 +413,12 @@ struct Closure
     JSContext *cx;
     bool cycleCollectionEnabled;
     nsCycleCollectionTraversalCallback *cb;
-#ifdef DEBUG
-    JSCompartment *compartment;
-#endif
 };
 
 static void
 CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing, void *aClosure)
 {
     Closure *closure = static_cast<Closure*>(aClosure);
-
-#ifdef DEBUG
-    if(aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
-       js_GetGCThingTraceKind(aThing) == JSTRACE_OBJECT)
-    {
-        JSCompartment *c = static_cast<JSObject*>(aThing)->compartment();
-        JS_ASSERT(!closure->compartment || closure->compartment == c);
-        closure->compartment = c;
-    }
-#endif
 
     if(!closure->cycleCollectionEnabled &&
        aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
@@ -451,9 +438,6 @@ NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
     Closure *closure = static_cast<Closure*>(arg);
 
     closure->cycleCollectionEnabled = PR_FALSE;
-#ifdef DEBUG
-    closure->compartment = nsnull;
-#endif
     entry->tracer->Trace(entry->holder, CheckParticipatesInCycleCollection,
                          closure);
     if(!closure->cycleCollectionEnabled)
@@ -513,11 +497,7 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
 
     if(mJSHolders.ops)
     {
-        Closure closure = { cx, PR_TRUE, &cb
-#if DEBUG
-                            , nsnull
-#endif
-        };
+        Closure closure = { cx, PR_TRUE, &cb };
         JS_DHashTableEnumerate(&mJSHolders, NoteJSHolder, &closure);
     }
 }
