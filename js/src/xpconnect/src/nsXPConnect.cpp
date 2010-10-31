@@ -991,7 +991,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
         xpc::PtrAndPrincipalHashKey *priv_key =
             new xpc::PtrAndPrincipalHashKey(ptr, uri);
         xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(priv_key, wantXrays);
+            new xpc::CompartmentPrivate(priv_key, wantXrays, NS_IsMainThread());
         if(!CreateNewCompartment(cx, clasp, principal, priv,
                                  global, compartment))
         {
@@ -1028,7 +1028,7 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
         // threadsafety assumptions.
         nsCOMPtr<nsIPrincipal> principal(do_QueryInterface(ptr));
         xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(ptr, false);
+            new xpc::CompartmentPrivate(ptr, false, NS_IsMainThread());
         if(!CreateNewCompartment(cx, clasp, principal, priv, global,
                                  compartment))
         {
