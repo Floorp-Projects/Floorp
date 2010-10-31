@@ -44,6 +44,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 // -----------------------------------------------------------------------
 
 const NS_APP_CACHE_PARENT_DIR = "cachePDir";
+const XRE_UPDATE_ROOT_DIR     = "UpdRootD";
 
 function DirectoryProvider() {}
 
@@ -72,6 +73,9 @@ DirectoryProvider.prototype = {
         default:
           return profile;
       }
+    } else if (prop == XRE_UPDATE_ROOT_DIR) {
+      let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+      return dm.defaultDownloadsDirectory;
     }
     
     // We are retuning null to show failure instead for throwing an error. The
