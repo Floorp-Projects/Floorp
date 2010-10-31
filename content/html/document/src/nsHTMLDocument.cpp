@@ -3311,10 +3311,6 @@ nsHTMLDocument::EditingStateChanged()
       rv = agentSheets.AppendObject(sheet);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // We need to flush styles here because we're setting an XBL binding in
-      // designmode.css.
-      FlushPendingNotifications(Flush_Style);
-
       // Disable scripting and plugins.
       rv = editSession->DisableJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3340,6 +3336,12 @@ nsHTMLDocument::EditingStateChanged()
     NS_ENSURE_SUCCESS(rv, rv);
 
     presShell->ReconstructStyleData();
+
+    if (designMode) {
+      // We need to flush styles here because we're setting an XBL binding in
+      // designmode.css.
+      FlushPendingNotifications(Flush_Style);
+    }
   }
 
   mEditingState = newState;
