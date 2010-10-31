@@ -956,8 +956,11 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   // make operations on the table asynchronous, for performance
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
 
-  // Use write-ahead-logging for performance.
+  // Use write-ahead-logging for performance. We cap the autocheckpoint limit at
+  // 16 pages (around 500KB).
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA journal_mode = WAL"));
+  mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA wal_autocheckpoint = 16"));
 
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
