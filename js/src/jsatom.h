@@ -373,6 +373,8 @@ struct JSAtomState
     JSAtom              *useStrictAtom;
     JSAtom              *locAtom;
     JSAtom              *lineAtom;
+    JSAtom              *InfinityAtom;
+    JSAtom              *NaNAtom;
 
 #if JS_HAS_XML_SUPPORT
     JSAtom              *etagoAtom;
@@ -407,8 +409,6 @@ struct JSAtomState
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
-        JSAtom          *InfinityAtom;
-        JSAtom          *NaNAtom;
         JSAtom          *XMLListAtom;
         JSAtom          *decodeURIAtom;
         JSAtom          *decodeURIComponentAtom;
