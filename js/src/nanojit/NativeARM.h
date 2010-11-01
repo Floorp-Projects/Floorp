@@ -271,7 +271,7 @@ verbose_only( extern const char* shiftNames[]; )
     void        underrunProtect(int bytes);                                     \
     void        nativePageReset();                                              \
     void        nativePageSetup();                                              \
-    bool        hardenNopInsertion(const Config& c) { return false; }           \
+    bool        hardenNopInsertion(const Config& /*c*/) { return false; }       \
     void        asm_immd_nochk(Register, int32_t, int32_t);                     \
     void        asm_regarg(ArgType, LIns*, Register);                           \
     void        asm_stkarg(LIns* p, int stkd);                                  \
