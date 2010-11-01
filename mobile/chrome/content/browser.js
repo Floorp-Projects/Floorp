@@ -529,6 +529,80 @@ var Browser = {
   },
 
   /**
+   * Determine if the given URL is a shortcut/keyword and, if so, expand it
+   * @param aURL String
+   * @param aPostDataRef Out param contains any required post data for a search
+   * @returns the expanded shortcut, or the original URL if not a shortcut
+   */
+  getShortcutOrURI: function getShortcutOrURI(aURL, aPostDataRef) {
+    let shortcutURL = null;
+    let keyword = aURL;
+    let param = "";
+
+    let offset = aURL.indexOf(" ");
+    if (offset > 0) {
+      keyword = aURL.substr(0, offset);
+      param = aURL.substr(offset + 1);
+    }
+  
+    if (!aPostDataRef)
+      aPostDataRef = {};
+  
+    let engine = Services.search.getEngineByAlias(keyword);
+    if (engine) {
+      let submission = engine.getSubmission(param);
+      aPostDataRef.value = submission.postData;
+      return submission.uri.spec;
+    }
+
+    try {
+      [shortcutURL, aPostDataRef.value] = PlacesUtils.getURLAndPostDataForKeyword(keyword);
+    } catch (e) {}
+
+    if (!shortcutURL)
+      return aURL;
+
+    let postData = "";
+    if (aPostDataRef.value)
+      postData = unescape(aPostDataRef.value);
+
+    if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
+      let charset = "";
+      const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+      let matches = shortcutURL.match(re);
+      if (matches)
+        [, shortcutURL, charset] = matches;
+      else {
+        // Try to get the saved character-set.
+        try {
+          // makeURI throws if URI is invalid.
+          // Will return an empty string if character-set is not found.
+          charset = PlacesUtils.history.getCharsetForURI(Util.makeURI(shortcutURL));
+        } catch (e) { dump("--- error " + e + "\n"); }
+      }
+
+      let encodedParam = "";
+      if (charset)
+        encodedParam = escape(convertFromUnicode(charset, param));
+      else // Default charset is UTF-8
+        encodedParam = encodeURIComponent(param);
+
+      shortcutURL = shortcutURL.replace(/%s/g, encodedParam).replace(/%S/g, param);
+
+      if (/%s/i.test(postData)) // POST keyword
+        aPostDataRef.value = getPostDataStream(postData, param, encodedParam, "application/x-www-form-urlencoded");
+    } else if (param) {
+      // This keyword doesn't take a parameter, but one was provided. Just return
+      // the original URL.
+      aPostDataRef.value = null;
+
+      return aURL;
+    }
+
+    return shortcutURL;
+  },
+
+  /**
    * Return the currently active <browser> object
    */
   get selectedBrowser() {
