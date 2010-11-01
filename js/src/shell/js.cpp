@@ -157,6 +157,9 @@ static bool enableProfiling = false;
 
 static bool printTiming = false;
 
+/* :FIXME: remove bug 608746 */
+static bool disablePrinting = false;
+
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t);
 
@@ -463,7 +466,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                     if (enableMethodJit)
                         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
 
-                    printf("Running interpreter...\n");
+                    disablePrinting = true;
 
                     (void)JS_ExecuteScript(cx, obj, script, NULL);
                     t1 = PRMJ_Now();
@@ -473,7 +476,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                     if (enableMethodJit)
                         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
 
-                    printf("Running JITs...\n");
+                    disablePrinting = false;
                 }
 #endif
 
@@ -1209,6 +1212,11 @@ Now(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
 {
+    if (disablePrinting) {
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return JS_TRUE;
+    }
+
     jsval *argv;
     uintN i;
     JSString *str;
