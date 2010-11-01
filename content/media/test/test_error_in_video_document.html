@@ -28,8 +28,8 @@ function check() {
   var v = document.body.getElementsByTagName("iframe")[0].contentDocument.body.getElementsByTagName("video")[0];
   
   // Debug info for Bug 608634
-  info(document.body.getElementsByTagName("iframe")[0].src);
-  info(v.src);
+  ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
+  ok(true, "video src=" + v.src);
   
   ok(v.error && v.error.code == MediaError.MEDIA_ERR_DECODE, "Must have error set to MEDIA_ERR_DECODE");
   SimpleTest.finish();
