@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=424627
+-->
+<head>
+  <title>Test for Bug 424627</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=424627">Mozilla Bug 424627</a>
+<p id="display"></p>
+<div id="content">
+<table><tr><td><textarea cols="60" rows="4" style="border: 20px solid blue;">text
+more text
+even more text
+enough text</textarea></td></tr></table>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 424627 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var t = document.querySelector("textarea")
+  t.focus();
+  var originalValue = t.value;
+  synthesizeMouse(t, 10, 30, {accelKey: true});
+  synthesizeKey("x", {});
+  t = document.querySelector("textarea")
+  ok(t, "The text area should not be removed from the document");
+  isnot(t.value, originalValue, "Its value should be modified");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
