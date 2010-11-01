@@ -453,22 +453,10 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                 if (enableTraceJit || enableMethodJit) {
                     /*
                      * Disable the jits and run the script under the interpreter
-                     * first to pick up any dynamic types.  This is code is temporary
+                     * first to pick up any dynamic types.  This only works if the
+                     * global script is idempotent.  This is code is temporary
                      * until recompilation works :FIXME: bug 608746
                      */
-
-                    /* Clone the global object for the second run. */
-                    JSObject *nobj = JS_NewGlobalObject(cx, obj->getJSClass());
-                    if (!nobj || !nobj->ensureSlots(cx, obj->numSlots()))
-                        return;
-                    memcpy(nobj->getSlots(), obj->getSlots(), obj->numSlots() * sizeof(Value));
-                    nobj->lastProp = obj->lastProp;
-                    nobj->objShape = obj->objShape;
-                    nobj->proto = obj->proto;
-                    JS_ASSERT(nobj->flags == obj->flags);
-                    JS_ASSERT(!nobj->parent && !obj->parent);
-                    JS_ASSERT(!nobj->privateData && !obj->privateData);
-                    JS_ASSERT(obj == cx->globalObject);
 
                     if (enableTraceJit)
                         JS_ToggleOptions(cx, JSOPTION_JIT);
