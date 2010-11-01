@@ -1773,7 +1773,8 @@ JSScript::analyze(JSContext *cx)
         makeAnalysis(cx);
     if (!analysis)
         return NULL;
-    analysis->analyze(cx);
+    if (!analysis->hasAnalyzed())
+        analysis->analyze(cx);
     return analysis;
 }
 
