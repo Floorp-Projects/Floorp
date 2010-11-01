@@ -61,6 +61,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
+#include "jswrapper.h"
 
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
@@ -545,9 +546,14 @@ ValueToShortSource(JSContext *cx, jsval v)
     JSString *str;
 
     /* Avoid toSource bloat and fallibility for object types. */
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        str = js_ValueToSource(cx, Valueify(v));
-    } else if (VALUE_IS_FUNCTION(cx, v)) {
+    if (JSVAL_IS_PRIMITIVE(v))
+        return js_ValueToSource(cx, Valueify(v));
+
+    AutoCompartment ac(cx, JSVAL_TO_OBJECT(v));
+    if (!ac.enter())
+        return NULL;
+
+    if (VALUE_IS_FUNCTION(cx, v)) {
         /*
          * XXX Avoid function decompilation bloat for now.
          */
@@ -570,6 +576,11 @@ ValueToShortSource(JSContext *cx, jsval v)
                     JSVAL_TO_OBJECT(v)->getClass()->name);
         str = JS_NewStringCopyZ(cx, buf);
     }
+
+    ac.leave();
+
+    if (!str || !cx->compartment->wrap(cx, &str))
+        return NULL;
     return str;
 }
 
