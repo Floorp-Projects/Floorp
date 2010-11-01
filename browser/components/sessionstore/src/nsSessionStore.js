@@ -1268,15 +1268,32 @@ SessionStoreService.prototype = {
   },
 
   getTabValue: function sss_getTabValue(aTab, aKey) {
-    var data = aTab.__SS_extdata || {};
+    let data = {};
+    if (aTab.__SS_extdata) {
+      data = aTab.__SS_extdata;
+    }
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      // If the tab hasn't been fully restored, get the data from the to-be-restored data
+      data = aTab.linkedBrowser.__SS_data.extData;
+    }
     return data[aKey] || "";
   },
 
   setTabValue: function sss_setTabValue(aTab, aKey, aStringValue) {
-    if (!aTab.__SS_extdata) {
-      aTab.__SS_extdata = {};
+    // If the tab hasn't been restored, then set the data there, otherwise we
+    // could lose newly added data.
+    let saveTo;
+    if (aTab.__SS_extdata) {
+      saveTo = aTab.__SS_extdata;
     }
-    aTab.__SS_extdata[aKey] = aStringValue;
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      saveTo = aTab.linkedBrowser.__SS_data.extData;
+    }
+    else {
+      aTab.__SS_extdata = {};
+      saveTo = aTab.__SS_extdata;
+    }
+    saveTo[aKey] = aStringValue;
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
   },
 

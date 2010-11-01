@@ -218,7 +218,7 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Autofocus, autofocus)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, FormAction, formaction)
+NS_IMPL_ACTION_ATTR(nsHTMLButtonElement, FormAction, formaction)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormEnctype, formenctype,
                                 kFormDefaultEnctype->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, FormMethod, formmethod,
@@ -439,7 +439,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               if (NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
                 nsIEventStateManager* esm =
                   aVisitor.mPresContext->EventStateManager();
-                nsEventStateManager::SetGlobalActiveContent(
+                nsEventStateManager::SetActiveManager(
                   static_cast<nsEventStateManager*>(esm), this);
               }
               nsIFocusManager* fm = nsFocusManager::GetFocusManager();

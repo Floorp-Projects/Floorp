@@ -54,30 +54,39 @@
 #pragma warning(disable:4251) /* Silence warning about JS_FRIEND_API and data members. */
 #endif
 
-struct JS_FRIEND_API(JSCompartment) {
-    JSRuntime       *rt;
-    JSPrincipals    *principals;
-    js::gc::Chunk   *chunk;
+namespace js {
+namespace mjit {
+class JaegerCompartment;
+}
+}
 
-    js::gc::ArenaList arenas[js::gc::FINALIZE_LIMIT];
-    js::gc::FreeLists freeLists;
+struct JS_FRIEND_API(JSCompartment) {
+    JSRuntime                    *rt;
+    JSPrincipals                 *principals;
+    js::gc::Chunk                *chunk;
+
+    js::gc::ArenaList            arenas[js::gc::FINALIZE_LIMIT];
+    js::gc::FreeLists            freeLists;
 
 #ifdef JS_GCMETER
-    js::gc::JSGCArenaStats compartmentStats[js::gc::FINALIZE_LIMIT];
+    js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
 
 #ifdef JS_TYPE_INFERENCE
     /* Type information about the scripts and objects in this compartment. */
-    js::types::TypeCompartment       types;
+    js::types::TypeCompartment   types;
 #endif
 
-    void *data;
-    bool marked;
-    js::WrapperMap crossCompartmentWrappers;
-    bool debugMode;
+    void                         *data;
+    bool                         marked;
+    js::WrapperMap               crossCompartmentWrappers;
 
-    /* List all scripts in this compartment. */
-    JSCList scripts;
+#ifdef JS_METHODJIT
+    js::mjit::JaegerCompartment  *jaegerCompartment;
+#endif
+
+    bool                         debugMode;  // true iff debug mode on
+    JSCList                      scripts;    // scripts in this compartment
 
     /*
      * Weak references to lazily-created, well-known XML singletons.
@@ -86,8 +95,8 @@ struct JS_FRIEND_API(JSCompartment) {
      * the object graph usually associated with a JSContext's global object,
      * including the set of standard class objects.  See jsxml.c for details.
      */
-    JSObject            *anynameObject;
-    JSObject            *functionNamespaceObject;
+    JSObject                     *anynameObject;
+    JSObject                     *functionNamespaceObject;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();

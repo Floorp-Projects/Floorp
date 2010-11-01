@@ -1187,6 +1187,27 @@ NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
   }
 
 /**
+ * A macro to implement getter and setter for action and form action content
+ * attributes. It's very similar to NS_IMPL_URI_ATTR excepted that if the
+ * content attribute is the empty string, the empty string is returned.
+ */
+#define NS_IMPL_ACTION_ATTR(_class, _method, _atom)                 \
+  NS_IMETHODIMP                                                     \
+  _class::Get##_method(nsAString& aValue)                           \
+  {                                                                 \
+    GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue);           \
+    if (aValue.IsEmpty()) {                                         \
+      return NS_OK;                                                 \
+    }                                                               \
+    return GetURIAttr(nsGkAtoms::_atom, nsnull, aValue);            \
+  }                                                                 \
+  NS_IMETHODIMP                                                     \
+  _class::Set##_method(const nsAString& aValue)                     \
+  {                                                                 \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                 \
+  }
+
+/**
  * A macro to implement the getter and setter for a given content
  * property that needs to set a non-negative integer. The method
  * uses the generic GetAttr and SetAttr methods. This macro is much
