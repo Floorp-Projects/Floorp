@@ -72,12 +72,13 @@ interface jsdIScript;
 interface jsdIValue;
 interface jsdIObject;
 interface jsdIProperty;
+interface jsdIActivationCallback;
 
 /**
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(dc0a24db-f8ac-4889-80d0-6016545a2dda)]
+[scriptable, uuid(01769775-c77c-47f9-8848-0abbab404215)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -216,19 +217,34 @@ interface jsdIDebuggerService : nsISupports
      */
     readonly attribute boolean isOn;
 
+
+    /**
+     * Synchronous activation of the debugger is no longer supported,
+     * and will throw an exception.
+     */
+    void on ();
+
     /**
      * Turn on the debugger.  This function should only be called from JavaScript
      * code.  The debugger will be enabled on the runtime the call is made on,
      * as determined by nsIXPCNativeCallContext.
-     */
-    void on ();
-    /**
-     * Turn on the debugger for a given runtime.
      *
-     * @param rt The runtime you want to debug.  You cannot turn the debugger
-     *           on for multiple runtimes.
+     * The debugger will be activated asynchronously, because there can be no JS
+     * on the stack when code is to be re-compiled for debug mode.
      */
-    [noscript] void onForRuntime (in JSRuntime rt);
+    void asyncOn (in jsdIActivationCallback callback);
+    
+    /**
+     * Called by nsIXPConnect after it's had a chance to recompile for
+     * debug mode.
+     */
+    [noscript] void activateDebugger(in JSRuntime rt);
+
+    /**
+     * Recompile all active scripts in the runtime for debugMode.
+     */
+    [noscript] void recompileForDebugMode(in JSRuntime rt, in PRBool mode);
+
     /**
      * Turn the debugger off.  This will invalidate all of your jsdIEphemeral
      * derived objects, and clear all of your breakpoints.  In theory you
@@ -455,6 +471,15 @@ interface jsdIFilter : nsISupports
      * |startLine| to the end of the file.
      */
     attribute unsigned long endLine;
+};
+
+/**
+ * Notify client code that debugMode has been activated.
+ */
+[scriptable, uuid(6da7f5fb-3a84-4abe-9e23-8b2045960732)]
+interface jsdIActivationCallback : nsISupports
+{
+    void onDebuggerActivated ();
 };
 
 /**

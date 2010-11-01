@@ -585,11 +585,6 @@ jsd_NewScriptHookProc(
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
         return;
     
-#ifdef LIVEWIRE
-    if( 1 == lineno )
-        jsdlw_PreLoadSource(jsdc, LWDBG_GetCurrentApp(), filename, JS_TRUE );
-#endif
-    
     JSD_LOCK_SCRIPTS(jsdc);
     jsdscript = _newJSDScript(jsdc, cx, script, fun);
     JSD_UNLOCK_SCRIPTS(jsdc);
@@ -611,7 +606,7 @@ jsd_NewScriptHookProc(
 
     if( hook )
         hook(jsdc, jsdscript, JS_TRUE, hookData);
-}                
+}
 
 void
 jsd_DestroyScriptHookProc( 

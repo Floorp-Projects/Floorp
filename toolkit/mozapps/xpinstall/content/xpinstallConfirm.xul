@@ -47,6 +47,7 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="xpinstallConfirm" title="&dialog.title;" style="&dialog.style;" 
+        windowtype="Addons:Install"
         onload="XPInstallConfirm.init()" 
         ondialogaccept="return XPInstallConfirm.onOK();"
         ondialogcancel="return XPInstallConfirm.onCancel();">

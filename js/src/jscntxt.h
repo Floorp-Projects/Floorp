@@ -129,10 +129,6 @@ namespace JSC {
 
 namespace js {
 
-#ifdef JS_METHODJIT
-struct VMFrame;
-#endif
-
 /* Tracer constants. */
 static const size_t MONITOR_N_GLOBAL_STATES = 4;
 static const size_t FRAGMENT_TABLE_SIZE = 512;
@@ -164,7 +160,7 @@ typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStat
 #endif
 
 namespace mjit {
-class CallStackIterator;
+class JaegerCompartment;
 }
 
 /*
@@ -227,34 +223,6 @@ struct TracerState
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
     ~TracerState();
 };
-
-#ifdef JS_METHODJIT
-namespace mjit {
-    struct Trampolines
-    {
-        typedef void (*TrampolinePtr)();
-        TrampolinePtr forceReturn;
-        JSC::ExecutablePool *forceReturnPool;
-#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-        TrampolinePtr forceReturnFast;
-        JSC::ExecutablePool *forceReturnFastPool;
-#endif
-    };
-
-    struct ThreadData
-    {
-        JSC::ExecutableAllocator *execAlloc;
-
-        // Trampolines for JIT code.
-        Trampolines trampolines;
-
-        VMFrame *activeFrame;
-
-        bool Initialize();
-        void Finish();
-    };
-}
-#endif /* JS_METHODJIT */
 
 /*
  * Storage for the execution state and store during trace execution. Generated
@@ -1159,10 +1127,6 @@ struct JSThreadData {
     unsigned            iterationCounter;
 #endif
 
-#ifdef JS_METHODJIT
-    js::mjit::ThreadData jmData;
-#endif
-
     /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
     JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
 
@@ -1416,6 +1380,11 @@ struct JSRuntime {
 
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
+
+    /*
+     * Right now, we only support runtime-wide debugging.
+     */
+    JSBool              debugMode;
 
 #ifdef JS_TRACER
     /* True if any debug hooks not supported by the JIT are enabled. */
@@ -1753,7 +1722,6 @@ struct JSRuntime {
 #define JS_GSN_CACHE(cx)        (JS_THREAD_DATA(cx)->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   (JS_THREAD_DATA(cx)->propertyCache)
 #define JS_TRACE_MONITOR(cx)    (JS_THREAD_DATA(cx)->traceMonitor)
-#define JS_METHODJIT_DATA(cx)   (JS_THREAD_DATA(cx)->jmData)
 #define JS_SCRIPTS_TO_GC(cx)    (JS_THREAD_DATA(cx)->scriptsToGC)
 
 #ifdef DEBUG
@@ -2250,6 +2218,10 @@ struct JSContext
     js::Vector<JSGenerator *, 2, js::SystemAllocPolicy> genStack;
 
   public:
+#ifdef JS_METHODJIT
+    inline js::mjit::JaegerCompartment *jaegerCompartment();
+#endif
+
     /* Return the generator object for the given generator frame. */
     JSGenerator *generatorFor(JSStackFrame *fp) const;
 

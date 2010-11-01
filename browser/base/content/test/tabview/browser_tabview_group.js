@@ -65,7 +65,7 @@ function testEmptyGroupItem(contentWindow) {
   let groupItemCount = contentWindow.GroupItems.groupItems.length;
   
   // create empty group item
-  let emptyGroupItem = createEmptyGroupItem(contentWindow, 100);
+  let emptyGroupItem = createEmptyGroupItem(contentWindow, 300, 300, 100, true);
   ok(emptyGroupItem.isEmpty(), "This group is empty");
 
   is(contentWindow.GroupItems.groupItems.length, ++groupItemCount,
@@ -89,7 +89,7 @@ function testEmptyGroupItem(contentWindow) {
 }
 
 function testGroupItemWithTabItem(contentWindow) {
-  let groupItem = createEmptyGroupItem(contentWindow, 200);
+  let groupItem = createEmptyGroupItem(contentWindow, 300, 300, 200, true);
   let tabItemCount = 0;
 
   let onTabViewHidden = function() {
@@ -160,18 +160,4 @@ function testGroupItemWithTabItem(contentWindow) {
   ok(newTabButton[0], "New tab button exists");
 
   EventUtils.synthesizeMouse(newTabButton[0], 1, 1, {}, contentWindow);
-}
-
-function createEmptyGroupItem(contentWindow, padding) {
-  let pageBounds = contentWindow.Items.getPageBounds();
-  pageBounds.inset(padding, padding);
-
-  let box = new contentWindow.Rect(pageBounds);
-  box.width = 300;
-  box.height = 300;
-
-  let emptyGroupItem = new contentWindow.GroupItem([], { bounds: box,
-                                                         immediately: true });
-
-  return emptyGroupItem;
 }
