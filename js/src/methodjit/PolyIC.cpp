@@ -2434,7 +2434,7 @@ SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
 }
 
 template<JSBool strict>
-void
+void JS_FASTCALL
 ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
 {
     JSContext *cx = f.cx;
