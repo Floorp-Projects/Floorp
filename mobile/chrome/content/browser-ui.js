@@ -342,7 +342,9 @@ var BrowserUI = {
     this._dispatchPopupChanged(true);
   },
 
-  popPopup: function popPopup() {
+  popPopup: function popPopup(aPanel) {
+    if (aPanel != this._popup.panel)
+      return;
     this._popup = null;
     this._dispatchPopupChanged(false);
   },
@@ -1428,7 +1430,7 @@ var NewTabPopup = {
 
     this._tabs = [];
     this.box.hidden = true;
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   show: function(aTab) {
@@ -1523,7 +1525,7 @@ var BookmarkPopup = {
       this._bookmarkPopupTimeout = -1;
     }
     this.box.hidden = true;
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   show : function show(aAutoClose) {
@@ -1605,7 +1607,7 @@ var BookmarkHelper = {
     this._editor = null;
 
     this._panel.hidden = true;
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   removeBookmarksForURI: function BH_removeBookmarksForURI(aURI) {
@@ -2194,7 +2196,7 @@ var SelectHelperUI = {
     if (this._docked)
       this.undock();
     else
-      BrowserUI.popPopup();
+      BrowserUI.popPopup(this);
 
     this.reset();
   },
@@ -2384,7 +2386,7 @@ var MenuListHelperUI = {
     this._currentList = null;
     this._container.hidden = true;
     window.removeEventListener("resize", this, true);
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   selectByIndex: function mn_selectByIndex(aIndex) {
@@ -2467,11 +2469,13 @@ var ContextHelper = {
   },
 
   hide: function ch_hide() {
+    if (this._panel.hidden)
+      return;
     this.popupState = null;
     this._panel.hidden = true;
     window.removeEventListener("resize", this, true);
 
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   sizeToContent: function sizeToContent() {
@@ -2562,7 +2566,7 @@ var SharingUI = {
       bbox.appendChild(button);
     });
     this._dialog.waitForClose();
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   hide: function hide() {
@@ -2696,7 +2700,7 @@ var FullScreenVideo = {
   hide: function fsv_hide() {
     this.destroyBrowser();
     window.fullScreen = false;
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   createBrowser: function fsv_createBrowser() {

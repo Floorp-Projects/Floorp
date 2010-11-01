@@ -1242,7 +1242,7 @@ const BrowserSearch = {
     this._popup.hidden = true;
     document.getElementById("urlbar-icons").removeAttribute("open");
     window.removeEventListener("resize", this, true);
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1769,7 +1769,7 @@ IdentityHandler.prototype = {
     this._identityPopup.hidden = true;
     this._identityBox.removeAttribute("open");
 
-    BrowserUI.popPopup();
+    BrowserUI.popPopup(this);
     BrowserUI.unlockToolbar();
   },
 
