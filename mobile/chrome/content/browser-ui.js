@@ -343,7 +343,7 @@ var BrowserUI = {
   },
 
   popPopup: function popPopup(aPanel) {
-    if (aPanel != this._popup.panel)
+    if (!this._popup || aPanel != this._popup.panel)
       return;
     this._popup = null;
     this._dispatchPopupChanged(false);
