@@ -3906,13 +3906,15 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                             fragment, 
                             contextAsContent->Tag(), 
                             contextAsContent->GetNameSpaceID(), 
-                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks));    
+                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks),
+                            PR_FALSE);
     } else {
       parser->ParseFragment(aFragment, 
                             fragment,
                             nsGkAtoms::body, 
                             kNameSpaceID_XHTML, 
-                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
+                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks),
+                            PR_FALSE);
     }
   
     frag.swap(*aReturn);

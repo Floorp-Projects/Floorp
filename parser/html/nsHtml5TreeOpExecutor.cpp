@@ -696,9 +696,9 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   }
   
   if (mFragmentMode) {
-    // ending the doc update called nsIParser::Terminate or we are in the
-    // fragment mode
-    sele->PreventExecution();
+    if (mPreventScriptExecution) {
+      sele->PreventExecution();
+    }
     return;
   }
 
