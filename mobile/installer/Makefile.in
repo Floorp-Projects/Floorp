@@ -123,6 +123,11 @@ PACKAGE_XULRUNNER = package-xulrunner
 UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
 endif
 
+libs::
+	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--.*-->/d' {} \;
+	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--/,/-->/d' {} \;
+	find $(DIST)/bin/chrome -type f -name *.properties -exec sed -i '/^#/d' {} \;
+
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 DEBDESTDIR=debian/$(MOZ_APP_NAME)
