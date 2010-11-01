@@ -295,6 +295,7 @@ namespace nanojit
         void underrunProtect(int bytes);                                    \
         void nativePageReset();                                             \
         void nativePageSetup();                                             \
+        bool hardenNopInsertion(const Config& c) { return false; }          \
         void br(NIns *addr, int link);                                      \
         void br_far(NIns *addr, int link);                                  \
         void asm_regarg(ArgType, LIns*, Register);                          \
