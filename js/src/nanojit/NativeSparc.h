@@ -208,6 +208,7 @@ namespace nanojit
      void nativePageReset(); \
      void nativePageSetup(); \
      void underrunProtect(int bytes); \
+     bool hardenNopInsertion(const Config& c) { return false; } \
      void asm_align_code(); \
      void asm_cmp(LIns *cond); \
      void asm_cmpd(LIns *cond); \

@@ -88,6 +88,10 @@ namespace nanojit
 
         /** return the whole size of this block including overhead */
         size_t blockSize() const { return uintptr_t(end) - uintptr_t(this); }
+
+    public:
+        /** true is the given NIns is contained within this block */
+        bool isInBlock(NIns* n) { return (n >= this->start() && n < this->end); }
     };
 
     /**

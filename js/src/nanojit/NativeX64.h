@@ -373,6 +373,7 @@ namespace nanojit
         void underrunProtect(ptrdiff_t bytes);                              \
         void nativePageReset();                                             \
         void nativePageSetup();                                             \
+        bool hardenNopInsertion(const Config& c) { return false; }          \
         void asm_qbinop(LIns*);                                             \
         void MR(Register, Register);\
         void JMP(NIns*);\
