@@ -371,7 +371,6 @@ nsHTMLScriptElement::nsHTMLScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo
   : nsGenericHTMLElement(aNodeInfo)
   , nsScriptElement(aFromParser)
 {
-  mDoneAddingChildren = !aFromParser;
   AddMutationObserver(this);
 }
 
