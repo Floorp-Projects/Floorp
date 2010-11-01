@@ -128,6 +128,7 @@ class StubCompiler
 #ifdef JS_POLYIC
     STUB_CALL_TYPE(VoidStubPIC);
     STUB_CALL_TYPE(VoidStubGetElemIC);
+    STUB_CALL_TYPE(VoidStubSetElemIC);
 #endif
 #ifdef JS_MONOIC
     STUB_CALL_TYPE(VoidStubMIC);
