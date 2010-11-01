@@ -2920,5 +2920,9 @@ void Assembler::swapCodeChunks() {
     verbose_only( SWAP(size_t, codeBytes, exitBytes); )
 }
 
+void Assembler::asm_insert_random_nop() {
+    NanoAssert(0); // not supported
+}
+
 }
 #endif /* FEATURE_NANOJIT */

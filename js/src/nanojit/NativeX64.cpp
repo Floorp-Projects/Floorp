@@ -2182,6 +2182,10 @@ namespace nanojit
         verbose_only( SWAP(size_t, codeBytes, exitBytes); )
     }
 
+    void Assembler::asm_insert_random_nop() {
+        NanoAssert(0); // not supported
+    }
+
 } // namespace nanojit
 
 #endif // FEATURE_NANOJIT && NANOJIT_X64
