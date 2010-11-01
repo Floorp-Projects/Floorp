@@ -1,5 +1,6 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4 et
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Fenntrolysis.
+ * The Original Code is Necko Test Code.
  *
- * The Initial Developer of the Original Code is
- *   Nokia.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Andreas Gal <gal@uci.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,20 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PBrowser;
+function run_test() { 
+    var tm = Components.classes["@mozilla.org/thread-manager;1"].getService();
+    var thr = tm.newThread(0);
 
-namespace mozilla {
-namespace ipc {
+    thr.dispatch({
+        run: function() {
+            do_check_true(false);
+        }
+    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 
-protocol PDocumentRendererNativeID
-{
-  manager PBrowser;
+    thr.shutdown();
+}
 
-parent:
-    // Returns the offset, width and height, in pixels, of the area in the
-    // buffer that was drawn.
-    __delete__(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, PRUint32 nativeID);
-};
-
-} // namespace ipc
-} // namespace mozilla

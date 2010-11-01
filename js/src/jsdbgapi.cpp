@@ -109,6 +109,12 @@ IsScriptLive(JSContext *cx, JSScript *script)
 }
 #endif
 
+JS_PUBLIC_API(void)
+JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
+{
+    rt->debugMode = debug;
+}
+
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
 {
@@ -117,7 +123,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
     for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
          &script->links != &cx->compartment->scripts;
          script = (JSScript *)script->links.next) {
-        if (script->debugMode != debug &&
+        if (script->debugMode != (bool) debug &&
             script->hasJITCode() &&
             !IsScriptLive(cx, script)) {
             /*
@@ -126,7 +132,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
              * correctness. We set the debug flag to false so that the caller
              * will not later attempt to use debugging features.
              */
-            mjit::Recompiler recompiler(cx, script);
+            js::mjit::Recompiler recompiler(cx, script);
             if (!recompiler.recompile()) {
                 cx->compartment->debugMode = JS_FALSE;
                 return JS_FALSE;
@@ -276,7 +282,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
-        mjit::Recompiler recompiler(cx, script);
+        js::mjit::Recompiler recompiler(cx, script);
         if (!recompiler.recompile())
             return JS_FALSE;
     }

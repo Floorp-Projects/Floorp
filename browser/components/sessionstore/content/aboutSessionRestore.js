@@ -36,6 +36,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 var gStateObject;
 var gTreeData;
@@ -54,13 +55,26 @@ window.onload = function() {
       return;
     }
   }
+
+  // remove unneeded braces (added for compatibility with Firefox 2.0 and 3.0)
+  if (sessionData.value.charAt(0) == '(')
+    sessionData.value = sessionData.value.slice(1, -1);
+  try {
+    gStateObject = JSON.parse(sessionData.value);
+  }
+  catch (exJSON) {
+    var s = new Cu.Sandbox("about:blank");
+    gStateObject = Cu.evalInSandbox("(" + sessionData.value + ")", s);
+    // If we couldn't parse the string with JSON.parse originally, make sure
+    // that the value in the textbox will be parsable.
+    sessionData.value = JSON.stringify(gStateObject);
+  }
+
   // make sure the data is tracked to be restored in case of a subsequent crash
   var event = document.createEvent("UIEvents");
   event.initUIEvent("input", true, true, window, 0);
   sessionData.dispatchEvent(event);
-  
-  gStateObject = JSON.parse(sessionData.value);
-  
+
   initTreeView();
   
   document.getElementById("errorTryAgain").focus();
