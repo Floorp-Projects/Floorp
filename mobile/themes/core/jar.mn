@@ -75,6 +75,7 @@ chrome.jar:
   skin/images/tab-closed-hdpi.png           (images/tab-closed-hdpi.png)
   skin/images/tab-reopen-hdpi.png           (images/tab-reopen-hdpi.png)
   skin/images/remotetabs-48.png             (images/remotetabs-48.png)
+  skin/images/remotetabs-32.png             (images/remotetabs-32.png)
   skin/images/mozilla-32.png                (images/mozilla-32.png)
   skin/images/toggle-on.png                 (images/toggle-on.png)
   skin/images/toggle-off.png                (images/toggle-off.png)
