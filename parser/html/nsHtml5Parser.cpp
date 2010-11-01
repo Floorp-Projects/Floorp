@@ -60,6 +60,7 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
+#include "nsIDOMDocumentFragment.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
@@ -430,7 +431,8 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
                              nsIContent* aTargetNode,
                              nsIAtom* aContextLocalName,
                              PRInt32 aContextNamespace,
-                             PRBool aQuirks)
+                             PRBool aQuirks,
+                             PRBool aPreventScriptExecution)
 {
   nsIDocument* doc = aTargetNode->GetOwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
@@ -448,7 +450,16 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
                                    aContextNamespace,
                                    &target,
                                    aQuirks);
-  mExecutor->EnableFragmentMode();
+
+#ifdef DEBUG
+  if (!aPreventScriptExecution) {
+    nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);
+    NS_ASSERTION(domFrag,
+        "If script execution isn't prevented, must parse to DOM fragment.");
+  }
+#endif
+
+  mExecutor->EnableFragmentMode(aPreventScriptExecution);
   
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Tried to start parse without initializing the parser.");
