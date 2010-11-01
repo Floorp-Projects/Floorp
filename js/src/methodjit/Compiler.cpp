@@ -104,6 +104,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
     getElemICs(ContextAllocPolicy(cx)),
+    setElemICs(ContextAllocPolicy(cx)),
 #endif
     callPatches(ContextAllocPolicy(cx)),
     callSites(ContextAllocPolicy(cx)), 
@@ -392,6 +393,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #if defined JS_POLYIC
                         sizeof(ic::PICInfo) * pics.length() +
                         sizeof(ic::GetElementIC) * getElemICs.length() +
+                        sizeof(ic::SetElementIC) * setElemICs.length() +
 #endif
                         sizeof(CallSite) * callSites.length();
 
@@ -599,7 +601,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     for (size_t i = 0; i < getElemICs.length(); i++) {
         ic::GetElementIC &to = jit->getElems[i];
         GetElementICInfo &from = getElemICs[i];
-        to.init();
+
+        new (&to) ic::GetElementIC();
         from.copyTo(to, fullCode, stubCode);
 
         to.typeReg = from.typeReg;
@@ -620,6 +623,46 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         stubCode.patch(from.paramAddr, &to);
     }
 
+    jit->nSetElems = setElemICs.length();
+    if (setElemICs.length()) {
+        jit->setElems = (ic::SetElementIC *)cursor;
+        cursor += sizeof(ic::SetElementIC) * setElemICs.length();
+    } else {
+        jit->setElems = NULL;
+    }
+
+    for (size_t i = 0; i < setElemICs.length(); i++) {
+        ic::SetElementIC &to = jit->setElems[i];
+        SetElementICInfo &from = setElemICs[i];
+
+        new (&to) ic::SetElementIC();
+        from.copyTo(to, fullCode, stubCode);
+
+        to.strictMode = script->strictModeCode;
+        to.vr = from.vr;
+        to.objReg = from.objReg;
+        to.objRemat = from.objRemat.toInt32();
+        JS_ASSERT(to.objRemat == from.objRemat.toInt32());
+
+        to.hasConstantKey = from.key.isConstant();
+        if (from.key.isConstant())
+            to.keyValue = from.key.index();
+        else
+            to.keyReg = from.key.reg();
+
+        int inlineClaspGuard = fullCode.locationOf(from.claspGuard) -
+                               fullCode.locationOf(from.fastPathStart);
+        to.inlineClaspGuard = inlineClaspGuard;
+        JS_ASSERT(to.inlineClaspGuard == inlineClaspGuard);
+
+        int inlineHoleGuard = fullCode.locationOf(from.holeGuard) -
+                               fullCode.locationOf(from.fastPathStart);
+        to.inlineHoleGuard = inlineHoleGuard;
+        JS_ASSERT(to.inlineHoleGuard == inlineHoleGuard);
+
+        stubCode.patch(from.paramAddr, &to);
+    }
+
     jit->nPICs = pics.length();
     if (pics.length()) {
         jit->pics = (ic::PICInfo *)cursor;
@@ -630,9 +673,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     if (ic::PICInfo *scriptPICs = jit->pics) {
         for (size_t i = 0; i < pics.length(); i++) {
-            scriptPICs[i].init();
+            new (&scriptPICs[i]) ic::PICInfo();
             pics[i].copyTo(scriptPICs[i], fullCode, stubCode);
             pics[i].copySimpleMembersTo(scriptPICs[i]);
+
             scriptPICs[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                          masm.distanceOf(pics[i].fastPathStart);
             JS_ASSERT(scriptPICs[i].shapeGuard == masm.distanceOf(pics[i].shapeGuard) -
@@ -1199,7 +1243,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_SETELEM)
-            jsop_setelem();
+            if (!jsop_setelem())
+                return Compile_Error;
           END_CASE(JSOP_SETELEM);
 
           BEGIN_CASE(JSOP_CALLNAME)
@@ -1574,7 +1619,8 @@ mjit::Compiler::generateMethod()
 
             // Before: VALUE OBJ ID VALUE
             // After:  VALUE VALUE
-            jsop_setelem();
+            if (!jsop_setelem())
+                return Compile_Error;
 
             // Before: VALUE VALUE
             // After:

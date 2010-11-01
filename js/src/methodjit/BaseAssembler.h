@@ -381,21 +381,22 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         Jump holeCheck;
     };
 
+    Jump guardArrayCapacity(RegisterID objReg, const Int32Key &key) {
+        Address capacity(objReg, offsetof(JSObject, capacity));
+        if (key.isConstant()) {
+            JS_ASSERT(key.index() >= 0);
+            return branch32(BelowOrEqual, payloadOf(capacity), Imm32(key.index()));
+        }
+        return branch32(BelowOrEqual, payloadOf(capacity), key.reg());
+    }
+
     // Load a jsval from an array slot, given a key. |objReg| is clobbered.
     FastArrayLoadFails fastArrayLoad(RegisterID objReg, const Int32Key &key,
                                      RegisterID typeReg, RegisterID dataReg) {
         JS_ASSERT(objReg != typeReg);
 
         FastArrayLoadFails fails;
-        Address capacity(objReg, offsetof(JSObject, capacity));
-
-        // Check that the id is within range.
-        if (key.isConstant()) {
-            JS_ASSERT(key.index() >= 0);
-            fails.rangeCheck = branch32(BelowOrEqual, payloadOf(capacity), Imm32(key.index()));
-        } else {
-            fails.rangeCheck = branch32(BelowOrEqual, payloadOf(capacity), key.reg());
-        }
+        fails.rangeCheck = guardArrayCapacity(objReg, key);
 
         RegisterID dslotsReg = objReg;
         loadPtr(Address(objReg, offsetof(JSObject, slots)), dslotsReg);

@@ -1192,171 +1192,160 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
     stubcc.rejoin(Changes((post || popped) ? 0 : 1));
 }
 
-void
+static inline bool
+IsCacheableSetElem(FrameEntry *obj, FrameEntry *id, FrameEntry *value)
+{
+    if (obj->isNotType(JSVAL_TYPE_OBJECT))
+        return false;
+    if (id->isNotType(JSVAL_TYPE_INT32))
+        return false;
+    if (id->isConstant() && id->getValue().toInt32() < 0)
+        return false;
+
+    // obj[obj] * is not allowed, since it will never optimize.
+    // obj[id] = id is allowed.
+    // obj[id] = obj is allowed.
+    if (obj->hasSameBacking(id))
+        return false;
+
+    return true;
+}
+
+bool
 mjit::Compiler::jsop_setelem()
 {
     FrameEntry *obj = frame.peek(-3);
     FrameEntry *id = frame.peek(-2);
-    FrameEntry *fe = frame.peek(-1);
+    FrameEntry *value = frame.peek(-1);
 
-    if (obj->isNotType(JSVAL_TYPE_OBJECT) || id->isNotType(JSVAL_TYPE_INT32) ||
-        (id->isConstant() && id->getValue().toInt32() < 0)) {
+    if (!IsCacheableSetElem(obj, id, value)) {
         jsop_setelem_slow();
-        return;
+        return true;
     }
 
-    /* id.isInt32() */
-    if (!id->isTypeKnown()) {
-        Jump j = frame.testInt32(Assembler::NotEqual, id);
-        stubcc.linkExit(j, Uses(3));
-    }
+    SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
 
-    /* obj.isObject() */
+    // One by one, check if the most important stack entries have registers,
+    // and if so, pin them. This is to avoid spilling and reloading from the
+    // stack as we incrementally allocate other registers.
+    MaybeRegisterID pinnedValueType = frame.maybePinType(value);
+    MaybeRegisterID pinnedValueData = frame.maybePinData(value);
+
+    // Pin |obj| if it doesn't share a backing with |value|.
+    MaybeRegisterID pinnedObjData;
+    if (!obj->hasSameBacking(value))
+        pinnedObjData = frame.maybePinData(obj);
+
+    // Pin |id| if it doesn't share a backing with |value|.
+    MaybeRegisterID pinnedIdData;
+    if (!id->hasSameBacking(value))
+        pinnedIdData = frame.maybePinData(id);
+
+    // Note: The fact that |obj| and |value|, or |id| and |value| can be
+    // copies, is a little complicated, but it is safe. Explanations
+    // follow at each point. Keep in mind two points:
+    //  1) maybePin() never allocates a register, it only pins if a register
+    //     already existed.
+    //  2) tempRegForData() will work fine on a pinned register.
+ 
+    // Guard that the object is an object.
     if (!obj->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, obj);
         stubcc.linkExit(j, Uses(3));
     }
 
-    /* obj.isDenseArray() */
-    RegisterID objReg = frame.copyDataIntoReg(obj);
-    Jump guardDense = masm.testObjClass(Assembler::NotEqual, objReg, &js_ArrayClass);
-    stubcc.linkExit(guardDense, Uses(3));
-
-    /* guard within capacity */
-    Address capacity(objReg, offsetof(JSObject, capacity));
-
-    Jump inRange;
-    MaybeRegisterID maybeIdReg;
-    if (id->isConstant()) {
-        inRange = masm.branch32(Assembler::LessThanOrEqual, capacity,
-                                Imm32(id->getValue().toInt32()));
-    } else {
-        maybeIdReg = frame.copyDataIntoReg(id);
-        inRange = masm.branch32(Assembler::AboveOrEqual, maybeIdReg.reg(), capacity);
+    // Guard that the id is int32.
+    if (!id->isTypeKnown()) {
+        Jump j = frame.testInt32(Assembler::NotEqual, id);
+        stubcc.linkExit(j, Uses(3));
     }
-    stubcc.linkExit(inRange, Uses(3));
 
-    /* load dslots */
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
-
-    /* guard within capacity */
-    if (id->isConstant()) {
-        /* guard not a hole */
-        Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
-#if defined JS_NUNBOX32
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
-#elif defined JS_PUNBOX64
-        masm.loadTypeTag(slot, Registers::ValueReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
-#endif
-        stubcc.linkExit(notHole, Uses(3));
-
-        stubcc.leave();
-        stubcc.call(STRICT_VARIANT(stubs::SetElem));
-
-        /* Infallible, start killing everything. */
-        frame.eviscerate(obj);
-        frame.eviscerate(id);
-
-        /* Perform the store. */
-        frame.storeTo(fe, slot);
+    // Grab a register for the object. It's safe to unpin |obj| because it
+    // won't have been pinned if it shares a backing with |value|. However,
+    // it would not be safe to copyDataIntoReg() if the value was pinned,
+    // since this could evict the register. So we special case.
+    frame.maybeUnpinReg(pinnedObjData);
+    if (obj->hasSameBacking(value) && pinnedValueData.isSet()) {
+        ic.objReg = frame.allocReg();
+        masm.move(pinnedValueData.reg(), ic.objReg);
     } else {
-        RegisterID idReg = maybeIdReg.reg();
-
-        /*
-         * Register for use only in OOL hole path. TODO: would be nice
-         * for the frame to do any associated spilling in the OOL path.
-         */
-        RegisterID T1 = frame.allocReg();
-
-        Label syncTarget = stubcc.syncExitAndJump(Uses(3));
-
-        /* guard not a hole */
-        BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
-#if defined JS_NUNBOX32
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
-#elif defined JS_PUNBOX64
-        masm.loadTypeTag(slot, Registers::ValueReg);
-        Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
-#endif
-
-        /* Make an OOL path for setting array holes. */
-        Label lblHole = stubcc.masm.label();
-        stubcc.linkExitDirect(notHole, lblHole);
-
-        /* Need a new handle on the object, as objReg now holds the dslots. */
-        RegisterID baseReg = frame.tempRegForData(obj, objReg, stubcc.masm);
-
-        /*
-         * Check if the object has a prototype with indexed properties,
-         * in which case it might have a setter for this element. For dense
-         * arrays we need to check only Array.prototype and Object.prototype.
-         * Indexed properties are indicated by the JSObject::INDEXED flag.
-         */
-
-        /* Test for indexed properties in Array.prototype. */
-        stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
-        Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, Imm32(JSObject::INDEXED));
-        extendedArray.linkTo(syncTarget, &stubcc.masm);
-
-        /* Test for indexed properties in Object.prototype. */
-        stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
-        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, flags)), T1);
-        Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, Imm32(JSObject::INDEXED));
-        extendedObject.linkTo(syncTarget, &stubcc.masm);
-
-        /* Update the array length if needed. Don't worry about overflow. */
-        Address arrayLength(baseReg, offsetof(JSObject, privateData));
-        stubcc.masm.load32(arrayLength, T1);
-        Jump underLength = stubcc.masm.branch32(Assembler::LessThan, idReg, T1);
-        stubcc.masm.move(idReg, T1);
-        stubcc.masm.add32(Imm32(1), T1);
-        stubcc.masm.store32(T1, arrayLength);
-        underLength.linkTo(stubcc.masm.label(), &stubcc.masm);
-
-        /* Restore the dslots register if we clobbered it with the object. */
-        if (baseReg == objReg)
-            stubcc.masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
-
-        /* Rejoin OOL path with inline path to do the store itself. */
-        Jump jmpHoleExit = stubcc.masm.jump();
-        Label lblRejoin = masm.label();
-        stubcc.crossJump(jmpHoleExit, lblRejoin);
-
-        stubcc.leave();
-        stubcc.call(STRICT_VARIANT(stubs::SetElem));
-
-        /* Infallible, start killing everything. */
-        frame.eviscerate(obj);
-        frame.eviscerate(id);
-
-        /* Perform the store. */
-        if (fe->isConstant()) {
-            masm.storeValue(fe->getValue(), slot);
-        } else if (fe->isTypeKnown()) {
-            masm.storeValueFromComponents(ImmType(fe->getKnownType()),
-                                          frame.tempRegForData(fe), slot);
-        } else {
-#if defined JS_NUNBOX32
-            masm.storeTypeTag(frame.tempRegForType(fe), slot);
-            masm.storePayload(frame.tempRegForData(fe), slot);
-#elif defined JS_PUNBOX64
-            RegisterID dreg = frame.tempRegForData(fe);
-            frame.pinReg(dreg);
-            masm.storeValueFromComponents(frame.tempRegForType(fe), dreg, slot);
-            frame.unpinReg(dreg);
-#endif
-        }
-
-        frame.freeReg(idReg);
-        frame.freeReg(T1);
+        ic.objReg = frame.copyDataIntoReg(obj);
     }
-    frame.freeReg(objReg);
 
+    // pinEntry() will ensure pinned registers for |value|. To avoid a
+    // double-pin assert, first unpin any registers that |value| had.
+    frame.maybeUnpinReg(pinnedValueType);
+    frame.maybeUnpinReg(pinnedValueData);
+    frame.pinEntry(value, ic.vr);
+
+    // Store rematerialization information about the key. This is the final
+    // register we allocate, and thus it can use tempRegForData() without
+    // the worry of being spilled. Once again, this is safe even if |id|
+    // shares a backing with |value|, because tempRegForData() will work on
+    // the pinned register, and |pinnedIdData| will not double-pin.
+    frame.maybeUnpinReg(pinnedIdData);
+    if (id->isConstant())
+        ic.key = Int32Key::FromConstant(id->getValue().toInt32());
+    else
+        ic.key = Int32Key::FromRegister(frame.tempRegForData(id));
+
+    // Unpin the value since register allocation is complete.
+    frame.unpinEntry(ic.vr);
+
+    // Now it's also safe to grab remat info for obj (all exits that can
+    // generate stubs must have the same register state).
+    ic.objRemat = frame.dataRematInfo(obj);
+
+    // All patchable guards must occur after this point.
+    ic.fastPathStart = masm.label();
+
+    // Create the common out-of-line sync block, taking care to link previous
+    // guards here after.
+    ic.slowPathStart = stubcc.syncExit(Uses(3));
+
+    // Guard obj is a dense array.
+    ic.claspGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, &js_ArrayClass);
+    stubcc.linkExitDirect(ic.claspGuard, ic.slowPathStart);
+
+    // Guard capacity in range.
+    Jump capacityGuard = masm.guardArrayCapacity(ic.objReg, ic.key);
+    stubcc.linkExitDirect(capacityGuard, ic.slowPathStart);
+
+    // Load the dynamic slots vector.
+    masm.loadPtr(Address(ic.objReg, offsetof(JSObject, slots)), ic.objReg);
+
+    // Guard there's no hole, then store directly to the slot.
+    if (ic.key.isConstant()) {
+        Address slot(ic.objReg, ic.key.index() * sizeof(Value));
+        ic.holeGuard = masm.guardNotHole(slot);
+        masm.storeValue(ic.vr, slot);
+    } else {
+        BaseIndex slot(ic.objReg, ic.key.reg(), Assembler::JSVAL_SCALE);
+        ic.holeGuard = masm.guardNotHole(slot);
+        masm.storeValue(ic.vr, slot);
+    }
+    stubcc.linkExitDirect(ic.holeGuard, ic.slowPathStart);
+
+    stubcc.leave();
+#ifdef JS_POLYIC
+    passICAddress(&ic);
+    ic.slowPathCall = stubcc.call(STRICT_VARIANT(ic::SetElement));
+#else
+    stubcc.call(STRICT_VARIANT(stubs::SetElem));
+#endif
+
+    ic.fastPathRejoin = masm.label();
+
+    frame.freeReg(ic.objReg);
     frame.shimmy(2);
-    stubcc.rejoin(Changes(0));
+    stubcc.rejoin(Changes(2));
+
+#ifdef JS_POLYIC
+    if (!setElemICs.append(ic))
+        return false;
+#endif
+
+    return true;
 }
 
 static inline bool
@@ -1377,6 +1366,10 @@ IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
         id->getValue().toInt32() < 0) {
         return false;
     }
+
+    // obj[obj] is not allowed, since it will never optimize.
+    if (obj->hasSameBacking(id))
+        return false;
 
     return true;
 }
@@ -1494,15 +1487,14 @@ mjit::Compiler::jsop_getelem(bool isCall)
         objTypeGuard.get().linkTo(stubcc.masm.label(), &stubcc.masm);
 #ifdef JS_POLYIC
     passICAddress(&ic);
-    if (isCall)
-        ic.slowPathCall = stubcc.call(ic::CallElement);
-    else
-        ic.slowPathCall = stubcc.call(ic::GetElement);
+    ic.slowPathCall = isCall
+                      ? stubcc.call(ic::CallElement)
+                      : stubcc.call(ic::GetElement);
 #else
     if (isCall)
-        ic.slowPathCall = stubcc.call(stubs::CallElem);
+        stubcc.call(stubs::CallElem);
     else
-        ic.slowPathCall = stubcc.call(stubs::GetElem);
+        stubcc.call(stubs::GetElem);
 #endif
 
     ic.fastPathRejoin = masm.label();

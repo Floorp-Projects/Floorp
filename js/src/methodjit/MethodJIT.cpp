@@ -809,9 +809,11 @@ mjit::JITScript::release()
 
 #if defined JS_POLYIC
     for (uint32 i = 0; i < nPICs; i++)
-        pics[i].finish();
+        Destroy(pics[i]);
     for (uint32 i = 0; i < nGetElems; i++)
-        getElems[i].finish();
+        Destroy(getElems[i]);
+    for (uint32 i = 0; i < nSetElems; i++)
+        Destroy(setElems[i]);
 #endif
 
 #if defined JS_MONOIC

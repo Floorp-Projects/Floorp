@@ -70,10 +70,10 @@ static const uint32 INLINE_PATH_LENGTH = 64;
 // are instantiated and rooted.
 class PICLinker : public LinkerHelper
 {
-    ic::BaseIC &ic;
+    ic::BasePolyIC &ic;
 
   public:
-    PICLinker(JSContext *cx, ic::BaseIC &ic)
+    PICLinker(JSContext *cx, ic::BasePolyIC &ic)
       : LinkerHelper(cx), ic(ic)
     { }
 
@@ -2277,6 +2277,180 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         THROW();
 }
 
+#define APPLY_STRICTNESS(f, s)                          \
+    (FunctionTemplateConditional(s, f<true>, f<false>))
+
+LookupStatus
+SetElementIC::disable(JSContext *cx, const char *reason)
+{
+    slowCallPatched = true;
+    VoidStub stub = APPLY_STRICTNESS(stubs::SetElem, strictMode);
+    BaseIC::disable(cx, reason, JS_FUNC_TO_DATA_PTR(void *, stub));
+    return Lookup_Uncacheable;
+}
+
+LookupStatus
+SetElementIC::error(JSContext *cx)
+{
+    disable(cx, "error");
+    return Lookup_Error;
+}
+
+void
+SetElementIC::purge()
+{
+    if (inlineClaspGuardPatched || inlineHoleGuardPatched) {
+        RepatchBuffer repatcher(fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
+
+        // Repatch the inline jumps.
+        if (inlineClaspGuardPatched)
+            repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), slowPathStart);
+        if (inlineHoleGuardPatched)
+            repatcher.relink(fastPathStart.jumpAtOffset(inlineHoleGuard), slowPathStart);
+    }
+
+    if (slowCallPatched) {
+        RepatchBuffer repatcher(slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
+        void *stub = JS_FUNC_TO_DATA_PTR(void *, APPLY_STRICTNESS(ic::SetElement, strictMode));
+        repatcher.relink(slowPathCall, FunctionPtr(stub));
+    }
+
+    reset();
+}
+
+LookupStatus
+SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
+{
+    if (keyval < 0)
+        return disable(cx, "negative key index");
+
+    // We may have failed a capacity check instead of a dense array check.
+    // However we should still build the IC in this case, since it could
+    // be in a loop that is filling in the array. We can assert, however,
+    // that either we're in capacity or there's a hole - guaranteed by
+    // the fast path.
+    JS_ASSERT((jsuint)keyval >= obj->getDenseArrayCapacity() ||
+              obj->getDenseArrayElement(keyval).isMagic(JS_ARRAY_HOLE));
+
+    if (js_PrototypeHasIndexedProperties(cx, obj))
+        return disable(cx, "prototype has indexed properties");
+
+    Assembler masm;
+
+    // Test for indexed properties in Array.prototype. It is safe to bake in
+    // this pointer because changing __proto__ will slowify.
+    JSObject *arrayProto = obj->getProto();
+    masm.move(ImmPtr(arrayProto), objReg);
+    Jump extendedArray = masm.branchTest32(Assembler::NonZero,
+                                           Address(objReg, offsetof(JSObject, flags)),
+                                           Imm32(JSObject::INDEXED));
+
+    // Text for indexed properties in Object.prototype. Guard that
+    // Array.prototype doesn't change, too.
+    JSObject *objProto = arrayProto->getProto();
+    Jump sameProto = masm.branchPtr(Assembler::NotEqual,
+                                    Address(objReg, offsetof(JSObject, proto)),
+                                    ImmPtr(objProto));
+    masm.move(ImmPtr(objProto), objReg);
+    Jump extendedObject = masm.branchTest32(Assembler::NonZero,
+                                            Address(objReg, offsetof(JSObject, flags)),
+                                            Imm32(JSObject::INDEXED));
+
+    // Restore |obj|.
+    masm.rematPayload(StateRemat::FromInt32(objRemat), objReg);
+
+    // Guard against negative indices.
+    MaybeJump keyGuard;
+    if (!hasConstantKey)
+        keyGuard = masm.branch32(Assembler::LessThan, keyReg, Imm32(0));
+
+    // Update the array length if necessary.
+    Jump skipUpdate;
+    Address arrayLength(objReg, offsetof(JSObject, privateData));
+    if (hasConstantKey) {
+        skipUpdate = masm.branch32(Assembler::Above, arrayLength, Imm32(keyValue));
+        masm.store32(Imm32(keyValue + 1), arrayLength);
+    } else {
+        skipUpdate = masm.branch32(Assembler::Above, arrayLength, keyReg);
+        masm.add32(Imm32(1), keyReg);
+        masm.store32(keyReg, arrayLength);
+        masm.sub32(Imm32(1), keyReg);
+    }
+    skipUpdate.linkTo(masm.label(), &masm);
+
+    // Store the value back.
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    if (hasConstantKey) {
+        Address slot(objReg, keyValue * sizeof(Value));
+        masm.storeValue(vr, slot);
+    } else {
+        BaseIndex slot(objReg, keyReg, Assembler::JSVAL_SCALE);
+        masm.storeValue(vr, slot);
+    }
+
+    Jump done = masm.jump();
+
+    JS_ASSERT(!execPool);
+    JS_ASSERT(!inlineHoleGuardPatched);
+
+    LinkerHelper buffer(cx);
+    execPool = buffer.init(masm);
+    if (!execPool)
+        return error(cx);
+
+    // Patch all guards.
+    buffer.link(extendedArray, slowPathStart);
+    buffer.link(sameProto, slowPathStart);
+    buffer.link(extendedObject, slowPathStart);
+    buffer.link(done, fastPathRejoin);
+
+    CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+    JaegerSpew(JSpew_PICs, "generated dense array hole stub at %p\n", cs.executableAddress());
+
+    PICRepatchBuffer repatcher(*this, fastPathStart);
+    repatcher.relink(inlineHoleGuard, cs);
+    inlineHoleGuardPatched = true;
+
+    disable(cx, "generated dense array hole stub");
+
+    return Lookup_Cacheable;
+}
+
+LookupStatus
+SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
+{
+    if (!objval.isObject())
+        return disable(cx, "primitive lval");
+    if (!idval.isInt32())
+        return disable(cx, "non-int32 key");
+
+    JSObject *obj = &objval.toObject();
+    int32 key = idval.toInt32();
+
+    if (obj->isDenseArray())
+        return attachHoleStub(cx, obj, key);
+
+    return disable(cx, "unsupported object type");
+}
+
+template<JSBool strict>
+void
+ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
+{
+    JSContext *cx = f.cx;
+
+    if (ic->shouldUpdate(cx)) {
+        LookupStatus status = ic->update(cx, f.regs.sp[-3], f.regs.sp[-2]);
+        if (status == Lookup_Error)
+            THROW();
+    }
+
+    stubs::SetElem<strict>(f);
+}
+
+template void JS_FASTCALL ic::SetElement<true>(VMFrame &f, SetElementIC *ic);
+template void JS_FASTCALL ic::SetElement<false>(VMFrame &f, SetElementIC *ic);
+
 void
 JITScript::purgePICs()
 {
@@ -2307,6 +2481,8 @@ JITScript::purgePICs()
 
     for (uint32 i = 0; i < nGetElems; i++)
         getElems[i].purge();
+    for (uint32 i = 0; i < nSetElems; i++)
+        setElems[i].purge();
 }
 
 void
