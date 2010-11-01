@@ -163,7 +163,7 @@ PromptService.prototype = {
   /* ----------  nsIPromptService  ---------- */
 
   alert: function() {
-    return this.callProxy("alert", arguments);IA
+    return this.callProxy("alert", arguments);
   },
   alertCheck: function() {
     return this.callProxy("alertCheck", arguments);
