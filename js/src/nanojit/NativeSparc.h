@@ -80,7 +80,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
-#define NJ_DIVI_SUPPORTED               0    
+#define NJ_DIVI_SUPPORTED               0
 
     const int NJ_ALIGN_STACK = 16;
 
@@ -208,7 +208,7 @@ namespace nanojit
      void nativePageReset(); \
      void nativePageSetup(); \
      void underrunProtect(int bytes); \
-     bool hardenNopInsertion(const Config& c) { return false; } \
+     bool hardenNopInsertion(const Config& /*c*/) { return false; } \
      void asm_align_code(); \
      void asm_cmp(LIns *cond); \
      void asm_cmpd(LIns *cond); \

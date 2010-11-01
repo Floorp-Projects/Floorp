@@ -61,7 +61,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #define NJ_F2I_SUPPORTED                0
 #define NJ_SOFTFLOAT_SUPPORTED          0
-#define NJ_DIVI_SUPPORTED               0    
+#define NJ_DIVI_SUPPORTED               0
 
     enum ConditionRegister {
         CR0 = 0,
@@ -295,7 +295,7 @@ namespace nanojit
         void underrunProtect(int bytes);                                    \
         void nativePageReset();                                             \
         void nativePageSetup();                                             \
-        bool hardenNopInsertion(const Config& c) { return false; }          \
+        bool hardenNopInsertion(const Config& /*c*/) { return false; }      \
         void br(NIns *addr, int link);                                      \
         void br_far(NIns *addr, int link);                                  \
         void asm_regarg(ArgType, LIns*, Register);                          \
