@@ -2408,6 +2408,13 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
+JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                     JSPrincipals *principals,
+                                     const char *bytes, size_t length,
+                                     const char *filename, uintN lineno,
+                                     JSVersion version);
+
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
                    const jschar *chars, size_t length,
                    const char *filename, uintN lineno);
@@ -2436,6 +2443,11 @@ extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *fh,
                                   JSPrincipals *principals);
+
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         const char *filename, FILE *fh,
+                                         JSPrincipals *principals);
 
 /*
  * NB: you must use JS_NewScriptObject and root a pointer to its return value
@@ -2553,6 +2565,10 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
+                        JSVersion version);
 
 /*
  * Execute either the function-defining prolog of a script, or the script's
