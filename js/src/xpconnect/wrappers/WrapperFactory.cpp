@@ -302,7 +302,8 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
     JSObject *xrayHolder = LW::createHolder(cx, obj, obj->getParent());
     if (!xrayHolder)
         return NULL;
-    JSObject *wrapperObj = JSWrapper::New(cx, obj, obj->getProto(), NULL, &LW::singleton);
+    JSObject *wrapperObj = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
+                                          &LW::singleton);
     if (!wrapperObj)
         return NULL;
     wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
@@ -336,7 +337,7 @@ JSObject *
 WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
 {
     JSObject *wrapperObj =
-        JSWrapper::New(cx, obj, obj->getProto(), NULL,
+        JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
                        &FilteringWrapper<JSWrapper,
                                          OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;
