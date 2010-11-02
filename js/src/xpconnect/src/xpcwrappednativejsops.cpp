@@ -350,13 +350,14 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
         if(wrapperToReflectInterfaceNames)
         {
+            JSAutoByteString name;
             AutoMarkingNativeInterfacePtr iface2(ccx);
             XPCWrappedNativeTearOff* to;
             JSObject* jso;
 
             if(JSID_IS_STRING(id) &&
-               nsnull != (name = JS_GetStringBytes(JSID_TO_STRING(id))) &&
-               (iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name), iface2) &&
+               name.encode(ccx, JSID_TO_STRING(id)) &&
+               (iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name.ptr()), iface2) &&
                nsnull != (to = wrapperToReflectInterfaceNames->
                                     FindTearOff(ccx, iface2, JS_TRUE)) &&
                nsnull != (jso = to->GetJSObject()))

@@ -179,7 +179,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
             {
                 XPCNativeInterface *iface = newwn->GetSet()->GetInterfaceAt(0);
                 JSString *name = JSID_TO_STRING(iface->GetName());
-                NS_ASSERTION(!strcmp("nsISupports", JS_GetStringBytes(name)), "weird interface");
+                NS_ASSERTION(JS_MatchStringAndAscii(name, "nsISupports"), "weird interface");
             }
 #endif
 

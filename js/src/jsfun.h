@@ -489,6 +489,14 @@ IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
     return isCtor;
 }
 
+inline const char *
+GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
+{
+    if (fun->atom)
+        return bytes->encode(cx, ATOM_TO_STRING(fun->atom));
+    return js_anonymous_str;
+}
+
 } /* namespace js */
 
 extern JSString *

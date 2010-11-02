@@ -698,12 +698,6 @@ FilenameToString(JSContext *cx, const char *filename)
     return JS_NewStringCopyZ(cx, filename);
 }
 
-static const char *
-StringToFilename(JSContext *cx, JSString *str)
-{
-    return js_GetStringBytes(cx, str);
-}
-
 static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1247,44 +1241,42 @@ js_ReportUncaughtException(JSContext *cx)
 
     /* XXX L10N angels cry once again (see also jsemit.c, /L10N gaffes/) */
     str = js_ValueToString(cx, Valueify(exn));
+    JSAutoByteString bytesStorage;
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
         roots[1] = STRING_TO_JSVAL(str);
-        bytes = js_GetStringBytes(cx, str);
-        if (!bytes)
+        if (!bytesStorage.encode(cx, str))
             return false;
+        bytes = bytesStorage.ptr();
     }
 
+    JSAutoByteString filename;
     if (!reportp && exnObject && exnObject->getClass() == &js_ErrorClass) {
-        const char *filename;
-
         if (!JS_GetProperty(cx, exnObject, js_message_str, &roots[2]))
             return false;
         if (JSVAL_IS_STRING(roots[2])) {
-            bytes = js_GetStringBytes(cx, JSVAL_TO_STRING(roots[2]));
-            if (!bytes)
+            bytesStorage.clear();
+            if (!bytesStorage.encode(cx, str))
                 return false;
+            bytes = bytesStorage.ptr();
         }
 
         if (!JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]))
             return false;
         str = js_ValueToString(cx, Valueify(roots[3]));
-        if (!str)
-            return false;
-        filename = StringToFilename(cx, str);
-        if (!filename)
+        if (!str || !filename.encode(cx, str))
             return false;
 
         if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
             return false;
         uint32_t lineno;
-        if (!ValueToECMAUint32 (cx, Valueify(roots[4]), &lineno))
+        if (!ValueToECMAUint32(cx, Valueify(roots[4]), &lineno))
             return false;
 
         reportp = &report;
         PodZero(&report);
-        report.filename = filename;
+        report.filename = filename.ptr();
         report.lineno = (uintN) lineno;
         if (JSVAL_IS_STRING(roots[2])) {
             report.ucmessage = js_GetStringChars(cx, JSVAL_TO_STRING(roots[2]));
