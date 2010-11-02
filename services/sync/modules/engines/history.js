@@ -117,17 +117,85 @@ HistoryStore.prototype = {
     return this.__haveTempTables;
   },
 
+  get _addGUIDAnnotationNameStm() {
+    let stmt = this._getStmt(
+      "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (:anno_name)");
+    stmt.params.anno_name = GUID_ANNO;
+    return stmt;
+  },
+
+  get _checkGUIDPageAnnotationStm() {
+    let base =
+      "SELECT h.id AS place_id, " +
+        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS name_id, " +
+        "a.id AS anno_id, a.dateAdded AS anno_date ";
+    let stmt;
+    if (this._haveTempTables) {
+      // Gecko <2.0
+      stmt = this._getStmt(base +
+        "FROM (SELECT id FROM moz_places_temp WHERE url = :page_url " +
+              "UNION " +
+              "SELECT id FROM moz_places WHERE url = :page_url) AS h " +
+        "LEFT JOIN moz_annos a ON a.place_id = h.id " +
+                             "AND a.anno_attribute_id = name_id");
+    } else {
+      // Gecko 2.0
+      stmt = this._getStmt(base +
+        "FROM moz_places h " + 
+        "LEFT JOIN moz_annos a ON a.place_id = h.id " +
+                             "AND a.anno_attribute_id = name_id " +
+        "WHERE h.url = :page_url");
+    }
+    stmt.params.anno_name = GUID_ANNO;
+    return stmt;
+  },
+
+  get _addPageAnnotationStm() {
+    return this._getStmt(
+    "INSERT OR REPLACE INTO moz_annos " +
+      "(id, place_id, anno_attribute_id, mime_type, content, flags, " +
+       "expiration, type, dateAdded, lastModified) " +
+    "VALUES (:id, :place_id, :name_id, :mime_type, :content, :flags, " +
+            ":expiration, :type, :date_added, :last_modified)");
+  },
+
   // Some helper functions to handle GUIDs
   setGUID: function setGUID(uri, guid) {
+    uri = uri.spec ? uri.spec : uri;
+
     if (arguments.length == 1)
       guid = Utils.makeGUID();
 
-    try {
-      Utils.anno(uri, GUID_ANNO, guid, "WITH_HISTORY");
-    } catch (ex) {
+    // Ensure annotation name exists
+    Utils.queryAsync(this._addGUIDAnnotationNameStm);
+
+    let stmt = this._checkGUIDPageAnnotationStm;
+    stmt.params.page_url = uri;
+    let result = Utils.queryAsync(stmt, ["place_id", "name_id", "anno_id",
+                                         "anno_date"])[0];
+    if (!result) {
       let log = Log4Moz.repository.getLogger("Engine.History");
-      log.warn("Couldn't annotate URI " + uri + ": " + ex);
+      log.warn("Couldn't annotate URI " + uri);
+      return guid;
     }
+
+    stmt = this._addPageAnnotationStm;
+    if (result.anno_id) {
+      stmt.params.id = result.anno_id;
+      stmt.params.date_added = result.anno_date;
+    } else {
+      stmt.params.id = null;
+      stmt.params.date_added = Date.now() * 1000;
+    }
+    stmt.params.place_id = result.place_id;
+    stmt.params.name_id = result.name_id;
+    stmt.params.content = guid;
+    stmt.params.flags = 0;
+    stmt.params.expiration = Ci.nsIAnnotationService.EXPIRE_WITH_HISTORY;
+    stmt.params.type = Ci.nsIAnnotationService.TYPE_STRING;
+    stmt.params.last_modified = Date.now() * 1000;
+    Utils.queryAsync(stmt);
+
     return guid;
   },
 
