@@ -1351,12 +1351,10 @@ const BrowserSearch = {
   },
 
   get engines() {
-    dump("------ engines\n")
     if (this._engines)
       return this._engines;
 
     this._engines = Services.search.getVisibleEngines({ });
-    dump("------ engines.length:" + this._engines.length + "\n")
     return this._engines;
   },
 
