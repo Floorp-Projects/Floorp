@@ -43,8 +43,11 @@
 #include "nsWebMReader.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
+#include "nsIServiceManager.h"
+#include "nsIPrefService.h"
 
 using namespace mozilla;
+using namespace mozilla::layers;
 
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
@@ -266,6 +269,45 @@ nsresult nsWebMReader::ReadMetadata()
         mInfo.mPicture.y = 0;
         mInfo.mPicture.width = params.width;
         mInfo.mPicture.height = params.height;
+      }
+
+      switch (params.stereo_mode) {
+      case NESTEGG_VIDEO_MONO:
+        mInfo.mStereoMode = STEREO_MODE_MONO;
+        break;
+      case NESTEGG_VIDEO_STEREO_LEFT_RIGHT:
+        mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
+        break;
+      case NESTEGG_VIDEO_STEREO_BOTTOM_TOP:
+        mInfo.mStereoMode = STEREO_MODE_BOTTOM_TOP;
+        break;
+      case NESTEGG_VIDEO_STEREO_TOP_BOTTOM:
+        mInfo.mStereoMode = STEREO_MODE_TOP_BOTTOM;
+        break;
+      case NESTEGG_VIDEO_STEREO_RIGHT_LEFT:
+        mInfo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
+        break;
+      }
+
+      nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+      PRInt32 forceStereoMode;
+      if (NS_SUCCEEDED(prefs->GetIntPref("media.webm.force_stereo_mode", &forceStereoMode))) {
+        switch (forceStereoMode) {
+        case 1:
+          mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
+          break;
+        case 2:
+          mInfo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
+          break;
+        case 3:
+          mInfo.mStereoMode = STEREO_MODE_TOP_BOTTOM;
+          break;
+        case 4:
+          mInfo.mStereoMode = STEREO_MODE_BOTTOM_TOP;
+          break;
+        default:
+          mInfo.mStereoMode = STEREO_MODE_MONO;
+        }
       }
 
       // mDataOffset is not used by the WebM backend.

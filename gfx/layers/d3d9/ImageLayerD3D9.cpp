@@ -176,17 +176,35 @@ ImageLayerD3D9::RenderLayer()
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
 
-    /* 
-     * Send 3d control data and metadata 
-     */ 
-    if (mD3DManager->Is3DEnabled() && mD3DManager->GetNv3DVUtils()) { 
-      mD3DManager->GetNv3DVUtils()->SendNv3DVControl(STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE); 
+    if (yuvImage->mData.mStereoMode != STEREO_MODE_MONO) {
+      Nv_Stereo_Mode mode;
+      switch (yuvImage->mData.mStereoMode) {
+      case STEREO_MODE_LEFT_RIGHT:
+        mode = NV_STEREO_MODE_LEFT_RIGHT;
+        break;
+      case STEREO_MODE_RIGHT_LEFT:
+        mode = NV_STEREO_MODE_RIGHT_LEFT;
+        break;
+      case STEREO_MODE_BOTTOM_TOP:
+        mode = NV_STEREO_MODE_BOTTOM_TOP;
+        break;
+      case STEREO_MODE_TOP_BOTTOM:
+        mode = NV_STEREO_MODE_TOP_BOTTOM;
+        break;
+      }
 
-      nsRefPtr<IDirect3DSurface9> renderTarget; 
-      device()->GetRenderTarget(0, getter_AddRefs(renderTarget)); 
-      mD3DManager->GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width, 
-        (unsigned int)yuvImage->mSize.height, (HANDLE)(yuvImage->mYTexture), (HANDLE)(renderTarget)); 
-    } 
+      /*
+       * Send 3d control data and metadata
+       */
+      if (mD3DManager->GetNv3DVUtils()) {
+        mD3DManager->GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
+
+        nsRefPtr<IDirect3DSurface9> renderTarget;
+        device()->GetRenderTarget(0, getter_AddRefs(renderTarget));
+        mD3DManager->GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width,
+                                                        (unsigned int)yuvImage->mSize.height, (HANDLE)(yuvImage->mYTexture), (HANDLE)(renderTarget));
+      }
+    }
 
     device()->SetTexture(0, yuvImage->mYTexture);
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
