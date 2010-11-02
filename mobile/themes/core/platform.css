@@ -44,6 +44,11 @@
   font-size: 24px !important;
 }
 
+::-moz-selection {
+  background-color: #8db8d8;
+  color: black;
+}
+
 menu,
 menuitem {
   padding: 0 !important;
