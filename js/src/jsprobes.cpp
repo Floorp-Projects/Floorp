@@ -124,7 +124,7 @@ jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
 #endif
 
 const char *
-Probes::FunctionName(JSContext *cx, const JSFunction *fun)
+Probes::FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString *bytes)
 {
     if (!fun)
         return nullName;
@@ -139,8 +139,7 @@ Probes::FunctionName(JSContext *cx, const JSFunction *fun)
         return nullName;
     }
 
-    char *name = (char *)js_GetStringBytes(cx, ATOM_TO_STRING(atom));
-    return name ? name : nullName;
+    return bytes->encode(cx, ATOM_TO_STRING(atom)) ? bytes->ptr() : nullName;
 }
 
 #ifdef INCLUDE_MOZILLA_DTRACE
