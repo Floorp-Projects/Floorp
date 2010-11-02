@@ -381,7 +381,9 @@ Content.prototype = {
 
       case "Browser:KeyEvent":
         let utils = Util.getWindowUtils(content);
-        let defaultAction = utils.sendKeyEvent(json.type, json.keyCode, json.charCode, modifiers);
+        let defaultAction;
+        if (!Util.isParentProcess())
+          defaultAction = utils.sendKeyEvent(json.type, json.keyCode, json.charCode, modifiers);
         if (defaultAction && json.type == "keypress") {
           const masks = Ci.nsIDOMNSEvent;
           sendAsyncMessage("Browser:KeyPress", {
