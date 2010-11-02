@@ -720,7 +720,9 @@ XrayWrapper<Base, Policy>::get(JSContext *cx, JSObject *wrapper, JSObject *recei
                                js::Value *vp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
-    return JSProxyHandler::get(cx, wrapper, receiver, id, vp);
+    // NB: None of the functions we call are prepared for the receiver not
+    // being the wrapper, so ignore the receiver here.
+    return JSProxyHandler::get(cx, wrapper, wrapper, id, vp);
 }
 
 template <typename Base, typename Policy>
@@ -729,7 +731,9 @@ XrayWrapper<Base, Policy>::set(JSContext *cx, JSObject *wrapper, JSObject *recei
                                js::Value *vp)
 {
     // Skip our Base if it isn't already JSProxyHandler.
-    return JSProxyHandler::set(cx, wrapper, receiver, id, vp);
+    // NB: None of the functions we call are prepared for the receiver not
+    // being the wrapper, so ignore the receiver here.
+    return JSProxyHandler::set(cx, wrapper, wrapper, id, vp);
 }
 
 template <typename Base, typename Policy>
