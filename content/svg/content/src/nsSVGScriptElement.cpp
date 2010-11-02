@@ -49,6 +49,8 @@
 #include "nsScriptElement.h"
 #include "nsIDOMText.h"
 
+using namespace mozilla::dom;
+
 typedef nsSVGElement nsSVGScriptElementBase;
 
 class nsSVGScriptElement : public nsSVGScriptElementBase,
@@ -59,9 +61,9 @@ class nsSVGScriptElement : public nsSVGScriptElementBase,
 protected:
   friend nsresult NS_NewSVGScriptElement(nsIContent **aResult,
                                          already_AddRefed<nsINodeInfo> aNodeInfo,
-                                         PRUint32 aFromParser);
+                                         FromParser aFromParser);
   nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     PRUint32 aFromParser);
+                     FromParser aFromParser);
   
 public:
   // interfaces:
@@ -133,7 +135,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGScriptElementBase)
 // Implementation
 
 nsSVGScriptElement::nsSVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                       PRUint32 aFromParser)
+                                       FromParser aFromParser)
   : nsSVGScriptElementBase(aNodeInfo)
   , nsScriptElement(aFromParser)
 {
@@ -150,10 +152,7 @@ nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   *aResult = nsnull;
 
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  nsSVGScriptElement* it = new nsSVGScriptElement(ni.forget(), PR_FALSE);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsSVGScriptElement* it = new nsSVGScriptElement(ni.forget(), NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv = it->Init();
