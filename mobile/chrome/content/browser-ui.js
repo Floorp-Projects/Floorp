@@ -1813,11 +1813,17 @@ var FormHelperUI = {
 
     this._updateContainer(lastElement, this._currentElement);
     this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
+
+    // Prevent the view to scroll automatically while typing
+    Browser.selectedBrowser.scrollSync = false;
   },
 
   hide: function formHelperHide() {
     if (!this._open)
       return;
+
+    // Restore the scroll synchonisation
+    Browser.selectedBrowser.scrollSync = true;
 
     // reset current Element and Caret Rect
     this._currentElementRect = null;
