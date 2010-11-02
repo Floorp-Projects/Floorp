@@ -345,6 +345,20 @@ mjit::Compiler::generatePrologue()
     if (debugMode)
         stubCall(stubs::EnterScript);
 
+    /*
+     * Set initial types of locals with known type.  These will stay synced
+     * through the rest of the script.
+     */
+    for (uint32 i = 0; i < script->nfixed; i++) {
+        JSValueType type = knownLocalType(i);
+        if (type != JSVAL_TYPE_UNKNOWN) {
+            JS_ASSERT(!analysis->localHasUseBeforeDef(i));
+            Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
+            masm.storeTypeTag(ImmType(type), local);
+            frame.learnType(frame.getLocal(i), type, false);
+        }
+    }
+
     return Compile_Okay;
 }
 
@@ -808,6 +822,9 @@ mjit::Compiler::generateMethod()
         if (opinfo->jumpTarget || trap) {
             frame.syncAndForgetEverything(opinfo->stackDepth);
             opinfo->safePoint = true;
+
+            if (!trap)
+                restoreAnalysisTypes(opinfo->stackDepth);
         }
         jumpMap[uint32(PC - script->code)] = masm.label();
 
@@ -1428,7 +1445,8 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            frame.storeLocal(GET_SLOTNO(PC), pop);
+            JSValueType type = knownLocalType(GET_SLOTNO(PC));
+            frame.storeLocal(GET_SLOTNO(PC), pop, type == JSVAL_TYPE_UNKNOWN);
             if (pop) {
                 frame.pop();
                 PC += JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
@@ -2312,9 +2330,16 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
 
     frame.popn(argc + 2);
-    frame.takeReg(JSReturnReg_Type);
-    frame.takeReg(JSReturnReg_Data);
-    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
+
+    JSValueType type = knownPushedType(0);
+    if (type != JSVAL_TYPE_UNKNOWN) {
+        frame.takeReg(JSReturnReg_Data);
+        frame.pushTypedPayload(type, JSReturnReg_Data);
+    } else {
+        frame.takeReg(JSReturnReg_Type);
+        frame.takeReg(JSReturnReg_Data);
+        frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
+    }
 
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(0));
@@ -2468,9 +2493,16 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
 
     frame.popn(argc + 2);
-    frame.takeReg(JSReturnReg_Type);
-    frame.takeReg(JSReturnReg_Data);
-    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
+
+    JSValueType type = knownPushedType(0);
+    if (type != JSVAL_TYPE_UNKNOWN) {
+        frame.takeReg(JSReturnReg_Data);
+        frame.pushTypedPayload(type, JSReturnReg_Data);
+    } else {
+        frame.takeReg(JSReturnReg_Type);
+        frame.takeReg(JSReturnReg_Data);
+        frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
+    }
 
     callIC.slowJoinPoint = stubcc.masm.label();
     rejoin1.linkTo(callIC.slowJoinPoint, &stubcc.masm);
@@ -3444,7 +3476,16 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 void
 mjit::Compiler::jsop_getarg(uint32 slot)
 {
-    frame.push(Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot)));
+    Address argument(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
+
+    JSValueType type = knownArgumentType(slot);
+    if (type != JSVAL_TYPE_UNKNOWN) {
+        RegisterID dataReg = frame.allocReg();
+        masm.loadPayload(argument, dataReg);
+        frame.pushTypedPayload(type, dataReg);
+    } else {
+        frame.push(argument);
+    }
 }
 
 void
@@ -4573,3 +4614,56 @@ mjit::Compiler::jsop_callelem_slow()
     frame.pushSynced();
 }
 
+void
+mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
+{
+#ifdef JS_TYPE_INFERENCE
+    /* Restore known types of locals. */
+    for (uint32 i = 0; i < script->nfixed; i++) {
+        JSValueType type = knownLocalType(i);
+        if (type != JSVAL_TYPE_UNKNOWN) {
+            FrameEntry *fe = frame.getLocal(i);
+            frame.learnType(fe, type, false);
+        }
+    }
+    for (uint32 i = 0; i < stackDepth; i++) {
+        types::TypeStack *stack = analysis->getCode(PC).inStack;
+        JSValueType type = analysis->getStackTypes(script->nfixed + i, stack)->getKnownTypeTag();
+        if (type != JSVAL_TYPE_UNKNOWN) {
+            FrameEntry *fe = frame.getLocal(script->nfixed + i);
+            frame.learnType(fe, type, true);
+        }
+    }
+#endif
+}
+
+JSValueType
+mjit::Compiler::knownArgumentType(uint32 arg)
+{
+#ifdef JS_TYPE_INFERENCE
+    jsid id = analysis->getArgumentId(arg);
+    if (!JSID_IS_VOID(id))
+        return analysis->localTypes.getVariable(cx, id)->getKnownTypeTag();
+#endif
+    return JSVAL_TYPE_UNKNOWN;
+}
+
+JSValueType
+mjit::Compiler::knownLocalType(uint32 local)
+{
+#ifdef JS_TYPE_INFERENCE
+    jsid id = analysis->getLocalId(local, NULL);
+    if (!analysis->localHasUseBeforeDef(local) && !JSID_IS_VOID(id))
+        return analysis->localTypes.getVariable(cx, id)->getKnownTypeTag();
+#endif
+    return JSVAL_TYPE_UNKNOWN;
+}
+
+JSValueType
+mjit::Compiler::knownPushedType(uint32 pushed)
+{
+#ifdef JS_TYPE_INFERENCE
+    return analysis->getCode(PC).pushed(pushed)->getKnownTypeTag();
+#endif
+    return JSVAL_TYPE_UNKNOWN;
+}

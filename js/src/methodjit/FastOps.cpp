@@ -566,7 +566,11 @@ mjit::Compiler::jsop_bitop(JSOp op)
     frame.pop();
     frame.pop();
 
-    if (op == JSOP_URSH)
+    JSValueType type = knownPushedType(0);
+
+    if (type != JSVAL_TYPE_UNKNOWN)
+        frame.pushTypedPayload(type, reg);
+    else if (op == JSOP_URSH)
         frame.pushNumber(reg, true);
     else
         frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
@@ -1160,8 +1164,14 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         frame.dup();
 
     FrameEntry *fe = frame.peek(-1);
-    Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
-    stubcc.linkExit(notInt, Uses(0));
+
+    if (fe->isTypeKnown()) {
+        if (fe->getKnownType() != JSVAL_TYPE_INT32)
+            stubcc.linkExit(masm.jump(), Uses(0));
+    } else {
+        Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
+        stubcc.linkExit(notInt, Uses(0));
+    }
 
     RegisterID reg = frame.ownRegForData(fe);
     frame.pop();
