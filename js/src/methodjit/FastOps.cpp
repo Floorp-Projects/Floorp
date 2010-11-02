@@ -1360,39 +1360,30 @@ mjit::Compiler::jsop_setelem()
     stubcc.rejoin(Changes(0));
 }
 
-static inline bool
-IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
+bool
+mjit::Compiler::jsop_getelem()
 {
-    if (obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT)
-        return false;
+    FrameEntry *obj = frame.peek(-2);
+    FrameEntry *id = frame.peek(-1);
+
+    if (obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT) {
+        jsop_getelem_slow();
+        return true;
+    }
+
     if (id->isTypeKnown() &&
         !(id->getKnownType() == JSVAL_TYPE_INT32
 #ifdef JS_POLYIC
           || id->getKnownType() == JSVAL_TYPE_STRING
 #endif
          )) {
-        return false;
+        jsop_getelem_slow();
+        return true;
     }
 
     if (id->isTypeKnown() && id->getKnownType() == JSVAL_TYPE_INT32 && id->isConstant() &&
         id->getValue().toInt32() < 0) {
-        return false;
-    }
-
-    return true;
-}
-
-bool
-mjit::Compiler::jsop_getelem(bool isCall)
-{
-    FrameEntry *obj = frame.peek(-2);
-    FrameEntry *id = frame.peek(-1);
-
-    if (!IsCacheableGetElem(obj, id)) {
-        if (isCall)
-            jsop_callelem_slow();
-        else
-            jsop_getelem_slow();
+        jsop_getelem_slow();
         return true;
     }
 
@@ -1419,14 +1410,6 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     // Get a mutable register for the object. This will be the data reg.
     ic.objReg = frame.copyDataIntoReg(obj);
-
-    // For potential dense array calls, grab an extra reg to save the
-    // outgoing object.
-    MaybeRegisterID thisReg;
-    if (isCall && id->mightBeType(JSVAL_TYPE_INT32)) {
-        thisReg = frame.allocReg();
-        masm.move(ic.objReg, thisReg.reg());
-    }
 
     // Get a mutable register for pushing the result type. We kill two birds
     // with one stone by making sure, if the key type is not known, to be loaded
@@ -1473,14 +1456,6 @@ mjit::Compiler::jsop_getelem(bool isCall)
         Assembler::FastArrayLoadFails fails =
             masm.fastArrayLoad(ic.objReg, key, ic.typeReg, ic.objReg);
 
-        // Store the object back to sp[-1] for calls. This must occur after
-        // all guards because otherwise sp[-1] will be clobbered.
-        if (isCall) {
-            Address thisSlot = frame.addressOf(id);
-            masm.storeValueFromComponents(ImmType(JSVAL_TYPE_OBJECT), thisReg.reg(), thisSlot);
-            frame.freeReg(thisReg.reg());
-        }
-
         stubcc.linkExitDirect(fails.rangeCheck, ic.slowPathStart);
         stubcc.linkExitDirect(fails.holeCheck, ic.slowPathStart);
     } else {
@@ -1495,23 +1470,15 @@ mjit::Compiler::jsop_getelem(bool isCall)
         objTypeGuard.get().linkTo(stubcc.masm.label(), &stubcc.masm);
 #ifdef JS_POLYIC
     passICAddress(&ic);
-    if (isCall)
-        ic.slowPathCall = stubcc.call(ic::CallElement);
-    else
-        ic.slowPathCall = stubcc.call(ic::GetElement);
+    ic.slowPathCall = stubcc.call(ic::GetElement);
 #else
-    if (isCall)
-        ic.slowPathCall = stubcc.call(stubs::CallElem);
-    else
-        ic.slowPathCall = stubcc.call(stubs::GetElem);
+    ic.slowPathCall = stubcc.call(stubs::GetElem);
 #endif
 
     ic.fastPathRejoin = masm.label();
 
     frame.popn(2);
     frame.pushRegs(ic.typeReg, ic.objReg);
-    if (isCall)
-        frame.pushSynced();
 
     stubcc.rejoin(Changes(2));
 
