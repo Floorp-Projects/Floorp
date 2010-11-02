@@ -352,7 +352,6 @@ class Compiler : public BaseCompiler
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
-    void jsop_callelem_slow();
     void jsop_unbrand();
     bool jsop_getprop(JSAtom *atom, bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
@@ -418,8 +417,7 @@ class Compiler : public BaseCompiler
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
-    bool jsop_getelem(bool isCall);
-    bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
+    bool jsop_getelem();
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
