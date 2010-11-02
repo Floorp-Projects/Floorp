@@ -57,17 +57,19 @@
 #undef GetObject
 #endif
 
-class nsHTMLSharedObjectElement : public nsGenericHTMLElement,
-                                  public nsObjectLoadingContent,
-                                  public nsIDOMHTMLAppletElement,
-                                  public nsIDOMHTMLEmbedElement
+using namespace mozilla::dom;
+
+class nsHTMLSharedObjectElement : public nsGenericHTMLElement
+                                , public nsObjectLoadingContent
+                                , public nsIDOMHTMLAppletElement
+                                , public nsIDOMHTMLEmbedElement
 #ifdef MOZ_SVG
-                                  , public nsIDOMGetSVGDocument
+                                , public nsIDOMGetSVGDocument
 #endif
 {
 public:
   nsHTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                            PRUint32 aFromParser = 0);
+                            mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLSharedObjectElement();
 
   // nsISupports
@@ -178,7 +180,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 
 
 nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                                     PRUint32 aFromParser)
+                                                     FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)
 {
