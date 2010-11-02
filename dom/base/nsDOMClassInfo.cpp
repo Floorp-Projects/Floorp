@@ -6180,15 +6180,15 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   {
     JSObject *winobj = aWin->FastGetGlobalJSObject();
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, winobj)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
     JSObject *proto = nsnull;
 
     if (class_parent_name) {
       jsval val;
+
+      JSAutoEnterCompartment ac;
+      if (!ac.enter(cx, winobj)) {
+        return NS_ERROR_UNEXPECTED;
+      }
 
       if (!::JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
         return NS_ERROR_UNEXPECTED;
@@ -6213,7 +6213,8 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
       if (proto &&
           (!xpc_proto_proto ||
            JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
-        if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
+        if (!JS_WrapObject(cx, &proto) ||
+            !JS_SetPrototype(cx, dot_prototype, proto)) {
           return NS_ERROR_UNEXPECTED;
         }
       }
