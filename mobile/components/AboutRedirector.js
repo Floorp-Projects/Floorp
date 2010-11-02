@@ -59,7 +59,7 @@ let modules = {
   },
   rights: {
 #ifdef MOZ_OFFICIAL_BRANDING
-    uri: "chrome://global/content/aboutRights.xhtml",
+    uri: "chrome://browser/content/aboutRights.xhtml",
 #else
     uri: "chrome://global/content/aboutRights-unbranded.xhtml",
 #endif

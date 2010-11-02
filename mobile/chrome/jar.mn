@@ -15,6 +15,7 @@ chrome.jar:
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)
   content/aboutCertError.css           (content/aboutCertError.css)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
+* content/aboutRights.xhtml            (content/aboutRights.xhtml)
   content/languages.properties         (content/languages.properties)
 * content/browser.xul                  (content/browser.xul)
 * content/browser.js                   (content/browser.js)
