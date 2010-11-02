@@ -500,7 +500,7 @@
     <vbox id="awesome-panels" hidden="true">
       <!-- Awesome header row -->
       <hbox id="awesome-header" class="panel-row-header">
-        <toolbarbutton type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all panel-row-button show-text" checked="true"/>
+        <toolbarbutton type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all panel-row-button show-text"/>
         <toolbarbutton type="radio" group="awesome-header" label="&bookmarksHeader.label;" command="cmd_bookmarks" class="choice-bookmarks panel-row-button show-text"/>
         <toolbarbutton type="radio" group="awesome-header" label="&historyHeader.label;" command="cmd_history" class="choice-history panel-row-button show-text"/>
 #ifdef MOZ_SERVICES_SYNC
