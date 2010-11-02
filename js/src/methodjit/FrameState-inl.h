@@ -688,7 +688,7 @@ FrameState::forgetType(FrameEntry *fe)
 }
 
 inline void
-FrameState::learnType(FrameEntry *fe, JSValueType type)
+FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
 {
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
@@ -696,6 +696,8 @@ FrameState::learnType(FrameEntry *fe, JSValueType type)
     fe->isNumber = false;
 #endif
     fe->setType(type);
+    if (unsync)
+        fe->type.unsync();
 }
 
 inline JSC::MacroAssembler::Address

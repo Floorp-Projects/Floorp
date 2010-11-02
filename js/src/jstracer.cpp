@@ -266,8 +266,8 @@ TypeToChar(JSValueType type)
       case JSVAL_TYPE_STRORNULL: return 's';
       case JSVAL_TYPE_OBJORNULL: return 'o';
       case JSVAL_TYPE_UNINITIALIZED: return '*';
+      default: return '?';
     }
-    return '?';
 }
 
 static char

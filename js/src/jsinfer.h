@@ -229,6 +229,9 @@ struct TypeSet
     void addFreezeProp(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, jsid id);
     void addFreezeElem(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *object);
 
+    /* Get any type tag which all values in this set must have. */
+    inline JSValueType getKnownTypeTag();
+
     /*
      * Make an intermediate type set with the specified debugging name,
      * not embedded in another structure.

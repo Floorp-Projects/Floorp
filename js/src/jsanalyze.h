@@ -151,6 +151,12 @@ struct Bytecode
      */
     inline types::TypeObject* getInitObject(JSContext *cx, bool isArray);
 
+    /*
+     * Get the type tag which values in this set must have, or JSVAL_TYPE_UNKNOWN
+     * if the type tag is not known.
+     */
+    inline JSValueType getKnownTypeTag();
+
     void print(JSContext *cx, FILE *out);
 
 #endif /* JS_TYPE_INFERENCE */
