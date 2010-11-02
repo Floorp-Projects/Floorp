@@ -96,9 +96,10 @@ const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
 
 var BrowserUI = {
-  _edit : null,
-  _throbber : null,
-  _favicon : null,
+  _edit: null,
+  _title: null,
+  _throbber: null,
+  _favicon: null,
   _dialogs: [],
 
   _domWillOpenModalDialog: function(aBrowser) {
@@ -124,7 +125,13 @@ var BrowserUI = {
     if (Util.isURLEmpty(url))
       caption = "";
 
-    this._setURI(caption);
+    if (caption) {
+      this._title.value = caption;
+      this._title.classList.remove("placeholder");
+    } else {
+      this._title.value = this._title.getAttribute("placeholder");
+      this._title.classList.add("placeholder");
+    }
   },
 
   /*
@@ -191,18 +198,16 @@ var BrowserUI = {
       document.getElementById("toolbar-moveable-container").top = "";
   },
 
-  _setURI: function _setURI(aCaption) {
+  _setURL: function _setURL(aURL) {
     if (this.activePanel)
-      this._edit.defaultValue = aCaption;
+      this._edit.defaultValue = aURL;
     else
-      this._edit.value = aCaption;
+      this._edit.value = aURL;
   },
 
   _editURI: function _editURI(aEdit) {
     Elements.urlbarState.setAttribute("mode", "edit");
     this._edit.defaultValue = this._edit.value;
-
-    this._showURI();
   },
 
   _showURI: function _showURI() {
@@ -421,6 +426,7 @@ var BrowserUI = {
 
   init: function() {
     this._edit = document.getElementById("urlbar-edit");
+    this._title = document.getElementById("urlbar-title");
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
@@ -432,8 +438,6 @@ var BrowserUI = {
 
     window.addEventListener("NavigationPanelShown", this, false);
     window.addEventListener("NavigationPanelHidden", this, false);
-
-    document.getElementById("toolbar-main").ignoreDrag = true;
 
     let tabs = document.getElementById("tabs");
     tabs.addEventListener("TabSelect", this, true);
@@ -572,7 +576,7 @@ var BrowserUI = {
     if (Util.isURLEmpty(urlString))
       urlString = "";
 
-    this._setURI(urlString);
+    this._setURL(urlString);
   },
 
   goToURI: function(aURI) {
@@ -841,11 +845,8 @@ var BrowserUI = {
         break;
       // URL textbox events
       case "click":
-        // if there is an already opened panel, keep it active (bug 596614).
-        if (this.activePanel && this._edit.readOnly)
+        if (this._edit.readOnly)
           this._edit.readOnly = false;
-        else if (!this.activePanel)
-          AllPagesList.doCommand();
         break;
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
@@ -863,7 +864,11 @@ var BrowserUI = {
         break;
       // Awesome popup event
       case "NavigationPanelShown":
-        this._edit.setAttribute("open", "true");
+        this._edit.collapsed = false;
+        this._title.collapsed = true;
+
+        if (!this._edit.readOnly)
+          this._edit.focus();
 
         // Disabled the search button if no search engines are available
         let button = document.getElementById("urlbar-icons");
@@ -874,7 +879,9 @@ var BrowserUI = {
 
         break;
       case "NavigationPanelHidden":
-        this._edit.removeAttribute("open");
+        this._edit.collapsed = true;
+        this._title.collapsed = false;
+
         document.getElementById("urlbar-icons").removeAttribute("disabled");
         break;
     }

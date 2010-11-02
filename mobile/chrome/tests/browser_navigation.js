@@ -74,11 +74,11 @@ gTests.push({
     is(forward.disabled, !gCurrentTest._currentTab.browser.canGoForward, "Forward button check");
 
     // Focus the url edit
-    let urlbarEdit = document.getElementById("urlbar-edit");
+    let urlbarTitle = document.getElementById("urlbar-title");
 
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
-    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
+    EventUtils.synthesizeMouse(urlbarTitle, urlbarTitle.width / 2, urlbarTitle.height / 2, {});
   },
 
   onFocusReady: function() {
@@ -173,8 +173,8 @@ gTests.push({
   },
 
   onPageReady: function() {
-    let urlbarEdit = document.getElementById("urlbar-edit");
-    is(urlbarEdit.value, "English Title Page", "The title must be displayed in urlbar");
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, "English Title Page", "The title must be displayed in urlbar");
     Browser.closeTab(gCurrentTest._currentTab);
     gCurrentTest._currentTab = BrowserUI.newTab(testURL_04);
 
@@ -186,8 +186,8 @@ gTests.push({
   },
 
   onPageReady2: function(){
-    let urlbarEdit = document.getElementById("urlbar-edit");
-    is(urlbarEdit.value, testURL_04, "The url for no title must be displayed in urlbar");
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, testURL_04, "The url for no title must be displayed in urlbar");
     Browser.closeTab(gCurrentTest._currentTab);
 
     // Check whether title appears after a pageload
@@ -200,12 +200,12 @@ gTests.push({
   },
 
   onPageReady3: function(){
-    let urlbarEdit = document.getElementById("urlbar-edit");
-    is(urlbarEdit.value, "Browser Blank Page 01", "The title of the first page must be displayed");
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, "Browser Blank Page 01", "The title of the first page must be displayed");
 
     // Wait for the awesomebar to load, then do the test
     window.addEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
-    EventUtils.synthesizeMouse(urlbarEdit, urlbarEdit.width / 2, urlbarEdit.height / 2, {});
+    EventUtils.synthesizeMouse(urlbarTitle, urlbarTitle.width / 2, urlbarTitle.height / 2, {});
   },
 
   onFocusReady: function() {
@@ -221,8 +221,8 @@ gTests.push({
   },
 
   onPageFinish: function() {
-    let urlbarEdit = document.getElementById("urlbar-edit");
-    is(urlbarEdit.value, "Browser Blank Page 02", "The title of the second page must be displayed");
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, "Browser Blank Page 02", "The title of the second page must be displayed");
     Browser.closeTab(gCurrentTest._currentTab);
     runNextTest();
   }

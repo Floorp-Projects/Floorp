@@ -521,10 +521,6 @@ var ScrollUtils = {
 
     for (; elem; elem = elem.parentNode) {
       try {
-        if (elem.ignoreDrag) {
-          break;
-        }
-
         if (elem.scrollBoxObject) {
           scrollbox = elem;
           qinterface = elem.scrollBoxObject;

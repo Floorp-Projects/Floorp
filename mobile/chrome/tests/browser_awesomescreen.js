@@ -48,8 +48,9 @@ gTests.push({
   },
 
   onPopupShown: function() {
-    is(BrowserUI.activePanel == AllPagesList, true, "AllPagesList should be visible");
-    is(BrowserUI._edit.hasAttribute("open"), true, "The urlbar edit element should have the open attribute");
+    is(BrowserUI.activePanel, AllPagesList, "AllPagesList should be visible");
+    ok(!BrowserUI._edit.collapsed, "The urlbar edit element is visible");
+    ok(BrowserUI._title.collapsed, "The urlbar title element is not visible");
 
     window.addEventListener("NavigationPanelHidden", function(aEvent) {
       window.removeEventListener(aEvent.type, arguments.callee, false);
@@ -60,8 +61,9 @@ gTests.push({
   },
 
   onPopupHidden: function() {
-    is(BrowserUI.activePanel == null, true, "AllPagesList should be dismissed");
-    is(BrowserUI._edit.hasAttribute("open"), false, "The urlbar edit element should not have the open attribute");
+    is(BrowserUI.activePanel, null, "AllPagesList should be dismissed");
+    ok(BrowserUI._edit.collapsed, "The urlbar edit element is not visible");
+    ok(!BrowserUI._title.collapsed, "The urlbar title element is visible");
 
     runNextTest();
   }
@@ -225,12 +227,9 @@ gTests.push({
 
     Panels.forEach(function(aPanel) {
       aPanel.doCommand();
-      // XXX for some reason the selectionStart == 0 && selectionEnd = edit.textLength
-      // even if visually there is no selection at all
-      todo_is(edit.selectionStart == edit.textLength && edit.selectionEnd == edit.textLength, true, "urlbar text should not be selected on a simple show");
-
+      ok(edit.selectionStart ==  edit.selectionEnd, "urlbar text should not be selected on a simple show");
       edit.click();
-      is(edit.selectionStart == 0 && edit.selectionEnd == edit.textLength, true, "urlbar text should be selected on a click");
+      ok(edit.selectionStart == 0 && edit.selectionEnd == edit.textLength, "urlbar text should be selected on a click");
 
     });
 
@@ -238,11 +237,9 @@ gTests.push({
     edit.clickSelectsAll = false;
     Panels.forEach(function(aPanel) {
       aPanel.doCommand();
-      // XXX for some reason the selectionStart == 0 && selectionEnd = edit.textLength
-      // even if visually there is no selection at all
-      todo_is(edit.selectionStart == edit.textLength && edit.selectionEnd == edit.textLength, true, "urlbar text should not be selected on a simple show");
+      ok(edit.selectionStart == edit.selectionEnd, "urlbar text should not be selected on a simple show");
       edit.click();
-      is(edit.selectionStart == edit.selectionEnd, true, "urlbar text should not be selected on a click");
+      ok(edit.selectionStart == edit.selectionEnd, "urlbar text should not be selected on a click");
     });
     edit.clickSelectsAll = oldClickSelectsAll;
 

@@ -242,18 +242,20 @@
                         <image id="urlbar-favicon" hidden="true"/>
                       </box>
                     </box>
+                    <label id="urlbar-title" class="uri-element" crop="end" flex="1"
+                           command="cmd_openLocation" onclick="this.doCommand();"
+                           placeholder="&urlbar.emptytext;"/>
                     <textbox id="urlbar-edit"
                              type="autocomplete"
                              class="uri-element"
                              autocompletesearch="history"
                              autocompletepopup="popup_autocomplete"
-                             enablehistory="false"
-                             maxrows="6"
                              completeselectedindex="true"
                              minresultsforpopup="0"
                              oncontextmenu="event.preventDefault();"
                              onsearchbegin="BrowserUI.updateAwesomeHeader(this.controller.searchString);"
                              placeholder="&urlbar.emptytext;"
+                             collapsed="true"
                              flex="1"
                              readonly="true"
                              ontextentered="BrowserUI.goToURI();"
