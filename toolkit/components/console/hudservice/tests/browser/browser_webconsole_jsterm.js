@@ -93,6 +93,18 @@ function testJSTerm()
   checkResult("valuesResult=true", "values() worked", 1);
 
   jsterm.clearOutput();
+  jsterm.execute("help()");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("help");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("?");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
   // Doesn't conform to checkResult format
   let label = jsterm.outputNode.querySelector(".jsterm-output-line");

@@ -3911,6 +3911,16 @@ function JSTermHelper(aJSTerm)
   };
 
   /**
+   * Opens a help window in MDC
+   */
+  aJSTerm.sandbox.help = function JSTH_help()
+  {
+    aJSTerm._window.open(
+        "https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=" +
+        aJSTerm._window.navigator.language, "help", "");
+  };
+
+  /**
    * Inspects the passed aObject. This is done by opening the PropertyPanel.
    *
    * @param object aObject
@@ -4052,6 +4062,10 @@ JSTerm.prototype = {
    */
   evalInSandbox: function JST_evalInSandbox(aString)
   {
+    // The help function needs to be easy to guess, so we make the () optional
+    if (aString.trim() === "help" || aString.trim() === "?") {
+      aString = "help()";
+    }
     return Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
   },
 
