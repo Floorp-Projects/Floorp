@@ -122,26 +122,11 @@ toolbarbutton.urlbar-button {
   color: #000;
   border-radius: 8px;
   margin: 8px;
-  background-image: url("chrome://browser/skin/images/button-bg.png");
+  background: url("chrome://browser/skin/images/button-bg.png") bottom left repeat-x;
 }
 
 #urlbar-container[mode="edit"] > #identity-box {
   visibility: collapse;
-}
-
-#urlbar-container[mode="edit"] > #urlbar-edit {
-  border-left: none;
-  border-right: 1px solid rgba(0,0,0,0.5);
-}
-
-#urlbar-container[mode="edit"] > #urlbar-edit:-moz-locale-dir(ltr) {
-  -moz-border-radius-topleft: 8px;
-  -moz-border-radius-bottomleft: 8px;
-}
-
-#urlbar-container[mode="edit"] > #urlbar-edit:-moz-locale-dir(rtl) {
-  -moz-border-radius-topright: 8px;
-  -moz-border-radius-bottomright: 8px;
 }
 
 /* URL bar cap buttons */
@@ -215,22 +200,44 @@ toolbarbutton.urlbar-button {
 }
 
 /* Main urlbar textbox */
-#urlbar-edit {
-  -moz-appearance: none !important;
-  min-height: 64px;
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 0;
-  border: 0 solid transparent;
-  border-left: 1px solid white;
-  border-right: 1px solid white;
-  background: transparent;
+#urlbar-title {
+  padding: 16px 8px;
 }
 
-#urlbar-edit[open="true"],
-#urlbar-edit:hover:active {
+#urlbar-title.placeholder {
+  color: gray;
+}
+
+#urlbar-edit,
+#urlbar-title {
+  margin: 0 !important;
+  border-left: 1px solid white;
+  border-right: 1px solid white;
+  min-height: 64px;
+}
+
+#urlbar-edit,
+#urlbar-title:hover:active {
   background-color: #f9f9f9;
-  background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
+  background: url("chrome://browser/skin/images/textbox-bg.png") bottom left repeat-x;
+}
+
+#urlbar-edit {
+  -moz-appearance: none !important;
+  border-radius: 0;
+  border: 0 solid transparent;
+  border-right: 1px solid rgba(0,0,0,0.5);
+  padding: 0 !important;
+}
+
+#urlbar-edit:-moz-locale-dir(ltr) {
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-bottomleft: 8px;
+}
+
+#urlbar-edit:-moz-locale-dir(rtl) {
+  -moz-border-radius-topright: 8px;
+  -moz-border-radius-bottomright: 8px;
 }
 
 #urlbar-edit > hbox > .textbox-input-box {

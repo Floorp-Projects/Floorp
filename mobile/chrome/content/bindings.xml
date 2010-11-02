@@ -76,7 +76,7 @@
               // but if the urlbar receive a keydown when it is readOnly this
               // could be because of a hardware keyboard or a user generated event.
               // In this case we want the text to be taken into account.
-              if (this.hasAttribute("open") && !this.hasAttribute("inactive") && this.readOnly &&
+              if (!this.collapsed && !this.hasAttribute("inactive") && this.readOnly &&
                   !(aEvent.originalTarget instanceof HTMLInputElement))
                 this.readOnly = false;
 
@@ -89,7 +89,7 @@
               break;
 
             case "PanBegin":
-              if (this.hasAttribute("open") && !this.readOnly) {
+              if (!this.collapsed && !this.readOnly) {
                 this.readOnly = true;
                 this.blur();
               }
@@ -100,13 +100,6 @@
     </implementation>
 
     <handlers>
-      <handler event="ValueChange" phase="bubbling">
-        <![CDATA[
-          if (this.readOnly)
-            this.inputField.selectionStart = this.inputField.selectionEnd = 0;
-        ]]>
-      </handler>
-
       <handler event="text" phase="bubbling">
         <![CDATA[
           if (this.mController.input == this)
