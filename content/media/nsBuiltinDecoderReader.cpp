@@ -148,6 +148,7 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   data.mPicX = aInfo.mPicture.x;
   data.mPicY = aInfo.mPicture.y;
   data.mPicSize = gfxIntSize(aInfo.mPicture.width, aInfo.mPicture.height);
+  data.mStereoMode = aInfo.mStereoMode;
 
   videoImage->SetData(data); // Copies buffer
   return v.forget();
