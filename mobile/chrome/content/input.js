@@ -51,9 +51,6 @@ const kDoubleClickRadius = 100;
 // Amount of time to wait before tap becomes long tap
 const kLongTapWait = 500;
 
-// threshold in pixels for sensing a tap as opposed to a pan
-const kTapRadius = Services.prefs.getIntPref("ui.dragThresholdX");
-
 // maximum drag distance in pixels while axis locking can still be reverted
 const kAxisLockRevertThreshold = 200;
 
@@ -91,7 +88,7 @@ const kStateActive = 0x00000001;
  * the defaultDragger prototype property.
  */
 function MouseModule() {
-  this._dragData = new DragData(kTapRadius);
+  this._dragData = new DragData();
 
   this._dragger = null;
   this._inputField = null;
@@ -302,6 +299,13 @@ MouseModule.prototype = {
         }
       }
     }
+    else if (!dragData.dragging && this._downUpEvents.length) {
+      let oldEvent = this._downUpEvents[0];
+      dragData._isPan = ScrollUtils.isPan(new Point(oldEvent.clientX, oldEvent.clientY),
+                                          new Point(aEvent.clientX, aEvent.clientY));
+      if (dragData.isPan())
+        this._longClickTimeout.clear();
+    }
   },
 
   /**
@@ -497,6 +501,12 @@ MouseModule.prototype = {
 };
 
 var ScrollUtils = {
+  // threshold in pixels for sensing a tap as opposed to a pan
+  get tapRadius() {
+    delete this.tapRadius;
+    return this.tapRadius = Services.prefs.getIntPref("ui.dragThresholdX");
+  },
+
   /**
    * Walk up (parentward) the DOM tree from elem in search of a scrollable element.
    * Return the element and its scroll interface if one is found, two nulls otherwise.
@@ -536,6 +546,17 @@ var ScrollUtils = {
                        prefer default behaviour to whiny scrollers. */ }
     }
     return [scrollbox, qinterface, (scrollbox ? (scrollbox.customDragger || this._defaultDragger) : null)];
+  },
+
+  /**
+   * Determine is the distance between two points can be considered as a pan
+   * action by using the same drag threshold as the one use in the platform 
+   * ui.dragThresholdX
+   */
+  isPan: function isPan(aPoint, aPoint2) {
+    let distanceSquared = (Math.pow(aPoint.x - aPoint2.x, 2) +
+                           Math.pow(aPoint.y - aPoint2.y, 2));
+    return distanceSquared > Math.pow(this.tapRadius, 2);
   },
 
   /**
@@ -583,8 +604,7 @@ var ScrollUtils = {
  * DragData handles processing drags on the screen, handling both
  * locking of movement on one axis, and click detection.
  */
-function DragData(dragRadius) {
-  this._dragRadius = dragRadius;
+function DragData() {
   this._domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
   this.reset();
 };
@@ -622,8 +642,7 @@ DragData.prototype = {
   setDragPosition: function setDragPosition(sX, sY) {
     // Check if drag is now a pan.
     if (!this._isPan) {
-      let distanceSquared = (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2));
-      this._isPan = (distanceSquared > Math.pow(this._dragRadius, 2));
+      this._isPan = ScrollUtils.isPan(new Point(this._originX, this._originY), new Point(sX, sY));
       if (this._isPan)
         this._resetActive();
     }

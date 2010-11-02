@@ -553,11 +553,10 @@
       <handler event="click" button="0">
         <![CDATA[
           let target = event.originalTarget;
-          if (target._empty)
-            return;
-
-          this._selectedIndex = target._index;
-          this.input.controller.handleEnter(true);
+          if (target._empty == false) {
+            this._selectedIndex = target._index;
+            this.input.controller.handleEnter(true);
+          }
         ]]>
       </handler>
     </handlers>
