@@ -1055,6 +1055,37 @@ Load(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+Evaluate(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             (argc != 1) ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_INVALID_ARGS,
+                             "evaluate");
+        return false;
+    }
+
+    JSString *code = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
+
+    size_t codeLength;
+    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
+    if (!codeChars)
+        return false;
+
+    JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
+    if (!thisobj)
+        return false;
+
+    if ((JS_GET_CLASS(cx, thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                             "this-value passed to evaluate()", "not a global object");
+        return false;
+    }
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 0, NULL);
+}
+
 /*
  * function readline()
  * Provides a hook for scripts to read a line from stdin.
@@ -4265,12 +4296,12 @@ StringStats(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-/* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
     JS_FN("revertVersion",  RevertVersion,  0,0),
     JS_FN("options",        Options,        0,0),
     JS_FN("load",           Load,           1,0),
+    JS_FN("evaluate",       Evaluate,       1,0),
     JS_FN("readline",       ReadLine,       0,0),
     JS_FN("print",          Print,          0,0),
     JS_FN("putstr",         PutStr,         0,0),
@@ -4372,6 +4403,7 @@ static const char *const shell_help_messages[] = {
 "revertVersion()          Revert previously set version number",
 "options([option ...])    Get or toggle JavaScript options",
 "load(['foo.js' ...])     Load files named by string arguments",
+"evaluate(code)           Evaluate code as though it were the contents of a file",
 "readline()               Read a single line from stdin",
 "print([exp ...])         Evaluate and print expressions",
 "putstr([exp])            Evaluate and print expression without newline",
