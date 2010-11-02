@@ -481,9 +481,10 @@ argumentUnboxingTemplates = {
         "        return JS_FALSE;\n",
 
     'string':
-        "    char *${name};\n"
-        "    if (!xpc_qsJsvalToCharStr(cx, ${argVal}, ${argPtr}, &${name}))\n"
-        "        return JS_FALSE;\n",
+        "    JSAutoByteString ${name}_bytes;\n"
+        "    if (!xpc_qsJsvalToCharStr(cx, ${argVal}, &${name}_bytes))\n"
+        "        return JS_FALSE;\n"
+        "    char *${name} = ${name}_bytes.ptr();\n",
 
     'wstring':
         "    PRUnichar *${name};\n"

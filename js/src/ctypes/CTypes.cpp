@@ -513,18 +513,17 @@ JSBool
 TypeError(JSContext* cx, const char* expected, jsval actual)
 {
   JSString* str = JS_ValueToSource(cx, actual);
-  js::AutoStringRooter root(cx, str);
-
+  JSAutoByteString bytes;
+  
   const char* src;
   if (str) {
-    src = JS_GetStringBytesZ(cx, str);
+    src = bytes.encode(cx, str);
     if (!src)
       return false;
   } else {
     JS_ClearPendingException(cx);
     src = "<<error converting value to string>>";
   }
-
   JS_ReportErrorNumber(cx, GetErrorMessage, NULL,
                        CTYPESMSG_TYPE_ERROR, expected, src);
   return false;
@@ -4331,11 +4330,11 @@ StructType::LookupField(JSContext* cx, JSObject* obj, JSString *name)
   if (ptr)
     return &ptr->value;
 
-  const char* bytes = JS_GetStringBytesZ(cx, name);
+  JSAutoByteString bytes(cx, name);
   if (!bytes)
     return NULL;
 
-  JS_ReportError(cx, "%s does not name a field", bytes);
+  JS_ReportError(cx, "%s does not name a field", bytes.ptr());
   return NULL;
 }
 

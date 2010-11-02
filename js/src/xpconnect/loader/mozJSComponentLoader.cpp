@@ -226,8 +226,11 @@ Atob(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
+    JSAutoByteString base64Bytes(cx, str);
+    if (!base64Bytes)
+        return JS_FALSE;
+    const char *base64Str = base64Bytes.ptr();
     size_t base64StrLength = JS_GetStringLength(str);
-    char *base64Str = JS_GetStringBytes(str);
 
     PRUint32 bin_dataLength = (PRUint32)base64StrLength;
     if (base64StrLength >= 1 && base64Str[base64StrLength - 1] == '=') {
@@ -262,7 +265,10 @@ Btoa(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
-    char *bin_data = JS_GetStringBytes(str);
+    JSAutoByteString bin_dataBytes(cx, str);
+    if (!bin_dataBytes)
+        return JS_FALSE;
+    const char *bin_data = bin_dataBytes.ptr();
     size_t bin_dataLength = JS_GetStringLength(str);
 
     char *base64 = PL_Base64Encode(bin_data, bin_dataLength, nsnull);
@@ -1533,9 +1539,12 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             }
 
             if (!JS_GetPropertyById(mContext, mod->global, symbolId, &val)) {
+                JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
+                if (!bytes)
+                    return NS_ERROR_FAILURE;
                 return ReportOnCaller(cxhelper, ERROR_GETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
-                                      JS_GetStringBytes(JSID_TO_STRING(symbolId)));
+                                      bytes.ptr());
             }
 
             JSAutoEnterCompartment target_ac;
@@ -1543,15 +1552,20 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             if (!target_ac.enter(mContext, targetObj) ||
                 !JS_WrapValue(mContext, &val) ||
                 !JS_SetPropertyById(mContext, targetObj, symbolId, &val)) {
+                JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
+                if (!bytes)
+                    return NS_ERROR_FAILURE;
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
                                       PromiseFlatCString(aLocation).get(),
-                                      JS_GetStringBytes(JSID_TO_STRING(symbolId)));
+                                      bytes.ptr());
             }
 #ifdef DEBUG
             if (i == 0) {
                 logBuffer.AssignLiteral("Installing symbols [ ");
             }
-            logBuffer.Append(JS_GetStringBytes(JSID_TO_STRING(symbolId)));
+            JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
+            if (!!bytes)
+                logBuffer.Append(bytes.ptr());
             logBuffer.AppendLiteral(" ");
             if (i == symbolCount - 1) {
                 LOG(("%s] from %s\n", PromiseFlatCString(logBuffer).get(),
