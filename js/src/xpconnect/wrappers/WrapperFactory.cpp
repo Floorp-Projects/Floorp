@@ -71,7 +71,7 @@ DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
 {
     if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
         js::SwitchToCompartment sc(cx, obj->compartment());
-        return JSWrapper::New(cx, obj, NULL, obj->getParent(),
+        return JSWrapper::New(cx, obj, NULL, obj->getGlobal(),
                               &WaiveXrayWrapperWrapper);
     }
     return obj;
@@ -323,7 +323,7 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 
     {
         js::SwitchToCompartment sc(cx, obj->compartment());
-        obj = JSWrapper::New(cx, obj, NULL, obj->getParent(), &WaiveXrayWrapperWrapper);
+        obj = JSWrapper::New(cx, obj, NULL, obj->getGlobal(), &WaiveXrayWrapperWrapper);
         if (!obj)
             return false;
     }
