@@ -131,15 +131,43 @@ HistoryStore.prototype = {
     return guid;
   },
 
-  GUIDForUri: function GUIDForUri(uri, create) {
-    try {
-      // Use the existing GUID if it exists
-      return Utils.anno(uri, GUID_ANNO);
-    } catch (ex) {
-      // Give the uri a GUID if it doesn't have one
-      if (create)
-        return this.setGUID(uri);
+  get _guidStm() {
+    let base =
+      "SELECT a.content AS guid " +
+      "FROM moz_annos a " +
+      "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id ";
+    let stm;
+    if (this._haveTempTables) {
+      // Gecko <2.0
+      stm = this._getStmt(base +
+        "JOIN ( " +
+          "SELECT id FROM moz_places_temp WHERE url = :page_url " +
+          "UNION " +
+          "SELECT id FROM moz_places WHERE url = :page_url " +
+        ") AS h ON h.id = a.place_id " +
+        "WHERE n.name = :anno_name");
+    } else {
+      // Gecko 2.0
+      stm = this._getStmt(base +
+        "JOIN moz_places h ON h.id = a.place_id " +
+        "WHERE n.name = :anno_name AND h.url = :page_url");
     }
+    stm.params.anno_name = GUID_ANNO;
+    return stm;
+  },
+
+  GUIDForUri: function GUIDForUri(uri, create) {
+    let stm = this._guidStm;
+    stm.params.page_url = uri.spec ? uri.spec : uri;
+
+    // Use the existing GUID if it exists
+    let result = Utils.queryAsync(stm, ["guid"])[0];
+    if (result)
+      return result.guid;
+
+    // Give the uri a GUID if it doesn't have one
+    if (create)
+      return this.setGUID(uri);
   },
 
   get _visitStm() {
