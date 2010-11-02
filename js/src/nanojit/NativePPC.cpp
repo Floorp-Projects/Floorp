@@ -737,7 +737,7 @@ namespace nanojit
                 // GP arg
                 if (r <= R10) {
                     asm_regarg(ty, arg, r);
-                    r = Register(r + 1);
+                    r = r + 1;
                     param_size += sizeof(void*);
                 } else {
                     // put arg on stack
@@ -747,11 +747,11 @@ namespace nanojit
                 // double
                 if (fr <= F13) {
                     asm_regarg(ty, arg, fr);
-                    fr = Register(fr + 1);
+                    fr = fr + 1;
                 #ifdef NANOJIT_64BIT
-                    r = Register(r + 1);
+                    r = r + 1;
                 #else
-                    r = Register(r + 2); // skip 2 gpr's
+                    r = r + 2; // Skip 2 GPRs.
                 #endif
                     param_size += sizeof(double);
                 } else {
@@ -1335,7 +1335,7 @@ namespace nanojit
         // patch 64bit branch
         else if ((branch[0] & ~(31<<21)) == PPC_addis) {
             // general branch, using lis,ori,sldi,oris,ori to load the const 64bit addr.
-            Register rd = Register((branch[0] >> 21) & 31);
+            Register rd = { (branch[0] >> 21) & 31 };
             NanoAssert(branch[1] == PPC_ori  | GPR(rd)<<21 | GPR(rd)<<16);
             NanoAssert(branch[3] == PPC_oris | GPR(rd)<<21 | GPR(rd)<<16);
             NanoAssert(branch[4] == PPC_ori  | GPR(rd)<<21 | GPR(rd)<<16);
@@ -1352,7 +1352,7 @@ namespace nanojit
         else if ((branch[0] & ~(31<<21)) == PPC_addis) {
             // general branch, using lis,ori to load the const addr.
             // patch a lis,ori sequence with a 32bit value
-            Register rd = Register((branch[0] >> 21) & 31);
+            Register rd = { (branch[0] >> 21) & 31 };
             NanoAssert(branch[1] == PPC_ori | GPR(rd)<<21 | GPR(rd)<<16);
             uint32_t imm = uint32_t(target);
             branch[0] = PPC_addis | GPR(rd)<<21 | uint16_t(imm >> 16); // lis rd, imm >> 16
@@ -1367,7 +1367,7 @@ namespace nanojit
     static int cntzlw(int set) {
         // On PowerPC, prefer higher registers, to minimize
         // size of nonvolatile area that must be saved.
-        register Register i;
+        register uint32_t i;
         #ifdef __GNUC__
         asm ("cntlzw %0,%1" : "=r" (i) : "r" (set));
         #else // __GNUC__
@@ -1377,15 +1377,16 @@ namespace nanojit
     }
 
     Register Assembler::nRegisterAllocFromSet(RegisterMask set) {
-        Register i;
+        uint32_t i;
         // note, deliberate truncation of 64->32 bits
         if (set & 0xffffffff) {
-            i = Register(cntzlw(int(set))); // gp reg
+            i = cntzlw(int(set)); // gp reg
         } else {
-            i = Register(32+cntzlw(int(set>>32))); // fp reg
+            i = 32 + cntzlw(int(set>>32)); // fp reg
         }
-        _allocator.free &= ~rmask(i);
-        return i;
+        Register r = { i };
+        _allocator.free &= ~rmask(r);
+        return r;
     }
 
     void Assembler::nRegisterResetAll(RegAlloc &regs) {
