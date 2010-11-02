@@ -5356,9 +5356,10 @@ TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
      * already.  This lets us detect if the comparison is optimized to 0 or 1,
      * in which case we avoid the guard() call below.
      */
-    ensureCond(&x, &cond);
-    if (!x->isImmI())
+    if (!x->isImmI()) {
+        ensureCond(&x, &cond);
         guard(cond, x, exitType);
+    }
 }
 
 /* Emit code for a fused IFEQ/IFNE. */
