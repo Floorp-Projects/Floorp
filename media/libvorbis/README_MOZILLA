@@ -3,10 +3,9 @@ subversion repository using the update.sh script. The only changes
 made were those applied by update.sh and the addition/upate of
 Makefile.in files for the Mozilla build system.
 
-The upstream release used was libvorbis 1.3.1.
+The upstream release used was libvorbis 1.3.2 (SVN r17614).
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.
 
 alloca.diff - Bug 469639 - Failed to build firefox trunk on OpenSolaris
-bug487519.patch: fix for bug 487519.
