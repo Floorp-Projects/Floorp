@@ -319,6 +319,10 @@ class Compiler : public BaseCompiler
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
     void addCallSite(uint32 id, bool stub);
+    void restoreAnalysisTypes(uint32 stackDepth);
+    JSValueType knownArgumentType(uint32 arg);
+    JSValueType knownLocalType(uint32 local);
+    JSValueType knownPushedType(uint32 pushed);
 
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);

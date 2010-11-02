@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// inline members for javascript type inference.
+/* Inline members for javascript type inference. */
 
 #include "jsanalyze.h"
 #include "jscompartment.h"
@@ -767,6 +767,22 @@ Script::getArgumentId(unsigned index)
     return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[index]));
 }
 
+inline types::TypeSet*
+Script::getStackTypes(unsigned index, types::TypeStack *stack)
+{
+    JS_ASSERT(index >= script->nfixed);
+
+    stack = stack->group();
+    while (stack && (stack->stackDepth != index - script->nfixed)) {
+        stack = stack->innerStack;
+        stack = stack ? stack->group() : NULL;
+    }
+
+    /* This should not be used for accessing a let variable's stack slot. */
+    JS_ASSERT(stack && !JSID_IS_VOID(stack->letVariable));
+    return &stack->types;
+}
+
 } /* namespace analyze */
 
 /////////////////////////////////////////////////////////////////////
@@ -1115,6 +1131,27 @@ TypeSet::addType(JSContext *cx, jstype type)
     }
 
     cx->compartment->types.resolvePending(cx);
+}
+
+inline JSValueType
+TypeSet::getKnownTypeTag()
+{
+    switch (typeFlags) {
+      case TYPE_FLAG_UNDEFINED:
+        return JSVAL_TYPE_UNDEFINED;
+      case TYPE_FLAG_NULL:
+        return JSVAL_TYPE_NULL;
+      case TYPE_FLAG_BOOLEAN:
+        return JSVAL_TYPE_BOOLEAN;
+      case TYPE_FLAG_INT32:
+        return JSVAL_TYPE_INT32;
+      case TYPE_FLAG_STRING:
+        return JSVAL_TYPE_STRING;
+      case TYPE_FLAG_OBJECT:
+        return JSVAL_TYPE_OBJECT;
+      default:
+        return JSVAL_TYPE_UNKNOWN;
+    }
 }
 
 inline TypeSet *

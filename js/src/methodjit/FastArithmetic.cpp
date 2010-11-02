@@ -460,7 +460,12 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
 
     /* Finish up stack operations. */
     frame.popn(2);
-    frame.pushNumber(regs.result, true);
+
+    JSValueType type = knownPushedType(0);
+    if (type != JSVAL_TYPE_UNKNOWN)
+        frame.pushTypedPayload(type, regs.result);
+    else
+        frame.pushNumber(regs.result, true);
 
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())
@@ -707,7 +712,12 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
 
     /* Finish up stack operations. */
     frame.popn(2);
-    frame.pushNumber(regs.result, true);
+
+    JSValueType type = knownPushedType(0);
+    if (type != JSVAL_TYPE_UNKNOWN)
+        frame.pushTypedPayload(type, regs.result);
+    else
+        frame.pushNumber(regs.result, true);
 
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())
@@ -934,7 +944,12 @@ mjit::Compiler::jsop_mod()
     }
 
     frame.popn(2);
-    frame.pushNumber(X86Registers::edx);
+
+    JSValueType type = knownPushedType(0);
+    if (type != JSVAL_TYPE_UNKNOWN)
+        frame.pushTypedPayload(type, X86Registers::edx);
+    else
+        frame.pushNumber(X86Registers::edx, true);
 
     if (slowPath)
         stubcc.rejoin(Changes(1));
