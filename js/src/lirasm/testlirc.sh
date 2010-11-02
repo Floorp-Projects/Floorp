@@ -26,7 +26,8 @@ function runtest {
         exit 1
     fi
 
-    if $LIRASM $options --execute $infile | tr -d '\r' > testoutput.txt && cmp -s testoutput.txt $outfile
+    # sed used to strip extra leading zeros from exponential values 'e+00' (see bug 602786)
+    if $LIRASM $options --execute $infile | tr -d '\r' | sed -e 's/e\+00*/e\+0/g' > testoutput.txt && cmp -s testoutput.txt $outfile
     then
         echo "TEST-PASS | lirasm | lirasm $options --execute $infile"
     else
