@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: psychoacoustics not including preecho
- last mod: $Id: psy.c 17077 2010-03-26 06:22:19Z xiphmont $
+ last mod: $Id: psy.c 17569 2010-10-26 17:09:47Z xiphmont $
 
  ********************************************************************/
 
@@ -1160,14 +1160,22 @@ void _vp_couple_quantize_normalize(int blobno,
                     However, this is a temporary patch.
                     by Aoyumi @ 2004/04/18
                 */
-                float derate = (1.0 - de*((float)(j-limit+i) / (float)(n-limit)));
-
-                /* elliptical */
+                /*float derate = (1.0 - de*((float)(j-limit+i) / (float)(n-limit)));
+                /* elliptical 
                 if(reM[j]+reA[j]<0){
                   reM[j] = - (qeM[j] = (fabs(reM[j])+fabs(reA[j]))*derate*derate);
                 }else{
                   reM[j] =   (qeM[j] = (fabs(reM[j])+fabs(reA[j]))*derate*derate);
+                  }*/
+
+                /* elliptical */
+                if(reM[j]+reA[j]<0){
+                  reM[j] = - (qeM[j] = fabs(reM[j])+fabs(reA[j]));
+                }else{
+                  reM[j] =   (qeM[j] = fabs(reM[j])+fabs(reA[j]));
                 }
+
+
               }
               reA[j]=qeA[j]=0.f;
               fA[j]=1;
