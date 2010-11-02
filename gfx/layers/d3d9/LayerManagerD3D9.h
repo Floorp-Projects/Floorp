@@ -175,11 +175,6 @@ public:
    */ 
   Nv3DVUtils *GetNv3DVUtils()  { return mDeviceManager ? mDeviceManager->GetNv3DVUtils() : NULL; } 
 
-  /** 
-   * Indicate whether 3D is enabled or not 
-   */ 
-  PRBool Is3DEnabled() { return mIs3DEnabled; } 
-
   static void OnDeviceManagerDestroy(DeviceManagerD3D9 *aDeviceManager) {
     if(aDeviceManager == mDefaultDeviceManager)
       mDefaultDeviceManager = nsnull;
@@ -211,9 +206,6 @@ private:
 
   /* Callback info for current transaction */
   CallbackInfo mCurrentCallbackInfo;
-
-  /* Flag that indicates whether 3D is enabled or not*/ 
-  PRBool mIs3DEnabled; 
 
   /*
    * Region we're clipping our current drawing to.

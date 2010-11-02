@@ -46,6 +46,14 @@
 namespace mozilla {
 namespace layers {
 
+enum StereoMode {
+  STEREO_MODE_MONO,
+  STEREO_MODE_LEFT_RIGHT,
+  STEREO_MODE_RIGHT_LEFT,
+  STEREO_MODE_BOTTOM_TOP,
+  STEREO_MODE_TOP_BOTTOM
+};
+
 /**
  * A class representing a buffer of pixel data. The data can be in one
  * of various formats including YCbCr.
@@ -277,6 +285,7 @@ public:
     PRUint32 mPicX;
     PRUint32 mPicY;
     gfxIntSize mPicSize;
+    StereoMode mStereoMode;
   };
 
   enum {

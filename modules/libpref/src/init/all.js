@@ -189,8 +189,6 @@ pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
-pref("gfx.3d_video.enabled", false);
-
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.sanitize", true);
 #ifdef XP_MACOSX

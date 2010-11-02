@@ -59,6 +59,7 @@ public:
       mAudioRate(0),
       mAudioChannels(0),
       mFrame(0,0),
+      mStereoMode(mozilla::layers::STEREO_MODE_MONO),
       mHasAudio(PR_FALSE),
       mHasVideo(PR_FALSE)
   {}
@@ -81,6 +82,9 @@ public:
   // The offset of the first non-header page in the file, in bytes.
   // Used to seek to the start of the media.
   PRInt64 mDataOffset;
+
+  // Indicates the frame layout for single track stereo videos.
+  mozilla::layers::StereoMode mStereoMode;
 
   // PR_TRUE if we have an active audio bitstream.
   PRPackedBool mHasAudio;
