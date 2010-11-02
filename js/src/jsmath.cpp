@@ -115,8 +115,8 @@ Class js_MathClass = {
     ConvertStub
 };
 
-static JSBool
-math_abs(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js_math_abs(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble x, z;
 
@@ -669,20 +669,19 @@ math_toSource(JSContext *cx, uintN argc, Value *vp)
 
 #ifdef JS_TRACER
 
-#define MATH_BUILTIN_1(name) MATH_BUILTIN_CFUN_1(name, name)
-#define MATH_BUILTIN_CFUN_1(name, cfun)                                       \
-    static jsdouble FASTCALL math_##name##_tn(MathCache *cache, jsdouble d) { \
+#define MATH_BUILTIN_1(name, cfun)                                            \
+    static jsdouble FASTCALL name##_tn(MathCache *cache, jsdouble d) {        \
         return cache->lookup(cfun, d);                                        \
     }                                                                         \
-    JS_DEFINE_TRCINFO_1(math_##name,                                          \
-        (2, (static, DOUBLE, math_##name##_tn, MATHCACHE, DOUBLE, 1, nanojit::ACCSET_NONE)))
+    JS_DEFINE_TRCINFO_1(name,                                                 \
+        (2, (static, DOUBLE, name##_tn, MATHCACHE, DOUBLE, 1, nanojit::ACCSET_NONE)))
 
-MATH_BUILTIN_CFUN_1(abs, fabs)
-MATH_BUILTIN_1(atan)
-MATH_BUILTIN_1(sin)
-MATH_BUILTIN_1(cos)
-MATH_BUILTIN_1(sqrt)
-MATH_BUILTIN_1(tan)
+MATH_BUILTIN_1(js_math_abs, fabs)
+MATH_BUILTIN_1(math_atan, atan)
+MATH_BUILTIN_1(math_sin, sin)
+MATH_BUILTIN_1(math_cos, cos)
+MATH_BUILTIN_1(math_sqrt, sqrt)
+MATH_BUILTIN_1(math_tan, tan)
 
 static jsdouble FASTCALL
 math_acos_tn(MathCache *cache, jsdouble d)
@@ -833,7 +832,7 @@ static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  math_toSource,        0, 0),
 #endif
-    JS_TN("abs",            math_abs,             1, 0, &math_abs_trcinfo),
+    JS_TN("abs",            js_math_abs,          1, 0, &js_math_abs_trcinfo),
     JS_TN("acos",           math_acos,            1, 0, &math_acos_trcinfo),
     JS_TN("asin",           math_asin,            1, 0, &math_asin_trcinfo),
     JS_TN("atan",           math_atan,            1, 0, &math_atan_trcinfo),

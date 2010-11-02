@@ -295,10 +295,11 @@ struct THEBES_API ContextFormat
     };
 
     ContextFormat() {
-        memset(this, 0, sizeof(this));
+        memset(this, 0, sizeof(*this));
     }
 
     ContextFormat(const StandardContextFormat cf) {
+        memset(this, 0, sizeof(*this));
         switch (cf) {
         case BasicRGBA32:
             red = green = blue = alpha = 8;

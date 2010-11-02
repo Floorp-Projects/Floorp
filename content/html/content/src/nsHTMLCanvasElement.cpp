@@ -56,11 +56,12 @@
 #define DEFAULT_CANVAS_HEIGHT 150
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 nsGenericHTMLElement*
 NS_NewHTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                        PRUint32 aFromParser)
+                        FromParser aFromParser)
 {
   return new nsHTMLCanvasElement(aNodeInfo);
 }

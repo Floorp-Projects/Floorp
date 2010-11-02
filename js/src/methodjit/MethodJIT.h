@@ -140,9 +140,74 @@ extern "C" void JaegerStubVeneer(void);
 #endif
 
 namespace mjit {
+
+/*
+ * Trampolines to force returns from jit code.
+ * See also TrampolineCompiler::generateForceReturn(Fast).
+ */
+struct Trampolines {
+    typedef void (*TrampolinePtr)();
+
+    TrampolinePtr       forceReturn;
+    JSC::ExecutablePool *forceReturnPool;
+
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
+    TrampolinePtr       forceReturnFast;
+    JSC::ExecutablePool *forceReturnFastPool;
+#endif
+};
+
+/*
+ * Method JIT compartment data. Currently, there is exactly one per
+ * JS compartment. It would be safe for multiple JS compartments to
+ * share a JaegerCompartment as long as only one thread can enter
+ * the JaegerCompartment at a time.
+ */
+class JaegerCompartment {
+    JSC::ExecutableAllocator *execAlloc;     // allocator for jit code
+    Trampolines              trampolines;    // force-return trampolines
+    VMFrame                  *activeFrame_;  // current active VMFrame
+
+    void Finish();
+
+  public:
+    bool Initialize();
+
+    ~JaegerCompartment() { Finish(); }
+
+    JSC::ExecutablePool *poolForSize(size_t size) {
+        return execAlloc->poolForSize(size);
+    }
+
+    VMFrame *activeFrame() {
+        return activeFrame_;
+    }
+
+    void pushActiveFrame(VMFrame *f) {
+        f->previous = activeFrame_;
+        activeFrame_ = f;
+    }
+
+    void popActiveFrame() {
+        JS_ASSERT(activeFrame_);
+        activeFrame_ = activeFrame_->previous;
+    }
+
+    Trampolines::TrampolinePtr forceReturnTrampoline() const {
+        return trampolines.forceReturn;
+    }
+
+#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
+    Trampolines::TrampolinePtr forceReturnFastTrampoline() const {
+        return trampolines.forceReturnFast;
+    }
+#endif
+};
+
 namespace ic {
 # if defined JS_POLYIC
     struct PICInfo;
+    struct GetElementIC;
 # endif
 # if defined JS_MONOIC
     struct MICInfo;
@@ -182,6 +247,7 @@ typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceI
 #endif
 #ifdef JS_POLYIC
 typedef void (JS_FASTCALL *VoidStubPIC)(VMFrame &, js::mjit::ic::PICInfo *);
+typedef void (JS_FASTCALL *VoidStubGetElemIC)(VMFrame &, js::mjit::ic::GetElementIC *);
 #endif
 
 namespace mjit {
@@ -212,6 +278,8 @@ struct JITScript {
 #ifdef JS_POLYIC
     ic::PICInfo     *pics;      /* PICs in this script */
     uint32          nPICs;      /* number of PolyICs */
+    ic::GetElementIC *getElems;
+    uint32           nGetElems;
 #endif
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */

@@ -387,14 +387,14 @@ add_test(function() {
       ];
 
       open_compatibility_window(inactiveAddonIds, function(aWindow) {
-      var doc = aWindow.document;
-      wait_for_page(aWindow, "mismatch", function(aWindow) {
-        var items = get_list_names(doc.getElementById("mismatch.incompatible"));
-        is(items.length, 1, "Should have seen 1 still incompatible items");
-        is(items[0], "Addon3 1.0", "Should have seen addon3 still incompatible");
+        var doc = aWindow.document;
+        wait_for_page(aWindow, "mismatch", function(aWindow) {
+          var items = get_list_names(doc.getElementById("mismatch.incompatible"));
+          is(items.length, 1, "Should have seen 1 still incompatible items");
+          is(items[0], "Addon3 1.0", "Should have seen addon3 still incompatible");
 
-        var button = doc.documentElement.getButton("next");
-        EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
+          var button = doc.documentElement.getButton("next");
+          EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
 
           wait_for_page(aWindow, "noupdates", function(aWindow) {
             var button = doc.documentElement.getButton("finish");

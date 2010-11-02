@@ -251,6 +251,7 @@ class nsCookieService : public nsICookieService
     static void                   FindStaleCookie(nsCookieEntry *aEntry, PRInt64 aCurrentTime, nsListIter &aIter);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);
+    void                          NotifyPurged(nsICookie2* aCookie);
 
   protected:
     // cached members.
