@@ -446,11 +446,15 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         break;
 
       case ACCSET_TARRAY_DATA:
-        // base_oprnd1 = ldp.tarray ...[TypedArray::dataOffset()]
+        // base = ldp.tarray/c ...[TypedArray::dataOffset()]
+        // ins  = {ld,st}X.tdata base[...]
+        //   OR
+        // base_oprnd1 = ldp.tarray/c ...[TypedArray::dataOffset()]
         // base        = addp base_oprnd1, ...
         // ins         = {ld,st}X.tdata base[...]
-        ok = base->isop(LIR_addp) &&
-             match(base->oprnd1(), LIR_ldp, ACCSET_TARRAY, TypedArray::dataOffset());
+        ok = match(base, LIR_ldp, ACCSET_TARRAY, LOAD_CONST, TypedArray::dataOffset()) ||
+             (base->isop(LIR_addp) &&
+              match(base->oprnd1(), LIR_ldp, ACCSET_TARRAY, LOAD_CONST, TypedArray::dataOffset()));
         break;
 
       case ACCSET_ITER:
