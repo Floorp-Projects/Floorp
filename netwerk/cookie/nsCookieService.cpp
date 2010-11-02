@@ -1324,6 +1324,15 @@ nsCookieService::NotifyChanged(nsISupports     *aSubject,
     mObserverService->NotifyObservers(aSubject, "cookie-changed", aData);
 }
 
+void
+nsCookieService::NotifyPurged(nsICookie2* aCookie)
+{
+  nsCOMPtr<nsIMutableArray> removedList =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  removedList->AppendElement(aCookie, PR_FALSE);
+  NotifyChanged(removedList, NS_LITERAL_STRING("batch-deleted").get());
+}
+
 /******************************************************************************
  * nsCookieService:
  * pref observer impl
@@ -2336,11 +2345,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
       RemoveCookieFromList(matchIter);
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
         "stale cookie was purged");
-
-      nsCOMPtr<nsIMutableArray> removedList =
-        do_CreateInstance(NS_ARRAY_CONTRACTID);
-      removedList->AppendElement(oldCookie, PR_FALSE);
-      NotifyChanged(removedList, NS_LITERAL_STRING("batch-deleted").get());
+      NotifyPurged(oldCookie);
 
       // We've done all we need to wrt removing and notifying the stale cookie.
       // From here on out, we pretend pretend it didn't exist, so that we
@@ -2389,11 +2394,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
       // remove the oldest cookie from the domain
       RemoveCookieFromList(iter);
       COOKIE_LOGEVICTED(oldCookie, "Too many cookies for this domain");
-
-      nsCOMPtr<nsIMutableArray> removedList =
-        do_CreateInstance(NS_ARRAY_CONTRACTID);
-      removedList->AppendElement(oldCookie, PR_FALSE);
-      NotifyChanged(removedList, NS_LITERAL_STRING("batch-deleted").get());
+      NotifyPurged(oldCookie);
 
     } else if (mDBState->cookieCount >= ADD_TEN_PERCENT(mMaxNumberOfCookies)) {
       PRInt64 maxAge = aCurrentTimeInUsec - mDBState->cookieOldestTime;
