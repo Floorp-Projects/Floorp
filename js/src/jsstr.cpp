@@ -181,7 +181,7 @@ JSString::flatten()
     JS_ASSERT(pos == length);
     /* Set null terminator. */
     chars[pos] = 0;
-    topNode->initFlatMutable(chars, pos, capacity);
+    topNode->initFlatExtensible(chars, pos, capacity);
 }
 
 #ifdef JS_TRACER
@@ -313,7 +313,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     if (right->isInteriorNode())
         right->flatten();
 
-    if (left->isMutable() && !right->isRope() &&
+    if (left->isExtensible() && !right->isRope() &&
         left->flatCapacity() >= length) {
         JS_ASSERT(left->isFlat());
 
@@ -327,7 +327,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         JSString *res = js_NewString(cx, chars, length);
         if (!res)
             return NULL;
-        res->initFlatMutable(chars, length, left->flatCapacity());
+        res->initFlatExtensible(chars, length, left->flatCapacity());
         left->initDependent(res, res->flatChars(), leftLen);
         return res;
     }
@@ -451,7 +451,7 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
         JS_RUNTIME_METER(cx->runtime, badUndependStrings);
         return JS_FALSE;
     }
-    str->flatClearMutable();
+    str->flatClearExtensible();
     return JS_TRUE;
 }
 
