@@ -401,6 +401,7 @@ namespace nanojit
         void SSE_STQsib(int32_t d, Register rb, Register ri, int32_t scale, Register rv); \
         void SSE_CVTSI2SD(Register xr, Register gr); \
         void SSE_CVTSD2SI(Register gr, Register xr); \
+        void SSE_CVTTSD2SI(Register gr, Register xr); \
         void SSE_CVTSD2SS(Register xr, Register gr); \
         void SSE_CVTSS2SD(Register xr, Register gr); \
         void SSE_CVTDQ2PD(Register d, Register r); \
