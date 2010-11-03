@@ -295,7 +295,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
                                            kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
   rv = NS_NewHTMLElement(getter_AddRefs(mPluginContent), nodeInfo.forget(),
-                         PR_FALSE);
+                         NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make it a named element

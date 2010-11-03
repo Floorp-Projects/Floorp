@@ -83,6 +83,10 @@
 #include "nsIConstraintValidation.h"
 #include "nsIEventStateManager.h"
 
+#include "nsIDOMHTMLButtonElement.h"
+
+using namespace mozilla::dom;
+
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 static const PRUint8 NS_FORM_AUTOCOMPLETE_ON  = 1;
@@ -232,12 +236,9 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 // construction, destruction
 nsGenericHTMLElement*
 NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                      PRUint32 aFromParser)
+                      FromParser aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
-  if (!it) {
-    return nsnull;
-  }
 
   nsresult rv = it->Init();
 
@@ -375,7 +376,7 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
+NS_IMPL_ACTION_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Autocomplete, autocomplete,
                                 kFormDefaultAutocomplete->tag)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Enctype, enctype,
@@ -385,17 +386,6 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Method, method,
 NS_IMPL_BOOL_ATTR(nsHTMLFormElement, NoValidate, novalidate)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
-
-NS_IMETHODIMP
-nsHTMLFormElement::GetMozActionUri(nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue);
-  if (aValue.IsEmpty()) {
-    // Avoid resolving action="" to the base uri, bug 297761.
-    return NS_OK;
-  }
-  return GetURIAttr(nsGkAtoms::action, nsnull, aValue);
-}
 
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
@@ -1431,17 +1421,29 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL,
   // from the form element should be used.
   //
   nsAutoString action;
-  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aOriginatingElement);
-  if (formControl && formControl->IsSubmitControl() &&
-      aOriginatingElement->GetAttr(kNameSpaceID_None, nsGkAtoms::formaction,
-                                   action)) {
-    // Avoid resolving action="" to the base uri, bug 297761.
-    if (!action.IsEmpty()) {
-      static_cast<nsGenericHTMLElement*>(aOriginatingElement)->
-        GetURIAttr(nsGkAtoms::formaction, nsnull, action);
+
+  if (aOriginatingElement &&
+      aOriginatingElement->HasAttr(kNameSpaceID_None, nsGkAtoms::formaction)) {
+#ifdef DEBUG
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aOriginatingElement);
+    NS_ASSERTION(formControl && formControl->IsSubmitControl(),
+                 "The originating element must be a submit form control!");
+#endif // DEBUG
+
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(aOriginatingElement);
+    if (inputElement) {
+      inputElement->GetFormAction(action);
+    } else {
+      nsCOMPtr<nsIDOMHTMLButtonElement> buttonElement = do_QueryInterface(aOriginatingElement);
+      if (buttonElement) {
+        buttonElement->GetFormAction(action);
+      } else {
+        NS_ERROR("Originating element must be an input or button element!");
+        return NS_ERROR_UNEXPECTED;
+      }
     }
   } else {
-    GetMozActionUri(action);
+    GetAction(action);
   }
 
   //

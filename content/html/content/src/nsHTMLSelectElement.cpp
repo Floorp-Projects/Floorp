@@ -140,13 +140,13 @@ nsSafeOptionListMutation::~nsSafeOptionListMutation()
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
 nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                         PRUint32 aFromParser)
+                                         FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mOptions(new nsHTMLOptionCollection(this)),
     mIsDoneAddingChildren(!aFromParser),
     mDisabledChanged(PR_FALSE),
     mMutating(PR_FALSE),
-    mInhibitStateRestoration(!!(aFromParser & NS_FROM_PARSER_FRAGMENT)),
+    mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
     mNonOptionChildren(0),
     mOptGroupCount(0),
     mSelectedIndex(-1)

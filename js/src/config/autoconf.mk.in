@@ -345,3 +345,16 @@ HAVE_ARM_SIMD= @HAVE_ARM_SIMD@
 
 JS_SHARED_LIBRARY = @JS_SHARED_LIBRARY@
 HAVE_LINUX_PERF_EVENT_H = @HAVE_LINUX_PERF_EVENT_H@
+
+# We only want to do the pymake sanity on Windows, other os's can cope
+ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
+# Ensure invariants between GNU Make and pymake
+# Checked here since we want the sane error in a file that
+# actually can be found regardless of path-style.
+ifeq (_:,$(.PYMAKE)_$(findstring :,$(srcdir)))
+$(error Windows-style srcdir being used with GNU make. Did you mean to run $(topsrcdir)/build/pymake/make.py instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
+endif
+ifeq (1_a,$(.PYMAKE)_$(firstword a$(subst /, ,$(srcdir))))
+$(error MSYS-style srcdir being used with Pymake. Did you mean to run GNU Make instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
+endif
+endif # Windows

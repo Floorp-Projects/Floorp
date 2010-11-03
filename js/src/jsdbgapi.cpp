@@ -62,6 +62,7 @@
 #include "jsscript.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
+#include "jswrapper.h"
 
 #include "jsatominlines.h"
 #include "jsinterpinlines.h"
@@ -107,6 +108,12 @@ IsScriptLive(JSContext *cx, JSScript *script)
 }
 #endif
 
+JS_PUBLIC_API(void)
+JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
+{
+    rt->debugMode = debug;
+}
+
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
 {
@@ -115,7 +122,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
     for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
          &script->links != &cx->compartment->scripts;
          script = (JSScript *)script->links.next) {
-        if (script->debugMode != debug &&
+        if (script->debugMode != (bool) debug &&
             script->hasJITCode() &&
             !IsScriptLive(cx, script)) {
             /*
@@ -124,7 +131,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
              * correctness. We set the debug flag to false so that the caller
              * will not later attempt to use debugging features.
              */
-            mjit::Recompiler recompiler(cx, script);
+            js::mjit::Recompiler recompiler(cx, script);
             if (!recompiler.recompile()) {
                 cx->compartment->debugMode = JS_FALSE;
                 return JS_FALSE;
@@ -274,7 +281,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
-        mjit::Recompiler recompiler(cx, script);
+        js::mjit::Recompiler recompiler(cx, script);
         if (!recompiler.recompile())
             return JS_FALSE;
     }
@@ -1180,9 +1187,13 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 {
     JS_ASSERT(cx->stack().contains(fp));
 
+    js::AutoCompartment ac(cx, &fp->scopeChain());
+    if (!ac.enter())
+        return NULL;
+
     /* Force creation of argument and call objects if not yet created */
     (void) JS_GetFrameCallObject(cx, fp);
-    return js_GetScopeChain(cx, fp);
+    return GetScopeChain(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1191,6 +1202,10 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
     JS_ASSERT(cx->stack().contains(fp));
 
     if (!fp->isFunctionFrame())
+        return NULL;
+
+    js::AutoCompartment ac(cx, &fp->scopeChain());
+    if (!ac.enter())
         return NULL;
 
     /* Force creation of argument object if not yet created */
@@ -1208,6 +1223,11 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv)
 {
     if (fp->isDummyFrame())
         return false;
+
+    js::AutoCompartment ac(cx, &fp->scopeChain());
+    if (!ac.enter())
+        return false;
+
     if (!fp->computeThis(cx))
         return false;
     *thisv = Jsvalify(fp->thisValue());
@@ -1269,6 +1289,7 @@ JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(void)
 JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval)
 {
+    assertSameCompartment(cx, fp, rval);
     fp->setReturnValue(Valueify(rval));
 }
 
@@ -1331,6 +1352,10 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     JSObject *scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
         return false;
+
+    js::AutoCompartment ac(cx, scobj);
+    if (!ac.enter())
+        return NULL;
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
@@ -1404,6 +1429,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                    JSPropertyDesc *pd)
 {
+    assertSameCompartment(cx, obj);
     Shape *shape = (Shape *) sprop;
     pd->id = IdToJsval(shape->id);
 
@@ -1457,6 +1483,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 {
+    assertSameCompartment(cx, obj);
     Class *clasp = obj->getClass();
     if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,

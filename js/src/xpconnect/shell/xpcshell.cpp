@@ -1957,7 +1957,7 @@ main(int argc, char **argv)
         rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                                   NS_GET_IID(nsISupports),
                                                   systemprincipal,
-                                                  EmptyCString(),
+                                                  nsnull,
                                                   nsIXPConnect::
                                                       FLAG_SYSTEM_GLOBAL_OBJECT,
                                                   getter_AddRefs(holder));

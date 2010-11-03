@@ -139,12 +139,6 @@ var Harness = {
   },
 
   // Window open handling
-  windowLoad: function(window) {
-    // Allow any other load handlers to execute
-    var self = this;
-    executeSoon(function() { self.windowReady(window); } );
-  },
-
   windowReady: function(window) {
     if (window.document.location.href == XPINSTALL_URL) {
       if (this.installBlockedCallback)
@@ -224,10 +218,9 @@ var Harness = {
     var domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                           .getInterface(Components.interfaces.nsIDOMWindowInternal);
     var self = this;
-    domwindow.addEventListener("load", function() {
-      domwindow.removeEventListener("load", arguments.callee, false);
-      self.windowLoad(domwindow);
-    }, false);
+    waitForFocus(function() {
+      self.windowReady(domwindow);
+    }, domwindow);
   },
 
   onCloseWindow: function(window) {

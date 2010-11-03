@@ -2083,7 +2083,7 @@ var gDetailView = {
     var sizeRow = document.getElementById("detail-size");
     if (aAddon.size && aIsRemote) {
       let [size, unit] = DownloadUtils.convertByteUnits(parseInt(aAddon.size));
-      formatted = gStrings.dl.GetStringFromName("doneSize");
+      let formatted = gStrings.dl.GetStringFromName("doneSize");
       formatted = formatted.replace("#1", size).replace("#2", unit);
       sizeRow.value = formatted;
     } else {

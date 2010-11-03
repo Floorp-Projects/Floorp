@@ -60,8 +60,6 @@ AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject);
 
 } // namespace XPCNativeWrapper
 
-extern nsIScriptSecurityManager *gScriptSecurityManager;
-
 // This namespace wraps some common functionality between the three existing
 // wrappers. Its main purpose is to allow XPCCrossOriginWrapper to act both
 // as an XPCSafeJSObjectWrapper and as an XPCNativeWrapper when required to
@@ -75,7 +73,7 @@ namespace XPCWrapper {
 inline nsIScriptSecurityManager *
 GetSecurityManager()
 {
-  return ::gScriptSecurityManager;
+  return nsXPConnect::gScriptSecurityManager;
 }
 
 inline JSBool

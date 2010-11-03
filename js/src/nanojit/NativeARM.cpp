@@ -24,6 +24,7 @@
  *   Adobe AS3 Team
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Jacob Bramley <Jacob.Bramley@arm.com>
+ *   Tero Koskinen <tero.koskinen@digia.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,7 +53,7 @@ namespace nanojit
 
 #ifdef NJ_VERBOSE
 const char* regNames[] = {"r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","fp","ip","sp","lr","pc",
-                          "d0","d1","d2","d3","d4","d5","d6","d7","s14"};
+                          "d0","d1","d2","d3","d4","d5","d6","d7","s0"};
 const char* condNames[] = {"eq","ne","cs","cc","mi","pl","vs","vc","hi","ls","ge","lt","gt","le",""/*al*/,"nv"};
 const char* shiftNames[] = { "lsl", "lsl", "lsr", "lsr", "asr", "asr", "ror", "ror" };
 #endif
@@ -613,6 +614,9 @@ Assembler::genEpilogue()
  * - 32-bit arguments are placed in registers and 32-bit aligned
  *   on the stack.
  *
+ * Under EABI with hardware floating-point procedure-call variant:
+ * - Same as EABI, but doubles are passed in D0..D7 registers.
+ *
  * Under legacy ABI:
  * - doubles are placed in subsequent arg registers; if the next
  *   available register is r3, the low order word goes into r3
@@ -622,23 +626,23 @@ Assembler::genEpilogue()
  *   alignment.
  */
 void
-Assembler::asm_arg(ArgType ty, LIns* arg, Register& r, int& stkd)
+Assembler::asm_arg(ArgType ty, LIns* arg, ParameterRegisters& params)
 {
     // The stack pointer must always be at least aligned to 4 bytes.
-    NanoAssert((stkd & 3) == 0);
+    NanoAssert((params.stkd & 3) == 0);
 
     if (ty == ARGTYPE_D) {
         // This task is fairly complex and so is delegated to asm_arg_64.
-        asm_arg_64(arg, r, stkd);
+        asm_arg_64(arg, params);
     } else {
         NanoAssert(ty == ARGTYPE_I || ty == ARGTYPE_UI);
         // pre-assign registers R0-R3 for arguments (if they fit)
-        if (r < R4) {
-            asm_regarg(ty, arg, r);
-            r = Register(r + 1);
+        if (params.r < R4) {
+            asm_regarg(ty, arg, params.r);
+            params.r = Register(params.r + 1);
         } else {
-            asm_stkarg(arg, stkd);
-            stkd += 4;
+            asm_stkarg(arg, params.stkd);
+            params.stkd += 4;
         }
     }
 }
@@ -646,11 +650,26 @@ Assembler::asm_arg(ArgType ty, LIns* arg, Register& r, int& stkd)
 // Encode a 64-bit floating-point argument using the appropriate ABI.
 // This function operates in the same way as asm_arg, except that it will only
 // handle arguments where (ArgType)ty == ARGTYPE_D.
+
+#ifdef NJ_ARM_EABI_HARD_FLOAT
 void
-Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
+Assembler::asm_arg_64(LIns* arg, ParameterRegisters& params)
+{
+    NanoAssert(IsFpReg(params.float_r));
+    if (params.float_r <= D7) {
+        findSpecificRegFor(arg, params.float_r);
+        params.float_r = Register(params.float_r + 1);
+    } else {
+        NanoAssertMsg(0, "Only 8 floating point arguments supported");
+    }
+}
+
+#else
+void
+Assembler::asm_arg_64(LIns* arg, ParameterRegisters& params)
 {
     // The stack pointer must always be at least aligned to 4 bytes.
-    NanoAssert((stkd & 3) == 0);
+    NanoAssert((params.stkd & 3) == 0);
     // The only use for this function when we are using soft floating-point
     // is for LIR_ii2d.
     NanoAssert(ARM_VFP || arg->isop(LIR_ii2d));
@@ -661,15 +680,15 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
     // odd-numbered register, advance it. Note that this will push r past
     // R3 if r is R3 to start with, and will force the argument to go on
     // the stack.
-    if ((r == R1) || (r == R3)) {
-        r = Register(r + 1);
+    if ((params.r == R1) || (params.r == R3)) {
+        params.r = Register(params.r + 1);
     }
 #endif
 
-    if (r < R3) {
-        Register    ra = r;
-        Register    rb = Register(r + 1);
-        r = Register(rb + 1);
+    if (params.r < R3) {
+        Register    ra = params.r;
+        Register    rb = Register(params.r + 1);
+        params.r = Register(rb + 1);
 
 #ifdef NJ_ARM_EABI
         // EABI requires that 64-bit arguments are aligned on even-numbered
@@ -693,12 +712,12 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
         // We only have one register left, but the legacy ABI requires that we
         // put 32 bits of the argument in the register (R3) and the remaining
         // 32 bits on the stack.
-        Register    ra = r; // R3
-        r = R4;
+        Register    ra = params.r; // R3
+        params.r = R4;
 
         // We're splitting the argument between registers and the stack.  This
         // must be the first time that the stack is used, so stkd must be at 0.
-        NanoAssert(stkd == 0);
+        NanoAssert(params.stkd == 0);
 
         if (ARM_VFP) {
             Register dm = findRegFor(arg, FpRegs);
@@ -717,27 +736,28 @@ Assembler::asm_arg_64(LIns* arg, Register& r, int& stkd)
             asm_regarg(ARGTYPE_I, arg->oprnd1(), ra);
             asm_stkarg(arg->oprnd2(), 0);
         }
-        stkd += 4;
+        params.stkd += 4;
 #endif
     } else {
         // The argument won't fit in registers, so pass on to asm_stkarg.
 #ifdef NJ_ARM_EABI
         // EABI requires that 64-bit arguments are 64-bit aligned.
-        if ((stkd & 7) != 0) {
+        if ((params.stkd & 7) != 0) {
             // stkd will always be aligned to at least 4 bytes; this was
             // asserted on entry to this function.
-            stkd += 4;
+            params.stkd += 4;
         }
 #endif
         if (ARM_VFP) {
-            asm_stkarg(arg, stkd);
+            asm_stkarg(arg, params.stkd);
         } else {
-            asm_stkarg(arg->oprnd1(), stkd);
-            asm_stkarg(arg->oprnd2(), stkd+4);
+            asm_stkarg(arg->oprnd1(), params.stkd);
+            asm_stkarg(arg->oprnd2(), params.stkd+4);
         }
-        stkd += 8;
+        params.stkd += 8;
     }
 }
+#endif // NJ_ARM_EABI_HARD_FLOAT
 
 void
 Assembler::asm_regarg(ArgType ty, LIns* p, Register rd)
@@ -818,6 +838,14 @@ Assembler::asm_call(LIns* ins)
          * used here with the ultimate VFP register, and not R0/R1, which
          * potentially allows for R0/R1 to get corrupted as described.
          */
+#ifdef NJ_ARM_EABI_HARD_FLOAT
+        /* With ARM hardware floating point ABI, D0 is used to return the double
+         * from the function. We need to prepare it like we do for R0 in the else
+         * branch.
+         */
+        prepareResultReg(ins, rmask(D0));
+        freeResourcesOf(ins);
+#endif
     } else if (!ins->isop(LIR_callv)) {
         prepareResultReg(ins, rmask(retRegs[0]));
         // Immediately free the resources as we need to re-use the register for
@@ -839,11 +867,12 @@ Assembler::asm_call(LIns* ins)
     // function call.
     NanoAssert(ARM_VFP || ins->isop(LIR_callv) || ins->isop(LIR_calli));
 
-    // If we're using VFP, and the return type is a double, it'll come back in
-    // R0/R1. We need to either place it in the result fp reg, or store it.
+    // If we're using VFP, but not hardware floating point ABI, and
+    // the return type is a double, it'll come back in R0/R1.
+    // We need to either place it in the result fp reg, or store it.
     // See comments above for more details as to why this is necessary here
     // for floating point calls, but not for integer calls.
-    if (ARM_VFP && ins->isExtant()) {
+    if (!ARM_EABI_HARD && ARM_VFP && ins->isExtant()) {
         // If the result size is a floating-point value, treat the result
         // specially, as described previously.
         if (ci->returnType() == ARGTYPE_D) {
@@ -894,9 +923,9 @@ Assembler::asm_call(LIns* ins)
         asm_regarg(ARGTYPE_I, ins->arg(--argc), LR);
     }
 
-    // Encode the arguments, starting at R0 and with an empty argument stack.
-    Register    r = R0;
-    int         stkd = 0;
+    // Encode the arguments, starting at R0 and with an empty argument stack (0).
+    // With hardware fp ABI, floating point arguments start from D0.
+    ParameterRegisters params = init_params(0, R0, D0);
 
     // Iterate through the argument list and encode each argument according to
     // the ABI.
@@ -904,11 +933,11 @@ Assembler::asm_call(LIns* ins)
     // in reverse order.
     uint32_t    i = argc;
     while(i--) {
-        asm_arg(argTypes[i], ins->arg(i), r, stkd);
+        asm_arg(argTypes[i], ins->arg(i), params);
     }
 
-    if (stkd > max_out_args) {
-        max_out_args = stkd;
+    if (params.stkd > max_out_args) {
+        max_out_args = params.stkd;
     }
 }
 
@@ -941,7 +970,7 @@ Assembler::nRegisterResetAll(RegAlloc& a)
     if (ARM_VFP) {
         a.free |=
             rmask(D0) | rmask(D1) | rmask(D2) | rmask(D3) |
-            rmask(D4) | rmask(D5) | rmask(D6);
+            rmask(D4) | rmask(D5) | rmask(D6) | rmask(D7);
     }
 }
 
@@ -1329,13 +1358,14 @@ Assembler::asm_load64(LIns* ins)
         int         offset = ins->disp();
 
         if (ins->isInReg()) {
-            dd = prepareResultReg(ins, FpRegs);
+            dd = prepareResultReg(ins, FpRegs & ~rmask(D0));
         } else {
             // If the result isn't already in a register, use the VFP scratch
             // register for the result and store it directly into memory.
             NanoAssert(ins->isInAr());
             int d = arDisp(ins);
-            dd = D7;
+            evictIfActive(D0);
+            dd = D0;
             // VFP can only do loads and stores with a range of ±1020, so we
             // might need to do some arithmetic to extend its range.
             if (isU8(d/4) || isU8(-d/4)) {
@@ -1356,11 +1386,12 @@ Assembler::asm_load64(LIns* ins)
                 }
                 break;
             case LIR_ldf2d:
-                FCVTDS(dd, S14);
+                evictIfActive(D0);
+                FCVTDS(dd, S0);
                 if (isU8(offset/4) || isU8(-offset/4)) {
-                    FLDS(S14, rn, offset);
+                    FLDS(S0, rn, offset);
                 } else {
-                    FLDS(S14, IP, offset%1024);
+                    FLDS(S0, IP, offset%1024);
                     asm_add_imm(IP, rn, offset-(offset%1024));
                 }
                 break;
@@ -1398,7 +1429,7 @@ Assembler::asm_store64(LOpcode op, LIns* value, int dr, LIns* base)
     NanoAssert(value->isD());
 
     if (ARM_VFP) {
-        Register dd = findRegFor(value, FpRegs);
+        Register dd = findRegFor(value, FpRegs & ~rmask(D0));
         Register rn = findRegFor(base, GpRegs);
 
         switch (op) {
@@ -1416,14 +1447,15 @@ Assembler::asm_store64(LOpcode op, LIns* value, int dr, LIns* base)
             case LIR_std2f:
                 // VFP can only do stores with a range of ±1020, so we might
                 // need to do some arithmetic to extend its range.
+                evictIfActive(D0);
                 if (isU8(dr/4) || isU8(-dr/4)) {
-                    FSTS(S14, rn, dr);
+                    FSTS(S0, rn, dr);
                 } else {
-                    FSTS(S14, IP, dr%1024);
+                    FSTS(S0, IP, dr%1024);
                     asm_add_imm(IP, rn, dr-(dr%1024));
                 }
 
-                FCVTSD(S14, dd);
+                FCVTSD(S0, dd);
 
                 break;
             default:
@@ -2123,11 +2155,12 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 void
 Assembler::asm_i2d(LIns* ins)
 {
-    Register dd = prepareResultReg(ins, FpRegs);
+    Register dd = prepareResultReg(ins, FpRegs & ~rmask(D0));
     Register rt = findRegFor(ins->oprnd1(), GpRegs);
 
-    FSITOD(dd, S14);
-    FMSR(S14, rt);
+    evictIfActive(D0);
+    FSITOD(dd, S0);
+    FMSR(S0, rt);
 
     freeResourcesOf(ins);
 }
@@ -2135,20 +2168,22 @@ Assembler::asm_i2d(LIns* ins)
 void
 Assembler::asm_ui2d(LIns* ins)
 {
-    Register dd = prepareResultReg(ins, FpRegs);
+    Register dd = prepareResultReg(ins, FpRegs & ~rmask(D0));
     Register rt = findRegFor(ins->oprnd1(), GpRegs);
 
-    FUITOD(dd, S14);
-    FMSR(S14, rt);
+    evictIfActive(D0);
+    FUITOD(dd, S0);
+    FMSR(S0, rt);
 
     freeResourcesOf(ins);
 }
 
 void Assembler::asm_d2i(LIns* ins)
 {
+    evictIfActive(D0);
     if (ins->isInReg()) {
         Register rt = ins->getReg();
-        FMRS(rt, S14);
+        FMRS(rt, S0);
     } else {
         // There's no active result register, so store the result directly into
         // memory to avoid the FP->GP transfer cost on Cortex-A8.
@@ -2156,16 +2191,16 @@ void Assembler::asm_d2i(LIns* ins)
         // VFP can only do stores with a range of ±1020, so we might need to do
         // some arithmetic to extend its range.
         if (isU8(d/4) || isU8(-d/4)) {
-            FSTS(S14, FP, d);
+            FSTS(S0, FP, d);
         } else {
-            FSTS(S14, IP, d%1024);
+            FSTS(S0, IP, d%1024);
             asm_add_imm(IP, FP, d-(d%1024));
         }
     }
 
-    Register dm = findRegFor(ins->oprnd1(), FpRegs);
+    Register dm = findRegFor(ins->oprnd1(), FpRegs & ~rmask(D0));
 
-    FTOSID(S14, dm);
+    FTOSID(S0, dm);
 
     freeResourcesOf(ins);
 }
@@ -2832,8 +2867,11 @@ Assembler::asm_ret(LIns *ins)
     // we are intending for R0 is currently IP, not R0. This has to do with
     // the strange dual-nature of the patchable jump in a side-exit. See
     // nPatchBranch.
-
-    MOV(IP, R0);
+    //
+    // With hardware floating point ABI we can skip this for retd.
+    if (!(ARM_EABI_HARD && ins->isop(LIR_retd))) {
+        MOV(IP, R0);
+    }
 
     // Pop the stack frame.
     MOV(SP,FP);
@@ -2847,8 +2885,12 @@ Assembler::asm_ret(LIns *ins)
     else {
         NanoAssert(ins->isop(LIR_retd));
         if (ARM_VFP) {
+#ifdef NJ_ARM_EABI_HARD_FLOAT
+            findSpecificRegFor(value, D0);
+#else
             Register reg = findRegFor(value, FpRegs);
             FMRRD(R0, R1, reg);
+#endif
         } else {
             NanoAssert(value->isop(LIR_ii2d));
             findSpecificRegFor(value->oprnd1(), R0); // lo

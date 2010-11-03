@@ -61,6 +61,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #define NJ_F2I_SUPPORTED                0
 #define NJ_SOFTFLOAT_SUPPORTED          0
+#define NJ_DIVI_SUPPORTED               0    
 
     enum ConditionRegister {
         CR0 = 0,

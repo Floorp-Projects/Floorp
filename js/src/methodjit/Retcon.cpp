@@ -143,7 +143,7 @@ Recompiler::recompile()
     }
 
     /* Iterate over VMFrames saving the machine and scripted return. */
-    for (VMFrame *f = JS_METHODJIT_DATA(cx).activeFrame;
+    for (VMFrame *f = cx->jaegerCompartment()->activeFrame();
          f != NULL;
          f = f->previous) {
 

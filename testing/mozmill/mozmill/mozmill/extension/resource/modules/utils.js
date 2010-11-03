@@ -368,15 +368,21 @@ function setPreference(aName, aValue) {
 
 /**
  * Sleep for the given amount of milliseconds
+ *
+ * @param {number} milliseconds
+ *        Sleeps the given number of milliseconds
  */
 function sleep(milliseconds) {
-  var self = {init: false};
+  // We basically just call this once after the specified number of milliseconds
+  var timeup = false;
+  function wait() { timeup = true; }
+  hwindow.setTimeout(wait, milliseconds);
 
-  waitFor(function() {
-    var init = self.init;
-    self.init = !init;
-    return init;
-  }, "The sleep call should never fail", (milliseconds + 1000), milliseconds);
+  var thread = Components.classes["@mozilla.org/thread-manager;1"].
+               getService().currentThread;
+  while(!timeup) {
+    thread.processNextEvent(true);
+  }
 }
 
 /**

@@ -2633,10 +2633,10 @@ Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsva
     return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
 }
 
-} // namespace JS
+} /* namespace JS */
 
 JS_BEGIN_EXTERN_C
-#endif // __cplusplus
+#endif /* __cplusplus */
 
 /*
  * These functions allow setting an operation callback that will be called

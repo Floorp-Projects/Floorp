@@ -29,6 +29,22 @@ function do_run_test() {
 
   do_check_eq(do_count_cookies(), 3000);
 
+  // Wait until all 3000 cookies have been written out to the database.
+  let db = new CookieDatabaseConnection(profile, 4);
+  while (do_count_cookies_in_db(profile) < 3000) {
+    do_execute_soon(function() {
+      do_run_generator(test_generator);
+    });
+    yield;
+  }
+
+  // Check the WAL file size. We set it to 16 pages of 32k, which means it
+  // should be around 500k.
+  let file = db.db.databaseFile;
+  do_check_true(file.exists());
+  do_check_true(file.fileSize < 1e6);
+  db.close();
+
   // fake a profile change
   do_close_profile(test_generator);
   yield;

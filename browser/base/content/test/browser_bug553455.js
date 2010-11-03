@@ -33,26 +33,21 @@ function wait_for_install_dialog(aCallback) {
   info("Waiting for install dialog");
   Services.wm.addListener({
     onOpenWindow: function(aXULWindow) {
-      info("Install dialog opened, waiting for load");
+      info("Install dialog opened, waiting for focus");
       Services.wm.removeListener(this);
 
       var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindowInternal);
-      domwindow.addEventListener("load", function() {
-        domwindow.removeEventListener("load", arguments.callee, false);
-
+      waitForFocus(function() {
+        info("Saw install dialog");
         is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");
 
-        // Allow other window load listeners to execute before passing to callback
-        executeSoon(function() {
-          info("Saw install dialog");
-          // Override the countdown timer on the accept button
-          var button = domwindow.document.documentElement.getButton("accept");
-          button.disabled = false;
+        // Override the countdown timer on the accept button
+        var button = domwindow.document.documentElement.getButton("accept");
+        button.disabled = false;
 
-          aCallback(domwindow);
-        });
-      }, false);
+        aCallback(domwindow);
+      }, domwindow);
     },
 
     onCloseWindow: function(aXULWindow) {
@@ -597,7 +592,7 @@ var XPInstallObserver = {
 };
 
 function test() {
-  requestLongerTimeout(2);
+  requestLongerTimeout(4);
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("extensions.logging.enabled", true);

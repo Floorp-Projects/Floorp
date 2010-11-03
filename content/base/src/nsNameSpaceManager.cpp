@@ -57,6 +57,8 @@
 static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
 
+using namespace mozilla::dom;
+
 #ifdef MOZ_SVG
 PRBool NS_SVGEnabled();
 #endif
@@ -227,7 +229,7 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 
 nsresult
 NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
-              already_AddRefed<nsINodeInfo> aNodeInfo, PRUint32 aFromParser)
+              already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
 {
   if (aElementType == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);

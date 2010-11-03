@@ -857,45 +857,6 @@ XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-static JSObject *
-XPC_WN_InnerObject(JSContext *cx, JSObject *obj)
-{
-    XPCWrappedNative *wrapper =
-        static_cast<XPCWrappedNative *>(obj->getPrivate());
-    if(!wrapper)
-    {
-        Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-
-        return nsnull;
-    }
-
-    if(!wrapper->IsValid())
-    {
-        Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);
-
-        return nsnull;
-    }
-
-    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if(si && si->GetFlags().WantInnerObject())
-    {
-        JSObject *newThis;
-        nsresult rv =
-            si->GetCallback()->InnerObject(wrapper, cx, obj, &newThis);
-
-        if(NS_FAILED(rv))
-        {
-            Throw(rv, cx);
-
-            return nsnull;
-        }
-
-        obj = newThis;
-    }
-
-    return obj;
-}
-
 js::Class XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",    // name;
     WRAPPER_SLOTS |
@@ -925,8 +886,8 @@ js::Class XPC_WN_NoHelper_JSClass = {
     // ClassExtension
     {
         JS_VALUEIFY(js::EqualityOp, XPC_WN_Equality),
-        XPC_WN_OuterObject,
-        XPC_WN_InnerObject,
+        nsnull, // outerObject
+        nsnull, // innerObject
         nsnull, // iteratorObject
         nsnull, // wrappedObject
     },
@@ -1589,11 +1550,8 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
 
     if(mFlags.WantOuterObject())
         mJSClass.base.ext.outerObject = XPC_WN_OuterObject;
-    if(mFlags.WantInnerObject())
-        mJSClass.base.ext.innerObject = XPC_WN_InnerObject;
 
-    if(!(mFlags & (nsIXPCScriptable::WANT_OUTER_OBJECT |
-                   nsIXPCScriptable::WANT_INNER_OBJECT)))
+    if(!(mFlags & nsIXPCScriptable::WANT_OUTER_OBJECT))
         mCanBeSlim = JS_TRUE;
 }
 

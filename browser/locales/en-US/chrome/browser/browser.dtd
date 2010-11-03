@@ -71,7 +71,7 @@ can reach it easily. -->
 <!ENTITY personalbarCmd.accesskey "B">
 <!ENTITY bookmarksToolbarItem.label "Bookmarks Toolbar Items">
 <!ENTITY addonBarCmd.label "Add-on Bar">
-<!ENTITY addonBarCmd.accesskey "B">
+<!ENTITY addonBarCmd.accesskey "A">
 
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">

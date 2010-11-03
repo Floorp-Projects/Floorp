@@ -23,7 +23,7 @@ function allow_blocked(installInfo) {
 }
 
 function confirm_install(window) {
-  items = window.document.getElementById("itemList").childNodes;
+  var items = window.document.getElementById("itemList").childNodes;
   is(items.length, 1, "Should only be 1 item listed in the confirmation dialog");
   is(items[0].name, "XPI Test", "Should have seen the name from the trigger list");
   is(items[0].url, TESTROOT + "unsigned.xpi", "Should have listed the correct url for the item");
