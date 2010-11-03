@@ -146,11 +146,11 @@
       </handler>
     </handlers>
     <content orient="vertical">
-      <xul:hbox class="autocomplete-item-container" align="top" xbl:inherits="favorite,remote" mousethrough="always">
+      <xul:hbox class="autocomplete-item-container" align="top" xbl:inherits="favorite,remote,search" mousethrough="always">
         <xul:image xbl:inherits="src"/>
         <xul:vbox flex="1">
           <xul:label class="autocomplete-item-label" crop="center" xbl:inherits="value"/>
-          <xul:label class="autocomplete-item-url" xbl:inherits="value=url" crop="center"/>
+          <xul:label class="autocomplete-item-subtitle" xbl:inherits="value=subtitle" crop="center"/>
         </xul:vbox>
         <xul:vbox align="end">
           <xul:label class="autocomplete-item-tags" value="" xbl:inherits="value=tags"/>
@@ -314,6 +314,9 @@
           let matchCount = this._matchCount;
           let children = items.childNodes;
           let iterCount = Math.max(children.length, matchCount);
+
+          let searchSubtitle = Elements.browserBundle.stringBundle.formatStringFromName("opensearch.searchFor", [searchString], 1);
+
           for (let i = 0; i < iterCount; ++i) {
             let item = children.item(i);
 
@@ -353,13 +356,20 @@
             // remove the badge only if the url has changed
             if (item._empty || item.getAttribute("url") != url) {
               item.setAttribute("url", url);
+              item.setAttribute("subtitle", url);
               item.removeAttribute("badge");
               item.removeAttribute("remote");
+              item.removeAttribute("search");
             }
 
             let isBookmark = ((type == "bookmark") || (type == "tag"));
             item.setAttribute("favorite", isBookmark);
             item.setAttribute("src", controller.getImageAt(i));
+            
+            if (type=="search") {
+              item.setAttribute("search", true);
+              item.setAttribute("subtitle", searchSubtitle);
+            }
 
             item._empty = false;
           }
@@ -388,6 +398,8 @@
             noResultsItem.removeAttribute("tags");
             noResultsItem.removeAttribute("badge");
             noResultsItem.removeAttribute("remote");
+            noResultsItem.removeAttribute("search");
+            noResultsItem.removeAttribute("subtitle");
           }
         ]]></body>
       </method>

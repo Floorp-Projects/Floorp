@@ -682,34 +682,45 @@ placeitem[src=""] .bookmark-item-container > image {
   -moz-margin-start: 1px;
 }
 
-.autocomplete-item-container[favorite="true"] {
-  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat 100% 2px;
+.autocomplete-item-container[favorite="true"],
+.autocomplete-item-container[remote="true"],
+.autocomplete-item-container[search="true"] {
+  background-repeat: no-repeat;
+  background-position: 100% 2px;
   background-size: 24px 24px;
+}
+
+.autocomplete-item-container[favorite="true"] {
+  background-image: url("chrome://browser/skin/images/autocomplete-bookmarked-hdpi.png");
 }
 
 .autocomplete-item-container[remote="true"] {
-  background: url(images/autocomplete-desktop-hdpi.png) no-repeat 100% 2px;
-  background-size: 24px 24px;
+  background-image: url("chrome://browser/skin/images/autocomplete-desktop-hdpi.png");
+}
+
+.autocomplete-item-container[search="true"] {
+  background-image: url("chrome://browser/skin/images/search-glass-30.png");
 }
 
 .autocomplete-item-container[favorite="true"][remote="true"] {
-  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat 100% 2px, url(images/autocomplete-desktop-hdpi.png) no-repeat 94% 2px;
-  background-size: 24px 24px;
+  background-image: url("chrome://browser/skin/images/autocomplete-bookmarked-hdpi.png"),
+                    url("chrome://browser/skin/images/autocomplete-desktop-hdpi.png");
+  background-position: 100% 2px,
+                        94% 2px;
+  -moz-padding-end: 48px;
 }
 
-.autocomplete-item-container[favorite="true"]:-moz-locale-dir(rtl) {
-  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat left 2px;
-}
-
+.autocomplete-item-container[favorite="true"]:-moz-locale-dir(rtl),
 .autocomplete-item-container[remote="true"]:-moz-locale-dir(rtl) {
-  background: url(images/autocomplete-desktop-hdpi.png) no-repeat left 2px;
+  background-position: left 2px;
 }
 
 .autocomplete-item-container[favorite="true"][remote="true"]:-moz-locale-dir(rtl) {
-  background: url(images/autocomplete-bookmarked-hdpi.png) no-repeat left 2px, url(images/autocomplete-desktop-hdpi.png) no-repeat 6% 2px;
+  background-position: left 2px,
+                         6% 2px;
 }
 
-.autocomplete-item-url,
+.autocomplete-item-subtitle,
 .bookmark-item-url {
   color: blue;
   font-size: 18px !important;
@@ -717,12 +728,14 @@ placeitem[src=""] .bookmark-item-container > image {
 }
 
 .autocomplete-item-container[favorite="true"] .autocomplete-item-label,
-.autocomplete-item-container[remote="true"] .autocomplete-item-label {
+.autocomplete-item-container[remote="true"] .autocomplete-item-label,
+.autocomplete-item-container[search="true"] .autocomplete-item-label {
   -moz-padding-end: 30px;
 }
 
-.autocomplete-item-container[favorite="true"][remote="true"] {
-  -moz-padding-end: 48px;
+.autocomplete-item-container[search="true"] .autocomplete-item-subtitle {
+  color: black;
+  font-size: smaller;
 }
 
 .autocomplete-item-tags,
