@@ -254,14 +254,8 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     Value fval = GetConstruct(proxy);
-    if (fval.isUndefined()) {
-        fval = GetCall(proxy);
-        JSObject *obj = JS_New(cx, &fval.toObject(), argc, Jsvalify(argv));
-        if (!obj)
-            return false;
-        rval->setObject(*obj);
-        return true;
-    }
+    if (fval.isUndefined())
+        return ExternalInvokeConstructor(cx, GetCall(proxy), argc, argv, rval);
 
     /*
      * FIXME: The Proxy proposal says to pass undefined as the this argument,
