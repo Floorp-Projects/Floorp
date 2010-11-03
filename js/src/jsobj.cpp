@@ -5536,6 +5536,21 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 
 namespace js {
 
+JSObject *
+HasNativeMethod(JSObject *obj, jsid methodid, Native native)
+{
+    const Shape *shape = obj->nativeLookup(methodid);
+    if (!shape || !shape->hasDefaultGetter() || !obj->containsSlot(shape->slot))
+        return NULL;
+
+    const Value &fval = obj->nativeGetSlot(shape->slot);
+    JSObject *funobj;
+    if (!IsFunctionObject(fval, &funobj) || funobj->getFunctionPrivate()->maybeNative() != native)
+        return NULL;
+
+    return funobj;
+}
+
 /*
  * When we have an object of a builtin class, we don't quite know what its
  * valueOf/toString methods are, since these methods may have been overwritten
@@ -5545,35 +5560,20 @@ namespace js {
  * TODO: a per-thread shape-based cache would be faster and simpler.
  */
 static JS_ALWAYS_INLINE bool
-ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *classp, jsid methodid,
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
                     Native native)
 {
-    JS_ASSERT(obj->getClass() == classp);
+    JS_ASSERT(obj->getClass() == clasp);
 
-    const Shape *shape = obj->nativeLookup(methodid);
-    JSObject *pobj = obj;
+    if (HasNativeMethod(obj, methodid, native))
+        return true;
 
-    if (!shape) {
-        pobj = obj->getProto();
-
-        if (pobj && pobj->getClass() == classp)
-            shape = pobj->nativeLookup(methodid);
-    }
-
-    if (shape && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot)) {
-        const Value &fval = pobj->nativeGetSlot(shape->slot);
-
-        JSObject *funobj;
-        if (IsFunctionObject(fval, &funobj)) {
-            JSFunction *fun = funobj->getFunctionPrivate();
-            if (fun->maybeNative() == native)
-                return true;
-        }
-    }
-    return false;
+    JSObject *pobj = obj->getProto();
+    return pobj && pobj->getClass() == clasp &&
+           HasNativeMethod(pobj, methodid, native);
 }
 
-JSBool
+bool
 DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 {
     JS_ASSERT(hint != JSTYPE_OBJECT && hint != JSTYPE_FUNCTION);
