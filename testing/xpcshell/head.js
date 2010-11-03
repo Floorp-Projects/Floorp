@@ -178,7 +178,11 @@ function _dump_exception_stack(stack) {
     // frame is of the form "fname(args)@file:line"
     let frame_regexp = new RegExp("(.*)\\(.*\\)@(.*):(\\d*)", "g");
     let parts = frame_regexp.exec(frame);
-    dump("JS frame :: " + parts[2] + " :: " + (parts[1] ? parts[1] : "anonymous") + " :: line " + parts[3] + "\n");
+    if (parts)
+        dump("JS frame :: " + parts[2] + " :: " + (parts[1] ? parts[1] : "anonymous")
+             + " :: line " + parts[3] + "\n");
+    else /* Could be a -e (command line string) style location. */
+        dump("JS frame :: " + frame + "\n");
   });
 }
 
