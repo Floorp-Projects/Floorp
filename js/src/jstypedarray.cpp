@@ -493,7 +493,7 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
     {
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);

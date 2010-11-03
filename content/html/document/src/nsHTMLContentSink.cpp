@@ -139,11 +139,12 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 //----------------------------------------------------------------------
 
 typedef nsGenericHTMLElement*
-  (*contentCreatorCallback)(already_AddRefed<nsINodeInfo>, PRUint32 aFromParser);
+  (*contentCreatorCallback)(already_AddRefed<nsINodeInfo>,
+                            FromParser aFromParser);
 
 nsGenericHTMLElement*
 NS_NewHTMLNOTUSEDElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                         PRUint32 aFromParser)
+                         FromParser aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
   return nsnull;
@@ -555,12 +556,12 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   NS_ENSURE_TRUE(nodeInfo, nsnull);
 
   // Make the content object
-  return CreateHTMLElement(aNodeType, nodeInfo.forget(), PR_TRUE);
+  return CreateHTMLElement(aNodeType, nodeInfo.forget(), FROM_PARSER_NETWORK);
 }
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
-                  PRUint32 aFromParser)
+                  FromParser aFromParser)
 {
   *aResult = nsnull;
 
@@ -583,7 +584,7 @@ NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 
 already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(PRUint32 aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
-                  PRUint32 aFromParser)
+                  FromParser aFromParser)
 {
   NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
                aNodeType == eHTMLTag_userdefined,
@@ -2619,7 +2620,8 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull, kNameSpaceID_XHTML);
 
-    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo.forget(), PR_FALSE);
+    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo.forget(),
+                               NOT_FROM_PARSER);
     NS_ENSURE_SUCCESS(result, result);
 
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(element));

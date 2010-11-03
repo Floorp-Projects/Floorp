@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=604660
+-->
+<head>
+  <title>Test for Bug 604660</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=604660">Mozilla Bug 604660</a>
+<script>
+SimpleTest.waitForExplicitFinish();
+var asyncState = false;
+var scriptState = 0;
+
+function scriptRan(num) {
+  ++scriptState;
+  is(scriptState, num, "Scripts ran in the wrong sequence.");
+}
+
+function asyncRan() {
+  asyncState = true;
+}
+
+</script>
+<p id="display"><iframe src="file_bug604660-1.xml" onload="iframeloaded()";></iframe></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var xlstProcessorState = false;
+
+function xsltProcessorCreatedScriptRan() {
+  xlstProcessorState = true;
+}
+
+function iframeloaded() {
+  ok(asyncState, "Async script should have run.");
+  is(scriptState, 5, "Five scripts should have run.");
+
+  var processor = new XSLTProcessor();
+
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      processor.importStylesheet(this.responseXML);
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+          var doc = processor.transformToDocument(this.responseXML);
+          var target = document.getElementById("display");
+          target.appendChild(doc.documentElement.firstChild);
+          ok(!xlstProcessorState, "Scripts created by transformToDocument should not run.");
+
+          var fragment = processor.transformToFragment(this.responseXML, document);
+          target.appendChild(fragment.firstChild.firstChild);
+          ok(xlstProcessorState, "Scripts created by transformToFragment should run.");
+
+          SimpleTest.finish();
+        }
+      }
+      xhr.open("GET", "file_bug604660-5.xml");
+      xhr.send();
+    }
+  }
+  xhr.open("GET", "file_bug604660-6.xsl");
+  xhr.send();
+}
+</script>
+</pre>
+</body>
+</html>
+

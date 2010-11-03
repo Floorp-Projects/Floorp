@@ -78,6 +78,7 @@ XPIDLSRCS	= \
 		nsIEmbeddingSiteWindow2.idl \
 		nsIContextMenuListener2.idl \
 		nsIWebBrowserChrome2.idl	    \
+		nsIWebBrowserChrome3.idl	    \
 		$(NULL)
 
 CPPSRCS		= \

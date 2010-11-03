@@ -1164,7 +1164,7 @@ XPCShellEnvironment::Init()
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                               NS_GET_IID(nsISupports),
                                               principal,
-                                              EmptyCString(),
+                                              nsnull,
                                               nsIXPConnect::
                                                   FLAG_SYSTEM_GLOBAL_OBJECT,
                                               getter_AddRefs(holder));

@@ -158,11 +158,13 @@ var gVersionInfoPage = {
 
     // Retrieve all add-ons in order to sync their app compatibility information
     AddonManager.getAllAddons(function(aAddons) {
-      gUpdateWizard.addons = aAddons;
+      gUpdateWizard.addons = aAddons.filter(function(a) {
+        return a.type != "plugin";
+      });
 
-      gVersionInfoPage._totalCount = aAddons.length;
+      gVersionInfoPage._totalCount = gUpdateWizard.addons.length;
 
-      aAddons.forEach(function(aAddon) {
+      gUpdateWizard.addons.forEach(function(aAddon) {
         aAddon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
       }, this);
     });
@@ -401,6 +403,7 @@ var gInstallingPage = {
   /////////////////////////////////////////////////////////////////////////////
   // InstallListener
   onDownloadStarted: function(aInstall) {
+    var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("downloadingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
     actionItem.value = label;
@@ -421,6 +424,7 @@ var gInstallingPage = {
   },
 
   onInstallStarted: function(aInstall) {
+    var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("installingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
     actionItem.value = label;
