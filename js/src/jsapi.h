@@ -2590,6 +2590,13 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
                                jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
+JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                      JSPrincipals *principals,
+                                      const char *bytes, uintN length,
+                                      const char *filename, uintN lineno,
+                                      jsval *rval, JSVersion version);
+
+extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
                     const jschar *chars, uintN length,
                     const char *filename, uintN lineno,
