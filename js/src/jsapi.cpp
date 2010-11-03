@@ -5231,7 +5231,7 @@ JS_GetStringChars(JSString *str)
             s = str->dependentChars();
         }
     } else {
-        str->flatClearMutable();
+        str->flatClearExtensible();
         s = str->flatChars();
     }
     return s;

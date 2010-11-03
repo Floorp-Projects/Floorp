@@ -100,9 +100,14 @@ namespace js { namespace mjit {
  * A flat string with the ATOMIZED flag means that the string is hashed as
  * an atom. This flag is used to avoid re-hashing the already-atomized string.
  *
- * A flat string with the MUTABLE flag means that the string may change into a
- * dependent string as part of an optimization with js_ConcatStrings. Flat
- * strings without the MUTABLE flag can be safely accessed by multiple threads.
+ * A flat string with the EXTENSIBLE flag means that the string may change into
+ * a dependent string as part of an optimization with js_ConcatStrings:
+ * extending |str1 = "abc"| with the character |str2 = str1 + "d"| will place
+ * "d" in the extra capacity from |str1|, make that the buffer for |str2|, and
+ * turn |str1| into a dependent string of |str2|.
+ *
+ * Flat strings without the EXTENSIBLE flag can be safely accessed by multiple
+ * threads.
  *
  * When the string is DEPENDENT, the string depends on characters of another
  * string strongly referenced by the mBase field. The base member may point to
@@ -146,7 +151,7 @@ struct JSString {
         jschar                      mInlineStorage[4]; /* In short strings. */
         struct {
             union {
-                size_t              mCapacity; /* in mutable flat strings (optional) */
+                size_t              mCapacity; /* in extensible flat strings (optional) */
                 JSString            *mParent; /* in rope interior nodes */
                 JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
             };
@@ -166,7 +171,9 @@ struct JSString {
      * The length is packed in mLengthAndFlags, even in string types that don't
      * need 3 other fields, to make the length check simpler.
      *
-     * When the string type is FLAT, the flags can contain ATOMIZED or MUTABLE.
+     * When the string type is FLAT, the flags can contain ATOMIZED or
+     * EXTENSIBLE.
+     *
      * When the string type is INTERIOR_NODE or TOP_NODE, the flags area is
      * used to store the rope traversal count.
      */
@@ -179,7 +186,7 @@ struct JSString {
     static const size_t ROPE_BIT = JSSTRING_BIT(1);
 
     static const size_t ATOMIZED = JSSTRING_BIT(2);
-    static const size_t MUTABLE = JSSTRING_BIT(3);
+    static const size_t EXTENSIBLE = JSSTRING_BIT(3);
 
     static const size_t FLAGS_LENGTH_SHIFT = 4;
 
@@ -222,8 +229,8 @@ struct JSString {
         return type() == FLAT;
     }
 
-    inline bool isMutable() const {
-        return isFlat() && hasFlag(MUTABLE);
+    inline bool isExtensible() const {
+        return isFlat() && hasFlag(EXTENSIBLE);
     }
 
     inline bool isRope() const {
@@ -280,12 +287,12 @@ struct JSString {
         mChars = chars;
     }
 
-    JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
+    JS_ALWAYS_INLINE void initFlatExtensible(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = cap;
-        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
+        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | EXTENSIBLE;
         mChars = chars;
     }
 
@@ -305,23 +312,23 @@ struct JSString {
     }
 
     /*
-     * Methods to manipulate atomized and mutable flags of flat strings. It is
+     * Methods to manipulate ATOMIZED and EXTENSIBLE flags of flat strings. It is
      * safe to use these without extra locking due to the following properties:
      *
      *   * We do not have a flatClearAtomized method, as a string remains
      *     atomized until the GC collects it.
      *
-     *   * A thread may call flatSetMutable only when it is the only
+     *   * A thread may call flatSetExtensible only when it is the only
      *     thread accessing the string until a later call to
-     *     flatClearMutable.
+     *     flatClearExtensible.
      *
-     *   * Multiple threads can call flatClearMutable but the function actually
-     *     clears the mutable flag only when the flag is set -- in which case
+     *   * Multiple threads can call flatClearExtensible but the function actually
+     *     clears the EXTENSIBLE flag only when the flag is set -- in which case
      *     only one thread can access the string (see previous property).
      *
      * Thus, when multiple threads access the string, JSString::flatSetAtomized
      * is the only function that can update the mLengthAndFlags field of the
-     * string by changing the mutable bit from 0 to 1. We call the method only
+     * string by changing the EXTENSIBLE bit from 0 to 1. We call the method only
      * after the string has been hashed. When some threads in js_ValueToStringId
      * see that the flag is set, it knows that the string was atomized.
      *
@@ -337,21 +344,21 @@ struct JSString {
         JS_ATOMIC_SET_MASK((jsword *)&mLengthAndFlags, ATOMIZED);
     }
 
-    inline void flatSetMutable() {
+    inline void flatSetExtensible() {
         JS_ASSERT(isFlat());
         JS_ASSERT(!isAtomized());
-        mLengthAndFlags |= MUTABLE;
+        mLengthAndFlags |= EXTENSIBLE;
     }
 
-    inline void flatClearMutable() {
+    inline void flatClearExtensible() {
         JS_ASSERT(isFlat());
 
         /*
          * We cannot eliminate the flag check before writing to mLengthAndFlags as
          * static strings may reside in write-protected memory. See bug 599481.
          */
-        if (mLengthAndFlags & MUTABLE)
-            mLengthAndFlags &= ~MUTABLE;
+        if (mLengthAndFlags & EXTENSIBLE)
+            mLengthAndFlags &= ~EXTENSIBLE;
     }
 
     /*
