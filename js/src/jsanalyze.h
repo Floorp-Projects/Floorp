@@ -309,12 +309,6 @@ class Script
     /* Array of local variable names, computed by js_GetLocalNameArray. */
     jsuword *localNames;
 
-    /* Whether this script is considered to be compiled, and types have been frozen. */
-    bool compiled;
-
-    /* Whether this script needs recompilation. */
-    bool recompileNeeded;
-
     void setFunction(JSContext *cx, JSFunction *fun);
 
     inline bool isEval() { return parent && !function; }
@@ -334,14 +328,6 @@ class Script
 
     /* Analyzes a bytecode, generating type constraints describing its behavior. */
     void analyzeTypes(JSContext *cx, Bytecode *codeType);
-
-    /*
-     * Add new constraints for a bytecode monitoring changes on type sets which can
-     * affect what the bytecode does.  Performed after analysis has finished and the
-     * type sets hopefully won't change further.
-     */
-    void freezeTypes(JSContext *cx, Bytecode *codeType);
-    void freezeAllTypes(JSContext *cx);
 
     /*
      * Get the name to use for the local with specified index.  Stack indicates the

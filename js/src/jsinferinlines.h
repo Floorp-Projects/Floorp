@@ -839,26 +839,12 @@ TypeCompartment::resolvePending(JSContext *cx)
 }
 
 inline void
-TypeCompartment::recompileScript(analyze::Bytecode *code)
-{
-    JS_ASSERT(code->script->compiled);
-
-    if (!code->script->recompileNeeded) {
-#ifdef DEBUG
-        fprintf(out, "MarkJIT: #%u:%05u\n", code->script->id, code->offset);
-#endif
-        code->script->recompileNeeded = true;
-    }
-}
-
-inline void
 TypeCompartment::monitorBytecode(analyze::Bytecode *code)
 {
     if (code->monitorNeeded)
         return;
 
-    if (code->script->compiled)
-        recompileScript(code);
+    /* :FIXME: bug 608746 trigger recompilation of the script if necessary. */
 
 #ifdef JS_TYPES_DEBUG_SPEW
     fprintf(out, "addMonitorNeeded: #%u:%05u\n", code->script->id, code->offset);
@@ -1134,24 +1120,36 @@ TypeSet::addType(JSContext *cx, jstype type)
 }
 
 inline JSValueType
-TypeSet::getKnownTypeTag()
+TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing)
 {
+    JSValueType type;
     switch (typeFlags) {
       case TYPE_FLAG_UNDEFINED:
-        return JSVAL_TYPE_UNDEFINED;
+        type = JSVAL_TYPE_UNDEFINED;
+        break;
       case TYPE_FLAG_NULL:
-        return JSVAL_TYPE_NULL;
+        type = JSVAL_TYPE_NULL;
+        break;
       case TYPE_FLAG_BOOLEAN:
-        return JSVAL_TYPE_BOOLEAN;
+        type = JSVAL_TYPE_BOOLEAN;
+        break;
       case TYPE_FLAG_INT32:
-        return JSVAL_TYPE_INT32;
+        type = JSVAL_TYPE_INT32;
+        break;
       case TYPE_FLAG_STRING:
-        return JSVAL_TYPE_STRING;
+        type = JSVAL_TYPE_STRING;
+        break;
       case TYPE_FLAG_OBJECT:
-        return JSVAL_TYPE_OBJECT;
+        type = JSVAL_TYPE_OBJECT;
+        break;
       default:
+        /* Return directly to avoid adding a type constraint. */
         return JSVAL_TYPE_UNKNOWN;
     }
+
+    addFreezeTypeTag(cx, script, isConstructing);
+
+    return type;
 }
 
 inline TypeSet *

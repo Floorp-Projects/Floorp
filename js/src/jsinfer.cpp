@@ -828,118 +828,50 @@ TypeConstraintMonitorRead::newType(JSContext *cx, TypeSet *source, jstype type)
 /////////////////////////////////////////////////////////////////////
 
 /*
- * Constraint which logs changes which occur after a script has been frozen,
- * at a bytecode granularity.
+ * Constraint which triggers recompilation of a script if a possible new JSValueType
+ * tag is realized for a type set.
  */
-class TypeConstraintFreeze : public TypeConstraint
+class TypeConstraintFreezeTypeTag : public TypeConstraint
 {
 public:
-    analyze::Bytecode *code;
+    JSScript *script;
+    bool isConstructing;
 
-    TypeConstraintFreeze(analyze::Bytecode *_code)
-        : TypeConstraint("freeze"), code(_code)
+    /*
+     * Whether the type tag has been marked unknown due to a type change which
+     * occurred after this constraint was generated (and which triggered recompilation).
+     */
+    bool typeUnknown;
+
+    TypeConstraintFreezeTypeTag(JSScript *script, bool isConstructing)
+        : TypeConstraint("freezeTypeTag"),
+          script(script), isConstructing(isConstructing), typeUnknown(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type)
     {
+        if (typeUnknown)
+            return;
+
         if (type != TYPE_UNKNOWN && TypeIsObject(type)) {
-            /*
-             * Ignore new objects when either (a) this is a non-function object
-             * and there are already other known objects, or (b) this is a function
-             * object and there were already at least two objects of any kind
-             * (could not treat as a direct call).  This can underapproximate the
-             * number of recompilations actually required.
-             */
-            TypeObject *obj = (TypeObject*) type;
-            if (obj->isFunction) {
-                if (source->objectCount >= 3)
-                    return;
-            } else if (source->objectCount >= 2) {
+            /* Ignore new objects when the type set already has other objects. */
+            if (source->objectCount >= 2) {
+                JS_ASSERT(source->typeFlags == TYPE_FLAG_OBJECT);
                 return;
             }
         }
 
-        cx->compartment->types.recompileScript(code);
+        typeUnknown = true;
+
+        /* Need to trigger recompilation of the script here. :FIXME: bug 608746 */
     }
 };
 
 void
-TypeSet::addFreeze(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code)
+TypeSet::addFreezeTypeTag(JSContext *cx, JSScript *script, bool isConstructing)
 {
-    JS_ASSERT(this->pool == &pool);
-    add(cx, ArenaNew<TypeConstraintFreeze>(pool, code), false);
-}
-
-/*
- * Constraint which logs changes to the types of a property of any object which
- * a type set can refer to.
- */
-class TypeConstraintFreezeProp : public TypeConstraint
-{
-public:
-    analyze::Bytecode *code;
-    jsid id;
-
-    TypeConstraintFreezeProp(analyze::Bytecode *_code, jsid _id)
-        : TypeConstraint("freezeprop"), code(_code), id(_id)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, jstype type)
-    {
-        if (type == TYPE_UNKNOWN)
-            return;
-
-        TypeObject *object = GetPropertyObject(cx, type);
-        if (!object)
-            return;
-
-        TypeSet *types = object->properties(cx).getVariable(cx, id);
-        types->addFreeze(cx, object->pool(), code);
-    }
-};
-
-void
-TypeSet::addFreezeProp(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, jsid id)
-{
-    JS_ASSERT(this->pool == &pool);
-    add(cx, ArenaNew<TypeConstraintFreezeProp>(pool, code, id), false);
-}
-
-/*
- * Constraint which logs changes to element accesses on an object, depending on
- * the type of the access.
- */
-class TypeConstraintFreezeElem : public TypeConstraint
-{
-public:
-    analyze::Bytecode *code;
-
-    /* Fields about the element access, as for TypeConstraintElem. */
-    TypeSet *object;
-
-    TypeConstraintFreezeElem(analyze::Bytecode *code, TypeSet *object)
-        : TypeConstraint("freezeelem"), code(code), object(object)
-    {}
-
-    void newType(JSContext *cx, TypeSet *source, jstype type)
-    {
-        if (type == TYPE_INT32) {
-            object->addFreezeProp(cx, code->pool(), code, JSID_VOID);
-        } else {
-            /*
-             * Accesses at this bytecode are monitored already, don't need
-             * any freeze constraints.
-             */
-            JS_ASSERT(code->monitorNeeded);
-        }
-    }
-};
-
-void
-TypeSet::addFreezeElem(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *object)
-{
-    JS_ASSERT(this->pool == &pool);
-    add(cx, ArenaNew<TypeConstraintFreezeElem>(pool, code, object), false);
+    JS_ASSERT(this->pool == &script->analysis->pool);
+    add(cx, ArenaNew<TypeConstraintFreezeTypeTag>(script->analysis->pool, script, isConstructing), false);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1170,8 +1102,6 @@ TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
     }
     fprintf(out, " (%u over)\n", typeCountOver);
 
-    if (recompilations)
-        fprintf(out, "Recompilations: %u\n", recompilations);
     fprintf(out, "Time: %.2f ms\n", millis);
 
     // for debugging regressions.
@@ -1503,15 +1433,6 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
 
     fputs("\n", cx->typeOut());
 #endif
-
-    if (!code.script->compiled)
-        analysis->freezeAllTypes(cx);
-
-    if (code.script->recompileNeeded) {
-        fprintf(cx->typeOut(), "Recompile: #%u\n", analysis->id);
-        code.script->recompileNeeded = false;
-        cx->compartment->types.recompilations++;
-    }
 
     if (!useCount || code.missingTypes)
         return;
@@ -2746,191 +2667,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
       default:
         cx->compartment->types.warnings = true;
         fprintf(cx->typeOut(), "warning: Unknown bytecode: %s\n", js_CodeNameTwo[op]);
-    }
-}
-
-void
-Script::freezeAllTypes(JSContext *cx)
-{
-    JS_ASSERT(!compiled);
-    compiled = true;
-
-    unsigned offset = 0;
-    while (offset < script->length) {
-        Bytecode *code = codeArray[offset];
-
-        if (code && code->analyzed)
-            freezeTypes(cx, code);
-
-        offset += GetBytecodeLength(script->code + offset);
-    }
-}
-
-void
-Script::freezeTypes(JSContext *cx, Bytecode *code)
-{
-    unsigned offset = code->offset;
-    unsigned useCount = GetUseCount(script, offset);
-
-    JS_ASSERT(code->analyzed);
-    jsbytecode *pc = script->code + offset;
-    JSOp op = (JSOp)*pc;
-
-    switch (op) {
-
-      case JSOP_IFEQ:
-      case JSOP_IFEQX:
-      case JSOP_IFNE:
-      case JSOP_IFNEX:
-      case JSOP_LOOKUPSWITCH:
-      case JSOP_LOOKUPSWITCHX:
-      case JSOP_TABLESWITCH:
-      case JSOP_TABLESWITCHX:
-      case JSOP_LSH:
-      case JSOP_RSH:
-      case JSOP_URSH:
-      case JSOP_BITOR:
-      case JSOP_BITXOR:
-      case JSOP_BITAND:
-      case JSOP_BITNOT:
-      case JSOP_EQ:
-      case JSOP_NE:
-      case JSOP_LT:
-      case JSOP_LE:
-      case JSOP_GT:
-      case JSOP_GE:
-      case JSOP_NOT:
-      case JSOP_STRICTEQ:
-      case JSOP_STRICTNE:
-      case JSOP_IN:
-      case JSOP_DIV:
-      case JSOP_OR:
-      case JSOP_ORX:
-      case JSOP_AND:
-      case JSOP_ANDX:
-      case JSOP_GETPROP:
-      case JSOP_GETXPROP:
-      case JSOP_CALLPROP:
-      case JSOP_GETELEM:
-      case JSOP_CALLELEM:
-      case JSOP_LENGTH:
-      case JSOP_ADD:
-      case JSOP_SUB:
-      case JSOP_MUL:
-      case JSOP_MOD:
-      case JSOP_NEG:
-        for (unsigned i = 0; i < useCount; i++)
-            code->popped(i)->addFreeze(cx, pool, code);
-        break;
-
-      case JSOP_INCNAME:
-      case JSOP_DECNAME:
-      case JSOP_NAMEINC:
-      case JSOP_NAMEDEC: {
-        jsid id = GetAtomId(cx, this, pc, 0);
-
-        VariableSet *vars = SearchScope(cx, this, code->inStack, id);
-        if (vars) {
-            TypeSet *types = vars->getVariable(cx, id);
-            types->addFreeze(cx, *vars->pool, code);
-        }
-        break;
-      }
-
-      case JSOP_INCGNAME:
-      case JSOP_DECGNAME:
-      case JSOP_GNAMEINC:
-      case JSOP_GNAMEDEC: {
-        jsid id = GetAtomId(cx, this, pc, 0);
-        TypeSet *types = GetGlobalProperties(cx)->getVariable(cx, id);
-
-        types->addFreeze(cx, cx->compartment->types.pool, code);
-        break;
-      }
-
-      case JSOP_INCGLOBAL:
-      case JSOP_DECGLOBAL:
-      case JSOP_GLOBALINC:
-      case JSOP_GLOBALDEC: {
-        jsid id = GetGlobalId(cx, this, pc);
-        TypeSet *types = GetGlobalProperties(cx)->getVariable(cx, id);
-
-        types->addFreeze(cx, cx->compartment->types.pool, code);
-        break;
-      }
-
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-      case JSOP_GETARGPROP: {
-        jsid id = getArgumentId(GET_ARGNO(pc));
-        TypeSet *types = localTypes.getVariable(cx, id);
-
-        types->addFreeze(cx, pool, code);
-        break;
-      }
-
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
-      case JSOP_GETLOCALPROP: {
-        jsid id = getLocalId(GET_SLOTNO(pc), code->inStack);
-        TypeSet *types = evalParent()->localTypes.getVariable(cx, id);
-
-        types->addFreeze(cx, evalParent()->pool, code);
-        break;
-      }
-
-      case JSOP_SETPROP:
-      case JSOP_SETMETHOD:
-        code->popped(1)->addFreeze(cx, pool, code);
-        break;
-
-      case JSOP_INCPROP:
-      case JSOP_DECPROP:
-      case JSOP_PROPINC:
-      case JSOP_PROPDEC: {
-        jsid id = GetAtomId(cx, this, pc, 0);
-        code->popped(0)->addFreeze(cx, pool, code);
-        code->popped(0)->addFreezeProp(cx, pool, code, id);
-        break;
-      }
-
-      case JSOP_GETTHISPROP:
-        thisTypes.addFreeze(cx, pool, code);
-        break;
-
-      case JSOP_SETELEM:
-        code->popped(1)->addFreeze(cx, pool, code);
-        code->popped(2)->addFreeze(cx, pool, code);
-        break;
-
-      case JSOP_INCELEM:
-      case JSOP_DECELEM:
-      case JSOP_ELEMINC:
-      case JSOP_ELEMDEC:
-        code->popped(0)->addFreeze(cx, pool, code);
-        code->popped(1)->addFreeze(cx, pool, code);
-        code->popped(0)->addFreezeElem(cx, pool, code, code->popped(1));
-        break;
-
-      case JSOP_CALL:
-      case JSOP_EVAL:
-      case JSOP_APPLY:
-      case JSOP_NEW: {
-        /*
-         * The only value affecting the behavior of a call is the callee,
-         * everything else is just copied around.
-         */
-        TypeSet *funTypes = code->popped(useCount - 1);
-        funTypes->addFreeze(cx, pool, code);
-        break;
-      }
-
-      default:
-        break;
     }
 }
 

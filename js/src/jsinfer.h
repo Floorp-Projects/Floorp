@@ -224,13 +224,15 @@ struct TypeSet
     void addFilterPrimitives(JSContext *cx, JSArenaPool &pool, TypeSet *target, bool onlyNullVoid);
     void addMonitorRead(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *target);
 
-    /* For simulating recompilation. */
-    void addFreeze(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code);
-    void addFreezeProp(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, jsid id);
-    void addFreezeElem(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *object);
+    /* Constraints inducing recompilation. */
+    void addFreezeTypeTag(JSContext *cx, JSScript *script, bool isConstructing);
 
-    /* Get any type tag which all values in this set must have. */
-    inline JSValueType getKnownTypeTag();
+    /*
+     * Get any type tag which all values in this set must have.  Should this type
+     * set change in the future so that another type tag is possible, mark script
+     * for recompilation.
+     */
+    inline JSValueType getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing);
 
     /*
      * Make an intermediate type set with the specified debugging name,
@@ -719,9 +721,6 @@ struct TypeCompartment
      */
     uint64_t analysisTime;
 
-    /* Number of times a script needed to be recompiled. */
-    unsigned recompilations;
-
     /* Counts of stack type sets with some number of possible operand types. */
     static const unsigned TYPE_COUNT_LIMIT = 4;
     unsigned typeCounts[TYPE_COUNT_LIMIT];
@@ -766,9 +765,6 @@ struct TypeCompartment
 
     /* Monitor future effects on a bytecode. */
     inline void monitorBytecode(analyze::Bytecode *code);
-
-    /* Mark a bytecode's script as needing eventual recompilation. */
-    inline void recompileScript(analyze::Bytecode *code);
 };
 
 } /* namespace types */
