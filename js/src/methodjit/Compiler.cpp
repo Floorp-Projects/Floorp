@@ -114,6 +114,10 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 #if defined JS_TRACER
     ,addTraceHints(cx->traceJitEnabled)
 #endif
+#if defined JS_TYPE_INFERENCE
+    ,argumentTypes(ContextAllocPolicy(cx))
+    ,localTypes(ContextAllocPolicy(cx))
+#endif
 {
 }
 
@@ -158,16 +162,49 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);
 
+    uint32 nargs = fun ? fun->nargs : 0;
+    if (!frame.init(nargs) || !stubcc.init(nargs))
+        return Compile_Abort;
+
 #ifdef JS_TYPE_INFERENCE
     this->analysis = script->analyze(cx);
-#else
+
+    /* Fill in known types of arguments and locals. */
+
+    if (!argumentTypes.reserve(nargs))
+        return Compile_Error;
+    for (unsigned i = 0; i < nargs; i++) {
+        jsid id = analysis->getArgumentId(i);
+        JSValueType type = JSVAL_TYPE_UNKNOWN;
+        if (!JSID_IS_VOID(id)) {
+            types::TypeSet *types = analysis->localTypes.getVariable(cx, id);
+            type = types->getKnownTypeTag(cx, script, isConstructing);
+        }
+        argumentTypes.append(type);
+    }
+
+    if (!localTypes.reserve(script->nfixed))
+        return Compile_Error;
+    for (unsigned i = 0; i < script->nfixed; i++) {
+        jsid id = analysis->getLocalId(i, NULL);
+        JSValueType type = JSVAL_TYPE_UNKNOWN;
+        if (!analysis->localHasUseBeforeDef(i) && !JSID_IS_VOID(id)) {
+            types::TypeSet *types = analysis->localTypes.getVariable(cx, id);
+            type = types->getKnownTypeTag(cx, script, isConstructing);
+        }
+        localTypes.append(type);
+    }
+
+#else /* JS_TYPE_INFERENCE */
+
     analyze::Script analysis_;
     PodZero(&analysis_);
     analysis_.init(script);
     analysis_.analyze(cx);
 
     this->analysis = &analysis_;
-#endif
+
+#endif /* JS_TYPE_INFERENCE */
 
     if (analysis->OOM())
         return Compile_Error;
@@ -175,10 +212,6 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
     }
-
-    uint32 nargs = fun ? fun->nargs : 0;
-    if (!frame.init(nargs) || !stubcc.init(nargs))
-        return Compile_Abort;
 
     jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
     if (!jumpMap)
@@ -4628,7 +4661,8 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
     }
     for (uint32 i = 0; i < stackDepth; i++) {
         types::TypeStack *stack = analysis->getCode(PC).inStack;
-        JSValueType type = analysis->getStackTypes(script->nfixed + i, stack)->getKnownTypeTag();
+        types::TypeSet *types = analysis->getStackTypes(script->nfixed + i, stack);
+        JSValueType type = types->getKnownTypeTag(cx, script, isConstructing);
         if (type != JSVAL_TYPE_UNKNOWN) {
             FrameEntry *fe = frame.getLocal(script->nfixed + i);
             frame.learnType(fe, type, true);
@@ -4641,9 +4675,8 @@ JSValueType
 mjit::Compiler::knownArgumentType(uint32 arg)
 {
 #ifdef JS_TYPE_INFERENCE
-    jsid id = analysis->getArgumentId(arg);
-    if (!JSID_IS_VOID(id))
-        return analysis->localTypes.getVariable(cx, id)->getKnownTypeTag();
+    JS_ASSERT(fun && arg < fun->nargs);
+    return argumentTypes[arg];
 #endif
     return JSVAL_TYPE_UNKNOWN;
 }
@@ -4652,9 +4685,8 @@ JSValueType
 mjit::Compiler::knownLocalType(uint32 local)
 {
 #ifdef JS_TYPE_INFERENCE
-    jsid id = analysis->getLocalId(local, NULL);
-    if (!analysis->localHasUseBeforeDef(local) && !JSID_IS_VOID(id))
-        return analysis->localTypes.getVariable(cx, id)->getKnownTypeTag();
+    JS_ASSERT(local < script->nfixed);
+    return localTypes[local];
 #endif
     return JSVAL_TYPE_UNKNOWN;
 }
@@ -4663,7 +4695,8 @@ JSValueType
 mjit::Compiler::knownPushedType(uint32 pushed)
 {
 #ifdef JS_TYPE_INFERENCE
-    return analysis->getCode(PC).pushed(pushed)->getKnownTypeTag();
+    types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
+    return types->getKnownTypeTag(cx, script, isConstructing);
 #endif
     return JSVAL_TYPE_UNKNOWN;
 }

@@ -290,6 +290,11 @@ class Compiler : public BaseCompiler
     bool debugMode;
     bool addTraceHints;
 
+#ifdef JS_TYPE_INFERENCE
+    js::Vector<JSValueType, 16> argumentTypes;
+    js::Vector<JSValueType, 16> localTypes;
+#endif
+
     Compiler *thisFromCtor() { return this; }
   public:
     // Special atom index used to indicate that the atom is 'length'. This
