@@ -642,6 +642,7 @@ JSObject::nativeSearch(jsid id, bool adding)
 inline const js::Shape *
 JSObject::nativeLookup(jsid id)
 {
+    JS_ASSERT(isNative());
     return SHAPE_FETCH(nativeSearch(id));
 }
 
