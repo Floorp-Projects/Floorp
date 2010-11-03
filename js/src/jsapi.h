@@ -485,16 +485,16 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
                                            if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
-#define JSFUN_CONSTRUCTOR       0x02    /* native that can be called as a ctor
-                                           without creating a this object */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
+#define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
+                                           without creating a this object */
 
-#define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
+#define JSFUN_FLAGS_MASK      0x07f8    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
                                            flag interpreted functions */
 
