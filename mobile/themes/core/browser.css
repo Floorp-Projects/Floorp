@@ -638,10 +638,10 @@ placeitem {
   min-height: 70px; /* row size */
 }
 
-autocompleteresult:hover:active,
+#popup_autocomplete autocompleteresult:hover:active,
 placelist placeitem:hover:active:not([selected="true"]),
-historylist placeitem:hover:active:not([selected="true"]):not([class="history-item-title"]),
-remotetabslist placeitem:hover:active:not([selected="true"]):not([class="remotetabs-item-title"]),
+historylist autocompleteresult:hover:active:not([selected="true"]):not([class="history-item-title"]),
+remotetabslist autocompleteresult:hover:active:not([selected="true"]):not([class="remotetabs-item-title"]),
 .autocompleteresult-selected {
   background-color: #8db8d8;
 }

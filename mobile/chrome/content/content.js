@@ -820,6 +820,11 @@ ContextHandler.registerType("link-saveable", function(aState, aElement) {
   return (protocol && protocol != "mailto" && protocol != "javascript" && protocol != "news" && protocol != "snews");
 });
 
+ContextHandler.registerType("link-openable", function(aState, aElement) {
+  let protocol = aState.linkProtocol;
+  return (protocol && protocol != "mailto" && protocol != "javascript" && protocol != "news" && protocol != "snews");
+});
+
 ContextHandler.registerType("link-shareable", function(aState, aElement) {
   return Util.isShareableScheme(aState.linkProtocol);
 });
