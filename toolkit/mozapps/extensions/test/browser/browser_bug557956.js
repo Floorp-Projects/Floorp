@@ -234,13 +234,15 @@ add_test(function() {
               ok(!button.disabled, "Finish button should not be disabled");
               EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
 
-              AddonManager.getAddonsByIDs(["addon8@tests.mozilla.org",
-                                           "addon9@tests.mozilla.org"],
-                                           function([a8, a9]) {
-                is(a8.version, "2.0", "addon8 should have updated");
-                is(a9.version, "2.0", "addon9 should have updated");
-
-                uninstall_test_addons(run_next_test);
+              wait_for_window_close(aWindow, function() {
+                AddonManager.getAddonsByIDs(["addon8@tests.mozilla.org",
+                                             "addon9@tests.mozilla.org"],
+                                             function([a8, a9]) {
+                  is(a8.version, "2.0", "addon8 should have updated");
+                  is(a9.version, "2.0", "addon9 should have updated");
+  
+                  uninstall_test_addons(run_next_test);
+                });
               });
             });
           });
@@ -317,9 +319,11 @@ add_test(function() {
               ok(!button.hidden, "Finish button should not be hidden");
               ok(!button.disabled, "Finish button should not be disabled");
 
-              EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
+              wait_for_window_close(aWindow, function() {
+                uninstall_test_addons(run_next_test);
+              });
 
-              uninstall_test_addons(run_next_test);
+              EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
             });
           });
         });
@@ -400,9 +404,12 @@ add_test(function() {
             var button = doc.documentElement.getButton("finish");
             ok(!button.hidden, "Finish button should not be hidden");
             ok(!button.disabled, "Finish button should not be disabled");
-            EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
 
-            uninstall_test_addons(run_next_test);
+            wait_for_window_close(aWindow, function() {
+              uninstall_test_addons(run_next_test);
+            });
+
+            EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
           });
         });
       });
