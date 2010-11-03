@@ -20,14 +20,14 @@ function clearEvents() {
 
 function checkEvents(aEvents) {
   if (aEvents.length != gEvents.length) {
-    dump("---- event check: failed length (" + aEvents.length + " != " + gEvents.length + ")\n");
-    dump("---- expected: [" + aEvents.join(",") + "] actual: [" + gEvents.join(",") + "]\n");
+    info("---- event check: failed length (" + aEvents.length + " != " + gEvents.length + ")\n");
+    info("---- expected: [" + aEvents.join(",") + "] actual: [" + gEvents.join(",") + "]\n");
     return false;
   }
 
   for (let i=0; i<aEvents.length; i++) {
     if (aEvents[i] != gEvents[i]) {
-      dump("---- event check: failed match (" + aEvents[i] + " != " + gEvents[i] + "\n");
+      info("---- event check: failed match (" + aEvents[i] + " != " + gEvents[i] + "\n");
       return false;
     }
   }
@@ -52,15 +52,15 @@ function clearContextTypes() {
 
 function checkContextTypes(aTypes) {
   if (aTypes.length != gContextTypes.length) {
-    dump("---- type check: failed length (" + aTypes.length + " != " + gContextTypes.length + ")\n");
-    dump("---- expected: [" + aTypes.join(",") + "] actual: [" + gContextTypes.join(",") + "]\n");
+    info("---- type check: failed length (" + aTypes.length + " != " + gContextTypes.length + ")\n");
+    info("---- expected: [" + aTypes.join(",") + "] actual: [" + gContextTypes.join(",") + "]\n");
     return false;
   }
 
   for (let i=0; i<aTypes.length; i++) {
     if (gContextTypes.indexOf(aTypes[i]) == -1) {
-      dump("---- type check: failed match (" + aTypes[i] + ")\n");
-      dump("---- expected: [" + aTypes.join(",") + "] actual: [" + gContextTypes.join(",") + "]\n");
+      info("---- type check: failed match (" + aTypes[i] + ")\n");
+      info("---- expected: [" + aTypes.join(",") + "] actual: [" + gContextTypes.join(",") + "]\n");
       return false;
     }
   }
@@ -218,14 +218,13 @@ gTests.push({
     browser.messageManager.addMessageListener("Browser:ContextMenu", dumpMessages);
 
     let link = browser.contentDocument.getElementById("link-single");
-    let bcr  = link.getBoundingClientRect();
     let linkRect = link.getBoundingClientRect();
 
     clearContextTypes();
-    EventUtils.synthesizeMouseForContent(link, bcr.width/2, bcr.height/2, { type: "mousedown" }, window);
+    EventUtils.synthesizeMouseForContent(link, linkRect.width/2, linkRect.height/4, { type: "mousedown" }, window);
     setTimeout(function() {
-      EventUtils.synthesizeMouseForContent(link, bcr.width/2, bcr.height/2, { type: "mouseup" }, window);
-      ok(checkContextTypes(["link","link-saveable"]), "Plain link context types");
+      EventUtils.synthesizeMouseForContent(link, linkRect.width/2, linkRect.height/4, { type: "mouseup" }, window);
+      ok(checkContextTypes(["link","link-saveable","link-openable"]), "Plain link context types");
       clearContextTypes();
 
       gCurrentTest.contextPlainImageTest();
@@ -240,7 +239,7 @@ gTests.push({
     let imgRect = img.getBoundingClientRect();
 
     clearContextTypes();
-    EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mousedown" }, window);
+    EventUtils.synthesizeMouseForContent(img, imgRect.width/2, imgRect.height/2, { type: "mousedown" }, window);
     setTimeout(function() {
       EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mouseup" }, window);
       ok(checkContextTypes(["image","image-shareable","image-loaded"]), "Plain image context types");
@@ -261,7 +260,7 @@ gTests.push({
     EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mousedown" }, window);
     setTimeout(function() {
       EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mouseup" }, window);
-      ok(checkContextTypes(["link","link-saveable","image","image-shareable","image-loaded"]), "Nested image context types");
+      ok(checkContextTypes(["link","link-saveable","image","image-shareable","image-loaded","link-openable"]), "Nested image context types");
       clearContextTypes();
 
       gCurrentTest.lastTest();
