@@ -413,9 +413,8 @@ TabChild::ParamsToArrays(nsIDialogParamBlock* aParams,
       aIntParams.AppendElement(val);
     }
     PRInt32 j = 0;
-    PRUnichar* str = nsnull;
-    while (NS_SUCCEEDED(aParams->GetString(j, &str))) {
-      nsAdoptingString strVal(str);
+    nsXPIDLString strVal;
+    while (NS_SUCCEEDED(aParams->GetString(j, getter_Copies(strVal)))) {
       aStringParams.AppendElement(strVal);
       ++j;
     }
