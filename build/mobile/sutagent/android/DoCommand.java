@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -59,9 +60,12 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.zip.Adler32;
@@ -87,6 +91,7 @@ import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -95,12 +100,14 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Debug;
 import android.os.Environment;
 import android.os.StatFs;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
@@ -118,13 +125,13 @@ public class DoCommand {
 	String	currentDir = "/";
 	String	sErrorPrefix = "##AGENT-WARNING## ";
 	
-	private final String prgVersion = "SUTAgentAndroid Version 0.85";
+	private final String prgVersion = "SUTAgentAndroid Version 0.87";
 	
 	public enum Command
 		{
 		RUN ("run"),
 		EXEC ("exec"),
-		ARUN ("arun"),
+		ENVRUN ("envrun"),
 		KILL ("kill"),
 		PS ("ps"),
 		DEVINFO ("info"),
@@ -173,6 +180,8 @@ public class DoCommand {
 		UNINST ("uninst"),
 		TEST ("test"),
 		VER ("ver"),
+		TZGET ("tzget"),
+		TZSET ("tzset"),
 		UNKNOWN ("unknown");
 		
 		private final String theCmd;
@@ -207,7 +216,7 @@ public class DoCommand {
 		Command	cCmd = null;
 		Command cSubCmd = null;
 		
-		String [] Argv = parseCmdLine(theCmdLine);
+		String [] Argv = parseCmdLine2(theCmdLine);
 		
 		int Argc = Argv.length;
 		
@@ -221,6 +230,17 @@ public class DoCommand {
 				
 			case CLOK:
 				strReturn = GetClok();
+				break;
+				
+			case TZGET:
+				strReturn = GetTimeZone();
+				break;
+				
+			case TZSET:
+				if (Argc == 2)
+					strReturn = SetTimeZone(Argv[1]);
+				else
+					strReturn = sErrorPrefix + "Wrong number of arguments for settz command!";
 				break;
 				
 			case UPDT:
@@ -327,16 +347,6 @@ public class DoCommand {
 				break;
 				
 			case REBT:
-//				try {
-//					reboot(null);
-//					Power.reboot(null);
-//					Power.shutdown();
-//					}
-//				catch (IOException e)
-//					{
-					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//					}
 				RunReboot(cmdOut);
 				break;
 				
@@ -498,6 +508,25 @@ public class DoCommand {
 			case TEST:
 //				boolean bRet = false;
 /*				
+				Configuration userConfig = new Configuration();
+				Settings.System.getConfiguration( contextWrapper.getContentResolver(), userConfig );
+				Calendar cal = Calendar.getInstance( userConfig.locale);
+				TimeZone ctz = cal.getTimeZone();
+				String sctzLongName = ctz.getDisplayName();
+				String pstzName = TimeZone.getDefault().getDisplayName();
+*/
+				String sTimeZoneName = GetTimeZone();
+				
+				TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+				TimeZone tz2 = TimeZone.getTimeZone("GMT-08:00");
+				int	nOffset = (-8 * 3600000);
+				String [] zoneNames = TimeZone.getAvailableIDs(nOffset);
+				int nNumMatches = zoneNames.length;
+				TimeZone.setDefault(tz);
+				
+				String sOldTZ = System.setProperty("persist.sys.timezone", "America/Los_Angeles");
+				
+/*				
 				byte[] buffer = new byte [4096];
 				int	nRead = 0;
 				long lTotalRead = 0;
@@ -591,7 +620,7 @@ public class DoCommand {
 					}
 */				
 //				strReturn = InstallApplication();
-				strReturn = InstallApp(Argv[1], cmdOut);
+//				strReturn = InstallApp(Argv[1], cmdOut);
 				
 //				strReturn = UninstallApplication();
 //				String sPingCheck = SendPing("www.mozilla.org",null);
@@ -651,6 +680,24 @@ public class DoCommand {
 					e.printStackTrace();
 					}
 */
+				break;
+				
+			case ENVRUN:
+				if (Argc >= 2)
+					{
+					String [] theArgs = new String [Argc - 1];
+			
+					for (int lcv = 1; lcv < Argc; lcv++)
+						{
+						theArgs[lcv - 1] = Argv[lcv];
+						}
+			
+					strReturn = StartPrg2(theArgs, cmdOut);
+					}
+				else
+					{
+					strReturn = sErrorPrefix + "Wrong number of arguments for " + Argv[0] + " command!";
+					}
 				break;
 				
 			case EXEC:
@@ -828,12 +875,28 @@ public class DoCommand {
 			}
 		}
 
-	public String [] parseCmdLine(String theCmdLine) {
+	public String [] parseCmdLine2(String theCmdLine)
+		{
+		String	cmdString;
 		String	workingString;
 		String	workingString2;
+		String	workingString3;
 		List<String> lst = new ArrayList<String>();
-		int nLength = theCmdLine.length();
-		int nFirstSpace = theCmdLine.indexOf(' ');
+		int nLength = 0;
+		int nFirstSpace = -1;
+		
+		// Null cmd line
+		if (theCmdLine == null)
+			{
+			String [] theArgs = new String [1];
+			theArgs[0] = new String("");
+			return(theArgs);
+			}
+		else
+			{
+			nLength = theCmdLine.length();
+			nFirstSpace = theCmdLine.indexOf(' ');
+			}
 		
 		if (nFirstSpace == -1)
 			{
@@ -843,7 +906,134 @@ public class DoCommand {
 			}
 		
 		// Get the command
-		lst.add(new String(theCmdLine.substring(0, nFirstSpace)));
+		cmdString = new String(theCmdLine.substring(0, nFirstSpace)); 
+		lst.add(cmdString);
+		
+		// Jump past the command and trim
+		workingString = (theCmdLine.substring(nFirstSpace + 1, nLength)).trim();
+		
+		while ((nLength = workingString.length()) > 0)
+			{
+			int nEnd = 0;
+			int	nStart = 0;
+			
+			// if we have a quote
+			if (workingString.startsWith("\""))
+				{
+				// point to the first non quote char
+				nStart = 1;
+				// find the matching quote
+				nEnd = workingString.indexOf('"', nStart);
+				
+				char prevChar;
+				
+				while(nEnd != -1)
+					{
+					// check to see if the quotation mark has been escaped
+					prevChar = workingString.charAt(nEnd - 1);
+					if (prevChar == '\\')
+						{
+						// if escaped, point past this quotation mark and find the next
+						nEnd++;
+						if (nEnd < nLength)
+							nEnd = workingString.indexOf('"', nEnd);
+						else
+							nEnd = -1;
+						}
+					else
+						break;
+					}
+				
+				// there isn't one
+				if (nEnd == -1)
+					{
+					// point at the quote
+					nStart = 0;
+					// so find the next space
+					nEnd = workingString.indexOf(' ', nStart);
+					// there isn't one of those either
+					if (nEnd == -1)
+						nEnd = nLength;	// Just grab the rest of the cmdline
+					}
+				}
+			else // no quote so find the next space
+				{
+				nEnd = workingString.indexOf(' ', nStart);
+				// there isn't one of those
+				if (nEnd == -1)
+					nEnd = nLength;	// Just grab the rest of the cmdline
+				}
+			
+			// get the substring
+			workingString2 = workingString.substring(nStart, nEnd);
+
+			// if we have escaped quotes
+			if (workingString2.contains("\\\""))
+				{
+				do
+					{
+					// replace escaped quote with embedded quote
+					workingString3 = workingString2.replace("\\\"", "\"");
+					workingString2 = workingString3;
+					}
+				while(workingString2.contains("\\\""));
+				}
+
+			// add it to the list
+			lst.add(new String(workingString2));
+			
+			// if we are dealing with a quote
+			if (nStart > 0)
+				nEnd++; //  point past the end one
+			
+			// jump past the substring and trim it
+			workingString = (workingString.substring(nEnd)).trim();
+			}
+		
+		// ok we're done package up the results
+		int nItems = lst.size();
+		
+		String [] theArgs = new String [nItems];
+		
+		for (int lcv = 0; lcv < nItems; lcv++)
+			{
+			theArgs[lcv] = lst.get(lcv);
+			}
+	
+		return(theArgs);
+		}
+	
+	public String [] parseCmdLine(String theCmdLine) {
+		String	cmdString;
+		String	workingString;
+		String	workingString2;
+		List<String> lst = new ArrayList<String>();
+		int nLength = 0;
+		int nFirstSpace = -1;
+		
+		// Null cmd line
+		if (theCmdLine == null)
+			{
+			String [] theArgs = new String [1];
+			theArgs[0] = new String("");
+			return(theArgs);
+			}
+		else
+			{
+			nLength = theCmdLine.length();
+			nFirstSpace = theCmdLine.indexOf(' ');
+			}
+		
+		if (nFirstSpace == -1)
+			{
+			String [] theArgs = new String [1];
+			theArgs[0] = new String(theCmdLine);
+			return(theArgs);
+			}
+		
+		// Get the command
+		cmdString = new String(theCmdLine.substring(0, nFirstSpace)); 
+		lst.add(cmdString);
 		
 		// Jump past the command and trim
 		workingString = (theCmdLine.substring(nFirstSpace + 1, nLength)).trim();
@@ -871,6 +1061,11 @@ public class DoCommand {
 					if (nEnd == -1)
 						nEnd = nLength;	// Just grab the rest of the cmdline
 					}
+				else
+					{
+					nStart = 0;
+					nEnd++;
+					}
 				}
 			else // no quote so find the next space
 				{
@@ -887,8 +1082,8 @@ public class DoCommand {
 			lst.add(new String(workingString2));
 			
 			// if we are dealing with a quote
-			if (nStart > 0)
-				nEnd++; //  point past the end one
+//			if (nStart > 0)
+//				nEnd++; //  point past the end one
 			
 			// jump past the substring and trim it
 			workingString = (workingString.substring(nEnd)).trim();
@@ -1116,7 +1311,6 @@ public class DoCommand {
 	public String StatProcess(String string)
 		{
 		String sRet = "";
-//		ActivityManager aMgr = (ActivityManager) SUTAgentAndroid.me.getSystemService(Activity.ACTIVITY_SERVICE);
 		ActivityManager aMgr = (ActivityManager) contextWrapper.getSystemService(Activity.ACTIVITY_SERVICE);
 		int	[] nPids = new int [1];
 		
@@ -1160,7 +1354,6 @@ public class DoCommand {
 	public String GetAppRoot(String AppName)
 		{
 		String sRet = "";
-//		Context ctx = SUTAgentAndroid.me.getApplicationContext();
 		Context ctx = contextWrapper.getApplicationContext();
 		
 		if (ctx != null)
@@ -1234,8 +1427,8 @@ public class DoCommand {
 		try {
 			digest = java.security.MessageDigest.getInstance("MD5");
 			}
-		catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
+		catch (NoSuchAlgorithmException e)
+			{
 			e.printStackTrace();
 			}
 		
@@ -1420,12 +1613,10 @@ public class DoCommand {
 			}
 		catch (FileNotFoundException e)
 			{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			} 
 		catch (IOException e)
 			{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			}
 
@@ -1534,12 +1725,6 @@ public class DoCommand {
 						@SuppressWarnings("unused")
 						boolean bRet = ftp.completePendingCommand();
 						outStream.flush();
-				    	/*				    	
-				    	if (ftp.retrieveFile("pub/mozilla.org/firefox/releases/3.6b4/wince-arm/en-US/firefox-3.6b4.cab", outStream))
-				    		{
-				    		outStream.flush();
-				    		}
-				    	 */				    		
 			    		outStream.close();
 						strRet = ftp.getReplyString();
 						reply = ftp.getReplyCode();
@@ -1564,7 +1749,6 @@ public class DoCommand {
 			}
 		catch (SocketException e)
 			{
-			// TODO Auto-generated catch block
 			sRet = e.getMessage();
 			strRet = ftp.getReplyString();
 			reply = ftp.getReplyCode();
@@ -1573,7 +1757,6 @@ public class DoCommand {
 			}
 		catch (IOException e)
 			{
-			// TODO Auto-generated catch block
 			sRet = e.getMessage();
 			strRet = ftp.getReplyString();
 			reply = ftp.getReplyCode();
@@ -1652,7 +1835,6 @@ public class DoCommand {
 		theArgs[2] = "kill";
 
 		String sRet = sErrorPrefix + "Unable to kill " + sProcName + "\n";
-//		ActivityManager aMgr = (ActivityManager) SUTAgentAndroid.me.getSystemService(Activity.ACTIVITY_SERVICE);
 		ActivityManager aMgr = (ActivityManager) contextWrapper.getSystemService(Activity.ACTIVITY_SERVICE);
 		List <ActivityManager.RunningAppProcessInfo> lProcesses = aMgr.getRunningAppProcesses();
 		int lcv = 0;
@@ -1661,7 +1843,6 @@ public class DoCommand {
 		
 		for (lcv = 0; lcv < lProcesses.size(); lcv++)
 			{
-//			if (lProcesses.get(lcv).processName.contentEquals(sProcName))
 			if (lProcesses.get(lcv).processName.contains(sProcName))
 				{
 				strProcName = lProcesses.get(lcv).processName;
@@ -1684,11 +1865,8 @@ public class DoCommand {
 					} 
 				catch (InterruptedException e)
 					{
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					}
-
-//				SUTAgentAndroid.me.finishActivity(SUTAgentAndroid.START_PRG);
 
 				// Give the messages a chance to be processed
 				try {
@@ -1698,7 +1876,6 @@ public class DoCommand {
 					{
 					e.printStackTrace();
 					}
-//				aMgr.restartPackage(strProcName);
 				break;
 				}
 			}
@@ -1709,7 +1886,6 @@ public class DoCommand {
 			lProcesses = aMgr.getRunningAppProcesses();
 			for (lcv = 0; lcv < lProcesses.size(); lcv++)
 				{
-//				if (lProcesses.get(lcv).processName.contentEquals(sProcName))
 				if (lProcesses.get(lcv).processName.contains(sProcName))
 					{
 					sRet = sErrorPrefix + "Unable to kill " + nPID + " " + strProcName + "\n";
@@ -1724,12 +1900,9 @@ public class DoCommand {
 	public boolean IsProcessDead(String sProcName)
 		{
 		boolean bRet = false;
-//		ActivityManager aMgr = (ActivityManager) SUTAgentAndroid.me.getSystemService(Activity.ACTIVITY_SERVICE);
 		ActivityManager aMgr = (ActivityManager) contextWrapper.getSystemService(Activity.ACTIVITY_SERVICE);
 		List <ActivityManager.ProcessErrorStateInfo> lProcesses = aMgr.getProcessesInErrorState();
 		int lcv = 0;
-//		String strProcName = "";
-//		int	nPID = 0;
 		
 		if (lProcesses != null)
 			{
@@ -1738,8 +1911,6 @@ public class DoCommand {
 				if (lProcesses.get(lcv).processName.contentEquals(sProcName) && 
 					lProcesses.get(lcv).condition != ActivityManager.ProcessErrorStateInfo.NO_ERROR)
 					{
-//					strProcName = lProcesses.get(lcv).processName;
-//					nPID = lProcesses.get(lcv).pid;
 					bRet = true;
 					break;
 					}
@@ -1752,7 +1923,6 @@ public class DoCommand {
 	public String GetProcessInfo()
 		{
 		String sRet = "";
-//		ActivityManager aMgr = (ActivityManager) SUTAgentAndroid.me.getSystemService(Activity.ACTIVITY_SERVICE);
 		ActivityManager aMgr = (ActivityManager) contextWrapper.getSystemService(Activity.ACTIVITY_SERVICE);
 		List <ActivityManager.RunningAppProcessInfo> lProcesses = aMgr.getRunningAppProcesses();
 		int	nProcs = lProcesses.size();
@@ -1817,12 +1987,10 @@ public class DoCommand {
 
 	public long GetMemoryConfig()
 		{
-//		ActivityManager aMgr = (ActivityManager) SUTAgentAndroid.me.getSystemService(Activity.ACTIVITY_SERVICE);
 		ActivityManager aMgr = (ActivityManager) contextWrapper.getSystemService(Activity.ACTIVITY_SERVICE);
 		ActivityManager.MemoryInfo outInfo = new ActivityManager.MemoryInfo();
 		aMgr.getMemoryInfo(outInfo);
 		long lMem = outInfo.availMem;
-//		float fMem = (float) lMem / (float)(1024.0 * 1024.0);
 
 		return (lMem);
 		}
@@ -1866,12 +2034,10 @@ public class DoCommand {
 				} 
 			catch (UnknownHostException e)
 				{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				}
 			catch (IOException e)
 				{
-				// TODO Auto-generated catch block
 				sRet += "reg exception thrown";
 				e.printStackTrace();
 				}
@@ -1911,21 +2077,72 @@ public class DoCommand {
 			}
 		catch (IllegalArgumentException e)
 			{
-			// TODO Auto-generated catch block
 			sRet = e.getLocalizedMessage();
 			e.printStackTrace();
 			}
 		catch (ClientProtocolException e)
 			{
-			// TODO Auto-generated catch block
 			sRet = e.getLocalizedMessage();
 			e.printStackTrace();
 			}
 		catch (IOException e)
 			{
-			// TODO Auto-generated catch block
 			sRet = e.getLocalizedMessage();
 			e.printStackTrace();
+			}
+		
+		return(sRet);
+		}
+	
+	public String GetTimeZone()
+		{
+		String	sRet = "";
+		TimeZone tz;
+		
+		tz = TimeZone.getDefault();
+		Date now = new Date();
+		sRet = tz.getDisplayName(tz.inDaylightTime(now), TimeZone.LONG);
+		
+		return(sRet);
+		}
+	
+	public String SetTimeZone(String sTimeZone)
+		{
+		String			sRet = "Unable to set timezone to " + sTimeZone;
+		TimeZone 		tz = null;
+		AlarmManager 	amgr = null;
+		
+		if ((sTimeZone.length() > 0) && (sTimeZone.startsWith("GMT")))
+			{
+			amgr = (AlarmManager) contextWrapper.getSystemService(Context.ALARM_SERVICE);
+			if (amgr != null)
+				amgr.setTimeZone(sTimeZone);
+			}
+		else
+			{
+			String [] zoneNames = TimeZone.getAvailableIDs();
+			int nNumMatches = zoneNames.length;
+			int	lcv = 0;
+			
+			for (lcv = 0; lcv < nNumMatches; lcv++)
+				{
+				if (zoneNames[lcv].equalsIgnoreCase(sTimeZone))
+					break;
+				}
+
+			if (lcv < nNumMatches)
+				{
+				amgr = (AlarmManager) contextWrapper.getSystemService(Context.ALARM_SERVICE);
+				if (amgr != null)
+					amgr.setTimeZone(zoneNames[lcv]);
+				}
+			}
+		
+		if (amgr != null)
+			{
+			tz = TimeZone.getDefault();
+			Date now = new Date();
+			sRet = tz.getDisplayName(tz.inDaylightTime(now), TimeZone.LONG);
 			}
 		
 		return(sRet);
@@ -1943,16 +2160,7 @@ public class DoCommand {
 	
 	public String SetSystemTime(String sDate, String sTime, OutputStream out)
 		{
-//		Debug.waitForDebugger();
 		String sRet = "";
-		
-//		Intent	prgIntent = new Intent(android.provider.Settings.ACTION_DATE_SETTINGS);
-//		prgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//		contextWrapper.startActivity(prgIntent);
-		
-		// 2010/09/22 
-		// 15:41:00
-		// 0123456789012345678
 		
 		if (((sDate != null) && (sTime != null)) && 
 			(sDate.contains("/") || sDate.contains(".")) &&
@@ -1966,14 +2174,11 @@ public class DoCommand {
 			int mins = Integer.parseInt(sTime.substring(3,5));
 			int secs = Integer.parseInt(sTime.substring(6,8));
 
-			Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+			Calendar cal = new GregorianCalendar(TimeZone.getDefault());
 			cal.set(year, month - 1, day, hour, mins, secs);
 			long lMillisecs = cal.getTime().getTime();
 			
-//			boolean bRet = SystemClock.setCurrentTimeMillis(lMillisecs);
 			String sM = Long.toString(lMillisecs);
-//			long lm = 1285175618316L;
-			String sTest = cal.getTime().toGMTString();
 			String sMillis = sM.substring(0, sM.length() - 3) + "." + sM.substring(sM.length() - 3);
 			String [] theArgs = new String [3];
 		
@@ -1996,7 +2201,6 @@ public class DoCommand {
 				} 
 			catch (InterruptedException e)
 				{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				}
 			}
@@ -2045,24 +2249,6 @@ public class DoCommand {
 
 		return (sRet);
 		}
-/*	
-	private boolean IsProcRunning(Process pProc)
-		{
-		boolean bRet = false;
-		int nExitCode = 0;
-		
-		try
-			{
-			nExitCode = pProc.exitValue();
-			}
-		catch (IllegalThreadStateException z)
-			{	
-			bRet = true;
-			}
-
-		return(bRet);
-		}
-*/
 
 	public String NewKillProc(String sProcId, OutputStream out)
 		{
@@ -2107,9 +2293,6 @@ public class DoCommand {
 		try 
 			{
 			pProc = Runtime.getRuntime().exec(theArgs);
-//			sutErr = pProc.getErrorStream(); // Stderr
-//			sutIn = pProc.getOutputStream(); // Stdin
-//			sutOut = pProc.getInputStream(); // Stdout
 			RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
 			outThrd.start();
 			outThrd.join(5000);
@@ -2123,7 +2306,6 @@ public class DoCommand {
 			} 
 		catch (InterruptedException e)
 			{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			}
 	
@@ -2133,7 +2315,6 @@ public class DoCommand {
 	public String GetTmpDir()
 	{
 		String 	sRet = "";
-//		Context ctx = SUTAgentAndroid.me.getApplicationContext();
 		Context ctx = contextWrapper.getApplicationContext();
         File dir = ctx.getFilesDir();
         ctx = null;
@@ -2245,7 +2426,6 @@ public class DoCommand {
 			} 
 		catch (InterruptedException e)
 			{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			}
 
@@ -2269,7 +2449,6 @@ public class DoCommand {
 			outThrd.start();
 			outThrd.join(60000);
 			int nRet = pProc.exitValue();
-//			boolean bRet = outThrd.isAlive();
 			sRet = "\nuninst complete [" + nRet + "]";
 			}
 		catch (IOException e) 
@@ -2403,7 +2582,6 @@ public class DoCommand {
 		{
 		String sRet = "";
 	
-//		Context ctx = SUTAgentAndroid.me.getApplicationContext();
 		Context ctx = contextWrapper.getApplicationContext();
 		PackageManager pm = ctx.getPackageManager();
 
@@ -2435,17 +2613,12 @@ public class DoCommand {
 		try 
 			{
 			contextWrapper.startActivity(prgIntent);
-//			Thread.sleep(5000);
 			sRet = "exit";
 			}
 		catch(ActivityNotFoundException anf)
 			{
 			anf.printStackTrace();
 			} 
-//		catch (InterruptedException e)
-//			{
-//			e.printStackTrace();
-//			}
 	
 		ctx = null;
 		return (sRet);
@@ -2458,7 +2631,6 @@ public class DoCommand {
 		String sUrl = "";
 		String sRedirFileName = "";
 		
-//		Context ctx = SUTAgentAndroid.me.getApplicationContext();
 		Context ctx = contextWrapper.getApplicationContext();
 		PackageManager pm = ctx.getPackageManager();
 
@@ -2486,7 +2658,7 @@ public class DoCommand {
 		
 		if (sArgs.length > 1)
 			{
-			if (sArgs[0].contains("android.browser"))
+//			if (sArgs[0].contains("android.browser"))
 				prgIntent.setAction(Intent.ACTION_VIEW);
 			
 			if (sArgs[0].contains("fennec"))
@@ -2530,10 +2702,7 @@ public class DoCommand {
 
 		try 
 			{
-//			ctx.startActivity(prgIntent);
 			contextWrapper.startActivity(prgIntent);
-//			SUTAgentAndroid.me.startActivity(prgIntent);
-//			SUTAgentAndroid.me.startActivityForResult(prgIntent, SUTAgentAndroid.START_PRG);
 			}
 		catch(ActivityNotFoundException anf)
 			{
@@ -2551,12 +2720,11 @@ public class DoCommand {
 		try 
 			{
 			pProc = Runtime.getRuntime().exec(progArray);
-			sutErr = pProc.getErrorStream(); // Stderr
-			sutIn = pProc.getOutputStream(); // Stdin
-			sutOut = pProc.getInputStream(); // Stdout
 			RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
 			outThrd.start();
 			outThrd.join(10000);
+			int nRetCode = pProc.exitValue();
+			sRet = "return code [" + nRetCode + "]";
 			}
 		catch (IOException e) 
 			{
@@ -2564,8 +2732,147 @@ public class DoCommand {
 			}
 		catch (InterruptedException e)
 			{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			sRet = "Timed out!";
+			}
+
+		return (sRet);
+		}
+/*	
+	@SuppressWarnings("unchecked")
+	public static void set(String key, String value) throws Exception
+		{
+	    Class[] classes = Collections.class.getDeclaredClasses();
+	    Map env = System.getenv();
+	    for(Class cl : classes)
+	    	{
+	        if("java.util.Collections$UnmodifiableMap".equals(cl.getName()))
+	        	{
+	            Field field = cl.getDeclaredField("m");
+	            field.setAccessible(true);
+	            Object obj = field.get(env);
+	            Map<String, String> map = (Map<String, String>) obj;
+	            map.put(key, value);
+	        	}
+	    	}
+		}
+
+*/	
+	public String StartPrg2(String [] progArray, OutputStream out)
+		{
+		String sRet = "";
+		
+		int	nArraySize = 0;
+		int	nArgs = progArray.length - 1; // 1st arg is the environment string
+		int	lcv	= 0;
+		int	temp = 0;
+
+		String sEnvString = progArray[0];
+
+		// Set up command line args stripping off the environment string
+		String [] theArgs = new String [nArgs];
+		for (lcv = 0; lcv < nArgs; lcv++)
+			{
+			theArgs[lcv] = progArray[lcv + 1];
+			}
+		
+		try 
+			{
+			String [] envStrings = sEnvString.split(",");
+			Map<String, String> newEnv = new HashMap<String, String>();
+			
+			for (lcv = 0; lcv < envStrings.length; lcv++)
+				{
+				temp = envStrings[lcv].indexOf("=");
+				if (temp > 0)
+					{
+					newEnv.put(	envStrings[lcv].substring(0, temp), 
+								envStrings[lcv].substring(temp + 1, envStrings[lcv].length()));
+					}
+				}
+			
+			Map<String, String> sysEnv = System.getenv();
+			
+			nArraySize = sysEnv.size();
+			
+			for (Map.Entry<String, String> entry : newEnv.entrySet())
+				{
+				if (!sysEnv.containsKey(entry.getKey()))
+					{
+					nArraySize++;
+					}
+				}
+			
+			String[] envArray = new String[nArraySize];
+				
+			int		i = 0;
+			int		offset;
+			String	sKey = "";
+			String 	sValue = "";
+			
+	        for (Map.Entry<String, String> entry : sysEnv.entrySet())
+	        	{
+	        	sKey = entry.getKey();
+	        	if (newEnv.containsKey(sKey))
+	        		{
+	        		sValue = newEnv.get(sKey);
+	        		if ((offset = sValue.indexOf("$" + sKey)) != -1)
+	        			{
+	        			envArray[i++] = sKey + 
+	        							"=" + 
+	        							sValue.substring(0, offset) + 
+	        							entry.getValue() + 
+	        							sValue.substring(offset + sKey.length() + 1);
+	        			}
+	        		else
+	        			envArray[i++] = sKey + "=" + sValue;
+	        		newEnv.remove(sKey);
+	        		}
+	        	else
+	        		envArray[i++] = entry.getKey() + "=" + entry.getValue();
+	        	}
+	        
+			for (Map.Entry<String, String> entry : newEnv.entrySet())
+				{
+        		envArray[i++] = entry.getKey() + "=" + entry.getValue();
+				}
+	        
+			pProc = Runtime.getRuntime().exec(theArgs, envArray);
+
+			RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
+			outThrd.start();
+			outThrd.join(10000);
+			int nRetCode = pProc.exitValue();
+			sRet = "return code [" + nRetCode + "]";
+			}
+		catch(UnsupportedOperationException e)
+			{
+			if (e != null)
+				e.printStackTrace();
+			}
+		catch(ClassCastException e)
+			{
+			if (e != null)
+				e.printStackTrace();
+			}
+		catch(IllegalArgumentException e)
+			{
+			if (e != null)
+				e.printStackTrace();
+			}
+		catch(NullPointerException e)
+			{
+			if (e != null)
+				e.printStackTrace();
+			}
+		catch (IOException e) 
+			{
+			e.printStackTrace();
+			}
+		catch (InterruptedException e)
+			{
+			e.printStackTrace();
+			sRet = "Timed out!";
 			}
 
 		return (sRet);
@@ -2603,55 +2910,58 @@ public class DoCommand {
 */
 	private String PrintUsage()
 		{
-		String sRet = "run [executable] [args]  - start program no wait\n" +
-			"exec [executable] [args] - start program wait\n" +
-			"fire [executable] [args] - start program no wait\n" +
-			"arun [executable] [args] - start program no wait\n" +
-			"kill [program name]      - kill program no path\n" +
-			"killall                  - kill all processes started\n" +
-			"ps                       - list of running processes\n" +
-			"info                     - list of device info\n" +
-			"        [os]             - os version for device\n" +
-			"        [id]             - unique identifier for device\n" +
-			"        [uptime]         - uptime for device\n" +
-			"        [systime]        - current system time on device\n" +
-			"        [screen]         - width, height and bits per pixel for device\n" +
-			"        [memory]         - physical, free, available, storage memory for device\n" +
-			"        [processes]      - list of running processes see 'ps'\n" +
-			"deadman timeout          - set the duration for the deadman timer\n" +
-			"alrt [on/off]            - start or stop sysalert behavior\n" +
-			"disk [arg]               - prints disk space info\n" +
-			"cp file1 file2           - copy file1 to file2 on device\n" +
-			"time file                - timestamp for file on device\n" +
-			"hash file                - generate hash for file on device\n" +
-			"cd directory             - change cwd on device\n" +
-			"cat file                 - cat file on device\n" +
-			"cwd                      - display cwd on device\n" +
-			"mv file1 file2           - move file1 to file2 on device\n" +
-			"push filename            - push file to device\n" +
-			"rm file                  - delete file on device\n" +
-			"rmdr directory           - delete directory on device even if not empty\n" +
-			"mkdr directory           - create directory on device\n" +
-			"dirw directory           - tests whether the directory is writable on the device\n" +
-			"stat processid           - stat process on device\n" +
-			"dead processid           - print whether the process is alive or hung on device\n" +
-			"mems                     - dump memory stats on device\n" +
-			"ls                       - print directory on device\n" +
-			"tmpd                     - print temp directory on device\n" +
-			"ping [hostname/ipaddr]   - ping a network device\n" +
-			"unzp zipfile destdir     - unzip the zipfile into the destination dir\n" +
-			"zip zipfile src          - zip the source file/dir into zipfile\n" +
-			"rebt                     - reboot device\n" +
-			"inst /path/filename.apk  - install the referenced apk file\n" +
-			"uninst packagename       - uninstall the referenced package\n" +
-			"updt pkgname pkgfile     - unpdate the referenced package\n" +
-			"clok                     - the current device time expressed as the number of millisecs since epoch\n" +
-			"settime date time        - sets the device date and time (YYYY/MM/DD HH:MM:SS)\n" +
-			"rebt                     - reboot device\n" +
-			"quit                     - disconnect SUTAgent\n" +
-			"exit                     - close SUTAgent\n" +
-			"ver                      - SUTAgent version\n" +
-			"help                     - you're reading it";
+		String sRet = 
+			"run [executable] [args]      - start program no wait\n" +
+			"exec [executable] [args]     - start program wait\n" +
+			"fire [executable] [args]     - start program no wait\n" +
+			"envrun [env pairs] [cmdline] - start program no wait\n" +
+			"kill [program name]          - kill program no path\n" +
+			"killall                      - kill all processes started\n" +
+			"ps                           - list of running processes\n" +
+			"info                         - list of device info\n" +
+			"        [os]                 - os version for device\n" +
+			"        [id]                 - unique identifier for device\n" +
+			"        [uptime]             - uptime for device\n" +
+			"        [systime]            - current system time on device\n" +
+			"        [screen]             - width, height and bits per pixel for device\n" +
+			"        [memory]             - physical, free, available, storage memory for device\n" +
+			"        [processes]          - list of running processes see 'ps'\n" +
+			"deadman timeout              - set the duration for the deadman timer\n" +
+			"alrt [on/off]                - start or stop sysalert behavior\n" +
+			"disk [arg]                   - prints disk space info\n" +
+			"cp file1 file2               - copy file1 to file2 on device\n" +
+			"time file                    - timestamp for file on device\n" +
+			"hash file                    - generate hash for file on device\n" +
+			"cd directory                 - change cwd on device\n" +
+			"cat file                     - cat file on device\n" +
+			"cwd                          - display cwd on device\n" +
+			"mv file1 file2               - move file1 to file2 on device\n" +
+			"push filename                - push file to device\n" +
+			"rm file                      - delete file on device\n" +
+			"rmdr directory               - delete directory on device even if not empty\n" +
+			"mkdr directory               - create directory on device\n" +
+			"dirw directory               - tests whether the directory is writable on the device\n" +
+			"stat processid               - stat process on device\n" +
+			"dead processid               - print whether the process is alive or hung on device\n" +
+			"mems                         - dump memory stats on device\n" +
+			"ls                           - print directory on device\n" +
+			"tmpd                         - print temp directory on device\n" +
+			"ping [hostname/ipaddr]       - ping a network device\n" +
+			"unzp zipfile destdir         - unzip the zipfile into the destination dir\n" +
+			"zip zipfile src              - zip the source file/dir into zipfile\n" +
+			"rebt                         - reboot device\n" +
+			"inst /path/filename.apk      - install the referenced apk file\n" +
+			"uninst packagename           - uninstall the referenced package\n" +
+			"updt pkgname pkgfile         - unpdate the referenced package\n" +
+			"clok                         - the current device time expressed as the number of millisecs since epoch\n" +
+			"settime date time            - sets the device date and time (YYYY/MM/DD HH:MM:SS)\n" +
+			"tzset timezone               - sets the device timezone format is GMTxhh:mm x = +/- or a recognized Olsen string\n" +
+			"tzget                        - returns the current timezone set on the device\n" +
+			"rebt                         - reboot device\n" +
+			"quit                         - disconnect SUTAgent\n" +
+			"exit                         - close SUTAgent\n" +
+			"ver                          - SUTAgent version\n" +
+			"help                         - you're reading it";
 		return (sRet);
 		}
 }

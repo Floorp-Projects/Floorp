@@ -543,6 +543,8 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *length2String(jschar c1, jschar c2);
     static JSString *intString(jsint i);
+
+    static JSString *lookupStaticString(const jschar *chars, size_t length);
     
     JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
 };

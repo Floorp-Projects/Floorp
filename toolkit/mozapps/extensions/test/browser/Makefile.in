@@ -82,6 +82,7 @@ _TEST_FILES = \
   $(NULL)
 
 _TEST_RESOURCES = \
+  addon_prefs.xul \
   browser_bug557956.rdf \
   browser_bug557956_8_2.xpi \
   browser_bug557956_9_2.xpi \

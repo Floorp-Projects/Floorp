@@ -1641,15 +1641,12 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
   const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
                          nsIXPConnect::OMIT_COMPONENTS_OBJECT;
 
-  nsCAutoString origin("DOM worker: ");
-  origin.AppendInt((PRUint64)this);
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> globalWrapper;
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(aCx, scopeSupports,
                                          NS_GET_IID(nsISupports), nsnull,
-                                         origin, flags,
-                                         getter_AddRefs(globalWrapper));
+                                         NS_ISUPPORTS_CAST(nsIWorker*, this),
+                                         flags, getter_AddRefs(globalWrapper));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   JSObject* global;

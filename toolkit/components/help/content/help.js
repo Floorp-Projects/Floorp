@@ -562,7 +562,8 @@ nsHelpStatusHandler.prototype = {
 
     setJSStatus : function(status) {},
     setJSDefaultStatus : function(status) {},
-    setOverLink : function(link, context) {}
+    setOverLink : function(link, context) {},
+    onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {}
 }
 
 function UpdateBackForwardButtons() {

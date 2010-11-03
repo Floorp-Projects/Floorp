@@ -42,7 +42,7 @@ desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Th
 summ = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Thunderbird, etc.)"""
 
 PACKAGE_NAME = "mozrunner"
-PACKAGE_VERSION = "2.5.2"
+PACKAGE_VERSION = "2.5.2rc2"
 
 deps = []
 

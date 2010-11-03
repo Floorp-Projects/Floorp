@@ -215,6 +215,7 @@ XPC_MSG_DEF(NS_ERROR_CACHE_IN_USE                   , "Cache is currently in use
 XPC_MSG_DEF(NS_ERROR_DOCUMENT_NOT_CACHED            , "Document does not exist in cache")
 XPC_MSG_DEF(NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS     , "The requested number of domain levels exceeds those present in the host string")
 XPC_MSG_DEF(NS_ERROR_HOST_IS_IP_ADDRESS             , "The host string is an IP address")
+XPC_MSG_DEF(NS_ERROR_NOT_SAME_THREAD                , "Can't access a wrapped JS object from a different thread")
 
 /* storage related codes (from mozStorage.h) */
 XPC_MSG_DEF(NS_ERROR_STORAGE_BUSY                   , "SQLite database connection is busy")

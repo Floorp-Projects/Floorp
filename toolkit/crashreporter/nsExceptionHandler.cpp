@@ -208,7 +208,7 @@ static char* childCrashNotifyPipe;
 #  elif defined(XP_LINUX)
 static int serverSocketFd = -1;
 static int clientSocketFd = -1;
-static const int kMagicChildCrashReportFd = 42;
+static const int kMagicChildCrashReportFd = 4;
 
 #  endif
 

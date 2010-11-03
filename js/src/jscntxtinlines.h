@@ -47,21 +47,43 @@
 #include "jsxml.h"
 #include "jsregexp.h"
 #include "jsgc.h"
+#include "jscompartment.h"
 
-inline js::RegExpStatics *
-JSContext::regExpStatics()
+namespace js {
+
+static inline JSObject *
+GetGlobalForScopeChain(JSContext *cx)
 {
-    VOUCH_HAVE_STACK();
     /*
-     * Whether we're on trace or not, the scope chain associated with cx->fp
-     * will lead us to the appropriate global. Although cx->fp is stale on
-     * trace, trace execution never crosses globals.
+     * This is essentially GetScopeChain(cx)->getGlobal(), but without
+     * falling off trace.
+     *
+     * This use of cx->fp, possibly on trace, is deliberate:
+     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
+     * trace or not, since we do not trace calls across global objects.
      */
-    JS_ASSERT(hasfp());
-    JSObject *global = fp()->scopeChain().getGlobal();
-    js::RegExpStatics *res = js::RegExpStatics::extractFrom(global);
-    return res;
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    if (cx->hasfp())
+        return cx->fp()->scopeChain().getGlobal();
+
+    JSObject *scope = cx->globalObject;
+    if (!scope) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return NULL;
+    }
+    OBJ_TO_INNER_OBJECT(cx, scope);
+    return scope;
 }
+
+}
+
+#ifdef JS_METHODJIT
+inline js::mjit::JaegerCompartment *JSContext::jaegerCompartment()
+{
+    return compartment->jaegerCompartment;
+}
+#endif
 
 inline bool
 JSContext::ensureGeneratorStackSpace()
@@ -85,6 +107,12 @@ JSContext::computeNextFrame(JSStackFrame *fp)
         if (end != ss->getPreviousInContext()->getCurrentFrame())
             next = NULL;
     }
+}
+
+inline js::RegExpStatics *
+JSContext::regExpStatics()
+{
+    return js::RegExpStatics::extractFrom(js::GetGlobalForScopeChain(this));
 }
 
 namespace js {
@@ -570,6 +598,10 @@ class CompartmentChecker
         }
     }
 
+    void check(JSStackFrame *fp) {
+        check(&fp->scopeChain());
+    }
+
     void check(JSString *) { /* nothing for now */ }
 };
 
@@ -704,6 +736,21 @@ CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id,
 {
     assertSameCompartment(cx, obj, id, *vp);
     return op(cx, obj, id, vp);
+}
+
+inline bool
+CallSetter(JSContext *cx, JSObject *obj, jsid id, PropertyOp op, uintN attrs, uintN shortid,
+           js::Value *vp)
+{
+    if (attrs & JSPROP_SETTER)
+        return ExternalGetOrSet(cx, obj, id, CastAsObjectJsval(op), JSACC_WRITE, 1, vp, vp);
+
+    if (attrs & JSPROP_GETTER)
+        return js_ReportGetterOnlyAssignment(cx);
+
+    if (attrs & JSPROP_SHORTID)
+        id = INT_TO_JSID(shortid);
+    return CallJSPropertyOpSetter(cx, op, obj, id, vp);
 }
 
 }  /* namespace js */

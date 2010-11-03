@@ -344,7 +344,8 @@ nsSVGUseElement::CreateAnonymousContent()
       return nsnull;
 
     nsCOMPtr<nsIContent> svgNode;
-    NS_NewSVGSVGElement(getter_AddRefs(svgNode), nodeInfo.forget(), PR_FALSE);
+    NS_NewSVGSVGElement(getter_AddRefs(svgNode), nodeInfo.forget(),
+                        NOT_FROM_PARSER);
 
     if (!svgNode)
       return nsnull;

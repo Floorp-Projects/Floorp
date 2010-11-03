@@ -789,6 +789,7 @@ jsd_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval)
 
         return NULL;
     }
+
     exceptionState = JS_SaveExceptionState(cx);
     fun = JS_ValueToFunction(cx, val);
     JS_RestoreExceptionState(cx, exceptionState);

@@ -956,8 +956,11 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   // make operations on the table asynchronous, for performance
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
 
-  // Use write-ahead-logging for performance.
+  // Use write-ahead-logging for performance. We cap the autocheckpoint limit at
+  // 16 pages (around 500KB).
   mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA journal_mode = WAL"));
+  mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA wal_autocheckpoint = 16"));
 
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1311,7 +1314,7 @@ nsCookieService::NotifyRejected(nsIURI *aHostURI)
 // "added"   means a cookie was added. aSubject is the added cookie.
 // "changed" means a cookie was altered. aSubject is the new cookie.
 // "cleared" means the entire cookie list was cleared. aSubject is null.
-// "batch-deleted" means multiple cookies were deleted. aSubject is the list of
+// "batch-deleted" means a set of cookies was purged. aSubject is the list of
 // cookies.
 void
 nsCookieService::NotifyChanged(nsISupports     *aSubject,
@@ -1319,6 +1322,15 @@ nsCookieService::NotifyChanged(nsISupports     *aSubject,
 {
   if (mObserverService)
     mObserverService->NotifyObservers(aSubject, "cookie-changed", aData);
+}
+
+void
+nsCookieService::NotifyPurged(nsICookie2* aCookie)
+{
+  nsCOMPtr<nsIMutableArray> removedList =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  removedList->AppendElement(aCookie, PR_FALSE);
+  NotifyChanged(removedList, NS_LITERAL_STRING("batch-deleted").get());
 }
 
 /******************************************************************************
@@ -2331,10 +2343,9 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
 
       // Remove the stale cookie and notify.
       RemoveCookieFromList(matchIter);
-
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
-        "stale cookie was deleted");
-      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+        "stale cookie was purged");
+      NotifyPurged(oldCookie);
 
       // We've done all we need to wrt removing and notifying the stale cookie.
       // From here on out, we pretend pretend it didn't exist, so that we
@@ -2349,16 +2360,15 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
         return;
       }
 
-      // Remove the old cookie and notify.
+      // Remove the old cookie.
       RemoveCookieFromList(matchIter);
-
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
-        "previously stored cookie was deleted");
-      NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
 
       // If the new cookie has expired -- i.e. the intent was simply to delete
       // the old cookie -- then we're done.
       if (aCookie->Expiry() <= currentTime) {
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
+          "previously stored cookie was deleted");
+        NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
         return;
       }
 
@@ -2379,12 +2389,12 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
     if (entry && entry->GetCookies().Length() >= mMaxCookiesPerHost) {
       nsListIter iter;
       FindStaleCookie(entry, currentTime, iter);
+      oldCookie = iter.Cookie();
 
       // remove the oldest cookie from the domain
-      COOKIE_LOGEVICTED(iter.Cookie(), "Too many cookies for this domain");
       RemoveCookieFromList(iter);
-
-      NotifyChanged(iter.Cookie(), NS_LITERAL_STRING("deleted").get());
+      COOKIE_LOGEVICTED(oldCookie, "Too many cookies for this domain");
+      NotifyPurged(oldCookie);
 
     } else if (mDBState->cookieCount >= ADD_TEN_PERCENT(mMaxNumberOfCookies)) {
       PRInt64 maxAge = aCurrentTimeInUsec - mDBState->cookieOldestTime;

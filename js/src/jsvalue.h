@@ -898,9 +898,11 @@ typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                  PropertyOp getter, PropertyOp setter, uintN attrs);
 typedef JSBool
-(* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+(* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 typedef JSBool
 (* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
+(* DeleteIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
 typedef JSBool
@@ -999,7 +1001,7 @@ struct ObjectOps {
     js::StrictPropertyIdOp  setProperty;
     js::AttributesOp        getAttributes;
     js::AttributesOp        setAttributes;
-    js::StrictPropertyIdOp  deleteProperty;
+    js::DeleteIdOp          deleteProperty;
     js::NewEnumerateOp      enumerate;
     js::TypeOfOp            typeOf;
     js::TraceOp             trace;

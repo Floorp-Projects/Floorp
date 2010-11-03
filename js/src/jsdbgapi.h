@@ -50,6 +50,13 @@
 JS_BEGIN_EXTERN_C
 
 /*
+ * Currently, we only support runtime-wide debugging. In the future, we should
+ * be able to support compartment-wide debugging.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug);
+
+/*
  * Debug mode is a compartment-wide mode that enables a debugger to attach
  * to and interact with running methodjit-ed frames. In particular, it causes
  * every function to be compiled as if an eval was present (so eval-in-frame)

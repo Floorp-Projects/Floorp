@@ -5119,7 +5119,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     fp = cx->regs->fp;
     script = fp->script();
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
-    JS_ASSERT(pc >= script->main && pc < script->code + script->length);
+    JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
@@ -5228,7 +5228,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     JSPrinter *jp;
     char *name;
 
-    JS_ASSERT(script->main <= pc && pc < script->code + script->length);
+    JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     pcstack = NULL;
     oldcode = script->code;

@@ -1577,6 +1577,9 @@ namespace nanojit
         virtual LIns* insJtbl(LIns* index, uint32_t size) {
             return out->insJtbl(index, size);
         }
+        virtual LIns* insComment(const char* str) {
+            return out->insComment(str);
+        }
 
         // convenience functions
 
@@ -1823,14 +1826,9 @@ namespace nanojit
         {
             if (!code.isEmpty()) {
                 InsBuf b;
-                int32_t count = 0;
-                for (Seq<LIns*>* p = code.get(); p != NULL; p = p->tail) {
+                for (Seq<LIns*>* p = code.get(); p != NULL; p = p->tail)
                     logc->printf("%s    %s\n", prefix, printer->formatIns(&b, p->head));
-                    count++;
-                }
                 code.clear();
-                if (count > 1)
-                    logc->printf("\n");
             }
         }
 
@@ -1839,7 +1837,7 @@ namespace nanojit
         }
 
         LIns* insGuardXov(LOpcode op, LIns* a, LIns* b, GuardRecord *gr) {
-            return add_flush(out->insGuardXov(op,a,b,gr));
+            return add(out->insGuardXov(op,a,b,gr));
         }
 
         LIns* insBranch(LOpcode v, LIns* condition, LIns* to) {
@@ -1847,7 +1845,7 @@ namespace nanojit
         }
 
         LIns* insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to) {
-            return add_flush(out->insBranchJov(v, a, b, to));
+            return add(out->insBranchJov(v, a, b, to));
         }
 
         LIns* insJtbl(LIns* index, uint32_t size) {
@@ -1880,7 +1878,7 @@ namespace nanojit
             return add(out->insLoad(v, base, disp, accSet, loadQual));
         }
         LIns* insStore(LOpcode op, LIns* v, LIns* b, int32_t d, AccSet accSet) {
-            return add(out->insStore(op, v, b, d, accSet));
+            return add_flush(out->insStore(op, v, b, d, accSet));
         }
         LIns* insAlloc(int32_t size) {
             return add(out->insAlloc(size));
@@ -1895,6 +1893,10 @@ namespace nanojit
 #endif
         LIns* insImmD(double d) {
             return add(out->insImmD(d));
+        }
+
+        LIns* insComment(const char* str) {
+            return add_flush(out->insComment(str));
         }
     };
 
@@ -2154,6 +2156,7 @@ namespace nanojit
             LIns*   insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to);
             LIns*   insAlloc(int32_t size);
             LIns*   insJtbl(LIns* index, uint32_t size);
+            LIns*   insComment(const char* str);
     };
 
     class LirFilter
@@ -2312,6 +2315,7 @@ namespace nanojit
         LIns *split(const CallInfo *call, LIns* args[]);
         LIns *callD1(const CallInfo *call, LIns *a);
         LIns *callD2(const CallInfo *call, LIns *a, LIns *b);
+        LIns *callI1(const CallInfo *call, LIns *a);
         LIns *cmpD(const CallInfo *call, LIns *a, LIns *b);
         LIns *ins1(LOpcode op, LIns *a);
         LIns *ins2(LOpcode op, LIns *a, LIns *b);
