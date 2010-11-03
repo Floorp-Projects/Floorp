@@ -742,13 +742,11 @@ js::SyncOptionsToVersion(JSContext* cx)
 {
     JSVersion version = cx->findVersion();
     uint32 options = cx->options;
-    if (OptionsHasXML(options) == VersionHasXML(version) &&
-        OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version)) {
+    if (OptionsHasXML(options) == VersionHasXML(version)) {
         /* No need to override. */
         return false;
     }
     VersionSetXML(&version, OptionsHasXML(options));
-    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
     cx->maybeOverrideVersion(version);
     return true;
 }

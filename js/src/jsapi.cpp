@@ -1025,7 +1025,6 @@ CheckOptionVersionSync(JSContext *cx)
     uint32 options = cx->options;
     JSVersion version = cx->findVersion();
     JS_ASSERT(OptionsHasXML(options) == VersionHasXML(version));
-    JS_ASSERT(OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version));
 #endif
 }
 
@@ -4870,6 +4869,16 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *princ
                                                  filename, lineno, rval);
     cx->free(chars);
     return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+                                      const char *bytes, uintN nbytes,
+                                      const char *filename, uintN lineno, jsval *rval, JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_EvaluateScriptForPrincipals(cx, obj, principals, bytes, nbytes, filename, lineno,
+                                          rval);
 }
 
 JS_PUBLIC_API(JSBool)
