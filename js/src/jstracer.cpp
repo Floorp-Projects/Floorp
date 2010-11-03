@@ -5324,6 +5324,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
 {
     ExitType exitType;
+    JS_ASSERT(isCond(x));
     if (IsLoopEdge(pc, (jsbytecode*)tree->ip)) {
         exitType = LOOP_EXIT;
 
@@ -5351,15 +5352,8 @@ TraceRecorder::emitIf(jsbytecode* pc, bool cond, LIns* x)
     } else {
         exitType = BRANCH_EXIT;
     }
-    /*
-     * Put 'x' in a form suitable for a guard/branch condition if it isn't
-     * already.  This lets us detect if the comparison is optimized to 0 or 1,
-     * in which case we avoid the guard() call below.
-     */
-    if (!x->isImmI()) {
-        ensureCond(&x, &cond);
+    if (!x->isImmI())
         guard(cond, x, exitType);
-    }
 }
 
 /* Emit code for a fused IFEQ/IFNE. */
@@ -8483,10 +8477,10 @@ TraceRecorder::ifop()
     } else if (v.isNumber()) {
         jsdouble d = v.toNumber();
         cond = !JSDOUBLE_IS_NaN(d) && d;
-        x = w.andi(w.eqd(v_ins, v_ins), w.eqi0(w.eqd0(v_ins)));
+        x = w.eqi0(w.eqi0(w.andi(w.eqd(v_ins, v_ins), w.eqi0(w.eqd0(v_ins)))));
     } else if (v.isString()) {
         cond = v.toString()->length() != 0;
-        x = w.getStringLength(v_ins);
+        x = w.eqi0(w.eqp0(w.getStringLength(v_ins)));
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
