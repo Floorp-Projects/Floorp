@@ -109,12 +109,12 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     callPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())), 
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
-    oomInVector(false),
     stubcc(cx, *thisFromCtor(), frame, script),
     debugMode(cx->compartment->debugMode)
 #if defined JS_TRACER
-    ,addTraceHints(cx->traceJitEnabled)
+    , addTraceHints(cx->traceJitEnabled)
 #endif
+    , oomInVector(false)
 {
 }
 
