@@ -837,7 +837,10 @@ var BrowserUI = {
             this.doCommand("cmd_menu");
             break;
           case "Search":
-            AllPagesList.doCommand();
+            if (!this.activePanel)
+              AllPagesList.doCommand();
+            else
+              this.doCommand("cmd_opensearch");
             break;
           default:
             break;
@@ -878,12 +881,15 @@ var BrowserUI = {
           button.setAttribute("disabled", "true");
 
         break;
-      case "NavigationPanelHidden":
+      case "NavigationPanelHidden": {
         this._edit.collapsed = true;
         this._title.collapsed = false;
 
-        document.getElementById("urlbar-icons").removeAttribute("disabled");
+        let button = document.getElementById("urlbar-icons");
+        button.removeAttribute("open");
+        button.removeAttribute("disabled");
         break;
+      }
     }
   },
 
