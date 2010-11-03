@@ -498,7 +498,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
          * compartment lock.
          */
         if (!needNewString && str->isFlat()) {
-            str->flatClearMutable();
+            str->flatClearExtensible();
             key = str;
             atoms.add(p, StringToInitialAtomEntry(key));
         } else {
