@@ -4960,9 +4960,20 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     memcpy(args.argv(), argv, argc * sizeof(jsval));
 
     bool ok = InvokeConstructor(cx, args);
-    JSObject *obj = (ok && args.rval().isObject())
-                    ? &args.rval().toObject()
-                    : NULL;
+
+    JSObject *obj = NULL;
+    if (ok) {
+        if (args.rval().isObject()) {
+            obj = &args.rval().toObject();
+        } else {
+            /*
+             * Although constructors may return primitives (via proxies), this
+             * API is asking for an object, so we report an error.
+             */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_NEW_RESULT,
+                                 js_ValueToPrintableString(cx, args.rval()));
+        }
+    }
 
     LAST_FRAME_CHECKS(cx, ok);
     return obj;

@@ -872,18 +872,38 @@ ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
 
     InvokeArgsGuard args;
     if (!cx->stack().pushInvokeArgs(cx, argc, &args))
-        return JS_FALSE;
+        return false;
 
     args.callee() = fval;
     args.thisv() = thisv;
     memcpy(args.argv(), argv, argc * sizeof(Value));
 
     if (!Invoke(cx, args, 0))
-        return JS_FALSE;
+        return false;
 
     *rval = args.rval();
+    return true;
+}
 
-    return JS_TRUE;
+bool
+ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
+                          Value *rval)
+{
+    LeaveTrace(cx);
+
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
+        return false;
+
+    args.callee() = fval;
+    args.thisv().setMagic(JS_THIS_POISON);
+    memcpy(args.argv(), argv, argc * sizeof(Value));
+
+    if (!InvokeConstructor(cx, args))
+        return false;
+
+    *rval = args.rval();
+    return true;
 }
 
 bool
