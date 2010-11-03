@@ -2574,9 +2574,7 @@ namespace nanojit
             ins = out->ins2(op, a, b);
             addNL(LIns2, ins, k);
         } else if (ins->isCmp()) {
-            // XXX: temporarily disabled because it exposed latent problems
-            // that caused bug 607856.  See also bug 609129.
-            if (0 && knownCmpValues.containsKey(ins)) {
+            if (knownCmpValues.containsKey(ins)) {
                 // We've seen this comparison before, and it was previously
                 // used in a guard, so we know what its value must be at this
                 // point.  Replace it with a constant.
