@@ -4418,6 +4418,17 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj, const jschar *chars, size_t len
 }
 
 JS_PUBLIC_API(JSScript *)
+JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                     JSPrincipals *principals,
+                                     const char *bytes, size_t length,
+                                     const char *filename, uintN lineno,
+                                     JSVersion version)
+{
+    AutoVersionAPI ava(cx, version);
+    return JS_CompileScriptForPrincipals(cx, obj, principals, bytes, length, filename, lineno);   
+}
+
+JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               JSPrincipals *principals,
                               const char *bytes, size_t length,
@@ -4536,6 +4547,14 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *file
     }
     LAST_FRAME_CHECKS(cx, script);
     return script;
+}
+
+JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj, const char *filename,
+                                         FILE *file, JSPrincipals *principals, JSVersion version)
+{
+    AutoVersionAPI ava(cx, version);
+    return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, principals);
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4781,6 +4800,15 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
+                        JSVersion version)
+{
+    AutoVersionAPI ava(cx, version);
+    return JS_ExecuteScript(cx, obj, script, rval);
+}
+
+
+JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                         JSPrincipals *principals,
                                         const jschar *chars, uintN length,
@@ -4932,9 +4960,20 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     memcpy(args.argv(), argv, argc * sizeof(jsval));
 
     bool ok = InvokeConstructor(cx, args);
-    JSObject *obj = (ok && args.rval().isObject())
-                    ? &args.rval().toObject()
-                    : NULL;
+
+    JSObject *obj = NULL;
+    if (ok) {
+        if (args.rval().isObject()) {
+            obj = &args.rval().toObject();
+        } else {
+            /*
+             * Although constructors may return primitives (via proxies), this
+             * API is asking for an object, so we report an error.
+             */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_NEW_RESULT,
+                                 js_ValueToPrintableString(cx, args.rval()));
+        }
+    }
 
     LAST_FRAME_CHECKS(cx, ok);
     return obj;

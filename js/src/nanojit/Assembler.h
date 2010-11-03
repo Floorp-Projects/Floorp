@@ -487,6 +487,7 @@ namespace nanojit
             NIns*       asm_branch_ov(LOpcode op, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
+            void        asm_insert_random_nop();
             void        emitJumpTable(SwitchInfo* si, NIns* target);
             void        assignSavedRegs();
             void        reserveSavedRegs();

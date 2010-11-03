@@ -67,7 +67,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
-#define NJ_DIVI_SUPPORTED               1    
+#define NJ_DIVI_SUPPORTED               1
 
     static const Register RAX = { 0 };      // 1st int return, # of sse varargs
     static const Register RCX = { 1 };      // 4th int arg
@@ -321,7 +321,7 @@ namespace nanojit
         X64_jmpx    = 0xC524ff4000000004LL, // jmp [d32+x*8]
         X64_jmpxb   = 0xC024ff4000000004LL, // jmp [b+x*8]
 
-        X64_movqmi  = 0x80C7480000000003LL, // 32bit signed extended to 64-bit store imm -> qword ptr[b+disp32]  
+        X64_movqmi  = 0x80C7480000000003LL, // 32bit signed extended to 64-bit store imm -> qword ptr[b+disp32]
         X64_movlmi  = 0x80C7400000000003LL, // 32bit store imm -> dword ptr[b+disp32]
         X64_movsmi  = 0x80C7406600000004LL, // 16bit store imm -> word ptr[b+disp32]
         X64_movbmi  = 0x80C6400000000003LL, // 8bit store imm -> byte ptr[b+disp32]
@@ -373,6 +373,7 @@ namespace nanojit
         void underrunProtect(ptrdiff_t bytes);                              \
         void nativePageReset();                                             \
         void nativePageSetup();                                             \
+        bool hardenNopInsertion(const Config& /*c*/) { return false; }      \
         void asm_qbinop(LIns*);                                             \
         void MR(Register, Register);\
         void JMP(NIns*);\

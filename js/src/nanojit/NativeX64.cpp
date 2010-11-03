@@ -1003,15 +1003,15 @@ namespace nanojit
         #ifdef _WIN64
             else if (ty == ARGTYPE_D && arg_index < NumArgRegs) {
                 // double goes in XMM reg # based on overall arg_index
-                Register rxi = { REGNUM(XMM0) + arg_index };
+                Register rxi = XMM0 + arg_index;
                 asm_regarg(ty, arg, rxi);
                 arg_index++;
             }
         #else
-            else if (ty == ARGTYPE_D && REGNUM(fr) < REGNUM(XMM8)) {
+            else if (ty == ARGTYPE_D && fr < XMM8) {
                 // double goes in next available XMM register
                 asm_regarg(ty, arg, fr);
-                fr = REGINC(fr);
+                fr = fr + 1;
             }
         #endif
             else {
@@ -2180,6 +2180,10 @@ namespace nanojit
         SWAP(NIns*, codeStart, exitStart);
         SWAP(NIns*, codeEnd, exitEnd);
         verbose_only( SWAP(size_t, codeBytes, exitBytes); )
+    }
+
+    void Assembler::asm_insert_random_nop() {
+        NanoAssert(0); // not supported
     }
 
 } // namespace nanojit

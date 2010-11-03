@@ -1118,10 +1118,10 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FAILURE;
             }
 
-            script = JS_CompileScriptForPrincipals(cx, global,
-                                                   jsPrincipals,
-                                                   buf, fileSize32,
-                                                   nativePath.get(), 1);
+            script = JS_CompileScriptForPrincipalsVersion(
+              cx, global, jsPrincipals, buf, fileSize32, nativePath.get(), 1,
+              JSVERSION_LATEST);
+
             PR_MemUnmap(buf, fileSize32);
 
 #else  /* HAVE_PR_MEMMAP */
@@ -1138,9 +1138,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FILE_NOT_FOUND;
             }
 
-            script = JS_CompileFileHandleForPrincipals(cx, global,
-                                                       nativePath.get(),
-                                                       fileHandle, jsPrincipals);
+            script = JS_CompileFileHandleForPrincipalsVersion(
+              cx, global, nativePath.get(), fileHandle, jsPrincipals, JSVERSION_LATEST);
 
             /* JS will close the filehandle after compilation is complete. */
 #endif /* HAVE_PR_MEMMAP */
@@ -1175,10 +1174,9 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
             buf[len] = '\0';
 
-            script = JS_CompileScriptForPrincipals(cx, global,
-                                                   jsPrincipals,
-                                                   buf, bytesRead,
-                                                   nativePath.get(), 1);
+            script = JS_CompileScriptForPrincipalsVersion(
+              cx, global, jsPrincipals, buf, bytesRead, nativePath.get(), 1,
+              JSVERSION_LATEST);
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
@@ -1237,7 +1235,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     *aGlobal = global;
 
     jsval retval;
-    if (!JS_ExecuteScript(cx, global, script, &retval)) {
+    if (!JS_ExecuteScriptVersion(cx, global, script, &retval, JSVERSION_LATEST)) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif

@@ -1402,6 +1402,12 @@ namespace nanojit
         asm_branch(ins->opcode() == LIR_xf, cond, exit);
     }
 
+    // helper function for nop insertion feature that results in no more
+    // than 1 no-op instruction insertion every 128-1151 Bytes
+    static inline uint32_t noiseForNopInsertion(Noise* n) {
+        return n->getValue(1023) + 128;
+    }
+
     void Assembler::gen(LirFilter* reader)
     {
         NanoAssert(_thisfrag->nStaticExits == 0);
@@ -1409,6 +1415,10 @@ namespace nanojit
         InsList pending_lives(alloc);
 
         NanoAssert(!error());
+
+        // compiler hardening setup
+        NIns* priorIns = _nIns;
+        int32_t nopInsertTrigger = hardenNopInsertion(_config) ? noiseForNopInsertion(_noise): 0;
 
         // What's going on here: we're visiting all the LIR instructions in
         // the buffer, working strictly backwards in buffer-order, and
@@ -1472,6 +1482,28 @@ namespace nanojit
             if ((_logc->lcbits & LC_Native) && (_logc->lcbits & LC_RegAlloc))
                 printRegState();
 #endif
+
+            // compiler hardening technique that inserts no-op instructions in the compiled method when nopInsertTrigger < 0
+            if (hardenNopInsertion(_config))
+            {
+                size_t delta = (uintptr_t)priorIns - (uintptr_t)_nIns; // # bytes that have been emitted since last go-around
+
+                if (codeList) {
+                    codeList = codeList;
+                }
+                // if no codeList then we know priorIns and _nIns are on same page, otherwise make sure priorIns was not in the previous code block
+                if (!codeList || !codeList->isInBlock(priorIns)) {
+                    NanoAssert(delta < VMPI_getVMPageSize()); // sanity check
+                    nopInsertTrigger -= delta;
+                    if (nopInsertTrigger < 0)
+                    {
+                        nopInsertTrigger = noiseForNopInsertion(_noise);
+                        asm_insert_random_nop();
+                        PERFM_NVPROF("hardening:nop-insert", 1);
+                    }
+                }
+                priorIns = _nIns;
+            }
 
             LOpcode op = ins->opcode();
             switch (op)
@@ -2033,7 +2065,7 @@ namespace nanojit
                 }
                #endif // VMCFG_VTUNE
 
-                case LIR_comment: 
+                case LIR_comment:
                     // Do nothing.
                     break;
             }
@@ -2048,7 +2080,7 @@ namespace nanojit
             if (_logc->lcbits & LC_AfterDCE) {
                 InsBuf b;
                 LInsPrinter* printer = _thisfrag->lirbuf->printer;
-                if (ins->isop(LIR_comment)) 
+                if (ins->isop(LIR_comment))
                     outputf("%s", printer->formatIns(&b, ins));
                 else
                     outputf("    %s", printer->formatIns(&b, ins));

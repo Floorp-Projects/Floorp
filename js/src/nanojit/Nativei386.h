@@ -193,6 +193,7 @@ namespace nanojit
         void nativePageReset();\
         void nativePageSetup();\
         void underrunProtect(int);\
+        bool hardenNopInsertion(const Config& c) { return c.harden_nop_insertion; } \
         void asm_immi(Register r, int32_t val, bool canClobberCCs);\
         void asm_stkarg(LIns* p, int32_t& stkd);\
         void asm_farg(LIns*, int32_t& stkd);\
