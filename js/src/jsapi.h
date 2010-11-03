@@ -485,16 +485,16 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
                                            if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
-#define JSFUN_CONSTRUCTOR       0x02    /* native that can be called as a ctor
-                                           without creating a this object */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
+#define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
+                                           without creating a this object */
 
-#define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
+#define JSFUN_FLAGS_MASK      0x07f8    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
                                            flag interpreted functions */
 
@@ -2408,6 +2408,13 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
+JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                     JSPrincipals *principals,
+                                     const char *bytes, size_t length,
+                                     const char *filename, uintN lineno,
+                                     JSVersion version);
+
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
                    const jschar *chars, size_t length,
                    const char *filename, uintN lineno);
@@ -2436,6 +2443,11 @@ extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *fh,
                                   JSPrincipals *principals);
+
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         const char *filename, FILE *fh,
+                                         JSPrincipals *principals);
 
 /*
  * NB: you must use JS_NewScriptObject and root a pointer to its return value
@@ -2553,6 +2565,10 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
+                        JSVersion version);
 
 /*
  * Execute either the function-defining prolog of a script, or the script's

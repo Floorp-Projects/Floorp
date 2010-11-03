@@ -88,10 +88,9 @@ class StubCompiler
     uint32 generation;
     uint32 lastGeneration;
 
-    /* :TODO: oom check */
-    Vector<CrossPatch, 64, SystemAllocPolicy> exits;
-    Vector<CrossPatch, 64, SystemAllocPolicy> joins;
-    Vector<CrossJumpInScript, 64, SystemAllocPolicy> scriptJoins;
+    Vector<CrossPatch, 64, mjit::CompilerAllocPolicy> exits;
+    Vector<CrossPatch, 64, mjit::CompilerAllocPolicy> joins;
+    Vector<CrossJumpInScript, 64, mjit::CompilerAllocPolicy> scriptJoins;
     Vector<Jump, 8, SystemAllocPolicy> jumpList;
 
   public:
