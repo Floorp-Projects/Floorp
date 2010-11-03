@@ -261,6 +261,7 @@ pref("browser.urlbar.restrict.bookmark", "*");
 pref("browser.urlbar.restrict.tag", "+");
 pref("browser.urlbar.match.title", "#");
 pref("browser.urlbar.match.url", "@");
+pref("browser.urlbar.autocomplete.search_threshold", 5);
 pref("browser.history.grouping", "day");
 pref("browser.history.showSessions", false);
 pref("browser.sessionhistory.max_entries", 50);

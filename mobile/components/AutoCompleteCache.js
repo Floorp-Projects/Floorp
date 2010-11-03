@@ -55,6 +55,9 @@ const MODE_TRUNCATE = 0x20;
 // file is modified.
 const CACHE_VERSION = 1;
 
+const RESULT_CACHE = 1;
+const RESULT_NEW = 2;
+
 // Lazily get the base Places AutoComplete Search
 XPCOMUtils.defineLazyGetter(this, "PACS", function() {
   return Components.classesByID["{d0272978-beab-4adc-a3d4-04b76acfa4e7}"]
@@ -90,7 +93,7 @@ var AutoCompleteUtils = {
       onSearchResult: function(search, result) {
         // Let the listener know about the result right away
         if (typeof onResult == "function")
-          onResult(result);
+          onResult(result, RESULT_NEW);
 
         // Don't do any more processing if we're not completely done
         if (result.searchResult == result.RESULT_NOMATCH_ONGOING ||
@@ -235,9 +238,31 @@ AutoCompleteCache.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
+  get _searchThreshold() {
+    delete this._searchCount;
+    return this._searchCount = Services.prefs.getIntPref("browser.urlbar.autocomplete.search_threshold");    
+  },
+
   startSearch: function(query, param, prev, listener) {
     let self = this;
-    let done = function(result) {
+    let done = function(result, aType) {
+      let showSearch = (result.matchCount < self._searchThreshold) && (aType == RESULT_NEW);
+
+      if (showSearch && (result.searchResult == Ci.nsIAutoCompleteResult.RESULT_SUCCESS ||
+                         result.searchResult == Ci.nsIAutoCompleteResult.RESULT_NOMATCH)) {
+        let engines = Services.search.getVisibleEngines();
+        try {
+          result.QueryInterface(Ci.nsIAutoCompleteSimpleResult);
+          if (engines.length > 0) {  
+            for (let i = 0; i < engines.length; i++) {
+              let url = engines[i].getSubmission(query).uri.spec;
+              result.appendMatch(url, engines[i].name, engines[i].iconURI.spec, "search");
+            }
+            result.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_SUCCESS);
+          }
+        } catch(ex) {
+        }
+      }
       listener.onSearchResult(self, result);
     };
 
@@ -246,7 +271,7 @@ AutoCompleteCache.prototype = {
 
     if (AutoCompleteUtils.query == query && AutoCompleteUtils.cache) {
       // On a cache-hit, give the results right away and fetch in the background
-      done(AutoCompleteUtils.cache);
+      done(AutoCompleteUtils.cache, RESULT_CACHE);
     } else {
       // Otherwise, fetch the result, cache it, and pass it on
       AutoCompleteUtils.fetch(query, done);
