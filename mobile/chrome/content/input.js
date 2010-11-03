@@ -213,7 +213,7 @@ MouseModule.prototype = {
       dragData.locked = !draggable.x || !draggable.y;
       if (draggable.x || draggable.y) {
         this._dragger = dragger;
-        this._doDragStart(aEvent);
+        this._doDragStart(aEvent, draggable);
       }
     }
 
@@ -311,12 +311,12 @@ MouseModule.prototype = {
   /**
    * Inform our dragger of a dragStart.
    */
-  _doDragStart: function _doDragStart(event) {
+  _doDragStart: function _doDragStart(aEvent, aDraggable) {
     let dragData = this._dragData;
-    dragData.setDragStart(event.screenX, event.screenY);
+    dragData.setDragStart(aEvent.screenX, aEvent.screenY, aDraggable);
     this._kinetic.addData(0, 0);
     if (!this._kinetic.isActive())
-      this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
+      this._dragger.dragStart(aEvent.clientX, aEvent.clientY, aEvent.target, this._targetScrollInterface);
   },
 
   /** Finish a drag. */
@@ -688,12 +688,17 @@ DragData.prototype = {
     this.sY = sY;
   },
 
-  setDragStart: function setDragStart(screenX, screenY) {
+  setDragStart: function setDragStart(screenX, screenY, aDraggable) {
     this.sX = this._originX = screenX;
     this.sY = this._originY = screenY;
     this.dragging = true;
-    this.locked = false;
-    this.stayLocked = false;
+
+    // If the target area is pannable only in one direction lock it early
+    // on the right axis
+    this.lockedX = !aDraggable.x ? screenX : null;
+    this.lockedY = !aDraggable.y ? screenY : null;
+    this.stayLocked = this.lockedX || this.lockedY;
+    this.locked = this.stayLocked;
   },
 
   endDrag: function endDrag() {
