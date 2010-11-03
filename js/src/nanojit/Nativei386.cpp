@@ -718,6 +718,7 @@ namespace nanojit
 
     inline void Assembler::SSE_CVTSI2SD(R xr, R gr)  { count_fpu(); SSE(0xf20f2a, xr, gr); asm_output("cvtsi2sd %s,%s", gpn(xr), gpn(gr)); }
     inline void Assembler::SSE_CVTSD2SI(R gr, R xr)  { count_fpu(); SSE(0xf20f2d, gr, xr); asm_output("cvtsd2si %s,%s", gpn(gr), gpn(xr)); }
+    inline void Assembler::SSE_CVTTSD2SI(R gr, R xr) { count_fpu(); SSE(0xf20f2c, gr, xr); asm_output("cvttsd2si %s,%s",gpn(gr), gpn(xr)); }
     inline void Assembler::SSE_CVTSD2SS(R xr, R gr)  { count_fpu(); SSE(0xf20f5a, xr, gr); asm_output("cvtsd2ss %s,%s", gpn(xr), gpn(gr)); }
     inline void Assembler::SSE_CVTSS2SD(R xr, R gr)  { count_fpu(); SSE(0xf30f5a, xr, gr); asm_output("cvtss2sd %s,%s", gpn(xr), gpn(gr)); }
     inline void Assembler::SSE_CVTDQ2PD(R d,  R r)   { count_fpu(); SSE(0xf30fe6, d,  r);  asm_output("cvtdq2pd %s,%s", gpn(d), gpn(r)); }
@@ -2587,7 +2588,7 @@ namespace nanojit
         if (_config.i386_sse2) {
             Register rr = prepareResultReg(ins, GpRegs);
             Register ra = findRegFor(lhs, XmmRegs);
-            SSE_CVTSD2SI(rr, ra);
+            SSE_CVTTSD2SI(rr, ra); 
         } else {
             bool pop = !lhs->isInReg();
             findSpecificRegFor(lhs, FST0);
