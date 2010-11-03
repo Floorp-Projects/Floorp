@@ -6514,14 +6514,17 @@ MOZ_ARG_ENABLE_BOOL(tree-freetype,
     MOZ_TREE_FREETYPE=1,
     MOZ_TREE_FREETYPE= )
 if test -n "$MOZ_TREE_FREETYPE"; then
+   if test -n "$_WIN32_MSVC"; then
+      AC_ERROR("building with in-tree freetype is not supported on MSVC")
+   fi
    AC_DEFINE(MOZ_TREE_FREETYPE)
    AC_SUBST(MOZ_TREE_FREETYPE)
    MOZ_ENABLE_CAIRO_FT=1       
    FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
    FT2_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
    CAIRO_FT_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
-   FT2_LIBS='$(call EXPAND_LIBNAME_PATH,freetype2,$(LIBXUL_DIST)/lib)'
-   CAIRO_FT_LIBS='$(call EXPAND_LIBNAME_PATH,freetype2,$(LIBXUL_DIST)/lib)'
+   FT2_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
+   CAIRO_FT_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
    AC_DEFINE(HAVE_FT_BITMAP_SIZE_Y_PPEM)
    AC_DEFINE(HAVE_FT_GLYPHSLOT_EMBOLDEN)
    AC_DEFINE(HAVE_FT_LOAD_SFNT_TABLE)
@@ -9366,6 +9369,18 @@ if test "$CAIRO_FEATURES_H"; then
   else
     rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
   fi
+fi
+
+# Run freetype configure script
+
+if test "$MOZ_TREE_FREETYPE"; then
+   export CFLAGS="$CFLAGS -std=c99"
+   export CPPFLAGS="$CPPFLAGS"
+   export CXXFLAGS="$CXXFLAGS"
+   export LDFLAGS="$LDFLAGS"
+   export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
+   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes"
+   AC_OUTPUT_SUBDIRS(modules/freetype2)
 fi
 
 dnl ========================================================
