@@ -248,5 +248,70 @@ gTests.push({
     BrowserUI.activePanel = null;
     runNextTest();
   }
+});         //------------------------------------------------------------------------------
+// Case: Test opening the awesome panel and checking the urlbar selection
+gTests.push({
+  desc: "Test context clicks on awesome panel",
+
+  _panelIndex : 0,
+  _contextOpts : [
+    ["link-openable", "link-shareable"],
+    ["link-openable", "link-shareable"],
+    ["edit-bookmark", "link-shareable", "link-openable"],
+  ],
+
+  clearContextTypes: function clearContextTypes() {
+    if (ContextHelper.popupState)
+      ContextHelper.hide();
+  },
+
+  checkContextTypes: function checkContextTypes(aTypes) {
+    let commandlist = document.getElementById("context-commands");
+  
+    for (let i=0; i<commandlist.childNodes.length; i++) {
+      let command = commandlist.childNodes[i];
+      if (aTypes.indexOf(command.getAttribute("type")) > -1) {
+        // command should be visible
+        if(command.hidden == true)
+          return false;
+      } else {
+        if(command.hidden == false)
+          return false;
+      }
+    }
+    return true;
+  },
+
+  run: function() {
+    window.addEventListener("NavigationPanelShown", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
+      gCurrentTest.onPopupReady();
+    }, false);
+
+    AllPagesList.doCommand();
+  },
+
+  onPopupReady: function() {
+    let self = this;
+    if(self._panelIndex < Panels.length) {
+      let panel = Panels[self._panelIndex];
+      panel.doCommand();
+
+      self.clearContextTypes();      
+
+      EventUtils.synthesizeMouse(panel.panel, panel.panel.width / 2, panel.panel.height / 2, { type: "mousedown" });
+      setTimeout(function() {
+        EventUtils.synthesizeMouse(panel.panel, panel.panel.width / 2, panel.panel.height / 2, { type: "mouseup" });
+        ok(self.checkContextTypes(self._contextOpts[self._panelIndex]), "Correct context menu shown for panel");
+        self.clearContextTypes();
+  
+        self._panelIndex++;
+        self.onPopupReady();
+      }, 500);
+    } else {
+      runNextTest();
+    }
+  }
 });
+
 
