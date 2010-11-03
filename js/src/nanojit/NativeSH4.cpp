@@ -3234,5 +3234,10 @@ namespace nanojit
             JMP(pc, true);
         }
     }
+
+    void Assembler::asm_insert_random_nop() {
+        NanoAssert(0); // not supported
+    }
+
 }
 #endif // FEATURE_NANOJIT && FEATURE_SH4

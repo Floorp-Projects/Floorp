@@ -204,6 +204,34 @@ class JaegerCompartment {
 #endif
 };
 
+/*
+ * Allocation policy for compiler jstl objects. The goal is to free the
+ * compiler from having to check and propagate OOM after every time we
+ * append to a vector. We do this by reporting OOM to the engine and
+ * setting a flag on the compiler when OOM occurs. The compiler is required
+ * to check for OOM only before trying to use the contents of the list.
+ */
+class CompilerAllocPolicy : public ContextAllocPolicy
+{
+    bool *oomFlag;
+
+    void *checkAlloc(void *p) {
+        if (!p)
+            *oomFlag = true;
+        return p;
+    }
+
+  public:
+    CompilerAllocPolicy(JSContext *cx, bool *oomFlag)
+    : ContextAllocPolicy(cx), oomFlag(oomFlag) {}
+    CompilerAllocPolicy(JSContext *cx, Compiler &compiler);
+
+    void *malloc(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc(bytes)); }
+    void *realloc(void *p, size_t bytes) {
+        return checkAlloc(ContextAllocPolicy::realloc(p, bytes));
+    }
+};
+
 namespace ic {
 # if defined JS_POLYIC
     struct PICInfo;
