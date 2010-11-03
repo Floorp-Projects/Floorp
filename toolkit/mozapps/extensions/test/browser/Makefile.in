@@ -60,6 +60,7 @@ _MAIN_TEST_FILES = \
   browser_bug587970.js \
   browser_bug591465.js \
   browser_bug596336.js \
+  browser_bug608316.js \
   browser_details.js \
   browser_discovery.js \
   browser_dragdrop.js \
