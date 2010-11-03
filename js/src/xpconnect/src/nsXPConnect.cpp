@@ -2420,6 +2420,8 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
             return;
         }
 
+        JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
+
         nsresult rv;
         const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
         nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
@@ -2432,11 +2434,11 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
         }
 
         if (NS_SUCCEEDED(rv)) {
-            JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
             gDebugMode = gDesiredDebugMode;
         } else {
             // if the attempt failed, cancel the debugMode request
             gDesiredDebugMode = gDebugMode;
+            JS_SetRuntimeDebugMode(rt, gDebugMode);
         }
     }
 }
