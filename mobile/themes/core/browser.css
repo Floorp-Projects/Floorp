@@ -1107,6 +1107,10 @@ pageaction:not([image]) > hbox >.pageaction-image {
   padding: 4px;
 }
 
+#context-hint[value=""] {
+  visibility: collapse;
+}
+
 #search-engines-list > .prompt-button > .button-box > .button-icon {
   width: 32px;
   height: 32px;
