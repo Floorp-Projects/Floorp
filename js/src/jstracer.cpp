@@ -2300,11 +2300,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         fragment->loopLabel = entryLabel;
     })
 
-    lirbuf->sp = w.name(w.ldpStateField(sp), "sp");
-    lirbuf->rp = w.name(w.ldpStateField(rp), "rp");
-    InitConst(cx_ins) = w.name(w.ldpStateField(cx), "cx");
-    InitConst(eos_ins) = w.name(w.ldpStateField(eos), "eos");
-    InitConst(eor_ins) = w.name(w.ldpStateField(eor), "eor");
+    lirbuf->sp = w.ldpStateField(sp);
+    lirbuf->rp = w.ldpStateField(rp);
+    InitConst(cx_ins) = w.ldpStateField(cx);
+    InitConst(eos_ins) = w.ldpStateField(eos);
+    InitConst(eor_ins) = w.ldpStateField(eor);
 
     strictModeCode_ins = w.name(w.immi(cx->fp()->script()->strictModeCode), "strict");
 
@@ -2343,7 +2343,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
              * stiVolatile() uses ACCSET_STORE_ANY;  If LICM is implemented
              * (bug 545406) this counter will need its own region.
              */
-            w.stiVolatile(w.addi(counterValue, w.nameImmi(1)), counterPtr);
+            w.stiVolatile(w.addi(counterValue, w.immi(1)), counterPtr);
             w.label(branch);
             w.comment("end-count-loop-iterations");
         }
@@ -2355,8 +2355,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
      * tree exited from is what we expect it to be.
      */
     if (anchor && anchor->exitType == NESTED_EXIT) {
-        LIns* nested_ins = w.name(w.ldpStateField(outermostTreeExitGuard),
-                                  "outermostTreeExitGuard");
+        LIns* nested_ins = w.ldpStateField(outermostTreeExitGuard);
         guard(true, w.eqp(nested_ins, w.nameImmpNonGC(innermost)), NESTED_EXIT);
     }
 
@@ -8839,11 +8838,11 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
             JSString *r_str = r.toString();
             if (!l_str->isRope() && !r_str->isRope() && l_str->length() == 1 && r_str->length() == 1) {
                 VMSideExit *exit = snapshot(BRANCH_EXIT);
-                LIns *c = w.nameImmw(1);
+                LIns *c = w.immw(1);
                 guard(true, w.eqp(w.getStringLength(l_ins), c), exit);
                 guard(true, w.eqp(w.getStringLength(r_ins), c), exit);
-                l_ins = w.getStringChar0(l_ins);
-                r_ins = w.getStringChar0(r_ins);
+                l_ins = w.getStringChar(l_ins, w.immpNonGC(0));
+                r_ins = w.getStringChar(r_ins, w.immpNonGC(0));
             } else {
                 args[0] = r_ins, args[1] = l_ins;
                 l_ins = w.call(&js_EqualStrings_ci, args);
@@ -9371,7 +9370,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
 
     if (entry->adding()) {
         LIns *vshape_ins =
-            w.ldiRuntimeProtoHazardShape(w.name(w.ldpConstContextField(runtime), "runtime"));
+            w.ldiRuntimeProtoHazardShape(w.ldpConstContextField(runtime));
 
         guard(true,
               w.name(w.eqiN(vshape_ins, vshape), "guard_protoHazardShape"),
@@ -9411,7 +9410,7 @@ TraceRecorder::stobj_set_dslot(LIns *obj_ins, unsigned slot, LIns*& slots_ins,
                                const Value &v, LIns* v_ins)
 {
     if (!slots_ins)
-        slots_ins = w.name(w.ldpObjSlots(obj_ins), "slots");
+        slots_ins = w.ldpObjSlots(obj_ins);
     box_value_into(v, v_ins, DSlotsAddress(slots_ins, slot));
 }
 
@@ -9448,14 +9447,14 @@ void
 TraceRecorder::box_undefined_into(Address addr)
 {
     w.stiValueTag(w.nameImmui(JSVAL_TAG_UNDEFINED), addr);
-    w.stiValuePayload(w.nameImmi(0), addr);
+    w.stiValuePayload(w.immi(0), addr);
 }
 
 void
 TraceRecorder::box_null_into(Address addr)
 {
     w.stiValueTag(w.nameImmui(JSVAL_TAG_NULL), addr);
-    w.stiValuePayload(w.nameImmi(0), addr);
+    w.stiValuePayload(w.immi(0), addr);
 }
 
 inline LIns*
@@ -9491,7 +9490,7 @@ LIns*
 TraceRecorder::unbox_object(Address addr, LIns* tag_ins, JSValueType type, VMSideExit* exit)
 {
     JS_ASSERT(type == JSVAL_TYPE_FUNOBJ || type == JSVAL_TYPE_NONFUNOBJ);
-    guard(true, w.eqi(tag_ins, w.nameImmui(JSVAL_TAG_OBJECT)), exit);
+    guard(true, w.name(w.eqi(tag_ins, w.nameImmui(JSVAL_TAG_OBJECT)), "isObj"), exit);
     LIns *payload_ins = w.ldiValuePayload(addr);
     if (type == JSVAL_TYPE_FUNOBJ)
         guardClass(payload_ins, &js_FunctionClass, exit, LOAD_NORMAL);
@@ -9509,12 +9508,12 @@ TraceRecorder::unbox_value(const Value &v, Address addr, VMSideExit *exit, bool 
         return unbox_number_as_double(addr, tag_ins, exit);
 
     if (v.isInt32()) {
-        guard(true, w.eqi(tag_ins, w.nameImmui(JSVAL_TAG_INT32)), exit);
+        guard(true, w.name(w.eqi(tag_ins, w.nameImmui(JSVAL_TAG_INT32)), "isInt"), exit);
         return w.i2d(w.ldiValuePayload(addr));
     }
 
     if (v.isDouble()) {
-        guard(true, w.ltui(tag_ins, w.nameImmui(JSVAL_TAG_CLEAR)), exit);
+        guard(true, w.name(w.ltui(tag_ins, w.nameImmui(JSVAL_TAG_CLEAR)), "isDouble"), exit);
         return w.ldd(addr);
     }
 
@@ -9830,11 +9829,15 @@ TraceRecorder::guardClassHelper(bool cond, LIns* obj_ins, Class* clasp, VMSideEx
 
 #ifdef JS_JIT_SPEW
     char namebuf[32];
+    JS_snprintf(namebuf, sizeof namebuf, "%s_clasp", clasp->name);
+    LIns* clasp_ins = w.name(w.immpNonGC(clasp), namebuf);
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
+    LIns* cmp_ins = w.name(w.eqp(class_ins, clasp_ins), namebuf);
 #else
-    static const char namebuf[] = "";
+    LIns* clasp_ins = w.immpNonGC(clasp);
+    LIns* cmp_ins = w.eqp(class_ins, clasp_ins);
 #endif
-    guard(cond, w.name(w.eqp(class_ins, w.nameImmpNonGC(clasp)), namebuf), exit);
+    guard(cond, cmp_ins, exit);
 }
 
 JS_REQUIRES_STACK void
@@ -10001,7 +10004,7 @@ TraceRecorder::putActivationObjects()
         else
             fp->forEachFormalArg(BoxArg(this, addr));
     } else {
-        args_ins = w.nameImmpNonGC(0);
+        args_ins = w.immpNonGC(0);
     }
 
     if (have_args) {
@@ -10020,7 +10023,7 @@ TraceRecorder::putActivationObjects()
                                AllocSlotsAddress(slots_ins, i));
             }
         } else {
-            slots_ins = w.nameImmpNonGC(0);
+            slots_ins = w.immpNonGC(0);
         }
 
         LIns* scopeChain_ins = getFrameObjPtr(fp->addressOfScopeChain());
@@ -10230,7 +10233,7 @@ TraceRecorder::record_JSOP_RETURN()
 
 #ifdef MOZ_TRACE_JSCALLS
     if (cx->functionCallback) {
-        LIns* args[] = { w.nameImmi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
+        LIns* args[] = { w.immi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
         LIns* call_ins = w.call(&functionProbe_ci, args);
         guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
     }
@@ -10807,7 +10810,7 @@ TraceRecorder::emitNativePropertyOp(const Shape* shape, LIns* obj_ins,
     enterDeepBailCall();
 
     w.stStateField(addr_boxed_val_ins, nativeVp);
-    w.stStateField(w.nameImmi(1), nativeVpLen);
+    w.stStateField(w.immi(1), nativeVpLen);
 
     CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(setflag ? shape->setterOp() : shape->getterOp());
@@ -11237,7 +11240,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             mode = JSOP_CALL;
         } else {
             args[0] = w.immpObjGC(funobj);
-            args[1] = w.nameImmpNonGC(clasp);
+            args[1] = w.immpNonGC(clasp);
             args[2] = cx_ins;
             newobj_ins = w.call(&js_CreateThisFromTrace_ci, args);
             guard(false, w.eqp0(newobj_ins), OOM_EXIT);
@@ -11357,7 +11360,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
     if (cx->functionCallback) {
         JSScript *script = FUN_SCRIPT(fun);
         if (! script || ! script->isEmpty()) {
-            LIns* args[] = { w.nameImmi(1), w.nameImmpNonGC(fun), cx_ins };
+            LIns* args[] = { w.immi(1), w.nameImmpNonGC(fun), cx_ins };
             LIns* call_ins = w.call(&functionProbe_ci, args);
             guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
         }
@@ -11386,7 +11389,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
     RecordingStatus rs = callNative(argc, mode);
 #ifdef MOZ_TRACE_JSCALLS
     if (cx->functionCallback) {
-        LIns* args[] = { w.nameImmi(0), w.nameImmpNonGC(fun), cx_ins };
+        LIns* args[] = { w.immi(0), w.nameImmpNonGC(fun), cx_ins };
         LIns* call_ins = w.call(&functionProbe_ci, args);
         guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
     }
@@ -12299,7 +12302,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
 {
     CHECK_STATUS(makeNumberInt32(idx_ins, &idx_ins));
     idx_ins = w.ui2p(idx_ins);
-    LIns *lengthAndFlags_ins = w.name(w.ldpStringLengthAndFlags(str_ins), "mLengthAndFlags");
+    LIns *lengthAndFlags_ins = w.ldpStringLengthAndFlags(str_ins);
     if (MaybeBranch mbr = w.jt(w.eqp0(w.andp(lengthAndFlags_ins, w.nameImmw(JSString::ROPE_BIT)))))
     {
         w.call(&js_Flatten_ci, &str_ins);
@@ -12796,7 +12799,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
          * operations.  Likewise with the diamond below.
          */
         w.pauseAddingCSEValues();
-        if (MaybeBranch mbr = w.jt(w.ltui(idx_ins, capacity_ins))) {
+        if (MaybeBranch mbr = w.jt(w.name(w.ltui(idx_ins, capacity_ins), "inRange"))) {
             LIns* args[] = { idx_ins, obj_ins, cx_ins };
             LIns* res_ins = w.call(&js_EnsureDenseArrayCapacity_ci, args);
             guard(false, w.eqi0(res_ins), mismatchExit);
@@ -12805,21 +12808,22 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         w.resumeAddingCSEValues();
 
         // Get the address of the element.
-        LIns *elem_ins = w.getDslotAddress(obj_ins, idx_ins);
+        LIns *elemp_ins = w.name(w.getDslotAddress(obj_ins, idx_ins), "elemp");
 
         // If we are overwriting a hole:
         // - Guard that we don't have any indexed properties along the prototype chain.
         // - Check if the length has changed;  if so, update it to index+1.
         // This happens moderately often, eg. close to 10% of the time in
         // SunSpider, and for some benchmarks it's close to 100%.
-        Address dslotAddr = DSlotsAddress(elem_ins);
-        LIns* isHole_ins = w.eqi(
+        Address dslotAddr = DSlotsAddress(elemp_ins);
+        LIns* isHole_ins = w.name(w.eqi(
 #if JS_BITS_PER_WORD == 32
-                                 w.ldiValueTag(dslotAddr),
+                                        w.ldiValueTag(dslotAddr),
 #else
-                                 w.q2i(w.rshuqN(w.ldq(dslotAddr), JSVAL_TAG_SHIFT)),
+                                        w.q2i(w.rshuqN(w.ldq(dslotAddr), JSVAL_TAG_SHIFT)),
 #endif
-                                 w.nameImmui(JSVAL_TAG_MAGIC));
+                                        w.nameImmui(JSVAL_TAG_MAGIC)),
+                                  "isHole");
         w.pauseAddingCSEValues();
         if (MaybeBranch mbr1 = w.jf(isHole_ins)) {
             CHECK_STATUS_A(guardPrototypeHasNoIndexedProperties(obj, obj_ins, mismatchExit));
@@ -13363,7 +13367,7 @@ TraceRecorder::record_NativeCallComplete()
                 // cond_ins := true if native_rval_ins contains a JSObject*
                 unbox_any_object(nativeRvalAddr, &v_ins, &cond_ins);
                 // x        := v_ins if native_rval_ins contains a JSObject*, NULL otherwise
-                x = w.cmovp(cond_ins, v_ins, w.nameImmw(0));
+                x = w.cmovp(cond_ins, v_ins, w.immw(0));
                 // v_ins    := newobj_ins if native_rval_ins doesn't contain a JSObject*,
                 //             the object payload from native_rval_ins otherwise
                 v_ins = w.cmovp(w.eqp0(x), newobj_ins, x);
@@ -13679,12 +13683,12 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     }
 
     /* Guard that index is within capacity. */
-    guard(true, w.ltui(idx_ins, capacity_ins), branchExit);
+    guard(true, w.name(w.ltui(idx_ins, capacity_ins), "inRange"), branchExit);
 
     /* Load the value and guard on its type to unbox it. */
     vp = &obj->slots[jsuint(idx)];
 	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
-    addr_ins = w.addp(w.name(w.ldpObjSlots(obj_ins), "slots"), w.lshpN(w.ui2p(idx_ins), 3));
+    addr_ins = w.name(w.getDslotAddress(obj_ins, idx_ins), "elemp");
     v_ins = unbox_value(*vp, DSlotsAddress(addr_ins), branchExit);
 
     /* Don't let the hole value escape. Turn it into an undefined. */
@@ -15474,7 +15478,7 @@ TraceRecorder::record_JSOP_STOP()
 
 #ifdef MOZ_TRACE_JSCALLS
     if (cx->functionCallback) {
-        LIns* args[] = { w.nameImmi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
+        LIns* args[] = { w.immi(0), w.nameImmpNonGC(cx->fp()->fun()), cx_ins };
         LIns* call_ins = w.call(&functionProbe_ci, args);
         guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
     }
