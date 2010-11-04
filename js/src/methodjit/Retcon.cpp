@@ -122,30 +122,34 @@ Recompiler::recompile()
     Vector<PatchableAddress> normalPatches(cx);
     Vector<PatchableAddress> ctorPatches(cx);
 
-    /* Scan the stack, saving the ncode elements of the frames. */
     JSStackFrame *firstCtorFrame = NULL;
     JSStackFrame *firstNormalFrame = NULL;
-    for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (!firstCtorFrame && i.fp()->maybeScript() == script && i.fp()->isConstructing())
-            firstCtorFrame = i.fp();
-        else if (!firstNormalFrame && i.fp()->maybeScript() == script && !i.fp()->isConstructing())
-            firstNormalFrame = i.fp();
-        void **addr = i.fp()->addressOfNativeReturnAddress();
-        if (!*addr)
-            continue;
-        if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
-            if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
-                return false;
-        } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
-            if (!normalPatches.append(findPatch(script->jitNormal, addr)))
-                return false;
-        }
-    }
 
-    /* Iterate over VMFrames saving the machine and scripted return. */
-    for (VMFrame *f = cx->jaegerCompartment()->activeFrame();
+    // Find all JIT'd stack frames to account for return addresses that will
+    // need to be patched after recompilation.
+    for (VMFrame *f = script->compartment->jaegerCompartment->activeFrame();
          f != NULL;
          f = f->previous) {
+
+        // Scan all frames owned by this VMFrame.
+        JSStackFrame *end = f->entryFp->prev();
+        for (JSStackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
+            // Remember the latest frame for each type of JIT'd code, so the
+            // compiler will have a frame to re-JIT from.
+            if (!firstCtorFrame && fp->script() == script && fp->isConstructing())
+                firstCtorFrame = fp;
+            else if (!firstNormalFrame && fp->script() == script && !fp->isConstructing())
+                firstNormalFrame = fp;
+
+            void **addr = fp->addressOfNativeReturnAddress();
+            if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
+                if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
+                    return false;
+            } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
+                if (!normalPatches.append(findPatch(script->jitNormal, addr)))
+                    return false;
+            }
+        }
 
         void **addr = f->returnAddressLocation();
         if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
