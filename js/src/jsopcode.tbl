@@ -201,9 +201,9 @@ OPDEF(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, 10,  JOF_BYTE|J
 
 /*
  * Host object extension: given 'o.item(i) = j', the left-hand side compiles
- * JSOP_SETCALL, rather than JSOP_CALL.
+ * JSOP_SETCALL after JSOP_CALL, JSOP_EVAL, JSOP_FUNAPPLY, or JSOP_FUNCALL.
  */
-OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         3, -1,  2, 18,  JOF_UINT16|JOF_SET)
+OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         1,  1,  2, 18,  JOF_BYTE)
 
 /*
  * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
@@ -624,5 +624,7 @@ OPDEF(JSOP_FORGLOBAL,     246,"forglobal",     NULL,  3,  1,  1, 19,  JOF_GLOBAL
 OPDEF(JSOP_BLOCKCHAIN,    247,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
 OPDEF(JSOP_NULLBLOCKCHAIN,248,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
-/* When changing bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */
+/* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */
 OPDEF(JSOP_FUNCALL,       249,"funcall",       NULL,  3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
+
+/* When changing bytecodes, don't forget to update JSXDR_BYTECODE_VERSION. */

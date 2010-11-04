@@ -3770,21 +3770,22 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     return JS_TRUE;
 }
 
-static JSBool
+static bool
 MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
 {
-    JSParseNode *pn2;
-
     JS_ASSERT(pn->pn_arity == PN_LIST);
     JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL ||
               pn->pn_op == JSOP_FUNCALL || pn->pn_op == JSOP_FUNAPPLY);
-    pn2 = pn->pn_head;
+    if (!ReportStrictModeError(cx, TS(tc->parser), tc, pn, msg))
+        return false;
+
+    JSParseNode *pn2 = pn->pn_head;
     if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_funbox->tcflags & TCF_GENEXP_LAMBDA)) {
         ReportCompileErrorNumber(cx, TS(tc->parser), pn, JSREPORT_ERROR, msg);
-        return JS_FALSE;
+        return false;
     }
-    pn->pn_op = JSOP_SETCALL;
-    return JS_TRUE;
+    pn->pn_xflags |= PNX_SETCALL;
+    return true;
 }
 
 static void
@@ -6610,15 +6611,21 @@ Parser::unaryExpr()
             return NULL;
         switch (pn2->pn_type) {
           case TOK_LP:
-            if (pn2->pn_op != JSOP_SETCALL &&
-                !MakeSetCall(context, pn2, tc, JSMSG_BAD_DELETE_OPERAND)) {
-                return NULL;
+            if (!(pn2->pn_xflags & PNX_SETCALL)) {
+                /*
+                 * Call MakeSetCall to check for errors, but clear PNX_SETCALL
+                 * because the optimizer will eliminate the useless delete.
+                 */
+                if (!MakeSetCall(context, pn2, tc, JSMSG_BAD_DELETE_OPERAND))
+                    return NULL;
+                pn2->pn_xflags &= ~PNX_SETCALL;
             }
             break;
           case TOK_NAME:
             if (!ReportStrictModeError(context, &tokenStream, tc, pn,
-                                       JSMSG_DEPRECATED_DELETE_OPERAND))
+                                       JSMSG_DEPRECATED_DELETE_OPERAND)) {
                 return NULL;
+            }
             pn2->pn_op = JSOP_DELNAME;
             if (pn2->pn_atom == context->runtime->atomState.argumentsAtom)
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
