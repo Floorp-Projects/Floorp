@@ -2032,29 +2032,44 @@ var FormHelperUI = {
     if (aElementRect && Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {
       this._currentElementRect = aElementRect;
       // Zoom to an element by keeping the caret into view
-      let zoomLevel = this._getZoomLevelForRect(aElementRect);
-      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
-      zoomLevel = Browser.selectedTab.clampZoomLevel(zoomLevel);
+      let zoomLevel = Browser.selectedTab.clampZoomLevel(this._getZoomLevelForRect(aElementRect));
 
       zoomRect = this._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
       Browser.animatedZoomTo(zoomRect);
     }
 
-    // Move the view to show the caret if needed
-    if (aCaretRect) {
-      this._currentCaretRect = aCaretRect;
-      let caretRect = aCaretRect.scale(browser.scale, browser.scale);
-      let scroll = browser.getPosition();
-      zoomRect.x += scroll.x;
-      zoomRect.y += scroll.y;
+    this._ensureCaretVisible(aCaretRect);
+  },
 
-      if (zoomRect.contains(caretRect))
-        return;
+  _ensureCaretVisible: function _ensureCaretVisible(aCaretRect) {
+    if (!aCaretRect)
+      return;
 
-      let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
-      if (deltaX != 0 || deltaY != 0)
-        browser.scrollBy(deltaX, deltaY);
+    // the scrollX/scrollY position can change because of the animated zoom so
+    // delay the caret adjustment
+    if (AnimatedZoom.isZooming()) {
+      let self = this;
+      window.addEventListener("AnimatedZoomEnd", function() {
+        window.removeEventListener("AnimatedZoomEnd", arguments.callee, true);
+          self._ensureCaretVisible(aCaretRect);
+      }, true);
+      return;
     }
+
+    let browser = getBrowser();
+    let zoomRect = this.visibleScreenArea;
+
+    this._currentCaretRect = aCaretRect;
+    let caretRect = aCaretRect.scale(browser.scale, browser.scale);
+
+    let scroll = browser.getPosition();
+    zoomRect = new Rect(scroll.x, scroll.y, zoomRect.width, zoomRect.height);
+    if (zoomRect.contains(caretRect))
+      return;
+
+    let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
+    if (deltaX != 0 || deltaY != 0)
+      browser.scrollBy(deltaX, deltaY);
   },
 
   /* Store the current zoom level, and scroll positions to restore them if needed */
