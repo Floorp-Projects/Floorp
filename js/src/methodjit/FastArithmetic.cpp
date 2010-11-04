@@ -949,7 +949,7 @@ mjit::Compiler::jsop_mod()
     if (type != JSVAL_TYPE_UNKNOWN)
         frame.pushTypedPayload(type, X86Registers::edx);
     else
-        frame.pushNumber(X86Registers::edx, true);
+        frame.pushNumber(X86Registers::edx);
 
     if (slowPath)
         stubcc.rejoin(Changes(1));
