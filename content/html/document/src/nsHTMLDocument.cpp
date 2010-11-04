@@ -226,7 +226,7 @@ RemoveFromAgentSheets(nsCOMArray<nsIStyleSheet> &aAgentSheets, const nsAString& 
   nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRInt32 i = 0; i < aAgentSheets.Count(); ++i) {
+  for (PRInt32 i = aAgentSheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = aAgentSheets[i];
     nsIURI* sheetURI = sheet->GetSheetURI();
 
@@ -3136,10 +3136,6 @@ nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
     EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
 
-    nsCOMPtr<nsPIDOMWindow> window = GetWindow();
-    if (!window)
-      return;
-
     nsCOMPtr<nsIPresShell> presShell = GetShell();
     if (!presShell)
       return;
@@ -3305,7 +3301,7 @@ nsHTMLDocument::EditingStateChanged()
       rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("resource://gre/res/designmode.css"));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = CSSLoader()->LoadSheetSync(uri, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
+      rv = LoadChromeSheetSync(uri, PR_TRUE, getter_AddRefs(sheet));
       NS_ENSURE_TRUE(sheet, rv);
 
       rv = agentSheets.AppendObject(sheet);
