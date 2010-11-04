@@ -637,15 +637,17 @@ var Browser = {
   },
 
   addTab: function(aURI, aBringFront, aOwner, aParams) {
-    let newTab = new Tab(aURI, aParams);
+    let params = aParams || {};
+    let newTab = new Tab(aURI, params);
     newTab.owner = aOwner || null;
     this._tabs.push(newTab);
 
     if (aBringFront)
       this.selectedTab = newTab;
 
-    let event = document.createEvent("Events");
-    event.initEvent("TabOpen", true, false);
+    let getAttention = (!aBringFront || params.getAttention);
+    let event = document.createEvent("UIEvents");
+    event.initUIEvent("TabOpen", true, false, window, getAttention);
     newTab.chromeTab.dispatchEvent(event);
     newTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
 
@@ -1226,7 +1228,7 @@ nsBrowserAccess.prototype = {
       return null;
     } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       let owner = isExternal ? null : Browser.selectedTab;
-      let tab = Browser.addTab("about:blank", true, owner);
+      let tab = Browser.addTab("about:blank", true, owner, { getAttention: true });
       if (isExternal)
         tab.closeOnExit = true;
       browser = tab.browser;
