@@ -577,6 +577,10 @@ var ExtensionsView = {
 
     showmore.setAttribute("url", browseURL);
     this._list.appendChild(showmore);
+
+    let evt = document.createEvent("Events");
+    evt.initEvent("ViewChanged", true, false);
+    this._list.dispatchEvent(evt);
   },
 
   displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aSelectFirstResult) {
