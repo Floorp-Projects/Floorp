@@ -2001,10 +2001,15 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, const Value &vp)
 JSBool JS_FASTCALL
 js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
 {
-    return ArrayCompPushImpl(cx, obj, ValueArgToConstRef(v));
+    if (!ArrayCompPushImpl(cx, obj, ValueArgToConstRef(v))) {
+        SetBuiltinError(cx);
+        return JS_FALSE;
+    }
+
+    return cx->tracerState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_ArrayCompPush_tn, CONTEXT, OBJECT, VALUE,
-                     0, nanojit::ACCSET_STORE_ANY)
+JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_ArrayCompPush_tn, CONTEXT, OBJECT,
+                     VALUE, 0, nanojit::ACCSET_STORE_ANY)
 
 static JSBool
 array_push(JSContext *cx, uintN argc, Value *vp)
