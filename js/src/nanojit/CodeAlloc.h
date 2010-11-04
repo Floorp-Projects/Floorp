@@ -144,7 +144,7 @@ namespace nanojit
         static CodeList* getBlock(NIns* start, NIns* end);
 
         /** add raw memory to the free list */
-        CodeList* addMem(void* mem, size_t bytes);
+        void addMem();
 
         /** make sure all the higher/lower pointers are correct for every block */
         void sanity_check();
