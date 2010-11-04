@@ -490,8 +490,8 @@ var ExtensionsView = {
   },
 
   appendSearchResults: function(aAddons, aShowRating) {
-    var urlproperties = [ "iconURL", "homepageURL" ];
-    var foundItem = false;
+    let urlproperties = [ "iconURL", "homepageURL" ];
+    let foundItem = false;
     for (let i = 0; i < aAddons.length; i++) {
       let addon = aAddons[i];
 
@@ -514,7 +514,8 @@ var ExtensionsView = {
 
       let listitem = this._createItem(addon, "search");
       listitem.setAttribute("description", addon.description);
-      listitem.setAttribute("homepageURL", addon.homepageURL);
+      if (addon.homepageURL)
+        listitem.setAttribute("homepageURL", addon.homepageURL);
       listitem.install = addon.install;
       listitem.setAttribute("sourceURL", addon.install.sourceURI.spec);
       if (aShowRating)
