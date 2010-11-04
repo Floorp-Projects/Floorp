@@ -2164,6 +2164,8 @@ var SelectHelperUI = {
   },
 
   show: function(aList) {
+    this.showFilter = false;
+    this._textbox.blur();
     this._list = aList;
 
     this._container = document.getElementById("select-list");
@@ -2208,13 +2210,22 @@ var SelectHelperUI = {
     this._scrollElementIntoView(firstSelected);
 
     this._container.addEventListener("click", this, false);
+    this._panel.addEventListener("overflow", this, true);
+  },
+  
+  _showFilter: false,
+  get showFilter() {
+    return this._showFilter;
+  },
+  set showFilter(val) {
+    this._showFilter = val;
+    if (!this._panel.hidden)
+      this._textbox.hidden = !val;
   },
 
   dock: function dock(aContainer) {
     aContainer.insertBefore(this._panel, aContainer.lastChild);
     this.resize();
-    this._textbox.hidden = false;
-
     this._docked = true;
   },
 
@@ -2241,8 +2252,11 @@ var SelectHelperUI = {
   },
 
   hide: function() {
+    this.showFilter = false;
     this._container.removeEventListener("click", this, false);
-    this._panel.hidden = this._textbox.hidden = true;
+    this._panel.removeEventListener("overflow", this, true);
+
+    this._panel.hidden = true;
 
     if (this._docked)
       this.undock();
@@ -2368,6 +2382,10 @@ var SelectHelperUI = {
           }
           this.onSelect(item.optionIndex, item.selected, !this._list.multiple);
         }
+        break;
+      case "overflow":
+        if (!this._textbox.value)
+          this.showFilter = true;
         break;
     }
   },
