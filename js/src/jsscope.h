@@ -551,7 +551,7 @@ struct Shape : public JSObjectMap
                                      uint32 aslot, uintN aattrs, uintN aflags,
                                      intN ashortid) const;
 
-    bool get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp) const;
+    bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
     bool set(JSContext* cx, JSObject *obj, js::Value* vp) const;
 
     inline bool isSharedPermanent() const;

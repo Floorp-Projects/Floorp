@@ -176,10 +176,10 @@ typedef Vector<PropDesc, 1> PropDescArray;
 } /* namespace js */
 
 struct JSObjectMap {
-    static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
-
     uint32 shape;       /* shape identifier */
     uint32 slotSpan;    /* one more than maximum live slot number */
+
+    static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
 
     explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
     JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}

@@ -4836,8 +4836,8 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
 }
 
 static JS_ALWAYS_INLINE JSBool
-js_NativeGetInline(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
-                   Value *vp)
+js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *pobj,
+                   const Shape *shape, uintN getHow, Value *vp)
 {
     LeaveTraceIfGlobalObject(cx, pobj);
 
@@ -4865,7 +4865,7 @@ js_NativeGetInline(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *sh
     {
         AutoShapeRooter tvr(cx, shape);
         AutoObjectRooter tvr2(cx, pobj);
-        if (!shape->get(cx, obj, pobj, vp))
+        if (!shape->get(cx, receiver, obj, pobj, vp))
             return false;
     }
 
@@ -4884,7 +4884,7 @@ JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow,
              Value *vp)
 {
-    return js_NativeGetInline(cx, obj, pobj, shape, getHow, vp);
+    return js_NativeGetInline(cx, obj, obj, pobj, shape, getHow, vp);
 }
 
 JSBool
@@ -5039,7 +5039,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
     }
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
-    if (!js_NativeGetInline(cx, receiver, obj2, shape, getHow, vp))
+    if (!js_NativeGetInline(cx, receiver, obj, obj2, shape, getHow, vp))
         return JS_FALSE;
 
     return JS_TRUE;
