@@ -225,8 +225,7 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc)
         return GET_UINT16(pc);
       default:
         /* stack: fun, this, [argc arguments] */
-        JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL ||
-                  op == JSOP_EVAL || op == JSOP_SETCALL ||
+        JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
                   op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
         return 2 + GET_ARGC(pc);
     }
@@ -2076,9 +2075,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                           case JSOP_ENUMCONSTELEM:
                             op = JSOP_GETELEM;
                             break;
-                          case JSOP_SETCALL:
-                            op = JSOP_CALL;
-                            break;
                           case JSOP_GETTHISPROP:
                             /*
                              * NB: JSOP_GETTHISPROP can't fail due to |this|
@@ -3589,7 +3585,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_EVAL:
               case JSOP_FUNCALL:
               case JSOP_FUNAPPLY:
-              case JSOP_SETCALL:
                 argc = GET_ARGC(pc);
                 argv = (char **)
                     cx->malloc((size_t)(argc + 1) * sizeof *argv);
@@ -3655,11 +3650,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 cx->free(argv);
                 if (!ok)
                     return NULL;
-                if (op == JSOP_SETCALL) {
-                    if (!PushOff(ss, todo, op))
-                        return NULL;
-                    todo = Sprint(&ss->sprinter, "");
-                }
+                break;
+
+              case JSOP_SETCALL:
+                todo = Sprint(&ss->sprinter, "");
                 break;
 
               case JSOP_DELNAME:

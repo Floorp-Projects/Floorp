@@ -5097,7 +5097,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 } else
 #endif
                 if (pn3->pn_type == TOK_LP) {
-                    JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
+                    JS_ASSERT(pn3->pn_xflags & PNX_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
@@ -6497,8 +6497,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!useful) {
                 off = noteIndex = -1;
             } else {
-                if (pn2->pn_op == JSOP_SETCALL)
-                    pn2->pn_op = JSOP_CALL;
+                JS_ASSERT_IF(pn2->pn_type == TOK_LP, !(pn2->pn_xflags & PNX_SETCALL));
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
                 off = CG_OFFSET(cg);
@@ -6638,6 +6637,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (PN_OP(pn) == JSOP_EVAL) {
             EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
             if (EmitBlockChain(cx, cg) < 0)
+                return JS_FALSE;
+        }
+        if (pn->pn_xflags & PNX_SETCALL) {
+            if (js_Emit1(cx, cg, JSOP_SETCALL) < 0)
                 return JS_FALSE;
         }
         break;
