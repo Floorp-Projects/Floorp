@@ -442,6 +442,7 @@ var BrowserUI = {
     let tabs = document.getElementById("tabs");
     tabs.addEventListener("TabSelect", this, true);
     tabs.addEventListener("TabOpen", this, true);
+    tabs.addEventListener("TabOpen", NewTabPopup, true);
     window.addEventListener("PanFinished", this, true);
 
     // listen content messages
@@ -809,12 +810,9 @@ var BrowserUI = {
         break;
       case "TabOpen":
       {
-        let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
-        if (!(tabsVisibility == 1.0) && Browser.selectedTab.chromeTab != aEvent.originalTarget)
-          NewTabPopup.show(aEvent.originalTarget);
-
         // Workaround to hide the tabstrip if it is partially visible
         // See bug 524469
+        let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
         if (tabsVisibility > 0.0 && tabsVisibility < 1.0)
           Browser.hideSidebars();
 
@@ -1430,14 +1428,14 @@ var NewTabPopup = {
     return this.box = box;
   },
 
-  _updateLabel: function() {
+  _updateLabel: function nt_updateLabel() {
     let newtabStrings = Elements.browserBundle.getString("newtabpopup.opened");
     let label = PluralForm.get(this._tabs.length, newtabStrings).replace("#1", this._tabs.length);
 
     this.box.firstChild.setAttribute("value", label);
   },
 
-  hide: function() {
+  hide: function nt_hide() {
     if (this._timeout) {
       clearTimeout(this._timeout);
       this._timeout = 0;
@@ -1448,7 +1446,7 @@ var NewTabPopup = {
     BrowserUI.popPopup(this);
   },
 
-  show: function(aTab) {
+  show: function nt_show(aTab) {
     BrowserUI.pushPopup(this, this.box);
 
     this._tabs.push(aTab);
@@ -1465,9 +1463,15 @@ var NewTabPopup = {
     }, 2000, this);
   },
 
-  selectTab: function() {
+  selectTab: function nt_selectTab() {
     BrowserUI.selectTab(this._tabs.pop());
     this.hide();
+  },
+
+  handleEvent: function nt_handleEvent(aEvent) {
+    let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
+    if (tabsVisibility != 1.0 && aEvent.detail)
+      this.show(aEvent.originalTarget);
   }
 };
 
