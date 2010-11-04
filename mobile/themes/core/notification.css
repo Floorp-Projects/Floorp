@@ -12,6 +12,10 @@ notification .messageCloseButton {
   -moz-box-align: start;
 }
 
+notification .messageCloseButton:-moz-focusring {
+  outline: 0 !important;
+}
+
 notification .messageCloseButton:hover:active {
   list-style-image: url("chrome://browser/skin/images/close-active-hdpi.png");
 }
