@@ -8631,9 +8631,31 @@ TraceRecorder::inc(const Value &v, LIns*& v_ins, jsint incr, bool pre)
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::incHelper(const Value &v, LIns* v_ins, LIns*& v_after, jsint incr)
 {
-    if (!v.isNumber())
-        RETURN_STOP("can only inc numbers");
-    v_after = alu(LIR_addd, v.toNumber(), incr, v_ins, w.immd(incr));
+    // FIXME: Bug 606071 on making this work for objects.
+    if (!v.isPrimitive())
+        RETURN_STOP("can inc primitives only");
+
+    if (v.isUndefined()) {
+        v_after = w.immd(js_NaN);
+    } else if (v.isNull()) {
+        v_after = w.immd(incr);
+    } else {
+        if (v.isBoolean()) {
+            v_ins = w.i2d(v_ins);
+        } else if (v.isString()) {
+            LIns* args[] = { v_ins, cx_ins };
+            v_ins = w.call(&js_StringToNumber_ci, args);
+        } else {
+            JS_ASSERT(v.isNumber());
+        }
+
+        jsdouble num;
+        AutoValueRooter tvr(cx);
+        *tvr.addr() = v;
+        ValueToNumber(cx, tvr.value(), &num);
+        v_after = alu(LIR_addd, num, incr, v_ins, w.immd(incr));
+    }
+
     return RECORD_CONTINUE;
 }
 
