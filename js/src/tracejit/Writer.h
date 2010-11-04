@@ -490,6 +490,12 @@ class Writer
                     "private_uint32");
     }
 
+    nj::LIns *stuiObjPrivate(nj::LIns *obj, nj::LIns *value) const {
+        return name(lir->insStore(nj::LIR_sti, value, obj, offsetof(JSObject, privateData),
+                                  ACCSET_OBJ_PRIVATE),
+                    "private_uint32");
+    }
+
     nj::LIns *ldiDenseArrayCapacity(nj::LIns *array) const {
         return name(lir->insLoad(nj::LIR_ldi, array, offsetof(JSObject, capacity),
                                  ACCSET_OBJ_CAPACITY),
@@ -936,6 +942,10 @@ class Writer
 
     nj::LIns *addi(nj::LIns *x, nj::LIns *y) const {
         return lir->ins2(nj::LIR_addi, x, y);
+    }
+
+    nj::LIns *addiN(nj::LIns *x, int32 imm) const {
+        return lir->ins2ImmI(nj::LIR_addi, x, imm);
     }
 
     nj::LIns *subi(nj::LIns *x, nj::LIns *y) const {

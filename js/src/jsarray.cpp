@@ -813,24 +813,6 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
     return JS_FALSE;
 }
 
-#ifdef JS_TRACER
-
-JSBool FASTCALL
-js_Array_dense_setelem_hole(JSContext* cx, JSObject* obj, jsint i)
-{
-    if (js_PrototypeHasIndexedProperties(cx, obj))
-        return false;
-
-    jsuint u = jsuint(i);
-    if (u >= obj->getArrayLength())
-        obj->setArrayLength(u + 1);
-    return true;
-}
-/* storeAccSet == ACCSET_OBJ_PRIVATE: because it can set 'length'. */
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_Array_dense_setelem_hole, CONTEXT, OBJECT, INT32,
-                     0, tjit::ACCSET_OBJ_PRIVATE)
-#endif
-
 static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                      PropertyOp getter, PropertyOp setter, uintN attrs)
