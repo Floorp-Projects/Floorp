@@ -509,6 +509,15 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     }
     #endif
 
+    // Loop through a list of blocks marking the chunks executable.  If we encounter
+    // multiple blocks in the same chunk, only the first block will cause the
+    // chunk to become executable, the other calls will no-op (isExec flag checked)
+    void CodeAlloc::markExec(CodeList* &blocks) {
+        for (CodeList *b = blocks; b != 0; b = b->next) {
+            markChunkExec(b->terminator);
+        }
+    }
+
     // Variant of markExec(CodeList*) that walks all heapblocks (i.e. chunks) marking
     // each one executable.   On systems where bytesPerAlloc is low (i.e. have lots
     // of elements in the list) this can be expensive.

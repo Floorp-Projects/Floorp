@@ -203,8 +203,11 @@ namespace nanojit
         /** print out stats about heap usage */
         void logStats();
 
-        /** protect all code in this code alloc */
+        /** protect all code managed by this CodeAlloc */
         void markAllExec();
+
+        /** protect all mem in the block list */
+        void markExec(CodeList* &blocks);
 
         /** protect an entire chunk */
         void markChunkExec(CodeList* term);
