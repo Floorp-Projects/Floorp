@@ -403,8 +403,9 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
 
       case ACCSET_OBJ_PRIVATE:
         // base = <JSObject>
-        // ins  = ldp.objprivate base[offsetof(JSObject, privateData)]
-        ok = (op == LIR_ldi || op == LIR_ldp) &&
+        // ins  = {ld,st}p.objprivate base[offsetof(JSObject, privateData)]
+        ok = (op == LIR_ldi || op == LIR_ldp ||
+              op == LIR_sti || op == LIR_stp) &&
              disp == offsetof(JSObject, privateData) &&
              couldBeObjectOrString(base);
         break;

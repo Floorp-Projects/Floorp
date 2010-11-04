@@ -12798,12 +12798,15 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 #endif
                                  w.nameImmui(JSVAL_TAG_MAGIC));
         w.pauseAddingCSEValues();
-        if (MaybeBranch mbr = w.jf(isHole_ins)) {
-            LIns* args[] = { idx_ins, obj_ins, cx_ins };
-            LIns* res_ins = w.name(w.call(&js_Array_dense_setelem_hole_ci, args),
-                                    "hasNoIndexedProperties");
-            guard(false, w.eqi0(res_ins), mismatchExit);
-            w.label(mbr);
+        if (MaybeBranch mbr1 = w.jf(isHole_ins)) {
+            CHECK_STATUS_A(guardPrototypeHasNoIndexedProperties(obj, obj_ins, mismatchExit));
+            LIns* length_ins = w.lduiObjPrivate(obj_ins);
+            if (MaybeBranch mbr2 = w.jt(w.ltui(idx_ins, length_ins))) {
+                LIns* newLength_ins = w.name(w.addiN(idx_ins, 1), "newLength");
+                w.stuiObjPrivate(obj_ins, newLength_ins);
+                w.label(mbr2);
+            }
+            w.label(mbr1);
         }
         w.resumeAddingCSEValues();
 
