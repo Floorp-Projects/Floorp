@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>.
+ *   Ehsan Akhgari <ehsan@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,48 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXPCOM.h"
-#include "nsXULAppAPI.h"
+#ifndef nsSetDllDirectory_h
+#define nsSetDllDirectory_h
 
-// FIXME/cjones testing
-#if !defined(OS_WIN)
-#include <unistd.h>
+#ifndef XP_WIN
+#error This file only makes sense on Windows.
 #endif
 
-#ifdef XP_WIN
-#include <windows.h>
-// we want a wmain entry point
-// but we don't want its DLL load protection, because we'll handle it here
-#define XRE_DONT_PROTECT_DLL_LOAD
-#include "nsWindowsWMain.cpp"
+#include <nscore.h>
 
-#include "nsSetDllDirectory.h"
-#endif
+namespace mozilla {
 
-int
-main(int argc, char* argv[])
-{
-#if defined(XP_WIN) && defined(DEBUG_bent)
-    MessageBox(NULL, L"Hi", L"Hi", MB_OK);
-#endif
+// Sets the directory from which DLLs can be loaded if the SetDllDirectory OS
+// API is available.
+XPCOM_API(void) NS_SetDllDirectory(const WCHAR *aDllDirectory);
 
-    // Check for the absolute minimum number of args we need to move
-    // forward here. We expect the last arg to be the child process type.
-    if (argc < 1)
-      return 1;
-    GeckoProcessType proctype = XRE_StringToChildProcessType(argv[--argc]);
-
-#ifdef XP_WIN
-    // For plugins, this is done in PluginProcessChild::Init, as we need to
-    // avoid it for unsupported plugins.  See PluginProcessChild::Init for
-    // the details.
-    if (proctype != GeckoProcessType_Plugin) {
-        mozilla::NS_SetDllDirectory(L"");
-    }
-#endif
-
-    nsresult rv = XRE_InitChildProcess(argc, argv, proctype);
-    NS_ENSURE_SUCCESS(rv, 1);
-
-    return 0;
 }
+
+#endif
