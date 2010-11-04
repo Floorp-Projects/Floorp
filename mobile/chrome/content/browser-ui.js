@@ -609,6 +609,7 @@ var BrowserUI = {
     if (this.isAutoCompleteOpen())
       return;
 
+    this.hidePanel();
     this._hidePopup();
     this.activePanel = AllPagesList;
   },
@@ -1017,7 +1018,6 @@ var BrowserUI = {
         this.goToURI();
         break;
       case "cmd_openLocation":
-        this.hidePanel();
         this.showAutoComplete();
         break;
       case "cmd_star":

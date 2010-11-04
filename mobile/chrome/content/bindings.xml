@@ -365,7 +365,7 @@
             let isBookmark = ((type == "bookmark") || (type == "tag"));
             item.setAttribute("favorite", isBookmark);
             item.setAttribute("src", controller.getImageAt(i));
-            
+
             if (type=="search") {
               item.setAttribute("search", true);
               item.setAttribute("subtitle", searchSubtitle);
@@ -1288,6 +1288,7 @@
             } else {
               child.setAttribute("class", "history-item");
               child.setAttribute("url", aItem.uri);
+              child.setAttribute("subtitle", aItem.uri);
               child.setAttribute("src", aItem.icon);
             }
 
@@ -1382,6 +1383,7 @@
             } else {
               child.setAttribute("class", "remotetabs-item");
               child.setAttribute("url", aItem.uri);
+              child.setAttribute("subtitle", aItem.uri);
               child.setAttribute("src", aItem.icon);
             }
 
