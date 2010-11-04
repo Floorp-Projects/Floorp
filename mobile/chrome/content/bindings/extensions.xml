@@ -173,6 +173,15 @@
   </binding>
 
   <binding id="extension-search" extends="chrome://browser/content/bindings.xml#richlistitem">
+    <implementation>
+      <field name="_showPageButton">document.getAnonymousElementByAttribute(this, "anonid", "show-page");</field>
+      <constructor>
+        <![CDATA[
+          if (!this.hasAttribute("homepageURL"))
+            this._showPageButton.setAttribute("disabled", "true");
+        ]]>
+      </constructor>
+    </implementation>
     <content orient="vertical">
       <xul:hbox align="start">
         <xul:image xbl:inherits="src=iconURL"/>
@@ -192,7 +201,7 @@
       </xul:hbox>
       <xul:vbox flex="1">
         <xul:hbox class="show-on-select">
-          <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonShowPage.label;"
+          <xul:button anonid="show-page" class="addon-install hide-on-install hide-on-restart" label="&addonShowPage.label;"
                       oncommand="ExtensionsView.showPage(document.getBindingParent(this));"/>
           <xul:spacer flex="1"/>
           <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonInstall2.label;"
