@@ -5822,7 +5822,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     NS_ASSERTION(rangeCount == rangeItemArray.Length(), "How did that happen?");
 
     // first register ranges for special editor gravity
-    for (i = 0; i < (PRInt32)rangeCount; i++)
+    for (i = 0; i < rangeCount; i++)
     {
       opRange = inArrayOfRanges[0];
       nsRangeStore *item = rangeItemArray.Elements() + i;
