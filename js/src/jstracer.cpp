@@ -15526,9 +15526,12 @@ TraceRecorder::record_JSOP_ARRAYPUSH()
     Value &elt = stackval(-1);
     LIns *elt_ins = box_value_for_native_call(elt, get(&elt));
 
+    enterDeepBailCall();
+
     LIns *args[] = { elt_ins, array_ins, cx_ins };
-    LIns *ok_ins = w.call(&js_ArrayCompPush_tn_ci, args);
-    guard(false, w.eqi0(ok_ins), OOM_EXIT);
+    pendingGuardCondition = w.call(&js_ArrayCompPush_tn_ci, args);
+
+    leaveDeepBailCall();
     return ARECORD_CONTINUE;
 }
 
