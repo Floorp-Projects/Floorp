@@ -4744,7 +4744,10 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN inde
     JSString *str;
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, script);
+#ifdef DEBUG
+    if (cx->compartment != script->compartment)
+        CompartmentChecker::fail(cx->compartment, script->compartment);
+#endif
     jp = js_NewPrinter(cx, name, NULL,
                        indent & ~JS_DONT_PRETTY_PRINT,
                        !(indent & JS_DONT_PRETTY_PRINT),
