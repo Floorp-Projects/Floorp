@@ -5856,39 +5856,6 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
     return FindClassPrototype(cx, scopeobj, protoKey, protop, clasp);
 }
 
-/*
- * For shared precompilation of function objects, we support cloning on entry
- * to an execution context in which the function declaration or expression
- * should be processed as if it were not precompiled, where the precompiled
- * function's scope chain does not match the execution context's.  The cloned
- * function object carries its execution-context scope in its parent slot; it
- * links to the precompiled function (the "clone-parent") via its proto slot.
- *
- * Note that this prototype-based delegation leaves an unchecked access path
- * from the clone to the clone-parent's 'constructor' property.  If the clone
- * lives in a less privileged or shared scope than the clone-parent, this is
- * a security hole, a sharing hazard, or both.  Therefore we check all such
- * accesses with the following getter/setter pair, which we use when defining
- * 'constructor' in f.prototype for all function objects f.
- */
-static JSBool
-CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    JSAtom *atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_TO_JSID(atom));
-    uintN attrs;
-    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_READ, vp, &attrs);
-}
-
-static JSBool
-CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    JSAtom *atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_TO_JSID(atom));
-    uintN attrs;
-    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE, vp, &attrs);
-}
-
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
@@ -5908,7 +5875,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
      * for a user-defined function f, is DontEnum.
      */
     return proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 ObjectOrNullValue(ctor), CheckCtorGetAccess, CheckCtorSetAccess, 0);
+                                 ObjectOrNullValue(ctor), PropertyStub, PropertyStub, 0);
 }
 
 JSBool
