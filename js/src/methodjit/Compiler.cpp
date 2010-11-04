@@ -228,6 +228,11 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
 {
     JS_ASSERT(cx->fp() == fp);
 
+#if JS_HAS_SHARP_VARS
+    if (fp->script()->hasSharps)
+        return Compile_Abort;
+#endif
+
     // Ensure that constructors have at least one slot.
     if (fp->isConstructing() && !fp->script()->nslots)
         fp->script()->nslots++;
