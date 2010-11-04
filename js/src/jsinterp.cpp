@@ -4788,11 +4788,7 @@ END_CASE(JSOP_CALL)
 
 BEGIN_CASE(JSOP_SETCALL)
 {
-    uintN argc = GET_ARGC(regs.pc);
-    Value *vp = regs.sp - argc - 2;
-    JSBool ok = Invoke(cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0);
-    if (ok)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
     goto error;
 }
 END_CASE(JSOP_SETCALL)
