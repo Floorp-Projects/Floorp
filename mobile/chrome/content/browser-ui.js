@@ -1706,6 +1706,7 @@ var FindHelperUI = {
 
   hide: function findHelperHide() {
     this._textbox.value = "";
+    this.status = null;
     this._textbox.blur();
     this._container.hide(this);
     Browser.selectedBrowser.scrollSync = true;
@@ -1720,6 +1721,12 @@ var FindHelperUI = {
   },
 
   search: function findHelperSearch(aValue) {
+    // Don't bother searching if the value is empty
+    if (aValue == "") {
+      this.status = null;
+      return;
+    }
+
     this.updateCommands(aValue);
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: aValue });
   },
