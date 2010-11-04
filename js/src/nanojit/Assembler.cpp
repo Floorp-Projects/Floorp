@@ -1492,13 +1492,10 @@ namespace nanojit
             {
                 size_t delta = (uintptr_t)priorIns - (uintptr_t)_nIns; // # bytes that have been emitted since last go-around
 
-                if (codeList) {
-                    codeList = codeList;
-                }
                 // if no codeList then we know priorIns and _nIns are on same page, otherwise make sure priorIns was not in the previous code block
                 if (!codeList || !codeList->isInBlock(priorIns)) {
                     NanoAssert(delta < VMPI_getVMPageSize()); // sanity check
-                    nopInsertTrigger -= delta;
+                    nopInsertTrigger -= (int32_t) delta;
                     if (nopInsertTrigger < 0)
                     {
                         nopInsertTrigger = noiseForNopInsertion(_noise);
