@@ -2322,6 +2322,10 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo>
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
+  if (mFieldSet) {
+    static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+  }
+
   // Check that this element doesn't know anything about its form at this point.
   NS_ASSERTION(!mForm, "mForm should be null at this point!");
 }
@@ -2939,13 +2943,20 @@ nsGenericHTMLFormElement::UpdateFieldSet()
         static_cast<nsHTMLFieldSetElement*>(parent);
 
       if (!prev || fieldset->GetFirstLegend() != prev) {
+        if (mFieldSet) {
+          static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+        }
         mFieldSet = fieldset;
+        fieldset->AddElement(this);
         return;
       }
     }
   }
 
   // No fieldset found.
+  if (mFieldSet) {
+    static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+  }
   mFieldSet = nsnull;
 }
 
