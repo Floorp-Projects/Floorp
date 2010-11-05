@@ -343,10 +343,10 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
         if (!gl || !InitAndValidateGL()) {
-            LogMessage("WebGL: OSMesa forced, but creating context failed -- aborting!");
+            LogMessage("OSMesa forced, but creating context failed -- aborting!");
             return NS_ERROR_FAILURE;
         }
-        LogMessage("WebGL: Using software rendering via OSMesa (THIS WILL BE SLOW)");
+        LogMessage("Using software rendering via OSMesa (THIS WILL BE SLOW)");
     }
 
 #ifdef XP_WIN
@@ -400,7 +400,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 #endif
 
     if (!gl) {
-        LogMessage("WebGL: Can't get a usable WebGL context");
+        LogMessage("Can't get a usable WebGL context");
         return NS_ERROR_FAILURE;
     }
 
