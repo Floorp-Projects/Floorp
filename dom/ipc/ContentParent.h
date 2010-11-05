@@ -51,6 +51,7 @@
 #include "nsIPrefService.h"
 #include "nsIPermissionManager.h"
 #include "nsIDOMGeoPositionCallback.h"
+#include "nsIAccelerometer.h"
 
 namespace mozilla {
 
@@ -66,6 +67,7 @@ class ContentParent : public PContentParent
                     , public nsIObserver
                     , public nsIThreadObserver
                     , public nsIDOMGeoPositionCallback
+                    , public nsIAccelerationListener
 {
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
@@ -83,6 +85,7 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIDOMGEOPOSITIONCALLBACK
+    NS_DECL_NSIACCELERATIONLISTENER
 
     TabParent* CreateTab(PRUint32 aChromeFlags);
 
@@ -161,8 +164,10 @@ private:
                                  nsTArray<nsString>* aRetvals);
     virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
 
-    virtual bool RecvGeolocationStart();
-    virtual bool RecvGeolocationStop();
+    virtual bool RecvAddGeolocationListener();
+    virtual bool RecvRemoveGeolocationListener();
+    virtual bool RecvAddAccelerometerListener();
+    virtual bool RecvRemoveAccelerometerListener();
 
     virtual bool RecvConsoleMessage(const nsString& aMessage);
     virtual bool RecvScriptError(const nsString& aMessage,
