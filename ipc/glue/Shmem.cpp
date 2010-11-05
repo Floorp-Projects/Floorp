@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <math.h>
-
 #include "Shmem.h"
 
 #include "ProtocolUtils.h"
@@ -194,14 +192,6 @@ DestroySegment(SharedMemory* aSegment)
   // the SharedMemory dtor closes and unmaps the actual OS shmem segment
   if (aSegment)
     aSegment->Release();
-}
-
-static size_t
-PageAlignedSize(size_t aSize)
-{
-  size_t pageSize = SharedMemory::SystemPageSize();
-  size_t nPagesNeeded = int(ceil(double(aSize) / double(pageSize)));
-  return pageSize * nPagesNeeded;
 }
 
 
@@ -401,7 +391,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   size_t pageSize = SharedMemory::SystemPageSize();
   SharedMemory* segment = nsnull;
   // |2*pageSize| is for the front and back sentinel
-  size_t segmentSize = PageAlignedSize(aNBytes + 2*pageSize);
+  size_t segmentSize = SharedMemory::PageAlignedSize(aNBytes + 2*pageSize);
 
   if (aType == SharedMemory::TYPE_BASIC)
     segment = CreateSegment(segmentSize, SharedMemoryBasic::NULLHandle());
@@ -457,7 +447,7 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   SharedMemory* segment = 0;
   size_t pageSize = SharedMemory::SystemPageSize();
   // |2*pageSize| is for the front and back sentinels
-  size_t segmentSize = PageAlignedSize(size + 2*pageSize);
+  size_t segmentSize = SharedMemory::PageAlignedSize(size + 2*pageSize);
 
   if (SharedMemory::TYPE_BASIC == type) {
     SharedMemoryBasic::Handle handle;
@@ -532,11 +522,11 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   SharedMemory *segment = nsnull;
 
   if (aType == SharedMemory::TYPE_BASIC)
-    segment = CreateSegment(PageAlignedSize(aNBytes + sizeof(uint32)),
+    segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32)),
                             SharedMemoryBasic::NULLHandle());
 #ifdef MOZ_HAVE_SHAREDMEMORYSYSV
   else if (aType == SharedMemory::TYPE_SYSV)
-    segment = CreateSegment(PageAlignedSize(aNBytes + sizeof(uint32)),
+    segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32)),
                             SharedMemorySysV::NULLHandle());
 #endif
   else
@@ -568,7 +558,7 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
     return 0;
 
   SharedMemory* segment = 0;
-  size_t segmentSize = PageAlignedSize(size + sizeof(size_t));
+  size_t segmentSize = SharedMemory::PageAlignedSize(size + sizeof(size_t));
 
   if (SharedMemory::TYPE_BASIC == type) {
     SharedMemoryBasic::Handle handle;
