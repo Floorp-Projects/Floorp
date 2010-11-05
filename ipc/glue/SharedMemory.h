@@ -121,9 +121,9 @@ protected:
   void Destroyed();
 
   // The size of the shmem region requested in Create(), if
-  // successful.  SharedMemorys that are opened from a foreign handle
-  // have an alloc size of 0, even though they have access to the
-  // alloc-size information.
+  // successful.  SharedMemory instances that are opened from a
+  // foreign handle have an alloc size of 0, even though they have
+  // access to the alloc-size information.
   size_t mAllocSize;
   // The size of the region mapped in Map(), if successful.  All
   // SharedMemorys that are mapped have a non-zero mapped size.
