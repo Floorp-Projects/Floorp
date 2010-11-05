@@ -191,7 +191,7 @@ def _shmemSegment(shmemexpr):
 def _shmemAlloc(size, type):
     # starts out UNprotected
     return ExprCall(ExprVar('Shmem::Alloc'),
-                    args=[ _shmemBackstagePass(), size, type ])
+                    args=[ _shmemBackstagePass(), size, type, ExprLiteral.FALSE ])
 
 def _shmemDealloc(rawmemvar):
     return ExprCall(ExprVar('Shmem::Dealloc'),
