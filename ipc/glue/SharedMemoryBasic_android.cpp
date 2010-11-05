@@ -108,6 +108,7 @@ SharedMemoryBasic::Create(size_t aNbytes)
 
   mShmFd = shmfd;
   mAllocSize = aNbytes;
+  Created(aNbytes);
   return true;
 }
 
@@ -128,6 +129,7 @@ SharedMemoryBasic::Map(size_t nBytes)
   }
 
   mSize = nBytes;
+  Mapped(nBytes);
   return true;
 }
 
@@ -160,6 +162,7 @@ SharedMemoryBasic::Unmap()
   }
   mMemory = nsnull;
   mSize = 0;
+  Unmapped(mSize);
 }
 
 void
@@ -167,6 +170,9 @@ SharedMemoryBasic::Destroy()
 {
   if (mShmFd > 0) {
     close(mShmFd);
+    if (mAllocSize) {
+      Destroyed(mAllocSize);
+    }
   }
 }
 

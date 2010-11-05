@@ -71,12 +71,22 @@ public:
   {
   }
 
+  virtual ~SharedMemoryBasic() {
+    if (memory()) {
+      Unmapped(mSize);
+    }
+    if (mAllocSize) {
+      Destroyed(mAllocSize);
+    }
+  }
+
   NS_OVERRIDE
   virtual bool Create(size_t aNbytes)
   {
     bool ok = mSharedMemory.Create("", false, false, aNbytes);
     if (ok) {
       mAllocSize = aNbytes;
+      Created(aNbytes);
     }
     return ok;
   }
@@ -85,8 +95,10 @@ public:
   virtual bool Map(size_t nBytes)
   {
     bool ok = mSharedMemory.Map(nBytes);
-    if (ok)
+    if (ok) {
       mSize = nBytes;
+      Mapped(nBytes);
+    }
     return ok;
   }
 

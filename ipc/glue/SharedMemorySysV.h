@@ -90,11 +90,17 @@ public:
 
   virtual ~SharedMemorySysV()
   {
+    if (memory()) {
+      Unmapped(mSize);
+    }
+    if (mAllocSize) {
+      Destroyed(mAllocSize);
+    }
+
     shmdt(mData);
     mHandle = -1;
     mData = nsnull;
     mSize = 0;
-    
   }
 
   NS_OVERRIDE
@@ -106,11 +112,9 @@ public:
 
     mHandle = id;
     mAllocSize = aNbytes;
+    Created(aNbytes);
 
-    if (!Map(aNbytes))
-      return false;
-
-    return true;
+    return Map(aNbytes);
   }
 
   NS_OVERRIDE
@@ -150,6 +154,7 @@ public:
                       "Segment doesn't have enough space!");
 #endif
 
+    Mapped(nBytes);
     return true;
   }
 
