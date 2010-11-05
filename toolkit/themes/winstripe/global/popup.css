@@ -101,7 +101,7 @@ panel[type="arrow"] {
   -moz-border-left-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
   -moz-border-bottom-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
   -moz-border-right-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
-  padding: 6px;
+  padding: 14px;
 }
 %endif
 
