@@ -104,6 +104,21 @@ public:
   static void SystemProtect(char* aAddr, size_t aSize, int aRights);
   static size_t SystemPageSize();
   static size_t PageAlignedSize(size_t aSize);
+
+protected:
+  SharedMemory();
+
+  // Implementations should call these methods on shmem usage changes,
+  // but *only if* the OS-specific calls are known to have succeeded.
+  // The methods are expected to be called in the pattern
+  //
+  //   Created (Mapped Unmapped)* Destroy
+  //
+  // but this isn't checked.
+  static void Created(size_t aNBytes);
+  static void Mapped(size_t aNBytes);
+  static void Unmapped(size_t aNBytes);
+  static void Destroyed(size_t aNBytes);
 };
 
 } // namespace ipc
