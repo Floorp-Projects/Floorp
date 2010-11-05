@@ -4723,14 +4723,18 @@ function updateAppButtonDisplay() {
     window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
+#ifdef CAN_DRAW_IN_TITLEBAR
   document.getElementById("titlebar").hidden = !displayAppButton;
 
   if (displayAppButton)
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
+#endif
 }
+#endif
 
+#ifdef CAN_DRAW_IN_TITLEBAR
 function onTitlebarMaxClick() {
   if (window.windowState == window.STATE_MAXIMIZED)
     window.restore();
