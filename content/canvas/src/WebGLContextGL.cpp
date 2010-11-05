@@ -349,7 +349,7 @@ NS_IMETHODIMP
 WebGLContext::BufferData(PRInt32 dummy)
 {
     // this should never be called
-    LogMessage("BufferData");
+    LogMessageIfVerbose("BufferData");
     return NS_ERROR_FAILURE;
 }
 

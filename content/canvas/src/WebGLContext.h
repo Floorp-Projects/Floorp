@@ -1003,12 +1003,14 @@ public:
 
             if (!areAllLevel0ImagesDefined) {
                 if (mTarget == LOCAL_GL_TEXTURE_2D) {
-                    mContext->LogMessage("We are currently drawing stuff, but some 2D texture has not yet been "
-                                         "uploaded any image at level 0. Until it's uploaded, this texture will look black.");
+                    mContext->LogMessageIfVerbose(
+                        "We are currently drawing stuff, but some 2D texture has not yet been "
+                        "uploaded any image at level 0. Until it's uploaded, this texture will look black.");
                 } else {
-                    mContext->LogMessage("We are currently drawing stuff, but some cube map texture has not yet been "
-                                         "uploaded any image at level 0, for at least one of its six faces. "
-                                         "Until it's uploaded, this texture will look black.");
+                    mContext->LogMessageIfVerbose(
+                        "We are currently drawing stuff, but some cube map texture has not yet been "
+                        "uploaded any image at level 0, for at least one of its six faces. "
+                        "Until it's uploaded, this texture will look black.");
                 }
                 mFakeBlackStatus = DoNeedFakeBlack;
                 return PR_TRUE;
