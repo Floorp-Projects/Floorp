@@ -2637,7 +2637,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
         obj2 = obj2->getProto();
     }
     if (!cycle)
-        obj->setProto(proto);
+        obj->setProto(cx, proto);
 
     return !cycle;
 }

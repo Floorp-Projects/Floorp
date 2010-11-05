@@ -312,9 +312,18 @@ class PunboxAssembler : public JSC::MacroAssembler
     }
 
     template <typename T>
-    Jump fastArrayLoadSlot(T address, RegisterID typeReg, RegisterID dataReg) {
-        loadValueAsComponents(address, typeReg, dataReg);
-        return branchPtr(Equal, typeReg, ImmType(JSVAL_TYPE_MAGIC));
+    Jump fastArrayLoadSlot(T address, bool holeCheck,
+                           MaybeRegisterID typeReg, RegisterID dataReg)
+    {
+        JS_ASSERT_IF(holeCheck, typeReg.isSet());
+        Jump notHole;
+        if (typeReg.isSet()) {
+            loadValueAsComponents(address, typeReg.reg(), dataReg);
+            if (holeCheck)
+                notHole = branchPtr(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
+        } else {
+            loadPayload(address, dataReg);
+        }
     }
 };
 

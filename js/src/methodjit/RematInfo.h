@@ -277,6 +277,57 @@ struct RematInfo {
     SyncState sync_;
 };
 
+class MaybeRegisterID {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+  public:
+    MaybeRegisterID()
+      : reg_(Registers::ReturnReg), set(false)
+    { }
+
+    MaybeRegisterID(RegisterID reg)
+      : reg_(reg), set(true)
+    { }
+
+    inline RegisterID reg() const { JS_ASSERT(set); return reg_; }
+    inline void setReg(const RegisterID r) { reg_ = r; set = true; }
+    inline bool isSet() const { return set; }
+
+    MaybeRegisterID & operator =(const MaybeRegisterID &other) {
+        set = other.set;
+        reg_ = other.reg_;
+        return *this;
+    }
+
+    MaybeRegisterID & operator =(RegisterID r) {
+        setReg(r);
+        return *this;
+    }
+
+  private:
+    RegisterID reg_;
+    bool set;
+};
+
+class MaybeJump {
+    typedef JSC::MacroAssembler::Jump Jump;
+  public:
+    MaybeJump()
+      : set(false)
+    { }
+
+    inline Jump getJump() const { JS_ASSERT(set); return jump; }
+    inline Jump get() const { JS_ASSERT(set); return jump; }
+    inline void setJump(const Jump &j) { jump = j; set = true; }
+    inline bool isSet() const { return set; }
+
+    inline MaybeJump &operator=(Jump j) { setJump(j); return *this; }
+
+  private:
+    Jump jump;
+    bool set;
+};
+
 } /* namespace mjit */
 } /* namespace js */
 

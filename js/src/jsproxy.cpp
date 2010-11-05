@@ -1402,7 +1402,7 @@ Class js_ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    TypeObject *type = cx->getTypeObject(js_ProxyClass.name, false);
+    TypeObject *type = cx->getTypeObject(js_ProxyClass.name, false, false);
     JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj, type);
     if (!module)
         return NULL;

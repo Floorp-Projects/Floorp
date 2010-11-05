@@ -300,9 +300,16 @@ class NunboxAssembler : public JSC::MacroAssembler
     }
 
     template <typename T>
-    Jump fastArrayLoadSlot(T address, RegisterID typeReg, RegisterID dataReg) {
-        loadTypeTag(address, typeReg);
-        Jump notHole = branch32(Equal, typeReg, ImmType(JSVAL_TYPE_MAGIC));
+    Jump fastArrayLoadSlot(T address, bool holeCheck,
+                           MaybeRegisterID typeReg, RegisterID dataReg)
+    {
+        JS_ASSERT_IF(holeCheck, typeReg.isSet());
+        Jump notHole;
+        if (typeReg.isSet()) {
+            loadTypeTag(address, typeReg.reg());
+            if (holeCheck)
+                notHole = branch32(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
+        }
         loadPayload(address, dataReg);
         return notHole;
     }

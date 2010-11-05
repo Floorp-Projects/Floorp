@@ -298,6 +298,21 @@ JSObject::getDenseArrayCapacity()
     return numSlots();
 }
 
+inline uint32
+JSObject::getDenseArrayInitializedLength()
+{
+    JS_ASSERT(isDenseArray());
+    return initializedLength;
+}
+
+inline void
+JSObject::setDenseArrayInitializedLength(uint32 length)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(length <= getDenseArrayCapacity() && length <= getArrayLength());
+    initializedLength = length;
+}
+
 inline js::Value*
 JSObject::getDenseArrayElements()
 {
@@ -308,7 +323,7 @@ JSObject::getDenseArrayElements()
 inline const js::Value &
 JSObject::getDenseArrayElement(uintN idx)
 {
-    JS_ASSERT(isDenseArray());
+    JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
     return getSlot(idx);
 }
 
@@ -322,7 +337,7 @@ JSObject::addressOfDenseArrayElement(uintN idx)
 inline void
 JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
 {
-    JS_ASSERT(isDenseArray());
+    JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
     setSlot(idx, val);
 }
 
@@ -338,6 +353,23 @@ JSObject::shrinkDenseArrayElements(JSContext *cx, uintN cap)
 {
     JS_ASSERT(isDenseArray());
     shrinkSlots(cx, cap);
+}
+
+inline bool
+JSObject::isPackedDenseArray()
+{
+    JS_ASSERT(isDenseArray());
+    return flags & PACKED_ARRAY;
+}
+
+inline void
+JSObject::setDenseArrayNotPacked(JSContext *cx)
+{
+    JS_ASSERT(isDenseArray());
+    if (flags & PACKED_ARRAY) {
+        flags ^= PACKED_ARRAY;
+        cx->markTypeArrayNotPacked(getTypeObject(), false);
+    }
 }
 
 inline void
@@ -591,11 +623,24 @@ JSObject::setWithThis(JSObject *thisp)
 }
 
 inline void
+JSObject::setProto(JSContext *cx, JSObject *newProto)
+{
+#ifdef DEBUG
+    for (JSObject *obj = newProto; obj; obj = obj->getProto())
+        JS_ASSERT(obj != this);
+#endif
+    if (newProto && newProto->isDenseArray())
+        newProto->makeDenseArraySlow(cx);
+
+    setDelegateNullSafe(newProto);
+    proto = newProto;
+}
+
+inline void
 JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *parent,
                js::types::TypeObject *type, void *priv, bool useHoles)
 {
     clasp = aclasp;
-    flags = 0;
 
 #ifdef DEBUG
     /*
@@ -608,25 +653,31 @@ JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *pare
     objShape = JSObjectMap::INVALID_SHAPE;
 #endif
 
-    setProto(proto);
+    setProto(cx, proto);
     setParent(parent);
 
     privateData = priv;
     slots = fixedSlots();
 
     /*
-     * Fill the fixed slots with undefined or array holes.  This object must
+     * Fill the fixed slots with undefined if needed.  This object must
      * already have its capacity filled in, as by js_NewGCObject.
      */
     JS_ASSERT(capacity == numFixedSlots());
-    ClearValueRange(slots, capacity, useHoles);
+    JS_ASSERT(useHoles == (aclasp == &js_ArrayClass));
+    if (useHoles) {
+        initializedLength = 0;
+        flags = PACKED_ARRAY;
+    } else {
+        ClearValueRange(slots, capacity, false);
+        emptyShapes = NULL;
+        flags = 0;
+    }
 
 #ifdef JS_TYPE_INFERENCE
     JS_ASSERT_IF(aclasp != &js_FunctionClass, type);
     typeObject = type;
 #endif
-
-    emptyShapes = NULL;
 }
 
 inline void
@@ -638,7 +689,7 @@ JSObject::finish(JSContext *cx)
 #endif
     if (hasSlotsArray())
         freeSlotsArray(cx);
-    if (emptyShapes)
+    if (!isDenseArray() && emptyShapes)
         cx->free(emptyShapes);
 }
 

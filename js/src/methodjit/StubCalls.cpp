@@ -569,7 +569,7 @@ stubs::SetElem(VMFrame &f)
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            jsuint length = obj->getDenseArrayCapacity();
+            jsuint length = obj->getDenseArrayInitializedLength();
             jsint i = JSID_TO_INT(id);
             if ((jsuint)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {

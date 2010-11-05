@@ -1124,7 +1124,7 @@ class TypedArrayTemplate
         JS_ASSERT(len <= length - offset);
         NativeType *dest = static_cast<NativeType*>(data) + offset;
 
-        if (ar->isDenseArray() && ar->getDenseArrayCapacity() >= len) {
+        if (ar->isDenseArray() && ar->getDenseArrayInitializedLength() >= len) {
             JS_ASSERT(ar->getArrayLength() == len);
 
             Value *src = ar->getDenseArrayElements();
@@ -1774,14 +1774,14 @@ js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope)
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    obj->setProto(proto);
+    obj->setProto(cx, proto);
     obj->setParent(scope);
 
     key = JSCLASS_CACHED_PROTO_KEY(&ArrayBuffer::jsclass);
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    buffer->setProto(proto);
+    buffer->setProto(cx, proto);
     buffer->setParent(scope);
 
     return JS_TRUE;

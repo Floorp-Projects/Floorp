@@ -138,10 +138,10 @@ MakeTypeId(jsid id)
 /////////////////////////////////////////////////////////////////////
 
 inline js::types::TypeObject *
-JSContext::getTypeObject(const char *name, bool isFunction)
+JSContext::getTypeObject(const char *name, bool isArray, bool isFunction)
 {
 #ifdef JS_TYPE_INFERENCE
-    return compartment->types.getTypeObject(this, NULL, name, isFunction);
+    return compartment->types.getTypeObject(this, NULL, name, isArray, isFunction);
 #else
     return NULL;
 #endif
@@ -152,7 +152,7 @@ JSContext::getGlobalTypeObject()
 {
 #ifdef JS_TYPE_INFERENCE
     if (!compartment->types.globalObject)
-        compartment->types.globalObject = getTypeObject("Global", false);
+        compartment->types.globalObject = getTypeObject("Global", false, false);
     return compartment->types.globalObject;
 #else
     return NULL;
@@ -226,7 +226,7 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
     JS_snprintf(name, 16, "#%u", script->analysis->id);
 
     js::types::TypeFunction *typeFun =
-        compartment->types.getTypeObject(this, script->analysis, name, true)->asFunction();
+        compartment->types.getTypeObject(this, script->analysis, name, false, true)->asFunction();
 
     /* We should not be attaching multiple scripts to the same function. */
     if (typeFun->script) {
@@ -247,7 +247,7 @@ JSContext::getTypeFunctionHandler(const char *name, JSTypeHandler handler)
 {
 #ifdef JS_TYPE_INFERENCE
     js::types::TypeFunction *typeFun =
-        compartment->types.getTypeObject(this, NULL, name, true)->asFunction();
+        compartment->types.getTypeObject(this, NULL, name, false, true)->asFunction();
 
     if (typeFun->handler) {
         /* Saw this function before, make sure it has the same behavior. */
@@ -414,6 +414,29 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
 
     firstTypes->addSubset(this, obj->pool(), secondTypes);
     secondTypes->addSubset(this, obj->pool(), firstTypes);
+#endif
+}
+
+inline void
+JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
+{
+#ifdef JS_TYPE_INFERENCE
+    if (notDense) {
+        if (!obj->isDenseArray)
+            return;
+        obj->isDenseArray = false;
+    } else if (!obj->isPackedArray) {
+        return;
+    }
+    obj->isPackedArray = false;
+
+    /* All constraints listening to changes in packed/dense status are on the element types. */
+    js::types::TypeSet *elementTypes = obj->properties(this).getVariable(this, JSID_VOID);
+    js::types::TypeConstraint *constraint = elementTypes->constraintList;
+    while (constraint) {
+        constraint->arrayNotPacked(this, notDense);
+        constraint = constraint->next;
+    }
 #endif
 }
 
@@ -692,7 +715,7 @@ Bytecode::getInitObject(JSContext *cx, bool isArray)
     if (!initObject) {
         char name[32];
         JS_snprintf(name, 32, "#%u:%u", script->id, offset);
-        initObject = cx->compartment->types.getTypeObject(cx, script, name, false);
+        initObject = cx->compartment->types.getTypeObject(cx, script, name, isArray, false);
         initObject->isInitObject = true;
     }
 
@@ -1119,39 +1142,6 @@ TypeSet::addType(JSContext *cx, jstype type)
     cx->compartment->types.resolvePending(cx);
 }
 
-inline JSValueType
-TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing)
-{
-    JSValueType type;
-    switch (typeFlags) {
-      case TYPE_FLAG_UNDEFINED:
-        type = JSVAL_TYPE_UNDEFINED;
-        break;
-      case TYPE_FLAG_NULL:
-        type = JSVAL_TYPE_NULL;
-        break;
-      case TYPE_FLAG_BOOLEAN:
-        type = JSVAL_TYPE_BOOLEAN;
-        break;
-      case TYPE_FLAG_INT32:
-        type = JSVAL_TYPE_INT32;
-        break;
-      case TYPE_FLAG_STRING:
-        type = JSVAL_TYPE_STRING;
-        break;
-      case TYPE_FLAG_OBJECT:
-        type = JSVAL_TYPE_OBJECT;
-        break;
-      default:
-        /* Return directly to avoid adding a type constraint. */
-        return JSVAL_TYPE_UNKNOWN;
-    }
-
-    addFreezeTypeTag(cx, script, isConstructing);
-
-    return type;
-}
-
 inline TypeSet *
 TypeSet::make(JSContext *cx, JSArenaPool &pool, const char *name)
 {
@@ -1295,7 +1285,7 @@ TypeFunction::getNewObject(JSContext *cx)
     char *newName = (char *) alloca(len);
     JS_snprintf(newName, len, "%s:new", baseName);
     newObject = cx->compartment->types.getTypeObject(cx, script ? script->analysis : NULL,
-                                                     newName, false);
+                                                     newName, false, false);
 
     properties(cx);
     JS_ASSERT_IF(!prototypeObject, isBuiltin);
