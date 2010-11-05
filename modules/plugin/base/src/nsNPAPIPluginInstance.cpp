@@ -855,19 +855,8 @@ nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::NotifyPainted(void)
 {
-  if (RUNNING != mRunning)
-    return NS_OK;
-
-  PluginDestructionGuard guard(this);
-
-  if (!mPlugin)
-    return NS_ERROR_FAILURE;
-
-  PluginLibrary* library = mPlugin->GetLibrary();
-  if (!library)
-    return NS_ERROR_FAILURE;
-
-  return library->NotifyPainted(&mNPP);
+  NS_NOTREACHED("Dead code, shouldn't be called.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

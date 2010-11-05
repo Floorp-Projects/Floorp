@@ -195,14 +195,6 @@ PluginPRLibrary::AsyncSetWindow(NPP instance, NPWindow* window)
 }
 
 nsresult
-PluginPRLibrary::NotifyPainted(NPP instance)
-{
-  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
-  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
 PluginPRLibrary::GetSurface(NPP instance, gfxASurface** aSurface)
 {
   nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;

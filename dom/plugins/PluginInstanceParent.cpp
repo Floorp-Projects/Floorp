@@ -101,7 +101,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mDrawingModel(NPDrawingModelCoreGraphics)
     , mIOSurface(nsnull)
 #endif
-    , mSentPaintNotification(PR_FALSE)
 {
     InitQuirksModes(aMimeType);
 }
@@ -508,8 +507,6 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     }
 #endif
 
-    mSentPaintNotification = PR_FALSE;
-
 #ifdef MOZ_X11
     if (mFrontSurface &&
         mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib)
@@ -539,23 +536,11 @@ PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
     window.height = aWindow->height;
     window.clipRect = aWindow->clipRect;
     window.type = aWindow->type;
-    mSentPaintNotification = PR_FALSE;
     if (!SendAsyncSetWindow(gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType(),
                             window))
         return NS_ERROR_FAILURE;
 
     return NS_OK;
-}
-
-nsresult
-PluginInstanceParent::NotifyPainted(void)
-{
-    bool rv = true;
-    if (!mSentPaintNotification) {
-        rv = SendPaintFinished();
-        mSentPaintNotification = rv;
-    }
-    return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult

@@ -261,7 +261,6 @@ public:
 #endif // definied(OS_MACOSX)
 
     nsresult AsyncSetWindow(NPWindow* window);
-    nsresult NotifyPainted(void);
     nsresult GetSurface(gfxASurface** aSurface);
 
 private:
@@ -321,9 +320,6 @@ private:
 
     // ObjectFrame layer wrapper
     nsRefPtr<gfxASurface>    mFrontSurface;
-
-    // Don't spam plugin process with extra paint notifications
-    PRPackedBool             mSentPaintNotification;
 };
 
 
