@@ -294,7 +294,22 @@ public:
               nsIntSize(newSize.width, newSize.height), aRect, aRotation);
   }
 
+  void SetBackingBufferAndUpdateFrom(
+    gfxASurface* aBuffer,
+    gfxASurface* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
+    const nsIntRegion& aUpdateRegion, float aXResolution, float aYResolution);
+
 private:
+  BasicThebesLayerBuffer(gfxASurface* aBuffer,
+                         const nsIntRect& aRect, const nsIntPoint& aRotation)
+    // The size policy doesn't really matter here; this constructor is
+    // intended to be used for creating temporaries
+    : ThebesLayerBuffer(ContainsVisibleBounds)
+  {
+    gfxIntSize sz = aBuffer->GetSize();
+    SetBuffer(aBuffer, nsIntSize(sz.width, sz.height), aRect, aRotation);
+  }
+
   BasicThebesLayer* mLayer;
 };
 
@@ -541,6 +556,25 @@ BasicThebesLayerBuffer::CreateBuffer(ContentType aType,
                                      const nsIntSize& aSize)
 {
   return mLayer->CreateBuffer(aType, aSize);
+}
+
+void
+BasicThebesLayerBuffer::SetBackingBufferAndUpdateFrom(
+  gfxASurface* aBuffer,
+  gfxASurface* aSource, const nsIntRect& aRect, const nsIntPoint& aRotation,
+  const nsIntRegion& aUpdateRegion, float aXResolution, float aYResolution)
+{
+  SetBackingBuffer(aBuffer, aRect, aRotation);
+  nsRefPtr<gfxContext> destCtx =
+    GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(),
+                                aXResolution, aYResolution);
+  destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  if (IsClippingCheap(destCtx, aUpdateRegion)) {
+    gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
+  }
+
+  BasicThebesLayerBuffer srcBuffer(aSource, aRect, aRotation);
+  srcBuffer.DrawBufferWithRotation(destCtx, 1.0, aXResolution, aYResolution);
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
@@ -1466,6 +1500,16 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
     mBuffer.SetBackingBuffer(backBuffer, aBuffer.rect(), aBuffer.rotation());
     return;
   }
+
+  const ThebesBuffer roFront = aReadOnlyFrontBuffer.get_ThebesBuffer();
+  nsRefPtr<gfxASurface> roFrontBuffer = BasicManager()->OpenDescriptor(roFront.buffer());
+  mBuffer.SetBackingBufferAndUpdateFrom(
+    backBuffer,
+    roFrontBuffer, roFront.rect(), roFront.rotation(),
+    aFrontUpdatedRegion, mXResolution, mYResolution);
+  // Now the new back buffer has the same (interesting) pixels as the
+  // new front buffer, and mValidRegion et al. are correct wrt the new
+  // back buffer (i.e. as they were for the old back buffer)
 }
 
 void
@@ -1957,8 +2001,8 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
 
   mFrontBufferDescriptor = aNewFront.buffer();
 
-  *aReadOnlyFront = null_t();
-  aFrontUpdatedRegion->SetEmpty();
+  *aReadOnlyFront = aNewFront;
+  *aFrontUpdatedRegion = aUpdatedRegion;
 }
 
 void
