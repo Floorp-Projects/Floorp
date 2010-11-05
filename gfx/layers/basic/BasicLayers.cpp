@@ -290,8 +290,9 @@ public:
     gfxIntSize newSize = aBuffer->GetSize();
     NS_ABORT_IF_FALSE(newSize == prevSize,
                       "Swapped-in buffer size doesn't match old buffer's!");
-    SetBuffer(aBuffer,
-              nsIntSize(newSize.width, newSize.height), aRect, aRotation);
+    nsRefPtr<gfxASurface> oldBuffer;
+    oldBuffer = SetBuffer(aBuffer, nsIntSize(newSize.width, newSize.height),
+                          aRect, aRotation);
   }
 
   void SetBackingBufferAndUpdateFrom(
