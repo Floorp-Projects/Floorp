@@ -4750,6 +4750,10 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     return entry;
 }
 
+/*
+ * On return, if |*pobjp| is a native object, then |*propp| is a |Shape *|.
+ * Otherwise, its type and meaning depends on the host object's implementation.
+ */
 JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp)

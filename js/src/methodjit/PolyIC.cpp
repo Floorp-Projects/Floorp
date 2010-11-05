@@ -672,26 +672,34 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 
 template <typename IC>
 struct GetPropertyHelper {
+    // These fields are set in the constructor and describe a property lookup.
     JSContext   *cx;
     JSObject    *obj;
     JSAtom      *atom;
     IC          &ic;
 
+    // These fields are set by |bind| and |lookup|. After a call to either
+    // function, these are set exactly as they are in JSOP_GETPROP or JSOP_NAME.
     JSObject    *aobj;
     JSObject    *holder;
+    JSProperty  *prop;
+ 
+    // This field is set by |bind| and |lookup| only if they returned
+    // Lookup_Cacheable, otherwise it is NULL.
     const Shape *shape;
 
     GetPropertyHelper(JSContext *cx, JSObject *obj, JSAtom *atom, IC &ic)
-      : cx(cx), obj(obj), atom(atom), ic(ic), holder(NULL), shape(NULL)
+      : cx(cx), obj(obj), atom(atom), ic(ic), holder(NULL), prop(NULL), shape(NULL)
     { }
 
   public:
     LookupStatus bind() {
-        JSProperty *prop;
         if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &holder, &prop))
             return ic.error(cx);
         if (!prop)
             return ic.disable(cx, "lookup failed");
+        if (!IsCacheableProtoChain(obj, holder))
+            return ic.disable(cx, "non-native holder");
         shape = (const Shape *)prop;
         return Lookup_Cacheable;
     }
@@ -700,7 +708,6 @@ struct GetPropertyHelper {
         JSObject *aobj = js_GetProtoIfDenseArray(obj);
         if (!aobj->isNative())
             return ic.disable(cx, "non-native");
-        JSProperty *prop;
         if (!aobj->lookupProperty(cx, ATOM_TO_JSID(atom), &holder, &prop))
             return ic.error(cx);
         if (!prop)
@@ -1166,12 +1173,13 @@ class ScopeNameCompiler : public PICStubCompiler
 
     GetPropertyHelper<ScopeNameCompiler> getprop;
 
+    ScopeNameCompiler *thisFromCtor() { return this; }
   public:
     ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
                       JSAtom *atom, VoidStubPIC stub)
       : PICStubCompiler("name", f, script, pic, JS_FUNC_TO_DATA_PTR(void *, stub)),
         scopeChain(scopeChain), atom(atom),
-        getprop(f.cx, NULL, atom, *this)
+        getprop(f.cx, NULL, atom, *thisFromCtor())
     { }
 
     static void reset(ic::PICInfo &pic)
@@ -1433,25 +1441,28 @@ class ScopeNameCompiler : public PICStubCompiler
     {
         JSObject *obj = getprop.obj;
         JSObject *holder = getprop.holder;
-        const Shape *shape = getprop.shape;
+        const JSProperty *prop = getprop.prop;
 
-        if (shape && (!obj->isNative() || !holder->isNative())) {
+        if (!prop) {
+            /* Kludge to allow (typeof foo == "undefined") tests. */
+            disable("property not found");
+            if (pic.kind == ic::PICInfo::NAME) {
+                JSOp op2 = js_GetOpcode(cx, script, cx->regs->pc + JSOP_NAME_LENGTH);
+                if (op2 == JSOP_TYPEOF) {
+                    vp->setUndefined();
+                    return true;
+                }
+            }
+            ReportAtomNotDefined(cx, atom);
+            return false;
+        }
+
+        if (!obj->isNative() || !holder->isNative()) {
             if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
                 return false;
         } else {
-            if (!shape) {
-                /* Kludge to allow (typeof foo == "undefined") tests. */
-                disable("property not found");
-                if (pic.kind == ic::PICInfo::NAME) {
-                    JSOp op2 = js_GetOpcode(cx, script, cx->regs->pc + JSOP_NAME_LENGTH);
-                    if (op2 == JSOP_TYPEOF) {
-                        vp->setUndefined();
-                        return true;
-                    }
-                }
-                ReportAtomNotDefined(cx, atom);
-                return false;
-            }
+            const Shape *shape = getprop.shape;
+            JS_ASSERT(shape);
             JSObject *normalized = obj;
             if (obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
                 normalized = js_UnwrapWithObject(cx, obj);
