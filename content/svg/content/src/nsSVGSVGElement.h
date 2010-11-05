@@ -51,6 +51,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
 #include "nsSVGPreserveAspectRatio.h"
+#include "mozilla/dom/FromParser.h"
 
 #ifdef MOZ_SMIL
 class nsSMILTimeContainer;
@@ -133,8 +134,9 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
 protected:
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
                                       already_AddRefed<nsINodeInfo> aNodeInfo,
-                                      PRUint32 aFromParser);
-  nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo, PRUint32 aFromParser);
+                                      mozilla::dom::FromParser aFromParser);
+  nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                  mozilla::dom::FromParser aFromParser);
   
 public:
 

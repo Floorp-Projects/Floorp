@@ -82,6 +82,14 @@
 #include "nsPermissionManager.h"
 #endif
 
+#if defined(ANDROID) || defined(LINUX)
+#include <sys/time.h>
+#include <sys/resource.h>
+// TODO: For other platforms that support setpriority, figure out
+//       appropriate values of niceness
+static const int kRelativeNiceness = 10;
+#endif
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -209,7 +217,19 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #endif
 
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
-  
+
+#if defined(ANDROID) || defined(LINUX)
+    // XXX We change the behavior of Linux child processes here. That
+    // means that, not just in Fennec, but also in Firefox, once it has
+    // child processes, those will be niced. IOW, Firefox with child processes
+    // will have different performance profiles on Linux than other
+    // platforms. This may alter Talos results and so forth.
+    char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
+    setpriority(PRIO_PROCESS, 0, getpriority(PRIO_PROCESS, 0) +
+            (relativeNicenessStr ? atoi(relativeNicenessStr) :
+             kRelativeNiceness));
+#endif
+
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 

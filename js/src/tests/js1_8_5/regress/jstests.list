@@ -12,7 +12,7 @@ script regress-551763-0.js
 script regress-551763-1.js
 script regress-551763-2.js
 script regress-555246-0.js
-fails-if(xulRuntime.shell) script regress-555246-1.js
+script regress-555246-1.js
 script regress-559438.js
 script regress-560101.js
 script regress-560998-1.js
@@ -48,3 +48,4 @@ script regress-598176.js
 script regress-600067.js
 script regress-600137.js
 script regress-602621.js
+fails-if(!xulRuntime.shell) script regress-607863.js

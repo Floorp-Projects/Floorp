@@ -73,6 +73,8 @@
 #include "nsContentCreatorFunctions.h"
 #include "txError.h"
 
+using namespace mozilla::dom;
+
 #define TX_ENSURE_CURRENTNODE                           \
     NS_ASSERTION(mCurrentNode, "mCurrentNode is NULL"); \
     if (!mCurrentNode)                                  \
@@ -257,8 +259,15 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
         
         return rv;
     }
-    // This should really be handled by nsIDocument::EndLoad
-    mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+
+    if (mCreatingNewDocument) {
+        // This should really be handled by nsIDocument::EndLoad
+        mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+        nsScriptLoader* loader = mDocument->ScriptLoader();
+        if (loader) {
+            loader->ParsingComplete(PR_FALSE);
+        }
+    }
 
     if (!mRefreshString.IsEmpty()) {
         nsPIDOMWindow *win = mDocument->GetWindow();
@@ -310,10 +319,18 @@ txMozillaXMLOutput::endElement()
             NS_ENSURE_SUCCESS(rv, rv);
         }
 
-        // Handle script elements
-        if (element->Tag() == nsGkAtoms::script &&
-            (element->IsHTML() ||
-            element->GetNameSpaceID() == kNameSpaceID_SVG)) {
+        // Handle elements that are different when parser-created
+        PRInt32 ns = element->GetNameSpaceID();
+        nsIAtom* localName = element->Tag();
+
+        if ((ns == kNameSpaceID_XHTML && (localName == nsGkAtoms::script ||
+                                          localName == nsGkAtoms::title ||
+                                          localName == nsGkAtoms::object ||
+                                          localName == nsGkAtoms::applet ||
+                                          localName == nsGkAtoms::select ||
+                                          localName == nsGkAtoms::textarea)) ||
+            (ns == kNameSpaceID_SVG && (localName == nsGkAtoms::script ||
+                                        localName == nsGkAtoms::title))) {
 
             rv = element->DoneAddingChildren(PR_TRUE);
 
@@ -324,6 +341,10 @@ txMozillaXMLOutput::endElement()
                 rv = mNotifier->AddScriptElement(sele);
                 NS_ENSURE_SUCCESS(rv, rv);
             }
+        } else if (ns == kNameSpaceID_XHTML &&
+                   (localName == nsGkAtoms::input ||
+                    localName == nsGkAtoms::button)) {
+          element->DoneCreatingElement();
         }
     }
 
@@ -431,6 +452,13 @@ txMozillaXMLOutput::startDocument()
         mNotifier->OnTransformStart();
     }
 
+    if (mCreatingNewDocument) {
+        nsScriptLoader* loader = mDocument->ScriptLoader();
+        if (loader) {
+            loader->BeginDeferringScripts();
+        }
+    }
+
     return NS_OK;
 }
 
@@ -536,7 +564,9 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     ni = mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni.forget(), PR_FALSE);
+    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni.forget(),
+                  mCreatingNewDocument ?
+                  FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
 
     // Set up the element and adjust state
     if (!mNoFixup) {
@@ -947,7 +977,9 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
                                        kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    return NS_NewHTMLElement(aResult, ni.forget(), PR_FALSE);
+    return NS_NewHTMLElement(aResult, ni.forget(), mCreatingNewDocument ?
+        FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
+
 }
 
 txTransformNotifier::txTransformNotifier()

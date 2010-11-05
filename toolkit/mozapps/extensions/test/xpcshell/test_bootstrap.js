@@ -14,10 +14,27 @@ const ADDON_DOWNGRADE                 = 8;
 // This verifies that bootstrappable add-ons can be used without restarts.
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-Services.prefs.setIntPref("bootstraptest.version", 0);
+// Enable loading extensions from the user scopes
+Services.prefs.setIntPref("extensions.enabledScopes",
+                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);
+
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
+const userExtDir = gProfD.clone();
+userExtDir.append("extensions2");
+userExtDir.append(gAppInfo.ID);
+registerDirectory("XREUSysExt", userExtDir.parent);
+
+function resetPrefs() {
+  Services.prefs.setIntPref("bootstraptest.active_version", -1);
+  Services.prefs.setIntPref("bootstraptest.installed_version", -1);
+  Services.prefs.setIntPref("bootstraptest.startup_reason", -1);
+  Services.prefs.setIntPref("bootstraptest.shutdown_reason", -1);
+  Services.prefs.setIntPref("bootstraptest.install_reason", -1);
+  Services.prefs.setIntPref("bootstraptest.uninstall_reason", -1);
+}
 
 function getActiveVersion() {
   return Services.prefs.getIntPref("bootstraptest.active_version");
@@ -35,9 +52,18 @@ function getShutdownReason() {
   return Services.prefs.getIntPref("bootstraptest.shutdown_reason");
 }
 
+function getInstallReason() {
+  return Services.prefs.getIntPref("bootstraptest.install_reason");
+}
+
+function getUninstallReason() {
+  return Services.prefs.getIntPref("bootstraptest.uninstall_reason");
+}
+
 function run_test() {
   do_test_pending();
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+
+  resetPrefs();
 
   startupManager();
 
@@ -746,8 +772,252 @@ function run_test_16() {
         do_check_eq(getInstalledVersion(), 1);
         do_check_eq(getActiveVersion(), 1);
 
-        do_test_finished();
+        AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+          b1.uninstall();
+
+          run_test_17();
+        });
       });
+    });
+  });
+}
+
+// Check that a bootstrapped extension in a non-profile location is loaded
+function run_test_17() {
+  shutdownManager();
+
+  let dir = userExtDir.clone();
+  dir.append("bootstrap1@tests.mozilla.org");
+  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+            createInstance(AM_Ci.nsIZipReader);
+  zip.open(do_get_addon("test_bootstrap1_1"));
+  dir.append("install.rdf");
+  zip.extract("install.rdf", dir);
+  dir = dir.parent;
+  dir.append("bootstrap.js");
+  zip.extract("bootstrap.js", dir);
+  zip.close();
+
+  resetPrefs();
+  startupManager();
+
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    // Should have installed and started
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_true(b1.isActive);
+
+    run_test_18();
+  });
+}
+
+// Check that installing a new bootstrapped extension in the profile replaces
+// the existing one
+function run_test_18() {
+  resetPrefs();
+  installAllFiles([do_get_addon("test_bootstrap1_2")], function() {
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      // Should have installed and started
+      do_check_eq(getInstalledVersion(), 2);
+      do_check_eq(getActiveVersion(), 2);
+      do_check_neq(b1, null);
+      do_check_eq(b1.version, "2.0");
+      do_check_true(b1.isActive);
+
+      do_check_eq(getShutdownReason(), ADDON_UPGRADE);
+      do_check_eq(getUninstallReason(), ADDON_UPGRADE);
+      do_check_eq(getInstallReason(), ADDON_UPGRADE);
+      do_check_eq(getStartupReason(), ADDON_UPGRADE);
+
+      run_test_19();
+    });
+  });
+}
+
+// Check that uninstalling the profile version reveals the non-profile one
+function run_test_19() {
+  resetPrefs();
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    // The revealed add-on gets activated asynchronously
+    prepare_test({
+      "bootstrap1@tests.mozilla.org": [
+        ["onUninstalling", false],
+        "onUninstalled",
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [], check_test_19);
+
+    b1.uninstall();
+  });
+}
+
+function check_test_19() {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    // Should have reverted to the older version
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_true(b1.isActive);
+
+    // TODO these reasons really should be ADDON_DOWNGRADE (bug 607818)
+    do_check_eq(getShutdownReason(), ADDON_UNINSTALL);
+    do_check_eq(getUninstallReason(), ADDON_UNINSTALL);
+    do_check_eq(getInstallReason(), ADDON_INSTALL);
+    do_check_eq(getStartupReason(), ADDON_INSTALL);
+
+    run_test_20();
+  });
+}
+
+// Check that a new profile extension detected at startup replaces the non-profile
+// one
+function run_test_20() {
+  resetPrefs();
+  shutdownManager();
+
+  let dir = profileDir.clone();
+  dir.append("bootstrap1@tests.mozilla.org");
+  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+            createInstance(AM_Ci.nsIZipReader);
+  zip.open(do_get_addon("test_bootstrap1_2"));
+  dir.append("install.rdf");
+  zip.extract("install.rdf", dir);
+  dir = dir.parent;
+  dir.append("bootstrap.js");
+  zip.extract("bootstrap.js", dir);
+  zip.close();
+
+  startupManager();
+
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    // Should have installed and started
+    do_check_eq(getInstalledVersion(), 2);
+    do_check_eq(getActiveVersion(), 2);
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "2.0");
+    do_check_true(b1.isActive);
+
+    do_check_eq(getShutdownReason(), APP_SHUTDOWN);
+    do_check_eq(getUninstallReason(), ADDON_UPGRADE);
+    do_check_eq(getInstallReason(), ADDON_UPGRADE);
+    do_check_eq(getStartupReason(), APP_STARTUP);
+
+    run_test_21();
+  });
+}
+
+// Check that a detected removal reveals the non-profile one
+function run_test_21() {
+  resetPrefs();
+  shutdownManager();
+
+  let dir = profileDir.clone();
+  dir.append("bootstrap1@tests.mozilla.org");
+  dir.remove(true);
+
+  startupManager();
+
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    // Should have installed and started
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_true(b1.isActive);
+
+    do_check_eq(getShutdownReason(), APP_SHUTDOWN);
+
+    // This won't be set as the bootstrap script was gone so we couldn't
+    // uninstall it properly
+    do_check_eq(getUninstallReason(), -1);
+
+    // TODO this reason should probably be ADDON_DOWNGRADE (bug 607818)
+    do_check_eq(getInstallReason(), ADDON_INSTALL);
+
+    do_check_eq(getStartupReason(), APP_STARTUP);
+
+    dir = userExtDir.clone();
+    dir.append("bootstrap1@tests.mozilla.org");
+    dir.remove(true);
+
+    restartManager();
+
+    run_test_22();
+  });
+}
+
+// Check that an upgrade from the filesystem is detected and applied correctly
+function run_test_22() {
+  shutdownManager();
+
+  let dir = profileDir.clone();
+  dir.append("bootstrap1@tests.mozilla.org");
+  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+            createInstance(AM_Ci.nsIZipReader);
+  zip.open(do_get_addon("test_bootstrap1_1"));
+  dir.append("install.rdf");
+  zip.extract("install.rdf", dir);
+  dir = dir.parent;
+  dir.append("bootstrap.js");
+  zip.extract("bootstrap.js", dir);
+  zip.close();
+
+  // Make it look old so changes are detected
+  setExtensionModifiedTime(dir.parent, dir.parent.lastModifiedTime - 5000);
+
+  startupManager();
+
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    // Should have installed and started
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_true(b1.isActive);
+
+    resetPrefs();
+    shutdownManager();
+
+    dir = dir.parent;
+    dir.remove(true);
+    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+              createInstance(AM_Ci.nsIZipReader);
+    zip.open(do_get_addon("test_bootstrap1_2"));
+    dir.append("install.rdf");
+    zip.extract("install.rdf", dir);
+    dir = dir.parent;
+    dir.append("bootstrap.js");
+    zip.extract("bootstrap.js", dir);
+    zip.close();
+
+    startupManager();
+
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      // Should have installed and started
+      do_check_eq(getInstalledVersion(), 2);
+      do_check_eq(getActiveVersion(), 2);
+      do_check_neq(b1, null);
+      do_check_eq(b1.version, "2.0");
+      do_check_true(b1.isActive);
+
+      do_check_eq(getShutdownReason(), APP_SHUTDOWN);
+
+      // This won't be set as the bootstrap script was gone so we couldn't
+      // uninstall it properly
+      do_check_eq(getUninstallReason(), -1);
+
+      do_check_eq(getInstallReason(), ADDON_UPGRADE);
+      do_check_eq(getStartupReason(), APP_STARTUP);
+
+      do_test_finished();
     });
   });
 }

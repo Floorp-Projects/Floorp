@@ -52,6 +52,19 @@ registerCleanupFunction(function() {
   while (windows.hasMoreElements())
     windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
 
+  windows = Services.wm.getEnumerator("Addons:Compatibility");
+  if (windows.hasMoreElements())
+    ok(false, "Found unexpected add-ons compatibility window still open");
+  while (windows.hasMoreElements())
+    windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
+
+  windows = Services.wm.getEnumerator("Addons:Install");
+  if (windows.hasMoreElements())
+    ok(false, "Found unexpected add-ons installation window still open");
+  while (windows.hasMoreElements())
+    windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
+
+
   // We can for now know that getAllInstalls actually calls its callback before
   // it returns so this will complete before the next test start.
   AddonManager.getAllInstalls(function(aInstalls) {
@@ -173,7 +186,9 @@ function get_addon_element(aManager, aId) {
   return null;
 }
 
-function wait_for_view_load(aManagerWindow, aCallback, aForceWait) {
+function wait_for_view_load(aManagerWindow, aCallback, aForceWait, aLongerTimeout) {
+  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
+
   if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
     aCallback(aManagerWindow);
     return;
@@ -198,7 +213,7 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
   }, false);
 }
 
-function open_manager(aView, aCallback, aLoadCallback) {
+function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
   function setup_manager(aManagerWindow) {
     if (aLoadCallback)
       aLoadCallback(aManagerWindow);
@@ -210,7 +225,7 @@ function open_manager(aView, aCallback, aLoadCallback) {
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
     wait_for_manager_load(aManagerWindow, function() {
-      wait_for_view_load(aManagerWindow, aCallback);
+      wait_for_view_load(aManagerWindow, aCallback, null, aLongerTimeout);
     });
   }
 
@@ -228,7 +243,9 @@ function open_manager(aView, aCallback, aLoadCallback) {
   }, true);
 }
 
-function close_manager(aManagerWindow, aCallback) {
+function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
+  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
+
   ok(aManagerWindow != null, "Should have an add-ons manager window to close");
   is(aManagerWindow.location, MANAGER_URI, "Should be closing window with correct URI");
 
@@ -393,8 +410,8 @@ CertOverrideListener.prototype = {
   },
 
   notifyCertProblem: function (socketInfo, sslStatus, targetHost) {
-    cert = sslStatus.QueryInterface(Components.interfaces.nsISSLStatus)
-                    .serverCert;
+    var cert = sslStatus.QueryInterface(Components.interfaces.nsISSLStatus)
+                        .serverCert;
     var cos = Cc["@mozilla.org/security/certoverride;1"].
               getService(Ci.nsICertOverrideService);
     cos.rememberValidityOverride(this.host, -1, cert, this.bits, false);

@@ -94,14 +94,20 @@ function initialize() {
   var observerService = Cc["@mozilla.org/observer-service;1"].
                         getService(Ci.nsIObserverService);
   observerService.addObserver(windowObserver, "toplevel-window-ready", false);
-  
+
   // Attach event listeners to all open windows
   var enumerator = Cc["@mozilla.org/appshell/window-mediator;1"].
                    getService(Ci.nsIWindowMediator).getEnumerator("");
   while (enumerator.hasMoreElements()) {
-    attachEventListeners(enumerator.getNext());
+    var win = enumerator.getNext();
+    attachEventListeners(win);
+
+    // For windows or dialogs already open we have to explicitly set the property
+    // otherwise windows which load really quick never gets the property set and
+    // we fail to create the controller
+    win.documentLoaded = true;
   };
 }
-  
+
 initialize();
 

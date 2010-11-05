@@ -1418,7 +1418,7 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
 void
 PluginInstanceParent::Invalidate()
 {
-    NPRect windowRect = {0, 0, mShWidth, mShHeight};
+    NPRect windowRect = {0, 0, mShHeight, mShWidth};
     RecvNPN_InvalidateRect(windowRect);
 }
 #endif
