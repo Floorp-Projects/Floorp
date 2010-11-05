@@ -81,8 +81,8 @@ panel[type="arrow"] {
               0 0 0 1px rgba(0,0,0,.75),
               0 1px 3px 2px rgba(0,0,0,.65);
 %else
-  background: -moz-linear-gradient(rgba(248,250,253,1), rgba(248,250,253,1) 20px, rgba(248,250,253,.97));
-  padding: 6px;
+  background: -moz-linear-gradient(rgba(250,251,253,.95), rgba(250,251,253,.95) 20px, rgba(250,251,253,.95));
+  padding: 14px;
   margin: 3px;
   box-shadow: 0 0 5px 1px rgba(184,205,232,1) inset,
               0 0 0 1px rgba(0,0,0,.25),
