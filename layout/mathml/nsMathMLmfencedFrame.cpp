@@ -138,9 +138,8 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
   if (!GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::open,
                     value)) {
     value = PRUnichar('('); // default as per the MathML REC
-  }
-  else {
-    value.Trim(" ");
+  } else {
+    value.CompressWhitespace();
   }
 
   if (!value.IsEmpty()) {
@@ -155,9 +154,8 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
   if(!GetAttribute(mContent, mPresentationData.mstyle,
                     nsGkAtoms::close, value)) {
     value = PRUnichar(')'); // default as per the MathML REC
-  }
-  else {
-    value.Trim(" ");
+  } else {
+    value.CompressWhitespace();
   }
 
   if (!value.IsEmpty()) {
@@ -169,11 +167,10 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
 
   //////////////
   // see if separators are there ...
-  if(!GetAttribute(mContent, mPresentationData.mstyle, 
-                   nsGkAtoms::separators_, value)) {
+  if (!GetAttribute(mContent, mPresentationData.mstyle, 
+                    nsGkAtoms::separators_, value)) {
     value = PRUnichar(','); // default as per the MathML REC
-  }
-  else {
+  } else {
     value.StripWhitespace();
   }
 
