@@ -73,17 +73,27 @@ function TabItem(tab, options) {
   this._cachedImageData = null;
   this.shouldHideCachedData = false;
   this.canvasSizeForced = false;
-  this.favEl = (iQ('.favicon', $div))[0];
-  this.favImgEl = (iQ('.favicon>img', $div))[0];
-  this.nameEl = (iQ('.tab-title', $div))[0];
-  this.thumbEl = (iQ('.thumb', $div))[0];
-  this.canvasEl = (iQ('.thumb canvas', $div))[0];
-  this.cachedThumbEl = (iQ('img.cached-thumb', $div))[0];
+  this.$thumb = iQ('.thumb', $div);
+  this.$fav   = iQ('.favicon', $div);
+  this.$tabTitle = iQ('.tab-title', $div);
+  this.$canvas = iQ('.thumb canvas', $div);
+  this.$cachedThumb = iQ('img.cached-thumb', $div);
+  this.$favImage = iQ('.favicon>img', $div);
 
-  this.tabCanvas = new TabCanvas(this.tab, this.canvasEl);
+  iQ("<div>")
+    .addClass('close')
+    .appendTo($div);
+  this.$close = iQ('.close', $div);
+
+  iQ("<div>")
+    .addClass('expander')
+    .appendTo($div);
+
+  this.tabCanvas = new TabCanvas(this.tab, this.$canvas[0]);
 
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
+  this._hidden = false;
   this.isATabItem = true;
   this._zoomPrep = false;
   this.sizeExtra = new Point();
@@ -113,7 +123,7 @@ function TabItem(tab, options) {
   // override dropOptions with custom tabitem methods
   // This is mostly to support the phantom groupItems.
   this.dropOptions.drop = function(e) {
-    var $target = iQ(this.container);
+    var $target = this.$container;
     this.isDropTarget = false;
 
     var phantom = $target.data("phantomGroupItem");
@@ -128,7 +138,7 @@ function TabItem(tab, options) {
   };
 
   this.dropOptions.over = function(e) {
-    var $target = iQ(this.container);
+    var $target = this.$container;
     this.isDropTarget = true;
 
     $target.removeClass("acceptsDrop");
@@ -167,7 +177,7 @@ function TabItem(tab, options) {
 
   this.dropOptions.out = function(e) {
     this.isDropTarget = false;
-    var phantom = iQ(this.container).data("phantomGroupItem");
+    var phantom = this.$container.data("phantomGroupItem");
     if (phantom) {
       phantom.fadeOut(function() {
         iQ(this).remove();
@@ -198,15 +208,6 @@ function TabItem(tab, options) {
     }
   });
 
-  iQ("<div>")
-    .addClass('close')
-    .appendTo($div);
-  this.closeEl = (iQ(".close", $div))[0];
-
-  iQ("<div>")
-    .addClass('expander')
-    .appendTo($div);
-
   this.setResizable(true, options.immediately);
   this.droppable(true);
   this._updateDebugBounds();
@@ -225,8 +226,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // to stay that resolution until unforceCanvasSize is called.
   forceCanvasSize: function TabItem_forceCanvasSize(w, h) {
     this.canvasSizeForced = true;
-    this.canvasEl.width = w;
-    this.canvasEl.height = h;
+    this.$canvas[0].width = w;
+    this.$canvas[0].height = h;
     this.tabCanvas.paint();
   },
 
@@ -272,22 +273,17 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         gBrowser.addTabsProgressListener(TabItems.tabsProgressListener);
     }
     this._cachedImageData = tabData.imageData;
-    let $nameElement = iQ(this.nameEl);
-    let $canvasElement = iQ(this.canvasEl);
-    let $cachedThumbElement = iQ(this.cachedThumbEl);
-    $cachedThumbElement.attr("src", this._cachedImageData).show();
-    $canvasElement.css({opacity: 0.0});
-    $nameElement.text(tabData.title ? tabData.title : "");
+    this.$cachedThumb.attr("src", this._cachedImageData).show();
+    this.$canvas.css({opacity: 0.0});
+    this.$tabTitle.text(tabData.title ? tabData.title : "");
   },
 
   // ----------
   // Function: hideCachedData
   // Hides the cached data i.e. image and title and show the canvas.
   hideCachedData: function TabItem_hideCachedData() {
-    let $canvasElement = iQ(this.canvasEl);
-    let $cachedThumbElement = iQ(this.cachedThumbEl);
-    $cachedThumbElement.hide();
-    $canvasElement.css({opacity: 1.0});
+    this.$cachedThumb.hide();
+    this.$canvas.css({opacity: 1.0});
     if (this._cachedImageData) {
       TabItems.cachedDataCounter--;
       this._cachedImageData = null;
@@ -387,6 +383,24 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
   
   // ----------
+  // Function: setHidden
+  // Hide/unhide this item
+  setHidden: function TabItem_setHidden(val) {
+    if (val)
+      this.addClass("tabHidden");
+    else
+      this.removeClass("tabHidden");
+    this._hidden = val;
+  },
+
+  // ----------
+  // Function: getHidden
+  // Return hide state of item
+  getHidden: function TabItem_getHidden() {
+    return this._hidden;
+  },
+
+  // ----------
   // Function: setBounds
   // Moves this item to the specified location and size.
   //
@@ -416,11 +430,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (this._zoomPrep)
       this.bounds.copy(rect);
     else {
-      var $container = iQ(this.container);
-      var $title = iQ(this.nameEl);
-      var $thumb = iQ(this.thumbEl);
-      var $close = iQ(this.closeEl);
-      var $fav   = iQ(this.favEl);
       var css = {};
 
       if (rect.left != this.bounds.left || options.force)
@@ -451,11 +460,11 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // a random location (i.e., from [0,0]). Instead, just
       // have it appear where it should be.
       if (immediately || (!this._hasBeenDrawn)) {
-        $container.css(css);
+        this.$container.css(css);
       } else {
         TabItems.pausePainting();
-        $container.animate(css, {
-          duration: 200,
+        this.$container.animate(css, {
+            duration: 200,
           easing: "tabviewBounce",
           complete: function() {
             TabItems.resumePainting();
@@ -465,9 +474,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       if (css.fontSize && !this.isStacked) {
         if (css.fontSize < TabItems.fontSizeRange.min)
-          immediately ? $title.hide() : $title.fadeOut();
+          immediately ? this.$tabTitle.hide() : this.$tabTitle.fadeOut();
         else
-          immediately ? $title.show() : $title.fadeIn();
+          immediately ? this.$tabTitle.show() : this.$tabTitle.fadeIn();
       }
 
       if (css.width) {
@@ -477,30 +486,30 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         if (this.isStacked) {
           if (UI.rtl) {
-            $fav.css({top:0, right:0});
+            this.$fav.css({top:0, right:0});
           } else {
-            $fav.css({top:0, left:0});
+            this.$fav.css({top:0, left:0});
           }
           widthRange = new Range(70, 90);
           proportion = widthRange.proportion(css.width); // between 0 and 1
         } else {
           if (UI.rtl) {
-            $fav.css({top:4, right:2});
+            this.$fav.css({top:4, right:2});
           } else {
-            $fav.css({top:4, left:4});
+            this.$fav.css({top:4, left:4});
           }
           widthRange = new Range(40, 45);
           proportion = widthRange.proportion(css.width); // between 0 and 1
         }
 
         if (proportion <= .1)
-          $close.hide();
+          this.$close.hide();
         else
-          $close.show().css({opacity:proportion});
+          this.$close.show().css({opacity:proportion});
 
         var pad = 1 + 5 * proportion;
         var alphaRange = new Range(0.1,0.2);
-        $fav.css({
+        this.$fav.css({
          "-moz-padding-start": pad + "px",
          "-moz-padding-end": pad + 2 + "px",
          "padding-top": pad + "px",
@@ -531,7 +540,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Sets the z-index for this item.
   setZ: function TabItem_setZ(value) {
     this.zIndex = value;
-    iQ(this.container).css({zIndex: value});
+    this.$container.css({zIndex: value});
   },
 
   // ----------
@@ -558,14 +567,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: addClass
   // Adds the specified CSS class to this item's container DOM element.
   addClass: function TabItem_addClass(className) {
-    iQ(this.container).addClass(className);
+    this.$container.addClass(className);
   },
 
   // ----------
   // Function: removeClass
   // Removes the specified CSS class from this item's container DOM element.
   removeClass: function TabItem_removeClass(className) {
-    iQ(this.container).removeClass(className);
+    this.$container.removeClass(className);
   },
 
   // ----------
@@ -590,7 +599,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: makeActive
   // Updates this item to visually indicate that it's active.
   makeActive: function TabItem_makeActive() {
-    iQ(this.container).addClass("focus");
+    this.$container.addClass("focus");
 
     if (this.parent)
       this.parent.setActiveTab(this);
@@ -600,7 +609,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: makeDeactive
   // Updates this item to visually indicate that it's not active.
   makeDeactive: function TabItem_makeDeactive() {
-    iQ(this.container).removeClass("focus");
+    this.$container.removeClass("focus");
   },
 
   // ----------
@@ -615,7 +624,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       return;
 
     var self = this;
-    var $tabEl = iQ(this.container);
+    var $tabEl = this.$container;
     var childHitResult = { shouldZoom: true };
     if (this.parent)
       childHitResult = this.parent.childHit(this);
@@ -673,7 +682,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //   complete - a function to call after the zoom down animation
   zoomOut: function TabItem_zoomOut(complete) {
-    var $tab = iQ(this.container);
+    var $tab = this.$container;
     var self = this;
     
     let onZoomDone = function onZoomDone() {
@@ -748,7 +757,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   setZoomPrep: function TabItem_setZoomPrep(value) {
     let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
 
-    var $div = iQ(this.container);
+    var $div = this.$container;
 
     if (value && animateZoom) {
       this._zoomPrep = true;
@@ -943,14 +952,14 @@ let TabItems = {
         if (!iconUrl)
           iconUrl = Utils.defaultFaviconURL;
 
-        if (iconUrl != tabItem.favImgEl.src)
-          tabItem.favImgEl.src = iconUrl;
+        if (iconUrl != tabItem.$favImage[0].src)
+          tabItem.$favImage[0].src = iconUrl;
 
-        iQ(tabItem.favEl).show();
+        iQ(tabItem.$fav[0]).show();
       } else {
-        if (tabItem.favImgEl.hasAttribute("src"))
-          tabItem.favImgEl.removeAttribute("src");
-        iQ(tabItem.favEl).hide();
+        if (tabItem.$favImage[0].hasAttribute("src"))
+          tabItem.$favImage[0].removeAttribute("src");
+        iQ(tabItem.$fav[0]).hide();
       }
 
       // ___ URL
@@ -963,18 +972,18 @@ let TabItems = {
 
       // ___ label
       let label = tab.label;
-      let $name = iQ(tabItem.nameEl);
+      let $name = tabItem.$tabTitle;
       if (!tabItem.isShowingCachedData() && $name.text() != label)
         $name.text(label);
 
       // ___ thumbnail
-      let $canvas = iQ(tabItem.canvasEl);
+      let $canvas = tabItem.$canvas;
       if (!tabItem.canvasSizeForced) {
         let w = $canvas.width();
         let h = $canvas.height();
-        if (w != tabItem.canvasEl.width || h != tabItem.canvasEl.height) {
-          tabItem.canvasEl.width = w;
-          tabItem.canvasEl.height = h;
+        if (w != tabItem.$canvas[0].width || h != tabItem.$canvas[0].height) {
+          tabItem.$canvas[0].width = w;
+          tabItem.$canvas[0].height = h;
         }
       }
 
@@ -1027,7 +1036,7 @@ let TabItems = {
 
       this.unregister(tab._tabViewTabItem);
       tab._tabViewTabItem._sendToSubscribers("close");
-      iQ(tab._tabViewTabItem.container).remove();
+      tab._tabViewTabItem.$container.remove();
       tab._tabViewTabItem.removeTrenches();
       Items.unsquish(null, tab._tabViewTabItem);
 
