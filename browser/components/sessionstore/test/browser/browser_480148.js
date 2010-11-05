@@ -132,7 +132,9 @@ function test() {
       handleLoad: function (aEvent) {
         let _this = this;
         executeSoon(function () {
-          _this.window.resizeTo(_this.windowWidth, _this.window.outerHeight);
+          let extent = _this.window.outerWidth - _this.window.gBrowser.tabContainer.mTabstrip.scrollClientSize;
+          let windowWidth = _this.tabbarWidth + extent;
+          _this.window.resizeTo(windowWidth, _this.window.outerHeight);
           ss.setWindowState(_this.window, JSON.stringify(_this.state), true);
         });
       },
@@ -151,7 +153,7 @@ function test() {
 
       // setup and actually run the test
       run: function () {
-        this.windowWidth = Math.floor((this.numTabsToShow - 0.5) * tabMinWidth);
+        this.tabbarWidth = Math.floor((this.numTabsToShow - 0.5) * tabMinWidth);
         this.window = openDialog(location, "_blank", "chrome,all,dialog=no");
         this.window.addEventListener("SSTabRestoring", this, false);
         this.window.addEventListener("load", this, false);
