@@ -24,21 +24,30 @@ SimpleTest.waitForExplicitFinish();
 resume_geolocationProvider();
 force_prompt(true);
 
-var successCallbackCalled = false;
+var successCallbackCalled = 0;
+var failureCallbackCalled = 0;
+const totalResults = 100;
 
 function successCallback(position) {
-  successCallbackCalled = true;
+  successCallbackCalled++;
+  testPassed();
 }
 
-for (var x = 0; x < 100; x++)
-  navigator.geolocation.getCurrentPosition(successCallback);
+function failureCallback(code) {
+  failureCallbackCalled++;
+  testPassed();
+}
+
+for (var x = 0; x < totalResults; x++)
+  navigator.geolocation.getCurrentPosition(successCallback, failureCallback);
 
 function testPassed() {
-  ok(successCallbackCalled, "if nothing crashed, all okay");
+  if (successCallbackCalled + failureCallbackCalled != totalResults)
+    return;
+  is(failureCallbackCalled, 0, "no failure callbacks should have been received");
   reset_prompt();
   SimpleTest.finish();
 }
-setTimeout(testPassed, 1000);
 
 </script>
 </pre>

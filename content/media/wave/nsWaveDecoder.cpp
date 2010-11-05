@@ -371,6 +371,10 @@ private:
 
   // True if paused.  Tracks only the play/paused state.
   PRPackedBool mPaused;
+
+  // True if playback of the audio stream has finished, and the audio stream
+  // has been drained. This means playback of the file has ended.
+  PRPackedBool mPlaybackEnded;
 };
 
 nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder,
@@ -395,7 +399,8 @@ nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder,
     mSeekTime(0.0f),
     mMetadataValid(PR_FALSE),
     mPositionChangeQueued(PR_FALSE),
-    mPaused(mNextState == STATE_PAUSED)
+    mPaused(mNextState == STATE_PAUSED),
+    mPlaybackEnded(PR_FALSE)
 {
   mMonitor = nsAutoMonitor::NewMonitor("nsWaveStateMachine");
 }
@@ -416,6 +421,7 @@ nsWaveStateMachine::Play()
 {
   nsAutoMonitor monitor(mMonitor);
   mPaused = PR_FALSE;
+  mPlaybackEnded = PR_FALSE;
   if (mState == STATE_ENDED) {
     Seek(0);
     return;
@@ -454,6 +460,7 @@ void
 nsWaveStateMachine::Seek(float aTime)
 {
   nsAutoMonitor monitor(mMonitor);
+  mPlaybackEnded = PR_FALSE;
   mSeekTime = aTime;
   if (mSeekTime < 0.0f) {
     mSeekTime = 0.0f;
@@ -511,7 +518,7 @@ PRBool
 nsWaveStateMachine::IsEnded()
 {
   nsAutoMonitor monitor(mMonitor);
-  return mState == STATE_ENDED || mState == STATE_SHUTDOWN;
+  return mPlaybackEnded;
 }
 
 nsHTMLMediaElement::NextFrameStatus
@@ -789,6 +796,8 @@ nsWaveStateMachine::Run()
         CloseAudioStream();
       }
 
+      mPlaybackEnded = PR_TRUE;
+
       if (mState == STATE_ENDED) {
         nsCOMPtr<nsIRunnable> event =
           NS_NewRunnableMethod(mDecoder, &nsWaveDecoder::PlaybackEnded);
@@ -818,6 +827,7 @@ nsWaveStateMachine::Run()
       break;
 
     case STATE_SHUTDOWN:
+      mPlaybackEnded = PR_TRUE;
       CloseAudioStream();
       return NS_OK;
     }

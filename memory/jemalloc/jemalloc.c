@@ -6348,7 +6348,7 @@ _malloc_postfork(void)
  */
 /******************************************************************************/
 
-#ifdef HAVE_LIBDL
+#ifdef HAVE_DLOPEN
 #  include <dlfcn.h>
 #endif
 

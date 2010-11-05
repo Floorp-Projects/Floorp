@@ -305,7 +305,7 @@ class jsdService : public jsdIDebuggerService
     nsCOMPtr<jsdIExecutionHook> mThrowHook;
     nsCOMPtr<jsdICallHook>      mTopLevelHook;
     nsCOMPtr<jsdICallHook>      mFunctionHook;
-
+    nsCOMPtr<jsdIActivationCallback> mActivationCallback;
 };
 
 #endif /* JSDSERVICE_H___ */

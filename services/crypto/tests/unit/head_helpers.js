@@ -11,8 +11,6 @@ try {
 }
 catch(ex) {
 
-do_get_profile();
-
 // Make sure to provide the right OS so crypto loads the right binaries
 let OS = "XPCShell";
 if ("@mozilla.org/windows-registry-key;1" in Cc)

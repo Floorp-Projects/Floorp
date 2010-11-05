@@ -930,18 +930,19 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
             TRACE("[ %d - Trying to load segment from '%s' @ 0x%08x "
                   "(0x%08x). p_vaddr=0x%08x p_offset=0x%08x ]\n", pid, si->name,
                   (unsigned)tmp, len, phdr->p_vaddr, phdr->p_offset);
-            if (fd == -1) {
+            if (fd == -1 || PFLAGS_TO_PROT(phdr->p_flags) & PROT_WRITE) {
                 pbase = mmap(tmp, len, PROT_WRITE,
-                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1,
-                             0);
+                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
                 if (pbase != MAP_FAILED) {
                     memcpy(pbase, header + ((phdr->p_offset) & (~PAGE_MASK)), len);
                     mprotect(pbase, len, PFLAGS_TO_PROT(phdr->p_flags));
-                }
-            } else
+                } else
+                    DL_ERR("%s: Memcpy mapping of segment failed!", si->name);
+            } else {
                 pbase = mmap(tmp, len, PFLAGS_TO_PROT(phdr->p_flags),
-                             MAP_PRIVATE | MAP_FIXED, fd,
+                             MAP_SHARED | MAP_FIXED, fd,
                              offset + ((phdr->p_offset) & (~PAGE_MASK)));
+            }
             if (pbase == MAP_FAILED) {
                 DL_ERR("%d failed to map segment from '%s' @ 0x%08x (0x%08x). "
                       "p_vaddr=0x%08x p_offset=0x%08x", pid, si->name,
@@ -1238,7 +1239,7 @@ load_mapped_library(const char * name, int fd,
           pid, name, (void *)si->base, (unsigned) ext_sz);
 
     /* Now actually load the library's segments into right places in memory */
-    if (load_segments(offset ? fd : -1, offset, mem, si) < 0) {
+    if (load_segments(fd, offset, mem, si) < 0) {
         if (si->ba_index >= 0) {
             ba_free(&ba_nonprelink, si->ba_index);
             si->ba_index = -1;
@@ -1394,6 +1395,28 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
     Elf32_Rel *start = rel;
     unsigned idx;
 
+    /* crappy hack to ensure we don't write into the read-only region */
+
+    /* crappy hack part 1: find the read only region */
+    int cnt;
+    void * ro_region_end = si->base;
+    Elf32_Ehdr *ehdr = (Elf32_Ehdr *)si->base;
+    Elf32_Phdr *phdr = (Elf32_Phdr *)((unsigned char *)si->base + ehdr->e_phoff);
+    for (cnt = 0; cnt < ehdr->e_phnum; ++cnt, ++phdr) {
+        if (phdr->p_type != PT_LOAD ||
+            PFLAGS_TO_PROT(phdr->p_flags) & PROT_WRITE ||
+            phdr->p_vaddr != 0)
+            continue;
+
+        ro_region_end = si->base + phdr->p_filesz;
+        break;
+    }
+
+    void * remapped_page = NULL;
+    void * copy_page = mmap(NULL, PAGE_SIZE,
+                            PROT_READ | PROT_WRITE,
+                            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
     for (idx = 0; idx < count; ++idx) {
         unsigned type = ELF32_R_TYPE(rel->r_info);
         unsigned sym = ELF32_R_SYM(rel->r_info);
@@ -1477,6 +1500,23 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
             COUNT_RELOC(RELOC_SYMBOL);
         } else {
             s = NULL;
+        }
+
+        /* crappy hack part 2: make this page writable */
+        void * reloc_page = reloc & ~PAGE_MASK;
+        if (reloc < ro_region_end && reloc_page != remapped_page) {
+            if (remapped_page != NULL)
+                mprotect(remapped_page, PAGE_SIZE, PROT_READ | PROT_EXEC);
+            memcpy(copy_page, reloc_page, PAGE_SIZE);
+            munmap(reloc_page, PAGE_SIZE);
+            if (mmap(reloc_page, PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
+                     -1, 0) == MAP_FAILED)
+                DL_ERR("failed to map page for %s at 0x%08x! errno=%d",
+                       si->name, reloc_page, errno);
+
+            memcpy(reloc_page, copy_page, PAGE_SIZE);
+            remapped_page = reloc_page;
         }
 
 /* TODO: This is ugly. Split up the relocations by arch into
@@ -1584,6 +1624,7 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
         }
         rel++;
     }
+    munmap(copy_page, PAGE_SIZE);
     return 0;
 }
 

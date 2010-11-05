@@ -130,3 +130,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "strings",
 XPCOMUtils.defineLazyServiceGetter(Services, "urlFormatter",
                                    "@mozilla.org/toolkit/URLFormatterService;1",
                                    "nsIURLFormatter");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "eTLD",
+                                   "@mozilla.org/network/effective-tld-service;1",
+                                   "nsIEffectiveTLDService");

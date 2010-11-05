@@ -307,6 +307,10 @@ inline int NS_SUCCEEDED(nsresult _nsresult) {
 
 #define NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM,  1)
 
+/* Result codes used by nsIThreadManager */
+
+#define NS_ERROR_NOT_SAME_THREAD                NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  4)
+
 /**
  * Various operations are not permitted during XPCOM shutdown and will fail
  * with this exception.

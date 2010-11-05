@@ -137,5 +137,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       catch (e) {
         ok(true, "undefined is not a valid value for wantXrays");
       }
+
+      // Crash test for bug 601829.
+      try {
+        Components.utils.evalInSandbox('', null);
+      } catch (e) {
+        ok(true, "didn't crash on a null sandbox object");
+      }
   ]]></script>
 </window>

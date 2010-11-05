@@ -272,8 +272,13 @@
           if (aTriggeringEvent instanceof MouseEvent) {
             // We have a mouse event (from the go button), so use the standard
             // UI link behaviors
-            openUILink(url, aTriggeringEvent, false, false,
-                       true /* allow third party fixup */, postData);
+            let where = whereToOpenLink(aTriggeringEvent, false, false);
+            if (where != "current") {
+              this.handleRevert();
+              content.focus();
+            }
+            openUILinkIn(url, where,
+                        { allowThirdPartyFixup: true, postData: postData });
             return;
           }
 

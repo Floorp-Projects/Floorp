@@ -10,6 +10,7 @@ const SEARCH_URL = TESTROOT + "browser_details.xml";
 
 var gManagerWindow;
 var gCategoryUtilities;
+var gProvider;
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
@@ -18,6 +19,8 @@ var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 1);
 
 function open_details(aId, aType, aCallback) {
+  requestLongerTimeout(2);
+
   gCategoryUtilities.openType(aType, function() {
     var list = gManagerWindow.document.getElementById("addon-list");
     var item = list.firstChild;

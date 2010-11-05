@@ -5574,8 +5574,8 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   } else {
     // If we're at the end of a line, look at the next continuation
     iter.SetOriginalOffset(startOffset);
-    if (startOffset <= PRUint32(trimmed.GetEnd()) &&
-        !(startOffset < PRUint32(trimmed.GetEnd()) &&
+    if (startOffset <= trimmed.GetEnd() &&
+        !(startOffset < trimmed.GetEnd() &&
           GetStyleText()->NewlineIsSignificant() &&
           iter.GetSkippedOffset() < mTextRun->GetLength() &&
           mTextRun->GetChar(iter.GetSkippedOffset()) == '\n')) {
@@ -6567,6 +6567,18 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                                   &textMetrics, boundingBoxType, ctx,
                                   &usedHyphenation, &transformedLastBreak,
                                   textStyle->WordCanWrap(), &breakPriority);
+  if (!length && !textMetrics.mAscent && !textMetrics.mDescent) {
+    // If we're measuring a zero-length piece of text, update
+    // the height manually.
+    nsIFontMetrics* fm = provider.GetFontMetrics();
+    if (fm) {
+      nscoord ascent, descent;
+      fm->GetMaxAscent(ascent);
+      fm->GetMaxDescent(descent);
+      textMetrics.mAscent = gfxFloat(ascent);
+      textMetrics.mDescent = gfxFloat(descent);
+    }
+  }
   // The "end" iterator points to the first character after the string mapped
   // by this frame. Basically, its original-string offset is offset+charsFit
   // after we've computed charsFit.
@@ -6658,7 +6670,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Disallow negative widths
   aMetrics.width = NSToCoordCeil(NS_MAX(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
-  if (transformedCharsFit == 0 && !usedHyphenation) {
+  if (completedFirstLetter && transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.ascent = 0;
     aMetrics.height = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
@@ -7240,6 +7252,12 @@ PRBool
 nsTextFrame::IsAtEndOfLine() const
 {
   return (GetStateBits() & TEXT_END_OF_LINE) != 0;
+}
+
+nscoord
+nsTextFrame::GetBaseline() const
+{
+  return mAscent;
 }
 
 PRBool

@@ -4803,8 +4803,12 @@ static void ProcessViewportToken(nsIDocument *aDocument,
     return;
 
   /* Extract the key and value. */
-  const nsAString &key = Substring(tail, tip);
-  const nsAString &value = Substring(++tip, end);
+  const nsAString &key =
+    nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(Substring(tail, tip),
+                                                        PR_TRUE);
+  const nsAString &value =
+    nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(Substring(++tip, end),
+                                                        PR_TRUE);
 
   /* Check for known keys. If we find a match, insert the appropriate
    * information into the document header. */
@@ -4823,7 +4827,9 @@ static void ProcessViewportToken(nsIDocument *aDocument,
     aDocument->SetHeaderData(nsGkAtoms::viewport_user_scalable, value);
 }
 
-#define IS_SEPARATOR(c) ((c == ' ') || (c == ',') || (c == ';'))
+#define IS_SEPARATOR(c) ((c == '=') || (c == ',') || (c == ';') || \
+                         (c == '\t') || (c == '\n') || (c == '\r'))
+
 /* static */
 nsresult
 nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
@@ -4839,12 +4845,12 @@ nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
   viewportInfo.EndReading(end);
 
   /* Read the tip to the first non-separator character. */
-  while ((tip != end) && IS_SEPARATOR(*tip))
+  while ((tip != end) && (IS_SEPARATOR(*tip) || nsCRT::IsAsciiSpace(*tip)))
     ++tip;
 
   /* Read through and find tokens separated by separators. */
   while (tip != end) {
-    
+
     /* Synchronize tip and tail. */
     tail = tip;
 
@@ -4852,11 +4858,22 @@ nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
     while ((tip != end) && !IS_SEPARATOR(*tip))
       ++tip;
 
+    /* Allow white spaces that surround the '=' character */
+    if ((tip != end) && (*tip == '=')) {
+      ++tip;
+
+      while ((tip != end) && nsCRT::IsAsciiSpace(*tip))
+        ++tip;
+
+      while ((tip != end) && !(IS_SEPARATOR(*tip) || nsCRT::IsAsciiSpace(*tip)))
+        ++tip;
+    }
+
     /* Our token consists of the characters between tail and tip. */
     ProcessViewportToken(aDocument, Substring(tail, tip));
 
     /* Skip separators. */
-    while ((tip != end) && IS_SEPARATOR(*tip))
+    while ((tip != end) && (IS_SEPARATOR(*tip) || nsCRT::IsAsciiSpace(*tip)))
       ++tip;
   }
 
