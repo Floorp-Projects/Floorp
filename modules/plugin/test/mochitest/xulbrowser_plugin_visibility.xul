@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	orient="vertical">
+
+  <tabbox id="tabbox" flex="1">
+    <tabs>
+      <tab id="tab1" label="Tab 1" />
+      <tab id="tab2" label="Tab 2" />
+    </tabs>
+    <tabpanels flex="1">
+      <browser id="browser1" type="content-primary" flex="1" src="about:blank"/>
+      <browser id="browser2" type="content-primary" flex="1" src="about:blank"/>
+    </tabpanels>
+  </tabbox>
+  <script type="application/javascript"><![CDATA[
+    const ok = window.opener.wrappedJSObject.ok;
+    const is = window.opener.wrappedJSObject.is;
+    const done = window.opener.wrappedJSObject.done;
+    const SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+
+    const nsIWebProgress = Components.interfaces.nsIWebProgress;
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+
+    const kURI = 'http://mochi.test:8888/chrome/modules/plugin/test/plugin_visibility_loader.html';
+
+    function doubleForDoublePass() {
+      if (SimpleTest.testPluginIsOOP())
+        return 1;
+
+      try {
+        if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
+          return 2;
+      }
+      catch (e) { }
+
+      return 1;
+    }
+
+    function ProgressListener() {
+    }
+    ProgressListener.prototype.onStateChange =
+      function(progress, req, flags, status) {
+        if ((flags & nsIWebProgressListener.STATE_IS_WINDOW) &&
+            (flags & nsIWebProgressListener.STATE_STOP))
+          browserLoaded();
+      };
+    ProgressListener.prototype.QueryInterface = function(iid) {
+      if (iid.equals(nsIWebProgressListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+        return this;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    };
+
+    var loadCount = 0;
+    function browserLoaded() {
+      ++loadCount;
+      if (2 == loadCount)
+        startTest();
+    }
+
+    var tabbox = document.getElementById('tabbox');
+    var browser1 = document.getElementById('browser1');
+    var browser2 = document.getElementById('browser2');
+
+    function setup() {
+      browser1.addProgressListener(new ProgressListener(), nsIWebProgress.NOTIFY_STATE_WINDOW);
+      browser1.loadURI(kURI, null, null);
+      browser2.addProgressListener(new ProgressListener(), nsIWebProgress.NOTIFY_STATE_WINDOW);
+      browser2.loadURI(kURI, null, null);
+    }
+
+    window.addEventListener("load", setup, false);
+
+    var plugin1, plugin2;
+
+    function startTest() {
+      plugin1 = browser1.contentDocument.getElementById('p').wrappedJSObject;
+      plugin2 = browser2.contentDocument.getElementById('p').wrappedJSObject;
+
+      ok(plugin1.isVisible(), "Plugin in tab 1 should be visible.");
+      is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
+         "Plugin in tab 1 should have painted once.");
+
+      ok(!plugin2.isVisible(), "Plugin in tab 2 should not be visible.");
+      is(plugin2.getPaintCount(), 0,
+         "Plugin in tab 2 should not have painted.");
+
+      tabbox.selectedIndex = 1;
+      setTimeout(part2, 100);
+    }
+
+    function part2() {
+      ok(!plugin1.isVisible(), "Plugin in tab 1 should have become invisible.");
+      is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
+         "Plugin in tab 1 should not have repainted.");
+
+      ok(plugin2.isVisible(), "Plugin in tab 2 should have become visible.");
+      is(plugin2.getPaintCount(), 1 * doubleForDoublePass(),
+         "Plugin in tab 2 should have painted once.");
+
+      // Setcolor invalidates
+      plugin1.setColor('FF00FF00');
+      plugin2.setColor('FF00FF00');
+
+      setTimeout(part3, 500);
+    }
+
+    function part3() {
+      is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
+         "Plugin in tab 1 should not have repainted after invalidate.");
+      is(plugin2.getPaintCount(), 2 * doubleForDoublePass(),
+         "Plugin in tab 2 should have repainted after invalidate.");
+      done();
+    }
+  ]]></script>
+
+</window>

@@ -176,6 +176,7 @@ static bool getFocusState(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool getFocusEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getEventModel(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getReflector(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -226,7 +227,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getFocusState",
   "getFocusEventCount",
   "getEventModel",
-  "getReflector"
+  "getReflector",
+  "isVisible"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -278,7 +280,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getFocusState,
   getFocusEventCount,
   getEventModel,
-  getReflector
+  getReflector,
+  isVisible
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -3087,5 +3090,17 @@ getReflector(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVarian
     NPN_CreateObject(npp,
 		     const_cast<NPClass*>(&kReflectorNPClass)); // retains
   OBJECT_TO_NPVARIANT(reflector, *result);
+  return true;
+}
+
+bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  BOOLEAN_TO_NPVARIANT(id->window.clipRect.top != 0 ||
+		       id->window.clipRect.left != 0 ||
+		       id->window.clipRect.bottom != 0 ||
+		       id->window.clipRect.right != 0, *result);
   return true;
 }
