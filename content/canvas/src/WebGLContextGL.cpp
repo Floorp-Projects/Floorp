@@ -3245,7 +3245,6 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 #if defined(USE_ANGLE)
     if (shader->NeedsTranslation() && mShaderValidation) {
         ShHandle compiler = 0;
-        int debugFlags = 0;
         ShBuiltInResources resources;
         memset(&resources, 0, sizeof(ShBuiltInResources));
 
