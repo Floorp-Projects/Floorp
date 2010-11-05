@@ -125,7 +125,7 @@ var TabUtils = {
     // of active Panoramas as well as for windows in which
     // Panorama has yet to be activated. We uses object sniffing to
     // determine the type of tab and then returns its name.     
-    return tab.label != undefined ? tab.label : tab.nameEl.innerHTML;
+    return tab.label != undefined ? tab.label : tab.$tabTitle[0].innerHTML;
   },
   
   // ---------
@@ -142,7 +142,7 @@ var TabUtils = {
   // Function: favURLOf
   // Given a <TabItem> or a <xul:tab> returns the URL of tab's favicon.
   faviconURLOf: function TabUtils_faviconURLOf(tab) {
-    return tab.image != undefined ? tab.image : tab.favImgEl.src;
+    return tab.image != undefined ? tab.image : tab.$favImage[0].src;
   },
   
   // ---------
@@ -196,7 +196,7 @@ TabMatcher.prototype = {
   _filterForUnmatches: function TabMatcher__filterForUnmatches(tabs) {
     var self = this;
     return tabs.filter(function(tab) {
-      var name = tab.nameEl.innerHTML;
+      var name = tab.$tabTitle[0].innerHTML;
       let url = TabUtils.URLOf(tab);
       return !name.match(self.term, "i") && !url.match(self.term, "i");
     });
@@ -429,22 +429,22 @@ var TabHandlers = {
     // Remove any existing handlers before adding the new ones.
     // If we don't do this, then we may add more handlers than
     // we remove.
-    iQ(tab.canvasEl)
-    .unbind("mousedown", TabHandlers._hideHandler)
-    .unbind("mouseup", TabHandlers._showHandler);
+    tab.$canvas
+      .unbind("mousedown", TabHandlers._hideHandler)
+      .unbind("mouseup", TabHandlers._showHandler);
 
-    iQ(tab.canvasEl)
-    .mousedown(TabHandlers._hideHandler)
-    .mouseup(TabHandlers._showHandler);
+    tab.$canvas
+      .mousedown(TabHandlers._hideHandler)
+      .mouseup(TabHandlers._showHandler);
   },
   
   onUnmatch: function(tab, index){
-    iQ(tab.container).removeClass("onTop");
+    tab.$container.removeClass("onTop");
     tab.removeClass("notMainMatch");
 
-    iQ(tab.canvasEl)
-     .unbind("mousedown", TabHandlers._hideHandler)
-     .unbind("mouseup", TabHandlers._showHandler);
+    tab.$canvas
+      .unbind("mousedown", TabHandlers._hideHandler)
+      .unbind("mouseup", TabHandlers._showHandler);
   },
   
   onOther: function(tab, index){

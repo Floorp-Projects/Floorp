@@ -470,8 +470,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
     } else if (css.left || css.top) {
       this._children.forEach(function(child) {
-        var box = child.getBounds();
-        child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+        if (!child.getHidden()) {
+          var box = child.getBounds();
+          child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+        }
       });
     }
 
@@ -494,7 +496,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
     }
 
-    this.adjustTitleSize();
+    if (css.width) {      
+      this.adjustTitleSize();
+    }
 
     UI.clearShouldResizeItems();
 
@@ -944,6 +948,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.removeClass("tabInGroupItem");
       item.removeClass("stacked");
       item.isStacked = false;
+      item.setHidden(false);
       item.removeClass("stack-trayed");
       item.setRotation(0);
 
@@ -1163,12 +1168,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!count)
       return;
 
-    var zIndex = this.getZ() + count + 1;
-    var maxRotation = 35; // degress
-    var scale = 0.8;
-    var newTabsPad = 10;
-    var itemAspect = TabItems.tabHeight / TabItems.tabWidth;
-    var bbAspect = bb.height / bb.width;
+    let itemAspect = TabItems.tabHeight / TabItems.tabWidth;
+    let zIndex = this.getZ() + count + 1;
+    let maxRotation = 35; // degress
+    let scale = 0.7;
+    let newTabsPad = 10;
+    let bbAspect = bb.height / bb.width;
+    let numInPile = 6;
+    let angleDelta = 3.5; // degrees
 
     // compute size of the entire stack, modulo rotation.
     let size;
@@ -1190,23 +1197,31 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     var children = [];
     childrenToArrange.forEach(function GroupItem__stackArrange_order(child) {
-      if (child == self.topChild)
-        children.unshift(child);
-      else
-        children.push(child);
+      // Children are still considered stacked even if they're hidden later.
+      child.addClass("stacked");
+      child.isStacked = true;
+      if (numInPile-- > 0) {
+        child.setHidden(false);
+        if (child == self.topChild)
+          children.unshift(child);
+        else
+          children.push(child);
+      } else {
+        child.setHidden(true);
+      }
     });
 
+    let angleAccum = 0;
     children.forEach(function GroupItem__stackArrange_apply(child, index) {
       if (!child.locked.bounds) {
         child.setZ(zIndex);
         zIndex--;
 
-        child.addClass("stacked");
-        child.isStacked = true;
         // Force a recalculation of height because we've changed how the title
         // is shown.
         child.setBounds(box, !animate, {force:true});
-        child.setRotation((UI.rtl ? -1 : 1) * Math.min(index, 5) * 5);
+        child.setRotation((UI.rtl ? -1 : 1) * angleAccum);
+        angleAccum += angleDelta;
       }
     });
 
@@ -1247,6 +1262,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       childrenToArrange.forEach(function(child) {
         child.removeClass("stacked");
         child.isStacked = false;
+        child.setHidden(false);
       });
     }
   
@@ -1362,6 +1378,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     this._children.forEach(function(child) {
       child.addClass("stack-trayed");
+      child.setHidden(false);
     });
 
     var $shield = iQ('<div>')

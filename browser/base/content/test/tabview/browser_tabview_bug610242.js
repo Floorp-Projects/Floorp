@@ -93,7 +93,7 @@ function onTabViewWindowLoaded(win) {
   });
 
   function check(tab, label, visible) {
-    let display = contentWindow.getComputedStyle(tab._tabViewTabItem.favEl, null).getPropertyValue("display");
+    let display = contentWindow.getComputedStyle(tab._tabViewTabItem.$fav[0], null).getPropertyValue("display");
     if (visible) {
       is(display, "block", label + " has favicon");
     } else {
