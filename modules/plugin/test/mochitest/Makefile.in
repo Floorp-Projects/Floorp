@@ -111,6 +111,18 @@ _MOCHICHROME_FILES = \
   test_bug479979.xul \
   $(NULL)
 
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_MOCHITEST_FILES += \
+  test_visibility.html \
+  $(NULL)
+
+_MOCHICHROME_FILES += \
+  test_xulbrowser_plugin_visibility.xul \
+  xulbrowser_plugin_visibility.xul \
+  plugin_visibility_loader.html \
+  $(NULL)
+endif
+
 # Temporarily disable the tests on Linux, see bug 573290 and bug 583591.
 ifneq ($(OS_ARCH),Linux)
 ifdef MOZ_CRASHREPORTER
