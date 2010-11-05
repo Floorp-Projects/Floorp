@@ -90,6 +90,8 @@
 static const int kRelativeNiceness = 10;
 #endif
 
+#include "nsAccelerometer.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -486,6 +488,16 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 #endif
 
   return true;
+}
+bool
+ContentChild::RecvAccelerationChanged(const double& x, const double& y,
+                                      const double& z)
+{
+    nsCOMPtr<nsIAccelerometerUpdate> acu = 
+        do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (acu)
+        acu->AccelerationChanged(x, y, z);
+    return true;
 }
 
 } // namespace dom
