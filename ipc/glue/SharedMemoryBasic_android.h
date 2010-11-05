@@ -71,12 +71,6 @@ public:
   virtual bool Map(size_t nBytes);
 
   NS_OVERRIDE
-  virtual size_t Size() const
-  {
-    return mSize;
-  }
-
-  NS_OVERRIDE
   virtual void* memory() const
   {
     return mMemory;
@@ -107,10 +101,6 @@ private:
 
   // The /dev/ashmem fd we allocate.
   int mShmFd;
-  // Allocated size, 0 if unallocated
-  size_t mAllocSize;
-  // Mapped size, 0 if unmapped.
-  size_t mSize;
   // Pointer to mapped region, null if unmapped.
   void *mMemory;
 };
