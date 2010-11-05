@@ -1108,9 +1108,6 @@ nsObjectFrame::CallSetWindow()
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
 #endif
 
-  if (IsHidden())
-    return;
-
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPortFromWidget();
 
@@ -1738,6 +1735,10 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (window->width <= 0 || window->height <= 0)
     return nsnull;
 
+#ifndef XP_MACOSX
+  mInstanceOwner->UpdateWindowVisibility(PR_TRUE);
+#endif
+
   nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
   // to provide crisper and faster drawing.
@@ -1751,6 +1752,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     layer = aManager->CreateImageLayer();
   }
 
+#if 0
   nsCOMPtr<nsIPluginInstance> pi;
   mInstanceOwner->GetInstance(*getter_AddRefs(pi));
   // Give plugin info about layer paint
@@ -1759,6 +1761,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
       return nsnull;
     }
   }
+#endif
 
   if (!layer)
     return nsnull;
@@ -1943,8 +1946,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     mInstanceOwner->GetWindow(window);
 
     if (window->type == NPWindowTypeDrawable) {
-      // check if we need to call SetWindow with updated parameters
-      PRBool doupdatewindow = PR_FALSE;
       // the offset of the DC
       nsPoint origin;
 
@@ -1979,6 +1980,11 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
           window->window = hdc;
           window->x = dest.left;
           window->y = dest.top;
+          window->clipRect.left = 0;
+          window->clipRect.top = 0;
+          // if we're painting, we're visible.
+          window->clipRect.right = window->width;
+          window->clipRect.bottom = window->height;
 
           // Windowless plugins on windows need a special event to update their location,
           // see bug 135737.
@@ -2001,9 +2007,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
           nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
           // XXX I don't think we can be certain that the location wrt to
           // the window only changes when the location wrt to the drawable
-          // changes, but the hdc probably changes on every paint so
-          // doupdatewindow is rarely false, and there is not likely to be
-          // a problem.
+          // changes, but the hdc probably changes on every paint.
           if (mWindowlessRect != winlessRect) {
             mWindowlessRect = winlessRect;
 
@@ -6458,7 +6462,7 @@ void nsPluginInstanceOwner::UpdateWindowClipRect(PRBool aSetWindow)
   // For windowless plugins a non-empty clip rectangle will be
   // passed to the plugin during paint, an additional update
   // of the the clip rectangle here is not required
-  if (aSetWindow && !mWidget && mPluginWindowVisible)
+  if (aSetWindow && !mWidget && mPluginWindowVisible && !UseLayers())
     return;
 
   const NPRect oldClipRect = mPluginWindow->clipRect;

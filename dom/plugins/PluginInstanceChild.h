@@ -102,7 +102,6 @@ protected:
     virtual bool
     RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                        const NPRemoteWindow& aWindow);
-    virtual bool RecvPaintFinished(void);
 
     NS_OVERRIDE
     virtual bool
@@ -408,6 +407,13 @@ public:
 private:
     const NPCocoaEvent   *mCurrentEvent;
 #endif
+
+    bool IsVisible() {
+        return mWindow.clipRect.top != 0 ||
+            mWindow.clipRect.left != 0 ||
+            mWindow.clipRect.bottom != 0 ||
+            mWindow.clipRect.right != 0;
+    }
 
     // ShowPluginFrame - in general does four things:
     // 1) Create mCurrentSurface optimized for rendering to parent process

@@ -124,10 +124,6 @@ child:
   // see https://wiki.mozilla.org/Gecko:AsyncPluginPainting
   // **********************
 
-  // Plugin parent notify child that plugin frame
-  // has been painted to the screen
-  async PaintFinished();
-
   // Async version of SetWindow call
   // @param surfaceType - gfxASurface::gfxSurfaceType
   //        plugin child must create offscreen buffer

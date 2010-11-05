@@ -2162,21 +2162,6 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
 }
 
 bool
-PluginInstanceChild::RecvPaintFinished(void)
-{
-    if (mPendingForcePaint) {
-        nsIntRect r(0, 0, mWindow.width, mWindow.height);
-        mAccumulatedInvalidRect.UnionRect(r, mAccumulatedInvalidRect);
-        mPendingForcePaint = false;
-    }
-    if (!mAccumulatedInvalidRect.IsEmpty()) {
-        AsyncShowPluginFrame();
-    }
-
-    return true;
-}
-
-bool
 PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                                         const NPRemoteWindow& aWindow)
 {
@@ -2186,8 +2171,12 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) {
         mCurrentSurface = nsnull;
         mHelperSurface = nsnull;
-        mPendingForcePaint = true;
+        mAccumulatedInvalidRect = nsIntRect(0, 0, aWindow.width, aWindow.height);
     }
+    if (mWindow.clipRect.top != aWindow.clipRect.top ||
+        mWindow.clipRect.left != aWindow.clipRect.left ||
+        mWindow.clipRect.bottom != aWindow.clipRect.bottom ||
+        mWindow.clipRect.right != aWindow.clipRect.right)
 
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;
@@ -2209,6 +2198,10 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     if (mQuirks & QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)
         SetupFlashMsgThrottle();
 #endif
+
+    if (!mAccumulatedInvalidRect.IsEmpty()) {
+        AsyncShowPluginFrame();
+    }
 
     return true;
 }
@@ -2430,23 +2423,26 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
         return;
     }
 
-    // The clip rect is relative to drawable top-left.
-    nsIntRect clipRect;
 #ifndef XP_WIN
     // On Windows, we translate the device context, in order for the window
     // origin to be correct.
     mWindow.x = mWindow.y = 0;
 #endif
 
-    // Don't ask the plugin to draw outside the drawable. The clip rect
-    // is in plugin coordinates, not window coordinates.
-    // This also ensures that the unsigned clip rectangle offsets won't be -ve.
-    clipRect.SetRect(0, 0, mWindow.width, mWindow.height);
+    if (IsVisible()) {
+        // The clip rect is relative to drawable top-left.
+        nsIntRect clipRect;
 
-    mWindow.clipRect.left = 0;
-    mWindow.clipRect.top = 0;
-    mWindow.clipRect.right = clipRect.XMost();
-    mWindow.clipRect.bottom = clipRect.YMost();
+        // Don't ask the plugin to draw outside the drawable. The clip rect
+        // is in plugin coordinates, not window coordinates.
+        // This also ensures that the unsigned clip rectangle offsets won't be -ve.
+        clipRect.SetRect(0, 0, mWindow.width, mWindow.height);
+
+        mWindow.clipRect.left = 0;
+        mWindow.clipRect.top = 0;
+        mWindow.clipRect.right = clipRect.XMost();
+        mWindow.clipRect.bottom = clipRect.YMost();
+    }
 
 #ifdef XP_WIN
     // Windowless plugins on Windows need a WM_WINDOWPOSCHANGED event to update
@@ -2792,7 +2788,7 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
 void
 PluginInstanceChild::InvalidateRectDelayed(void)
 {
-    if (!mCurrentInvalidateTask) {
+    if (!mCurrentInvalidateTask || !IsVisible()) {
         return;
     }
 
@@ -2809,7 +2805,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
 void
 PluginInstanceChild::AsyncShowPluginFrame(void)
 {
-    if (mCurrentInvalidateTask) {
+    if (mCurrentInvalidateTask || !IsVisible()) {
         return;
     }
 
