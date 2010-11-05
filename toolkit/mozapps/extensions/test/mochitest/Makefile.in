@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,11 +12,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Extension Manager.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-#      Dave Townsend <dtownsend@oxymoronical.com>.
-#
+# Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
@@ -35,44 +35,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
-ADDONSRC = $(srcdir)/addons
-relativesrcdir = toolkit/mozapps/extensions/test
-
-TESTROOT = $(CURDIR)/$(DEPTH)/_tests/xpcshell/$(relativesrcdir)
-TESTXPI = $(TESTROOT)/xpcshell/addons
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = toolkit/mozapps/extensions/test/mochitest
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE = test_extensionmanager
-
-ifneq (mobile,$(MOZ_BUILD_APP))
- DIRS +=  \
-    xpinstall \
-    browser \
-    mochitest \
-    $(NULL)
-endif
-
-XPCSHELL_TESTS = \
-  xpcshell \
-  xpcshell-unpack \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	rm -rf $(TESTXPI)
-	$(NSINSTALL) -D $(TESTXPI)
-	if [ -d $(ADDONSRC) ]; then \
-		$(EXIT_ON_ERROR) \
-		for dir in $(ADDONSRC)/*; do \
-			base=`basename $$dir` ; \
-			(cd $$dir && zip -r $(TESTXPI)/$$base.xpi *) \
-		done \
-	fi
-	cd $(TESTROOT)/xpcshell/ && tar -cPf - . | (cd $(TESTROOT)/xpcshell-unpack && tar -xPvf - )
+_TEST_FILES =	test_bug609794.html \
+		$(NULL)
 
+libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
