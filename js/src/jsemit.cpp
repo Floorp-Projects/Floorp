@@ -1529,8 +1529,7 @@ EmitKnownBlockChain(JSContext *cx, JSCodeGenerator *cg, JSObjectBox *box)
 {
     if (box)
         return EmitIndexOp(cx, JSOP_BLOCKCHAIN, box->index, cg);
-    else
-        return js_Emit1(cx, cg, JSOP_NULLBLOCKCHAIN) >= 0;
+    return js_Emit1(cx, cg, JSOP_NULLBLOCKCHAIN) >= 0;
 }
 
 static JSBool

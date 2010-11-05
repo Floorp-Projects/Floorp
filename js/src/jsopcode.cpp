@@ -4109,10 +4109,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc += len;
                     if (*pc == JSOP_BLOCKCHAIN) {
                         pc += JSOP_BLOCKCHAIN_LENGTH;
-                    } else if (*pc == JSOP_NULLBLOCKCHAIN) {
-                        pc += JSOP_NULLBLOCKCHAIN_LENGTH;
                     } else {
-                        JS_NOT_REACHED("should see block chain operation");
+                        LOCAL_ASSERT(*pc == JSOP_NULLBLOCKCHAIN);
+                        pc += JSOP_NULLBLOCKCHAIN_LENGTH;
                     }
                     LOCAL_ASSERT(*pc == JSOP_PUSH);
                     pc += JSOP_PUSH_LENGTH;

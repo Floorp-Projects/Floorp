@@ -202,36 +202,37 @@ js::GetBlockChain(JSContext *cx, JSStackFrame *fp)
     if (!fp->isScriptFrame())
         return NULL;
 
+    /* Assume that imacros don't affect blockChain */
+    jsbytecode *target = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
+
     JSScript *script = fp->script();
     jsbytecode *start = script->code;
-    /* Assume that imacros don't affect blockChain */
-    jsbytecode *pc = fp->hasImacropc() ? fp->imacropc() : fp->pc(cx);
-
-    JS_ASSERT(pc >= start && pc < script->code + script->length);
+    JS_ASSERT(target >= start && target < start + script->length);
 
     JSObject *blockChain = NULL;
-    if (*pc == JSOP_BLOCKCHAIN) {
-        blockChain = script->getObject(GET_INDEX(pc));
-    } else if (*pc == JSOP_NULLBLOCKCHAIN) {
-        blockChain = NULL;
-    } else {
-        ptrdiff_t oplen;
-        for (jsbytecode *p = start; p < pc; p += oplen) {
-            JSOp op = js_GetOpcode(cx, script, p);
-            const JSCodeSpec *cs = &js_CodeSpec[op];
-            oplen = cs->length;
-            if (oplen < 0)
-                oplen = js_GetVariableBytecodeLength(p);
+    uintN indexBase = 0;
+    ptrdiff_t oplen;
+    for (jsbytecode *pc = start; pc < target; pc += oplen) {
+        JSOp op = js_GetOpcode(cx, script, pc);
+        const JSCodeSpec *cs = &js_CodeSpec[op];
+        oplen = cs->length;
+        if (oplen < 0)
+            oplen = js_GetVariableBytecodeLength(pc);
 
-            if (op == JSOP_ENTERBLOCK)
-                blockChain = script->getObject(GET_INDEX(p));
-            else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR)
-                blockChain = blockChain->getParent();
-            else if (op == JSOP_BLOCKCHAIN)
-                blockChain = script->getObject(GET_INDEX(p));
-            else if (op == JSOP_NULLBLOCKCHAIN)
-                blockChain = NULL;
-        }
+        if (op == JSOP_INDEXBASE)
+            indexBase = GET_INDEXBASE(pc);
+        else if (op == JSOP_INDEXBASE1 || op == JSOP_INDEXBASE2 || op == JSOP_INDEXBASE3)
+            indexBase = (op - JSOP_INDEXBASE1 + 1) << 16;
+        else if (op == JSOP_RESETBASE || op == JSOP_RESETBASE0)
+            indexBase = 0;
+        else if (op == JSOP_ENTERBLOCK)
+            blockChain = script->getObject(indexBase + GET_INDEX(pc));
+        else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR)
+            blockChain = blockChain->getParent();
+        else if (op == JSOP_BLOCKCHAIN)
+            blockChain = script->getObject(indexBase + GET_INDEX(pc));
+        else if (op == JSOP_NULLBLOCKCHAIN)
+            blockChain = NULL;
     }
 
     return blockChain;
@@ -249,29 +250,19 @@ js::GetBlockChainFast(JSContext *cx, JSStackFrame *fp, JSOp op, size_t oplen)
 {
     /* Assume that we're in a script frame. */
     jsbytecode *pc = fp->pc(cx);
+    JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
 
-    /* The fast path. */
-    if (pc[oplen] == JSOP_NULLBLOCKCHAIN) {
-        JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
+    pc += oplen;
+    op = JSOp(*pc);
+    JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
+
+    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE noise. */
+    if (op == JSOP_NULLBLOCKCHAIN)
         return NULL;
-    }
+    if (op == JSOP_BLOCKCHAIN)
+        return fp->script()->getObject(GET_INDEX(pc));
 
-    JSScript *script = fp->script();
-
-    JS_ASSERT(js_GetOpcode(cx, script, pc) == op);
-
-    JSObject *blockChain;
-    JSOp opNext = js_GetOpcode(cx, script, pc + oplen);
-    if (opNext == JSOP_BLOCKCHAIN) {
-        blockChain = script->getObject(GET_INDEX(pc + oplen));
-    } else if (opNext == JSOP_NULLBLOCKCHAIN) {
-        blockChain = NULL;
-    } else {
-        blockChain = NULL; /* appease gcc */
-        JS_NOT_REACHED("invalid opcode for fast block chain access");
-    }
-
-    return blockChain;
+    return GetBlockChain(cx, fp);
 }
 
 /*
@@ -5639,7 +5630,7 @@ BEGIN_CASE(JSOP_LAMBDA)
             parent = &regs.fp->scopeChain();
 
             if (obj->getParent() == parent) {
-                jsbytecode *pc2 = js_AdvanceOverBlockchain(regs.pc + JSOP_LAMBDA_LENGTH);
+                jsbytecode *pc2 = AdvanceOverBlockchainOp(regs.pc + JSOP_LAMBDA_LENGTH);
                 JSOp op2 = JSOp(*pc2);
 
                 /*
