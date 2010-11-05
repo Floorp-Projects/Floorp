@@ -1,0 +1,16 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="lime">
+    <content>
+      <rect xmlns="http://www.w3.org/2000/svg"
+            width="100%" height="100%" fill="url(#grad) red"/>
+      <linearGradient xmlns="http://www.w3.org/2000/svg"
+                      id="grad" gradientUnits="userSpaceOnUse">
+        <stop stop-color="lime"/>
+      </linearGradient>
+    </content>
+  </binding>
+</bindings>
