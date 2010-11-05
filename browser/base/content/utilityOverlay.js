@@ -412,9 +412,8 @@ function isBidiEnabled() {
 function openAboutDialog() {
   var enumerator = Services.wm.getEnumerator("Browser:About");
   while (enumerator.hasMoreElements()) {
+    // Only open one about window (Bug 599573)
     let win = enumerator.getNext();
-    if (win.opener != window)
-      continue;
     win.focus();
     return;
   }
