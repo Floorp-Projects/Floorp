@@ -84,10 +84,13 @@ function doubleForDoublePass() {
   if (SimpleTest.testPluginIsOOP())
     return 1;
 
-  if (!Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
-    return 1;
+  try {
+    if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
+      return 2;
+  }
+  catch (e) { }
 
-  return 2;
+  return 1;
 }
 
 function invalidate() {
