@@ -1928,6 +1928,11 @@ function BrowserGoHome(aEvent) {
   var where = whereToOpenLink(aEvent, false, true);
   var urls;
 
+  // Home page should open in a new tab when current tab is an app tab
+  if (where == "current" &&
+      gBrowser.selectedTab.pinned)
+    where = "tab";
+
   // openUILinkIn in utilityOverlay.js doesn't handle loading multiple pages
   switch (where) {
   case "current":
