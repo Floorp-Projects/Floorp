@@ -57,15 +57,15 @@ CPPSRCS = \
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../src \
-		$(foreach d,$(MOZ_IMG_ENCODERS), \
-			-I$(srcdir)/../encoders/${d}) \
+		-I$(srcdir)/../encoders/png \
+		-I$(srcdir)/../encoders/jpeg \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
 		../decoders/$(LIB_PREFIX)imgdecoders_s.$(LIB_SUFFIX) \
-		$(foreach d,$(MOZ_IMG_ENCODERS), \
-			../encoders/${d}/$(LIB_PREFIX)img${d}e_s.$(LIB_SUFFIX))\
+		../encoders/png/$(LIB_PREFIX)imgpnge_s.$(LIB_SUFFIX)\
+		../encoders/jpeg/$(LIB_PREFIX)imgjpege_s.$(LIB_SUFFIX)\
 		$(NULL)
 
 EXTRA_DSO_LIBS	= \
