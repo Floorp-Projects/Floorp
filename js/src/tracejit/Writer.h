@@ -114,7 +114,7 @@ enum LC_TMBits {
  * - ACCSET_OBJ_PROTO:     The 'proto'    field of all JSObjects.
  * - ACCSET_OBJ_PARENT:    The 'parent'   field of all JSObjects.
  * - ACCSET_OBJ_PRIVATE:   The 'private'  field of all JSObjects.
- * - ACCSET_OBJ_CAPACITY:  The 'capacity' field of all JSObjects.
+ * - ACCSET_OBJ_CAPACITY:  The 'capacity' or 'initializedLength' field of all JSObjects.
  * - ACCSET_OBJ_SLOTS:     The 'slots'    field of all JSObjects.
  * - ACCSET_SLOTS:         The slots (be they fixed or dynamic) of all JSObjects.
  * - ACCSET_TARRAY:        All TypedArray structs.
@@ -490,8 +490,8 @@ class Writer
                     "private_uint32");
     }
 
-    nj::LIns *ldiDenseArrayCapacity(nj::LIns *array) const {
-        return name(lir->insLoad(nj::LIR_ldi, array, offsetof(JSObject, capacity),
+    nj::LIns *ldiDenseArrayInitializedLength(nj::LIns *array) const {
+        return name(lir->insLoad(nj::LIR_ldi, array, offsetof(JSObject, initializedLength),
                                  ACCSET_OBJ_CAPACITY),
                     "capacity");
     }

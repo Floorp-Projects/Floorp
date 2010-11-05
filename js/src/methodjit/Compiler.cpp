@@ -4700,3 +4700,27 @@ mjit::Compiler::knownPushedType(uint32 pushed)
 #endif
     return JSVAL_TYPE_UNKNOWN;
 }
+
+types::ObjectKind
+mjit::Compiler::knownPoppedObjectKind(uint32 popped)
+{
+#ifdef JS_TYPE_INFERENCE
+    types::TypeSet *types = analysis->getCode(PC).popped(popped);
+    return types->getKnownObjectKind(cx, script, isConstructing);
+#endif
+    return types::OBJECT_UNKNOWN;
+}
+
+bool
+mjit::Compiler::arrayPrototypeHasIndexedSetter()
+{
+#ifdef JS_TYPE_INFERENCE
+    types::TypeSet *arrayTypes =
+        cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE)->indexTypes(cx);
+    types::TypeSet *objectTypes =
+        cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE)->indexTypes(cx);
+    return arrayTypes->hasGetterSetter(cx, script, isConstructing)
+        || objectTypes->hasGetterSetter(cx, script, isConstructing);
+#endif
+    return true;
+}

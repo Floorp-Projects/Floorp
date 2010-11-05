@@ -7238,7 +7238,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     if (!xml_setSettings(cx, 1, vp))
         return NULL;
 
-    cx->markTypeBuiltinFunction(cx->getTypeObject(js_XMLList_str, true));
+    cx->markTypeBuiltinFunction(cx->getTypeObject(js_XMLList_str, false, true));
 
     /* Define the XMLList function and give it the same prototype as XML. */
     fun = JS_DefineFunctionWithType(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR,

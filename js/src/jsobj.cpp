@@ -3637,7 +3637,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (clasp == &js_FunctionClass)
         protoType = cx->getTypeFunctionHandler(protoName, JS_TypeHandlerVoid);
     else
-        protoType = cx->getTypeObject(protoName, false);
+        protoType = cx->getTypeObject(protoName, false, false);
 #endif
 
     /*
@@ -3736,7 +3736,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (ctor->getClass() == clasp)
-            ctor->setProto(proto);
+            ctor->setProto(cx, proto);
 
 #ifdef JS_TYPE_INFERENCE
         if (clasp == &js_FunctionClass) {
@@ -3906,7 +3906,8 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
 
     if (oldcap <= SLOT_CAPACITY_MIN || !hasSlotsArray()) {
         /* We won't shrink the slots any more.  Clear excess holes. */
-        ClearValueRange(slots + newcap, oldcap - newcap, isDenseArray());
+        if (!isDenseArray())
+            ClearValueRange(slots + newcap, oldcap - newcap, false);
         return;
     }
 
@@ -3922,7 +3923,8 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
 
     if (fill < newcap) {
         /* Clear any excess holes if we tried to shrink below SLOT_CAPACITY_MIN. */
-        ClearValueRange(slots + fill, newcap - fill, isDenseArray());
+        if (!isDenseArray())
+            ClearValueRange(slots + fill, newcap - fill, false);
     }
 }
 
@@ -3978,7 +3980,7 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
     }
 
     if (!proto || !checkForCycles) {
-        obj->setProto(proto);
+        obj->setProto(cx, proto);
     } else if (!SetProtoCheckingForCycles(cx, obj, proto)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE, js_proto_str);
         return false;
@@ -6576,7 +6578,7 @@ js_DumpObject(JSObject *obj)
     fprintf(stderr, "\n");
 
     if (obj->isDenseArray()) {
-        unsigned slots = JS_MIN(obj->getArrayLength(), obj->getDenseArrayCapacity());
+        unsigned slots = obj->getDenseArrayInitializedLength();
         fprintf(stderr, "elements\n");
         for (unsigned i = 0; i < slots; i++) {
             fprintf(stderr, " %3d: ", i);

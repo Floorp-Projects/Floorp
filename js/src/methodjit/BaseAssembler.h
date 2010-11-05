@@ -56,38 +56,6 @@
 namespace js {
 namespace mjit {
 
-class MaybeRegisterID {
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-
-  public:
-    MaybeRegisterID()
-      : reg_(Registers::ReturnReg), set(false)
-    { }
-
-    MaybeRegisterID(RegisterID reg)
-      : reg_(reg), set(true)
-    { }
-
-    inline RegisterID reg() const { JS_ASSERT(set); return reg_; }
-    inline void setReg(const RegisterID r) { reg_ = r; set = true; }
-    inline bool isSet() const { return set; }
-
-    MaybeRegisterID & operator =(const MaybeRegisterID &other) {
-        set = other.set;
-        reg_ = other.reg_;
-        return *this;
-    }
-
-    MaybeRegisterID & operator =(RegisterID r) {
-        setReg(r);
-        return *this;
-    }
-
-  private:
-    RegisterID reg_;
-    bool set;
-};
-
 // Represents an int32 property name in generated code, which must be either
 // a RegisterID or a constant value.
 struct Int32Key {
@@ -116,25 +84,6 @@ struct Int32Key {
 
     RegisterID reg() const { return reg_.reg(); }
     bool isConstant() const { return !reg_.isSet(); }
-};
-
-class MaybeJump {
-    typedef JSC::MacroAssembler::Jump Jump;
-  public:
-    MaybeJump()
-      : set(false)
-    { }
-
-    inline Jump getJump() const { JS_ASSERT(set); return jump; }
-    inline Jump get() const { JS_ASSERT(set); return jump; }
-    inline void setJump(const Jump &j) { jump = j; set = true; }
-    inline bool isSet() const { return set; }
-
-    inline MaybeJump &operator=(Jump j) { setJump(j); return *this; }
-
-  private:
-    Jump jump;
-    bool set;
 };
 
 struct FrameAddress : JSC::MacroAssembler::Address
@@ -381,13 +330,14 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         Jump holeCheck;
     };
 
-    Jump guardArrayCapacity(RegisterID objReg, const Int32Key &key) {
-        Address capacity(objReg, offsetof(JSObject, capacity));
+    // Guard an array's capacity, length or initialized length.
+    Jump guardArrayExtent(uint32 offset, RegisterID objReg, const Int32Key &key, Condition cond) {
+        Address initlen(objReg, offset);
         if (key.isConstant()) {
             JS_ASSERT(key.index() >= 0);
-            return branch32(BelowOrEqual, payloadOf(capacity), Imm32(key.index()));
+            return branch32(cond, initlen, Imm32(key.index()));
         }
-        return branch32(BelowOrEqual, payloadOf(capacity), key.reg());
+        return branch32(cond, initlen, key.reg());
     }
 
     // Load a jsval from an array slot, given a key. |objReg| is clobbered.
@@ -396,7 +346,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         JS_ASSERT(objReg != typeReg);
 
         FastArrayLoadFails fails;
-        fails.rangeCheck = guardArrayCapacity(objReg, key);
+        fails.rangeCheck = guardArrayExtent(offsetof(JSObject, initializedLength),
+                                            objReg, key, BelowOrEqual);
 
         RegisterID dslotsReg = objReg;
         loadPtr(Address(objReg, offsetof(JSObject, slots)), dslotsReg);
@@ -404,13 +355,27 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         // Load the slot out of the array.
         if (key.isConstant()) {
             Address slot(objReg, key.index() * sizeof(Value));
-            fails.holeCheck = fastArrayLoadSlot(slot, typeReg, dataReg);
+            fails.holeCheck = fastArrayLoadSlot(slot, true, typeReg, dataReg);
         } else {
             BaseIndex slot(objReg, key.reg(), JSVAL_SCALE);
-            fails.holeCheck = fastArrayLoadSlot(slot, typeReg, dataReg);
+            fails.holeCheck = fastArrayLoadSlot(slot, true, typeReg, dataReg);
         }
 
         return fails;
+    }
+
+    void storeKey(const Int32Key &key, Address address) {
+        if (key.isConstant())
+            store32(Imm32(key.index()), address);
+        else
+            store32(key.reg(), address);
+    }
+
+    void bumpKey(Int32Key &key, int32 delta) {
+        if (key.isConstant())
+            key.index_ += delta;
+        else
+            add32(Imm32(delta), key.reg());
     }
 
     void loadObjClass(RegisterID objReg, RegisterID destReg) {

@@ -273,6 +273,6 @@ JS_FRIEND_API(JSBool)
 js_IsDensePrimitiveArray(JSObject *obj);
 
 extern JSBool JS_FASTCALL
-js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i);
+js_Array_dense_setelem_uninitialized(JSContext *cx, JSObject *obj, jsint i);
 
 #endif /* jsarray_h___ */

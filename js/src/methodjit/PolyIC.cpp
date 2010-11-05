@@ -2329,7 +2329,7 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
     // be in a loop that is filling in the array. We can assert, however,
     // that either we're in capacity or there's a hole - guaranteed by
     // the fast path.
-    JS_ASSERT((jsuint)keyval >= obj->getDenseArrayCapacity() ||
+    JS_ASSERT((jsuint)keyval >= obj->getDenseArrayInitializedLength() ||
               obj->getDenseArrayElement(keyval).isMagic(JS_ARRAY_HOLE));
 
     if (js_PrototypeHasIndexedProperties(cx, obj))

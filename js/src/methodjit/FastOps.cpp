@@ -1221,6 +1221,101 @@ IsCacheableSetElem(FrameEntry *obj, FrameEntry *id, FrameEntry *value)
     return true;
 }
 
+void
+mjit::Compiler::jsop_setelem_dense()
+{
+    FrameEntry *obj = frame.peek(-3);
+    FrameEntry *id = frame.peek(-2);
+    FrameEntry *value = frame.peek(-1);
+
+    // We might not know whether this is an object, but if it is an object we
+    // know it is a dense array.
+    if (!obj->isTypeKnown()) {
+        Jump guard = frame.testObject(Assembler::NotEqual, obj);
+        stubcc.linkExit(guard, Uses(3));
+    }
+
+    // Test for integer index.
+    if (!id->isTypeKnown()) {
+        Jump guard = frame.testInt32(Assembler::NotEqual, id);
+        stubcc.linkExit(guard, Uses(3));
+    }
+
+    // Allocate registers.
+
+    ValueRemat vr;
+    frame.pinEntry(value, vr);
+
+    Int32Key key = id->isConstant()
+                 ? Int32Key::FromConstant(id->getValue().toInt32())
+                 : Int32Key::FromRegister(frame.tempRegForData(id));
+    if (!key.isConstant() && !frame.haveSameBacking(id, value))
+        frame.pinReg(key.reg());
+
+    RegisterID objReg = frame.copyDataIntoReg(obj);
+
+    frame.unpinEntry(vr);
+    if (!key.isConstant() && !frame.haveSameBacking(id, value))
+        frame.unpinReg(key.reg());
+
+    Label syncTarget = stubcc.syncExitAndJump(Uses(3));
+
+    // Check against initialized length.  This always need to be done.
+    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                              objReg, key, Assembler::BelowOrEqual);
+
+    // Make an OOL path for setting exactly the initialized length.
+    {
+        stubcc.linkExitDirect(initlenGuard, stubcc.masm.label());
+
+        // Recheck for an exact initialized length.
+        // :TODO: would be nice to reuse the condition bits from the previous test.
+        Jump exactlenGuard = stubcc.masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                                          objReg, key, Assembler::NotEqual);
+        exactlenGuard.linkTo(syncTarget, &stubcc.masm);
+
+        // Check array capacity.
+        Jump capacityGuard = stubcc.masm.guardArrayExtent(offsetof(JSObject, capacity),
+                                                          objReg, key, Assembler::BelowOrEqual);
+        capacityGuard.linkTo(syncTarget, &stubcc.masm);
+
+        // Bump the index for setting the array length.  The above guard ensures this
+        // won't overflow.
+        stubcc.masm.bumpKey(key, 1);
+
+        // Update the initialized length.
+        stubcc.masm.storeKey(key, Address(objReg, offsetof(JSObject, initializedLength)));
+
+        // Update the array length if needed.
+        Jump lengthGuard = stubcc.masm.guardArrayExtent(offsetof(JSObject, privateData),
+                                                        objReg, key, Assembler::AboveOrEqual);
+        stubcc.masm.storeKey(key, Address(objReg, offsetof(JSObject, privateData)));
+        lengthGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+        // Restore the index.
+        stubcc.masm.bumpKey(key, -1);
+
+        // Jump back to the inline path.
+        Jump initlenExit = stubcc.masm.jump();
+        stubcc.crossJump(initlenExit, masm.label());
+    }
+
+    // Fully store the value. :TODO: don't need to do this in the non-initlen case
+    // if the array is packed and monomorphic.
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    if (key.isConstant())
+        masm.storeValue(vr, Address(objReg, key.index() * sizeof(Value)));
+    else
+        masm.storeValue(vr, BaseIndex(objReg, key.reg(), masm.JSVAL_SCALE));
+
+    stubcc.leave();
+    stubcc.call(STRICT_VARIANT(stubs::SetElem));
+
+    frame.freeReg(objReg);
+    frame.shimmy(2);
+    stubcc.rejoin(Changes(2));
+}
+
 bool
 mjit::Compiler::jsop_setelem()
 {
@@ -1230,6 +1325,16 @@ mjit::Compiler::jsop_setelem()
 
     if (!IsCacheableSetElem(obj, id, value)) {
         jsop_setelem_slow();
+        return true;
+    }
+
+    types::ObjectKind kind = knownPoppedObjectKind(2);
+    if (id->mightBeType(JSVAL_TYPE_INT32) &&
+        (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+        !arrayPrototypeHasIndexedSetter()) {
+        // this is definitely a dense array, generate code directly without
+        // using an inline cache.
+        jsop_setelem_dense();
         return true;
     }
 
@@ -1317,9 +1422,10 @@ mjit::Compiler::jsop_setelem()
     ic.claspGuard = masm.testObjClass(Assembler::NotEqual, ic.objReg, &js_ArrayClass);
     stubcc.linkExitDirect(ic.claspGuard, ic.slowPathStart);
 
-    // Guard capacity in range.
-    Jump capacityGuard = masm.guardArrayCapacity(ic.objReg, ic.key);
-    stubcc.linkExitDirect(capacityGuard, ic.slowPathStart);
+    // Guard in range of initialized length.
+    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                              ic.objReg, ic.key, Assembler::BelowOrEqual);
+    stubcc.linkExitDirect(initlenGuard, ic.slowPathStart);
 
     // Load the dynamic slots vector.
     masm.loadPtr(Address(ic.objReg, offsetof(JSObject, slots)), ic.objReg);
@@ -1384,6 +1490,85 @@ IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
     return true;
 }
 
+void
+mjit::Compiler::jsop_getelem_dense(bool isPacked)
+{
+    FrameEntry *obj = frame.peek(-2);
+    FrameEntry *id = frame.peek(-1);
+
+    // We might not know whether this is an object, but if it is an object we
+    // know it is a dense array.
+    if (!obj->isTypeKnown()) {
+        Jump guard = frame.testObject(Assembler::NotEqual, obj);
+        stubcc.linkExit(guard, Uses(2));
+    }
+
+    // Test for integer index.
+    if (!id->isTypeKnown()) {
+        Jump guard = frame.testInt32(Assembler::NotEqual, id);
+        stubcc.linkExit(guard, Uses(2));
+    }
+
+    JSValueType type = knownPushedType(0);
+
+    // Allocate registers.
+
+    RegisterID objReg = frame.tempRegForData(obj);
+    frame.pinReg(objReg);
+
+    Int32Key key = id->isConstant()
+                 ? Int32Key::FromConstant(id->getValue().toInt32())
+                 : Int32Key::FromRegister(frame.tempRegForData(id));
+    if (!key.isConstant() && !frame.haveSameBacking(id, obj))
+        frame.pinReg(key.reg());
+
+    RegisterID dataReg = frame.allocReg();
+
+    MaybeRegisterID typeReg;
+    if (!isPacked || type == JSVAL_TYPE_UNKNOWN)
+        typeReg = frame.allocReg();
+
+    frame.unpinReg(objReg);
+    if (!key.isConstant() && !frame.haveSameBacking(id, obj))
+        frame.unpinReg(key.reg());
+
+    // Guard on the array's initialized length.
+    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                              objReg, key, Assembler::BelowOrEqual);
+    stubcc.linkExit(initlenGuard, Uses(2));
+
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), dataReg);
+
+    // Get the slot, skipping the hole check if the array is known to be packed.
+    Jump holeCheck;
+    if (key.isConstant()) {
+        Address slot(dataReg, key.index() * sizeof(Value));
+        holeCheck = masm.fastArrayLoadSlot(slot, !isPacked, typeReg, dataReg);
+    } else {
+        JS_ASSERT(key.reg() != dataReg);
+        BaseIndex slot(dataReg, key.reg(), masm.JSVAL_SCALE);
+        holeCheck = masm.fastArrayLoadSlot(slot, !isPacked, typeReg, dataReg);
+    }
+
+    if (!isPacked) {
+        stubcc.linkExit(holeCheck, Uses(2));
+        if (type != JSVAL_TYPE_UNKNOWN)
+            frame.freeReg(typeReg.reg());
+    }
+
+    stubcc.leave();
+    stubcc.call(stubs::GetElem);
+
+    frame.popn(2);
+
+    if (type != JSVAL_TYPE_UNKNOWN)
+        frame.pushTypedPayload(type, dataReg);
+    else
+        frame.pushRegs(typeReg.reg(), dataReg);
+
+    stubcc.rejoin(Changes(2));
+}
+
 bool
 mjit::Compiler::jsop_getelem(bool isCall)
 {
@@ -1395,6 +1580,16 @@ mjit::Compiler::jsop_getelem(bool isCall)
             jsop_callelem_slow();
         else
             jsop_getelem_slow();
+        return true;
+    }
+
+    types::ObjectKind kind = knownPoppedObjectKind(1);
+
+    if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
+        (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY)) {
+        // this is definitely a dense array, generate code directly without
+        // using an inline cache.
+        jsop_getelem_dense(kind == types::OBJECT_PACKED_ARRAY);
         return true;
     }
 

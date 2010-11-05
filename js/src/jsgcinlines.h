@@ -253,7 +253,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
 
-    if (obj->emptyShapes) {
+    if (!obj->isDenseArray() && obj->emptyShapes) {
         int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
         for (int i = 0; i < count; i++) {
             if (obj->emptyShapes[i])

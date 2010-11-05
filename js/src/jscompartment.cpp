@@ -241,7 +241,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     vp->setObject(*wrapper);
 
-    wrapper->setProto(proto);
+    wrapper->setProto(cx, proto);
     if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
         return false;
 

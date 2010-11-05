@@ -540,6 +540,10 @@ TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
     if (!object)
         return;
 
+    /* Mark arrays with possible non-integer properties as not dense. */
+    if (assign && !JSID_IS_VOID(id))
+        cx->markTypeArrayNotPacked(object, true);
+
     TypeSet *types = object->properties(cx).getVariable(cx, id);
 
     /* Capture the effects of a standard property access. */
@@ -867,11 +871,245 @@ public:
     }
 };
 
-void
-TypeSet::addFreezeTypeTag(JSContext *cx, JSScript *script, bool isConstructing)
+static inline JSValueType
+GetValueTypeFromTypeFlags(TypeFlags flags)
+{
+    switch (flags) {
+      case TYPE_FLAG_UNDEFINED:
+        return JSVAL_TYPE_UNDEFINED;
+      case TYPE_FLAG_NULL:
+        return JSVAL_TYPE_NULL;
+      case TYPE_FLAG_BOOLEAN:
+        return JSVAL_TYPE_BOOLEAN;
+      case TYPE_FLAG_INT32:
+        return JSVAL_TYPE_INT32;
+      case TYPE_FLAG_STRING:
+        return JSVAL_TYPE_STRING;
+      case TYPE_FLAG_OBJECT:
+        return JSVAL_TYPE_OBJECT;
+      default:
+        return JSVAL_TYPE_UNKNOWN;
+    }
+}
+
+JSValueType
+TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing)
 {
     JS_ASSERT(this->pool == &script->analysis->pool);
-    add(cx, ArenaNew<TypeConstraintFreezeTypeTag>(script->analysis->pool, script, isConstructing), false);
+
+    JSValueType type = GetValueTypeFromTypeFlags(typeFlags);
+
+    if (type != JSVAL_TYPE_UNKNOWN)
+        add(cx, ArenaNew<TypeConstraintFreezeTypeTag>(script->analysis->pool, script, isConstructing), false);
+
+    return type;
+}
+
+/* Compute the meet of kind with the kind of object, per the ObjectKind lattice. */
+static inline ObjectKind
+CombineObjectKind(TypeObject *object, ObjectKind kind)
+{
+    ObjectKind nkind;
+    if (object->isFunction)
+        nkind = object->asFunction()->script ? OBJECT_SCRIPTED_FUNCTION : OBJECT_NATIVE_FUNCTION;
+    else if (object->isPackedArray)
+        nkind = OBJECT_PACKED_ARRAY;
+    else if (object->isDenseArray)
+        nkind = OBJECT_DENSE_ARRAY;
+    else
+        nkind = OBJECT_UNKNOWN;
+
+    if (kind == OBJECT_UNKNOWN || nkind == OBJECT_UNKNOWN)
+        return OBJECT_UNKNOWN;
+
+    if (kind == nkind || kind == OBJECT_NONE)
+        return nkind;
+
+    if ((kind == OBJECT_PACKED_ARRAY && nkind == OBJECT_DENSE_ARRAY) ||
+        (kind == OBJECT_DENSE_ARRAY && nkind == OBJECT_PACKED_ARRAY)) {
+        return OBJECT_DENSE_ARRAY;
+    }
+
+    return OBJECT_UNKNOWN;
+}
+
+/* Constraint which triggers recompilation if an array becomes not-packed or not-dense. */
+class TypeConstraintFreezeArray : public TypeConstraint
+{
+public:
+    /*
+     * Array kind being specialized on by the FreezeObjectConstraint.  This may have
+     * become OBJECT_UNKNOWN due to subsequent type changes and recompilation.
+     */
+    ObjectKind *pkind;
+
+    JSScript *script;
+    bool isConstructing;
+
+    TypeConstraintFreezeArray(ObjectKind *pkind, JSScript *script, bool isConstructing)
+        : TypeConstraint("freezeArray"),
+          pkind(pkind), script(script), isConstructing(isConstructing)
+    {
+        JS_ASSERT(*pkind == OBJECT_PACKED_ARRAY || *pkind == OBJECT_DENSE_ARRAY);
+    }
+
+    void newType(JSContext *cx, TypeSet *source, jstype type) {}
+
+    void arrayNotPacked(JSContext *cx, bool notDense)
+    {
+        if (*pkind == OBJECT_UNKNOWN) {
+            /* Despecialized the kind we were interested in due to recompilation. */
+            return;
+        }
+
+        JS_ASSERT(*pkind == OBJECT_PACKED_ARRAY || *pkind == OBJECT_DENSE_ARRAY);
+
+        if (!notDense && *pkind == OBJECT_DENSE_ARRAY) {
+            /* Marking an array as not packed, but we were already accounting for this. */
+            return;
+        }
+
+        /* Need to trigger recompilation of the script here. :FIXME: bug 608746 */
+    }
+};
+
+/*
+ * Constraint which triggers recompilation if objects of a different kind are
+ * added to a type set.
+ */
+class TypeConstraintFreezeObjectKind : public TypeConstraint
+{
+public:
+    ObjectKind kind;
+    JSScript *script;
+    bool isConstructing;
+
+    TypeConstraintFreezeObjectKind(ObjectKind kind, JSScript *script, bool isConstructing)
+        : TypeConstraint("freezeObjectKind"),
+          kind(kind), script(script), isConstructing(isConstructing)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type)
+    {
+        if (kind == OBJECT_UNKNOWN) {
+            /* Despecialized the kind we were interested in due to recompilation. */
+            return;
+        }
+
+        if (type == TYPE_UNKNOWN) {
+            kind = OBJECT_UNKNOWN;
+        } else if (TypeIsObject(type)) {
+            TypeObject *object = (TypeObject *) type;
+            ObjectKind nkind = CombineObjectKind(object, kind);
+
+            if (nkind != OBJECT_UNKNOWN &&
+                (kind == OBJECT_PACKED_ARRAY || kind == OBJECT_DENSE_ARRAY)) {
+                /*
+                 * Arrays can become not-packed or not-dense dynamically.
+                 * Add a constraint on the element type of the object to pick
+                 * up such changes.
+                 */
+                TypeSet *elementTypes = object->indexTypes(cx);
+                elementTypes->add(cx,
+                    ArenaNew<TypeConstraintFreezeArray>(object->pool(),
+                                                        &kind, script, isConstructing), false);
+            }
+
+            if (nkind == kind) {
+                /* New object with the same kind we are interested in. */
+                return;
+            }
+            kind = nkind;
+        }
+
+        /* Need to trigger recompilation of the script here. :FIXME: bug 608746 */
+    }
+};
+
+ObjectKind
+TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script, bool isConstructing)
+{
+    JS_ASSERT(this->pool == &script->analysis->pool);
+
+    ObjectKind kind = OBJECT_NONE;
+
+    if (objectCount >= 2) {
+        unsigned objectCapacity = HashSetCapacity(objectCount);
+        for (unsigned i = 0; i < objectCapacity; i++) {
+            TypeObject *object = objectSet[i];
+            if (object)
+                kind = CombineObjectKind(object, kind);
+        }
+    } else if (objectCount == 1) {
+        kind = CombineObjectKind((TypeObject *) objectSet, kind);
+    }
+
+    if (kind != OBJECT_UNKNOWN) {
+        /*
+         * Watch for new objects of different kind, and re-traverse existing types
+         * in this set to add any needed FreezeArray constraints.
+         */
+        add(cx, ArenaNew<TypeConstraintFreezeObjectKind>(script->analysis->pool,
+                                                         kind, script, isConstructing), true);
+    }
+
+    return kind;
+}
+
+/*
+ * Constraint which triggers recompilation of a script if a getter or setter is added
+ * to a type set.
+ */
+class TypeConstraintFreezeGetSet : public TypeConstraint
+{
+public:
+    JSScript *script;
+    bool isConstructing;
+
+    bool hasGetSet;
+
+    TypeConstraintFreezeGetSet(JSScript *script, bool isConstructing)
+        : TypeConstraint("freezeGetSet"),
+          script(script), isConstructing(isConstructing), hasGetSet(false)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type)
+    {
+        if (hasGetSet)
+            return;
+
+        if (type != TYPE_UNKNOWN) {
+            if (!TypeIsObject(type))
+                return;
+            if (cx->getFixedTypeObject(TYPE_OBJECT_GETSET) != (TypeObject *) type)
+                return;
+        }
+
+        hasGetSet = true;
+
+        /* Need to trigger recompilation of the script here. :FIXME: bug 608746 */
+    }
+};
+
+bool
+TypeSet::hasGetterSetter(JSContext *cx, JSScript *script, bool isConstructing)
+{
+    TypeObject *getset = cx->getFixedTypeObject(TYPE_OBJECT_GETSET);
+
+    if (objectCount >= 2) {
+        unsigned objectCapacity = HashSetCapacity(objectCount);
+        for (unsigned i = 0; i < objectCapacity; i++) {
+            if (getset == objectSet[i])
+                return true;
+        }
+    } else if (objectCount == 1) {
+        if (getset == (TypeObject *) objectSet)
+            return true;
+    }
+
+    add(cx, ArenaNew<TypeConstraintFreezeGetSet>(script->analysis->pool, script, isConstructing), true);
+
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -990,7 +1228,10 @@ TypeCompartment::makeFixedTypeObject(JSContext *cx, FixedTypeObjectName which)
     JS_ASSERT(which < TYPE_OBJECT_FIXED_LIMIT);
     JS_ASSERT(!fixedTypeObjects[which]);
 
-    TypeObject *type = cx->getTypeObject(fixedTypeObjectNames[which], which <= TYPE_OBJECT_FUNCTION_LAST);
+    bool isArray = (which > TYPE_OBJECT_MONITOR_LAST && which <= TYPE_OBJECT_ARRAY_LAST);
+    bool isFunction = (which <= TYPE_OBJECT_FUNCTION_LAST);
+
+    TypeObject *type = cx->getTypeObject(fixedTypeObjectNames[which], isArray, isFunction);
     fixedTypeObjects[which] = type;
 
     if (which <= TYPE_OBJECT_BASE_LAST) {
@@ -1007,7 +1248,8 @@ TypeCompartment::makeFixedTypeObject(JSContext *cx, FixedTypeObjectName which)
 }
 
 TypeObject *
-TypeCompartment::getTypeObject(JSContext *cx, analyze::Script *script, const char *name, bool isFunction)
+TypeCompartment::getTypeObject(JSContext *cx, analyze::Script *script, const char *name,
+                               bool isArray, bool isFunction)
 {
 #ifdef JS_TYPE_INFERENCE
     jsid id = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), 0));
@@ -1020,16 +1262,19 @@ TypeCompartment::getTypeObject(JSContext *cx, analyze::Script *script, const cha
      */
     ObjectNameTable::AddPtr p = objectNameTable->lookupForAdd(id);
     if (p) {
-        JS_ASSERT(p->value->isFunction == isFunction);
-        JS_ASSERT(&p->value->pool() == &pool);
-        return p->value;
+        js::types::TypeObject *object = p->value;
+        JS_ASSERT(object->isFunction == isFunction);
+        JS_ASSERT(&object->pool() == &pool);
+        if (!isArray && object->isDenseArray)
+            cx->markTypeArrayNotPacked(object, true);
+        return object;
     }
 
     js::types::TypeObject *object;
     if (isFunction)
         object = ArenaNew<TypeFunction>(pool, cx, &pool, id);
     else
-        object = ArenaNew<TypeObject>(pool, cx, &pool, id);
+        object = ArenaNew<TypeObject>(pool, cx, &pool, id, isArray);
 
     TypeObject *&objects = script ? script->objects : this->objects;
     object->next = objects;
@@ -1225,10 +1470,11 @@ VariableSet::print(JSContext *cx, FILE *out)
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-TypeObject::TypeObject(JSContext *cx, JSArenaPool *pool, jsid name)
+TypeObject::TypeObject(JSContext *cx, JSArenaPool *pool, jsid name, bool isArray)
     : name(name), isFunction(false), monitored(false),
       propertySet(pool), propertiesFilled(false), next(NULL),
-      hasObjectPropagation(false), hasArrayPropagation(false), isInitObject(false)
+      hasObjectPropagation(false), hasArrayPropagation(false), isInitObject(false),
+      isDenseArray(isArray), isPackedArray(isArray)
 {
 #ifdef JS_TYPES_DEBUG_SPEW
     propertySet.name = name;
@@ -1284,7 +1530,7 @@ TypeFunction::fillProperties(JSContext *cx)
     unsigned len = strlen(baseName) + 15;
     char *prototypeName = (char *)alloca(len);
     JS_snprintf(prototypeName, len, "%s:prototype", baseName);
-    prototypeObject = cx->getTypeObject(prototypeName, false);
+    prototypeObject = cx->getTypeObject(prototypeName, false, false);
 
     TypeSet *prototypeTypes = propertySet.getVariable(cx, id_prototype(cx));
     prototypeTypes->addType(cx, (jstype) prototypeObject);
@@ -1335,7 +1581,7 @@ TypeObject::print(JSContext *cx, FILE *out)
 /////////////////////////////////////////////////////////////////////
 
 TypeFunction::TypeFunction(JSContext *cx, JSArenaPool *pool, jsid name)
-    : TypeObject(cx, pool, name), handler(NULL), script(NULL),
+    : TypeObject(cx, pool, name, false), handler(NULL), script(NULL),
       prototypeObject(NULL), newObject(NULL), returnTypes(pool),
       isBuiltin(false), isGeneric(false)
 {
@@ -1441,6 +1687,24 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
     for (int i = 0; i < useCount; i++) {
         const js::Value &val = sp[-1 - i];
         js::types::jstype type = js::types::GetValueType(cx, val);
+
+        if (js::types::TypeIsObject(type)) {
+            /* Make sure information about the array status of this object is right. */
+            JS_ASSERT(val.isObject());
+            js::types::TypeObject *object = (js::types::TypeObject *) type;
+
+            JS_ASSERT_IF(object->isPackedArray, object->isDenseArray);
+            if (object->isDenseArray) {
+                if (!val.toObject().isDenseArray() ||
+                    (object->isPackedArray && !val.toObject().isPackedDenseArray())) {
+                    fprintf(cx->typeOut(), "warning: Object not %s array at #%u:%05u: %s",
+                            object->isPackedArray ? "packed" : "dense",
+                            analysis->id, code.offset, cx->getTypeId(object->name));
+                    cx->compartment->types.warnings = true;
+                    object->isDenseArray = object->isPackedArray = false;
+                }
+            }
+        }
 
         bool matches = IgnorePopped(op, i) || stack->types.hasType(type);
 

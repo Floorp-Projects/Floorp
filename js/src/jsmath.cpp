@@ -897,7 +897,7 @@ js_IsMathFunction(JSNative native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    types::TypeObject *type = cx->getTypeObject(js_Math_str, false);
+    types::TypeObject *type = cx->getTypeObject(js_Math_str, false, false);
     JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj, type);
     if (!Math)
         return NULL;

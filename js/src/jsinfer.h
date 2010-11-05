@@ -159,6 +159,34 @@ public:
 
     /* Register a new type for the set this constraint is listening to. */
     virtual void newType(JSContext *cx, TypeSet *source, jstype type) = 0;
+
+    /*
+     * Mark the object containing the set this constraint is listening to
+     * as not a packed array and, possibly, not a dense array.
+     */
+    virtual void arrayNotPacked(JSContext *cx, bool notDense) {}
+};
+
+/*
+ * Coarse kinds of a set of objects.  These form the following lattice:
+ *
+ *                    NONE
+ *       ___________ /  | \______________
+ *      /               |                \
+ * PACKED_ARRAY  SCRIPTED_FUNCTION  NATIVE_FUNCTION
+ *      |               |                 |
+ * DENSE_ARRAY          |                 |
+ *      \____________   |   _____________/
+ *                   \  |  /
+ *                   UNKNOWN
+ */
+enum ObjectKind {
+    OBJECT_NONE,
+    OBJECT_UNKNOWN,
+    OBJECT_PACKED_ARRAY,
+    OBJECT_DENSE_ARRAY,
+    OBJECT_SCRIPTED_FUNCTION,
+    OBJECT_NATIVE_FUNCTION
 };
 
 /* Information about the set of types associated with an lvalue. */
@@ -212,6 +240,7 @@ struct TypeSet
     inline void addType(JSContext *cx, jstype type);
 
     /* Add specific kinds of constraints to this set. */
+    inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
     void addSubset(JSContext *cx, JSArenaPool &pool, TypeSet *target);
     void addGetProperty(JSContext *cx, analyze::Bytecode *code, TypeSet *target, jsid id);
     void addSetProperty(JSContext *cx, analyze::Bytecode *code, TypeSet *target, jsid id);
@@ -224,24 +253,26 @@ struct TypeSet
     void addFilterPrimitives(JSContext *cx, JSArenaPool &pool, TypeSet *target, bool onlyNullVoid);
     void addMonitorRead(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *target);
 
-    /* Constraints inducing recompilation. */
-    void addFreezeTypeTag(JSContext *cx, JSScript *script, bool isConstructing);
-
-    /*
-     * Get any type tag which all values in this set must have.  Should this type
-     * set change in the future so that another type tag is possible, mark script
-     * for recompilation.
-     */
-    inline JSValueType getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing);
-
     /*
      * Make an intermediate type set with the specified debugging name,
      * not embedded in another structure.
      */
     static inline TypeSet* make(JSContext *cx, JSArenaPool &pool, const char *name);
 
-  private:
-    inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
+    /* Methods for JIT compilation. */
+
+    /*
+     * Get any type tag which all values in this set must have.  Should this type
+     * set change in the future so that another type tag is possible, mark script
+     * for recompilation.
+     */
+    JSValueType getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing);
+
+    /* Get information about the kinds of objects in this type set. */
+    ObjectKind getKnownObjectKind(JSContext *cx, JSScript *script, bool isConstructing);
+
+    /* Get whether this type set contains any scripted getter or setter. */
+    bool hasGetterSetter(JSContext *cx, JSScript *script, bool isConstructing);
 };
 
 /*
@@ -412,7 +443,7 @@ struct TypeObject
     bool isFunction;
 
     /*
-     * Whether all accesses to this object need to be monitored.  This includes
+     * Whether all reads from this object need to be monitored.  This includes
      * all property and element accesses, and for functions all calls to the function.
      */
     bool monitored;
@@ -442,8 +473,14 @@ struct TypeObject
      */
     bool isInitObject;
 
+    /* Whether all objects this represents are dense arrays. */
+    bool isDenseArray;
+
+    /* Whether all objects this represents are packed arrays (implies isDenseArray). */
+    bool isPackedArray;
+
     /* Make an object with the specified name. */
-    TypeObject(JSContext *cx, JSArenaPool *pool, jsid id);
+    TypeObject(JSContext *cx, JSArenaPool *pool, jsid id, bool isArray);
 
     /* Propagate properties from this object to target. */
     bool addPropagate(JSContext *cx, TypeObject *target, bool excludePrototype = true);
@@ -451,12 +488,8 @@ struct TypeObject
     /* Coerce this object to a function. */
     TypeFunction* asFunction()
     {
-        if (isFunction) {
-            return (TypeFunction*) this;
-        } else {
-            JS_NOT_REACHED("Object is not a function");
-            return NULL;
-        }
+        JS_ASSERT(isFunction);
+        return (TypeFunction *) this;
     }
 
     JSArenaPool & pool() { return *propertySet.pool; }
@@ -754,7 +787,7 @@ struct TypeCompartment
 
     /* Get a function or non-function object associated with an optional script. */
     TypeObject *getTypeObject(JSContext *cx, js::analyze::Script *script,
-                              const char *name, bool isFunction);
+                              const char *name, bool isArray, bool isFunction);
 
     /*
      * Add the specified type to the specified set, and do any necessary reanalysis
