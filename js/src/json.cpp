@@ -1259,7 +1259,7 @@ static JSFunctionSpec json_static_methods[] = {
 JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
-    TypeObject *type = cx->getTypeObject(js_JSON_str, false);
+    TypeObject *type = cx->getTypeObject(js_JSON_str, false, false);
     JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj, type);
     if (!JSON)
         return NULL;

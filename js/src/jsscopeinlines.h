@@ -66,6 +66,8 @@ JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     int i = kind - js::gc::FINALIZE_OBJECT0;
 
+    JS_ASSERT(!isDenseArray());
+
     if (!emptyShapes) {
         emptyShapes = (js::EmptyShape**)
             cx->calloc(sizeof(js::EmptyShape*) * js::gc::JS_FINALIZE_OBJECT_LIMIT);
@@ -98,6 +100,7 @@ JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
 inline bool
 JSObject::canProvideEmptyShape(js::Class *aclasp)
 {
+    JS_ASSERT(!isDenseArray());
     return !emptyShapes || emptyShapes[0]->getClass() == aclasp;
 }
 

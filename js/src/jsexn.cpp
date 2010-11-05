@@ -1034,7 +1034,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
      * use a single type object for Error and all exceptions which
      * inherit properties from it.
      */
-    TypeObject *protoType = cx->getTypeObject("Error.prototype", false);
+    TypeObject *protoType = cx->getTypeObject("Error.prototype", false, false);
     TypeObject *errorType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ERROR);
     cx->addTypePrototype(protoType, obj_proto->getTypeObject());
     cx->addTypePrototype(errorType, protoType);
@@ -1070,7 +1070,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
          * Mark the function as a builtin before constructing and adding it to the global
          * object, which could trigger accesses on its properties.
          */
-        cx->markTypeBuiltinFunction(cx->getTypeObject(fullName, true));
+        cx->markTypeBuiltinFunction(cx->getTypeObject(fullName, false, true));
 
         /* Make a constructor function for the current name. */
         JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];

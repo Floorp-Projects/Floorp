@@ -10674,6 +10674,7 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     // that pval is usable.
     JS_ASSERT(!pval.isPrimitive());
     JSObject *proto = &pval.toObject();
+    JS_ASSERT(!proto->isDenseArray());
     JS_ASSERT_IF(clasp != &js_ArrayClass, proto->emptyShapes[0]->getClass() == clasp);
 
     proto_ins = w.immpObjGC(proto);
@@ -12773,21 +12774,26 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // be an integer.
         CHECK_STATUS_A(makeNumberInt32(idx_ins, &idx_ins));
 
-        if (!js_EnsureDenseArrayCapacity(cx, obj, idx.toInt32()))
+        /* Check the initialized index is not too sparse. */
+        if (!js_Array_dense_setelem_uninitialized(cx, obj, idx.toInt32()))
             RETURN_STOP_A("couldn't ensure dense array capacity for setelem");
 
-        // Grow the array if the index exceeds the capacity.  This happens
-        // rarely, eg. less than 1% of the time in SunSpider.
-        LIns* capacity_ins = w.ldiDenseArrayCapacity(obj_ins);
+        /*
+         * Grow the array and fully initialize it if the index exceeds the initialized
+         * length of the array.  This happens rarely, eg. less than 1% of the time
+         * in SunSpider.
+         */
+        LIns* initlen_ins = w.ldiDenseArrayInitializedLength(obj_ins);
+
         /*
          * It's important that CSE works across this control-flow diamond
          * because it really helps series of interleaved GETELEM and SETELEM
          * operations.  Likewise with the diamond below.
          */
         w.pauseAddingCSEValues();
-        if (MaybeBranch mbr = w.jt(w.ltui(idx_ins, capacity_ins))) {
+        if (MaybeBranch mbr = w.jt(w.ltui(idx_ins, initlen_ins))) {
             LIns* args[] = { idx_ins, obj_ins, cx_ins };
-            LIns* res_ins = w.call(&js_EnsureDenseArrayCapacity_ci, args);
+            LIns* res_ins = w.call(&js_Array_dense_setelem_uninitialized_ci, args);
             guard(false, w.eqi0(res_ins), mismatchExit);
             w.label(mbr);
         }
@@ -13624,19 +13630,13 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     LIns* idx_ins;
     CHECK_STATUS(makeNumberInt32(get(&ival), &idx_ins));
 
-    /*
-     * Arrays have both a length and a capacity, but we only need to check
-     * |index < capacity|;  in the case where |length < index < capacity|
-     * the entries [length..capacity-1] will have already been marked as
-     * holes by resizeDenseArrayElements() so we can read them and get
-     * the correct value.
-     */
-    LIns* capacity_ins = w.ldiDenseArrayCapacity(obj_ins);
-    jsuint capacity = obj->getDenseArrayCapacity();
-    bool within = (jsuint(idx) < capacity);
+    /* Check the initialized length of the array, which is <= length and <= capacity. */
+    LIns* initlen_ins = w.ldiDenseArrayInitializedLength(obj_ins);
+    jsuint initlen = obj->getDenseArrayInitializedLength();
+    bool within = (jsuint(idx) < initlen);
     if (!within) {
-        /* If not idx < capacity, stay on trace (and read value as undefined). */
-        guard(true, w.geui(idx_ins, capacity_ins), branchExit);
+        /* If not idx < initlen, stay on trace (and read value as undefined). */
+        guard(true, w.geui(idx_ins, initlen_ins), branchExit);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, snapshot(MISMATCH_EXIT)));
 
@@ -13646,8 +13646,8 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
         return RECORD_CONTINUE;
     }
 
-    /* Guard that index is within capacity. */
-    guard(true, w.ltui(idx_ins, capacity_ins), branchExit);
+    /* Guard that index is within the initialized length. */
+    guard(true, w.ltui(idx_ins, initlen_ins), branchExit);
 
     /* Load the value and guard on its type to unbox it. */
     vp = &obj->slots[jsuint(idx)];

@@ -4547,8 +4547,7 @@ BEGIN_CASE(JSOP_GETELEM)
         int32_t i = rref.toInt32();
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(i);
-
-            if (idx < obj->getDenseArrayCapacity()) {
+            if (idx < obj->getDenseArrayInitializedLength()) {
                 copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
@@ -4633,7 +4632,7 @@ BEGIN_CASE(JSOP_SETELEM)
     TYPE_MONITOR_ASSIGN(cx, obj, id, regs.sp[-1]);
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            jsuint length = obj->getDenseArrayCapacity();
+            jsuint length = obj->getDenseArrayInitializedLength();
             jsint i = JSID_TO_INT(id);
             if ((jsuint)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {

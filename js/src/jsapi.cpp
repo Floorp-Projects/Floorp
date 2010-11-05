@@ -1413,9 +1413,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->setProto(obj_proto);
+    fun_proto->setProto(cx, obj_proto);
     if (!obj->getProto())
-        obj->setProto(obj_proto);
+        obj->setProto(cx, obj_proto);
 
 #ifdef JS_TYPE_INFERENCE
     {
@@ -3426,7 +3426,9 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
 
-    TypeObject *nobjType = cx->getTypeObject(name, clasp == &js_FunctionClass);
+    TypeObject *nobjType = cx->getTypeObject(name,
+                                             clasp == &js_ArrayClass,
+                                             clasp == &js_FunctionClass);
     if (proto)
         cx->addTypePrototype(nobjType, proto->getTypeObject());
 
@@ -4811,7 +4813,7 @@ JS_PUBLIC_API(JSTypeObject *)
 JS_MakeTypeObject(JSContext *cx, const char *name, JSBool monitorNeeded, JSBool isArray)
 {
 #ifdef JS_TYPE_INFERENCE
-    TypeObject *type = cx->getTypeObject(name, false);
+    TypeObject *type = cx->getTypeObject(name, isArray, false);
     TypeObject *proto = cx->getFixedTypeObject(isArray ? TYPE_OBJECT_ARRAY_PROTOTYPE : TYPE_OBJECT_OBJECT_PROTOTYPE);
     if (proto)
         proto->addPropagate(cx, type);

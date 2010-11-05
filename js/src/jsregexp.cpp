@@ -935,6 +935,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     cx->addTypeProperty(arrayType, NULL, TYPE_STRING);
     cx->addTypeProperty(arrayType, "index", TYPE_INT32);
     cx->addTypeProperty(arrayType, "input", TYPE_STRING);
+    cx->markTypeArrayNotPacked(arrayType, true);
 
     return proto;
 }

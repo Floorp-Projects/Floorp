@@ -339,7 +339,8 @@ struct JSObject : js::gc::Cell {
         INDEXED         = 0x40,
         OWN_SHAPE       = 0x80,
         BOUND_FUNCTION  = 0x100,
-        HAS_EQUALITY    = 0x200
+        HAS_EQUALITY    = 0x200,
+        PACKED_ARRAY    = 0x400
     };
 
     /*
@@ -354,8 +355,13 @@ struct JSObject : js::gc::Cell {
     uint32      flags;                      /* flags */
     uint32      objShape;                   /* copy of lastProp->shape, or override if different */
 
-    /* If prototype, lazily filled array of empty shapes for each object size. */
-    js::EmptyShape **emptyShapes;
+    union {
+        /* If prototype, lazily filled array of empty shapes for each object size. */
+        js::EmptyShape **emptyShapes;
+
+        /* If dense array, initialized length of the array. */
+        jsuword initializedLength;
+    };
 
     JSObject    *proto;                     /* object's prototype */
     JSObject    *parent;                    /* object's parent */
@@ -655,14 +661,7 @@ struct JSObject : js::gc::Cell {
     JSObject *getProto() const  { return proto; }
     void clearProto()           { proto = NULL; }
 
-    void setProto(JSObject *newProto) {
-#ifdef DEBUG
-        for (JSObject *obj = newProto; obj; obj = obj->getProto())
-            JS_ASSERT(obj != this);
-#endif
-        setDelegateNullSafe(newProto);
-        proto = newProto;
-    }
+    inline void setProto(JSContext *cx, JSObject *newProto);
 
     JSObject *getParent() const {
         return parent;
@@ -754,12 +753,17 @@ struct JSObject : js::gc::Cell {
     inline void setArrayLength(JSContext *cx, uint32 length);
 
     inline uint32 getDenseArrayCapacity();
+    inline uint32 getDenseArrayInitializedLength();
+    inline void setDenseArrayInitializedLength(uint32 length);
     inline js::Value* getDenseArrayElements();
     inline const js::Value &getDenseArrayElement(uintN idx);
     inline js::Value* addressOfDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
     inline bool ensureDenseArrayElements(JSContext *cx, uintN cap);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
+
+    inline bool isPackedDenseArray();
+    inline void setDenseArrayNotPacked(JSContext *cx);
 
     JSBool makeDenseArraySlow(JSContext *cx);
 

@@ -319,15 +319,19 @@ class Compiler : public BaseCompiler
     CompileStatus generateEpilogue();
     CompileStatus finishThisUp(JITScript **jitp);
 
+    /* Analysis helpers. */
+    void restoreAnalysisTypes(uint32 stackDepth);
+    JSValueType knownArgumentType(uint32 arg);
+    JSValueType knownLocalType(uint32 local);
+    JSValueType knownPushedType(uint32 pushed);
+    js::types::ObjectKind knownPoppedObjectKind(uint32 popped);
+    bool arrayPrototypeHasIndexedSetter();
+
     /* Non-emitting helpers. */
     uint32 fullAtomIndex(jsbytecode *pc);
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
     void addCallSite(uint32 id, bool stub);
-    void restoreAnalysisTypes(uint32 stackDepth);
-    JSValueType knownArgumentType(uint32 arg);
-    JSValueType knownLocalType(uint32 local);
-    JSValueType knownPushedType(uint32 pushed);
 
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
@@ -440,7 +444,9 @@ class Compiler : public BaseCompiler
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     bool jsop_setelem();
+    void jsop_setelem_dense();
     bool jsop_getelem(bool isCall);
+    void jsop_getelem_dense(bool isPacked);
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);

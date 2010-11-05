@@ -2361,7 +2361,7 @@ public:
 
     /* Get a function or non-function object. */
     inline js::types::TypeObject *
-    getTypeObject(const char *name, bool isFunction);
+    getTypeObject(const char *name, bool isArray, bool isFunction);
 
     /* Get a function with the specified handler. */
     inline js::types::TypeFunction *
@@ -2417,6 +2417,9 @@ public:
 
     /* Alias two properties in the type information for obj. */
     inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
+
+    /* Mark an array type as being not packed and, possibly, not dense. */
+    inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
 
   private:
     /* To silence MSVC warning about using 'this' in a member initializer. */
