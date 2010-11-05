@@ -624,16 +624,6 @@ PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
 }
 
 nsresult
-PluginModuleParent::NotifyPainted(NPP instance)
-{
-    PluginInstanceParent* i = InstCast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->NotifyPainted();
-}
-
-nsresult
 PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
 {
     PluginInstanceParent* i = InstCast(instance);
