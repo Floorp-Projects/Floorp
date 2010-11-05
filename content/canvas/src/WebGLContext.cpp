@@ -399,6 +399,16 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 #endif
 
+    // finally, try OSMesa
+    if (!gl) {
+        gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
+        if (!gl || !InitAndValidateGL()) {
+            gl = nsnull;
+        } else {
+            LogMessage("Using software rendering via OSMesa (THIS WILL BE SLOW)");
+        }
+    }
+
     if (!gl) {
         LogMessage("Can't get a usable WebGL context");
         return NS_ERROR_FAILURE;
