@@ -3014,15 +3014,18 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         if (aEvent->message == NS_MOUSE_PIXEL_SCROLL) {
-          if (action == MOUSE_SCROLL_N_LINES) {
+          if (action == MOUSE_SCROLL_N_LINES ||
+              (msEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
              action = MOUSE_SCROLL_PIXELS;
           } else {
             // Do not scroll pixels when zooming
             action = -1;
           }
         } else if (msEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) {
-          if (action == MOUSE_SCROLL_N_LINES) {
-            // We shouldn't scroll lines when a pixel scroll event will follow.
+          if (action == MOUSE_SCROLL_N_LINES ||
+              (msEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
+            // Don't scroll lines when a pixel scroll event will follow.
+            // Also, don't do history scrolling or zooming for momentum scrolls.
             action = -1;
           }
         }
