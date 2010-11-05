@@ -103,6 +103,7 @@ public:
 
   static void SystemProtect(char* aAddr, size_t aSize, int aRights);
   static size_t SystemPageSize();
+  static size_t PageAlignedSize(size_t aSize);
 };
 
 } // namespace ipc
