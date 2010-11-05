@@ -1088,6 +1088,14 @@ private:
     JSParseNode *functionExpr();
     JSParseNode *statements();
     JSParseNode *statement();
+    JSParseNode *switchStatement();
+    JSParseNode *forStatement();
+    JSParseNode *tryStatement();
+    JSParseNode *withStatement();
+#if JS_HAS_BLOCK_SCOPE
+    JSParseNode *letStatement();
+#endif
+    JSParseNode *expressionStatement();
     JSParseNode *variables(bool inLetHead);
     JSParseNode *expr();
     JSParseNode *assignExpr();
