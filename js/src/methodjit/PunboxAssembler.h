@@ -324,6 +324,7 @@ class PunboxAssembler : public JSC::MacroAssembler
         } else {
             loadPayload(address, dataReg);
         }
+        return notHole;
     }
 };
 
