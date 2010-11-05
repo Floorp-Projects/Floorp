@@ -5993,8 +5993,50 @@ MOZ_ARG_DISABLE_BOOL(webm,
     MOZ_WEBM=,
     MOZ_WEBM=1)
 
+dnl system libvpx Support
+dnl ========================================================
+MOZ_ARG_WITH_STRING(system-libvpx,
+[  --with-system-libvpx=[PFX]
+                          Use system libvpx [installed at prefix PFX]],
+    LIBVPX_DIR=$withval)
+
+MOZ_NATIVE_LIBVPX=
+MOZ_LIBVPX_INCLUDES=
+MOZ_LIBVPX_LIBS=
+
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
+
+    if test -n "$LIBVPX_DIR" -a "$LIBVPX_DIR" != no; then
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_LDFLAGS=$LDFLAGS
+        _SAVE_LIBS=$LIBS
+        if test "${LIBVPX_DIR}" = "yes"; then
+            LIBVPX_DIR=/usr
+        fi
+        CFLAGS="-I${LIBVPX_DIR}/include $CFLAGS"
+        LDFLAGS="-L${LIBVPX_DIR}/lib $LDFLAGS"
+        AC_CHECK_HEADER(vpx/vpx_decoder.h,
+                        [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
+                             AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
+                         fi],
+                        AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
+        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver,
+                     [MOZ_NATIVE_LIBVPX=1
+                      MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
+                      MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
+                     ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
+        CFLAGS=$_SAVE_CFLAGS
+        LDFLAGS=$_SAVE_LDFLAGS
+        LIBS=$_SAVE_LIBS
+    fi
+fi
+
+AC_SUBST(MOZ_NATIVE_LIBVPX)
+AC_SUBST(MOZ_LIBVPX_INCLUDES)
+AC_SUBST(MOZ_LIBVPX_LIBS)
+
+if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
     case "$target_cpu" in
