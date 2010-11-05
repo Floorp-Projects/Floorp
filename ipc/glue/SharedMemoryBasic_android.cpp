@@ -70,15 +70,11 @@ LogError(const char* what)
 
 SharedMemoryBasic::SharedMemoryBasic()
   : mShmFd(-1)
-  , mAllocSize(0)
-  , mSize(0)
   , mMemory(nsnull)
 { }
 
 SharedMemoryBasic::SharedMemoryBasic(const Handle& aHandle)
   : mShmFd(aHandle.fd)
-  , mAllocSize(0)
-  , mSize(0)
   , mMemory(nsnull)
 { }
 
@@ -107,7 +103,6 @@ SharedMemoryBasic::Create(size_t aNbytes)
   }
 
   mShmFd = shmfd;
-  mAllocSize = aNbytes;
   Created(aNbytes);
   return true;
 }
@@ -128,7 +123,6 @@ SharedMemoryBasic::Map(size_t nBytes)
     return false;
   }
 
-  mSize = nBytes;
   Mapped(nBytes);
   return true;
 }
@@ -157,12 +151,10 @@ SharedMemoryBasic::Unmap()
     return;
   }
 
-  if (munmap(mMemory, mSize)) {
+  if (munmap(mMemory, Size())) {
     LogError("ShmemAndroid::Unmap()");
   }
   mMemory = nsnull;
-  mSize = 0;
-  Unmapped(mSize);
 }
 
 void
@@ -170,9 +162,6 @@ SharedMemoryBasic::Destroy()
 {
   if (mShmFd > 0) {
     close(mShmFd);
-    if (mAllocSize) {
-      Destroyed(mAllocSize);
-    }
   }
 }
 

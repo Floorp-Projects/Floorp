@@ -67,9 +67,9 @@ public:
     TYPE_UNKNOWN
   };
 
-  virtual ~SharedMemory() { }
+  virtual ~SharedMemory() { Unmapped(); Destroyed(); }
 
-  virtual size_t Size() const = 0;
+  size_t Size() const { return mMappedSize; }
 
   virtual void* memory() const = 0;
 
@@ -115,10 +115,19 @@ protected:
   //   Created (Mapped Unmapped)* Destroy
   //
   // but this isn't checked.
-  static void Created(size_t aNBytes);
-  static void Mapped(size_t aNBytes);
-  static void Unmapped(size_t aNBytes);
-  static void Destroyed(size_t aNBytes);
+  void Created(size_t aNBytes);
+  void Mapped(size_t aNBytes);
+  void Unmapped();
+  void Destroyed();
+
+  // The size of the shmem region requested in Create(), if
+  // successful.  SharedMemorys that are opened from a foreign handle
+  // have an alloc size of 0, even though they have access to the
+  // alloc-size information.
+  size_t mAllocSize;
+  // The size of the region mapped in Map(), if successful.  All
+  // SharedMemorys that are mapped have a non-zero mapped size.
+  size_t mMappedSize;
 };
 
 } // namespace ipc
