@@ -1405,7 +1405,9 @@ public:
 
   void SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
                              const nsIntRegion& aValidRegion,
-                             float aXResolution, float aYResolution);
+                             float aXResolution, float aYResolution,
+                             const OptionalThebesBuffer& aReadOnlyFrontBuffer,
+                             const nsIntRegion& aFrontUpdatedRegion);
 
   virtual void Disconnect()
   {
@@ -1446,15 +1448,24 @@ void
 BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
                                                   const nsIntRegion& aValidRegion,
                                                   float aXResolution,
-                                                  float aYResolution);
+                                                  float aYResolution,
+                                                  const OptionalThebesBuffer& aReadOnlyFrontBuffer,
+                                                  const nsIntRegion& aFrontUpdatedRegion)
 {
   mBackBuffer = aBuffer.buffer();
-  mValidRegion = aValidRegion;
-  mXResolution = aXResolution;
-  mYResolution = aYResolution;
-
   nsRefPtr<gfxASurface> backBuffer = BasicManager()->OpenDescriptor(mBackBuffer);
-  mBuffer.SetBackingBuffer(backBuffer, aBuffer.rect(), aBuffer.rotation());
+
+  if (OptionalThebesBuffer::Tnull_t == aReadOnlyFrontBuffer.type()) {
+    // We didn't get back a read-only ref to our old back buffer (the
+    // parent's new front buffer).  If the parent is pushing updates
+    // to a texture it owns, then we probably got back the same buffer
+    // we pushed in the update and all is well.  If not, ...
+    mValidRegion = aValidRegion;
+    mXResolution = aXResolution;
+    mYResolution = aYResolution;
+    mBuffer.SetBackingBuffer(backBuffer, aBuffer.rect(), aBuffer.rotation());
+    return;
+  }
 }
 
 void
@@ -1845,7 +1856,8 @@ public:
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       float* aNewXResolution, float* aNewYResolution);
+       float* aNewXResolution, float* aNewYResolution,
+       OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
 
   virtual void DestroyFrontBuffer()
   {
@@ -1907,7 +1919,9 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
                              const nsIntRegion& aUpdatedRegion,
                              ThebesBuffer* aNewBack,
                              nsIntRegion* aNewBackValidRegion,
-                             float* aNewXResolution, float* aNewYResolution)
+                             float* aNewXResolution, float* aNewYResolution,
+                             OptionalThebesBuffer* aReadOnlyFront,
+                             nsIntRegion* aFrontUpdatedRegion)
 {
   // This code relies on Swap() arriving *after* attribute mutations.
   aNewBack->buffer() = mFrontBufferDescriptor;
@@ -1942,6 +1956,9 @@ BasicShadowThebesLayer::Swap(const ThebesBuffer& aNewFront,
     getter_AddRefs(unused), &aNewBack->rect(), &aNewBack->rotation());
 
   mFrontBufferDescriptor = aNewFront.buffer();
+
+  *aReadOnlyFront = null_t();
+  aFrontUpdatedRegion->SetEmpty();
 }
 
 void
@@ -2373,7 +2390,8 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
         BasicShadowableThebesLayer* thebes = GetBasicShadowable(obs)->AsThebes();
         thebes->SetBackBufferAndAttrs(
           obs.newBackBuffer(),
-          obs.newValidRegion(), obs.newXResolution(), obs.newYResolution());
+          obs.newValidRegion(), obs.newXResolution(), obs.newYResolution(),
+          obs.readOnlyFrontBuffer(), obs.frontUpdatedRegion());
         break;
       }
       case EditReply::TOpBufferSwap: {
