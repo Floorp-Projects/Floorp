@@ -45,20 +45,20 @@ var Feedback = {
     // A simple frame script to fill in the referrer page
     messageManager.loadFrameScript("data:,addMessageListener('Feedback:InitPage', function(m) { content.document.getElementById('id_url').value = m.json.referrer; });", true);
 
-    let feedbackPrefs = document.getElementById("feedback-tools").childNodes;
-    for (let i = 0; i < feedbackPrefs.length; i++) {
-      let pref = feedbackPrefs[i].getAttribute("pref");
-      if (!pref)
-        continue;
-
-      let value = Services.prefs.getPrefType(pref) == Ci.nsIPrefBranch.PREF_INVALID ? false : Services.prefs.getBoolPref(pref);
-      Feedback._prefs.push({ "name": pref, "value": value });
-    }
-
     // Delay the widget initialization during startup.
     window.addEventListener("UIReadyDelayed", function(aEvent) {
       window.removeEventListener(aEvent.type, arguments.callee, false);
       document.getElementById("feedback-container").hidden = false;
+
+      let feedbackPrefs = document.getElementById("feedback-tools").childNodes;
+      for (let i = 0; i < feedbackPrefs.length; i++) {
+        let pref = feedbackPrefs[i].getAttribute("pref");
+        if (!pref)
+          continue;
+  
+        let value = Services.prefs.getPrefType(pref) == Ci.nsIPrefBranch.PREF_INVALID ? false : Services.prefs.getBoolPref(pref);
+        Feedback._prefs.push({ "name": pref, "value": value });
+      }
     }, false);
   },
 
