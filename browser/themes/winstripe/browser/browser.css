@@ -1864,7 +1864,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 .geolocation-text-link {
-  padding-top: 5px;
+  margin-top: 17px;
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
