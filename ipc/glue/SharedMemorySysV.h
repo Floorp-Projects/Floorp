@@ -74,33 +74,21 @@ public:
 
   SharedMemorySysV() :
     mHandle(-1),
-    mData(nsnull),
-    mAllocSize(0),
-    mSize(0)
+    mData(nsnull)
   {
   }
 
   SharedMemorySysV(Handle aHandle) :
     mHandle(aHandle),
-    mData(nsnull),
-    mAllocSize(0),
-    mSize(0)
+    mData(nsnull)
   {
   }
 
   virtual ~SharedMemorySysV()
   {
-    if (memory()) {
-      Unmapped(mSize);
-    }
-    if (mAllocSize) {
-      Destroyed(mAllocSize);
-    }
-
     shmdt(mData);
     mHandle = -1;
     mData = nsnull;
-    mSize = 0;
   }
 
   NS_OVERRIDE
@@ -143,7 +131,6 @@ public:
     shmctl(mHandle, IPC_RMID, 0);
 
     mData = mem;
-    mSize = nBytes;
 
 #ifdef NS_DEBUG
     struct shmid_ds info;
@@ -156,12 +143,6 @@ public:
 
     Mapped(nBytes);
     return true;
-  }
-
-  NS_OVERRIDE
-  virtual size_t Size() const
-  {
-    return mSize;
   }
 
   NS_OVERRIDE
@@ -195,8 +176,6 @@ public:
 private:
   Handle mHandle;
   void* mData;
-  size_t mAllocSize;
-  size_t mSize;
 };
 
 } // namespace ipc

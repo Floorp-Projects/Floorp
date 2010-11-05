@@ -63,6 +63,8 @@ NS_MEMORY_REPORTER_IMPLEMENT(ShmemMapped,
                              nsnull)
 
 SharedMemory::SharedMemory()
+  : mAllocSize(0)
+  , mMappedSize(0)
 {
   // NB: SharedMemory is main-thread-only at the moment, but that may
   // change soon
@@ -82,32 +84,36 @@ SharedMemory::PageAlignedSize(size_t aSize)
   return pageSize * nPagesNeeded;
 }
 
-/*static*/ void
+void
 SharedMemory::Created(size_t aNBytes)
 {
-  gShmemAllocated += aNBytes;
+  mAllocSize = aNBytes;
+  gShmemAllocated += mAllocSize;
 }
 
-/*static*/ void
+void
 SharedMemory::Mapped(size_t aNBytes)
 {
-  gShmemMapped += aNBytes;
+  mMappedSize = aNBytes;
+  gShmemMapped += mMappedSize;
 }
 
-/*static*/ void
-SharedMemory::Unmapped(size_t aNBytes)
+void
+SharedMemory::Unmapped()
 {
-  NS_ABORT_IF_FALSE(gShmemMapped >= PRInt64(aNBytes),
+  NS_ABORT_IF_FALSE(gShmemMapped >= PRInt64(mMappedSize),
                     "Can't unmap more than mapped");
-  gShmemMapped -= aNBytes;
+  gShmemMapped -= mMappedSize;
+  mMappedSize = 0;
 }
 
 /*static*/ void
-SharedMemory::Destroyed(size_t aNBytes)
+SharedMemory::Destroyed()
 {
-  NS_ABORT_IF_FALSE(gShmemAllocated >= PRInt64(aNBytes),
+  NS_ABORT_IF_FALSE(gShmemAllocated >= PRInt64(mAllocSize),
                     "Can't destroy more than allocated");
-  gShmemAllocated -= aNBytes;
+  gShmemAllocated -= mAllocSize;
+  mAllocSize = 0;
 }
 
 } // namespace ipc
