@@ -323,7 +323,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
                               nsToolkit::mDllInstance, NULL);
   NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
 
-  ShowWindow(hWnd, SW_SHOW);
+  ShowWindow(hWnd, SW_SHOWNOACTIVATE);
   TITLEBARINFOEX info = {0};
   info.cbSize = sizeof(TITLEBARINFOEX);
   SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
