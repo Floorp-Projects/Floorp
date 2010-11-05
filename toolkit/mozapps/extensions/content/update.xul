@@ -51,7 +51,7 @@
 <wizard id="updateWizard"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;"
-        windowtype="Update:Wizard"
+        windowtype="Addons:Compatibility"
         branded="true"
         onload="gUpdateWizard.init();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"

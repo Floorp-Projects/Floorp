@@ -98,6 +98,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_594497_history_arrow_keys.js \
 	browser_webconsole_bug_588342_document_focus.js \
 	browser_webconsole_bug_595934_message_categories.js \
+	browser_webconsole_bug_601352_scroll.js \
 	head.js \
 	$(NULL)
 

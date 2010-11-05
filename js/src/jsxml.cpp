@@ -1763,7 +1763,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     {
         Parser parser(cx);
         if (parser.init(chars, length, NULL, filename, lineno)) {
-            JSObject *scopeChain = JS_GetScopeChain(cx);
+            JSObject *scopeChain = GetScopeChain(cx);
             if (!scopeChain)
                 return NULL;
             JSParseNode *pn = parser.parseXMLText(scopeChain, false);
@@ -4743,7 +4743,7 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *v,
 }
 
 static JSBool
-xml_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+xml_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
         vp->setUndefined();
@@ -7210,7 +7210,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     JSObject *ns, *obj, *tmp;
     jsval v;
 
-    JSObject *scopeChain = JS_GetScopeChain(cx);
+    JSObject *scopeChain = GetScopeChain(cx);
 
     obj = NULL;
     for (tmp = scopeChain; tmp; tmp = tmp->getParent()) {

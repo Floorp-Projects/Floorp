@@ -53,6 +53,7 @@ namespace layers {
 
 struct Edit;
 struct EditReply;
+class OptionalThebesBuffer;
 class PLayerChild;
 class PLayersChild;
 class PLayersParent;
@@ -505,7 +506,8 @@ public:
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       float* aNewXResolution, float* aNewYResolution) = 0;
+       float* aNewXResolution, float* aNewYResolution,
+       OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY

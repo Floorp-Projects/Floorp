@@ -67,9 +67,9 @@ public:
     TYPE_UNKNOWN
   };
 
-  virtual ~SharedMemory() { }
+  virtual ~SharedMemory() { Unmapped(); Destroyed(); }
 
-  virtual size_t Size() const = 0;
+  size_t Size() const { return mMappedSize; }
 
   virtual void* memory() const = 0;
 
@@ -103,6 +103,31 @@ public:
 
   static void SystemProtect(char* aAddr, size_t aSize, int aRights);
   static size_t SystemPageSize();
+  static size_t PageAlignedSize(size_t aSize);
+
+protected:
+  SharedMemory();
+
+  // Implementations should call these methods on shmem usage changes,
+  // but *only if* the OS-specific calls are known to have succeeded.
+  // The methods are expected to be called in the pattern
+  //
+  //   Created (Mapped Unmapped)* Destroy
+  //
+  // but this isn't checked.
+  void Created(size_t aNBytes);
+  void Mapped(size_t aNBytes);
+  void Unmapped();
+  void Destroyed();
+
+  // The size of the shmem region requested in Create(), if
+  // successful.  SharedMemory instances that are opened from a
+  // foreign handle have an alloc size of 0, even though they have
+  // access to the alloc-size information.
+  size_t mAllocSize;
+  // The size of the region mapped in Map(), if successful.  All
+  // SharedMemorys that are mapped have a non-zero mapped size.
+  size_t mMappedSize;
 };
 
 } // namespace ipc

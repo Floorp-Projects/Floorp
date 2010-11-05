@@ -13,11 +13,12 @@ include xul/reftest.list
 == passwd-1.html passwd-ref.html
 != passwd-2.html passwd-ref.html
 == passwd-3.html passwd-ref.html
-== passwd-4.html passwd-ref.html
+asserts(1) == passwd-4.html passwd-ref.html # bug 596901
 == emptypasswd-1.html emptypasswd-ref.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
 == spellcheck-1.html spellcheck-ref.html
+== caret_on_focus.html caret_on_focus-ref.html
 != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
 == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
 == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html

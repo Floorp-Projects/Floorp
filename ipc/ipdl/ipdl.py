@@ -125,7 +125,7 @@ print >>ipcmsgstart, """
   LastMsgIndex
 };
 
-COMPILE_ASSERT(LastMsgIndex <= 64, need_to_update_IPC_MESSAGE_MACRO);
+COMPILE_ASSERT(LastMsgIndex <= 65536, need_to_update_IPC_MESSAGE_MACRO);
 
 #endif // ifndef IPCMessageStart_h
 """

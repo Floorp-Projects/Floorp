@@ -48,19 +48,7 @@
 namespace js {
 namespace mjit {
 
-class BaseCompiler
-{
-  protected:
-    JSContext *cx;
-
-  public:
-    BaseCompiler() : cx(NULL)
-    { }
-
-    BaseCompiler(JSContext *cx) : cx(cx)
-    { }
-
-  protected:
+struct MacroAssemblerTypedefs {
     typedef JSC::MacroAssembler::Label Label;
     typedef JSC::MacroAssembler::Imm32 Imm32;
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
@@ -77,11 +65,25 @@ class BaseCompiler
     typedef JSC::MacroAssembler::DataLabel32 DataLabel32;
     typedef JSC::FunctionPtr FunctionPtr;
     typedef JSC::RepatchBuffer RepatchBuffer;
-    typedef JSC::CodeBlock CodeBlock;
     typedef JSC::CodeLocationLabel CodeLocationLabel;
-    typedef JSC::JITCode JITCode;
+    typedef JSC::CodeLocationCall CodeLocationCall;
     typedef JSC::ReturnAddressPtr ReturnAddressPtr;
     typedef JSC::MacroAssemblerCodePtr MacroAssemblerCodePtr;
+};
+
+class BaseCompiler : public MacroAssemblerTypedefs
+{
+  protected:
+    JSContext *cx;
+
+  public:
+    BaseCompiler() : cx(NULL)
+    { }
+
+    BaseCompiler(JSContext *cx) : cx(cx)
+    { }
+
+  protected:
 
     JSC::ExecutablePool *
     getExecPool(size_t size) {
@@ -91,8 +93,7 @@ class BaseCompiler
   public:
     static JSC::ExecutablePool *
     GetExecPool(JSContext *cx, size_t size) {
-        ThreadData *jaegerData = &JS_METHODJIT_DATA(cx);
-        JSC::ExecutablePool *pool = jaegerData->execAlloc->poolForSize(size);
+        JSC::ExecutablePool *pool = cx->jaegerCompartment()->poolForSize(size);
         if (!pool)
             js_ReportOutOfMemory(cx);
         return pool;
@@ -126,6 +127,12 @@ class LinkerHelper : public JSC::LinkBuffer
             return NULL;
         }
         return ep;
+    }
+
+    void maybeLink(MaybeJump jump, JSC::CodeLocationLabel label) {
+        if (!jump.isSet())
+            return;
+        link(jump.get(), label);
     }
 };
 

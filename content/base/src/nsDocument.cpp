@@ -4371,7 +4371,8 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIContent> content;
   PRInt32 ns = nodeInfo->NamespaceID();
-  rv = NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(), PR_FALSE);
+  rv = NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(),
+                     NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);
@@ -6848,7 +6849,8 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamesp
                                 getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewElement(aResult, elementType, nodeInfo.forget(), PR_FALSE);
+  return NS_NewElement(aResult, elementType, nodeInfo.forget(),
+                       NOT_FROM_PARSER);
 }
 
 PRBool
