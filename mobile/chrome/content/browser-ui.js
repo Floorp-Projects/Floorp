@@ -1469,8 +1469,12 @@ var NewTabPopup = {
   },
 
   handleEvent: function nt_handleEvent(aEvent) {
+    // Bail early and fast
+    if (!aEvent.detail)
+      return;
+
     let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
-    if (tabsVisibility != 1.0 && aEvent.detail)
+    if (tabsVisibility != 1.0)
       this.show(aEvent.originalTarget);
   }
 };
