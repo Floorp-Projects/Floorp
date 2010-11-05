@@ -1496,6 +1496,13 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
     return;
   }
 
+  MOZ_LAYERS_LOG(("BasicShadowableThebes(%p): reading back <x=%d,y=%d,w=%d,h=%d>",
+                  this,
+                  aFrontUpdatedRegion.GetBounds().x,
+                  aFrontUpdatedRegion.GetBounds().y,
+                  aFrontUpdatedRegion.GetBounds().width,
+                  aFrontUpdatedRegion.GetBounds().height));
+
   const ThebesBuffer roFront = aReadOnlyFrontBuffer.get_ThebesBuffer();
   nsRefPtr<gfxASurface> roFrontBuffer = BasicManager()->OpenDescriptor(roFront.buffer());
   mBuffer.SetBackingBufferAndUpdateFrom(
@@ -1536,6 +1543,10 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
   if (!HasShadow()) {
     return BasicThebesLayer::CreateBuffer(aType, aSize);
   }
+
+  MOZ_LAYERS_LOG(("BasicShadowableThebes(%p): creating %d x %d buffer(x2)",
+                  this,
+                  aSize.width, aSize.height));
 
   if (IsSurfaceDescriptorValid(mBackBuffer)) {
     BasicManager()->DestroyedThebesBuffer(BasicManager()->Hold(this),
