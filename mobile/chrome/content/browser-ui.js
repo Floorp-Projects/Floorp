@@ -2416,10 +2416,20 @@ var MenuListHelperUI = {
     return this._title = document.getElementById("menulist-title");
   },
 
+  _firePopupEvent: function firePopupEvent(aEventName) {
+    let menupopup = this._currentList.menupopup;
+    if (menupopup.hasAttribute(aEventName)) {
+      let func = new Function("event", menupopup.getAttribute(aEventName));
+      func.call(this);
+    }
+  },
+
   _currentList: null,
   show: function mn_show(aMenulist) {
     this._currentList = aMenulist;
+    this._container.setAttribute("for", aMenulist.id);
     this._title.value = aMenulist.title || "";
+    this._firePopupEvent("onpopupshowing");
 
     let container = this._container;
     let listbox = this._popup.lastChild;
@@ -2430,6 +2440,11 @@ var MenuListHelperUI = {
     for (let i = 0; i < children.length; i++) {
       let child = children[i];
       let item = document.createElement("richlistitem");
+      if (child.disabled)
+        item.setAttribute("disabled", "true");
+      if (child.hidden)
+        item.setAttribute("hidden", "true");
+
       // Add selected as a class name instead of an attribute to not being overidden
       // by the richlistbox behavior (it sets the "current" and "selected" attribute
       item.setAttribute("class", "menulist-command prompt-button" + (child.selected ? " selected" : ""));
@@ -2453,6 +2468,7 @@ var MenuListHelperUI = {
 
   hide: function mn_hide() {
     this._currentList = null;
+    this._container.removeAttribute("for");
     this._container.hidden = true;
     window.removeEventListener("resize", this, true);
     BrowserUI.popPopup(this);

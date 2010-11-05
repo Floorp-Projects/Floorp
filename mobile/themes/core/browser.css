@@ -437,6 +437,11 @@ toolbarbutton.choice-remotetabs {
   list-style-image: url("chrome://browser/skin/images/console-default-64.png");
 }
 
+/* preferences panel UI -----------------------------------------------------*/
+#menulist-container[for="prefs-homepage-options"] .menulist-command.selected {
+  pointer-events: none;
+}
+
 /* addons panel UI   ------------------------------------------------------- */
 @media (min-width: 500px) {
   #addons-repo {
@@ -1031,6 +1036,12 @@ pageaction {
   -moz-box-align: center;
 }
 
+.prompt-button[disabled="true"],
+.context-command[disabled="true"] {
+  pointer-events: none;
+  color: #aaa !important;
+}
+
 .prompt-button[selected="true"],
 .context-command[selected="true"] {
   background: transparent;
@@ -1066,7 +1077,7 @@ pageaction {
 }
 
 .prompt-button:not([disabled]):hover:active,
-.context-command:hover:active,
+.context-command:not([disabled]):hover:active,
 pageaction:not([disabled]):hover:active {
   background: url("chrome://browser/skin/images/popup-selected-item-hdpi.png") repeat-x !important;
   background-origin: border-box !important;
@@ -1397,7 +1408,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
   background-color: #8db8d8;
 }
 
-echrome-select-option[disabled="true"] {
+.chrome-select-option[disabled="true"] {
   pointer-events: none;
   color: #aaa !important;
 }

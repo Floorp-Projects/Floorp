@@ -436,7 +436,7 @@
                 </setting>
                 <setting id="prefs-homepage" title="&homepage.title;" type="control">
                   <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
-                    <menupopup>
+                    <menupopup onpopupshowing="PreferencesView.updateHomePageList();">
                       <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
                       <menuitem id="prefs-homepage-none" label="&homepage.none;" value="none"/>
                       <menuitem id="prefs-homepage-currentpage" label="&homepage.currentpage;" value="currentpage"/>
