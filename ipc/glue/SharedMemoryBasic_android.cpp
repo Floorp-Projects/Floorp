@@ -70,12 +70,14 @@ LogError(const char* what)
 
 SharedMemoryBasic::SharedMemoryBasic()
   : mShmFd(-1)
+  , mAllocSize(0)
   , mSize(0)
   , mMemory(nsnull)
 { }
 
 SharedMemoryBasic::SharedMemoryBasic(const Handle& aHandle)
   : mShmFd(aHandle.fd)
+  , mAllocSize(0)
   , mSize(0)
   , mMemory(nsnull)
 { }
@@ -83,9 +85,7 @@ SharedMemoryBasic::SharedMemoryBasic(const Handle& aHandle)
 SharedMemoryBasic::~SharedMemoryBasic()
 {
   Unmap();
-  if (mShmFd > 0) {
-    close(mShmFd);
-  }
+  Destroy();
 }
 
 bool
@@ -107,6 +107,7 @@ SharedMemoryBasic::Create(size_t aNbytes)
   }
 
   mShmFd = shmfd;
+  mAllocSize = aNbytes;
   return true;
 }
 
@@ -159,6 +160,14 @@ SharedMemoryBasic::Unmap()
   }
   mMemory = nsnull;
   mSize = 0;
+}
+
+void
+SharedMemoryBasic::Destroy()
+{
+  if (mShmFd > 0) {
+    close(mShmFd);
+  }
 }
 
 } // namespace ipc

@@ -75,6 +75,7 @@ public:
   SharedMemorySysV() :
     mHandle(-1),
     mData(nsnull),
+    mAllocSize(0),
     mSize(0)
   {
   }
@@ -82,6 +83,7 @@ public:
   SharedMemorySysV(Handle aHandle) :
     mHandle(aHandle),
     mData(nsnull),
+    mAllocSize(0),
     mSize(0)
   {
   }
@@ -103,6 +105,7 @@ public:
       return false;
 
     mHandle = id;
+    mAllocSize = aNbytes;
 
     if (!Map(aNbytes))
       return false;
@@ -187,6 +190,7 @@ public:
 private:
   Handle mHandle;
   void* mData;
+  size_t mAllocSize;
   size_t mSize;
 };
 
