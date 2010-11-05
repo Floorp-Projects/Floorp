@@ -82,21 +82,5 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-# Force a rebuild of nsImageModule when either of MOZ_IMG_{DE,EN}CODERS changes
-
-GARBAGE += _img_list nsImgBuildDefines.h
-
-export::
-	{ \
-	$(foreach d,$(MOZ_IMG_ENCODERS), \
-		echo "#define IMG_BUILD_ENCODER_${d}" ; ) \
-	} > nsImgBuildDefines.tmp
-	@if `cmp -s nsImgBuildDefines.h nsImgBuildDefines.tmp`; then \
-		rm -f nsImgBuildDefines.tmp; \
-	else \
-		rm -f nsImgBuildDefines.h; \
-		mv nsImgBuildDefines.tmp nsImgBuildDefines.h; \
-	fi
-
 include $(topsrcdir)/config/rules.mk
 
