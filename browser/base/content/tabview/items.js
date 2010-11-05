@@ -162,6 +162,7 @@ Item.prototype = {
     Utils.assert(Utils.isRect(this.bounds), 'Subclass must provide bounds');
 
     this.container = container;
+    this.$container = iQ(container);
 
     if (this.debug) {
       this.$debug = iQ('<div>')
