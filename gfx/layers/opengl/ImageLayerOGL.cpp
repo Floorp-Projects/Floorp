@@ -428,12 +428,10 @@ ImageLayerOGL::RenderLayer(int,
 
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture.GetTextureID());
-  
-    ColorTextureLayerProgram *program;
-    if (cairoImage->mASurfaceAsGLContext)
-      program = mOGLManager->GetRGBALayerProgram();
-    else
-      program = mOGLManager->GetBGRALayerProgram();
+
+    ColorTextureLayerProgram *program =
+      mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                        cairoImage->mASurfaceAsGLContext != 0);
 
     ApplyFilter(mFilter);
 
@@ -793,7 +791,9 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
-  ColorTextureLayerProgram *program = mOGLManager->GetBGRALayerProgram();
+  ColorTextureLayerProgram *program =
+    mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                      mTexImage->IsRGB());
 
   ApplyFilter(mFilter);
 
