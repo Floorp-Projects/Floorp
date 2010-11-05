@@ -103,9 +103,12 @@ public:
 
 private:
   void Unmap();
+  void Destroy();
 
   // The /dev/ashmem fd we allocate.
   int mShmFd;
+  // Allocated size, 0 if unallocated
+  size_t mAllocSize;
   // Mapped size, 0 if unmapped.
   size_t mSize;
   // Pointer to mapped region, null if unmapped.

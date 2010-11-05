@@ -58,21 +58,27 @@ class SharedMemoryBasic : public SharedMemory
 public:
   typedef base::SharedMemoryHandle Handle;
 
-  SharedMemoryBasic() :
-    mSize(0)
+  SharedMemoryBasic()
+    : mAllocSize(0)
+    , mSize(0)
   {
   }
 
-  SharedMemoryBasic(const Handle& aHandle) :
-    mSharedMemory(aHandle, false),
-    mSize(0)
+  SharedMemoryBasic(const Handle& aHandle)
+    : mSharedMemory(aHandle, false)
+    , mAllocSize(0)
+    , mSize(0)
   {
   }
 
   NS_OVERRIDE
   virtual bool Create(size_t aNbytes)
   {
-    return mSharedMemory.Create("", false, false, aNbytes);
+    bool ok = mSharedMemory.Create("", false, false, aNbytes);
+    if (ok) {
+      mAllocSize = aNbytes;
+    }
+    return ok;
   }
 
   NS_OVERRIDE
@@ -124,6 +130,7 @@ public:
 
 private:
   base::SharedMemory mSharedMemory;
+  size_t mAllocSize;
   // NB: we have to track this because shared_memory_win.cc doesn't
   size_t mSize;
 };
