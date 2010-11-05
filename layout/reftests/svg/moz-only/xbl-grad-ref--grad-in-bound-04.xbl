@@ -1,0 +1,12 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="lime">
+    <content>
+      <rect xmlns="http://www.w3.org/2000/svg"
+            width="100%" height="100%" fill="url(xbl-grad-ref--grad-in-bound-04.svg#grad) red"/>
+    </content>
+  </binding>
+</bindings>

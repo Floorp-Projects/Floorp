@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=587585 -->
+<!DOCTYPE html>
+<title>Test mask reference in binding for mask in bound document with external binding</title>
+
+<body style="margin:0">
+  <div style="-moz-binding: url(mask-html-xbl-bound-01.xbl#lime);"></div>
+  
+  <svg height="0">
+    <mask id="m1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+      <linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1">
+        <stop stop-color="white" offset="0"/>
+        <stop stop-color="white" stop-opacity="0" offset="1"/>
+      </linearGradient>
+      <circle cx="0.25" cy="0.25" r="0.25" id="circle" fill="white"/>
+      <rect x="0.5" y="0" width="0.5" height="1" fill="url(#g)"/>
+    </mask>
+  </svg>
+</body>
