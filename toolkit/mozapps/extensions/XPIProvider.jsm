@@ -1781,11 +1781,20 @@ var XPIProvider = {
    * @param  aUpdateCompatibility
    *         true to update add-ons appDisabled property when the application
    *         version has changed
+   * @param  aMigrateData
+   *         an object generated from a previous version of the database
+   *         holding information about what add-ons were previously userDisabled
+   *         and updated compatibility information if present
+   * @param  aActiveBundles
+   *         When performing recovery after startup this will be an array of
+   *         persistent descriptors of add-ons that are known to be active,
+   *         otherwise it will be null
    * @return true if a change requiring a restart was detected
    */
   processFileChanges: function XPI_processFileChanges(aState, aManifests,
                                                       aUpdateCompatibility,
-                                                      aMigrateData) {
+                                                      aMigrateData,
+                                                      aActiveBundles) {
     let visibleAddons = {};
 
     /**
@@ -2032,8 +2041,11 @@ var XPIProvider = {
     function addMetadata(aInstallLocation, aId, aAddonState, aMigrateData) {
       LOG("New add-on " + aId + " installed in " + aInstallLocation.name);
 
-      // Check the updated manifests lists for a manifest for this add-on
-      let newAddon = aManifests[aInstallLocation.name][aId];
+      let newAddon = null;
+      // Check the updated manifests lists for the install location, If there
+      // is no manifest for the add-on ID then newAddon will be undefined
+      if (aInstallLocation.name in aManifests)
+        newAddon = aManifests[aInstallLocation.name][aId];
 
       try {
         // Otherwise load the manifest from the add-on
@@ -2082,6 +2094,24 @@ var XPIProvider = {
           if ("targetApplications" in aMigrateData)
             newAddon.applyCompatibilityUpdate(aMigrateData, true);
         }
+      }
+
+      // If we have a list of what add-ons should be marked as active then use it
+      if (aActiveBundles) {
+        // For themes we know which is active by the current skin setting
+        if (newAddon.type == "theme")
+          newAddon.active = newAddon.internalName == XPIProvider.currentSkin;
+        else
+          newAddon.active = aActiveBundles.indexOf(aAddonState.descriptor) != -1;
+
+        // If the add-on isn't active and it isn't appDisabled then it is
+        // probably userDisabled
+        if (!newAddon.active && newAddon.visible && !newAddon.appDisabled)
+          newAddon.userDisabled = true;
+      }
+      else {
+        newAddon.active = (newAddon.visible && !newAddon.userDisabled &&
+                           !newAddon.appDisabled)
       }
 
       try {
@@ -2275,57 +2305,54 @@ var XPIProvider = {
     if (aAppChanged !== false)
       this.importPermissions();
 
-    // First install any new add-ons into the locations, we'll detect these when
-    // we read the install state
+    // If the application version has changed then the database information
+    // needs to be updated
+    let updateDatabase = aAppChanged;
+
+    // First install any new add-ons into the locations, if there are any
+    // changes then we must update the database with the information in the
+    // install locations
     let manifests = {};
-    let changed = this.processPendingFileChanges(manifests);
+    updateDatabase = this.processPendingFileChanges(manifests) | updateDatabase;
 
-    // We have to hold the DB scheme in prefs so we don't need to load the
-    // database to see if we need to migrate data
-    let schema = Prefs.getIntPref(PREF_DB_SCHEMA, 0);
+    // This will be true if the previous session made changes that affect the
+    // active state of add-ons but didn't commit them properly (normally due
+    // to the application crashing)
+    let hasPendingChanges = Prefs.getBoolPref(PREF_PENDING_OPERATIONS);
 
-    let migrateData = null;
-    let cache = null;
-    if (schema != DB_SCHEMA) {
-      // The schema has changed so migrate data from the old schema
-      migrateData = XPIDatabase.migrateData(schema);
-    }
+    // If the schema appears to have changed then we should update the database
+    updateDatabase |= DB_SCHEMA != Prefs.getIntPref(PREF_DB_SCHEMA, 0);
+
+    // Load the list of bootstrapped add-ons first so processFileChanges can
+    // modify it
+    this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
+                                         "{}"));
+
+    let state = this.getInstallLocationStates();
 
     // If the database exists then the previous file cache can be trusted
-    // otherwise create an empty database
-    let db = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    if (db.exists()) {
-      cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
-    }
-    else {
-      try {
-        LOG("Database is missing, recreating");
-        XPIDatabase.openConnection();
-        XPIDatabase.createSchema();
-      }
-      catch (e) {
-        try {
-          db.remove(true);
-        }
-        catch (e) {
-        }
-        return;
-      }
+    // otherwise the database needs to be recreated
+    let dbFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
+    updateDatabase |= !dbFile.exists();
+    if (!updateDatabase) {
+      // If the state has changed then we must update the database
+      let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
+      updateDatabase |= cache != JSON.stringify(state);
     }
 
     // Catch any errors during the main startup and rollback the database changes
     XPIDatabase.beginTransaction();
     try {
-      // Load the list of bootstrapped add-ons first so processFileChanges can
-      // modify it
-      this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
-                                           "{}"));
-      let state = this.getInstallLocationStates();
-      if (aAppChanged || changed || cache == null ||
-          cache != JSON.stringify(state)) {
+      let extensionListChanged = false;
+      // If the database needs to be updated then open it and then update it
+      // from the filesystem
+      if (updateDatabase || hasPendingChanges) {
+        let migrateData = XPIDatabase.openConnection(false);
+
         try {
-          changed = this.processFileChanges(state, manifests, aAppChanged,
-                                            migrateData);
+          extensionListChanged = this.processFileChanges(state, manifests,
+                                                         aAppChanged,
+                                                         migrateData, null);
         }
         catch (e) {
           ERROR("Error processing file changes: " + e);
@@ -2342,7 +2369,7 @@ var XPIProvider = {
 
       // If the application crashed before completing any pending operations then
       // we should perform them now.
-      if (changed || Prefs.getBoolPref(PREF_PENDING_OPERATIONS)) {
+      if (extensionListChanged || hasPendingChanges) {
         LOG("Updating database with changes to installed add-ons");
         XPIDatabase.updateActiveAddons();
         XPIDatabase.commitTransaction();
@@ -3419,151 +3446,302 @@ var XPIDatabase = {
   },
 
   /**
-   * Opens a new connection to the database file.
+   * Attempts to open the database file. If it fails it will try to delete the
+   * existing file and create an empty database. If that fails then it will
+   * open an in-memory database that can be used during this session.
    *
+   * @param  aDBFile
+   *         The nsIFile to open
    * @return the mozIStorageConnection for the database
    */
-  openConnection: function XPIDB_openConnection() {
+  openDatabaseFile: function XPIDB_openDatabaseFile(aDBFile) {
+    LOG("Opening database");
+    let connection = null;
+
+    // Attempt to open the database
+    try {
+      connection = Services.storage.openUnsharedDatabase(aDBFile);
+    }
+    catch (e) {
+      ERROR("Failed to open database (1st attempt): " + e);
+      try {
+        aDBFile.remove(true);
+      }
+      catch (e) {
+        ERROR("Failed to remove database that could not be opened: " + e);
+      }
+      try {
+        connection = Services.storage.openUnsharedDatabase(aDBFile);
+      }
+      catch (e) {
+        ERROR("Failed to open database (2nd attempt): " + e);
+
+        // If we have got here there seems to be no way to open the real
+        // database, instead open a temporary memory database so things will
+        // work for this session
+        return Services.storage.openSpecialDatabase("memory");
+      }
+    }
+
+    connection.executeSimpleSQL("PRAGMA synchronous = FULL");
+    connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+
+    return connection;
+  },
+
+  /**
+   * Opens a new connection to the database file.
+   *
+   * @param  aRebuildOnError
+   *         A boolean indicating whether add-on information should be loaded
+   *         from the install locations if the database needs to be rebuilt.
+   * @return the migration data from the database if it was an old schema or
+   *         null otherwise.
+   */
+  openConnection: function XPIDB_openConnection(aRebuildOnError) {
     this.initialized = true;
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     delete this.connection;
-    this.connection = Services.storage.openUnsharedDatabase(dbfile);
-    this.connection.executeSimpleSQL("PRAGMA synchronous = FULL");
-    this.connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+
+    this.connection = this.openDatabaseFile(dbfile);
+
+    let migrateData = null;
+    // If the database was corrupt or missing then the new blank database will
+    // have a schema version of 0.
+    let schemaVersion = this.connection.schemaVersion;
+    if (schemaVersion != DB_SCHEMA) {
+      // A non-zero schema version means that a schema has been successfully
+      // created in the database in the past so we might be able to get useful
+      // information from it
+      if (schemaVersion != 0) {
+        LOG("Migrating data from schema " + schemaVersion);
+        migrateData = this.getMigrateDataFromDatabase();
+
+        // Delete the existing database
+        this.connection.close();
+        try {
+          if (dbfile.exists())
+            dbfile.remove(true);
+
+          // Reopen an empty database
+          this.connection = this.openDatabaseFile(dbfile);
+        }
+        catch (e) {
+          ERROR("Failed to remove old database: " + e);
+          // If the file couldn't be deleted then fall back to an in-memory
+          // database
+          this.connection = Services.storage.openSpecialDatabase("memory");
+        }
+      }
+      else if (Prefs.getIntPref(PREF_DB_SCHEMA, 0) == 0) {
+        // Only migrate data from the RDF if we haven't done it before
+        LOG("Migrating data from extensions.rdf");
+        migrateData = this.getMigrateDataFromRDF();
+      }
+
+      // At this point the database should be completely empty
+      this.createSchema();
+
+      if (aRebuildOnError) {
+        let activeBundles = this.getActiveBundles();
+        WARN("Rebuilding add-ons database from installed extensions.");
+        this.beginTransaction();
+        try {
+          let state = XPIProvider.getInstallLocationStates();
+          XPIProvider.processFileChanges(state, {}, false, migrateData, activeBundles)
+          // Make sure to update the active add-ons and add-ons list on shutdown
+          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+          this.commitTransaction();
+        }
+        catch (e) {
+          ERROR("Error processing file changes: " + e);
+          dump(e.stack);
+          this.rollbackTransaction();
+        }
+      }
+    }
+
+    // If the database connection has a file open then it has the right schema
+    // by now so make sure the preferences reflect that. If not then there is
+    // an in-memory database open which means a problem opening and deleting the
+    // real database, clear the schema preference to force trying to load the
+    // database on the next startup
+    if (this.connection.databaseFile) {
+      Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+    }
+    else {
+      try {
+        Services.prefs.clearUserPref(PREF_DB_SCHEMA);
+      }
+      catch (e) {
+        // The preference may not be defined
+      }
+    }
+    Services.prefs.savePrefFile(null);
 
     // Begin any pending transactions
     for (let i = 0; i < this.transactionCount; i++)
       this.connection.executeSimpleSQL("SAVEPOINT 'default'");
-    return this.connection;
+    return migrateData;
   },
 
   /**
    * A lazy getter for the database connection.
    */
   get connection() {
-    return this.openConnection();
+    this.openConnection(true);
+    return this.connection;
   },
 
   /**
-   * Migrates data from a previous database schema.
+   * Gets the list of file descriptors of active extension directories or XPI
+   * files from the add-ons list. This must be loaded from disk since the
+   * directory service gives no easy way to get both directly. This list doesn't
+   * include themes as preferences already say which theme is currently active
    *
-   * @param  oldSchema
-   *         The previous schema
-   * @return an object holding information about what add-ons were previously
-   *         userDisabled
+   * @return an array of persisitent descriptors for the directories
    */
-  migrateData: function XPIDB_migrateData(aOldSchema) {
-    LOG("Migrating data from schema " + aOldSchema);
+  getActiveBundles: function XPIDB_getActiveBundles() {
+    let bundles = [];
+
+    let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
+                                       true);
+
+    let iniFactory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
+                     getService(Ci.nsIINIParserFactory);
+    let parser = iniFactory.createINIParser(addonsList);
+
+    let keys = parser.getKeys("ExtensionDirs");
+
+    while (keys.hasMore())
+      bundles.push(parser.getString("ExtensionDirs", keys.getNext()));
+
+    // Also include the list of active bootstrapped extensions
+    for (let id in XPIProvider.bootstrappedAddons)
+      bundles.push(XPIProvider.bootstrappedAddons[id].descriptor);
+
+    return bundles;
+  },
+
+  /**
+   * Retrieves migration data from the old extensions.rdf database.
+   *
+   * @return an object holding information about what add-ons were previously
+   *         userDisabled and any updated compatibility information
+   */
+  getMigrateDataFromRDF: function XPIDB_getMigrateDataFromRDF(aDbWasMissing) {
     let migrateData = {};
 
-    if (aOldSchema == 0) {
-      // Migrate data from extensions.rdf
-      let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
-      if (rdffile.exists()) {
-        let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
-        let root = Cc["@mozilla.org/rdf/container;1"].
-                   createInstance(Ci.nsIRDFContainer);
-        root.Init(ds, gRDF.GetResource(RDFURI_ITEM_ROOT));
-        let elements = root.GetElements();
-        while (elements.hasMoreElements()) {
-          let source = elements.getNext().QueryInterface(Ci.nsIRDFResource);
+    // Migrate data from extensions.rdf
+    let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
+    if (rdffile.exists()) {
+      let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
+      let root = Cc["@mozilla.org/rdf/container;1"].
+                 createInstance(Ci.nsIRDFContainer);
+      root.Init(ds, gRDF.GetResource(RDFURI_ITEM_ROOT));
+      let elements = root.GetElements();
+      while (elements.hasMoreElements()) {
+        let source = elements.getNext().QueryInterface(Ci.nsIRDFResource);
 
-          let location = getRDFProperty(ds, source, "installLocation");
-          if (location) {
-            if (!(location in migrateData))
-              migrateData[location] = {};
-            let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
-            migrateData[location][id] = {
-              version: getRDFProperty(ds, source, "version"),
-              userDisabled: false,
-              targetApplications: []
-            }
-
-            let disabled = getRDFProperty(ds, source, "userDisabled");
-            if (disabled == "true" || disabled == "needs-disable")
-              migrateData[location][id].userDisabled = true;
-
-            let targetApps = ds.GetTargets(source, EM_R("targetApplication"),
-                                           true);
-            while (targetApps.hasMoreElements()) {
-              let targetApp = targetApps.getNext()
-                                        .QueryInterface(Ci.nsIRDFResource);
-              let appInfo = {
-                id: getRDFProperty(ds, targetApp, "id")
-              };
-
-              let minVersion = getRDFProperty(ds, targetApp, "updatedMinVersion");
-              if (minVersion) {
-                appInfo.minVersion = minVersion;
-                appInfo.maxVersion = getRDFProperty(ds, targetApp, "updatedMaxVersion");
-              }
-              else {
-                appInfo.minVersion = getRDFProperty(ds, targetApp, "minVersion");
-                appInfo.maxVersion = getRDFProperty(ds, targetApp, "maxVersion");
-              }
-              migrateData[location][id].targetApplications.push(appInfo);
-            }
-          }
-        }
-      }
-    }
-    else {
-      // Attempt to migrate data from a different (even future!) version of the
-      // database
-      try {
-        var stmt = this.connection.createStatement("SELECT internal_id, id, " +
-                                                   "location, userDisabled, " +
-                                                   "installDate, version " +
-                                                   "FROM addon");
-        for (let row in resultRows(stmt)) {
-          if (!(row.location in migrateData))
-            migrateData[row.location] = {};
-          migrateData[row.location][row.id] = {
-            internal_id: row.internal_id,
-            version: row.version,
-            installDate: row.installDate,
-            userDisabled: row.userDisabled == 1,
+        let location = getRDFProperty(ds, source, "installLocation");
+        if (location) {
+          if (!(location in migrateData))
+            migrateData[location] = {};
+          let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
+          migrateData[location][id] = {
+            version: getRDFProperty(ds, source, "version"),
+            userDisabled: false,
             targetApplications: []
-          };
-        }
+          }
 
-        var taStmt = this.connection.createStatement("SELECT id, minVersion, " +
-                                                     "maxVersion FROM " +
-                                                     "targetApplication WHERE " +
-                                                     "addon_internal_id=:internal_id");
+          let disabled = getRDFProperty(ds, source, "userDisabled");
+          if (disabled == "true" || disabled == "needs-disable")
+            migrateData[location][id].userDisabled = true;
 
-        for (let location in migrateData) {
-          for (let id in migrateData[location]) {
-            taStmt.params.internal_id = migrateData[location][id].internal_id;
-            delete migrateData[location][id].internal_id;
-            for (let row in resultRows(taStmt)) {
-              migrateData[location][id].targetApplications.push({
-                id: row.id,
-                minVersion: row.minVersion,
-                maxVersion: row.maxVersion
-              });
+          let targetApps = ds.GetTargets(source, EM_R("targetApplication"),
+                                         true);
+          while (targetApps.hasMoreElements()) {
+            let targetApp = targetApps.getNext()
+                                      .QueryInterface(Ci.nsIRDFResource);
+            let appInfo = {
+              id: getRDFProperty(ds, targetApp, "id")
+            };
+
+            let minVersion = getRDFProperty(ds, targetApp, "updatedMinVersion");
+            if (minVersion) {
+              appInfo.minVersion = minVersion;
+              appInfo.maxVersion = getRDFProperty(ds, targetApp, "updatedMaxVersion");
             }
+            else {
+              appInfo.minVersion = getRDFProperty(ds, targetApp, "minVersion");
+              appInfo.maxVersion = getRDFProperty(ds, targetApp, "maxVersion");
+            }
+            migrateData[location][id].targetApplications.push(appInfo);
           }
         }
       }
-      catch (e) {
-        // An error here means the schema is too different to read
-        ERROR("Error migrating data: " + e);
-      }
-      finally {
-        if (taStmt)
-          taStmt.finalize();
-        if (stmt)
-          stmt.finalize();
-      }
-      this.connection.close();
-      this.initialized = false;
     }
 
-    // Delete any existing database file
-    let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    if (dbfile.exists())
-      dbfile.remove(true);
+    return migrateData;
+  },
+
+  /**
+   * Retrieves migration data from a database that has an older or newer schema.
+   *
+   * @return an object holding information about what add-ons were previously
+   *         userDisabled and any updated compatibility information
+   */
+  getMigrateDataFromDatabase: function XPIDB_getMigrateDataFromDatabase() {
+    let migrateData = {};
+
+    // Attempt to migrate data from a different (even future!) version of the
+    // database
+    try {
+      var stmt = this.connection.createStatement("SELECT internal_id, id, " +
+                                                 "location, userDisabled, " +
+                                                 "installDate, version " +
+                                                 "FROM addon");
+      for (let row in resultRows(stmt)) {
+        if (!(row.location in migrateData))
+          migrateData[row.location] = {};
+        migrateData[row.location][row.id] = {
+          internal_id: row.internal_id,
+          version: row.version,
+          installDate: row.installDate,
+          userDisabled: row.userDisabled == 1,
+          targetApplications: []
+        };
+      }
+
+      var taStmt = this.connection.createStatement("SELECT id, minVersion, " +
+                                                   "maxVersion FROM " +
+                                                   "targetApplication WHERE " +
+                                                   "addon_internal_id=:internal_id");
+
+      for (let location in migrateData) {
+        for (let id in migrateData[location]) {
+          taStmt.params.internal_id = migrateData[location][id].internal_id;
+          delete migrateData[location][id].internal_id;
+          for (let row in resultRows(taStmt)) {
+            migrateData[location][id].targetApplications.push({
+              id: row.id,
+              minVersion: row.minVersion,
+              maxVersion: row.maxVersion
+            });
+          }
+        }
+      }
+    }
+    catch (e) {
+      // An error here means the schema is too different to read
+      ERROR("Error migrating data: " + e);
+    }
+    finally {
+      if (taStmt)
+        taStmt.finalize();
+      if (stmt)
+        stmt.finalize();
+    }
 
     return migrateData;
   },
@@ -3591,7 +3769,8 @@ var XPIDatabase = {
       // Re-create the connection smart getter to allow the database to be
       // re-loaded during testing.
       this.__defineGetter__("connection", function() {
-        return this.openConnection();
+        this.openConnection(true);
+        return this.connection;
       });
 
       connection.asyncClose(aCallback);
@@ -3687,7 +3866,6 @@ var XPIDatabase = {
         "DELETE FROM locale_strings WHERE locale_id=old.id; " +
         "END");
       this.connection.schemaVersion = DB_SCHEMA;
-      Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
       this.commitTransaction();
     }
     catch (e) {
@@ -4229,9 +4407,6 @@ var XPIDatabase = {
         return row;
       }
 
-      aAddon.active = (aAddon.visible && !aAddon.userDisabled &&
-                       !aAddon.appDisabled);
-
       if (aAddon.visible) {
         let stmt = this.getStatement("clearVisibleAddons");
         stmt.params.id = aAddon.id;
@@ -4309,6 +4484,8 @@ var XPIDatabase = {
       this.removeAddonMetadata(aOldAddon);
       aNewAddon.installDate = aOldAddon.installDate;
       aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
+      aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
+                          !aNewAddon.appDisabled)
       this.addAddonMetadata(aNewAddon, aDescriptor);
       this.commitTransaction();
     }
@@ -5410,6 +5587,8 @@ AddonInstall.prototype = {
         }
         else {
           this.addon.installDate = this.addon.updateDate;
+          this.addon.active = (this.addon.visible && !this.addon.userDisabled &&
+                               !this.addon.appDisabled)
           XPIDatabase.addAddonMetadata(this.addon, file.persistentDescriptor);
         }
 
