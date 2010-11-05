@@ -467,48 +467,6 @@ nsHTMLDocument::TryCacheCharset(nsICachingChannel* aCachingChannel,
   return PR_FALSE;
 }
 
-PRBool
-nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
-                                   nsIChannel* aChannel,
-                                   PRInt32& aCharsetSource,
-                                   nsACString& aCharset)
-{
-  if (kCharsetFromBookmarks <= aCharsetSource) {
-    return PR_TRUE;
-  }
-
-  if (!aChannel) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsICharsetResolver> bookmarksResolver =
-    do_GetService("@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1");
-
-  if (!bookmarksResolver) {
-    return PR_FALSE;
-  }
-
-  PRBool wantCharset;         // ignored for now
-  nsCAutoString charset;
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aDocShell));
-  nsCOMPtr<nsISupports> closure;
-  nsresult rv = bookmarksResolver->RequestCharset(webNav,
-                                                  aChannel,
-                                                  &wantCharset,
-                                                  getter_AddRefs(closure),
-                                                  charset);
-  // FIXME: Bug 337970
-  NS_ASSERTION(!wantCharset, "resolved charset notification not implemented!");
-
-  if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
-    aCharset = charset;
-    aCharsetSource = kCharsetFromBookmarks;
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
 static PRBool
 CheckSameOrigin(nsINode* aNode1, nsINode* aNode2)
 {
@@ -879,10 +837,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           TryChannelCharset(aChannel, charsetSource, charset)) {
         // Use the channel's charset (e.g., charset from HTTP
         // "Content-Type" header).
-      }
-      else if (!scheme.EqualsLiteral("about") &&          // don't try to access bookmarks for about:blank
-               TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
-        // Use the bookmark's charset.
       }
       else if (cachingChan && !urlSpec.IsEmpty() &&
                TryCacheCharset(cachingChan, charsetSource, charset)) {
