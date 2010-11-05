@@ -383,7 +383,11 @@ public:
   // CoreGraphics drawing model).
   void BeginCGPaint();
   void EndCGPaint();
-#endif
+#else // XP_MACOSX
+  void UpdateWindowClipRect(PRBool aSetWindow);
+  void SetWindow();
+  void UpdateWindowVisibility(PRBool aVisible);
+#endif // XP_MACOSX
 
   void SetOwner(nsObjectFrame *aOwner)
   {
@@ -514,6 +518,7 @@ private:
   // Used with windowless plugins only, initialized in CreateWidget().
   PRPackedBool                mFlash10Quirks;
 #endif
+  PRPackedBool                mPluginWindowVisible;
 
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.
@@ -828,6 +833,10 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
       mInstanceOwner->SetupCARefresh();
     }
 #endif
+  } else {
+#ifndef XP_MACOSX
+    rpc->RegisterPluginForGeometryUpdates(this);
+#endif
   }
 
   if (!IsHidden()) {
@@ -1068,15 +1077,15 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
   // on the Mac we need to set the clipRect to { 0, 0, 0, 0 } for now. This will keep
   // us from drawing on screen until the widget is properly positioned, which will not
   // happen until we have finished the reflow process.
+#ifdef XP_MACOSX
   window->clipRect.top = 0;
   window->clipRect.left = 0;
-#ifdef XP_MACOSX
   window->clipRect.bottom = 0;
   window->clipRect.right = 0;
 #else
-  window->clipRect.bottom = presContext->AppUnitsToDevPixels(aSize.height);
-  window->clipRect.right = presContext->AppUnitsToDevPixels(aSize.width);
+  mInstanceOwner->UpdateWindowClipRect(PR_FALSE);
 #endif
+
   NotifyPluginReflowObservers();
 }
 
@@ -1101,8 +1110,6 @@ nsObjectFrame::CallSetWindow()
 
   if (IsHidden())
     return;
-
-  PRBool windowless = (window->type == NPWindowTypeDrawable);
 
   // refresh the plugin port as well
   window->window = mInstanceOwner->GetPluginPortFromWidget();
@@ -1292,8 +1299,14 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
                                      const nsPoint& aPluginOrigin,
                                      nsTArray<nsIWidget::Configuration>* aConfigurations)
 {
-  if (!mWidget)
+  if (!mWidget) {
+#ifndef XP_MACOSX
+    if (mInstanceOwner) {
+      mInstanceOwner->UpdateWindowVisibility(!aRegion.IsEmpty());
+    }
+#endif
     return;
+  }
 
   nsPresContext* presContext = PresContext();
   nsRootPresContext* rootPC = presContext->GetRootPresContext();
@@ -2542,25 +2555,28 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     return;
   }
 
-  if (mWidget) {
-    nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
-    if (rootPC) {
-      rootPC->UnregisterPluginForGeometryUpdates(this);
+  nsRootPresContext* rpc = PresContext()->GetRootPresContext();
+  if (!rpc) {
+    NS_ASSERTION(PresContext()->PresShell()->IsFrozen(),
+                 "unable to unregister the plugin frame");
+  }
+  else if (mWidget) {
+    rpc->UnregisterPluginForGeometryUpdates(this);
 
-      // Make sure the plugin is hidden in case an update of plugin geometry
-      // hasn't happened since this plugin became hidden.
-      nsIWidget* parent = mWidget->GetParent();
-      if (parent) {
-        nsTArray<nsIWidget::Configuration> configurations;
-        GetEmptyClipConfiguration(&configurations);
-        parent->ConfigureChildren(configurations);
-        DidSetWidgetGeometry();
-      }
+    // Make sure the plugin is hidden in case an update of plugin geometry
+    // hasn't happened since this plugin became hidden.
+    nsIWidget* parent = mWidget->GetParent();
+    if (parent) {
+      nsTArray<nsIWidget::Configuration> configurations;
+      GetEmptyClipConfiguration(&configurations);
+      parent->ConfigureChildren(configurations);
+      DidSetWidgetGeometry();
     }
-    else {
-      NS_ASSERTION(PresContext()->PresShell()->IsFrozen(),
-                   "unable to unregister the plugin frame");
-    }
+  }
+  else {
+#ifndef XP_MACOSX
+    rpc->UnregisterPluginForGeometryUpdates(this);
+#endif
   }
 
   // Transfer the reference to the instance owner onto the stack so
@@ -2796,6 +2812,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #endif
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
+  mPluginWindowVisible = PR_FALSE;
   mNumCachedAttrs = 0;
   mNumCachedParams = 0;
   mCachedAttrParamNames = nsnull;
@@ -6430,6 +6447,62 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 #endif
 
   return nsnull;
+}
+
+#else // XP_MACOSX
+void nsPluginInstanceOwner::UpdateWindowClipRect(PRBool aSetWindow)
+{
+  if (!mPluginWindow)
+    return;
+
+  // For windowless plugins a non-empty clip rectangle will be
+  // passed to the plugin during paint, an additional update
+  // of the the clip rectangle here is not required
+  if (aSetWindow && !mWidget && mPluginWindowVisible)
+    return;
+
+  const NPRect oldClipRect = mPluginWindow->clipRect;
+
+  mPluginWindow->clipRect.left = 0;
+  mPluginWindow->clipRect.top = 0;
+
+  if (mPluginWindowVisible) {
+    mPluginWindow->clipRect.right = mPluginWindow->width;
+    mPluginWindow->clipRect.bottom = mPluginWindow->height;
+  } else {
+    mPluginWindow->clipRect.right = 0;
+    mPluginWindow->clipRect.bottom = 0;
+  }
+
+  if (!aSetWindow)
+    return;
+
+  if ((mPluginWindow->clipRect.left   != oldClipRect.left   ||
+       mPluginWindow->clipRect.top    != oldClipRect.top    ||
+       mPluginWindow->clipRect.right  != oldClipRect.right  ||
+       mPluginWindow->clipRect.bottom != oldClipRect.bottom)) {
+    SetWindow();
+  }
+}
+
+void
+nsPluginInstanceOwner::SetWindow()
+{
+  if (!mInstance)
+    return;
+
+  if (UseLayers()) {
+    mInstance->AsyncSetWindow(mPluginWindow);
+  } else {
+    mInstance->SetWindow(mPluginWindow);
+  }
+}
+
+void
+nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
+{
+  mPluginWindowVisible = aVisible;
+  UpdateWindowClipRect(PR_TRUE);
 }
 
 #endif // XP_MACOSX
