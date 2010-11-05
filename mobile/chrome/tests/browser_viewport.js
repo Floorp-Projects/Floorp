@@ -70,7 +70,14 @@ let gTestData = [
   { metadata: "width=100, maximum-scale=2.0", width: 266.67, scale: 3, maxScale: 3 },
   { metadata: "width=2000, initial-scale=0.75", width: 2000, scale: 1.125 },
   { metadata: "width=20000, initial-scale=100", width: 10000, scale: 4 },
-  { metadata: "XHTML", width: 533.33, scale: 1.5, disableZoom: true }
+  { metadata: "XHTML", width: 533.33, scale: 1.5, disableZoom: true },
+  /* testing spaces between arguments (bug 572696) */
+  { metadata: "width= 2000, minimum-scale=0.75", width: 2000, scale: 1.125 },
+  { metadata: "width = 2000, minimum-scale=0.75", width: 2000, scale: 1.125 },
+  { metadata: "width = 2000 , minimum-scale=0.75", width: 2000, scale: 1.125 },
+  { metadata: "width = 2000 , minimum-scale =0.75", width: 2000, scale: 1.125 },
+  { metadata: "width = 2000 , minimum-scale = 0.75", width: 2000, scale: 1.125 },
+  { metadata: "width =  2000   ,    minimum-scale      =       0.75", width: 2000, scale: 1.125 }
 ];
 
 
