@@ -3140,11 +3140,9 @@ case $target in
 *-os2*)
     ;;
 *)
-    AC_CHECK_LIB(m, atan)
-    AC_CHECK_LIB(dl, dlopen,
-    AC_CHECK_HEADER(dlfcn.h, 
-        LIBS="-ldl $LIBS"
-        AC_DEFINE(HAVE_LIBDL)))
+    AC_SEARCH_LIBS(dlopen, dl, 
+        AC_CHECK_HEADER(dlfcn.h, 
+        AC_DEFINE(HAVE_DLOPEN)))
     ;;
 esac
 

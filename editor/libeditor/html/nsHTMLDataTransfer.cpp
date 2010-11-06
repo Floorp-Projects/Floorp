@@ -1121,7 +1121,6 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
         (*aTransferable)->AddDataFlavor(kNativeHTMLMime);
       }
       (*aTransferable)->AddDataFlavor(kHTMLMime);
-      (*aTransferable)->AddDataFlavor(kFileMime);
 
       nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
       PRInt32 clipboardPasteOrder = 1; // order of image-encoding preference
@@ -1376,64 +1375,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         nsAutoEditBatch beginBatching(this);
         // need to provide a hook from this point
         rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
-      }
-    }
-    else if (0 == nsCRT::strcmp(bestFlavor, kFileMime))
-    {
-      nsCOMPtr<nsIFile> fileObj(do_QueryInterface(genericDataObj));
-      if (fileObj && len > 0)
-      {
-        
-        nsCOMPtr<nsIURI> uri;
-        rv = NS_NewFileURI(getter_AddRefs(uri), fileObj);
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        nsCOMPtr<nsIURL> fileURL(do_QueryInterface(uri));
-        if (fileURL)
-        {
-          PRBool insertAsImage = PR_FALSE;
-          nsCAutoString fileextension;
-          rv = fileURL->GetFileExtension(fileextension);
-          if (NS_SUCCEEDED(rv) && !fileextension.IsEmpty())
-          {
-            if ( (nsCRT::strcasecmp(fileextension.get(), "jpg") == 0 )
-              || (nsCRT::strcasecmp(fileextension.get(), "jpeg") == 0 )
-              || (nsCRT::strcasecmp(fileextension.get(), "gif") == 0 )
-              || (nsCRT::strcasecmp(fileextension.get(), "png") == 0 ) )
-            {
-              insertAsImage = PR_TRUE;
-            }
-          }
-          
-          nsCAutoString urltext;
-          rv = fileURL->GetSpec(urltext);
-          if (NS_SUCCEEDED(rv) && !urltext.IsEmpty())
-          {
-            if (insertAsImage)
-            {
-              stuffToPaste.AssignLiteral("<IMG src=\"");
-              AppendUTF8toUTF16(urltext, stuffToPaste);
-              stuffToPaste.AppendLiteral("\" alt=\"\" >");
-            }
-            else /* insert as link */
-            {
-              stuffToPaste.AssignLiteral("<A href=\"");
-              AppendUTF8toUTF16(urltext, stuffToPaste);
-              stuffToPaste.AppendLiteral("\">");
-              AppendUTF8toUTF16(urltext, stuffToPaste);
-              stuffToPaste.AppendLiteral("</A>");
-            }
-            nsAutoEditBatch beginBatching(this);
-
-            const nsAFlatString& empty = EmptyString();
-            rv = DoInsertHTMLWithContext(stuffToPaste,
-                                         empty, empty, flavor, 
-                                         aSourceDoc,
-                                         aDestinationNode, aDestOffset,
-                                         aDoDeleteSelection,
-                                         isSafe);
-          }
-        }
       }
     }
     else if (0 == nsCRT::strcmp(bestFlavor, kJPEGImageMime) ||

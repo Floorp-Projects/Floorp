@@ -1650,7 +1650,7 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
 }
 
 nsresult
-nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
+nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame,
                                       nsIFontMetrics** aFontMetrics)
 {
   return nsLayoutUtils::GetFontMetricsForStyleContext(aFrame->GetStyleContext(),

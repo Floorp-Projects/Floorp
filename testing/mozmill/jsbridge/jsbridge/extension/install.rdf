@@ -4,7 +4,7 @@
    <Description about="urn:mozilla:install-manifest">
      <em:id>jsbridge@mozilla.com</em:id>
      <em:name>jsbridge</em:name>
-     <em:version>2.4.1</em:version>
+     <em:version>2.4.1rc2</em:version>
      <em:creator>Mikeal Rogers</em:creator>
      <em:description>Python to JavaScript bridge</em:description>
      <em:targetApplication>

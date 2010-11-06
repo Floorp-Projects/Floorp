@@ -391,7 +391,7 @@ public class SUTAgentAndroid extends Activity
 					{
 					sb.append("Overheated ");
 					sb.append((((float)(nBatteryTemp))/10));
-					sb.append("(°C)");
+					sb.append("(C)");
 					}
 				else
 					{

@@ -45,7 +45,7 @@ interface nsIThread;
 /**
  * An interface for creating and locating nsIThread instances.
  */
-[scriptable, uuid(056216f5-8803-46b4-9199-d95bc1f0446f)]
+[scriptable, uuid(487c10bf-0a22-4148-89fa-790d819dd559)]
 interface nsIThreadManager : nsISupports
 {
   /**
@@ -89,4 +89,10 @@ interface nsIThreadManager : nsISupports
    * application process.
    */
   readonly attribute boolean isMainThread;
+
+  /**
+   * This attribute is true if the calling thread is the thread on which the
+   * cycle collector runs.
+   */
+  readonly attribute boolean isCycleCollectorThread;
 };

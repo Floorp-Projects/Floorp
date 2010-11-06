@@ -972,10 +972,19 @@ public:
   /**
    * Get the position of the frame's baseline, relative to the top of
    * the frame (its top border edge).  Only valid when Reflow is not
-   * needed and when the frame returned nsHTMLReflowMetrics::
-   * ASK_FOR_BASELINE as ascent in its reflow metrics.
+   * needed.
    */
   virtual nscoord GetBaseline() const = 0;
+
+  /**
+   * Get the position of the baseline on which the caret needs to be placed,
+   * relative to the top of the frame.  This is mostly needed for frames
+   * which return a baseline from GetBaseline which is not useful for
+   * caret positioning.
+   */
+  virtual nscoord GetCaretBaseline() const {
+    return GetBaseline();
+  }
 
   /**
    * Used to iterate the list of additional child list names. Returns the atom

@@ -72,6 +72,7 @@
 #endif
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
+#include "nsAccelerometer.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
@@ -288,7 +289,7 @@ ContentParent::Observe(nsISupports* aSubject,
             }
         }
 
-        RecvGeolocationStop();
+        RecvRemoveGeolocationListener();
             
         Close();
         XRE_GetIOMessageLoop()->PostTask(
@@ -622,7 +623,7 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 }
 
 bool
-ContentParent::RecvGeolocationStart()
+ContentParent::RecvAddGeolocationListener()
 {
   if (mGeolocationWatchID == -1) {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
@@ -635,7 +636,7 @@ ContentParent::RecvGeolocationStart()
 }
 
 bool
-ContentParent::RecvGeolocationStop()
+ContentParent::RecvRemoveGeolocationListener()
 {
   if (mGeolocationWatchID != -1) {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
@@ -646,6 +647,26 @@ ContentParent::RecvGeolocationStop()
     mGeolocationWatchID = -1;
   }
   return true;
+}
+
+bool
+ContentParent::RecvAddAccelerometerListener()
+{
+    nsCOMPtr<nsIAccelerometer> ac = 
+        do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac)
+        ac->AddListener(this);
+    return true;
+}
+
+bool
+ContentParent::RecvRemoveAccelerometerListener()
+{
+    nsCOMPtr<nsIAccelerometer> ac = 
+        do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac)
+        ac->RemoveListener(this);
+    return true;
 }
 
 NS_IMETHODIMP
@@ -689,6 +710,20 @@ ContentParent::RecvScriptError(const nsString& aMessage,
   svc->LogMessage(msg);
   return true;
 }
+
+NS_IMETHODIMP
+ContentParent::OnAccelerationChange(nsIAcceleration *aAcceleration)
+{
+    double x, y, z;
+    aAcceleration->GetX(&x);
+    aAcceleration->GetY(&y);
+    aAcceleration->GetZ(&z);
+
+    mozilla::dom::ContentParent::GetSingleton()->
+        SendAccelerationChanged(x, y, z);
+    return NS_OK;
+}
+
 
 } // namespace dom
 } // namespace mozilla

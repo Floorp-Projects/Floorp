@@ -257,10 +257,10 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     DEBUG_GL_ERROR_CHECK(gl());
-    program = mOGLManager->GetRGBALayerProgram();
-  } else {
-    program = mOGLManager->GetBGRALayerProgram();
   }
+  program =
+    mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                      useGLContext != 0);
 
   ApplyFilter(mFilter);
 
@@ -358,7 +358,9 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
-  ColorTextureLayerProgram *program = mOGLManager->GetBGRALayerProgram();
+  ColorTextureLayerProgram *program =
+    mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                      mTexImage->IsRGB());
 
   ApplyFilter(mFilter);
 

@@ -44,11 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imglib2
 
-DIRS		= public src decoders
-
-ifdef MOZ_IMG_ENCODERS
-DIRS		+= encoders
-endif
+PARALLEL_DIRS		= public src decoders encoders
 
 ifdef ENABLE_TESTS
 DIRS  += test

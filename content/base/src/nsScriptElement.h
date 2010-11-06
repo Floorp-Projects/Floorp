@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
 
-  nsScriptElement(PRUint32 aFromParser)
+  nsScriptElement(mozilla::dom::FromParser aFromParser)
     : nsIScriptElement(aFromParser)
   {
   }

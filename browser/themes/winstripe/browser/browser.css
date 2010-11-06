@@ -302,14 +302,6 @@
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
 }
 
-#BMB_subscribeToPage:not([disabled]),
-#BMB_subscribeToPageMenu,
-#appmenu_subscribeToPage:not([disabled]),
-#appmenu_subscribeToPageMenu {
-  list-style-image: url("chrome://browser/skin/feeds/feed-icons-16.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
 #BMB_bookmarkThisPage,
 #appmenu_bookmarkThisPage {
   list-style-image: url("chrome://browser/skin/places/bookmark.png");
@@ -1872,7 +1864,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 .geolocation-text-link {
-  padding-top: 5px;
+  margin-top: 17px;
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
@@ -1936,6 +1928,15 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Bookmarks roots menu-items */
+#appmenu_subscribeToPage:not([disabled]),
+#appmenu_subscribeToPageMenu,
+#subscribeToPageMenuitem:not([disabled]),
+#subscribeToPageMenupopup,
+#BMB_subscribeToPageMenuitem:not([disabled]),
+#BMB_subscribeToPageMenupopup {
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
+}
+
 #bookmarksToolbarFolderMenu,
 #appmenu_bookmarksToolbar,
 #BMB_bookmarksToolbar {

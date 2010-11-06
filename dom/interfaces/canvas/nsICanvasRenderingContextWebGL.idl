@@ -510,6 +510,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   const unsigned long DEPTH_COMPONENT16              = 0x81A5;
   const unsigned long STENCIL_INDEX                  = 0x1901;
   const unsigned long STENCIL_INDEX8                 = 0x8D48;
+  const unsigned long DEPTH_STENCIL                  = 0x84F9;
 
   const unsigned long RENDERBUFFER_WIDTH             = 0x8D42;
   const unsigned long RENDERBUFFER_HEIGHT            = 0x8D43;
@@ -529,6 +530,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   const unsigned long COLOR_ATTACHMENT0              = 0x8CE0;
   const unsigned long DEPTH_ATTACHMENT               = 0x8D00;
   const unsigned long STENCIL_ATTACHMENT             = 0x8D20;
+  const unsigned long DEPTH_STENCIL_ATTACHMENT       = 0x821A;
 
   const unsigned long NONE                           = 0;
 

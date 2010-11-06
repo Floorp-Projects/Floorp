@@ -80,7 +80,7 @@ toolbar[printpreview="true"] {
   -moz-box-ordinal-group: 10;
 }
 
-%ifdef MENUBAR_CAN_AUTOHIDE
+%ifdef CAN_DRAW_IN_TITLEBAR
 #main-window[inFullscreen] > #titlebar {
   display: none;
 }

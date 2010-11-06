@@ -127,6 +127,8 @@
 
 #include "nsHTMLInputElement.h"
 
+using namespace mozilla::dom;
+
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
@@ -612,14 +614,14 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
 nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                       PRUint32 aFromParser)
+                                       FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kInputDefaultType->value),
     mBitField(0)
 {
   SET_BOOLBIT(mBitField, BF_PARSER_CREATING, aFromParser);
   SET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION,
-      aFromParser & NS_FROM_PARSER_FRAGMENT);
+      aFromParser & mozilla::dom::FROM_PARSER_FRAGMENT);
   mInputData.mState = new nsTextEditorState(this);
   NS_ADDREF(mInputData.mState);
   
@@ -702,10 +704,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   *aResult = nsnull;
 
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  nsHTMLInputElement *it = new nsHTMLInputElement(ni.forget(), PR_FALSE);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsHTMLInputElement *it = new nsHTMLInputElement(ni.forget(), NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv = CopyInnerTo(it);

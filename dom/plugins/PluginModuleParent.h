@@ -61,6 +61,7 @@
 #include "nsHashKeys.h"
 #include "nsIFileStreams.h"
 #include "nsTObserverArray.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace plugins {
@@ -264,8 +265,7 @@ private:
     nsString mHangID;
 
 #ifdef OS_MACOSX
-    void CAUpdate();
-    base::RepeatingTimer<PluginModuleParent> mCATimer;
+    nsCOMPtr<nsITimer> mCATimer;
     nsTObserverArray<PluginInstanceParent*> mCATimerTargets;
 #endif
 };

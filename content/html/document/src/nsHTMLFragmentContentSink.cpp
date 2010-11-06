@@ -75,6 +75,7 @@
 #include "nsICSSRuleList.h"
 #include "nsIDOMCSSRule.h"
 
+using namespace mozilla::dom;
 namespace css = mozilla::css;
 
 //
@@ -390,7 +391,8 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
     }
 
-    content = CreateHTMLElement(nodeType, nodeInfo.forget(), PR_FALSE).get();
+    content =
+      CreateHTMLElement(nodeType, nodeInfo.forget(), NOT_FROM_PARSER).get();
     NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
     result = AddAttributes(aNode, content);
@@ -477,7 +479,8 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
         }
 
-        content = CreateHTMLElement(nodeType, nodeInfo.forget(), PR_FALSE);
+        content =
+          CreateHTMLElement(nodeType, nodeInfo.forget(), NOT_FROM_PARSER);
         NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
         result = AddAttributes(aNode, content);

@@ -23,6 +23,7 @@ protected:
     NS_OVERRIDE
     virtual bool RecvTake(
             Shmem& mem,
+            Shmem& unsafe,
             const size_t& expectedSize);
 
     NS_OVERRIDE
@@ -47,6 +48,7 @@ protected:
     NS_OVERRIDE
     virtual bool RecvGive(
             Shmem& mem,
+            Shmem& unsafe,
             const size_t& expectedSize);
 
     NS_OVERRIDE
