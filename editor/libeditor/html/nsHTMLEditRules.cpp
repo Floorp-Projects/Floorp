@@ -484,22 +484,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
       res = mHTMLEditor->CollapseAdjacentTextNodes(mDocChangeRange);
       NS_ENSURE_SUCCESS(res, res);
     }
-    
-    // replace newlines with breaks.
-    // MOOSE:  This is buttUgly.  A better way to 
-    // organize the action enum is in order.
-    if (// (action == nsEditor::kOpInsertText) || 
-        // (action == nsEditor::kOpInsertIMEText) ||
-        (action == nsHTMLEditor::kOpInsertElement) ||
-        (action == nsHTMLEditor::kOpInsertQuotation) ||
-        (action == nsEditor::kOpInsertNode) ||
-        (action == nsHTMLEditor::kOpHTMLPaste ||
-        (action == nsHTMLEditor::kOpLoadHTML)))
-    {
-      res = ReplaceNewlines(mDocChangeRange);
-      NS_ENSURE_SUCCESS(res, res);
-    }
-    
+
     // clean up any empty nodes in the selection
     res = RemoveEmptyNodes();
     NS_ENSURE_SUCCESS(res, res);
