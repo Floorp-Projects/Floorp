@@ -175,15 +175,11 @@ SVGDocumentWrapper::IsAnimated()
 void
 SVGDocumentWrapper::StartAnimation()
 {
-  nsSVGSVGElement* svgElem = GetRootSVGElem();
-  if (!svgElem)
-    return;
-
-#ifdef DEBUG
-  nsresult rv = 
-#endif
-    svgElem->UnpauseAnimations();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "UnpauseAnimations failed");
+  nsIDocument* doc = mViewer->GetDocument();
+  if (doc) {
+    doc->GetAnimationController()->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
+    doc->SetImagesNeedAnimating(PR_TRUE);
+  }
 }
 
 void
@@ -191,20 +187,16 @@ SVGDocumentWrapper::StopAnimation()
 {
   // This method gets called for animated images during shutdown, after we've
   // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
-  // When that happens, we need to bail out early, or else GetRootSVGElem will
-  // try to deref mViewer (= null) and crash as a result.
+  // When that happens, we need to bail out early, or else the
+  // mViewer->GetDocument() call below will crash on a null pointer.
   if (!mViewer)
     return;
 
-  nsSVGSVGElement* svgElem = GetRootSVGElem();
-  if (!svgElem)
-    return;
-
-#ifdef DEBUG
-  nsresult rv = 
-#endif
-    svgElem->PauseAnimations();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "PauseAnimations failed");
+  nsIDocument* doc = mViewer->GetDocument();
+  if (doc) {
+    doc->GetAnimationController()->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
+    doc->SetImagesNeedAnimating(PR_FALSE);
+  }
 }
 
 void
