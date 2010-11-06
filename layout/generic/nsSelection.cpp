@@ -4979,7 +4979,7 @@ nsTypedSelection::CollapseToStart()
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
   if (NS_FAILED(rv) || cnt <= 0)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   // Get the first range
   nsIRange* firstRange = mRanges[0].mRange;
@@ -4999,7 +4999,7 @@ nsTypedSelection::CollapseToEnd()
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
   if (NS_FAILED(rv) || cnt <= 0)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   // Get the last range
   nsIRange* lastRange = mRanges[cnt-1].mRange;
