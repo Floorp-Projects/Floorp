@@ -65,7 +65,7 @@ notification[type="critical"] .messageImage {
 
 %ifdef XP_WIN
 @media all and (-moz-windows-default-theme) {
-  .popup-notification-menubutton {
+  .popup-notification-menubutton[type="menu-button"] {
     -moz-appearance: none;
     border: 1px solid rgba(0,0,0,.35);
     border-radius: 3px;
@@ -75,7 +75,7 @@ notification[type="critical"] .messageImage {
 %endif    
   }
 
-  .popup-notification-menubutton:hover:active {
+  .popup-notification-menubutton[type="menu-button"]:hover:active {
     border-color: rgba(0,0,0,.5);
   }
 
