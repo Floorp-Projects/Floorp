@@ -93,7 +93,7 @@ notification[type="critical"] .messageImage {
   -moz-margin-start: 5px;
 }
 
-.popup-notification-menubutton {
+.popup-notification-menubutton[type="menu-button"] {
   -moz-appearance: none;
 }
 
