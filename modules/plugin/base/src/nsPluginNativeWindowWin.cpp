@@ -499,14 +499,14 @@ HookSetWindowLongPtr()
 
   sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
-  sUser32Intercept.AddHook("SetWindowLongPtrA", SetWindowLongPtrAHook,
+  sUser32Intercept.AddHook("SetWindowLongPtrA", (void*)SetWindowLongPtrAHook,
                            (void**) &sUser32SetWindowLongAHookStub);
-  sUser32Intercept.AddHook("SetWindowLongPtrW", SetWindowLongPtrWHook,
+  sUser32Intercept.AddHook("SetWindowLongPtrW", (void*)SetWindowLongPtrWHook,
                            (void**) &sUser32SetWindowLongWHookStub);
 #else
-  sUser32Intercept.AddHook("SetWindowLongA", SetWindowLongAHook,
+  sUser32Intercept.AddHook("SetWindowLongA", (void*)SetWindowLongAHook,
                            (void**) &sUser32SetWindowLongAHookStub);
-  sUser32Intercept.AddHook("SetWindowLongW", SetWindowLongWHook,
+  sUser32Intercept.AddHook("SetWindowLongW", (void*)SetWindowLongWHook,
                            (void**) &sUser32SetWindowLongWHookStub);
 #endif
 }
@@ -528,7 +528,7 @@ nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
   mPluginType = nsPluginType_Unknown;
 
   mParentWnd = NULL;
-  mParentProc = NULL;
+  mParentProc = 0;
 
   if (!sWM_FLASHBOUNCEMSG) {
     sWM_FLASHBOUNCEMSG = ::RegisterWindowMessage(NS_PLUGIN_CUSTOM_MSG_ID);
@@ -767,7 +767,7 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
   if (mPluginType == nsPluginType_PDF && mParentWnd) {
     ::SetWindowLongPtr(mParentWnd, GWLP_WNDPROC, mParentProc);
     mParentWnd = NULL;
-    mParentProc = NULL;
+    mParentProc = 0;
   }
 
   return NS_OK;
