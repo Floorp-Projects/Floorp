@@ -8578,7 +8578,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_TREE_PIXMAN"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
     else
-        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.17.3)
+        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
         MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
     fi
