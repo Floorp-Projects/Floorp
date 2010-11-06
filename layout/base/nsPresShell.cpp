@@ -6901,7 +6901,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     }                                
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                          aEvent->message == NS_MOUSE_BUTTON_DOWN);
+                                                          aEvent, mDocument);
 
     if (NS_IS_TRUSTED_EVENT(aEvent) && aEvent->message == NS_MOUSE_MOVE) {
       nsIPresShell::AllowMouseCapture(
