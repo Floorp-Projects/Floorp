@@ -407,7 +407,10 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   mThebesLayerCallback = aCallback;
   mThebesLayerCallbackData = aCallbackData;
 
-  Render();
+  // NULL callback means "non-painting transaction"
+  if (aCallback) {
+    Render();
+  }
 
   mThebesLayerCallback = nsnull;
   mThebesLayerCallbackData = nsnull;
