@@ -262,18 +262,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   
   aSelCon->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);//we want to see all the selection reflected to user
 
-#if 1
-  // THIS BLOCK CAUSES ASSERTIONS because sometimes we don't yet have
-  // a moz-br but we do have a presshell.
-
-  // Set the selection to the beginning:
-
-//hack to get around this for now.
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mSelConWeak);
-  if (shell)
-    BeginningOfDocument();
-#endif
-
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
 
   // Make sure that the editor will be destroyed properly
