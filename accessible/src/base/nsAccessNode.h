@@ -156,7 +156,7 @@ public:
    */
   virtual nsINode* GetNode() const { return mContent; }
   nsIContent* GetContent() const { return mContent; }
-  nsIDocument* GetDocumentNode() const
+  virtual nsIDocument* GetDocumentNode() const
     { return mContent ? mContent->GetOwnerDoc() : nsnull; }
 
   /**
