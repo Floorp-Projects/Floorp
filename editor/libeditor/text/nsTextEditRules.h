@@ -205,9 +205,6 @@ protected:
 
   // helper functions
   
-  /** replaces newllines with breaks, if needed.  acts on doc portion in aRange */
-  nsresult ReplaceNewlines(nsIDOMRange *aRange);
-  
   /** creates a trailing break in the text doc if there is not one already */
   nsresult CreateTrailingBRIfNeeded();
   

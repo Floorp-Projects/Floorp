@@ -145,9 +145,6 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
   mEditor->GetSelection(getter_AddRefs(selection));
   NS_ASSERTION(selection, "editor cannot get selection");
 
-  // Cache our body node, if available.
-  nsIDOMNode *body = mEditor->GetRoot();
-
   // Put in a magic br if needed. This method handles null selection,
   // which should never happen anyway
   nsresult res = CreateBogusNodeIfNeeded(selection);
@@ -168,29 +165,6 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
     // ensure trailing br node
     res = CreateTrailingBRIfNeeded();
     NS_ENSURE_SUCCESS(res, res);
-  }
-
-  if (body)
-  {
-    // create a range that is the entire body contents
-    nsCOMPtr<nsIDOMRange> wholeDoc =
-      do_CreateInstance("@mozilla.org/content/range;1");
-    NS_ENSURE_TRUE(wholeDoc, NS_ERROR_NULL_POINTER);
-    wholeDoc->SetStart(body,0);
-    nsCOMPtr<nsIDOMNodeList> list;
-    res = body->GetChildNodes(getter_AddRefs(list));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(list, NS_ERROR_FAILURE);
-
-    PRUint32 listCount;
-    res = list->GetLength(&listCount);
-    NS_ENSURE_SUCCESS(res, res);
-
-    res = wholeDoc->SetEnd(body, listCount);
-    NS_ENSURE_SUCCESS(res, res);
-
-    // replace newlines in that range with breaks
-    res = ReplaceNewlines(wholeDoc);
   }
 
   PRBool deleteBidiImmediately = PR_FALSE;
@@ -1096,83 +1070,6 @@ nsresult
 nsTextEditRules::DidOutputText(nsISelection *aSelection, nsresult aResult)
 {
   return NS_OK;
-}
-
-nsresult
-nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
-{
-  NS_ENSURE_TRUE(aRange, NS_ERROR_NULL_POINTER);
-  
-  // convert any newlines in editable, preformatted text nodes 
-  // into normal breaks.  this is because layout won't give us a place 
-  // to put the cursor on empty lines otherwise.
-
-  nsresult res;
-  nsCOMPtr<nsIContentIterator> iter =
-       do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
-  NS_ENSURE_SUCCESS(res, res);
-
-  res = iter->Init(aRange);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  nsCOMArray<nsIDOMCharacterData> arrayOfNodes;
-  
-  // gather up a list of editable preformatted text nodes
-  while (!iter->IsDone())
-  {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(iter->GetCurrentNode());
-    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
-    if (mEditor->IsTextNode(node) && mEditor->IsEditable(node))
-    {
-      PRBool isPRE;
-      res = mEditor->IsPreformatted(node, &isPRE);
-      NS_ENSURE_SUCCESS(res, res);
-      if (isPRE)
-      {
-        nsCOMPtr<nsIDOMCharacterData> data = do_QueryInterface(node);
-        arrayOfNodes.AppendObject(data);
-      }
-    }
-    iter->Next();
-  }
-  
-  // replace newlines with breaks.  have to do this left to right,
-  // since inserting the break can split the text node, and the
-  // original node becomes the righthand node.
-  PRInt32 j, nodeCount = arrayOfNodes.Count();
-  for (j = 0; j < nodeCount; j++)
-  {
-    nsCOMPtr<nsIDOMNode> brNode;
-    nsCOMPtr<nsIDOMCharacterData> textNode = arrayOfNodes[0];
-    arrayOfNodes.RemoveObjectAt(0);
-    // find the newline
-    PRInt32 offset;
-    nsAutoString tempString;
-    do 
-    {
-      textNode->GetData(tempString);
-      offset = tempString.FindChar(nsCRT::LF);
-      if (offset == -1) break; // done with this node
-      
-      // delete the newline
-      nsRefPtr<DeleteTextTxn> txn;
-      // note 1: we are not telling edit listeners about these because they don't care
-      // note 2: we are not wrapping these in a placeholder because we know they already are,
-      //         or, failing that, undo is disabled
-      res = mEditor->CreateTxnForDeleteText(textNode, offset, 1,
-                                            getter_AddRefs(txn));
-      NS_ENSURE_SUCCESS(res, res); 
-      NS_ENSURE_TRUE(txn, NS_ERROR_OUT_OF_MEMORY);
-      res = mEditor->DoTransaction(txn); 
-      NS_ENSURE_SUCCESS(res, res); 
-      
-      // insert a break
-      res = mEditor->CreateBR(textNode, offset, address_of(brNode));
-      NS_ENSURE_SUCCESS(res, res);
-    } while (1);  // break used to exit while loop
-  }
-  return res;
 }
 
 nsresult
