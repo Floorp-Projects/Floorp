@@ -1342,6 +1342,16 @@ PRBool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
   return PR_TRUE;
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::BreakIsVisible(nsIDOMNode *aNode, PRBool *aIsVisible)
+{
+  NS_ENSURE_ARG_POINTER(aNode && aIsVisible);
+
+  *aIsVisible = IsVisBreak(aNode);
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)

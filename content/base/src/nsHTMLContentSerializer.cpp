@@ -68,6 +68,10 @@
 #include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
+#include "nsIDocShell.h"
+#include "nsIEditorDocShell.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -79,6 +83,40 @@ nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
   }
 
   return CallQueryInterface(it, aSerializer);
+}
+
+static
+PRBool
+IsInvisibleBreak(nsIContent *aNode, nsIAtom *aTag) {
+  // xxxehsan: we should probably figure out a way to determine
+  // if a BR node is visible without using the editor.
+  if (aTag != nsGkAtoms::br || !aNode->IsEditable()) {
+    return PR_FALSE;
+  }
+
+  // Grab the editor associated with the document
+  nsIDocument *doc = aNode->GetCurrentDoc();
+  if (doc) {
+    nsPIDOMWindow *window = doc->GetWindow();
+    if (window) {
+      nsIDocShell *docShell = window->GetDocShell();
+      if (docShell) {
+        nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
+        if (editorDocShell) {
+          nsCOMPtr<nsIEditor> editor;
+          editorDocShell->GetEditor(getter_AddRefs(editor));
+          nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+          if (htmlEditor) {
+            PRBool isVisible = PR_FALSE;
+            nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
+            htmlEditor->BreakIsVisible(domNode, &isVisible);
+            return !isVisible;
+          }
+        }
+      }
+    }
+  }
+  return PR_FALSE;
 }
 
 nsHTMLContentSerializer::nsHTMLContentSerializer()
@@ -204,6 +242,12 @@ nsHTMLContentSerializer::AppendElementStart(nsIContent *aElement,
   }
 
   nsIAtom *name = content->Tag();
+
+  if ((mFlags & nsIDocumentEncoder::OutputPreformatted) &&
+      IsInvisibleBreak(content, name)) {
+    return NS_OK;
+  }
+
   PRBool lineBreakBeforeOpen = LineBreakBeforeOpen(content->GetNameSpaceID(), name);
 
   if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
