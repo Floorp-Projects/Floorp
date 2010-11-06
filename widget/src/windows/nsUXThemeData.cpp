@@ -68,8 +68,6 @@ PRPackedBool
 nsUXThemeData::sIsXPOrLater = PR_FALSE;
 PRPackedBool
 nsUXThemeData::sIsVistaOrLater = PR_FALSE;
-PRPackedBool
-nsUXThemeData::sHaveCompositor = PR_FALSE;
 
 PRBool nsUXThemeData::sTitlebarInfoPopulated = PR_FALSE;
 SIZE nsUXThemeData::sCommandButtons[4];
