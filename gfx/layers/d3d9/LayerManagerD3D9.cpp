@@ -263,7 +263,7 @@ LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
   nsCString msg;
   msg.Append(aMsg);
   msg.AppendLiteral(" Error code: ");
-  msg.AppendInt(aCode);
+  msg.AppendInt(PRUint32(aCode));
   NS_WARNING(msg.BeginReading());
 }
 
