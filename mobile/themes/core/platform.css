@@ -195,7 +195,6 @@ spinbuttons {
 }
 
 .numberbox-input-box {
-  max-width: 128px;
   border: 2px solid #cacdd5;
   border-right: 0px solid transparent;
   border-radius: 8px 0px 0px 8px;
