@@ -80,6 +80,7 @@
 #include "nsIPropertyBag2.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+static const PRInt32 STARTUP_DATABASE_CURRENT_SCHEMA = 1;
 
 class nsAppExitEvent : public nsRunnable {
 private:
@@ -560,47 +561,57 @@ nsresult nsAppStartup::RecordStartupDuration()
   rv = OpenStartupDatabase(getter_AddRefs(db));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NAMED_LITERAL_CSTRING(insert,
-                           "INSERT INTO duration                                       \
-                                        (timestamp, launch, startup, appVersion,       \
-                                         appBuild, platformVersion, platformBuild)     \
-                                   VALUES (:timestamp, :launch, :startup, :appVersion, \
-                                           :appBuild, :platformVersion, :platformBuild)");
   nsCOMPtr<mozIStorageAsyncStatement> statement;
-  rv = db->CreateAsyncStatement(insert, getter_AddRefs(statement));
+  rv = db->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO duration (timestamp, launch, startup, appVersion, "
+                          "appBuild, platformVersion, platformBuild)"
+    "VALUES (:timestamp, :launch, :startup, :appVersion, :appBuild, "
+             ":platformVersion, :platformBuild)"),
+                                getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageBindingParamsArray> parametersArray;
-  statement->NewBindingParamsArray(getter_AddRefs(parametersArray));
+  rv = statement->NewBindingParamsArray(getter_AddRefs(parametersArray));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageBindingParams> parameters;
-  parametersArray->NewBindingParams(getter_AddRefs(parameters));
+  rv = parametersArray->NewBindingParams(getter_AddRefs(parameters));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  parameters->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
-                              launched);
-  parameters->BindInt64ByName(NS_LITERAL_CSTRING("launch"),
-                              started - launched);
-  parameters->BindInt64ByName(NS_LITERAL_CSTRING("startup"),
-                              mRestoredTimestamp - started);
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("appVersion"),
-                                   appVersion);
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("appBuild"),
-                                   appBuild);
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("platformVersion"),
-                                   platformVersion);
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("platformBuild"),
-                                   platformBuild);
+  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
+                                   launched);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("launch"),
+                                   started - launched);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("startup"),
+                                   mRestoredTimestamp - started);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("appVersion"),
+                                        appVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("appBuild"),
+                                        appBuild);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("platformVersion"),
+                                        platformVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("platformBuild"),
+                                        platformBuild);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  parametersArray->AddParams(parameters);
-  statement->BindParameters(parametersArray);
+
+  rv = parametersArray->AddParams(parameters);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindParameters(parametersArray);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStoragePendingStatement> pending;
   rv = statement->ExecuteAsync(nsnull, getter_AddRefs(pending));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->Finalize();
+  rv = db->AsyncClose(nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  db->Close();
   return NS_OK;
 }
 
@@ -620,37 +631,47 @@ nsresult nsAppStartup::RecordAddonEvent(const PRUnichar *event, nsISupports *det
   rv = OpenStartupDatabase(getter_AddRefs(db));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NAMED_LITERAL_CSTRING(insert,
-                           "INSERT INTO events (timestamp, extid, name, version, action) \
-                                   VALUES (:timestamp, :extid, :name, :version, :action)");
   nsCOMPtr<mozIStorageAsyncStatement> statement;
-  rv = db->CreateAsyncStatement(insert, getter_AddRefs(statement));
+  rv = db->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO events (timestamp, extid, name, version, action) "
+    "VALUES (:timestamp, :extid, :name, :version, :action)"),
+                                getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageBindingParamsArray> parametersArray;
-  statement->NewBindingParamsArray(getter_AddRefs(parametersArray));
+  rv = statement->NewBindingParamsArray(getter_AddRefs(parametersArray));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageBindingParams> parameters;
-  parametersArray->NewBindingParams(getter_AddRefs(parameters));
+  rv = parametersArray->NewBindingParams(getter_AddRefs(parameters));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  parameters->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
-                              now);
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("extid"),
-                                   NS_ConvertUTF16toUTF8(id));
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
-                                   NS_ConvertUTF16toUTF8(name));
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("version"),
-                                   NS_ConvertUTF16toUTF8(version));
-  parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("action"),
-                                   NS_ConvertUTF16toUTF8(nsDependentString(event)));
+  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
+                                   now);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("extid"),
+                                        NS_ConvertUTF16toUTF8(id));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
+                                        NS_ConvertUTF16toUTF8(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("version"),
+                                        NS_ConvertUTF16toUTF8(version));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("action"),
+                                        NS_ConvertUTF16toUTF8(nsDependentString(event)));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  parametersArray->AddParams(parameters);
-  statement->BindParameters(parametersArray);
+  rv = parametersArray->AddParams(parameters);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindParameters(parametersArray);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStoragePendingStatement> pending;
   rv = statement->ExecuteAsync(nsnull, getter_AddRefs(pending));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  db->Close();
+  db->AsyncClose(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -668,32 +689,46 @@ nsresult OpenStartupDatabase(mozIStorageConnection **db)
   rv = svc->OpenDatabase(file, db);
   if (NS_ERROR_FILE_CORRUPTED == rv)
   {
-    svc->BackupDatabaseFile(file, NS_LITERAL_STRING("startup.sqlite.backup"),
-                            nsnull, nsnull);
+    rv = file->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = svc->OpenDatabase(file, db);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  (*db)->SetSchemaVersion(1);
 
-  rv = EnsureTable(*db,
-                   NS_LITERAL_CSTRING("duration"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER,             \
-                                       launch INTEGER,                \
-                                       startup INTEGER,               \
-                                       appVersion TEXT,               \
-                                       appBuild TEXT,                 \
-                                       platformVersion TEXT,          \
-                                       platformBuild TEXT"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = EnsureTable(*db,
-                   NS_LITERAL_CSTRING("events"),
-                   NS_LITERAL_CSTRING("timestamp INTEGER,             \
-                                       extid TEXT,                    \
-                                       name TEXT,                     \
-                                       version TEXT,                  \
-                                       action TEXT"));
+  mozStorageTransaction transaction(*db, PR_FALSE);
+
+  PRInt32 schema;
+  rv = (*db)->GetSchemaVersion(&schema);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (0 == schema)
+  {
+    rv = EnsureTable(*db,
+                     NS_LITERAL_CSTRING("duration"),
+                     NS_LITERAL_CSTRING("timestamp INTEGER,             \
+                                         launch INTEGER,                \
+                                         startup INTEGER,               \
+                                         appVersion TEXT,               \
+                                         appBuild TEXT,                 \
+                                         platformVersion TEXT,          \
+                                         platformBuild TEXT"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = EnsureTable(*db,
+                     NS_LITERAL_CSTRING("events"),
+                     NS_LITERAL_CSTRING("timestamp INTEGER,             \
+                                         extid TEXT,                    \
+                                         name TEXT,                     \
+                                         version TEXT,                  \
+                                         action TEXT"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = (*db)->SetSchemaVersion(STARTUP_DATABASE_CURRENT_SCHEMA);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
