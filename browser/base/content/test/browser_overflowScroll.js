@@ -46,16 +46,14 @@ function runOverflowTests(aEvent) {
   var element;
 
   gBrowser.selectedTab = firstScrollable();
-  ok(left(scrollbox) <= left(firstScrollable()), "Selecting the first tab scrolls it into view " +
-     "(" + left(scrollbox) + " <= " + left(firstScrollable()) + ")");
+  isLeft(firstScrollable(), "Selecting the first tab scrolls it into view");
 
   element = nextRightElement();
   EventUtils.synthesizeMouse(downButton, 1, 1, {});
   isRight(element, "Scrolled one tab to the right with a single click");
 
   gBrowser.selectedTab = tabs[tabs.length - 1];
-  ok(right(gBrowser.selectedTab) <= right(scrollbox), "Selecting the last tab scrolls it into view " +
-     "(" + right(gBrowser.selectedTab) + " <= " + right(scrollbox) + ")");
+  isRight(gBrowser.selectedTab, "Selecting the last tab scrolls it into view");
 
   element = nextLeftElement();
   EventUtils.synthesizeMouse(upButton, 1, 1, {});
@@ -66,13 +64,11 @@ function runOverflowTests(aEvent) {
   isLeft(element, "Scrolled one page of tabs with a double click");
 
   EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 3});
-  var firstScrollableLeft = left(firstScrollable());
-  ok(left(scrollbox) <= firstScrollableLeft, "Scrolled to the start with a triple click " +
-     "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");
+  isLeft(firstScrollable(), "Scrolled to the start with a triple click");
 
   for (var i = 2; i; i--)
     EventUtils.synthesizeMouseScroll(scrollbox, 1, 1, {axis: "horizontal", delta: -1});
-  is(left(firstScrollable()), firstScrollableLeft, "Remained at the start with the mouse wheel");
+  isLeft(firstScrollable(), "Remained at the start with the mouse wheel");
 
   element = nextRightElement();
   EventUtils.synthesizeMouseScroll(scrollbox, 1, 1, {axis: "horizontal", delta: 1});

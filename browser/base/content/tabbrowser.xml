@@ -2708,20 +2708,12 @@
           var width = 0;
           var scrollButtonWidth = this.getAttribute("overflow") != "true" ? 0 :
                                   this.mTabstrip._scrollButtonDown.scrollWidth;
-          var paddingStart = this.mTabstrip.scrollboxPaddingStart;
-
           for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
             let tab = this.childNodes[i];
             width += tab.scrollWidth;
-            if (this.getAttribute("overflow") != "true")
-              tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
-            else
-              tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
+            tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
           }
-          if (width == 0 || this.getAttribute("overflow") != "true")
-            this.style.MozMarginStart = width + "px";
-          else
-            this.style.MozMarginStart = width + paddingStart + "px";
+          this.style.MozMarginStart = width + "px";
           this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
         ]]></body>
       </method>
