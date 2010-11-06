@@ -26,6 +26,17 @@ var f = document.createElement("iframe");
 
 function check() {
   var v = document.body.getElementsByTagName("iframe")[0].contentDocument.body.getElementsByTagName("video")[0];
+  
+  // Debug info for Bug 608634
+  ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
+  ok(true, "v.readyState=" + v.readyState);
+  ok(true, "v.networkState=" + v.networkState);
+  if (v.error) {
+    ok(true, "v.error.code=" + v.error.code);
+  } else {
+    ok(true, "v.error is null");
+  }
+  
   ok(v.error && v.error.code == MediaError.MEDIA_ERR_DECODE, "Must have error set to MEDIA_ERR_DECODE");
   SimpleTest.finish();
 }

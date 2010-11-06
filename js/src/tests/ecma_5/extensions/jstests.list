@@ -7,4 +7,5 @@ script String-toSource.js
 script proxy-strict.js
 script regress-bug567606.js
 script string-literal-getter-setter-decompilation.js
+script eval-native-callback-is-indirect.js
 script regress-bug607284.js

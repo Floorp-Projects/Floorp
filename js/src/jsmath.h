@@ -94,6 +94,9 @@ extern void
 js_InitRandom(JSContext *cx);
 
 extern JSBool
+js_math_abs(JSContext *cx, uintN argc, js::Value *vp);
+
+extern JSBool
 js_math_ceil(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool

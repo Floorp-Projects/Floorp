@@ -69,8 +69,7 @@
 #
 #######################################################################
 # Defines
-#
-CVS = cvs
+
 comma := ,
 
 CWD := $(CURDIR)
@@ -107,7 +106,6 @@ endif
 PERL ?= perl
 PYTHON ?= python
 
-RUN_AUTOCONF_LOCALLY = 1
 CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS_SCRIPT
   CONFIG_GUESS = $(shell $(CONFIG_GUESS_SCRIPT))
@@ -170,7 +168,6 @@ CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
 #######################################################################
 # Rules
-# 
 
 # The default rule is build
 build::
@@ -272,7 +269,6 @@ else
 CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
 CONFIG_CACHE  = $(wildcard $(OBJDIR)/config.cache)
 
-ifdef RUN_AUTOCONF_LOCALLY
 EXTRA_CONFIG_DEPS := \
 	$(TOPSRCDIR)/aclocal.m4 \
 	$(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
@@ -282,7 +278,6 @@ EXTRA_CONFIG_DEPS := \
 $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	@echo Generating $@ using autoconf
 	cd $(@D); $(AUTOCONF)
-endif
 
 CONFIG_STATUS_DEPS := \
 	$(wildcard $(CONFIGURES)) \
@@ -290,8 +285,7 @@ CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/.mozconfig.mk \
 	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
 	$(wildcard $(TOPSRCDIR)/config/milestone.txt) \
-	$(wildcard $(TOPSRCDIR)/config/chrome-versions.sh) \
-  $(wildcard $(addsuffix confvars.sh,$(wildcard $(TOPSRCDIR)/*/))) \
+	$(wildcard $(addsuffix confvars.sh,$(wildcard $(TOPSRCDIR)/*/))) \
 	$(NULL)
 
 # configure uses the program name to determine @srcdir@. Calling it without
@@ -300,10 +294,6 @@ CONFIG_STATUS_DEPS := \
 ifeq ($(TOPSRCDIR),$(OBJDIR))
   CONFIGURE = ./configure
 else
-  CONFIGURE = $(TOPSRCDIR)/configure
-endif
-
-ifdef MOZ_TOOLS
   CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
@@ -417,4 +407,4 @@ echo-variable-%:
 # in parallel.
 .NOTPARALLEL:
 
-.PHONY: checkout real_checkout depend build profiledbuild maybe_clobber_profiledbuild export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all
+.PHONY: checkout real_checkout depend build profiledbuild maybe_clobber_profiledbuild export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all upload sdk

@@ -127,7 +127,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return true;
     }
     if (desc.attrs & JSPROP_GETTER) {
-        return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.getter),
+        return ExternalGetOrSet(cx, receiver, id, CastAsObjectJsval(desc.getter),
                                 JSACC_READ, 0, NULL, vp);
     }
     if (!(desc.attrs & JSPROP_SHARED))
@@ -136,7 +136,7 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         vp->setUndefined();
     if (desc.attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(desc.shortid);
-    return CallJSPropertyOp(cx, desc.getter, proxy, id, vp);
+    return CallJSPropertyOp(cx, desc.getter, receiver, id, vp);
 }
 
 bool
@@ -148,43 +148,29 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
-        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
-            if (desc.attrs & JSPROP_SETTER) {
-                return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
-                                        JSACC_WRITE, 1, vp, vp);
-            }
-            if (desc.attrs & JSPROP_SHORTID)
-                id = INT_TO_JSID(desc.shortid);
-            return CallJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
-        }
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub))
+            return CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, vp);
         if (desc.attrs & JSPROP_READONLY)
             return true;
         desc.value = *vp;
-        return defineProperty(cx, proxy, id, &desc);
+        return defineProperty(cx, receiver, id, &desc);
     }
     if (!getPropertyDescriptor(cx, proxy, id, true, &desc))
         return false;
     if (desc.obj) {
-        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
-            if (desc.attrs & JSPROP_SETTER) {
-                return ExternalGetOrSet(cx, proxy, id, CastAsObjectJsval(desc.setter),
-                                        JSACC_WRITE, 1, vp, vp);
-            }
-            if (desc.attrs & JSPROP_SHORTID)
-                id = INT_TO_JSID(desc.shortid);
-            return CallJSPropertyOpSetter(cx, desc.setter, proxy, id, vp);
-        }
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub))
+            return CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, vp);
         if (desc.attrs & JSPROP_READONLY)
             return true;
         /* fall through */
     }
-    desc.obj = proxy;
+    desc.obj = receiver;
     desc.value = *vp;
     desc.attrs = JSPROP_ENUMERATE;
     desc.getter = NULL;
     desc.setter = NULL;
     desc.shortid = 0;
-    return defineProperty(cx, proxy, id, &desc);
+    return defineProperty(cx, receiver, id, &desc);
 }
 
 bool
@@ -862,15 +848,15 @@ proxy_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 }
 
 static JSBool
-proxy_GetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+proxy_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
-    return JSProxy::get(cx, obj, obj, id, vp);
+    return JSProxy::get(cx, obj, receiver, id, vp);
 }
 
 static JSBool
 proxy_SetProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
 {
-    // TODO: throwing away strict
+    // FIXME (bug 596351): throwing away strict.
     return JSProxy::set(cx, obj, obj, id, vp);
 }
 

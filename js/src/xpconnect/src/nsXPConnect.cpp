@@ -61,6 +61,8 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
+#include "jsdIDebuggerService.h"
+
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
@@ -72,10 +74,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
 PRUint32     nsXPConnect::gReportAllJSExceptions = 0;
+JSBool       nsXPConnect::gDebugMode = JS_FALSE;
+JSBool       nsXPConnect::gDesiredDebugMode = JS_FALSE;
 
 // Global cache of the default script security manager (QI'd to
 // nsIScriptSecurityManager)
-nsIScriptSecurityManager *gScriptSecurityManager = nsnull;
+nsIScriptSecurityManager *nsXPConnect::gScriptSecurityManager = nsnull;
 
 const char XPC_CONTEXT_STACK_CONTRACTID[] = "@mozilla.org/js/xpc/ContextStack;1";
 const char XPC_RUNTIME_CONTRACTID[]       = "@mozilla.org/js/xpc/RuntimeService;1";
@@ -939,69 +943,68 @@ static JSClass xpcTempGlobalClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+static bool
+CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
+                     xpc::CompartmentPrivate *priv, JSObject **global,
+                     JSCompartment **compartment)
+{
+    // We take ownership of |priv|. Ensure that either we free it in the case
+    // of failure or give ownership to the compartment in case of success (in
+    // that case it will be free'd in CompartmentCallback during GC).
+    nsAutoPtr<xpc::CompartmentPrivate> priv_holder(priv);
+    JSPrincipals *principals = nsnull;
+    if(principal)
+        principal->GetJSPrincipals(cx, &principals);
+    JSObject *tempGlobal = JS_NewCompartmentAndGlobalObject(cx, clasp, principals);
+    if(principals)
+        JSPRINCIPALS_DROP(cx, principals);
+
+    if(!tempGlobal)
+        return false;
+
+    *global = tempGlobal;
+    *compartment = tempGlobal->getCompartment();
+
+    js::SwitchToCompartment sc(cx, *compartment);
+    JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
+    return true;
+}
+
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
-                       const nsACString &origin, nsIPrincipal *principal,
+                       nsIPrincipal *principal, nsISupports *ptr,
                        bool wantXrays, JSObject **global,
                        JSCompartment **compartment)
 {
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
+    NS_ABORT_IF_FALSE(principal, "bad key");
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = principal->GetURI(getter_AddRefs(uri));
+    if(NS_FAILED(rv))
+        return UnexpectedFailure(rv);
+
     XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
-    nsCAutoString local_origin(origin);
-    if(local_origin.EqualsLiteral("file://") && principal)
+    xpc::PtrAndPrincipalHashKey key(ptr, uri);
+    if(!map.Get(&key, compartment))
     {
-        nsCOMPtr<nsIURI> uri;
-        principal->GetURI(getter_AddRefs(uri));
-        uri->GetSpec(local_origin);
-    }
-
-    JSObject *tempGlobal;
-    if(!map.Get(local_origin, compartment))
-    {
-        JSPrincipals *principals = nsnull;
-        if(principal)
-            principal->GetJSPrincipals(cx, &principals);
-        tempGlobal = JS_NewCompartmentAndGlobalObject(cx, clasp, principals);
-        if(principals)
-            JSPRINCIPALS_DROP(cx, principals);
-
-        if(!tempGlobal)
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-
-        *global = tempGlobal;
-        *compartment = tempGlobal->getCompartment();
-
-        js::SwitchToCompartment sc(cx, *compartment);
-
+        xpc::PtrAndPrincipalHashKey *priv_key =
+            new xpc::PtrAndPrincipalHashKey(ptr, uri);
         xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(ToNewCString(local_origin), wantXrays);
-        JS_SetCompartmentPrivate(cx, *compartment, priv);
-        map.Put(local_origin, *compartment);
+            new xpc::CompartmentPrivate(priv_key, wantXrays, NS_IsMainThread());
+        if(!CreateNewCompartment(cx, clasp, principal, priv,
+                                 global, compartment))
+        {
+            return UnexpectedFailure(NS_ERROR_FAILURE);
+        }
+
+        map.Put(&key, *compartment);
     }
     else
     {
         js::SwitchToCompartment sc(cx, *compartment);
 
-#ifdef DEBUG
-        if(principal)
-        {
-            nsIPrincipal *cprincipal = xpc::AccessCheck::getPrincipal(*compartment);
-            PRBool equals;
-            nsresult rv = cprincipal->Equals(principal, &equals);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "bad Equals implementation");
-            if(!equals)
-            {
-                nsCOMPtr<nsIURI> domain;
-                cprincipal->GetDomain(getter_AddRefs(domain));
-                if(!domain)
-                {
-                    principal->GetDomain(getter_AddRefs(domain));
-                    NS_ASSERTION(!domain, "bad mixing");
-                }
-            }
-        }
-#endif
-
-        tempGlobal = JS_NewGlobalObject(cx, clasp);
+        JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
         if(!tempGlobal)
             return UnexpectedFailure(NS_ERROR_FAILURE);
         *global = tempGlobal;
@@ -1010,20 +1013,56 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     return NS_OK;
 }
 
-/* nsIXPConnectJSObjectHolder initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID, in PRUint32 aFlags); */
+nsresult
+xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
+                         nsISupports *ptr, JSObject **global,
+                         JSCompartment **compartment)
+{
+    // NB: We can be either on or off the main thread here.
+    XPCMTCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetMTCompartmentMap();
+    if(!map.Get(ptr, compartment))
+    {
+        // We allow the pointer to be a principal, in which case it becomes
+        // the principal for the newly created compartment. The caller is
+        // responsible for ensuring that doing this doesn't violate
+        // threadsafety assumptions.
+        nsCOMPtr<nsIPrincipal> principal(do_QueryInterface(ptr));
+        xpc::CompartmentPrivate *priv =
+            new xpc::CompartmentPrivate(ptr, false, NS_IsMainThread());
+        if(!CreateNewCompartment(cx, clasp, principal, priv, global,
+                                 compartment))
+        {
+            return UnexpectedFailure(NS_ERROR_UNEXPECTED);
+        }
+
+        map.Put(ptr, *compartment);
+    }
+    else
+    {
+        js::SwitchToCompartment sc(cx, *compartment);
+
+        JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
+        if(!tempGlobal)
+            return UnexpectedFailure(NS_ERROR_FAILURE);
+        *global = tempGlobal;
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
                                              const nsIID & aIID,
                                              nsIPrincipal * aPrincipal,
-                                             const nsACString & aOrigin,
+                                             nsISupports * aExtraPtr,
                                              PRUint32 aFlags,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aCOMObj, "bad param");
     NS_ASSERTION(_retval, "bad param");
-    NS_ASSERTION(!aOrigin.IsEmpty() || aPrincipal, "must be able to assign an origin");
+    NS_ASSERTION(aExtraPtr || aPrincipal, "must be able to find a compartment");
 
     // XXX This is not pretty. We make a temporary global object and
     // init it with all the Components object junk just so we have a
@@ -1032,18 +1071,16 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
 
-    nsCString origin;
-    if(aOrigin.IsEmpty())
-        aPrincipal->GetOrigin(getter_Copies(origin));
-    else
-        origin = aOrigin;
-
     JSCompartment* compartment;
     JSObject* tempGlobal;
 
-    nsresult rv = xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, origin,
-                                         aPrincipal, false, &tempGlobal,
-                                         &compartment);
+    nsresult rv = aPrincipal
+                  ? xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, aPrincipal,
+                                           aExtraPtr, false, &tempGlobal,
+                                           &compartment)
+                  : xpc_CreateMTGlobalObject(ccx, &xpcTempGlobalClass,
+                                             aExtraPtr, &tempGlobal,
+                                             &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoEnterCompartment ac;
@@ -2374,6 +2411,38 @@ nsXPConnect::Peek(JSContext * *_retval)
     return data->GetJSContextStack()->Peek(_retval);
 }
 
+void 
+nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
+    if (gDebugMode != gDesiredDebugMode) {
+        // This can happen if a Worker is running, but we don't have the ability
+        // to debug workers right now, so just return.
+        if (!NS_IsMainThread()) {
+            return;
+        }
+
+        JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
+
+        nsresult rv;
+        const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
+        nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            if (gDesiredDebugMode == PR_FALSE) {
+                rv = jsds->RecompileForDebugMode(rt, PR_FALSE);
+            } else {
+                rv = jsds->ActivateDebugger(rt);
+            }
+        }
+
+        if (NS_SUCCEEDED(rv)) {
+            gDebugMode = gDesiredDebugMode;
+        } else {
+            // if the attempt failed, cancel the debugMode request
+            gDesiredDebugMode = gDebugMode;
+            JS_SetRuntimeDebugMode(rt, gDebugMode);
+        }
+    }
+}
+
 /* JSContext Pop (); */
 NS_IMETHODIMP
 nsXPConnect::Pop(JSContext * *_retval)
@@ -2398,6 +2467,15 @@ nsXPConnect::Push(JSContext * cx)
 
     if(!data)
         return NS_ERROR_FAILURE;
+
+    PRInt32 count;
+    nsresult rv;
+    rv = data->GetJSContextStack()->GetCount(&count);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (count == 0)
+        CheckForDebugMode(mRuntime->GetJSRuntime());
 
     return data->GetJSContextStack()->Push(cx);
 }
@@ -2504,6 +2582,13 @@ nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
 
     // Set to the caller in XPC_WN_Helper_{Call,Construct}
     *aObj = ccx->GetFlattenedJSObject();
+}
+
+NS_IMETHODIMP
+nsXPConnect::SetDebugModeWhenPossible(PRBool mode)
+{
+    gDesiredDebugMode = mode;
+    return NS_OK;
 }
 
 /* These are here to be callable from a debugger */

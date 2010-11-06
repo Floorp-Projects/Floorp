@@ -56,6 +56,8 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 
+using namespace mozilla::dom;
+
 txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocument* aSourceDocument,
                                          nsIDOMDocument* aResultDocument,
                                          nsITransformObserver* aObserver)
@@ -293,6 +295,5 @@ txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
         GetNodeInfo(aName, nsnull, kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    return NS_NewHTMLElement(aResult, ni.forget(), PR_FALSE);
+    return NS_NewHTMLElement(aResult, ni.forget(), NOT_FROM_PARSER);
 }
-

@@ -309,10 +309,6 @@ protected:
   static PRBool TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset);
-  static PRBool TryBookmarkCharset(nsIDocShell* aDocShell,
-                                   nsIChannel* aChannel,
-                                   PRInt32& aCharsetSource,
-                                   nsACString& aCharset);
   // aParentDocument could be null.
   PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
                           nsIDocument* aParentDocument,

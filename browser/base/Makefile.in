@@ -82,6 +82,7 @@ endif
 endif
 
 ifneq (,$(filter windows, $(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DCAN_DRAW_IN_TITLEBAR=1
 DEFINES += -DMENUBAR_CAN_AUTOHIDE=1
 endif
 

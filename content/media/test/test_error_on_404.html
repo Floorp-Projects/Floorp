@@ -44,7 +44,6 @@ function FinishedLoads() {
 
 function loadError(evt) {
   // Prevent mochitest's onerror handler catching the 'error' event on bubble.
-  evt.stopPropagation();
   var v = evt.target;
   is(v._loadError, false, "Shouldn't receive multiple error events for " + v.src);
   v._loadError = true;

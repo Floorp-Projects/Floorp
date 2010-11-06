@@ -420,8 +420,8 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
 
   nsRefPtr<gfxSharedImageSurface> front = new gfxSharedImageSurface();
   nsRefPtr<gfxSharedImageSurface> back = new gfxSharedImageSurface();
-  if (!front->Init(mShadowManager, aSize, format, shmemType) ||
-      !back->Init(mShadowManager, aSize, format, shmemType))
+  if (!front->InitUnsafe(mShadowManager, aSize, format, shmemType) ||
+      !back->InitUnsafe(mShadowManager, aSize, format, shmemType))
     return PR_FALSE;
 
   *aFrontBuffer = NULL;       *aBackBuffer = NULL;

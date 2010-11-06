@@ -5911,6 +5911,10 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
     printf("SWP_NOSIZE ");
   if (wp->flags & SWP_HIDEWINDOW)
     printf("SWP_HIDEWINDOW ");
+  if (wp->flags & SWP_NOZORDER)
+    printf("SWP_NOZORDER ");
+  if (wp->flags & SWP_NOACTIVATE)
+    printf("SWP_NOACTIVATE ");
   printf("\n");
 #endif
 
@@ -5983,7 +5987,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
   }
 
   // Handle window size changes
-  if (0 == (wp->flags & SWP_NOSIZE)) {
+  if (!(wp->flags & SWP_NOSIZE)) {
     RECT r;
     PRInt32 newWidth, newHeight;
 

@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607584
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 607584" onload="runTest();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+    src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=607584"
+     target="_blank">Mozilla Bug 607584</a>
+  <p/>
+  <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          id="editor"
+          type="content-primary"
+          editortype="html"
+          style="width: 400px; height: 100px; border: thin solid black"/>
+  <p/>
+  <pre id="test">
+  </pre>
+  </body>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function EditorContentListener(aEditor)
+  {
+    this.init(aEditor);
+  }
+  
+  EditorContentListener.prototype = {
+    init : function(aEditor)
+      {
+        this.mEditor = aEditor;
+      },
+  
+    QueryInterface : function(aIID)
+      {
+        if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+            aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+            aIID.equals(Components.interfaces.nsISupports))
+          return this;
+        throw Components.results.NS_NOINTERFACE;
+      },
+  
+    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+    {
+        if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
+        {
+          var editor = this.mEditor.getEditor(this.mEditor.contentWindow);
+          if (editor) {
+              editor instanceof Components.interfaces.nsIHTMLEditor;
+              editor.returnInParagraphCreatesNewParagraph = true;
+              editor.insertHTML("<p id='foo'>this is a paragraph carrying id 'foo'</p>");
+              var p = editor.document.getElementById('foo')
+              editor.beginningOfDocument();
+              sendKey("return", p);
+              var firstP = p.parentNode.firstElementChild;
+              var lastP  = p.parentNode.lastElementChild;
+              var isOk = firstP.nodeName.toLowerCase() == "p" &&
+	                       firstP.id == "foo" &&
+	                       lastP.id == "";
+              ok(isOk, "CR in a paragraph with an ID should not create two paragraphs of same ID");
+              SimpleTest.finish();
+          }
+        }
+  
+    },
+  
+  
+    onProgressChange : function(aWebProgress, aRequest,
+                                aCurSelfProgress, aMaxSelfProgress,
+                                aCurTotalProgress, aMaxTotalProgress)
+      {
+      },
+  
+    onLocationChange : function(aWebProgress, aRequest, aLocation)
+      {
+      },
+  
+    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+      {
+      },
+  
+    onSecurityChange : function(aWebProgress, aRequest, aState)
+      {
+      },
+  
+      mEditor: null
+  };
+
+  function runTest() {
+    var newEditorElement = document.getElementById("editor");
+    newEditorElement.makeEditable("html", true);
+    var docShell = newEditorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).docShell;
+    var progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
+    var progressListener = new EditorContentListener(newEditorElement);
+    progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+    newEditorElement.setAttribute("src", "about:blank");
+  }
+]]>
+</script>
+</window>

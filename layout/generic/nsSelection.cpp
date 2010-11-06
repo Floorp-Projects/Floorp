@@ -2085,18 +2085,28 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
 
       if (textNode)
       {
-        if (aOffset > childIndex)
+        if (theNode->GetPrimaryFrame())
         {
-          PRUint32 textLength = 0;
+          if (aOffset > childIndex)
+          {
+            PRUint32 textLength = 0;
 
-          nsresult rv = textNode->GetLength(&textLength);
-          if (NS_FAILED(rv))
-            return nsnull;
+            nsresult rv = textNode->GetLength(&textLength);
+            if (NS_FAILED(rv))
+              return nsnull;
 
-          *aReturnOffset = (PRInt32)textLength;
+            *aReturnOffset = (PRInt32)textLength;
+          }
+          else
+            *aReturnOffset = 0;
         }
         else
-          *aReturnOffset = 0;
+        {
+          // If we're at a collapsed whitespace content node (which
+          // does not have a primary frame), just use the original node
+          // to get the frame on which we should put the caret.
+          theNode = aNode;
+        }
       }
     }
   }

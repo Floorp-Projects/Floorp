@@ -26,7 +26,6 @@ function startTest(test, token) {
     manager.finished(token);
   }
   var checkError = function(test, v) { return function(evt) {
-    evt.stopPropagation();
     v._errorCount++;
     is(v._errorCount, 1, test.name + " only one error fired");
     endedTest(v);

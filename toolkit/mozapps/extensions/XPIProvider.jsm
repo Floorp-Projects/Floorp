@@ -1853,13 +1853,22 @@ var XPIProvider = {
       XPIDatabase.updateAddonMetadata(aOldAddon, newAddon, aAddonState.descriptor);
       if (newAddon.visible) {
         visibleAddons[newAddon.id] = newAddon;
-        // If the old version was active and wasn't bootstrapped or the new
-        // version will be active and isn't bootstrapped then we must force a
-        // restart
-        if ((aOldAddon.active && !aOldAddon.bootstrap) ||
-            (newAddon.active && !newAddon.bootstrap)) {
-          return true;
+
+        // If the new add-on is bootstrapped and active then call its install method
+        if (newAddon.active && newAddon.bootstrap) {
+          let installReason = Services.vc.compare(aOldAddon.version, newAddon.version) < 0 ?
+                              BOOTSTRAP_REASONS.ADDON_UPGRADE :
+                              BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+
+          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+          file.persistentDescriptor = aAddonState.descriptor;
+          XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, file,
+                                          "install", installReason);
+          return false;
         }
+
+        // Otherwise the caches will need to be invalidated
+        return true;
       }
 
       return false;
@@ -1892,16 +1901,23 @@ var XPIProvider = {
         if (!aOldAddon.visible) {
           XPIDatabase.makeAddonVisible(aOldAddon);
 
-          // If the add-on is bootstrappable and it should be active then
-          // mark it as active and add it to the list to be activated.
-          if (aOldAddon.bootstrap && !aOldAddon.appDisabled &&
-              !aOldAddon.userDisabled) {
-            aOldAddon.active = true;
-            XPIDatabase.updateAddonActive(aOldAddon);
-            XPIProvider.bootstrappedAddons[aOldAddon.id] = {
-              version: aOldAddon.version,
-              descriptor: aAddonState.descriptor
-            };
+          if (aOldAddon.bootstrap) {
+            // The add-on is bootstrappable so call its install script
+            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+            file.persistentDescriptor = aAddonState.descriptor;
+            XPIProvider.callBootstrapMethod(aOldAddon.id, aOldAddon.version, file,
+                                            "install",
+                                            BOOTSTRAP_REASONS.ADDON_INSTALL);
+
+            // If it should be active then mark it as active otherwise unload
+            // its scope
+            if (!aOldAddon.appDisabled && !aOldAddon.userDisabled) {
+              aOldAddon.active = true;
+              XPIDatabase.updateAddonActive(aOldAddon);
+            }
+            else {
+              XPIProvider.unloadBootstrapScope(newAddon.id);
+            }
           }
           else {
             // Otherwise a restart is necessary
@@ -1988,7 +2004,11 @@ var XPIProvider = {
         if (!aOldAddon.bootstrap)
           return true;
 
-        XPIProvider.unloadBootstrapScope(aOldAddon.id);
+        // If this is the currently active bootstrapped add-on for this ID then
+        // remove it from the list.
+        if (aOldAddon.id in XPIProvider.bootstrappedAddons &&
+            XPIProvider.bootstrappedAddons[aOldAddon.id].descriptor == aOldAddon._descriptor)
+          XPIProvider.unloadBootstrapScope(aOldAddon.id);
       }
 
       return false;
@@ -2083,6 +2103,26 @@ var XPIProvider = {
           XPIProvider.allAppGlobal = false;
 
         visibleAddons[newAddon.id] = newAddon;
+
+        let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
+
+        // If we're hiding a bootstrapped add-on then call its uninstall method
+        if (newAddon.id in XPIProvider.bootstrappedAddons) {
+          let oldBootstrap = XPIProvider.bootstrappedAddons[newAddon.id];
+
+          installReason = Services.vc.compare(oldBootstrap.version, newAddon.version) < 0 ?
+                          BOOTSTRAP_REASONS.ADDON_UPGRADE :
+                          BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+
+          let oldAddonFile = Cc["@mozilla.org/file/local;1"].
+                             createInstance(Ci.nsILocalFile);
+          oldAddonFile.persistentDescriptor = oldBootstrap.descriptor;
+          XPIProvider.callBootstrapMethod(newAddon.id, oldBootstrap.version,
+                                          oldAddonFile, "uninstall",
+                                          installReason);
+          XPIProvider.unloadBootstrapScope(newAddon.id);
+        }
+
         if (!newAddon.bootstrap)
           return true;
 
@@ -2090,8 +2130,7 @@ var XPIProvider = {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.persistentDescriptor = aAddonState.descriptor;
         XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, file,
-                                        "install",
-                                        BOOTSTRAP_REASONS.ADDON_INSTALL);
+                                        "install", installReason);
         if (!newAddon.active)
           XPIProvider.unloadBootstrapScope(newAddon.id);
       }
@@ -3037,7 +3076,53 @@ var XPIProvider = {
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
       AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
-      // TODO reveal hidden add-ons (bug 557710)
+
+      // Reveal the highest priority add-on with the same ID
+      function revealAddon(aAddon) {
+        XPIDatabase.makeAddonVisible(aAddon);
+
+        let wrappedAddon = createWrapper(aAddon);
+        AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
+
+        if (!aAddon.userDisabled && !aAddon.appDisabled &&
+            !XPIProvider.enableRequiresRestart(aAddon)) {
+          aAddon.active = true;
+          XPIDatabase.updateAddonActive(aAddon);
+        }
+
+        if (aAddon.bootstrap) {
+          let file = aAddon._installLocation.getLocationForID(aAddon.id);
+          XPIProvider.callBootstrapMethod(aAddon.id, aAddon.version, file,
+                                          "install", BOOTSTRAP_REASONS.ADDON_INSTALL);
+
+          if (aAddon.active) {
+            XPIProvider.callBootstrapMethod(aAddon.id, aAddon.version, file,
+                                            "startup", BOOTSTRAP_REASONS.ADDON_INSTALL);
+          }
+          else {
+            XPIProvider.unloadBootstrapScope(aAddon.id);
+          }
+        }
+
+        // We always send onInstalled even if a restart is required to enable
+        // the revealed add-on
+        AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
+      }
+
+      function checkInstallLocation(aPos) {
+        if (aPos < 0)
+          return;
+
+        let location = XPIProvider.installLocations[aPos];
+        XPIDatabase.getAddonInLocation(aAddon.id, location.name, function(aNewAddon) {
+          if (aNewAddon)
+            revealAddon(aNewAddon);
+          else
+            checkInstallLocation(aPos - 1);
+        })
+      }
+
+      checkInstallLocation(this.installLocations.length - 1);
     }
 
     // Notify any other providers that a new theme has been enabled
