@@ -246,7 +246,13 @@ class MochiRemote(Mochitest):
     def buildURLOptions(self, options):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
+        options.profilePath = self.localProfile
         retVal = Mochitest.buildURLOptions(self, options)
+        #we really need testConfig.js (for browser chrome)
+        if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
+            raise devicemanager.FileError("Unable to copy profile to device.")
+
+        options.profilePath = self.remoteProfile
         options.logFile = self.localLog
         return retVal
 

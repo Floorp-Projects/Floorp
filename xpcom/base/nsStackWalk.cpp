@@ -1137,7 +1137,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 #define __USE_GNU
 #endif
 
-#if defined(HAVE_LIBDL) || defined(XP_MACOSX)
+#if defined(HAVE_DLOPEN) || defined(XP_MACOSX)
 #include <dlfcn.h>
 #endif
 

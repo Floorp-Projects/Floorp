@@ -68,7 +68,7 @@
 @define FRAGMENT_SHADER_HEADER
 /* Fragment Shader */
 #ifdef GL_ES
-precision mediump float;
+precision lowp float;
 #endif
 @end
 

@@ -216,6 +216,25 @@ inline JSBool Probes::CustomMark(JSString *string) { return JS_TRUE; }
 inline JSBool Probes::CustomMark(const char *string) { return JS_TRUE; }
 inline JSBool Probes::CustomMark(int marker) { return JS_TRUE; }
 
+struct AutoFunctionCallProbe {
+    JSContext * const cx;
+    JSFunction *fun;
+    js::Value *lval;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    AutoFunctionCallProbe(JSContext *cx, JSFunction *fun, js::Value *lval = NULL
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx), fun(fun), lval(lval)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        Probes::enterJSFun(cx, fun, lval);
+    }
+
+    ~AutoFunctionCallProbe() {
+        Probes::exitJSFun(cx, fun, lval);
+    }
+};
+
 } /* namespace js */
     
 #endif /* _JSPROBES_H */

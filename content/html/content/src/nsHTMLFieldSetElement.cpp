@@ -58,6 +58,10 @@ nsHTMLFieldSetElement::nsHTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNode
 
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 {
+  PRUint32 length = mDependentElements.Length();
+  for (PRUint32 i=0; i<length; ++i) {
+    mDependentElements[i]->ForgetFieldSet(this);
+  }
 }
 
 // nsISupports

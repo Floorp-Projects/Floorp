@@ -376,12 +376,16 @@ ShadowLayersParent::RecvUpdate(const nsTArray<Edit>& cset,
       ThebesBuffer newBack;
       nsIntRegion newValidRegion;
       float newXResolution, newYResolution;
+      OptionalThebesBuffer readonlyFront;
+      nsIntRegion frontUpdatedRegion;
       thebes->Swap(newFront, op.updatedRegion(),
-                   &newBack, &newValidRegion, &newXResolution, &newYResolution);
+                   &newBack, &newValidRegion, &newXResolution, &newYResolution,
+                   &readonlyFront, &frontUpdatedRegion);
       replyv.push_back(
         OpThebesBufferSwap(
           shadow, NULL,
-          newBack, newValidRegion, newXResolution, newYResolution));
+          newBack, newValidRegion, newXResolution, newYResolution,
+          readonlyFront, frontUpdatedRegion));
       break;
     }
     case Edit::TOpPaintCanvas: {

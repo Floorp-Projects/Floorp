@@ -870,7 +870,7 @@ nsresult
 nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                 nsIContent** aResult, PRBool* aAppendContent,
-                                PRUint32 aFromParser)
+                                FromParser aFromParser)
 {
 #ifdef MOZ_XUL
   if (!aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {

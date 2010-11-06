@@ -123,7 +123,7 @@ public:
   using nsIConstraintValidation::GetValidationMessage;
 
   nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     PRUint32 aFromParser);
+                     mozilla::dom::FromParser aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports

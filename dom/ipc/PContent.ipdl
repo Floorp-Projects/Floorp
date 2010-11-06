@@ -88,6 +88,8 @@ child:
     // nsIPermissionManager messages
     AddPermission(Permission permission);
 
+    AccelerationChanged(double x, double y, double z);
+
 parent:
     PNecko();
 
@@ -122,8 +124,10 @@ parent:
                        nsCString aContentDisposition, bool aForceSave,
                        PRInt64 aContentLength);
     
-    GeolocationStart();
-    GeolocationStop();
+    AddGeolocationListener();
+    RemoveGeolocationListener();
+    AddAccelerometerListener();
+    RemoveAccelerometerListener();
 
     ConsoleMessage(nsString message);
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,

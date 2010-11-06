@@ -3,9 +3,6 @@ conformance/constants.html
 conformance/context-attributes-alpha-depth-stencil-antialias.html
 conformance/context-attributes.html
 conformance/context-type-test.html
-conformance/framebuffer-object-attachment.html
-conformance/get-active-test.html
-conformance/gl-enum-tests.html
 conformance/gl-get-calls.html
 conformance/gl-teximage.html
 conformance/glsl-conformance.html
@@ -13,10 +10,8 @@ conformance/methods.html
 conformance/program-test.html
 conformance/read-pixels-pack-alignment.html
 conformance/tex-image-and-sub-image-2d-with-video.html
-conformance/tex-image-with-format-and-type.html
 conformance/tex-image-with-invalid-data.html
 conformance/tex-input-validation.html
-conformance/texture-active-bind.html
 more/conformance/constants.html
 more/conformance/getContext.html
 more/conformance/quickCheckAPI.html

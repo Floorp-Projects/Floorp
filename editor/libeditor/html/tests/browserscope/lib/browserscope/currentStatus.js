@@ -43,7 +43,6 @@ var knownFailures = {
     'backcolor-2' : true,
     'fontsize-1' : true,
     'fontsize-2' : true,
-    'underline-5' : true,
   },
   'c': {
     'backcolor-0' : true,

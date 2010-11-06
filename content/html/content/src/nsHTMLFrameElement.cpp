@@ -41,13 +41,14 @@
 #include "nsIDOMDocument.h"
 #include "nsDOMError.h"
 
+using namespace mozilla::dom;
 
 class nsHTMLFrameElement : public nsGenericHTMLFrameElement,
                            public nsIDOMHTMLFrameElement
 {
 public:
   nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     PRUint32 aFromParser = NS_NOT_FROM_PARSER);
+                     mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLFrameElement();
 
   // nsISupports
@@ -81,7 +82,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Frame)
 
 
 nsHTMLFrameElement::nsHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                       PRUint32 aFromParser)
+                                       FromParser aFromParser)
   : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
 {
 }

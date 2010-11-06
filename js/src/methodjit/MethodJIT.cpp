@@ -116,17 +116,14 @@ extern "C" void JaegerTrampolineReturn();
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.previous = JS_METHODJIT_DATA(f.cx).activeFrame;
-    JS_METHODJIT_DATA(f.cx).activeFrame = &f;
-
+    f.cx->jaegerCompartment()->pushActiveFrame(&f);
     f.regs.fp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
 }
 
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    JS_ASSERT(JS_METHODJIT_DATA(f.cx).activeFrame);
-    JS_METHODJIT_DATA(f.cx).activeFrame = JS_METHODJIT_DATA(f.cx).activeFrame->previous;    
+    f.cx->jaegerCompartment()->popActiveFrame();
 }
 
 extern "C" void JS_FASTCALL
@@ -683,7 +680,7 @@ JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 #endif                   /* _MSC_VER */
 
 bool
-ThreadData::Initialize()
+JaegerCompartment::Initialize()
 {
     execAlloc = new JSC::ExecutableAllocator();
     if (!execAlloc)
@@ -700,13 +697,13 @@ ThreadData::Initialize()
         StubCallsForOp[i] = 0;
 #endif
 
-    activeFrame = NULL;
+    activeFrame_ = NULL;
 
     return true;
 }
 
 void
-ThreadData::Finish()
+JaegerCompartment::Finish()
 {
     TrampolineCompiler::release(&trampolines);
     delete execAlloc;
@@ -811,10 +808,10 @@ mjit::JITScript::release()
     code.m_executablePool->release();
 
 #if defined JS_POLYIC
-    for (uint32 i = 0; i < nPICs; i++) {
-        pics[i].releasePools();
-        Destroy(pics[i].execPools);
-    }
+    for (uint32 i = 0; i < nPICs; i++)
+        pics[i].finish();
+    for (uint32 i = 0; i < nGetElems; i++)
+        getElems[i].finish();
 #endif
 
 #if defined JS_MONOIC

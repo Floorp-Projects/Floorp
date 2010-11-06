@@ -1928,6 +1928,11 @@ function BrowserGoHome(aEvent) {
   var where = whereToOpenLink(aEvent, false, true);
   var urls;
 
+  // Home page should open in a new tab when current tab is an app tab
+  if (where == "current" &&
+      gBrowser.selectedTab.pinned)
+    where = "tab";
+
   // openUILinkIn in utilityOverlay.js doesn't handle loading multiple pages
   switch (where) {
   case "current":
@@ -3489,9 +3494,10 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   PlacesToolbarHelper.customizeDone();
   BookmarksMenuButton.customizeDone();
 
-  UpdateUrlbarSearchSplitterState();
-
+  // The url bar splitter state is dependent on whether stop/reload
+  // and the location bar are combined, so we need this ordering
   CombinedStopReload.init();
+  UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
   if (gURLBar) {
@@ -4723,14 +4729,18 @@ function updateAppButtonDisplay() {
     window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
+#ifdef CAN_DRAW_IN_TITLEBAR
   document.getElementById("titlebar").hidden = !displayAppButton;
 
   if (displayAppButton)
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
+#endif
 }
+#endif
 
+#ifdef CAN_DRAW_IN_TITLEBAR
 function onTitlebarMaxClick() {
   if (window.windowState == window.STATE_MAXIMIZED)
     window.restore();

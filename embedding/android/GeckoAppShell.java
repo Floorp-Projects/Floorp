@@ -417,8 +417,30 @@ class GeckoAppShell
             return new Intent(Intent.ACTION_VIEW);
     }
 
-    static String getMimeTypeFromExtension(String aFileExt) {
-        return android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(aFileExt);
+    static String getMimeTypeFromExtensions(String aFileExt) {
+        android.webkit.MimeTypeMap mtm =
+            android.webkit.MimeTypeMap.getSingleton();
+        StringTokenizer st = new StringTokenizer(aFileExt, "., ");
+        String type = null;
+        String subType = null;
+        while (st.hasMoreElements()) {
+            String ext = st.nextToken();
+            String mt = mtm.getMimeTypeFromExtension(ext);
+            if (mt == null)
+                continue;
+            int slash = mt.indexOf('/');
+            String tmpType = mt.substring(0, slash);
+            if (!tmpType.equalsIgnoreCase(type))
+                type = type == null ? tmpType : "*";
+            String tmpSubType = mt.substring(slash + 1);
+            if (!tmpSubType.equalsIgnoreCase(subType))
+                subType = subType == null ? tmpSubType : "*";
+        }
+        if (type == null)
+            type = "*";
+        if (subType == null)
+            subType = "*";
+        return type + "/" + subType;
     }
 
     static boolean openUriExternal(String aUriSpec, String aMimeType, String aPackageName, 
@@ -575,7 +597,8 @@ class GeckoAppShell
          GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
          return metrics.densityDpi;
     }
-    public static String showFilePicker() {
-        return GeckoApp.mAppContext.showFilePicker();
+    public static String showFilePicker(String aFilters) {
+        return GeckoApp.mAppContext.
+            showFilePicker(getMimeTypeFromExtensions(aFilters));
     }
 }
