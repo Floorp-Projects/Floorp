@@ -285,8 +285,12 @@ nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     return NS_OK_DEFUNCT_OBJECT;
   }
 
-  if (aExtraState)
-    *aExtraState = 0;
+  if (aExtraState) {
+    // The root content of the document might be removed so that mContent is
+    // out of date.
+    *aExtraState = (mContent->GetCurrentDoc() == mDocument) ?
+      0 : nsIAccessibleStates::EXT_STATE_STALE;
+  }
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
@@ -1346,22 +1350,49 @@ nsDocAccessible::UpdateTree(nsIContent* aContainerNode,
   // Since this information may be not correct then we need to fire some events
   // regardless the document loading state.
 
+  // Update the whole tree of this document accessible when the container is
+  // null (document element is inserted or removed).
+
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   nsIEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
   PRBool fireAllEvents = PR_TRUE;//IsContentLoaded() || esm->IsHandlingUserInputExternal();
 
-  // We don't create new accessibles on content removal.
-  nsAccessible* container = aIsInsert ?
-    GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
-    GetAccService()->GetCachedAccessibleOrContainer(aContainerNode);
-
+  // XXX: bug 608887 reconsider accessible tree update logic because
+  // 1) elements appended outside the HTML body don't get accessibles;
+  // 2) the document having elements that should be accessible may function
+  // without body.
+  nsAccessible* container = nsnull;
   if (aIsInsert) {
+    container = aContainerNode ?
+      GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
+      this;
+
+    // The document children were changed; the root content might be affected.
+    if (container == this) {
+      nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
+
+      // No root content (for example HTML document element was inserted but no
+      // body). Nothing to update.
+      if (!rootContent)
+        return;
+
+      // New root content has been inserted, update it and update the tree.
+      if (rootContent != mContent)
+        mContent = rootContent;
+    }
+
     // XXX: Invalidate parent-child relations for container accessible and its
     // children because there's no good way to find insertion point of new child
     // accessibles into accessible tree. We need to invalidate children even
     // there's no inserted accessibles in the end because accessible children
     // are created while parent recaches child accessibles.
     container->InvalidateChildren();
+
+  } else {
+    // Don't create new accessibles on content removal.
+    container = aContainerNode ?
+      GetAccService()->GetCachedAccessibleOrContainer(aContainerNode) :
+      this;
   }
 
   EIsFromUserInput fromUserInput = esm->IsHandlingUserInputExternal() ?
