@@ -2206,7 +2206,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
     PRUint32 runStart = aScriptRunStart;
     nsAutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString, aScriptRunStart, aScriptRunEnd);
+    ComputeRanges(fontRanges, aString,
+                  aScriptRunStart, aScriptRunEnd, aRunScript);
     PRUint32 numRanges = fontRanges.Length();
 
     for (PRUint32 r = 0; r < numRanges; r++) {
@@ -2271,7 +2272,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
 
 already_AddRefed<gfxFont>
-gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, gfxFont *aPrevMatchedFont)
+gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
+                              PRInt32 aRunScript, gfxFont *aPrevMatchedFont)
 {
     nsRefPtr<gfxFont>    selectedFont;
 
@@ -2329,7 +2331,10 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, 
 }
 
 
-void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnichar *aString, PRUint32 begin, PRUint32 end)
+void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
+                                 const PRUnichar *aString,
+                                 PRUint32 begin, PRUint32 end,
+                                 PRInt32 aRunScript)
 {
     const PRUnichar *str = aString + begin;
     PRUint32 len = end - begin;
@@ -2352,16 +2357,11 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnicha
             ch = SURROGATE_TO_UCS4(ch, str[i]);
         }
 
-        // set up next ch
-        PRUint32 nextCh = 0;
-        if (i+1 < len) {
-            nextCh = str[i+1];
-            if ((i+2 < len) && NS_IS_HIGH_SURROGATE(nextCh) && NS_IS_LOW_SURROGATE(str[i+2]))
-                nextCh = SURROGATE_TO_UCS4(nextCh, str[i+2]);
-        }
-        
         // find the font for this char
-        nsRefPtr<gfxFont> font = FindFontForChar(ch, prevCh, nextCh, (aRanges.Length() == 0) ? nsnull : aRanges[aRanges.Length() - 1].font.get());
+        nsRefPtr<gfxFont> font =
+            FindFontForChar(ch, prevCh, aRunScript,
+                            (aRanges.Length() == 0) ?
+                            nsnull : aRanges[aRanges.Length() - 1].font.get());
 
         prevCh = ch;
 

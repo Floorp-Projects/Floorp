@@ -63,6 +63,8 @@
 #include "gfxPangoFonts.h"
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
+#include "harfbuzz/hb-unicode.h"
+#include "gfxUnicodeProperties.h"
 #include "gfxFontconfigUtils.h"
 #include "gfxUserFontSet.h"
 #include "gfxAtoms.h"
@@ -2068,6 +2070,106 @@ gfxPangoFontGroup::GetFontSet(PangoLanguage *aLang)
     mFontSets.AppendElement(FontSetByLangEntry(aLang, fontSet));
 
     return fontSet;
+}
+
+already_AddRefed<gfxFont>
+gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
+                                   PRInt32 aRunScript,
+                                   gfxFont *aPrevMatchedFont)
+{
+    if (aPrevMatchedFont) {
+        PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aCh);
+        // If this character is a format character (including join-causers)
+        // or a variation selector, use the same font as the previous
+        // character, regardless of whether it supports the character.
+        // Otherwise the text run will be divided.
+        if ((category == HB_CATEGORY_CONTROL ||
+             category == HB_CATEGORY_FORMAT  ||
+             gfxFontUtils::IsVarSelector(aCh))) {
+            return nsRefPtr<gfxFont>(aPrevMatchedFont).forget();
+        }
+
+        // If the previous character is a space or a join-causer and the
+        // previous font supports this character, then use the same font.
+        //
+        // The fonts selected for spaces are usually ignored.  Sticking with
+        // the same font avoids breaking the shaping run.
+        if (aCh == ' ' ||
+            (gfxFontUtils::IsJoinCauser(aPrevCh) &&
+             static_cast<gfxFcFont*>(aPrevMatchedFont)->GetGlyph(aCh))) {
+            return nsRefPtr<gfxFont>(aPrevMatchedFont).forget();
+        }
+    }
+
+    // The real fonts that fontconfig provides for generic/fallback families
+    // depend on the language used, so a different FontSet is used for each
+    // language (except for the variation below).
+    //
+    //   With most fontconfig configurations any real family names prior to a
+    //   fontconfig generic with corresponding fonts installed will still lead
+    //   to the same leading fonts in each FontSet.
+    //
+    //   There is an inefficiency here therefore because the same base FontSet
+    //   could often be used if these real families support the character.
+    //   However, with fontconfig aliases, it is difficult to distinguish
+    //   where exactly alias fonts end and generic/fallback fonts begin.
+    //
+    // The variation from pure language-based matching used here is that the
+    // same primary/base font is always used irrespective of the language.
+    // This provides that SCRIPT_COMMON characters are consistently rendered
+    // with the same font (bug 339513 and bug 416725).  This is particularly
+    // important with the word cache as script can't be reliably determined
+    // from surrounding words.  It also often avoids the unnecessary extra
+    // FontSet efficiency mentioned above.
+    //
+    // However, in two situations, the base font is not checked before the
+    // language-specific FontSet.
+    //
+    //   1. When we don't have a language to make a good choice for
+    //      the base font.
+    //
+    //   2. For system fonts, use the default Pango behavior to give
+    //      consistency with other apps.  This is relevant when un-localized
+    //      builds are run in non-Latin locales.  This special-case probably
+    //      wouldn't be necessary but for bug 91190.
+
+    gfxFcFontSet *fontSet = GetBaseFontSet();
+    PRUint32 nextFont = 0;
+    FcPattern *basePattern = NULL;
+    if (!mStyle.systemFont && mPangoLanguage) {
+        basePattern = fontSet->GetFontPatternAt(0);
+        if (HasChar(basePattern, aCh)) {
+            return nsRefPtr<gfxFont>(GetBaseFont()).forget();
+        }
+
+        nextFont = 1;
+    }
+
+    // Pango, GLib, and HarfBuzz all happen to use the same script codes.
+    const PangoScript script = static_cast<PangoScript>(aRunScript);
+    // Might be nice to call pango_language_includes_script only once for the
+    // run rather than for each character.
+    PangoLanguage *scriptLang;
+    if ((!basePattern ||
+         !pango_language_includes_script(mPangoLanguage, script)) &&
+        (scriptLang = pango_script_get_sample_language(script))) {
+        fontSet = GetFontSet(scriptLang);
+        nextFont = 0;
+    }
+
+    for (PRUint32 i = nextFont;
+         FcPattern *pattern = fontSet->GetFontPatternAt(i);
+         ++i) {
+        if (pattern == basePattern) {
+            continue; // already checked basePattern
+        }
+
+        if (HasChar(pattern, aCh)) {
+            return nsRefPtr<gfxFont>(fontSet->GetFontAt(i)).forget();
+        }
+    }
+
+    return nsnull;
 }
 
 /**
