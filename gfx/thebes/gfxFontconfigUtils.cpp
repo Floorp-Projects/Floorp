@@ -39,6 +39,7 @@
 
 #include "gfxFontconfigUtils.h"
 #include "gfxFont.h"
+#include "gfxAtoms.h"
 
 #include <locale.h>
 #include <fontconfig/fontconfig.h>
@@ -206,7 +207,7 @@ AddString(FcPattern *aPattern, const char *object, const char *aString)
 }
 
 static void
-AddLangGroup(FcPattern *aPattern, const nsACString& aLangGroup)
+AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
 {
     // Translate from mozilla's internal mapping into fontconfig's
     nsCAutoString lang;
@@ -260,11 +261,7 @@ gfxFontconfigUtils::GetFontList(nsIAtom *aLangGroup,
     aListOfFonts.Clear();
 
     nsTArray<nsCString> fonts;
-    nsCAutoString langGroupStr;
-    if (aLangGroup) {
-        aLangGroup->ToUTF8String(langGroupStr);
-    }
-    nsresult rv = GetFontListInternal(fonts, langGroupStr);
+    nsresult rv = GetFontListInternal(fonts, aLangGroup);
     if (NS_FAILED(rv))
         return rv;
 
@@ -306,33 +303,33 @@ gfxFontconfigUtils::GetFontList(nsIAtom *aLangGroup,
 }
 
 struct MozLangGroupData {
-    const char *mozLangGroup;
+    nsIAtom* const& mozLangGroup;
     const char *defaultLang;
 };
 
 const MozLangGroupData MozLangGroups[] = {
-    { "x-western",      "en" },
-    { "x-central-euro", "pl" },
-    { "x-cyrillic",     "ru" },
-    { "x-baltic",       "lv" },
-    { "x-devanagari",   "hi" },
-    { "x-tamil",        "ta" },
-    { "x-armn",         "hy" },
-    { "x-beng",         "bn" },
-    { "x-cans",         "iu" },
-    { "x-ethi",         "am" },
-    { "x-geor",         "ka" },
-    { "x-gujr",         "gu" },
-    { "x-guru",         "pa" },
-    { "x-khmr",         "km" },
-    { "x-knda",         "kn" },
-    { "x-mlym",         "ml" },
-    { "x-orya",         "or" },
-    { "x-sinh",         "si" },
-    { "x-telu",         "te" },
-    { "x-tibt",         "bo" },
-    { "x-unicode",      0    },
-    { "x-user-def",     0    }
+    { gfxAtoms::x_western,      "en" },
+    { gfxAtoms::x_central_euro, "pl" },
+    { gfxAtoms::x_cyrillic,     "ru" },
+    { gfxAtoms::x_baltic,       "lv" },
+    { gfxAtoms::x_devanagari,   "hi" },
+    { gfxAtoms::x_tamil,        "ta" },
+    { gfxAtoms::x_armn,         "hy" },
+    { gfxAtoms::x_beng,         "bn" },
+    { gfxAtoms::x_cans,         "iu" },
+    { gfxAtoms::x_ethi,         "am" },
+    { gfxAtoms::x_geor,         "ka" },
+    { gfxAtoms::x_gujr,         "gu" },
+    { gfxAtoms::x_guru,         "pa" },
+    { gfxAtoms::x_khmr,         "km" },
+    { gfxAtoms::x_knda,         "kn" },
+    { gfxAtoms::x_mlym,         "ml" },
+    { gfxAtoms::x_orya,         "or" },
+    { gfxAtoms::x_sinh,         "si" },
+    { gfxAtoms::x_telu,         "te" },
+    { gfxAtoms::x_tibt,         "bo" },
+    { gfxAtoms::x_unicode,      0    },
+    { gfxAtoms::x_user_def,     0    }
 };
 
 static PRBool
@@ -371,7 +368,7 @@ TryLangForGroup(const nsACString& aOSLang, nsIAtom *aLangGroup,
 }
 
 /* static */ void
-gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
+gfxFontconfigUtils::GetSampleLangForGroup(nsIAtom *aLangGroup,
                                           nsACString *aFcLang)
 {
     NS_PRECONDITION(aFcLang != nsnull, "aFcLang must not be NULL");
@@ -379,8 +376,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
     const MozLangGroupData *langGroup = nsnull;
 
     for (unsigned int i = 0; i < NS_ARRAY_LENGTH(MozLangGroups); ++i) {
-        if (aLangGroup.Equals(MozLangGroups[i].mozLangGroup,
-                              nsCaseInsensitiveCStringComparator())) {
+        if (aLangGroup == MozLangGroups[i].mozLangGroup) {
             langGroup = &MozLangGroups[i];
             break;
         }
@@ -389,7 +385,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
     if (!langGroup) {
         // Not a special mozilla language group.
         // Use aLangGroup as a language code.
-        aFcLang->Assign(aLangGroup);
+        aLangGroup->ToUTF8String(*aFcLang);
         return;
     }
 
@@ -400,8 +396,6 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
     }
 
     if (gLangService) {
-        nsRefPtr<nsIAtom> langGroupAtom = do_GetAtom(langGroup->mozLangGroup);
-
         const char *languages = getenv("LANGUAGE");
         if (languages) {
             const char separator = ':';
@@ -410,7 +404,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
                 if (*pos == '\0' || *pos == separator) {
                     if (languages < pos &&
                         TryLangForGroup(Substring(languages, pos),
-                                        langGroupAtom, aFcLang))
+                                        aLangGroup, aFcLang))
                         return;
 
                     if (*pos == '\0')
@@ -422,7 +416,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
         }
         const char *ctype = setlocale(LC_CTYPE, NULL);
         if (ctype &&
-            TryLangForGroup(nsDependentCString(ctype), langGroupAtom, aFcLang))
+            TryLangForGroup(nsDependentCString(ctype), aLangGroup, aFcLang))
             return;
     }
 
@@ -435,7 +429,7 @@ gfxFontconfigUtils::GetSampleLangForGroup(const nsACString& aLangGroup,
 
 nsresult
 gfxFontconfigUtils::GetFontListInternal(nsTArray<nsCString>& aListOfFonts,
-                                        const nsACString& aLangGroup)
+                                        nsIAtom *aLangGroup)
 {
     FcPattern *pat = NULL;
     FcObjectSet *os = NULL;
@@ -453,7 +447,7 @@ gfxFontconfigUtils::GetFontListInternal(nsTArray<nsCString>& aListOfFonts,
         goto end;
 
     // take the pattern and add the lang group to it
-    if (!aLangGroup.IsEmpty()) {
+    if (aLangGroup) {
         AddLangGroup(pat, aLangGroup);
     }
 
