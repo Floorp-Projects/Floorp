@@ -83,6 +83,10 @@ public:
 
     virtual void UpdateFontList();
 
+    virtual already_AddRefed<gfxFont>
+        FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRInt32 aRunScript,
+                        gfxFont *aPrevMatchedFont);
+
     static void Shutdown();
 
     // Used for @font-face { src: local(); }

@@ -2117,14 +2117,18 @@ public:
         return mUnderlineOffset;
     }
 
-    already_AddRefed<gfxFont> FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, gfxFont *aPrevMatchedFont);
+    virtual already_AddRefed<gfxFont>
+        FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRInt32 aRunScript,
+                        gfxFont *aPrevMatchedFont);
 
     // search through pref fonts for a character, return nsnull if no matching pref font
     virtual already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
 
     virtual already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
 
-    void ComputeRanges(nsTArray<gfxTextRange>& mRanges, const PRUnichar *aString, PRUint32 begin, PRUint32 end);
+    void ComputeRanges(nsTArray<gfxTextRange>& mRanges,
+                       const PRUnichar *aString, PRUint32 begin, PRUint32 end,
+                       PRInt32 aRunScript);
 
     gfxUserFontSet* GetUserFontSet();
 
