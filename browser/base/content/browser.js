@@ -1913,12 +1913,7 @@ function BrowserReloadSkipCache() {
   BrowserReloadWithFlags(reloadFlags);
 }
 
-function BrowserHome()
-{
-  var homePage = gHomeButton.getHomePage();
-  loadOneOrMoreURIs(homePage);
-}
-
+var BrowserHome = BrowserGoHome;
 function BrowserGoHome(aEvent) {
   if (aEvent && "button" in aEvent &&
       aEvent.button == 2) // right-click: do nothing
