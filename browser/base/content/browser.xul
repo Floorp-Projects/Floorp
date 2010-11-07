@@ -435,11 +435,7 @@
   <hbox id="appmenu-button-container" align="start">
   <button id="appmenu-button"
           type="menu"
-#ifdef XP_WIN
           label="&brandShortName;"
-#else
-          label="&appMenuButton.label;"
-#endif
           style="-moz-user-focus: ignore;">
 #include browser-appmenu.inc
   </button>
