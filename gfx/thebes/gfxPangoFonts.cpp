@@ -943,7 +943,7 @@ GetFontGroup(PangoContext *aContext)
  * gfxFcFontSet:
  *
  * Translation from a desired FcPattern to a sorted set of font references
- * (fontconfig cache data) and (when needed) PangoFonts.
+ * (fontconfig cache data) and (when needed) fonts.
  */
 
 class gfxFcFontSet {
@@ -960,7 +960,7 @@ public:
 
     // A reference is held by the FontSet.
     // The caller may add a ref to keep the font alive longer than the FontSet.
-    PangoFont *GetPangoFontAt(PRUint32 i)
+    gfxFcFont *GetFontAt(PRUint32 i)
     {
         if (i >= mFonts.Length() || !mFonts[i].mFont) { 
             // GetFontPatternAt sets up mFonts
@@ -968,10 +968,27 @@ public:
             if (!fontPattern)
                 return NULL;
 
-            mFonts[i].mFont =
-                gfxPangoFcFont::NewFont(mSortPattern, fontPattern);
+            nsAutoRef<FcPattern> renderPattern
+                (FcFontRenderPrepare(NULL, mSortPattern, fontPattern));
+            mFonts[i].mFont = gfxFcFont::GetOrMakeFont(renderPattern);
         }
         return mFonts[i].mFont;
+    }
+
+    // A reference is held by the FontSet.
+    // The caller may add a ref to keep the font alive longer than the FontSet.
+    PangoFont *GetPangoFontAt(PRUint32 i)
+    {
+        if (i >= mFonts.Length() || !mFonts[i].mPangoFont) { 
+            // GetFontPatternAt sets up mFonts
+            FcPattern *fontPattern = GetFontPatternAt(i);
+            if (!fontPattern)
+                return NULL;
+
+            mFonts[i].mPangoFont =
+                gfxPangoFcFont::NewFont(mSortPattern, fontPattern);
+        }
+        return mFonts[i].mPangoFont;
     }
 
     FcPattern *GetFontPatternAt(PRUint32 i);
@@ -983,7 +1000,8 @@ private:
     struct FontEntry {
         explicit FontEntry(FcPattern *aPattern) : mPattern(aPattern) {}
         nsCountedRef<FcPattern> mPattern;
-        nsCountedRef<PangoFont> mFont;
+        nsRefPtr<gfxFcFont> mFont;
+        nsCountedRef<PangoFont> mPangoFont;
     };
 
     struct LangSupportEntry {
@@ -1008,7 +1026,7 @@ private:
     nsCountedRef<FcPattern> mSortPattern;
     // Fonts from @font-face rules
     nsRefPtr<gfxUserFontSet> mUserFontSet;
-    // A (trimmed) list of font patterns and PangoFonts that is built up as
+    // A (trimmed) list of font patterns and fonts that is built up as
     // required.
     nsTArray<FontEntry> mFonts;
     // Holds a list of font patterns that will be trimmed.  This is first set
@@ -1363,7 +1381,7 @@ gfxFcFontSet::SortFallbackFonts()
                                              FcFalse, NULL, &result));
 }
 
-// GetPangoFontAt relies on this setting up all patterns up to |i|.
+// GetFontAt relies on this setting up all patterns up to |i|.
 FcPattern *
 gfxFcFontSet::GetFontPatternAt(PRUint32 i)
 {
@@ -2318,8 +2336,7 @@ gfxPangoFontGroup::GetBaseFontSet()
 
     double size = GetPixelSize(pattern);
     if (size != 0.0 && mStyle.sizeAdjust != 0.0) {
-        gfxFcFont *font = gfxPangoFcFont::
-            GfxFont(GFX_PANGO_FC_FONT(fontSet->GetPangoFontAt(0)));
+        gfxFcFont *font = fontSet->GetFontAt(0);
         if (font) {
             const gfxFont::Metrics& metrics = font->GetMetrics();
 
