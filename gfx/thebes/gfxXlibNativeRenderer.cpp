@@ -185,8 +185,8 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     /* Draw() checked that the matrix contained only a very-close-to-integer
        translation.  Here (and in several other places and thebes) device
        offsets are assumed to be integer. */
-    NS_ASSERTION(PRUint32(device_offset_x) == device_offset_x &&
-                 PRUint32(device_offset_y) == device_offset_y,
+    NS_ASSERTION(PRInt32(device_offset_x) == device_offset_x &&
+                 PRInt32(device_offset_y) == device_offset_y,
                  "Expected integer device offsets");
     nsIntPoint offset(NS_lroundf(matrix.x0 + device_offset_x),
                       NS_lroundf(matrix.y0 + device_offset_y));
