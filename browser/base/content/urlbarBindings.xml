@@ -248,8 +248,13 @@
           if (action) {
             url = action.param;
             if (!(aTriggeringEvent && aTriggeringEvent.altKey)) {
-              if (action.type == "switchtab")
-                switchToTabHavingURI(url);
+              if (action.type == "switchtab") {
+                this.handleRevert();
+                let prevTab = gBrowser.selectedTab;
+                if (switchToTabHavingURI(url) &&
+                    isTabEmpty(prevTab))
+                  gBrowser.removeTab(prevTab);
+              }
               return;
             }
           }
