@@ -167,6 +167,7 @@ CPPSRCS += \
   waitable_event_win.cc \
   win_util.cc \
   chrome_paths_win.cc \
+  chrome_constants.cc \
   ipc_channel_win.cc \
   process_watcher_win.cc \
   transport_dib_win.cc \
