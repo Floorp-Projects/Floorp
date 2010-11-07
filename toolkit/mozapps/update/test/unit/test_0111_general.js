@@ -37,8 +37,18 @@
  */
 
 /* General Partial MAR File Patch Apply Test */
+
 const APPLY_TO_DIR = "applyToDir_0111";
 const UPDATES_DIR  = "0111_mar";
+const AFTER_APPLY_DIR = "afterApplyDir";
+const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
+const AFTER_APPLY_BIN_FILE = "TestAUSHelper" + BIN_SUFFIX;
+const RELAUNCH_BIN_FILE = "relaunch_app" + BIN_SUFFIX;
+const RELAUNCH_ARGS = ["Test Arg 1", "Test Arg 2", "Test Arg 3"];
+// All we care about is that the last modified time has changed so that Mac OS
+// X Launch Services invalidates its cache so the test allows up to one minute
+// difference in the last modified time.
+const MAX_TIME_DIFFERENCE = 60000;
 
 var gTestFiles = [
 {
@@ -106,11 +116,6 @@ var gTestFiles = [
   comparePerms     : 0644
 }];
 
-// All we care about is that the last modified time has changed so that Mac OS
-// X Launch Services invalidates its cache so the test allows up to one minute
-// difference in the last modified time.
-const MAX_TIME_DIFFERENCE = 60000;
-
 function run_test() {
   if (IS_ANDROID) {
     logTestInfo("this test is not applicable to Android... returning early");
@@ -139,6 +144,22 @@ function run_test() {
   logTestInfo("testing successful removal of the directory used to apply the " +
               "mar file");
   do_check_false(applyToDir.exists());
+
+  // Use a directory outside of dist/bin to lessen the garbage in dist/bin
+  var updatesDir = do_get_file(UPDATES_DIR, true);
+  try {
+    // Mac OS X intermittently fails when removing the dir where the updater
+    // binary was launched.
+    removeDirRecursive(updatesDir);
+  }
+  catch (e) {
+    dump("Unable to remove directory\n" +
+         "path: " + updatesDir.path + "\n" +
+         "Exception: " + e + "\n");
+  }
+  if (!updatesDir.exists()) {
+    updatesDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+  }
 
   // Create the files to test the partial mar's ability to modify and delete
   // files.
@@ -171,6 +192,25 @@ function run_test() {
     }
   }
 
+  var afterApplyBinDir = applyToDir.clone();
+  afterApplyBinDir.append(AFTER_APPLY_DIR);
+
+  var afterApplyBin = do_get_file(AFTER_APPLY_BIN_FILE);
+  afterApplyBin.copyTo(afterApplyBinDir, RELAUNCH_BIN_FILE);
+
+  var relaunchApp = afterApplyBinDir.clone();
+  relaunchApp.append(RELAUNCH_BIN_FILE);
+  relaunchApp.permissions = PERMS_DIRECTORY;
+
+  let updaterIniContents = "[Strings]\n" +
+                           "Title=Update Test\n" +
+                           "Info=Application Update XPCShell Test - " +
+                           "test_0111_general.js\n";
+  var updaterIni = updatesDir.clone();
+  updaterIni.append(FILE_UPDATER_INI);
+  writeFile(updaterIni, updaterIniContents);
+  updaterIni.copyTo(afterApplyBinDir, FILE_UPDATER_INI);
+
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on a successful
   // update (bug 600098).
@@ -187,35 +227,18 @@ function run_test() {
   updater.append("updater.app");
   if (!updater.exists()) {
     updater = binDir.clone();
-    updater.append("updater.exe");
+    updater.append(UPDATER_BIN_FILE);
     if (!updater.exists()) {
-      updater = binDir.clone();
-      updater.append("updater");
-      if (!updater.exists()) {
-        do_throw("Unable to find updater binary!");
-      }
+      do_throw("Unable to find updater binary!");
     }
   }
 
-  // Use a directory outside of dist/bin to lessen the garbage in dist/bin
-  var updatesDir = do_get_file(UPDATES_DIR, true);
-  try {
-    // Mac OS X intermittently fails when removing the dir where the updater
-    // binary was launched.
-    removeDirRecursive(updatesDir);
-  }
-  catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updatesDir.path + "\n" +
-         "Exception: " + e + "\n");
-  }
-
-  updatesDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
   var mar = do_get_file("data/aus-0111_general.mar");
   mar.copyTo(updatesDir, FILE_UPDATE_ARCHIVE);
 
   // apply the partial mar and check the innards of the files
-  var exitValue = runUpdate(updater, updatesDir, applyToDir);
+  var exitValue = runUpdate(updater, updatesDir, applyToDir, relaunchApp,
+                            RELAUNCH_ARGS);
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a partial mar");
   do_check_eq(exitValue, 0);
@@ -286,7 +309,7 @@ function run_test() {
     do_check_neq(getFileExtension(entry), "patch");
   }
 
-  do_test_finished();
+  check_app_launch_log();
 }
 
 function end_test() {
@@ -312,4 +335,31 @@ function end_test() {
   }
 
   cleanUp();
+}
+
+function check_app_launch_log() {
+  var appLaunchLog = do_get_file(APPLY_TO_DIR);
+  appLaunchLog.append(AFTER_APPLY_DIR);
+  appLaunchLog.append(RELAUNCH_BIN_FILE + ".log");
+  if (!appLaunchLog.exists()) {
+    do_timeout(0, check_app_launch_log);
+    return;
+  }
+
+  var expectedLogContents = "executed\n" + RELAUNCH_ARGS.join("\n") + "\n";
+  var logContents = readFile(appLaunchLog).replace(/\r\n/g, "\n");
+  // It is possible for the log file contents check to occur before the log file
+  // contents are completely written so wait until the contents are the expected
+  // value. If the contents are never the expected value then the test will
+  // fail by timing out.
+  if (logContents != expectedLogContents) {
+    do_timeout(0, check_app_launch_log);
+    return;
+  }
+
+  logTestInfo("testing that the callback application successfully launched " +
+              "and the expected command line arguments passed to it");
+  do_check_eq(logContents, expectedLogContents);
+
+  do_test_finished();
 }
