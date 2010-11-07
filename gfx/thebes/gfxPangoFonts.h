@@ -53,9 +53,6 @@
 // to shape any textruns with non-8bit characters
 // XXX
 #define ENABLE_FAST_PATH_8BIT
-// Enable this to bypass Pango shaping for all textruns.  Don't expect
-// anything other than simple Latin work though!
-//#define ENABLE_FAST_PATH_ALWAYS
 
 class gfxFcFontSet;
 class gfxFcFont;
@@ -133,26 +130,15 @@ private:
      * (TEXT_IS_8BIT can return false when the characters are all below 0x100
      * but stored in UTF16 format)
      */
-    void InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
-                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
-                     PRBool aTake8BitPath);
+    void InitTextRun(gfxTextRun *aTextRun, const PRUnichar *aString,
+                     PRUint32 aLength, PRBool aTake8BitPath);
 
-    // Returns NS_ERROR_FAILURE if there's a missing glyph
-    nsresult SetGlyphs(gfxTextRun *aTextRun,
-                       const gchar *aUTF8, PRUint32 aUTF8Length,
-                       PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
-                       PangoGlyphUnit aOverrideSpaceWidth,
-                       PRBool aAbortOnMissingGlyph);
-    nsresult SetMissingGlyphs(gfxTextRun *aTextRun,
-                              const gchar *aUTF8, PRUint32 aUTF8Length,
-                              PRUint32 *aUTF16Offset);
     void CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
-                                  const gchar *aUTF8, PRUint32 aUTF8Length,
-                                  PRUint32 aUTF8HeaderLength);
-#if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
+                                  const PRUnichar *aString, PRUint32 aLength);
+#if defined(ENABLE_FAST_PATH_8BIT)
     PRBool CanTakeFastPath(PRUint32 aFlags);
     nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
-                                 const gchar *aUTF8, PRUint32 aUTF8Length);
+                                 const PRUnichar *aString, PRUint32 aLength);
 #endif
 
     void GetFcFamilies(nsTArray<nsString> *aFcFamilyList,
