@@ -82,6 +82,7 @@ if ($ARGV[0] eq "compare" && $#ARGV == 1) {
 #     11   | priority
 #     12   | linebreakstyle
 #     13   | direction
+#     14   | integral
 
 # 1) build %moz_hash from $MOZ_DICTIONARY
 
@@ -114,6 +115,7 @@ while (<$file>) {
     $value[12] = ""; # we don't store "linebreakstyle" in our dictionary
     if (m/^(.*)direction:([a-z]*)(.*)$/) { $value[13] = $2; }
     else { $value[13] = ""; }
+    $value[14] = (m/^(.*)integral(.*)$/);
 
     # 1.3) save the key and value
     $moz_hash{$key} = [ @value ];
@@ -131,6 +133,7 @@ if ($ARGV[0] eq "check") {
         die ("Couldn't open $FILE_SYNTAX_ERRORS!");
 
     $nb_errors = 0;
+    $nb_warnings = 0;
     @moz_keys = (keys %moz_hash);
     # check the validity of our private data
     while ($key = pop(@moz_keys)) {
@@ -142,11 +145,24 @@ if ($ARGV[0] eq "check") {
               @moz[13] eq "horizontal" ||
               @moz[13] eq "vertical")) {
             $valid = 0;
+            $nb_errors++;
             print $file_syntax_errors "error: invalid direction \"$moz[13]\"\n";
         }
 
+        if (!@moz[4] && @moz[14]) {
+            $valid = 0;
+            $nb_warnings++;
+            print $file_syntax_errors "warning: operator is integral but not lareop\n";
+        }
+        
+        $_ = @moz[0];
+        if ((m/^(.*)[iI]ntegral(.*)$/) && !@moz[14]) {
+            $valid = 0;
+            $nb_warnings++;
+            print $file_syntax_errors "warning: operator contains the term \"integral\" in its comment, but is not integral\n";
+        }
+
         if (!$valid) {
-            $nb_errors++;
             print $file_syntax_errors $entry;
             print $file_syntax_errors "\n";
         }
@@ -222,8 +238,9 @@ if ($ARGV[0] eq "check") {
 
     close($file_syntax_errors);
     print "\n";
-    if ($nb_errors > 0) {
-        print "$nb_errors errors found\n";
+    if ($nb_errors > 0 || $nb_warnings > 0) {
+        print "$nb_errors error(s) found\n";
+        print "$nb_warnings warning(s) found\n";
         print "See output file $FILE_SYNTAX_ERRORS.\n\n";
     } else {
         print "No error found.\n\n";
@@ -284,6 +301,7 @@ for ($i = 0; $i < $n; $i++) {
 
     # not stored in the WG dictionary
     $value[13] = ""; # direction
+    $value[14] = ""; # integral
 
     # 3.3) save the key and value
     push(@wg_keys, $key);
@@ -419,6 +437,7 @@ sub completeCommon {
     $entry = "$key = $entry";
 
     if ($v_moz[13]) { $entry = "$entry direction:$v_moz[13]"; }
+    if ($v_moz[14]) { $entry = "$entry integral"; }
 
     if ($v_moz[0]) {
         # keep our previous comment
