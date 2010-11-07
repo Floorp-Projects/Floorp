@@ -1020,19 +1020,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: shouldStack
-  // Returns true if the groupItem, given "count", should stack (instead of grid).
+  // Returns true if the groupItem should stack (instead of grid).
   shouldStack: function GroupItem_shouldStack(count) {
     if (count <= 1)
       return false;
 
     var bb = this.getContentBounds();
     var options = {
-      pretend: true,
-      count: count
+      return: 'widthAndColumns',
+      count: count || this._children.length
     };
+    let {childWidth, columns} = Items.arrange(null, bb, options);
 
-    var rects = Items.arrange(null, bb, options);
-    return (rects[0].width < 55);
+    let shouldStack = childWidth < TabItems.minTabWidth * 1.35;
+    this._columns = shouldStack ? null : columns;
+
+    return shouldStack;
   },
 
   // ----------
@@ -1049,16 +1052,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
     } else {
       var bb = this.getContentBounds();
-      var count = this._children.length;
-      if (!this.shouldStack(count)) {
+      if (!this.shouldStack()) {
         if (!options)
           options = {};
-
-        var animate;
-        if (typeof options.animate == 'undefined')
-          animate = true;
-        else
-          animate = options.animate;
 
         this._children.forEach(function(child) {
             child.removeClass("stacked")
@@ -1066,17 +1062,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         this.topChild = null;
 
-        var arrangeOptions = Utils.copy(options);
-        Utils.extend(arrangeOptions, {
-          pretend: true,
-          count: count
-        });
-
-        if (!count) {
+        if (!this._children.length) {
           this.xDensity = 0;
           this.yDensity = 0;
           return;
         }
+
+        var arrangeOptions = Utils.copy(options);
+        Utils.extend(arrangeOptions, {
+          columns: this._columns
+        });
+
+        // Items.arrange will rearrange the children, but also return an array
+        // of the Rect's used.
 
         var rects = Items.arrange(this._children, bb, arrangeOptions);
 
@@ -1097,15 +1095,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             break;
         }
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
-
-        this._children.forEach(function(child, index) {
-          if (!child.locked.bounds) {
-            child.setBounds(rects[index], !animate);
-            child.setRotation(0);
-            if (options.z)
-              child.setZ(options.z);
-          }
-        });
 
         this._isStacked = false;
       } else
