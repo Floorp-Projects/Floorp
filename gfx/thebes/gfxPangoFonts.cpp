@@ -3057,6 +3057,44 @@ SetMissingGlyphs(gfxTextRun *aTextRun, const gchar *aUTF8,
     *aUTF16Offset = utf16Offset;
 }
 
+static void
+InitGlyphRunWithPango(gfxTextRun *aTextRun,
+                      const gchar *aUTF8, PRUint32 aUTF8Length,
+                      PRUint32 *aUTF16Offset,
+                      PangoAnalysis *aAnalysis,
+                      PangoGlyphUnit aOverrideSpaceWidth)
+{
+    PRUint32 utf16Offset = *aUTF16Offset;
+    PangoGlyphString *glyphString = pango_glyph_string_new();
+
+    const gchar *p = aUTF8;
+    const gchar *end = p + aUTF8Length;
+    while (p < end) {
+        if (*p == 0) {
+            aTextRun->SetMissingGlyph(utf16Offset, 0);
+            ++p;
+            ++utf16Offset;
+            continue;
+        }
+
+        // It's necessary to loop over pango_shape as it treats
+        // NULs as string terminators
+        const gchar *text = p;
+        do {
+            ++p;
+        } while(p < end && *p != 0);
+        gint len = p - text;
+
+        pango_shape(text, len, aAnalysis, glyphString);
+        SetupClusterBoundaries(aTextRun, text, len, utf16Offset, aAnalysis);
+        SetGlyphs(aTextRun, text, len, &utf16Offset, glyphString,
+                  aOverrideSpaceWidth);
+    }
+
+    pango_glyph_string_free(glyphString);
+    *aUTF16Offset = utf16Offset;
+}
+
 #if defined(ENABLE_FAST_PATH_8BIT)
 nsresult
 gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
@@ -3164,10 +3202,6 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
     PRBool isRTL = aTextRun->IsRightToLeft();
 #endif
     GList *pos = items;
-    PangoGlyphString *glyphString = pango_glyph_string_new();
-    if (!glyphString)
-        goto out; // OOM
-
     for (; pos && pos->data; pos = pos->next) {
         PangoItem *item = (PangoItem *)pos->data;
         NS_ASSERTION(isRTL == item->analysis.level % 2, "RTL assumption mismatch");
@@ -3194,34 +3228,11 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
         PRUint32 spaceWidth =
             moz_pango_units_from_double(font->GetMetrics().spaceWidth);
 
-        const gchar *p = utf8.get() + offset;
-        const gchar *end = p + length;
-        while (p < end) {
-            if (*p == 0) {
-                aTextRun->SetMissingGlyph(utf16Offset, 0);
-                ++p;
-                ++utf16Offset;
-                continue;
-            }
-
-            // It's necessary to loop over pango_shape as it treats
-            // NULs as string terminators
-            const gchar *text = p;
-            do {
-                ++p;
-            } while(p < end && *p != 0);
-            gint len = p - text;
-
-            pango_shape(text, len, &item->analysis, glyphString);
-            SetupClusterBoundaries(aTextRun, text, len, utf16Offset, &item->analysis);
-            SetGlyphs(aTextRun, text, len, &utf16Offset, glyphString, spaceWidth);
-        }
+        InitGlyphRunWithPango(aTextRun, utf8.get() + offset, length,
+                              &utf16Offset, &item->analysis, spaceWidth);
     }
 
 out:
-    if (glyphString)
-        pango_glyph_string_free(glyphString);
-
     for (pos = items; pos; pos = pos->next)
         pango_item_free((PangoItem *)pos->data);
 
