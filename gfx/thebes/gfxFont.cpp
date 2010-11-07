@@ -2188,13 +2188,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     PRUint32 runStart = 0, runLimit = aLength;
     PRInt32 runScript = HB_SCRIPT_LATIN;
     while (scriptRuns.Next(runStart, runLimit, runScript)) {
-        if (runScript <= HB_SCRIPT_INHERITED) {
-            // For unresolved "common" or "inherited" runs, default to Latin
-            // for now.
-            // (Should we somehow use the language or locale to try and infer
-            // a better default?)
-            runScript = HB_SCRIPT_LATIN;
-        }
         InitTextRun(aContext, aTextRun, aString, aLength,
                     runStart, runLimit, runScript);
     }
