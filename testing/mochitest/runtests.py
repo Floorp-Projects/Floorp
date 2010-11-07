@@ -15,7 +15,7 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Foundation.
+# the Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
@@ -49,6 +49,10 @@ import os
 import os.path
 import sys
 import time
+
+SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+sys.path.insert(0, SCRIPT_DIR);
+
 import shutil
 from urllib import quote_plus as encodeURIComponent
 import urllib2
