@@ -7845,17 +7845,11 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
     for (let i = 0; i < browsers.length; i++) {
       let browser = browsers[i];
       if (browser.currentURI.equals(aURI)) {
-        gURLBar.handleRevert();
-        // We need the current tab so we can check if we should close it
-        let prevTab = gBrowser.selectedTab;
         // Focus the matching window & tab
         aWindow.focus();
         aWindow.gBrowser.tabContainer.selectedIndex = i;
         if (aCallback)
           aCallback(browser);
-        // Close the previously selected tab if it was empty
-        if (isTabEmpty(prevTab))
-          gBrowser.removeTab(prevTab);
         return true;
       }
     }
