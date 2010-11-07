@@ -290,8 +290,13 @@ nsUITimerCallback::Notify(nsITimer* aTimer)
   if ((gMouseOrKeyboardEventCounter == mPreviousCount) || !aTimer) {
     gMouseOrKeyboardEventCounter = 0;
     obs->NotifyObservers(nsnull, "user-interaction-inactive", nsnull);
+    if (gUserInteractionTimer) {
+      gUserInteractionTimer->Cancel();
+      NS_RELEASE(gUserInteractionTimer);
+    }
   } else {
     obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
+    nsEventStateManager::UpdateUserActivityTimer();
   }
   mPreviousCount = gMouseOrKeyboardEventCounter;
   return NS_OK;
@@ -784,17 +789,28 @@ nsEventStateManager::nsEventStateManager()
 {
   if (sESMInstanceCount == 0) {
     gUserInteractionTimerCallback = new nsUITimerCallback();
-    if (gUserInteractionTimerCallback) {
+    if (gUserInteractionTimerCallback)
       NS_ADDREF(gUserInteractionTimerCallback);
-      CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
-      if (gUserInteractionTimer) {
-        gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
-                                                NS_USER_INTERACTION_INTERVAL,
-                                                nsITimer::TYPE_REPEATING_SLACK);
-      }
-    }
+    UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
+}
+
+nsresult
+nsEventStateManager::UpdateUserActivityTimer(void)
+{
+  if (!gUserInteractionTimerCallback)
+    return NS_OK;
+
+  if (!gUserInteractionTimer)
+    CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
+
+  if (gUserInteractionTimer) {
+    gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
+                                            NS_USER_INTERACTION_INTERVAL,
+                                            nsITimer::TYPE_ONE_SHOT);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1071,6 +1087,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mozilla::services::GetObserverService();
       if (obs) {
         obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
+        UpdateUserActivityTimer();
       }
     }
     ++gMouseOrKeyboardEventCounter;
