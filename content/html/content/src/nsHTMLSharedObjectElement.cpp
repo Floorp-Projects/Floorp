@@ -185,7 +185,7 @@ nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(already_AddRefed<nsINodeInf
     mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)
 {
   RegisterFreezableElement();
-  SetIsNetworkCreated(aFromParser == NS_FROM_PARSER_NETWORK);
+  SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
 }
 
 nsHTMLSharedObjectElement::~nsHTMLSharedObjectElement()
