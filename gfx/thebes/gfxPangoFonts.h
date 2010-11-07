@@ -57,10 +57,12 @@
 // anything other than simple Latin work though!
 //#define ENABLE_FAST_PATH_ALWAYS
 
-class gfxFcPangoFontSet;
+class gfxFcFontSet;
+class gfxFcFont;
 class gfxProxyFontEntry;
 typedef struct _FcPattern FcPattern;
 typedef struct FT_FaceRec_* FT_Face;
+typedef struct FT_LibraryRec_  *FT_Library;
 
 class THEBES_API gfxPangoFontGroup : public gfxFontGroup {
 public:
@@ -103,14 +105,14 @@ public:
     // @param aLang [in] language to use for pref fonts and system default font
     //        selection, or NULL for the language guessed from the gfxFontStyle.
     // The FontGroup holds a reference to this set.
-    gfxFcPangoFontSet *GetFontSet(PangoLanguage *aLang = NULL);
+    gfxFcFontSet *GetFontSet(PangoLanguage *aLang = NULL);
 
-protected:
+private:
     class FontSetByLangEntry {
     public:
-        FontSetByLangEntry(PangoLanguage *aLang, gfxFcPangoFontSet *aFontSet);
+        FontSetByLangEntry(PangoLanguage *aLang, gfxFcFontSet *aFontSet);
         PangoLanguage *mLang;
-        nsRefPtr<gfxFcPangoFontSet> mFontSet;
+        nsRefPtr<gfxFcFontSet> mFontSet;
     };
     // There is only one of entry in this array unless characters from scripts
     // of other languages are measured.
@@ -155,11 +157,12 @@ protected:
     // @param aLang [in] language to use for pref fonts and system font
     //        resolution, or NULL to guess a language from the gfxFontStyle.
     // @param aMatchPattern [out] if non-NULL, will return the pattern used.
-    already_AddRefed<gfxFcPangoFontSet>
+    already_AddRefed<gfxFcFontSet>
     MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
                 nsAutoRef<FcPattern> *aMatchPattern = NULL);
 
-    gfxFcPangoFontSet *GetBaseFontSet();
+    gfxFcFontSet *GetBaseFontSet();
+    gfxFcFont *GetBaseFont();
 
     gfxFloat GetSizeAdjustFactor()
     {
@@ -167,6 +170,8 @@ protected:
             GetBaseFontSet();
         return mSizeAdjustFactor;
     }
+
+    static FT_Library GetFTLibrary();
 };
 
 #endif /* GFX_PANGOFONTS_H */
