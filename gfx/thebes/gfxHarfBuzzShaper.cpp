@@ -213,7 +213,7 @@ gfxHarfBuzzShaper::GetGlyphMetrics(gfxContext *aContext,
     NS_ASSERTION((mNumLongMetrics > 0) && mHmtxTable != nsnull,
                  "font is lacking metrics, we shouldn't be here");
 
-    if (glyph >= mNumLongMetrics) {
+    if (glyph >= PRUint32(mNumLongMetrics)) {
         glyph = mNumLongMetrics - 1;
     }
 
@@ -901,7 +901,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     }
 
     for (PRInt32 i = 0; i < numGlyphs; ++i) {
-        PRInt32 loc = ginfo[i].cluster;
+        PRUint32 loc = ginfo[i].cluster;
         if (loc < aRunLength) {
             charToGlyph[loc] = i;
         }
