@@ -2203,16 +2203,6 @@ protected:
                                    const nsACString& aGenericName,
                                    void *closure);
 
-    inline gfxFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, PRUint32 aCh) {
-        PRUint32 len = aFontList.Length();
-        for (PRUint32 i = 0; i < len; i++) {
-            gfxFont* font = aFontList.ElementAt(i);
-            if (font && font->HasCharacter(aCh))
-                return font;
-        }
-        return nsnull;
-    }
-
     static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 };
 #endif
