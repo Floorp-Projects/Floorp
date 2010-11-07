@@ -132,6 +132,7 @@ CPPSRCS += \
   message_router.cc \
   notification_service.cc \
   task_queue.cc \
+  sha512.cc \
   $(NULL)
 
 ifdef OS_WIN # {
@@ -176,7 +177,6 @@ endif # } OS_WIN
 ifdef OS_POSIX # {
 
 CPPSRCS += \
-  sha512.cc \
   condition_variable_posix.cc \
   debug_util_posix.cc \
   event_recorder_stubs.cc \
