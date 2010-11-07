@@ -57,7 +57,6 @@ protected:
   nsCString mCharset;
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
-  PRPackedBool mIsInternal;
 
   nsresult FinishWithLength(char **_retval, PRInt32* aLength);
   nsresult ConvertFromUnicodeWithLength(const nsAString& aSrc,
