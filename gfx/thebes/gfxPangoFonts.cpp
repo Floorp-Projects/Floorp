@@ -104,8 +104,7 @@ int moz_pango_units_from_double(double d) {
     return NS_lround(d * FLOAT_PANGO_SCALE);
 }
 
-static PangoLanguage *GuessPangoLanguage(const nsACString& aLangGroup);
-static PangoLanguage *GuessPangoLanguage(nsIAtom *aLangGroup);
+static PangoLanguage *GuessPangoLanguage(nsIAtom *aLanguage);
 
 static cairo_scaled_font_t *CreateScaledFont(FcPattern *aPattern);
 static void SetMissingGlyphs(gfxTextRun *aTextRun, const gchar *aUTF8,
@@ -3244,28 +3243,19 @@ out:
 
 /* static */
 PangoLanguage *
-GuessPangoLanguage(const nsACString& aLangGroup)
+GuessPangoLanguage(nsIAtom *aLanguage)
 {
-    // See if the lang group needs to be translated from Mozilla's
-    // internal mapping into fontconfig's
-    nsCAutoString lang;
-    gfxFontconfigUtils::GetSampleLangForGroup(aLangGroup, &lang);
+    if (!aLanguage)
+        return NULL;
 
+    // Pango and fontconfig won't understand mozilla's internal langGroups, so
+    // find a real language.
+    nsCAutoString lang;
+    gfxFontconfigUtils::GetSampleLangForGroup(aLanguage, &lang);
     if (lang.IsEmpty())
         return NULL;
 
     return pango_language_from_string(lang.get());
-}
-
-PangoLanguage *
-GuessPangoLanguage(nsIAtom *aLangGroup)
-{
-    if (!aLangGroup)
-        return NULL;
-
-    nsCAutoString lg;
-    aLangGroup->ToUTF8String(lg);
-    return GuessPangoLanguage(lg);
 }
 
 #ifdef MOZ_WIDGET_GTK2
