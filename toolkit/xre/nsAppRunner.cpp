@@ -1178,9 +1178,9 @@ ScopedXPCOMStartup::Initialize()
 #ifndef _BUILD_STATIC_BIN
   XRE_AddStaticComponent(&kXREModule);
 #else
-  for (const mozilla::Module *const *staticModules = kPStaticModules;
+  for (const mozilla::Module *const *const *staticModules = kPStaticModules;
        *staticModules; ++staticModules)
-      XRE_AddStaticComponent(*staticModules);
+      XRE_AddStaticComponent(**staticModules);
 #endif
 #endif
 
