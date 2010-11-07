@@ -524,8 +524,10 @@
                   browserHistory.unregisterOpenPage(this.mBrowser.registeredOpenURI);
                   delete this.mBrowser.registeredOpenURI;
                 }
-                browserHistory.registerOpenPage(aLocation);
-                this.mBrowser.registeredOpenURI = aLocation;
+                if (aLocation.spec != "about:blank") {
+                  browserHistory.registerOpenPage(aLocation);
+                  this.mBrowser.registeredOpenURI = aLocation;
+                }
               }
 
               if (!this.mBlank) {
