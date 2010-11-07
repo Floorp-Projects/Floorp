@@ -1082,6 +1082,9 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            if (document.documentElement.getAttribute("chromehidden"))
+              throw Error("Won't open multiple tabs in popups");
+
             var aFromExternal;
             var aRelatedToCurrent;
             var aSkipAnimation;
