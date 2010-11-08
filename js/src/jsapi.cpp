@@ -299,12 +299,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             if (!str)
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);
-            if (c == 's') {
-                const char *bytes = js_GetStringBytes(cx, str);
-                if (!bytes)
-                    return JS_FALSE;
-                *va_arg(ap, const char **) = bytes;
-            } else if (c == 'W') {
+            if (c == 'W') {
                 const jschar *chars = js_GetStringChars(cx, str);
                 if (!chars)
                     return JS_FALSE;
@@ -810,7 +805,7 @@ StartRequest(JSContext *cx)
 {
     JSThread *t = cx->thread;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
-   
+
     if (t->data.requestDepth) {
         t->data.requestDepth++;
     } else {
@@ -2959,7 +2954,7 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
         return NULL;
 
     obj->syncSpecialEquality();
-    
+
     /* Construct a regexp statics object for this global object. */
     JSObject *res = regexp_statics_construct(cx, obj);
     if (!res ||
@@ -4223,9 +4218,10 @@ JS_GetFunctionObject(JSFunction *fun)
 JS_PUBLIC_API(const char *)
 JS_GetFunctionName(JSFunction *fun)
 {
-    return fun->atom
-           ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom))
-           : js_anonymous_str;
+    if (!fun->atom)
+        return js_anonymous_str;
+    const char *byte = js_GetStringBytes(fun->atom);
+    return byte ? byte : "";
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4406,10 +4402,10 @@ LAST_FRAME_CHECKS(JSContext *cx, bool result)
     }
 }
 
-inline static uint32 
+inline static uint32
 JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
 {
-    return ((cx->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) | 
+    return ((cx->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) |
            ((cx->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
 }
 
@@ -4460,7 +4456,7 @@ JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                      JSVersion version)
 {
     AutoVersionAPI ava(cx, version);
-    return JS_CompileScriptForPrincipals(cx, obj, principals, bytes, length, filename, lineno);   
+    return JS_CompileScriptForPrincipals(cx, obj, principals, bytes, length, filename, lineno);
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -5125,14 +5121,8 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
 
     /* Free chars (but not bytes, which caller frees on error) if we fail. */
     str = js_NewString(cx, chars, length);
-    if (!str) {
+    if (!str)
         cx->free(chars);
-        return NULL;
-    }
-
-    /* Hand off bytes to the deflated string cache, if possible. */
-    if (!cx->runtime->deflatedStringCache->setBytes(cx, str, bytes))
-        cx->free(bytes);
     return str;
 }
 
@@ -5231,15 +5221,6 @@ JS_InternUCString(JSContext *cx, const jschar *s)
     return JS_InternUCStringN(cx, s, js_strlen(s));
 }
 
-JS_PUBLIC_API(char *)
-JS_GetStringBytes(JSString *str)
-{
-    const char *bytes;
-
-    bytes = js_GetStringBytes(NULL, str);
-    return (char *)(bytes ? bytes : "");
-}
-
 JS_PUBLIC_API(jschar *)
 JS_GetStringChars(JSString *str)
 {
@@ -5249,9 +5230,9 @@ JS_GetStringChars(JSString *str)
     str->ensureNotRope();
 
     /*
-     * API botch (again, shades of JS_GetStringBytes): we have no cx to report
-     * out-of-memory when undepending strings, so we replace JSString::undepend
-     * with explicit malloc call and ignore its errors.
+     * API botch: we have no cx to report out-of-memory when undepending
+     * strings, so we replace JSString::undepend with explicit malloc call and
+     * ignore its errors.
      *
      * If we fail to convert a dependent string into an independent one, our
      * caller will not be guaranteed a \u0000 terminator as a backstop.  This
@@ -5283,13 +5264,6 @@ JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str)
 {
     return str->length();
-}
-
-JS_PUBLIC_API(const char *)
-JS_GetStringBytesZ(JSContext *cx, JSString *str)
-{
-    assertSameCompartment(cx, str);
-    return js_GetStringBytes(cx, str);
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -5369,7 +5343,6 @@ JS_PUBLIC_API(JSBool)
 JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst, size_t *dstlenp)
 {
     size_t n;
-
     if (!dst) {
         n = js_GetDeflatedStringLength(cx, src, srclen);
         if (n == (size_t)-1) {
@@ -5393,6 +5366,37 @@ JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSString *str)
 {
     return js_DeflateString(cx, str->chars(), str->length());
+}
+
+JS_PUBLIC_API(size_t)
+JS_GetStringEncodingLength(JSContext *cx, JSString *str)
+{
+    return js_GetDeflatedStringLength(cx, str->chars(), str->length());
+}
+
+JS_PUBLIC_API(size_t)
+JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
+{
+    /*
+     * FIXME bug 612141 - fix js_DeflateStringToBuffer interface so the result
+     * would allow to distinguish between insufficient buffer and encoding
+     * error.
+     */
+    size_t writtenLength = length;
+    if (js_DeflateStringToBuffer(NULL, str->chars(), str->length(), buffer, &writtenLength)) {
+        JS_ASSERT(writtenLength <= length);
+        return writtenLength;
+    }
+    JS_ASSERT(writtenLength <= length);
+    size_t necessaryLength = js_GetDeflatedStringLength(NULL, str->chars(), str->length());
+    if (necessaryLength == size_t(-1))
+        return size_t(-1);
+    if (writtenLength != length) {
+        /* Make sure that the buffer contains only valid UTF-8 sequences. */
+        JS_ASSERT(js_CStringsAreUTF8);
+        PodZero(buffer + writtenLength, length - writtenLength);
+    }
+    return necessaryLength;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5696,7 +5700,7 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
                           size_t *indexp, JSBool test, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    
+
     RegExp *re = RegExp::extractFrom(obj);
     if (!re)
         return false;
@@ -5907,7 +5911,7 @@ JS_ClearContextThread(JSContext *cx)
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
     JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->data.requestDepth);
-   
+
     /*
      * We can access t->id as long as the GC lock is held and we cannot race
      * with the GC that may delete t.
