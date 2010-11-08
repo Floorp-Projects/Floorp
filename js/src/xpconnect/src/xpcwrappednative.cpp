@@ -2809,7 +2809,10 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     dp->SetValIsAllocated();
                     useAllocator = JS_TRUE;
                     break;
-
+                case nsXPTType::T_CHAR_STR:
+                    dp->SetValIsAllocated();
+                    useAllocator = JS_TRUE;
+                    break;
                 case nsXPTType::T_ASTRING:
                     // Fall through to the T_DOMSTRING case
 
@@ -2979,8 +2982,10 @@ CallMethodHelper::ConvertDependentParams()
                          "Expected either enough arguments or an optional argument");
             src = i < mArgc ? mArgv[i] : JSVAL_NULL;
 
-            if(datum_type.IsPointer() &&
-               datum_type.TagPart() == nsXPTType::T_IID)
+            if((datum_type.IsPointer() &&
+                (datum_type.TagPart() == nsXPTType::T_IID ||
+                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS)) ||
+               (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
                 useAllocator = JS_TRUE;
                 dp->SetValIsAllocated();
