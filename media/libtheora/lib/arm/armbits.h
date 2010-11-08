@@ -5,28 +5,28 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009                *
+ * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2010                *
  * by the Xiph.Org Foundation and contributors http://www.xiph.org/ *
  *                                                                  *
  ********************************************************************
 
   function:
-    last mod: $Id: huffdec.h 17410 2010-09-21 21:53:48Z tterribe $
+    last mod: $Id: x86int.h 17344 2010-07-21 01:42:18Z tterribe $
 
  ********************************************************************/
+#if !defined(_arm_armbits_H)
+# define _arm_armbits_H (1)
+# include "../bitpack.h"
+# include "armcpu.h"
 
-#if !defined(_huffdec_H)
-# define _huffdec_H (1)
-# include "huffman.h"
-# include "bitpack.h"
+# if defined(OC_ARM_ASM)
+#  define oc_pack_read oc_pack_read_arm
+#  define oc_pack_read1 oc_pack_read1_arm
+#  define oc_huff_token_decode oc_huff_token_decode_arm
+# endif
 
-
-
-int oc_huff_trees_unpack(oc_pack_buf *_opb,
- ogg_int16_t *_nodes[TH_NHUFFMAN_TABLES]);
-int oc_huff_trees_copy(ogg_int16_t *_dst[TH_NHUFFMAN_TABLES],
- const ogg_int16_t *const _src[TH_NHUFFMAN_TABLES]);
-void oc_huff_trees_clear(ogg_int16_t *_nodes[TH_NHUFFMAN_TABLES]);
-int oc_huff_token_decode_c(oc_pack_buf *_opb,const ogg_int16_t *_node);
+long oc_pack_read_arm(oc_pack_buf *_b,int _bits);
+int oc_pack_read1_arm(oc_pack_buf *_b);
+int oc_huff_token_decode_arm(oc_pack_buf *_b,const ogg_int16_t *_tree);
 
 #endif
