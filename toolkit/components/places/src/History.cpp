@@ -345,35 +345,36 @@ public:
   /**
    * Adds a visit to the database asynchronously.
    *
+   * @param aConnection
+   *        The database connection to use for these operations.
    * @param aPlace
    *        The location to record a visit.
    * @param [optional] aReferrer
    *        The page that "referred" us to aPlace.
    */
-  static nsresult Start(VisitData& aPlace,
+  static nsresult Start(mozIStorageConnection* aConnection,
+                        VisitData& aPlace,
                         nsIURI* aReferrer = nsnull)
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
 
-    nsRefPtr<InsertVisitedURI> event = new InsertVisitedURI(aPlace, aReferrer);
+    nsRefPtr<InsertVisitedURI> event =
+      new InsertVisitedURI(aConnection, aPlace, aReferrer);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-    nsNavHistory* navhistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navhistory, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv = navhistory->GetDBConnection(getter_AddRefs(event->mDBConn));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // Speculatively get a new session id for our visit.  While it is true that
     // we will use the session id from the referrer if the visit was "recent"
     // enough, we cannot call this method off of the main thread, so we have to
     // consume an id now.
+    nsNavHistory* navhistory = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(navhistory, NS_ERROR_UNEXPECTED);
     event->mPlace.sessionId = navhistory->GetNewSessionID();
 
     // Get the target thread, and then start the work!
-    nsCOMPtr<nsIEventTarget> target = do_GetInterface(event->mDBConn);
-    NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
-    rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
+    NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
+    nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -392,15 +393,17 @@ public:
     if (known) {
       NS_ASSERTION(mPlace.placeId > 0, "must have a valid place id!");
 
-      nsCOMPtr<mozIStorageStatement> stmt;
-      nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "UPDATE moz_places "
-        "SET hidden = :hidden, typed = :typed "
-        "WHERE id = :page_id "
-      ), getter_AddRefs(stmt));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<mozIStorageStatement> stmt =
+        mHistory->syncStatements.GetCachedStatement(
+          "UPDATE moz_places "
+          "SET hidden = :hidden, typed = :typed "
+          "WHERE id = :page_id "
+        );
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
 
-      rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), mPlace.typed);
+      nsresult rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"),
+                                          mPlace.typed);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), mPlace.hidden);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -414,16 +417,17 @@ public:
     else {
       NS_ASSERTION(mPlace.placeId == 0, "should not have a valid place id!");
 
-      nsCOMPtr<mozIStorageStatement> stmt;
-      nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_places "
-          "(url, rev_host, hidden, typed) "
-        "VALUES (:page_url, :rev_host, :hidden, :typed) "
-      ), getter_AddRefs(stmt));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<mozIStorageStatement> stmt =
+        mHistory->syncStatements.GetCachedStatement(
+          "INSERT INTO moz_places "
+            "(url, rev_host, hidden, typed) "
+          "VALUES (:page_url, :rev_host, :hidden, :typed) "
+        );
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
 
       nsAutoString revHost;
-      rv = GetReversedHostname(mPlace.uri, revHost);
+      nsresult rv = GetReversedHostname(mPlace.uri, revHost);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.uri);
@@ -479,9 +483,12 @@ public:
     return NS_OK;
   }
 private:
-  InsertVisitedURI(VisitData& aPlace,
+  InsertVisitedURI(mozIStorageConnection* aConnection,
+                   VisitData& aPlace,
                    nsIURI* aReferrer)
-  : mPlace(aPlace)
+  : mDBConn(aConnection)
+  , mPlace(aPlace)
+  , mHistory(History::GetService())
   {
     mReferrer.uri = aReferrer;
   }
@@ -498,15 +505,17 @@ private:
     NS_PRECONDITION(_place.uri || _place.spec.Length(),
                     "must have a non-null uri or a non-empty spec!");
 
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id, typed, hidden "
-      "FROM moz_places "
-      "WHERE url = :page_url "
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, false);
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mHistory->syncStatements.GetCachedStatement(
+        "SELECT id, typed, hidden "
+        "FROM moz_places "
+        "WHERE url = :page_url "
+      );
+    NS_ENSURE_TRUE(stmt, false);
+    mozStorageStatementScoper scoper(stmt);
 
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.uri);
+    nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                                  _place.uri);
     NS_ENSURE_SUCCESS(rv, false);
 
     PRBool hasResult;
@@ -557,16 +566,18 @@ private:
     NS_PRECONDITION(_place.uri || _place.spec.Length(),
                     "must have a non-null uri or a non-empty spec!");
 
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id, session, visit_date "
-      "FROM moz_historyvisits "
-      "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
-      "ORDER BY visit_date DESC "
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, false);
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mHistory->syncStatements.GetCachedStatement(
+        "SELECT id, session, visit_date "
+        "FROM moz_historyvisits "
+        "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
+        "ORDER BY visit_date DESC "
+      );
+    NS_ENSURE_TRUE(stmt, false);
+    mozStorageStatementScoper scoper(stmt);
 
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.uri);
+    nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                                  _place.uri);
     NS_ENSURE_SUCCESS(rv, false);
 
     PRBool hasResult;
@@ -604,16 +615,17 @@ private:
   nsresult AddVisit(VisitData& _place,
                     const VisitData& aReferrer)
   {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_historyvisits "
-        "(from_visit, place_id, visit_date, visit_type, session) "
-      "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mHistory->syncStatements.GetCachedStatement(
+        "INSERT INTO moz_historyvisits "
+          "(from_visit, place_id, visit_date, visit_type, session) "
+        "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
+      );
+    NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("from_visit"),
-                               aReferrer.visitId);
+    nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("from_visit"),
+                                        aReferrer.visitId);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
                                _place.placeId);
@@ -651,43 +663,54 @@ private:
    */
   nsresult UpdateFrecency(const VisitData& aPlace)
   {
-    // First, set our frecency to the proper value.
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places "
-      "SET frecency = CALCULATE_FRECENCY(:page_id) "
-      "WHERE id = :page_id"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
+    { // First, set our frecency to the proper value.
+      nsCOMPtr<mozIStorageStatement> stmt =
+        mHistory->syncStatements.GetCachedStatement(
+          "UPDATE moz_places "
+          "SET frecency = CALCULATE_FRECENCY(:page_id) "
+          "WHERE id = :page_id"
+        );
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                               aPlace.placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                          aPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
-    // Finally, we need to mark the page as not hidden if the frecency is now
-    // nonzero.
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places "
-      "SET hidden = 0 "
-      "WHERE id = :page_id AND frecency <> 0"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
+    { // Now, we need to mark the page as not hidden if the frecency is now
+      // nonzero.
+      nsCOMPtr<mozIStorageStatement> stmt =
+        mHistory->syncStatements.GetCachedStatement(
+          "UPDATE moz_places "
+          "SET hidden = 0 "
+          "WHERE id = :page_id AND frecency <> 0"
+        );
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
 
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                               aPlace.placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                          aPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     return NS_OK;
   }
 
-  nsCOMPtr<mozIStorageConnection> mDBConn;
+  mozIStorageConnection* mDBConn;
 
   VisitData mPlace;
   VisitData mReferrer;
+
+  /**
+   * Strong reference to the History object because we do not want it to
+   * disappear out from under us.
+   */
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -868,6 +891,7 @@ History* History::gService = NULL;
 
 History::History()
 : mShuttingDown(false)
+, syncStatements(mDBConn)
 {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   gService = this;
@@ -977,11 +1001,7 @@ History::GetIsVisitedStatement()
 
   // If we don't yet have a database connection, go ahead and clone it now.
   if (!mReadOnlyDBConn) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, nsnull);
-
-    nsCOMPtr<mozIStorageConnection> dbConn;
-    (void)history->GetDBConnection(getter_AddRefs(dbConn));
+    mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_TRUE(dbConn, nsnull);
 
     (void)dbConn->Clone(PR_TRUE, getter_AddRefs(mReadOnlyDBConn));
@@ -1027,6 +1047,22 @@ History::GetSingleton()
   return gService;
 }
 
+mozIStorageConnection*
+History::GetDBConn()
+{
+  if (mDBConn) {
+    return mDBConn;
+  }
+
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, nsnull);
+
+  nsresult rv = history->GetDBConnection(getter_AddRefs(mDBConn));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBConn;
+}
+
 void
 History::StartNextTask()
 {
@@ -1055,6 +1091,8 @@ History::Shutdown()
   }
 
   // Clean up our statements and connection.
+  syncStatements.FinalizeStatements();
+
   if (mReadOnlyDBConn) {
     if (mIsVisitedStatement) {
       (void)mIsVisitedStatement->Finalize();
@@ -1150,7 +1188,10 @@ History::VisitURI(nsIURI* aURI,
   place.visitTime = PR_Now();
   place.uri = aURI;
 
-  rv = InsertVisitedURI::Start(place, aLastVisitedURI);
+  mozIStorageConnection* dbConn = GetDBConn();
+  NS_ENSURE_STATE(dbConn);
+
+  rv = InsertVisitedURI::Start(dbConn, place, aLastVisitedURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, notify that we've been visited.
@@ -1338,7 +1379,7 @@ History::Observe(nsISupports* aSubject, const char* aTopic,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_ISUPPORTS2(
+NS_IMPL_THREADSAFE_ISUPPORTS2(
   History
 , IHistory
 , nsIObserver
