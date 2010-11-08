@@ -419,6 +419,7 @@ Content.prototype = {
       }
 
       case "Browser:MouseUp": {
+        this._formAssistant.focusSync = true;
         let element = elementFromPoint(x, y);
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
           let uri = Util.getHrefForElement(element);
@@ -431,6 +432,7 @@ Content.prototype = {
           this._sendMouseEvent("mouseup", element, x, y);
         }
         ContextHandler.reset();
+        this._formAssistant.focusSync = false;
         break;
       }
 
