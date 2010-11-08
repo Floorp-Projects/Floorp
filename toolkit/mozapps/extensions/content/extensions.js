@@ -2408,7 +2408,8 @@ var gUpdatesView = {
 
     var self = this;
     AddonManager.getAllInstalls(function(aInstallsList) {
-      if (!aIsRefresh && gViewController && aRequest != gViewController.currentViewRequest)
+      if (!aIsRefresh && gViewController && aRequest &&
+          aRequest != gViewController.currentViewRequest)
         return;
 
       if (aIsRefresh) {
@@ -2527,16 +2528,13 @@ var gUpdatesView = {
   },
 
   installSelected: function() {
-    /* Starting the update of one item will refresh the list,
-       which can cause problems while we're iterating over it.
-       So we update only after we've finished iterating over the list. */
-    var toUpgrade = [];
     for (let i = 0; i < this._listBox.childNodes.length; i++) {
       let item = this._listBox.childNodes[i];
       if (item.includeUpdate)
-        toUpgrade.push(item);
+        item.upgrade();
     }
-    toUpgrade.forEach(function(aItem) aItem.upgrade());
+
+    this._updateSelected.disabled = true;
   },
 
   getSelectedAddon: function() {
@@ -2579,23 +2577,17 @@ var gUpdatesView = {
     }
   },
 
-  onDownloadStarted: function(aInstall) {
-    if (!this.isManualUpdate(aInstall))
-      return;
-    this.maybeRefresh();
-  },
-
-  onInstallStarted: function(aInstall) {
-    if (!this.isManualUpdate(aInstall))
-      return;
-    this.maybeRefresh();
-  },
-
   onInstallEnded: function(aAddon) {
     if (!shouldAutoUpdate(aAddon)) {
       this._numManualUpdaters++;
       this.maybeShowCategory();
     }
+  },
+
+  onInstallCancelled: function(aInstall) {
+    if (!this.isManualUpdate(aInstall))
+      return;
+    this.maybeRefresh();
   },
 
   onPropertyChanged: function(aAddon, aProperties) {
