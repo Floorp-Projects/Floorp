@@ -1289,6 +1289,9 @@ JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(void)
 JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval)
 {
+#ifdef JS_METHODJIT
+    JS_ASSERT_IF(fp->isScriptFrame(), fp->script()->debugMode);
+#endif
     assertSameCompartment(cx, fp, rval);
     fp->setReturnValue(Valueify(rval));
 }

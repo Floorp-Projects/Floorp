@@ -327,6 +327,13 @@ Script::analyze(JSContext *cx, JSScript *script)
     }
 
     /*
+     * If the script is in debug mode, JS_SetFrameReturnValue can be called at
+     * any safe point.
+     */
+    if (cx->compartment->debugMode)
+        usesRval = true;
+
+    /*
      * If we are in the middle of one or more jumps, the offset of the highest
      * target jumping over this bytecode.  Includes implicit jumps from
      * try/catch/finally blocks.
