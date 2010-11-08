@@ -371,9 +371,7 @@ ImageLayerOGL::GetLayer()
 
 void
 ImageLayerOGL::RenderLayer(int,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix)
+                           const nsIntPoint& aOffset)
 {
   if (!GetContainer())
     return;
@@ -412,8 +410,8 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         yuvImage->mSize.width,
                                         yuvImage->mSize.height));
-    program->SetLayerTransform(GetEffectiveTransform() * aMatrix);
-    program->SetLayerOpacity(GetOpacity() * aOpacity);
+    program->SetLayerTransform(GetEffectiveTransform());
+    program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
 
@@ -441,8 +439,8 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         cairoImage->mSize.width,
                                         cairoImage->mSize.height));
-    program->SetLayerTransform(GetEffectiveTransform() * aMatrix);
-    program->SetLayerOpacity(GetOpacity() * aOpacity);
+    program->SetLayerTransform(GetEffectiveTransform());
+    program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
 
@@ -789,9 +787,7 @@ ShadowImageLayerOGL::GetLayer()
 
 void
 ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                                 const nsIntPoint& aOffset,
-                                 float aOpacity,
-                                 const gfx3DMatrix& aMatrix)
+                                 const nsIntPoint& aOffset)
 {
   mOGLManager->MakeCurrent();
 
@@ -805,8 +801,8 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
-  program->SetLayerTransform(mTransform * aMatrix);
-  program->SetLayerOpacity(GetOpacity() * aOpacity);
+  program->SetLayerTransform(GetEffectiveTransform());
+  program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 

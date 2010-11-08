@@ -71,9 +71,7 @@ public:
   virtual void Destroy();
   virtual Layer* GetLayer() { return this; }
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix);
+                           const nsIntPoint& aOffset);
 
 protected:
   nsRefPtr<gfxASurface> mCanvasSurface;
@@ -82,7 +80,6 @@ protected:
   void MakeTexture();
   GLuint mTexture;
 
-  nsIntRect mBounds;
   nsIntRect mUpdatedRect;
 
   PRPackedBool mGLBufferIsPremultiplied;
@@ -117,9 +114,7 @@ public:
   void Destroy();
   Layer* GetLayer();
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix);
+                           const nsIntPoint& aOffset);
 
 private:
   nsRefPtr<TextureImage> mTexImage;

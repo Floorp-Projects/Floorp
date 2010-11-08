@@ -60,12 +60,8 @@ static void ContainerRender(Container* aContainer,
                             int aPreviousFrameBuffer,
                             const nsIntPoint& aOffset,
                             LayerManagerOGL* aManager);
-template<class Container>
-static bool ShouldUseIntermediate(Container* aContainer,
-                                  float aOpacity,
-                                  const gfx3DMatrix& aMatrix);
 
-class ContainerLayerOGL : public ContainerLayer, 
+class ContainerLayerOGL : public ContainerLayer,
                           public LayerOGL
 {
   template<class Container>
@@ -79,10 +75,6 @@ class ContainerLayerOGL : public ContainerLayer,
                               int aPreviousFrameBuffer,
                               const nsIntPoint& aOffset,
                               LayerManagerOGL* aManager);
-  template<class Container>
-  friend bool ShouldUseIntermediate(Container* aContainer,
-                                    float aOpacity,
-                                    const gfx3DMatrix& aMatrix);
 
 public:
   ContainerLayerOGL(LayerManagerOGL *aManager);
@@ -100,9 +92,12 @@ public:
   LayerOGL* GetFirstChildOGL();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix);
+                           const nsIntPoint& aOffset);
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
+  }
 };
 
 #ifdef MOZ_IPC
@@ -120,10 +115,6 @@ class ShadowContainerLayerOGL : public ShadowContainerLayer,
                               int aPreviousFrameBuffer,
                               const nsIntPoint& aOffset,
                               LayerManagerOGL* aManager);
-  template<class Container>
-  friend bool ShouldUseIntermediate(Container* aContainer,
-                                    float aOpacity,
-                                    const gfx3DMatrix& aMatrix);
 
 public:
   ShadowContainerLayerOGL(LayerManagerOGL *aManager);
@@ -141,9 +132,12 @@ public:
   LayerOGL* GetFirstChildOGL();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix);
+                           const nsIntPoint& aOffset);
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
+  }
 };
 #endif  // MOZ_IPC
 
