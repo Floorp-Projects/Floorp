@@ -245,11 +245,18 @@ public:
     }
 
     History::GetService()->NotifyVisited(mPlace.uri);
+
+    // We have to be careful about when we release our URIs.  The background
+    // thread could still hold a reference to this event, so relying on the
+    // destructor to free us is a bad idea.
+    mPlace.uri = nsnull;
+    mReferrer.uri = nsnull;
+
     return NS_OK;
   }
 private:
-  const VisitData mPlace;
-  const VisitData mReferrer;
+  VisitData mPlace;
+  VisitData mReferrer;
 };
 
 /**
@@ -671,6 +678,11 @@ public:
     nsNavHistory* navhistory = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(navhistory, NS_ERROR_OUT_OF_MEMORY);
     navhistory->NotifyTitleChange(mURI, mTitle);
+
+    // We have to be careful about when we release our URI.  The background
+    // thread could still hold a reference to this event, so relying on the
+    // destructor to free us is a bad idea.
+    mURI = nsnull;
 
     return NS_OK;
   }
