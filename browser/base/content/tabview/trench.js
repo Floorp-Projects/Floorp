@@ -477,7 +477,7 @@ var Trenches = {
   //   preferTop - (boolean) prefer snapping to the top to the bottom
   //   preferLeft - (boolean) prefer snapping to the left to the right
   preferTop: true,
-  preferLeft: true,
+  get preferLeft() { return !UI.rtl; },
 
   trenches: [],
 
