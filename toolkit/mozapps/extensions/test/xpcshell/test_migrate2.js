@@ -134,9 +134,8 @@ function run_test() {
   stmt.execute();
   stmt.finalize();
 
-  db.schemaVersion = 100;
-  Services.prefs.setIntPref("extensions.databaseSchema", 100);
   db.close();
+  Services.prefs.setIntPref("extensions.databaseSchema", 100);
 
   startupManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
