@@ -53,6 +53,8 @@ _CHROME_FILES = \
 	bug551434_childframe.html \
 	test_chrome_content_integration.xul \
 	     chrome_content_integration_window.xul \
+	test_chrome_over_plugin.xul \
+	     chrome_over_plugin_window.xul \
 	test_default_background.xul \
 	     default_background_window.xul \
 	test_printpreview.xul \
