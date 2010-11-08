@@ -429,7 +429,7 @@ test_visituri_inserts()
   do_check_true(place.id > 0);
   do_check_false(place.hidden);
   do_check_false(place.typed);
-  do_check_true(place.visitCount == 1);
+  do_check_eq(1, place.visitCount);
 
   run_next_test();
 }
@@ -453,7 +453,7 @@ test_visituri_updates()
   PlaceRecord place;
   do_get_place(visitedURI, place);
 
-  do_check_true(place.visitCount == 2);
+  do_check_eq(2, place.visitCount);
 
   run_next_test();
 }
@@ -497,8 +497,8 @@ test_visituri_creates_visit()
   do_get_lastVisit(place.id, visit);
 
   do_check_true(visit.id > 0);
-  do_check_true(visit.lastVisitId == 0);
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_LINK);
+  do_check_eq(0, visit.lastVisitId);
+  do_check_eq(nsINavHistoryService::TRANSITION_LINK, visit.transitionType);
 
   run_next_test();
 }
