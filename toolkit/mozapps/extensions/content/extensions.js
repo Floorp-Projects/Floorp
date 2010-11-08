@@ -1444,6 +1444,13 @@ var gDiscoverView = {
                 .getService(Ci.nsIURLFormatter)
                 .formatURLPref(PREF_DISCOVERURL);
 
+    var browser = gDiscoverView._browser;
+
+    if (Services.prefs.getBoolPref(PREF_BACKGROUND_UPDATE) == false) {
+      browser.homePage = url;
+      return;
+    }
+
     gPendingInitializations++;
     AddonManager.getAllAddons(function(aAddons) {
       var list = {};
@@ -1458,7 +1465,6 @@ var gDiscoverView = {
         }
       });
 
-      var browser = gDiscoverView._browser;
       browser.homePage = url + "#" + JSON.stringify(list);
 
       if (gDiscoverView.loaded) {
