@@ -5124,6 +5124,15 @@ function contentAreaClick(event, isPanelClick)
   }
 
   handleLinkClick(event, href, linkNode);
+
+  // Mark the page as a user followed link.  This is done so that history can
+  // distinguish automatic embed visits from user activated ones.  For example
+  // pages loaded in frames are embed visits and lost with the session, while
+  // visits across frames should be preserved.
+  try {
+    PlacesUIUtils.markPageAsFollowedLink(href);
+  } catch (ex) { /* Skip invalid URIs. */ }
+
   return true;
 }
 
