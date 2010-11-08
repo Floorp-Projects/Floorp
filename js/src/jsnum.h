@@ -235,6 +235,9 @@ struct ToCStringBuf
 extern char *
 NumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base = 10);
 
+extern JSString *
+Int32ToString(JSContext *cx, int32 i);
+
 /*
  * The largest positive integer such that all positive integers less than it
  * may be precisely represented using the IEEE-754 double-precision format.
