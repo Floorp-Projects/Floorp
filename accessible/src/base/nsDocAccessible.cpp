@@ -1243,12 +1243,17 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent2,
                                            nsEventStates aStateMask)
 {
-  if (!aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
-    return;
+  if (aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
+    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
+    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
   }
 
-  nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
-  nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
+  if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent1, nsIAccessibleStates::STATE_INVALID,
+                              PR_FALSE, PR_TRUE);
+    FireDelayedAccessibleEvent(event);
+   }
 }
 
 void nsDocAccessible::DocumentStatesChanged(nsIDocument* aDocument,

@@ -26,10 +26,6 @@
     {
       this.DOMNode = aDocNode;
 
-      this.eventSeq = [
-        new invokerChecker(EVENT_STATE_CHANGE, getAccessible(this.DOMNode))
-      ];
-
       this.invoke = function editabledoc_invoke() {
         // Note: this should fire an EVENT_STATE_CHANGE
         this.DOMNode.designMode = 'on';
@@ -58,6 +54,24 @@
       };
     }
 
+    function invalidInput(aNodeOrID)
+    {
+      this.DOMNode = getNode(aNodeOrID);
+
+      this.invoke = function invalidInput_invoke() {
+        // Note: this should fire an EVENT_STATE_CHANGE
+        this.DOMNode.value = "I am too long";
+      };
+
+      this.check = function invalidInput_check() {
+        testStates(aNodeOrID, STATE_INVALID);
+      };
+
+      this.getID = function invalidInput_getID() {
+        return prettyName(aNodeOrID) + " became invalid";
+      };
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
@@ -67,11 +81,14 @@
 
     function doTests()
     {
-      gQueue = new eventQueue();
+      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_STATE_CHANGE);
 
       // Test delayed editable state change
       var doc = document.getElementById("iframe").contentDocument;
       gQueue.push(new makeEditableDoc(doc));
+
+      // invalid state change
+      gQueue.push(new invalidInput("maxlength"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -87,6 +104,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=564471"
      title="Make state change events async">
     Mozilla Bug 564471
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=555728"
+     title="Fire a11y event based on HTML5 constraint validation">
+    Mozilla Bug 555728
   </a>
 
   <p id="display"></p>
@@ -97,6 +119,9 @@
   <div id="testContainer">
     <iframe id="iframe"></iframe>
   </div>
+
+  <input id="maxlength" maxlength="1">
+
   <div id="eventdump"></div>
 </body>
 </html>
