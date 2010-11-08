@@ -1334,7 +1334,7 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
     gc::FinalizeKind kind = gc::FinalizeKind(proxy->arena()->header()->thingKind);
     JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
     if (!newborn)
-        return NULL;
+        return false;
     AutoObjectRooter tvr2(cx, newborn);
 
     if (clasp == &CallableObjectClass) {
