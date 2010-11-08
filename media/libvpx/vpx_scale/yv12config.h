@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -32,8 +32,8 @@ extern "C"
     ************************************/
     typedef enum
     {
-        REG_YUV = 0,    // Regular yuv
-        INT_YUV = 1     // The type of yuv that can be tranfer to and from RGB through integer transform
+        REG_YUV = 0,    /* Regular yuv */
+        INT_YUV = 1     /* The type of yuv that can be tranfer to and from RGB through integer transform */
               }
               YUV_TYPE;
 
@@ -42,12 +42,12 @@ extern "C"
         int   y_width;
         int   y_height;
         int   y_stride;
-//    int   yinternal_width;
+/*    int   yinternal_width; */
 
         int   uv_width;
         int   uv_height;
         int   uv_stride;
-//    int   uvinternal_width;
+/*    int   uvinternal_width; */
 
         unsigned char *y_buffer;
         unsigned char *u_buffer;
@@ -68,4 +68,4 @@ extern "C"
 #endif
 
 
-#endif //YV12_CONFIG_H
+#endif /*YV12_CONFIG_H*/

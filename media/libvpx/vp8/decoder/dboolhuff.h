@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -45,7 +45,7 @@ typedef struct
     const unsigned char *source, unsigned int source_sz)
 #define prototype_dbool_fill(sym) void sym(BOOL_DECODER *br)
 #define prototype_dbool_debool(sym) int sym(BOOL_DECODER *br, int probability)
-#define prototype_dbool_devalue(sym) int sym(BOOL_DECODER *br, int bits);
+#define prototype_dbool_devalue(sym) int sym(BOOL_DECODER *br, int bits)
 
 #if ARCH_ARM
 #include "arm/dboolhuff_arm.h"
@@ -84,16 +84,17 @@ typedef struct vp8_dboolhuff_rtcd_vtable {
     vp8_dbool_devalue_fn_t devalue;
 } vp8_dboolhuff_rtcd_vtable_t;
 
-// There are no processor-specific versions of these
-// functions right now. Disable RTCD to avoid using
-// function pointers which gives a speed boost
-//#ifdef ENABLE_RUNTIME_CPU_DETECT
-//#define DBOOLHUFF_INVOKE(ctx,fn) (ctx)->fn
-//#define IF_RTCD(x) (x)
-//#else
+/* There are no processor-specific versions of these
+ * functions right now. Disable RTCD to avoid using
+ * function pointers which gives a speed boost
+ */
+/*#ifdef ENABLE_RUNTIME_CPU_DETECT
+#define DBOOLHUFF_INVOKE(ctx,fn) (ctx)->fn
+#define IF_RTCD(x) (x)
+#else*/
 #define DBOOLHUFF_INVOKE(ctx,fn) vp8_dbool_##fn
 #define IF_RTCD(x) NULL
-//#endif
+/*#endif*/
 
 DECLARE_ALIGNED(16, extern const unsigned char, vp8dx_bitreader_norm[256]);
 

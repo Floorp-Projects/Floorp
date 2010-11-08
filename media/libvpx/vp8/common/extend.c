@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,14 +15,14 @@
 
 static void extend_plane_borders
 (
-    unsigned char *s, // source
-    int sp,           // pitch
-    int h,            // height
-    int w,            // width
-    int et,           // extend top border
-    int el,           // extend left border
-    int eb,           // extend bottom border
-    int er            // extend right border
+    unsigned char *s, /* source */
+    int sp,           /* pitch */
+    int h,            /* height */
+    int w,            /* width */
+    int et,           /* extend top border */
+    int el,           /* extend left border */
+    int eb,           /* extend bottom border */
+    int er            /* extend right border */
 )
 {
 
@@ -31,7 +31,7 @@ static void extend_plane_borders
     unsigned char *dest_ptr1, *dest_ptr2;
     int linesize;
 
-    // copy the left and right most columns out
+    /* copy the left and right most columns out */
     src_ptr1 = s;
     src_ptr2 = s + w - 1;
     dest_ptr1 = s - el;
@@ -39,8 +39,9 @@ static void extend_plane_borders
 
     for (i = 0; i < h - 0 + 1; i++)
     {
-        // Some linkers will complain if we call vpx_memset with el set to a
-        // constant 0.
+        /* Some linkers will complain if we call vpx_memset with el set to a
+         * constant 0.
+         */
         if (el)
             vpx_memset(dest_ptr1, src_ptr1[0], el);
         vpx_memset(dest_ptr2, src_ptr2[0], er);
@@ -50,7 +51,7 @@ static void extend_plane_borders
         dest_ptr2 += sp;
     }
 
-    // Now copy the top and bottom source lines into each line of the respective borders
+    /* Now copy the top and bottom source lines into each line of the respective borders */
     src_ptr1 = s - el;
     src_ptr2 = s + sp * (h - 1) - el;
     dest_ptr1 = s + sp * (-et) - el;
@@ -76,12 +77,12 @@ void vp8_extend_to_multiple_of16(YV12_BUFFER_CONFIG *ybf, int width, int height)
     int er = 0xf & (16 - (width & 0xf));
     int eb = 0xf & (16 - (height & 0xf));
 
-    // check for non multiples of 16
+    /* check for non multiples of 16 */
     if (er != 0 || eb != 0)
     {
         extend_plane_borders(ybf->y_buffer, ybf->y_stride, height, width, 0, 0, eb, er);
 
-        //adjust for uv
+        /* adjust for uv */
         height = (height + 1) >> 1;
         width  = (width  + 1) >> 1;
         er = 0x7 & (8 - (width  & 0x7));
@@ -95,7 +96,7 @@ void vp8_extend_to_multiple_of16(YV12_BUFFER_CONFIG *ybf, int width, int height)
     }
 }
 
-// note the extension is only for the last row, for intra prediction purpose
+/* note the extension is only for the last row, for intra prediction purpose */
 void vp8_extend_mb_row(YV12_BUFFER_CONFIG *ybf, unsigned char *YPtr, unsigned char *UPtr, unsigned char *VPtr)
 {
     int i;
