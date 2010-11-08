@@ -591,7 +591,7 @@ LayerManagerOGL::Render()
 
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
-                           nsIntPoint(0, 0));
+                           nsIntPoint(0, 0), 1.0, gfx3DMatrix());
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
