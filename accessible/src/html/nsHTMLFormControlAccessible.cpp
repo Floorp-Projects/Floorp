@@ -412,16 +412,24 @@ nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
   if (!aName.IsEmpty())
     return NS_OK;
 
-  if (!mContent->GetBindingParent())
+  if (mContent->GetBindingParent())
+  {
+    // XXX: bug 459640
+    // There's a binding parent.
+    // This means we're part of another control, so use parent accessible for name.
+    // This ensures that a textbox inside of a XUL widget gets
+    // an accessible name.
+    nsAccessible* parent = GetParent();
+    parent->GetName(aName);
+  }
+
+  if (!aName.IsEmpty())
     return NS_OK;
 
-  // XXX: bug 459640
-  // There's a binding parent.
-  // This means we're part of another control, so use parent accessible for name.
-  // This ensures that a textbox inside of a XUL widget gets
-  // an accessible name.
-  nsAccessible* parent = GetParent();
-  return parent ? parent->GetName(aName) : NS_OK;
+  // text inputs and textareas might have useful placeholder text
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::placeholder, aName);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
