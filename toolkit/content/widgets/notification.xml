@@ -423,7 +423,7 @@
     <content align="start">
       <xul:image class="popup-notification-icon"
                  xbl:inherits="popupid"/>
-      <xul:vbox>
+      <xul:vbox flex="1">
         <xul:description class="popup-notification-description"
                          xbl:inherits="value=label"/>
         <xul:spacer flex="1"/>
