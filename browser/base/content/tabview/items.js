@@ -968,7 +968,12 @@ let Items = {
     if (options.return == 'widthAndColumns')
       return {childWidth: tabWidth, columns: columns};
 
-    var box = new Rect(bounds.left, bounds.top, tabWidth, tabHeight);
+    let initialOffset = 0;
+    if (UI.rtl) {
+      initialOffset = bounds.width - tabWidth;
+    }
+    var box = new Rect(bounds.left + initialOffset, bounds.top, tabWidth, tabHeight);
+
     var column = 0;
 
     for (let a = 0; a < count; a++) {
@@ -983,10 +988,10 @@ let Items = {
         }
       }
 
-      box.left += box.width + padding;
+      box.left += (UI.rtl ? -1 : 1) * (box.width + padding);
       column++;
       if (column == columns) {
-        box.left = bounds.left;
+        box.left = bounds.left + initialOffset;
         box.top += (box.height * yScale) + padding;
         column = 0;
       }
