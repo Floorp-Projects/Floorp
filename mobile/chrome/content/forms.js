@@ -67,10 +67,14 @@ function FormAssistant() {
   addEventListener("keyup", this, false);
   addEventListener("resize", this, false);
   addEventListener("focus", this, true);
+
+  this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
 };
 
 FormAssistant.prototype = {
   _selectWrapper: null,
+  _currentIndex: -1,
+  _elements: [],
 
   get currentElement() {
     return this._elements[this._currentIndex];
@@ -108,6 +112,8 @@ FormAssistant.prototype = {
         return false;
 
       sendAsyncMessage("FormAssist:Hide", { });
+      this._currentIndex = -1;
+      this._elements = [];
       return this._open = false;
     }
 
@@ -198,8 +204,9 @@ FormAssistant.prototype = {
     return false;
   },
 
+  focusSync: false,
   handleEvent: function formHelperHandleEvent(aEvent) {
-    if (!this._enabled || !this.currentElement)
+    if (!this._enabled || (!this.currentElement && (aEvent.type != "focus" || !this.focusSync)))
       return;
 
     switch (aEvent.type) {
@@ -207,7 +214,21 @@ FormAssistant.prototype = {
         sendAsyncMessage("FormAssist:Resize");
         break;
       case "focus":
-        let focusedIndex = this._getIndexForElement(gFocusManager.focusedElement);
+        // if an element is focused while we're closed but the element can be handle
+        // by the assistant, try to activate it
+        let focusedElement = gFocusManager.focusedElement;
+        if (!this.currentElement) {
+          if (focusedElement && this._isValidElement(focusedElement)) {
+            let self = this;
+            let timer = new Util.Timeout(function() {
+              self.open(focusedElement);
+            });
+            timer.once(0);
+          }
+          return;
+        }
+
+        let focusedIndex = this._getIndexForElement(focusedElement);
         if (focusedIndex != -1 && this.currentIndex != focusedIndex)
           this.currentIndex = focusedIndex;
         break;
