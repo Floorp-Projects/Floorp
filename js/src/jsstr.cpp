@@ -212,7 +212,7 @@ RopeAllocSize(const size_t length, size_t *capacity)
     if (length > ROPE_DOUBLING_MAX)
         size = minCap + (minCap / 8);
     else
-        size = 1 << (JS_CeilingLog2(minCap));
+        size = RoundUpPow2(minCap);
     *capacity = (size / sizeof(jschar)) - 1;
     JS_ASSERT(size >= sizeof(JSRopeBufferInfo));
     return size;
