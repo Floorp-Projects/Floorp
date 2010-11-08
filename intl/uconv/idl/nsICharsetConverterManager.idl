@@ -66,15 +66,20 @@ interface nsIUTF8StringEnumerator;
  * @created         21/Feb/2000
  * @author  Catalin Rotaru [CATA]
  */
-[scriptable, uuid(f5323a76-c8f7-4c65-8d0c-1250e969c7d5)]
+[scriptable, uuid(6aba73aa-be22-46a9-bf81-c117557f65b5)]
 interface nsICharsetConverterManager : nsISupports
 {
     /**
      * Get the Unicode decoder for the given charset.
      * The "Raw" version skips charset alias resolution
+     * The "Internal" version will return a decoder for any charset; the others
+     *  will return NS_ERROR_UCONV_NOCONV if the requested charsets is
+     *  vulnerable to XSS attacks and should not be used with untrusted input
      */
     nsIUnicodeDecoder getUnicodeDecoder(in string charset);
     nsIUnicodeDecoder getUnicodeDecoderRaw(in string charset);
+    nsIUnicodeDecoder getUnicodeDecoderInternal(in string charset);
+    nsIUnicodeDecoder getUnicodeDecoderRawInternal(in string charset);
 
     /**
      * Get the Unicode encoder for the given charset.
@@ -113,10 +118,11 @@ interface nsICharsetConverterManager : nsISupports
      * character encoding may be used for certain purposes, if it is 
      * multi-byte, and the language code for it. See charsetData.properties
      * for the source of this data. Some known property names:
-     *    notForBrowser  - not to be used in the bowser.
+     *    notForBrowser  - not to be used in the browser.
      *    notForOutgoing - not to be used for exporting files.
      *    LangGroup      - language code for charset, e.g. 'he' and 'zh-CN'.
      *    isMultibyte    - is this a multi-byte charset?
+     *    isXSSVulnerable - not to be used in untrusted web content
      * 
      * @param charset name of the character encoding, e.g. 'iso-8859-15'.
      * @param prop property desired for the character encoding.
