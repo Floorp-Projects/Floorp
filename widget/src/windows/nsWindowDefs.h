@@ -214,11 +214,11 @@ typedef enum
  * touchpad scrolling or screen readers.
  */
 const PRUint32 kMaxClassNameLength   = 40;
-const LPCWSTR kClassNameHidden       = L"MozillaHiddenWindowClass";
-const LPCWSTR kClassNameGeneral      = L"MozillaWindowClass";
-const LPCWSTR kClassNameDialog       = L"MozillaDialogClass";
-const LPCWSTR kClassNameDropShadow   = L"MozillaDropShadowWindowClass";
-const LPCWSTR kClassNameTemp         = L"MozillaTempWindowClass";
+const char kClassNameHidden[]        = "MozillaHiddenWindowClass";
+const char kClassNameGeneral[]       = "MozillaWindowClass";
+const char kClassNameDialog[]        = "MozillaDialogClass";
+const char kClassNameDropShadow[]    = "MozillaDropShadowWindowClass";
+const char kClassNameTemp[]          = "MozillaTempWindowClass";
 
 static const PRUint32 sModifierKeyMap[][3] = {
   { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },

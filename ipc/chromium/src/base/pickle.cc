@@ -16,9 +16,9 @@ const int Pickle::kPayloadUnit = 64;
 
 // We mark a read only pickle with a special capacity_.
 #ifdef CHROMIUM_MOZILLA_BUILD
-static const uint32 kCapacityReadOnly = std::numeric_limits<uint32>::max();
+static const uint32 kCapacityReadOnly = (uint32) -1;
 #else
-static const size_t kCapacityReadOnly = std::numeric_limits<size_t>::max();
+static const size_t kCapacityReadOnly = (size_t) -1;
 #endif
 
 // Payload is uint32 aligned.

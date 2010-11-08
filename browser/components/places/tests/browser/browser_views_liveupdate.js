@@ -291,8 +291,8 @@ var bookmarksObserver = {
       }
       else {
         if (!aNewValue && aElementOrTreeIndex.localName != "toolbarbutton")
-          return aElementOrTreeIndex.label == PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode);
-        return aElementOrTreeIndex.label == aNewValue;
+          return aElementOrTreeIndex.getAttribute("label") == PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode);
+        return aElementOrTreeIndex.getAttribute("label") == aNewValue;
       }
     };
 

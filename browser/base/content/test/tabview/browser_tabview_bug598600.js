@@ -35,15 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 let newWin;
-let prefService;
-
 function test() {
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-  prefService = 
-    Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
-      getBranch("browser.panorama.");
-  // make sure we don't trigger the 'first run' behavior
-  prefService.setBoolPref("experienced_first_run", true);
 
   waitForExplicitFinish();
 
@@ -104,7 +97,6 @@ function test() {
       is(contentWindow.GroupItems.getOrphanedTabs().length, 0, "No orphan tabs");
 
       // clean up and finish
-      prefService.setBoolPref("experienced_first_run", false);
       newWin.close();
 
       finish();

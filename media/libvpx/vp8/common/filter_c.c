@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -32,13 +32,13 @@ static const int bilinear_filters[8][2] =
 static const short sub_pel_filters[8][6] =
 {
 
-    { 0,  0,  128,    0,   0,  0 },         // note that 1/8 pel positions are just as per alpha -0.5 bicubic
+    { 0,  0,  128,    0,   0,  0 },         /* note that 1/8 pel positions are just as per alpha -0.5 bicubic */
     { 0, -6,  123,   12,  -1,  0 },
-    { 2, -11, 108,   36,  -8,  1 },         // New 1/4 pel 6 tap filter
+    { 2, -11, 108,   36,  -8,  1 },         /* New 1/4 pel 6 tap filter */
     { 0, -9,   93,   50,  -6,  0 },
-    { 3, -16,  77,   77, -16,  3 },         // New 1/2 pel 6 tap filter
+    { 3, -16,  77,   77, -16,  3 },         /* New 1/2 pel 6 tap filter */
     { 0, -6,   50,   93,  -9,  0 },
-    { 1, -8,   36,  108, -11,  2 },         // New 1/4 pel 6 tap filter
+    { 1, -8,   36,  108, -11,  2 },         /* New 1/4 pel 6 tap filter */
     { 0, -1,   12,  123,  -6,  0 },
 
 
@@ -69,9 +69,9 @@ void vp8_filter_block2d_first_pass
                    ((int)src_ptr[pixel_step]         * vp8_filter[3]) +
                    ((int)src_ptr[2*pixel_step]       * vp8_filter[4]) +
                    ((int)src_ptr[3*pixel_step]       * vp8_filter[5]) +
-                   (VP8_FILTER_WEIGHT >> 1);      // Rounding
+                   (VP8_FILTER_WEIGHT >> 1);      /* Rounding */
 
-            // Normalize back to 0-255
+            /* Normalize back to 0-255 */
             Temp = Temp >> VP8_FILTER_SHIFT;
 
             if (Temp < 0)
@@ -83,7 +83,7 @@ void vp8_filter_block2d_first_pass
             src_ptr++;
         }
 
-        // Next row...
+        /* Next row... */
         src_ptr    += src_pixels_per_line - output_width;
         output_ptr += output_width;
     }
@@ -108,16 +108,16 @@ void vp8_filter_block2d_second_pass
     {
         for (j = 0; j < output_width; j++)
         {
-            // Apply filter
+            /* Apply filter */
             Temp = ((int)src_ptr[-2 * (int)pixel_step] * vp8_filter[0]) +
                    ((int)src_ptr[-1 * (int)pixel_step] * vp8_filter[1]) +
                    ((int)src_ptr[0]                 * vp8_filter[2]) +
                    ((int)src_ptr[pixel_step]         * vp8_filter[3]) +
                    ((int)src_ptr[2*pixel_step]       * vp8_filter[4]) +
                    ((int)src_ptr[3*pixel_step]       * vp8_filter[5]) +
-                   (VP8_FILTER_WEIGHT >> 1);   // Rounding
+                   (VP8_FILTER_WEIGHT >> 1);   /* Rounding */
 
-            // Normalize back to 0-255
+            /* Normalize back to 0-255 */
             Temp = Temp >> VP8_FILTER_SHIFT;
 
             if (Temp < 0)
@@ -129,7 +129,7 @@ void vp8_filter_block2d_second_pass
             src_ptr++;
         }
 
-        // Start next row
+        /* Start next row */
         src_ptr    += src_pixels_per_line - output_width;
         output_ptr += output_pitch;
     }
@@ -146,12 +146,12 @@ void vp8_filter_block2d
     const short  *VFilter
 )
 {
-    int FData[9*4]; // Temp data bufffer used in filtering
+    int FData[9*4]; /* Temp data bufffer used in filtering */
 
-    // First filter 1-D horizontally...
+    /* First filter 1-D horizontally... */
     vp8_filter_block2d_first_pass(src_ptr - (2 * src_pixels_per_line), FData, src_pixels_per_line, 1, 9, 4, HFilter);
 
-    // then filter verticaly...
+    /* then filter verticaly... */
     vp8_filter_block2d_second_pass(FData + 8, output_ptr, output_pitch, 4, 4, 4, 4, VFilter);
 }
 
@@ -195,8 +195,8 @@ void vp8_sixtap_predict_c
     const short  *HFilter;
     const short  *VFilter;
 
-    HFilter = sub_pel_filters[xoffset];   // 6 tap
-    VFilter = sub_pel_filters[yoffset];   // 6 tap
+    HFilter = sub_pel_filters[xoffset];   /* 6 tap */
+    VFilter = sub_pel_filters[yoffset];   /* 6 tap */
 
     vp8_filter_block2d(src_ptr, dst_ptr, src_pixels_per_line, dst_pitch, HFilter, VFilter);
 }
@@ -212,16 +212,16 @@ void vp8_sixtap_predict8x8_c
 {
     const short  *HFilter;
     const short  *VFilter;
-    int FData[13*16];   // Temp data bufffer used in filtering
+    int FData[13*16];   /* Temp data bufffer used in filtering */
 
-    HFilter = sub_pel_filters[xoffset];   // 6 tap
-    VFilter = sub_pel_filters[yoffset];   // 6 tap
+    HFilter = sub_pel_filters[xoffset];   /* 6 tap */
+    VFilter = sub_pel_filters[yoffset];   /* 6 tap */
 
-    // First filter 1-D horizontally...
+    /* First filter 1-D horizontally... */
     vp8_filter_block2d_first_pass(src_ptr - (2 * src_pixels_per_line), FData, src_pixels_per_line, 1, 13, 8, HFilter);
 
 
-    // then filter verticaly...
+    /* then filter verticaly... */
     vp8_filter_block2d_second_pass(FData + 16, dst_ptr, dst_pitch, 8, 8, 8, 8, VFilter);
 
 }
@@ -238,16 +238,16 @@ void vp8_sixtap_predict8x4_c
 {
     const short  *HFilter;
     const short  *VFilter;
-    int FData[13*16];   // Temp data bufffer used in filtering
+    int FData[13*16];   /* Temp data bufffer used in filtering */
 
-    HFilter = sub_pel_filters[xoffset];   // 6 tap
-    VFilter = sub_pel_filters[yoffset];   // 6 tap
+    HFilter = sub_pel_filters[xoffset];   /* 6 tap */
+    VFilter = sub_pel_filters[yoffset];   /* 6 tap */
 
-    // First filter 1-D horizontally...
+    /* First filter 1-D horizontally... */
     vp8_filter_block2d_first_pass(src_ptr - (2 * src_pixels_per_line), FData, src_pixels_per_line, 1, 9, 8, HFilter);
 
 
-    // then filter verticaly...
+    /* then filter verticaly... */
     vp8_filter_block2d_second_pass(FData + 16, dst_ptr, dst_pitch, 8, 8, 4, 8, VFilter);
 
 }
@@ -264,16 +264,16 @@ void vp8_sixtap_predict16x16_c
 {
     const short  *HFilter;
     const short  *VFilter;
-    int FData[21*24];   // Temp data bufffer used in filtering
+    int FData[21*24];   /* Temp data bufffer used in filtering */
 
 
-    HFilter = sub_pel_filters[xoffset];   // 6 tap
-    VFilter = sub_pel_filters[yoffset];   // 6 tap
+    HFilter = sub_pel_filters[xoffset];   /* 6 tap */
+    VFilter = sub_pel_filters[yoffset];   /* 6 tap */
 
-    // First filter 1-D horizontally...
+    /* First filter 1-D horizontally... */
     vp8_filter_block2d_first_pass(src_ptr - (2 * src_pixels_per_line), FData, src_pixels_per_line, 1, 21, 16, HFilter);
 
-    // then filter verticaly...
+    /* then filter verticaly... */
     vp8_filter_block2d_second_pass(FData + 32, dst_ptr, dst_pitch, 16, 16, 16, 16, VFilter);
 
 }
@@ -324,14 +324,14 @@ void vp8_filter_block2d_bil_first_pass
     {
         for (j = 0; j < output_width; j++)
         {
-            // Apply bilinear filter
+            /* Apply bilinear filter */
             output_ptr[j] = (((int)src_ptr[0]          * vp8_filter[0]) +
                              ((int)src_ptr[pixel_step] * vp8_filter[1]) +
                              (VP8_FILTER_WEIGHT / 2)) >> VP8_FILTER_SHIFT;
             src_ptr++;
         }
 
-        // Next row...
+        /* Next row... */
         src_ptr    += src_pixels_per_line - output_width;
         output_ptr += output_width;
     }
@@ -384,7 +384,7 @@ void vp8_filter_block2d_bil_second_pass
     {
         for (j = 0; j < output_width; j++)
         {
-            // Apply filter
+            /* Apply filter */
             Temp = ((int)src_ptr[0]         * vp8_filter[0]) +
                    ((int)src_ptr[pixel_step] * vp8_filter[1]) +
                    (VP8_FILTER_WEIGHT / 2);
@@ -392,7 +392,7 @@ void vp8_filter_block2d_bil_second_pass
             src_ptr++;
         }
 
-        // Next row...
+        /* Next row... */
         src_ptr    += src_pixels_per_line - output_width;
         output_ptr += output_pitch;
     }
@@ -432,12 +432,12 @@ void vp8_filter_block2d_bil
 )
 {
 
-    unsigned short FData[17*16];    // Temp data bufffer used in filtering
+    unsigned short FData[17*16];    /* Temp data bufffer used in filtering */
 
-    // First filter 1-D horizontally...
+    /* First filter 1-D horizontally... */
     vp8_filter_block2d_bil_first_pass(src_ptr, FData, src_pixels_per_line, 1, Height + 1, Width, HFilter);
 
-    // then 1-D vertically...
+    /* then 1-D vertically... */
     vp8_filter_block2d_bil_second_pass(FData, output_ptr, dst_pitch, Width, Width, Height, Width, VFilter);
 }
 

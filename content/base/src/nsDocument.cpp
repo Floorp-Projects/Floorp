@@ -5543,6 +5543,11 @@ nsDocument::GetAnimationController()
     }
   }
 
+  // If we're hidden (or being hidden), notify the animation controller.
+  if (!mIsShowing) {
+    mAnimationController->OnPageHide();
+  }
+
   return mAnimationController;
 }
 #endif // MOZ_SMIL

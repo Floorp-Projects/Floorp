@@ -110,6 +110,12 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   - (CGFloat)deviceDeltaY;
 @end
 
+// Undocumented scrollPhase flag that lets us discern between real scrolls and
+// automatically firing momentum scroll events.
+@interface NSEvent (ScrollPhase)
+- (long long)_scrollPhase;
+@end
+
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY
                               mozAccessible,

@@ -315,7 +315,6 @@ static PRBool UnloadPluginsASAP()
     }
   }
 
-  NS_WARNING("Unable to retrieve pref: plugins.unloadASAP");
   return PR_FALSE;
 }
 

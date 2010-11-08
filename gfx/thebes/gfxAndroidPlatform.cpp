@@ -270,7 +270,12 @@ gfxAndroidPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString&
 gfxPlatformFontList*
 gfxAndroidPlatform::CreatePlatformFontList()
 {
-    return new gfxFT2FontList();
+    gfxPlatformFontList* list = new gfxFT2FontList();
+    if (NS_SUCCEEDED(list->InitFontList())) {
+        return list;
+    }
+    gfxPlatformFontList::Shutdown();
+    return nsnull;
 }
 
 PRBool
