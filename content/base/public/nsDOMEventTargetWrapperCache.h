@@ -54,15 +54,8 @@ class nsDOMEventTargetWrapperCache : public nsDOMEventTargetHelper,
 public:  
   NS_DECL_ISUPPORTS_INHERITED
 
-  class NS_CYCLE_COLLECTION_INNERCLASS
-    : public NS_CYCLE_COLLECTION_CLASSNAME(nsDOMEventTargetHelper)
-  {
-    NS_IMETHOD RootAndUnlinkJSObjects(void *p);
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(nsDOMEventTargetWrapperCache,
-                                                            nsDOMEventTargetHelper)
-    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);
-  };
-  NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMEventTargetWrapperCache,
+                                                         nsDOMEventTargetHelper)
   
   void GetParentObject(nsIScriptGlobalObject **aParentObject)
   {

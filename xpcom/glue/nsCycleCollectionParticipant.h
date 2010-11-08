@@ -547,7 +547,6 @@ NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public nsXPCOMCycleCollectionParticipant                                    \
 {                                                                              \
-  NS_IMETHOD RootAndUnlinkJSObjects(void *p);                                  \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                           \
   NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);           \
 };                                                                             \
@@ -596,7 +595,6 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
 {                                                                              \
 public:                                                                        \
-  NS_IMETHOD RootAndUnlinkJSObjects(void *p);                                  \
   NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);           \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)           \
 };                                                                             \
