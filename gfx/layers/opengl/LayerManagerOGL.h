@@ -462,9 +462,7 @@ public:
   virtual Layer* GetLayer() = 0;
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix) = 0;
+                           const nsIntPoint& aOffset) = 0;
 
   typedef mozilla::gl::GLContext GLContext;
 

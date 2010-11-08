@@ -404,6 +404,10 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
     return;
   }
 
+  // The results of our drawing always go directly into a pixel buffer,
+  // so we don't need to pass any global transform here.
+  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+
   mThebesLayerCallback = aCallback;
   mThebesLayerCallbackData = aCallbackData;
 
@@ -591,7 +595,7 @@ LayerManagerOGL::Render()
 
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
-                           nsIntPoint(0, 0), 1.0, gfx3DMatrix());
+                           nsIntPoint(0, 0));
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
