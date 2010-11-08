@@ -512,10 +512,10 @@ abstract public class GeckoApp
     static final int FILE_PICKER_REQUEST = 1;
 
     private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue();
-    public String showFilePicker() {
+    public String showFilePicker(String aMimeType) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
+        intent.setType(aMimeType);
         GeckoApp.this.
             startActivityForResult(
                 Intent.createChooser(intent,"choose a file"),

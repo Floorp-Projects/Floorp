@@ -360,6 +360,7 @@ user_pref("network.http.prompt-temp-redirect", false);
 user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
 user_pref("app.update.enabled", false);
+user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION

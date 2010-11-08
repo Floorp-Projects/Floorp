@@ -130,7 +130,6 @@ public:
   static BOOL sFlatMenus;
   static PRPackedBool sIsXPOrLater;
   static PRPackedBool sIsVistaOrLater;
-  static PRPackedBool sHaveCompositor;
   static PRBool sTitlebarInfoPopulated;
   static SIZE sCommandButtons[4];
   static nsILookAndFeel::WindowsThemeIdentifier sThemeId;
@@ -238,7 +237,7 @@ public:
     if(dwmIsCompositionEnabledPtr)
       dwmIsCompositionEnabledPtr(&compositionIsEnabled);
 #endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-    return sHaveCompositor = (compositionIsEnabled != 0);
+    return (compositionIsEnabled != FALSE);
   }
 };
 #endif // __UXThemeData_h__

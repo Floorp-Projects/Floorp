@@ -1,6 +1,26 @@
+libteora 1.2.0alpha1 (2010 September 23)
+
+- New 'ptalarbvorm' encoder with better rate/distortion optimization
+- New th_encode_ctl option for copying configuration from an existing
+  setup header, useful for splicing streams.
+- Returns TH_DUPFRAME in more cases.
+- Add ARM optimizations
+- Add TI C64x+ DSP optimizations
+- Other performance improvements
+- Rename speedlevel 2 to 3 and provide a new speedlevel 2
+- Various minor bug fixes
+
 libtheora 1.1.2 (unreleased snapshot)
 
- - no changes recorded
+ - Fix Huffman table decoding with OC_HUFF_SLUSH is set to 0
+ - Fix a frame size bug in player_example
+ - Add support for passing a buffer the size of the picture
+   region, rather than a full padded frame to th_encode_ycbcr_in()
+   as was possible with the legacy pre-1.0 API.
+ - 4:4:4 support in player_example using software yuv->rgb
+ - Better rgb->yuv conversion in png2theora
+ - Clean up warnings and local variables
+ - Build and documentation fixes
 
 libtheora 1.1.1 (2009 October 1)
 
@@ -128,7 +148,7 @@ libtheora 1.0beta1 (2007 September 22)
  - Granulepos scheme modified to match other codecs. This bumps
    the bitstream revision to 3.2.1. Bitstreams marked 3.2.0 are
    handled correctly by this decoder. Older decoders will show
-   a one frame sync error in the less noticable direction.
+   a one frame sync error in the less noticeable direction.
 
 libtheora 1.0alpha8 (2007 September 18)
 

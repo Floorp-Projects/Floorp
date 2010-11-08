@@ -275,6 +275,8 @@ void
 printf_stderr(const char *fmt, ...)
 {
   FILE *fp = _fdopen(_dup(2), "a");
+  if (!fp)
+      return;
 
   va_list args;
   va_start(args, fmt);

@@ -185,6 +185,7 @@ nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(already_AddRefed<nsINodeInf
     mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)
 {
   RegisterFreezableElement();
+  SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
 }
 
 nsHTMLSharedObjectElement::~nsHTMLSharedObjectElement()
@@ -455,6 +456,7 @@ nsHTMLSharedObjectElement::StartObjectLoad(PRBool aNotify)
   else {
     LoadObject(uri, aNotify, type);
   }
+  SetIsNetworkCreated(PR_FALSE);
 }
 
 nsEventStates

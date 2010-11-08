@@ -430,28 +430,24 @@
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
-  <vbox id="titlebar">
+<vbox id="titlebar">
   <hbox id="titlebar-content">
-  <hbox id="appmenu-button-container" align="start">
-  <button id="appmenu-button"
-          type="menu"
-#ifdef XP_WIN
-          label="&brandShortName;"
-#else
-          label="&appMenuButton.label;"
-#endif
-          style="-moz-user-focus: ignore;">
+    <hbox id="appmenu-button-container" align="start">
+      <button id="appmenu-button"
+              type="menu"
+              label="&brandShortName;"
+              style="-moz-user-focus: ignore;">
 #include browser-appmenu.inc
-  </button>
+      </button>
+    </hbox>
+    <spacer id="titlebar-spacer" flex="1"/>
+    <hbox id="titlebar-buttonbox">
+      <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
+      <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+      <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
+    </hbox>
   </hbox>
-  <spacer id="titlebar-spacer" flex="1"/>
-  <hbox id="titlebar-buttonbox">
-    <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
-    <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-    <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
-  </hbox>
-  </hbox>
-  </vbox>
+</vbox>
 #endif
 
 <deck flex="1" id="tab-view-deck">
@@ -580,13 +576,16 @@
                    onclick="gURLBar.handleCommand(event);"/>
           </hbox>
           <toolbarbutton id="urlbar-go-button"
+                         class="chromeclass-toolbar-additional"
                          onclick="gURLBar.handleCommand(event);"
                          tooltiptext="&goEndCap.tooltip;"/>
           <toolbarbutton id="urlbar-reload-button"
+                         class="chromeclass-toolbar-additional"
                          command="Browser:ReloadOrDuplicate"
                          onclick="checkForMiddleClick(this, event);"
                          tooltiptext="&reloadButton.tooltip;"/>
           <toolbarbutton id="urlbar-stop-button"
+                         class="chromeclass-toolbar-additional"
                          command="Browser:Stop"
                          tooltiptext="&stopButton.tooltip;"/>
         </textbox>

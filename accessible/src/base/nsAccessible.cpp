@@ -467,9 +467,6 @@ nsAccessible::GetFirstChild(nsIAccessible **aFirstChild)
   NS_ENSURE_ARG_POINTER(aFirstChild);
   *aFirstChild = nsnull;
 
-  if (gIsCacheDisabled)
-    InvalidateChildren();
-
   PRInt32 childCount = GetChildCount();
   NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
 

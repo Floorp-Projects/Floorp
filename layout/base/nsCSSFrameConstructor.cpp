@@ -6898,6 +6898,17 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 #endif
     }
 
+#ifdef ACCESSIBILITY
+    if (mPresShell->IsAccessibilityActive()) {
+      nsCOMPtr<nsIAccessibilityService> accService =
+          do_GetService("@mozilla.org/accessibilityService;1");
+      if (accService) {
+        accService->ContentRangeInserted(mPresShell, aContainer,
+                                         aStartChild, aEndChild);
+      }
+    }
+#endif
+
     return NS_OK;
   }
 

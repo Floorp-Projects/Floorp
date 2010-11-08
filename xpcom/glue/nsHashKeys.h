@@ -184,7 +184,7 @@ public:
   PRBool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return *aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return PLDHashNumber(*aKey); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:

@@ -178,7 +178,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     nsIntRect quadRect = *iterRect;
     program->Activate();
     program->SetLayerQuadRect(quadRect);
-    program->SetLayerOpacity(mLayer->GetOpacity());
+    program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
     program->SetLayerTransform(mLayer->GetEffectiveTransform());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);

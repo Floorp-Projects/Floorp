@@ -992,7 +992,7 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.6 python2.5 python2.4 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1846,8 +1846,6 @@ case "$host" in
     ;;
 
 *cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
-    # we need Python 2.5 on Windows
-    PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1921,8 +1919,7 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.4 or newer of Python to build,
-dnl and 2.5 or newer on Windows.
+dnl We require version 2.5 or newer of Python to build.
 AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
 changequote(,)
 $PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
@@ -4726,10 +4723,10 @@ AC_CHECK_PROGS(YASM, yasm, "")
 if test -n "$YASM"; then
   dnl Pull out yasm's version string
   changequote(,)
-  _YASM_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*|\1|p'
+  _YASM_VER_FILTER='s|.* \([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\).*|\1|p'
   changequote([,])
 
-  YASM_VERSION=`yasm --version | sed -nre "$_YASM_VER_FILTER"`
+  YASM_VERSION=`yasm --version | sed -ne "$_YASM_VER_FILTER"`
   _YASM_MAJOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $1 }'`
   _YASM_MINOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $2 }'`
   _YASM_RELEASE=`      echo ${YASM_VERSION} | $AWK -F\. '{ print $3 }'`
@@ -4961,7 +4958,11 @@ MOZ_MEDIA=
 MOZ_WEBM=1
 VPX_AS=
 VPX_ASFLAGS=
+VPX_AS_DASH_C_FLAG=
+VPX_AS_CONVERSION=
+VPX_ASM_SUFFIX=
 VPX_X86_ASM=
+VPX_ARM_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -6048,8 +6049,10 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
-    dnl We currently require yasm on all platforms and require yasm 1.1.0 on Win32.
+    dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
+    dnl We currently require gcc on all arm platforms.
     VPX_AS=$YASM
+    VPX_ASM_SUFFIX=asm
 
     dnl See if we have assembly on this platform.  
     case "$OS_ARCH:$CPU_ARCH" in
@@ -6096,6 +6099,17 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
         fi
       fi
     ;;
+    *:arm*)
+      if test -n "$GNU_AS" ; then
+        VPX_AS=$AS
+        dnl These flags are a lie; they're just used to enable the requisite
+        dnl opcodes; actual arch detection is done at runtime.
+        VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
+        VPX_DASH_C_FLAG="-c"
+        VPX_AS_CONVERSION="$PERL ${srcdir}/media/libvpx/build/make/ads2gas.pl"
+        VPX_ASM_SUFFIX="$ASM_SUFFIX"
+        VPX_ARM_ASM=1
+      fi
     esac
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
@@ -6104,6 +6118,8 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     if test -n "$VPX_X86_ASM"; then
       AC_DEFINE(VPX_X86_ASM)
+    elif test -n "$VPX_ARM_ASM"; then
+      AC_DEFINE(VPX_ARM_ASM)
     else
       AC_MSG_WARN([No assembler or assembly support for libvpx. Using unoptimized C routines.])
     fi
@@ -6406,13 +6422,9 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
 fi
 
-dnl xforms requires xtf and schema-validation
+dnl xforms requires xtf
 if test -z "$MOZ_XTF" -a `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
-fi
-if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTENSIONS" | grep -c schema-validation` -eq 0; then
-    AC_MSG_WARN([Cannot build XForms without schema validation.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 
@@ -8585,7 +8597,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_TREE_PIXMAN"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
     else
-        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.17.3)
+        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
         MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
     fi
@@ -9089,7 +9101,11 @@ AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
+AC_SUBST(VPX_DASH_C_FLAG)
+AC_SUBST(VPX_AS_CONVERSION)
+AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
+AC_SUBST(VPX_ARM_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

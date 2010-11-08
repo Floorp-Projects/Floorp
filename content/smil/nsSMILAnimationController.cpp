@@ -192,12 +192,14 @@ nsSMILAnimationController::RegisterAnimationElement(
   NS_ASSERTION(!mRunningSample, "Registering content during sample.");
   mAnimationElementTable.PutEntry(aAnimationElement);
   if (mDeferredStartSampling) {
-    // mAnimationElementTable was empty until we just inserted its first element
-    NS_ABORT_IF_FALSE(mAnimationElementTable.Count() == 1,
-                      "we shouldn't have deferred sampling if we already had "
-                      "animations registered");
     mDeferredStartSampling = PR_FALSE;
-    StartSampling(GetRefreshDriverForDoc(mDocument));
+    if (mChildContainerTable.Count()) {
+      // mAnimationElementTable was empty, but now we've added its 1st element
+      NS_ABORT_IF_FALSE(mAnimationElementTable.Count() == 1,
+                        "we shouldn't have deferred sampling if we already had "
+                        "animations registered");
+      StartSampling(GetRefreshDriverForDoc(mDocument));
+    } // else, don't sample until a time container is registered (via AddChild)
   }
 }
 

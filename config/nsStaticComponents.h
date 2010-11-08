@@ -43,6 +43,6 @@
 // These symbols are provided by nsStaticComponents.cpp, and also by other
 // static component providers such as nsStaticXULComponents (libxul).
 
-extern mozilla::Module const *const *const kPStaticModules;
+extern mozilla::Module const *const *const kPStaticModules[];
 
 #endif

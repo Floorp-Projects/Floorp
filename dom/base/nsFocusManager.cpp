@@ -1126,6 +1126,12 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
     // is in chrome, any web contents should not be able to steal the focus.
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mFocusedContent));
     sendFocusEvent = nsContentUtils::CanCallerAccess(domNode);
+    if (!sendFocusEvent && mMouseDownEventHandlingDocument) {
+      // However, while mouse down event is handling, the handling document's
+      // script should be able to steal focus.
+      domNode = do_QueryInterface(mMouseDownEventHandlingDocument);
+      sendFocusEvent = nsContentUtils::CanCallerAccess(domNode);
+    }
   }
 
   if (sendFocusEvent) {

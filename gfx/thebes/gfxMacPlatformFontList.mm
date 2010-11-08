@@ -608,7 +608,7 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
     sFontManager = [NSFontManager sharedFontManager];
 }
 
-void
+nsresult
 gfxMacPlatformFontList::InitFontList()
 {
     nsAutoreleasePool localPool;
@@ -617,7 +617,7 @@ gfxMacPlatformFontList::InitFontList()
 
     // need to ignore notifications after adding each font
     if (mATSGeneration == currentGeneration)
-        return;
+        return NS_OK;
 
     mATSGeneration = currentGeneration;
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) updating to generation: %d", mATSGeneration));
@@ -672,6 +672,8 @@ gfxMacPlatformFontList::InitFontList()
 
     // start the delayed cmap loader
     StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps);
+
+	return NS_OK;
 }
 
 void
