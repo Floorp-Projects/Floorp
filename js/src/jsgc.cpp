@@ -704,10 +704,10 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
 }
 
 static void
-MarkRangeConservatively(JSTracer *trc, jsuword *begin, jsuword *end)
+MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
 {
     JS_ASSERT(begin <= end);
-    for (jsuword *i = begin; i != end; ++i)
+    for (const jsuword *i = begin; i != end; ++i)
         MarkWordConservatively(trc, *i);
 }
 
@@ -734,15 +734,15 @@ MarkThreadDataConservatively(JSTracer *trc, JSThreadData *td)
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
 {
-    jsuword *begin = beginv->payloadWord();
-    jsuword *end = endv->payloadWord();;
+    const jsuword *begin = beginv->payloadWord();
+    const jsuword *end = endv->payloadWord();;
 #ifdef JS_NUNBOX32
     /*
      * With 64-bit jsvals on 32-bit systems, we can optimize a bit by
      * scanning only the payloads.
      */
     JS_ASSERT(begin <= end);
-    for (jsuword *i = begin; i != end; i += sizeof(Value)/sizeof(jsuword))
+    for (const jsuword *i = begin; i != end; i += sizeof(Value)/sizeof(jsuword))
         MarkWordConservatively(trc, *i);
 #else
     MarkRangeConservatively(trc, begin, end);

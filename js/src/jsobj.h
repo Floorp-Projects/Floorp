@@ -220,7 +220,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp)
 namespace js {
 
 extern JSBool
-GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp);
+GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, Value *vp);
 
 } /* namespace js */
 
