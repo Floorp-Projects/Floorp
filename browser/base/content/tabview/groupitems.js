@@ -175,16 +175,17 @@ function GroupItem(listOfEls, options) {
     if (!self.getTitle()) {
       self.$title
         .addClass("defaultName")
-        .val(self.defaultName);
+        .val(self.defaultName)
+        .css({"background-image":null, "-moz-padding-start":null});
     } else {
-      self.$title.css({"background":"none"});
+      self.$title.css({"background-image":"none"});
       if (immediately) {
         self.$title.css({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           });
       } else {
         self.$title.animate({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           }, {
             duration: 200,
             easing: "tabviewBounce"
@@ -408,7 +409,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   adjustTitleSize: function GroupItem_adjustTitleSize() {
     Utils.assert(this.bounds, 'bounds needs to have been set');
     let closeButton = iQ('.close', this.container);
-    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css('right')),
+    var dimension = UI.rtl ? 'left' : 'right';
+    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css(dimension)),
                      Math.max(150, this.getTitle().length * 6));
     // The * 6 multiplier calculation is assuming that characters in the title
     // are approximately 6 pixels wide. Bug 586545
