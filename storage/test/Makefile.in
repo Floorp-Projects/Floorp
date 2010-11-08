@@ -58,6 +58,7 @@ CPP_UNIT_TESTS = \
   test_unlock_notify.cpp \
   test_service_init_background_thread.cpp \
   test_AsXXX_helpers.cpp \
+  test_StatementCache.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG
