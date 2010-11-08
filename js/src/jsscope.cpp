@@ -447,11 +447,8 @@ Shape::getChild(JSContext *cx, const js::Shape &child, Shape **listp)
     JS_ASSERT(!child.inDictionary());
 
     if (inDictionary()) {
-        if (newDictionaryShape(cx, child, listp)) {
-            if (!(*listp)->table)
-                (*listp)->maybeHash(cx);
+        if (newDictionaryShape(cx, child, listp))
             return *listp;
-        }
         return NULL;
     }
 
