@@ -64,6 +64,7 @@ _BROWSER_FILES = \
                  browser_tabview_launch.js \
                  browser_tabview_orphaned_tabs.js \
                  browser_tabview_privatebrowsing.js \
+                 browser_tabview_rtl.js \
                  browser_tabview_search.js \
                  browser_tabview_snapping.js \
                  browser_tabview_startup_transitions.js \
