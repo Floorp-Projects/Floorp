@@ -106,6 +106,9 @@ let UI = {
     try {
       let self = this;
 
+      // initialize the direction of the page
+      this._initPageDirection();
+
       // ___ storage
       Storage.init();
       let data = Storage.readUIData(gWindow);
@@ -244,7 +247,13 @@ let UI = {
     this._reorderTabsOnHide = null;
     this._frameInitialized = false;
   },
-  
+
+  // Property: rtl
+  // Returns true if we are in RTL mode, false otherwise
+  get rtl() {
+    return document.documentElement.getAttribute("dir") == "rtl";
+  },
+
   // Function: reset
   // Resets the Panorama view to have just one group with all tabs
   // and, if firstTime == true, add the welcome video/tab
@@ -263,6 +272,9 @@ let UI = {
     box.width = Math.min(box.width * 0.667,
                          pageBounds.width - (welcomeWidth + padding));
     box.height = box.height * 0.667;
+    if (UI.rtl) {
+      box.right = pageBounds.width + pageBounds.left;
+    }
 
     GroupItems.groupItems.forEach(function(group) {
       group.close();
@@ -351,6 +363,15 @@ let UI = {
     return gTabViewDeck.selectedIndex == 1;
   },
 
+  // ---------
+  // Function: _initPageDirection
+  // Initializes the page base direction
+  _initPageDirection: function UI__initPageDirection() {
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                    getService(Ci.nsIXULChromeRegistry);
+    document.documentElement.setAttribute("dir", chromeReg.isLocaleRTL("global") ? "rtl" : "ltr");
+  },
+
   // ----------
   // Function: showTabView
   // Shows TabView and hides the main browser UI.
@@ -361,9 +382,7 @@ let UI = {
       return;
 
     // initialize the direction of the page
-    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                    getService(Ci.nsIXULChromeRegistry);
-    document.documentElement.setAttribute("dir", chromeReg.isLocaleRTL("global") ? "rtl" : "ltr");
+    this._initPageDirection();
 
     var self = this;
     var currentTab = this._currentTab;
@@ -1081,7 +1100,7 @@ let UI = {
         return;
 
       var bounds = item.getBounds();
-      bounds.left += newPageBounds.left - self._pageBounds.left;
+      bounds.left += (UI.rtl ? -1 : 1) * (newPageBounds.left - self._pageBounds.left);
       bounds.left *= scale;
       bounds.width *= scale;
 
