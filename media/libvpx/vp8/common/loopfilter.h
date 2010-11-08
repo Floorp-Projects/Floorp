@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -22,10 +22,10 @@ typedef enum
     SIMPLE_LOOPFILTER = 1
 } LOOPFILTERTYPE;
 
-// FRK
-// Need to align this structure so when it is declared and
-// passed it can be loaded into vector registers.
-// FRK
+/* FRK
+ * Need to align this structure so when it is declared and
+ * passed it can be loaded into vector registers.
+ */
 typedef struct
 {
     DECLARE_ALIGNED(16, signed char, lim[16]);
@@ -119,8 +119,8 @@ typedef struct
 
 typedef void loop_filter_uvfunction
 (
-    unsigned char *u,   // source pointer
-    int p,              // pitch
+    unsigned char *u,   /* source pointer */
+    int p,              /* pitch */
     const signed char *flimit,
     const signed char *limit,
     const signed char *thresh,
