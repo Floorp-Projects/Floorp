@@ -44,8 +44,6 @@ MOZ_BRANDING_DIRECTORY=mobile/branding/nightly
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
-MOZ_CHROME_FILE_FORMAT=omni
-
 MOZ_SERVICES_SYNC=1
 MOZ_UPDATER=1
 
