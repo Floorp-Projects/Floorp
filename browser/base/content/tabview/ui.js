@@ -360,6 +360,11 @@ let UI = {
     if (this._isTabViewVisible())
       return;
 
+    // initialize the direction of the page
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                    getService(Ci.nsIXULChromeRegistry);
+    document.documentElement.setAttribute("dir", chromeReg.isLocaleRTL("global") ? "rtl" : "ltr");
+
     var self = this;
     var currentTab = this._currentTab;
     var item = null;
