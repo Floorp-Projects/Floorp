@@ -1088,13 +1088,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         // tab) / (the total available content width)
 
         // first, find the right of the rightmost tab! luckily, they're in order.
-        // TODO: does this change for rtl?
         var rightMostRight = 0;
-        for each (var rect in rects) {
-          if (rect.right > rightMostRight)
-            rightMostRight = rect.right;
-          else
-            break;
+        if (UI.rtl) {
+          rightMostRight = rects[0].right;
+        } else {
+          for each (var rect in rects) {
+            if (rect.right > rightMostRight)
+              rightMostRight = rect.right;
+            else
+              break;
+          }
         }
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
 
@@ -1179,7 +1182,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         child.addClass("stacked");
         child.setBounds(box, !animate);
-        child.setRotation(self._randRotate(maxRotation, index));
+        child.setRotation((UI.rtl ? -1 : 1) * self._randRotate(maxRotation, index));
       }
     });
 
