@@ -313,6 +313,12 @@ class nsTArray : public nsTArray_base {
       return true;
     }
 
+    // Return true if this array does not have the same length and the same
+    // elements as |other|.
+    bool operator!=(const self_type& other) const {
+      return !operator==(other);
+    }
+
     //
     // Accessor methods
     //
