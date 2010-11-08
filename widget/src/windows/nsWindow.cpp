@@ -750,13 +750,15 @@ void nsWindow::RegisterWindowClass(const nsString& aClassName, UINT aExtraStyle,
   }
 }
 
+static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
+
 // Return the proper window class for everything except popups.
 void nsWindow::GetWindowClass(nsString& aWindowClass)
 {
   switch (mWindowType) {
   case eWindowType_invisible:
     aWindowClass.AssignLiteral(kClassNameHidden);
-    RegisterWindowClass(aWindowClass, 0, IDI_APPLICATION);
+    RegisterWindowClass(aWindowClass, 0, gStockApplicationIcon);
     break;
   case eWindowType_dialog:
     aWindowClass.AssignLiteral(kClassNameDialog);
@@ -764,7 +766,7 @@ void nsWindow::GetWindowClass(nsString& aWindowClass)
     break;
   default:
     GetMainWindowClass(aWindowClass);
-    RegisterWindowClass(aWindowClass, 0, IDI_APPLICATION);
+    RegisterWindowClass(aWindowClass, 0, gStockApplicationIcon);
     break;
   }
 }
@@ -773,7 +775,7 @@ void nsWindow::GetWindowClass(nsString& aWindowClass)
 void nsWindow::GetWindowPopupClass(nsString& aWindowClass)
 {
   aWindowClass.AssignLiteral(kClassNameDropShadow);
-  RegisterWindowClass(aWindowClass, CS_XP_DROPSHADOW, IDI_APPLICATION);
+  RegisterWindowClass(aWindowClass, CS_XP_DROPSHADOW, gStockApplicationIcon);
 }
 
 /**************************************************************
