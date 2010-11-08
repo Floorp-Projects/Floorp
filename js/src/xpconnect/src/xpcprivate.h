@@ -2445,17 +2445,17 @@ public:
     // collected then its mFlatJSObject will be cycle collected too and
     // finalization of the mFlatJSObject will unlink the js objects (see
     // XPC_WN_NoHelper_Finalize and FlatJSObjectFinalized).
-    // We also rely on NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK having empty
-    // Root/Unroot methods, to avoid root/unrooting the JS objects from
-    // addrefing/releasing the XPCWrappedNative during unlinking, which would
-    // make the JS objects uncollectable to the JS GC.
+    // We also give XPCWrappedNative empty Root/Unroot methods, to avoid
+    // root/unrooting the JS objects from addrefing/releasing the
+    // XPCWrappedNative during unlinking, which would make the JS objects
+    // uncollectable to the JS GC.
     class NS_CYCLE_COLLECTION_INNERCLASS
      : public nsXPCOMCycleCollectionParticipant
     {
       NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(XPCWrappedNative,
                                                     XPCWrappedNative)
-      NS_IMETHOD RootAndUnlinkJSObjects(void *p);
-      NS_IMETHOD Unlink(void *p) { return NS_OK; }
+      NS_IMETHOD RootAndUnlinkJSObjects(void *p) { return NS_OK; }
+      NS_IMETHOD Unlink(void *p);
       NS_IMETHOD Unroot(void *p) { return NS_OK; }
     };
     NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
@@ -2963,13 +2963,7 @@ public:
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
 
-    class NS_CYCLE_COLLECTION_INNERCLASS
-     : public nsXPCOMCycleCollectionParticipant
-    {
-      NS_IMETHOD RootAndUnlinkJSObjects(void *p);
-      NS_DECL_CYCLE_COLLECTION_CLASS_BODY(nsXPCWrappedJS, nsIXPConnectWrappedJS)
-    };
-    NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(nsXPCWrappedJS)
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,

@@ -866,15 +866,13 @@ class JSContextParticipant : public nsCycleCollectionParticipant
 public:
     NS_IMETHOD RootAndUnlinkJSObjects(void *n)
     {
-        JSContext *cx = static_cast<JSContext*>(n);
-        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
-        cx->globalObject = nsnull;
         return NS_OK;
     }
     NS_IMETHOD Unlink(void *n)
     {
-        // We must not unlink a JSContext because Root/Unroot don't ensure that
-        // the pointer is still valid.
+        JSContext *cx = static_cast<JSContext*>(n);
+        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
+        cx->globalObject = nsnull;
         return NS_OK;
     }
     NS_IMETHOD Unroot(void *n)
