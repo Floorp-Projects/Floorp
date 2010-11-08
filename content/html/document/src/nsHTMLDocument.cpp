@@ -3278,6 +3278,13 @@ nsHTMLDocument::EditingStateChanged()
     nsCOMPtr<nsIPresShell> presShell = GetShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
+    // If we're entering the design mode, put the selection at the beginning of
+    // the document for compatibility reasons.
+    if (designMode) {
+      rv = editor->BeginningOfDocument();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     nsCOMArray<nsIStyleSheet> agentSheets;
     rv = presShell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
