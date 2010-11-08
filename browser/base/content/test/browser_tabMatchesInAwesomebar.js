@@ -153,28 +153,27 @@ function loadTab(tab, url) {
   // Because adding visits is async, we will not be notified immediately.
   let visited = false;
 
-  tab.linkedBrowser.addEventListener("load", function (event) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  Services.obs.addObserver(
+    function (aSubject, aTopic, aData) {
+      if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
+        return;
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      if (--gTabWaitCount > 0)
+        return;
+      is(gTabWaitCount, 0,
+         "sanity check, gTabWaitCount should not be decremented below 0");
 
-    Services.obs.addObserver(
-      function (aSubject, aTopic, aData) {
-        if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
-          return;
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        if (--gTabWaitCount > 0)
-          return;
-        is(gTabWaitCount, 0,
-           "sanity check, gTabWaitCount should not be decremented below 0");
+      try {
+        ensure_opentabs_match_db();
+      } catch (e) {
+        ok(false, "exception from ensure_openpages_match_db: " + e);
+      }
 
-        try {
-          ensure_opentabs_match_db();
-        } catch (e) {
-          ok(false, "exception from ensure_openpages_match_db: " + e);
-        }
-
-        executeSoon(nextStep);
-      }, "uri-visit-saved", false);
-  }, true);
+      executeSoon(nextStep);
+    },
+    "uri-visit-saved",
+    false
+  );
 
   gTabWaitCount++;
   tab.linkedBrowser.loadURI(url);

@@ -51,6 +51,8 @@
 #include "mozIStorageStatement.h"
 #include "nsPIPlacesDatabase.h"
 
+#include <sstream>
+
 using namespace mozilla;
 
 static size_t gTotalTests = 0;
@@ -80,7 +82,17 @@ static size_t gPassedTests = 0;
   do_check_true(NS_SUCCEEDED(aResult))
 
 #define do_check_eq(aFirst, aSecond) \
-  do_check_true(aFirst == aSecond)
+  PR_BEGIN_MACRO \
+    gTotalTests++; \
+    if (aFirst == aSecond) { \
+      gPassedTests++; \
+    } else { \
+      std::ostringstream temp; \
+      temp << "Expected '" << aFirst << "', got '" << aSecond <<"' at "; \
+      temp << __FILE__ << ":" << __LINE__ << "!"; \
+      fail(temp.str().c_str()); \
+    } \
+  PR_END_MACRO
 
 struct Test
 {
