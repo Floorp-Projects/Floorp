@@ -68,7 +68,7 @@ public:
   /**
    * Matrix multiplication.
    */
-  inline gfx3DMatrix operator*(const gfx3DMatrix &aMatrix);
+  inline gfx3DMatrix operator*(const gfx3DMatrix &aMatrix) const;
 
   /**
    * Return true if this matrix and |aMatrix| are the same matrix.
@@ -134,7 +134,7 @@ gfx3DMatrix::gfx3DMatrix(void)
 }
 
 inline gfx3DMatrix
-gfx3DMatrix::operator*(const gfx3DMatrix &aMatrix)
+gfx3DMatrix::operator*(const gfx3DMatrix &aMatrix) const
 {
   gfx3DMatrix matrix;
 

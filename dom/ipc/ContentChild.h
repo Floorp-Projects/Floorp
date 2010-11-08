@@ -114,6 +114,9 @@ public:
 
     virtual bool RecvAddPermission(const IPC::Permission& permission);
 
+    virtual bool RecvAccelerationChanged(const double& x, const double& y,
+                                         const double& z);
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);

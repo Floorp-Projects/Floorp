@@ -54,7 +54,7 @@
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
-
+#include "nsJSEnvironment.h"
 #include "jstypedarray.h"
 
 #include "XrayWrapper.h"
@@ -2279,6 +2279,11 @@ NS_IMETHODIMP
 nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                    PRUint32 aRecursionDepth)
 {
+    // Call cycle collector occasionally.
+    if (NS_IsMainThread()) {
+        nsJSContext::MaybeCCIfUserInactive();
+    }
+
     return Pop(nsnull);
 }
 

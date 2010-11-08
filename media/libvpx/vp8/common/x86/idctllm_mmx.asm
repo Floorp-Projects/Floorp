@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -58,11 +58,11 @@ sym(vp8_short_idct4x4llm_mmx):
         movq        mm5,            mm1
         paddw       mm2,            mm0             ; a1 =0+2
 
-        pmulhw      mm5,            [x_s1sqr2 GLOBAL]        ;
+        pmulhw      mm5,            [GLOBAL(x_s1sqr2)]       ;
         paddw       mm5,            mm1             ; ip1 * sin(pi/8) * sqrt(2)
 
         movq        mm7,            mm3             ;
-        pmulhw      mm7,            [x_c1sqr2less1 GLOBAL]    ;
+        pmulhw      mm7,            [GLOBAL(x_c1sqr2less1)]   ;
 
         paddw       mm7,            mm3             ; ip3 * cos(pi/8) * sqrt(2)
         psubw       mm7,            mm5             ; c1
@@ -70,10 +70,10 @@ sym(vp8_short_idct4x4llm_mmx):
         movq        mm5,            mm1
         movq        mm4,            mm3
 
-        pmulhw      mm5,            [x_c1sqr2less1 GLOBAL]
+        pmulhw      mm5,            [GLOBAL(x_c1sqr2less1)]
         paddw       mm5,            mm1
 
-        pmulhw      mm3,            [x_s1sqr2 GLOBAL]
+        pmulhw      mm3,            [GLOBAL(x_s1sqr2)]
         paddw       mm3,            mm4
 
         paddw       mm3,            mm5             ; d1
@@ -113,11 +113,11 @@ sym(vp8_short_idct4x4llm_mmx):
         movq        mm5,            mm1
         paddw       mm2,            mm0             ; a1 =0+2
 
-        pmulhw      mm5,            [x_s1sqr2 GLOBAL]         ;
+        pmulhw      mm5,            [GLOBAL(x_s1sqr2)]        ;
         paddw       mm5,            mm1             ; ip1 * sin(pi/8) * sqrt(2)
 
         movq        mm7,            mm3             ;
-        pmulhw      mm7,            [x_c1sqr2less1 GLOBAL]    ;
+        pmulhw      mm7,            [GLOBAL(x_c1sqr2less1)]   ;
 
         paddw       mm7,            mm3             ; ip3 * cos(pi/8) * sqrt(2)
         psubw       mm7,            mm5             ; c1
@@ -125,16 +125,16 @@ sym(vp8_short_idct4x4llm_mmx):
         movq        mm5,            mm1
         movq        mm4,            mm3
 
-        pmulhw      mm5,            [x_c1sqr2less1 GLOBAL]
+        pmulhw      mm5,            [GLOBAL(x_c1sqr2less1)]
         paddw       mm5,            mm1
 
-        pmulhw      mm3,            [x_s1sqr2 GLOBAL]
+        pmulhw      mm3,            [GLOBAL(x_s1sqr2)]
         paddw       mm3,            mm4
 
         paddw       mm3,            mm5             ; d1
-        paddw       mm0,            [fours GLOBAL]
+        paddw       mm0,            [GLOBAL(fours)]
 
-        paddw       mm2,            [fours GLOBAL]
+        paddw       mm2,            [GLOBAL(fours)]
         movq        mm6,            mm2             ; a1
 
         movq        mm4,            mm0             ; b1
@@ -196,7 +196,7 @@ sym(vp8_short_idct4x4llm_1_mmx):
         mov         rax,            arg(0) ;input
         movd        mm0,            [rax]
 
-        paddw       mm0,            [fours GLOBAL]
+        paddw       mm0,            [GLOBAL(fours)]
         mov         rdx,            arg(1) ;output
 
         psraw       mm0,            3
@@ -239,7 +239,7 @@ sym(vp8_dc_only_idct_add_mmx):
 
         movd        mm5,            arg(0) ;input_dc
 
-        paddw       mm5,            [fours GLOBAL]
+        paddw       mm5,            [GLOBAL(fours)]
 
         psraw       mm5,            3
 

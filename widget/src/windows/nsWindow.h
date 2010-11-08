@@ -307,8 +307,10 @@ protected:
   void                    InvalidateNonClientRegion();
   HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
 #if !defined(WINCE)
-  static void             InitTrackPointHack();
+  static void             InitInputHackDefaults();
 #endif
+  static PRBool           UseTrackPointHack();
+  static void             GetMainWindowClass(nsAString& aClass);
   PRBool                  HasGlass() const {
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
@@ -394,14 +396,15 @@ protected:
    */
   void                    UserActivity();
 
-  /**
-   * Methods for derived classes 
-   */
-  virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
-  virtual LPCWSTR         WindowClass();
-  virtual LPCWSTR         WindowPopupClass();
+  PRInt32                 GetHeight(PRInt32 aProposedHeight);
+  void                    GetWindowClass(nsString& aWindowClass);
+  void                    GetWindowPopupClass(nsString& aWindowClass);
   virtual DWORD           WindowStyle();
-  virtual DWORD           WindowExStyle();
+  DWORD                   WindowExStyle();
+
+  void                    RegisterWindowClass(const nsString& aClassName,
+                                              UINT aExtraStyle,
+                                              LPWSTR aIconID);
 
   /**
    * XP and Vista theming support for windows with rounded edges
@@ -488,8 +491,6 @@ protected:
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;
-  static BOOL           sIsRegistered;
-  static BOOL           sIsPopupClassRegistered;
   static BOOL           sIsOleInitialized;
   static HCURSOR        sHCursor;
   static imgIContainer* sCursorImgContainer;
@@ -497,7 +498,8 @@ protected:
   static PRBool         sJustGotDeactivate;
   static PRBool         sJustGotActivate;
   static int            sTrimOnMinimize;
-  static PRBool         sTrackPointHack;
+  static PRBool         sDefaultTrackPointHack;
+  static const char*    sDefaultMainWindowClass;
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif

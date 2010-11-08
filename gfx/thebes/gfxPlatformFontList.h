@@ -67,9 +67,10 @@ public:
         NS_TIME_FUNCTION;
 
         NS_ASSERTION(!sPlatformFontList, "What's this doing here?");
-        sPlatformFontList = gfxPlatform::GetPlatform()->CreatePlatformFontList();
-        if (!sPlatformFontList) return NS_ERROR_OUT_OF_MEMORY;
-        sPlatformFontList->InitFontList();
+        gfxPlatform::GetPlatform()->CreatePlatformFontList();
+        if (!sPlatformFontList) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         return NS_OK;
     }
 
@@ -77,6 +78,9 @@ public:
         delete sPlatformFontList;
         sPlatformFontList = nsnull;
     }
+
+    // initialize font lists
+    virtual nsresult InitFontList();
 
     void GetFontList (nsIAtom *aLangGroup,
                       const nsACString& aGenericFamily,
@@ -139,9 +143,6 @@ protected:
     static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                                nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                                void* userArg);
-
-    // initialize font lists
-    virtual void InitFontList();
 
     // separate initialization for reading in name tables, since this is expensive
     void InitOtherFamilyNames();

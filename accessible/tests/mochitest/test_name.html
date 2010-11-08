@@ -176,6 +176,14 @@
       testName("textboxinend", "This day was sunny");
       testName("textbox2", "This day was");
 
+      // placeholder
+      testName("ph_password", "a placeholder");
+      testName("ph_text", "a placeholder");
+      testName("ph_textarea", "a placeholder");
+      testName("ph_text2", "a label");
+      testName("ph_textarea2", "a label");
+      testName("ph_text3", "a label");
+
       SimpleTest.finish();
     }
 
@@ -196,6 +204,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=530081"
      title="Clean up our tree walker ">
     Mozilla Bug 530081
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=604391"
+     title="Use placeholder as name if name is otherwise empty">
+    Mozilla Bug 604391
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -420,6 +433,19 @@
       <input id="textbox2" value="sunny">
     </label>
   </form>
+
+  <!-- placeholder  -->
+  <input id="ph_password" type="password" value="" placeholder="a placeholder" />
+  <input id="ph_text" type="text" placeholder="a placeholder" />
+  <textarea id="ph_textarea" cols="5" placeholder="a placeholder"></textarea>  
+
+  <!-- placeholder does not win -->
+  <input id="ph_text2" type="text" aria-label="a label" placeholder="meh" />
+  <textarea id="ph_textarea2" cols="5" aria-labelledby="ph_text2" 
+            placeholder="meh"></textarea>
+
+  <label for="ph_text3">a label</label>
+  <input id="ph_text3" placeholder="meh" />
 
 </body>
 </html>

@@ -14,7 +14,7 @@ dropmarker {
   -moz-image-region: auto;
 }
 
-dropmarker:hover:active {
+dropmarker:hover:active:not([disabled="true"]) {
   -moz-border-top-colors: ThreeDShadow ThreeDFace;
   -moz-border-right-colors: ThreeDShadow ThreeDFace;
   -moz-border-bottom-colors: ThreeDShadow ThreeDFace;
@@ -24,9 +24,4 @@ dropmarker:hover:active {
 
 dropmarker[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight !important;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight !important;
-  padding: 1px !important;
 }

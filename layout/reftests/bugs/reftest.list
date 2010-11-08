@@ -1525,8 +1525,12 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
 == 600974-1.html 600974-1-ref.html
-== 604737.html 604737-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
+== 602200-1.html 602200-1-ref.html
+== 602200-2.html 602200-2-ref.html
+== 602200-3.html 602200-3-ref.html
+== 602200-4.html 602200-4-ref.html
+== 604737.html 604737-ref.html
 == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml

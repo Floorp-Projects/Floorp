@@ -139,7 +139,7 @@ load 374297-1.html
 load 374297-2.html
 load 376223-1.xhtml
 asserts(0-99) load 378325-1.html # bug 531589
-load 379105-1.xhtml
+asserts(0-3) load 379105-1.xhtml # bug 570215, bug 479160
 load 379419-1.xhtml
 load 379768-1.html
 load 379799-1.html

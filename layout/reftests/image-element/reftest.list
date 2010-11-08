@@ -42,3 +42,4 @@ random-if(!cocoaWidget) == gradient-html-07a.html gradient-html-07b.html
 == gradient-html-07b.html gradient-html-07c.html
 == pattern-html-01.html pattern-html-01-ref.svg
 == pattern-html-02.html pattern-html-02-ref.svg
+== referenced-from-binding-01.html referenced-from-binding-01-ref.html

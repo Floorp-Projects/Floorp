@@ -237,7 +237,9 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
-CapturingContentInfo nsIPresShell::gCaptureInfo;
+CapturingContentInfo nsIPresShell::gCaptureInfo =
+  { PR_FALSE /* mAllowed */,     PR_FALSE /* mRetargetToElement */,
+    PR_FALSE /* mPreventDrag */, nsnull /* mContent */ };
 nsIContent* nsIPresShell::gKeyDownTarget;
 
 static PRUint32
@@ -269,7 +271,7 @@ struct RangePaintInfo {
   nsPoint mRootOffset;
 
   RangePaintInfo(nsIRange* aRange, nsIFrame* aFrame)
-    : mRange(aRange), mBuilder(aFrame, PR_FALSE, PR_FALSE)
+    : mRange(aRange), mBuilder(aFrame, nsDisplayListBuilder::PAINTING, PR_FALSE)
   {
     MOZ_COUNT_CTOR(RangePaintInfo);
   }
@@ -6901,7 +6903,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     }                                
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                          aEvent->message == NS_MOUSE_BUTTON_DOWN);
+                                                          aEvent, mDocument);
 
     if (NS_IS_TRUSTED_EVENT(aEvent) && aEvent->message == NS_MOUSE_MOVE) {
       nsIPresShell::AllowMouseCapture(

@@ -97,7 +97,7 @@ NS_IMETHODIMP nsAcceleration::GetZ(double *aZ)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsAccelerometer, nsIAccelerometer)
+NS_IMPL_ISUPPORTS2(nsAccelerometer, nsIAccelerometer, nsIAccelerometerUpdate)
 
 nsAccelerometer::nsAccelerometer()
 : mLastX(10), /* initialize to values that can't be possible */
@@ -200,11 +200,11 @@ NS_IMETHODIMP nsAccelerometer::RemoveWindowListener(nsIDOMWindow *aWindow)
   return NS_OK;
 }
 
-void 
+NS_IMETHODIMP
 nsAccelerometer::AccelerationChanged(double x, double y, double z)
 {
   if (!mEnabled)
-    return;
+    return NS_ERROR_NOT_INITIALIZED;
 
   if (x > 1)
     x = 1;
@@ -223,7 +223,7 @@ nsAccelerometer::AccelerationChanged(double x, double y, double z)
     if (PR_ABS(mLastX - x) < .01 &&
         PR_ABS(mLastY - y) < .01 &&
         PR_ABS(mLastZ - z) < .01)
-      return;
+      return NS_OK;
   }
 
   mLastX = x;
@@ -270,4 +270,5 @@ nsAccelerometer::AccelerationChanged(double x, double y, double z)
       }
     }
   }
+  return NS_OK;
 }

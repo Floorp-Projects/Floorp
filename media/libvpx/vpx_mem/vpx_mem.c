@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -31,7 +31,7 @@ static unsigned long g_alloc_count = 0;
 # include "hmm_intrnl.h"
 
 # define SHIFT_HMM_ADDR_ALIGN_UNIT 5
-# define TOTAL_MEMORY_TO_ALLOCATE  20971520 // 20 * 1024 * 1024
+# define TOTAL_MEMORY_TO_ALLOCATE  20971520 /* 20 * 1024 * 1024 */
 
 # define MM_DYNAMIC_MEMORY 1
 # if MM_DYNAMIC_MEMORY
@@ -48,7 +48,7 @@ static int g_mng_memory_allocated = 0;
 
 static int vpx_mm_create_heap_memory();
 static void *vpx_mm_realloc(void *memblk, size_t size);
-#endif //CONFIG_MEM_MANAGER
+#endif /*CONFIG_MEM_MANAGER*/
 
 #if USE_GLOBAL_FUNCTION_POINTERS
 struct GLOBAL_FUNC_POINTERS
@@ -75,7 +75,7 @@ struct GLOBAL_FUNC_POINTERS
 # define VPX_MEMCPY_L  memcpy
 # define VPX_MEMSET_L  memset
 # define VPX_MEMMOVE_L memmove
-#endif // USE_GLOBAL_FUNCTION_POINTERS
+#endif /* USE_GLOBAL_FUNCTION_POINTERS */
 
 unsigned int vpx_mem_get_version()
 {
@@ -130,7 +130,7 @@ void *vpx_memalign(size_t align, size_t size)
     addr = hmm_alloc(&hmm_d, number_aau);
 #else
     addr = VPX_MALLOC_L(size + align - 1 + ADDRESS_STORAGE_SIZE);
-#endif //CONFIG_MEM_MANAGER
+#endif /*CONFIG_MEM_MANAGER*/
 
     if (addr)
     {
@@ -269,7 +269,7 @@ void *xvpx_memalign(size_t align, size_t size, char *file, int line)
     }
 #else
     x = vpx_memalign(align, size);
-#endif //TRY_BOUNDS_CHECK
+#endif /*TRY_BOUNDS_CHECK*/
 
     g_alloc_count++;
 
@@ -332,9 +332,10 @@ void *xvpx_realloc(void *memblk, size_t size, char *file, int line)
     vpx_memory_tracker_check_integrity(file, line);
 #endif
 
-    //have to do this regardless of success, because
-    //the memory that does get realloc'd may change
-    //the bounds values of this block
+    /* have to do this regardless of success, because
+     * the memory that does get realloc'd may change
+     * the bounds values of this block
+     */
     vpx_memory_tracker_remove((size_t)memblk);
 
 #if TRY_BOUNDS_CHECK
@@ -364,7 +365,7 @@ void *xvpx_realloc(void *memblk, size_t size, char *file, int line)
     }
 #else
     x = vpx_realloc(memblk, size);
-#endif //TRY_BOUNDS_CHECK
+#endif /*TRY_BOUNDS_CHECK*/
 
     if (!memblk) ++g_alloc_count;
 
@@ -380,7 +381,7 @@ void xvpx_free(void *p_address, char *file, int line)
 {
 #if TRY_BOUNDS_CHECK
     unsigned char *p_bounds_address = (unsigned char *)p_address;
-    //p_bounds_address -= BOUNDS_CHECK_PAD_SIZE;
+    /*p_bounds_address -= BOUNDS_CHECK_PAD_SIZE;*/
 #endif
 
 #if !TRY_BOUNDS_CHECK_ON_FREE
@@ -394,8 +395,9 @@ void xvpx_free(void *p_address, char *file, int line)
         vpx_memory_tracker_check_integrity(file, line);
 #endif
 
-        //if the addr isn't found in the list, assume it was allocated via
-        //vpx_ calls not xvpx_, therefore it does not contain any padding
+        /* if the addr isn't found in the list, assume it was allocated via
+         * vpx_ calls not xvpx_, therefore it does not contain any padding
+         */
         if (vpx_memory_tracker_remove((size_t)p_address) == -2)
         {
             p_bounds_address = p_address;
@@ -421,7 +423,7 @@ void xvpx_free(void *p_address, char *file, int line)
 
 #if CONFIG_MEM_CHECKS
 #if defined(VXWORKS)
-#include <task_lib.h> //for task_delay()
+#include <task_lib.h> /*for task_delay()*/
 /* This function is only used to get a stack trace of the player
 object so we can se where we are having a problem. */
 static int get_my_tt(int task)
@@ -627,7 +629,7 @@ static void *vpx_mm_realloc(void *memblk, size_t size)
 
     return p_ret;
 }
-#endif //CONFIG_MEM_MANAGER
+#endif /*CONFIG_MEM_MANAGER*/
 
 #if USE_GLOBAL_FUNCTION_POINTERS
 # if CONFIG_MEM_TRACKER
@@ -639,7 +641,7 @@ extern int vpx_memory_tracker_set_functions(g_malloc_func g_malloc_l
         , g_memset_func g_memset_l
         , g_memmove_func g_memmove_l);
 # endif
-#endif //USE_GLOBAL_FUNCTION_POINTERS
+#endif /*USE_GLOBAL_FUNCTION_POINTERS*/
 int vpx_mem_set_functions(g_malloc_func g_malloc_l
                           , g_calloc_func g_calloc_l
                           , g_realloc_func g_realloc_l
