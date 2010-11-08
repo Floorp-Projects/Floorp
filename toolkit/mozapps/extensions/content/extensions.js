@@ -1302,8 +1302,11 @@ var gCategories = {
     }
 
     if (this.node.selectedItem &&
-        this.node.selectedItem.value == aId)
+        this.node.selectedItem.value == aId) {
+      this.node.selectedItem.hidden = false;
+      this.node.selectedItem.disabled = false;
       return;
+    }
 
     if (view.type == "search")
       var item = this._search;
