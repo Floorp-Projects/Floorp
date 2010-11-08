@@ -638,7 +638,7 @@ gfxGDIFontList::GetFontSubstitutes()
     return NS_OK;
 }
 
-void
+nsresult
 gfxGDIFontList::InitFontList()
 {
     gfxFontCache *fc = gfxFontCache::GetCache();
@@ -664,8 +664,10 @@ gfxGDIFontList::InitFontList()
     GetFontSubstitutes();
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
+
+    return NS_OK;
 }
-    
+
 int CALLBACK
 gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
                                       NEWTEXTMETRICEXW *lpntme,
