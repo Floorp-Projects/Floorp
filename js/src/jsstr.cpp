@@ -105,83 +105,88 @@ js_GetStringChars(JSContext *cx, JSString *str)
 void
 JSString::flatten()
 {
-    JSString *topNode;
-    jschar *chars;
-    size_t capacity;
     JS_ASSERT(isRope());
 
     /*
      * This can be called from any string in the rope, so first traverse to the
      * top node.
      */
-    topNode = this;
+    JSString *topNode = this;
     while (topNode->isInteriorNode())
         topNode = topNode->interiorNodeParent();
 
+    const size_t length = topNode->length();
+    const size_t capacity = topNode->topNodeCapacity();
+    jschar *const chars = (jschar *) topNode->topNodeBuffer();
+
+    /*
+     * To allow a homogeneous tree traversal, transform the top node into an
+     * internal node with null parent (which will be the stop condition).
+     */
+    topNode->e.mParent = NULL;
 #ifdef DEBUG
-    size_t length = topNode->length();
+    topNode->mLengthAndFlags = JSString::INTERIOR_NODE;
 #endif
 
-    capacity = topNode->topNodeCapacity();
-    chars = (jschar *) topNode->topNodeBuffer();
-
     /*
-     * To make the traversal simpler, convert the top node to be marked as an
-     * interior node with a NULL parent, so that we end up at NULL when we are
-     * done processing it.
+     * Perform a depth-first tree traversal, splatting each node's characters
+     * into a contiguous buffer. Visit each node three times:
+     *  - the first time, record the position in the linear buffer, and recurse
+     *    into the left child.
+     *  - the second time, recurse into the right child.
+     *  - the third time, transform the node into a dependent string.
+     * To avoid maintaining a stack, tree nodes are mutated to indicate how
+     * many times they have been visited.
      */
-    topNode->convertToInteriorNode(NULL);
-    JSString *str = topNode, *next;
-    size_t pos = 0;
-
-    /*
-     * Traverse the tree, making each interior string dependent on the resulting
-     * string.
-     */
-    while (str) {
-        switch (str->ropeTraversalCount()) {
-          case 0:
-            next = str->ropeLeft();
-
-            /*
-             * We know the "offset" field for the new dependent string now, but
-             * not later, so store it early. We have to be careful with this:
-             * mLeft is replaced by mOffset.
-             */
-            str->startTraversalConversion(chars, pos);
-            str->ropeIncrementTraversalCount();
+    JSString *str = topNode;
+    jschar *pos = chars;
+    while (true) {
+        /* Visiting the node for the first time. */
+        JS_ASSERT(str->isInteriorNode());
+        {
+            JSString *next = str->mLeft;
+            str->mChars = pos;  /* N.B. aliases mLeft */
             if (next->isInteriorNode()) {
+                str->mLengthAndFlags = 0x200;  /* N.B. flags invalidated */
                 str = next;
+                continue;  /* Visit node for the first time. */
             } else {
-                js_strncpy(chars + pos, next->chars(), next->length());
-                pos += next->length();
+                size_t len = next->length();
+                PodCopy(pos, next->mChars, len);
+                pos += len;
+                goto visit_right_child;
             }
-            break;
-          case 1:
-            next = str->ropeRight();
-            str->ropeIncrementTraversalCount();
+        }
+
+      revisit_parent:
+        if (str->mLengthAndFlags == 0x200) {
+          visit_right_child:
+            JSString *next = str->e.mRight;
             if (next->isInteriorNode()) {
+                str->mLengthAndFlags = 0x300;
                 str = next;
+                continue;  /* Visit 'str' for the first time. */
             } else {
-                js_strncpy(chars + pos, next->chars(), next->length());
-                pos += next->length();
+                size_t len = next->length();
+                PodCopy(pos, next->mChars, len);
+                pos += len;
+                goto finish_node;
             }
-            break;
-          case 2:
-            next = str->interiorNodeParent();
-            /* Make the string a dependent string dependent with the right fields. */
-            str->finishTraversalConversion(topNode, chars, pos);
+        } else {
+            JS_ASSERT(str->mLengthAndFlags == 0x300);
+          finish_node:
+            JSString *next = str->e.mParent;
+            str->finishTraversalConversion(topNode, pos);
+            if (!next) {
+                JS_ASSERT(pos == chars + length);
+                *pos = 0;
+                topNode->initFlatExtensible(chars, length, capacity);
+                return;
+            }
             str = next;
-            break;
-          default:
-            JS_NOT_REACHED("bad traversal count");
+            goto revisit_parent;  /* Visit 'str' for the second or third time */
         }
     }
-
-    JS_ASSERT(pos == length);
-    /* Set null terminator. */
-    chars[pos] = 0;
-    topNode->initFlatExtensible(chars, pos, capacity);
 }
 
 #ifdef JS_TRACER
@@ -353,8 +358,8 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         left->flatten();
         leftRopeTop = false;
         rightRopeTop = false;
-        JS_ASSERT(leftLen = left->length());
-        JS_ASSERT(rightLen = right->length());
+        JS_ASSERT(leftLen == left->length());
+        JS_ASSERT(rightLen == right->length());
         JS_ASSERT(!left->isTopNode());
         JS_ASSERT(!right->isTopNode());
     }
