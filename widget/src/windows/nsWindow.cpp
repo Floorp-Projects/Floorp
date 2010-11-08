@@ -8376,27 +8376,50 @@ PRBool nsWindow::UseTrackPointHack()
 }
 
 #if !defined(WINCE)
+static PRBool
+HasRegistryKey(HKEY aRoot, LPCWSTR aName)
+{
+  HKEY key;
+  LONG result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ, &key);
+  if (result != ERROR_SUCCESS)
+    return PR_FALSE;
+  ::RegCloseKey(key);
+  return PR_TRUE;
+}
+
+static PRBool
+IsObsoleteSynapticsDriver()
+{
+  HKEY key;
+  LONG result = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+      L"Software\\Synaptics\\SynTP\\Install\\DriverVersion", 0, KEY_READ, &key);
+  if (result != ERROR_SUCCESS)
+    return PR_FALSE;
+  DWORD type;
+  PRUnichar buf[40];
+  DWORD buflen = sizeof(buf);
+  result = ::RegQueryValueExW(key, NULL, NULL, &type, (BYTE*)buf, &buflen);
+  ::RegCloseKey(key);
+  if (result != ERROR_SUCCESS || type != REG_SZ)
+    return PR_FALSE;
+  buf[NS_ARRAY_LENGTH(buf) - 1] = 0;
+
+  int majorVersion = wcstol(buf, NULL, 10);
+  return majorVersion < 15;
+}
+
 void nsWindow::InitInputHackDefaults()
 {
-  // Init Trackpoint Hack
-  const WCHAR wstrKeys[][40] = {L"Software\\Lenovo\\TrackPoint",
-                                L"Software\\Lenovo\\UltraNav",
-                                L"Software\\Alps\\Apoint\\TrackPoint",
-                                L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB",
-                                L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2"};    
-  // If anything fails turn the hack off
-  sDefaultTrackPointHack = PR_FALSE;
-  for (unsigned i = 0; i < NS_ARRAY_LENGTH(wstrKeys); i++) {
-    HKEY hKey;
-    long lResult = ::RegOpenKeyExW(HKEY_CURRENT_USER, (LPCWSTR)&wstrKeys[i],
-                                   0, KEY_READ, &hKey);
-    ::RegCloseKey(hKey);
-    if (lResult == ERROR_SUCCESS) {
-      // If we detected a registry key belonging to a TrackPoint driver
-      // Turn on the hack by default
-      sDefaultTrackPointHack = PR_TRUE;
-      break;
-    }
+  if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\TrackPoint")) {
+    sDefaultTrackPointHack = PR_TRUE;
+  } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\UltraNav")) {
+    sDefaultTrackPointHack = PR_TRUE;
+  } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Alps\\Apoint\\TrackPoint")) {
+    sDefaultTrackPointHack = PR_TRUE;
+  } else if ((HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB") ||
+              HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) &&
+              IsObsoleteSynapticsDriver()) {
+    sDefaultTrackPointHack = PR_TRUE;
   }
 }
 #endif // #if !defined(WINCE)
