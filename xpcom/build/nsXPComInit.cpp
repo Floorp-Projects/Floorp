@@ -180,7 +180,7 @@ extern nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 
 #ifdef XP_WIN
-extern nsresult nsMediaCacheRemover_Startup();
+extern nsresult ScheduleMediaCacheRemover();
 #endif
 
 #ifdef DEBUG
@@ -560,7 +560,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
                                   nsnull,
                                   NS_XPCOM_STARTUP_OBSERVER_ID);
 #ifdef XP_WIN
-    nsMediaCacheRemover_Startup();
+    ScheduleMediaCacheRemover();
 #endif
 
     return NS_OK;
