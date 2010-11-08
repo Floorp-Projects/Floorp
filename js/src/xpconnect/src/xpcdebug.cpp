@@ -74,7 +74,8 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     JSBool gotThisVal;
     jsval thisVal;
     JSObject* callObj = nsnull;
-    const char* funname = nsnull;
+    JSString* funname = nsnull;
+    JSAutoByteString funbytes;
     const char* filename = nsnull;
     PRInt32 lineno = 0;
     JSFunction* fun = nsnull;
@@ -98,7 +99,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
         lineno =  (PRInt32) JS_PCToLineNumber(cx, script, pc);
         fun = JS_GetFrameFunction(cx, fp);
         if(fun)
-            funname = JS_GetFunctionName(fun);
+            funname = JS_GetFunctionId(fun);
 
         if(showArgs || showLocals)
         {
@@ -122,7 +123,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     // print the frame number and function name
 
     if(funname)
-        buf = JS_sprintf_append(buf, "%d %s(", num, funname);
+        buf = JS_sprintf_append(buf, "%d %s(", num, funbytes.encode(cx, funname));
     else if(fun)
         buf = JS_sprintf_append(buf, "%d anonymous(", num);
     else
