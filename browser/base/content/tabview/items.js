@@ -227,8 +227,7 @@ Item.prototype = {
         resizeInfo = new Drag(this, e, true); // true = isResizing
       },
       resize: function(e,ui) {
-        // TODO: maybe the stationaryCorner should be topright for rtl langs?
-        resizeInfo.snap('topleft', false, self.keepProportional);
+        resizeInfo.snap(UI.rtl ? 'topright' : 'topleft', false, self.keepProportional);
       },
       stop: function() {
         self.setUserSize();
@@ -769,7 +768,16 @@ Item.prototype = {
         var handleMouseMove = function(e) {
           var mouse = new Point(e.pageX, e.pageY);
           var box = self.getBounds();
-          box.width = Math.max(self.resizeOptions.minWidth || 0, startSize.x + (mouse.x - startMouse.x));
+          if (UI.rtl) {
+            var minWidth = (self.resizeOptions.minWidth || 0);
+            var oldWidth = box.width;
+            if (minWidth != oldWidth || mouse.x < startMouse.x) {
+              box.width = Math.max(minWidth, startSize.x - (mouse.x - startMouse.x));
+              box.left -= box.width - oldWidth;
+            }
+          } else {
+            box.width = Math.max(self.resizeOptions.minWidth || 0, startSize.x + (mouse.x - startMouse.x));
+          }
           box.height = Math.max(self.resizeOptions.minHeight || 0, startSize.y + (mouse.y - startMouse.y));
 
           if (self.resizeOptions.aspectRatio) {
