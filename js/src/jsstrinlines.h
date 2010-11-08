@@ -69,6 +69,13 @@ JSString::length2String(jschar c1, jschar c2)
 }
 
 inline JSString *
+JSString::length2String(uint32 i)
+{
+    JS_ASSERT(i < 100);
+    return length2String('0' + i / 10, '0' + i % 10);
+}
+
+inline JSString *
 JSString::intString(jsint i)
 {
     jsuint u = jsuint(i);

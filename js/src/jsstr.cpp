@@ -3737,7 +3737,7 @@ js_ValueToString(JSContext *cx, const Value &arg)
     if (v.isString()) {
         str = v.toString();
     } else if (v.isInt32()) {
-        str = js_NumberToString(cx, v.toInt32());
+        str = Int32ToString(cx, v.toInt32());
     } else if (v.isDouble()) {
         str = js_NumberToString(cx, v.toDouble());
     } else if (v.isBoolean()) {

@@ -287,6 +287,13 @@ struct JSString {
         mChars = chars;
     }
 
+    JS_ALWAYS_INLINE void initShortString(jschar *chars, size_t length) {
+        JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
+        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
+        mChars = chars;
+    }
+
     JS_ALWAYS_INLINE void initFlatExtensible(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(!isStatic(this));
@@ -549,6 +556,7 @@ struct JSString {
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *length2String(jschar c1, jschar c2);
+    static JSString *length2String(uint32 i);
     static JSString *intString(jsint i);
 
     static JSString *lookupStaticString(const jschar *chars, size_t length);
@@ -572,12 +580,21 @@ struct JSShortString : js::gc::Cell {
      */
     inline jschar *init(size_t length) {
         JS_ASSERT(length <= MAX_SHORT_STRING_LENGTH);
-        mHeader.initFlat(mHeader.inlineStorage(), length);
+        mHeader.initShortString(mHeader.inlineStorage(), length);
         return mHeader.inlineStorage();
     }
 
+    inline jschar *getInlineStorageBeforeInit() {
+        return mHeader.mInlineStorage;
+    }
+
+    inline void initAtOffsetInBuffer(jschar *p, size_t length) {
+        JS_ASSERT(p >= mHeader.mInlineStorage && p < mHeader.mInlineStorage + MAX_SHORT_STRING_LENGTH);
+        mHeader.initShortString(p, length);
+    }
+
     inline void resetLength(size_t length) {
-        mHeader.initFlat(mHeader.flatChars(), length);
+        mHeader.initShortString(mHeader.flatChars(), length);
     }
 
     inline JSString *header() {
@@ -590,7 +607,7 @@ struct JSShortString : js::gc::Cell {
     static inline bool fitsIntoShortString(size_t length) {
         return length <= MAX_SHORT_STRING_LENGTH;
     }
-    
+
     JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
 };
 
