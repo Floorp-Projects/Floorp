@@ -332,7 +332,8 @@
 
     <menupopup id="placesContext"/>
 
-    <panel id="notification-popup" type="arrow" position="after_start" noautofocus="true" hidden="true"/>
+    <panel id="notification-popup" type="arrow" position="after_start"
+           noautofocus="true" hidden="true" orient="vertical"/>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
