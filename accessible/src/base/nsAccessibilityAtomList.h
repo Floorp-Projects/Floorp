@@ -196,6 +196,7 @@ ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")
 ACCESSIBILITY_ATOM(popup, "popup")
+ACCESSIBILITY_ATOM(placeholder, "placeholder")
 ACCESSIBILITY_ATOM(readonly, "readonly")
 ACCESSIBILITY_ATOM(scope, "scope") // HTML table
 ACCESSIBILITY_ATOM(seltype, "seltype") // XUL listbox
