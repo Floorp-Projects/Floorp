@@ -51,6 +51,7 @@
 #include "mozIStorageStatement.h"
 #include "mozIStoragePendingStatement.h"
 #include "nsThreadUtils.h"
+#include <sstream>
 
 static int gTotalTests = 0;
 static int gPassedTests = 0;
@@ -79,7 +80,17 @@ static int gPassedTests = 0;
   do_check_true(NS_SUCCEEDED(aResult))
 
 #define do_check_eq(aFirst, aSecond) \
-  do_check_true(aFirst == aSecond)
+  PR_BEGIN_MACRO \
+    gTotalTests++; \
+    if (aFirst == aSecond) { \
+      gPassedTests++; \
+    } else { \
+      std::ostringstream temp; \
+      temp << "Expected '" << aFirst << "', got '" << aSecond <<"' at "; \
+      temp << __FILE__ << ":" << __LINE__ << "!"; \
+      fail(temp.str().c_str()); \
+    } \
+  PR_END_MACRO
 
 already_AddRefed<mozIStorageService>
 getService()
