@@ -47,19 +47,23 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
+#include "nsITimer.h"
 
 // Duration of idle time before we'll get a callback whereupon we attempt to
 // remove any stray and unused media cache temp files.
 #define TEMP_FILE_IDLE_TIME 30
 
-// This class is instantiated during the xpcom initialization, and adds itself
-// as an idle observer. When the application has been idle for about 30 seconds
-// we'll get a notification, whereupon we'll attempt to delete
-// ${TempDir}/mozilla-media-cache/. This is to ensure all media cache temp
-// files which were supposed to be deleted on application exit were actually
-// deleted as they may not be if we previously crashed. See bug 572579. This
-// is only needed on some versions of Windows, nsILocalFile::DELETE_ON_CLOSE
-// works on other platforms.
+// The nsMediaCacheRemover is created in a timer, which sets an idle observer.
+// This is expiration time (in ms) which initial timer is set for (3 minutes).
+#define SCHEDULE_TIMEOUT 3 * 60 * 1000
+
+// This class adds itself as an idle observer. When the application has
+// been idle for about 30 seconds we'll get a notification, whereupon we'll
+// attempt to delete ${TempDir}/mozilla-media-cache/. This is to ensure all
+// media cache temp files which were supposed to be deleted on application
+// exit were actually deleted as they may not be if we previously crashed.
+// See bug 572579. This is only needed on some versions of Windows,
+// nsILocalFile::DELETE_ON_CLOSE works on other platforms.
 class nsMediaCacheRemover : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
@@ -122,11 +126,25 @@ public:
 
 NS_IMPL_ISUPPORTS1(nsMediaCacheRemover, nsIObserver)
 
-nsresult nsMediaCacheRemover_Startup() {
+void CreateMediaCacheRemover(nsITimer* aTimer, void* aClosure) {
   // Create a new nsMediaCacheRemover, and register it as an idle observer.
   // If it is successfully registered as an idle observer, its owning reference
   // will be held by the idle service, otherwise it will be destroyed by the
   // refptr here when it goes out of scope.
   nsRefPtr<nsMediaCacheRemover> t = new nsMediaCacheRemover();
-  return t->RegisterIdleObserver();
+  t->RegisterIdleObserver();
+}
+
+nsresult ScheduleMediaCacheRemover() {
+  // We create the nsMediaCacheRemover in a timer, so that the app has enough
+  // time to start up before we add the idle observer. If we register the
+  // idle observer too early, it will be registered before the fake idle
+  // service is installed when running in xpcshell, and this interferes with
+  // the fake idle service, causing xpcshell-test failures.
+  nsCOMPtr<nsITimer> t = do_CreateInstance(NS_TIMER_CONTRACTID);
+  nsresult res = t->InitWithFuncCallback(CreateMediaCacheRemover,
+                                         0,
+                                         SCHEDULE_TIMEOUT,
+                                         nsITimer::TYPE_ONE_SHOT);
+  return res;
 }
