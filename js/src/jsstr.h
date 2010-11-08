@@ -190,12 +190,6 @@ struct JSString {
 
     static const size_t FLAGS_LENGTH_SHIFT = 4;
 
-    static const size_t ROPE_TRAVERSAL_COUNT_SHIFT = 2;
-    static const size_t ROPE_TRAVERSAL_COUNT_MASK = JSSTRING_BITMASK(4) -
-                                                    JSSTRING_BITMASK(2);
-    static const size_t ROPE_TRAVERSAL_COUNT_UNIT =
-                                (1 << ROPE_TRAVERSAL_COUNT_SHIFT);
-
     static const size_t TYPE_MASK = JSSTRING_BITMASK(2);
     static const size_t TYPE_FLAGS_MASK = JSSTRING_BITMASK(4);
 
@@ -442,38 +436,10 @@ struct JSString {
         e.mBufferWithInfo = NULL;
     }
 
-    /*
-     * When flattening a rope, we need to convert a rope node to a dependent
-     * string in two separate parts instead of calling initDependent.
-     */
-    inline void startTraversalConversion(jschar *chars, size_t offset) {
-        JS_ASSERT(isInteriorNode());
-        mChars = chars + offset;
-    }    
-
-    inline void finishTraversalConversion(JSString *base, jschar *chars,
-                                          size_t end) {
-        JS_ASSERT(isInteriorNode());
-        /* Note that setting flags also clears the traversal count. */
+    inline void finishTraversalConversion(JSString *base, jschar *end) {
         mLengthAndFlags = JSString::DEPENDENT |
-            ((chars + end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
+                          ((end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
         e.mBase = base;
-    }
-
-    inline void ropeClearTraversalCount() {
-        JS_ASSERT(isRope());
-        mLengthAndFlags &= ~ROPE_TRAVERSAL_COUNT_MASK;
-    }
-
-    inline size_t ropeTraversalCount() const {
-        JS_ASSERT(isRope());
-        return (mLengthAndFlags & ROPE_TRAVERSAL_COUNT_MASK) >>
-                ROPE_TRAVERSAL_COUNT_SHIFT;
-    }
-
-    inline void ropeIncrementTraversalCount() {
-        JS_ASSERT(isRope());
-        mLengthAndFlags += ROPE_TRAVERSAL_COUNT_UNIT;
     }
 
     inline bool ensureNotDependent(JSContext *cx) {
