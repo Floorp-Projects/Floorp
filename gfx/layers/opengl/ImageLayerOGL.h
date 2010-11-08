@@ -184,7 +184,9 @@ public:
   virtual Layer* GetLayer();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 };
 
 class THEBES_API PlanarYCbCrImageOGL : public PlanarYCbCrImage
@@ -262,7 +264,9 @@ public:
   virtual Layer* GetLayer();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 
 private:
   nsRefPtr<TextureImage> mTexImage;

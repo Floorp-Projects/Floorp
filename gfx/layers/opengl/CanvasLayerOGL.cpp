@@ -231,7 +231,9 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
 
 void
 CanvasLayerOGL::RenderLayer(int aPreviousDestination,
-                            const nsIntPoint& aOffset)
+                            const nsIntPoint& aOffset,
+                            float aOpacity,
+                            const gfx3DMatrix& aMatrix)
 {
   mOGLManager->MakeCurrent();
 
@@ -266,8 +268,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   program->Activate();
   program->SetLayerQuadRect(mBounds);
-  program->SetLayerTransform(GetEffectiveTransform());
-  program->SetLayerOpacity(GetOpacity());
+  program->SetLayerTransform(GetEffectiveTransform() * aMatrix);
+  program->SetLayerOpacity(GetOpacity() * aOpacity);
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 
@@ -352,7 +354,9 @@ ShadowCanvasLayerOGL::GetLayer()
 
 void
 ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                                  const nsIntPoint& aOffset)
+                                  const nsIntPoint& aOffset,
+                                  float aOpacity,
+                                  const gfx3DMatrix& aMatrix)
 {
   mOGLManager->MakeCurrent();
 
@@ -366,8 +370,8 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
-  program->SetLayerTransform(mTransform);
-  program->SetLayerOpacity(GetOpacity());
+  program->SetLayerTransform(mTransform * aMatrix);
+  program->SetLayerOpacity(GetOpacity() * aOpacity);
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 
