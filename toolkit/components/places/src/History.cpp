@@ -43,11 +43,6 @@
 #include "nsXULAppAPI.h"
 #endif
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/ContentChild.h"
-#include "nsXULAppAPI.h"
-#endif
-
 #include "History.h"
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
@@ -72,87 +67,6 @@ namespace places {
 #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
 // Observer event fired after a visit has been registered in the DB.
 #define URI_VISIT_SAVED "uri-visit-saved"
-
-////////////////////////////////////////////////////////////////////////////////
-//// Step
-
-class Step : public AsyncStatementCallback
-{
-public:
-  /**
-   * Executes statement asynchronously using this as a callback.
-   * 
-   * @param aStmt
-   *        Statement to execute asynchronously
-   */
-  NS_IMETHOD ExecuteAsync(mozIStorageStatement* aStmt);
-
-  /**
-   * Called once after query is completed.  If your query has more than one
-   * result set to process, you will want to override HandleResult to process
-   * each one.
-   *
-   * @param aResultSet
-   *        Results from ExecuteAsync
-   *        Unlike HandleResult, this *can be NULL* if there were no results.
-   */
-  NS_IMETHOD Callback(mozIStorageResultSet* aResultSet);
-
-  /**
-   * By default, stores the last result set received in mResultSet.
-   * For queries with only one result set, you don't need to override.
-   *
-   * @param aResultSet
-   *        Results from ExecuteAsync
-   */
-  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet);
-
-  /**
-   * By default, this calls Callback with any saved results from HandleResult.
-   * For queries with only one result set, you don't need to override.
-   *
-   * @param aReason
-   *        SQL status code
-   */
-  NS_IMETHOD HandleCompletion(PRUint16 aReason);
-
-private:
-  // Used by HandleResult to cache results until HandleCompletion is called.
-  nsCOMPtr<mozIStorageResultSet> mResultSet;
-};
-
-NS_IMETHODIMP
-Step::ExecuteAsync(mozIStorageStatement* aStmt)
-{
-  nsCOMPtr<mozIStoragePendingStatement> handle;
-  nsresult rv = aStmt->ExecuteAsync(this, getter_AddRefs(handle));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Step::Callback(mozIStorageResultSet* aResultSet)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Step::HandleResult(mozIStorageResultSet* aResultSet)
-{
-  mResultSet = aResultSet;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Step::HandleCompletion(PRUint16 aReason)
-{
-  if (aReason == mozIStorageStatementCallback::REASON_FINISHED) {
-    nsCOMPtr<mozIStorageResultSet> resultSet = mResultSet;
-    mResultSet = NULL;
-    Callback(resultSet);
-  }
-  return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
@@ -300,6 +214,8 @@ public:
   : mPlace(aPlace)
   , mReferrer(aReferrer)
   {
+    NS_PRECONDITION(!NS_IsMainThread(),
+                    "This should not be called on the main thread");
   }
 
   NS_IMETHOD Run()
@@ -361,7 +277,6 @@ public:
 
     nsRefPtr<InsertVisitedURI> event =
       new InsertVisitedURI(aConnection, aPlace, aReferrer);
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
     // Speculatively get a new session id for our visit.  While it is true that
     // we will use the session id from the referrer if the visit was "recent"
@@ -476,7 +391,6 @@ public:
 
     // Finally, dispatch an event to the main thread to notify observers.
     nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(mPlace, mReferrer);
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
     rv = NS_DispatchToMainThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -714,172 +628,211 @@ private:
 };
 
 /**
- * Fail-safe mechanism for ensuring that your task completes, no matter what.
- * Pass this around as an nsAutoPtr in your steps to guarantee that when all
- * your steps are finished, your task is finished.
- *
- * Be sure to use AppendTask to add your first step to the queue.
+ * Notifies observers about a pages title changing.
  */
-class FailSafeFinishTask
+class NotifyTitleObservers : public nsRunnable
 {
 public:
-  FailSafeFinishTask()
-  : mAppended(false)
-  {
-  }
-
-  ~FailSafeFinishTask()
-  {
-    if (mAppended) {
-      History::GetService()->CurrentTaskFinished();
-    }
-  }
-
   /**
-   * Appends task to History's queue.  When this object is destroyed, it will
-   * consider the task finished.
+   * Notifies observers on the main thread if we need to, and releases the
+   * URI (necessary to do on the main thread).
+   *
+   * @param aNotify
+   *        True if we should notify, false if not.
+   * @param aURI
+   *        Reference to the nsCOMPtr that owns the nsIURI object describing the
+   *        page we set the title on.  This will be null after this object is
+   *        constructed.
+   * @param aTitle
+   *        The new title to notify about.
    */
-  void AppendTask(Step* step)
+  NotifyTitleObservers(bool aNotify,
+                       nsCOMPtr<nsIURI>& aURI,
+                       const nsString& aTitle)
+  : mNotify(aNotify)
+  , mTitle(aTitle)
   {
-    History::GetService()->AppendTask(step);
-    mAppended = true;
+    NS_PRECONDITION(!NS_IsMainThread(),
+                    "This should not be called on the main thread");
+
+    // Do not want to AddRef and Release on the background thread!
+    mURI.swap(aURI);
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    if (!mNotify) {
+      return NS_OK;
+    }
+
+    nsNavHistory* navhistory = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(navhistory, NS_ERROR_OUT_OF_MEMORY);
+    navhistory->NotifyTitleChange(mURI, mTitle);
+
+    return NS_OK;
+  }
+private:
+  const bool mNotify;
+  nsCOMPtr<nsIURI> mURI;
+  const nsString mTitle;
+};
+
+
+/**
+ * Sets the page title for a page in moz_places (if necessary).
+ */
+class SetPageTitle : public nsRunnable
+{
+public:
+  /**
+   * Sets a pages title in the database asynchronously.
+   *
+   * @param aConnection
+   *        The database connection to use for this operation.
+   * @param aURI
+   *        The URI to set the page title on.
+   * @param aTitle
+   *        The title to set for the page, if the page exists.
+   */
+  static nsresult Start(mozIStorageConnection* aConnection,
+                        nsIURI* aURI,
+                        const nsString& aTitle)
+  {
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    nsRefPtr<SetPageTitle> event = new SetPageTitle(aConnection, aURI, aTitle);
+
+    // Get the target thread, and then start the work!
+    nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
+    NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
+    nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(!NS_IsMainThread(),
+                    "This should not be called on the main thread");
+
+    // First, see if the page exists in the database (we'll need its id later).
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mHistory->syncStatements.GetCachedStatement(
+        "SELECT id, title "
+        "FROM moz_places "
+        "WHERE url = :page_url "
+      );
+    NS_ENSURE_STATE(stmt);
+
+    PRInt64 placeId = 0;
+    nsAutoString title;
+    {
+      mozStorageStatementScoper scoper(stmt);
+      nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mURI);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool hasResult;
+      rv = stmt->ExecuteStep(&hasResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!hasResult) {
+        // We have no record of this page, so there is no need to do any further
+        // work.
+        return Finish(false);
+      }
+
+      rv = stmt->GetInt64(0, &placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = stmt->GetString(1, title);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    NS_ASSERTION(placeId > 0, "We somehow have an invalid place id here!");
+
+    // Also, if we have the same title, there is no reason to do another write
+    // or notify our observers, so bail early.
+    if (mTitle.Equals(title) || (mTitle.IsVoid() && title.IsVoid())) {
+      return Finish(false);
+    }
+
+    // Now we can update our database record.
+    stmt = mHistory->syncStatements.GetCachedStatement(
+        "UPDATE moz_places "
+        "SET title = :page_title "
+        "WHERE id = :page_id "
+      );
+    NS_ENSURE_STATE(stmt);
+
+    {
+      mozStorageStatementScoper scoper(stmt);
+      nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                          placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (mTitle.IsVoid()) {
+        rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_title"));
+      }
+      else {
+        rv = stmt->BindStringByName(NS_LITERAL_CSTRING("page_title"),
+                                    StringHead(mTitle, TITLE_LENGTH_MAX));
+      }
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    nsresult rv = Finish(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
 private:
-  bool mAppended;
-};
-////////////////////////////////////////////////////////////////////////////////
-//// Steps for SetURITitle
-
-struct SetTitleData : public FailSafeFinishTask
-{
-  nsCOMPtr<nsIURI> uri;
-  nsString title;
-};
-
-/**
- * Step 3: Notify that title has been updated.
- */
-class TitleNotifyStep: public Step
-{
-public:
-  TitleNotifyStep(nsAutoPtr<SetTitleData> aData)
-  : mData(aData)
+  SetPageTitle(mozIStorageConnection* aConnection,
+               nsIURI* aURI,
+               const nsString& aTitle)
+  : mDBConn(aConnection)
+  , mURI(aURI)
+  , mTitle(aTitle)
+  , mHistory(History::GetService())
   {
   }
 
-  NS_IMETHOD Callback(mozIStorageResultSet* aResultSet)
+  /**
+   * Finishes our work by dispatching an event back to the main thread.
+   *
+   * @param aNotify
+   *        True if we should notify observers, false otherwise.
+   */
+  nsresult Finish(bool aNotify)
   {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    history->NotifyTitleChange(mData->uri, mData->title);
+    // We always dispatch this event because we have to release mURI on the
+    // main thread.
+    nsCOMPtr<nsIRunnable> event =
+      new NotifyTitleObservers(aNotify, mURI, mTitle);
+    nsresult rv = NS_DispatchToMainThread(event);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(!mURI,
+                 "We did not let go of our nsIURI reference after notifying!");
 
     return NS_OK;
   }
 
-protected:
-  nsAutoPtr<SetTitleData> mData;
-};
+  mozIStorageConnection* mDBConn;
 
-/**
- * Step 2: Set title.
- */
-class SetTitleStep : public Step
-{
-public:
-  SetTitleStep(nsAutoPtr<SetTitleData> aData)
-  : mData(aData)
-  {
-  }
+  nsCOMPtr<nsIURI> mURI;
+  const nsString mTitle;
 
-  NS_IMETHOD Callback(mozIStorageResultSet* aResultSet)
-  {
-    if (!aResultSet) {
-      // URI record was not found.
-      return NS_OK;
-    }
-
-    nsCOMPtr<mozIStorageRow> row;
-    nsresult rv = aResultSet->GetNextRow(getter_AddRefs(row));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString title;
-    rv = row->GetString(2, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // It is actually common to set the title to be the same thing it used to
-    // be. For example, going to any web page will always cause a title to be set,
-    // even though it will often be unchanged since the last visit. In these
-    // cases, we can avoid DB writing and observer overhead.
-    if (mData->title.Equals(title) || (mData->title.IsVoid() && title.IsVoid()))
-      return NS_OK;
-
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-    nsCOMPtr<mozIStorageStatement> stmt =
-      history->GetStatementById(DB_SET_PLACE_TITLE);
-    NS_ENSURE_STATE(stmt);
-
-    if (mData->title.IsVoid()) {
-      rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_title"));
-    }
-    else {
-      rv = stmt->BindStringByName(
-        NS_LITERAL_CSTRING("page_title"),
-        StringHead(mData->title, TITLE_LENGTH_MAX)
-      );
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mData->uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<Step> step = new TitleNotifyStep(mData);
-    rv = step->ExecuteAsync(stmt);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-  }
-
-protected:
-  nsAutoPtr<SetTitleData> mData;
-};
-
-/**
- * Step 1: See if there is an existing URI.
- */
-class StartSetURITitleStep : public Step
-{
-public:
-  StartSetURITitleStep(nsAutoPtr<SetTitleData> aData)
-  : mData(aData)
-  {
-    mData->AppendTask(this);
-  }
-
-  NS_IMETHOD Callback(mozIStorageResultSet* aResultSet)
-  {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-    // Find existing entry in moz_places table, if any.
-    nsCOMPtr<mozIStorageStatement> stmt =
-      history->GetStatementById(DB_GET_URL_PAGE_INFO);
-    NS_ENSURE_STATE(stmt);
-
-    nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mData->uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<Step> step = new SetTitleStep(mData);
-    rv = step->ExecuteAsync(stmt);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-  }
-
-protected:
-  nsAutoPtr<SetTitleData> mData;
+  /**
+   * Strong reference to the History object because we do not want it to
+   * disappear out from under us.
+   */
+  nsRefPtr<History> mHistory;
 };
 
 } // anonymous namespace
@@ -917,38 +870,6 @@ History::~History()
   // Places shutdown event may not occur, but we *must* clean up before History
   // goes away.
   Shutdown();
-}
-
-void
-History::AppendTask(Step* aTask)
-{
-  NS_PRECONDITION(aTask, "Got NULL task.");
-
-  if (mShuttingDown) {
-    return;
-  }
-
-  NS_ADDREF(aTask);
-  mPendingVisits.Push(aTask);
-
-  if (mPendingVisits.GetSize() == 1) {
-    // There are no other pending tasks.
-    StartNextTask();
-  }
-}
-
-void
-History::CurrentTaskFinished()
-{
-  if (mShuttingDown) {
-    return;
-  }
-
-  NS_ASSERTION(mPendingVisits.PeekFront(), "Tried to finish task not on the queue");
-
-  nsCOMPtr<Step> deadTaskWalking =
-    dont_AddRef(static_cast<Step*>(mPendingVisits.PopFront()));
-  StartNextTask();
 }
 
 void
@@ -1064,31 +985,9 @@ History::GetDBConn()
 }
 
 void
-History::StartNextTask()
-{
-  if (mShuttingDown) {
-    return;
-  }
-
-  nsCOMPtr<Step> nextTask =
-    static_cast<Step*>(mPendingVisits.PeekFront());
-  if (!nextTask) {
-    // No more pending visits left to process.
-    return;
-  }
-  nsresult rv = nextTask->Callback(NULL);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Beginning a task failed.");
-}
-
-void
 History::Shutdown()
 {
   mShuttingDown = true;
-
-  while (mPendingVisits.PeekFront()) {
-    nsCOMPtr<Step> deadTaskWalking =
-      dont_AddRef(static_cast<Step*>(mPendingVisits.PopFront()));
-  }
 
   // Clean up our statements and connection.
   syncStatements.FinalizeStatements();
@@ -1340,19 +1239,19 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
     return NS_OK;
   }
 
-  nsAutoPtr<SetTitleData> data(new SetTitleData());
-  NS_ENSURE_STATE(data);
-
-  data->uri = aURI;
-
+  nsAutoString title;
   if (aTitle.IsEmpty()) {
-    data->title.SetIsVoid(PR_TRUE);
+    title.SetIsVoid(PR_TRUE);
   }
   else {
-    data->title.Assign(aTitle);
+    title.Assign(aTitle);
   }
 
-  nsCOMPtr<Step> task(new StartSetURITitleStep(data));
+  mozIStorageConnection* dbConn = GetDBConn();
+  NS_ENSURE_STATE(dbConn);
+
+  rv = SetPageTitle::Start(dbConn, aURI, title);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
