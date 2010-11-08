@@ -133,8 +133,7 @@ public:
 
   virtual PaintState BeginPaint(ContentType aContentType) = 0;
 
-  void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager,
-                float aOpacity, const gfx3DMatrix& aMatrix);
+  void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager);
 
   nsIntSize GetSize() {
     if (mTexImage)
@@ -154,9 +153,7 @@ protected:
 
 void
 ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
-                               LayerManagerOGL* aManager,
-                               float aOpacity,
-                               const gfx3DMatrix& aMatrix)
+                               LayerManagerOGL* aManager)
 {
   if (!mTexImage)
     return;
@@ -181,8 +178,8 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     nsIntRect quadRect = *iterRect;
     program->Activate();
     program->SetLayerQuadRect(quadRect);
-    program->SetLayerOpacity(mLayer->GetOpacity() * aOpacity);
-    program->SetLayerTransform(mLayer->GetEffectiveTransform() * aMatrix);
+    program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
+    program->SetLayerTransform(mLayer->GetEffectiveTransform());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
     DEBUG_GL_ERROR_CHECK(gl());
@@ -512,9 +509,7 @@ ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
 
 void
 ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                            const nsIntPoint& aOffset,
-                            float aOpacity,
-                            const gfx3DMatrix& aMatrix)
+                            const nsIntPoint& aOffset)
 {
   if (!mBuffer && !CreateSurface()) {
     return;
@@ -544,7 +539,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   DEBUG_GL_ERROR_CHECK(gl());
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
-  mBuffer->RenderTo(aOffset, mOGLManager, aOpacity, aMatrix);
+  mBuffer->RenderTo(aOffset, mOGLManager);
   DEBUG_GL_ERROR_CHECK(gl());
 }
 
@@ -704,9 +699,7 @@ ShadowThebesLayerOGL::IsEmpty()
 
 void
 ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                                  const nsIntPoint& aOffset,
-                                  float aOpacity,
-                                  const gfx3DMatrix& aMatrix)
+                                  const nsIntPoint& aOffset)
 {
   if (!mBuffer) {
     return;
@@ -718,7 +711,7 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   DEBUG_GL_ERROR_CHECK(gl());
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
-  mBuffer->RenderTo(aOffset, mOGLManager, aOpacity, aMatrix);
+  mBuffer->RenderTo(aOffset, mOGLManager);
   DEBUG_GL_ERROR_CHECK(gl());
 }
 

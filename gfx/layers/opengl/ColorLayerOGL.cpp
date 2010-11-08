@@ -43,8 +43,7 @@ namespace layers {
 
 static void
 RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
-                 const nsIntPoint& aOffset, float aOpacity,
-                 const gfx3DMatrix& aMatrix)
+                 const nsIntPoint& aOffset)
 {
   aManager->MakeCurrent();
 
@@ -57,7 +56,7 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
    * write to the color buffer.  This saves a needless
    * multiply in the fragment shader.
    */
-  float opacity = aLayer->GetOpacity() * aOpacity;
+  float opacity = aLayer->GetEffectiveOpacity();
   gfxRGBA color(aLayer->GetColor());
   color.r *= opacity;
   color.g *= opacity;
@@ -67,7 +66,7 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   SolidColorLayerProgram *program = aManager->GetColorLayerProgram();
   program->Activate();
   program->SetLayerQuadRect(visibleRect);
-  program->SetLayerTransform(aLayer->GetEffectiveTransform() * aMatrix);
+  program->SetLayerTransform(aLayer->GetEffectiveTransform());
   program->SetRenderOffset(aOffset);
   program->SetRenderColor(color);
 
@@ -78,21 +77,17 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
 
 void
 ColorLayerOGL::RenderLayer(int,
-                           const nsIntPoint& aOffset,
-                           float aOpacity,
-                           const gfx3DMatrix& aMatrix)
+                           const nsIntPoint& aOffset)
 {
-  return RenderColorLayer(this, mOGLManager, aOffset, aOpacity, aMatrix);
+  return RenderColorLayer(this, mOGLManager, aOffset);
 }
 
 #ifdef MOZ_IPC
 void
 ShadowColorLayerOGL::RenderLayer(int,
-                                 const nsIntPoint& aOffset,
-                                 float aOpacity,
-                                 const gfx3DMatrix& aMatrix)
+                                 const nsIntPoint& aOffset)
 {
-  return RenderColorLayer(this, mOGLManager, aOffset, aOpacity, aMatrix);
+  return RenderColorLayer(this, mOGLManager, aOffset);
 }
 #endif  // MOZ_IPC
 
