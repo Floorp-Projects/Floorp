@@ -655,7 +655,7 @@ var Browser = {
     if (aBringFront)
       this.selectedTab = newTab;
 
-    let getAttention = (!aBringFront || params.getAttention);
+    let getAttention = ("getAttention" in params ? params.getAttention : !aBringFront);
     let event = document.createEvent("UIEvents");
     event.initUIEvent("TabOpen", true, false, window, getAttention);
     newTab.chromeTab.dispatchEvent(event);
@@ -2119,6 +2119,11 @@ var ContentCrashObserver = {
       event.lastTab = null;
       Browser.selectedTab.chromeTab.dispatchEvent(event);
     } else {
+      // If this is the only tab, we need to pre-fab a new tab. We should never
+      // have zero open tabs
+      if (Browser.tabs.length == 1)
+        Browser.addTab(Browser.getHomePage(), false, null, { getAttention: false });
+
       // Close this tab, it could be the reason we crashed. The undo-close-tab
       // system will pick it up.
       Browser.closeTab(Browser.selectedTab);
