@@ -728,8 +728,8 @@ class Value
         return data.asPtr;
     }
 
-    jsuword *payloadWord() const {
-        return (jsuword *)&data.s.payload;
+    const jsuword *payloadWord() const {
+        return &data.s.payload.word;
     }
 
   private:
