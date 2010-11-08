@@ -60,6 +60,10 @@ static void ContainerRender(Container* aContainer,
                             int aPreviousFrameBuffer,
                             const nsIntPoint& aOffset,
                             LayerManagerOGL* aManager);
+template<class Container>
+static bool ShouldUseIntermediate(Container* aContainer,
+                                  float aOpacity,
+                                  const gfx3DMatrix& aMatrix);
 
 class ContainerLayerOGL : public ContainerLayer, 
                           public LayerOGL
@@ -75,6 +79,10 @@ class ContainerLayerOGL : public ContainerLayer,
                               int aPreviousFrameBuffer,
                               const nsIntPoint& aOffset,
                               LayerManagerOGL* aManager);
+  template<class Container>
+  friend bool ShouldUseIntermediate(Container* aContainer,
+                                    float aOpacity,
+                                    const gfx3DMatrix& aMatrix);
 
 public:
   ContainerLayerOGL(LayerManagerOGL *aManager);
@@ -92,7 +100,9 @@ public:
   LayerOGL* GetFirstChildOGL();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 };
 
 #ifdef MOZ_IPC
@@ -110,6 +120,10 @@ class ShadowContainerLayerOGL : public ShadowContainerLayer,
                               int aPreviousFrameBuffer,
                               const nsIntPoint& aOffset,
                               LayerManagerOGL* aManager);
+  template<class Container>
+  friend bool ShouldUseIntermediate(Container* aContainer,
+                                    float aOpacity,
+                                    const gfx3DMatrix& aMatrix);
 
 public:
   ShadowContainerLayerOGL(LayerManagerOGL *aManager);
@@ -127,7 +141,9 @@ public:
   LayerOGL* GetFirstChildOGL();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 };
 #endif  // MOZ_IPC
 

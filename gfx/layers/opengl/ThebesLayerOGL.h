@@ -76,7 +76,9 @@ public:
   Layer* GetLayer();
   virtual PRBool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 
 private:
   friend class BasicBufferOGL;
@@ -110,7 +112,9 @@ public:
   Layer* GetLayer();
   virtual PRBool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;

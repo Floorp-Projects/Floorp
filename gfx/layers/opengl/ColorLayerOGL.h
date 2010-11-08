@@ -66,7 +66,9 @@ public:
   virtual void Destroy() { mDestroyed = PR_TRUE; }
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 };
 
 #ifdef MOZ_IPC
@@ -88,7 +90,9 @@ public:
   virtual void Destroy() { mDestroyed = PR_TRUE; }
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
-                           const nsIntPoint& aOffset);
+                           const nsIntPoint& aOffset,
+                           float aOpacity,
+                           const gfx3DMatrix& aMatrix);
 };
 #endif  // MOZ_IPC
 

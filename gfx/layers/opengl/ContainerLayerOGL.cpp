@@ -121,10 +121,48 @@ ContainerDestroy(Container* aContainer)
 }
 
 template<class Container>
+static bool
+ShouldUseIntermediate(Container* aContainer,
+                      float aOpacity, 
+                      const gfx3DMatrix& aMatrix)
+{
+  if (aOpacity == 1.0f && aMatrix.IsIdentity()) {
+    return false;
+  }
+
+  Layer *firstChild = aContainer->GetFirstChild();
+  if (!firstChild) {
+    return false;
+  }
+
+  /* We always require an intermediate layer for opacity */
+  if (aOpacity != 1.0f) {
+    return true;
+  }
+
+  do {
+    const nsIntRect *clipRect = firstChild->GetClipRect();
+    /* We can't (easily) forward our transform to children with a non-emtpy clip 
+     * rect since it would need to be adjusted for the transform.
+     * TODO: This is easily solvable for translation/scaling transforms.
+     */
+    if (clipRect && !clipRect->IsEmpty() && !firstChild->GetVisibleRegion().IsEmpty()) {
+      return true;
+    }
+
+  } while ((firstChild = firstChild->GetNextSibling()) != nsnull);
+
+  /* All children have no clip or are invisible */
+  return false;
+}
+
+template<class Container>
 static void
 ContainerRender(Container* aContainer,
                 int aPreviousFrameBuffer,
                 const nsIntPoint& aOffset,
+                float aOpacity,
+                const gfx3DMatrix& aMatrix,
                 LayerManagerOGL* aManager)
 {
   /**
@@ -135,12 +173,13 @@ ContainerRender(Container* aContainer,
 
   nsIntPoint childOffset(aOffset);
   nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
-  const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
+  const gfx3DMatrix& transform = aContainer->GetEffectiveTransform() * aMatrix;
 
+  nsIntRect cachedScissor = aContainer->gl()->ScissorRect();
   aContainer->gl()->PushScissorRect();
 
-  float opacity = aContainer->GetOpacity();
-  bool needsFramebuffer = (opacity != 1.0) || !transform.IsIdentity();
+  float opacity = aContainer->GetOpacity() * aOpacity;
+  bool needsFramebuffer = ShouldUseIntermediate(aContainer, opacity, transform);
   if (needsFramebuffer) {
     aManager->CreateFBOWithTexture(visibleRect.width,
                                    visibleRect.height,
@@ -175,13 +214,34 @@ ContainerRender(Container* aContainer,
       scissorRect.MoveBy(- visibleRect.TopLeft());
     }
 
-    if (aPreviousFrameBuffer == 0) {
-      aContainer->gl()->FixWindowCoordinateRect(scissorRect, aManager->GetWigetSize().height);
+    if (!needsFramebuffer && aPreviousFrameBuffer) {
+      scissorRect.IntersectRect(scissorRect, cachedScissor);
+    } else if (!needsFramebuffer) {
+      aContainer->gl()->FixWindowCoordinateRect(scissorRect, 
+                                                aManager->GetWigetSize().height);
+      scissorRect.IntersectRect(scissorRect, cachedScissor);
     }
 
-    aManager->gl()->fScissor(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
+    /**
+     *  We can't clip to a visible region if theres no framebuffer since we might be transformed
+     */
+    if (needsFramebuffer || clipRect) {
+      aContainer->gl()->fScissor(scissorRect.x, 
+                                 scissorRect.y, 
+                                 scissorRect.width, 
+                                 scissorRect.height);
+    } else {
+      aContainer->gl()->fScissor(cachedScissor.x, 
+                                 cachedScissor.y, 
+                                 cachedScissor.width, 
+                                 cachedScissor.height);
+    }
 
-    layerToRender->RenderLayer(frameBuffer, childOffset);
+    if (!needsFramebuffer) {
+      layerToRender->RenderLayer(frameBuffer, childOffset, opacity, transform);
+    } else {
+      layerToRender->RenderLayer(frameBuffer, childOffset, 1.0, gfx3DMatrix());
+     }
 
     Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
     layerToRender = nextSibling ? static_cast<LayerOGL*>(nextSibling->
@@ -276,9 +336,11 @@ ContainerLayerOGL::GetFirstChildOGL()
 
 void
 ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                               const nsIntPoint& aOffset)
+                               const nsIntPoint& aOffset,
+                               float aOpacity,
+                               const gfx3DMatrix& aMatrix)
 {
-  ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
+  ContainerRender(this, aPreviousFrameBuffer, aOffset, aOpacity, aMatrix, mOGLManager);
 }
 
 
@@ -325,9 +387,11 @@ ShadowContainerLayerOGL::GetFirstChildOGL()
  
 void
 ShadowContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                                     const nsIntPoint& aOffset)
+                                     const nsIntPoint& aOffset,
+                                     float aOpacity,
+                                     const gfx3DMatrix& aMatrix)
 {
-  ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
+  ContainerRender(this, aPreviousFrameBuffer, aOffset, aOpacity, aMatrix, mOGLManager);
 }
 
 #endif  // MOZ_IPC
