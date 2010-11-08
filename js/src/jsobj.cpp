@@ -5077,7 +5077,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value 
 }
 
 JSBool
-js::GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp)
+js::GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, Value *vp)
 {
     JSProperty *prop;
     JSObject *obj2;
