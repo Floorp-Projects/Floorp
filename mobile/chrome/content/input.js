@@ -258,7 +258,7 @@ MouseModule.prototype = {
     this._target = null;
 
     // Do pan
-    if (dragData.isPan()) {
+    if (dragData.isPan() && this._dragger) {
       // User was panning around, do not allow click
       let generatesClick = aEvent.detail;
       if (generatesClick)
@@ -550,9 +550,9 @@ var ScrollUtils = {
    * ui.dragThresholdX
    */
   isPan: function isPan(aPoint, aPoint2) {
-    let distanceSquared = (Math.pow(aPoint.x - aPoint2.x, 2) +
-                           Math.pow(aPoint.y - aPoint2.y, 2));
-    return distanceSquared > Math.pow(this.tapRadius, 2);
+    if (Math.abs(aPoint.x - aPoint2.x) > this.tapRadius ||
+        Math.abs(aPoint.y - aPoint2.y) > this.tapRadius)
+    return true;
   },
 
   /**
