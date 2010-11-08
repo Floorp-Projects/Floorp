@@ -49,6 +49,7 @@
 #include "nsDeque.h"
 #include "nsIObserver.h"
 #include "mozIStorageConnection.h"
+#include "mozilla/storage/StatementCache.h"
 
 namespace mozilla {
 namespace places {
@@ -110,8 +111,27 @@ public:
    */
   static History* GetSingleton();
 
+  /**
+   * Statement cache that is used for background thread statements only.
+   */
+  storage::StatementCache<mozIStorageStatement> syncStatements;
+
 private:
   virtual ~History();
+
+  /**
+   * Obtains a read-write database connection.
+   */
+  mozIStorageConnection* GetDBConn();
+
+  /**
+   * A read-write database connection used for adding history visits and setting
+   * a page's title.
+   *
+   * @note this should only be accessed by GetDBConn.
+   * @note this is the same connection as the one found on nsNavHistory.
+   */
+  nsCOMPtr<mozIStorageConnection> mDBConn;
 
   /**
    * A read-only database connection used for checking if a URI is visited.
