@@ -39,28 +39,27 @@ enum BuiltInCharacterClassID {
     NewlineClassID
 };
 
-enum ErrorCode {
-    NoError,
-    PatternTooLarge,
-    QuantifierOutOfOrder,
-    QuantifierWithoutAtom,
-    MissingParentheses,
-    ParenthesesUnmatched,
-    ParenthesesTypeInvalid,
-    CharacterClassUnmatched,
-    CharacterClassOutOfOrder,
-    CharacterClassRangeSingleChar,
-    EscapeUnterminated,
-    QuantifierTooLarge,
-    NumberOfErrorCodes
-};
-
 // The Parser class should not be used directly - only via the Yarr::parse() method.
 template<class Delegate>
 class Parser {
 private:
     template<class FriendDelegate>
     friend int parse(FriendDelegate& delegate, const UString& pattern, unsigned backReferenceLimit);
+
+    enum ErrorCode {
+        NoError,
+        PatternTooLarge,
+        QuantifierOutOfOrder,
+        QuantifierWithoutAtom,
+        MissingParentheses,
+        ParenthesesUnmatched,
+        ParenthesesTypeInvalid,
+        CharacterClassUnmatched,
+        CharacterClassOutOfOrder,
+        EscapeUnterminated,
+        QuantifierTooLarge,
+        NumberOfErrorCodes
+    };
 
     /*
      * CharacterClassParserDelegate:
@@ -77,7 +76,6 @@ private:
             : m_delegate(delegate)
             , m_err(err)
             , m_state(empty)
-            , m_sawCharacterClass(false)
         {
         }
 
@@ -109,14 +107,6 @@ private:
                 break;
 
             case cachedCharacter:
-                // This guard handles things like /[\s-d]/.
-                if ((m_character == '-') && m_sawCharacterClass) {
-                    m_err = CharacterClassRangeSingleChar;
-                    m_state = empty;
-                    break;
-                }
-
-                m_sawCharacterClass = false;
                 if (ch == '-')
                     m_state = cachedCharacterHyphen;
                 else {
@@ -148,7 +138,6 @@ private:
                 flush();
 
             atomPatternCharacterUnescaped(ch);
-            m_sawCharacterClass = false;
         }
 
         /*
@@ -158,20 +147,8 @@ private:
          */
         void atomBuiltInCharacterClass(BuiltInCharacterClassID classID, bool invert)
         {
-            // The first part of this guard handles things like /[a-\d]/ and the
-            // second part handles things like /[\w-\s]/.
-            if (m_state == cachedCharacterHyphen ||
-                (m_sawCharacterClass && (m_state == cachedCharacter) && m_character == '-')) {
-                // If the RHS of a range does not contain exacly one character then a SyntaxError
-                // must be thrown.
-                // Assumes none of the built in character classes contain a single character.
-                m_err = CharacterClassRangeSingleChar;
-                m_state = empty;
-                return;
-            }
             flush();
             m_delegate.atomCharacterClassBuiltIn(classID, invert);
-            m_sawCharacterClass = true;
         }
 
         /*
@@ -207,8 +184,6 @@ private:
             cachedCharacter,
             cachedCharacterHyphen
         } m_state;
-        // Used to verify that there is not a character class on the LHS of a range.
-        bool m_sawCharacterClass;
         UChar m_character;
     };
 
@@ -429,7 +404,7 @@ private:
     /*
      * parseCharacterClass():
      *
-     * Helper for parseTokens(); calls directly and indirectly (via parseCharacterClassEscape)
+     * Helper for parseTokens(); calls dirctly and indirectly (via parseCharacterClassEscape)
      * to an instance of CharacterClassParserDelegate, to describe the character class to the
      * delegate.
      */

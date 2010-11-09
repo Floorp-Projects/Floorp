@@ -58,8 +58,6 @@
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
 
-#include "yarr/RegexParser.h"
-
 #ifdef JS_TRACER
 #include "jstracer.h"
 using namespace avmplus;
@@ -173,12 +171,26 @@ js_ObjectIsRegExp(JSObject *obj)
 void
 RegExp::handleYarrError(JSContext *cx, int error)
 {
+    /* Hack: duplicated from yarr/yarr/RegexParser.h */
+    enum ErrorCode {
+        NoError,
+        PatternTooLarge,
+        QuantifierOutOfOrder,
+        QuantifierWithoutAtom,
+        MissingParentheses,
+        ParenthesesUnmatched,
+        ParenthesesTypeInvalid,     /* "(?" with bad next char or end of pattern. */
+        CharacterClassUnmatched,
+        CharacterClassOutOfOrder,
+        QuantifierTooLarge,
+        EscapeUnterminated
+    };
     switch (error) {
-      case JSC::Yarr::NoError:
+      case NoError:
         JS_NOT_REACHED("Precondition violation: an error must have occurred.");
         return;
 #define COMPILE_EMSG(__code, __msg) \
-      case JSC::Yarr::__code: \
+      case __code: \
         JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, __msg); \
         return
       COMPILE_EMSG(PatternTooLarge, JSMSG_REGEXP_TOO_COMPLEX);
@@ -186,10 +198,9 @@ RegExp::handleYarrError(JSContext *cx, int error)
       COMPILE_EMSG(QuantifierWithoutAtom, JSMSG_BAD_QUANTIFIER);
       COMPILE_EMSG(MissingParentheses, JSMSG_MISSING_PAREN);
       COMPILE_EMSG(ParenthesesUnmatched, JSMSG_UNMATCHED_RIGHT_PAREN);
-      COMPILE_EMSG(ParenthesesTypeInvalid, JSMSG_BAD_QUANTIFIER); /* "(?" with bad next char */
+      COMPILE_EMSG(ParenthesesTypeInvalid, JSMSG_BAD_QUANTIFIER);
       COMPILE_EMSG(CharacterClassUnmatched, JSMSG_BAD_CLASS_RANGE);
       COMPILE_EMSG(CharacterClassOutOfOrder, JSMSG_BAD_CLASS_RANGE);
-      COMPILE_EMSG(CharacterClassRangeSingleChar, JSMSG_BAD_CLASS_RANGE);
       COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
       COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
 #undef COMPILE_EMSG
