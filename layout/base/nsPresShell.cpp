@@ -7615,7 +7615,6 @@ PresShell::WillDoReflow()
   // XXXbz that comment makes no sense
   if (mCaret) {
     mCaret->InvalidateOutsideCaret();
-    mCaret->UpdateCaretPosition();
   }
 
   mPresContext->FlushUserFontSet();
