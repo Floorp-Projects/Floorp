@@ -93,7 +93,7 @@ function onDebugKeyPress(ev) {
   const j = 74;
   const k = 75;
   const l = 76;
-  const m = 77;
+  const m = 77; // Android menu
   const n = 78;
   const o = 79;
   const p = 80;  // fake pinch zoom
@@ -131,6 +131,9 @@ function onDebugKeyPress(ev) {
   case f:
     MemoryObserver.observe();
     dump("Forced a GC\n");
+    break;
+  case m:
+    CommandUpdater.doCommand("cmd_menu");
     break;
 #ifndef MOZ_PLATFORM_MAEMO
   case p:

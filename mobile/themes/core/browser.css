@@ -925,7 +925,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 #bookmark-container {
   padding: 8px; /* core spacing */
   background: rgb(94,97,102);
-  -moz-box-shadow: black 0 2px 2px;
+  box-shadow: black 0 2px 2px;
 }
 
 #bookmark-form {
@@ -1471,3 +1471,52 @@ pageaction:not([image]) > hbox >.pageaction-image {
   z-index: 500;
 }
 
+/* Android menu ------------------------------------------------------------ */
+#appmenu {
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 6px 10px 6px black;
+  border-style: solid;
+  border-color: #6d6d6d;
+  border-width: 3px 3px 0 3px;
+}
+
+.appmenu-button {
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+  border-style: solid;
+  border-color: #d8d8d8 !important;
+  border-width: 0 1px 1px 0;
+  height: 99px;
+  width: 0;
+}
+
+.appmenu-button:hover:active {
+  background: #f78c00;
+  box-shadow: inset 1px 2px 5px #333;
+}
+
+#appmenu > .appmenu-button .toolbarbutton-text {
+  display: block !important;
+  font-size: 22px !important;
+}
+
+@media (max-width: 499px) {
+  #appmenu[count="4"],
+  #appmenu[count="5"],
+  #appmenu[count="6"] {
+    height: 200px;
+    display: inline-block;
+  }
+
+  #appmenu[count="4"] > .appmenu-button,
+  #appmenu[count="5"] > .appmenu-button {
+    width: 50%;
+  }
+
+  #appmenu[count="5"] > .appmenu-button:nth-child(3),
+  #appmenu[count="5"] > .appmenu-button:nth-child(4),
+  #appmenu[count="5"] > .appmenu-button:nth-child(5),
+  #appmenu[count="6"] > .appmenu-button {
+    width: 33%;
+  }
+}
