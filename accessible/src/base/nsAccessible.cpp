@@ -2731,7 +2731,7 @@ PRBool
 nsAccessible::AppendChild(nsAccessible* aChild)
 {
   if (!aChild)
-    return PR_FLASE;
+    return PR_FALSE;
 
   if (!mChildren.AppendElement(aChild))
     return PR_FALSE;
@@ -2747,7 +2747,7 @@ PRBool
 nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
 {
   if (!aChild)
-    return PR_FLASE;
+    return PR_FALSE;
 
   if (!mChildren.InsertElementAt(aIndex, aChild))
     return PR_FALSE;
@@ -2770,7 +2770,7 @@ PRBool
 nsAccessible::RemoveChild(nsAccessible* aChild)
 {
   if (!aChild)
-    return PR_FLASE;
+    return PR_FALSE;
 
   PRInt32 index = aChild->mIndexInParent;
   if (aChild->mParent != this || index == -1)
