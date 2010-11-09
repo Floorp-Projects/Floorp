@@ -59,7 +59,7 @@ function test() {
     toggleSidebar();
   }
 
-  const TEST_URL = "javascript:alert(\"test\");";
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/sidebarpanels_click_test_page.html";
 
   let tests = [];
   tests.push({
@@ -87,8 +87,10 @@ function test() {
     init: function() {
       // Add a history entry.
       this.cleanup();
-      hs.addVisit(PlacesUtils._uri(TEST_URL), Date.now() * 1000,
-                  null, hs.TRANSITION_TYPED, false, 0);
+      let uri = PlacesUtils._uri(TEST_URL);
+      hs.addVisit(uri, Date.now() * 1000, null, hs.TRANSITION_TYPED, false, 0);
+      let gh = hs.QueryInterface(Ci.nsIGlobalHistory2);
+      ok(gh.isVisited(uri), "Item is visited");
     },
     prepare: function() {
       sidebar.contentDocument.getElementById("byvisited").doCommand();
