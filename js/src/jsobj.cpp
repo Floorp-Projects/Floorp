@@ -3666,6 +3666,15 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     }
 
     /*
+     * Pre-brand the prototype and constructor if they have built-in methods.
+     * This avoids extra shape guard branch exits in the tracejitted code.
+     */
+    if (fs && !proto->brand(cx))
+        goto bad;
+    if (ctor != proto && static_fs && !ctor->brand(cx))
+        goto bad;
+
+    /*
      * Make sure proto's emptyShape is available to be shared by objects of
      * this class.  JSObject::emptyShape is a one-slot cache. If we omit this,
      * some other class could snap it up. (The risk is particularly great for
