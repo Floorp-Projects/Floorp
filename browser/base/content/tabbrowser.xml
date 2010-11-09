@@ -2725,11 +2725,18 @@
       <method name="_positionPinnedTabs">
         <body><![CDATA[
           var width = 0;
-          var scrollButtonWidth = this.getAttribute("overflow") != "true" ? 0 :
+          var pinnedOnly = (this.tabbrowser._numPinnedTabs == this.tabbrowser.visibleTabs.length);
+
+          if (pinnedOnly)
+            this.tabbrowser.tabContainer.setAttribute("pinnedonly", "true");
+          else
+            this.tabbrowser.tabContainer.removeAttribute("pinnedonly");
+
+          var scrollButtonWidth = (this.getAttribute("overflow") != "true" || pinnedOnly) ? 0 :
                                   this.mTabstrip._scrollButtonDown.scrollWidth;
           for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
             let tab = this.childNodes[i];
-            width += tab.scrollWidth;
+            width += pinnedOnly ? 0 : tab.scrollWidth;
             tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
           }
           this.style.MozMarginStart = width + "px";
