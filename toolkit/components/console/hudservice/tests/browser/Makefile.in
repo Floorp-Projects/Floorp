@@ -45,7 +45,6 @@ relativesrcdir  = toolkit/components/console/hudservice/tests/browser
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-
 _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_580030_errors_after_page_reload.js \
 	browser_webconsole_basic_net_logging.js \
