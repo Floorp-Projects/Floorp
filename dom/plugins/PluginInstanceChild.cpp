@@ -141,7 +141,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mAccumulatedInvalidRect(0,0,0,0)
     , mIsTransparent(false)
     , mSurfaceType(gfxASurface::SurfaceTypeMax)
-    , mPendingForcePaint(false)
     , mCurrentInvalidateTask(nsnull)
     , mPendingPluginCall(false)
     , mDoAlphaExtraction(false)
@@ -2177,6 +2176,7 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
         mWindow.clipRect.left != aWindow.clipRect.left ||
         mWindow.clipRect.bottom != aWindow.clipRect.bottom ||
         mWindow.clipRect.right != aWindow.clipRect.right)
+        mAccumulatedInvalidRect = nsIntRect(0, 0, aWindow.width, aWindow.height);
 
     mWindow.x = aWindow.x;
     mWindow.y = aWindow.y;

@@ -492,10 +492,6 @@ private:
     // Surface type optimized of parent process
     gfxSurfaceType mSurfaceType;
 
-    // set TRUE if plugin surface dropped in asyncSetWindow
-    // if TRUE then initiate full repaint in RecvPaintFinished
-    bool mPendingForcePaint;
-
     // Keep InvalidateRect task pointer to be able Cancel it on Destroy
     CancelableTask *mCurrentInvalidateTask;
 

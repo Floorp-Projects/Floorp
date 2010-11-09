@@ -1772,17 +1772,6 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     layer = aManager->CreateImageLayer();
   }
 
-#if 0
-  nsCOMPtr<nsIPluginInstance> pi;
-  mInstanceOwner->GetInstance(*getter_AddRefs(pi));
-  // Give plugin info about layer paint
-  if (pi) {
-    if (NS_FAILED(pi->NotifyPainted())) {
-      return nsnull;
-    }
-  }
-#endif
-
   if (!layer)
     return nsnull;
 
@@ -2025,26 +2014,22 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 
           nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
           nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
-          // XXX I don't think we can be certain that the location wrt to
-          // the window only changes when the location wrt to the drawable
-          // changes, but the hdc probably changes on every paint.
-          if (mWindowlessRect != winlessRect) {
-            mWindowlessRect = winlessRect;
 
-            WINDOWPOS winpos;
-            memset(&winpos, 0, sizeof(winpos));
-            winpos.x = mWindowlessRect.x;
-            winpos.y = mWindowlessRect.y;
-            winpos.cx = mWindowlessRect.width;
-            winpos.cy = mWindowlessRect.height;
+          mWindowlessRect = winlessRect;
 
-            // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
-            NPEvent pluginEvent;
-            pluginEvent.event = WM_WINDOWPOSCHANGED;
-            pluginEvent.wParam = 0;
-            pluginEvent.lParam = (LPARAM)&winpos;
-            inst->HandleEvent(&pluginEvent, nsnull);
-          }
+          WINDOWPOS winpos;
+          memset(&winpos, 0, sizeof(winpos));
+          winpos.x = mWindowlessRect.x;
+          winpos.y = mWindowlessRect.y;
+          winpos.cx = mWindowlessRect.width;
+          winpos.cy = mWindowlessRect.height;
+
+          // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
+          NPEvent pluginEvent;
+          pluginEvent.event = WM_WINDOWPOSCHANGED;
+          pluginEvent.wParam = 0;
+          pluginEvent.lParam = (LPARAM)&winpos;
+          inst->HandleEvent(&pluginEvent, nsnull);
 
           inst->SetWindow(window);
         }
