@@ -52,13 +52,15 @@ class StorageBaseStatementInternal;
 
 class BindingParamsArray : public mozIStorageBindingParamsArray
 {
+  typedef nsTArray< nsCOMPtr<mozIStorageBindingParams> > array_type;
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEBINDINGPARAMSARRAY
 
   BindingParamsArray(StorageBaseStatementInternal *aOwningStatement);
 
-  typedef nsTArray_base::size_type size_type;
+  typedef array_type::size_type size_type;
 
   /**
    * Locks the array and prevents further modification to it (such as adding
@@ -132,7 +134,7 @@ public:
   }
 private:
   nsCOMPtr<StorageBaseStatementInternal> mOwningStatement;
-  nsTArray< nsCOMPtr<mozIStorageBindingParams> > mArray;
+  array_type mArray;
   bool mLocked;
 
   friend class iterator;
