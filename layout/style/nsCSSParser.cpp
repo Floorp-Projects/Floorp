@@ -439,6 +439,14 @@ protected:
     nsCSSValueList* mOrigin;
     nsCSSValuePairList* mPosition;
     nsCSSValuePairList* mSize;
+    BackgroundParseState(
+        nsCSSValue& aColor, nsCSSValueList* aImage, nsCSSValueList* aRepeat,
+        nsCSSValueList* aAttachment, nsCSSValueList* aClip,
+        nsCSSValueList* aOrigin, nsCSSValuePairList* aPosition,
+        nsCSSValuePairList* aSize) :
+        mColor(aColor), mImage(aImage), mRepeat(aRepeat),
+        mAttachment(aAttachment), mClip(aClip), mOrigin(aOrigin),
+        mPosition(aPosition), mSize(aSize) {};
   };
 
   PRBool ParseBackgroundItem(BackgroundParseState& aState);
@@ -6164,16 +6172,10 @@ CSSParserImpl::ParseBackground()
   }
 
   nsCSSValue image, repeat, attachment, clip, origin, position, size;
-  BackgroundParseState state = {
-    color,
-    image.SetListValue(),
-    repeat.SetListValue(),
-    attachment.SetListValue(),
-    clip.SetListValue(),
-    origin.SetListValue(),
-    position.SetPairListValue(),
-    size.SetPairListValue()
-  };
+  BackgroundParseState state(color, image.SetListValue(), repeat.SetListValue(),
+                             attachment.SetListValue(), clip.SetListValue(),
+                             origin.SetListValue(), position.SetPairListValue(),
+                             size.SetPairListValue());
 
   for (;;) {
     if (!ParseBackgroundItem(state)) {
