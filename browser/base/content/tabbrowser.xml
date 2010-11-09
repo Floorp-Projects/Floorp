@@ -832,31 +832,48 @@
             // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
             if (!this._previewMode) {
               // We've selected the new tab, so go ahead and notify listeners.
-              var event = document.createEvent("Events");
+              let event = document.createEvent("Events");
               event.initEvent("TabSelect", true, false);
               this.mCurrentTab.dispatchEvent(event);
 
               this._tabAttrModified(oldTab);
               this._tabAttrModified(this.mCurrentTab);
 
-              // Change focus to the new browser unless the findbar is focused.
-              if (!gFindBarInitialized ||
-                  gFindBar.hidden ||
-                  gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true") {
+              // Adjust focus
+              do {
+                // Focus the location bar if it was previously focused for that tab.
+                // In full screen mode, only bother making the location bar visible
+                // if the tab is a blank one.
+                oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
+                if (newBrowser._urlbarFocused && gURLBar) {
+                  if (!window.fullScreen) {
+                    gURLBar.focus();
+                    break;
+                  } else if (isTabEmpty(this.mCurrentTab)) {
+                    focusAndSelectUrlBar();
+                    break;
+                  }
+                }
 
-                var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                           getService(Components.interfaces.nsIFocusManager);
-                var newFocusedElement = fm.getFocusedElementForWindow(window.content, true, {});
+                // If the find bar is focused, keep it focused.
+                if (gFindBarInitialized &&
+                    !gFindBar.hidden &&
+                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
+                  break;
+
+                // Otherwise, focus the content area.
+                let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+                let newFocusedElement = fm.getFocusedElementForWindow(window.content, true, {});
 
                 // for anchors, use FLAG_SHOWRING so that it is clear what link was
                 // last clicked when switching back to that tab
-                var focusFlags = fm.FLAG_NOSCROLL;
+                let focusFlags = fm.FLAG_NOSCROLL;
                 if (newFocusedElement &&
                     (newFocusedElement instanceof HTMLAnchorElement ||
                      newFocusedElement.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple"))
                   focusFlags |= fm.FLAG_SHOWRING;
                 fm.setFocus(newBrowser, focusFlags);
-              }
+              } while (false);
             }
           ]]>
         </body>
