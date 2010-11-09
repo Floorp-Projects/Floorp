@@ -329,7 +329,7 @@ JSID_TO_STRING(jsid id)
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_ZERO(jsid id)
 {
-    return JSID_BITS(id) == NULL;
+    return JSID_BITS(id) == 0;
 }
 
 JS_PUBLIC_API(JSBool)
