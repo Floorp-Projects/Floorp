@@ -155,6 +155,11 @@ LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
 {
   mCurrentCallbackInfo.Callback = aCallback;
   mCurrentCallbackInfo.CallbackData = aCallbackData;
+
+  // The results of our drawing always go directly into a pixel buffer,
+  // so we don't need to pass any global transform here.
+  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+
   Render();
   /* Clean this out for sanity */
   mCurrentCallbackInfo.Callback = NULL;
@@ -263,7 +268,7 @@ LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
   nsCString msg;
   msg.Append(aMsg);
   msg.AppendLiteral(" Error code: ");
-  msg.AppendInt(aCode);
+  msg.AppendInt(PRUint32(aCode));
   NS_WARNING(msg.BeginReading());
 }
 
@@ -298,7 +303,7 @@ LayerManagerD3D9::Render()
     }
     device()->SetScissorRect(&r);
 
-    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer(1.0, gfx3DMatrix());
+    static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
   }
 
   device()->EndScene();

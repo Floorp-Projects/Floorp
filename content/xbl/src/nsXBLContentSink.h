@@ -124,7 +124,7 @@ protected:
     nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                            nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                            nsIContent** aResult, PRBool* aAppendContent,
-                           PRUint32 aFromParser);
+                           mozilla::dom::FromParser aFromParser);
     
     nsresult AddAttributes(const PRUnichar** aAtts, 
                            nsIContent* aContent);

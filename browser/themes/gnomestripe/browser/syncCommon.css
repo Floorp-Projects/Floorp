@@ -14,11 +14,11 @@
 }
 
 .statusIcon[status="error"] {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 .statusIcon[status="success"] {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
 }
 
 /* .data is only used by syncGenericChange.xul, but it seems unnecessary to have

@@ -303,6 +303,10 @@ bool nsDSURIContentListener::CheckFrameOptions(nsIRequest* request)
         // document must be same-origin with top window.  X-F-O: DENY requires that
         // the document must never be framed.
         nsCOMPtr<nsIDOMWindow> thisWindow = do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
+        // If we don't have DOMWindow there is no risk of clickjacking
+        if (!thisWindow)
+            return true;
+
         nsCOMPtr<nsIDOMWindow> topWindow;
         thisWindow->GetTop(getter_AddRefs(topWindow));
 

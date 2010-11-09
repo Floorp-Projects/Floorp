@@ -920,6 +920,17 @@ nsInlineFrame::GetSkipSides() const
   return skip;
 }
 
+nscoord
+nsInlineFrame::GetBaseline() const
+{
+  nscoord ascent = 0;
+  nsCOMPtr<nsIFontMetrics> fm;
+  if (NS_SUCCEEDED(nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm)))) {
+    fm->GetMaxAscent(ascent);
+  }
+  return ascent + GetUsedBorderAndPadding().top;
+}
+
 #ifdef ACCESSIBILITY
 already_AddRefed<nsAccessible>
 nsInlineFrame::CreateAccessible()

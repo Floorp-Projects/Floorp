@@ -66,9 +66,10 @@ interface nsIChannel;
  *          the new cookie. (note that host, path, and name are invariant
  *          for a given cookie; other parameters may change.)
  *          "batch-deleted"
- *          a batch of cookies was deleted (for instance, as part of a purging
- *          operation). the subject is an nsIArray of nsICookie2's representing
- *          the deleted cookies.
+ *          a set of cookies was purged (typically, because they have either
+ *          expired or because the cookie list has grown too large). The subject
+ *          is an nsIArray of nsICookie2's representing the deleted cookies.
+ *          Note that the array could contain a single cookie.
  *          "cleared"
  *          the entire cookie list was cleared. the subject is null.
  *          "reload"

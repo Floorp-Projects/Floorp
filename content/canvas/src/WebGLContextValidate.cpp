@@ -362,10 +362,6 @@ WebGLContext::InitAndValidateGL()
     mBoundElementArrayBuffer = nsnull;
     mCurrentProgram = nsnull;
 
-    mFramebufferColorAttachments.Clear();
-    mFramebufferDepthAttachment = nsnull;
-    mFramebufferStencilAttachment = nsnull;
-
     mBoundFramebuffer = nsnull;
     mBoundRenderbuffer = nsnull;
 
@@ -433,7 +429,7 @@ WebGLContext::InitAndValidateGL()
     // Always 1 for GLES2
     val = 1;
 #endif
-    mFramebufferColorAttachments.SetLength(val);
+    mMaxFramebufferColorAttachments = val;
 
 #if defined(DEBUG_vladimir) && defined(USE_GLES2)
     gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, (GLint*) &val);

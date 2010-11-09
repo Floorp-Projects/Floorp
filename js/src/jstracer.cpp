@@ -2300,11 +2300,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         fragment->loopLabel = entryLabel;
     })
 
-    lirbuf->sp = w.ldpStateField(sp);
-    lirbuf->rp = w.ldpStateField(rp);
-    InitConst(cx_ins) = w.ldpStateField(cx);
-    InitConst(eos_ins) = w.ldpStateField(eos);
-    InitConst(eor_ins) = w.ldpStateField(eor);
+    lirbuf->sp = w.name(w.ldpStateField(sp), "sp");
+    lirbuf->rp = w.name(w.ldpStateField(rp), "rp");
+    InitConst(cx_ins) = w.name(w.ldpStateField(cx), "cx");
+    InitConst(eos_ins) = w.name(w.ldpStateField(eos), "eos");
+    InitConst(eor_ins) = w.name(w.ldpStateField(eor), "eor");
 
     strictModeCode_ins = w.name(w.immi(cx->fp()->script()->strictModeCode), "strict");
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -24,7 +24,7 @@ void vp8_dequantize_b_c(BLOCKD *d)
     int i;
     short *DQ  = d->dqcoeff;
     short *Q   = d->qcoeff;
-    short *DQC = &d->dequant[0][0];
+    short *DQC = d->dequant;
 
     for (i = 0; i < 16; i++)
     {
@@ -45,7 +45,7 @@ void vp8_dequant_idct_add_c(short *input, short *dq, unsigned char *pred,
         input[i] = dq[i] * input[i];
     }
 
-    // the idct halves ( >> 1) the pitch
+    /* the idct halves ( >> 1) the pitch */
     vp8_short_idct4x4llm_c(input, output, 4 << 1);
 
     vpx_memset(input, 0, 32);
@@ -87,7 +87,7 @@ void vp8_dequant_dc_idct_add_c(short *input, short *dq, unsigned char *pred,
         input[i] = dq[i] * input[i];
     }
 
-    // the idct halves ( >> 1) the pitch
+    /* the idct halves ( >> 1) the pitch */
     vp8_short_idct4x4llm_c(input, output, 4 << 1);
 
     vpx_memset(input, 0, 32);

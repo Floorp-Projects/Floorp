@@ -92,6 +92,8 @@
 #include "nsThemeConstants.h"
 #include "nsPLDOMEvent.h"
 
+namespace dom = mozilla::dom;
+
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplayTextEvent::Run()
 {
@@ -1012,15 +1014,13 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // create button which drops the list down
   NS_NewHTMLElement(getter_AddRefs(mButtonContent), nodeInfo.forget(),
-                    PR_FALSE);
+                    dom::NOT_FROM_PARSER);
   if (!mButtonContent)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // make someone to listen to the button. If its pressed by someone like Accessibility
   // then open or close the combo box.
   mButtonListener = new nsComboButtonListener(this);
-  if (!mButtonListener)
-    return NS_ERROR_OUT_OF_MEMORY;
   mButtonContent->AddEventListenerByIID(mButtonListener,
                                         NS_GET_IID(nsIDOMMouseListener));
 

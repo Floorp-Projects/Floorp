@@ -138,7 +138,7 @@ gfxPlatformFontList::gfxPlatformFontList(PRBool aNeedFullnamePostscriptNames)
     }
 }
 
-void
+nsresult
 gfxPlatformFontList::InitFontList()
 {
     mFontFamilies.Clear();
@@ -156,6 +156,10 @@ gfxPlatformFontList::InitFontList()
     mCodepointsWithNoFonts.reset();
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
+
+    sPlatformFontList = this;
+
+    return NS_OK;
 }
 
 void

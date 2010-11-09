@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0cm" height="0cm">
+
+<text id="a">a</text>
+
+<script><![CDATA[
+var x=document.getElementById('a').getExtentOfChar(0);
+]]></script>
+</svg>

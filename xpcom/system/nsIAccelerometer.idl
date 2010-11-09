@@ -62,3 +62,13 @@ interface nsIAccelerometer : nsISupports
   void removeWindowListener(in nsIDOMWindow aWindow);
 
 };
+
+/* for use by IPC system to notify non-chrome processes of 
+ * accelerometer events
+ */
+[uuid(22dd1d8a-51bf-406f-8b6d-d1919f8f1c7d)]
+interface nsIAccelerometerUpdate : nsIAccelerometer
+{
+  /* must be called on the main thread or else */
+  void accelerationChanged(in double x, in double y, in double z);
+};

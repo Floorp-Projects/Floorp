@@ -454,7 +454,10 @@ nsEditorSpellCheck::UninitSpellChecker()
 
   // we preserve the last selected language, but ignore errors so we continue
   // to uninitialize
-  nsresult rv = SaveDefaultDictionary();
+#ifdef DEBUG
+  nsresult rv =
+#endif
+  SaveDefaultDictionary();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to set default dictionary");
 
   // Cleanup - kill the spell checker

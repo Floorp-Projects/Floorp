@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,7 +12,7 @@
 #ifndef _PTHREAD_EMULATION
 #define _PTHREAD_EMULATION
 
-#define VPXINFINITE 10000       //10second.
+#define VPXINFINITE 10000       /* 10second. */
 
 /* Thread management macros */
 #ifdef _WIN32
@@ -72,11 +72,11 @@
 #define sem_wait(sem) (semaphore_wait(*sem) )
 #define sem_post(sem) semaphore_signal(*sem)
 #define sem_destroy(sem) semaphore_destroy(mach_task_self(),*sem)
-#define thread_sleep(nms) // { struct timespec ts;ts.tv_sec=0; ts.tv_nsec = 1000*nms;nanosleep(&ts, NULL);}
+#define thread_sleep(nms) /* { struct timespec ts;ts.tv_sec=0; ts.tv_nsec = 1000*nms;nanosleep(&ts, NULL);} */
 #else
 #include <unistd.h>
 #include <sched.h>
-#define thread_sleep(nms) sched_yield();// {struct timespec ts;ts.tv_sec=0; ts.tv_nsec = 1000*nms;nanosleep(&ts, NULL);}
+#define thread_sleep(nms) sched_yield();/* {struct timespec ts;ts.tv_sec=0; ts.tv_nsec = 1000*nms;nanosleep(&ts, NULL);} */
 #endif
 /* Not Windows. Assume pthreads */
 

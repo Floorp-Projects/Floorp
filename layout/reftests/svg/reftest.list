@@ -126,6 +126,8 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundin
 == polyline-points-invalid-01.svg pass.svg
 == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
+== path-03.svg pass.svg
+== pattern-invalid-01.svg pattern-invalid-01-ref.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
 == pattern-live-01b.svg pattern-live-01-ref.svg
 == pattern-live-01c.svg pattern-live-01-ref.svg
@@ -163,6 +165,7 @@ random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fai
 == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
+== text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
 == text-style-01c.svg text-style-01-ref.svg

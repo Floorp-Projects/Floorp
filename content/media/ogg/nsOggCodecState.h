@@ -257,7 +257,7 @@ public:
                              nsSeekTarget& aResult);
 
   PRBool HasIndex() const {
-    return mIndex.Count() > 0;
+    return mIndex.IsInitialized() && mIndex.Count() > 0;
   }
 
   // Returns the duration of the active tracks in the media, if we have

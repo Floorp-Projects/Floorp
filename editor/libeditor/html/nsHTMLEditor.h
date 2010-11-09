@@ -148,7 +148,7 @@ public:
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
-  virtual PRBool HasFocus();
+  virtual already_AddRefed<nsIContent> GetFocusedContent();
   virtual PRBool IsActiveInDOMWindow();
   virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);

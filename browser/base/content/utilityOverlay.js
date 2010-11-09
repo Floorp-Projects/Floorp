@@ -412,9 +412,8 @@ function isBidiEnabled() {
 function openAboutDialog() {
   var enumerator = Services.wm.getEnumerator("Browser:About");
   while (enumerator.hasMoreElements()) {
+    // Only open one about window (Bug 599573)
     let win = enumerator.getNext();
-    if (win.opener != window)
-      continue;
     win.focus();
     return;
   }
@@ -486,107 +485,12 @@ function openFeedbackPage()
   openUILinkIn("http://input.mozilla.com/feedback", "tab");
 }
 
-
-#ifdef MOZ_UPDATER
-/**
- * Opens the update manager and checks for updates to the application.
- */
-function checkForUpdates()
-{
-  var um = 
-      Components.classes["@mozilla.org/updates/update-manager;1"].
-      getService(Components.interfaces.nsIUpdateManager);
-  var prompter = 
-      Components.classes["@mozilla.org/updates/update-prompt;1"].
-      createInstance(Components.interfaces.nsIUpdatePrompt);
-
-  // If there's an update ready to be applied, show the "Update Downloaded"
-  // UI instead and let the user know they have to restart the browser for
-  // the changes to be applied. 
-  if (um.activeUpdate && um.activeUpdate.state == "pending")
-    prompter.showUpdateDownloaded(um.activeUpdate);
-  else
-    prompter.checkForUpdates();
-}
-#endif
-
-#ifdef MOZ_UPDATER
-/**
- * Updates an element to reflect the state of available update services.
- */
-function setupCheckForUpdates(checkForUpdates, aStringBundle)
-{
-  var updates = 
-      Components.classes["@mozilla.org/updates/update-service;1"].
-      getService(Components.interfaces.nsIApplicationUpdateService);
-  var um = 
-      Components.classes["@mozilla.org/updates/update-manager;1"].
-      getService(Components.interfaces.nsIUpdateManager);
-
-  // Disable the UI if the update enabled pref has been locked by the 
-  // administrator or if we cannot update for some other reason
-  var canCheckForUpdates = updates.canCheckForUpdates;
-  checkForUpdates.setAttribute("disabled", !canCheckForUpdates);
-  if (!canCheckForUpdates)
-    return; 
-
-  var activeUpdate = um.activeUpdate;
-
-  // If there's an active update, substitute its name into the label
-  // we show for this item, otherwise display a generic label.
-  function getStringWithUpdateName(key) {
-    if (activeUpdate && activeUpdate.name)
-      return aStringBundle.formatStringFromName(key, [activeUpdate.name], 1);
-    return aStringBundle.GetStringFromName(key + "Fallback");
-  }
-
-  // By default, show "Check for Updates..."
-  var key = "default";
-  if (activeUpdate) {
-    switch (activeUpdate.state) {
-    case "downloading":
-      // If we're downloading an update at present, show the text:
-      // "Downloading Firefox x.x..." otherwise we're paused, and show
-      // "Resume Downloading Firefox x.x..."
-      key = updates.isDownloading ? "downloading" : "resume";
-      break;
-    case "pending":
-      // If we're waiting for the user to restart, show: "Apply Downloaded
-      // Updates Now..."
-      key = "pending";
-      break;
-    }
-  }
-  checkForUpdates.label = getStringWithUpdateName("updatesItem_" + key);
-  checkForUpdates.accessKey = aStringBundle.
-                              GetStringFromName("updatesItem_" + key + ".accesskey");
-  if (um.activeUpdate && updates.isDownloading)
-    checkForUpdates.setAttribute("loading", "true");
-  else
-    checkForUpdates.removeAttribute("loading");
-}
-#endif
-
 function buildHelpMenu()
 {
   // Enable/disable the "Report Web Forgery" menu item.  safebrowsing object
   // may not exist in OSX
   if (typeof safebrowsing != "undefined")
     safebrowsing.setReportPhishingMenu();
-
-#ifdef XP_MACOSX
-#ifdef MOZ_UPDATER
-  var checkForUpdates = document.getElementById("checkForUpdates");
-  var browserBundle = document.getElementById("bundle_browser").stringBundle;
-  setupCheckForUpdates(checkForUpdates, browserBundle);
-#else  
-  // Needed by safebrowsing for inserting its menuitem so just hide it
-  document.getElementById("updateSeparator").hidden = true;
-#endif
-#else
-  // Needed by safebrowsing for inserting its menuitem so just hide it
-  document.getElementById("updateSeparator").hidden = true;
-#endif
 }
 
 function isElementVisible(aElement)
