@@ -47,6 +47,11 @@ LIBRARY_NAME	= jsdombase_s
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 
+EXTRA_PP_COMPONENTS = \
+		ConsoleAPI.js \
+		ConsoleAPI.manifest \
+		$(NULL)
+
 XPIDLSRCS = \
   nsIEntropyCollector.idl \
   nsIScriptChannel.idl \
