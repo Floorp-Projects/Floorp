@@ -14,10 +14,10 @@ String(const char* const str)
     return NS_ConvertUTF8toUTF16(str);
 }
 
-static nsTArray<JSONVariant>
+static InfallibleTArray<JSONVariant>
 Array123()
 {
-    nsTArray<JSONVariant> a123;
+    InfallibleTArray<JSONVariant> a123;
     a123.AppendElement(1);  a123.AppendElement(2);  a123.AppendElement(3);
 
     test_assert(a123 == a123, "operator== is broken");
@@ -45,7 +45,7 @@ MakeTestVariant(HandleT* handle)
     //     }
     //   ]
     //
-    nsTArray<JSONVariant> outer;
+    InfallibleTArray<JSONVariant> outer;
 
     outer.AppendElement(void_t());
     outer.AppendElement(null_t());
@@ -57,7 +57,7 @@ MakeTestVariant(HandleT* handle)
 
     outer.AppendElement(Array123());
 
-    nsTArray<KeyValue> obj;
+    InfallibleTArray<KeyValue> obj;
     obj.AppendElement(KeyValue(String("undefined"), void_t()));
     obj.AppendElement(KeyValue(String("null"), null_t()));
     obj.AppendElement(KeyValue(String("true"), true));

@@ -361,8 +361,8 @@ PluginModuleParent::DeallocPPluginIdentifier(PPluginIdentifierParent* aActor)
 PPluginInstanceParent*
 PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
                                          const uint16_t& aMode,
-                                         const nsTArray<nsCString>& aNames,
-                                         const nsTArray<nsCString>& aValues,
+                                         const InfallibleTArray<nsCString>& aNames,
+                                         const InfallibleTArray<nsCString>& aValues,
                                          NPError* rv)
 {
     NS_ERROR("Not reachable!");
@@ -784,8 +784,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     // create the instance on the other side
-    nsTArray<nsCString> names;
-    nsTArray<nsCString> values;
+    InfallibleTArray<nsCString> names;
+    InfallibleTArray<nsCString> values;
 
     for (int i = 0; i < argc; ++i) {
         names.AppendElement(NullableString(argn[i]));

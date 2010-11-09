@@ -111,8 +111,8 @@ ContentListener::HandleEvent(nsIDOMEvent* aEvent)
 class ContentDialogChild : public PContentDialogChild
 {
 public:
-  virtual bool Recv__delete__(const nsTArray<int>& aIntParams,
-                              const nsTArray<nsString>& aStringParams);
+  virtual bool Recv__delete__(const InfallibleTArray<int>& aIntParams,
+                              const InfallibleTArray<nsString>& aStringParams);
 };
 
 
@@ -373,8 +373,8 @@ TabChild::OpenDialog(PRUint32 aType, const nsACString& aName,
   if (!gActiveDialogs.IsInitialized()) {
     NS_ENSURE_STATE(gActiveDialogs.Init());
   }
-  nsTArray<PRInt32> intParams;
-  nsTArray<nsString> stringParams;
+  InfallibleTArray<PRInt32> intParams;
+  InfallibleTArray<nsString> stringParams;
   ParamsToArrays(aArguments, intParams, stringParams);
   PContentDialogChild* dialog =
     SendPContentDialogConstructor(aType, nsCString(aName),
@@ -390,8 +390,8 @@ TabChild::OpenDialog(PRUint32 aType, const nsACString& aName,
 }
 
 bool
-ContentDialogChild::Recv__delete__(const nsTArray<int>& aIntParams,
-                                   const nsTArray<nsString>& aStringParams)
+ContentDialogChild::Recv__delete__(const InfallibleTArray<int>& aIntParams,
+                                   const InfallibleTArray<nsString>& aStringParams)
 {
   nsCOMPtr<nsIDialogParamBlock> params;
   if (gActiveDialogs.Get(this, getter_AddRefs(params))) {
@@ -403,8 +403,8 @@ ContentDialogChild::Recv__delete__(const nsTArray<int>& aIntParams,
 
 void
 TabChild::ParamsToArrays(nsIDialogParamBlock* aParams,
-                         nsTArray<int>& aIntParams,
-                         nsTArray<nsString>& aStringParams)
+                         InfallibleTArray<int>& aIntParams,
+                         InfallibleTArray<nsString>& aStringParams)
 {
   if (aParams) {
     for (PRInt32 i = 0; i < 8; ++i) {
@@ -422,8 +422,8 @@ TabChild::ParamsToArrays(nsIDialogParamBlock* aParams,
 }
 
 void
-TabChild::ArraysToParams(const nsTArray<int>& aIntParams,
-                         const nsTArray<nsString>& aStringParams,
+TabChild::ArraysToParams(const InfallibleTArray<int>& aIntParams,
+                         const InfallibleTArray<nsString>& aStringParams,
                          nsIDialogParamBlock* aParams)
 {
   if (aParams) {
@@ -679,8 +679,8 @@ PContentDialogChild*
 TabChild::AllocPContentDialog(const PRUint32&,
                               const nsCString&,
                               const nsCString&,
-                              const nsTArray<int>&,
-                              const nsTArray<nsString>&)
+                              const InfallibleTArray<int>&,
+                              const InfallibleTArray<nsString>&)
 {
   return new ContentDialogChild();
 }
@@ -950,7 +950,7 @@ static bool
 SendSyncMessageToParent(void* aCallbackData,
                         const nsAString& aMessage,
                         const nsAString& aJSON,
-                        nsTArray<nsString>* aJSONRetVal)
+                        InfallibleTArray<nsString>* aJSONRetVal)
 {
   return static_cast<TabChild*>(aCallbackData)->
     SendSyncMessage(nsString(aMessage), nsString(aJSON),

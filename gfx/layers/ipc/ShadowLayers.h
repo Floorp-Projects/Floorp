@@ -232,7 +232,7 @@ public:
    * |aReplies| are directions from the ShadowLayerManager to the
    * caller of EndTransaction().
    */
-  PRBool EndTransaction(nsTArray<EditReply>* aReplies);
+  PRBool EndTransaction(InfallibleTArray<EditReply>* aReplies);
 
   /**
    * True if this is forwarding to a ShadowLayerManager.

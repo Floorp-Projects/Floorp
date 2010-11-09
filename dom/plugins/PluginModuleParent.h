@@ -98,8 +98,8 @@ protected:
     PPluginInstanceParent*
     AllocPPluginInstance(const nsCString& aMimeType,
                          const uint16_t& aMode,
-                         const nsTArray<nsCString>& aNames,
-                         const nsTArray<nsCString>& aValues,
+                         const InfallibleTArray<nsCString>& aNames,
+                         const InfallibleTArray<nsCString>& aValues,
                          NPError* rv);
 
     virtual bool
