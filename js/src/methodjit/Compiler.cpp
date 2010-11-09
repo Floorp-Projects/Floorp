@@ -1501,10 +1501,12 @@ mjit::Compiler::generateMethod()
           {
             jsint i = GET_UINT16(PC);
             uint32 count = GET_UINT16(PC + UINT16_LEN);
+            types::TypeObject *type = script->getTypeInitObject(cx, PC, true);
 
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
             prepareStubCall(Uses(0));
+            masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
             masm.move(Imm32(count), Registers::ArgReg1);
             if (i == JSProto_Array)
                 stubCall(stubs::NewInitArray);
@@ -1915,7 +1917,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NEWARRAY)
           {
             uint32 len = GET_UINT16(PC);
+            types::TypeObject *type = script->getTypeInitObject(cx, PC, true);
+
             prepareStubCall(Uses(len));
+            masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
             masm.move(Imm32(len), Registers::ArgReg1);
             stubCall(stubs::NewArray);
             frame.popn(len);
@@ -4685,7 +4690,8 @@ JSValueType
 mjit::Compiler::knownLocalType(uint32 local)
 {
 #ifdef JS_TYPE_INFERENCE
-    JS_ASSERT(local < script->nfixed);
+    if (local >= script->nfixed)
+        return JSVAL_TYPE_UNKNOWN;
     return localTypes[local];
 #endif
     return JSVAL_TYPE_UNKNOWN;

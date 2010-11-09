@@ -3526,7 +3526,7 @@ static void object_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
     TypeCallsite *site = Valueify(jssite);
 
     if (site->argumentCount == 0) {
-        TypeObject *object = site->getInitObject(cx, true);
+        TypeObject *object = site->getInitObject(cx, false);
         if (site->returnTypes)
             site->returnTypes->addType(cx, (jstype) object);
     } else {
@@ -3688,6 +3688,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         }
 
         ctor = proto;
+        cx->addTypePrototype(protoType, cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE));
     } else {
         if (!ctorHandler)
             ctorHandler = JS_TypeHandlerMissing;

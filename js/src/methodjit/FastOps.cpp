@@ -1252,7 +1252,16 @@ mjit::Compiler::jsop_setelem_dense()
     if (!key.isConstant() && !frame.haveSameBacking(id, value))
         frame.pinReg(key.reg());
 
-    RegisterID objReg = frame.copyDataIntoReg(obj);
+    RegisterID objReg;
+    if (frame.haveSameBacking(obj, value)) {
+        objReg = frame.allocReg();
+        masm.move(vr.dataReg(), objReg);
+    } else if (frame.haveSameBacking(obj, id)) {
+        objReg = frame.allocReg();
+        masm.move(key.reg(), objReg);
+    } else {
+        objReg = frame.copyDataIntoReg(obj);
+    }
 
     frame.unpinEntry(vr);
     if (!key.isConstant() && !frame.haveSameBacking(id, value))

@@ -462,6 +462,34 @@ TypeSet::addMonitorRead(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *cod
     add(cx, ArenaNew<TypeConstraintMonitorRead>(pool, code, target));
 }
 
+/*
+ * Type constraint which marks the result of 'for in' loops as unknown if the
+ * iterated value could be a generator.
+ */
+class TypeConstraintGenerator : public TypeConstraint
+{
+public:
+    TypeSet *target;
+
+    TypeConstraintGenerator(TypeSet *target)
+        : TypeConstraint("generator"), target(target)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type);
+};
+
+/* Update types with the possible values bound by the for loop in code. */
+static inline void
+SetForTypes(JSContext *cx, analyze::Bytecode *code, TypeSet *types)
+{
+    if (code->pushedArray[0].group()->isForEach)
+        types->addType(cx, TYPE_UNKNOWN);
+    else
+        types->addType(cx, TYPE_STRING);
+
+    code->popped(0)->add(cx, ArenaNew<TypeConstraintGenerator>(code->pool(), types));
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeConstraint
 /////////////////////////////////////////////////////////////////////
@@ -656,6 +684,21 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
             /* Model the function's effects directly. */
             function->handler(cx, (JSTypeFunction*)function, (JSTypeCallsite*)callsite);
         }
+
+        /*
+         * When invoking 'new' on natives other than Object, Function, and Array
+         * (whose handlers take care of the 'new' case), add the 'new' object of
+         * the function to the return types.
+         */
+        if (callsite->isNew && callsite->returnTypes &&
+            function != cx->getFixedTypeObject(TYPE_OBJECT_OBJECT) &&
+            function != cx->getFixedTypeObject(TYPE_OBJECT_FUNCTION) &&
+            function != cx->getFixedTypeObject(TYPE_OBJECT_ARRAY)) {
+            TypeObject *object = function->getNewObject(cx);
+            if (callsite->returnTypes)
+                callsite->returnTypes->addType(cx, (jstype) object);
+        }
+
         return;
     }
 
@@ -825,6 +868,16 @@ TypeConstraintMonitorRead::newType(JSContext *cx, TypeSet *source, jstype type)
     }
 
     target->addType(cx, type);
+}
+
+void
+TypeConstraintGenerator::newType(JSContext *cx, TypeSet *source, jstype type)
+{
+    if (type == TYPE_UNKNOWN)
+        target->addType(cx, TYPE_UNKNOWN);
+
+    if (type == (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR))
+        target->addType(cx, TYPE_UNKNOWN);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1140,6 +1193,15 @@ const char * const fixedTypeObjectNames[] = {
     "Proxy:new",
     "RegExp:new",
     "ArrayBuffer:new",
+    "Int8Array:new",
+    "Uint8Array:new",
+    "Int16Array:new",
+    "Uint16Array:new",
+    "Int32Array:new",
+    "Uint32Array:new",
+    "Float32Array:new",
+    "Float64Array:new",
+    "Uint8ClampedArray:new",
     "#Magic",
     "#GetSet",
     "XML:new",
@@ -1237,7 +1299,7 @@ TypeCompartment::makeFixedTypeObject(JSContext *cx, FixedTypeObjectName which)
     if (which <= TYPE_OBJECT_BASE_LAST) {
         /* Nothing */
     } else if (which <= TYPE_OBJECT_MONITOR_LAST) {
-        type->setMonitored(cx);
+        cx->monitorTypeObject(type);
     } else if (which <= TYPE_OBJECT_ARRAY_LAST) {
         cx->addTypePrototype(type, cx->getFixedTypeObject(TYPE_OBJECT_ARRAY_PROTOTYPE));
     } else {
@@ -1541,30 +1603,6 @@ TypeFunction::fillProperties(JSContext *cx)
 }
 
 void
-TypeObject::setMonitored(JSContext *cx)
-{
-    if (monitored)
-        return;
-
-    /*
-     * Existing property constraints may have already been added to this object,
-     * which we need to do the right thing for.  We can't ensure that we will
-     * mark all monitored objects before they have been accessed, as the __proto__
-     * of a non-monitored object could be dynamically set to a monitored object.
-     * Adding unknown for any properties accessed already accounts for possible
-     * values read from them.
-     */
-
-    Variable *var = properties(cx).variables;
-    while (var) {
-        var->types.addType(cx, TYPE_UNKNOWN);
-        var = var->next;
-    }
-
-    monitored = true;
-}
-
-void
 TypeObject::print(JSContext *cx, FILE *out)
 {
     fputs(cx->getTypeId(name), out);
@@ -1659,6 +1697,9 @@ IgnorePopped(JSOp op, unsigned index)
 void
 JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp)
 {
+    if (analysis->failed())
+        return;
+
     js::analyze::Bytecode &code = analysis->getCode(pc);
     JS_ASSERT(code.analyzed);
 
@@ -1688,7 +1729,7 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
         const js::Value &val = sp[-1 - i];
         js::types::jstype type = js::types::GetValueType(cx, val);
 
-        if (js::types::TypeIsObject(type)) {
+        if (js::types::TypeIsObject(type) && !val.isMagic(JS_ARRAY_HOLE)) {
             /* Make sure information about the array status of this object is right. */
             JS_ASSERT(val.isObject());
             js::types::TypeObject *object = (js::types::TypeObject *) type;
@@ -1697,9 +1738,9 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
             if (object->isDenseArray) {
                 if (!val.toObject().isDenseArray() ||
                     (object->isPackedArray && !val.toObject().isPackedDenseArray())) {
-                    fprintf(cx->typeOut(), "warning: Object not %s array at #%u:%05u: %s",
+                    fprintf(cx->typeOut(), "warning: Object not %s array at #%u:%05u popped %u: %s\n",
                             object->isPackedArray ? "packed" : "dense",
-                            analysis->id, code.offset, cx->getTypeId(object->name));
+                            analysis->id, code.offset, i, cx->getTypeId(object->name));
                     cx->compartment->types.warnings = true;
                     object->isDenseArray = object->isPackedArray = false;
                 }
@@ -1827,7 +1868,7 @@ SearchScope(JSContext *cx, Script *script, TypeStack *stack, jsid id,
     bool foundWith = false;
 
     /* Search up until we find a local variable with the specified name. */
-    while (script->parent) {
+    while (true) {
         /* Search the stack for any 'with' objects or 'let' variables. */
         while (stack) {
             stack = stack->group();
@@ -1849,6 +1890,9 @@ SearchScope(JSContext *cx, Script *script, TypeStack *stack, jsid id,
             script = script->parent->analysis;
             continue;
         }
+
+        if (!script->parent)
+            break;
 
         /* Function scripts have 'arguments' local variables. */
         if (id == id_arguments(cx) && script->function) {
@@ -1998,21 +2042,8 @@ MergePushed(JSContext *cx, JSArenaPool &pool, Bytecode *code, unsigned num, Type
     types->addSubset(cx, pool, code->pushed(num));
 }
 
-/*
- * Update types with the possible values bound by the for loop in code.
- * TODO: generators not handled yet.
- */
 void
-SetForTypes(JSContext *cx, Bytecode *code, TypeSet *types)
-{
-    if (code->pushedArray[0].group()->isForEach)
-        types->addType(cx, TYPE_UNKNOWN);
-    else
-        types->addType(cx, TYPE_STRING);
-}
-
-void
-Script::analyzeTypes(JSContext *cx, Bytecode *code)
+Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 {
     unsigned offset = code->offset;
 
@@ -2037,7 +2068,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
       case JSOP_IFEQX:
       case JSOP_IFNE:
       case JSOP_IFNEX:
-      case JSOP_ENDINIT:
       case JSOP_LINENO:
       case JSOP_LOOKUPSWITCH:
       case JSOP_LOOKUPSWITCHX:
@@ -2206,7 +2236,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
                                        JSRESOLVE_QUALIFIED, &obj, &prop);
         }
 
-        if (vars && id != id___proto__(cx) && id != id_prototype(cx)) {
+        if (vars && id != id___proto__(cx) && id != id_prototype(cx) && id != id_constructor(cx)) {
             TypeSet *types = vars->getVariable(cx, id);
             types->addMonitorRead(cx, *vars->pool, code, code->pushed(0));
             if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME || op == JSOP_CALLNAME)
@@ -2266,7 +2296,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
         VariableSet *vars = code->inStack->group()->scopeVars;
         if (vars) {
             TypeSet *types = vars->getVariable(cx, id);
-            types->addSubset(cx, pool, code->pushed(0));
+            types->addSubset(cx, *vars->pool, code->pushed(0));
         } else {
             cx->compartment->types.monitorBytecode(code);
         }
@@ -2422,11 +2452,15 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC: {
-        jsid id = getLocalId(GET_SLOTNO(pc), code->inStack);
+        uint32 local = GET_SLOTNO(pc);
+        jsid id = getLocalId(local, code->inStack);
         TypeSet *types = evalParent()->localTypes.getVariable(cx, id);
 
         types->addArith(cx, evalParent()->pool, code, types);
         MergePushed(cx, evalParent()->pool, code, 0, types);
+
+        if (localHasUseBeforeDef(local) || !localDefined(local, pc))
+            types->addType(cx, TYPE_DOUBLE);
         break;
       }
 
@@ -2676,15 +2710,32 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
         break;
       }
 
+      case JSOP_ENDINIT:
+        JS_ASSERT(!state.hasGetSet);
+        break;
+
       case JSOP_INITELEM: {
         TypeObject *object = code->initObject;
         JS_ASSERT(object);
 
-        /* TODO: broken for float indexes? */
-        code->popped(0)->addSubset(cx, pool, object->indexTypes(cx));
         code->pushed(0)->addType(cx, (jstype) object);
+
+        /* TODO: broken for float indexes? */
+        TypeSet *types = object->indexTypes(cx);
+
+        if (state.hasGetSet)
+            types->addType(cx, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_GETSET));
+        else
+            code->popped(0)->addSubset(cx, pool, types);
+        state.hasGetSet = false;
         break;
       }
+
+      case JSOP_GETTER:
+      case JSOP_SETTER:
+        JS_ASSERT(!state.hasGetSet);
+        state.hasGetSet = true;
+        break;
 
       case JSOP_INITPROP:
       case JSOP_INITMETHOD: {
@@ -2698,8 +2749,11 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
 
         if (id == id___proto__(cx) || id == id_prototype(cx))
             cx->compartment->types.monitorBytecode(code);
+        else if (state.hasGetSet)
+            types->addType(cx, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_GETSET));
         else
             code->popped(0)->addSubset(cx, pool, types);
+        state.hasGetSet = false;
         break;
       }
 
@@ -2728,10 +2782,20 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code)
         uintN flags = pc[1];
         if (flags & JSITER_FOREACH)
             code->pushedArray[0].group()->isForEach = true;
+
+        /*
+         * The actual pushed value is an iterator object, which we don't care about.
+         * Propagate the target of the iteration itself so that we'll be able to detect
+         * when an object of Iterator class flows to the JSOP_FOR* opcode, which could
+         * be a generator that produces arbitrary vaues with 'for in' syntax.
+         */
+        MergePushed(cx, pool, code, 0, code->popped(0));
+
         break;
       }
 
       case JSOP_MOREITER:
+        MergePushed(cx, pool, code, 0, code->popped(0));
         code->setFixed(cx, 1, TYPE_BOOLEAN);
         break;
 
@@ -3056,7 +3120,7 @@ Bytecode::print(JSContext *cx, FILE *out)
 void
 Script::print(JSContext *cx)
 {
-    if (!codeArray)
+    if (failed() || !codeArray)
         return;
 
     TypeCompartment *compartment = &script->compartment->types;

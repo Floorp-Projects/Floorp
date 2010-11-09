@@ -540,6 +540,10 @@ Script::analyze(JSContext *cx)
           case JSOP_TABLESWITCHX:
           case JSOP_LOOKUPSWITCHX:
             hadFailure = true;
+#ifdef JS_TYPE_INFERENCE
+            if (function)
+                function->returnTypes.addType(cx, types::TYPE_UNKNOWN);
+#endif
             return;
 
           case JSOP_TABLESWITCH: {
@@ -750,6 +754,7 @@ Script::analyze(JSContext *cx)
 #ifdef JS_TYPE_INFERENCE
     /* Generate type constraints for the script. */
     offset = 0;
+    TypeState state;
     while (offset < script->length) {
         analyze::Bytecode *code = maybeCode(offset);
 
@@ -757,7 +762,7 @@ Script::analyze(JSContext *cx)
         offset += GetBytecodeLength(pc);
 
         if (code && code->analyzed)
-            analyzeTypes(cx, code);
+            analyzeTypes(cx, code, state);
     }
 #endif
 }
