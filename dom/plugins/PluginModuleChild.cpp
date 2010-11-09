@@ -57,6 +57,9 @@
 #include "nsPluginsDir.h"
 #include "nsXULAppAPI.h"
 
+#ifdef MOZ_X11
+# include "mozilla/X11Util.h"
+#endif
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/BrowserStreamChild.h"
@@ -1631,6 +1634,13 @@ PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
 
 #ifdef OS_WIN
     SetEventHooks();
+#endif
+
+#ifdef MOZ_X11
+    // Send the parent a dup of our X socket, to act as a proxy
+    // reference for our X resources
+    int xSocketFd = ConnectionNumber(DefaultXDisplay());
+    SendBackUpXResources(FileDescriptor(xSocketFd, false/*don't close*/));
 #endif
 
 #if defined(OS_LINUX)
