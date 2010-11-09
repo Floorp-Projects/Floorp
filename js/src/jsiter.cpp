@@ -426,6 +426,10 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                              js_AtomToPrintableString(cx, atom));
         return false;
     }
+    /* Notify type inference of the custom iterator. */
+    JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
+    cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0,
+        (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR), true);
     return true;
 }
 

@@ -4819,7 +4819,7 @@ JS_MakeTypeObject(JSContext *cx, const char *name, JSBool monitorNeeded, JSBool 
         proto->addPropagate(cx, type);
 
     if (monitorNeeded)
-        type->setMonitored(cx);
+        cx->monitorTypeObject(type);
 
     return (JSTypeObject*) type;
 #endif

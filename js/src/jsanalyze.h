@@ -245,7 +245,7 @@ class Script
     }
 
     bool localHasUseBeforeDef(uint32 local) {
-        JS_ASSERT(local < script->nfixed && !failed());
+        JS_ASSERT(!failed());
         return local >= localCount() || locals[local] == LOCAL_USE_BEFORE_DEF;
     }
 
@@ -326,8 +326,18 @@ class Script
 
     /* Helpers */
 
+    /* Temporary state for handling opcodes with fused behavior. */
+    struct TypeState {
+        /* Last opcode was JSOP_GETTER or JSOP_SETTER. */
+        bool hasGetSet;
+
+        TypeState()
+            : hasGetSet(false)
+        {}
+    };
+
     /* Analyzes a bytecode, generating type constraints describing its behavior. */
-    void analyzeTypes(JSContext *cx, Bytecode *codeType);
+    void analyzeTypes(JSContext *cx, Bytecode *codeType, TypeState &state);
 
     /*
      * Get the name to use for the local with specified index.  Stack indicates the

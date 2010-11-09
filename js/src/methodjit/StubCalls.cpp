@@ -1271,7 +1271,7 @@ stubs::Mod(VMFrame &f)
 JSObject *JS_FASTCALL
 stubs::NewArray(VMFrame &f, uint32 len)
 {
-    TypeObject *type = f.cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_ARRAY);
+    TypeObject *type = (TypeObject *) f.scratch;
     JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len, type);
     if (!obj)
         THROWV(NULL);
@@ -1375,7 +1375,7 @@ stubs::NewInitArray(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
 
-    TypeObject *type = f.cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_ARRAY);
+    TypeObject *type = (TypeObject *) f.scratch;
     gc::FinalizeKind kind = GuessObjectGCKind(count, true);
 
     JSObject *obj = NewArrayWithKind(cx, type, kind);
@@ -1389,7 +1389,7 @@ stubs::NewInitObject(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
 
-    TypeObject *type = f.cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
+    TypeObject *type = (TypeObject *) f.scratch;
     gc::FinalizeKind kind = GuessObjectGCKind(count, false);
 
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);

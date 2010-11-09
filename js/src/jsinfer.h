@@ -501,12 +501,6 @@ struct TypeObject
     inline TypeSet* indexTypes(JSContext *cx);
 
     void print(JSContext *cx, FILE *out);
-
-    /*
-     * Mark all accesses to this object as needing runtime monitoring.  The object
-     * may have properties the inference does not know about.
-     */
-    void setMonitored(JSContext *cx);
 };
 
 /* Type information about an interpreted or native function. */
@@ -600,6 +594,15 @@ enum FixedTypeObjectName
     TYPE_OBJECT_NEW_PROXY,
     TYPE_OBJECT_NEW_REGEXP,
     TYPE_OBJECT_NEW_ARRAYBUFFER,
+    TYPE_OBJECT_NEW_INT8ARRAY,
+    TYPE_OBJECT_NEW_UINT8ARRAY,
+    TYPE_OBJECT_NEW_INT16ARRAY,
+    TYPE_OBJECT_NEW_UINT16ARRAY,
+    TYPE_OBJECT_NEW_INT32ARRAY,
+    TYPE_OBJECT_NEW_UINT32ARRAY,
+    TYPE_OBJECT_NEW_FLOAT32ARRAY,
+    TYPE_OBJECT_NEW_FLOAT64ARRAY,
+    TYPE_OBJECT_NEW_UINT8CLAMPEDARRAY,
     TYPE_OBJECT_MAGIC,   /* Placeholder for magic values. */
     TYPE_OBJECT_GETSET,  /* Placeholder for properties with a scripted getter/setter. */
 
