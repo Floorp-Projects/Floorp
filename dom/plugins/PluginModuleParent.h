@@ -50,6 +50,7 @@
 
 #include "base/string_util.h"
 
+#include "mozilla/FileUtils.h"
 #include "mozilla/PluginLibrary.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
@@ -154,6 +155,10 @@ protected:
 
     NS_OVERRIDE
     virtual bool ShouldContinueFromReplyTimeout();
+
+    NS_OVERRIDE
+    virtual bool
+    RecvBackUpXResources(const FileDescriptor& aXSocketFd);
 
     virtual bool
     AnswerNPN_UserAgent(nsCString* userAgent);
@@ -267,6 +272,12 @@ private:
 #ifdef OS_MACOSX
     nsCOMPtr<nsITimer> mCATimer;
     nsTObserverArray<PluginInstanceParent*> mCATimerTargets;
+#endif
+
+#ifdef MOZ_X11
+    // Dup of plugin's X socket, used to scope its resources to this
+    // object instead of the plugin process's lifetime
+    ScopedClose mPluginXSocketFdDup;
 #endif
 };
 
