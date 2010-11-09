@@ -142,17 +142,8 @@ js_SweepWatchPoints(JSContext *cx);
 
 #ifdef __cplusplus
 
-extern const js::Shape *
-js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id);
-
 extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
-extern JSBool
-js_watch_set_wrapper(JSContext *cx, uintN argc, js::Value *vp);
-
-extern js::PropertyOp
-js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, js::PropertyOp setter);
 
 #endif
 
