@@ -347,6 +347,7 @@ class GeckoAppShell
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
             GeckoApp.mAppContext.finish();
+            System.exit(0);
         }
 
     }
