@@ -289,7 +289,8 @@ abstract public class GeckoApp
         Log.i("GeckoApp", "destroy");
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
+        if (isFinishing())
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
 
         super.onDestroy();
     }
