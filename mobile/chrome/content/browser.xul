@@ -605,6 +605,25 @@
         <description id="alerts-text" flex="1"/>
       </vbox>
     </hbox>
+
+    <hbox id="appmenu" bottom="0" collapsed="true" align="stretch" oncommand="AppMenu.hide();">
+      <toolbarbutton class="appmenu-button"
+        label="&appMenu.siteOptions;"
+        image="chrome://browser/skin/images/settings-default-64.png"
+        oncommand="getIdentityHandler().show(); event.stopPropagation();"/>
+      <toolbarbutton class="appmenu-button"
+        label="&prefsHeader.label;"
+        image="chrome://browser/skin/images/preferences-default-64.png"
+        oncommand="BrowserUI.showPanel('prefs-container');"/>
+      <toolbarbutton class="appmenu-button"
+        label="&addonsHeader.label;"
+        image="chrome://browser/skin/images/addons-default-64.png"
+        oncommand="BrowserUI.showPanel('addons-container');"/>
+      <toolbarbutton class="appmenu-button"
+        label="&downloadsHeader.label;"
+        image="chrome://browser/skin/images/downloads-default-64.png"
+        oncommand="BrowserUI.showPanel('downloads-container');"/>
+    </hbox>
   </stack>
 
   <tooltip default="true" id="default-tooltip"/>
