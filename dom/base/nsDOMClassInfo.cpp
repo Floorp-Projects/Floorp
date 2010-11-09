@@ -89,6 +89,7 @@
 #include "nsIDOMPopStateEvent.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowUtils.h"
+#include "nsIDOMGlobalPropertyInitializer.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -6424,7 +6425,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    jsval prop_val; // Property value.
+    jsval prop_val = JSVAL_VOID; // Property value.
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
@@ -6438,6 +6439,19 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
       prop_val = OBJECT_TO_JSVAL(prop_obj);
     } else {
+      nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
+
+      if (gpi) {
+        rv = gpi->Init(aWin, &prop_val);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!JS_WrapValue(cx, &prop_val)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
+    }
+
+    if (JSVAL_IS_PRIMITIVE(prop_val)) {
       JSObject *scope;
 
       if (aWin->IsOuterWindow()) {

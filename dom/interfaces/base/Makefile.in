@@ -60,7 +60,7 @@ XPIDLSRCS =					\
 	nsIBrowserDOMWindow.idl			\
     nsIContentPermissionPrompt.idl  \
 	nsIContentPrefService.idl		\
-	nsIContentURIGrouper.idl    \
+	nsIContentURIGrouper.idl		\
 	nsIDOMClientInformation.idl		\
 	nsIDOMConstructor.idl			\
 	nsIDOMCRMFObject.idl			\
@@ -83,8 +83,9 @@ XPIDLSRCS =					\
         nsIDOMClientRectList.idl		\
 	nsIFocusManager.idl			\
 	nsIQueryContentEventResult.idl		\
-	nsITabChild.idl                         \
-	nsITabParent.idl                         \
+	nsITabChild.idl				\
+	nsITabParent.idl			\
+	nsIDOMGlobalPropertyInitializer.idl	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
