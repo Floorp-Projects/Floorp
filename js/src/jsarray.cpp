@@ -2099,6 +2099,10 @@ array_push(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
+
+    if (cx->isTypeCallerMonitored())
+        cx->monitorTypeObject(obj->getTypeObject());
+
     if (argc != 1 || !obj->isDenseArray())
         return array_push_slowly(cx, obj, argc, vp + 2, vp);
 
@@ -2223,6 +2227,10 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
+
+    if (cx->isTypeCallerMonitored())
+        cx->monitorTypeObject(obj->getTypeObject());
+
     newlen = length;
     if (argc > 0) {
         /* Slide up the array to make room for argc at the bottom. */
@@ -2283,9 +2291,13 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         objType = cx->getTypeCallerInitObject(true);
+        cx->monitorTypeObject(objType);
         cx->markTypeCallerUnexpected((jstype) objType);
     }
 #endif
+
+    if (cx->isTypeCallerMonitored())
+        cx->monitorTypeObject(objType);
 
     /*
      * Create a new array value to return.  Our ECMA v2 proposal specs
@@ -2440,6 +2452,9 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
     /* Get the type object to use for the result. */
     TypeObject *ntype = cx->getTypeCallerInitObject(true);
 
+    if (cx->isTypeCallerMonitored())
+        cx->monitorTypeObject(ntype);
+
     /* Create a new Array object and root it using *vp. */
     JSObject *aobj = ComputeThisFromVp(cx, vp);
     JSObject *nobj;
@@ -2574,9 +2589,13 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         objType = cx->getTypeCallerInitObject(true);
+        cx->monitorTypeObject(objType);
         cx->markTypeCallerUnexpected((jstype) objType);
     }
 #endif
+
+    if (cx->isTypeCallerMonitored())
+        cx->monitorTypeObject(objType);
 
     if (obj->isDenseArray() && end <= obj->getDenseArrayCapacity() &&
         !js_PrototypeHasIndexedProperties(cx, obj)) {
@@ -2791,14 +2810,11 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     Value thisv = (argc > 1 && !REDUCE_MODE(mode)) ? argv[1] : UndefinedValue();
 
     /*
-     * If the callsite is being monitored for type inference, notify it of every
-     * value added to the output array.
+     * If the callsite is being monitored for type inference, and we are modifying
+     * the output array, monitor any reads on the array in the future.
      */
-    TypeSet *types = NULL;
-#ifdef JS_TYPE_INFERENCE
-    if (newtype && cx->isTypeCallerMonitored())
-        types = newtype->indexTypes(cx);
-#endif
+    if (cx->isTypeCallerMonitored() && (mode == MAP || mode == FILTER))
+        cx->monitorTypeObject(newtype);
 
     /*
      * For all but REDUCE, we call with 3 args (value, index, array). REDUCE
@@ -2858,8 +2874,6 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             *vp = rval;
             break;
           case MAP:
-            if (types)
-                cx->addTypeProperty(newtype, NULL, rval);
             ok = SetArrayElement(cx, newarr, i, rval);
             if (!ok)
                 goto out;
@@ -2868,8 +2882,6 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             if (!cond)
                 break;
             /* The element passed the filter, so push it onto our result. */
-            if (types)
-                cx->addTypeProperty(newtype, NULL, tvr.value());
             ok = SetArrayElement(cx, newarr, newlen++, tvr.value());
             if (!ok)
                 goto out;
@@ -3259,6 +3271,9 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         vector = NULL;
     }
+
+    if (cx->isTypeCallerMonitored() && vector)
+        cx->monitorTypeObject(type);
 
     /* Whether called with 'new' or not, use a new Array object. */
     JSObject *obj = NewDenseArrayObject(cx, type, length);

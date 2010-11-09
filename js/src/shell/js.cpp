@@ -396,7 +396,7 @@ int errno;
 #endif
 
 static void
-Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
+Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool last)
 {
     JSBool ok, hitEOF;
     JSScript *script;
@@ -477,6 +477,18 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
 
                     disablePrinting = false;
+
+                    if (!last) {
+                        /*
+                         * If multiple files were specified at the command line, only
+                         * run the JIT on the last file.  This is a hack to get benchmark
+                         * and testing harnesses to work.
+                         */
+                        JS_DestroyScript(cx, script);
+                        if (file != stdin)
+                            fclose(file);
+                        return;
+                    }
                 }
 #endif
 
@@ -897,7 +909,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (++i == argc)
                 return usage();
 
-            Process(cx, obj, argv[i], JS_FALSE);
+            Process(cx, obj, argv[i], JS_FALSE, i + 1 == argc);
             if (gExitCode != 0)
                 return gExitCode;
 
@@ -978,7 +990,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     }
 
     if (filename || isInteractive)
-        Process(cx, obj, filename, forceTTY);
+        Process(cx, obj, filename, forceTTY, true);
     return gExitCode;
 }
 
@@ -4336,7 +4348,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("timeout",        Timeout,        1,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("elapsed",        Elapsed,        0,0, JS_TypeHandlerFloat),
     JS_FN_TYPE("parent",         Parent,         1,0, JS_TypeHandlerDynamic),
-    JS_FN_TYPE("wrap",           Wrap,           1,0, JS_TypeHandlerMissing),
+    JS_FN_TYPE("wrap",           Wrap,           1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("serialize",      Serialize,      1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("deserialize",    Deserialize,    1,0, JS_TypeHandlerDynamic),
     JS_FS_END

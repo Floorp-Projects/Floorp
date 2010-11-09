@@ -117,6 +117,7 @@ pm_start(JSContext* cx, uintN /*unused*/, jsval* vp)
         return JS_FALSE;
 
     p->start();
+    *vp = Jsvalify(js::UndefinedValue());
     return JS_TRUE;
 }
 
@@ -128,6 +129,7 @@ pm_stop(JSContext* cx, uintN /*unused*/, jsval* vp)
         return JS_FALSE;
 
     p->stop();
+    *vp = Jsvalify(js::UndefinedValue());
     return JS_TRUE;
 }
 
@@ -139,6 +141,7 @@ pm_reset(JSContext* cx, uintN /*unused*/, jsval* vp)
         return JS_FALSE;
 
     p->reset();
+    *vp = Jsvalify(js::UndefinedValue());
     return JS_TRUE;
 }
 
@@ -155,10 +158,10 @@ pm_canMeasureSomething(JSContext* cx, uintN /*unused*/, jsval* vp)
 
 const uint8 PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED;
 static JSFunctionSpec pm_fns[] = {
-    JS_FN("start",               pm_start,               0, PM_FATTRS),
-    JS_FN("stop",                pm_stop,                0, PM_FATTRS),
-    JS_FN("reset",               pm_reset,               0, PM_FATTRS),
-    JS_FN("canMeasureSomething", pm_canMeasureSomething, 0, PM_FATTRS),
+    JS_FN_TYPE("start",               pm_start,               0, PM_FATTRS, JS_TypeHandlerVoid),
+    JS_FN_TYPE("stop",                pm_stop,                0, PM_FATTRS, JS_TypeHandlerVoid),
+    JS_FN_TYPE("reset",               pm_reset,               0, PM_FATTRS, JS_TypeHandlerVoid),
+    JS_FN_TYPE("canMeasureSomething", pm_canMeasureSomething, 0, PM_FATTRS, JS_TypeHandlerBool),
     JS_FS_END
 };
 
@@ -166,7 +169,7 @@ const uint8 PM_PATTRS =
     JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED;
 
 #define GETTER(name)                            \
-    { #name, 0, PM_PATTRS, pm_get_##name, 0 }
+    { #name, 0, PM_PATTRS, pm_get_##name, 0, JS_TypeHandlerFloat }
 
 static JSPropertySpec pm_props[] = {
     GETTER(cpu_cycles),
@@ -253,9 +256,9 @@ namespace JS {
 JSObject*
 RegisterPerfMeasurement(JSContext *cx, JSObject *global)
 {
-    JSObject *prototype = JS_InitClass(cx, global, 0 /* parent */,
-                                       &pm_class, pm_construct, 1,
-                                       pm_props, pm_fns, 0, 0);
+    JSObject *prototype = JS_InitClassWithType(cx, global, 0 /* parent */,
+                                               &pm_class, pm_construct, 1, JS_TypeHandlerNew,
+                                               pm_props, pm_fns, 0, 0);
     if (!prototype)
         return 0;
 
@@ -264,8 +267,8 @@ RegisterPerfMeasurement(JSContext *cx, JSObject *global)
         return 0;
 
     for (const pm_const *c = pm_consts; c->name; c++) {
-        if (!JS_DefineProperty(cx, ctor, c->name, INT_TO_JSVAL(c->value),
-                               JS_PropertyStub, JS_PropertyStub, PM_CATTRS))
+        if (!JS_DefinePropertyWithType(cx, ctor, c->name, DOUBLE_TO_JSVAL(c->value),
+                                       JS_PropertyStub, JS_PropertyStub, PM_CATTRS))
             return 0;
     }
 

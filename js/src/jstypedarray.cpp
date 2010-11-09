@@ -442,6 +442,19 @@ struct uint8_clamped {
 /* Make sure the compiler isn't doing some funky stuff */
 JS_STATIC_ASSERT(sizeof(uint8_clamped) == 1);
 
+static types::FixedTypeObjectName arrayTypeObjects[] = {
+    types::TYPE_OBJECT_NEW_INT8ARRAY,
+    types::TYPE_OBJECT_NEW_UINT8ARRAY,
+    types::TYPE_OBJECT_NEW_INT16ARRAY,
+    types::TYPE_OBJECT_NEW_UINT16ARRAY,
+    types::TYPE_OBJECT_NEW_INT32ARRAY,
+    types::TYPE_OBJECT_NEW_UINT32ARRAY,
+    types::TYPE_OBJECT_NEW_FLOAT32ARRAY,
+    types::TYPE_OBJECT_NEW_FLOAT64ARRAY,
+    types::TYPE_OBJECT_NEW_UINT8CLAMPEDARRAY
+};
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(arrayTypeObjects) == TypedArray::TYPE_MAX);
+
 template<typename NativeType> static inline const int TypeIDOfType();
 template<> inline const int TypeIDOfType<int8>() { return TypedArray::TYPE_INT8; }
 template<> inline const int TypeIDOfType<uint8>() { return TypedArray::TYPE_UINT8; }
@@ -461,6 +474,11 @@ template<> inline const bool TypeIsUnsigned<uint32>() { return true; }
 template<typename NativeType> static inline const bool TypeIsFloatingPoint() { return false; }
 template<> inline const bool TypeIsFloatingPoint<float>() { return true; }
 template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
+
+template<typename NativeType> static inline const bool ElementTypeMayBeDouble() { return false; }
+template<> inline const bool ElementTypeMayBeDouble<uint32>() { return true; }
+template<> inline const bool ElementTypeMayBeDouble<float>() { return true; }
+template<> inline const bool ElementTypeMayBeDouble<double>() { return true; }
 
 template<typename NativeType> class TypedArrayTemplate;
 
@@ -484,6 +502,7 @@ class TypedArrayTemplate
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
+    static const bool ArrayElementTypeMayBeDouble() { return ElementTypeMayBeDouble<NativeType>(); }
 
     static JSFunctionSpec jsfuncs[];
 
@@ -721,7 +740,7 @@ class TypedArrayTemplate
     {
         /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
+        TypeObject *type = cx->getFixedTypeObject(arrayTypeObjects[ArrayTypeID()]);
         JSObject *obj = NewBuiltinClassInstance(cx, slowClass(), type);
         if (!obj)
             return false;
@@ -1440,18 +1459,6 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
  * shared TypedArray
  */
 
-static void typedarray_TypeBuffer(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-#ifdef JS_TYPE_INFERENCE
-    TypeCallsite *site = Valueify(jssite);
-
-    if (site->returnTypes) {
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
-        site->returnTypes->addType(cx, (jstype) type);
-    }
-#endif
-}
-
 JSPropertySpec TypedArray::jsprops[] = {
     { js_length_str,
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
@@ -1468,7 +1475,7 @@ JSPropertySpec TypedArray::jsprops[] = {
     { "buffer",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
       Jsvalify(TypedArray::prop_getBuffer), Jsvalify(TypedArray::prop_getBuffer),
-      typedarray_TypeBuffer },
+      NULL },
     {0,0,0,0,0}
 };
 
@@ -1544,6 +1551,11 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
+    cx->addTypeProperty(proto->getTypeObject(), "buffer",                      \
+        (types::jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER));  \
+    cx->addTypeProperty(proto->getTypeObject(), NULL, types::TYPE_INT32);      \
+    if (_typedArray::ArrayElementTypeMayBeDouble())                            \
+        cx->addTypeProperty(proto->getTypeObject(), NULL, types::TYPE_DOUBLE); \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \

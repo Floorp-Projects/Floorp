@@ -278,7 +278,8 @@ JSContext::isTypeCallerMonitored()
 {
 #ifdef JS_TYPE_INFERENCE
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
-    return caller->script()->analysis->getCode(caller->pc(this)).monitorNeeded;
+    js::analyze::Script *analysis = caller->script()->analysis;
+    return analysis->failed() || analysis->getCode(caller->pc(this)).monitorNeeded;
 #else
     return false;
 #endif
@@ -440,6 +441,32 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
 #endif
 }
 
+void
+JSContext::monitorTypeObject(js::types::TypeObject *obj)
+{
+#ifdef JS_TYPE_INFERENCE
+    if (obj->monitored)
+        return;
+
+    /*
+     * Existing property constraints may have already been added to this object,
+     * which we need to do the right thing for.  We can't ensure that we will
+     * mark all monitored objects before they have been accessed, as the __proto__
+     * of a non-monitored object could be dynamically set to a monitored object.
+     * Adding unknown for any properties accessed already accounts for possible
+     * values read from them.
+     */
+
+    js::types::Variable *var = obj->properties(this).variables;
+    while (var) {
+        var->types.addType(this, js::types::TYPE_UNKNOWN);
+        var = var->next;
+    }
+
+    obj->monitored = true;
+#endif
+}
+
 inline void
 JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
                            const js::CallArgs &args, bool constructing, bool force)
@@ -461,7 +488,7 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
     js::analyze::Script *script = fun->script->analysis;
 
     if (!force) {
-        if (caller->analysis->getCode(callerpc).monitorNeeded)
+        if (caller->analysis->failed() || caller->analysis->getCode(callerpc).monitorNeeded)
             force = true;
     }
 
@@ -555,6 +582,11 @@ inline js::types::TypeObject *
 JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 {
 #ifdef JS_TYPE_INFERENCE
+    if (analysis->failed()) {
+        return cx->getFixedTypeObject(isArray
+                                      ? js::types::TYPE_OBJECT_UNKNOWN_ARRAY
+                                      : js::types::TYPE_OBJECT_UNKNOWN_OBJECT);
+    }
     return analysis->getCode(pc).getInitObject(cx, isArray);
 #else
     return NULL;
@@ -566,6 +598,9 @@ JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
                             js::types::jstype type, bool force)
 {
 #ifdef JS_TYPE_INFERENCE
+    if (analysis->failed())
+        return;
+
     js::analyze::Bytecode &code = analysis->getCode(pc);
     if (!force && !code.monitorNeeded)
         return;
@@ -597,9 +632,11 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
                             JSObject *obj, jsid id, const js::Value &rval)
 {
 #ifdef JS_TYPE_INFERENCE
-    js::analyze::Bytecode &code = analysis->getCode(pc);
-    if (!code.monitorNeeded)
-        return;
+    if (!analysis->failed()) {
+        js::analyze::Bytecode &code = analysis->getCode(pc);
+        if (!code.monitorNeeded)
+            return;
+    }
 
     js::types::TypeObject *object = obj->getTypeObject();
     js::types::jstype rvtype = js::types::GetValueType(cx, rval);
@@ -621,7 +658,8 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
         return;
 
     cx->compartment->types.addDynamicType(cx, assignTypes, rvtype,
-                                          "MonitorAssign: #%u:%05u %s %s:", analysis->id, code.offset,
+                                          "MonitorAssign: #%u:%05u %s %s:",
+                                          analysis->id, pc - code,
                                           cx->getTypeId(object->name),
                                           cx->getTypeId(id));
 #endif
@@ -769,7 +807,7 @@ Script::getLocalId(unsigned index, types::TypeStack *stack)
         return JSID_VOID;
     }
 
-    if (!localNames[argCount + index])
+    if (!localNames || !localNames[argCount + index])
         return JSID_VOID;
 
     return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[argCount + index]));

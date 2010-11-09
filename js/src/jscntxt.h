@@ -2421,6 +2421,12 @@ public:
     /* Mark an array type as being not packed and, possibly, not dense. */
     inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
 
+    /*
+     * Monitor future reads from the a type object.  Instances may have properties
+     * the inference does not know about.
+     */
+    inline void monitorTypeObject(js::types::TypeObject *obj);
+
   private:
     /* To silence MSVC warning about using 'this' in a member initializer. */
     JSContext *thisInInitializer() { return this; }
