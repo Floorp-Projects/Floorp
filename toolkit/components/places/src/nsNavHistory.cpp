@@ -2691,7 +2691,8 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
       scheme.EqualsLiteral("view-source") ||
       scheme.EqualsLiteral("chrome") ||
       scheme.EqualsLiteral("data") ||
-      scheme.EqualsLiteral("wyciwyg")) {
+      scheme.EqualsLiteral("wyciwyg") ||
+      scheme.EqualsLiteral("javascript")) {
     *canAdd = PR_FALSE;
     return NS_OK;
   }
