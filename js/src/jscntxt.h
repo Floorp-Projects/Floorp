@@ -1803,9 +1803,18 @@ OptionsSameVersionFlags(uint32 self, uint32 other)
     return !((self & mask) ^ (other & mask));
 }
 
+/*
+ * Flags accompany script version data so that a) dynamically created scripts
+ * can inherit their caller's compile-time properties and b) scripts can be
+ * appropriately compared in the eval cache across global option changes. An
+ * example of the latter is enabling the top-level-anonymous-function-is-error
+ * option: subsequent evals of the same, previously-valid script text may have
+ * become invalid.
+ */
 namespace VersionFlags {
-static const uint32 MASK =        0x0FFF; /* see JSVersion in jspubtd.h */
-static const uint32 HAS_XML =     0x1000; /* flag induced by XML option */
+static const uint32 MASK        = 0x0FFF; /* see JSVersion in jspubtd.h */
+static const uint32 HAS_XML     = 0x1000; /* flag induced by XML option */
+static const uint32 ANONFUNFIX  = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
 }
 
 static inline JSVersion
@@ -1827,6 +1836,12 @@ VersionShouldParseXML(JSVersion version)
     return VersionHasXML(version) || VersionNumber(version) >= JSVERSION_1_6;
 }
 
+static inline bool
+VersionHasAnonFunFix(JSVersion version)
+{
+    return !!(version & VersionFlags::ANONFUNFIX);
+}
+
 static inline void
 VersionSetXML(JSVersion *version, bool enable)
 {
@@ -1834,6 +1849,15 @@ VersionSetXML(JSVersion *version, bool enable)
         *version = JSVersion(uint32(*version) | VersionFlags::HAS_XML);
     else
         *version = JSVersion(uint32(*version) & ~VersionFlags::HAS_XML);
+}
+
+static inline void
+VersionSetAnonFunFix(JSVersion *version, bool enable)
+{
+    if (enable)
+        *version = JSVersion(uint32(*version) | VersionFlags::ANONFUNFIX);
+    else
+        *version = JSVersion(uint32(*version) & ~VersionFlags::ANONFUNFIX);
 }
 
 static inline JSVersion
