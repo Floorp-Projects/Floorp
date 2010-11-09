@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -14,7 +14,7 @@
 typedef enum
 {
     PRED = 0,
-    DEST = 1,
+    DEST = 1
 } BLOCKSET;
 
 void vp8_setup_block
@@ -62,13 +62,13 @@ void vp8_setup_macroblock(MACROBLOCKD *x, BLOCKSET bs)
         v = &x->pre.v_buffer;
     }
 
-    for (block = 0; block < 16; block++) // y blocks
+    for (block = 0; block < 16; block++) /* y blocks */
     {
         vp8_setup_block(&x->block[block], x->dst.y_stride, y, x->dst.y_stride,
                         (block >> 2) * 4 * x->dst.y_stride + (block & 3) * 4, bs);
     }
 
-    for (block = 16; block < 20; block++) // U and V blocks
+    for (block = 16; block < 20; block++) /* U and V blocks */
     {
         vp8_setup_block(&x->block[block], x->dst.uv_stride, u, x->dst.uv_stride,
                         ((block - 16) >> 1) * 4 * x->dst.uv_stride + (block & 1) * 4, bs);
@@ -123,7 +123,7 @@ void vp8_setup_block_dptrs(MACROBLOCKD *x)
 void vp8_build_block_doffsets(MACROBLOCKD *x)
 {
 
-    // handle the destination pitch features
+    /* handle the destination pitch features */
     vp8_setup_macroblock(x, DEST);
     vp8_setup_macroblock(x, PRED);
 }

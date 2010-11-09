@@ -48,12 +48,9 @@ LIBXUL_LIBRARY = 1
 
 EXTRA_DSO_LIBS	= gkgfx
 
-
-ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
-DEFINES		+= -DMOZ_PNG_WRITE
-endif
-
-DEFINES		+= -DMOZ_PNG_READ
+DEFINES		+= -DMOZ_PNG_WRITE \
+	-DMOZ_PNG_READ \
+	$(NULL)
 
 CPPSRCS		= nsPNGEncoder.cpp
 

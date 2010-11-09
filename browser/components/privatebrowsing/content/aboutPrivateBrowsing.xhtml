@@ -45,12 +45,10 @@
   %globalDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
-#ifdef XP_WIN
-  <!ENTITY basePBMenu.label   "<span class='appMenuButton'>&brandShortName;</span><span class='toolsMenu'>&toolsMenu.label;</span>">
-#elifdef XP_MACOSX
+#ifdef XP_MACOSX
   <!ENTITY basePBMenu.label   "&toolsMenu.label;">
 #else
-  <!ENTITY basePBMenu.label   "<span class='appMenuButton'>&appMenuButton.label;</span><span class='toolsMenu'>&toolsMenu.label;</span>">
+  <!ENTITY basePBMenu.label   "<span class='appMenuButton'>&brandShortName;</span><span class='toolsMenu'>&toolsMenu.label;</span>">
 #endif
   <!ENTITY % privatebrowsingpageDTD SYSTEM "chrome://browser/locale/aboutPrivateBrowsing.dtd">
   %privatebrowsingpageDTD;

@@ -80,7 +80,7 @@
  * to *_retval unless they want to return PR_FALSE.
  */
 
-[uuid(5d309b93-e9b4-4374-bcd5-44245c83408f)]
+[uuid(a40ce52e-2d8c-400f-9af2-f8784a656070)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -115,7 +115,6 @@ interface nsIXPCScriptable : nsISupports
     const PRUint32 DONT_REFLECT_INTERFACE_NAMES     = 1 << 27;
     const PRUint32 WANT_EQUALITY                    = 1 << 28;
     const PRUint32 WANT_OUTER_OBJECT                = 1 << 29;
-    const PRUint32 WANT_INNER_OBJECT                = 1 << 30;
 
     // The high order bit is RESERVED for consumers of these flags. 
     // No implementor of this interface should ever return flags 
@@ -195,9 +194,6 @@ interface nsIXPCScriptable : nsISupports
                     in JSContextPtr cx, in JSObjectPtr obj, in jsval val);
 
     JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper,
-                            in JSContextPtr cx, in JSObjectPtr obj);
-
-    JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper,
                             in JSContextPtr cx, in JSObjectPtr obj);
 
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);

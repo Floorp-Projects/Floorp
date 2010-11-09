@@ -70,22 +70,18 @@ LogError(const char* what)
 
 SharedMemoryBasic::SharedMemoryBasic()
   : mShmFd(-1)
-  , mSize(0)
   , mMemory(nsnull)
 { }
 
 SharedMemoryBasic::SharedMemoryBasic(const Handle& aHandle)
   : mShmFd(aHandle.fd)
-  , mSize(0)
   , mMemory(nsnull)
 { }
 
 SharedMemoryBasic::~SharedMemoryBasic()
 {
   Unmap();
-  if (mShmFd > 0) {
-    close(mShmFd);
-  }
+  Destroy();
 }
 
 bool
@@ -107,6 +103,7 @@ SharedMemoryBasic::Create(size_t aNbytes)
   }
 
   mShmFd = shmfd;
+  Created(aNbytes);
   return true;
 }
 
@@ -126,7 +123,7 @@ SharedMemoryBasic::Map(size_t nBytes)
     return false;
   }
 
-  mSize = nBytes;
+  Mapped(nBytes);
   return true;
 }
 
@@ -154,11 +151,18 @@ SharedMemoryBasic::Unmap()
     return;
   }
 
-  if (munmap(mMemory, mSize)) {
+  if (munmap(mMemory, Size())) {
     LogError("ShmemAndroid::Unmap()");
   }
   mMemory = nsnull;
-  mSize = 0;
+}
+
+void
+SharedMemoryBasic::Destroy()
+{
+  if (mShmFd > 0) {
+    close(mShmFd);
+  }
 }
 
 } // namespace ipc

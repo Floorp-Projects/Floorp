@@ -1,0 +1,11 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="insertPaintClient">
+    <content>
+      <div xmlns="http://www.w3.org/1999/xhtml" class="paintClient"></div>
+    </content>
+  </binding>
+</bindings>

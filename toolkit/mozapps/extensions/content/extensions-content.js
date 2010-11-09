@@ -93,6 +93,9 @@ InstallTrigger.prototype = {
    * @see amIInstallTriggerInstaller.idl
    */
   install: function(aArgs, aCallback) {
+    if (!aArgs || typeof aArgs != "object")
+      throw new Error("Incorrect arguments passed to InstallTrigger.install()");
+
     var params = {
       installerId: this.installerId,
       mimetype: "application/x-xpinstall",
@@ -250,7 +253,7 @@ InstallTriggerManager.prototype = {
    * @return The callback ID, an integer identifying this callback.
    */
   addCallback: function(aCallback, aUrls) {
-    if (!aCallback)
+    if (!aCallback || typeof aCallback != "function")
       return -1;
     var callbackId = 0;
     while (callbackId in this.callbacks)

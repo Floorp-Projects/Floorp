@@ -44,7 +44,7 @@ PreWrap(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags)
 static JSObject *
 Wrap(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, uintN flags)
 {
-    return JSWrapper::New(cx, obj, proto, NULL, &JSCrossCompartmentWrapper::singleton);
+    return JSWrapper::New(cx, obj, proto, parent, &JSCrossCompartmentWrapper::singleton);
 }
 
 BEGIN_TEST(testBug604087)

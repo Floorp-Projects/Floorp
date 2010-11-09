@@ -50,6 +50,7 @@
 
 #include "base/string_util.h"
 
+#include "mozilla/FileUtils.h"
 #include "mozilla/PluginLibrary.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
@@ -61,6 +62,7 @@
 #include "nsHashKeys.h"
 #include "nsIFileStreams.h"
 #include "nsTObserverArray.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace plugins {
@@ -96,8 +98,8 @@ protected:
     PPluginInstanceParent*
     AllocPPluginInstance(const nsCString& aMimeType,
                          const uint16_t& aMode,
-                         const nsTArray<nsCString>& aNames,
-                         const nsTArray<nsCString>& aValues,
+                         const InfallibleTArray<nsCString>& aNames,
+                         const InfallibleTArray<nsCString>& aValues,
                          NPError* rv);
 
     virtual bool
@@ -153,6 +155,10 @@ protected:
 
     NS_OVERRIDE
     virtual bool ShouldContinueFromReplyTimeout();
+
+    NS_OVERRIDE
+    virtual bool
+    RecvBackUpXResources(const FileDescriptor& aXSocketFd);
 
     virtual bool
     AnswerNPN_UserAgent(nsCString* userAgent);
@@ -264,9 +270,14 @@ private:
     nsString mHangID;
 
 #ifdef OS_MACOSX
-    void CAUpdate();
-    base::RepeatingTimer<PluginModuleParent> mCATimer;
+    nsCOMPtr<nsITimer> mCATimer;
     nsTObserverArray<PluginInstanceParent*> mCATimerTargets;
+#endif
+
+#ifdef MOZ_X11
+    // Dup of plugin's X socket, used to scope its resources to this
+    // object instead of the plugin process's lifetime
+    ScopedClose mPluginXSocketFdDup;
 #endif
 };
 

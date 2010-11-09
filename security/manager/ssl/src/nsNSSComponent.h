@@ -380,5 +380,14 @@ public:
                                           nsString &returnedMessage);
 };
 
+class nsPSMInitPanic
+{
+private:
+  static PRBool isPanic;
+public:
+  static void SetPanic() {isPanic = PR_TRUE;}
+  static PRBool GetPanic() {return isPanic;}
+};
+
 #endif // _nsNSSComponent_h_
 

@@ -270,10 +270,10 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("suspend", this.suspend, false);
       v.addEventListener("ended", this.ended, false);
-      v.addEventListener("error", function(e){v._gotErrorEvent = true; e.stopPropagation();}, false);
       var s1 = document.createElement("source");
       s1.src = "not-a-real-file.404"
       s1.type = test.type;
+      s1.addEventListener("error", function(e){v._gotErrorEvent = true;}, false);
       v.appendChild(s1);
       var s2 = document.createElement("source");
       s2.src = test.name;

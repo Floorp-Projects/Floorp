@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -23,6 +23,10 @@
     void sym (unsigned char *s, char *noise, char blackclamp[16],\
               char whiteclamp[16], char bothclamp[16],\
               unsigned int w, unsigned int h, int pitch)
+
+#define prototype_postproc_blend_mb(sym)\
+    void sym (unsigned char *y, unsigned char *u, unsigned char *v,\
+              int y1, int u1, int v1, int alpha, int stride)
 
 #if ARCH_X86 || ARCH_X86_64
 #include "x86/postproc_x86.h"
@@ -48,16 +52,22 @@ extern prototype_postproc(vp8_postproc_downacross);
 #endif
 extern prototype_postproc_addnoise(vp8_postproc_addnoise);
 
+#ifndef vp8_postproc_blend_mb
+#define vp8_postproc_blend_mb vp8_blend_mb_c
+#endif
+extern prototype_postproc_blend_mb(vp8_postproc_blend_mb);
 
 typedef prototype_postproc((*vp8_postproc_fn_t));
 typedef prototype_postproc_inplace((*vp8_postproc_inplace_fn_t));
 typedef prototype_postproc_addnoise((*vp8_postproc_addnoise_fn_t));
+typedef prototype_postproc_blend_mb((*vp8_postproc_blend_mb_fn_t));
 typedef struct
 {
     vp8_postproc_inplace_fn_t   down;
     vp8_postproc_inplace_fn_t   across;
     vp8_postproc_fn_t           downacross;
     vp8_postproc_addnoise_fn_t  addnoise;
+    vp8_postproc_blend_mb_fn_t  blend_mb;
 } vp8_postproc_rtcd_vtable_t;
 
 #if CONFIG_RUNTIME_CPU_DETECT

@@ -672,7 +672,7 @@ public:
    * @param aFontMetrics the font metrics result
    * @return success or failure code
    */
-  static nsresult GetFontMetricsForFrame(nsIFrame* aFrame,
+  static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
                                          nsIFontMetrics** aFontMetrics);
 
   /**

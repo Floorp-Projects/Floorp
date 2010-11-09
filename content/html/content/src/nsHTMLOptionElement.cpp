@@ -66,13 +66,15 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
 
+using namespace mozilla::dom;
+
 /**
  * Implementation of &lt;option&gt;
  */
 
 nsGenericHTMLElement*
 NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                        PRUint32 aFromParser)
+                        FromParser aFromParser)
 {
   /*
    * nsHTMLOptionElement's will be created without a nsINodeInfo passed in

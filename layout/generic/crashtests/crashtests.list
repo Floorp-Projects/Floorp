@@ -340,6 +340,7 @@ load 590404.html
 load 591141.html
 asserts(0-1) load 592118.html
 load 594808-1.html
+asserts(4) load 595435-1.xhtml # bug 610331
 load 603490-1.html
 load 603510-1.html
 load 604314-1.html

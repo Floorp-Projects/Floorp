@@ -161,7 +161,7 @@
           pasteAndGo.setAttribute("label", label);
           pasteAndGo.setAttribute("anonid", "paste-and-go");
           pasteAndGo.setAttribute("oncommand",
-              "gURLBar.value = ''; goDoCommand('cmd_paste'); gURLBar.handleCommand();");
+              "gURLBar.select(); goDoCommand('cmd_paste'); gURLBar.handleCommand();");
           cxmenu.insertBefore(pasteAndGo, insertLocation.nextSibling);
         }
       ]]></constructor>
@@ -248,8 +248,13 @@
           if (action) {
             url = action.param;
             if (!(aTriggeringEvent && aTriggeringEvent.altKey)) {
-              if (action.type == "switchtab")
-                switchToTabHavingURI(url);
+              if (action.type == "switchtab") {
+                this.handleRevert();
+                let prevTab = gBrowser.selectedTab;
+                if (switchToTabHavingURI(url) &&
+                    isTabEmpty(prevTab))
+                  gBrowser.removeTab(prevTab);
+              }
               return;
             }
           }
@@ -272,8 +277,13 @@
           if (aTriggeringEvent instanceof MouseEvent) {
             // We have a mouse event (from the go button), so use the standard
             // UI link behaviors
-            openUILink(url, aTriggeringEvent, false, false,
-                       true /* allow third party fixup */, postData);
+            let where = whereToOpenLink(aTriggeringEvent, false, false);
+            if (where != "current") {
+              this.handleRevert();
+              content.focus();
+            }
+            openUILinkIn(url, where,
+                        { allowThirdPartyFixup: true, postData: postData });
             return;
           }
 

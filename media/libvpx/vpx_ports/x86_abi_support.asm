@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -36,6 +36,43 @@
 %define rsp esp
 %define rbp ebp
 %define movsxd mov
+%macro movq 2
+  %ifidn %1,eax
+    movd %1,%2
+  %elifidn %2,eax
+    movd %1,%2
+  %elifidn %1,ebx
+    movd %1,%2
+  %elifidn %2,ebx
+    movd %1,%2
+  %elifidn %1,ecx
+    movd %1,%2
+  %elifidn %2,ecx
+    movd %1,%2
+  %elifidn %1,edx
+    movd %1,%2
+  %elifidn %2,edx
+    movd %1,%2
+  %elifidn %1,esi
+    movd %1,%2
+  %elifidn %2,esi
+    movd %1,%2
+  %elifidn %1,edi
+    movd %1,%2
+  %elifidn %2,edi
+    movd %1,%2
+  %elifidn %1,esp
+    movd %1,%2
+  %elifidn %2,esp
+    movd %1,%2
+  %elifidn %1,ebp
+    movd %1,%2
+  %elifidn %2,ebp
+    movd %1,%2
+  %else
+    movq %1,%2
+  %endif
+%endmacro
 %endif
 
 
@@ -90,7 +127,7 @@
 %macro ALIGN_STACK 2
     mov         %2, rsp
     and         rsp, -%1
-    sub         rsp, %1 - REG_SZ_BYTES
+    lea         rsp, [rsp - (%1 - REG_SZ_BYTES)]
     push        %2
 %endmacro
 
@@ -105,7 +142,6 @@
 %idefine XMMWORD
 %idefine MMWORD
 
-
 ; PIC macros
 ;
 %if ABI_IS_32BIT
@@ -116,11 +152,15 @@
       extern _GLOBAL_OFFSET_TABLE_
       push %1
       call %%get_got
+      %%sub_offset:
+      jmp %%exitGG
       %%get_got:
-      pop %1
-      add %1, _GLOBAL_OFFSET_TABLE_ + $$ - %%get_got wrt ..gotpc
+      mov %1, [esp]
+      add %1, _GLOBAL_OFFSET_TABLE_ + $$ - %%sub_offset wrt ..gotpc
+      ret
+      %%exitGG:
       %undef GLOBAL
-      %define GLOBAL + %1 wrt ..gotoff
+      %define GLOBAL(x) x + %1 wrt ..gotoff
       %undef RESTORE_GOT
       %define RESTORE_GOT pop %1
     %endmacro
@@ -128,11 +168,15 @@
     %macro GET_GOT 1
       push %1
       call %%get_got
+      %%sub_offset:
+      jmp  %%exitGG
       %%get_got:
-      pop %1
-      add %1, fake_got - %%get_got
+      mov  %1, [esp]
+      add %1, fake_got - %%sub_offset
+      ret
+      %%exitGG:
       %undef GLOBAL
-      %define GLOBAL + %1 - fake_got
+      %define GLOBAL(x) x + %1 - fake_got
       %undef RESTORE_GOT
       %define RESTORE_GOT pop %1
     %endmacro
@@ -142,7 +186,7 @@
 %else
   %macro GET_GOT 1
   %endmacro
-  %define GLOBAL wrt rip
+  %define GLOBAL(x) rel x
   %ifidn __OUTPUT_FORMAT__,elf64
     %define WRT_PLT wrt ..plt
     %define HIDDEN_DATA(x) x:data hidden
@@ -153,7 +197,7 @@
 %ifnmacro GET_GOT
     %macro GET_GOT 1
     %endmacro
-    %define GLOBAL
+    %define GLOBAL(x) x
 %endif
 %ifndef RESTORE_GOT
 %define RESTORE_GOT

@@ -188,10 +188,10 @@ def _shmemSegment(shmemexpr):
     return ExprCall(ExprSelect(shmemexpr, '.', 'Segment'),
                     args=[ _shmemBackstagePass() ])
 
-def _shmemAlloc(size, type):
+def _shmemAlloc(size, type, unsafe):
     # starts out UNprotected
     return ExprCall(ExprVar('Shmem::Alloc'),
-                    args=[ _shmemBackstagePass(), size, type ])
+                    args=[ _shmemBackstagePass(), size, type, unsafe ])
 
 def _shmemDealloc(rawmemvar):
     return ExprCall(ExprVar('Shmem::Dealloc'),
@@ -288,7 +288,7 @@ E.g., |Foo[]| --> |ArrayOfFoo|."""
 
 def _hasVisibleActor(ipdltype):
     """Return true iff a C++ decl of |ipdltype| would have an Actor* type.
-For example: |Actor[]| would turn into |nsTArray<ActorParent*>|, so this
+For example: |Actor[]| would turn into |Array<ActorParent*>|, so this
 function would return true for |Actor[]|."""
     return (ipdltype.isIPDL()
             and (ipdltype.isActor()
@@ -314,7 +314,7 @@ def _autoptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
-    return Type('nsTArray', T=basetype, const=const, ref=ref)
+    return Type('InfallibleTArray', T=basetype, const=const, ref=ref)
 
 def _callCxxArrayLength(arr):
     return ExprCall(ExprSelect(arr, '.', 'Length'))
@@ -336,7 +336,7 @@ def _callCxxArrayClear(arr):
 
 def _cxxArrayHasElementSorted(arr, elt):
     return ExprBinary(
-        ExprVar('nsTArray_base::NoIndex'), '!=',
+        ExprSelect(arr, '.', 'NoIndex'), '!=',
         ExprCall(ExprSelect(arr, '.', 'BinaryIndexOf'), args=[ elt ]))
 
 def _otherSide(side):
@@ -3085,6 +3085,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         rawvar = ExprVar('segment')
         sizevar = ExprVar('aSize')
         typevar = ExprVar('type')
+        unsafevar = ExprVar('unsafe')
         listenertype = Type('ChannelListener', ptr=1)
 
         register = MethodDefn(MethodDecl(
@@ -3111,6 +3112,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ret=_rawShmemType(ptr=1),
             params=[ Decl(Type.SIZE, sizevar.name),
                      Decl(_shmemTypeType(), typevar.name),
+                     Decl(Type.BOOL, unsafevar.name),
                      Decl(_shmemIdType(ptr=1), idvar.name) ],
             virtual=1))
         adoptshmem = MethodDefn(MethodDecl(
@@ -3165,8 +3167,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprCall(ExprSelect(p.actorMapVar(), '.', 'Remove'),
                          [ idvar ])))
 
-            # SharedMemory* CreateSharedMemory(size, type, id_t*):
-            #   nsAutoPtr<SharedMemory> seg(Shmem::Alloc(size, type));
+            # SharedMemory* CreateSharedMemory(size, type, bool, id_t*):
+            #   nsAutoPtr<SharedMemory> seg(Shmem::Alloc(size, type, unsafe));
             #   if (!shmem)
             #     return false
             #   Shmem s(seg, [nextshmemid]);
@@ -3178,7 +3180,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #   return shmem.forget();
             createshmem.addstmt(StmtDecl(
                 Decl(_autoptr(_rawShmemType()), rawvar.name),
-                initargs=[ _shmemAlloc(sizevar, typevar) ]))
+                initargs=[ _shmemAlloc(sizevar, typevar, unsafevar) ]))
             failif = StmtIf(ExprNot(rawvar))
             failif.addifstmt(StmtReturn(ExprLiteral.NULL))
             createshmem.addstmt(failif)
@@ -3338,7 +3340,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 [ idvar ])))
             createshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.createSharedMemory().name),
-                [ sizevar, typevar, idvar ])))
+                [ sizevar, typevar, unsafevar, idvar ])))
             adoptshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.adoptSharedMemory().name),
                 [ rawvar, idvar ])))
@@ -3417,36 +3419,49 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         outmemvar = ExprVar('aOutMem')
         rawvar = ExprVar('rawmem')
 
-        # bool AllocShmem(size_t size, Shmem* outmem):
-        #   id_t id;
-        #   nsAutoPtr<SharedMemory> mem(CreateSharedMemory(&id));
-        #   if (!mem)
-        #     return false;
-        #   *outmem = Shmem(mem, id)
-        #   return true;
-        allocShmem = MethodDefn(MethodDecl(
-            'AllocShmem',
-            params=[ Decl(Type.SIZE, sizevar.name),
-                     Decl(_shmemTypeType(), typevar.name),
-                     Decl(_shmemType(ptr=1), memvar.name) ],
-            ret=Type.BOOL))
+        def allocShmemMethod(name, unsafe):
+            # bool Alloc*Shmem(size_t size, Type type, Shmem* outmem):
+            #   id_t id;
+            #   nsAutoPtr<SharedMemory> mem(CreateSharedMemory(&id));
+            #   if (!mem)
+            #     return false;
+            #   *outmem = Shmem(mem, id)
+            #   return true;
+            method = MethodDefn(MethodDecl(
+                name,
+                params=[ Decl(Type.SIZE, sizevar.name),
+                         Decl(_shmemTypeType(), typevar.name),
+                         Decl(_shmemType(ptr=1), memvar.name) ],
+                ret=Type.BOOL))
 
-        ifallocfails = StmtIf(ExprNot(rawvar))
-        ifallocfails.addifstmt(StmtReturn.FALSE)
+            ifallocfails = StmtIf(ExprNot(rawvar))
+            ifallocfails.addifstmt(StmtReturn.FALSE)
 
-        allocShmem.addstmts([
-            StmtDecl(Decl(_shmemIdType(), idvar.name)),
-            StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
-                     initargs=[ ExprCall(p.createSharedMemory(),
+            if unsafe:
+                unsafe = ExprLiteral.TRUE
+            else:
+                unsafe = ExprLiteral.FALSE
+            method.addstmts([
+                StmtDecl(Decl(_shmemIdType(), idvar.name)),
+                StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
+                         initargs=[ ExprCall(p.createSharedMemory(),
                                          args=[ sizevar,
                                                 typevar,
+                                                unsafe,
                                                 ExprAddrOf(idvar) ]) ]),
-            ifallocfails,
-            Whitespace.NL,
-            StmtExpr(ExprAssn(
-                ExprDeref(memvar), _shmemCtor(_autoptrForget(rawvar), idvar))),
-            StmtReturn.TRUE
-        ])
+                ifallocfails,
+                Whitespace.NL,
+                StmtExpr(ExprAssn(
+                    ExprDeref(memvar), _shmemCtor(_autoptrForget(rawvar), idvar))),
+                StmtReturn.TRUE
+            ])
+            return method
+
+        # bool AllocShmem(size_t size, Type type, Shmem* outmem):
+        allocShmem = allocShmemMethod('AllocShmem', False)
+
+        # bool AllocUnsafeShmem(size_t size, Type type, Shmem* outmem):
+        allocUnsafeShmem = allocShmemMethod('AllocUnsafeShmem', True)
 
         # bool AdoptShmem(const Shmem& mem, Shmem* outmem):
         #   SharedMemory* raw = mem.mSegment;
@@ -3505,6 +3520,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return [ Whitespace('// Methods for managing shmem\n', indent=1),
                  allocShmem,
+                 Whitespace.NL,
+                 allocUnsafeShmem,
                  Whitespace.NL,
                  adoptShmem,
                  Whitespace.NL,

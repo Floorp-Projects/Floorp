@@ -9,7 +9,7 @@
     window.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
   <defs>
-    <pattern id="pat" width="50">
+    <pattern id="pat" width="50" height="100%">
       <rect x="0" y="0" width="50" height="100%" fill="red"/>
       <rect x="50" y="0" width="50" height="100%" fill="lime"/>
       <animateTransform attributeName="patternTransform" type="translate" dur="1s"

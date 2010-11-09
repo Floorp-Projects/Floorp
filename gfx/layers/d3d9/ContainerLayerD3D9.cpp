@@ -135,9 +135,8 @@ ContainerLayerD3D9::GetFirstChildD3D9()
 }
 
 void
-ContainerLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
+ContainerLayerD3D9::RenderLayer()
 {
-  float opacity = GetOpacity() * aOpacity;
   nsRefPtr<IDirect3DSurface9> previousRenderTarget;
   nsRefPtr<IDirect3DTexture9> renderTexture;
   float previousRenderTargetOffset[4];
@@ -145,10 +144,8 @@ ContainerLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
   float renderTargetOffset[] = { 0, 0, 0, 0 };
   float oldViewMatrix[4][4];
 
-  gfx3DMatrix transform = mTransform * aTransform;
-
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
-  PRBool useIntermediate = ShouldUseIntermediate(opacity, transform);
+  PRBool useIntermediate = UseIntermediateSurface();
 
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
@@ -223,11 +220,7 @@ ContainerLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
       device()->SetScissorRect(&r);
     }
 
-    if (!useIntermediate) {
-      layerToRender->RenderLayer(opacity, transform);
-    } else {
-      layerToRender->RenderLayer(1.0, gfx3DMatrix());
-    }
+    layerToRender->RenderLayer();
 
     if (clipRect || useIntermediate) {
       device()->SetScissorRect(&oldClipRect);
@@ -251,15 +244,7 @@ ContainerLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
                                                           visibleRect.height),
                                        1);
 
-    device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
-
-    float opacityVector[4];
-    /*
-     * We always upload a 4 component float, but the shader will use only the
-     * first component since it's declared as a 'float'.
-     */
-    opacityVector[0] = opacity;
-    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacityVector, 1);
+    SetShaderTransformAndOpacity();
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
@@ -275,33 +260,6 @@ ContainerLayerD3D9::LayerManagerDestroyed()
     GetFirstChildD3D9()->LayerManagerDestroyed();
     RemoveChild(mFirstChild);
   }
-}
-
-bool
-ContainerLayerD3D9::ShouldUseIntermediate(float aOpacity,
-                                          const gfx3DMatrix &aMatrix)
-{
-  if (aOpacity == 1.0f && aMatrix.IsIdentity()) {
-    return false;
-  }
-
-  Layer *firstChild = GetFirstChild();
-
-  if (!firstChild || (!firstChild->GetNextSibling() &&
-      !firstChild->GetClipRect())) {
-    // If we forward our transform to a child without using an intermediate,
-    // we need to be sure that child does not have a clip rect, since its clip
-    // rect would be applied after our transform.
-    return false;
-  }
-
-  if (aMatrix.IsIdentity() && (!firstChild || !firstChild->GetNextSibling())) {
-    // If there's no transforms applied and a single child, opacity can always
-    // be forwarded to our only child.
-    return false;
-  }
-
-  return true;
 }
 
 } /* layers */

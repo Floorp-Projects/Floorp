@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607584
+-->
+<head>
+  <title>Test for Bug 607584</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=607584">Mozilla Bug 607584</a>
+<p id="display"></p>
+<div id="content" contenteditable>
+<p id="foo">Hello world</p>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 607584 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var content = document.getElementById("content");
+  content.focus();
+  var sel = getSelection();
+  sel.collapse(document.getElementById("foo").firstChild, 5);
+  synthesizeKey("VK_ENTER", {});
+  var paragraphs = content.querySelectorAll("p");
+  is(paragraphs.length, 2, "The paragraph should be split in two");
+  is(paragraphs[0].textContent, "Hello", "The first paragraph should have the correct content");
+  is(paragraphs[1].textContent, " world", "The second paragraph should have the correct content");
+  is(paragraphs[0].getAttribute("id"), "foo", "The id of the first paragraph should be retained");
+  is(paragraphs[1].hasAttribute("id"), false, "The second paragraph shouldn't have an ID");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

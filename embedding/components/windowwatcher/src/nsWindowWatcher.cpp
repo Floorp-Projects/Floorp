@@ -582,6 +582,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIScriptSecurityManager>
     sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
 
+  NS_ENSURE_TRUE(sm, NS_ERROR_FAILURE);
+
   // Remember who's calling us. This code used to assume a null
   // subject principal if it failed to get the principal, but that's
   // just not safe, so bail on errors here.

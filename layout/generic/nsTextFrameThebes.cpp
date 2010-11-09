@@ -5574,8 +5574,8 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   } else {
     // If we're at the end of a line, look at the next continuation
     iter.SetOriginalOffset(startOffset);
-    if (startOffset <= PRUint32(trimmed.GetEnd()) &&
-        !(startOffset < PRUint32(trimmed.GetEnd()) &&
+    if (startOffset <= trimmed.GetEnd() &&
+        !(startOffset < trimmed.GetEnd() &&
           GetStyleText()->NewlineIsSignificant() &&
           iter.GetSkippedOffset() < mTextRun->GetLength() &&
           mTextRun->GetChar(iter.GetSkippedOffset()) == '\n')) {
@@ -6396,6 +6396,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // Restrict preformatted text to the nearest newline
   PRInt32 newLineOffset = -1; // this will be -1 or a content offset
+  PRInt32 contentNewLineOffset = -1;
   // Pointer to the nsGkAtoms::newline set on this frame's element
   NewlineProperty* cachedNewlineOffset = nsnull;
   if (textStyle->NewlineIsSignificant()) {
@@ -6404,9 +6405,18 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     if (cachedNewlineOffset && cachedNewlineOffset->mStartOffset <= offset &&
         (cachedNewlineOffset->mNewlineOffset == -1 ||
          cachedNewlineOffset->mNewlineOffset >= offset)) {
-      newLineOffset = cachedNewlineOffset->mNewlineOffset;
+      contentNewLineOffset = cachedNewlineOffset->mNewlineOffset;
     } else {
-      newLineOffset = FindChar(frag, offset, length, '\n');
+      contentNewLineOffset = FindChar(frag, offset, 
+                                      mContent->TextLength() - offset, '\n');
+    }
+    if (contentNewLineOffset < offset + length) {
+      /*
+        The new line offset could be outside this frame if the frame has been
+        split by bidi resolution. In that case we won't use it in this reflow
+        (newLineOffset will remain -1), but we will still cache it in mContent
+      */
+      newLineOffset = contentNewLineOffset;
     }
     if (newLineOffset >= 0) {
       length = newLineOffset + 1 - offset;
@@ -6567,6 +6577,18 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                                   &textMetrics, boundingBoxType, ctx,
                                   &usedHyphenation, &transformedLastBreak,
                                   textStyle->WordCanWrap(), &breakPriority);
+  if (!length && !textMetrics.mAscent && !textMetrics.mDescent) {
+    // If we're measuring a zero-length piece of text, update
+    // the height manually.
+    nsIFontMetrics* fm = provider.GetFontMetrics();
+    if (fm) {
+      nscoord ascent, descent;
+      fm->GetMaxAscent(ascent);
+      fm->GetMaxDescent(descent);
+      textMetrics.mAscent = gfxFloat(ascent);
+      textMetrics.mDescent = gfxFloat(descent);
+    }
+  }
   // The "end" iterator points to the first character after the string mapped
   // by this frame. Basically, its original-string offset is offset+charsFit
   // after we've computed charsFit.
@@ -6658,7 +6680,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Disallow negative widths
   aMetrics.width = NSToCoordCeil(NS_MAX(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
-  if (transformedCharsFit == 0 && !usedHyphenation) {
+  if (completedFirstLetter && transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.ascent = 0;
     aMetrics.height = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
@@ -6754,7 +6776,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Updated the cached NewlineProperty, or delete it.
   if (contentLength < maxContentLength &&
       textStyle->NewlineIsSignificant() &&
-      (newLineOffset < 0 || mContentOffset + contentLength <= newLineOffset)) {
+      (contentNewLineOffset < 0 ||
+       mContentOffset + contentLength <= contentNewLineOffset)) {
     if (!cachedNewlineOffset) {
       cachedNewlineOffset = new NewlineProperty;
       if (cachedNewlineOffset) {
@@ -6767,7 +6790,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     }
     if (cachedNewlineOffset) {
       cachedNewlineOffset->mStartOffset = offset;
-      cachedNewlineOffset->mNewlineOffset = newLineOffset;
+      cachedNewlineOffset->mNewlineOffset = contentNewLineOffset;
     }
   } else if (cachedNewlineOffset) {
     mContent->DeleteProperty(nsGkAtoms::newline);
@@ -7240,6 +7263,12 @@ PRBool
 nsTextFrame::IsAtEndOfLine() const
 {
   return (GetStateBits() & TEXT_END_OF_LINE) != 0;
+}
+
+nscoord
+nsTextFrame::GetBaseline() const
+{
+  return mAscent;
 }
 
 PRBool

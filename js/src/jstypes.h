@@ -80,16 +80,9 @@
 
 #define DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION(Name) class Name
 
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_OS2)
 
 /* These also work for __MWERKS__ */
-# define JS_EXTERN_API(__type)  extern __declspec(dllexport) __type
-# define JS_EXPORT_API(__type)  __declspec(dllexport) __type
-# define JS_EXTERN_DATA(__type) extern __declspec(dllexport) __type
-# define JS_EXPORT_DATA(__type) __declspec(dllexport) __type
-
-#elif defined(XP_OS2) && defined(__declspec)
-
 # define JS_EXTERN_API(__type)  extern __declspec(dllexport) __type
 # define JS_EXPORT_API(__type)  __declspec(dllexport) __type
 # define JS_EXTERN_DATA(__type) extern __declspec(dllexport) __type
@@ -136,7 +129,7 @@
 # else
 #  define JS_IMPORT_API(__x)    __declspec(dllimport) __x
 # endif
-#elif defined(XP_OS2) && defined(__declspec)
+#elif defined(XP_OS2)
 # define JS_IMPORT_API(__x)     __declspec(dllimport) __x
 #elif defined(__SYMBIAN32__)
 # define JS_IMPORT_API(__x)     IMPORT_C __x
@@ -146,7 +139,7 @@
 
 #if defined(_WIN32) && !defined(__MWERKS__)
 # define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
-#elif defined(XP_OS2) && defined(__declspec)
+#elif defined(XP_OS2)
 # define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
 #elif defined(__SYMBIAN32__)
 # if defined(__CW32__)

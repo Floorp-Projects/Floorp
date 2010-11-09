@@ -244,7 +244,7 @@ public:
   using nsIConstraintValidation::GetValidationMessage;
 
   nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                      PRUint32 aFromParser = 0);
+                      mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -493,14 +493,6 @@ protected:
   virtual PRBool AcceptAutofocus() const
   {
     return PR_TRUE;
-  }
-
-  /**
-   * Helper method to get the default size.
-   */
-  PRInt32 GetDefaultSize() const
-  {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ? 4 : 1;
   }
 
   /** The options[] array */

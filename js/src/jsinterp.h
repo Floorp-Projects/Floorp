@@ -988,6 +988,16 @@ extern JS_REQUIRES_STACK bool
 DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp);
 
 /*
+ * Performs a direct eval for the given arguments, which must correspond to the
+ * currently-executing stack frame, which must be a script frame.  evalfun must
+ * be the built-in eval function and must correspond to the callee in vp[0].
+ * When this function succeeds it returns the result in *vp, adjusts the JS
+ * stack pointer, and returns true.
+ */
+extern JS_REQUIRES_STACK bool
+DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp);
+
+/*
  * Executes a script with the given scope chain in the context of the given
  * frame.
  */

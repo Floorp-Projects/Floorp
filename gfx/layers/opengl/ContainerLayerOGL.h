@@ -61,7 +61,7 @@ static void ContainerRender(Container* aContainer,
                             const nsIntPoint& aOffset,
                             LayerManagerOGL* aManager);
 
-class ContainerLayerOGL : public ContainerLayer, 
+class ContainerLayerOGL : public ContainerLayer,
                           public LayerOGL
 {
   template<class Container>
@@ -93,6 +93,11 @@ public:
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
+  }
 };
 
 #ifdef MOZ_IPC
@@ -128,6 +133,11 @@ public:
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
+
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
+  }
 };
 #endif  // MOZ_IPC
 

@@ -17,7 +17,6 @@ function startTest(test, token) {
   var v = document.createElement("video");
   manager.started(token);
   v.addEventListener("error", function (event) {
-    event.stopPropagation();
     var el = event.currentTarget;
     is(event.type, "error", "Expected event of type 'error'");
     ok(el.error, "Element 'error' attr expected to have a value");

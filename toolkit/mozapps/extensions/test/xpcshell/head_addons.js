@@ -446,7 +446,7 @@ function createInstallRDF(aData) {
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
    "optionsURL", "aboutURL", "iconURL", "icon64URL",
-   "skinnable"].forEach(function(aProp) {
+   "skinnable", "bootstrap"].forEach(function(aProp) {
     if (aProp in aData)
       rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });

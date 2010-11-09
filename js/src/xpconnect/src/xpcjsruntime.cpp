@@ -1123,9 +1123,11 @@ public:
     }
 private:
     virtual void *doAlloc() {
-        void *chunk = 0;
+        void *chunk;
 #ifdef MOZ_MEMORY
-        posix_memalign(&chunk, js::GC_CHUNK_SIZE, js::GC_CHUNK_SIZE);
+        // posix_memalign returns zero on success, nonzero on failure.
+        if (posix_memalign(&chunk, js::GC_CHUNK_SIZE, js::GC_CHUNK_SIZE))
+            chunk = 0;
 #else
         chunk = js::AllocGCChunk();
 #endif
