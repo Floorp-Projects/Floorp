@@ -1491,7 +1491,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 .appmenu-button:hover:active {
-  background: #f78c00;
+  background: #ffc000;
   box-shadow: inset 1px 2px 5px #333;
 }
 
