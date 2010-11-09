@@ -102,8 +102,9 @@ nsSMILCSSProperty::GetBaseValue() const
   // from ALL return points. This function must only return THIS variable:
   nsSMILValue baseValue;
 
-  // SPECIAL CASE: Shorthands
-  if (nsCSSProps::IsShorthand(mPropID)) {
+  // SPECIAL CASE: (a) Shorthands
+  //               (b) 'display'
+  if (nsCSSProps::IsShorthand(mPropID) || mPropID == eCSSProperty_display) {
     // We can't look up the base (computed-style) value of shorthand
     // properties, because they aren't guaranteed to have a consistent computed
     // value.  However, that's not a problem, because it turns out the caller
@@ -112,6 +113,10 @@ nsSMILCSSProperty::GetBaseValue() const
     // properties we know about don't support those operations. So, we can just
     // return a dummy value (initialized with the right type, so as not to
     // indicate failure).
+    // For 'display' we'd like to avoid clearing and setting this property since
+    // it can cause frames to be recreated, so instead we just return a dummy
+    // value. As with shorthand properties this is ok as we never interpolate or
+    // add display properties.
     nsSMILValue tmpVal(&nsSMILCSSValueType::sSingleton);
     baseValue.Swap(tmpVal);
     return baseValue;
