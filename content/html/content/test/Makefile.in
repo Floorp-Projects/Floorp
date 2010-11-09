@@ -240,6 +240,7 @@ _TEST_FILES = \
 		file_bug297761.html \
 		test_bug607145.html \
 		test_bug601061.html \
+		reflect.js \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
