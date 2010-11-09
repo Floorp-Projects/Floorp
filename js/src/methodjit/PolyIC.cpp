@@ -698,6 +698,8 @@ struct GetPropertyHelper {
             return ic.error(cx);
         if (!prop)
             return ic.disable(cx, "lookup failed");
+        if (!obj->isNative())
+            return ic.disable(cx, "non-native");
         if (!IsCacheableProtoChain(obj, holder))
             return ic.disable(cx, "non-native holder");
         shape = (const Shape *)prop;
