@@ -396,12 +396,15 @@ namespace js {
 bool
 GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
 {
-    if (aobj->isDenseArray() && length <= aobj->getDenseArrayCapacity()) {
+    if (aobj->isDenseArray() && length <= aobj->getDenseArrayCapacity() &&
+        !js_PrototypeHasIndexedProperties(cx, aobj)) {
+        /* The prototype does not have indexed properties so hole = undefined */
         Value *srcbeg = aobj->getDenseArrayElements();
         Value *srcend = srcbeg + length;
         for (Value *dst = vp, *src = srcbeg; src < srcend; ++dst, ++src)
             *dst = src->isMagic(JS_ARRAY_HOLE) ? UndefinedValue() : *src;
-    } else if (aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
+    } else if (aobj->isArguments() && !aobj->isArgsLengthOverridden() &&
+               !js_PrototypeHasIndexedProperties(cx, aobj)) {
         /*
          * Two cases, two loops: note how in the case of an active stack frame
          * backing aobj, even though we copy from fp->argv, we still must check

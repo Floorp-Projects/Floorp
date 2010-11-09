@@ -989,7 +989,8 @@ ic::SplatApplyArgs(VMFrame &f)
         JSStackFrame *fp = f.regs.fp;
         if (!fp->hasOverriddenArgs() &&
             (!fp->hasArgsObj() ||
-             (fp->hasArgsObj() && !fp->argsObj().isArgsLengthOverridden()))) {
+             (fp->hasArgsObj() && !fp->argsObj().isArgsLengthOverridden() &&
+              !js_PrototypeHasIndexedProperties(cx, &fp->argsObj())))) {
 
             uintN n = fp->numActualArgs();
             if (!BumpStack(f, n))
