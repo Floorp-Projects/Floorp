@@ -7,5 +7,10 @@ script String-toSource.js
 script proxy-strict.js
 script regress-bug567606.js
 script string-literal-getter-setter-decompilation.js
+script watch-inherited-property.js
+script watch-replaced-setter.js
+script watch-setter-become-setter.js
+script watch-value-prop-becoming-setter.js
+script watchpoint-deletes-JSPropertyOp-setter.js
 script eval-native-callback-is-indirect.js
 script regress-bug607284.js
