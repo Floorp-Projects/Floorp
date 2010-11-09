@@ -65,6 +65,7 @@
 #include "jswrapper.h"
 
 #include "jsatominlines.h"
+#include "jsdbgapiinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -545,41 +546,24 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         return ok;
     }
 
-    /*
-     * Remove wp from the list, then if there are no other watchpoints for
-     * wp->shape in any scope, restore wp->shape->setter from wp.
-     */
+    /* Remove wp from the list, then restore wp->shape->setter from wp. */
     ++rt->debuggerMutations;
     JS_REMOVE_LINK(&wp->links);
-
-    const Shape *shape = wp->shape;
-    PropertyOp setter = NULL;
-
-    for (JSWatchPoint *wp2 = (JSWatchPoint *)rt->watchPointList.next;
-         &wp2->links != &rt->watchPointList;
-         wp2 = (JSWatchPoint *)wp2->links.next) {
-        if (wp2->shape == shape) {
-            setter = wp->setter;
-            break;
-        }
-    }
     DBG_UNLOCK(rt);
 
-    if (!setter) {
-        /*
-         * If the property wasn't found on wp->object, or it isn't still being
-         * watched, then someone else must have deleted or unwatched it, and we
-         * don't need to change the property attributes.
-         */
-        const Shape *wprop = wp->object->nativeLookup(shape->id);
-        if (wprop &&
-            wprop->hasSetterValue() == shape->hasSetterValue() &&
-            IsWatchedProperty(cx, wprop)) {
-            shape = wp->object->changeProperty(cx, wprop, 0, wprop->attributes(),
-                                               wprop->getter(), wp->setter);
-            if (!shape)
-                ok = false;
-        }
+    /*
+     * If the property isn't found on wp->object, then someone else must have deleted it,
+     * and we don't need to change the property attributes.
+     */
+    const Shape *shape = wp->shape;
+    const Shape *wprop = wp->object->nativeLookup(shape->id);
+    if (wprop &&
+        wprop->hasSetterValue() == shape->hasSetterValue() &&
+        IsWatchedProperty(cx, wprop)) {
+        shape = wp->object->changeProperty(cx, wprop, 0, wprop->attributes(),
+                                           wprop->getter(), wp->setter);
+        if (!shape)
+            ok = false;
     }
 
     cx->free(wp);
@@ -640,10 +624,10 @@ js_SweepWatchPoints(JSContext *cx)
 
 
 /*
- * NB: FindWatchPoint must be called with rt->debuggerLock acquired.
+ * NB: LockedFindWatchPoint must be called with rt->debuggerLock acquired.
  */
 static JSWatchPoint *
-FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
+LockedFindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 {
     JSWatchPoint *wp;
 
@@ -656,17 +640,15 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
     return NULL;
 }
 
-const Shape *
-js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
+static JSWatchPoint *
+FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 {
     JSWatchPoint *wp;
-    const Shape *shape;
 
     DBG_LOCK(rt);
-    wp = FindWatchPoint(rt, obj, id);
-    shape = wp ? wp->shape : NULL;
+    wp = LockedFindWatchPoint(rt, obj, id);
     DBG_UNLOCK(rt);
-    return shape;
+    return wp;
 }
 
 JSBool
@@ -716,7 +698,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return JS_TRUE;
 }
 
-JSBool
+static JSBool
 js_watch_set_wrapper(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ComputeThisFromVp(cx, vp);
@@ -750,8 +732,8 @@ IsWatchedProperty(JSContext *cx, const Shape *shape)
  * with attributes |attrs|, to implement a watchpoint on the property named
  * |id|.
  */
-PropertyOp
-js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
+static PropertyOp
+WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
 {
     JSAtom *atom;
     JSFunction *wrapper;
@@ -779,6 +761,88 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
     if (!wrapper)
         return NULL;
     return CastAsPropertyOp(FUN_OBJECT(wrapper));
+}
+
+static bool
+UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape)
+{
+    JS_ASSERT_IF(wp->shape, wp->shape->id == newShape->id);
+    JS_ASSERT(!IsWatchedProperty(cx, newShape));
+
+    /* Create a watching setter we can substitute for the new shape's setter. */
+    js::PropertyOp watchingSetter = WrapWatchedSetter(cx, newShape->id, newShape->attributes(),
+                                                      newShape->setter());
+    if (!watchingSetter)
+        return false;
+
+    /*
+     * Save the shape's setter; we don't know whether js_ChangeNativePropertyAttrs will
+     * return a new shape, or mutate this one.
+     */
+    js::PropertyOp originalSetter = newShape->setter();
+
+    /*
+     * Drop the watching setter into the object, in place of newShape. Note that a single
+     * watchpoint-wrapped shape may correspond to more than one non-watchpoint shape: we
+     * wrap all (JSPropertyOp, not JSObject *) setters with js_watch_set, so shapes that
+     * differ only in their setter may all get wrapped to the same shape.
+     */
+    const js::Shape *watchingShape = 
+        js_ChangeNativePropertyAttrs(cx, wp->object, newShape, 0, newShape->attributes(),
+                                     newShape->getter(), watchingSetter);
+    if (!watchingShape)
+        return false;
+
+    /* Update the watchpoint with the new shape and its original setter. */
+    wp->setter = originalSetter;
+    wp->shape = watchingShape;
+
+    return true;
+}
+
+bool
+js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Shape *newShape)
+{
+    /*
+     * The watchpoint code uses the normal property-modification functions to install its
+     * own watchpoint-aware shapes. Those functions report those changes back to the
+     * watchpoint code, just as they do user-level changes. So if this change is
+     * installing a watchpoint-aware shape, it's something we asked for ourselves, and can
+     * proceed without interference.
+     */
+    if (IsWatchedProperty(cx, newShape))
+        return true;
+
+    JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, newShape->id);
+    if (!wp)
+        return true;
+
+    return UpdateWatchpointShape(cx, wp, newShape);
+}
+
+/*
+ * Return the underlying setter for |shape| on |obj|, seeing through any
+ * watchpoint-wrapping. Note that we need |obj| to disambiguate, since a single
+ * watchpoint-wrapped shape may correspond to more than one non-watchpoint shape; see the
+ * comments in UpdateWatchpointShape.
+ */
+static PropertyOp
+UnwrapSetter(JSContext *cx, JSObject *obj, const Shape *shape)
+{
+    /* If it's not a watched property, its setter is not wrapped. */
+    if (!IsWatchedProperty(cx, shape))
+        return shape->setter();
+
+    /* Look up the watchpoint, from which we can retrieve the underlying setter. */
+    JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, shape->id);
+
+    /* 
+     * Since we know |shape| is watched, we *must* find a watchpoint: we should never
+     * leave wrapped setters lying around in shapes after removing a watchpoint.
+     */
+    JS_ASSERT(wp);
+
+    return wp->setter;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -818,16 +882,16 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         return JS_FALSE;
     }
 
-    JSProperty *prop;
     JSObject *pobj;
+    JSProperty *prop;
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
     const Shape *shape = (Shape *) prop;
     JSRuntime *rt = cx->runtime;
     if (!shape) {
         /* Check for a deleted symbol watchpoint, which holds its property. */
-        shape = js_FindWatchPoint(rt, obj, propid);
-        if (!shape) {
+        JSWatchPoint *wp = FindWatchPoint(rt, obj, propid);
+        if (!wp) {
             /* Make a new property in obj so we can watch for the first set. */
             if (!js_DefineNativeProperty(cx, obj, propid, UndefinedValue(), NULL, NULL,
                                          JSPROP_ENUMERATE, 0, 0, &prop)) {
@@ -847,7 +911,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                         ? pobj->nativeGetSlot(shape->slot)
                         : UndefinedValue());
             getter = shape->getter();
-            setter = shape->setter();
+            setter = UnwrapSetter(cx, pobj, shape);
             attrs = shape->attributes();
             flags = shape->getFlags();
             shortid = shape->shortid;
@@ -875,33 +939,26 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
      * unlock the object before returning.
      */
     DBG_LOCK(rt);
-    JSWatchPoint *wp = FindWatchPoint(rt, obj, propid);
+    JSWatchPoint *wp = LockedFindWatchPoint(rt, obj, propid);
     if (!wp) {
         DBG_UNLOCK(rt);
-        PropertyOp watcher = js_WrapWatchedSetter(cx, propid, shape->attributes(), shape->setter());
-        if (!watcher)
-            return JS_FALSE;
-
         wp = (JSWatchPoint *) cx->malloc(sizeof *wp);
         if (!wp)
             return JS_FALSE;
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
-        wp->setter = shape->setter();
+        wp->shape = NULL;
         wp->flags = JSWP_LIVE;
 
         /* XXXbe nest in obj lock here */
-        shape = js_ChangeNativePropertyAttrs(cx, obj, shape, 0, shape->attributes(),
-                                             shape->getter(), watcher);
-        if (!shape) {
+        if (!UpdateWatchpointShape(cx, wp, shape)) {
             /* Self-link so DropWatchPointAndUnlock can JS_REMOVE_LINK it. */
             JS_INIT_CLIST(&wp->links);
             DBG_LOCK(rt);
             DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
             return JS_FALSE;
         }
-        wp->shape = shape;
 
         /*
          * Now that wp is fully initialized, append it to rt's wp list.
@@ -909,7 +966,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
          * a watchpoint for (obj, propid).
          */
         DBG_LOCK(rt);
-        JS_ASSERT(!FindWatchPoint(rt, obj, propid));
+        JS_ASSERT(!LockedFindWatchPoint(rt, obj, propid));
         JS_APPEND_LINK(&wp->links, &rt->watchPointList);
         ++rt->debuggerMutations;
     }

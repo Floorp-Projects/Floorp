@@ -63,6 +63,7 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
+#include "jsdbgapiinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
@@ -614,19 +615,6 @@ NormalizeGetterAndSetter(JSContext *cx, JSObject *obj,
         }
     }
 
-    /*
-     * Check for a watchpoint on a deleted property; if one exists, change
-     * setter to js_watch_set or js_watch_set_wrapper.
-     * XXXbe this could get expensive with lots of watchpoints...
-     */
-    if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList) &&
-        js_FindWatchPoint(cx->runtime, obj, id)) {
-        setter = js_WrapWatchedSetter(cx, id, attrs, setter);
-        if (!setter) {
-            METER(wrapWatchFails);
-            return false;
-        }
-    }
     return true;
 }
 
@@ -731,7 +719,18 @@ JSObject::addProperty(JSContext *cx, jsid id,
     /* Search for id with adding = true in order to claim its entry. */
     Shape **spp = nativeSearch(id, true);
     JS_ASSERT(!SHAPE_FETCH(spp));
-    return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
+    const Shape *shape = addPropertyInternal(cx, id, getter, setter, slot, attrs, 
+                                             flags, shortid, spp);
+    if (!shape)
+        return NULL;
+
+    /* Update any watchpoints referring to this property. */
+    if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
+        METER(wrapWatchFails);
+        return NULL;
+    }
+
+    return shape;
 }
 
 const Shape *
@@ -850,7 +849,13 @@ JSObject::putProperty(JSContext *cx, jsid id,
             return NULL;
         }
 
-        return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
+        const Shape *new_shape =
+            addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp);
+        if (!js_UpdateWatchpointsForShape(cx, this, new_shape)) {
+            METER(wrapWatchFails);
+            return NULL;
+        }
+        return new_shape;
     }
 
     /* Property exists: search must have returned a valid *spp. */
@@ -882,7 +887,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
      */
     if (shape != lastProp && !inDictionaryMode()) {
         if (!toDictionaryMode(cx))
-            return false;
+            return NULL;
         spp = nativeSearch(shape->id);
         shape = SHAPE_FETCH(spp);
     }
@@ -987,6 +992,12 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     CHECK_SHAPE_CONSISTENCY(this);
     METER(puts);
+
+    if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
+        METER(wrapWatchFails);
+        return NULL;
+    }
+
     return shape;
 }
 
@@ -1042,6 +1053,11 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
 
             updateFlags(newShape);
             updateShape(cx);
+
+            if (!js_UpdateWatchpointsForShape(cx, this, newShape)) {
+                METER(wrapWatchFails);
+                return NULL;
+            }
         }
     } else if (shape == lastProp) {
         newShape = getChildProperty(cx, shape->parent, child);
