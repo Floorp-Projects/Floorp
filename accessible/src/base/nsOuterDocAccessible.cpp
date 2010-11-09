@@ -196,8 +196,13 @@ nsOuterDocAccessible::InvalidateChildren()
 PRBool
 nsOuterDocAccessible::AppendChild(nsAccessible *aAccessible)
 {
-  NS_ASSERTION(!mChildren.Length(),
-               "Previous child document of outerdoc accessible wasn't removed!");
+  // We keep showing the old document for a bit after creating the new one,
+  // and while building the new DOM and frame tree. That's done on purpose
+  // to avoid weird flashes of default background color.
+  // The old viewer will be destroyed after the new one is created.
+  // For a11y, it should be safe to shut down the old document now.
+  if (mChildren.Length())
+    mChildren[0]->Shutdown();
 
   if (!nsAccessible::AppendChild(aAccessible))
     return PR_FALSE;
