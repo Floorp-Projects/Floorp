@@ -101,7 +101,6 @@ MOZ_DEBUG_DISABLE_DEFS	= @MOZ_DEBUG_DISABLE_DEFS@
 MOZ_DEBUG_FLAGS	= @MOZ_DEBUG_FLAGS@
 MOZ_DEBUG_LDFLAGS=@MOZ_DEBUG_LDFLAGS@
 MOZ_EXTENSIONS  = @MOZ_EXTENSIONS@
-MOZ_IMG_ENCODERS= @MOZ_IMG_ENCODERS@
 MOZ_JSDEBUGGER  = @MOZ_JSDEBUGGER@
 MOZ_IPC 	= @MOZ_IPC@
 MOZ_IPDL_TESTS 	= @MOZ_IPDL_TESTS@
@@ -166,7 +165,11 @@ MOZ_TREMOR = @MOZ_TREMOR@
 MOZ_WEBM = @MOZ_WEBM@
 VPX_AS = @VPX_AS@
 VPX_ASFLAGS = @VPX_ASFLAGS@
+VPX_DASH_C_FLAG = @VPX_DASH_C_FLAG@
+VPX_AS_CONVERSION = @VPX_AS_CONVERSION@
+VPX_ASM_SUFFIX = @VPX_ASM_SUFFIX@
 VPX_X86_ASM = @VPX_X86_ASM@
+VPX_ARM_ASM = @VPX_ARM_ASM@
 NS_PRINTING = @NS_PRINTING@
 MOZ_CRASHREPORTER = @MOZ_CRASHREPORTER@
 MOZ_HELP_VIEWER = @MOZ_HELP_VIEWER@
@@ -231,6 +234,10 @@ MOZ_HUNSPELL_CFLAGS = @MOZ_HUNSPELL_CFLAGS@
 MOZ_NATIVE_LIBEVENT = @MOZ_NATIVE_LIBEVENT@
 MOZ_LIBEVENT_LIBS = @MOZ_LIBEVENT_LIBS@
 MOZ_LIBEVENT_INCLUDES = @MOZ_LIBEVENT_INCLUDES@
+
+MOZ_NATIVE_LIBVPX = @MOZ_NATIVE_LIBVPX@
+MOZ_LIBVPX_LIBS = @MOZ_LIBVPX_LIBS@
+MOZ_LIBVPX_INCLUDES = @MOZ_LIBVPX_INCLUDES@
 
 MOZ_NATIVE_ZLIB	= @SYSTEM_ZLIB@
 MOZ_NATIVE_BZ2	= @SYSTEM_BZ2@
@@ -605,7 +612,6 @@ AIX_OBJMODEL = @AIX_OBJMODEL@
 
 # For OS/2 build
 MOZ_OS2_TOOLS = @MOZ_OS2_TOOLS@
-MOZ_OS2_USE_DECLSPEC = @MOZ_OS2_USE_DECLSPEC@
 MOZ_OS2_HIGH_MEMORY = @MOZ_OS2_HIGH_MEMORY@
 
 HAVE_XIE=@HAVE_XIE@
@@ -696,3 +702,16 @@ ANDROID_TOOLS     = @ANDROID_TOOLS@
 ANDROID_VERSION   = @ANDROID_VERSION@
 
 JS_SHARED_LIBRARY = @JS_SHARED_LIBRARY@
+
+# We only want to do the pymake sanity on Windows, other os's can cope
+ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
+# Ensure invariants between GNU Make and pymake
+# Checked here since we want the sane error in a file that
+# actually can be found regardless of path-style.
+ifeq (_:,$(.PYMAKE)_$(findstring :,$(srcdir)))
+$(error Windows-style srcdir being used with GNU make. Did you mean to run $(topsrcdir)/build/pymake/make.py instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
+endif
+ifeq (1_a,$(.PYMAKE)_$(firstword a$(subst /, ,$(srcdir))))
+$(error MSYS-style srcdir being used with Pymake. Did you mean to run GNU Make instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
+endif
+endif # Windows

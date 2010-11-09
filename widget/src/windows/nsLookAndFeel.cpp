@@ -462,7 +462,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_DWMCompositor:
 #ifndef WINCE
-        aMetric = nsUXThemeData::sHaveCompositor;
+        aMetric = nsUXThemeData::CheckForCompositor();
 #else
         aMetric = 0;
 #endif

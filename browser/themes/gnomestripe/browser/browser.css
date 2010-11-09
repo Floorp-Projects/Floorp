@@ -233,7 +233,7 @@ menuitem.bookmark-item {
 }
 
 /* Stock icons for the menu bar items */
-menuitem:not([type]) {
+menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
 }
 
@@ -470,6 +470,13 @@ menuitem:not([type]) {
 #bookmarksShowAll {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+#subscribeToPageMenuitem:not([disabled]),
+#subscribeToPageMenupopup,
+#BMB_subscribeToPageMenuitem:not([disabled]),
+#BMB_subscribeToPageMenupopup {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
 #bookmarksToolbarFolderMenu,

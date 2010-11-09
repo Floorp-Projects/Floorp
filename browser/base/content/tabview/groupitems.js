@@ -81,6 +81,8 @@ function GroupItem(listOfEls, options) {
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
   this.hidden = false;
+  this.fadeAwayUndoButtonDelay = 15000;
+  this.fadeAwayUndoButtonDuration = 300;
 
   this.keepProportional = false;
 
@@ -277,6 +279,7 @@ function GroupItem(listOfEls, options) {
 
   // ___ Undo Close
   this.$undoContainer = null;
+  this._undoButtonTimeoutId = null;
 
   // ___ Superclass initialization
   this._init($container[0]);
@@ -637,28 +640,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
     }, 50);
 
-    let remove = function() {
-      // close all children
-      let toClose = self._children.concat();
-      toClose.forEach(function(child) {
-        child.removeSubscriber(self, "close");
-        child.close();
-      });
- 
-      // remove all children
-      self.removeAll();
-      GroupItems.unregister(self);
-      self._sendToSubscribers("close");
-      self.removeTrenches();
-
-      iQ(self.container).remove();
-      self.$undoContainer.remove();
-      self.$undoContainer = null;
-      Items.unsquish();
-
-      self.deleteData();
-    };
-
     this.$undoContainer.click(function(e) {
       // Only do this for clicks on this actual element.
       if (e.target.nodeName != self.$undoContainer[0].nodeName)
@@ -667,6 +648,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.$undoContainer.fadeOut(function() {
         iQ(this).remove();
         self.hidden = false;
+        self._cancelFadeAwayUndoButtonTimer();
         self.$undoContainer = null;
 
         iQ(self.container).show().animate({
@@ -686,31 +668,92 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
 
     undoClose.click(function() {
-      self.$undoContainer.fadeOut(remove);
+      self._cancelFadeAwayUndoButtonTimer();
+      self.$undoContainer.fadeOut(function() { self._removeHiddenGroupItem(); });
     });
 
-    // After 15 seconds, fade away.
-    const WAIT = 15000;
-    const FADE = 300;
+    this.setupFadeAwayUndoButtonTimer();
+    // Cancel the fadeaway if you move the mouse over the undo
+    // button, and restart the countdown once you move out of it.
+    this.$undoContainer.mouseover(function() { 
+      self._cancelFadeAwayUndoButtonTimer();
+    });
+    this.$undoContainer.mouseout(function() {
+      self.setupFadeAwayUndoButtonTimer();
+    });
+  },
 
-    let fadeaway = function() {
-      if (self.$undoContainer)
+  // ----------
+  // Sets up fade away undo button timeout. 
+  setupFadeAwayUndoButtonTimer: function() {
+    let self = this;
+
+    if (!this._undoButtonTimeoutId) {
+      this._undoButtonTimeoutId = setTimeout(function() { 
+        self._fadeAwayUndoButton(); 
+      }, this.fadeAwayUndoButtonDelay);
+    }
+  },
+  
+  // ----------
+  // Cancels the fade away undo button timeout. 
+  _cancelFadeAwayUndoButtonTimer: function() {
+    clearTimeout(this._undoButtonTimeoutId);
+    this._undoButtonTimeoutId = null;
+  }, 
+
+  // ----------
+  // Fades away the undo button
+  _fadeAwayUndoButton: function() {
+    let self = this;
+
+    if (this.$undoContainer) {
+      // if there is one or more orphan tabs or there is more than one group 
+      // and other groupS are not empty, fade away the undo button.
+      let shouldFadeAway = GroupItems.getOrphanedTabs().length > 0;
+      
+      if (!shouldFadeAway && GroupItems.groupItems.length > 1) {
+        shouldFadeAway = 
+          GroupItems.groupItems.some(function(groupItem) {
+            return (groupItem != self && groupItem.getChildren().length > 0);
+          });
+      }
+      if (shouldFadeAway) {
         self.$undoContainer.animate({
           color: "transparent",
           opacity: 0
         }, {
-          duration: FADE,
-          complete: remove
+          duration: this.fadeAwayUndoButtonDuration,
+          complete: function() { self._removeHiddenGroupItem(); }
         });
-    };
+      }
+    }
+  },
 
-    let timeoutId = setTimeout(fadeaway, WAIT);
-    // Cancel the fadeaway if you move the mouse over the undo
-    // button, and restart the countdown once you move out of it.
-    this.$undoContainer.mouseover(function() clearTimeout(timeoutId));
-    this.$undoContainer.mouseout(function() {
-      timeoutId = setTimeout(fadeaway, WAIT);
+  // ----------
+  // Removes the group item, its children and its container.
+  _removeHiddenGroupItem: function() {
+    let self = this;
+
+    // close all children
+    let toClose = this._children.concat();
+    toClose.forEach(function(child) {
+      child.removeSubscriber(self, "close");
+      child.close();
     });
+ 
+    // remove all children
+    this.removeAll();
+    GroupItems.unregister(this);
+    this._sendToSubscribers("close");
+    this.removeTrenches();
+
+    iQ(this.container).remove();
+    this.$undoContainer.remove();
+    this.$undoContainer = null;
+    Items.unsquish();
+
+    this.deleteData();
   },
 
   // ----------

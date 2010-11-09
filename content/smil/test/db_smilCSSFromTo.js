@@ -105,7 +105,33 @@ var _fromToTestLists = {
                                      "#gradB\") rgb(0, 0, 255)" },
                            "need support for URI-based paints"),
   ],
+  lengthNoUnits: [
+    new AnimTestcaseFromTo("0",  "20", { fromComp:  "0px",
+                                         midComp:  "10px",
+                                         toComp:   "20px"}),
+    new AnimTestcaseFromTo("50",  "0", { fromComp: "50px",
+                                         midComp:  "25px",
+                                         toComp:    "0px"}),
+    new AnimTestcaseFromTo("30", "80", { fromComp: "30px",
+                                         midComp:  "55px",
+                                         toComp:   "80px"}),
+  ],
+  lengthNoUnitsSVG: [
+    new AnimTestcaseFromTo("0",  "20", { fromComp:  "0px", // 0 acts like 0px
+                                         midComp:  "10",
+                                         toComp:   "20"}),
+    new AnimTestcaseFromTo("50",  "0", { fromComp: "50",
+                                         midComp:  "25",
+                                         toComp:    "0px"}), // 0 acts like 0px
+    new AnimTestcaseFromTo("30", "80", { fromComp: "30",
+                                         midComp:  "55",
+                                         toComp:   "80"}),
+  ],
   lengthPx: [
+    new AnimTestcaseFromTo("0", "12px", { fromComp: "0px",  // 0 acts like 0px
+                                          midComp:  "6px"}),
+    new AnimTestcaseFromTo("16px", "0", { midComp: "8px",
+                                          toComp:  "0px"}), // 0 acts like 0px
     new AnimTestcaseFromTo("10px", "20px", { midComp: "15px"}),
     new AnimTestcaseFromTo("41px", "1px", { midComp: "21px"}),
   ],
@@ -266,7 +292,8 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("cursive", "monospace"),
   ]),
   new TestcaseBundle(gPropList.font_size,
-                     [].concat(_fromToTestLists.lengthPx, [
+                     [].concat(_fromToTestLists.lengthNoUnits,
+                               _fromToTestLists.lengthPx, [
     new AnimTestcaseFromTo("10px", "40%", { midComp: "15px", toComp: "20px" }),
     new AnimTestcaseFromTo("160%", "80%",
                            { fromComp: "80px",
@@ -331,7 +358,8 @@ var gFromToBundles = [
                              toComp: "optimizespeed" }),
   ]),
   new TestcaseBundle(gPropList.letter_spacing,
-                     [].concat(_fromToTestLists.lengthPx,
+                     [].concat(_fromToTestLists.lengthNoUnits,
+                               _fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG)),
   new TestcaseBundle(gPropList.letter_spacing,
                      _fromToTestLists.lengthPctSVG,
@@ -388,7 +416,8 @@ var gFromToBundles = [
                              midComp:  "1, 3, 3, 5, 5, 2, 2, 4, 4, 6"}),
   ])),
   new TestcaseBundle(gPropList.stroke_dashoffset,
-                     [].concat(_fromToTestLists.lengthPx,
+                     [].concat(_fromToTestLists.lengthNoUnitsSVG,
+                               _fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG,
                                _fromToTestLists.lengthPctSVG)),
   new TestcaseBundle(gPropList.stroke_linecap, [
@@ -405,7 +434,8 @@ var gFromToBundles = [
   ]),
   new TestcaseBundle(gPropList.stroke_opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.stroke_width,
-                     [].concat(_fromToTestLists.lengthPx,
+                     [].concat(_fromToTestLists.lengthNoUnitsSVG,
+                               _fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG,
                                _fromToTestLists.lengthPctSVG, [
     new AnimTestcaseFromTo("inherit", "7px",
@@ -438,7 +468,8 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("hidden", "collapse"),
   ]),
   new TestcaseBundle(gPropList.word_spacing,
-                     [].concat(_fromToTestLists.lengthPx,
+                     [].concat(_fromToTestLists.lengthNoUnits,
+                               _fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG)),
   new TestcaseBundle(gPropList.word_spacing,
                      _fromToTestLists.lengthPctSVG,

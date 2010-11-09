@@ -134,4 +134,15 @@ std::string pluginGetClipboardText(InstanceData* instanceData);
  */
 bool pluginCrashInNestedLoop(InstanceData* instanceData);
 
+/**
+ * Destroy gfx things that might be shared with the parent process
+ * when we're run out-of-process.  It's not expected that this
+ * function will be called when the test plugin is loaded in-process,
+ * and bad things will happen if it is called.
+ *
+ * This call leaves the plugin subprocess in an undefined state.  It
+ * must not be used after this call or weird things will happen.
+ */
+bool pluginDestroySharedGfxStuff(InstanceData* instanceData);
+
 #endif // nptest_platform_h_

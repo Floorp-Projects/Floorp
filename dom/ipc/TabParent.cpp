@@ -273,7 +273,7 @@ TabParent::SendKeyEvent(const nsAString& aType,
 bool
 TabParent::RecvSyncMessage(const nsString& aMessage,
                            const nsString& aJSON,
-                           nsTArray<nsString>* aJSONRetVal)
+                           InfallibleTArray<nsString>* aJSONRetVal)
 {
   return ReceiveMessage(aMessage, PR_TRUE, aJSON, aJSONRetVal);
 }
@@ -536,7 +536,7 @@ bool
 TabParent::ReceiveMessage(const nsString& aMessage,
                           PRBool aSync,
                           const nsString& aJSON,
-                          nsTArray<nsString>* aJSONRetVal)
+                          InfallibleTArray<nsString>* aJSONRetVal)
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
@@ -589,8 +589,8 @@ PContentDialogParent*
 TabParent::AllocPContentDialog(const PRUint32& aType,
                                const nsCString& aName,
                                const nsCString& aFeatures,
-                               const nsTArray<int>& aIntParams,
-                               const nsTArray<nsString>& aStringParams)
+                               const InfallibleTArray<int>& aIntParams,
+                               const InfallibleTArray<nsString>& aStringParams)
 {
   ContentDialogParent* parent = new ContentDialogParent();
   nsCOMPtr<nsIDialogParamBlock> params =
@@ -645,8 +645,8 @@ TabParent::HandleDelayedDialogs()
 
     delete data;
     if (dialog) {
-      nsTArray<PRInt32> intParams;
-      nsTArray<nsString> stringParams;
+      InfallibleTArray<PRInt32> intParams;
+      InfallibleTArray<nsString> stringParams;
       TabChild::ParamsToArrays(params, intParams, stringParams);
       unused << PContentDialogParent::Send__delete__(dialog,
                                                      intParams, stringParams);

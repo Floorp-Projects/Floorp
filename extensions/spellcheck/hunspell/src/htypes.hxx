@@ -69,7 +69,7 @@
 #define H_OPT_PHON   (1 << 2)
 
 // see also csutil.hxx
-#define HENTRY_WORD(h) (h->word)
+#define HENTRY_WORD(h) &(h->word[0])
 
 // approx. number  of user defined words
 #define USERWORD 1000

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -14,10 +14,11 @@
 #include "onyxd_int.h"
 
 extern void vp8_arch_x86_decode_init(VP8D_COMP *pbi);
+extern void vp8_arch_arm_decode_init(VP8D_COMP *pbi);
 
 void vp8_dmachine_specific_config(VP8D_COMP *pbi)
 {
-    // Pure C:
+    /* Pure C: */
 #if CONFIG_RUNTIME_CPU_DETECT
     pbi->mb.rtcd                     = &pbi->common.rtcd;
     pbi->dequant.block               = vp8_dequantize_b_c;
@@ -28,7 +29,7 @@ void vp8_dmachine_specific_config(VP8D_COMP *pbi)
     pbi->dequant.idct_add_uv_block   = vp8_dequant_idct_add_uv_block_c;
     pbi->dboolhuff.start             = vp8dx_start_decode_c;
     pbi->dboolhuff.fill              = vp8dx_bool_decoder_fill_c;
-#if 0 //For use with RTCD, when implemented
+#if 0 /*For use with RTCD, when implemented*/
     pbi->dboolhuff.debool = vp8dx_decode_bool_c;
     pbi->dboolhuff.devalue = vp8dx_decode_value_c;
 #endif
@@ -36,5 +37,9 @@ void vp8_dmachine_specific_config(VP8D_COMP *pbi)
 
 #if ARCH_X86 || ARCH_X86_64
     vp8_arch_x86_decode_init(pbi);
+#endif
+
+#if ARCH_ARM
+    vp8_arch_arm_decode_init(pbi);
 #endif
 }

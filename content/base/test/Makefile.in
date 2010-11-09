@@ -431,6 +431,13 @@ _TEST_FILES2 = \
 		test_bug601803.html \
 		file_bug601803a.html \
 		file_bug601803b.html \
+		test_bug604660.html \
+		file_bug604660-1.xml \
+		file_bug604660-2.xsl \
+		file_bug604660-3.js \
+		file_bug604660-4.js \
+		file_bug604660-5.xml \
+		file_bug604660-6.xsl \
 		test_bug605982.html \
 		$(NULL)
 

@@ -5822,7 +5822,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     NS_ASSERTION(rangeCount == rangeItemArray.Length(), "How did that happen?");
 
     // first register ranges for special editor gravity
-    for (i = 0; i < (PRInt32)rangeCount; i++)
+    for (i = 0; i < rangeCount; i++)
     {
       opRange = inArrayOfRanges[0];
       nsRangeStore *item = rangeItemArray.Elements() + i;
@@ -6678,7 +6678,12 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
     res = mHTMLEditor->DeleteNode(aBRNode);  
     NS_ENSURE_SUCCESS(res, res);
   }
-  
+
+  // remove ID attribute on the paragraph we just created
+  nsCOMPtr<nsIDOMElement> rightElt = do_QueryInterface(rightPara);
+  res = mHTMLEditor->RemoveAttribute(rightElt, NS_LITERAL_STRING("id"));
+  NS_ENSURE_SUCCESS(res, res);
+
   // check both halves of para to see if we need mozBR
   res = InsertMozBRIfNeeded(leftPara);
   NS_ENSURE_SUCCESS(res, res);

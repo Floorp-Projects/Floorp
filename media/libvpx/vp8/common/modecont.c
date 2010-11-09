@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -14,27 +14,27 @@
 const int vp8_mode_contexts[6][4] =
 {
     {
-        // 0
+        /* 0 */
         7,     1,     1,   143,
     },
     {
-        // 1
+        /* 1 */
         14,    18,    14,   107,
     },
     {
-        // 2
+        /* 2 */
         135,    64,    57,    68,
     },
     {
-        // 3
+        /* 3 */
         60,    56,   128,    65,
     },
     {
-        // 4
+        /* 4 */
         159,   134,   128,    34,
     },
     {
-        // 5
+        /* 5 */
         234,   188,   128,    28,
     },
 };

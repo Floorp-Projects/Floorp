@@ -236,18 +236,23 @@ GetCurrentProcess = GetCurrentProcessProto(
 GetCurrentProcess.errcheck = ErrCheckHandle
 
 # IsProcessInJob()
-IsProcessInJobProto = WINFUNCTYPE(BOOL,     # Return type
-                                  HANDLE,   # Process Handle
-                                  HANDLE,   # Job Handle
-                                  LPBOOL      # Result
-                                 )
-IsProcessInJobFlags = ((1, "ProcessHandle"),
-                       (1, "JobHandle", HANDLE(0)),
-                       (2, "Result"))
-IsProcessInJob = IsProcessInJobProto(
-    ("IsProcessInJob", windll.kernel32),
-    IsProcessInJobFlags)
-IsProcessInJob.errcheck = ErrCheckBool 
+try:
+    IsProcessInJobProto = WINFUNCTYPE(BOOL,     # Return type
+                                      HANDLE,   # Process Handle
+                                      HANDLE,   # Job Handle
+                                      LPBOOL      # Result
+                                      )
+    IsProcessInJobFlags = ((1, "ProcessHandle"),
+                           (1, "JobHandle", HANDLE(0)),
+                           (2, "Result"))
+    IsProcessInJob = IsProcessInJobProto(
+        ("IsProcessInJob", windll.kernel32),
+        IsProcessInJobFlags)
+    IsProcessInJob.errcheck = ErrCheckBool 
+except AttributeError:
+    # windows 2k doesn't have this API
+    def IsProcessInJob(process):
+        return False
 
 
 # ResumeThread()

@@ -156,7 +156,7 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jBeginDrawingMethod = getMethod("beginDrawing", "()I");
     jGetSoftwareDrawBufferMethod = getMethod("getSoftwareDrawBuffer", "()Ljava/nio/ByteBuffer;");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
-    jDraw2DMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;)V");
+    jDraw2DMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
 }
 
@@ -388,9 +388,9 @@ AndroidGeckoSurfaceView::EndDrawing()
 }
 
 void
-AndroidGeckoSurfaceView::Draw2D(jobject buffer)
+AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 {
-    JNI()->CallVoidMethod(wrapped_obj, jDraw2DMethod, buffer);
+    JNI()->CallVoidMethod(wrapped_obj, jDraw2DMethod, buffer, stride);
 }
 
 jobject

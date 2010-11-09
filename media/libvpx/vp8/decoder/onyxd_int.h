@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -88,30 +88,33 @@ typedef struct VP8Decompressor
     unsigned int time_loop_filtering;
 
     volatile int b_multithreaded_rd;
-    volatile int b_multithreaded_lf;
     int max_threads;
-    int last_mb_row_decoded;
     int current_mb_col_main;
     int decoding_thread_count;
     int allocated_decoding_thread_count;
-    int *current_mb_col;                  //Each row remembers its already decoded column.
-    int mt_baseline_filter_level[MAX_MB_SEGMENTS];
 
-    // variable for threading
-    DECLARE_ALIGNED(16, MACROBLOCKD, lpfmb);
+    /* variable for threading */
 #if CONFIG_MULTITHREAD
-    //pthread_t           h_thread_lpf;         // thread for postprocessing
-    sem_t               h_event_end_lpf;          // Event for post_proc completed
-    sem_t               *h_event_start_lpf;
-#endif
+    int mt_baseline_filter_level[MAX_MB_SEGMENTS];
+    int sync_range;
+    int *mt_current_mb_col;                  /* Each row remembers its already decoded column. */
+
+    unsigned char **mt_yabove_row;           /* mb_rows x width */
+    unsigned char **mt_uabove_row;
+    unsigned char **mt_vabove_row;
+    unsigned char **mt_yleft_col;            /* mb_rows x 16 */
+    unsigned char **mt_uleft_col;            /* mb_rows x 8 */
+    unsigned char **mt_vleft_col;            /* mb_rows x 8 */
+
     MB_ROW_DEC           *mb_row_di;
-    DECODETHREAD_DATA   *de_thread_data;
-#if CONFIG_MULTITHREAD
+    DECODETHREAD_DATA    *de_thread_data;
+
     pthread_t           *h_decoding_thread;
     sem_t               *h_event_start_decoding;
-    sem_t               h_event_end_decoding;
-    // end of threading data
+    sem_t                h_event_end_decoding;
+    /* end of threading data */
 #endif
+
     vp8_reader *mbc;
     INT64 last_time_stamp;
     int   ready_for_new_data;
@@ -124,6 +127,12 @@ typedef struct VP8Decompressor
     vp8_dequant_rtcd_vtable_t        dequant;
     struct vp8_dboolhuff_rtcd_vtable dboolhuff;
 #endif
+
+
+    vp8_prob prob_intra;
+    vp8_prob prob_last;
+    vp8_prob prob_gf;
+    vp8_prob prob_skip_false;
 
 } VP8D_COMP;
 

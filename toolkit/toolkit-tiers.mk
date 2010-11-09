@@ -155,10 +155,10 @@ tier_platform_dirs += \
 endif
 
 ifdef MOZ_WEBM
-tier_platform_dirs += \
-		media/libnestegg \
-		media/libvpx \
-		$(NULL)
+tier_platform_dirs += media/libnestegg
+ifndef MOZ_NATIVE_LIBVPX
+tier_platform_dirs += media/libvpx
+endif
 endif
 
 ifdef MOZ_OGG

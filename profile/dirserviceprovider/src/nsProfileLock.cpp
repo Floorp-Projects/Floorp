@@ -159,8 +159,11 @@ static struct sigaction SIGABRT_oldact;
 static struct sigaction SIGSEGV_oldact;
 static struct sigaction SIGTERM_oldact;
 
-void nsProfileLock::FatalSignalHandler(int signo, siginfo_t *info,
-                                       void *context)
+void nsProfileLock::FatalSignalHandler(int signo
+#ifdef SA_SIGINFO
+                                       , siginfo_t *info, void *context
+#endif
+                                       )
 {
     // Remove any locks still held.
     RemovePidLockFiles(PR_TRUE);
@@ -212,10 +215,12 @@ void nsProfileLock::FatalSignalHandler(int signo, siginfo_t *info,
 
             raise(signo);
         }
+#ifdef SA_SIGINFO
         else if (oldact->sa_sigaction &&
                  (oldact->sa_flags & SA_SIGINFO) == SA_SIGINFO) {
             oldact->sa_sigaction(signo, info, context);
         }
+#endif
         else if (oldact->sa_handler && oldact->sa_handler != SIG_IGN)
         {
             oldact->sa_handler(signo);
@@ -392,8 +397,12 @@ nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, PRBool a
                 // because mozilla is run via nohup.
                 if (!sDisableSignalHandling) {
                     struct sigaction act, oldact;
+#ifdef SA_SIGINFO
                     act.sa_sigaction = FatalSignalHandler;
                     act.sa_flags = SA_SIGINFO;
+#else
+                    act.sa_handler = FatalSignalHandler;
+#endif
                     sigfillset(&act.sa_mask);
 
 #define CATCH_SIGNAL(signame)                                           \

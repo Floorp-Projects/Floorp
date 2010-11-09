@@ -180,9 +180,9 @@ SVGLengthListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   // To understand this code, see the comments documenting our Init() method,
   // and documenting SVGLengthListAndInfo::CanZeroPadList().
 
-  NS_ASSERTION(from.CanZeroPadList() == to.CanZeroPadList() ||
-               from.CanZeroPadList() && from.Length() == 0 ||
-               to.CanZeroPadList() && to.Length() == 0,
+  NS_ASSERTION((from.CanZeroPadList() == to.CanZeroPadList()) ||
+               (from.CanZeroPadList() && from.Length() == 0) ||
+               (to.CanZeroPadList() && to.Length() == 0),
                "Only \"zero\" nsSMILValues from the SMIL engine should "
                "return PR_TRUE for CanZeroPadList() when the attribute "
                "being animated can't be zero padded");
@@ -255,9 +255,9 @@ SVGLengthListSMILType::Interpolate(const nsSMILValue& aStartVal,
   // To understand this code, see the comments documenting our Init() method,
   // and documenting SVGLengthListAndInfo::CanZeroPadList().
 
-  NS_ASSERTION(start.CanZeroPadList() == end.CanZeroPadList() ||
-               start.CanZeroPadList() && start.Length() == 0 ||
-               end.CanZeroPadList() && end.Length() == 0,
+  NS_ASSERTION((start.CanZeroPadList() == end.CanZeroPadList()) ||
+               (start.CanZeroPadList() && start.Length() == 0) ||
+               (end.CanZeroPadList() && end.Length() == 0),
                "Only \"zero\" nsSMILValues from the SMIL engine should "
                "return PR_TRUE for CanZeroPadList() when the attribute "
                "being animated can't be zero padded");

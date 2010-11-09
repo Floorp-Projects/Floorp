@@ -78,7 +78,6 @@ CPPSRCS += crashreporter_unix_common.cpp
 CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
 LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
   $(NULL)
 

@@ -11,7 +11,7 @@ function test() {
 }
 
 function confirm_install(window) {
-  items = window.document.getElementById("itemList").childNodes;
+  let items = window.document.getElementById("itemList").childNodes;
   is(items.length, 1, "Should only be 1 item listed in the confirmation dialog");
   is(items[0].name, "Signed XPI Test", "Should have had the name");
   is(items[0].url, TESTROOT + "signed.xpi", "Should have listed the correct url for the item");

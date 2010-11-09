@@ -2105,6 +2105,29 @@ nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
 }
 
 nsresult
+nsGenericHTMLElement::GetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aDefault,
+                                         PRUint32* aResult)
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
+    *aResult = attrVal->GetIntegerValue();
+  }
+  else {
+    *aResult = aDefault;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue)
+{
+  nsAutoString value;
+  value.AppendInt(aValue);
+
+  return SetAttr(kNameSpaceID_None, aAttr, value, PR_TRUE);
+}
+
+nsresult
 nsGenericHTMLElement::GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aResult)
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
@@ -2322,6 +2345,10 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo>
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
+  if (mFieldSet) {
+    static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+  }
+
   // Check that this element doesn't know anything about its form at this point.
   NS_ASSERTION(!mForm, "mForm should be null at this point!");
 }
@@ -2939,13 +2966,20 @@ nsGenericHTMLFormElement::UpdateFieldSet()
         static_cast<nsHTMLFieldSetElement*>(parent);
 
       if (!prev || fieldset->GetFirstLegend() != prev) {
+        if (mFieldSet) {
+          static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+        }
         mFieldSet = fieldset;
+        fieldset->AddElement(this);
         return;
       }
     }
   }
 
   // No fieldset found.
+  if (mFieldSet) {
+    static_cast<nsHTMLFieldSetElement*>(mFieldSet)->RemoveElement(this);
+  }
   mFieldSet = nsnull;
 }
 

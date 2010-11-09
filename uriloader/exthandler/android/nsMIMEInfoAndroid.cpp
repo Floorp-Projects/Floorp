@@ -102,7 +102,7 @@ nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
   nsCString mimeType;
   if (mozilla::AndroidBridge::Bridge())
     mozilla::AndroidBridge::Bridge()->
-      GetMimeTypeFromExtension(aFileExt, mimeType);
+      GetMimeTypeFromExtensions(aFileExt, mimeType);
   return GetMimeInfoForMimeType(mimeType, aMimeInfo);
 }
 

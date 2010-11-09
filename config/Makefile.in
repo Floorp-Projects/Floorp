@@ -132,6 +132,7 @@ export::
 		-DMOZ_NATIVE_PNG=$(MOZ_NATIVE_PNG) \
 		-DMOZ_NATIVE_JPEG=$(MOZ_NATIVE_JPEG) \
 		-DMOZ_NATIVE_LIBEVENT=$(MOZ_NATIVE_LIBEVENT) \
+		-DMOZ_NATIVE_LIBVPX=$(MOZ_NATIVE_LIBVPX) \
 		$(srcdir)/system-headers | $(PERL) $(topsrcdir)/nsprpub/config/make-system-wrappers.pl system_wrappers
 	$(INSTALL) system_wrappers $(DIST)
 

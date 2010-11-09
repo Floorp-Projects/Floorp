@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -64,32 +64,32 @@ typedef signed char     INT8;
 #endif
 
 #ifndef TYPE_INT16
-//#define TYPE_INT16
+/*#define TYPE_INT16*/
 typedef signed short    INT16;
 #endif
 
 #ifndef TYPE_INT32
-//#define TYPE_INT32
+/*#define TYPE_INT32*/
 typedef signed int      INT32;
 #endif
 
 #ifndef TYPE_UINT8
-//#define TYPE_UINT8
+/*#define TYPE_UINT8*/
 typedef unsigned char   UINT8;
 #endif
 
 #ifndef TYPE_UINT32
-//#define TYPE_UINT32
+/*#define TYPE_UINT32*/
 typedef unsigned int    UINT32;
 #endif
 
 #ifndef TYPE_UINT16
-//#define TYPE_UINT16
+/*#define TYPE_UINT16*/
 typedef unsigned short  UINT16;
 #endif
 
 #ifndef TYPE_BOOL
-//#define TYPE_BOOL
+/*#define TYPE_BOOL*/
 typedef int             BOOL;
 #endif
 
@@ -101,7 +101,7 @@ typedef __int64 INT64;
 
 #ifndef TYPE_INT64
 #ifdef _TMS320C6X
-//for now we only have 40bits
+/* for now we only have 40bits */
 typedef long INT64;
 #else
 typedef long long INT64;

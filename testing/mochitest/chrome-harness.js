@@ -91,38 +91,38 @@ function getChromeDir(resolvedURI) {
 /*
  * given a .jar file, we get all test files located inside the archive
  *
- * basePath: base URL to determine chrome location and search for tests
- * testPath: passed in testPath value from command line such as: dom/tests/mochitest
- * dir: the test dir to append to the baseURL after getting a directory interface
+ * aBasePath: base URL to determine chrome location and search for tests
+ * aTestPath: passed in testPath value from command line such as: dom/tests/mochitest
+ * aDir: the test dir to append to the baseURL after getting a directory interface
  *
  * As a note, this is hardcoded to the .jar structure we use for mochitest.  
  * Please don't assume this works for all jar files.
  */
-function getMochitestJarListing(basePath, testPath, dir)
+function getMochitestJarListing(aBasePath, aTestPath, aDir)
 {
   var zReader = Components.classes["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Components.interfaces.nsIZipReader);
   var fileHandler = Components.classes["@mozilla.org/network/protocol;1?name=file"].
                     getService(Components.interfaces.nsIFileProtocolHandler);
 
-  var fileName = fileHandler.getFileFromURLSpec(getResolvedURI(basePath).JARFile.spec);
+  var fileName = fileHandler.getFileFromURLSpec(getResolvedURI(aBasePath).JARFile.spec);
   zReader.open(fileName);
   //hardcoded 'content' as that is the root dir in the mochikit.jar file
-  var idx = basePath.indexOf('/content');
-  var basePath = basePath.slice(0, idx);
+  var idx = aBasePath.indexOf('/content');
+  var basePath = aBasePath.slice(0, idx);
 
-  var base = "content/" + dir + "/";
+  var base = "content/" + aDir + "/";
 
   var singleTestPath;
-  if (testPath) {
-    var extraPath = testPath;
-    var pathToCheck = base + testPath;
+  if (aTestPath) {
+    var extraPath = aTestPath;
+    var pathToCheck = base + aTestPath;
     if (zReader.hasEntry(pathToCheck)) {
       var pathEntry = zReader.getEntry(pathToCheck);
       if (pathEntry.isDirectory) {
         base = pathToCheck;
       } else {
-        singleTestPath = basePath + '/' + base + testPath;
+        singleTestPath = basePath + '/' + base + aTestPath;
         var singleObject = {};
         singleObject[singleTestPath] = true;
         return [singleObject, singleTestPath];

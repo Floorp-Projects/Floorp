@@ -1,5 +1,6 @@
 pref("startup.homepage_override_url","http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/whatsnew/");
 pref("startup.homepage_welcome_url","http://www.mozilla.com/%LOCALE%/%APP%/%VERSION%/firstrun/");
+pref("browser.panorama.welcome_url", "http://www.mozilla.com/firefox/panorama/");
 // Interval: Time between checks for a new version (in seconds)
 // nightly=6 hours, official=24 hours
 pref("app.update.interval", 86400);

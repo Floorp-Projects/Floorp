@@ -51,7 +51,7 @@ class nsHTMLAudioElement : public nsHTMLMediaElement,
 {
 public:
   nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                     PRUint32 aFromParser = 0);
+                     mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLAudioElement();
 
   // nsISupports

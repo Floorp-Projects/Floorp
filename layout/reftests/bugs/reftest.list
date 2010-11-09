@@ -1353,7 +1353,9 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 503364-1a.html 503364-1-ref.html
 == 503364-1b.html 503364-1-ref.html
 == 503399.html 503399-ref.html
-== 503531-1.html 503531-1-ref.html
+# Reftest for bug 503531 marked as failing; should be re-enabled when
+# bug 607548 gets resolved.
+fails == 503531-1.html 503531-1-ref.html
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
 == 506481-1.html 506481-1-ref.html
@@ -1424,6 +1426,10 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 539880-1-dynamic.html 539880-1-ref.html
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
+!= 542116-1.html 542116-1-ref.html
+asserts(1) != 542116-2.html 542116-2-ref.html # bug 596901
+!= 542116-3.html 542116-3-ref.html
+== 542317-1.html 542317-1-ref.html
 == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
 == 542620-1.html 542620-1-ref.html
 == 545049-1.html 545049-1-ref.html
@@ -1519,8 +1525,12 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
 == 600974-1.html 600974-1-ref.html
-== 604737.html 604737-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
+== 602200-1.html 602200-1-ref.html
+== 602200-2.html 602200-2-ref.html
+== 602200-3.html 602200-3-ref.html
+== 602200-4.html 602200-4-ref.html
+== 604737.html 604737-ref.html
 == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml

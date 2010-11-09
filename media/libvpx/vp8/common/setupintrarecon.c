@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -16,7 +16,7 @@ void vp8_setup_intra_recon(YV12_BUFFER_CONFIG *ybf)
 {
     int i;
 
-    // set up frame new frame for intra coded blocks
+    /* set up frame new frame for intra coded blocks */
     vpx_memset(ybf->y_buffer - 1 - ybf->y_stride, 127, ybf->y_width + 5);
     for (i = 0; i < ybf->y_height; i++)
         ybf->y_buffer[ybf->y_stride *i - 1] = (unsigned char) 129;

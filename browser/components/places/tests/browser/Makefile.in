@@ -65,6 +65,10 @@ _BROWSER_TEST_FILES = \
 	browser_views_liveupdate.js \
 	browser_sidebarpanels_click.js \
 	browser_library_infoBox.js \
+	browser_markPageAsFollowedLink.js \
+	framedPage.html \
+	frameLeft.html \
+	frameRight.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

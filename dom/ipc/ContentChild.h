@@ -94,9 +94,9 @@ public:
             const PRInt64& aContentLength);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
 
-    virtual bool RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
-                                    const nsTArray<ResourceMapping>& resources,
-                                    const nsTArray<OverrideMapping>& overrides);
+    virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
+                                    const InfallibleTArray<ResourceMapping>& resources,
+                                    const InfallibleTArray<OverrideMapping>& overrides);
 
     virtual bool RecvSetOffline(const PRBool& offline);
 
@@ -114,6 +114,9 @@ public:
 
     virtual bool RecvAddPermission(const IPC::Permission& permission);
 
+    virtual bool RecvAccelerationChanged(const double& x, const double& y,
+                                         const double& z);
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -127,7 +130,7 @@ private:
      */
     NS_NORETURN void QuickExit();
 
-    nsTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
+    InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsRefPtr<ConsoleListener> mConsoleListener;
 
     static ContentChild* sSingleton;
