@@ -186,7 +186,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                                 JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
                                 obj->shape());
 #endif
-                        if (!pobj->brand(cx, shape->slot, v))
+                        if (!pobj->brand(cx))
                             return JS_NO_PROP_CACHE_FILL;
                     }
                     vword.setFunObj(*funobj);
