@@ -2924,9 +2924,30 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     } else {
         gsop = NULL;
     }
+
+    /*
+     * Historically, all objects have a parent slot and all native functions
+     * defined by the JS_DefineFunction* APIs funnel here and bind parent to
+     * obj. But this prematurely deoptimizes by flagging, e.g. Date.prototype,
+     * as a "delegate" (a proto or parent of some other object), which in turn
+     * causes shadowingShapeChange events and shape regeneration for common
+     * method names that are also (and already) bound on, say, Object.prototype
+     * (e.g., toString).
+     *
+     * Until we get rid of parent, avoid flagging standard class prototype
+     * objects as delegates prematurely when defining their methods, instead
+     * parenting each method to the proto's global. We keep API compatibility
+     * for all obj parameters that are not of a standard (cached-proto-key)
+     * class, since some embedding clients count on parent being obj.
+     */
+    JSObject *parent = (JSCLASS_CACHED_PROTO_KEY(obj->clasp) != JSProto_Null)
+                       ? obj->getGlobal()
+                       : obj;
+
     fun = js_NewFunction(cx, NULL, native, nargs,
                          attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
-                         obj, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
+                         parent,
+                         JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
     if (!fun)
         return NULL;
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gsop, gsop, attrs & ~JSFUN_FLAGS_MASK))
