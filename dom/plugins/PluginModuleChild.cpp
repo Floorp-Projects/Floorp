@@ -859,7 +859,10 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_scheduletimer,
     mozilla::plugins::child::_unscheduletimer,
     mozilla::plugins::child::_popupcontextmenu,
-    mozilla::plugins::child::_convertpoint
+    mozilla::plugins::child::_convertpoint,
+    NULL, // handleevent, unimplemented
+    NULL, // unfocusinstance, unimplemented
+    NULL  // urlredirectresponse, unimplemented
 };
 
 PluginInstanceChild*
