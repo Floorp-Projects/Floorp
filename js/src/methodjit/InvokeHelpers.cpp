@@ -453,11 +453,8 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!IsFunctionObject(*vp, &callee) ||
         !IsBuiltinEvalFunction((fun = callee->getFunctionPrivate())))
     {
-        if (!ComputeThisFromVpInPlace(f.cx, vp) ||
-            !Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
-        {
+        if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
             THROW();
-        }
         return;
     }
 
