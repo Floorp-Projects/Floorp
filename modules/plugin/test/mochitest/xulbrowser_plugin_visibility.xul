@@ -75,11 +75,30 @@
 
     var plugin1, plugin2;
 
+    const kTimeout = 5000; // 5 seconds
+    var paintGiveUp;
+    var paintInterval;
+
     function startTest() {
       plugin1 = browser1.contentDocument.getElementById('p').wrappedJSObject;
       plugin2 = browser2.contentDocument.getElementById('p').wrappedJSObject;
 
-      ok(plugin1.isVisible(), "Plugin in tab 1 should be visible.");
+      paintGiveUp = Date.now() + kTimeout;
+      paintInterval = setInterval(waitForPaint, 100);
+    }
+
+    function waitForPaint() {
+      if (!plugin1.isVisible()) {
+        if (Date.now() < paintGiveUp)
+          return;
+
+        ok(false, "Plugin in tab 1 never became visible.");
+        done();
+        return;
+      }
+
+      clearInterval(paintInterval);
+      ok(true, "Plugin in tab 1 should be visible.");
       is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
          "Plugin in tab 1 should have painted once.");
 
