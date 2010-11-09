@@ -56,6 +56,14 @@
 #pragma warning( disable : 4800 )
 #endif
 
+#if !defined(OS_POSIX)
+// This condition must be kept in sync with the one in
+// ipc_message_utils.h, but this dummy definition of
+// base::FileDescriptor acts as a static assert that we only get one
+// def or the other (or neither, in which case code using
+// FileDescriptor fails to build)
+namespace base { class FileDescriptor { }; }
+#endif
 
 namespace mozilla {
 
@@ -116,6 +124,22 @@ struct ParamTraits<PRUint8>
     return true;
   }
 };
+
+#if !defined(OS_POSIX)
+// See above re: keeping definitions in sync
+template<>
+struct ParamTraits<base::FileDescriptor>
+{
+  typedef base::FileDescriptor paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    NS_RUNTIMEABORT("FileDescriptor isn't meaningful on this platform");
+  }
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+    NS_RUNTIMEABORT("FileDescriptor isn't meaningful on this platform");
+    return false;
+  }
+};
+#endif  // !defined(OS_POSIX)
 
 template <>
 struct ParamTraits<nsACString>
