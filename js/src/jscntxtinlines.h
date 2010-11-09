@@ -519,6 +519,7 @@ class AutoNamespaceArray : protected AutoGCRooter {
     JSXMLArray array;
 };
 
+#ifdef DEBUG
 class CompartmentChecker
 {
   private:
@@ -537,7 +538,7 @@ class CompartmentChecker
      */
     static void fail(JSCompartment *c1, JSCompartment *c2) {
         printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
-        JS_Assert("compartment mismatched", __FILE__, __LINE__);
+        JS_NOT_REACHED("compartment mismatched");
     }
 
     void check(JSCompartment *c) {
@@ -604,6 +605,8 @@ class CompartmentChecker
     void check(JSString *) { /* nothing for now */ }
 };
 
+#endif
+
 /*
  * Don't perform these checks when called from a finalizer. The checking
  * depends on other objects not having been swept yet.
@@ -616,46 +619,56 @@ class CompartmentChecker
 template <class T1> inline void
 assertSameCompartment(JSContext *cx, T1 t1)
 {
+#ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
+#endif
 }
 
 template <class T1, class T2> inline void
 assertSameCompartment(JSContext *cx, T1 t1, T2 t2)
 {
+#ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
+#endif
 }
 
 template <class T1, class T2, class T3> inline void
 assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3)
 {
+#ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
     c.check(t3);
+#endif
 }
 
 template <class T1, class T2, class T3, class T4> inline void
 assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
 {
+#ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
     c.check(t3);
     c.check(t4);
+#endif
 }
 
 template <class T1, class T2, class T3, class T4, class T5> inline void
 assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 {
+#ifdef DEBUG
     START_ASSERT_SAME_COMPARTMENT();
     c.check(t1);
     c.check(t2);
     c.check(t3);
     c.check(t4);
     c.check(t5);
+#endif
 }
 
 #undef START_ASSERT_SAME_COMPARTMENT
