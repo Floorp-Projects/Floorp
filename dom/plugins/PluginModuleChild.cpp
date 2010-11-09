@@ -1708,8 +1708,8 @@ PluginModuleChild::DeallocPPluginIdentifier(PPluginIdentifierChild* aActor)
 PPluginInstanceChild*
 PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
                                         const uint16_t& aMode,
-                                        const nsTArray<nsCString>& aNames,
-                                        const nsTArray<nsCString>& aValues,
+                                        const InfallibleTArray<nsCString>& aNames,
+                                        const InfallibleTArray<nsCString>& aValues,
                                         NPError* rv)
 {
     PLUGIN_LOG_DEBUG_METHOD;
@@ -1728,8 +1728,8 @@ bool
 PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                                     const nsCString& aMimeType,
                                                     const uint16_t& aMode,
-                                                    const nsTArray<nsCString>& aNames,
-                                                    const nsTArray<nsCString>& aValues,
+                                                    const InfallibleTArray<nsCString>& aNames,
+                                                    const InfallibleTArray<nsCString>& aValues,
                                                     NPError* rv)
 {
     PLUGIN_LOG_DEBUG_METHOD;

@@ -272,10 +272,10 @@ struct ParamTraits<nsString> : ParamTraits<nsAString>
   typedef nsString paramType;
 };
 
-template <typename E>
-struct ParamTraits<nsTArray<E> >
+template <typename E, class A>
+struct ParamTraits<nsTArray<E, A> >
 {
-  typedef nsTArray<E> paramType;
+  typedef nsTArray<E, A> paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -313,6 +313,28 @@ struct ParamTraits<nsTArray<E> >
       LogParam(aParam[index], aLog);
     }
   }
+};
+
+template<typename E>
+struct ParamTraits<InfallibleTArray<E> > :
+  ParamTraits<nsTArray<E, nsTArrayInfallibleAllocator> >
+{
+  typedef InfallibleTArray<E> paramType;
+
+  // use nsTArray Write() method
+
+  // deserialize the array fallibly, but return an InfallibleTArray
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    nsTArray<E> temp;
+    if (!ReadParam(aMsg, aIter, &temp))
+      return false;
+
+    aResult->SwapElements(temp);
+    return true;
+  }
+
+  // use nsTArray Log() method
 };
 
 template<>
