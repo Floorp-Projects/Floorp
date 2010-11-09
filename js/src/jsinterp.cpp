@@ -4671,7 +4671,7 @@ BEGIN_CASE(JSOP_EVAL)
 
     newfun = callee->getFunctionPrivate();
     if (!IsBuiltinEvalFunction(newfun))
-        goto not_direct_eval;
+        goto call_using_invoke;
 
     if (!DirectEval(cx, newfun, argc, vp))
         goto error;
@@ -4688,7 +4688,6 @@ BEGIN_CASE(JSOP_FUNCALL)
     if (IsFunctionObject(*vp, &callee)) {
         newfun = callee->getFunctionPrivate();
 
-      not_direct_eval:
         /* Clear frame flags since this is not a constructor call. */
         flags = 0;
         if (newfun->isInterpreted())
