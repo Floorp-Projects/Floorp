@@ -64,48 +64,17 @@ function test_lastSync() {
   }
 }
 
-function test_toFetch() {
-  _("SyncEngine.toFetch corresponds to file on disk");
-  let engine = makeSteamEngine();
-  try {
-    // Ensure pristine environment
-    do_check_eq(engine.toFetch.length, 0);
-
-    // Write file to disk
-    let toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    engine.toFetch = toFetch;
-    do_check_eq(engine.toFetch, toFetch);
-    let fakefile = syncTesting.fakeFilesystem.fakeContents[
-        "weave/toFetch/steam.json"];
-    do_check_eq(fakefile, JSON.stringify(toFetch));
-
-    // Read file from disk
-    toFetch = [Utils.makeGUID(), Utils.makeGUID()];
-    syncTesting.fakeFilesystem.fakeContents["weave/toFetch/steam.json"]
-        = JSON.stringify(toFetch);
-    engine.loadToFetch();
-    do_check_eq(engine.toFetch.length, 2);
-    do_check_eq(engine.toFetch[0], toFetch[0]);
-    do_check_eq(engine.toFetch[1], toFetch[1]);
-  } finally {
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-  }
-}
-
 function test_resetClient() {
-  _("SyncEngine.resetClient resets lastSync and toFetch");
+  _("SyncEngine.resetClient resets lastSync");
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
     do_check_eq(Svc.Prefs.get("steam.lastSync"), undefined);
-    do_check_eq(engine.toFetch.length, 0);
 
-    engine.toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
     engine.lastSync = 123.45;
 
     engine.resetClient();
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.toFetch.length, 0);
   } finally {
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
     Svc.Prefs.resetBranch("");
@@ -128,14 +97,12 @@ function test_wipeServer() {
 
   try {
     // Some data to reset.
-    engine.toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
     engine.lastSync = 123.45;
 
     _("Wipe server data and reset client.");
     engine.wipeServer(true);
     do_check_eq(steamCollection.payload, undefined);
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.toFetch.length, 0);
 
     _("We passed a truthy arg earlier in which case it doesn't wipe the crypto collection.");
     do_check_eq(steamCrypto.payload, PAYLOAD);
@@ -153,7 +120,6 @@ function run_test() {
   test_url_attributes();
   test_syncID();
   test_lastSync();
-  test_toFetch();
   test_resetClient();
   test_wipeServer();
 }
