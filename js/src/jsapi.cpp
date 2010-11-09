@@ -120,11 +120,14 @@ class AutoVersionAPI
     explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
       : cx(cx), oldVersion(cx->findVersion()), oldVersionWasOverride(cx->isVersionOverridden()),
         oldOptions(cx->options) {
-        JS_ASSERT(!VersionExtractFlags(newVersion) ||
-                  VersionExtractFlags(newVersion) == VersionFlags::HAS_XML);
         cx->options = VersionHasXML(newVersion)
                       ? (cx->options | JSOPTION_XML)
                       : (cx->options & ~JSOPTION_XML);
+
+        /* 
+         * Note: ANONFUNFIX is ignored for backwards compatibility, must be set
+         * via JS_SetOptions.
+         */
         cx->maybeOverrideVersion(newVersion);
         SyncOptionsToVersion(cx);
     }
@@ -1021,6 +1024,7 @@ CheckOptionVersionSync(JSContext *cx)
     uint32 options = cx->options;
     JSVersion version = cx->findVersion();
     JS_ASSERT(OptionsHasXML(options) == VersionHasXML(version));
+    JS_ASSERT(OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version));
 #endif
 }
 
