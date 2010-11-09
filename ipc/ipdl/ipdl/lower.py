@@ -288,7 +288,7 @@ E.g., |Foo[]| --> |ArrayOfFoo|."""
 
 def _hasVisibleActor(ipdltype):
     """Return true iff a C++ decl of |ipdltype| would have an Actor* type.
-For example: |Actor[]| would turn into |nsTArray<ActorParent*>|, so this
+For example: |Actor[]| would turn into |Array<ActorParent*>|, so this
 function would return true for |Actor[]|."""
     return (ipdltype.isIPDL()
             and (ipdltype.isActor()
@@ -314,7 +314,7 @@ def _autoptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
-    return Type('nsTArray', T=basetype, const=const, ref=ref)
+    return Type('InfallibleTArray', T=basetype, const=const, ref=ref)
 
 def _callCxxArrayLength(arr):
     return ExprCall(ExprSelect(arr, '.', 'Length'))
