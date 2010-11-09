@@ -66,6 +66,7 @@ abstract public class GeckoApp
     public static FrameLayout mainLayout;
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
+    public static boolean mFullscreen = false;
     ProgressDialog mProgressDialog;
 
     void showErrorDialog(String message)
@@ -116,13 +117,15 @@ abstract public class GeckoApp
 
         mAppContext = this;
 
-        // hide our window's title, we don't want it
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(mFullscreen ?
+                             WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
+                             WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        checkAndLaunchUpdate();
+        if (surfaceView == null)
+            surfaceView = new GeckoSurfaceView(this);
+        else
+            mainLayout.removeView(surfaceView);
 
-        surfaceView = new GeckoSurfaceView(this);
-        
         mainLayout = new FrameLayout(this);
         mainLayout.addView(surfaceView,
                            new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT,
@@ -139,6 +142,8 @@ abstract public class GeckoApp
                                                   ViewGroup.LayoutParams.FILL_PARENT));
 
         if (!GeckoAppShell.sGeckoRunning) {
+            checkAndLaunchUpdate();
+
             try {
                 BufferedReader reader =
                     new BufferedReader(new FileReader("/proc/cpuinfo"));
@@ -196,8 +201,6 @@ abstract public class GeckoApp
                 launch();
             }
         }
-
-        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -222,7 +225,6 @@ abstract public class GeckoApp
     @Override
     public void onPause()
     {
-
         Log.i("GeckoApp", "pause");
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
@@ -242,8 +244,6 @@ abstract public class GeckoApp
         Log.i("GeckoApp", "resume");
         if (GeckoAppShell.sGeckoRunning)
             GeckoAppShell.onResume();
-        if (surfaceView != null)
-            surfaceView.mSurfaceNeedsRedraw = true;
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
         super.onResume();

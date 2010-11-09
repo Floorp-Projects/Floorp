@@ -117,6 +117,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jAlertsProgressListener_OnProgress = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
     jAlertsProgressListener_OnCancel = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnCancel", "(Ljava/lang/String;)V");
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
+    jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
 
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
@@ -515,6 +516,12 @@ AndroidBridge::ShowFilePicker(nsAString& aFilePath, nsAString& aFilters)
                                              mGeckoAppShellClass,
                                              jShowFilePicker, jstrFilers));
     aFilePath.Assign(nsJNIString(jstr));
+}
+
+void
+AndroidBridge::SetFullScreen(PRBool aFullScreen)
+{
+    mJNIEnv->CallStaticIntMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
 }
 
 void
