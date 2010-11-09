@@ -336,7 +336,7 @@ def _callCxxArrayClear(arr):
 
 def _cxxArrayHasElementSorted(arr, elt):
     return ExprBinary(
-        ExprVar('nsTArray_base::NoIndex'), '!=',
+        ExprSelect(arr, '.', 'NoIndex'), '!=',
         ExprCall(ExprSelect(arr, '.', 'BinaryIndexOf'), args=[ elt ]))
 
 def _otherSide(side):
