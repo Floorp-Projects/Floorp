@@ -546,6 +546,19 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
 }
 
 bool
+PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
+{
+#ifndef MOZ_X11
+    NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
+#else
+    NS_ABORT_IF_FALSE(0 > mPluginXSocketFdDup.mFd,
+                      "Already backed up X resources??");
+    mPluginXSocketFdDup.mFd = aXSocketFd.fd;
+#endif
+    return true;
+}
+
+bool
 PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
 {
     *userAgent = NullableString(mNPNIface->uagent(nsnull));
