@@ -514,7 +514,7 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 
 /************************************************************************/
 
-typedef struct JSWatchPoint {
+struct JSWatchPoint {
     JSCList             links;
     JSObject            *object;        /* weak link, see js_FinalizeObject */
     const Shape         *shape;
@@ -522,13 +522,13 @@ typedef struct JSWatchPoint {
     JSWatchPointHandler handler;
     JSObject            *closure;
     uintN               flags;
-} JSWatchPoint;
+};
 
 #define JSWP_LIVE       0x1             /* live because set and not cleared */
 #define JSWP_HELD       0x2             /* held while running handler/setter */
 
 static bool
-IsWatchedProperty(JSContext *cx, const Shape &shape);
+IsWatchedProperty(JSContext *cx, const Shape *shape);
 
 /*
  * NB: DropWatchPointAndUnlock releases cx->runtime->debuggerLock in all cases.
@@ -574,7 +574,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         const Shape *wprop = wp->object->nativeLookup(shape->id);
         if (wprop &&
             wprop->hasSetterValue() == shape->hasSetterValue() &&
-            IsWatchedProperty(cx, *wprop)) {
+            IsWatchedProperty(cx, wprop)) {
             shape = wp->object->changeProperty(cx, wprop, 0, wprop->attributes(),
                                                wprop->getter(), wp->setter);
             if (!shape)
@@ -732,28 +732,38 @@ js_watch_set_wrapper(JSContext *cx, uintN argc, Value *vp)
 }
 
 static bool
-IsWatchedProperty(JSContext *cx, const Shape &shape)
+IsWatchedProperty(JSContext *cx, const Shape *shape)
 {
-    if (shape.hasSetterValue()) {
-        JSObject *funobj = shape.setterObject();
+    if (shape->hasSetterValue()) {
+        JSObject *funobj = shape->setterObject();
         if (!funobj || !funobj->isFunction())
             return false;
 
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         return fun->maybeNative() == js_watch_set_wrapper;
     }
-    return shape.setterOp() == js_watch_set;
+    return shape->setterOp() == js_watch_set;
 }
 
+/*
+ * Return an appropriate setter to substitute for |setter| on a property
+ * with attributes |attrs|, to implement a watchpoint on the property named
+ * |id|.
+ */
 PropertyOp
 js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, PropertyOp setter)
 {
     JSAtom *atom;
     JSFunction *wrapper;
 
+    /* Wrap a JSPropertyOp setter simply by returning our own JSPropertyOp. */
     if (!(attrs & JSPROP_SETTER))
         return &js_watch_set;   /* & to silence schoolmarmish MSVC */
 
+    /*
+     * Wrap a JSObject * setter by constructing our own JSFunction * that saves the
+     * property id as the function name, and calls js_watch_set.
+     */
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
@@ -779,12 +789,6 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     Value v;
     uintN attrs;
     jsid propid;
-    JSObject *pobj;
-    JSProperty *prop;
-    const Shape *shape;
-    JSRuntime *rt;
-    JSWatchPoint *wp;
-    PropertyOp watcher;
 
     origobj = obj;
     OBJ_TO_INNER_OBJECT(cx, obj);
@@ -814,10 +818,12 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         return JS_FALSE;
     }
 
+    JSProperty *prop;
+    JSObject *pobj;
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
-    shape = (Shape *) prop;
-    rt = cx->runtime;
+    const Shape *shape = (Shape *) prop;
+    JSRuntime *rt = cx->runtime;
     if (!shape) {
         /* Check for a deleted symbol watchpoint, which holds its property. */
         shape = js_FindWatchPoint(rt, obj, propid);
@@ -869,10 +875,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
      * unlock the object before returning.
      */
     DBG_LOCK(rt);
-    wp = FindWatchPoint(rt, obj, propid);
+    JSWatchPoint *wp = FindWatchPoint(rt, obj, propid);
     if (!wp) {
         DBG_UNLOCK(rt);
-        watcher = js_WrapWatchedSetter(cx, propid, shape->attributes(), shape->setter());
+        PropertyOp watcher = js_WrapWatchedSetter(cx, propid, shape->attributes(), shape->setter());
         if (!watcher)
             return JS_FALSE;
 
