@@ -51,10 +51,11 @@ interface nsIDocShell;
 
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 
-template<class E> class nsTArray;
+template<class E, class A> class nsTArray;
+struct nsTArrayDefaultAllocator;
 %}
 
-[ref] native nsDocshellIDArray(nsTArray<PRUint64>);
+[ref] native nsDocshellIDArray(nsTArray<PRUint64, nsTArrayDefaultAllocator>);
 
 [scriptable, uuid(2dede933-25e1-47a3-8f61-0127c785ea01)]
 interface nsISHistoryInternal: nsISupports
