@@ -120,6 +120,7 @@ _BROWSER_TEST_FILES = \
 	browser_581593.js \
 	browser_586147.js \
 	browser_586068-cascaded_restore.js \
+	browser_589246.js \
 	browser_590268.js \
 	browser_600545.js \
 	$(NULL)
