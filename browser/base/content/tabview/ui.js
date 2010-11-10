@@ -1023,11 +1023,12 @@ let UI = {
     }
 
     function collapse() {
+      let center = phantom.bounds().center();
       phantom.animate({
         width: 0,
         height: 0,
-        top: phantom.position().x + phantom.height()/2,
-        left: phantom.position().y + phantom.width()/2
+        top: center.y,
+        left: center.x
       }, {
         duration: 300,
         complete: function() {
