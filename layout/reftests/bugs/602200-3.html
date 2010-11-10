@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div style="-moz-transform:translate(0.4px); position:absolute; top:0px;">
+  <canvas style="margin-left:0.4px; border:1px solid black; display:block" width="10" height="10" id="c"></canvas>
+</div>
+<div style="position:absolute; top:0px; width:12px; height:12px; background:black;"></div>
+<script>
+var c = document.getElementById("c");
+var ctx = c.getContext('2d');
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, c.width, c.height);
+</script>
+</body>
+</html>

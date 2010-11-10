@@ -99,8 +99,6 @@ EXPORTS		= \
 		$(NULL)
 
 # These files enable support for writing JPEGs
-# (on certain platforms, or if JPEG image encoder support is required)
-ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT))$(filter jpeg,$(MOZ_IMG_ENCODERS)))
 CSRCS		+= \
 		jcapimin.c \
 		jcparam.c \
@@ -117,8 +115,6 @@ CSRCS		+= \
 		jcdctmgr.c \
 		jcprepct.c \
 		$(NULL)
-
-endif
 
 # need static lib for some of the libimg componentry to link properly
 FORCE_STATIC_LIB = 1

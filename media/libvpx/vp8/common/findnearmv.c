@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -168,7 +168,7 @@ void vp8_find_near_mvs
 
     vp8_clamp_mv(nearest, xd);
     vp8_clamp_mv(nearby, xd);
-    vp8_clamp_mv(best_mv, xd); //TODO: move this up before the copy
+    vp8_clamp_mv(best_mv, xd); /*TODO: move this up before the copy*/
 }
 
 vp8_prob *vp8_mv_ref_probs(
@@ -179,7 +179,7 @@ vp8_prob *vp8_mv_ref_probs(
     p[1] = vp8_mode_contexts [near_mv_ref_ct[1]] [1];
     p[2] = vp8_mode_contexts [near_mv_ref_ct[2]] [2];
     p[3] = vp8_mode_contexts [near_mv_ref_ct[3]] [3];
-    //p[3] = vp8_mode_contexts [near_mv_ref_ct[1] + near_mv_ref_ct[2] + near_mv_ref_ct[3]] [3];
+    /*p[3] = vp8_mode_contexts [near_mv_ref_ct[1] + near_mv_ref_ct[2] + near_mv_ref_ct[3]] [3];*/
     return p;
 }
 

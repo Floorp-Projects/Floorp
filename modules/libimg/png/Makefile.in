@@ -66,28 +66,21 @@ CSRCS		= \
 		pngtrans.c \
 		$(NULL)
 
-# These files enable support for reading PNGs
+# These files enable support for reading/writting PNGs
 CSRCS		+= \
 		pngpread.c \
 		pngread.c \
 		pngrio.c \
 		pngrtran.c \
 		pngrutil.c \
-		$(NULL)
-
-DEFINES		+= -DMOZ_PNG_READ
-
-# These files enable support for writing PNGs
-ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
-CSRCS		+= \
 		pngwio.c \
 		pngwrite.c \
 		pngwtran.c \
 		pngwutil.c \
 		$(NULL)
 
-DEFINES		+= -DMOZ_PNG_WRITE
-endif
+DEFINES		+= -DMOZ_PNG_READ \
+		-DMOZ_PNG_WRITE
 
 EXPORTS		= png.h pngconf.h mozpngconf.h
 

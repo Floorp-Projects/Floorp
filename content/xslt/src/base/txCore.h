@@ -73,9 +73,9 @@ public:
     /**
      * Useful constants
      */
-    static const double NaN;
-    static const double POSITIVE_INFINITY;
-    static const double NEGATIVE_INFINITY;
+    static const txdpun NaN;
+    static const txdpun POSITIVE_INFINITY;
+    static const txdpun NEGATIVE_INFINITY;
 
     /**
      * Determines whether the given double represents positive or negative

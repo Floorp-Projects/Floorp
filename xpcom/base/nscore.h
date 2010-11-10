@@ -195,7 +195,7 @@
 #define NS_EXPORT_STATIC_MEMBER_(type) type
 #define NS_IMPORT_STATIC_MEMBER_(type) type
 
-#elif defined(XP_OS2) && defined(__declspec)
+#elif defined(XP_OS2)
 
 #define NS_IMPORT __declspec(dllimport)
 #define NS_IMPORT_(type) type __declspec(dllimport)

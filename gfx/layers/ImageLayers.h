@@ -207,6 +207,23 @@ public:
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    // Snap image edges to pixel boundaries
+    gfxRect snap(0, 0, 0, 0);
+    if (mContainer) {
+      gfxIntSize size = mContainer->GetCurrentSize();
+      snap.size = gfxSize(size.width, size.height);
+    }
+    // Snap our local transform first, and snap the inherited transform as well.
+    // This makes our snapping equivalent to what would happen if our content
+    // was drawn into a ThebesLayer (gfxContext would snap using the local
+    // transform, then we'd snap again when compositing the ThebesLayer).
+    mEffectiveTransform =
+        SnapTransform(GetLocalTransform(), snap, nsnull)*
+        SnapTransform(aTransformToSurface, gfxRect(0, 0, 0, 0), nsnull);
+  }
+
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}

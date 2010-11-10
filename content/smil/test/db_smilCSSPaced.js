@@ -92,6 +92,47 @@ var _pacedTestLists =
           },
           "need support for URI-based paints"),
   ],
+  lengthNoUnits : [
+    new AnimTestcasePaced("2; 0; 4",
+                          { comp0:   "2px",
+                            comp1_6: "1px",
+                            comp1_3: "0px",
+                            comp2_3: "2px",
+                            comp1:   "4px"
+                          }),
+    new AnimTestcasePaced("10; 12; 8",
+                          { comp0:   "10px",
+                            comp1_6: "11px",
+                            comp1_3: "12px",
+                            comp2_3: "10px",
+                            comp1:    "8px"
+                          }),
+  ],
+  lengthNoUnitsSVG : [
+    new AnimTestcasePaced("2; 0; 4",
+                          { comp0:   "2",
+                            comp1_6: "1",
+                            comp1_3: "0px",  // 0 acts like 0px
+                            comp2_3: "2",
+                            comp1:   "4"
+                          }),
+    new AnimTestcasePaced("10; 12; 8",
+                          { comp0:   "10",
+                            comp1_6: "11",
+                            comp1_3: "12",
+                            comp2_3: "10",
+                            comp1:   "8"
+                          }),
+  ],
+  lengthPx : [
+    new AnimTestcasePaced("0; 2px; 6px",
+                          { comp0:   "0px", // 0 acts like 0px
+                            comp1_6: "1px",
+                            comp1_3: "2px",
+                            comp2_3: "4px",
+                            comp1:   "6px"
+                          }),
+  ],
   lengthPx : [
     new AnimTestcasePaced("0px; 2px; 6px",
                           { comp0:   "0px",
@@ -223,7 +264,8 @@ var gPacedBundles =
                      [].concat(_pacedTestLists.color,
                                _pacedTestLists.paintServer)),
   new TestcaseBundle(gPropList.font_size,
-                     [].concat(_pacedTestLists.lengthPx, [
+                     [].concat(_pacedTestLists.lengthNoUnits,
+                               _pacedTestLists.lengthPx, [
     new AnimTestcasePaced("20%; 24%; 16%",
                           { comp0:   "10px",
                             comp1_6: "11px",
@@ -280,11 +322,13 @@ var gPacedBundles =
                           }),
   ])),
   new TestcaseBundle(gPropList.stroke_dashoffset,
-                     [].concat(_pacedTestLists.lengthPx,
+                     [].concat(_pacedTestLists.lengthNoUnitsSVG,
+                               _pacedTestLists.lengthPx,
                                _pacedTestLists.lengthPctSVG,
                                _pacedTestLists.lengthPxPctSVG)),
   new TestcaseBundle(gPropList.stroke_width,
-                     [].concat(_pacedTestLists.lengthPx,
+                     [].concat(_pacedTestLists.lengthNoUnitsSVG,
+                               _pacedTestLists.lengthPx,
                                _pacedTestLists.lengthPctSVG,
                                _pacedTestLists.lengthPxPctSVG)),
   // XXXdholbert TODO: test 'stroke-dasharray' once we support animating it

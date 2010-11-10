@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Geoff Lankow <geoff@darktrojan.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -540,6 +541,9 @@ UploadLastDir::StoreLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
   NS_PRECONDITION(aFile, "aFile is null");
   nsCOMPtr<nsIFile> parentFile;
   aFile->GetParent(getter_AddRefs(parentFile));
+  if (!parentFile) {
+    return NS_OK;
+  }
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(parentFile);
 
   // Store the data in memory instead of the CPS during private browsing mode
@@ -977,7 +981,7 @@ NS_IMPL_URI_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
-//NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Size, size, 0)
+NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(nsHTMLInputElement, Size, size, DEFAULT_COLS)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Pattern, pattern)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Placeholder, placeholder)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
@@ -1017,29 +1021,6 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetIndeterminate(PRBool aValue)
 {
   return SetIndeterminateInternal(aValue, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::GetSize(PRUint32* aValue)
-{
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::size);
-  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
-    *aValue = attrVal->GetIntegerValue();
-  }
-  else {
-    *aValue = 0;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetSize(PRUint32 aValue)
-{
-  nsAutoString val;
-  val.AppendInt(aValue);
-
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::size, val, PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -2691,7 +2672,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseNonNegativeIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::size) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+      return aResult.ParsePositiveIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::border) {
       return aResult.ParseIntWithBounds(aValue, 0);

@@ -121,8 +121,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x7fb1e97d, 0xbd2c, 0x47cf, \
-  { 0xa3, 0x05, 0x5b, 0x31, 0xd4, 0x1d, 0x3a, 0x52 } }
+{ 0xc38a7935, 0xc854, 0x4df7, \
+  { 0x8f, 0xd4, 0xa2, 0x6f, 0x0d, 0x27, 0x9f, 0x31 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1279,6 +1279,11 @@ public:
   // mAnimationController isn't yet initialized.
   virtual nsSMILAnimationController* GetAnimationController() = 0;
 #endif // MOZ_SMIL
+
+  // Makes the images on this document capable of having their animation
+  // active or suspended. An Image will animate as long as at least one of its
+  // owning Documents needs it to animate; otherwise it can suspend.
+  virtual void SetImagesNeedAnimating(PRBool aAnimating) = 0;
 
   /**
    * Prevents user initiated events from being dispatched to the document and

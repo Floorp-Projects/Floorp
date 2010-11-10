@@ -266,7 +266,7 @@ nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsresult result;
+  nsresult result = NS_OK;
   if (aAttributeWasSet) {
     // the style attribute was set and not empty, let's recreate the declaration
     nsAutoString propertyNameString;

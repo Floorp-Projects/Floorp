@@ -402,7 +402,7 @@ RealBreak()
    raise(SIGTRAP);
 #endif
 #else
-#warning don't know how to break on this platform  
+#warning do not know how to break on this platform
 #endif
 }
 
@@ -506,7 +506,7 @@ Break(const char *aMsg)
 #elif defined(SOLARIS)
    RealBreak();
 #else
-#warning don't know how to break on this platform
+#warning do not know how to break on this platform
 #endif
 }
 

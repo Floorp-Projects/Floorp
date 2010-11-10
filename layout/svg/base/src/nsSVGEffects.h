@@ -81,6 +81,7 @@ public:
 
   void InvalidateViaReferencedElement();
   nsIFrame* GetReferencedFrame();
+  PRBool IsInObserverList() const { return mInObserverList; }
 
   /**
    * @param aOK this is only for the convenience of callers. We set *aOK to false

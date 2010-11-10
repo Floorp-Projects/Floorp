@@ -62,14 +62,15 @@ public:
    * Pause request types.
    */
   enum {
-    PAUSE_BEGIN    = 1,
-    PAUSE_SCRIPT   = 2,
-    PAUSE_PAGEHIDE = 4,
-    PAUSE_USERPREF = 8
+    PAUSE_BEGIN    =  1, // Paused because timeline has yet to begin.
+    PAUSE_SCRIPT   =  2, // Paused by script.
+    PAUSE_PAGEHIDE =  4, // Paused because our doc is hidden.
+    PAUSE_USERPREF =  8, // Paused because animations are disabled in prefs.
+    PAUSE_IMAGE    = 16  // Paused becuase we're in an image that's suspended.
   };
 
   /*
-   * Cause the time container to records its begin time.
+   * Cause the time container to record its begin time.
    */
   void Begin();
 

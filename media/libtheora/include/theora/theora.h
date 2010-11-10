@@ -179,7 +179,7 @@ typedef enum {
   OC_PF_420,    /**< Chroma subsampling by 2 in each direction (4:2:0) */
   OC_PF_RSVD,   /**< Reserved value */
   OC_PF_422,    /**< Horizonatal chroma subsampling by 2 (4:2:2) */
-  OC_PF_444,    /**< No chroma subsampling at all (4:4:4) */
+  OC_PF_444     /**< No chroma subsampling at all (4:4:4) */
 } theora_pixelformat;
 
 /**

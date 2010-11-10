@@ -76,14 +76,16 @@ public:
               gfxImageFormat aFormat,
               SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC)
     {
-        mSize = aSize;
-        mFormat = aFormat;
-        mStride = ComputeStride();
-        if (!aAllocator->AllocShmem(GetAlignedSize(),
-                                    aShmType, &mShmem))
-            return false;
+        return Init<ShmemAllocator, false>(aAllocator, aSize, aFormat, aShmType);
+    }
 
-        return InitSurface(PR_TRUE);
+    template<class ShmemAllocator>
+    bool InitUnsafe(ShmemAllocator *aAllocator,
+                    const gfxIntSize& aSize,
+                    gfxImageFormat aFormat,
+                    SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC)
+    {
+        return Init<ShmemAllocator, true>(aAllocator, aSize, aFormat, aShmType);
     }
 
     /* Gives Shmem data, which can be passed to IPDL interfaces */
@@ -93,6 +95,28 @@ public:
     static PRBool IsSharedImage(gfxASurface *aSurface);
 
 private:
+    template<class ShmemAllocator, bool Unsafe>
+    bool Init(ShmemAllocator *aAllocator,
+              const gfxIntSize& aSize,
+              gfxImageFormat aFormat,
+              SharedMemory::SharedMemoryType aShmType)
+    {
+        mSize = aSize;
+        mFormat = aFormat;
+        mStride = ComputeStride();
+        if (!Unsafe) {
+            if (!aAllocator->AllocShmem(GetAlignedSize(),
+                                        aShmType, &mShmem))
+                return false;
+        } else {
+            if (!aAllocator->AllocUnsafeShmem(GetAlignedSize(),
+                                              aShmType, &mShmem))
+                return false;
+        }
+
+        return InitSurface(PR_TRUE);
+    }
+
     size_t GetAlignedSize();
     bool InitSurface(PRBool aUpdateShmemInfo);
 

@@ -1,10 +1,7 @@
 diff --git a/media/libvpx/vp8/common/loopfilter_filters.c b/media/libvpx/vp8/common/loopfilter_filters.c
 --- a/media/libvpx/vp8/common/loopfilter_filters.c
 +++ b/media/libvpx/vp8/common/loopfilter_filters.c
-@@ -8,16 +8,19 @@
-  *  be found in the AUTHORS file in the root of the source tree.
-  */
- 
+@@ -11,10 +11,14 @@
  
  #include <stdlib.h>
  #include "loopfilter.h"
@@ -13,9 +10,7 @@ diff --git a/media/libvpx/vp8/common/loopfilter_filters.c b/media/libvpx/vp8/com
 +#ifdef __SUNPRO_C
 +#define __inline inline
 +#endif
- 
- #define NEW_LOOPFILTER_MASK
- 
++
  typedef unsigned char uc;
  
  static __inline signed char vp8_signed_char_clamp(int t)
@@ -109,14 +104,14 @@ diff --git a/media/libvpx/vpx_ports/mem.h b/media/libvpx/vpx_ports/mem.h
 diff --git a/media/libvpx/vpx_ports/x86.h b/media/libvpx/vpx_ports/x86.h
 --- a/media/libvpx/vpx_ports/x86.h
 +++ b/media/libvpx/vpx_ports/x86.h
-@@ -26,16 +26,36 @@
+@@ -45,16 +45,36 @@
+ #define cpuid(func,ax,bx,cx,dx)\
      __asm__ __volatile__ (\
-                           "pushl %%ebx     \n\t" \
-                           "cpuid           \n\t" \
-                           "movl  %%ebx, %1 \n\t" \
-                           "popl  %%ebx     \n\t" \
-                           : "=a" (ax), "=r" (bx), "=c" (cx), "=d" (dx) \
-                           : "a"  (func));
+                           "mov %%ebx, %%edi   \n\t" \
+                           "cpuid              \n\t" \
+                           "xchg %%edi, %%ebx  \n\t" \
+                           : "=a" (ax), "=D" (bx), "=c" (cx), "=d" (dx) \
+                           : "a" (func));
  #endif
 +#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 +#if ARCH_X86_64

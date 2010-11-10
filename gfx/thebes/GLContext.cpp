@@ -604,6 +604,7 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
                             NULL);
 
     mTextureInited = PR_TRUE;
+    mSize = aSize;
 }
 
 PRBool

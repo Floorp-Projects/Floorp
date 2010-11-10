@@ -594,6 +594,9 @@ endif
 ifeq (bundle,$(MOZ_FS_LAYOUT))
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
+ifdef MOZ_OMNIJAR
+	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(PACK_OMNIJAR)
+endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
 	(cd $(DIST)/$(MOZ_PKG_DIR) && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DESTDIR)$(installdir) && tar -xf -)

@@ -5708,11 +5708,16 @@ public:
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
                                 PRInt32 aInput, Image* aImage) {
-    if (aInput == 0)
+    switch (aInput) {
+    case 0:
       return aImage->mColorModel.mColorSpace == ColorModel::SRGB;
-
-    return nsSVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
-                                                             aInput, aImage);
+    case 1:
+      return nsSVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
+                                                               aInput, aImage);
+    default:
+      NS_ERROR("Will not give correct output color model");
+      return PR_FALSE;
+    }
   }
   virtual PRBool OperatesOnPremultipledAlpha(PRInt32 aInput) {
     return !(aInput == 1);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -29,7 +29,8 @@
  * This interface provides the capability to encode raw VP8 streams, as would
  * be found in AVI files.
  */
-extern vpx_codec_iface_t vpx_codec_vp8_cx_algo;
+extern vpx_codec_iface_t  vpx_codec_vp8_cx_algo;
+extern vpx_codec_iface_t* vpx_codec_vp8_cx(void);
 
 
 /*

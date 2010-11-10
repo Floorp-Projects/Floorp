@@ -66,6 +66,10 @@ _BROWSER_TEST_FILES = \
 	browser_sidebarpanels_click.js \
 	sidebarpanels_click_test_page.html \
 	browser_library_infoBox.js \
+	browser_markPageAsFollowedLink.js \
+	framedPage.html \
+	frameLeft.html \
+	frameRight.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

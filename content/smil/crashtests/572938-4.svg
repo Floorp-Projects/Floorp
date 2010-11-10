@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="a">
+ <path d=""><animate/></path>
+</g>
+<g display="none">
+<use xlink:href="#a" x="80"/>
+<set attributeName="display" to="inline"/>
+</g>
+</svg>

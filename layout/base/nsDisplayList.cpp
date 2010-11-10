@@ -68,12 +68,12 @@ using namespace mozilla;
 using namespace mozilla::layers;
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
-    PRBool aIsForEvents, PRBool aBuildCaret)
+    Mode aMode, PRBool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nsnull),
       mCurrentTableItem(nsnull),
       mBuildCaret(aBuildCaret),
-      mEventDelivery(aIsForEvents),
+      mMode(aMode),
       mIgnoreSuppression(PR_FALSE),
       mHadToIgnoreSuppression(PR_FALSE),
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
@@ -307,6 +307,21 @@ nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
   return ComputeVisibilityForSublist(aBuilder, aVisibleRegion, r.GetBounds());
 }
 
+static PRBool
+TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder,
+              PRBool* aTransparentBackground)
+{
+  if (aItem->IsOpaque(aBuilder, aTransparentBackground))
+    return PR_TRUE;
+  if (aBuilder->IsForPluginGeometry()) {
+    // Treat all chrome items as opaque
+    nsIFrame* f = aItem->GetUnderlyingFrame();
+    if (f && f->PresContext()->IsChrome())
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 PRBool
 nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
@@ -345,7 +360,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
       anyVisible = PR_TRUE;
       nsIFrame* f = item->GetUnderlyingFrame();
       PRBool transparentBackground = PR_FALSE;
-      if (item->IsOpaque(aBuilder, &transparentBackground) && f) {
+      if (TreatAsOpaque(item, aBuilder, &transparentBackground) && f) {
         // Subtract opaque item from the visible region
         aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(bounds));
       }
@@ -650,7 +665,8 @@ PRBool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   if (!ComputeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
-  if (IsOpaque(aBuilder)) {
+  PRBool forceTransparentBackground;
+  if (TreatAsOpaque(this, aBuilder, &forceTransparentBackground)) {
     aVisibleRegion->Sub(*aVisibleRegion, bounds);
   }
   return PR_TRUE;

@@ -37,6 +37,8 @@
 const kIMig = Components.interfaces.nsIBrowserProfileMigrator;
 const kIPStartup = Components.interfaces.nsIProfileStartup;
 const kProfileMigratorContractIDPrefix = "@mozilla.org/profile/migrator;1?app=browser&type=";
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 var MigrationWizard = {
   _source: "",                  // Source Profile Migrator ContractID suffix
@@ -54,6 +56,7 @@ var MigrationWizard = {
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
     os.addObserver(this, "Migration:ItemAfterMigrate", false);
+    os.addObserver(this, "Migration:ItemError", false);
     os.addObserver(this, "Migration:Ended", false);
 
     this._wiz = document.documentElement;
@@ -81,6 +84,7 @@ var MigrationWizard = {
     os.removeObserver(this, "Migration:Started");
     os.removeObserver(this, "Migration:ItemBeforeMigrate");
     os.removeObserver(this, "Migration:ItemAfterMigrate");
+    os.removeObserver(this, "Migration:ItemError");
     os.removeObserver(this, "Migration:Ended");
   },
 
@@ -488,6 +492,35 @@ var MigrationWizard = {
         var nextButton = this._wiz.getButton("next");
         nextButton.click();
       }
+      break;
+    case "Migration:ItemError":
+      var type = "undefined";
+      switch (parseInt(aData)) {
+      case Ci.nsIBrowserProfileMigrator.SETTINGS:
+        type = "settings";
+        break;
+      case Ci.nsIBrowserProfileMigrator.COOKIES:
+        type = "cookies";
+        break;
+      case Ci.nsIBrowserProfileMigrator.HISTORY:
+        type = "history";
+        break;
+      case Ci.nsIBrowserProfileMigrator.FORMDATA:
+        type = "form data";
+        break;
+      case Ci.nsIBrowserProfileMigrator.PASSWORDS:
+        type = "passwords";
+        break;
+      case Ci.nsIBrowserProfileMigrator.BOOKMARKS:
+        type = "bookmarks";
+        break;
+      case Ci.nsIBrowserProfileMigrator.OTHERDATA:
+        type = "misc. data";
+        break;
+      }
+      Cc["@mozilla.org/consoleservice;1"]
+        .getService(Ci.nsIConsoleService)
+        .logStringMessage("some " + type + " did not successfully migrate.");
       break;
     }
   },

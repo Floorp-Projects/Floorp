@@ -305,3 +305,11 @@ nsThreadManager::GetIsMainThread(PRBool *result)
   *result = (PR_GetCurrentThread() == mMainPRThread);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsThreadManager::GetIsCycleCollectorThread(PRBool *result)
+{
+  // Not yet implemented.
+  *result = PR_FALSE;
+  return NS_OK;
+}

@@ -93,6 +93,9 @@ InstallTrigger.prototype = {
    * @see amIInstallTriggerInstaller.idl
    */
   install: function(aArgs, aCallback) {
+    if (!aArgs || typeof aArgs != "object")
+      throw new Error("Incorrect arguments passed to InstallTrigger.install()");
+
     var params = {
       installerId: this.installerId,
       mimetype: "application/x-xpinstall",
@@ -226,13 +229,24 @@ InstallTriggerManager.prototype = {
   },
 
   createInstallTrigger: function createInstallTrigger() {
-    // 'this' is the window itself. We do this in a getter, so that
-    // we create these objects only on demand (this is a potential
-    // concern, since otherwise we might add one per iframe, and
-    // keep them alive for as long as the tab is alive).
-    delete this.InstallTrigger; // remove getter
-    this.InstallTrigger = new InstallTrigger(this);
-    return this.InstallTrigger;
+    // We do this in a getter, so that we create these objects
+    // only on demand (this is a potential concern, since
+    // otherwise we might add one per iframe, and keep them
+    // alive for as long as the tab is alive).
+    // In order for this lazy instantiation to work, we need
+    // 'this' to be a window. However, we can get here with the
+    // window being on the prototype chain of our actual 'this'
+    // object (see bug 609794). Note that we need the
+    // XPCNativeWrapper.unwrap because getting the prototype
+    // doesn't respect the .wrappedJSObject unwrapping above.
+    var obj = XPCNativeWrapper.unwrap(this);
+    while (!obj.hasOwnProperty('InstallTrigger')) {
+      obj = XPCNativeWrapper.unwrap(Object.getPrototypeOf(obj));
+    }
+
+    delete obj.InstallTrigger; // remove getter
+    obj.InstallTrigger = new InstallTrigger(this);
+    return obj.InstallTrigger;
   },
 
   /**
@@ -250,7 +264,7 @@ InstallTriggerManager.prototype = {
    * @return The callback ID, an integer identifying this callback.
    */
   addCallback: function(aCallback, aUrls) {
-    if (!aCallback)
+    if (!aCallback || typeof aCallback != "function")
       return -1;
     var callbackId = 0;
     while (callbackId in this.callbacks)

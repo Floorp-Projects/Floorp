@@ -135,12 +135,13 @@ ContainerRender(Container* aContainer,
 
   nsIntPoint childOffset(aOffset);
   nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
-  const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
 
+  nsIntRect cachedScissor = aContainer->gl()->ScissorRect();
   aContainer->gl()->PushScissorRect();
 
-  float opacity = aContainer->GetOpacity();
-  bool needsFramebuffer = (opacity != 1.0) || !transform.IsIdentity();
+  float opacity = aContainer->GetEffectiveOpacity();
+  const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
+  bool needsFramebuffer = aContainer->UseIntermediateSurface();
   if (needsFramebuffer) {
     aManager->CreateFBOWithTexture(visibleRect.width,
                                    visibleRect.height,
@@ -175,11 +176,28 @@ ContainerRender(Container* aContainer,
       scissorRect.MoveBy(- visibleRect.TopLeft());
     }
 
-    if (aPreviousFrameBuffer == 0) {
-      aContainer->gl()->FixWindowCoordinateRect(scissorRect, aManager->GetWigetSize().height);
+    if (!needsFramebuffer && aPreviousFrameBuffer) {
+      scissorRect.IntersectRect(scissorRect, cachedScissor);
+    } else if (!needsFramebuffer) {
+      aContainer->gl()->FixWindowCoordinateRect(scissorRect, 
+                                                aManager->GetWigetSize().height);
+      scissorRect.IntersectRect(scissorRect, cachedScissor);
     }
 
-    aManager->gl()->fScissor(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
+    /**
+     *  We can't clip to a visible region if theres no framebuffer since we might be transformed
+     */
+    if (needsFramebuffer || clipRect) {
+      aContainer->gl()->fScissor(scissorRect.x, 
+                                 scissorRect.y, 
+                                 scissorRect.width, 
+                                 scissorRect.height);
+    } else {
+      aContainer->gl()->fScissor(cachedScissor.x, 
+                                 cachedScissor.y, 
+                                 cachedScissor.width, 
+                                 cachedScissor.height);
+    }
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
 

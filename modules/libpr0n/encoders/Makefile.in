@@ -40,7 +40,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += $(MOZ_IMG_ENCODERS)
+DIRS += png \
+	jpeg \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -100,6 +100,7 @@ ACCESSIBILITY_ATOM(a, "a")
 ACCESSIBILITY_ATOM(abbr, "abbr")
 ACCESSIBILITY_ATOM(acronym, "acronym")
 ACCESSIBILITY_ATOM(area, "area")
+ACCESSIBILITY_ATOM(article, "article") // HTML landmark
 ACCESSIBILITY_ATOM(autocomplete, "autocomplete")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
@@ -111,7 +112,9 @@ ACCESSIBILITY_ATOM(dd, "dd")
 ACCESSIBILITY_ATOM(div, "div")
 ACCESSIBILITY_ATOM(dl, "dl")
 ACCESSIBILITY_ATOM(dt, "dt")
+ACCESSIBILITY_ATOM(footer, "footer") // HTML landmark
 ACCESSIBILITY_ATOM(form, "form")
+ACCESSIBILITY_ATOM(header, "header") // HTML landmark
 ACCESSIBILITY_ATOM(h1, "h1")
 ACCESSIBILITY_ATOM(h2, "h2")
 ACCESSIBILITY_ATOM(h3, "h3")
@@ -135,6 +138,7 @@ ACCESSIBILITY_ATOM(map, "map")
 ACCESSIBILITY_ATOM(math, "math")
 ACCESSIBILITY_ATOM(menupopup, "menupopup")     // XUL
 ACCESSIBILITY_ATOM(object, "object")
+ACCESSIBILITY_ATOM(nav, "nav") // HTML landmark
 ACCESSIBILITY_ATOM(ol, "ol")
 ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
@@ -196,6 +200,7 @@ ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")
 ACCESSIBILITY_ATOM(popup, "popup")
+ACCESSIBILITY_ATOM(placeholder, "placeholder")
 ACCESSIBILITY_ATOM(readonly, "readonly")
 ACCESSIBILITY_ATOM(scope, "scope") // HTML table
 ACCESSIBILITY_ATOM(seltype, "seltype") // XUL listbox
@@ -289,3 +294,4 @@ ACCESSIBILITY_ATOM(live, "live")
 ACCESSIBILITY_ATOM(lineNumber, "line-number")
 ACCESSIBILITY_ATOM(posinset, "posinset") 
 ACCESSIBILITY_ATOM(setsize, "setsize")
+ACCESSIBILITY_ATOM(xmlroles, "xml-roles")

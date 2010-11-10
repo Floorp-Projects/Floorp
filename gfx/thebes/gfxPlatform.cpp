@@ -256,15 +256,6 @@ gfxPlatform::Init()
     if (!gPlatform)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    gPlatform->mScreenReferenceSurface =
-      gPlatform->CreateOffscreenSurface(gfxIntSize(1,1),
-                                        gfxASurface::CONTENT_COLOR_ALPHA);
-    if (!gPlatform->mScreenReferenceSurface) {
-      NS_ERROR("Could not initialize mScreenReferenceSurface");
-      Shutdown();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     nsresult rv;
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID) // temporary, until this is implemented on others
@@ -275,6 +266,15 @@ gfxPlatform::Init()
         return rv;
     }
 #endif
+
+    gPlatform->mScreenReferenceSurface =
+        gPlatform->CreateOffscreenSurface(gfxIntSize(1,1),
+                                          gfxASurface::CONTENT_COLOR_ALPHA);
+    if (!gPlatform->mScreenReferenceSurface) {
+        NS_ERROR("Could not initialize mScreenReferenceSurface");
+        Shutdown();
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     rv = gfxFontCache::Init();
     if (NS_FAILED(rv)) {

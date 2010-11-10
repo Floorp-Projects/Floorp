@@ -89,6 +89,16 @@ public:
   nsresult ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
 
   /**
+   * Called when mouse button down event handling is started and finished.
+   */
+  void SetMouseButtonDownHandlingDocument(nsIDocument* aDocument)
+  {
+    NS_ASSERTION(!aDocument || !mMouseDownEventHandlingDocument,
+                 "Some mouse button down events are nested?");
+    mMouseDownEventHandlingDocument = aDocument;
+  }
+
+  /**
    * Returns the content node that would be focused if aWindow was in an
    * active window. This will traverse down the frame hierarchy, starting at
    * the given window aWindow. Sets aFocusedWindow to the window with the
@@ -466,6 +476,14 @@ protected:
   // synchronized actions cannot be interrupted with events, so queue these up
   // and fire them later.
   nsTArray<nsDelayedBlurOrFocusEvent> mDelayedBlurFocusEvents;
+
+  // A document which is handling a mouse button down event.
+  // When a mouse down event process is finished, ESM sets focus to the target
+  // content.  Therefore, while DOM event handlers are handling mouse down
+  // events, the handlers should be able to steal focus from any elements even
+  // if focus is in chrome content.  So, if this isn't NULL and the caller
+  // can access the document node, the caller should succeed in moving focus.
+  nsCOMPtr<nsIDocument> mMouseDownEventHandlingDocument;
 
   // the single focus manager
   static nsFocusManager* sInstance;

@@ -439,11 +439,17 @@
                 command="Browser:AddBookmarkAs"
                 key="addBookmarkAsKb"/>
       <menuitem id="subscribeToPageMenuitem"
+#ifndef XP_MACOSX
+                class="menuitem-iconic"
+#endif
                 label="&subscribeToPageMenuitem.label;"
                 oncommand="return FeedHandler.subscribeToFeed(null, event);"
                 onclick="checkForMiddleClick(this, event);"
                 observes="singleFeedMenuitemState"/>
       <menu id="subscribeToPageMenupopup"
+#ifndef XP_MACOSX
+            class="menu-iconic"
+#endif
             label="&subscribeToPageMenupopup.label;"
             observes="multipleFeedsMenuState">
         <menupopup id="subscribeToPageSubmenuMenupopup"

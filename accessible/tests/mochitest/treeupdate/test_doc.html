@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test document root content mutations</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Helpers
+
+    function getDocNode(aID)
+    {
+      return getNode(aID).contentDocument;
+    }
+    function getDocChildNode(aID)
+    {
+      return getDocNode(aID).body.firstChild;
+    }
+
+    function rootContentReplaced(aID, aTextName)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
+        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+      ];
+
+      this.finalCheck = function rootContentReplaced_finalCheck()
+      {
+        var tree = {
+          role: ROLE_DOCUMENT,
+          children: [
+            {
+              role: ROLE_TEXT_LEAF,
+              name: aTextName
+            }
+          ]
+        };
+        testAccessibleTree(getDocNode(aID), tree);
+      }
+    }
+
+    function rootContentRemoved(aID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, null),
+        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+      ];
+
+      this.preinvoke = function rootContentRemoved_preinvoke()
+      {
+        // Set up target for hide event before we invoke.
+        var text = getAccessible(getAccessible(getDocNode(aID)).firstChild,
+                                               [nsIAccessNode]).DOMNode;
+        this.eventSeq[0].target = text;
+      }
+
+      this.finalCheck = function rootContentRemoved_finalCheck()
+      {
+        var tree = {
+          role: ROLE_DOCUMENT,
+          states: {
+            // Out of date root content involves stale state presence.
+            states: 0,
+            extraStates: EXT_STATE_STALE
+          },
+          children: [ ]
+        };
+        testAccessibleTree(getDocNode(aID), tree);
+      }
+    }
+
+    function rootContentInserted(aID, aTextName)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getDocChildNode, aID),
+        new invokerChecker(EVENT_REORDER, getDocNode, aID)
+      ];
+
+      this.finalCheck = function rootContentInserted_finalCheck()
+      {
+        var tree = {
+          role: ROLE_DOCUMENT,
+          states: {
+            states: 0,
+            extraStates: 0,
+            absentStates: 0,
+            absentExtraStates: EXT_STATE_STALE
+          },
+          children: [
+            {
+              role: ROLE_TEXT_LEAF,
+              name: aTextName
+            }
+          ]
+        };
+        testAccessibleTree(getDocNode(aID), tree);
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function writeIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentReplaced(aID, "hello");
+
+      this.invoke = function writeIFrameDoc_invoke()
+      {
+        var docNode = getDocNode(aID);
+
+        // We can't use open/write/close outside of iframe document because of
+        // security error.
+        var script = docNode.createElement("script");
+        script.textContent = "document.open(); document.write('hello'); document.close();";
+        docNode.body.appendChild(script);
+      }
+
+      this.getID = function writeIFrameDoc_getID()
+      {
+        return "write document";
+      }
+    }
+
+    /**
+     * Replace HTML element.
+     */
+    function replaceIFrameHTMLElm(aID)
+    {
+      this.__proto__ = new rootContentReplaced(aID, "New Wave");
+
+      this.invoke = function replaceIFrameHTMLElm_invoke()
+      {
+        var docNode = getDocNode(aID);
+        var newHTMLNode = docNode.createElement("html");
+        var newBodyNode = docNode.createElement("body");
+        var newTextNode = docNode.createTextNode("New Wave");
+        newBodyNode.appendChild(newTextNode);
+        newHTMLNode.appendChild(newBodyNode);
+        docNode.replaceChild(newHTMLNode, docNode.documentElement);
+      }
+
+      this.getID = function replaceIFrameBody_getID()
+      {
+        return "replace HTML element";
+      }
+    }
+
+    /**
+     * Replace HTML body.
+     */
+    function replaceIFrameBody(aID)
+    {
+      this.__proto__ = new rootContentReplaced(aID, "New Hello");
+
+      this.invoke = function replaceIFrameBody_invoke()
+      {
+        var docNode = getDocNode(aID);
+        var newBodyNode = docNode.createElement("body");
+        var newTextNode = docNode.createTextNode("New Hello");
+        newBodyNode.appendChild(newTextNode);
+        docNode.documentElement.replaceChild(newBodyNode, docNode.body);
+      }
+
+      this.finalCheck = function replaceIFrameBody_finalCheck()
+      {
+        var tree = {
+          role: ROLE_DOCUMENT,
+          children: [
+            {
+              role: ROLE_TEXT_LEAF,
+              name: "New Hello"
+            }
+          ]
+        };
+        testAccessibleTree(getDocNode(aID), tree);
+      }
+
+      this.getID = function replaceIFrameBody_getID()
+      {
+        return "replace body";
+      }
+    }
+
+    /**
+     * Open/close document pair.
+     */
+    function openIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentRemoved(aID);
+
+      this.invoke = function openIFrameDoc_invoke()
+      {
+        this.preinvoke();
+
+        // Open document.
+        var docNode = getDocNode(aID);
+        var script = docNode.createElement("script");
+        script.textContent = "function closeMe() { document.write('Works?'); document.close(); } window.closeMe = closeMe; document.open();";
+        docNode.body.appendChild(script);
+      }
+
+      this.getID = function openIFrameDoc_getID()
+      {
+        return "open document";
+      }
+    }
+
+    function closeIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentInserted(aID, "Works?");
+
+      this.invoke = function closeIFrameDoc_invoke()
+      {
+        // Write and close document.
+        getDocNode(aID).write('Works?'); getDocNode(aID).close();
+      }
+
+      this.getID = function closeIFrameDoc_getID()
+      {
+        return "close document";
+      }
+    }
+
+    /**
+     * Remove/insert HTML element pair.
+     */
+    function removeHTMLFromIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentRemoved(aID);
+
+      this.invoke = function removeHTMLFromIFrameDoc_invoke()
+      {
+        this.preinvoke();
+
+        // Remove HTML element.
+        var docNode = getDocNode(aID);
+        docNode.removeChild(docNode.firstChild);
+      }
+
+      this.getID = function removeHTMLFromIFrameDoc_getID()
+      {
+        return "remove HTML element";
+      }
+    }
+
+    function insertHTMLToIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentInserted(aID, "Haha");
+
+      this.invoke = function insertHTMLToIFrameDoc_invoke()
+      {
+        // Insert HTML element.
+        var docNode = getDocNode(aID);
+        var html = docNode.createElement("html");
+        var body = docNode.createElement("body");
+        var text = docNode.createTextNode("Haha");
+        body.appendChild(text);
+        html.appendChild(body);
+        docNode.appendChild(html);
+      }
+
+      this.getID = function insertHTMLToIFrameDoc_getID()
+      {
+        return "insert HTML element document";
+      }
+    }
+
+    /**
+     * Remove/insert HTML body pair.
+     */
+    function removeBodyFromIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentRemoved(aID);
+
+      this.invoke = function removeBodyFromIFrameDoc_invoke()
+      {
+        this.preinvoke();
+
+        // Remove body element.
+        var docNode = getDocNode(aID);
+        docNode.documentElement.removeChild(docNode.body);
+      }
+
+      this.getID = function removeBodyFromIFrameDoc_getID()
+      {
+        return "remove body element";
+      }
+    }
+
+    function insertBodyToIFrameDoc(aID)
+    {
+      this.__proto__ = new rootContentInserted(aID, "Yo ho ho i butylka roma!");
+
+      this.invoke = function insertBodyToIFrameDoc_invoke()
+      {
+        // Insert body element.
+        var docNode = getDocNode(aID);
+        var body = docNode.createElement("body");
+        var text = docNode.createTextNode("Yo ho ho i butylka roma!");
+        body.appendChild(text);
+        docNode.documentElement.appendChild(body);
+      }
+
+      this.getID = function insertBodyToIFrameDoc_getID()
+      {
+        return "insert body element";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new writeIFrameDoc("iframe"));
+      gQueue.push(new replaceIFrameHTMLElm("iframe"));
+      gQueue.push(new replaceIFrameBody("iframe"));
+      gQueue.push(new openIFrameDoc("iframe"));
+      gQueue.push(new closeIFrameDoc("iframe"));
+      gQueue.push(new removeHTMLFromIFrameDoc("iframe"));
+      gQueue.push(new insertHTMLToIFrameDoc("iframe"));
+      gQueue.push(new removeBodyFromIFrameDoc("iframe"));
+      gQueue.push(new insertBodyToIFrameDoc("iframe"));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Update accessible tree when root element is changed"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606082">Mozilla Bug 606082</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <iframe id="iframe"></iframe>
+
+  <div id="eventdump"></div>
+</body>
+</html>

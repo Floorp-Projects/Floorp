@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -41,7 +41,7 @@ typedef enum
     VP8_SEG_ALG_PRIV     = 256,
     VP8_SEG_MAX
 } mem_seg_id_t;
-#define NELEMENTS(x) (sizeof(x)/sizeof(x[0]))
+#define NELEMENTS(x) ((int)(sizeof(x)/sizeof(x[0])))
 
 static unsigned long vp8_priv_sz(const vpx_codec_dec_cfg_t *si, vpx_codec_flags_t);
 
@@ -170,7 +170,7 @@ static void vp8_init_ctx(vpx_codec_ctx_t *ctx, const vpx_codec_mmap_t *mmap)
     }
 }
 
-static void *mmap_lkup(vpx_codec_alg_priv_t *ctx, int id)
+static void *mmap_lkup(vpx_codec_alg_priv_t *ctx, unsigned int id)
 {
     int i;
 
@@ -269,14 +269,14 @@ static vpx_codec_err_t vp8_peek_si(const uint8_t         *data,
             const uint8_t *c = data + 3;
             si->is_kf = 1;
 
-            // vet via sync code
+            /* vet via sync code */
             if (c[0] != 0x9d || c[1] != 0x01 || c[2] != 0x2a)
                 res = VPX_CODEC_UNSUP_BITSTREAM;
 
             si->w = swap2(*(const unsigned short *)(c + 3)) & 0x3fff;
             si->h = swap2(*(const unsigned short *)(c + 5)) & 0x3fff;
 
-            //printf("w=%d, h=%d\n", si->w, si->h);
+            /*printf("w=%d, h=%d\n", si->w, si->h);*/
             if (!(si->h | si->w))
                 res = VPX_CODEC_UNSUP_BITSTREAM;
         }
@@ -653,7 +653,7 @@ vpx_codec_ctrl_fn_map_t vp8_ctf_maps[] =
 #ifndef VERSION_STRING
 #define VERSION_STRING
 #endif
-vpx_codec_iface_t vpx_codec_vp8_dx_algo =
+CODEC_INTERFACE(vpx_codec_vp8_dx) =
 {
     "WebM Project VP8 Decoder" VERSION_STRING,
     VPX_CODEC_INTERNAL_ABI_VERSION,
@@ -670,7 +670,14 @@ vpx_codec_iface_t vpx_codec_vp8_dx_algo =
         vp8_decode,       /* vpx_codec_decode_fn_t     decode; */
         vp8_get_frame,    /* vpx_codec_frame_get_fn_t  frame_get; */
     },
-    {NOT_IMPLEMENTED} /* encoder functions */
+    { /* encoder functions */
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED
+    }
 };
 
 /*
@@ -693,5 +700,12 @@ vpx_codec_iface_t vpx_codec_vp8_algo =
         vp8_decode,       /* vpx_codec_decode_fn_t     decode; */
         vp8_get_frame,    /* vpx_codec_frame_get_fn_t  frame_get; */
     },
-    {NOT_IMPLEMENTED} /* encoder functions */
+    { /* encoder functions */
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED,
+        NOT_IMPLEMENTED
+    }
 };

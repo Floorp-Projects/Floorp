@@ -126,15 +126,20 @@ function pathHandler(metadata, response) {
 /**
  * Launches the updater binary to apply a mar file using the current working
  * directory for the location to apply the mar.
+ *
  * @param   aUpdater
  *          The updater binary binary to copy to aUpdatesDir.
  * @param   aUpdatesDir
  *          The directory to copy the update mar, binary, etc.
  * @param   aApplyToDir
  *          The directory where the update will be applied.
- * @returns The exit value returned from the updater binary.
+ * @param   aCallbackApp (optional)
+ *          The application to launch after the update.
+ * @param   aAppArgs (optional)
+ *          The arguments to pass to the callback application.
+ * @return  The exit value returned from the updater binary.
  */
-function runUpdate(aUpdater, aUpdatesDir, aApplyToDir) {
+function runUpdate(aUpdater, aUpdatesDir, aApplyToDir, aCallbackApp, aAppArgs) {
   // Copy the updater binary to the update directory so the updater.ini is not
   // in the same directory as it is. This prevents the PostUpdate executable
   // which is defined in the updater.ini from launching and the updater ui from
@@ -158,10 +163,24 @@ function runUpdate(aUpdater, aUpdatesDir, aApplyToDir) {
   if (/ /.test(applyToPath))
     applyToPath = '"' + applyToPath + '"';
 
+  var args;
+  if (aCallbackApp) {
+    var cwdPath = aCallbackApp.parent.parent.path;
+    if (/ /.test(cwdPath))
+      cwdPath = '"' + cwdPath + '"';
+
+    var testAppPath = aCallbackApp.path;
+    if (/ /.test(testAppPath))
+      testAppPath = '"' + testAppPath + '"';
+    args = [updatesDirPath, applyToPath, 0, cwdPath, testAppPath].
+           concat(aAppArgs);
+  }
+  else {
+    args = [updatesDirPath, applyToPath];
+  }
   var process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
-  var args = [updatesDirPath, applyToPath];
   process.run(true, args, args.length);
   return process.exitValue;
 }
@@ -286,6 +305,7 @@ const updateCheckListener = {
 
 /**
  * Helper for starting the http server used by the tests
+ *
  * @param   aRelativeDirName
  *          The directory name to register relative to
  *          toolkit/mozapps/update/test/unit/
@@ -314,6 +334,7 @@ function stop_httpserver(callback) {
 
 /**
  * Creates an nsIXULAppInfo
+ *
  * @param   id
  *          The ID of the test application
  * @param   name
@@ -391,6 +412,8 @@ const APP_BIN_SUFFIX = "-bin";
 #else
 const APP_BIN_SUFFIX = "@BIN_SUFFIX@";
 #endif
+
+const BIN_SUFFIX = "@BIN_SUFFIX@";
 
 #ifdef XP_WIN
 const IS_WIN = true;

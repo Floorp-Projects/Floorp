@@ -54,7 +54,6 @@ public:
   CanvasLayerD3D9(LayerManagerD3D9 *aManager)
     : CanvasLayer(aManager, NULL),
       LayerD3D9(aManager),
-      mTexture(0),
       mDataIsPremultiplied(PR_FALSE),
       mNeedsYFlip(PR_FALSE)
   {
@@ -70,7 +69,7 @@ public:
 
   // LayerD3D9 implementation
   virtual Layer* GetLayer();
-  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
+  virtual void RenderLayer();
   virtual void CleanResources();
   virtual void LayerManagerDestroyed();
 
@@ -79,17 +78,14 @@ public:
 protected:
   typedef mozilla::gl::GLContext GLContext;
 
-  // Indicates whether our texture was obtained through D2D interop.
-  bool mIsInteropTexture;
-
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;
+  nsRefPtr<IDirect3DTexture9> mTexture;
 
   PRUint32 mCanvasFramebuffer;
 
-  nsRefPtr<IDirect3DTexture9> mTexture;
-
-  nsIntRect mBounds;
+  // Indicates whether our texture was obtained through D2D interop.
+  bool mIsInteropTexture;
 
   PRPackedBool mDataIsPremultiplied;
   PRPackedBool mNeedsYFlip;

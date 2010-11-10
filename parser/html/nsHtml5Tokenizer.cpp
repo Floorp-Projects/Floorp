@@ -61,22 +61,41 @@
 
 #include "nsHtml5Tokenizer.h"
 
+PRUnichar nsHtml5Tokenizer::LT_GT[] = { '<', '>' };
+PRUnichar nsHtml5Tokenizer::LT_SOLIDUS[] = { '<', '/' };
+PRUnichar nsHtml5Tokenizer::RSQB_RSQB[] = { ']', ']' };
+PRUnichar nsHtml5Tokenizer::REPLACEMENT_CHARACTER[] = { 0xfffd };
+PRUnichar nsHtml5Tokenizer::LF[] = { '\n' };
+PRUnichar nsHtml5Tokenizer::CDATA_LSQB[] = { 'C', 'D', 'A', 'T', 'A', '[' };
+PRUnichar nsHtml5Tokenizer::OCTYPE[] = { 'o', 'c', 't', 'y', 'p', 'e' };
+PRUnichar nsHtml5Tokenizer::UBLIC[] = { 'u', 'b', 'l', 'i', 'c' };
+PRUnichar nsHtml5Tokenizer::YSTEM[] = { 'y', 's', 't', 'e', 'm' };
 static PRUnichar const TITLE_ARR_DATA[] = { 't', 'i', 't', 'l', 'e' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TITLE_ARR = { TITLE_ARR_DATA, NS_ARRAY_LENGTH(TITLE_ARR_DATA) };
 static PRUnichar const SCRIPT_ARR_DATA[] = { 's', 'c', 'r', 'i', 'p', 't' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::SCRIPT_ARR = { SCRIPT_ARR_DATA, NS_ARRAY_LENGTH(SCRIPT_ARR_DATA) };
 static PRUnichar const STYLE_ARR_DATA[] = { 's', 't', 'y', 'l', 'e' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::STYLE_ARR = { STYLE_ARR_DATA, NS_ARRAY_LENGTH(STYLE_ARR_DATA) };
 static PRUnichar const PLAINTEXT_ARR_DATA[] = { 'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::PLAINTEXT_ARR = { PLAINTEXT_ARR_DATA, NS_ARRAY_LENGTH(PLAINTEXT_ARR_DATA) };
 static PRUnichar const XMP_ARR_DATA[] = { 'x', 'm', 'p' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::XMP_ARR = { XMP_ARR_DATA, NS_ARRAY_LENGTH(XMP_ARR_DATA) };
 static PRUnichar const TEXTAREA_ARR_DATA[] = { 't', 'e', 'x', 't', 'a', 'r', 'e', 'a' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::TEXTAREA_ARR = { TEXTAREA_ARR_DATA, NS_ARRAY_LENGTH(TEXTAREA_ARR_DATA) };
 static PRUnichar const IFRAME_ARR_DATA[] = { 'i', 'f', 'r', 'a', 'm', 'e' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::IFRAME_ARR = { IFRAME_ARR_DATA, NS_ARRAY_LENGTH(IFRAME_ARR_DATA) };
 static PRUnichar const NOEMBED_ARR_DATA[] = { 'n', 'o', 'e', 'm', 'b', 'e', 'd' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOEMBED_ARR = { NOEMBED_ARR_DATA, NS_ARRAY_LENGTH(NOEMBED_ARR_DATA) };
 static PRUnichar const NOSCRIPT_ARR_DATA[] = { 'n', 'o', 's', 'c', 'r', 'i', 'p', 't' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOSCRIPT_ARR = { NOSCRIPT_ARR_DATA, NS_ARRAY_LENGTH(NOSCRIPT_ARR_DATA) };
 static PRUnichar const NOFRAMES_ARR_DATA[] = { 'n', 'o', 'f', 'r', 'a', 'm', 'e', 's' };
+staticJArray<PRUnichar,PRInt32> nsHtml5Tokenizer::NOFRAMES_ARR = { NOFRAMES_ARR_DATA, NS_ARRAY_LENGTH(NOFRAMES_ARR_DATA) };
 
 nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler)
   : tokenHandler(tokenHandler),
     encodingDeclarationHandler(nsnull),
-    bmpChar(jArray<PRUnichar,PRInt32>(1)),
-    astralChar(jArray<PRUnichar,PRInt32>(2)),
+    bmpChar(jArray<PRUnichar,PRInt32>::newJArray(1)),
+    astralChar(jArray<PRUnichar,PRInt32>::newJArray(2)),
     tagName(nsnull),
     attributeName(nsnull),
     doctypeName(nsnull),
@@ -100,14 +119,6 @@ nsHtml5Tokenizer::initLocation(nsString* newPublicId, nsString* newSystemId)
   this->publicId = newPublicId;
 }
 
-
-nsHtml5Tokenizer::~nsHtml5Tokenizer()
-{
-  MOZ_COUNT_DTOR(nsHtml5Tokenizer);
-  bmpChar.release();
-  astralChar.release();
-}
-
 void 
 nsHtml5Tokenizer::setStateAndEndTagExpectation(PRInt32 specialTokenizerState, nsIAtom* endTagExpectation)
 {
@@ -115,9 +126,8 @@ nsHtml5Tokenizer::setStateAndEndTagExpectation(PRInt32 specialTokenizerState, ns
   if (specialTokenizerState == NS_HTML5TOKENIZER_DATA) {
     return;
   }
-  jArray<PRUnichar,PRInt32> asArray = nsHtml5Portability::newCharArrayFromLocal(endTagExpectation);
+  autoJArray<PRUnichar,PRInt32> asArray = nsHtml5Portability::newCharArrayFromLocal(endTagExpectation);
   this->endTagExpectation = nsHtml5ElementName::elementNameByBuffer(asArray, 0, asArray.length, interner);
-  asArray.release();
   endTagExpectationToArray();
 }
 
@@ -196,9 +206,8 @@ void
 nsHtml5Tokenizer::appendStrBuf(PRUnichar c)
 {
   if (strBufLen == strBuf.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(strBuf.length + NS_HTML5TOKENIZER_BUFFER_GROW_BY);
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(strBuf.length + NS_HTML5TOKENIZER_BUFFER_GROW_BY);
     nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
-    strBuf.release();
     strBuf = newBuf;
   }
   strBuf[strBufLen++] = c;
@@ -228,22 +237,20 @@ void
 nsHtml5Tokenizer::appendLongStrBuf(PRUnichar c)
 {
   if (longStrBufLen == longStrBuf.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(longStrBufLen + (longStrBufLen >> 1));
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(longStrBufLen + (longStrBufLen >> 1));
     nsHtml5ArrayCopy::arraycopy(longStrBuf, newBuf, longStrBuf.length);
-    longStrBuf.release();
     longStrBuf = newBuf;
   }
   longStrBuf[longStrBufLen++] = c;
 }
 
 void 
-nsHtml5Tokenizer::appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length)
+nsHtml5Tokenizer::appendLongStrBuf(PRUnichar* buffer, PRInt32 offset, PRInt32 length)
 {
   PRInt32 reqLen = longStrBufLen + length;
   if (longStrBuf.length < reqLen) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(reqLen + (reqLen >> 1));
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(reqLen + (reqLen >> 1));
     nsHtml5ArrayCopy::arraycopy(longStrBuf, newBuf, longStrBuf.length);
-    longStrBuf.release();
     longStrBuf = newBuf;
   }
   nsHtml5ArrayCopy::arraycopy(buffer, offset, longStrBuf, longStrBufLen, length);
@@ -1461,13 +1468,13 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             if (hi < lo) {
               NS_HTML5_BREAK(outer);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length()) {
               candidate = lo;
               strBufMark = strBufLen;
               lo++;
-            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length) {
+            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c > nsHtml5NamedCharacters::NAMES[lo][entCol]) {
+            } else if (c > nsHtml5NamedCharacters::NAMES[lo].charAt(entCol)) {
               lo++;
             } else {
               NS_HTML5_BREAK(loloop);
@@ -1478,12 +1485,12 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             if (hi < lo) {
               NS_HTML5_BREAK(outer);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(hiloop);
             }
-            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c < nsHtml5NamedCharacters::NAMES[hi][entCol]) {
+            } else if (c < nsHtml5NamedCharacters::NAMES[hi].charAt(entCol)) {
               hi--;
             } else {
               NS_HTML5_BREAK(hiloop);
@@ -1507,8 +1514,8 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           reconsume = PR_TRUE;
           NS_HTML5_CONTINUE(stateloop);
         } else {
-          jArray<PRInt8,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
-          if (!candidateArr.length || candidateArr[candidateArr.length - 1] != ';') {
+          const nsHtml5CharacterName& candidateName = nsHtml5NamedCharacters::NAMES[candidate];
+          if (!candidateName.length() || candidateName.charAt(candidateName.length() - 1) != ';') {
             if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
               PRUnichar ch;
               if (strBufMark == strBufLen) {
@@ -3550,12 +3557,12 @@ nsHtml5Tokenizer::eof()
             if (hi == -1) {
               NS_HTML5_BREAK(hiloop);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(hiloop);
             }
-            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length) {
+            if (entCol > nsHtml5NamedCharacters::NAMES[hi].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c < nsHtml5NamedCharacters::NAMES[hi][entCol]) {
+            } else if (c < nsHtml5NamedCharacters::NAMES[hi].charAt(entCol)) {
               hi--;
             } else {
               NS_HTML5_BREAK(hiloop);
@@ -3566,13 +3573,13 @@ nsHtml5Tokenizer::eof()
             if (hi < lo) {
               NS_HTML5_BREAK(outer);
             }
-            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length) {
+            if (entCol == nsHtml5NamedCharacters::NAMES[lo].length()) {
               candidate = lo;
               strBufMark = strBufLen;
               lo++;
-            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length) {
+            } else if (entCol > nsHtml5NamedCharacters::NAMES[lo].length()) {
               NS_HTML5_BREAK(outer);
-            } else if (c > nsHtml5NamedCharacters::NAMES[lo][entCol]) {
+            } else if (c > nsHtml5NamedCharacters::NAMES[lo].charAt(entCol)) {
               lo++;
             } else {
               NS_HTML5_BREAK(loloop);
@@ -3591,8 +3598,8 @@ nsHtml5Tokenizer::eof()
           state = returnState;
           NS_HTML5_CONTINUE(eofloop);
         } else {
-          jArray<PRInt8,PRInt32> candidateArr = nsHtml5NamedCharacters::NAMES[candidate];
-          if (!candidateArr.length || candidateArr[candidateArr.length - 1] != ';') {
+          const nsHtml5CharacterName& candidateName = nsHtml5NamedCharacters::NAMES[candidate];
+          if (!candidateName.length() || candidateName.charAt(candidateName.length() - 1) != ';') {
             if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
               PRUnichar ch;
               if (strBufMark == strBufLen) {
@@ -3705,9 +3712,7 @@ nsHtml5Tokenizer::emitOrAppendOne(const PRUnichar* val, PRInt32 returnState)
 void 
 nsHtml5Tokenizer::end()
 {
-  strBuf.release();
   strBuf = nsnull;
-  longStrBuf.release();
   longStrBuf = nsnull;
   nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsnull;
@@ -3760,7 +3765,7 @@ nsHtml5Tokenizer::resetToDataState()
   entCol = -1;
   firstCharKey = -1;
   lo = 0;
-  hi = (nsHtml5NamedCharacters::NAMES.length - 1);
+  hi = 0;
   candidate = -1;
   strBufMark = 0;
   prevValue = -1;
@@ -3788,14 +3793,12 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
 {
   strBufLen = other->strBufLen;
   if (strBufLen > strBuf.length) {
-    strBuf.release();
-    strBuf = jArray<PRUnichar,PRInt32>(strBufLen);
+    strBuf = jArray<PRUnichar,PRInt32>::newJArray(strBufLen);
   }
   nsHtml5ArrayCopy::arraycopy(other->strBuf, strBuf, strBufLen);
   longStrBufLen = other->longStrBufLen;
   if (longStrBufLen > longStrBuf.length) {
-    longStrBuf.release();
-    longStrBuf = jArray<PRUnichar,PRInt32>(longStrBufLen);
+    longStrBuf = jArray<PRUnichar,PRInt32>::newJArray(longStrBufLen);
   }
   nsHtml5ArrayCopy::arraycopy(other->longStrBuf, longStrBuf, longStrBufLen);
   stateSave = other->stateSave;
@@ -3865,8 +3868,8 @@ void
 nsHtml5Tokenizer::initializeWithoutStarting()
 {
   confident = PR_FALSE;
-  strBuf = jArray<PRUnichar,PRInt32>(64);
-  longStrBuf = jArray<PRUnichar,PRInt32>(1024);
+  strBuf = jArray<PRUnichar,PRInt32>::newJArray(64);
+  longStrBuf = jArray<PRUnichar,PRInt32>::newJArray(1024);
   line = 1;
   resetToDataState();
 }
@@ -3877,19 +3880,15 @@ nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDec
   this->encodingDeclarationHandler = encodingDeclarationHandler;
 }
 
+
+nsHtml5Tokenizer::~nsHtml5Tokenizer()
+{
+  MOZ_COUNT_DTOR(nsHtml5Tokenizer);
+}
+
 void
 nsHtml5Tokenizer::initializeStatics()
 {
-  TITLE_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)TITLE_ARR_DATA, 5);
-  SCRIPT_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)SCRIPT_ARR_DATA, 6);
-  STYLE_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)STYLE_ARR_DATA, 5);
-  PLAINTEXT_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)PLAINTEXT_ARR_DATA, 9);
-  XMP_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)XMP_ARR_DATA, 3);
-  TEXTAREA_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)TEXTAREA_ARR_DATA, 8);
-  IFRAME_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)IFRAME_ARR_DATA, 6);
-  NOEMBED_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)NOEMBED_ARR_DATA, 7);
-  NOSCRIPT_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)NOSCRIPT_ARR_DATA, 8);
-  NOFRAMES_ARR = jArray<PRUnichar,PRInt32>((PRUnichar*)NOFRAMES_ARR_DATA, 8);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -18,6 +18,7 @@
 #include "onyxc_int.h"
 
 extern void vp8_arch_x86_common_init(VP8_COMMON *ctx);
+extern void vp8_arch_arm_common_init(VP8_COMMON *ctx);
 
 void (*vp8_build_intra_predictors_mby_ptr)(MACROBLOCKD *x);
 extern void vp8_build_intra_predictors_mby(MACROBLOCKD *x);
@@ -39,9 +40,11 @@ void vp8_machine_specific_config(VP8_COMMON *ctx)
     rtcd->recon.copy16x16   = vp8_copy_mem16x16_c;
     rtcd->recon.copy8x8     = vp8_copy_mem8x8_c;
     rtcd->recon.copy8x4     = vp8_copy_mem8x4_c;
-    rtcd->recon.recon      = vp8_recon_b_c;
+    rtcd->recon.recon       = vp8_recon_b_c;
     rtcd->recon.recon2      = vp8_recon2b_c;
-    rtcd->recon.recon4     = vp8_recon4b_c;
+    rtcd->recon.recon4      = vp8_recon4b_c;
+    rtcd->recon.recon_mb    = vp8_recon_mb_c;
+    rtcd->recon.recon_mby   = vp8_recon_mby_c;
 
     rtcd->subpix.sixtap16x16   = vp8_sixtap_predict16x16_c;
     rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_c;
@@ -66,15 +69,20 @@ void vp8_machine_specific_config(VP8_COMMON *ctx)
     rtcd->postproc.across      = vp8_mbpost_proc_across_ip_c;
     rtcd->postproc.downacross  = vp8_post_proc_down_and_across_c;
     rtcd->postproc.addnoise    = vp8_plane_add_noise_c;
+    rtcd->postproc.blend_mb    = vp8_blend_mb_c;
 #endif
 
 #endif
-    // Pure C:
+    /* Pure C: */
     vp8_build_intra_predictors_mby_ptr = vp8_build_intra_predictors_mby;
     vp8_build_intra_predictors_mby_s_ptr = vp8_build_intra_predictors_mby_s;
 
 #if ARCH_X86 || ARCH_X86_64
     vp8_arch_x86_common_init(ctx);
+#endif
+
+#if ARCH_ARM
+    vp8_arch_arm_common_init(ctx);
 #endif
 
 }

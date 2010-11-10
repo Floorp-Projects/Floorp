@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -74,7 +74,7 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
 
 #if CONFIG_POSTPROC
         rtcd->postproc.down        = vp8_mbpost_proc_down_mmx;
-        //rtcd->postproc.across      = vp8_mbpost_proc_across_ip_c;
+        /*rtcd->postproc.across      = vp8_mbpost_proc_across_ip_c;*/
         rtcd->postproc.downacross  = vp8_post_proc_down_and_across_mmx;
         rtcd->postproc.addnoise    = vp8_plane_add_noise_mmx;
 #endif
@@ -124,6 +124,8 @@ void vp8_arch_x86_common_init(VP8_COMMON *ctx)
         rtcd->subpix.sixtap8x8     = vp8_sixtap_predict8x8_ssse3;
         rtcd->subpix.sixtap8x4     = vp8_sixtap_predict8x4_ssse3;
         rtcd->subpix.sixtap4x4     = vp8_sixtap_predict4x4_ssse3;
+        rtcd->subpix.bilinear16x16 = vp8_bilinear_predict16x16_ssse3;
+        rtcd->subpix.bilinear8x8   = vp8_bilinear_predict8x8_ssse3;
     }
 #endif
 

@@ -477,32 +477,33 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
                                              nsIContent* aStartChild,
                                              nsIContent* aEndChild)
 {
-#ifdef DEBUG_A11Y
+#ifdef DEBUG_CONTENTMUTATION
   nsAutoString tag;
   aStartChild->Tag()->ToString(tag);
-  nsIAtom* id = aStartChild->GetID();
-  nsCAutoString strid;
-  if (id)
-    id->ToUTF8String(strid);
+
+  nsIAtom* atomid = aStartChild->GetID();
+  nsCAutoString id;
+  if (atomid)
+    atomid->ToUTF8String(id);
+
   nsAutoString ctag;
-  aContainer->Tag()->ToString(ctag);
-  nsIAtom* cid = aContainer->GetID();
-  nsCAutoString strcid;
-  if (cid)
-    cid->ToUTF8String(strcid);
+  nsCAutoString cid;
+  nsIAtom* catomid = nsnull;
+  if (aContainer) {
+    aContainer->Tag()->ToString(ctag);
+    catomid = aContainer->GetID();
+    if (catomid)
+      catomid->ToUTF8String(cid);
+  }
+
   printf("\ncontent inserted: %s@id='%s', container: %s@id='%s', end node: %p\n\n",
-         NS_ConvertUTF16toUTF8(tag).get(), strid.get(),
-         NS_ConvertUTF16toUTF8(ctag).get(), strcid.get(), aEndChild);
+         NS_ConvertUTF16toUTF8(tag).get(), id.get(),
+         NS_ConvertUTF16toUTF8(ctag).get(), cid.get(), aEndChild);
 #endif
 
-  // XXX: bug 606082. aContainer is null when root element is inserted into
-  // document, we need to handle this and update the tree, also we need to
-  // update a content node of the document accessible.
-  if (aContainer) {
-    nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
-    if (docAccessible)
-      docAccessible->UpdateTree(aContainer, aStartChild, aEndChild, PR_TRUE);
-  }
+  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
+  if (docAccessible)
+    docAccessible->UpdateTree(aContainer, aStartChild, aEndChild, PR_TRUE);
 }
 
 void
@@ -510,21 +511,34 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
                                        nsIContent* aContainer,
                                        nsIContent* aChild)
 {
-#ifdef DEBUG_A11Y
-  nsAutoString id;
-  aChild->Tag()->ToString(id);
-  printf("\ncontent removed: %s\n", NS_ConvertUTF16toUTF8(id).get());
+#ifdef DEBUG_CONTENTMUTATION
+  nsAutoString tag;
+  aChild->Tag()->ToString(tag);
+
+  nsIAtom* atomid = aChild->GetID();
+  nsCAutoString id;
+  if (atomid)
+    atomid->ToUTF8String(id);
+
+  nsAutoString ctag;
+  nsCAutoString cid;
+  nsIAtom* catomid = nsnull;
+  if (aContainer) {
+    aContainer->Tag()->ToString(ctag);
+    catomid = aContainer->GetID();
+    if (catomid)
+      catomid->ToUTF8String(cid);
+  }
+
+  printf("\ncontent removed: %s@id='%s', container: %s@id='%s'\n\n",
+           NS_ConvertUTF16toUTF8(tag).get(), id.get(),
+           NS_ConvertUTF16toUTF8(ctag).get(), cid.get());
 #endif
 
-  // XXX: bug 606082. aContainer is null when root element is inserted into
-  // document, we need to handle this and update the tree, perhaps destroy
-  // the document accessible.
-  if (aContainer) {
-    nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
-    if (docAccessible)
-      docAccessible->UpdateTree(aContainer, aChild, aChild->GetNextSibling(),
-                                PR_FALSE);
-  }
+  nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
+  if (docAccessible)
+    docAccessible->UpdateTree(aContainer, aChild, aChild->GetNextSibling(),
+                              PR_FALSE);
 }
 
 void

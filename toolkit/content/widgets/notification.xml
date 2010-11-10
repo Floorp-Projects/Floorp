@@ -439,6 +439,9 @@
         </xul:hbox>
       </xul:vbox>
     </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
     <implementation>
       <field name="button" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "button");

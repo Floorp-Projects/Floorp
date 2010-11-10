@@ -212,6 +212,7 @@ public:
   ProtectedVariantArray(const NPVariant* aArgs,
                         PRUint32 aCount,
                         PluginInstanceParent* aInstance)
+    : mUsingShadowArray(false)
   {
     for (PRUint32 index = 0; index < aCount; index++) {
       Variant* remoteVariant = mArray.AppendElement();
@@ -228,6 +229,7 @@ public:
   ProtectedVariantArray(const NPVariant* aArgs,
                         PRUint32 aCount,
                         PluginInstanceChild* aInstance)
+    : mUsingShadowArray(false)
   {
     for (PRUint32 index = 0; index < aCount; index++) {
       Variant* remoteVariant = mArray.AppendElement();
@@ -243,15 +245,16 @@ public:
 
   ~ProtectedVariantArray()
   {
-    PRUint32 count = mArray.Length();
+    InfallibleTArray<Variant>& vars = EnsureAndGetShadowArray();
+    PRUint32 count = vars.Length();
     for (PRUint32 index = 0; index < count; index++) {
-      ReleaseRemoteVariant(mArray[index]);
+      ReleaseRemoteVariant(vars[index]);
     }
   }
 
-  operator const nsTArray<Variant>&()
+  operator const InfallibleTArray<Variant>&()
   {
-    return mArray;
+    return EnsureAndGetShadowArray();
   }
 
   bool IsOk()
@@ -260,8 +263,22 @@ public:
   }
 
 private:
+  InfallibleTArray<Variant>&
+  EnsureAndGetShadowArray()
+  {
+    if (!mUsingShadowArray) {
+      mShadowArray.SwapElements(mArray);
+      mUsingShadowArray = true;
+    }
+    return mShadowArray;
+  }
+
+  // We convert the variants fallibly, but pass them to Call*()
+  // methods as an infallible array
   nsTArray<Variant> mArray;
+  InfallibleTArray<Variant> mShadowArray;
   bool mOk;
+  bool mUsingShadowArray;
 };
 
 template<class ActorType>

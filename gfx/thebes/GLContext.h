@@ -182,6 +182,7 @@ public:
      * a dummy BeginUpdate/EndUpdate pair.
      */
     virtual void Resize(const nsIntSize& aSize) {
+        mSize = aSize;
         nsIntRegion r(nsIntRect(0, 0, aSize.width, aSize.height));
         BeginUpdate(r);
         EndUpdate();

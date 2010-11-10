@@ -121,7 +121,7 @@ var gTestSteps = [
   },
   function() {
     info("Running step 7 - remove tab immediately");
-    let tab = gBrowser.addTab("about:blank");
+    let tab = gBrowser.addTab("about:logo");
     gBrowser.removeTab(tab);
     ensure_opentabs_match_db();
     nextStep();
@@ -208,6 +208,8 @@ function ensure_opentabs_match_db() {
     for (let i = 0; i < browserWin.gBrowser.tabContainer.childElementCount; i++) {
       let browser = browserWin.gBrowser.getBrowserAtIndex(i);
       let url = browser.currentURI.spec;
+      if (url == "about:blank")
+        continue;
       if (!(url in tabs))
         tabs[url] = 1;
       else
@@ -247,6 +249,10 @@ function ensure_opentabs_match_db() {
     ok(dbtabs.indexOf(url) > -1,
        "tab is open (" + tabs[url] + " times) and should recorded in db: " + url);
   }
+  dbtabs.forEach(function (url) {
+    ok(url in tabs,
+       "db-recorded tab should actually exist: " + url);
+  });
 }
 
 /**

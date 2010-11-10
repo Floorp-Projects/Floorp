@@ -236,6 +236,11 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
 {
   mCurrentCallbackInfo.Callback = aCallback;
   mCurrentCallbackInfo.CallbackData = aCallbackData;
+
+  // The results of our drawing always go directly into a pixel buffer,
+  // so we don't need to pass any global transform here.
+  mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
+
   Render();
   mCurrentCallbackInfo.Callback = nsnull;
   mCurrentCallbackInfo.CallbackData = nsnull;
@@ -462,7 +467,7 @@ LayerManagerD3D10::Render()
     }
     device()->RSSetScissorRects(1, &r);
 
-    static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer(1, gfx3DMatrix());
+    static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
   }
 
   if (mTarget) {
