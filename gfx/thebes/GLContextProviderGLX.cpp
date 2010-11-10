@@ -470,7 +470,6 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     XWindowAttributes widgetAttrs;
     if (!XGetWindowAttributes(display, window, &widgetAttrs)) {
         NS_WARNING("[GLX] XGetWindowAttributes() failed");
-        XFree(cfgs);
         return nsnull;
     }
     const VisualID widgetVisualID = XVisualIDFromVisual(widgetAttrs.visual);
