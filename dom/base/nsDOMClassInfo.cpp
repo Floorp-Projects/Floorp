@@ -6145,6 +6145,12 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    // Special case for |IDBKeyRange| which gets funny "static" functions.
+    if (primary_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
+        !indexedDB::IDBKeyRange::DefineConstructors(cx, class_obj)) {
+      return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsIInterfaceInfoManager>
       iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
     NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
