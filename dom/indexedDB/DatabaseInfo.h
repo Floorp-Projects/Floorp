@@ -68,7 +68,6 @@ struct DatabaseInfo
   bool ContainsStoreName(const nsAString& aName);
 
   nsString name;
-  nsString description;
   nsString version;
   PRUint32 id;
   nsString filePath;
