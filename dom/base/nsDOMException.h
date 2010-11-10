@@ -61,6 +61,10 @@ protected:
   nsCOMPtr<nsIException> mInner;
 };
 
+nsresult
+NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
+                                   const char** aMessage);
+
 #define DECL_INTERNAL_DOM_EXCEPTION(domname)                                 \
 nsresult                                                                     \
 NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
@@ -74,3 +78,4 @@ DECL_INTERNAL_DOM_EXCEPTION(SVGException)
 #endif
 DECL_INTERNAL_DOM_EXCEPTION(XPathException)
 DECL_INTERNAL_DOM_EXCEPTION(FileException)
+DECL_INTERNAL_DOM_EXCEPTION(IDBDatabaseException)

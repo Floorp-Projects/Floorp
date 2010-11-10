@@ -39,7 +39,6 @@
 
 #include "IDBFactory.h"
 
-#include "nsIIDBDatabaseException.h"
 #include "nsILocalFile.h"
 #include "nsIScriptContext.h"
 
@@ -134,8 +133,8 @@ public:
     mDatabaseId(0), mLastObjectStoreId(0), mLastIndexId(0)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -829,7 +828,7 @@ IDBFactory::Open(const nsAString& aName,
     if (PR_NewThreadPrivateIndex(&gCurrentDatabaseIndex, NULL) != PR_SUCCESS) {
       NS_ERROR("PR_NewThreadPrivateIndex failed!");
       gCurrentDatabaseIndex = BAD_TLS_INDEX;
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
@@ -837,13 +836,13 @@ IDBFactory::Open(const nsAString& aName,
   }
 
   if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
   nsCOMPtr<nsIPrincipal> principal;
   rv = nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCString origin;
   if (nsContentUtils::IsSystemPrincipal(principal)) {
@@ -851,16 +850,16 @@ IDBFactory::Open(const nsAString& aName,
   }
   else {
     rv = nsContentUtils::GetASCIIOrigin(principal, origin);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (origin.EqualsLiteral("null")) {
       NS_WARNING("IndexedDB databases not allowed for this principal!");
-      return nsnull;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
 
   nsIScriptContext* context = GetScriptContextFromJSContext(aCx);
-  NS_ENSURE_STATE(context);
+  NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCOMPtr<nsPIDOMWindow> innerWindow;
 
@@ -869,10 +868,10 @@ IDBFactory::Open(const nsAString& aName,
   if (window) {
     innerWindow = window->GetCurrentInnerWindow();
   }
-  NS_ENSURE_STATE(innerWindow);
+  NS_ENSURE_TRUE(innerWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
     new OpenDatabaseHelper(request, aName, aDescription, origin);
@@ -881,10 +880,10 @@ IDBFactory::Open(const nsAString& aName,
     new CheckPermissionsHelper(openHelper, innerWindow, aName, origin);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = mgr->WaitForOpenAllowed(aName, origin, permissionHelper);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -898,7 +897,7 @@ IDBFactory::MakeSingleKeyRange(nsIVariant* aValue,
 
   nsresult rv = ValidateVariantForKey(aValue);
   if (NS_FAILED(rv)) {
-    return rv;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   nsRefPtr<IDBKeyRange> range =
@@ -919,7 +918,7 @@ IDBFactory::MakeLeftBoundKeyRange(nsIVariant* aBound,
 
   nsresult rv = ValidateVariantForKey(aBound);
   if (NS_FAILED(rv)) {
-    return rv;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   PRUint16 flags = aOpen ?
@@ -942,7 +941,7 @@ IDBFactory::MakeRightBoundKeyRange(nsIVariant* aBound,
 
   nsresult rv = ValidateVariantForKey(aBound);
   if (NS_FAILED(rv)) {
-    return rv;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   PRUint16 flags = aOpen ?
@@ -967,12 +966,12 @@ IDBFactory::MakeBoundKeyRange(nsIVariant* aLeft,
 
   nsresult rv = ValidateVariantForKey(aLeft);
   if (NS_FAILED(rv)) {
-    return rv;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   rv = ValidateVariantForKey(aRight);
   if (NS_FAILED(rv)) {
-    return rv;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   PRUint16 flags = aOpenLeft ?
@@ -990,7 +989,7 @@ IDBFactory::MakeBoundKeyRange(nsIVariant* aLeft,
   return NS_OK;
 }
 
-PRUint16
+nsresult
 OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
 #ifdef DEBUG
@@ -1005,21 +1004,21 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(!aConnection, "Huh?!");
 
   if (IndexedDatabaseManager::IsShuttingDown()) {
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
   nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDescription,
                                          mDatabaseFilePath,
                                          getter_AddRefs(connection));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mDatabaseId = HashString(mDatabaseFilePath);
   NS_ASSERTION(mDatabaseId, "HashString gave us 0?!");
 
   rv = IDBFactory::LoadDatabaseInformation(connection, mDatabaseId, mVersion,
                                            mObjectStores);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   for (PRUint32 i = 0; i < mObjectStores.Length(); i++) {
     nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
@@ -1030,10 +1029,10 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     mLastObjectStoreId = PR_MAX(objectStoreInfo->id, mLastObjectStoreId);
   }
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   DatabaseInfo* dbInfo;
@@ -1101,14 +1100,14 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 
     if (!DatabaseInfo::Put(newInfo)) {
       NS_ERROR("Failed to add to hash!");
-      return nsIIDBDatabaseException::UNKNOWN_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     dbInfo = newInfo.forget();
 
     nsresult rv = IDBFactory::UpdateDatabaseMetadata(dbInfo, mVersion,
                                                      mObjectStores);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_ASSERTION(mObjectStores.IsEmpty(), "Should have swapped!");
   }
@@ -1120,9 +1119,9 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBDatabase::Create(mRequest->ScriptContext(), mRequest->Owner(), dbInfo,
                         mASCIIOrigin);
   if (!db) {
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(db));
-  return OK;
+  return NS_OK;
 }

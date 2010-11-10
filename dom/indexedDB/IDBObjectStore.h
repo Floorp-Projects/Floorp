@@ -300,8 +300,6 @@ public:
     return mTransaction;
   }
 
-  ObjectStoreInfo* GetObjectStoreInfo();
-
 protected:
   IDBObjectStore();
   ~IDBObjectStore();
