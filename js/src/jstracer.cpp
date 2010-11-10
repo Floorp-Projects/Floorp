@@ -107,6 +107,26 @@
 #include <elf.h>
 #endif
 
+#ifdef DEBUG
+namespace js {
+static const char*
+getExitName(ExitType type)
+{
+    static const char* exitNames[] =
+    {
+    #define MAKE_EXIT_STRING(x) #x,
+    JS_TM_EXITCODES(MAKE_EXIT_STRING)
+    #undef MAKE_EXIT_STRING
+    NULL
+    };
+
+    JS_ASSERT(type < TOTAL_EXIT_TYPES);
+
+    return exitNames[type];
+}
+}
+#endif /* DEBUG */
+
 namespace nanojit {
 using namespace js;
 using namespace js::gc;
@@ -151,39 +171,53 @@ StackFilter::getTop(LIns* guard)
 }
 
 #if defined NJ_VERBOSE
+static void
+formatGuardExit(InsBuf *buf, LIns *ins)
+{
+    VMSideExit *x = (VMSideExit *)ins->record()->exit;
+    RefBuf b1;
+    if (LogController.lcbits & LC_FragProfile)
+        VMPI_snprintf(b1.buf, b1.len, " (GuardID=%03d)", ins->record()->profGuardID);
+    else
+        b1.buf[0] = '\0';
+    VMPI_snprintf(buf->buf, buf->len,
+                  " -> exit=%p pc=%p imacpc=%p sp%+ld rp%+ld %s%s",
+                  (void *)x,
+                  (void *)x->pc,
+                  (void *)x->imacpc,
+                  (long int)x->sp_adj,
+                  (long int)x->rp_adj,
+                  getExitName(x->exitType),
+                  b1.buf);
+}
+
 void
 LInsPrinter::formatGuard(InsBuf *buf, LIns *ins)
 {
     RefBuf b1, b2;
-    VMSideExit *x = (VMSideExit *)ins->record()->exit;
+    InsBuf b3;
+    formatGuardExit(&b3, ins);
     VMPI_snprintf(buf->buf, buf->len,
-            "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld (GuardID=%03d)",
-            formatRef(&b1, ins),
-            lirNames[ins->opcode()],
-            ins->oprnd1() ? formatRef(&b2, ins->oprnd1()) : "",
-            (void *)x->pc,
-            (void *)x->imacpc,
-            (long int)x->sp_adj,
-            (long int)x->rp_adj,
-            ins->record()->profGuardID);
+                  "%s: %s %s%s",
+                  formatRef(&b1, ins),
+                  lirNames[ins->opcode()],
+                  ins->oprnd1() ? formatRef(&b2, ins->oprnd1()) : "",
+                  b3.buf);
 }
 
 void
 LInsPrinter::formatGuardXov(InsBuf *buf, LIns *ins)
 {
     RefBuf b1, b2, b3;
-    VMSideExit *x = (VMSideExit *)ins->record()->exit;
+    InsBuf b4;
+    formatGuardExit(&b4, ins);
     VMPI_snprintf(buf->buf, buf->len,
-            "%s = %s %s, %s -> pc=%p imacpc=%p sp%+ld rp%+ld (GuardID=%03d)",
-            formatRef(&b1, ins),
-            lirNames[ins->opcode()],
-            formatRef(&b2, ins->oprnd1()),
-            formatRef(&b3, ins->oprnd2()),
-            (void *)x->pc,
-            (void *)x->imacpc,
-            (long int)x->sp_adj,
-            (long int)x->rp_adj,
-            ins->record()->profGuardID);
+                  "%s = %s %s, %s%s",
+                  formatRef(&b1, ins),
+                  lirNames[ins->opcode()],
+                  formatRef(&b2, ins->oprnd1()),
+                  formatRef(&b3, ins->oprnd2()),
+                  b4.buf);
 }
 
 const char*
@@ -806,22 +840,6 @@ FragProfiling_showResults(TraceMonitor* tm)
 /* ----------------------------------------------------------------- */
 
 #ifdef DEBUG
-static const char*
-getExitName(ExitType type)
-{
-    static const char* exitNames[] =
-    {
-    #define MAKE_EXIT_STRING(x) #x,
-    JS_TM_EXITCODES(MAKE_EXIT_STRING)
-    #undef MAKE_EXIT_STRING
-    NULL
-    };
-
-    JS_ASSERT(type < TOTAL_EXIT_TYPES);
-
-    return exitNames[type];
-}
-
 static JSBool FASTCALL
 PrintOnTrace(char* format, uint32 argc, double *argv)
 {
