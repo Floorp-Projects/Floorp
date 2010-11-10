@@ -458,7 +458,9 @@ toolbarbutton.choice-remotetabs {
 }
 
 .addon-image {
-  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");  
+  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
+  width: 32px;
+  height: 32px;
 }
 
 .addon-rating[rating] {
