@@ -73,6 +73,7 @@
 
 #include <fontconfig/fcfreetype.h>
 #include <pango/pango.h>
+#include <pango/pangocairo.h>
 #include <pango/pango-modules.h>
 #include <pango/pangofc-fontmap.h>
 
@@ -529,8 +530,6 @@ public:
     virtual ~gfxFcFont();
     static already_AddRefed<gfxFcFont>
     GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern);
-    static already_AddRefed<gfxFcFont>
-    GetOrMakeFont(FcPattern *aRenderPattern, gfxPangoFcFont *aPangoFont);
 
     virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
@@ -558,7 +557,7 @@ public:
 
 private:
     static already_AddRefed<gfxFcFont> GetOrMakeFont(FcPattern *aPattern);
-    gfxFcFont(cairo_scaled_font_t *aCairoFont,
+    gfxFcFont(cairo_scaled_font_t *aCairoFont, FcPattern *aFontPattern,
               gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle);
 
     void MakePangoFont();
@@ -618,13 +617,7 @@ struct gfxPangoFcFont {
     // last reference to |this|.
     void ForgetGfxFont() { mGfxFont = nsnull; }
 
-    gfxFcFont *GfxFont()
-    {
-        if (!mGfxFont) {
-            SetGfxFont();
-        }
-        return mGfxFont;
-    }
+    gfxFcFont *GfxFont() { return mGfxFont; }
 
     cairo_scaled_font_t *CairoFont()
     {
@@ -633,7 +626,6 @@ struct gfxPangoFcFont {
 
 private:
     void SetFontMap();
-    void SetGfxFont();
 };
 
 struct gfxPangoFcFontClass {
@@ -698,14 +690,6 @@ gfxPangoFcFont::SetFontMap()
         fc_font->fontmap = fontmap;
         g_object_ref(fc_font->fontmap);
     }
-}
-
-void
-gfxPangoFcFont::SetGfxFont() {
-    PangoFcFont *fc_font = &parent_instance;
-
-    // Created with gfxPangoFontMap::new_font()
-    mGfxFont = gfxFcFont::GetOrMakeFont(fc_font->font_pattern, this).get();
 }
 
 static void
@@ -1438,7 +1422,9 @@ static PRBool HasChar(FcPattern *aFont, FcChar32 wc)
 /**
  * gfxPangoFontMap: An implementation of a PangoFontMap.
  *
- * This is a PangoFcFontMap for gfxPangoFcFont.
+ * This is a PangoFcFontMap for gfxPangoFcFont.  It will only ever be used if
+ * some day pango_cairo_font_map_get_default() does not return a
+ * PangoFcFontMap.
  */
 
 #define GFX_TYPE_PANGO_FONT_MAP              (gfx_pango_font_map_get_type())
@@ -1477,12 +1463,41 @@ gfx_pango_font_map_init(gfxPangoFontMap *fontset)
 {
 }
 
-static double
-gfx_pango_font_map_get_resolution(PangoFcFontMap *fcfontmap,
-                                  PangoContext *context)
+static PangoFcFont *
+gfx_pango_font_map_new_font(PangoFcFontMap *fontmap,
+                            FcPattern *pattern)
 {
-    // This merely enables the FC_SIZE field of the pattern to be accurate.
-    return GetDPI();
+    // new_font is not likely to be used, but the class makes the method
+    // available and shapers have access to the class through the font.  Not
+    // bothering to make an effort here because this will only ever be used if
+    // pango_cairo_font_map_get_default() does not return a PangoFcFontMap and
+    // a shaper tried to create a different font from the one it was provided.
+    // Only a basic implementation is provided that simply refuses to
+    // create a new font.  PangoFcFontMap allows NULL return values here.
+    return NULL;
+}
+
+static void
+gfx_pango_font_map_class_init(gfxPangoFontMapClass *klass)
+{
+    // inherit GObjectClass::finalize from parent as this class adds no data.
+
+    // inherit PangoFontMap::load_font (which is not likely to be used)
+    //   from PangoFcFontMap
+    // inherit PangoFontMap::list_families (which is not likely to be used)
+    //   from PangoFcFontMap
+    // inherit PangoFontMap::load_fontset (which is not likely to be used)
+    //   from PangoFcFontMap
+    // inherit PangoFontMap::shape_engine_type from PangoFcFontMap
+
+    PangoFcFontMapClass *fcfontmap_class = PANGO_FC_FONT_MAP_CLASS (klass);
+    // default_substitute is not required.
+    // The API for create_font changed between Pango 1.22 and 1.24 so new_font
+    // is provided instead.
+    fcfontmap_class->new_font = gfx_pango_font_map_new_font;
+    // get_resolution is not required.
+    // context_key_* virtual functions are only necessary if we want to
+    // dynamically respond to changes in the screen cairo_font_options_t.
 }
 
 #ifdef MOZ_WIDGET_GTK2
@@ -1536,51 +1551,6 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
     }
 
     FcDefaultSubstitute(aPattern);
-}
-
-static void
-gfx_pango_font_map_default_substitute(PangoFcFontMap *fontmap,
-                                      FcPattern *pattern)
-{
-    // The context is not available here but most of our rendering is for the
-    // screen so aIsPrinterFont is set to FALSE.
-    PrepareSortPattern(pattern, 18.0, 1.0, FALSE);
-}
-
-static PangoFcFont *
-gfx_pango_font_map_new_font(PangoFcFontMap *fontmap,
-                            FcPattern *pattern)
-{
-    return PANGO_FC_FONT(g_object_new(GFX_TYPE_PANGO_FC_FONT,
-                                      "pattern", pattern, NULL));
-}
-
-static void
-gfx_pango_font_map_class_init(gfxPangoFontMapClass *klass)
-{
-    // inherit GObjectClass::finalize from parent as this class adds no data.
-
-    // inherit PangoFontMap::load_font (which is not likely to be used)
-    //   from PangoFcFontMap
-    // inherit PangoFontMap::list_families (which is not likely to be used)
-    //   from PangoFcFontMap
-    // inherit PangoFontMap::load_fontset (which is not likely to be used)
-    //   from PangoFcFontMap
-    // inherit PangoFontMap::shape_engine_type from PangoFcFontMap
-
-    PangoFcFontMapClass *fcfontmap_class = PANGO_FC_FONT_MAP_CLASS (klass);
-    fcfontmap_class->get_resolution = gfx_pango_font_map_get_resolution;
-    // context_key_* virtual functions are only necessary if we want to
-    // dynamically respond to changes in the screen cairo_font_options_t.
-
-    // The APIs for context_substitute/fontset_key_substitute and create_font
-    //   changed between Pango 1.22 and 1.24 so default_substitute and
-    //   new_font are provided instead.
-    // default_substitute and new_font are not likely to be used but
-    //   implemented because the class makes them available and an
-    //   implementation should provide either create_font or new_font.
-    fcfontmap_class->default_substitute = gfx_pango_font_map_default_substitute;
-    fcfontmap_class->new_font = gfx_pango_font_map_new_font;
 }
 
 /**
@@ -1905,9 +1875,11 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
 cairo_user_data_key_t gfxFcFont::sGfxFontKey;
 
 gfxFcFont::gfxFcFont(cairo_scaled_font_t *aCairoFont,
+                     FcPattern *aFontPattern,
                      gfxFontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
     : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle),
+      mFontPattern(aFontPattern),
       mPangoFont()
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, this, NULL);
@@ -1984,12 +1956,6 @@ gfxFcFont::InitTextRun(gfxContext *aContext,
 gfxPangoFontGroup::Shutdown()
 {
     if (gPangoFontMap) {
-        if (PANGO_IS_FC_FONT_MAP (gPangoFontMap)) {
-            // This clears circular references from the fontmap to itself
-            // through its fonts.  (This is actually unnecessary with Pango
-            // versions >= 1.22.)
-            pango_fc_font_map_shutdown(PANGO_FC_FONT_MAP(gPangoFontMap));
-        }
         g_object_unref(gPangoFontMap);
         gPangoFontMap = NULL;
     }
@@ -2130,48 +2096,25 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
 {
     nsAutoRef<FcPattern> renderPattern
         (FcFontRenderPrepare(NULL, aRequestedPattern, aFontPattern));
-    nsRefPtr<gfxFcFont> font = GetOrMakeFont(renderPattern);
-    if (!font->mFontPattern) {
-        font->mFontPattern = aFontPattern;
-    }
-    return font.forget();
-}
 
-/* static */
-already_AddRefed<gfxFcFont>
-gfxFcFont::GetOrMakeFont(FcPattern *aRenderPattern, gfxPangoFcFont *aPangoFont)
-{
-    nsRefPtr<gfxFcFont> font = GetOrMakeFont(aRenderPattern);
-    if (!font->mPangoFont) {
-        font->mPangoFont = PANGO_FONT(aPangoFont);
-        g_object_add_toggle_ref(G_OBJECT(aPangoFont),
-                                PangoFontToggleNotify, font);
-    }
-    return font.forget();
-}
-
-/* static */
-already_AddRefed<gfxFcFont>
-gfxFcFont::GetOrMakeFont(FcPattern *aPattern)
-{
-    cairo_scaled_font_t *cairoFont = CreateScaledFont(aPattern);
+    cairo_scaled_font_t *cairoFont = CreateScaledFont(renderPattern);
 
     nsRefPtr<gfxFcFont> font = static_cast<gfxFcFont*>
         (cairo_scaled_font_get_user_data(cairoFont, &sGfxFontKey));
 
     if (!font) {
-        gfxFloat size = GetPixelSize(aPattern);
+        gfxFloat size = GetPixelSize(renderPattern);
 
         // Shouldn't actually need to take too much care about the correct
         // name or style, as size is the only thing expected to be important.
-        PRUint8 style = gfxFontconfigUtils::GetThebesStyle(aPattern);
-        PRUint16 weight = gfxFontconfigUtils::GetThebesWeight(aPattern);
+        PRUint8 style = gfxFontconfigUtils::GetThebesStyle(renderPattern);
+        PRUint16 weight = gfxFontconfigUtils::GetThebesWeight(renderPattern);
 
         // The LangSet in the FcPattern does not have an order so there is no
         // one particular language to choose and converting the set to a
         // string through FcNameUnparse() is more trouble than it's worth.
         nsIAtom *language = gfxAtoms::en; // TODO: get the correct language?
-        // FIXME: Pass a real stretch based on aPattern!
+        // FIXME: Pass a real stretch based on renderPattern!
         gfxFontStyle fontStyle(style, weight, NS_FONT_STRETCH_NORMAL,
                                size, language, 0.0,
                                PR_TRUE, PR_FALSE, PR_FALSE,
@@ -2180,10 +2123,10 @@ gfxFcFont::GetOrMakeFont(FcPattern *aPattern)
 
         nsRefPtr<gfxFontEntry> fe;
         FcChar8 *fc_file;
-        if (FcPatternGetString(aPattern,
+        if (FcPatternGetString(renderPattern,
                                FC_FILE, 0, &fc_file) == FcResultMatch) {
             int index;
-            if (FcPatternGetInteger(aPattern,
+            if (FcPatternGetInteger(renderPattern,
                                     FC_INDEX, 0, &index) != FcResultMatch) {
                 // cairo won't know what to do with this pattern.
                 NS_NOTREACHED("No index in pattern for font face from file");
@@ -2200,7 +2143,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aPattern)
 
             fe = new gfxFontEntry(name);
         } else {
-            fe = GetDownloadedFontEntry(aPattern);
+            fe = GetDownloadedFontEntry(renderPattern);
             if (!fe) {
                 // cairo won't know which font to open without a file.
                 // (We don't create fonts from an FT_Face.)
@@ -2211,12 +2154,12 @@ gfxFcFont::GetOrMakeFont(FcPattern *aPattern)
 
         // Note that a file/index pair (or FT_Face) and the gfxFontStyle are
         // not necessarily enough to provide a key that will describe a unique
-        // font.  cairoFont contains information from aPattern, which is a
+        // font.  cairoFont contains information from renderPattern, which is a
         // fully resolved pattern from FcFontRenderPrepare.
         // FcFontRenderPrepare takes the requested pattern and the face
         // pattern as input and can modify elements of the resulting pattern
         // that affect rendering but are not included in the gfxFontStyle.
-        font = new gfxFcFont(cairoFont, fe, &fontStyle);
+        font = new gfxFcFont(cairoFont, aFontPattern, fe, &fontStyle);
     }
 
     cairo_scaled_font_destroy(cairoFont);
@@ -2227,7 +2170,19 @@ static PangoFontMap *
 GetPangoFontMap()
 {
     if (!gPangoFontMap) {
-        gPangoFontMap = gfxPangoFontMap::NewFontMap();
+        // This is the same FontMap used by GDK, so that the same
+        // PangoCoverage cache is shared.
+        gPangoFontMap = pango_cairo_font_map_get_default();
+
+        if (PANGO_IS_FC_FONT_MAP(gPangoFontMap)) {
+            g_object_ref(gPangoFontMap);
+        } else {
+            // Future proofing: We need a PangoFcFontMap for gfxPangoFcFont.
+            // pango_cairo_font_map_get_default() is expected to return a
+            // PangoFcFontMap on Linux systems, but, just in case this ever
+            // changes, we provide our own basic implementation.
+            gPangoFontMap = gfxPangoFontMap::NewFontMap();
+        }
     }
     return gPangoFontMap;
 }
