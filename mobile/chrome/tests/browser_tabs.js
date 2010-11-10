@@ -41,22 +41,22 @@ function load_tabs() {
 function tab_switch_01() {
   BrowserUI.selectTab(new_tab_01);
   is(Browser.selectedTab.browser.currentURI.spec, testURL_01, "Tab Switch 01 URL Matches");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   //Add new tab
   new_tab_02 =  Browser.addTab(testURL_02,false);
   new_tab_02.browser.addEventListener("load", tab_switch_02, true);
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 }
 
 function tab_switch_02() {
   BrowserUI.selectTab(new_tab_02);
   is(Browser.selectedTab.browser.currentURI.spec, testURL_02, "Tab Switch 02 URL Matches");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   BrowserUI.selectTab(new_tab_01);
   is(Browser.selectedTab.browser.currentURI.spec, testURL_01, "Tab Switch 01 URL Matches");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   //Add new tab
   new_tab_03 =  Browser.addTab(testURL_03, true, new_tab_01);
@@ -66,11 +66,11 @@ function tab_switch_02() {
 function tab_switch_03() {
   is(Browser.selectedTab.browser.currentURI.spec, testURL_03, "Tab Switch 03 URL Matches"); 
   is(new_tab_03.owner, new_tab_01, "Tab 03 owned by tab 01");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   Browser.closeTab(new_tab_03);
   is(Browser.selectedTab, new_tab_01, "Closing tab 03 returns to owner");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   new_tab_03 =  Browser.addTab(testURL_03, true, new_tab_01);
   new_tab_03.browser.addEventListener("load", tab_switch_04, true);
@@ -79,12 +79,12 @@ function tab_switch_03() {
 function tab_switch_04() {
   is(Browser.selectedTab.browser.currentURI.spec, testURL_03, "Tab Switch 03 URL Matches"); 
   is(new_tab_03.owner, new_tab_01, "Tab 03 owned by tab 01");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   Browser.closeTab(new_tab_01);
   is(Browser.selectedTab, new_tab_03, "Closing tab 01 keeps selectedTab");
   is(new_tab_03.owner, null, "Closing tab 01 nulls tab3 owner");
-  is(Browser.selectedTab.browser, Elements.browsers.selectedPanel, "Deck has correct browser");
+  is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   done();
 }
