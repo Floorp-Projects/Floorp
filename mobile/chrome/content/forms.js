@@ -187,6 +187,11 @@ FormAssistant.prototype = {
         currentElement.dispatchEvent(event);
         break;
       }
+
+      case "FormAssist:Closed":
+        currentElement.blur();
+        this._currentIndex = null;
+        break;
     }
   },
 

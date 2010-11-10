@@ -1500,13 +1500,13 @@
 
       <property name="isActive" onget="return !this._spacer.hidden;"/>
 
-      <field name="_model">null</field>
+      <field name="model">null</field>
       <method name="show">
         <parameter name="aModel" />
         <body><![CDATA[
           // call the hide callback of the current object if any
-          if (this._model && this._model.type != aModel.type)
-            this._model.hide();
+          if (this.model && this.model.type != aModel.type)
+            this.model.hide();
 
           this.setAttribute("type", aModel.type);
           this.setAttribute("next", aModel.commands.next);
@@ -1519,7 +1519,7 @@
           this._previousButton.disabled = document.getElementById(aModel.commands.previous).disabled;
           this._nextButton.disabled = document.getElementById(aModel.commands.next).disabled;
 
-          this._model = aModel;
+          this.model = aModel;
           this.contentHasChanged();
           this._spacer.hidden = false;
         ]]></body>
@@ -1533,7 +1533,7 @@
           this.removeAttribute("close");
           this.removeAttribute("type");
 
-          this._model = null;
+          this.model = null;
           this._spacer.hidden = true;
         ]]></body>
       </method>
