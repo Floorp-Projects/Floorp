@@ -239,7 +239,7 @@ InstallTriggerManager.prototype = {
     // object (see bug 609794). Note that we need the
     // XPCNativeWrapper.unwrap because getting the prototype
     // doesn't respect the .wrappedJSObject unwrapping above.
-    var obj = this;
+    var obj = XPCNativeWrapper.unwrap(this);
     while (!obj.hasOwnProperty('InstallTrigger')) {
       obj = XPCNativeWrapper.unwrap(Object.getPrototypeOf(obj));
     }
