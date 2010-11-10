@@ -100,7 +100,7 @@ public:
                bool aAutoIncrement);
 
   already_AddRefed<mozIStorageStatement>
-  RemoveStatement(bool aAutoIncrement);
+  DeleteStatement(bool aAutoIncrement);
 
   already_AddRefed<mozIStorageStatement>
   GetStatement(bool aAutoIncrement);

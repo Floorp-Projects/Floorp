@@ -134,10 +134,10 @@ private:
   nsString mValue;
 };
 
-class RemoveHelper : public GetHelper
+class DeleteHelper : public GetHelper
 {
 public:
-  RemoveHelper(IDBTransaction* aTransaction,
+  DeleteHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                IDBObjectStore* aObjectStore,
                const Key& aKey)
@@ -235,10 +235,10 @@ private:
   PRInt64 mId;
 };
 
-class RemoveIndexHelper : public AsyncConnectionHelper
+class DeleteIndexHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveIndexHelper(IDBTransaction* aTransaction,
+  DeleteIndexHelper(IDBTransaction* aTransaction,
                     const nsAString& aName,
                     IDBObjectStore* aObjectStore)
   : AsyncConnectionHelper(aTransaction, nsnull), mName(aName),
@@ -1082,7 +1082,7 @@ IDBObjectStore::Put(const jsval &aValue,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Remove(nsIVariant* aKey,
+IDBObjectStore::Delete(nsIVariant* aKey,
                        nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -1104,8 +1104,8 @@ IDBObjectStore::Remove(nsIVariant* aKey,
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<RemoveHelper> helper =
-    new RemoveHelper(mTransaction, request, this, key);
+  nsRefPtr<DeleteHelper> helper =
+    new DeleteHelper(mTransaction, request, this, key);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1339,7 +1339,7 @@ IDBObjectStore::Index(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::RemoveIndex(const nsAString& aName)
+IDBObjectStore::DeleteIndex(const nsAString& aName)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1373,8 +1373,8 @@ IDBObjectStore::RemoveIndex(const nsAString& aName)
     return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
-  nsRefPtr<RemoveIndexHelper> helper =
-    new RemoveIndexHelper(mTransaction, aName, this);
+  nsRefPtr<DeleteIndexHelper> helper =
+    new DeleteIndexHelper(mTransaction, aName, this);
 
   nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1708,12 +1708,12 @@ GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 }
 
 nsresult
-RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+DeleteHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mTransaction->RemoveStatement(mObjectStore->IsAutoIncrement());
+    mTransaction->DeleteStatement(mObjectStore->IsAutoIncrement());
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -1745,13 +1745,13 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-RemoveHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+DeleteHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   return AsyncConnectionHelper::OnSuccess(aTarget);
 }
 
 nsresult
-RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
+DeleteHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
 
@@ -2126,7 +2126,7 @@ CreateIndexHelper::OnError(nsIDOMEventTarget* aTarget,
 }
 
 nsresult
-RemoveIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+DeleteIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -2150,7 +2150,7 @@ RemoveIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-RemoveIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+DeleteIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   NS_ASSERTION(!aTarget, "Huh?!");
 
@@ -2158,7 +2158,7 @@ RemoveIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 }
 
 void
-RemoveIndexHelper::OnError(nsIDOMEventTarget* aTarget,
+DeleteIndexHelper::OnError(nsIDOMEventTarget* aTarget,
                            nsresult aErrorCode)
 {
   NS_NOTREACHED("Removing an index should never fail here!");

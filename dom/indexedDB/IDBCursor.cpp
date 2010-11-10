@@ -90,10 +90,10 @@ private:
   nsTArray<IndexUpdateInfo> mIndexUpdateInfo;
 };
 
-class RemoveHelper : public AsyncConnectionHelper
+class DeleteHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveHelper(IDBTransaction* aTransaction,
+  DeleteHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
                const Key& aKey,
@@ -549,7 +549,7 @@ IDBCursor::Update(const jsval& aValue,
 }
 
 NS_IMETHODIMP
-IDBCursor::Remove(nsIIDBRequest** _retval)
+IDBCursor::Delete(nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -569,8 +569,8 @@ IDBCursor::Remove(nsIIDBRequest** _retval)
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<RemoveHelper> helper =
-    new RemoveHelper(mTransaction, request, mObjectStore->Id(), key,
+  nsRefPtr<DeleteHelper> helper =
+    new DeleteHelper(mTransaction, request, mObjectStore->Id(), key,
                      mObjectStore->IsAutoIncrement());
 
   nsresult rv = helper->DispatchToTransactionPool();
@@ -650,12 +650,12 @@ UpdateHelper::GetSuccessResult(nsIWritableVariant* aResult)
 }
 
 nsresult
-RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+DeleteHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mTransaction->RemoveStatement(mAutoIncrement);
+    mTransaction->DeleteStatement(mAutoIncrement);
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   mozStorageStatementScoper scoper(stmt);
 
@@ -685,7 +685,7 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
+DeleteHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
 

@@ -54,7 +54,7 @@ interface nsIDOMDOMStringList;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, uuid(e71c797f-d991-485d-859e-baf0f201cfd0)]
+[scriptable, uuid(6bb4ef9b-d96b-46df-8116-c62f635bf4c2)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -69,7 +69,7 @@ interface nsIIDBDatabase : nsISupports
                     [optional /* false */] in boolean autoIncrement);
 
   void
-  removeObjectStore(in AString name);
+  deleteObjectStore(in AString name);
 
   [implicit_jscontext]
   nsIIDBRequest

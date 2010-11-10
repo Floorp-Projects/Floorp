@@ -108,10 +108,10 @@ private:
   nsRefPtr<IDBObjectStore> mObjectStore;
 };
 
-class RemoveObjectStoreHelper : public AsyncConnectionHelper
+class DeleteObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveObjectStoreHelper(IDBTransaction* aTransaction,
+  DeleteObjectStoreHelper(IDBTransaction* aTransaction,
                           PRInt64 aObjectStoreId)
   : AsyncConnectionHelper(aTransaction, nsnull), mObjectStoreId(aObjectStoreId)
   { }
@@ -596,7 +596,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabase::RemoveObjectStore(const nsAString& aName)
+IDBDatabase::DeleteObjectStore(const nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -612,8 +612,8 @@ IDBDatabase::RemoveObjectStore(const nsAString& aName)
     return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
-  nsRefPtr<RemoveObjectStoreHelper> helper =
-    new RemoveObjectStoreHelper(transaction, objectStoreInfo->id);
+  nsRefPtr<DeleteObjectStoreHelper> helper =
+    new DeleteObjectStoreHelper(transaction, objectStoreInfo->id);
   nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -902,7 +902,7 @@ CreateObjectStoreHelper::OnError(nsIDOMEventTarget* aTarget,
 }
 
 nsresult
-RemoveObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+DeleteObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -923,7 +923,7 @@ RemoveObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-RemoveObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+DeleteObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   NS_ASSERTION(!aTarget, "Huh?!");
 
@@ -931,7 +931,7 @@ RemoveObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 }
 
 void
-RemoveObjectStoreHelper::OnError(nsIDOMEventTarget* aTarget,
+DeleteObjectStoreHelper::OnError(nsIDOMEventTarget* aTarget,
                                  nsresult aErrorCode)
 {
   NS_NOTREACHED("Removing an object store should never fail here!");
