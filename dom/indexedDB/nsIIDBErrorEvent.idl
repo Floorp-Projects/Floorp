@@ -39,13 +39,13 @@
 
 #include "nsIIDBEvent.idl"
 
-[scriptable, uuid(70420fe2-363a-43fc-a11c-636a809f7598)]
+[scriptable, uuid(b2048056-3ed9-4975-97cc-dea74282b607)]
 interface nsIIDBErrorEvent : nsIIDBEvent
 {
   /**
    * See nsIIDBDatabaseException.idl
    */
-  attribute unsigned short code;
+  readonly attribute unsigned short code;
 
-  attribute DOMString message;
+  readonly attribute DOMString message;
 };
