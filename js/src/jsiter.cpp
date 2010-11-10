@@ -426,10 +426,17 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                              js_AtomToPrintableString(cx, atom));
         return false;
     }
-    /* Notify type inference of the custom iterator. */
-    JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
-    cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0,
-        (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR), true);
+    /*
+     * Notify type inference of the custom iterator.  This only needs to be done
+     * if this is coming from a 'for in' loop, not a call to Iterator itself.
+     * If an Iterator object is used in a for loop then the values fetched in
+     * that loop are unknown, whether there is a custom __iterator__ or not.
+     */
+    if (!(flags & JSITER_OWNONLY)) {
+        JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
+        cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0,
+            (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR), true);
+    }
     return true;
 }
 
