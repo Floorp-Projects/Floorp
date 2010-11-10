@@ -781,7 +781,7 @@ var BrowserUI = {
     // Check content helper
     let contentHelper = document.getElementById("content-navigator");
     if (contentHelper.isActive) {
-      contentHelper.hide();
+      contentHelper.model.hide();
       return;
     }
 
@@ -1859,6 +1859,8 @@ var FormHelperUI = {
 
     this._updateContainerForSelect(this._currentElement, null);
     this._open = false;
+
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Closed", { });
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
@@ -2212,7 +2214,7 @@ var SelectHelperUI = {
     this._container.addEventListener("click", this, false);
     this._panel.addEventListener("overflow", this, true);
   },
-  
+
   _showFilter: false,
   get showFilter() {
     return this._showFilter;
