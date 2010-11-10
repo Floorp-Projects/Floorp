@@ -404,6 +404,7 @@ struct JSObject : js::gc::Cell {
 
     bool isDelegate() const     { return !!(flags & DELEGATE); }
     void setDelegate()          { flags |= DELEGATE; }
+    void clearDelegate()        { flags &= ~DELEGATE; }
 
     bool isBoundFunction() const { return !!(flags & BOUND_FUNCTION); }
 
