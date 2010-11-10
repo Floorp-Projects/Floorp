@@ -1428,6 +1428,8 @@ MakePlaceholder(JSParseNode *pn, JSTreeContext *tc)
         return NULL;
 
     ALE_SET_DEFN(ale, dn);
+    dn->pn_type = TOK_NAME;
+    dn->pn_op = JSOP_NOP;
     dn->pn_defn = true;
     dn->pn_dflags |= PND_PLACEHOLDER;
     return ale;
@@ -2051,6 +2053,7 @@ Parser::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                             afunbox = afunbox->parent;
                             --staticLevel;
                         }
+                        JS_ASSERT(afunbox->level + 1U == calleeLevel);
                         afunbox->node->setFunArg();
                     } else {
                        afunbox = lexdep->pn_funbox;
@@ -2609,58 +2612,70 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
                 DeoptimizeUsesWithin(dn, fn->pn_pos);
             }
 
-            JSDefinition *outer_dn;
-
             if (!outer_ale)
                 outer_ale = tc->lexdeps.lookup(atom);
-            if (outer_ale) {
-                /*
-                 * Insert dn's uses list at the front of outer_dn's list.
+            if (!outer_ale) {
+                /* 
+                 * Create a new placeholder for our outer lexdep. We could simply re-use
+                 * the inner placeholder, but that introduces subtleties in the case where
+                 * we find a later definition that captures an existing lexdep. For
+                 * example:
                  *
-                 * Without loss of generality or correctness, we allow a dn to
-                 * be in inner and outer lexdeps, since the purpose of lexdeps
-                 * is one-pass coordination of name use and definition across
-                 * functions, and if different dn's are used we'll merge lists
-                 * when leaving the inner function.
+                 *   function f() { function g() { x; } let x; }
                  *
-                 * The dn == outer_dn case arises with generator expressions
-                 * (see CompExprTransplanter::transplant, the PN_FUNC/PN_NAME
-                 * case), and nowhere else, currently.
+                 * Here, g's TOK_UPVARS node lists the placeholder for x, which must be
+                 * captured by the 'let' declaration later, since 'let's are hoisted.
+                 * Taking g's placeholder as our own would work fine. But consider:
+                 *
+                 *   function f() { x; { function g() { x; } let x; } }
+                 *
+                 * Here, the 'let' must not capture all the uses of f's lexdep entry for
+                 * x, but it must capture the x node referred to from g's TOK_UPVARS node.
+                 * Always turning inherited lexdeps into uses of a new outer definition
+                 * allows us to handle both these cases in a natural way.
                  */
-                outer_dn = ALE_DEFN(outer_ale);
-
-                if (dn != outer_dn) {
-                    JSParseNode **pnup = &dn->dn_uses;
-                    JSParseNode *pnu;
-
-                    while ((pnu = *pnup) != NULL) {
-                        pnu->pn_lexdef = outer_dn;
-                        pnup = &pnu->pn_link;
-                    }
-
-                    /*
-                     * Make dn be a use that redirects to outer_dn, because we
-                     * can't replace dn with outer_dn in all the pn_namesets in
-                     * the AST where it may be. Instead we make it forward to
-                     * outer_dn. See JSDefinition::resolve.
-                     */
-                    *pnup = outer_dn->dn_uses;
-                    outer_dn->dn_uses = dn;
-                    outer_dn->pn_dflags |= dn->pn_dflags & ~PND_PLACEHOLDER;
-                    dn->pn_defn = false;
-                    dn->pn_used = true;
-                    dn->pn_lexdef = outer_dn;
-
-                    /* Mark the outer dn as escaping. */
-                }
-            } else {
-                /* Add an outer lexical dependency for ale's definition. */
-                outer_ale = tc->lexdeps.add(tc->parser, atom);
-                if (!outer_ale)
-                    return false;
-                outer_dn = ALE_DEFN(ale);
-                ALE_SET_DEFN(outer_ale, outer_dn);
+                outer_ale = MakePlaceholder(dn, tc);
             }
+
+            JSDefinition *outer_dn = ALE_DEFN(outer_ale);
+
+            /*
+             * Insert dn's uses list at the front of outer_dn's list.
+             *
+             * Without loss of generality or correctness, we allow a dn to
+             * be in inner and outer lexdeps, since the purpose of lexdeps
+             * is one-pass coordination of name use and definition across
+             * functions, and if different dn's are used we'll merge lists
+             * when leaving the inner function.
+             *
+             * The dn == outer_dn case arises with generator expressions
+             * (see CompExprTransplanter::transplant, the PN_FUNC/PN_NAME
+             * case), and nowhere else, currently.
+             */
+            if (dn != outer_dn) {
+                JSParseNode **pnup = &dn->dn_uses;
+                JSParseNode *pnu;
+
+                while ((pnu = *pnup) != NULL) {
+                    pnu->pn_lexdef = outer_dn;
+                    pnup = &pnu->pn_link;
+                }
+
+                /*
+                 * Make dn be a use that redirects to outer_dn, because we
+                 * can't replace dn with outer_dn in all the pn_namesets in
+                 * the AST where it may be. Instead we make it forward to
+                 * outer_dn. See JSDefinition::resolve.
+                 */
+                *pnup = outer_dn->dn_uses;
+                outer_dn->dn_uses = dn;
+                outer_dn->pn_dflags |= dn->pn_dflags & ~PND_PLACEHOLDER;
+                dn->pn_defn = false;
+                dn->pn_used = true;
+                dn->pn_lexdef = outer_dn;
+            }
+
+            /* Mark the outer dn as escaping. */
             outer_dn->pn_dflags |= PND_CLOSED;
         }
 
@@ -4777,10 +4792,6 @@ RebindLets(JSParseNode *pn, JSTreeContext *tc)
                     ale = MakePlaceholder(pn, tc);
                     if (!ale)
                         return NULL;
-
-                    JSDefinition *dn = ALE_DEFN(ale);
-                    dn->pn_type = TOK_NAME;
-                    dn->pn_op = JSOP_NOP;
                 }
                 LinkUseToDef(pn, ALE_DEFN(ale), tc);
             }
@@ -8632,8 +8643,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                      * necessary for safe context->display-based optimiza-
                      * tion of the closure's static link.
                      */
-                    JS_ASSERT(PN_TYPE(dn) == TOK_NAME);
-                    JS_ASSERT(dn->pn_op == JSOP_NOP);
                     if (tokenStream.peekToken() != TOK_LP)
                         dn->pn_dflags |= PND_FUNARG;
                 }
