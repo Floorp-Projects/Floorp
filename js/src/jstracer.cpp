@@ -9897,8 +9897,31 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
     if (js_PrototypeHasIndexedProperties(cx, obj))
         return RECORD_STOP;
 
-    while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit))
+    JS_ASSERT(obj->isDenseArray());
+
+    /*
+     * Changing __proto__ on a dense array makes it slow, so we can just bake in
+     * the current prototype as the first prototype to test. This avoids an
+     * extra load when running the trace.
+     */
+    obj = obj->getProto();
+    JS_ASSERT(obj);
+
+    obj_ins = w.immpObjGC(obj);
+
+    /*
+     * Changing __proto__ on a native object changes its shape, and adding
+     * indexed properties changes shapes too.  And non-native objects never pass
+     * shape guards.  So it's enough to just guard on shapes up the proto chain;
+     * any change to the proto chain length will make us fail a guard before we
+     * run off the end of the proto chain.
+     */
+    do {
         CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(), "guard(shape)", exit));
+        obj = obj->getProto();
+        obj_ins = w.ldpObjProto(obj_ins);
+    } while (obj);
+
     return RECORD_CONTINUE;
 }
 
@@ -12836,7 +12859,12 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                                   "isHole");
         w.pauseAddingCSEValues();
         if (MaybeBranch mbr1 = w.jf(isHole_ins)) {
-            CHECK_STATUS_A(guardPrototypeHasNoIndexedProperties(obj, obj_ins, mismatchExit));
+            /*
+             * It's important that this use branchExit, not mismatchExit, since
+             * changes to shapes should just mean we compile a new branch, not
+             * throw the whole trace away.
+             */
+            CHECK_STATUS_A(guardPrototypeHasNoIndexedProperties(obj, obj_ins, branchExit));
             LIns* length_ins = w.lduiObjPrivate(obj_ins);
             if (MaybeBranch mbr2 = w.jt(w.ltui(idx_ins, length_ins))) {
                 LIns* newLength_ins = w.name(w.addiN(idx_ins, 1), "newLength");
