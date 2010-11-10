@@ -537,6 +537,35 @@ IDBTransaction::TransactionIsOpen() const
 }
 #endif
 
+already_AddRefed<IDBObjectStore>
+IDBTransaction::GetOrCreateObjectStore(const nsAString& aName,
+                                       ObjectStoreInfo* aObjectStoreInfo)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!aName.IsEmpty(), "Empty name!");
+  NS_ASSERTION(aObjectStoreInfo, "Null pointer!");
+
+  nsRefPtr<IDBObjectStore> retval;
+
+  for (PRUint32 index = 0; index < mCreatedObjectStores.Length(); index++) {
+    nsRefPtr<IDBObjectStore>& objectStore = mCreatedObjectStores[index];
+    if (objectStore->Name() == aName) {
+      retval = objectStore;
+      return retval.forget();
+    }
+  }
+
+  retval = IDBObjectStore::Create(this, aObjectStoreInfo);
+  NS_ENSURE_TRUE(retval, nsnull);
+
+  if (!mCreatedObjectStores.AppendElement(retval)) {
+    NS_WARNING("Out of memory!");
+    return nsnull;
+  }
+
+  return retval.forget();
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
@@ -547,6 +576,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+
+  for (PRUint32 i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
+    cb.NoteXPCOMChild(static_cast<nsIIDBObjectStore*>(
+                      tmp->mCreatedObjectStores[i].get()));
+  }
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
@@ -556,6 +592,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+
+  tmp->mCreatedObjectStores.Clear();
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBTransaction)
@@ -653,7 +692,7 @@ IDBTransaction::ObjectStore(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<IDBObjectStore> objectStore(IDBObjectStore::Create(this, info));
+  nsRefPtr<IDBObjectStore> objectStore = GetOrCreateObjectStore(aName, info);
   NS_ENSURE_TRUE(objectStore, NS_ERROR_FAILURE);
 
   objectStore.forget(_retval);

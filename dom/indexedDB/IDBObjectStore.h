@@ -324,6 +324,9 @@ private:
 
   // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+
+  nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
+
 };
 
 END_INDEXEDDB_NAMESPACE

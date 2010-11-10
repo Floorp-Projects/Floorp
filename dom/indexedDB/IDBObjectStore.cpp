@@ -853,12 +853,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBObjectStore,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsPIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+
+  for (PRUint32 i = 0; i < tmp->mCreatedIndexes.Length(); i++) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedIndexes[i]");
+    cb.NoteXPCOMChild(static_cast<nsIIDBIndex*>(tmp->mCreatedIndexes[i].get()));
+  }
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBObjectStore,
                                                 nsDOMEventTargetHelper)
   // Don't unlink mTransaction!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+
+  tmp->mCreatedIndexes.Clear();
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBObjectStore)
@@ -1275,7 +1284,20 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   // Don't leave this in the list if we fail below!
   AutoRemoveIndex autoRemove(databaseInfo->id, mName, aName);
 
+#ifdef DEBUG
+  for (PRUint32 index = 0; index < mCreatedIndexes.Length(); index++) {
+    if (mCreatedIndexes[index]->Name() == aName) {
+      NS_ERROR("Already created this one!");
+    }
+  }
+#endif
+
   nsRefPtr<IDBIndex> index(IDBIndex::Create(this, indexInfo));
+
+  if (!mCreatedIndexes.AppendElement(index)) {
+    NS_WARNING("Out of memory!");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsRefPtr<CreateIndexHelper> helper =
     new CreateIndexHelper(mTransaction, index);
@@ -1319,10 +1341,26 @@ IDBObjectStore::Index(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<IDBIndex> index = IDBIndex::Create(this, indexInfo);
-  NS_ENSURE_TRUE(index, NS_ERROR_FAILURE);
+  nsRefPtr<IDBIndex> retval;
+  for (PRUint32 i = 0; i < mCreatedIndexes.Length(); i++) {
+    nsRefPtr<IDBIndex>& index = mCreatedIndexes[i];
+    if (index->Name() == aName) {
+      retval = index;
+      break;
+    }
+  }
 
-  index.forget(_retval);
+  if (!retval) {
+    retval = IDBIndex::Create(this, indexInfo);
+    NS_ENSURE_TRUE(retval, NS_ERROR_FAILURE);
+
+    if (!mCreatedIndexes.AppendElement(retval)) {
+      NS_WARNING("Out of memory!");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  retval.forget(_retval);
   return NS_OK;
 }
 
