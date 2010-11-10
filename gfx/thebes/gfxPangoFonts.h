@@ -70,12 +70,6 @@ public:
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
-    // Create and initialize a textrun using Pango
-    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                                    const Parameters *aParams, PRUint32 aFlags);
-    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                    const Parameters *aParams, PRUint32 aFlags);
-
     virtual gfxFont *GetFontAt(PRInt32 i);
 
     virtual void UpdateFontList();
@@ -97,18 +91,15 @@ public:
     // Interfaces used internally
     // (but public so that they can be accessed from non-member functions):
 
-    // The FontGroup holds the reference to the PangoFont (through the FontSet).
-    PangoFont *GetBasePangoFont();
-
     // A language guessed from the gfxFontStyle
     PangoLanguage *GetPangoLanguage() { return mPangoLanguage; }
 
+private:
     // @param aLang [in] language to use for pref fonts and system default font
     //        selection, or NULL for the language guessed from the gfxFontStyle.
     // The FontGroup holds a reference to this set.
     gfxFcFontSet *GetFontSet(PangoLanguage *aLang = NULL);
 
-private:
     class FontSetByLangEntry {
     public:
         FontSetByLangEntry(PangoLanguage *aLang, gfxFcFontSet *aFontSet);
@@ -122,19 +113,6 @@ private:
     gfxFloat mSizeAdjustFactor;
     PangoLanguage *mPangoLanguage;
 
-    // ****** Textrun glyph conversion helpers ******
-
-    /**
-     * Fill in the glyph-runs for the textrun.
-     * @param aTake8BitPath the text contains only characters below 0x100
-     * (TEXT_IS_8BIT can return false when the characters are all below 0x100
-     * but stored in UTF16 format)
-     */
-    void InitTextRun(gfxTextRun *aTextRun, const PRUnichar *aString,
-                     PRUint32 aLength, PRBool aTake8BitPath);
-
-    void CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
-                                  const PRUnichar *aString, PRUint32 aLength);
 #if defined(ENABLE_FAST_PATH_8BIT)
     nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
                                  const PRUnichar *aString, PRUint32 aLength);
