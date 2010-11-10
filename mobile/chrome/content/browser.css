@@ -46,7 +46,8 @@ setting[type="string"] {
   -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-string");
 }
 
-notificationbox {
+#browsers > notificationbox {
+  -moz-binding: url("chrome://browser/content/notification.xml#stacked-notificationbox");
   overflow: -moz-hidden-unscrollable;
 }
 
