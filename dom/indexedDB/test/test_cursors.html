@@ -103,13 +103,8 @@
           let retval = cursor.continue();
           is(retval, true, "Correct return from continue");
 
-          try {
-            cursor.continue();
-            ok(false, "continue twice should throw");
-          }
-          catch (e) {
-            ok(true, "continue twice should throw");
-          }
+          cursor.continue();
+          ok(true, "continue twice should not throw");
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
