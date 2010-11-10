@@ -729,29 +729,6 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
         return false;
 
-    /*
-     * FIXME bug 592992: hoist to ExternalInvoke
-     *
-     * Compute |this|. Currently, this must happen after the frame is pushed
-     * and fp->scopeChain is correct because the thisObject hook may call
-     * GetScopeChain.
-     */
-    if (!(flags & JSINVOKE_CONSTRUCT)) {
-        Value &thisv = fp->functionThis();
-        if (thisv.isObject()) {
-            /*
-             * We must call the thisObject hook in case we are not called from the
-             * interpreter, where a prior bytecode has computed an appropriate
-             * |this| already.
-             */
-            JSObject *thisp = thisv.toObject().thisObject(cx);
-            if (!thisp)
-                 return false;
-            JS_ASSERT(IsSaneThisObject(*thisp));
-            thisv.setObject(*thisp);
-        }
-    }
-
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
     JSBool ok;
     {
@@ -804,15 +781,6 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         JSStackFrame *fp = frame_.fp();
         fp->initCallFrame(cx, calleev.toObject(), fun, argc, flags);
         stack.pushInvokeFrame(cx, args_, &frame_);
-
-        // FIXME bug 592992: hoist thisObject hook to ExternalInvoke
-        if (thisv.isObject()) {
-            JSObject *thisp = thisv.toObject().thisObject(cx);
-            if (!thisp)
-                return false;
-            JS_ASSERT(IsSaneThisObject(*thisp));
-            savedThis_.setObject(*thisp);
-        }
 
 #ifdef JS_METHODJIT
         /* Hoist dynamic checks from RunScript. */
@@ -868,6 +836,19 @@ ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
     args.callee() = fval;
     args.thisv() = thisv;
     memcpy(args.argv(), argv, argc * sizeof(Value));
+
+    if (args.thisv().isObject()) {
+        /*
+         * We must call the thisObject hook in case we are not called from the
+         * interpreter, where a prior bytecode has computed an appropriate
+         * |this| already.
+         */
+        JSObject *thisp = args.thisv().toObject().thisObject(cx);
+        if (!thisp)
+             return false;
+        JS_ASSERT(IsSaneThisObject(*thisp));
+        args.thisv().setObject(*thisp);
+    }
 
     if (!Invoke(cx, args, 0))
         return false;
