@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-#ifeq (beta,$(MOZ_UPDATE_CHANNEL))
+ifeq (beta,$(MOZ_UPDATE_CHANNEL))
 EXTENSIONS = \
   feedback@mobile.mozilla.org \
   $(NULL)
@@ -61,4 +61,4 @@ endef # do not remove the blank line!
 libs::
 	$(foreach dir,$(EXTENSIONS),$(_PACKAGE_EXTENSIONS))
 
-#endif
+endif
