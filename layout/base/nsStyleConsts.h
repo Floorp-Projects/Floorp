@@ -448,8 +448,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FONT_STRETCH_EXPANDED          NS_FONT_STRETCH_EXPANDED
 #define NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED    NS_FONT_STRETCH_EXTRA_EXPANDED
 #define NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED    NS_FONT_STRETCH_ULTRA_EXPANDED
-#define NS_STYLE_FONT_STRETCH_WIDER             NS_FONT_STRETCH_WIDER
-#define NS_STYLE_FONT_STRETCH_NARROWER          NS_FONT_STRETCH_NARROWER
 
 // See nsStyleFont - system fonts
 #define NS_STYLE_FONT_CAPTION                   1		// css2
