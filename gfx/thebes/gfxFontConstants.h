@@ -50,8 +50,6 @@
 
 #define NS_FONT_WEIGHT_NORMAL           400
 #define NS_FONT_WEIGHT_BOLD             700
-#define NS_FONT_WEIGHT_BOLDER           1
-#define NS_FONT_WEIGHT_LIGHTER          (-1)
 
 #define NS_FONT_STRETCH_ULTRA_CONDENSED (-4)
 #define NS_FONT_STRETCH_EXTRA_CONDENSED (-3)

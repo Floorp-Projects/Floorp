@@ -189,33 +189,11 @@ GuessFcWeight(const gfxFontStyle& aFontStyle)
      * the weight in the list of supported font weights,
      * this value can be negative or positive.
      */
-    PRInt8 weight;
-    PRInt8 offset;
-    aFontStyle.ComputeWeightAndOffset(&weight, &offset);
+    PRInt8 weight = aFontStyle.ComputeWeight();
 
-    // ComputeWeightAndOffset trimmed the range of weights for us
+    // ComputeWeight trimmed the range of weights for us
     NS_ASSERTION(weight >= 0 && weight <= 10,
                  "base weight out of range");
-
-    // Most font families do not support every weight.  The tables here are
-    // chosen such that a normal (4) base weight and an offset of +1 will
-    // guess bold.
-
-    // Mapping from weight to a guess of the nearest available lighter weight
-    static const int lighterGuess[11] =
-        { 0, 0, 1, 1, 2, 3, 4, 4, 6, 7, 8 };
-    // Mapping from weight to a guess of the nearest available bolder weight
-    static const int bolderGuess[11] =
-        { 2, 3, 4, 6, 7, 7, 8, 9, 10, 10, 10 };
-
-    while (offset < 0) {
-        weight = lighterGuess[weight];
-        offset++;
-    }
-    while (offset > 0) {
-        weight = bolderGuess[weight];
-        offset--;
-    }
 
     return gfxFontconfigUtils::FcWeightForBaseWeight(weight);
 }

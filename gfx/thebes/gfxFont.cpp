@@ -312,12 +312,8 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
 
     aNeedsSyntheticBold = PR_FALSE;
 
-    PRInt8 baseWeight, weightDistance;
-    aFontStyle.ComputeWeightAndOffset(&baseWeight, &weightDistance);
+    PRInt8 baseWeight = aFontStyle.ComputeWeight();
     PRBool wantBold = baseWeight >= 6;
-    if ((wantBold && weightDistance < 0) || (!wantBold && weightDistance > 0)) {
-        wantBold = !wantBold;
-    }
 
     // If the family has only one face, we simply return it; no further checking needed
     if (mAvailableFonts.Length() == 1) {
@@ -422,47 +418,11 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
                  "weight mapping should always find at least one font in a family");
 
     gfxFontEntry *matchFE = weightList[matchBaseWeight];
-    const PRInt8 absDistance = abs(weightDistance);
-    PRInt8 wghtSteps;
-
-    if (weightDistance != 0) {
-        direction = (weightDistance > 0) ? 1 : -1;
-        PRInt8 j;
-
-        // Synthetic bolding occurs when font itself is not a bold-face and
-        // either the absolute weight is at least 600 or the relative weight
-        // (e.g. 402) implies a darker face than the ones available.
-        // note: this means that (1) lighter styles *never* synthetic bold and
-        // (2) synthetic bolding always occurs at the first bolder step beyond
-        // available faces, no matter how light the boldest face
-
-        // Account for synthetic bold in lighter case
-        // if lighter is applied with an inherited bold weight,
-        // and no actual bold faces exist, synthetic bold is used
-        // so the matched weight above is actually one step down already
-
-        wghtSteps = 1; // account for initial mapped weight
-
-        if (weightDistance < 0 && baseWeight > 5 && matchBaseWeight < 6) {
-            wghtSteps++; // if no faces [600, 900] then synthetic bold at 700
-        }
-
-        for (j = matchBaseWeight + direction;
-             j < 10 && j > 0 && wghtSteps <= absDistance;
-             j += direction) {
-            if (weightList[j]) {
-                matchFE = weightList[j];
-                wghtSteps++;
-            }
-        }
-    }
 
     NS_ASSERTION(matchFE,
                  "weight mapping should always find at least one font in a family");
 
-    if (!matchFE->IsBold() &&
-        ((weightDistance == 0 && baseWeight >= 6) ||
-         (weightDistance > 0 && wghtSteps <= absDistance)))
+    if (!matchFE->IsBold() && baseWeight >= 6)
     {
         aNeedsSyntheticBold = PR_TRUE;
     }
@@ -628,12 +588,7 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
             }
             
             // weight
-            PRInt8 baseWeight, weightDistance;
-            style->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-
-            // xxx - not entirely correct, the one unit of weight distance reflects 
-            // the "next bolder/lighter face"
-            PRInt32 targetWeight = (baseWeight * 100) + (weightDistance * 100);
+            PRInt32 targetWeight = style->ComputeWeight() * 100;
 
             PRInt32 entryWeight = fe->Weight();
             if (entryWeight == targetWeight) {
@@ -2730,21 +2685,17 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     }
 }
 
-void
-gfxFontStyle::ComputeWeightAndOffset(PRInt8 *outBaseWeight, PRInt8 *outOffset) const
+PRInt8
+gfxFontStyle::ComputeWeight() const
 {
     PRInt8 baseWeight = (weight + 50) / 100;
-    PRInt8 offset = weight - baseWeight * 100;
 
     if (baseWeight < 0)
         baseWeight = 0;
     if (baseWeight > 9)
         baseWeight = 9;
 
-    if (outBaseWeight)
-        *outBaseWeight = baseWeight;
-    if (outOffset)
-        *outOffset = offset;
+    return baseWeight;
 }
 
 PRBool
