@@ -432,7 +432,13 @@ GLContext::InitExtensions()
 PRBool
 GLContext::IsExtensionSupported(const char *extension)
 {
-    const GLubyte *extensions = NULL;
+    return ListHasExtension(fGetString(LOCAL_GL_EXTENSIONS), extension);
+}
+
+// Common code for checking for both GL extensions and GLX extensions.
+PRBool
+GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
+{
     const GLubyte *start;
     GLubyte *where, *terminator;
 
@@ -441,7 +447,6 @@ GLContext::IsExtensionSupported(const char *extension)
     if (where || *extension == '\0')
         return PR_FALSE;
 
-    extensions = fGetString(LOCAL_GL_EXTENSIONS);
     /* 
      * It takes a bit of care to be fool-proof about parsing the
      * OpenGL extensions string. Don't be fooled by sub-strings,

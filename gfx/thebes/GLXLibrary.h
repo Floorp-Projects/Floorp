@@ -99,6 +99,11 @@ public:
                                                          Pixmap,
                                                          const int *);
     PFNGLXCREATEPIXMAP xCreatePixmap;
+    typedef GLXPixmap (GLAPIENTRY * PFNGLXCREATEGLXPIXMAPWITHCONFIG)
+                                                        (Display *,
+                                                         GLXFBConfig,
+                                                         Pixmap);
+    PFNGLXCREATEGLXPIXMAPWITHCONFIG xCreateGLXPixmapWithConfig;
     typedef void (GLAPIENTRY * PFNGLXDESTROYPIXMAP) (Display *,
                                                      GLXPixmap);
     PFNGLXDESTROYPIXMAP xDestroyPixmap;
