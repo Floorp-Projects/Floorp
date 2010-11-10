@@ -1011,10 +1011,10 @@ GestureModule.prototype = {
               Browser.scrollContentToTop();
               break;
             case gesture.DIRECTION_LEFT:
-              CommandUpdater.doCommand("cmd_back");
+              CommandUpdater.doCommand("cmd_forward");
               break;
             case gesture.DIRECTION_RIGHT:
-              CommandUpdater.doCommand("cmd_forward");
+              CommandUpdater.doCommand("cmd_back");
               break;
           }
           break;
