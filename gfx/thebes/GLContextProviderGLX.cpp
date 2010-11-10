@@ -64,7 +64,15 @@ namespace gl {
 
 static PRBool gIsATI = PR_FALSE;
 static PRBool gIsChromium = PR_FALSE;
-static int gGLXVersion = 0;
+static int gGLXMajorVersion = 0, gGLXMinorVersion = 0;
+
+// Check that we have at least version aMajor.aMinor .
+static inline bool
+GLXVersionCheck(int aMajor, int aMinor)
+{
+    return aMajor < gGLXMajorVersion ||
+           (aMajor == gGLXMajorVersion && aMinor <= gGLXMinorVersion);
+}
 
 static inline bool
 HasExtension(const char* aExtensions, const char* aRequiredExtension)
@@ -99,11 +107,11 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xDestroyContext, { "glXDestroyContext", NULL } },
         { (PRFuncPtr*) &xMakeCurrent, { "glXMakeCurrent", NULL } },
         { (PRFuncPtr*) &xSwapBuffers, { "glXSwapBuffers", NULL } },
+        { (PRFuncPtr*) &xQueryVersion, { "glXQueryVersion", NULL } },
         { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
         /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsString, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xQueryServerString, { "glXQueryServerString", NULL } },
-        { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
         { NULL, { NULL } }
     };
 
@@ -155,35 +163,23 @@ GLXLibrary::EnsureInitialized()
 
     Display *display = DefaultXDisplay();
     int screen = DefaultScreen(display);
+    if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
+        gGLXMajorVersion = 0;
+        gGLXMinorVersion = 0;
+        return PR_FALSE;
+    }
+
     const char *vendor = xQueryServerString(display, screen, GLX_VENDOR);
     const char *serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
-    const char *clientVersionStr = xGetClientString(display, GLX_VERSION);
 
-    int serverVersion = 0, clientVersion = 0;
-    if (serverVersionStr &&
-        strlen(serverVersionStr) >= 3 &&
-        serverVersionStr[1] == '.')
-    {
-        serverVersion = (serverVersionStr[0] - '0') << 8 | (serverVersionStr[2] - '0');
-    }
-
-    if (clientVersionStr &&
-        strlen(clientVersionStr) >= 3 &&
-        clientVersionStr[1] == '.')
-    {
-        clientVersion = (clientVersionStr[0] - '0') << 8 | (clientVersionStr[2] - '0');
-    }
-
-    gGLXVersion = PR_MIN(clientVersion, serverVersion);
-
-    if (gGLXVersion < 0x0101)
+    if (!GLXVersionCheck(1, 1))
         // Not possible to query for extensions.
         return PR_FALSE;
 
     const char *extensionsStr = xQueryExtensionsString(display, screen);
 
     LibrarySymbolLoader::SymLoadStruct *sym13;
-    if (gGLXVersion < 0x0103) {
+    if (!GLXVersionCheck(1, 3)) {
         // Even if we don't have 1.3, we might have equivalent extensions
         // (as on the Intel X server).
         if (!HasExtension(extensionsStr, "GLX_SGIX_fbconfig")) {
@@ -199,7 +195,7 @@ GLXLibrary::EnsureInitialized()
     }
 
     LibrarySymbolLoader::SymLoadStruct *sym14;
-    if (gGLXVersion < 0x0104) {
+    if (!GLXVersionCheck(1, 4)) {
         // Even if we don't have 1.4, we might have equivalent extensions
         // (as on the Intel X server).
         if (!HasExtension(extensionsStr, "GLX_ARB_get_proc_address")) {
@@ -216,7 +212,7 @@ GLXLibrary::EnsureInitialized()
 
     gIsATI = vendor && DoesVendorStringMatch(vendor, "ATI");
     gIsChromium = (vendor && DoesVendorStringMatch(vendor, "Chromium")) ||
-        (serverVersion && DoesVendorStringMatch(serverVersionStr, "Chromium"));
+        (serverVersionStr && DoesVendorStringMatch(serverVersionStr, "Chromium"));
 
     mInitialized = PR_TRUE;
     return PR_TRUE;
@@ -513,7 +509,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 
     int numConfigs;
     ScopedXFree<GLXFBConfig> cfgs;
-    if (gIsATI || gGLXVersion < 0x0103) {
+    if (gIsATI || !GLXVersionCheck(1, 3)) {
         const int attribs[] = {
             GLX_DOUBLEBUFFER, False,
             0
@@ -677,7 +673,7 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
     // Handle slightly different signature between glXCreatePixmap and
     // its pre-GLX-1.3 extension equivalent (though given the ABI, we
     // might not need to).
-    if (gGLXVersion >= 0x0103) {
+    if (GLXVersionCheck(1, 3)) {
         glxpixmap = sGLXLibrary.xCreatePixmap(display,
                                               cfgs[chosenIndex],
                                               xsurface->XDrawable(),

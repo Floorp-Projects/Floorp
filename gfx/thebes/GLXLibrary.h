@@ -107,14 +107,15 @@ public:
     typedef void (GLAPIENTRY * PFNGLXDESTROYPIXMAP) (Display *,
                                                      GLXPixmap);
     PFNGLXDESTROYPIXMAP xDestroyPixmap;
-    typedef const char * (GLAPIENTRY * PFNGLXGETCLIENTSTRING) (Display *,
-                                                               int);
-    PFNGLXGETCLIENTSTRING xGetClientString;
     typedef GLXContext (GLAPIENTRY * PFNGLXCREATECONTEXT) (Display *,
                                                            XVisualInfo *,
                                                            GLXContext,
                                                            Bool);
     PFNGLXCREATECONTEXT xCreateContext;
+    typedef Bool (GLAPIENTRY * PFNGLXQUERYVERSION) (Display *,
+                                                    int *,
+                                                    int *);
+    PFNGLXQUERYVERSION xQueryVersion;
 
     PRBool EnsureInitialized();
 
