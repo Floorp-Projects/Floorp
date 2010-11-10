@@ -177,13 +177,14 @@ public:
   OpenCursorHelper(IDBTransaction* aTransaction,
                    IDBRequest* aRequest,
                    IDBObjectStore* aObjectStore,
-                   const Key& aLeftKey,
-                   const Key& aRightKey,
-                   PRUint16 aKeyRangeFlags,
+                   const Key& aLowerKey,
+                   const Key& aUpperKey,
+                   PRBool aLowerOpen,
+                   PRBool aUpperOpen,
                    PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
-    mDirection(aDirection)
+    mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
+    mUpperOpen(aUpperOpen), mDirection(aDirection)
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -198,9 +199,10 @@ public:
 private:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
-  const Key mLeftKey;
-  const Key mRightKey;
-  const PRUint16 mKeyRangeFlags;
+  const Key mLowerKey;
+  const Key mUpperKey;
+  const PRPackedBool mLowerOpen;
+  const PRPackedBool mUpperOpen;
   const PRUint16 mDirection;
 
   // Out-params.
@@ -267,13 +269,14 @@ public:
   GetAllHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                IDBObjectStore* aObjectStore,
-               const Key& aLeftKey,
-               const Key& aRightKey,
-               const PRUint16 aKeyRangeFlags,
+               const Key& aLowerKey,
+               const Key& aUpperKey,
+               const PRBool aLowerOpen,
+               const PRBool aUpperOpen,
                const PRUint32 aLimit)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
-    mLimit(aLimit)
+    mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
+    mUpperOpen(aUpperOpen), mLimit(aLimit)
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -288,9 +291,10 @@ public:
 protected:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
-  const Key mLeftKey;
-  const Key mRightKey;
-  const PRUint16 mKeyRangeFlags;
+  const Key mLowerKey;
+  const Key mUpperKey;
+  const PRPackedBool mLowerOpen;
+  const PRPackedBool mUpperOpen;
   const PRUint32 mLimit;
 
 private:
@@ -952,25 +956,28 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
     aLimit = PR_UINT32_MAX;
   }
 
-  Key leftKey, rightKey;
-  PRUint16 keyRangeFlags = 0;
-
   nsresult rv;
+  Key lowerKey, upperKey;
+  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
+
   if (aKeyRange) {
-    rv = aKeyRange->GetFlags(&keyRangeFlags);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
     nsCOMPtr<nsIVariant> variant;
-    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
+    rv = aKeyRange->GetLower(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, leftKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, lowerKey);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = aKeyRange->GetRight(getter_AddRefs(variant));
+    rv = aKeyRange->GetUpper(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, rightKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, upperKey);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetLowerOpen(&lowerOpen);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetUpperOpen(&upperOpen);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
@@ -978,8 +985,8 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<GetAllHelper> helper =
-    new GetAllHelper(mTransaction, request, this, leftKey, rightKey,
-                     keyRangeFlags, aLimit);
+    new GetAllHelper(mTransaction, request, this, lowerKey, upperKey, lowerOpen,
+                     upperOpen, aLimit);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1148,25 +1155,27 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
   }
 
   nsresult rv;
-
-  Key leftKey, rightKey;
-  PRUint16 keyRangeFlags = 0;
+  Key lowerKey, upperKey;
+  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
 
   if (aKeyRange) {
-    rv = aKeyRange->GetFlags(&keyRangeFlags);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
     nsCOMPtr<nsIVariant> variant;
-    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
+    rv = aKeyRange->GetLower(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, leftKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, lowerKey);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = aKeyRange->GetRight(getter_AddRefs(variant));
+    rv = aKeyRange->GetUpper(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, rightKey);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, upperKey);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetLowerOpen(&lowerOpen);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetUpperOpen(&upperOpen);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
@@ -1186,8 +1195,8 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenCursorHelper> helper =
-    new OpenCursorHelper(mTransaction, request, this, leftKey, rightKey,
-                         keyRangeFlags, aDirection);
+    new OpenCursorHelper(mTransaction, request, this, lowerKey, upperKey,
+                         lowerOpen, upperOpen, aDirection);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1818,25 +1827,23 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
 
   nsCAutoString keyRangeClause;
-  if (!mLeftKey.IsUnset()) {
+  if (!mLowerKey.IsUnset()) {
     keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+    if (mLowerOpen) {
       keyRangeClause.AppendLiteral(" > :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" >= :");
     }
     keyRangeClause.Append(leftKeyName);
   }
 
-  if (!mRightKey.IsUnset()) {
+  if (!mUpperKey.IsUnset()) {
     keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+    if (mUpperOpen) {
       keyRangeClause.AppendLiteral(" < :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" <= :");
     }
     keyRangeClause.Append(rightKeyName);
@@ -1877,12 +1884,12 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!mLeftKey.IsUnset()) {
-    if (mLeftKey.IsString()) {
-      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+  if (!mLowerKey.IsUnset()) {
+    if (mLowerKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLowerKey.StringValue());
     }
-    else if (mLeftKey.IsInt()) {
-      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    else if (mLowerKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLowerKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
@@ -1890,12 +1897,12 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  if (!mRightKey.IsUnset()) {
-    if (mRightKey.IsString()) {
-      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+  if (!mUpperKey.IsUnset()) {
+    if (mUpperKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mUpperKey.StringValue());
     }
-    else if (mRightKey.IsInt()) {
-      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    else if (mUpperKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mUpperKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
@@ -2184,25 +2191,23 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
 
   nsCAutoString keyRangeClause;
-  if (!mLeftKey.IsUnset()) {
+  if (!mLowerKey.IsUnset()) {
     keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+    if (mLowerOpen) {
       keyRangeClause.AppendLiteral(" > :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" >= :");
     }
     keyRangeClause.Append(leftKeyName);
   }
 
-  if (!mRightKey.IsUnset()) {
+  if (!mUpperKey.IsUnset()) {
     keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+    if (mUpperOpen) {
       keyRangeClause.AppendLiteral(" < :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" <= :");
     }
     keyRangeClause.Append(rightKeyName);
@@ -2232,12 +2237,12 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!mLeftKey.IsUnset()) {
-    if (mLeftKey.IsString()) {
-      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+  if (!mLowerKey.IsUnset()) {
+    if (mLowerKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLowerKey.StringValue());
     }
-    else if (mLeftKey.IsInt()) {
-      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    else if (mLowerKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLowerKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
@@ -2245,12 +2250,12 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  if (!mRightKey.IsUnset()) {
-    if (mRightKey.IsString()) {
-      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+  if (!mUpperKey.IsUnset()) {
+    if (mUpperKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mUpperKey.StringValue());
     }
-    else if (mRightKey.IsInt()) {
-      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    else if (mUpperKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mUpperKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");

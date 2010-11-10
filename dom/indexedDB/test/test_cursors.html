@@ -121,7 +121,7 @@
 
       keyIndex = 4;
 
-      let range = moz_indexedDB.makeBoundKeyRange(2000, "q");
+      let range = IDBKeyRange.bound(2000, "q");
       request = objectStore.openCursor(range);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
