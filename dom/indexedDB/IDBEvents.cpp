@@ -200,23 +200,9 @@ IDBErrorEvent::GetCode(PRUint16* aCode)
 }
 
 NS_IMETHODIMP
-IDBErrorEvent::SetCode(PRUint16 aCode)
-{
-  mCode = aCode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 IDBErrorEvent::GetMessage(nsAString& aMessage)
 {
   aMessage.Assign(mMessage);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBErrorEvent::SetMessage(const nsAString& aMessage)
-{
-  mMessage.Assign(aMessage);
   return NS_OK;
 }
 
