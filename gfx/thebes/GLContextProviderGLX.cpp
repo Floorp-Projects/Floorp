@@ -81,7 +81,7 @@ GLXLibrary::EnsureInitialized()
     }
 
     LibrarySymbolLoader::SymLoadStruct symbols[] = {
-        { (PRFuncPtr*) &xDeleteContext, { "glXDestroyContext", NULL } },
+        { (PRFuncPtr*) &xDestroyContext, { "glXDestroyContext", NULL } },
         { (PRFuncPtr*) &xMakeCurrent, { "glXMakeCurrent", NULL } },
         { (PRFuncPtr*) &xGetProcAddress, { "glXGetProcAddress", NULL } },
         { (PRFuncPtr*) &xChooseVisual, { "glXChooseVisual", NULL } },
@@ -228,7 +228,7 @@ TRY_AGAIN_NO_SHARING:
     {
         MarkDestroyed();
 
-        sGLXLibrary.xDeleteContext(mDisplay, mContext);
+        sGLXLibrary.xDestroyContext(mDisplay, mContext);
 
         if (mDeleteDrawable) {
             sGLXLibrary.xDestroyPixmap(mDisplay, mDrawable);

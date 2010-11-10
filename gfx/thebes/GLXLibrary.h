@@ -47,9 +47,9 @@ class GLXLibrary
 public:
     GLXLibrary() : mInitialized(PR_FALSE), mOGLLibrary(nsnull) {}
 
-    typedef void (GLAPIENTRY * PFNGLXDELETECONTEXTPROC) (Display*,
-                                                         GLXContext);
-    PFNGLXDELETECONTEXTPROC xDeleteContext;
+    typedef void (GLAPIENTRY * PFNGLXDESTROYCONTEXTPROC) (Display*,
+                                                          GLXContext);
+    PFNGLXDESTROYCONTEXTPROC xDestroyContext;
     typedef Bool (GLAPIENTRY * PFNGLXMAKECURRENTPROC) (Display*,
                                                        GLXDrawable,
                                                        GLXContext);
