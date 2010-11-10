@@ -59,7 +59,7 @@
 }
 
 .hud-clickable {
-  cursor: pointer !important;
+  cursor: pointer;
   text-decoration: underline;
 }
 
@@ -157,10 +157,10 @@
   font-family: monospace;
   font-size: 9pt;
   background: url("chrome://global/skin/icons/commandline.png") 4px 3px
-      no-repeat !important;
-  border: none !important;
-  padding: 0px 0px 0px 16px !important;
-  -moz-appearance: none !important;
+    no-repeat;
+  border: none;
+  padding: 0px 0px 0px 16px;
+  -moz-appearance: none;
 }
 
 .jsterm-input-node > .textbox-input-box > .textbox-textarea {
@@ -177,13 +177,13 @@
 }
 
 .jsterm-close-button {
-  background: none !important;
-  border: none !important;
+  background: none;
+  border: none;
   list-style-image: url("chrome://global/skin/icons/close.png");
-  margin: 0px !important;
-  min-width: 0px !important;
-  padding: 1px 3px 1px 7px !important;
-  -moz-appearance: none !important;
+  margin: 0px;
+  min-width: 0px;
+  padding: 1px 3px 1px 7px;
+  -moz-appearance: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
   -moz-user-focus: ignore;
 }
