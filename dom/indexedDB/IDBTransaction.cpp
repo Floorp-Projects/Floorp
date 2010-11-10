@@ -317,7 +317,7 @@ IDBTransaction::AddStatement(bool aCreate,
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBTransaction::RemoveStatement(bool aAutoIncrement)
+IDBTransaction::DeleteStatement(bool aAutoIncrement)
 {
   if (aAutoIncrement) {
     return GetCachedStatement(
