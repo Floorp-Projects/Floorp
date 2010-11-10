@@ -745,16 +745,11 @@ var Browser = {
     if (this._selectedTab.isLoading())
       BrowserUI.lockToolbar();
 
-    if (oldBrowser) {
-      oldBrowser.setAttribute("type", "content");
-      oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
-    }
+    if (lastTab)
+      lastTab.updateBrowser(false);
 
-    if (browser) {
-      browser.setAttribute("type", "content-primary");
-      Elements.browsers.selectedPanel = browser;
-      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
-    }
+    if (tab)
+      tab.updateBrowser(true);
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
 
@@ -803,22 +798,8 @@ var Browser = {
   },
 
   getNotificationBox: function getNotificationBox(aBrowser) {
-    return document.getElementById("notifications");
-  },
-
-  removeTransientNotificationsForTab: function removeTransientNotificationsForTab(aTab) {
-    let notificationBox = this.getNotificationBox();
-    let notifications = notificationBox.allNotifications;
-    for (let n = notifications.length - 1; n >= 0; n--) {
-      let notification = notifications[n];
-      if (notification._chromeTab != aTab.chromeTab)
-        continue;
-
-      if (notification.persistence)
-        notification.persistence--;
-      else if (Date.now() > notification.timeout)
-        notificationBox.removeNotification(notification);
-    }
+    let browser = aBrowser || this.selectedBrowser;
+    return browser.parentNode;
   },
 
   /**
@@ -2329,7 +2310,7 @@ ProgressController.prototype = {
       TapHighlightHelper.hide();
 
       this.browser.lastLocation = location;
-      Browser.removeTransientNotificationsForTab(this._tab);
+      Browser.getNotificationBox(this.browser).removeTransientNotifications();
       this._tab.resetZoomLevel();
 
       if (this._tab == Browser.selectedTab) {
@@ -2633,6 +2614,9 @@ Tab.prototype = {
   _createBrowser: function _createBrowser(aURI, aInsertBefore) {
     if (this._browser)
       throw "Browser already exists";
+ 
+    // Create a notification box around the browser
+    let notification = this._notification = document.createElement("notificationbox");
 
     // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
@@ -2646,7 +2630,8 @@ Tab.prototype = {
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 
     // Append the browser to the document, which should start the page load
-    Elements.browsers.insertBefore(browser, aInsertBefore);
+    notification.appendChild(browser);
+    Elements.browsers.insertBefore(notification, aInsertBefore);
 
     // stop about:blank from loading
     browser.stop();
@@ -2764,6 +2749,21 @@ Tab.prototype = {
 
     this._thumbnailWindowId = browser.contentWindowId;
     this._chromeTab.updateThumbnail(browser, browser.contentWindowWidth, browser.contentWindowHeight);
+  },
+
+  updateBrowser: function updateBrowser(aDisplay) {
+    let notification = this._notification;
+    let browser = this._browser;
+    if (aDisplay) {
+      browser.setAttribute("type", "content-primary");
+      notification.style.display = "";
+      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
+    }
+    else {
+      browser.setAttribute("type", "content");
+      notification.style.display = "none";
+      browser.messageManager.sendAsyncMessage("Browser:Blur", {});
+    }
   },
 
   toString: function() {
