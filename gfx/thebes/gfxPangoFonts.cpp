@@ -50,8 +50,6 @@
 
 #include "nsMathUtils.h"
 #include "nsTArray.h"
-#include "nsServiceManagerUtils.h"
-#include "nsILanguageAtomService.h"
 
 #include "gfxContext.h"
 #ifdef MOZ_WIDGET_GTK2
@@ -2019,19 +2017,15 @@ gfxPangoFontGroup::MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
 {
     const char *lang = pango_language_to_string(aLang);
 
-    nsIAtom *langGroup = nsnull;
+    nsRefPtr <nsIAtom> langGroup;
     if (aLang != mPangoLanguage) {
         // Set up langGroup for Mozilla's font prefs.
-        if (!gLangService) {
-            CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
-        }
-        if (gLangService) {
-            langGroup = gLangService->LookupLanguage(NS_ConvertUTF8toUTF16(lang));
-        }
+        langGroup = do_GetAtom(lang);
     }
 
     nsAutoTArray<nsString, 20> fcFamilyList;
-    GetFcFamilies(&fcFamilyList, langGroup ? langGroup : mStyle.language.get());
+    GetFcFamilies(&fcFamilyList,
+                  langGroup ? langGroup.get() : mStyle.language.get());
 
     // To consider: A fontset cache here could be helpful.
 
