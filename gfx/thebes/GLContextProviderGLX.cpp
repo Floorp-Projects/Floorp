@@ -72,6 +72,12 @@ GLXLibrary::EnsureInitialized()
         return PR_TRUE;
     }
 
+    // Don't repeatedly try to initialize.
+    if (mTriedInitializing) {
+        return PR_FALSE;
+    }
+    mTriedInitializing = PR_TRUE;
+
     if (!mOGLLibrary) {
         mOGLLibrary = PR_LoadLibrary("libGL.so.1");
         if (!mOGLLibrary) {

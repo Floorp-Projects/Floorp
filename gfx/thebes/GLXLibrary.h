@@ -45,7 +45,8 @@ namespace gl {
 class GLXLibrary
 {
 public:
-    GLXLibrary() : mInitialized(PR_FALSE), mOGLLibrary(nsnull) {}
+    GLXLibrary() : mInitialized(PR_FALSE), mTriedInitializing(PR_FALSE),
+                   mOGLLibrary(nsnull) {}
 
     typedef void (GLAPIENTRY * PFNGLXDESTROYCONTEXTPROC) (Display*,
                                                           GLXContext);
@@ -114,6 +115,7 @@ public:
 
 private:
     PRBool mInitialized;
+    PRBool mTriedInitializing;
     PRLibrary *mOGLLibrary;
 };
 
