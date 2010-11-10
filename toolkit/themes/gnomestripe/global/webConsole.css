@@ -42,10 +42,6 @@
   text-shadow: none;
 }
 
-.hud-group label {
-  padding-left: 1em;
-}
-
 .hud-outer-wrapper {
   width: 100%;
   height: 100%;
@@ -62,38 +58,32 @@
   font-weight: bold;
 }
 
-.hud-output-node * {
-  -moz-user-select: text;
-  white-space: pre-wrap;
-  -moz-user-focus: normal;
-}
-
 .hud-clickable {
   cursor: pointer !important;
   text-decoration: underline;
 }
 
-.hud-output-node .hud-network {
+.hud-network {
   color: blue;
 }
 
-.hud-output-node .hud-error {
+.hud-error {
   color: red;
 }
 
-.hud-output-node .hud-log {
+.hud-log {
   color: black;
 }
 
-.hud-output-node .hud-warn {
+.hud-warn {
   color: orange;
 }
 
-.hud-output-node .hud-info {
+.hud-info {
   color: green;
 }
 
-.hud-output-node .hud-exception {
+.hud-exception {
   color: red;
   font-weight: bold;
 }
@@ -102,7 +92,10 @@
   width: 100%;
   margin-top: 0.3em;
   margin-bottom: 0.3em;
-  padding-left: 0.3em;
+  padding-left: 1em;
+  -moz-user-select: text;
+  white-space: pre-wrap;
+  -moz-user-focus: normal;
 }
 
 .hud-output-node {
@@ -124,7 +117,7 @@
   color: GrayText;
 }
 
-.hud-group:first-child .hud-divider {
+.hud-group:first-child > .hud-divider {
   display: none;
 }
 
@@ -151,10 +144,6 @@
   -moz-box-direction: reverse;
 }
 
-.jsterm-output-node div {
-  -moz-user-select: text;
-}
-
 .jsterm-scroll-to-node {
   height: 1px;
   width: 1px;
@@ -174,7 +163,7 @@
   -moz-appearance: none !important;
 }
 
-.jsterm-input-node textarea {
+.jsterm-input-node > .textbox-input-box > .textbox-textarea {
   overflow-x: hidden;
 }
 
