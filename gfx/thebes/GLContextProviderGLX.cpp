@@ -184,18 +184,11 @@ public:
 TRY_AGAIN_NO_SHARING:
         oldHandler = XSetErrorHandler(&ctxErrorHandler);
 
-        if (gGLXVersion >= 0x0103) {
-            context = sGLXLibrary.xCreateNewContext(display,
-                                                    cfg,
-                                                    GLX_RGBA_TYPE,
-                                                    shareContext ? shareContext->mContext : NULL,
-                                                    True);
-        } else {
-            context = sGLXLibrary.xCreateContext(display,
-                                                 vinfo,
-                                                 shareContext ? shareContext->mContext : NULL,
-                                                 True);
-        }
+        context = sGLXLibrary.xCreateNewContext(display,
+                                                cfg,
+                                                GLX_RGBA_TYPE,
+                                                shareContext ? shareContext->mContext : NULL,
+                                                True);
 
         XSync(display, False);
         XSetErrorHandler(oldHandler);
