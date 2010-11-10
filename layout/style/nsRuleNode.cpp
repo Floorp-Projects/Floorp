@@ -3005,11 +3005,30 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case NS_STYLE_FONT_WEIGHT_BOLD:
         aFont->mFont.weight = value;
         break;
-      case NS_STYLE_FONT_WEIGHT_BOLDER:
-      case NS_STYLE_FONT_WEIGHT_LIGHTER:
+      case NS_STYLE_FONT_WEIGHT_BOLDER: {
         aCanStoreInRuleTree = PR_FALSE;
-        aFont->mFont.weight = nsStyleUtil::ConstrainFontWeight(aParentFont->mFont.weight + value);
+        PRInt32 inheritedValue = aParentFont->mFont.weight;
+        if (inheritedValue <= 300) {
+          aFont->mFont.weight = 400;
+        } else if (inheritedValue <= 500) {
+          aFont->mFont.weight = 700;
+        } else {
+          aFont->mFont.weight = 900;
+        }
         break;
+      }
+      case NS_STYLE_FONT_WEIGHT_LIGHTER: {
+        aCanStoreInRuleTree = PR_FALSE;
+        PRInt32 inheritedValue = aParentFont->mFont.weight;
+        if (inheritedValue < 600) {
+          aFont->mFont.weight = 100;
+        } else if (inheritedValue < 800) {
+          aFont->mFont.weight = 400;
+        } else {
+          aFont->mFont.weight = 700;
+        }
+        break;
+      }
     }
   } else
     SetDiscrete(aFontData.mWeight, aFont->mFont.weight, aCanStoreInRuleTree,

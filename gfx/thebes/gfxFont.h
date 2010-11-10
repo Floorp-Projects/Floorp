@@ -137,11 +137,7 @@ struct THEBES_API gfxFontStyle {
     // "Wingdings", etc.) should be applied.
     PRPackedBool familyNameQuirks : 1;
 
-    // The weight of the font.  100, 200, ... 900 are the weights, and
-    // single integer offsets request the next bolder/lighter font
-    // available.  For example, for a font available in weights 200,
-    // 400, 700, and 900, a weight of 898 should lead to the weight 400
-    // font being used, since it is two weights lighter than 900.
+    // The weight of the font: 100, 200, ... 900.
     PRUint16 weight;
 
     // The stretch of the font (the sum of various NS_FONT_STRETCH_*
@@ -191,8 +187,7 @@ struct THEBES_API gfxFontStyle {
             nsISupportsHashKey::HashKey(language);
     }
 
-    void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
-                                PRInt8 *outOffset) const;
+    PRInt8 ComputeWeight() const;
 
     PRBool Equals(const gfxFontStyle& other) const {
         return (size == other.size) &&
