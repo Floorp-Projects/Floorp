@@ -44,7 +44,7 @@
 == feTile-1.svg feTile-1-ref.svg
 == feTile-2.svg feTile-2-ref.svg
 
-# no tests for feSpecularLighting, feDiffuseLighting or feTurbulence
+# no tests for feTurbulence
 
 == filter-clipped-rect-01.svg pass.svg
 == filter-filterRes-high-01.svg pass.svg
@@ -81,3 +81,8 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feMorphology-radius-zero-02.svg pass.svg
 
 == feTile-large-01.svg pass.svg
+
+== feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
+
+== feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
+
