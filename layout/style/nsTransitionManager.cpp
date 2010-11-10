@@ -75,6 +75,28 @@ struct ElementPropertyTransition
   TimeDuration mDuration;
   nsSMILKeySpline mTimingFunction;
 
+  // This is the start value to be used for a check for whether a
+  // transition is being reversed.  Normally the same as mStartValue,
+  // except when this transition started as the reversal of another
+  // in-progress transition.  Needed so we can handle two reverses in a
+  // row.
+  nsStyleAnimation::Value mStartForReversingTest;
+  // Likewise, the portion (in value space) of the "full" reversed
+  // transition that we're actually covering.  For example, if a :hover
+  // effect has a transition that moves the element 10px to the right
+  // (by changing 'left' from 0px to 10px), and the mouse moves in to
+  // the element (starting the transition) but then moves out after the
+  // transition has advanced 4px, the second transition (from 10px/4px
+  // to 0px) will have mReversePortion of 0.4.  (If the mouse then moves
+  // in again when the transition is back to 2px, the mReversePortion
+  // for the third transition (from 0px/2px to 10px) will be 0.8.
+  double mReversePortion;
+
+  // Compute the portion of the *value* space that we should be through
+  // at the given time.  (The input to the transition timing function
+  // has time units, the output has value units.)
+  double ValuePortionFor(TimeStamp aRefreshTime) const;
+
   PRBool IsRemovedSentinel() const
   {
     return mStartTime.IsNull();
@@ -86,6 +108,34 @@ struct ElementPropertyTransition
     mStartTime = TimeStamp();
   }
 };
+
+double
+ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
+{
+  // Set |timePortion| to the portion of the way we are through the time
+  // input to the transition's timing function (always within the range
+  // 0-1).
+  double duration = mDuration.ToSeconds();
+  NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
+  double timePortion;
+  if (duration == 0.0) {
+    // When duration is zero, we can still have a transition when delay
+    // is nonzero.  mStartTime already incorporates delay.
+    if (aRefreshTime >= mStartTime) {
+      timePortion = 0.0;
+    } else {
+      timePortion = 1.0;
+    }
+  } else {
+    timePortion = (aRefreshTime - mStartTime).ToSeconds() / duration;
+    if (timePortion < 0.0)
+      timePortion = 0.0; // use start value during transition-delay
+    if (timePortion > 1.0)
+      timePortion = 1.0; // we might be behind on flushing
+  }
+
+  return mTimingFunction.GetSplineValue(timePortion);
+}
 
 /**
  * A style rule that maps property-nsStyleAnimation::Value pairs.
@@ -204,26 +254,7 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
         continue;
       }
 
-      double duration = pt.mDuration.ToSeconds();
-      NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
-      double timePortion;
-      if (duration == 0.0) {
-        if (aRefreshTime >= pt.mStartTime) {
-          timePortion = 0.0;
-        } else {
-          timePortion = 1.0;
-        }
-      } else {
-        timePortion = (aRefreshTime - pt.mStartTime).ToSeconds() /
-                      pt.mDuration.ToSeconds();
-        if (timePortion < 0.0)
-          timePortion = 0.0; // use start value during transition-delay
-        if (timePortion > 1.0)
-          timePortion = 1.0; // we might be behind on flushing
-      }
-
-      double valuePortion =
-        pt.mTimingFunction.GetSplineValue(timePortion);
+      double valuePortion = pt.ValuePortionFor(aRefreshTime);
 #ifdef DEBUG
       PRBool ok =
 #endif
@@ -600,15 +631,21 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     return;
   }
 
-  // When we interrupt a running transition, we want to reduce the
-  // duration of the new transition *if* the new transition would have
-  // been longer had it started from the endpoint of the currently
-  // running transition.
-  double durationFraction = 1.0;
+  TimeStamp mostRecentRefresh =
+    presContext->RefreshDriver()->MostRecentRefresh();
+
+  const nsTimingFunction &tf = aTransition.GetTimingFunction();
+  float delay = aTransition.GetDelay();
+  float duration = aTransition.GetDuration();
+  if (duration < 0.0) {
+    // The spec says a negative duration is treated as zero.
+    duration = 0.0;
+  }
+  pt.mStartForReversingTest = pt.mStartValue;
+  pt.mReversePortion = 1.0;
 
   // We need to check two things if we have a currently running
-  // transition for this property:  see durationFraction comment above
-  // and the endpoint check below.
+  // transition for this property.
   if (currentIndex != nsTArray<ElementPropertyTransition>::NoIndex) {
     const ElementPropertyTransition &oldPT =
       aElementTransitions->mPropertyTransitions[currentIndex];
@@ -621,49 +658,31 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       return;
     }
 
-    double fullDistance, remainingDistance;
-#ifdef DEBUG
-    PRBool ok =
-#endif
-      nsStyleAnimation::ComputeDistance(aProperty, pt.mStartValue,
-                                        pt.mEndValue, fullDistance);
-    NS_ABORT_IF_FALSE(ok, "could not compute distance");
-    NS_ABORT_IF_FALSE(fullDistance >= 0.0, "distance must be positive");
-
+    // If the new transition reverses the old one, we'll need to handle
+    // the timing differently.
     if (!oldPT.IsRemovedSentinel() &&
-        nsStyleAnimation::ComputeDistance(aProperty, oldPT.mEndValue,
-                                          pt.mEndValue, remainingDistance)) {
-      NS_ABORT_IF_FALSE(remainingDistance >= 0.0, "distance must be positive");
-      durationFraction = fullDistance / remainingDistance;
-      if (durationFraction > 1.0) {
-        durationFraction = 1.0;
-      }
+        oldPT.mStartForReversingTest == pt.mEndValue) {
+      // Compute the appropriate negative transition-delay such that right
+      // now we'd end up at the current position.
+      double valuePortion =
+        oldPT.ValuePortionFor(mostRecentRefresh) * oldPT.mReversePortion +
+        (1.0 - oldPT.mReversePortion); 
+
+      // Negative delays are essentially part of the transition
+      // function, so reduce them along with the duration, but don't
+      // reduce positive delays.
+      if (delay < 0.0f)
+        delay *= valuePortion;
+      duration *= valuePortion;
+
+      pt.mStartForReversingTest = oldPT.mEndValue;
+      pt.mReversePortion = valuePortion;
     }
   }
 
-
-  nsRefreshDriver *rd = presContext->RefreshDriver();
-
   pt.mProperty = aProperty;
-  float delay = aTransition.GetDelay();
-  float duration = aTransition.GetDuration();
-  if (duration < 0.0) {
-    // The spec says a negative duration is treated as zero.
-    duration = 0.0;
-  }
-  if (durationFraction != 1.0) {
-    // Negative delays are essentially part of the transition
-    // function, so reduce them along with the duration, but don't
-    // reduce positive delays.  (See comment above about
-    // durationFraction.)
-    if (delay < 0.0f)
-        delay *= durationFraction;
-    duration *= durationFraction;
-  }
-  pt.mStartTime = rd->MostRecentRefresh() +
-                  TimeDuration::FromMilliseconds(delay);
+  pt.mStartTime = mostRecentRefresh + TimeDuration::FromMilliseconds(delay);
   pt.mDuration = TimeDuration::FromMilliseconds(duration);
-  const nsTimingFunction &tf = aTransition.GetTimingFunction();
   pt.mTimingFunction.Init(tf.mX1, tf.mY1, tf.mX2, tf.mY2);
 
   if (!aElementTransitions) {
