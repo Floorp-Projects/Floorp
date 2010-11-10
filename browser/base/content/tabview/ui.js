@@ -646,31 +646,27 @@ let UI = {
       self.onTabSelect(tab);
     };
 
+    // TabPinned
+    this._eventListeners.pinned = function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
+        return;
+
+      TabItems.handleTabPin(tab);
+      GroupItems.addAppTab(tab);
+    };
+
+    // TabUnpinned
+    this._eventListeners.unpinned = function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
+        return;
+
+      TabItems.handleTabUnpin(tab);
+      GroupItems.removeAppTab(tab);
+    };
+
     // Actually register the above handlers
     for (let name in this._eventListeners)
       AllTabs.register(name, this._eventListeners[name]);
-
-    // Start watching for tab pin events, and set up our uninit for same.
-    function handleTabPin(event) {
-      TabItems.handleTabPin(event.originalTarget);
-      GroupItems.addAppTab(event.originalTarget);
-    }
-
-    gBrowser.tabContainer.addEventListener("TabPinned", handleTabPin, false);
-    this._cleanupFunctions.push(function() {
-      gBrowser.tabContainer.removeEventListener("TabPinned", handleTabPin, false);
-    });
-
-    // Start watching for tab unpin events, and set up our uninit for same.
-    function handleTabUnpin(event) {
-      TabItems.handleTabUnpin(event.originalTarget);
-      GroupItems.removeAppTab(event.originalTarget);
-    }
-
-    gBrowser.tabContainer.addEventListener("TabUnpinned", handleTabUnpin, false);
-    this._cleanupFunctions.push(function() {
-      gBrowser.tabContainer.removeEventListener("TabUnpinned", handleTabUnpin, false);
-    });
   },
 
   // ----------

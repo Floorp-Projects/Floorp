@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
+                 browser_tabview_alltabs.js \
                  browser_tabview_apptabs.js \
                  browser_tabview_bug580412.js \
                  browser_tabview_bug587043.js \
