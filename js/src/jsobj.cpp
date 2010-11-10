@@ -1782,34 +1782,36 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.keys", &obj))
-        return JS_FALSE;
+        return false;
 
     AutoIdVector props(cx);
     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props))
-        return JS_FALSE;
+        return false;
 
     AutoValueVector vals(cx);
-    vals.resize(props.length());
+    if (!vals.reserve(props.length()))
+        return false;
     for (size_t i = 0, len = props.length(); i < len; i++) {
         jsid id = props[i];
         if (JSID_IS_STRING(id)) {
-            vals[i].setString(JSID_TO_STRING(id));
-        } else {
-            JS_ASSERT(JSID_IS_INT(id));
+            JS_ALWAYS_TRUE(vals.append(StringValue(JSID_TO_STRING(id))));
+        } else if (JSID_IS_INT(id)) {
             JSString *str = js_IntToString(cx, JSID_TO_INT(id));
             if (!str)
-                return JS_FALSE;
-            vals[i].setString(str);
+                return false;
+            JS_ALWAYS_TRUE(vals.append(StringValue(str)));
+        } else {
+            JS_ASSERT(JSID_IS_OBJECT(id));
         }
     }
 
     JS_ASSERT(props.length() <= UINT32_MAX);
     JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin());
     if (!aobj)
-        return JS_FALSE;
+        return false;
     vp->setObject(*aobj);
 
-    return JS_TRUE;
+    return true;
 }
 
 static bool
