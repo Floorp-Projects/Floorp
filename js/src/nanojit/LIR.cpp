@@ -167,7 +167,6 @@ namespace nanojit
         // clear the stats, etc
         _unused = 0;
         _limit = 0;
-        _bytesAllocated = 0;
         _stats.lir = 0;
         for (int i = 0; i < NumSavedRegs; ++i)
             savedRegs[i] = NULL;
@@ -184,11 +183,6 @@ namespace nanojit
     int32_t LirBuffer::insCount()
     {
         return _stats.lir;
-    }
-
-    size_t LirBuffer::byteCount()
-    {
-        return _bytesAllocated - (_limit - _unused);
     }
 
     // Allocate a new page, and write the first instruction to it -- a skip
@@ -2070,23 +2064,25 @@ namespace nanojit
           suspended(false)
     {
 
-        m_findNL[LInsImmI] = &CseFilter::findImmI;
-        m_findNL[LInsImmQ] = PTR_SIZE(NULL, &CseFilter::findImmQ);
-        m_findNL[LInsImmD] = &CseFilter::findImmD;
-        m_findNL[LIns1]    = &CseFilter::find1;
-        m_findNL[LIns2]    = &CseFilter::find2;
-        m_findNL[LIns3]    = &CseFilter::find3;
-        m_findNL[LInsCall] = &CseFilter::findCall;
+        m_findNL[NLImmISmall] = &CseFilter::findImmISmall;
+        m_findNL[NLImmILarge] = &CseFilter::findImmILarge;
+        m_findNL[NLImmQ]      = PTR_SIZE(NULL, &CseFilter::findImmQ);
+        m_findNL[NLImmD]      = &CseFilter::findImmD;
+        m_findNL[NL1]         = &CseFilter::find1;
+        m_findNL[NL2]         = &CseFilter::find2;
+        m_findNL[NL3]         = &CseFilter::find3;
+        m_findNL[NLCall]      = &CseFilter::findCall;
 
-        m_capNL[LInsImmI]  = 128;
-        m_capNL[LInsImmQ]  = PTR_SIZE(0, 16);
-        m_capNL[LInsImmD]  = 16;
-        m_capNL[LIns1]     = 256;
-        m_capNL[LIns2]     = 512;
-        m_capNL[LIns3]     = 16;
-        m_capNL[LInsCall]  = 64;
+        m_capNL[NLImmISmall]  = 17;   // covers 0..16, which is over half the cases for TraceMonkey
+        m_capNL[NLImmILarge]  = 64;
+        m_capNL[NLImmQ]       = PTR_SIZE(0, 16);
+        m_capNL[NLImmD]       = 16;
+        m_capNL[NL1]          = 256;
+        m_capNL[NL2]          = 512;
+        m_capNL[NL3]          = 16;
+        m_capNL[NLCall]       = 64;
 
-        for (NLKind nlkind = LInsFirst; nlkind <= LInsLast; nlkind = nextNLKind(nlkind)) {
+        for (NLKind nlkind = NLFirst; nlkind <= NLLast; nlkind = nextNLKind(nlkind)) {
             m_listNL[nlkind] = new (alloc) LIns*[m_capNL[nlkind]];
             m_usedNL[nlkind] = 1; // Force memset in clearAll().
         }
@@ -2162,7 +2158,7 @@ namespace nanojit
     }
 
     void CseFilter::clearAll() {
-        for (NLKind nlkind = LInsFirst; nlkind <= LInsLast; nlkind = nextNLKind(nlkind))
+        for (NLKind nlkind = NLFirst; nlkind <= NLLast; nlkind = nextNLKind(nlkind))
             clearNL(nlkind);
 
         // Note that this clears the CONST and MULTIPLE load tables as well.
@@ -2216,6 +2212,7 @@ namespace nanojit
 
     void CseFilter::growNL(NLKind nlkind)
     {
+        NanoAssert(nlkind != NLImmISmall);
         const uint32_t oldcap = m_capNL[nlkind];
         m_capNL[nlkind] <<= 1;
         LIns** oldlist = m_listNL[nlkind];
@@ -2248,6 +2245,16 @@ namespace nanojit
         }
     }
 
+    void CseFilter::addNLImmISmall(LIns* ins, uint32_t k)
+    {
+        if (suspended) return;
+        NLKind nlkind = NLImmISmall;
+        NanoAssert(k < m_capNL[nlkind]);
+        NanoAssert(!m_listNL[nlkind][k]);
+        m_usedNL[nlkind]++;
+        m_listNL[nlkind][k] = ins;
+    }
+
     void CseFilter::addNL(NLKind nlkind, LIns* ins, uint32_t k)
     {
         if (suspended) return;
@@ -2271,9 +2278,26 @@ namespace nanojit
         }
     }
 
-    inline LIns* CseFilter::findImmI(int32_t a, uint32_t &k)
+    inline LIns* CseFilter::findImmISmall(int32_t a, uint32_t &k)
     {
-        NLKind nlkind = LInsImmI;
+        // This one is a direct array lookup rather than a hashtable lookup.
+        NLKind nlkind = NLImmISmall;
+        k = a;
+        LIns* ins = m_listNL[nlkind][k];
+        NanoAssert(!ins || ins->isImmI(a));
+        return ins;
+    }
+
+    uint32_t CseFilter::findImmISmall(LIns* ins)
+    {
+        uint32_t k;
+        findImmISmall(ins->immI(), k);
+        return k;
+    }
+
+    inline LIns* CseFilter::findImmILarge(int32_t a, uint32_t &k)
+    {
+        NLKind nlkind = NLImmILarge;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hashImmI(a) & bitmask;
         uint32_t n = 1;
@@ -2296,17 +2320,17 @@ namespace nanojit
         }
     }
 
-    uint32_t CseFilter::findImmI(LIns* ins)
+    uint32_t CseFilter::findImmILarge(LIns* ins)
     {
         uint32_t k;
-        findImmI(ins->immI(), k);
+        findImmILarge(ins->immI(), k);
         return k;
     }
 
 #ifdef NANOJIT_64BIT
     inline LIns* CseFilter::findImmQ(uint64_t a, uint32_t &k)
     {
-        NLKind nlkind = LInsImmQ;
+        NLKind nlkind = NLImmQ;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hashImmQorD(a) & bitmask;
         uint32_t n = 1;
@@ -2332,7 +2356,7 @@ namespace nanojit
 
     inline LIns* CseFilter::findImmD(uint64_t a, uint32_t &k)
     {
-        NLKind nlkind = LInsImmD;
+        NLKind nlkind = NLImmD;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hashImmQorD(a) & bitmask;
         uint32_t n = 1;
@@ -2357,7 +2381,7 @@ namespace nanojit
 
     inline LIns* CseFilter::find1(LOpcode op, LIns* a, uint32_t &k)
     {
-        NLKind nlkind = LIns1;
+        NLKind nlkind = NL1;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hash1(op, a) & bitmask;
         uint32_t n = 1;
@@ -2381,7 +2405,7 @@ namespace nanojit
 
     inline LIns* CseFilter::find2(LOpcode op, LIns* a, LIns* b, uint32_t &k)
     {
-        NLKind nlkind = LIns2;
+        NLKind nlkind = NL2;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hash2(op, a, b) & bitmask;
         uint32_t n = 1;
@@ -2405,7 +2429,7 @@ namespace nanojit
 
     inline LIns* CseFilter::find3(LOpcode op, LIns* a, LIns* b, LIns* c, uint32_t &k)
     {
-        NLKind nlkind = LIns3;
+        NLKind nlkind = NL3;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hash3(op, a, b, c) & bitmask;
         uint32_t n = 1;
@@ -2466,7 +2490,7 @@ namespace nanojit
 
     inline LIns* CseFilter::findCall(const CallInfo *ci, uint32_t argc, LIns* args[], uint32_t &k)
     {
-        NLKind nlkind = LInsCall;
+        NLKind nlkind = NLCall;
         const uint32_t bitmask = m_capNL[nlkind] - 1;
         k = hashCall(ci, argc, args) & bitmask;
         uint32_t n = 1;
@@ -2496,10 +2520,19 @@ namespace nanojit
     LIns* CseFilter::insImmI(int32_t imm)
     {
         uint32_t k;
-        LIns* ins = findImmI(imm, k);
-        if (!ins) {
-            ins = out->insImmI(imm);
-            addNL(LInsImmI, ins, k);
+        LIns* ins;
+        if (0 <= imm && imm < int32_t(m_capNL[NLImmISmall])) {
+            ins = findImmISmall(imm, k);
+            if (!ins) {
+                ins = out->insImmI(imm);
+                addNLImmISmall(ins, k);
+            }
+        } else {
+            ins = findImmILarge(imm, k);
+            if (!ins) {
+                ins = out->insImmI(imm);
+                addNL(NLImmILarge, ins, k);
+            }
         }
         // We assume that downstream stages do not modify the instruction, so
         // that we can insert 'ins' into slot 'k'.  Check this.
@@ -2514,7 +2547,7 @@ namespace nanojit
         LIns* ins = findImmQ(q, k);
         if (!ins) {
             ins = out->insImmQ(q);
-            addNL(LInsImmQ, ins, k);
+            addNL(NLImmQ, ins, k);
         }
         NanoAssert(ins->isop(LIR_immq) && ins->immQ() == q);
         return ins;
@@ -2534,7 +2567,7 @@ namespace nanojit
         LIns* ins = findImmD(u.u64, k);
         if (!ins) {
             ins = out->insImmD(d);
-            addNL(LInsImmD, ins, k);
+            addNL(NLImmD, ins, k);
         }
         NanoAssert(ins->isop(LIR_immd) && ins->immDasQ() == u.u64);
         return ins;
@@ -2555,7 +2588,7 @@ namespace nanojit
             ins = find1(op, a, k);
             if (!ins) {
                 ins = out->ins1(op, a);
-                addNL(LIns1, ins, k);
+                addNL(NL1, ins, k);
             }
         } else {
             ins = out->ins1(op, a);
@@ -2572,7 +2605,7 @@ namespace nanojit
         ins = find2(op, a, b, k);
         if (!ins) {
             ins = out->ins2(op, a, b);
-            addNL(LIns2, ins, k);
+            addNL(NL2, ins, k);
         } else if (ins->isCmp()) {
             if (knownCmpValues.containsKey(ins)) {
                 // We've seen this comparison before, and it was previously
@@ -2594,7 +2627,7 @@ namespace nanojit
         LIns* ins = find3(op, a, b, c, k);
         if (!ins) {
             ins = out->ins3(op, a, b, c);
-            addNL(LIns3, ins, k);
+            addNL(NL3, ins, k);
         }
         NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b && ins->oprnd3() == c);
         return ins;
@@ -2694,7 +2727,7 @@ namespace nanojit
             ins = find1(op, c, k);
             if (!ins) {
                 ins = out->insGuard(op, c, gr);
-                addNL(LIns1, ins, k);
+                addNL(NL1, ins, k);
             }
             // After this guard, we know that 'c's result was true (if
             // op==LIR_xf) or false (if op==LIR_xt), else we would have
@@ -2719,7 +2752,7 @@ namespace nanojit
         LIns* ins = find2(op, a, b, k);
         if (!ins) {
             ins = out->insGuardXov(op, a, b, gr);
-            addNL(LIns2, ins, k);
+            addNL(NL2, ins, k);
         }
         NanoAssert(ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b);
         return ins;
@@ -2737,7 +2770,7 @@ namespace nanojit
             ins = findCall(ci, argc, args, k);
             if (!ins) {
                 ins = out->insCall(ci, args);
-                addNL(LInsCall, ins, k);
+                addNL(NLCall, ins, k);
             }
         } else {
             // We only need to worry about aliasing if !ci->_isPure.
