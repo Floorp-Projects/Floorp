@@ -1919,15 +1919,11 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (this.visibleTabs.length == 1)
+            if (this.tabs.length == 1)
               return null;
 
             // tell a new window to take the "dropped" tab
-            return Services.ww.openWindow(window,
-                                          getBrowserURL(),
-                                          null,
-                                          "chrome,dialog=no,all",
-                                          aTab);
+            return window.openDialog(getBrowserURL(), "_blank", "dialog=no,all", aTab);
           ]]>
         </body>
       </method>
