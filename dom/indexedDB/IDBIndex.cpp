@@ -43,6 +43,7 @@
 #include "nsIIDBKeyRange.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
 #include "mozilla/storage.h"
 
@@ -218,9 +219,10 @@ already_AddRefed<IDBRequest>
 GenerateRequest(IDBIndex* aIndex)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  IDBDatabase* database = aIndex->ObjectStore()->Transaction()->Database();
-  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aIndex),
-                            database->ScriptContext(), database->Owner());
+  IDBTransaction* transaction = aIndex->ObjectStore()->Transaction();
+  IDBDatabase* database = transaction->Database();
+  return IDBRequest::Create(aIndex, database->ScriptContext(),
+                            database->Owner(), transaction);
 }
 
 } // anonymous namespace
@@ -262,34 +264,30 @@ IDBIndex::IDBIndex()
 IDBIndex::~IDBIndex()
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBIndex)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBIndex,
-                                                  nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mObjectStore,
-                                                       nsPIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBIndex)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBIndex,
-                                                nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBIndex)
   // Don't unlink mObjectStore!
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBIndex)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBIndex)
   NS_INTERFACE_MAP_ENTRY(nsIIDBIndex)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBIndex)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(IDBIndex, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(IDBIndex, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBIndex)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBIndex)
 
 DOMCI_DATA(IDBIndex, IDBIndex)
 
@@ -1177,7 +1175,7 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mData);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
+  aResult->SetAsISupports(cursor);
   return NS_OK;
 }
 
@@ -1377,6 +1375,6 @@ OpenObjectCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mData);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
+  aResult->SetAsISupports(cursor);
   return NS_OK;
 }

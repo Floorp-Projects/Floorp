@@ -160,8 +160,8 @@ IDBErrorEvent::Create(IDBRequest* aRequest,
   event->mCode = NS_ERROR_GET_CODE(aResult);
   event->mMessage.AssignASCII(message);
 
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_FALSE,
-                                 PR_FALSE);
+  nsresult rv = event->InitEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_TRUE,
+                                 PR_TRUE);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   rv = event->SetTrusted(PR_TRUE);
@@ -180,6 +180,62 @@ IDBErrorEvent::CreateRunnable(IDBRequest* aRequest,
 
   nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aRequest, event));
   return runnable.forget();
+}
+
+// static
+already_AddRefed<nsIDOMEvent>
+IDBErrorEvent::MaybeDuplicate(nsIDOMEvent* aOther)
+{
+  NS_ASSERTION(aOther, "Null pointer!");
+
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent(do_QueryInterface(aOther));
+  nsCOMPtr<nsIIDBErrorEvent> errorEvent(do_QueryInterface(aOther));
+
+  if (!domNSEvent || !errorEvent) {
+    return nsnull;
+  }
+
+  PRBool isTrusted;
+  nsresult rv = domNSEvent->GetIsTrusted(&isTrusted);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  if (!isTrusted) {
+    return nsnull;
+  }
+
+  nsString type;
+  rv = errorEvent->GetType(type);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  PRBool canBubble;
+  rv = errorEvent->GetBubbles(&canBubble);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<nsISupports> source;
+  rv = errorEvent->GetSource(getter_AddRefs(source));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  PRUint16 code;
+  rv = errorEvent->GetCode(&code);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsString message;
+  rv = errorEvent->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsRefPtr<IDBErrorEvent> event(new IDBErrorEvent());
+
+  event->mSource = source;
+  event->mCode = code;
+  event->mMessage = message;
+
+  rv = event->InitEvent(type, canBubble, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return ForgetEvent(event);
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBErrorEvent, IDBEvent)

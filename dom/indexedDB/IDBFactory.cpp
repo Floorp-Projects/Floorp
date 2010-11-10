@@ -841,7 +841,8 @@ IDBFactory::Open(const nsAString& aName,
   }
   NS_ENSURE_TRUE(innerWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow,
+                                                    nsnull);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
