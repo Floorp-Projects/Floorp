@@ -62,8 +62,8 @@ public:
   bool
   RecvMessage(JSContext* cx,
               const nsString& messageName,
-              const nsTArray<Variant>& data,
-              nsTArray<Variant>* results);
+              const InfallibleTArray<Variant>& data,
+              InfallibleTArray<Variant>* results);
 
   nsresult
   RegisterReceiver(JSContext* cx,

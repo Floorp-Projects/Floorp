@@ -126,14 +126,9 @@
   margin: 0;
 }
 
-#main-window[privatebrowsingmode=temporary] #appmenu-button:not(:-moz-window-inactive) {
+#main-window[privatebrowsingmode=temporary] #appmenu-button {
   background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
   border-color: rgba(43,8,65,.9);
-}
-
-#appmenu-button:-moz-window-inactive {
-  background-image: none;
-  border-color: rgba(0,0,0,.4);
 }
 
 #appmenu-button:hover:not(:active):not([open]) {

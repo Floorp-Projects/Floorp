@@ -120,8 +120,8 @@ protected:
     virtual PPluginInstanceChild*
     AllocPPluginInstance(const nsCString& aMimeType,
                          const uint16_t& aMode,
-                         const nsTArray<nsCString>& aNames,
-                         const nsTArray<nsCString>& aValues,
+                         const InfallibleTArray<nsCString>& aNames,
+                         const InfallibleTArray<nsCString>& aValues,
                          NPError* rv);
 
     virtual bool
@@ -131,8 +131,8 @@ protected:
     AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                      const nsCString& aMimeType,
                                      const uint16_t& aMode,
-                                     const nsTArray<nsCString>& aNames,
-                                     const nsTArray<nsCString>& aValues,
+                                     const InfallibleTArray<nsCString>& aNames,
+                                     const InfallibleTArray<nsCString>& aValues,
                                      NPError* rv);
     virtual bool
     AnswerNP_Shutdown(NPError *rv);

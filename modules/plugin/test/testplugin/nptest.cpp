@@ -169,6 +169,7 @@ static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t ar
 static bool callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool reinitWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool destroySharedGfxStuff(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool propertyAndMethod(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getTopLevelWindowActivationState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -221,6 +222,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "callOnDestroy",
   "reinitWidget",
   "crashInNestedLoop",
+  "destroySharedGfxStuff",
   "propertyAndMethod",
   "getTopLevelWindowActivationState",
   "getTopLevelWindowActivationEventCount",
@@ -274,6 +276,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   callOnDestroy,
   reinitWidget,
   crashPluginInNestedLoop,
+  destroySharedGfxStuff,
   propertyAndMethod,
   getTopLevelWindowActivationState,
   getTopLevelWindowActivationEventCount,
@@ -2873,6 +2876,15 @@ crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
   return pluginCrashInNestedLoop(id);
 }
 
+bool
+destroySharedGfxStuff(NPObject* npobj, const NPVariant* args,
+                        uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  return pluginDestroySharedGfxStuff(id);
+}
+
 #else
 bool
 getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
@@ -2884,6 +2896,14 @@ getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 
 bool
 crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
+                        uint32_t argCount, NPVariant* result)
+{
+  // XXX Not implemented!
+  return false;
+}
+
+bool
+destroySharedGfxStuff(NPObject* npobj, const NPVariant* args,
                         uint32_t argCount, NPVariant* result)
 {
   // XXX Not implemented!

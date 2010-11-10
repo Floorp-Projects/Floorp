@@ -567,9 +567,8 @@ nsHtml5TreeBuilder::accumulateCharacters(const PRUnichar* aBuf, PRInt32 aStart, 
   PRInt32 newFillLen = charBufferLen + aLength;
   if (newFillLen > charBuffer.length) {
     PRInt32 newAllocLength = newFillLen + (newFillLen >> 1);
-    jArray<PRUnichar,PRInt32> newBuf(newAllocLength);
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(newAllocLength);
     memcpy(newBuf, charBuffer, sizeof(PRUnichar) * charBufferLen);
-    charBuffer.release();
     charBuffer = newBuf;
   }
   memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(PRUnichar) * aLength);

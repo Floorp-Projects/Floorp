@@ -385,8 +385,6 @@
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
-@BINPATH@/components/WeaveCrypto.manifest
-@BINPATH@/components/WeaveCrypto.js
 #endif
 
 ; Modules

@@ -361,8 +361,8 @@ PluginModuleParent::DeallocPPluginIdentifier(PPluginIdentifierParent* aActor)
 PPluginInstanceParent*
 PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
                                          const uint16_t& aMode,
-                                         const nsTArray<nsCString>& aNames,
-                                         const nsTArray<nsCString>& aValues,
+                                         const InfallibleTArray<nsCString>& aNames,
+                                         const InfallibleTArray<nsCString>& aValues,
                                          NPError* rv)
 {
     NS_ERROR("Not reachable!");
@@ -543,6 +543,19 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
         return NPERR_GENERIC_ERROR;
 
     return i->NPP_SetValue(variable, value);
+}
+
+bool
+PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
+{
+#ifndef MOZ_X11
+    NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
+#else
+    NS_ABORT_IF_FALSE(0 > mPluginXSocketFdDup.mFd,
+                      "Already backed up X resources??");
+    mPluginXSocketFdDup.mFd = aXSocketFd.fd;
+#endif
+    return true;
 }
 
 bool
@@ -750,8 +763,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     // create the instance on the other side
-    nsTArray<nsCString> names;
-    nsTArray<nsCString> values;
+    InfallibleTArray<nsCString> names;
+    InfallibleTArray<nsCString> values;
 
     for (int i = 0; i < argc; ++i) {
         names.AppendElement(NullableString(argn[i]));
