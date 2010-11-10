@@ -22,6 +22,7 @@ function repeat_test()
   // test with a larger purge age.
   do_check_true(gPurgeAge < 64);
   gPurgeAge *= 2;
+  gShortExpiry *= 2;
 
   do_execute_soon(function() {
     test_generator.close();
@@ -33,12 +34,22 @@ function repeat_test()
 // Purge threshold, in seconds.
 let gPurgeAge = 1;
 
+// Short expiry age, in seconds.
+let gShortExpiry = 2;
+
 // Required delay to ensure a purge occurs, in milliseconds. This must be at
 // least gPurgeAge + 10%, and includes a little fuzz to account for timer
 // resolution and possible differences between PR_Now() and Date.now().
 function get_purge_delay()
 {
   return gPurgeAge * 1100 + 100;
+}
+
+// Required delay to ensure a cookie set with an expiry time 'gShortExpiry' into
+// the future will have expired.
+function get_expiry_delay()
+{
+  return gShortExpiry * 1000 + 100;
 }
 
 function do_run_test()
@@ -148,6 +159,32 @@ function do_run_test()
   do_load_profile();
   do_check_true(check_remaining_cookies(110, 20, 110));
 
+  // 6) Excess and age are satisfied, but the cookie limit can be satisfied by
+  // purging expired cookies.
+  Services.cookiemgr.removeAll();
+  let shortExpiry = Math.floor(Date.now() / 1000) + gShortExpiry;
+  if (!set_cookies(0, 20, shortExpiry)) {
+    repeat_test();
+    return;
+  }
+  do_timeout(get_expiry_delay(), continue_test);
+  yield;
+  if (!set_cookies(20, 110, expiry)) {
+    repeat_test();
+    return;
+  }
+  do_timeout(get_purge_delay(), continue_test);
+  yield;
+  if (!set_cookies(110, 111, expiry)) {
+    repeat_test();
+    return;
+  }
+
+  do_close_profile(test_generator);
+  yield;
+  do_load_profile();
+  do_check_true(check_remaining_cookies(111, 20, 91));
+
   do_finish_generator_test(test_generator);
 }
 
@@ -168,7 +205,7 @@ function set_cookies(begin, end, expiry)
   }
 
   let endTime = get_creationTime(end - 1);
-  do_check_true(endTime > beginTime);
+  do_check_true(begin == end - 1 || endTime > beginTime);
   if (endTime - beginTime > gPurgeAge * 1000000) {
     // Setting cookies took an amount of time very close to the purge threshold.
     // Retry the test with a larger threshold.
