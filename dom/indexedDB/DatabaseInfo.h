@@ -135,4 +135,3 @@ struct IndexUpdateInfo
 END_INDEXEDDB_NAMESPACE
 
 #endif // mozilla_dom_indexeddb_databaseinfo_h__
-

@@ -109,6 +109,9 @@ public:
   CreateRunnable(IDBRequest* aRequest,
                  nsresult aResult);
 
+  static already_AddRefed<nsIDOMEvent>
+  MaybeDuplicate(nsIDOMEvent* aOther);
+
 protected:
   IDBErrorEvent() { }
 

@@ -84,6 +84,9 @@ public:
          PRUint16 aMode,
          PRUint32 aTimeout);
 
+  // nsPIDOMEventTarget
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+
   void OnNewRequest();
   void OnRequestFinished();
 
@@ -135,8 +138,9 @@ public:
 #else
   bool TransactionIsOpen() const
   {
-    return mReadyState == nsIIDBTransaction::INITIAL ||
-           mReadyState == nsIIDBTransaction::LOADING;
+    return (mReadyState == nsIIDBTransaction::INITIAL ||
+            mReadyState == nsIIDBTransaction::LOADING) &&
+           !mClosed;
   }
 #endif
 
@@ -175,10 +179,10 @@ private:
   PRUint32 mPendingRequests;
 
   // Only touched on the main thread.
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnCompleteListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
@@ -192,6 +196,7 @@ private:
   nsTArray<nsRefPtr<IDBObjectStore> > mCreatedObjectStores;
 
   bool mAborted;
+  bool mClosed;
 };
 
 class CommitHelper : public nsIRunnable

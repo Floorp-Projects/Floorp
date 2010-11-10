@@ -45,9 +45,11 @@
 
 #include "nsIIDBCursor.h"
 
-#include "nsDOMEventTargetHelper.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIRunnable;
+class nsIScriptContext;
+class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -69,17 +71,15 @@ struct KeyKeyPair
 
 class ContinueRunnable;
 
-class IDBCursor : public nsDOMEventTargetHelper,
-                  public nsIIDBCursor
+class IDBCursor : public nsIIDBCursor
 {
   friend class ContinueRunnable;
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIIDBCURSOR
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBCursor,
-                                                         nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBCursor)
 
   static
   already_AddRefed<IDBCursor>
@@ -132,6 +132,9 @@ protected:
   nsRefPtr<IDBObjectStore> mObjectStore;
   nsRefPtr<IDBIndex> mIndex;
 
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+  nsCOMPtr<nsPIDOMWindow> mOwner;
+
   PRUint16 mDirection;
 
   nsCOMPtr<nsIVariant> mCachedKey;
@@ -145,9 +148,6 @@ protected:
   Type mType;
   nsTArray<KeyValuePair> mData;
   nsTArray<KeyKeyPair> mKeyData;
-
-  // Only touched on the main thread.
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 };
 
 END_INDEXEDDB_NAMESPACE

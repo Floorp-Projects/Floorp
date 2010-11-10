@@ -44,6 +44,7 @@ interface nsIIDBObjectStore;
 interface nsIIDBRequest;
 interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
+interface nsIDOMEventListener;
 
 %{C++
 #include "jsapi.h"
@@ -54,7 +55,7 @@ interface nsIDOMDOMStringList;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, uuid(6bb4ef9b-d96b-46df-8116-c62f635bf4c2)]
+[scriptable, uuid(a4a707af-f5bb-45e4-a615-7616b03a5edc)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -83,4 +84,8 @@ interface nsIIDBDatabase : nsISupports
 
   void
   close();
+
+  attribute nsIDOMEventListener onerror;
+
+  attribute nsIDOMEventListener onversionchange;
 };

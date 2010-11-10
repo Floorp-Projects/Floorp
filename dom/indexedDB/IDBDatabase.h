@@ -79,6 +79,9 @@ public:
          DatabaseInfo* aDatabaseInfo,
          const nsACString& aASCIIOrigin);
 
+  // nsPIDOMEventTarget
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
   PRUint32 Id()
   {
     return mDatabaseId;
@@ -141,6 +144,8 @@ private:
 
   // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnVersionChangeListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnBlockedListener;
 };
 
 END_INDEXEDDB_NAMESPACE

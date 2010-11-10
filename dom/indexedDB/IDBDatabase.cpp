@@ -42,6 +42,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
+#include "nsEventDispatcher.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
@@ -227,15 +228,6 @@ ConvertVariantToStringArray(nsIVariant* aVariant,
   }
 
   return NS_OK;
-}
-
-inline
-already_AddRefed<IDBRequest>
-GenerateRequest(IDBDatabase* aDatabase)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aDatabase),
-                            aDatabase->ScriptContext(), aDatabase->Owner());
 }
 
 } // anonymous namespace
@@ -460,11 +452,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnVersionChangeListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase,
                                                 nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnVersionChangeListener)
 
   // Do some cleanup.
   tmp->OnUnlink();
@@ -647,7 +641,7 @@ IDBDatabase::SetVersion(const nsAString& aVersion,
 
   nsRefPtr<IDBVersionChangeRequest> request =
     IDBVersionChangeRequest::Create(static_cast<nsPIDOMEventTarget*>(this),
-                                    ScriptContext(), Owner());
+                                    ScriptContext(), Owner(), transaction);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<SetVersionHelper> helper =
@@ -816,6 +810,55 @@ IDBDatabase::Close()
   CloseInternal();
 
   NS_ASSERTION(mClosed, "Should have set the closed flag!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBDatabase::SetOnerror(nsIDOMEventListener* aErrorListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
+                                mOnErrorListener, aErrorListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::GetOnerror(nsIDOMEventListener** aErrorListener)
+{
+  return GetInnerEventListener(mOnErrorListener, aErrorListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::SetOnversionchange(nsIDOMEventListener* aVersionChangeListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(VERSIONCHANGE_EVT_STR),
+                                mOnVersionChangeListener,
+                                aVersionChangeListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::GetOnversionchange(nsIDOMEventListener** aVersionChangeListener)
+{
+  return GetInnerEventListener(mOnVersionChangeListener,
+                               aVersionChangeListener);
+}
+
+nsresult
+IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
+
+  if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+    nsCOMPtr<nsIDOMEvent> duplicateEvent =
+      IDBErrorEvent::MaybeDuplicate(aVisitor.mDOMEvent);
+
+    if (duplicateEvent) {
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mOwner));
+      NS_ASSERTION(target, "How can this happen?!");
+
+      PRBool dummy;
+      target->DispatchEvent(duplicateEvent, &dummy);
+    }
+  }
+
   return NS_OK;
 }
 

@@ -46,6 +46,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsEventDispatcher.h"
 #include "nsJSON.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
@@ -119,8 +120,8 @@ GenerateRequest(IDBCursor* aCursor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   IDBDatabase* database = aCursor->Transaction()->Database();
-  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aCursor),
-                            database->ScriptContext(), database->Owner());
+  return IDBRequest::Create(aCursor, database->ScriptContext(),
+                            database->Owner(), aCursor->Transaction());
 }
 
 } // anonymous namespace
@@ -268,26 +269,20 @@ IDBCursor::~IDBCursor()
   if (mValueRooted) {
     NS_DROP_JS_OBJECTS(this, IDBCursor);
   }
-
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBCursor,
-                                                  nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRequest,
                                                        nsPIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsPIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mObjectStore,
-                                                       nsPIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mIndex,
-                                                       nsPIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIndex)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(IDBCursor)
@@ -306,20 +301,21 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBCursor,
-                                                nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
   // Don't unlink mObjectStore, mIndex, or mTransaction!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBCursor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBCursor)
   NS_INTERFACE_MAP_ENTRY(nsIIDBCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBCursor)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(IDBCursor, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(IDBCursor, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBCursor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBCursor)
 
 DOMCI_DATA(IDBCursor, IDBCursor)
 
@@ -801,7 +797,7 @@ ContinueRunnable::Run()
       }
     }
 
-    rv = variant->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
+    rv = variant->SetAsISupports(cursor);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
