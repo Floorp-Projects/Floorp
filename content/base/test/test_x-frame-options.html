@@ -16,24 +16,35 @@
 <script class="testbody" type="text/javascript">
 
 var path = "/tests/content/base/test/";
-// contains { test_frame_id : expected_result }
-var testExpectedResults = { "control1": true,
-                            "control2": true,
-                            "deny": false,
-                            "sameorigin1": true,
-                            "sameorigin2": false
-                          };
 
 var testFramesLoaded = function() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var harness = document.getElementById("harness");
 
-  for (var t in testExpectedResults) {
-    var frame = harness.contentDocument.getElementById(t);
-    // test if frame loaded by checking for a contentDocument we can access
-    test = frame.contentDocument.getElementById("test");
-    is(test != null, testExpectedResults[t], "test "+t);
-  }
+  // iframe from same origin, no X-F-O header - should load
+  var frame = harness.contentDocument.getElementById("control1");
+  var test1 = frame.contentDocument.getElementById("test").textContent;
+  is(test1, "control1", "test control1");
+
+  // iframe from different origin, no X-F-O header - should load
+  frame = harness.contentDocument.getElementById("control2");
+  var test2 = frame.contentDocument.getElementById("test").textContent;
+  is(test2, "control2", "test control2");
+
+  // iframe from same origin, X-F-O: DENY - should not load
+  frame = harness.contentDocument.getElementById("deny");
+  var test3 = frame.contentDocument.getElementById("test");
+  is(test3, null, "test deny");
+
+  // iframe from same origin, X-F-O: SAMEORIGIN - should load
+  frame = harness.contentDocument.getElementById("sameorigin1");
+  var test4 = frame.contentDocument.getElementById("test").textContent;
+  is(test4, "sameorigin1", "test sameorigin1");
+
+  // iframe from different origin, X-F-O: SAMEORIGIN - should not load
+  frame = harness.contentDocument.getElementById("sameorigin2");
+  var test5 = frame.contentDocument.getElementById("test");
+  is(test5, null, "test sameorigin2");
 
   // call tests to check principal comparison, e.g. a document can open a window
   // to a data: or javascript: document which frames an

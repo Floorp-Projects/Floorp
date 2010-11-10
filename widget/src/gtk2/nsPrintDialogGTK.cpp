@@ -142,7 +142,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   gtk_widget_show_all(custom_hbox);
 
   gtk_box_pack_start(GTK_BOX(GTK_DIALOG(prompt_dialog)->vbox), custom_hbox, FALSE, FALSE, 0);
-  gint diag_response = gtk_dialog_run(GTK_DIALOG(prompt_dialog));
+  gint diag_response = RunDialog(GTK_DIALOG(prompt_dialog));
 
   if (diag_response == GTK_RESPONSE_ACCEPT) {
     const gchar* response_text = gtk_entry_get_text(GTK_ENTRY(custom_entry));

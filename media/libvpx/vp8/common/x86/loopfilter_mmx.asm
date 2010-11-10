@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -111,7 +111,7 @@ next8_h:
         psubusb     mm3, mm2              ; q1-=p1
         psubusb     mm2, mm4              ; p1-=q1
         por         mm2, mm3              ; abs(p1-q1)
-        pand        mm2, [tfe GLOBAL]     ; set lsb of each byte to zero
+        pand        mm2, [GLOBAL(tfe)]    ; set lsb of each byte to zero
         psrlw       mm2, 1                ; abs(p1-q1)/2
 
         movq        mm6, mm5              ; p0
@@ -150,12 +150,12 @@ next8_h:
         ; start work on filters
         movq        mm2, [rsi+2*rax]      ; p1
         movq        mm7, [rdi]            ; q1
-        pxor        mm2, [t80 GLOBAL]     ; p1 offset to convert to signed values
-        pxor        mm7, [t80 GLOBAL]     ; q1 offset to convert to signed values
+        pxor        mm2, [GLOBAL(t80)]    ; p1 offset to convert to signed values
+        pxor        mm7, [GLOBAL(t80)]    ; q1 offset to convert to signed values
         psubsb      mm2, mm7              ; p1 - q1
         pand        mm2, mm4              ; high var mask (hvm)(p1 - q1)
-        pxor        mm6, [t80 GLOBAL]     ; offset to convert to signed values
-        pxor        mm0, [t80 GLOBAL]     ; offset to convert to signed values
+        pxor        mm6, [GLOBAL(t80)]    ; offset to convert to signed values
+        pxor        mm0, [GLOBAL(t80)]    ; offset to convert to signed values
         movq        mm3, mm0              ; q0
         psubsb      mm0, mm6              ; q0 - p0
         paddsb      mm2, mm0              ; 1 * (q0 - p0) + hvm(p1 - q1)
@@ -163,8 +163,8 @@ next8_h:
         paddsb      mm2, mm0              ; 3 * (q0 - p0) + hvm(p1 - q1)
         pand        mm1, mm2                  ; mask filter values we don't care about
         movq        mm2, mm1
-        paddsb      mm1, [t4 GLOBAL]      ; 3* (q0 - p0) + hvm(p1 - q1) + 4
-        paddsb      mm2, [t3 GLOBAL]      ; 3* (q0 - p0) + hvm(p1 - q1) + 3
+        paddsb      mm1, [GLOBAL(t4)]     ; 3* (q0 - p0) + hvm(p1 - q1) + 4
+        paddsb      mm2, [GLOBAL(t3)]     ; 3* (q0 - p0) + hvm(p1 - q1) + 3
 
         pxor        mm0, mm0             ;
         pxor        mm5, mm5
@@ -185,29 +185,29 @@ next8_h:
         movq        mm5, mm0              ; save results
 
         packsswb    mm0, mm1              ; (3* (q0 - p0) + hvm(p1 - q1) + 4) >>3
-        paddsw      mm5, [ones GLOBAL]
-        paddsw      mm1, [ones GLOBAL]
+        paddsw      mm5, [GLOBAL(ones)]
+        paddsw      mm1, [GLOBAL(ones)]
         psraw       mm5, 1                ; partial shifted one more time for 2nd tap
         psraw       mm1, 1                ; partial shifted one more time for 2nd tap
         packsswb    mm5, mm1              ; (3* (q0 - p0) + hvm(p1 - q1) + 4) >>4
         pandn       mm4, mm5              ; high edge variance additive
 
         paddsb      mm6, mm2              ; p0+= p0 add
-        pxor        mm6, [t80 GLOBAL]     ; unoffset
+        pxor        mm6, [GLOBAL(t80)]    ; unoffset
         movq        [rsi+rax], mm6        ; write back
 
         movq        mm6, [rsi+2*rax]      ; p1
-        pxor        mm6, [t80 GLOBAL]     ; reoffset
+        pxor        mm6, [GLOBAL(t80)]    ; reoffset
         paddsb      mm6, mm4              ; p1+= p1 add
-        pxor        mm6, [t80 GLOBAL]     ; unoffset
+        pxor        mm6, [GLOBAL(t80)]    ; unoffset
         movq        [rsi+2*rax], mm6      ; write back
 
         psubsb      mm3, mm0              ; q0-= q0 add
-        pxor        mm3, [t80 GLOBAL]     ; unoffset
+        pxor        mm3, [GLOBAL(t80)]    ; unoffset
         movq        [rsi], mm3            ; write back
 
         psubsb      mm7, mm4              ; q1-= q1 add
-        pxor        mm7, [t80 GLOBAL]     ; unoffset
+        pxor        mm7, [GLOBAL(t80)]    ; unoffset
         movq        [rdi], mm7            ; write back
 
         add         rsi,8
@@ -403,7 +403,7 @@ next8_v:
         psubusb     mm5,        mm1                         ; q1-=p1
         psubusb     mm1,        mm2                         ; p1-=q1
         por         mm5,        mm1                         ; abs(p1-q1)
-        pand        mm5,        [tfe GLOBAL]                ; set lsb of each byte to zero
+        pand        mm5,        [GLOBAL(tfe)]               ; set lsb of each byte to zero
         psrlw       mm5,        1                           ; abs(p1-q1)/2
 
         mov         rdx,        arg(2) ;flimit                      ;
@@ -455,14 +455,14 @@ next8_v:
         movq        mm6,        [rdx+8]         ; p0
         movq        mm0,        [rdx+16]        ; q0
 
-        pxor        mm2,        [t80 GLOBAL]    ; p1 offset to convert to signed values
-        pxor        mm7,        [t80 GLOBAL]    ; q1 offset to convert to signed values
+        pxor        mm2,        [GLOBAL(t80)]   ; p1 offset to convert to signed values
+        pxor        mm7,        [GLOBAL(t80)]   ; q1 offset to convert to signed values
 
         psubsb      mm2,        mm7             ; p1 - q1
         pand        mm2,        mm4             ; high var mask (hvm)(p1 - q1)
 
-        pxor        mm6,        [t80 GLOBAL]    ; offset to convert to signed values
-        pxor        mm0,        [t80 GLOBAL]    ; offset to convert to signed values
+        pxor        mm6,        [GLOBAL(t80)]   ; offset to convert to signed values
+        pxor        mm0,        [GLOBAL(t80)]   ; offset to convert to signed values
 
         movq        mm3,        mm0             ; q0
         psubsb      mm0,        mm6             ; q0 - p0
@@ -474,9 +474,9 @@ next8_v:
         pand       mm1,        mm2              ; mask filter values we don't care about
 
         movq        mm2,        mm1
-        paddsb      mm1,        [t4 GLOBAL]       ; 3* (q0 - p0) + hvm(p1 - q1) + 4
+        paddsb      mm1,        [GLOBAL(t4)]      ; 3* (q0 - p0) + hvm(p1 - q1) + 4
 
-        paddsb      mm2,        [t3 GLOBAL]       ; 3* (q0 - p0) + hvm(p1 - q1) + 3
+        paddsb      mm2,        [GLOBAL(t3)]      ; 3* (q0 - p0) + hvm(p1 - q1) + 3
         pxor        mm0,        mm0          ;
 
         pxor        mm5,        mm5
@@ -503,9 +503,9 @@ next8_v:
         movq        mm5,        mm0              ; save results
 
         packsswb    mm0,        mm1           ; (3* (q0 - p0) + hvm(p1 - q1) + 4) >>3
-        paddsw      mm5,        [ones GLOBAL]
+        paddsw      mm5,        [GLOBAL(ones)]
 
-        paddsw      mm1,        [ones GLOBAL]
+        paddsw      mm1,        [GLOBAL(ones)]
         psraw       mm5,        1                 ; partial shifted one more time for 2nd tap
 
         psraw       mm1,        1                 ; partial shifted one more time for 2nd tap
@@ -514,22 +514,22 @@ next8_v:
         pandn       mm4,        mm5             ; high edge variance additive
 
         paddsb      mm6,        mm2             ; p0+= p0 add
-        pxor        mm6,        [t80 GLOBAL]    ; unoffset
+        pxor        mm6,        [GLOBAL(t80)]   ; unoffset
 
         ; mm6=p0                               ;
         movq        mm1,        [rdx]           ; p1
-        pxor        mm1,        [t80 GLOBAL]    ; reoffset
+        pxor        mm1,        [GLOBAL(t80)]   ; reoffset
 
         paddsb      mm1,        mm4                 ; p1+= p1 add
-        pxor        mm1,        [t80 GLOBAL]        ; unoffset
+        pxor        mm1,        [GLOBAL(t80)]       ; unoffset
         ; mm6 = p0 mm1 = p1
 
         psubsb      mm3,        mm0                 ; q0-= q0 add
-        pxor        mm3,        [t80 GLOBAL]        ; unoffset
+        pxor        mm3,        [GLOBAL(t80)]       ; unoffset
 
         ; mm3 = q0
         psubsb      mm7,        mm4                 ; q1-= q1 add
-        pxor        mm7,        [t80 GLOBAL]        ; unoffset
+        pxor        mm7,        [GLOBAL(t80)]       ; unoffset
         ; mm7 = q1
 
         ; tranpose and write back
@@ -708,7 +708,7 @@ next8_mbh:
         psubusb     mm3, mm2              ; q1-=p1
         psubusb     mm2, mm4              ; p1-=q1
         por         mm2, mm3              ; abs(p1-q1)
-        pand        mm2, [tfe GLOBAL]     ; set lsb of each byte to zero
+        pand        mm2, [GLOBAL(tfe)]    ; set lsb of each byte to zero
         psrlw       mm2, 1                ; abs(p1-q1)/2
 
         movq        mm6, mm5              ; p0
@@ -753,12 +753,12 @@ next8_mbh:
         ; start work on filters
         movq        mm2, [rsi+2*rax]      ; p1
         movq        mm7, [rdi]            ; q1
-        pxor        mm2, [t80 GLOBAL]     ; p1 offset to convert to signed values
-        pxor        mm7, [t80 GLOBAL]     ; q1 offset to convert to signed values
+        pxor        mm2, [GLOBAL(t80)]    ; p1 offset to convert to signed values
+        pxor        mm7, [GLOBAL(t80)]    ; q1 offset to convert to signed values
         psubsb      mm2, mm7              ; p1 - q1
 
-        pxor        mm6, [t80 GLOBAL]     ; offset to convert to signed values
-        pxor        mm0, [t80 GLOBAL]     ; offset to convert to signed values
+        pxor        mm6, [GLOBAL(t80)]    ; offset to convert to signed values
+        pxor        mm0, [GLOBAL(t80)]    ; offset to convert to signed values
         movq        mm3, mm0              ; q0
         psubsb      mm0, mm6              ; q0 - p0
         paddsb      mm2, mm0              ; 1 * (q0 - p0) + (p1 - q1)
@@ -772,7 +772,7 @@ next8_mbh:
         pand        mm2, mm4;             ; Filter2 = vp8_filter & hev
 
         movq        mm5,        mm2       ;
-        paddsb      mm5,        [t3 GLOBAL];
+        paddsb      mm5,        [GLOBAL(t3)];
 
         pxor        mm0, mm0              ; 0
         pxor        mm7, mm7              ; 0
@@ -785,7 +785,7 @@ next8_mbh:
 
         movq        mm5, mm0              ; Filter2
 
-        paddsb      mm2, [t4 GLOBAL]      ; vp8_signed_char_clamp(Filter2 + 4)
+        paddsb      mm2, [GLOBAL(t4)]     ; vp8_signed_char_clamp(Filter2 + 4)
         pxor        mm0, mm0              ; 0
         pxor        mm7, mm7              ; 0
 
@@ -818,10 +818,10 @@ next8_mbh:
         pxor        mm2, mm2
         punpcklbw   mm1, mm4
         punpckhbw   mm2, mm4
-        pmulhw      mm1, [s27 GLOBAL]
-        pmulhw      mm2, [s27 GLOBAL]
-        paddw       mm1, [s63 GLOBAL]
-        paddw       mm2, [s63 GLOBAL]
+        pmulhw      mm1, [GLOBAL(s27)]
+        pmulhw      mm2, [GLOBAL(s27)]
+        paddw       mm1, [GLOBAL(s63)]
+        paddw       mm2, [GLOBAL(s63)]
         psraw       mm1, 7
         psraw       mm2, 7
         packsswb    mm1, mm2
@@ -829,8 +829,8 @@ next8_mbh:
         psubsb      mm3, mm1
         paddsb      mm6, mm1
 
-        pxor        mm3, [t80 GLOBAL]
-        pxor        mm6, [t80 GLOBAL]
+        pxor        mm3, [GLOBAL(t80)]
+        pxor        mm6, [GLOBAL(t80)]
         movq        [rsi+rax], mm6
         movq        [rsi],     mm3
 
@@ -844,10 +844,10 @@ next8_mbh:
         pxor        mm2, mm2
         punpcklbw   mm1, mm4
         punpckhbw   mm2, mm4
-        pmulhw      mm1, [s18 GLOBAL]
-        pmulhw      mm2, [s18 GLOBAL]
-        paddw       mm1, [s63 GLOBAL]
-        paddw       mm2, [s63 GLOBAL]
+        pmulhw      mm1, [GLOBAL(s18)]
+        pmulhw      mm2, [GLOBAL(s18)]
+        paddw       mm1, [GLOBAL(s63)]
+        paddw       mm2, [GLOBAL(s63)]
         psraw       mm1, 7
         psraw       mm2, 7
         packsswb    mm1, mm2
@@ -855,14 +855,14 @@ next8_mbh:
         movq        mm3, [rdi]
         movq        mm6, [rsi+rax*2]       ; p1
 
-        pxor        mm3, [t80 GLOBAL]
-        pxor        mm6, [t80 GLOBAL]
+        pxor        mm3, [GLOBAL(t80)]
+        pxor        mm6, [GLOBAL(t80)]
 
         paddsb      mm6, mm1
         psubsb      mm3, mm1
 
-        pxor        mm6, [t80 GLOBAL]
-        pxor        mm3, [t80 GLOBAL]
+        pxor        mm6, [GLOBAL(t80)]
+        pxor        mm3, [GLOBAL(t80)]
         movq        [rdi], mm3
         movq        [rsi+rax*2], mm6
 
@@ -876,10 +876,10 @@ next8_mbh:
         pxor        mm2, mm2
         punpcklbw   mm1, mm4
         punpckhbw   mm2, mm4
-        pmulhw      mm1, [s9 GLOBAL]
-        pmulhw      mm2, [s9 GLOBAL]
-        paddw       mm1, [s63 GLOBAL]
-        paddw       mm2, [s63 GLOBAL]
+        pmulhw      mm1, [GLOBAL(s9)]
+        pmulhw      mm2, [GLOBAL(s9)]
+        paddw       mm1, [GLOBAL(s63)]
+        paddw       mm2, [GLOBAL(s63)]
         psraw       mm1, 7
         psraw       mm2, 7
         packsswb    mm1, mm2
@@ -889,14 +889,14 @@ next8_mbh:
         neg         rax
         movq        mm3, [rdi+rax  ]
 
-        pxor        mm6, [t80 GLOBAL]
-        pxor        mm3, [t80 GLOBAL]
+        pxor        mm6, [GLOBAL(t80)]
+        pxor        mm3, [GLOBAL(t80)]
 
         paddsb      mm6, mm1
         psubsb      mm3, mm1
 
-        pxor        mm6, [t80 GLOBAL]
-        pxor        mm3, [t80 GLOBAL]
+        pxor        mm6, [GLOBAL(t80)]
+        pxor        mm3, [GLOBAL(t80)]
         movq        [rdi+rax  ], mm3
         neg         rax
         movq        [rdi+rax*4], mm6
@@ -1105,7 +1105,7 @@ next8_mbv:
         psubusb     mm5,        mm1                         ; q1-=p1
         psubusb     mm1,        mm2                         ; p1-=q1
         por         mm5,        mm1                         ; abs(p1-q1)
-        pand        mm5,        [tfe GLOBAL]                ; set lsb of each byte to zero
+        pand        mm5,        [GLOBAL(tfe)]               ; set lsb of each byte to zero
         psrlw       mm5,        1                           ; abs(p1-q1)/2
 
         mov         rdx,        arg(2) ;flimit                      ;
@@ -1155,14 +1155,14 @@ next8_mbv:
         ; start work on filters
         movq        mm2, [rdx+16]         ; p1
         movq        mm7, [rdx+40]         ; q1
-        pxor        mm2, [t80 GLOBAL]     ; p1 offset to convert to signed values
-        pxor        mm7, [t80 GLOBAL]     ; q1 offset to convert to signed values
+        pxor        mm2, [GLOBAL(t80)]    ; p1 offset to convert to signed values
+        pxor        mm7, [GLOBAL(t80)]    ; q1 offset to convert to signed values
         psubsb      mm2, mm7              ; p1 - q1
 
         movq        mm6, [rdx+24]         ; p0
         movq        mm0, [rdx+32]         ; q0
-        pxor        mm6, [t80 GLOBAL]     ; offset to convert to signed values
-        pxor        mm0, [t80 GLOBAL]     ; offset to convert to signed values
+        pxor        mm6, [GLOBAL(t80)]    ; offset to convert to signed values
+        pxor        mm0, [GLOBAL(t80)]    ; offset to convert to signed values
 
         movq        mm3, mm0              ; q0
         psubsb      mm0, mm6              ; q0 - p0
@@ -1176,7 +1176,7 @@ next8_mbv:
         pand        mm2, mm4;             ; Filter2 = vp8_filter & hev
 
         movq        mm5,        mm2       ;
-        paddsb      mm5,        [t3 GLOBAL];
+        paddsb      mm5,        [GLOBAL(t3)];
 
         pxor        mm0, mm0              ; 0
         pxor        mm7, mm7              ; 0
@@ -1189,7 +1189,7 @@ next8_mbv:
 
         movq        mm5, mm0              ; Filter2
 
-        paddsb      mm2, [t4 GLOBAL]      ; vp8_signed_char_clamp(Filter2 + 4)
+        paddsb      mm2, [GLOBAL(t4)]     ; vp8_signed_char_clamp(Filter2 + 4)
         pxor        mm0, mm0              ; 0
         pxor        mm7, mm7              ; 0
 
@@ -1222,10 +1222,10 @@ next8_mbv:
         pxor        mm2, mm2
         punpcklbw   mm1, mm4
         punpckhbw   mm2, mm4
-        pmulhw      mm1, [s27 GLOBAL]
-        pmulhw      mm2, [s27 GLOBAL]
-        paddw       mm1, [s63 GLOBAL]
-        paddw       mm2, [s63 GLOBAL]
+        pmulhw      mm1, [GLOBAL(s27)]
+        pmulhw      mm2, [GLOBAL(s27)]
+        paddw       mm1, [GLOBAL(s63)]
+        paddw       mm2, [GLOBAL(s63)]
         psraw       mm1, 7
         psraw       mm2, 7
         packsswb    mm1, mm2
@@ -1233,8 +1233,8 @@ next8_mbv:
         psubsb      mm3, mm1
         paddsb      mm6, mm1
 
-        pxor        mm3, [t80 GLOBAL]
-        pxor        mm6, [t80 GLOBAL]
+        pxor        mm3, [GLOBAL(t80)]
+        pxor        mm6, [GLOBAL(t80)]
         movq        [rdx+24], mm6
         movq        [rdx+32], mm3
 
@@ -1248,24 +1248,24 @@ next8_mbv:
         pxor        mm2, mm2
         punpcklbw   mm1, mm4
         punpckhbw   mm2, mm4
-        pmulhw      mm1, [s18 GLOBAL]
-        pmulhw      mm2, [s18 GLOBAL]
-        paddw       mm1, [s63 GLOBAL]
-        paddw       mm2, [s63 GLOBAL]
+        pmulhw      mm1, [GLOBAL(s18)]
+        pmulhw      mm2, [GLOBAL(s18)]
+        paddw       mm1, [GLOBAL(s63)]
+        paddw       mm2, [GLOBAL(s63)]
         psraw       mm1, 7
         psraw       mm2, 7
         packsswb    mm1, mm2
 
         movq        mm3, [rdx + 40]
         movq        mm6, [rdx + 16]       ; p1
-        pxor        mm3, [t80 GLOBAL]
-        pxor        mm6, [t80 GLOBAL]
+        pxor        mm3, [GLOBAL(t80)]
+        pxor        mm6, [GLOBAL(t80)]
 
         paddsb      mm6, mm1
         psubsb      mm3, mm1
 
-        pxor        mm6, [t80 GLOBAL]
-        pxor        mm3, [t80 GLOBAL]
+        pxor        mm6, [GLOBAL(t80)]
+        pxor        mm3, [GLOBAL(t80)]
         movq        [rdx + 40], mm3
         movq        [rdx + 16], mm6
 
@@ -1279,10 +1279,10 @@ next8_mbv:
         pxor        mm2, mm2
         punpcklbw   mm1, mm4
         punpckhbw   mm2, mm4
-        pmulhw      mm1, [s9 GLOBAL]
-        pmulhw      mm2, [s9 GLOBAL]
-        paddw       mm1, [s63 GLOBAL]
-        paddw       mm2, [s63 GLOBAL]
+        pmulhw      mm1, [GLOBAL(s9)]
+        pmulhw      mm2, [GLOBAL(s9)]
+        paddw       mm1, [GLOBAL(s63)]
+        paddw       mm2, [GLOBAL(s63)]
         psraw       mm1, 7
         psraw       mm2, 7
         packsswb    mm1, mm2
@@ -1290,14 +1290,14 @@ next8_mbv:
         movq        mm6, [rdx+ 8]
         movq        mm3, [rdx+48]
 
-        pxor        mm6, [t80 GLOBAL]
-        pxor        mm3, [t80 GLOBAL]
+        pxor        mm6, [GLOBAL(t80)]
+        pxor        mm3, [GLOBAL(t80)]
 
         paddsb      mm6, mm1
         psubsb      mm3, mm1
 
-        pxor        mm6, [t80 GLOBAL]           ; mm6 = 71 61 51 41 31 21 11 01
-        pxor        mm3, [t80 GLOBAL]           ; mm3 = 76 66 56 46 36 26 15 06
+        pxor        mm6, [GLOBAL(t80)]          ; mm6 = 71 61 51 41 31 21 11 01
+        pxor        mm3, [GLOBAL(t80)]          ; mm3 = 76 66 56 46 36 26 15 06
 
         ; tranpose and write back
         movq        mm0,    [rdx]               ; mm0 = 70 60 50 40 30 20 10 00
@@ -1432,7 +1432,7 @@ nexts8_h:
         psubusb     mm0, mm1              ; q1-=p1
         psubusb     mm1, mm4              ; p1-=q1
         por         mm1, mm0              ; abs(p1-q1)
-        pand        mm1, [tfe GLOBAL]     ; set lsb of each byte to zero
+        pand        mm1, [GLOBAL(tfe)]    ; set lsb of each byte to zero
         psrlw       mm1, 1                ; abs(p1-q1)/2
 
         movq        mm5, [rsi+rax]        ; p0
@@ -1450,12 +1450,12 @@ nexts8_h:
         pcmpeqb     mm5, mm3
 
         ; start work on filters
-        pxor        mm2, [t80 GLOBAL]     ; p1 offset to convert to signed values
-        pxor        mm7, [t80 GLOBAL]     ; q1 offset to convert to signed values
+        pxor        mm2, [GLOBAL(t80)]    ; p1 offset to convert to signed values
+        pxor        mm7, [GLOBAL(t80)]    ; q1 offset to convert to signed values
         psubsb      mm2, mm7              ; p1 - q1
 
-        pxor        mm6, [t80 GLOBAL]     ; offset to convert to signed values
-        pxor        mm0, [t80 GLOBAL]     ; offset to convert to signed values
+        pxor        mm6, [GLOBAL(t80)]    ; offset to convert to signed values
+        pxor        mm0, [GLOBAL(t80)]    ; offset to convert to signed values
         movq        mm3, mm0              ; q0
         psubsb      mm0, mm6              ; q0 - p0
         paddsb      mm2, mm0              ; p1 - q1 + 1 * (q0 - p0)
@@ -1464,7 +1464,7 @@ nexts8_h:
         pand        mm5, mm2              ; mask filter values we don't care about
 
         ; do + 4 side
-        paddsb      mm5, [t4 GLOBAL]      ; 3* (q0 - p0) + (p1 - q1) + 4
+        paddsb      mm5, [GLOBAL(t4)]     ; 3* (q0 - p0) + (p1 - q1) + 4
 
         movq        mm0, mm5              ; get a copy of filters
         psllw       mm0, 8                ; shift left 8
@@ -1477,12 +1477,12 @@ nexts8_h:
         por         mm0, mm1              ; put the two together to get result
 
         psubsb      mm3, mm0              ; q0-= q0 add
-        pxor        mm3, [t80 GLOBAL]     ; unoffset
+        pxor        mm3, [GLOBAL(t80)]    ; unoffset
         movq        [rsi], mm3            ; write back
 
 
         ; now do +3 side
-        psubsb      mm5, [t1s GLOBAL]      ; +3 instead of +4
+        psubsb      mm5, [GLOBAL(t1s)]     ; +3 instead of +4
 
         movq        mm0, mm5              ; get a copy of filters
         psllw       mm0, 8                ; shift left 8
@@ -1494,7 +1494,7 @@ nexts8_h:
 
 
         paddsb      mm6, mm0              ; p0+= p0 add
-        pxor        mm6, [t80 GLOBAL]     ; unoffset
+        pxor        mm6, [GLOBAL(t80)]    ; unoffset
         movq        [rsi+rax], mm6        ; write back
 
         add         rsi,8
@@ -1589,7 +1589,7 @@ nexts8_v:
         psubusb     mm7,        mm6                             ; q1-=p1
         psubusb     mm6,        mm3                             ; p1-=q1
         por         mm6,        mm7                             ; abs(p1-q1)
-        pand        mm6,        [tfe GLOBAL]                    ; set lsb of each byte to zero
+        pand        mm6,        [GLOBAL(tfe)]                   ; set lsb of each byte to zero
         psrlw       mm6,        1                               ; abs(p1-q1)/2
 
         movq        mm5,        mm1                             ; p0
@@ -1617,16 +1617,16 @@ nexts8_v:
         movq        t0,         mm0
         movq        t1,         mm3
 
-        pxor        mm0,        [t80 GLOBAL]                    ; p1 offset to convert to signed values
-        pxor        mm3,        [t80 GLOBAL]                    ; q1 offset to convert to signed values
+        pxor        mm0,        [GLOBAL(t80)]                   ; p1 offset to convert to signed values
+        pxor        mm3,        [GLOBAL(t80)]                   ; q1 offset to convert to signed values
 
         psubsb      mm0,        mm3                             ; p1 - q1
         movq        mm6,        mm1                             ; p0
 
         movq        mm7,        mm2                             ; q0
-        pxor        mm6,        [t80 GLOBAL]                    ; offset to convert to signed values
+        pxor        mm6,        [GLOBAL(t80)]                   ; offset to convert to signed values
 
-        pxor        mm7,        [t80 GLOBAL]                    ; offset to convert to signed values
+        pxor        mm7,        [GLOBAL(t80)]                   ; offset to convert to signed values
         movq        mm3,        mm7                             ; offseted ; q0
 
         psubsb      mm7,        mm6                             ; q0 - p0
@@ -1637,7 +1637,7 @@ nexts8_v:
 
         pand        mm5,        mm0                             ; mask filter values we don't care about
 
-        paddsb      mm5,        [t4 GLOBAL]                     ;  3* (q0 - p0) + (p1 - q1) + 4
+        paddsb      mm5,        [GLOBAL(t4)]                    ;  3* (q0 - p0) + (p1 - q1) + 4
 
         movq        mm0,        mm5                             ; get a copy of filters
         psllw       mm0,        8                               ; shift left 8
@@ -1651,10 +1651,10 @@ nexts8_v:
         por         mm0,        mm7                             ; put the two together to get result
 
         psubsb      mm3,        mm0                             ; q0-= q0sz add
-        pxor        mm3,        [t80 GLOBAL]                    ; unoffset
+        pxor        mm3,        [GLOBAL(t80)]                   ; unoffset
 
         ; now do +3 side
-        psubsb      mm5, [t1s GLOBAL]                           ; +3 instead of +4
+        psubsb      mm5, [GLOBAL(t1s)]                          ; +3 instead of +4
 
         movq        mm0, mm5                                    ; get a copy of filters
         psllw       mm0, 8                                      ; shift left 8
@@ -1666,7 +1666,7 @@ nexts8_v:
         por         mm0, mm5                                    ; put the two together to get result
 
         paddsb      mm6, mm0                                    ; p0+= p0 add
-        pxor        mm6, [t80 GLOBAL]                           ; unoffset
+        pxor        mm6, [GLOBAL(t80)]                          ; unoffset
 
 
         movq        mm0,        t0

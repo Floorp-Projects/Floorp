@@ -152,7 +152,7 @@ ThebesLayerD3D10::InvalidateRegion(const nsIntRegion &aRegion)
 }
 
 void
-ThebesLayerD3D10::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
+ThebesLayerD3D10::RenderLayer()
 {
   if (!mTexture) {
     return;
@@ -160,9 +160,7 @@ ThebesLayerD3D10::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
-  gfx3DMatrix transform = mTransform * aTransform;
-  effect()->GetVariableByName("mLayerTransform")->SetRawValue(&transform._11, 0, 64);
-  effect()->GetVariableByName("fLayerOpacity")->AsScalar()->SetFloat(GetOpacity() * aOpacity);
+  SetEffectTransformAndOpacity();
 
   ID3D10EffectTechnique *technique;
   if (CanUseOpaqueSurface()) {

@@ -82,6 +82,7 @@ _TEST_FILES = \
 		$(warning test_bug421839-1.html disabled because it calls finish twice which can cause timeouts) \
 		test_bug421839-2.html \
 		bug421839-2-page.html \
+		test_bug424627.html \
 		test_bug438840.html \
 		test_bug448860.html \
 		test_bug460532.html \
@@ -89,6 +90,7 @@ _TEST_FILES = \
 		test_bug469613.xul \
 		test_bug469774.xul \
 		test_bug470212.html \
+		$(warning test_bug488417.html temporarily disabled - see bug 489560) \
 		test_bug496275.html \
 		test_bug503813.html \
 		test_bug508115.xul \
@@ -117,11 +119,11 @@ _TEST_FILES = \
 		file_bug514732_1.html \
 		file_bug514732_helper.html \
 		test_bug522632.html \
+		test_bug589621.html \
+		test_bug589623.html \
 		$(srcdir)/../../reftests/backgrounds/blue-32x32.png \
 		$(srcdir)/../../reftests/backgrounds/fuchsia-32x32.png \
 		$(NULL)
-# disabled temporarily
-#		test_bug488417.html \
 
 _CHROME_FILES = \
 		test_bug514732-2.xul \

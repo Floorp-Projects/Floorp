@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -44,18 +44,18 @@ typedef struct
 
 DECLARE_ALIGNED(16, static const TOKENEXTRABITS, vp8d_token_extra_bits2[MAX_ENTROPY_TOKENS]) =
 {
-    {  0, -1, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },  //ZERO_TOKEN
-    {  1, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   //ONE_TOKEN
-    {  2, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   //TWO_TOKEN
-    {  3, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   //THREE_TOKEN
-    {  4, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   //FOUR_TOKEN
-    {  5, 0, { 159, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },  //DCT_VAL_CATEGORY1
-    {  7, 1, { 145, 165, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } }, //DCT_VAL_CATEGORY2
-    { 11, 2, { 140, 148, 173, 0,  0,  0,  0,  0,  0,  0,  0,  0   } }, //DCT_VAL_CATEGORY3
-    { 19, 3, { 135, 140, 155, 176, 0,  0,  0,  0,  0,  0,  0,  0   } }, //DCT_VAL_CATEGORY4
-    { 35, 4, { 130, 134, 141, 157, 180, 0,  0,  0,  0,  0,  0,  0   } }, //DCT_VAL_CATEGORY5
-    { 67, 10, { 129, 130, 133, 140, 153, 177, 196, 230, 243, 254, 254, 0   } }, //DCT_VAL_CATEGORY6
-    {  0, -1, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },  // EOB TOKEN
+    {  0, -1, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },  /* ZERO_TOKEN */
+    {  1, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   /* ONE_TOKEN */
+    {  2, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   /* TWO_TOKEN */
+    {  3, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   /* THREE_TOKEN */
+    {  4, 0, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },   /* FOUR_TOKEN */
+    {  5, 0, { 159, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },  /* DCT_VAL_CATEGORY1 */
+    {  7, 1, { 145, 165, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } }, /* DCT_VAL_CATEGORY2 */
+    { 11, 2, { 140, 148, 173, 0,  0,  0,  0,  0,  0,  0,  0,  0   } }, /* DCT_VAL_CATEGORY3 */
+    { 19, 3, { 135, 140, 155, 176, 0,  0,  0,  0,  0,  0,  0,  0   } }, /* DCT_VAL_CATEGORY4 */
+    { 35, 4, { 130, 134, 141, 157, 180, 0,  0,  0,  0,  0,  0,  0   } }, /* DCT_VAL_CATEGORY5 */
+    { 67, 10, { 129, 130, 133, 140, 153, 177, 196, 230, 243, 254, 254, 0   } }, /* DCT_VAL_CATEGORY6 */
+    {  0, -1, { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0   } },  /*  EOB TOKEN */
 };
 
 
@@ -75,13 +75,14 @@ void vp8_reset_mb_tokens_context(MACROBLOCKD *x)
 }
 
 #if CONFIG_ARM_ASM_DETOK
-// mashup of vp8_block2left and vp8_block2above so we only need one pointer
-// for the assembly version.
+/* mashup of vp8_block2left and vp8_block2above so we only need one pointer
+ * for the assembly version.
+ */
 DECLARE_ALIGNED(16, const UINT8, vp8_block2leftabove[25*2]) =
 {
-    //vp8_block2left
+    /* vp8_block2left */
     0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-    //vp8_block2above
+    /* vp8_block2above */
     0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 4, 5, 6, 7, 6, 7, 8
 };
 
@@ -297,7 +298,7 @@ BLOCK_LOOP:
 
     c = (INT16)(!type);
 
-//    Dest = ((A)!=0) + ((B)!=0);
+    /*Dest = ((A)!=0) + ((B)!=0);*/
     VP8_COMBINEENTROPYCONTEXTS(v, *a, *l);
     Prob = coef_probs;
     Prob += v * ENTROPY_NODES;
@@ -387,7 +388,7 @@ ONE_CONTEXT_NODE_0_:
 
     qcoeff_ptr [ scan[15] ] = (INT16) v;
 BLOCK_FINISHED:
-    *a = *l = ((eobs[i] = c) != !type);   // any nonzero data?
+    *a = *l = ((eobs[i] = c) != !type);   /* any nonzero data? */
     eobtotal += c;
     qcoeff_ptr += 16;
 
@@ -422,4 +423,4 @@ BLOCK_FINISHED:
     return eobtotal;
 
 }
-#endif //!CONFIG_ASM_DETOK
+#endif /*!CONFIG_ASM_DETOK*/

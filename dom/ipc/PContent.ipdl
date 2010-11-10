@@ -49,7 +49,6 @@ include "PPrefTuple.h";
 
 using GeoPosition;
 using PrefTuple;
-using nsTArray<PrefTuple>;
 
 using ChromePackage;
 using ResourceMapping;
@@ -88,6 +87,8 @@ child:
     // nsIPermissionManager messages
     AddPermission(Permission permission);
 
+    AccelerationChanged(double x, double y, double z);
+
 parent:
     PNecko();
 
@@ -106,7 +107,7 @@ parent:
     async LoadURIExternal(URI uri);
 
     // PrefService message
-    sync ReadPrefsArray() returns (nsTArray<PrefTuple> retValue);
+    sync ReadPrefsArray() returns (PrefTuple[] retValue);
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
@@ -122,8 +123,10 @@ parent:
                        nsCString aContentDisposition, bool aForceSave,
                        PRInt64 aContentLength);
     
-    GeolocationStart();
-    GeolocationStop();
+    AddGeolocationListener();
+    RemoveGeolocationListener();
+    AddAccelerometerListener();
+    RemoveAccelerometerListener();
 
     ConsoleMessage(nsString message);
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,

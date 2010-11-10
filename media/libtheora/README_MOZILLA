@@ -2,6 +2,4 @@ The source from this directory was copied from the theora subversion trunk
 using the update.sh script. The changes made were those applied by update.sh,
 the addition/update of Makefile.in files for the Mozilla build system.
 
-The subversion revision used was r16712.
-
-bug559343.patch: Silence Coverity warning.
+The subversion revision used was r17578.

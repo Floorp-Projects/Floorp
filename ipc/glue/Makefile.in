@@ -89,6 +89,7 @@ CPPSRCS += \
   ProcessChild.cpp \
   RPCChannel.cpp \
   ScopedXREEmbed.cpp \
+  SharedMemory.cpp \
   Shmem.cpp \
   StringUtil.cpp \
   SyncChannel.cpp \

@@ -227,7 +227,7 @@ CanvasLayerD3D9::GetLayer()
 }
 
 void
-CanvasLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
+CanvasLayerD3D9::RenderLayer()
 {
   if (!mTexture) {
     Updated(mBounds);
@@ -246,16 +246,7 @@ CanvasLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
 
   device()->SetVertexShaderConstantF(CBvLayerQuad, quad, 1);
 
-  gfx3DMatrix transform = mTransform * aTransform;
-  device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
-
-  float opacity[4];
-  /*
-   * We always upload a 4 component float, but the shader will use only the
-   * first component since it's declared as a 'float'.
-   */
-  opacity[0] = GetOpacity();
-  device()->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
+  SetShaderTransformAndOpacity();
 
   mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 

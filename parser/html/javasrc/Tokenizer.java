@@ -35,6 +35,8 @@
 
 package nu.validator.htmlparser.impl;
 
+import nu.validator.htmlparser.annotation.Auto;
+import nu.validator.htmlparser.annotation.CharacterName;
 import nu.validator.htmlparser.annotation.Const;
 import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
@@ -372,7 +374,7 @@ public class Tokenizer implements Locator {
     /**
      * Buffer for short identifiers.
      */
-    private char[] strBuf;
+    private @Auto char[] strBuf;
 
     /**
      * Number of significant <code>char</code>s in <code>strBuf</code>.
@@ -387,7 +389,7 @@ public class Tokenizer implements Locator {
     /**
      * Buffer for long strings.
      */
-    private char[] longStrBuf;
+    private @Auto char[] longStrBuf;
 
     /**
      * Number of significant <code>char</code>s in <code>longStrBuf</code>.
@@ -403,19 +405,19 @@ public class Tokenizer implements Locator {
     /**
      * Buffer for expanding NCRs falling into the Basic Multilingual Plane.
      */
-    private final char[] bmpChar;
+    private final @Auto char[] bmpChar;
 
     /**
      * Buffer for expanding astral NCRs.
      */
-    private final char[] astralChar;
+    private final @Auto char[] astralChar;
 
     /**
      * The element whose end tag closes the current CDATA or RCDATA element.
      */
     protected ElementName endTagExpectation = null;
 
-    private char[] endTagExpectationAsArray;
+    private char[] endTagExpectationAsArray; // not @Auto!
 
     /**
      * <code>true</code> if tokenizing an end tag
@@ -555,11 +557,6 @@ public class Tokenizer implements Locator {
 
     }
 
-    void destructor() {
-        Portability.releaseArray(bmpChar);
-        Portability.releaseArray(astralChar);
-    }
-
     // [NOCPP[
 
     /**
@@ -676,10 +673,9 @@ public class Tokenizer implements Locator {
         if (specialTokenizerState == Tokenizer.DATA) {
             return;
         }
-        char[] asArray = Portability.newCharArrayFromLocal(endTagExpectation);
+        @Auto char[] asArray = Portability.newCharArrayFromLocal(endTagExpectation);
         this.endTagExpectation = ElementName.elementNameByBuffer(asArray, 0,
                 asArray.length, interner);
-        Portability.releaseArray(asArray);
         endTagExpectationToArray();
     }
 
@@ -822,7 +818,6 @@ public class Tokenizer implements Locator {
         if (strBufLen == strBuf.length) {
             char[] newBuf = new char[strBuf.length + Tokenizer.BUFFER_GROW_BY];
             System.arraycopy(strBuf, 0, newBuf, 0, strBuf.length);
-            Portability.releaseArray(strBuf);
             strBuf = newBuf;
         }
         strBuf[strBufLen++] = c;
@@ -882,7 +877,6 @@ public class Tokenizer implements Locator {
         if (longStrBufLen == longStrBuf.length) {
             char[] newBuf = new char[longStrBufLen + (longStrBufLen >> 1)];
             System.arraycopy(longStrBuf, 0, newBuf, 0, longStrBuf.length);
-            Portability.releaseArray(longStrBuf);
             longStrBuf = newBuf;
         }
         longStrBuf[longStrBufLen++] = c;
@@ -950,12 +944,11 @@ public class Tokenizer implements Locator {
         // ]NOCPP]
     }
 
-    private void appendLongStrBuf(char[] buffer, int offset, int length) {
+    private void appendLongStrBuf(@NoLength char[] buffer, int offset, int length) {
         int reqLen = longStrBufLen + length;
         if (longStrBuf.length < reqLen) {
             char[] newBuf = new char[reqLen + (reqLen >> 1)];
             System.arraycopy(longStrBuf, 0, newBuf, 0, longStrBuf.length);
-            Portability.releaseArray(longStrBuf);
             longStrBuf = newBuf;
         }
         System.arraycopy(buffer, offset, longStrBuf, longStrBufLen, length);
@@ -3047,13 +3040,13 @@ public class Tokenizer implements Locator {
                             if (hi < lo) {
                                 break outer;
                             }
-                            if (entCol == NamedCharacters.NAMES[lo].length) {
+                            if (entCol == NamedCharacters.NAMES[lo].length()) {
                                 candidate = lo;
                                 strBufMark = strBufLen;
                                 lo++;
-                            } else if (entCol > NamedCharacters.NAMES[lo].length) {
+                            } else if (entCol > NamedCharacters.NAMES[lo].length()) {
                                 break outer;
-                            } else if (c > NamedCharacters.NAMES[lo][entCol]) {
+                            } else if (c > NamedCharacters.NAMES[lo].charAt(entCol)) {
                                 lo++;
                             } else {
                                 break loloop;
@@ -3064,12 +3057,12 @@ public class Tokenizer implements Locator {
                             if (hi < lo) {
                                 break outer;
                             }
-                            if (entCol == NamedCharacters.NAMES[hi].length) {
+                            if (entCol == NamedCharacters.NAMES[hi].length()) {
                                 break hiloop;
                             }
-                            if (entCol > NamedCharacters.NAMES[hi].length) {
+                            if (entCol > NamedCharacters.NAMES[hi].length()) {
                                 break outer;
-                            } else if (c < NamedCharacters.NAMES[hi][entCol]) {
+                            } else if (c < NamedCharacters.NAMES[hi].charAt(entCol)) {
                                 hi--;
                             } else {
                                 break hiloop;
@@ -3099,9 +3092,9 @@ public class Tokenizer implements Locator {
                         continue stateloop;
                     } else {
                         // c can't be CR, LF or nul if we got here
-                        byte[] candidateArr = NamedCharacters.NAMES[candidate];
-                        if (candidateArr.length == 0
-                                || candidateArr[candidateArr.length - 1] != ';') {
+                        @Const @CharacterName String candidateName = NamedCharacters.NAMES[candidate];
+                        if (candidateName.length() == 0
+                                || candidateName.charAt(candidateName.length() - 1) != ';') {
                             /*
                              * If the last character matched is not a U+003B
                              * SEMICOLON (;), there is a parse error.
@@ -6261,12 +6254,12 @@ public class Tokenizer implements Locator {
                             if (hi == -1) {
                                 break hiloop;
                             }
-                            if (entCol == NamedCharacters.NAMES[hi].length) {
+                            if (entCol == NamedCharacters.NAMES[hi].length()) {
                                 break hiloop;
                             }
-                            if (entCol > NamedCharacters.NAMES[hi].length) {
+                            if (entCol > NamedCharacters.NAMES[hi].length()) {
                                 break outer;
-                            } else if (c < NamedCharacters.NAMES[hi][entCol]) {
+                            } else if (c < NamedCharacters.NAMES[hi].charAt(entCol)) {
                                 hi--;
                             } else {
                                 break hiloop;
@@ -6277,13 +6270,13 @@ public class Tokenizer implements Locator {
                             if (hi < lo) {
                                 break outer;
                             }
-                            if (entCol == NamedCharacters.NAMES[lo].length) {
+                            if (entCol == NamedCharacters.NAMES[lo].length()) {
                                 candidate = lo;
                                 strBufMark = strBufLen;
                                 lo++;
-                            } else if (entCol > NamedCharacters.NAMES[lo].length) {
+                            } else if (entCol > NamedCharacters.NAMES[lo].length()) {
                                 break outer;
-                            } else if (c > NamedCharacters.NAMES[lo][entCol]) {
+                            } else if (c > NamedCharacters.NAMES[lo].charAt(entCol)) {
                                 lo++;
                             } else {
                                 break loloop;
@@ -6295,7 +6288,6 @@ public class Tokenizer implements Locator {
                         continue;
                     }
 
-                    // TODO warn about apos (IE) and TRADE (Opera)
                     if (candidate == -1) {
                         /*
                          * If no match can be made, then this is a parse error.
@@ -6305,9 +6297,9 @@ public class Tokenizer implements Locator {
                         state = returnState;
                         continue eofloop;
                     } else {
-                        byte[] candidateArr = NamedCharacters.NAMES[candidate];
-                        if (candidateArr.length == 0
-                                || candidateArr[candidateArr.length - 1] != ';') {
+                        @Const @CharacterName String candidateName = NamedCharacters.NAMES[candidate];
+                        if (candidateName.length() == 0
+                                || candidateName.charAt(candidateName.length() - 1) != ';') {
                             /*
                              * If the last character matched is not a U+003B
                              * SEMICOLON (;), there is a parse error.
@@ -6492,9 +6484,7 @@ public class Tokenizer implements Locator {
     }
 
     public void end() throws SAXException {
-        Portability.releaseArray(strBuf);
         strBuf = null;
-        Portability.releaseArray(longStrBuf);
         longStrBuf = null;
         Portability.releaseLocal(doctypeName);
         doctypeName = null;
@@ -6581,7 +6571,7 @@ public class Tokenizer implements Locator {
         entCol = -1;
         firstCharKey = -1;
         lo = 0;
-        hi = (NamedCharacters.NAMES.length - 1);
+        hi = 0; // will always be overwritten before use anyway
         candidate = -1;
         strBufMark = 0;
         prevValue = -1;
@@ -6613,14 +6603,12 @@ public class Tokenizer implements Locator {
     public void loadState(Tokenizer other) throws SAXException {
         strBufLen = other.strBufLen;
         if (strBufLen > strBuf.length) {
-            Portability.releaseArray(strBuf);
             strBuf = new char[strBufLen];
         }
         System.arraycopy(other.strBuf, 0, strBuf, 0, strBufLen);
 
         longStrBufLen = other.longStrBufLen;
         if (longStrBufLen > longStrBuf.length) {
-            Portability.releaseArray(longStrBuf);
             longStrBuf = new char[longStrBufLen];
         }
         System.arraycopy(other.longStrBuf, 0, longStrBuf, 0, longStrBufLen);
@@ -6924,6 +6912,10 @@ public class Tokenizer implements Locator {
     public void setEncodingDeclarationHandler(
             EncodingDeclarationHandler encodingDeclarationHandler) {
         this.encodingDeclarationHandler = encodingDeclarationHandler;
+    }
+    
+    void destructor() {
+        // The translator will write refcount tracing stuff here
     }
     
     // [NOCPP[

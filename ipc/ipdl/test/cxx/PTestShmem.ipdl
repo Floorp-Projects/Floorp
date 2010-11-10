@@ -3,10 +3,10 @@ namespace _ipdltest {
 
 protocol PTestShmem {
 child:
-    Give(Shmem mem, size_t expectedSize);
+    Give(Shmem mem, Shmem unsafe, size_t expectedSize);
 
 parent:
-    Take(Shmem mem, size_t expectedSize);
+    Take(Shmem mem, Shmem unsafe, size_t expectedSize);
     __delete__();
 
 

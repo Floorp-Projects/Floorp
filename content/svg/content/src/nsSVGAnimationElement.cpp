@@ -458,6 +458,8 @@ nsSVGAnimationElement::BeginElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::BeginElementAt(float offset)
 {
+  NS_ENSURE_FINITE(offset, NS_ERROR_ILLEGAL_VALUE);
+
   // This will fail if we're not attached to a time container (SVG document
   // fragment).
   nsresult rv = mTimedElement.BeginElementAt(offset);
@@ -480,6 +482,8 @@ nsSVGAnimationElement::EndElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::EndElementAt(float offset)
 {
+  NS_ENSURE_FINITE(offset, NS_ERROR_ILLEGAL_VALUE);
+
   nsresult rv = mTimedElement.EndElementAt(offset);
   if (NS_FAILED(rv))
     return rv;

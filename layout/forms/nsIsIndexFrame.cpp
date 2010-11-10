@@ -60,7 +60,6 @@
 #include "nsIComponentManager.h"
 #include "nsHTMLParts.h"
 #include "nsLinebreakConverter.h"
-#include "nsILinkHandler.h"
 #include "nsIHTMLDocument.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -351,8 +350,6 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
   // End ProcessAsURLEncoded
 
   // make the url string
-  nsILinkHandler *handler = aPresContext->GetLinkHandler();
-
   nsAutoString href;
 
   // Get the document.
@@ -430,10 +427,9 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
                      flatDocCharset.get(), baseURI);
   if (NS_FAILED(result)) return result;
 
-  // Now pass on absolute url to the click handler
-  if (handler) {
-    handler->OnLinkClick(mContent, uri, nsnull);
-  }
+  // Now pretend we're triggering a link
+  nsContentUtils::TriggerLink(mContent, aPresContext, uri,
+                              EmptyString(), PR_TRUE, PR_TRUE);
   return result;
 }
 

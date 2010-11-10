@@ -273,7 +273,9 @@ nsSVGFilterProperty::DoUpdate()
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
 
-  if (!mFrame->IsFrameOfType(nsIFrame::eSVG)) {
+  // Don't need to request a reflow if the frame is already being reflowed.
+  if (!mFrame->IsFrameOfType(nsIFrame::eSVG) &&
+      !(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     NS_UpdateHint(changeHint, nsChangeHint_ReflowFrame);
   }
   mFramePresShell->FrameConstructor()->PostRestyleEvent(

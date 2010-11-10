@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <script>
+
+    var txt = document.createTextNode("");
+    var b = document.createElement("b");
+    var w = b["watch"];
+    var txtdg = txt["__lookupGetter__"];
+    w["__defineGetter__"]("toString",txtdg);
+    var obj = {
+      variable: 910,
+      fun: function() {
+        w["toString"]();
+      }
+    };
+
+    function vuln()
+    {
+      window.status = "" + obj.variable;
+      try{
+        obj.fun();
+      }catch(er){}
+      return obj;
+    }
+
+    var ret = vuln();
+  </script>
+</html>

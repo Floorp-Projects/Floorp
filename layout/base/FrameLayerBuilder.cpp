@@ -327,7 +327,8 @@ protected:
    * the layers in this array either have mContainerLayer as their parent,
    * or no parent.
    */
-  nsAutoTArray<nsRefPtr<Layer>,1>  mNewChildLayers;
+  typedef nsAutoTArray<nsRefPtr<Layer>,1> AutoLayersArray;
+  AutoLayersArray                  mNewChildLayers;
   nsTArray<nsRefPtr<ThebesLayer> > mRecycledThebesLayers;
   nsTArray<nsRefPtr<ColorLayer> >  mRecycledColorLayers;
   PRUint32                         mNextFreeRecycledThebesLayer;
@@ -803,8 +804,8 @@ ContainerState::PopThebesLayerData()
     colorLayer->SetColor(data->mSolidColor);
 
     NS_ASSERTION(!mNewChildLayers.Contains(colorLayer), "Layer already in list???");
-    nsTArray_base::index_type index = mNewChildLayers.IndexOf(data->mLayer);
-    NS_ASSERTION(index != nsTArray_base::NoIndex, "Thebes layer not found?");
+    AutoLayersArray::index_type index = mNewChildLayers.IndexOf(data->mLayer);
+    NS_ASSERTION(index != AutoLayersArray::NoIndex, "Thebes layer not found?");
     mNewChildLayers.InsertElementAt(index + 1, colorLayer);
 
     // Copy transform and clip rect

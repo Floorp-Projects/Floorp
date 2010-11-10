@@ -45,6 +45,7 @@ include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
 using NPNVariable;
+using base::FileDescriptor;
 using mozilla::plugins::NativeThreadId;
 
 namespace mozilla {
@@ -82,6 +83,19 @@ child:
     returns (NPError rv);
 
 parent:
+  /**
+   * This message is only used on X11 platforms.
+   *
+   * Send a dup of the plugin process's X socket to the parent
+   * process.  In theory, this scheme keeps the plugin's X resources
+   * around until after both the plugin process shuts down *and* the
+   * parent process closes the dup fd.  This is used to prevent the
+   * parent process from crashing on X errors if, e.g., the plugin
+   * crashes *just before* a repaint and the parent process tries to
+   * use the newly-invalid surface.
+   */
+  async BackUpXResources(FileDescriptor aXSocketFd);
+
   rpc NPN_UserAgent()
     returns (nsCString userAgent);
 

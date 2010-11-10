@@ -504,7 +504,8 @@ nsTextEditRules::CollapseSelectionToTrailingBRIfNeeded(nsISelection* aSelection)
   NS_ENSURE_SUCCESS(res, res);
 
   // nothing to do if we're not at the end of the text node
-  if (selOffset != length) return NS_OK;
+  if (selOffset != PRInt32(length))
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 parentOffset;

@@ -29,17 +29,15 @@ function maketest(attach_media, name, type, check_metadata) {
           e.parentNode.removeChild(e);
           manager.finished(token);
         }, false);
-      e.addEventListener('error', function(e) { e.stopPropagation();}, false);      
     } else {
       e.addEventListener('error', function(event) {
-        event.stopPropagation();
         is(errorRun, false, "error handler should run once only!");
         errorRun = true;
         is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
            'test ' + token + ' readyState should be HAVE_NOTHING when load fails.');
         e.parentNode.removeChild(e);
         manager.finished(token);
-      }, false);
+      }, true);
     }
     attach_media(e, name, type);
   }

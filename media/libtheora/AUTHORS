@@ -16,6 +16,9 @@ Nils Pipenbrinck
 Monty
 	- MMX optimized functions
 	
+David Schleef
+	- C64x port
+	
 Aaron Colwell
 Thomas Vander Stichele
 Jan Gerber
@@ -45,5 +48,7 @@ Arc Riley
 Rodolphe Ortalo
 	- Bug fixes
 
+Robin Watts
+	- ARM code optimisations
 
 and other Xiph.org contributors

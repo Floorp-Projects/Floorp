@@ -88,7 +88,7 @@ public:
   // LayerD3D10 Implementation
   virtual Layer* GetLayer();
 
-  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
+  virtual void RenderLayer();
 };
 
 class THEBES_API ImageD3D10

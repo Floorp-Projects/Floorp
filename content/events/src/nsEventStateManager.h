@@ -54,6 +54,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIScrollableFrame.h"
+#include "nsFocusManager.h"
+#include "nsIDocument.h"
 
 class nsIPresShell;
 class nsIDocShell;
@@ -404,6 +406,9 @@ protected:
 
   PRPackedBool m_haveShutdown;
 
+
+public:
+  static nsresult UpdateUserActivityTimer(void);
   // Array for accesskey support
   nsCOMArray<nsIContent> mAccessKeys;
 
@@ -436,14 +441,25 @@ protected:
 class nsAutoHandlingUserInputStatePusher
 {
 public:
-  nsAutoHandlingUserInputStatePusher(PRBool aIsHandlingUserInput, PRBool aIsMouseDown)
-    : mIsHandlingUserInput(aIsHandlingUserInput), mIsMouseDown(aIsMouseDown)
+  nsAutoHandlingUserInputStatePusher(PRBool aIsHandlingUserInput,
+                                     nsEvent* aEvent,
+                                     nsIDocument* aDocument)
+    : mIsHandlingUserInput(aIsHandlingUserInput),
+      mIsMouseDown(aEvent && aEvent->message == NS_MOUSE_BUTTON_DOWN),
+      mResetFMMouseDownState(PR_FALSE)
   {
     if (aIsHandlingUserInput) {
       nsEventStateManager::StartHandlingUserInput();
-      if (aIsMouseDown) {
+      if (mIsMouseDown) {
         nsIPresShell::SetCapturingContent(nsnull, 0);
         nsIPresShell::AllowMouseCapture(PR_TRUE);
+        if (aDocument && NS_IS_TRUSTED_EVENT(aEvent)) {
+          nsFocusManager* fm = nsFocusManager::GetFocusManager();
+          if (fm) {
+            fm->SetMouseButtonDownHandlingDocument(aDocument);
+            mResetFMMouseDownState = PR_TRUE;
+          }
+        }
       }
     }
   }
@@ -454,6 +470,12 @@ public:
       nsEventStateManager::StopHandlingUserInput();
       if (mIsMouseDown) {
         nsIPresShell::AllowMouseCapture(PR_FALSE);
+        if (mResetFMMouseDownState) {
+          nsFocusManager* fm = nsFocusManager::GetFocusManager();
+          if (fm) {
+            fm->SetMouseButtonDownHandlingDocument(nsnull);
+          }
+        }
       }
     }
   }
@@ -461,6 +483,7 @@ public:
 protected:
   PRBool mIsHandlingUserInput;
   PRBool mIsMouseDown;
+  PRBool mResetFMMouseDownState;
 
 private:
   // Hide so that this class can only be stack-allocated

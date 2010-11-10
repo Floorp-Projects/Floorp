@@ -102,6 +102,12 @@ fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
 == anim-css-strokewidth-1-from-to-px-px.svg   anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-to-px-px.svg        anim-css-strokewidth-1-ref.svg
 
+# 'stroke-width' property, from/by/to with unitless values only
+== anim-css-strokewidth-1-by-no-no.svg        anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-by-no-no.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-from-to-no-no.svg   anim-css-strokewidth-1-ref.svg
+== anim-css-strokewidth-1-to-no-no.svg        anim-css-strokewidth-1-ref.svg
+
 # 'stroke-width' property, from/by/to with percent values
 # XXXdholbert the mixed pct + px tests fail right now, because we need calc()
 # in order to interpolate between pct and non-pct values, and we don't yet
@@ -144,6 +150,7 @@ fails == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.s
 == anim-css-strokewidth-4-from-by-px-px.svg   anim-css-strokewidth-4-ref.svg
 == anim-css-strokewidth-4-from-by-px-em.svg   anim-css-strokewidth-4-ref.svg
 == anim-css-strokewidth-4-from-by-em-em.svg   anim-css-strokewidth-4-ref.svg
+== anim-css-strokewidth-4-from-by-no-no.svg   anim-css-strokewidth-4-ref.svg
 
 # check correct handling of "!important" values
 == important-set-1.svg  anim-standard-ref.svg

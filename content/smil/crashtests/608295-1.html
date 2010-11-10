@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  // NB: <script src> is needed to trigger the bug. I'm being clever by also using it to remove reftest-wait.
+  var s = "<script src='data:text/javascript,parent.document.documentElement.className=null;'><\/script><svg>";
+  document.getElementById("f").contentDocument.write(s);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<iframe id="f"></iframe>
+</body>
+</html>

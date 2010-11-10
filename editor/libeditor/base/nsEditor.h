@@ -666,11 +666,11 @@ public:
            IsInteractionAllowed();
   }
 
-  // Whether the editor has application level focus or not.
-  virtual PRBool HasFocus();
+  // Get the focused content, if we're focused.  Returns null otherwise.
+  virtual already_AddRefed<nsIContent> GetFocusedContent();
 
   // Whether the editor is active on the DOM window.  Note that when this
-  // returns true but HasFocus() returns false, it means that this editor was
+  // returns true but GetFocusedContent() returns null, it means that this editor was
   // focused when the DOM window was active.
   virtual PRBool IsActiveInDOMWindow();
 

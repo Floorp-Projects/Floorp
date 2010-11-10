@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -116,7 +116,7 @@ void vp8cx_vertical_band_4_5_scale_c(unsigned char *dest, unsigned int dest_pitc
         des [dest_pitch*2] = (unsigned char)((b * 102 + c + 128) >> 8);
         des [dest_pitch*3] = (unsigned char)((c + 102 * d + 128) >> 8);
 
-        // First line in next band
+        /* First line in next band */
         a = des [dest_pitch * 5];
         des [dest_pitch * 4] = (unsigned char)((d * 205 + 51 * a + 128) >> 8);
 
@@ -163,7 +163,7 @@ void vp8cx_last_vertical_band_4_5_scale_c(unsigned char *dest, unsigned int dest
         des [dest_pitch*2] = (unsigned char)((b * 102 + c + 128) >> 8);
         des [dest_pitch*3] = (unsigned char)((c + 102 * d + 128) >> 8);
 
-        // No other line for interplation of this line, so ..
+        /* No other line for interplation of this line, so .. */
         des[dest_pitch*4] = (unsigned char) d;
 
         des++;
@@ -401,7 +401,7 @@ void vp8cx_vertical_band_3_5_scale_c(unsigned char *dest, unsigned int dest_pitc
         des [dest_pitch*2] = (unsigned char)((b * 205 + c * 51 + 128) >> 8);
         des [dest_pitch*3] = (unsigned char)((b * 51 + c * 205 + 128) >> 8);
 
-        // First line in next band...
+        /* First line in next band... */
         a = des [dest_pitch * 5];
         des [dest_pitch * 4] = (unsigned char)((c * 154 + a * 102 + 128) >> 8);
 
@@ -446,7 +446,7 @@ void vp8cx_last_vertical_band_3_5_scale_c(unsigned char *dest, unsigned int dest
         des [dest_pitch*2] = (unsigned char)((b * 205 + c * 51 + 128) >> 8);
         des [dest_pitch*3] = (unsigned char)((b * 51 + c * 205 + 128) >> 8);
 
-        // No other line for interplation of this line, so ..
+        /* No other line for interplation of this line, so .. */
         des [ dest_pitch * 4 ] = (unsigned char)(c) ;
 
         des++;
@@ -549,7 +549,7 @@ void vp8cx_vertical_band_3_4_scale_c(unsigned char *dest, unsigned int dest_pitc
         c = des[dest_pitch*2];
         des [dest_pitch*2] = (unsigned char)((b + c + 1) >> 1);
 
-        // First line in next band...
+        /* First line in next band... */
         a = des [dest_pitch*4];
         des [dest_pitch*3] = (unsigned char)((c * 192 + a * 64 + 128) >> 8);
 
@@ -593,7 +593,7 @@ void vp8cx_last_vertical_band_3_4_scale_c(unsigned char *dest, unsigned int dest
         c = des[dest_pitch*2];
         des [dest_pitch*2] = (unsigned char)((b + c + 1) >> 1);
 
-        // No other line for interplation of this line, so ..
+        /* No other line for interplation of this line, so .. */
         des [dest_pitch*3] = (unsigned char)(c);
 
         des++;

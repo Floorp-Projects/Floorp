@@ -81,6 +81,8 @@ function GroupItem(listOfEls, options) {
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
   this.hidden = false;
+  this.fadeAwayUndoButtonDelay = 15000;
+  this.fadeAwayUndoButtonDuration = 300;
 
   this.keepProportional = false;
 
@@ -277,6 +279,7 @@ function GroupItem(listOfEls, options) {
 
   // ___ Undo Close
   this.$undoContainer = null;
+  this._undoButtonTimeoutId = null;
 
   // ___ Superclass initialization
   this._init($container[0]);
@@ -637,28 +640,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
     }, 50);
 
-    let remove = function() {
-      // close all children
-      let toClose = self._children.concat();
-      toClose.forEach(function(child) {
-        child.removeSubscriber(self, "close");
-        child.close();
-      });
- 
-      // remove all children
-      self.removeAll();
-      GroupItems.unregister(self);
-      self._sendToSubscribers("close");
-      self.removeTrenches();
-
-      iQ(self.container).remove();
-      self.$undoContainer.remove();
-      self.$undoContainer = null;
-      Items.unsquish();
-
-      self.deleteData();
-    };
-
     this.$undoContainer.click(function(e) {
       // Only do this for clicks on this actual element.
       if (e.target.nodeName != self.$undoContainer[0].nodeName)
@@ -667,6 +648,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.$undoContainer.fadeOut(function() {
         iQ(this).remove();
         self.hidden = false;
+        self._cancelFadeAwayUndoButtonTimer();
         self.$undoContainer = null;
 
         iQ(self.container).show().animate({
@@ -686,31 +668,92 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
 
     undoClose.click(function() {
-      self.$undoContainer.fadeOut(remove);
+      self._cancelFadeAwayUndoButtonTimer();
+      self.$undoContainer.fadeOut(function() { self._removeHiddenGroupItem(); });
     });
 
-    // After 15 seconds, fade away.
-    const WAIT = 15000;
-    const FADE = 300;
+    this.setupFadeAwayUndoButtonTimer();
+    // Cancel the fadeaway if you move the mouse over the undo
+    // button, and restart the countdown once you move out of it.
+    this.$undoContainer.mouseover(function() { 
+      self._cancelFadeAwayUndoButtonTimer();
+    });
+    this.$undoContainer.mouseout(function() {
+      self.setupFadeAwayUndoButtonTimer();
+    });
+  },
 
-    let fadeaway = function() {
-      if (self.$undoContainer)
+  // ----------
+  // Sets up fade away undo button timeout. 
+  setupFadeAwayUndoButtonTimer: function() {
+    let self = this;
+
+    if (!this._undoButtonTimeoutId) {
+      this._undoButtonTimeoutId = setTimeout(function() { 
+        self._fadeAwayUndoButton(); 
+      }, this.fadeAwayUndoButtonDelay);
+    }
+  },
+  
+  // ----------
+  // Cancels the fade away undo button timeout. 
+  _cancelFadeAwayUndoButtonTimer: function() {
+    clearTimeout(this._undoButtonTimeoutId);
+    this._undoButtonTimeoutId = null;
+  }, 
+
+  // ----------
+  // Fades away the undo button
+  _fadeAwayUndoButton: function() {
+    let self = this;
+
+    if (this.$undoContainer) {
+      // if there is one or more orphan tabs or there is more than one group 
+      // and other groupS are not empty, fade away the undo button.
+      let shouldFadeAway = GroupItems.getOrphanedTabs().length > 0;
+      
+      if (!shouldFadeAway && GroupItems.groupItems.length > 1) {
+        shouldFadeAway = 
+          GroupItems.groupItems.some(function(groupItem) {
+            return (groupItem != self && groupItem.getChildren().length > 0);
+          });
+      }
+      if (shouldFadeAway) {
         self.$undoContainer.animate({
           color: "transparent",
           opacity: 0
         }, {
-          duration: FADE,
-          complete: remove
+          duration: this.fadeAwayUndoButtonDuration,
+          complete: function() { self._removeHiddenGroupItem(); }
         });
-    };
+      }
+    }
+  },
 
-    let timeoutId = setTimeout(fadeaway, WAIT);
-    // Cancel the fadeaway if you move the mouse over the undo
-    // button, and restart the countdown once you move out of it.
-    this.$undoContainer.mouseover(function() clearTimeout(timeoutId));
-    this.$undoContainer.mouseout(function() {
-      timeoutId = setTimeout(fadeaway, WAIT);
+  // ----------
+  // Removes the group item, its children and its container.
+  _removeHiddenGroupItem: function() {
+    let self = this;
+
+    // close all children
+    let toClose = this._children.concat();
+    toClose.forEach(function(child) {
+      child.removeSubscriber(self, "close");
+      child.close();
     });
+ 
+    // remove all children
+    this.removeAll();
+    GroupItems.unregister(this);
+    this._sendToSubscribers("close");
+    this.removeTrenches();
+
+    iQ(this.container).remove();
+    this.$undoContainer.remove();
+    this.$undoContainer = null;
+    Items.unsquish();
+
+    this.deleteData();
   },
 
   // ----------
@@ -977,19 +1020,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: shouldStack
-  // Returns true if the groupItem, given "count", should stack (instead of grid).
+  // Returns true if the groupItem should stack (instead of grid).
   shouldStack: function GroupItem_shouldStack(count) {
     if (count <= 1)
       return false;
 
     var bb = this.getContentBounds();
     var options = {
-      pretend: true,
-      count: count
+      return: 'widthAndColumns',
+      count: count || this._children.length
     };
+    let {childWidth, columns} = Items.arrange(null, bb, options);
 
-    var rects = Items.arrange(null, bb, options);
-    return (rects[0].width < 55);
+    let shouldStack = childWidth < TabItems.minTabWidth * 1.35;
+    this._columns = shouldStack ? null : columns;
+
+    return shouldStack;
   },
 
   // ----------
@@ -1006,16 +1052,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
     } else {
       var bb = this.getContentBounds();
-      var count = this._children.length;
-      if (!this.shouldStack(count)) {
+      if (!this.shouldStack()) {
         if (!options)
           options = {};
-
-        var animate;
-        if (typeof options.animate == 'undefined')
-          animate = true;
-        else
-          animate = options.animate;
 
         this._children.forEach(function(child) {
             child.removeClass("stacked")
@@ -1023,17 +1062,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         this.topChild = null;
 
-        var arrangeOptions = Utils.copy(options);
-        Utils.extend(arrangeOptions, {
-          pretend: true,
-          count: count
-        });
-
-        if (!count) {
+        if (!this._children.length) {
           this.xDensity = 0;
           this.yDensity = 0;
           return;
         }
+
+        var arrangeOptions = Utils.copy(options);
+        Utils.extend(arrangeOptions, {
+          columns: this._columns
+        });
+
+        // Items.arrange will rearrange the children, but also return an array
+        // of the Rect's used.
 
         var rects = Items.arrange(this._children, bb, arrangeOptions);
 
@@ -1054,15 +1095,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             break;
         }
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
-
-        this._children.forEach(function(child, index) {
-          if (!child.locked.bounds) {
-            child.setBounds(rects[index], !animate);
-            child.setRotation(0);
-            if (options.z)
-              child.setZ(options.z);
-          }
-        });
 
         this._isStacked = false;
       } else

@@ -137,7 +137,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mMainThreadWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
-        mWrapperMap(WrappedNative2WrapperMap::newMap(XPC_WRAPPER_MAP_SIZE)),
         mComponents(nsnull),
         mNext(nsnull),
         mGlobalJSObject(nsnull),
@@ -324,12 +323,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     {
         NS_ASSERTION(0 == mMainThreadWrappedNativeProtoMap->Count(), "scope has non-empty map");
         delete mMainThreadWrappedNativeProtoMap;
-    }
-
-    if(mWrapperMap)
-    {
-        NS_ASSERTION(0 == mWrapperMap->Count(), "scope has non-empty map");
-        delete mWrapperMap;
     }
 
     if(mContext)

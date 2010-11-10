@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -29,21 +29,21 @@ const MV_CONTEXT vp8_mv_update_probs[2] =
 const MV_CONTEXT vp8_default_mv_context[2] =
 {
     {{
-        // row
-        162,                                        // is short
-        128,                                        // sign
-        225, 146, 172, 147, 214,  39, 156,          // short tree
-        128, 129, 132,  75, 145, 178, 206, 239, 254, 254 // long bits
+        /* row */
+        162,                                        /* is short */
+        128,                                        /* sign */
+        225, 146, 172, 147, 214,  39, 156,          /* short tree */
+        128, 129, 132,  75, 145, 178, 206, 239, 254, 254 /* long bits */
     }},
 
 
 
     {{
-        // same for column
-        164,                                        // is short
+        /* same for column */
+        164,                                        /* is short */
         128,
         204, 170, 119, 235, 140, 230, 228,
-        128, 130, 130,  74, 148, 180, 203, 236, 254, 254 // long bits
+        128, 130, 130,  74, 148, 180, 203, 236, 254, 254 /* long bits */
 
     }}
 };

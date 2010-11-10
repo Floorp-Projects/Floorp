@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
+#include <stdlib.h>
 
 
 void vp8_blit_text(const char *msg, unsigned char *address, const int pitch)
@@ -49,5 +49,82 @@ void vp8_blit_text(const char *msg, unsigned char *address, const int pitch)
 
         output_pos += 7;
         colpos++;
+    }
+}
+
+static void plot (const int x, const int y, unsigned char *image, const int pitch)
+{
+    image [x+y*pitch] ^= 255;
+}
+
+/* Bresenham line algorithm */
+void vp8_blit_line(int x0, int x1, int y0, int y1, unsigned char *image, const int pitch)
+{
+    int steep = abs(y1 - y0) > abs(x1 - x0);
+    int deltax, deltay;
+    int error, ystep, y, x;
+
+    if (steep)
+    {
+        int t;
+        t = x0;
+        x0 = y0;
+        y0 = t;
+
+        t = x1;
+        x1 = y1;
+        y1 = t;
+    }
+
+    if (x0 > x1)
+    {
+        int t;
+        t = x0;
+        x0 = x1;
+        x1 = t;
+
+        t = y0;
+        y0 = y1;
+        y1 = t;
+    }
+
+    deltax = x1 - x0;
+    deltay = abs(y1 - y0);
+    error  = deltax / 2;
+
+    y = y0;
+
+    if (y0 < y1)
+        ystep = 1;
+    else
+        ystep = -1;
+
+    if (steep)
+    {
+        for (x = x0; x <= x1; x++)
+        {
+            plot(y,x, image, pitch);
+
+            error = error - deltay;
+            if (error < 0)
+            {
+                y = y + ystep;
+                error = error + deltax;
+            }
+        }
+    }
+    else
+    {
+        for (x = x0; x <= x1; x++)
+        {
+            plot(x,y, image, pitch);
+
+            error = error - deltay;
+            if (error < 0)
+            {
+                y = y + ystep;
+                error = error + deltax;
+            }
+        }
     }
 }

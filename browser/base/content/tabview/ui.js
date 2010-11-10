@@ -249,16 +249,19 @@ let UI = {
   // Resets the Panorama view to have just one group with all tabs
   // and, if firstTime == true, add the welcome video/tab
   reset: function UI_reset(firstTime) {
-    let padding = 10;
-    let infoWidth = 350;
-    let infoHeight = 232;
+    let padding = Trenches.defaultRadius;
+    let welcomeWidth = 300;
     let pageBounds = Items.getPageBounds();
     pageBounds.inset(padding, padding);
 
+    let $actions = iQ("#actions");
+    if ($actions)
+      pageBounds.width -= $actions.width();
+
     // ___ make a fresh groupItem
     let box = new Rect(pageBounds);
-    box.width = 
-      Math.min(box.width * 0.667, pageBounds.width - (infoWidth + padding));
+    box.width = Math.min(box.width * 0.667,
+                         pageBounds.width - (welcomeWidth + padding));
     box.height = box.height * 0.667;
 
     GroupItems.groupItems.forEach(function(group) {
@@ -280,17 +283,18 @@ let UI = {
     if (firstTime) {
       gPrefBranch.setBoolPref("experienced_first_run", true);
 
-      // ___ make info item
-      let video = 
-        "http://videos-cdn.mozilla.net/firefox4beta/tabcandy_howto.webm";
-      let html =
-        "<div class='intro'>"
-          + "<video src='" + video + "' width='100%' preload controls>"
-        + "</div>";
-      let infoBox = new Rect(box.right + padding, box.top,
-                         infoWidth, infoHeight);
-      let infoItem = new InfoItem(infoBox);
-      infoItem.html(html);
+      let url = gPrefBranch.getCharPref("welcome_url");
+      let newTab = gBrowser.loadOneTab(url, {inBackground: true});
+      let newTabItem = newTab.tabItem;
+      let parent = newTabItem.parent;
+      Utils.assert(parent, "should have a parent");
+
+      newTabItem.parent.remove(newTabItem);
+      let aspect = TabItems.tabHeight / TabItems.tabWidth;
+      let welcomeBounds = new Rect(box.right + padding, box.top,
+                                   welcomeWidth, welcomeWidth * aspect);
+      newTabItem.setBounds(welcomeBounds, true);
+      GroupItems.setActiveGroupItem(groupItem);
     }
   },
 

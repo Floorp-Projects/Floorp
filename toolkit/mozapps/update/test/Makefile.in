@@ -63,6 +63,7 @@ DIRS = \
 
 CPPSRCS = \
   TestAUSReadStrings.cpp \
+  TestAUSHelper.cpp \
   $(NULL)
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
@@ -116,3 +117,6 @@ endif # ANDROID
 
 libs:: unit/head_update.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
+
+libs::
+	$(INSTALL) TestAUSHelper$(BIN_SUFFIX) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit

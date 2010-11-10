@@ -1547,59 +1547,6 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
 /************************************************************************/
 
-JS_FRIEND_API(JSBool)
-js_GetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
-                                jsval *vp)
-{
-    JS_ASSERT(scopeobj->isGlobal());
-
-    DummyFrameGuard frame;
-    if (!cx->stack().pushDummyFrame(cx, *scopeobj, &frame))
-        return false;
-
-    bool ok = JS_GetPropertyById(cx, obj, id, vp);
-
-    JS_ASSERT(!frame.fp()->hasCallObj());
-    JS_ASSERT(!frame.fp()->hasArgsObj());
-    return ok;
-}
-
-JS_FRIEND_API(JSBool)
-js_SetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
-                                jsval *vp)
-{
-    JS_ASSERT(scopeobj->isGlobal());
-
-    DummyFrameGuard frame;
-    if (!cx->stack().pushDummyFrame(cx, *scopeobj, &frame))
-        return false;
-
-    bool ok = JS_SetPropertyById(cx, obj, id, vp);
-
-    JS_ASSERT(!frame.fp()->hasCallObj());
-    JS_ASSERT(!frame.fp()->hasArgsObj());
-    return ok;
-}
-
-JS_FRIEND_API(JSBool)
-js_CallFunctionValueWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsval funval,
-                                  uintN argc, jsval *argv, jsval *rval)
-{
-    JS_ASSERT(scopeobj->isGlobal());
-
-    DummyFrameGuard frame;
-    if (!cx->stack().pushDummyFrame(cx, *scopeobj, &frame))
-        return false;
-
-    bool ok = JS_CallFunctionValue(cx, obj, funval, argc, argv, rval);
-
-    JS_ASSERT(!frame.fp()->hasCallObj());
-    JS_ASSERT(!frame.fp()->hasArgsObj());
-    return ok;
-}
-
-/************************************************************************/
-
 JS_PUBLIC_API(JSBool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
 {

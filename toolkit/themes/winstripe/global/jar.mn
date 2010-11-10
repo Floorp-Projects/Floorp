@@ -33,7 +33,7 @@ toolkit.jar:
         skin/classic/global/menulist.css
         skin/classic/global/netError.css
         skin/classic/global/numberbox.css
-        skin/classic/global/notification.css
+*       skin/classic/global/notification.css
         skin/classic/global/passwordmgr.css
 *       skin/classic/global/popup.css
         skin/classic/global/preferences.css
@@ -205,7 +205,7 @@ toolkit.jar:
 *       skin/classic/aero/global/menulist.css                            (menulist-aero.css)
         skin/classic/aero/global/netError.css
         skin/classic/aero/global/numberbox.css
-        skin/classic/aero/global/notification.css
+*       skin/classic/aero/global/notification.css                        (notification-aero.css)
         skin/classic/aero/global/passwordmgr.css
 *       skin/classic/aero/global/popup.css                               (popup-aero.css)
         skin/classic/aero/global/preferences.css

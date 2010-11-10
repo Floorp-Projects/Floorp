@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var option = document.getElementsByTagName("option")[0];
+  var b = option.firstChild;
+  option.appendChild(document.createTextNode("\u064A"));
+  document.documentElement.offsetHeight;
+  option.removeChild(b);
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();"><select><option>B </option></select></body>
+</html>

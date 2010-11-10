@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=587585 -->
+<!DOCTYPE html>
+<title>Test -moz-element reference with external binding</title>
+<style>
+.paintClient {
+  background: -moz-element(#image-element);
+  width: 100px;
+  height: 100px;
+}
+</style>
+
+<body style="margin:0">
+  <div style="-moz-binding: url(referenced-from-binding-01.xbl#insertPaintClient);"></div>
+  <div style="height: 0; overflow: hidden;">
+    <div id="image-element"
+         style="width: 20px; height: 20px; background: lime;"></div>
+  </div>
+</body>

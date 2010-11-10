@@ -59,12 +59,13 @@
 
 #include "nsHtml5HtmlAttributes.h"
 
+nsHtml5HtmlAttributes* nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES = nsnull;
 
 nsHtml5HtmlAttributes::nsHtml5HtmlAttributes(PRInt32 mode)
   : mode(mode),
     length(0),
-    names(jArray<nsHtml5AttributeName*,PRInt32>(5)),
-    values(jArray<nsString*,PRInt32>(5))
+    names(jArray<nsHtml5AttributeName*,PRInt32>::newJArray(5)),
+    values(jArray<nsString*,PRInt32>::newJArray(5))
 {
   MOZ_COUNT_CTOR(nsHtml5HtmlAttributes);
 }
@@ -74,8 +75,6 @@ nsHtml5HtmlAttributes::~nsHtml5HtmlAttributes()
 {
   MOZ_COUNT_DTOR(nsHtml5HtmlAttributes);
   clear(0);
-  names.release();
-  values.release();
 }
 
 PRInt32 
@@ -161,13 +160,11 @@ nsHtml5HtmlAttributes::addAttribute(nsHtml5AttributeName* name, nsString* value)
 {
   if (names.length == length) {
     PRInt32 newLen = length << 1;
-    jArray<nsHtml5AttributeName*,PRInt32> newNames = jArray<nsHtml5AttributeName*,PRInt32>(newLen);
+    jArray<nsHtml5AttributeName*,PRInt32> newNames = jArray<nsHtml5AttributeName*,PRInt32>::newJArray(newLen);
     nsHtml5ArrayCopy::arraycopy(names, newNames, names.length);
-    names.release();
     names = newNames;
-    jArray<nsString*,PRInt32> newValues = jArray<nsString*,PRInt32>(newLen);
+    jArray<nsString*,PRInt32> newValues = jArray<nsString*,PRInt32>::newJArray(newLen);
     nsHtml5ArrayCopy::arraycopy(values, newValues, values.length);
-    values.release();
     values = newValues;
   }
   names[length] = name;

@@ -185,6 +185,19 @@ private:
   CFTypeRef mObject;
 };
 
+static Boolean ShouldIgnoreMIMEType(CFBundleRef bundle, CFStringRef mimeString) {
+  CFTypeRef bundleID = ::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("CFBundleIdentifier"));
+  if (!bundleID || ::CFGetTypeID(bundleID) != ::CFStringGetTypeID())
+    return false;
+    
+  // Workaround for bug 607444 (ignore pdf extension in Quicktime)
+  if ((::CFStringCompare(static_cast<CFStringRef>(bundleID), CFSTR("com.apple.QuickTime Plugin.plugin"), 0) == kCFCompareEqualTo) && 
+      (::CFStringCompare(static_cast<CFStringRef>(mimeString), CFSTR("application/pdf"), 0) == kCFCompareEqualTo))
+    return true;
+  
+  return false;
+}
+
 static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
 {
   CFTypeRef mimeFileName = ::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("WebPluginMIMETypesFilename"));
@@ -296,18 +309,16 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   nsAutoArrayPtr<CFTypeRef> values(new CFTypeRef[mimeDictKeyCount]);
   if (!values)
     return;
-
-  // Set the variant count now that we have safely allocated memory
-  info.fVariantCount = mimeDictKeyCount;
+  
+  info.fVariantCount = 0;
 
   ::CFDictionaryGetKeysAndValues(mimeDict, keys, values);
   for (int i = 0; i < mimeDictKeyCount; i++) {
     CFTypeRef mimeString = keys[i];
-    if (mimeString && ::CFGetTypeID(mimeString) == ::CFStringGetTypeID()) {
-      info.fMimeTypeArray[i] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(mimeString));
+    if (mimeString && ::CFGetTypeID(mimeString) == ::CFStringGetTypeID() && !ShouldIgnoreMIMEType(bundle, static_cast<CFStringRef>(mimeString))) {
+      info.fMimeTypeArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(mimeString));
     }
     else {
-      info.fVariantCount -= 1;
       continue;
     }
     CFTypeRef mimeDict = values[i];
@@ -324,13 +335,14 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
             ::CFStringAppend(static_cast<CFMutableStringRef>(extensionList), static_cast<CFStringRef>(extension));
           }
         }
-        info.fExtensionArray[i] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(extensionList));
+        info.fExtensionArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(extensionList));
         ::CFRelease(extensionList);
       }
       CFTypeRef description = ::CFDictionaryGetValue(static_cast<CFDictionaryRef>(mimeDict), CFSTR("WebPluginTypeDescription"));
       if (description && ::CFGetTypeID(description) == ::CFStringGetTypeID())
-        info.fMimeDescriptionArray[i] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(description));
+        info.fMimeDescriptionArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(description));
     }
+    info.fVariantCount++;
   }
 }
 

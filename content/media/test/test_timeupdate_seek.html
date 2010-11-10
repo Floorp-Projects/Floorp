@@ -20,11 +20,15 @@ var manager = new MediaTestManager;
 
 function do_loadedmetadata(e) {
   var v = e.target;
-  if (e._finished)
+  if (v._finished)
     return false;
 
-  v._seekTime = Math.round(v.duration / 2);
-  v.currentTime=v._seekTime;
+  var duration = v.duration;
+  v._seekTime = Math.round(duration / 2);
+  ok(!isNaN(duration), v._name + ": duration must be non NaN");
+  ok(v._seekTime >= 0.0, v._name + ": must have non-negative seek target");
+  ok(!isNaN(v._seekTime), v._name + ": seek target must be non NaN");
+  v.currentTime = v._seekTime;
   return false;
 }
 
@@ -35,9 +39,8 @@ function do_seeking(e) {
 
   v._seeking = true;
   ok(v.currentTime == v._seekTime,
-     "Check currentTime of " + v.currentTime +
-     " is requested seek time of " + v._seekTime +
-     " in " + v._name);
+      v._name + ": currentTime of " + v.currentTime +
+     " should be requested seek time of " + v._seekTime);
   return false;
 }
 
@@ -47,12 +50,13 @@ function do_timeupdate(e) {
     return false;
 
   ok(v.currentTime == v._seekTime,
-     "Check currentTime of " + v.currentTime +
-     " is requested seek time of " + v._seekTime +
-     " in " + v._name);
-  v._finished= true;
+      v._name + ": currentTime of " + v.currentTime +
+     " should be  requested seek time of " + v._seekTime);
+  v._finished = true;
   v.pause();
   v.parentNode.removeChild(v);
+  v.src = "";
+  ok(true, v._name + ": finished");
   manager.finished(v.token);
   return false;
 }
@@ -63,6 +67,7 @@ function startTest(test, token) {
   v.token = token;
   manager.started(token);
   v.src = test.name;
+  ok(true, test.name + ": started");
   v._name = test.name;
   v._seeking = false;
   v._finished = false;

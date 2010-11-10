@@ -96,6 +96,12 @@ endif
 endif
 endif
 
+ifeq (86,$(findstring 86,$(OS_TEST)))
+ifdef SOLARIS_SUNPRO_CXX
+nsUTF8ToUnicode.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+endif
+endif
+
 EXTRA_DSO_LDOPTS = \
 		../util/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
 		$(MOZ_UNICHARUTIL_LIBS) \

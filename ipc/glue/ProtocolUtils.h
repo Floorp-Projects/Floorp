@@ -110,7 +110,7 @@ public:
     virtual void RemoveManagee(int32, ListenerT*) = 0;
 
     virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, int32*) = 0;
+        size_t, SharedMemory::SharedMemoryType, bool, int32*) = 0;
     virtual bool AdoptSharedMemory(Shmem::SharedMemory*, int32*) = 0;
     virtual Shmem::SharedMemory* LookupSharedMemory(int32) = 0;
     virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;

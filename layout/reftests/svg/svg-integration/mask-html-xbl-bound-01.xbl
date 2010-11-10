@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="lime">
+    <content>
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           style="mask: url(mask-html-xbl-bound-01.html#m1);
+                  width:500px; height:500px; background:lime;"></div>
+    </content>
+  </binding>
+</bindings>

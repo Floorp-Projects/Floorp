@@ -290,8 +290,13 @@ nsUITimerCallback::Notify(nsITimer* aTimer)
   if ((gMouseOrKeyboardEventCounter == mPreviousCount) || !aTimer) {
     gMouseOrKeyboardEventCounter = 0;
     obs->NotifyObservers(nsnull, "user-interaction-inactive", nsnull);
+    if (gUserInteractionTimer) {
+      gUserInteractionTimer->Cancel();
+      NS_RELEASE(gUserInteractionTimer);
+    }
   } else {
     obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
+    nsEventStateManager::UpdateUserActivityTimer();
   }
   mPreviousCount = gMouseOrKeyboardEventCounter;
   return NS_OK;
@@ -784,17 +789,28 @@ nsEventStateManager::nsEventStateManager()
 {
   if (sESMInstanceCount == 0) {
     gUserInteractionTimerCallback = new nsUITimerCallback();
-    if (gUserInteractionTimerCallback) {
+    if (gUserInteractionTimerCallback)
       NS_ADDREF(gUserInteractionTimerCallback);
-      CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
-      if (gUserInteractionTimer) {
-        gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
-                                                NS_USER_INTERACTION_INTERVAL,
-                                                nsITimer::TYPE_REPEATING_SLACK);
-      }
-    }
+    UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
+}
+
+nsresult
+nsEventStateManager::UpdateUserActivityTimer(void)
+{
+  if (!gUserInteractionTimerCallback)
+    return NS_OK;
+
+  if (!gUserInteractionTimer)
+    CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
+
+  if (gUserInteractionTimer) {
+    gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
+                                            NS_USER_INTERACTION_INTERVAL,
+                                            nsITimer::TYPE_ONE_SHOT);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1071,6 +1087,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mozilla::services::GetObserverService();
       if (obs) {
         obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
+        UpdateUserActivityTimer();
       }
     }
     ++gMouseOrKeyboardEventCounter;
@@ -3014,15 +3031,18 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         if (aEvent->message == NS_MOUSE_PIXEL_SCROLL) {
-          if (action == MOUSE_SCROLL_N_LINES) {
+          if (action == MOUSE_SCROLL_N_LINES ||
+              (msEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
              action = MOUSE_SCROLL_PIXELS;
           } else {
             // Do not scroll pixels when zooming
             action = -1;
           }
         } else if (msEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) {
-          if (action == MOUSE_SCROLL_N_LINES) {
-            // We shouldn't scroll lines when a pixel scroll event will follow.
+          if (action == MOUSE_SCROLL_N_LINES ||
+              (msEvent->scrollFlags & nsMouseScrollEvent::kIsMomentum)) {
+            // Don't scroll lines when a pixel scroll event will follow.
+            // Also, don't do history scrolling or zooming for momentum scrolls.
             action = -1;
           }
         }

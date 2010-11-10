@@ -48,7 +48,11 @@
 #ifdef XP_WIN
 #include <windows.h>
 // we want a wmain entry point
+// but we don't want its DLL load protection, because we'll handle it here
+#define XRE_DONT_PROTECT_DLL_LOAD
 #include "nsWindowsWMain.cpp"
+
+#include "nsSetDllDirectory.h"
 #endif
 
 int
@@ -58,22 +62,20 @@ main(int argc, char* argv[])
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
 #endif
 
-#ifdef XP_WIN
-    typedef BOOL
-    (WINAPI *pfnSetDllDirectory) (LPCWSTR);
-    pfnSetDllDirectory setDllDirectory =
-        reinterpret_cast<pfnSetDllDirectory>
-        (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
-    if (setDllDirectory) {
-        setDllDirectory(L"");
-    }
-#endif
-
     // Check for the absolute minimum number of args we need to move
     // forward here. We expect the last arg to be the child process type.
     if (argc < 1)
       return 1;
     GeckoProcessType proctype = XRE_StringToChildProcessType(argv[--argc]);
+
+#ifdef XP_WIN
+    // For plugins, this is done in PluginProcessChild::Init, as we need to
+    // avoid it for unsupported plugins.  See PluginProcessChild::Init for
+    // the details.
+    if (proctype != GeckoProcessType_Plugin) {
+        mozilla::NS_SetDllDirectory(L"");
+    }
+#endif
 
     nsresult rv = XRE_InitChildProcess(argc, argv, proctype);
     NS_ENSURE_SUCCESS(rv, 1);

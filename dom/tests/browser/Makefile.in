@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
 		browser_focus_steal_from_chrome.js \
+		browser_focus_steal_from_chrome_during_mousedown.js \
 		browser_autofocus_background.js \
 		$(NULL)
 

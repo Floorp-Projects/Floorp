@@ -104,6 +104,7 @@ public:
   
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();
+  virtual nscoord GetBaseline() const;
 
 protected:
   void GetDesiredSize(nsPresContext* aPresContext,

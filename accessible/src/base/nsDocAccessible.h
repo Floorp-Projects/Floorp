@@ -108,6 +108,7 @@ public:
   virtual nsIFrame* GetFrame();
   virtual PRBool IsDefunct();
   virtual nsINode* GetNode() const { return mDocument; }
+  virtual nsIDocument* GetDocumentNode() const { return mDocument; }
 
   // nsAccessible
   virtual PRUint32 NativeRole();

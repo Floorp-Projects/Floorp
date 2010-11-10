@@ -200,7 +200,9 @@ JetpackActorCommon::jsval_to_CompVariant(JSContext* cx, JSType type, jsval from,
           !jsval_to_Variant(cx, val, vp, seen))
         *vp = void_t();
     }
-    *to = elems;
+    InfallibleTArray<Variant> outElems;
+    outElems.SwapElements(elems);
+    *to = outElems;
     return true;
   }
 
@@ -227,7 +229,9 @@ JetpackActorCommon::jsval_to_CompVariant(JSContext* cx, JSType type, jsval from,
       kvs.AppendElement(kv);
     }
   }
-  *to = kvs;
+  InfallibleTArray<KeyValue> outKvs;
+  outKvs.SwapElements(kvs);
+  *to = outKvs;
 
   return true;
 }
@@ -414,8 +418,8 @@ JetpackActorCommon::jsval_from_Variant(JSContext* cx, const Variant& from,
 bool
 JetpackActorCommon::RecvMessage(JSContext* cx,
                                 const nsString& messageName,
-                                const nsTArray<Variant>& data,
-                                nsTArray<Variant>* results)
+                                const InfallibleTArray<Variant>& data,
+                                InfallibleTArray<Variant>* results)
 {
   if (results)
     results->Clear();

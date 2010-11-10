@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,11 +12,18 @@
 #ifndef __INC_RECON_H
 #define __INC_RECON_H
 
+#include "blockd.h"
+
 #define prototype_copy_block(sym) \
     void sym(unsigned char *src, int src_pitch, unsigned char *dst, int dst_pitch)
 
 #define prototype_recon_block(sym) \
-    void sym(unsigned char *pred, short *diff, unsigned char *dst, int pitch);
+    void sym(unsigned char *pred, short *diff, unsigned char *dst, int pitch)
+
+#define prototype_recon_macroblock(sym) \
+    void sym(const struct vp8_recon_rtcd_vtable *rtcd, MACROBLOCKD *x)
+
+struct vp8_recon_rtcd_vtable;
 
 #if ARCH_X86 || ARCH_X86_64
 #include "x86/recon_x86.h"
@@ -56,9 +63,20 @@ extern prototype_recon_block(vp8_recon_recon2);
 #endif
 extern prototype_recon_block(vp8_recon_recon4);
 
+#ifndef vp8_recon_recon_mb
+#define vp8_recon_recon_mb vp8_recon_mb_c
+#endif
+extern prototype_recon_macroblock(vp8_recon_recon_mb);
+
+#ifndef vp8_recon_recon_mby
+#define vp8_recon_recon_mby vp8_recon_mby_c
+#endif
+extern prototype_recon_macroblock(vp8_recon_recon_mby);
+
 typedef prototype_copy_block((*vp8_copy_block_fn_t));
 typedef prototype_recon_block((*vp8_recon_fn_t));
-typedef struct
+typedef prototype_recon_macroblock((*vp8_recon_mb_fn_t));
+typedef struct vp8_recon_rtcd_vtable
 {
     vp8_copy_block_fn_t  copy16x16;
     vp8_copy_block_fn_t  copy8x8;
@@ -66,6 +84,8 @@ typedef struct
     vp8_recon_fn_t       recon;
     vp8_recon_fn_t       recon2;
     vp8_recon_fn_t       recon4;
+    vp8_recon_mb_fn_t    recon_mb;
+    vp8_recon_mb_fn_t    recon_mby;
 } vp8_recon_rtcd_vtable_t;
 
 #if CONFIG_RUNTIME_CPU_DETECT
@@ -74,9 +94,6 @@ typedef struct
 #define RECON_INVOKE(ctx,fn) vp8_recon_##fn
 #endif
 
-#include "blockd.h"
-void vp8_recon16x16mby(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
-void vp8_recon16x16mb(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
 void vp8_recon_intra4x4mb(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
 void vp8_recon_intra_mbuv(const vp8_recon_rtcd_vtable_t *rtcd, MACROBLOCKD *x);
 #endif

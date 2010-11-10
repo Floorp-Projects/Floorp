@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=541530
+-->
+<head>
+  <title>Test for Bug 411103</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=541530">Mozilla Bug 541530</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var orig = window;
+window = {};
+
+var origLocation = location;
+
+ok(window === orig, "can't override window");
+ok(window.location === location, "properties are properly aliased");
+ok(document.location === location, "properties are properly aliased");
+
+try {
+    __defineGetter__('window', function() {});
+    ok(false, "should not be able to defineGetter(window)");
+} catch (e) {
+}
+
+try {
+    window.__defineGetter__('location', function(){});
+    ok(false, "should not be able to defineGetter(window.location)");
+} catch (e) {
+}
+
+try {
+    window.location.__defineGetter__('href', function(){});
+    ok(false, "shouldn't be able to override location.href");
+} catch (e) {
+}
+
+try {
+    window.location.__proto__.__defineGetter__('href', function(){});
+    ok(false, "shouldn't be able to use the prototype");
+} catch (e) {
+}
+
+try {
+    window.location.__defineSetter__('href', function(){});
+    ok(false, "overrode a setter for location.href?");
+} catch (e) {
+}
+
+try {
+    document.__defineGetter__('location', function(){});
+    ok(false, "shouldn't be able to override document.location");
+} catch (e) {
+}
+
+is(location.watch, undefined, "watch doesn't exist on location objects");
+try {
+    Object.prototype.watch.call(location, function() {});
+    ok(false, "shouldn't be able to set a watchpoint on location");
+} catch (e) {
+}
+
+ok(window === orig, "can't override window");
+ok(window.location === origLocation, "properties are properly aliased");
+ok(document.location === origLocation, "properties are properly aliased");
+
+location.href = 'javascript:ok(true, "was able to set location.href through a watchpoint")';
+
+</script>
+</pre>
+</body>
+</html>

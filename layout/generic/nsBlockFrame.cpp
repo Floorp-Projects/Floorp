@@ -550,11 +550,30 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
 nscoord
 nsBlockFrame::GetBaseline() const
 {
-  NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "frame must not be dirty");
   nscoord result;
   if (nsLayoutUtils::GetLastLineBaseline(this, &result))
     return result;
   return nsFrame::GetBaseline();
+}
+
+nscoord
+nsBlockFrame::GetCaretBaseline() const
+{
+  nsRect contentRect = GetContentRect();
+  nsMargin bp = GetUsedBorderAndPadding();
+
+  if (!mLines.empty()) {
+    const_line_iterator line = begin_lines();
+    const nsLineBox* firstLine = line;
+    if (firstLine->GetChildCount()) {
+      return bp.top + firstLine->mFirstChild->GetCaretBaseline();
+    }
+  }
+  nsCOMPtr<nsIFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  return nsLayoutUtils::GetCenteredFontBaseline(fm, nsHTMLReflowState::
+      CalcLineHeight(GetStyleContext(), contentRect.height)) +
+    bp.top;
 }
 
 /////////////////////////////////////////////////////////////////////////////

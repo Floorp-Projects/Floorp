@@ -101,6 +101,7 @@ SDK_HEADERS = \
 		nsStringAPI.h \
 		nsStringGlue.h \
 		nsTArray.h \
+		nsTArray-inl.h \
 		nsTHashtable.h \
 		nsTObserverArray.h \
 		nsTPtrArray.h \

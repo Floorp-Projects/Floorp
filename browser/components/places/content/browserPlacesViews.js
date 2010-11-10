@@ -499,10 +499,10 @@ PlacesViewBase.prototype = {
       // Many users consider toolbars as shortcuts containers, so explicitly
       // allow empty labels on toolbarbuttons.  For any other element try to be
       // smarter, guessing a title from the uri.
-      elt.label = PlacesUIUtils.getBestTitle(aPlacesNode);
+      elt.setAttribute("label", PlacesUIUtils.getBestTitle(aPlacesNode));
     }
     else {
-      elt.label = aNewTitle;
+      elt.setAttribute("label", aNewTitle);
     }
   },
 

@@ -32,7 +32,7 @@
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/soundcard.h> header file. */
-/* #undef HAVE_SYS_SOUNDCARD_H */
+#define HAVE_SYS_SOUNDCARD_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
@@ -43,18 +43,29 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#define LT_OBJDIR ".libs/"
-
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 /* #undef NO_MINUS_C_MINUS_O */
+
+/* make use of arm asm optimization */
+ 
+
+/* Define if assembler supports EDSP instructions */
+
+
+/* Define if assembler supports ARMv6 media instructions */
+
+
+/* Define if compiler supports NEON instructions */
+
+
+/* make use of c64x+ asm optimization */
+/* #undef OC_C64X_ASM */
 
 /* make use of x86_64 asm optimization */
 /* #undef OC_X86_64_ASM */
 
 /* make use of x86 asm optimization */
- /**/
+/* #undef OC_X86_ASM */
 
 /* Name of package */
 #define PACKAGE "libtheora"
@@ -66,16 +77,13 @@
 #define PACKAGE_NAME "libtheora"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libtheora 1.1.1+svn"
+#define PACKAGE_STRING "libtheora 1.2.0alpha1+svn"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libtheora"
 
-/* Define to the home page for this package. */
-#define PACKAGE_URL ""
-
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.1.1+svn"
+#define PACKAGE_VERSION "1.2.0alpha1+svn"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -87,4 +95,4 @@
 /* #undef THEORA_DISABLE_FLOAT */
 
 /* Version number of package */
-#define VERSION "1.1.1+svn"
+#define VERSION "1.2.0alpha1+svn"

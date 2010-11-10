@@ -47,7 +47,7 @@
 #include "nsIContent.h"
 
 class nsIFrame;
-template <class T> class nsTArray;
+template <class T, class A> class nsTArray;
 
 /**
  * Any source for anonymous content can implement this interface to provide it.

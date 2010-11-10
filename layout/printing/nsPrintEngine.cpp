@@ -1801,11 +1801,12 @@ nsPrintEngine::SetupToPrintContent()
     if (seqFrame) {
       seqFrame->StartPrint(mPrt->mPrintObject->mPresContext, 
                            mPrt->mPrintSettings, docTitleStr, docURLStr);
+      docTitleStr = nsnull;
+      docURLStr = nsnull;
     }
-  } else {
-    if (docTitleStr) nsMemory::Free(docTitleStr);
-    if (docURLStr) nsMemory::Free(docURLStr);
   }
+  if (docTitleStr) nsMemory::Free(docTitleStr);
+  if (docURLStr) nsMemory::Free(docURLStr);
 
   PR_PL(("****************** Begin Document ************************\n"));
 
