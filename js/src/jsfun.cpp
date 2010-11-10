@@ -2926,30 +2926,55 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     }
 
     /*
-     * Historically, all objects have a parent slot and all native functions
-     * defined by the JS_DefineFunction* APIs funnel here and bind parent to
-     * obj. But this prematurely deoptimizes by flagging, e.g. Date.prototype,
-     * as a "delegate" (a proto or parent of some other object), which in turn
-     * causes shadowingShapeChange events and shape regeneration for common
-     * method names that are also (and already) bound on, say, Object.prototype
-     * (e.g., toString).
+     * Historically, all objects have had a parent member as intrinsic scope
+     * chain link. We want to move away from this universal parent, but JS
+     * requires that function objects have something like parent (ES3 and ES5
+     * call it the [[Scope]] internal property), to bake a particular static
+     * scope environment into each function object.
      *
-     * Until we get rid of parent, avoid flagging standard class prototype
-     * objects as delegates prematurely when defining their methods, instead
-     * parenting each method to the proto's global. We keep API compatibility
-     * for all obj parameters that are not of a standard (cached-proto-key)
-     * class, since some embedding clients count on parent being obj.
+     * All function objects thus have parent, including all native functions.
+     * All native functions defined by the JS_DefineFunction* APIs are created
+     * via the call below to js_NewFunction, which passes obj as the parent
+     * parameter, and so binds fun's parent to obj using JSObject::setParent,
+     * under js_NewFunction (in JSObject::init, called from NewObject -- see
+     * jsobjinlines.h).
+     *
+     * But JSObject::setParent sets the DELEGATE object flag on its receiver,
+     * to mark the object as a proto or parent of another object. Such objects
+     * may intervene in property lookups and scope chain searches, so require
+     * special handling when caching lookup and search results (since such
+     * intervening objects can in general grow shadowing properties later).
+     *
+     * Thus using setParent prematurely flags certain objects, notably class
+     * prototypes, so that defining native methods on them, where the method's
+     * name (e.g., toString) is already bound on Object.prototype, triggers
+     * shadowingShapeChange events and gratuitous shape regeneration.
+     *
+     * To fix this longstanding bug, we set check whether obj is already a
+     * delegate, and if not, then if js_NewFunction flagged obj as a delegate,
+     * we clear the flag.
+     *
+     * We thus rely on the fact that native functions (including indirect eval)
+     * do not use the property cache or equivalent JIT techniques that require
+     * this bit to be set on their parent-linked scope chain objects.
+     *
+     * Note: we keep API compatibility by setting parent to obj for all native
+     * function objects, even if obj->getGlobal() would suffice. This should be
+     * revisited when parent is narrowed to exist only for function objects and
+     * possibly a few prehistoric scope objects (e.g. event targets).
      */
-    JSObject *parent = (JSCLASS_CACHED_PROTO_KEY(obj->clasp) != JSProto_Null)
-                       ? obj->getGlobal()
-                       : obj;
+    bool wasDelegate = obj->isDelegate();
 
     fun = js_NewFunction(cx, NULL, native, nargs,
                          attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
-                         parent,
+                         obj,
                          JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
     if (!fun)
         return NULL;
+
+    if (!wasDelegate && obj->isDelegate())
+        obj->clearDelegate();
+
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gsop, gsop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
     return fun;
