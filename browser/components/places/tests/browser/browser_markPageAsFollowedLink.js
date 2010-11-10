@@ -70,8 +70,8 @@ function getTransitionForUrl(aUrl)
   let dbConn = PlacesUtils.history
                           .QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
   let stmt = dbConn.createStatement(
-    "SELECT visit_type FROM moz_historyvisits_view WHERE place_id = " +
-      "(SELECT id FROM moz_places_view WHERE url = :page_url)");
+    "SELECT visit_type FROM moz_historyvisits WHERE place_id = " +
+      "(SELECT id FROM moz_places WHERE url = :page_url)");
   stmt.params.page_url = aUrl;
   try {
     ok(stmt.executeStep(), "Found the visit in the database");
