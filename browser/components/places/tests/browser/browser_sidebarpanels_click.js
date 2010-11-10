@@ -181,9 +181,20 @@ function test() {
   }
 
   function runNextTest() {
+    // Remove any extraneous tabs.
+    for (let tabCount = gBrowser.tabContainer.childNodes.length;
+         tabCount > 1; tabCount--) {
+      gBrowser.selectedTab = gBrowser.tabContainer.childNodes[tabCount - 1];
+      gBrowser.removeCurrentTab();
+    }
+
     if (tests.length == 0)
       finish();
     else {
+      // Create a new tab for our test to use.
+      gBrowser.selectedTab = gBrowser.addTab();
+
+      // Now we can run our test.
       currentTest = tests.shift();
       testPlacesPanel(function() {
         changeSidebarDirection("ltr");
