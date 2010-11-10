@@ -250,6 +250,12 @@ JSWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *
     GET(JS_HasInstance(cx, wrappedObject(wrapper), Jsvalify(*vp), &b) && Cond(b, bp));
 }
 
+JSType
+JSWrapper::typeOf(JSContext *cx, JSObject *wrapper)
+{
+    return TypeOfValue(cx, ObjectValue(*wrappedObject(wrapper)));
+}
+
 JSString *
 JSWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
 {
@@ -296,6 +302,10 @@ JSWrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                JSWrapper *handler)
 {
     JS_ASSERT(parent);
+    if (obj->isXML()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WRAP_XML_OBJECT);
+        return NULL;
+    }
     return NewProxyObject(cx, handler, ObjectValue(*obj), proto, parent,
                           obj->isCallable() ? obj : NULL, NULL);
 }
