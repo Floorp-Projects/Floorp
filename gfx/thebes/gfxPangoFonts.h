@@ -136,7 +136,6 @@ private:
     void CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
                                   const PRUnichar *aString, PRUint32 aLength);
 #if defined(ENABLE_FAST_PATH_8BIT)
-    PRBool CanTakeFastPath(PRUint32 aFlags);
     nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
                                  const PRUnichar *aString, PRUint32 aLength);
 #endif
