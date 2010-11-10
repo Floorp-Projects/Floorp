@@ -126,11 +126,10 @@ class OpenDatabaseHelper : public AsyncConnectionHelper
 public:
   OpenDatabaseHelper(IDBRequest* aRequest,
                      const nsAString& aName,
-                     const nsAString& aDescription,
                      const nsACString& aASCIIOrigin)
   : AsyncConnectionHelper(static_cast<IDBDatabase*>(nsnull), aRequest),
-    mName(aName), mDescription(aDescription), mASCIIOrigin(aASCIIOrigin),
-    mDatabaseId(0), mLastObjectStoreId(0), mLastIndexId(0)
+    mName(aName), mASCIIOrigin(aASCIIOrigin), mDatabaseId(0),
+    mLastObjectStoreId(0), mLastIndexId(0)
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -139,7 +138,6 @@ public:
 private:
   // In-params.
   nsString mName;
-  nsString mDescription;
   nsCString mASCIIOrigin;
 
   // Out-params.
@@ -162,7 +160,6 @@ CreateTables(mozIStorageConnection* aDBConn)
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE database ("
       "name TEXT NOT NULL, "
-      "description TEXT NOT NULL, "
       "version TEXT DEFAULT NULL"
     ");"
   ));
@@ -324,22 +321,19 @@ CreateTables(mozIStorageConnection* aDBConn)
 
 nsresult
 CreateMetaData(mozIStorageConnection* aConnection,
-               const nsAString& aName,
-               const nsAString& aDescription)
+               const nsAString& aName)
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
   NS_PRECONDITION(aConnection, "Null database!");
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO database (name, description) "
-    "VALUES (:name, :description)"
+    "INSERT OR REPLACE INTO database (name) "
+    "VALUES (:name)"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("description"), aDescription);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
@@ -348,7 +342,6 @@ CreateMetaData(mozIStorageConnection* aConnection,
 nsresult
 CreateDatabaseConnection(const nsACString& aASCIIOrigin,
                          const nsAString& aName,
-                         const nsAString& aDescription,
                          nsAString& aDatabaseFilePath,
                          mozIStorageConnection** aConnection)
 {
@@ -486,7 +479,7 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
     rv = CreateTables(connection);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = CreateMetaData(connection, aName, aDescription);
+    rv = CreateMetaData(connection, aName);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -815,7 +808,6 @@ DOMCI_DATA(IDBFactory, IDBFactory)
 
 NS_IMETHODIMP
 IDBFactory::Open(const nsAString& aName,
-                 const nsAString& aDescription,
                  JSContext* aCx,
                  nsIIDBRequest** _retval)
 {
@@ -874,7 +866,7 @@ IDBFactory::Open(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, aDescription, origin);
+    new OpenDatabaseHelper(request, aName, origin);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
     new CheckPermissionsHelper(openHelper, innerWindow, aName, origin);
@@ -1008,8 +1000,7 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDescription,
-                                         mDatabaseFilePath,
+  nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDatabaseFilePath,
                                          getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -1043,7 +1034,6 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 #ifdef DEBUG
     {
       NS_ASSERTION(dbInfo->name == mName &&
-                   dbInfo->description == mDescription &&
                    dbInfo->version == mVersion &&
                    dbInfo->id == mDatabaseId &&
                    dbInfo->filePath == mDatabaseFilePath,
@@ -1093,7 +1083,6 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     nsAutoPtr<DatabaseInfo> newInfo(new DatabaseInfo());
 
     newInfo->name = mName;
-    newInfo->description = mDescription;
     newInfo->id = mDatabaseId;
     newInfo->filePath = mDatabaseFilePath;
     newInfo->referenceCount = 1;

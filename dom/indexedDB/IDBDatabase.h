@@ -132,7 +132,6 @@ private:
 
   PRUint32 mDatabaseId;
   nsString mName;
-  nsString mDescription;
   nsString mFilePath;
   nsCString mASCIIOrigin;
 
