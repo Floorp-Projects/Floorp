@@ -6914,6 +6914,10 @@ public class Tokenizer implements Locator {
         this.encodingDeclarationHandler = encodingDeclarationHandler;
     }
     
+    void destructor() {
+        // The translator will write refcount tracing stuff here
+    }
+    
     // [NOCPP[
     
     /**

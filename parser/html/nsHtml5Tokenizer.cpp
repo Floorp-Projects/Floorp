@@ -3880,6 +3880,12 @@ nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDec
   this->encodingDeclarationHandler = encodingDeclarationHandler;
 }
 
+
+nsHtml5Tokenizer::~nsHtml5Tokenizer()
+{
+  MOZ_COUNT_DTOR(nsHtml5Tokenizer);
+}
+
 void
 nsHtml5Tokenizer::initializeStatics()
 {
