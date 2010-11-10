@@ -584,10 +584,8 @@ ToCStringBuf::~ToCStringBuf()
         js_free(dbuf);
 }
 
-namespace js {
-
-JSString *
-Int32ToString(JSContext *cx, int32 si)
+JSString * JS_FASTCALL
+js_IntToString(JSContext *cx, int32 si)
 {
     uint32 ui;
     if (si >= 0) {
@@ -632,8 +630,6 @@ Int32ToString(JSContext *cx, int32 si)
     data->dtoaCache.d = si;
     data->dtoaCache.s = ret;
     return ret;
-}
-
 }
 
 /* Returns a non-NULL pointer to inside cbuf.  */
@@ -1121,16 +1117,6 @@ NumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base/* = 10
            : FracNumberToCString(cx, cbuf, d, base);
 }
 
-}
-
-JSString * JS_FASTCALL
-js_IntToString(JSContext *cx, jsint i)
-{
-    if (jsuint(i) < INT_STRING_LIMIT)
-        return JSString::intString(i);
-
-    ToCStringBuf cbuf;
-    return js_NewStringCopyZ(cx, IntToCString(&cbuf, i));
 }
 
 static JSString * JS_FASTCALL
