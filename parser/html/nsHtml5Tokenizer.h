@@ -287,6 +287,7 @@ class nsHtml5Tokenizer
     void loadState(nsHtml5Tokenizer* other);
     void initializeWithoutStarting();
     void setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler);
+    ~nsHtml5Tokenizer();
     static void initializeStatics();
     static void releaseStatics();
 };
