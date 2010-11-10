@@ -84,12 +84,9 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xDestroyContext, { "glXDestroyContext", NULL } },
         { (PRFuncPtr*) &xMakeCurrent, { "glXMakeCurrent", NULL } },
         { (PRFuncPtr*) &xGetProcAddress, { "glXGetProcAddress", NULL } },
-        { (PRFuncPtr*) &xChooseVisual, { "glXChooseVisual", NULL } },
         { (PRFuncPtr*) &xChooseFBConfig, { "glXChooseFBConfig", NULL } },
         { (PRFuncPtr*) &xGetFBConfigs, { "glXGetFBConfigs", NULL } },
-        { (PRFuncPtr*) &xCreatePbuffer, { "glXCreatePbuffer", NULL } },
         { (PRFuncPtr*) &xCreateNewContext, { "glXCreateNewContext", NULL } },
-        { (PRFuncPtr*) &xDestroyPbuffer, { "glXDestroyPbuffer", NULL } },
         { (PRFuncPtr*) &xGetVisualFromFBConfig, { "glXGetVisualFromFBConfig", NULL } },
         { (PRFuncPtr*) &xGetFBConfigAttrib, { "glXGetFBConfigAttrib", NULL } },
         { (PRFuncPtr*) &xSwapBuffers, { "glXSwapBuffers", NULL } },
@@ -97,7 +94,6 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xCreatePixmap, { "glXCreatePixmap", NULL } },
         { (PRFuncPtr*) &xDestroyPixmap, { "glXDestroyPixmap", NULL } },
         { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
-        { (PRFuncPtr*) &xCreateContext, { "glXCreateContext", NULL } },
         { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
         { NULL, { NULL } }
     };

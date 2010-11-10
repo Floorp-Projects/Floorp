@@ -58,10 +58,6 @@ public:
     PFNGLXGETCURRENTCONTEXT xGetCurrentContext;
     typedef void* (GLAPIENTRY * PFNGLXGETPROCADDRESSPROC) (const char *);
     PFNGLXGETPROCADDRESSPROC xGetProcAddress;
-    typedef XVisualInfo* (GLAPIENTRY * PFNGLXCHOOSEVISUALPROC) (Display*,
-                                                                int,
-                                                                int *);
-    PFNGLXCHOOSEVISUALPROC xChooseVisual;
     typedef GLXFBConfig* (GLAPIENTRY * PFNGLXCHOOSEFBCONFIG) (Display *,
                                                               int,
                                                               const int *,
@@ -71,20 +67,12 @@ public:
                                                             int,
                                                             int *);
     PFNGLXGETFBCONFIGS xGetFBConfigs;
-    typedef GLXPbuffer (GLAPIENTRY * PFNGLXCREATEPBUFFER) (Display *,
-                                                           GLXFBConfig,
-                                                           const int *);
-    PFNGLXCREATEPBUFFER xCreatePbuffer;
     typedef GLXContext (GLAPIENTRY * PFNGLXCREATENEWCONTEXT) (Display *,
                                                               GLXFBConfig,
                                                               int,
                                                               GLXContext,
                                                               Bool);
     PFNGLXCREATENEWCONTEXT xCreateNewContext;
-    typedef void (GLAPIENTRY * PFNGLXDESTROYPBUFFER) (Display *,
-                                                      GLXPbuffer);
-    PFNGLXDESTROYPBUFFER xDestroyPbuffer;
-
     typedef XVisualInfo* (GLAPIENTRY * PFNGLXGETVISUALFROMFBCONFIG) (Display *,
                                                                      GLXFBConfig);
     PFNGLXGETVISUALFROMFBCONFIG xGetVisualFromFBConfig;
@@ -118,15 +106,6 @@ public:
                                                            GLXContext,
                                                            Bool);
     PFNGLXCREATECONTEXT xCreateContext;
-    typedef int (GLAPIENTRY * PFNGLXGETCONFIG) (Display *,
-                                                XVisualInfo *,
-                                                int,
-                                                int *);
-    PFNGLXGETCONFIG xGetConfig;
-    typedef GLXPixmap (GLAPIENTRY * PFNGLXCREATEGLXPIXMAP) (Display *,
-                                                            XVisualInfo *,
-                                                            Pixmap);
-    PFNGLXCREATEGLXPIXMAP xCreateGLXPixmap;
 
     PRBool EnsureInitialized();
 
