@@ -615,15 +615,15 @@ struct gfxPangoFcFont {
         return nsReturnRef<PangoFont>(PANGO_FONT(font));
     }
 
-    static gfxFcFont *GfxFont(gfxPangoFcFont *self)
+    gfxFcFont *GfxFont()
     {
-        if (!self->mGfxFont) {
-            PangoFcFont *fc_font = &self->parent_instance;
+        if (!mGfxFont) {
+            PangoFcFont *fc_font = &parent_instance;
 
-            if (NS_LIKELY(self->mRequestedPattern)) {
+            if (NS_LIKELY(mRequestedPattern)) {
                 // Created with gfxPangoFcFont::NewFont()
                 nsAutoRef<FcPattern> renderPattern
-                    (FcFontRenderPrepare(NULL, self->mRequestedPattern,
+                    (FcFontRenderPrepare(NULL, mRequestedPattern,
                                          fc_font->font_pattern));
                 if (!renderPattern)
                     return nsnull;
@@ -642,25 +642,25 @@ struct gfxPangoFcFont {
                     (matrix->xy != 0.0 || matrix->yx != 0.0 ||
                      matrix->xx != 1.0 || matrix->yy != 1.0);
 
-                self->mGfxFont = gfxFcFont::GetOrMakeFont(renderPattern).get();
-                if (self->mGfxFont) {
+                mGfxFont = gfxFcFont::GetOrMakeFont(renderPattern).get();
+                if (mGfxFont) {
                     // Finished with the requested pattern
-                    FcPatternDestroy(self->mRequestedPattern);
-                    self->mRequestedPattern = NULL;
+                    FcPatternDestroy(mRequestedPattern);
+                    mRequestedPattern = NULL;
                 }
 
             } else {
                 // Created with gfxPangoFontMap::create_font()
-                self->mGfxFont =
+                mGfxFont =
                     gfxFcFont::GetOrMakeFont(fc_font->font_pattern).get();
             }                
         }
-        return self->mGfxFont;
+        return mGfxFont;
     }
 
-    static cairo_scaled_font_t *CairoFont(gfxPangoFcFont *self)
+    cairo_scaled_font_t *CairoFont()
     {
-        return gfxPangoFcFont::GfxFont(self)->CairoScaledFont();
+        return GfxFont()->CairoScaledFont();
     }
 };
 
@@ -737,7 +737,7 @@ gfx_pango_fc_font_describe(PangoFont *font)
     PangoFontDescription *result =
         pango_font_description_copy(fcFont->description);
 
-    gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
+    gfxFcFont *gfxFont = self->GfxFont();
     if (gfxFont) {
         double pixelsize = gfxFont->GetStyle()->size;
         double dpi = GetDPI();
@@ -755,7 +755,7 @@ gfx_pango_fc_font_describe_absolute(PangoFont *font)
     PangoFontDescription *result =
         pango_font_description_copy(fcFont->description);
 
-    gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
+    gfxFcFont *gfxFont = self->GfxFont();
     if (gfxFont) {
         double size = gfxFont->GetStyle()->size * PANGO_SCALE;
         pango_font_description_set_absolute_size(result, size);
@@ -769,7 +769,7 @@ gfx_pango_fc_font_get_glyph_extents(PangoFont *font, PangoGlyph glyph,
                                     PangoRectangle *logical_rect)
 {
     gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
+    gfxFcFont *gfxFont = self->GfxFont();
 
     if (IS_MISSING_GLYPH(glyph)) {
         const gfxFont::Metrics& metrics = gfxFont->GetMetrics();
@@ -826,7 +826,7 @@ gfx_pango_fc_font_get_metrics(PangoFont *font, PangoLanguage *language)
     // This uses g_slice_alloc which will abort on OOM rather than return NULL.
     PangoFontMetrics *result = pango_font_metrics_new();
 
-    gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
+    gfxFcFont *gfxFont = self->GfxFont();
     if (gfxFont) {
         const gfxFont::Metrics& metrics = gfxFont->GetMetrics();
 
@@ -852,21 +852,21 @@ static FT_Face
 gfx_pango_fc_font_lock_face(PangoFcFont *font)
 {
     gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    return cairo_ft_scaled_font_lock_face(gfxPangoFcFont::CairoFont(self));
+    return cairo_ft_scaled_font_lock_face(self->CairoFont());
 }
 
 static void
 gfx_pango_fc_font_unlock_face(PangoFcFont *font)
 {
     gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    cairo_ft_scaled_font_unlock_face(gfxPangoFcFont::CairoFont(self));
+    cairo_ft_scaled_font_unlock_face(self->CairoFont());
 }
 
 static guint
 gfx_pango_fc_font_get_glyph(PangoFcFont *font, gunichar wc)
 {
     gfxPangoFcFont *self = GFX_PANGO_FC_FONT(font);
-    gfxFcFont *gfxFont = gfxPangoFcFont::GfxFont(self);
+    gfxFcFont *gfxFont = self->GfxFont();
     return gfxFont->GetGlyph(wc);
 }
 
@@ -1980,7 +1980,7 @@ gfxPangoFontGroup::GetBaseFont()
 {
     if (!mFonts[0]) {
         PangoFont *pangoFont = GetBasePangoFont();
-        mFonts[0] = gfxPangoFcFont::GfxFont(GFX_PANGO_FC_FONT(pangoFont));
+        mFonts[0] = GFX_PANGO_FC_FONT(pangoFont)->GfxFont();
     }
 
     return static_cast<gfxFcFont*>(mFonts[0].get());
@@ -3215,8 +3215,7 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
             offset = headerLen;
         }
 
-        gfxFcFont *font =
-            gfxPangoFcFont::GfxFont(GFX_PANGO_FC_FONT(item->analysis.font));
+        gfxFcFont *font = GFX_PANGO_FC_FONT(item->analysis.font)->GfxFont();
 
         nsresult rv = aTextRun->AddGlyphRun(font, utf16Offset);
         if (NS_FAILED(rv)) {
