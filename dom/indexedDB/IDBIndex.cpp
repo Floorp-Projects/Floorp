@@ -146,11 +146,10 @@ public:
                    const Key& aLeftKey,
                    const Key& aRightKey,
                    PRUint16 aKeyRangeFlags,
-                   PRUint16 aDirection,
-                   PRBool aPreload)
+                   PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex),
     mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
-    mDirection(aDirection), mPreload(aPreload)
+    mDirection(aDirection)
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -169,7 +168,6 @@ private:
   const Key mRightKey;
   const PRUint16 mKeyRangeFlags;
   const PRUint16 mDirection;
-  const PRBool mPreload;
 
   // Out-params.
   nsTArray<KeyKeyPair> mData;
@@ -184,11 +182,10 @@ public:
                          const Key& aLeftKey,
                          const Key& aRightKey,
                          PRUint16 aKeyRangeFlags,
-                         PRUint16 aDirection,
-                         PRBool aPreload)
+                         PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mIndex(aIndex),
     mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
-    mDirection(aDirection), mPreload(aPreload)
+    mDirection(aDirection)
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -207,7 +204,6 @@ private:
   const Key mRightKey;
   const PRUint16 mKeyRangeFlags;
   const PRUint16 mDirection;
-  const PRBool mPreload;
 
   // Out-params.
   nsTArray<KeyValuePair> mData;
@@ -470,7 +466,6 @@ IDBIndex::GetAllObjects(nsIVariant* aKey,
 NS_IMETHODIMP
 IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
                      PRUint16 aDirection,
-                     PRBool aPreload,
                      PRUint8 aOptionalArgCount,
                      nsIIDBRequest** _retval)
 {
@@ -515,17 +510,12 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
     aDirection = nsIIDBCursor::NEXT;
   }
 
-  if (aPreload) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenCursorHelper> helper =
     new OpenCursorHelper(transaction, request, this, leftKey, rightKey,
-                         keyRangeFlags, aDirection, aPreload);
+                         keyRangeFlags, aDirection);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -537,7 +527,6 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
 NS_IMETHODIMP
 IDBIndex::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
                            PRUint16 aDirection,
-                           PRBool aPreload,
                            PRUint8 aOptionalArgCount,
                            nsIIDBRequest** _retval)
 {
@@ -582,17 +571,12 @@ IDBIndex::OpenObjectCursor(nsIIDBKeyRange* aKeyRange,
     aDirection = nsIIDBCursor::NEXT;
   }
 
-  if (aPreload) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenObjectCursorHelper> helper =
     new OpenObjectCursorHelper(transaction, request, this, leftKey, rightKey,
-                               keyRangeFlags, aDirection, aPreload);
+                               keyRangeFlags, aDirection);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
