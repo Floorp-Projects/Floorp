@@ -97,6 +97,8 @@
 #define IS_MISSING_GLYPH(g) ((g) & PANGO_GLYPH_UNKNOWN_FLAG)
 #define IS_EMPTY_GLYPH(g) ((g) == PANGO_GLYPH_EMPTY)
 
+class gfxPangoFcFont;
+
 // Same as pango_units_from_double from Pango 1.16 (but not in older versions)
 int moz_pango_units_from_double(double d) {
     return NS_lround(d * FLOAT_PANGO_SCALE);
@@ -523,16 +525,35 @@ gfxDownloadedFcFontEntry::GetPangoCoverage()
 
 class gfxFcFont : public gfxFT2FontBase {
 public:
-    virtual ~gfxFcFont ();
-    static already_AddRefed<gfxFcFont> GetOrMakeFont(FcPattern *aPattern);
+    virtual ~gfxFcFont();
+    static already_AddRefed<gfxFcFont>
+    GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern);
+    static already_AddRefed<gfxFcFont>
+    GetOrMakeFont(FcPattern *aRenderPattern, gfxPangoFcFont *aPangoFont);
 
 #if defined(ENABLE_FAST_PATH_8BIT)
     nsresult InitGlyphRunFast(gfxTextRun *aTextRun,
                               const PRUnichar *aString, PRUint32 aLength);
 #endif
-protected:
+    // The PangoFont returned is owned by the gfxFcFont
+    PangoFont *GetPangoFont() {
+        if (!mPangoFont) {
+            MakePangoFont();
+        }
+        return mPangoFont;
+    }
+
+private:
+    static already_AddRefed<gfxFcFont> GetOrMakeFont(FcPattern *aPattern);
     gfxFcFont(cairo_scaled_font_t *aCairoFont,
               gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle);
+
+    void MakePangoFont();
+
+    // For memory efficiency, this is a font pattern, not a fully resolved
+    // pattern.  Only needed for constructing mPangoFont.
+    nsCountedRef<FcPattern> mFontPattern;
+    PangoFont *mPangoFont;
 
     // key for locating a gfxFcFont corresponding to a cairo_scaled_font
     static cairo_user_data_key_t sGfxFontKey;
@@ -568,12 +589,22 @@ struct gfxPangoFcFont {
     PangoCoverage *mCoverage;
     gfxFcFont *mGfxFont;
 
-    // The gfxPangoFcFont holds a reference to |aGfxFont| and |aFontPattern|.
+    // The gfxPangoFcFont adds a reference to |aGfxFont| and |aFontPattern|.
     // Providing one of fontconfig's font patterns uses much less memory than
     // using a fully resolved pattern, because fontconfig's font patterns are
     // shared and will exist anyway.
+    //
+    // Note that the ownership between this PangoFont and the gfxFcFont is
+    // shared and the gfxFcFont will sometimes remove its reference added
+    // here.  See PangoFontToggleNotify.
     static nsReturnRef<PangoFont>
     NewFont(gfxFcFont *aGfxFont, FcPattern *aFontPattern);
+
+    // Tell |this| that it no longer needs the gfxFcFont and the caller
+    // assumes ownership of the gfxFcFont reference added at construction of
+    // |this|.  The method is called just before the gfxFcFont removes the
+    // last reference to |this|.
+    void ForgetGfxFont() { mGfxFont = nsnull; }
 
     static nsReturnRef<PangoFont>
     NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern);
@@ -714,7 +745,7 @@ gfxPangoFcFont::SetGfxFont() {
             (matrix->xy != 0.0 || matrix->yx != 0.0 ||
              matrix->xx != 1.0 || matrix->yy != 1.0);
 
-        mGfxFont = gfxFcFont::GetOrMakeFont(renderPattern).get();
+        mGfxFont = gfxFcFont::GetOrMakeFont(renderPattern, this).get();
         if (mGfxFont) {
             // Finished with the requested pattern
             FcPatternDestroy(mRequestedPattern);
@@ -723,7 +754,7 @@ gfxPangoFcFont::SetGfxFont() {
 
     } else {
         // Created with gfxPangoFontMap::create_font()
-        mGfxFont = gfxFcFont::GetOrMakeFont(fc_font->font_pattern).get();
+        mGfxFont = gfxFcFont::GetOrMakeFont(fc_font->font_pattern, this).get();
     }
 }
 
@@ -1029,9 +1060,8 @@ public:
             if (!fontPattern)
                 return NULL;
 
-            nsAutoRef<FcPattern> renderPattern
-                (FcFontRenderPrepare(NULL, mSortPattern, fontPattern));
-            mFonts[i].mFont = gfxFcFont::GetOrMakeFont(renderPattern);
+            mFonts[i].mFont =
+                gfxFcFont::GetOrMakeFont(mSortPattern, fontPattern);
         }
         return mFonts[i].mFont;
     }
@@ -2242,14 +2272,44 @@ cairo_user_data_key_t gfxFcFont::sGfxFontKey;
 gfxFcFont::gfxFcFont(cairo_scaled_font_t *aCairoFont,
                      gfxFontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
-    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
+    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle),
+      mPangoFont()
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, this, NULL);
+}
+
+// The gfxFcFont keeps (only) a toggle_ref on mPangoFont.
+// While mPangoFont has other references, a reference (from mPangoFont) to the
+// gfxFcFont is held.  While mPangoFont has no other references, the reference
+// to the gfxFcFont is removed.
+static void
+PangoFontToggleNotify(gpointer data, GObject* object, gboolean is_last_ref)
+{
+    gfxFcFont *font = static_cast<gfxFcFont*>(data);
+    if (is_last_ref) { // gfxFcFont has last ref to PangoFont
+        NS_RELEASE(font);
+    } else {
+        NS_ADDREF(font);
+    }
+}
+
+void
+gfxFcFont::MakePangoFont()
+{
+    // Switch from a normal reference to a toggle_ref.
+    nsAutoRef<PangoFont> pangoFont(gfxPangoFcFont::NewFont(this, mFontPattern));
+    mPangoFont = pangoFont;
+    g_object_add_toggle_ref(G_OBJECT(mPangoFont), PangoFontToggleNotify, this);
 }
 
 gfxFcFont::~gfxFcFont()
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, NULL, NULL);
+    if (mPangoFont) {
+        GFX_PANGO_FC_FONT(mPangoFont)->ForgetGfxFont();
+        g_object_remove_toggle_ref(G_OBJECT(mPangoFont),
+                                   PangoFontToggleNotify, this);
+    }
 }
 
 /* static */ void
@@ -2395,6 +2455,32 @@ GetPixelSize(FcPattern *aPattern)
  * gfxFontStyle used to build the text run.  Notably, the language is not
  * recorded.
  */
+
+/* static */
+already_AddRefed<gfxFcFont>
+gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
+{
+    nsAutoRef<FcPattern> renderPattern
+        (FcFontRenderPrepare(NULL, aRequestedPattern, aFontPattern));
+    nsRefPtr<gfxFcFont> font = GetOrMakeFont(renderPattern);
+    if (!font->mFontPattern) {
+        font->mFontPattern = aFontPattern;
+    }
+    return font.forget();
+}
+
+/* static */
+already_AddRefed<gfxFcFont>
+gfxFcFont::GetOrMakeFont(FcPattern *aRenderPattern, gfxPangoFcFont *aPangoFont)
+{
+    nsRefPtr<gfxFcFont> font = GetOrMakeFont(aRenderPattern);
+    if (!font->mPangoFont) {
+        font->mPangoFont = PANGO_FONT(aPangoFont);
+        g_object_add_toggle_ref(G_OBJECT(aPangoFont),
+                                PangoFontToggleNotify, font);
+    }
+    return font.forget();
+}
 
 /* static */
 already_AddRefed<gfxFcFont>
