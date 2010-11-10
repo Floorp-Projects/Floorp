@@ -204,12 +204,23 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
         continue;
       }
 
-      double timePortion =
-        (aRefreshTime - pt.mStartTime).ToSeconds() / pt.mDuration.ToSeconds();
-      if (timePortion < 0.0)
-        timePortion = 0.0; // use start value during transition-delay
-      if (timePortion > 1.0)
-        timePortion = 1.0; // we might be behind on flushing
+      double duration = pt.mDuration.ToSeconds();
+      NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
+      double timePortion;
+      if (duration == 0.0) {
+        if (aRefreshTime >= pt.mStartTime) {
+          timePortion = 0.0;
+        } else {
+          timePortion = 1.0;
+        }
+      } else {
+        timePortion = (aRefreshTime - pt.mStartTime).ToSeconds() /
+                      pt.mDuration.ToSeconds();
+        if (timePortion < 0.0)
+          timePortion = 0.0; // use start value during transition-delay
+        if (timePortion > 1.0)
+          timePortion = 1.0; // we might be behind on flushing
+      }
 
       double valuePortion =
         pt.mTimingFunction.GetSplineValue(timePortion);
@@ -636,6 +647,10 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   pt.mProperty = aProperty;
   float delay = aTransition.GetDelay();
   float duration = aTransition.GetDuration();
+  if (duration < 0.0) {
+    // The spec says a negative duration is treated as zero.
+    duration = 0.0;
+  }
   if (durationFraction != 1.0) {
     // Negative delays are essentially part of the transition
     // function, so reduce them along with the duration, but don't
