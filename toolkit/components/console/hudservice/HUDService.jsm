@@ -59,10 +59,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "activityDistributor",
                                    "@mozilla.org/network/http-activity-distributor;1",
                                    "nsIHttpActivityDistributor");
 
-XPCOMUtils.defineLazyServiceGetter(this, "sss",
-                                   "@mozilla.org/content/style-sheet-service;1",
-                                   "nsIStyleSheetService");
-
 XPCOMUtils.defineLazyServiceGetter(this, "mimeService",
                                    "@mozilla.org/mime;1",
                                    "nsIMIMEService");
@@ -100,7 +96,6 @@ function LogFactory(aMessagePrefix)
 
 let log = LogFactory("*** HUDService:");
 
-const HUD_STYLESHEET_URI = "chrome://global/skin/webConsole.css";
 const HUD_STRINGS_URI = "chrome://global/locale/headsUpDisplay.properties";
 
 XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
@@ -1346,10 +1341,6 @@ function HUD_SERVICE()
   // event listeners. So we hammer in the "this" binding.
   this.onTabClose = this.onTabClose.bind(this);
   this.onWindowUnload = this.onWindowUnload.bind(this);
-
-  // load stylesheet with StyleSheetService
-  var uri = Services.io.newURI(HUD_STYLESHEET_URI, null, null);
-  sss.loadAndRegisterSheet(uri, sss.AGENT_SHEET);
 
   // begin observing HTTP traffic
   this.startHTTPObservation();
