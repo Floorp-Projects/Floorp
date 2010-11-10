@@ -77,7 +77,7 @@ ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	CPPSRCS += nsPluginsDirWin.cpp
 	CPPSRCS += nsPluginNativeWindowWin.cpp
 	CPPSRCS += nsPluginDirServiceProvider.cpp
-	LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+	LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
