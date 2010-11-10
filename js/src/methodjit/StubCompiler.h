@@ -108,38 +108,6 @@ class StubCompiler
 
     Call vpInc(JSOp op, uint32 depth);
 
-#define STUB_CALL_TYPE(type)                                        \
-    Call call(type stub) {                                          \
-        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));         \
-    }                                                               \
-    Call call(type stub, uint32 slots) {                            \
-        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots);  \
-    }
-
-    STUB_CALL_TYPE(JSObjStub);
-    STUB_CALL_TYPE(VoidStub);
-    STUB_CALL_TYPE(VoidStubUInt32);
-    STUB_CALL_TYPE(VoidPtrStubUInt32);
-    STUB_CALL_TYPE(VoidPtrStub);
-    STUB_CALL_TYPE(BoolStub);
-    STUB_CALL_TYPE(VoidStubAtom);
-    STUB_CALL_TYPE(VoidStubPC);
-#ifdef JS_POLYIC
-    STUB_CALL_TYPE(VoidStubPIC);
-    STUB_CALL_TYPE(VoidStubGetElemIC);
-    STUB_CALL_TYPE(VoidStubSetElemIC);
-#endif
-#ifdef JS_MONOIC
-    STUB_CALL_TYPE(VoidStubMIC);
-    STUB_CALL_TYPE(VoidPtrStubMIC);
-    STUB_CALL_TYPE(VoidStubCallIC);
-    STUB_CALL_TYPE(VoidPtrStubCallIC);
-    STUB_CALL_TYPE(BoolStubEqualityIC);
-    STUB_CALL_TYPE(VoidPtrStubTraceIC);
-#endif
-
-#undef STUB_CALL_TYPE
-
     /*
      * Force a frame sync and return a label before the syncing code.
      * A Jump may bind to the label with leaveExitDirect().
@@ -173,9 +141,8 @@ class StubCompiler
     bool jumpInScript(Jump j, jsbytecode *target);
     void crossJump(Jump j, Label l);
 
-  private:
-    Call stubCall(void *ptr);
-    Call stubCall(void *ptr, uint32 slots);
+    Call emitStubCall(void *ptr, uint32 id);
+    Call emitStubCall(void *ptr, int32 slots, uint32 id);
 };
 
 } /* namepsace mjit */

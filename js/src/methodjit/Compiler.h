@@ -55,6 +55,8 @@ namespace mjit {
 
 class Compiler : public BaseCompiler
 {
+    friend class StubCompiler;
+
     struct BranchPatch {
         BranchPatch(const Jump &j, jsbytecode *pc)
           : jump(j), pc(pc)
@@ -244,10 +246,16 @@ class Compiler : public BaseCompiler
     };
 
     struct InternalCallSite {
-        bool stub;
-        Label location;
+        uint32 returnOffset;
         jsbytecode *pc;
         uint32 id;
+        bool call;
+        bool ool;
+
+        InternalCallSite(uint32 returnOffset, jsbytecode *pc, uint32 id,
+                         bool call, bool ool)
+          : returnOffset(returnOffset), pc(pc), id(id), call(call), ool(ool)
+        { }
     };
 
     struct DoublePatch {
@@ -264,6 +272,7 @@ class Compiler : public BaseCompiler
     bool isConstructing;
     analyze::Script *analysis;
     Label *jumpMap;
+    bool *savedTraps;
     jsbytecode *PC;
     Assembler masm;
     FrameState frame;
@@ -285,7 +294,7 @@ class Compiler : public BaseCompiler
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
-    bool debugMode;
+    bool debugMode_;
     bool addTraceHints;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
@@ -308,6 +317,11 @@ class Compiler : public BaseCompiler
     bool knownJump(jsbytecode *pc);
     Label labelOf(jsbytecode *target);
     void *findCallSite(const CallSite &callSite);
+    void addCallSite(const InternalCallSite &callSite);
+    void addReturnSite(Label joinPoint, uint32 id);
+    bool loadOldTraps(const Vector<CallSite> &site);
+
+    bool debugMode() { return debugMode_; }
 
   private:
     CompileStatus performCompilation(JITScript **jitp);
@@ -320,7 +334,6 @@ class Compiler : public BaseCompiler
     uint32 fullAtomIndex(jsbytecode *pc);
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
-    void addCallSite(uint32 id, bool stub);
     bool canUseApplyTricks();
 
     /* Emitting helpers. */
@@ -447,34 +460,32 @@ class Compiler : public BaseCompiler
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
-#define STUB_CALL_TYPE(type)                                            \
-    Call stubCall(type stub) {                                          \
-        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));             \
-    }
-
-    STUB_CALL_TYPE(JSObjStub);
-    STUB_CALL_TYPE(VoidStubUInt32);
-    STUB_CALL_TYPE(VoidStub);
-    STUB_CALL_TYPE(VoidPtrStubUInt32);
-    STUB_CALL_TYPE(VoidPtrStub);
-    STUB_CALL_TYPE(BoolStub);
-    STUB_CALL_TYPE(JSObjStubUInt32);
-    STUB_CALL_TYPE(JSObjStubFun);
-    STUB_CALL_TYPE(JSObjStubJSObj);
-    STUB_CALL_TYPE(VoidStubAtom);
-    STUB_CALL_TYPE(JSStrStub);
-    STUB_CALL_TYPE(JSStrStubUInt32);
-    STUB_CALL_TYPE(VoidStubJSObj);
-    STUB_CALL_TYPE(VoidPtrStubPC);
-    STUB_CALL_TYPE(VoidVpStub);
-    STUB_CALL_TYPE(VoidStubPC);
-    STUB_CALL_TYPE(BoolStubUInt32);
-    STUB_CALL_TYPE(VoidStubFun);
-
-#undef STUB_CALL_TYPE
+   
     void prepareStubCall(Uses uses);
-    Call stubCall(void *ptr);
+    Call emitStubCall(void *ptr);
 };
+
+// Given a stub call, emits the call into the inline assembly path. If
+// debug mode is on, adds the appropriate instrumentation for recompilation.
+#define INLINE_STUBCALL(stub)                                               \
+    do {                                                                    \
+        Call cl = emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)));        \
+        if (debugMode()) {                                                  \
+            InternalCallSite site(masm.callReturnOffset(cl), PC, __LINE__,  \
+                                  true, false);                             \
+            addCallSite(site);                                              \
+        }                                                                   \
+    } while (0)                                                             \
+
+// Given a stub call, emits the call into the out-of-line assembly path. If
+// debug mode is on, adds the appropriate instrumentation for recompilation.
+// Unlike the INLINE_STUBCALL variant, this returns the Call offset.
+#define OOL_STUBCALL(stub)                                                      \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), __LINE__)          \
+
+// Same as OOL_STUBCALL, but specifies a slot depth.
+#define OOL_STUBCALL_SLOTS(stub, slots)                                         \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), (slots), __LINE__) \
 
 } /* namespace js */
 } /* namespace mjit */

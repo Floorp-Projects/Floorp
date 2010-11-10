@@ -380,6 +380,22 @@ struct CallSite
     uint32 codeOffset;
     uint32 pcOffset;
     uint32 id;
+
+    // Normally, callsite ID is the __LINE__ in the program that added the
+    // callsite. Since traps can be removed, we make sure they carry over
+    // from each compilation, and identify them with a single, canonical
+    // ID. Hopefully a SpiderMonkey file won't have two billion source lines.
+    static const uint32 MAGIC_TRAP_ID = 0xFEDCBABC;
+
+    void initialize(uint32 codeOffset, uint32 pcOffset, uint32 id) {
+        this->codeOffset = codeOffset;
+        this->pcOffset = pcOffset;
+        this->id = id;
+    }
+
+    bool isTrap() const {
+        return id == MAGIC_TRAP_ID;
+    }
 };
 
 /* Re-enables a tracepoint in the method JIT. */
