@@ -110,10 +110,8 @@ function test() {
               if (aTopic != "domwindowclosed")
                 return;
               ww.unregisterNotification(closeObserver);
-              SimpleTest.waitForFocus(function() {
-                // Proceed
-                funcNext();
-              });
+              // Proceed
+              funcNext();
             }
             ww.registerNotification(closeObserver);
             // Close Library window.
