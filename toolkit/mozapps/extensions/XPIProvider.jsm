@@ -4670,6 +4670,16 @@ var XPIDatabase = {
   }
 };
 
+function getHashStringForCrypto(aCrypto) {
+  // return the two-digit hexadecimal code for a byte
+  function toHexString(charCode)
+    ("0" + charCode.toString(16)).slice(-2);
+
+  // convert the binary hash data to a hex string.
+  let binary = aCrypto.finish(false);
+  return [toHexString(binary.charCodeAt(i)) for (i in binary)].join("").toLowerCase()
+}
+
 /**
  * Instantiates an AddonInstall and passes the new object to a callback when
  * it is complete.
@@ -4707,7 +4717,14 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
   this.installLocation = aInstallLocation;
   this.sourceURI = aUrl;
   this.releaseNotesURI = aReleaseNotesURI;
-  this.hash = aHash;
+  if (aHash) {
+    let hashSplit = aHash.toLowerCase().split(":");
+    this.originalHash = {
+      algorithm: hashSplit[0],
+      data: hashSplit[1]
+    };
+  }
+  this.hash = this.originalHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
   this.existingAddon = aExistingAddon;
@@ -4736,13 +4753,25 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
     if (this.hash) {
       let crypto = Cc["@mozilla.org/security/hash;1"].
                    createInstance(Ci.nsICryptoHash);
+      try {
+        crypto.initWithString(this.hash.algorithm);
+      }
+      catch (e) {
+        WARN("Unknown hash algorithm " + this.hash.algorithm);
+        this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
+        aCallback(this);
+        return;
+      }
+
       let fis = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
       fis.init(this.file, -1, -1, false);
       crypto.updateFromStream(fis, this.file.fileSize);
-      let hash = crypto.finish(true);
-      if (hash != this.hash) {
-        WARN("Hash mismatch");
+      let calculatedHash = getHashStringForCrypto(crypto);
+      if (calculatedHash != this.hash.data) {
+        WARN("File hash (" + calculatedHash + ") did not match provided hash (" +
+             this.hash.data + ")");
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         aCallback(this);
@@ -4816,6 +4845,7 @@ AddonInstall.prototype = {
   wrapper: null,
   stream: null,
   crypto: null,
+  originalHash: null,
   hash: null,
   loadGroup: null,
   badCertHandler: null,
@@ -4854,6 +4884,18 @@ AddonInstall.prototype = {
       break;
     case AddonManager.STATE_DOWNLOADED:
       this.startInstall();
+      break;
+    case AddonManager.STATE_DOWNLOAD_FAILED:
+    case AddonManager.STATE_INSTALL_FAILED:
+    case AddonManager.STATE_CANCELLED:
+      this.removeTemporaryFile();
+      this.state = AddonManager.STATE_AVAILABLE;
+      this.error = 0;
+      this.progress = 0;
+      this.maxProgress = -1;
+      this.hash = this.originalHash;
+      XPIProvider.installs.push(this);
+      this.startDownload();
       break;
     case AddonManager.STATE_DOWNLOADING:
     case AddonManager.STATE_CHECKING:
@@ -5260,7 +5302,12 @@ AddonInstall.prototype = {
     if (!this.hash && aOldChannel.originalURI.schemeIs("https") &&
         aOldChannel instanceof Ci.nsIHttpChannel) {
       try {
-        this.hash = aOldChannel.getResponseHeader("X-Target-Digest");
+        let hashStr = aOldChannel.getResponseHeader("X-Target-Digest");
+        let hashSplit = hashStr.toLowerCase().split(":");
+        this.hash = {
+          algorithm: hashSplit[0],
+          data: hashSplit[1]
+        };
       }
       catch (e) {
       }
@@ -5283,13 +5330,11 @@ AddonInstall.prototype = {
     this.crypto = Cc["@mozilla.org/security/hash;1"].
                   createInstance(Ci.nsICryptoHash);
     if (this.hash) {
-      [alg, this.hash] = this.hash.split(":", 2);
-
       try {
-        this.crypto.initWithString(alg);
+        this.crypto.initWithString(this.hash.algorithm);
       }
       catch (e) {
-        WARN("Unknown hash algorithm " + alg);
+        WARN("Unknown hash algorithm " + this.hash.algorithm);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         XPIProvider.removeActiveInstall(this);
@@ -5347,18 +5392,13 @@ AddonInstall.prototype = {
           }
         }
 
-        // return the two-digit hexadecimal code for a byte
-        function toHexString(charCode)
-          ("0" + charCode.toString(16)).slice(-2);
-
         // convert the binary hash data to a hex string.
-        let binary = this.crypto.finish(false);
-        let hash = [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
+        let calculatedHash = getHashStringForCrypto(this.crypto);
         this.crypto = null;
-        if (this.hash && hash.toLowerCase() != this.hash.toLowerCase()) {
+        if (this.hash && calculatedHash != this.hash.data) {
           this.downloadFailed(AddonManager.ERROR_INCORRECT_HASH,
-                              "Downloaded file hash (" + hash +
-                              ") did not match provided hash (" + this.hash + ")");
+                              "Downloaded file hash (" + calculatedHash +
+                              ") did not match provided hash (" + this.hash.data + ")");
           return;
         }
         try {
@@ -5411,7 +5451,11 @@ AddonInstall.prototype = {
     XPIProvider.removeActiveInstall(this);
     AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
                                              this.wrapper);
-    this.removeTemporaryFile();
+
+    // If the listener hasn't restarted the download then remove any temporary
+    // file
+    if (this.state == AddonManager.STATE_DOWNLOAD_FAILED)
+      this.removeTemporaryFile();
   },
 
   /**
