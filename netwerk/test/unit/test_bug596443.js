@@ -15,16 +15,14 @@ function setupChannel(suffix, flags) {
     return chan;
 }
 
-function Listener(response, finalResponse, chainedHandler) {
+function Listener(response, finalResponse) {
     this._response = response;
     this._finalResponse = finalResponse;
-    this._chainedHandler = chainedHandler;
 }
 Listener.prototype = {
     _response: null,
     _buffer: null,
     _finalResponse: false,
-    _chainedHandler: undefined,
 
     QueryInterface: function(iid) {
         if (iid.equals(Components.interfaces.nsIStreamListener) ||
@@ -47,8 +45,6 @@ Listener.prototype = {
             do_timeout(10, function() {
                         httpserver.stop(do_test_finished);
                     });
-        if (this._chainedHandler != undefined)
-            do_timeout(10, initialHandlers[this._chainedHandler]);
     }
 };
 
@@ -64,10 +60,10 @@ function run_test() {
             Components.interfaces.nsICache.STORE_ANYWHERE);
 
     var ch0 = setupChannel("/bug596443", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch0.asyncOpen(new Listener(0, false), null);
+    ch0.asyncOpen(new Listener(0), null);
 
     var ch1 = setupChannel("/bug596443", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch1.asyncOpen(new Listener(1, false, 0), null);
+    ch1.asyncOpen(new Listener(1), null);
 
     var ch2 = setupChannel("/bug596443");
     ch2.asyncOpen(new Listener(1, true), null); // Note param: we expect this to come from cache
@@ -76,7 +72,10 @@ function run_test() {
 }
 
 function triggerHandlers() {
-    do_timeout(100, initialHandlers[1]);
+    do_timeout(100, function() {
+        do_timeout(100, initialHandlers[1]);
+        do_timeout(100, initialHandlers[0]);
+    });
 }
 
 var initialHandlers = [];
