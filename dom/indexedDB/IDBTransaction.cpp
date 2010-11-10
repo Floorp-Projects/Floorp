@@ -43,6 +43,7 @@
 
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
+#include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -109,7 +110,8 @@ IDBTransaction::IDBTransaction()
   mTimeout(0),
   mPendingRequests(0),
   mSavepointCount(0),
-  mAborted(false)
+  mAborted(false),
+  mClosed(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -148,6 +150,10 @@ IDBTransaction::OnRequestFinished()
     if (!mAborted) {
       NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
     }
+
+    NS_ASSERTION(!mClosed, "Shouldn't be closed yet!");
+    mClosed = true;
+
     CommitOrRollback();
   }
 }
@@ -532,8 +538,9 @@ bool
 IDBTransaction::TransactionIsOpen() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return mReadyState == nsIIDBTransaction::INITIAL ||
-         mReadyState == nsIIDBTransaction::LOADING;
+  return (mReadyState == nsIIDBTransaction::INITIAL ||
+          mReadyState == nsIIDBTransaction::LOADING) &&
+         !mClosed;
 }
 #endif
 
@@ -572,10 +579,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mDatabase,
                                                        nsPIDOMEventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnTimeoutListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
 
   for (PRUint32 i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
@@ -588,10 +595,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
                                                 nsDOMEventTargetHelper)
   // Don't unlink mDatabase!
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCompleteListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnTimeoutListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
 
   tmp->mCreatedObjectStores.Clear();
 
@@ -710,8 +717,20 @@ IDBTransaction::Abort()
 
   mAborted = true;
   mReadyState = nsIIDBTransaction::DONE;
-
   return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBTransaction::SetOnerror(nsIDOMEventListener* aErrorListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
+                                mOnErrorListener, aErrorListener);
+}
+
+NS_IMETHODIMP
+IDBTransaction::GetOnerror(nsIDOMEventListener** aErrorListener)
+{
+  return GetInnerEventListener(mOnErrorListener, aErrorListener);
 }
 
 NS_IMETHODIMP
@@ -765,6 +784,14 @@ IDBTransaction::SetOntimeout(nsIDOMEventListener* aOntimeout)
                                 mOnTimeoutListener, aOntimeout);
 }
 
+nsresult
+IDBTransaction::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mParentTarget = mDatabase;
+  return NS_OK;
+}
+
 CommitHelper::CommitHelper(IDBTransaction* aTransaction)
 : mTransaction(aTransaction),
   mAborted(!!aTransaction->mAborted),
@@ -782,6 +809,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CommitHelper, nsIRunnable)
 NS_IMETHODIMP
 CommitHelper::Run()
 {
+  NS_ASSERTION(mTransaction->mClosed, "Should be closed!");
+
   if (NS_IsMainThread()) {
     NS_ASSERTION(mDoomedObjects.IsEmpty(), "Didn't release doomed objects!");
 

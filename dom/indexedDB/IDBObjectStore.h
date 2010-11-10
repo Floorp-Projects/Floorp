@@ -47,7 +47,10 @@
 #include "nsIIDBObjectStore.h"
 #include "nsIIDBTransaction.h"
 
-#include "nsDOMEventTargetHelper.h"
+#include "nsCycleCollectionParticipant.h"
+
+class nsIScriptContext;
+class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -57,15 +60,13 @@ struct ObjectStoreInfo;
 struct IndexInfo;
 struct IndexUpdateInfo;
 
-class IDBObjectStore : public nsDOMEventTargetHelper,
-                       public nsIIDBObjectStore
+class IDBObjectStore : public nsIIDBObjectStore
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIIDBOBJECTSTORE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBObjectStore,
-                                           nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
 
   static already_AddRefed<IDBObjectStore>
   Create(IDBTransaction* aTransaction,
@@ -159,14 +160,14 @@ protected:
 private:
   nsRefPtr<IDBTransaction> mTransaction;
 
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+  nsCOMPtr<nsPIDOMWindow> mOwner;
+
   PRInt64 mId;
   nsString mName;
   nsString mKeyPath;
   PRBool mAutoIncrement;
   PRUint32 mDatabaseId;
-
-  // Only touched on the main thread.
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
 

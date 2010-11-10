@@ -22,6 +22,9 @@
       let event = yield;
 
       let db = event.result;
+      db.addEventListener("error", function(event) {
+        event.preventDefault();
+      }, false);
 
       request = db.setVersion("1");
       request.onerror = errorHandler;

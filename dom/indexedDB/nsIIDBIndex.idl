@@ -48,7 +48,7 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBIndex for more
  * information.
  */
-[scriptable, uuid(e5fea76f-af0a-4c23-9c35-a2abe82cfdc5)]
+[scriptable, uuid(077bcaab-f5b1-4ed8-a2b4-e4a3eb6bf6de)]
 interface nsIIDBIndex : nsISupports
 {
   readonly attribute DOMString name;
