@@ -70,6 +70,8 @@
 #include "nsILocalFileWin.h"
 #include "nsAutoPtr.h"
 
+#include "prnetdb.h"
+
 #include <objbase.h>
 #include <shlguid.h>
 #include <urlhist.h>
@@ -1919,14 +1921,20 @@ nsIEProfileMigrator::CopyCookiesFromBuffer(char *aBuffer,
     nsDependentCString stringName(name),
                        stringPath(path);
 
-    // delete any possible extant matching host cookie
-    if (hostCopy[0] == '.')
+    // delete any possible extant matching host cookie and
+    // check if we're dealing with an IPv4/IPv6 hostname.
+    PRBool isIPAddress = PR_FALSE;
+    if (hostCopy[0] == '.') {
       aCookieManager->Remove(nsDependentCString(hostCopy+1),
                              stringName, stringPath, PR_FALSE);
+      PRNetAddr addr;
+      if (PR_StringToNetAddr(hostCopy+1, &addr) == PR_SUCCESS)
+        isIPAddress = PR_TRUE;
+    }
 
     nsresult onerv;
     // Add() makes a new domain cookie
-    onerv = aCookieManager->Add(nsDependentCString(hostCopy),
+    onerv = aCookieManager->Add(nsDependentCString(hostCopy + (isIPAddress ? 1 : 0)),
                                 stringPath,
                                 stringName,
                                 nsDependentCString(value),
