@@ -569,91 +569,12 @@ struct gfxPangoFcFont {
     gfxFcFont *mGfxFont;
 
     static nsReturnRef<PangoFont>
-    NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
-    {
-        // A pattern is needed for pango_fc_font_finalize.
-        //
-        // Adding a ref to the requested pattern and one of fontconfig's
-        // patterns uses much less memory than using the fully resolved
-        // pattern here, and saves calling FcFontRenderPrepare when the
-        // PangoFont is only tested for character coverage.
-        //
-        // Normally the is_hinted field of the PangoFcFont is set based on the
-        // FC_HINTING property on the pattern at construction, but this
-        // property is not known until after RenderPrepare.  is_hinted is used
-        // by pango_fc_font_kern_glyphs, which is sometimes used by
-        // pango_ot_buffer_output.  is_hinted will be set when the gfxFont is
-        // constructed for PangoFcFont::lock_face.
-        gfxPangoFcFont *font = static_cast<gfxPangoFcFont*>
-            (g_object_new(GFX_TYPE_PANGO_FC_FONT,
-                          "pattern", aFontPattern, NULL));
-
-        // Save the requested pattern for FcFontRenderPrepare.
-        FcPatternReference(aRequestedPattern);
-        font->mRequestedPattern = aRequestedPattern;
-
-        // PangoFcFont::get_coverage wants a PangoFcFontMap.  (PangoFcFontMap
-        // would usually set this after calling PangoFcFontMap::create_font()
-        // or new_font().)
-        PangoFontMap *fontmap = GetPangoFontMap();
-        // In Pango-1.24.4, we can use the "fontmap" property; by setting the
-        // property, the PangoFcFont base class manages the pointer (as a weak
-        // reference).
-        PangoFcFont *fc_font = &font->parent_instance;
-        if (gUseFontMapProperty) {
-            g_object_set(font, "fontmap", fontmap, NULL);
-        } else {
-            // In Pango versions up to 1.20.5, the parent class will decrement
-            // the reference count of the fontmap during shutdown() or
-            // finalize() of the font.  In Pango versions from 1.22.0 this no
-            // longer happens, so we'll end up leaking the (singleton)
-            // fontmap.
-            fc_font->fontmap = fontmap;
-            g_object_ref(fc_font->fontmap);
-        }
-
-        return nsReturnRef<PangoFont>(PANGO_FONT(font));
-    }
+    NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern);
 
     gfxFcFont *GfxFont()
     {
         if (!mGfxFont) {
-            PangoFcFont *fc_font = &parent_instance;
-
-            if (NS_LIKELY(mRequestedPattern)) {
-                // Created with gfxPangoFcFont::NewFont()
-                nsAutoRef<FcPattern> renderPattern
-                    (FcFontRenderPrepare(NULL, mRequestedPattern,
-                                         fc_font->font_pattern));
-                if (!renderPattern)
-                    return nsnull;
-
-                FcBool hinting = FcTrue;
-                FcPatternGetBool(renderPattern, FC_HINTING, 0, &hinting);
-                fc_font->is_hinted = hinting;
-
-                // is_transformed does not appear to be used anywhere but looks
-                // like it should be set.
-                FcMatrix *matrix;
-                FcResult result = FcPatternGetMatrix(renderPattern,
-                                                     FC_MATRIX, 0, &matrix);
-                fc_font->is_transformed =
-                    result == FcResultMatch &&
-                    (matrix->xy != 0.0 || matrix->yx != 0.0 ||
-                     matrix->xx != 1.0 || matrix->yy != 1.0);
-
-                mGfxFont = gfxFcFont::GetOrMakeFont(renderPattern).get();
-                if (mGfxFont) {
-                    // Finished with the requested pattern
-                    FcPatternDestroy(mRequestedPattern);
-                    mRequestedPattern = NULL;
-                }
-
-            } else {
-                // Created with gfxPangoFontMap::create_font()
-                mGfxFont =
-                    gfxFcFont::GetOrMakeFont(fc_font->font_pattern).get();
-            }                
+            SetGfxFont();
         }
         return mGfxFont;
     }
@@ -662,6 +583,9 @@ struct gfxPangoFcFont {
     {
         return GfxFont()->CairoScaledFont();
     }
+
+private:
+    void SetGfxFont();
 };
 
 struct gfxPangoFcFontClass {
@@ -670,11 +594,95 @@ struct gfxPangoFcFontClass {
 
 G_DEFINE_TYPE (gfxPangoFcFont, gfx_pango_fc_font, PANGO_TYPE_FC_FONT)
 
+/* static */ nsReturnRef<PangoFont>
+gfxPangoFcFont::NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
+{
+    // A pattern is needed for pango_fc_font_finalize.
+    //
+    // Adding a ref to the requested pattern and one of fontconfig's
+    // patterns uses much less memory than using the fully resolved
+    // pattern here, and saves calling FcFontRenderPrepare when the
+    // PangoFont is only tested for character coverage.
+    //
+    // Normally the is_hinted field of the PangoFcFont is set based on the
+    // FC_HINTING property on the pattern at construction, but this
+    // property is not known until after RenderPrepare.  is_hinted is used
+    // by pango_fc_font_kern_glyphs, which is sometimes used by
+    // pango_ot_buffer_output.  is_hinted will be set when the gfxFont is
+    // constructed for PangoFcFont::lock_face.
+    gfxPangoFcFont *font = static_cast<gfxPangoFcFont*>
+        (g_object_new(GFX_TYPE_PANGO_FC_FONT, "pattern", aFontPattern, NULL));
+
+    // Save the requested pattern for FcFontRenderPrepare.
+    FcPatternReference(aRequestedPattern);
+    font->mRequestedPattern = aRequestedPattern;
+
+    // PangoFcFont::get_coverage wants a PangoFcFontMap.  (PangoFcFontMap
+    // would usually set this after calling PangoFcFontMap::create_font()
+    // or new_font().)
+    PangoFontMap *fontmap = GetPangoFontMap();
+    // In Pango-1.24.4, we can use the "fontmap" property; by setting the
+    // property, the PangoFcFont base class manages the pointer (as a weak
+    // reference).
+    PangoFcFont *fc_font = &font->parent_instance;
+    if (gUseFontMapProperty) {
+        g_object_set(font, "fontmap", fontmap, NULL);
+    } else {
+        // In Pango versions up to 1.20.5, the parent class will decrement
+        // the reference count of the fontmap during shutdown() or
+        // finalize() of the font.  In Pango versions from 1.22.0 this no
+        // longer happens, so we'll end up leaking the (singleton)
+        // fontmap.
+        fc_font->fontmap = fontmap;
+        g_object_ref(fc_font->fontmap);
+    }
+
+    return nsReturnRef<PangoFont>(PANGO_FONT(font));
+}
+
+void
+gfxPangoFcFont::SetGfxFont() {
+    PangoFcFont *fc_font = &parent_instance;
+
+    if (NS_LIKELY(mRequestedPattern)) {
+        // Created with gfxPangoFcFont::NewFont()
+        nsAutoRef<FcPattern> renderPattern
+            (FcFontRenderPrepare(NULL, mRequestedPattern,
+                                 fc_font->font_pattern));
+        if (!renderPattern)
+            return;
+
+        FcBool hinting = FcTrue;
+        FcPatternGetBool(renderPattern, FC_HINTING, 0, &hinting);
+        fc_font->is_hinted = hinting;
+
+        // is_transformed does not appear to be used anywhere but looks
+        // like it should be set.
+        FcMatrix *matrix;
+        FcResult result = FcPatternGetMatrix(renderPattern,
+                                             FC_MATRIX, 0, &matrix);
+        fc_font->is_transformed =
+            result == FcResultMatch &&
+            (matrix->xy != 0.0 || matrix->yx != 0.0 ||
+             matrix->xx != 1.0 || matrix->yy != 1.0);
+
+        mGfxFont = gfxFcFont::GetOrMakeFont(renderPattern).get();
+        if (mGfxFont) {
+            // Finished with the requested pattern
+            FcPatternDestroy(mRequestedPattern);
+            mRequestedPattern = NULL;
+        }
+
+    } else {
+        // Created with gfxPangoFontMap::create_font()
+        mGfxFont = gfxFcFont::GetOrMakeFont(fc_font->font_pattern).get();
+    }
+}
+
 static void
 gfx_pango_fc_font_init(gfxPangoFcFont *font)
 {
 }
-
 
 static void
 gfx_pango_fc_font_finalize(GObject *object)
