@@ -57,6 +57,7 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
+#include "GLContext.h"
 
 namespace mozilla {
 namespace gl {
@@ -64,6 +65,13 @@ namespace gl {
 static PRBool gIsATI = PR_FALSE;
 static PRBool gIsChromium = PR_FALSE;
 static int gGLXVersion = 0;
+
+static inline bool
+HasExtension(const char* aExtensions, const char* aRequiredExtension)
+{
+    return GLContext::ListHasExtension(
+        reinterpret_cast<const GLubyte*>(aExtensions), aRequiredExtension);
+}
 
 PRBool
 GLXLibrary::EnsureInitialized()
@@ -87,21 +95,56 @@ GLXLibrary::EnsureInitialized()
     }
 
     LibrarySymbolLoader::SymLoadStruct symbols[] = {
+        /* functions that were in GLX 1.0 */
         { (PRFuncPtr*) &xDestroyContext, { "glXDestroyContext", NULL } },
         { (PRFuncPtr*) &xMakeCurrent, { "glXMakeCurrent", NULL } },
-        { (PRFuncPtr*) &xGetProcAddress, { "glXGetProcAddress", NULL } },
-        { (PRFuncPtr*) &xChooseFBConfig, { "glXChooseFBConfig", NULL } },
-        { (PRFuncPtr*) &xGetFBConfigs, { "glXGetFBConfigs", NULL } },
-        { (PRFuncPtr*) &xCreateNewContext, { "glXCreateNewContext", NULL } },
-        { (PRFuncPtr*) &xGetVisualFromFBConfig, { "glXGetVisualFromFBConfig", NULL } },
-        { (PRFuncPtr*) &xGetFBConfigAttrib, { "glXGetFBConfigAttrib", NULL } },
         { (PRFuncPtr*) &xSwapBuffers, { "glXSwapBuffers", NULL } },
+        { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
+        /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsString, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xQueryServerString, { "glXQueryServerString", NULL } },
+        { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
+        { NULL, { NULL } }
+    };
+
+    LibrarySymbolLoader::SymLoadStruct symbols13[] = {
+        /* functions introduced in GLX 1.3 */
+        { (PRFuncPtr*) &xChooseFBConfig, { "glXChooseFBConfig", NULL } },
+        { (PRFuncPtr*) &xGetFBConfigAttrib, { "glXGetFBConfigAttrib", NULL } },
+        // WARNING: xGetFBConfigs not set in symbols13_ext
+        { (PRFuncPtr*) &xGetFBConfigs, { "glXGetFBConfigs", NULL } },
+        { (PRFuncPtr*) &xGetVisualFromFBConfig, { "glXGetVisualFromFBConfig", NULL } },
+        // WARNING: symbols13_ext sets xCreateGLXPixmapWithConfig instead
         { (PRFuncPtr*) &xCreatePixmap, { "glXCreatePixmap", NULL } },
         { (PRFuncPtr*) &xDestroyPixmap, { "glXDestroyPixmap", NULL } },
-        { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
-        { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
+        { (PRFuncPtr*) &xCreateNewContext, { "glXCreateNewContext", NULL } },
+        { NULL, { NULL } }
+    };
+
+    LibrarySymbolLoader::SymLoadStruct symbols13_ext[] = {
+        /* extension equivalents for functions introduced in GLX 1.3 */
+        // GLX_SGIX_fbconfig extension
+        { (PRFuncPtr*) &xChooseFBConfig, { "glXChooseFBConfigSGIX", NULL } },
+        { (PRFuncPtr*) &xGetFBConfigAttrib, { "glXGetFBConfigAttribSGIX", NULL } },
+        // WARNING: no xGetFBConfigs equivalent in extensions
+        { (PRFuncPtr*) &xGetVisualFromFBConfig, { "glXGetVisualFromFBConfig", NULL } },
+        // WARNING: different from symbols13:
+        { (PRFuncPtr*) &xCreateGLXPixmapWithConfig, { "glXCreateGLXPixmapWithConfigSGIX", NULL } },
+        { (PRFuncPtr*) &xDestroyPixmap, { "glXDestroyGLXPixmap", NULL } }, // not from ext
+        { (PRFuncPtr*) &xCreateNewContext, { "glXCreateContextWithConfigSGIX", NULL } },
+        { NULL, { NULL } }
+    };
+
+    LibrarySymbolLoader::SymLoadStruct symbols14[] = {
+        /* functions introduced in GLX 1.4 */
+        { (PRFuncPtr*) &xGetProcAddress, { "glXGetProcAddress", NULL } },
+        { NULL, { NULL } }
+    };
+
+    LibrarySymbolLoader::SymLoadStruct symbols14_ext[] = {
+        /* extension equivalents for functions introduced in GLX 1.4 */
+        // GLX_ARB_get_proc_address extension
+        { (PRFuncPtr*) &xGetProcAddress, { "glXGetProcAddressARB", NULL } },
         { NULL, { NULL } }
     };
 
@@ -110,15 +153,11 @@ GLXLibrary::EnsureInitialized()
         return PR_FALSE;
     }
 
-    const char *vendor = xQueryServerString(DefaultXDisplay(),
-                                            DefaultScreen(DefaultXDisplay()),
-                                            GLX_VENDOR);
-    const char *serverVersionStr = xQueryServerString(DefaultXDisplay(),
-                                                      DefaultScreen(DefaultXDisplay()),
-                                                      GLX_VERSION);
-    const char *clientVersionStr = xGetClientString(DefaultXDisplay(),
-                                                    GLX_VERSION);
-
+    Display *display = DefaultXDisplay();
+    int screen = DefaultScreen(display);
+    const char *vendor = xQueryServerString(display, screen, GLX_VENDOR);
+    const char *serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
+    const char *clientVersionStr = xGetClientString(display, GLX_VERSION);
 
     int serverVersion = 0, clientVersion = 0;
     if (serverVersionStr &&
@@ -137,8 +176,43 @@ GLXLibrary::EnsureInitialized()
 
     gGLXVersion = PR_MIN(clientVersion, serverVersion);
 
-    if (gGLXVersion < 0x0103)
+    if (gGLXVersion < 0x0101)
+        // Not possible to query for extensions.
         return PR_FALSE;
+
+    const char *extensionsStr = xQueryExtensionsString(display, screen);
+
+    LibrarySymbolLoader::SymLoadStruct *sym13;
+    if (gGLXVersion < 0x0103) {
+        // Even if we don't have 1.3, we might have equivalent extensions
+        // (as on the Intel X server).
+        if (!HasExtension(extensionsStr, "GLX_SGIX_fbconfig")) {
+            return PR_FALSE;
+        }
+        sym13 = symbols13_ext;
+    } else {
+        sym13 = symbols13;
+    }
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, sym13)) {
+        NS_WARNING("Couldn't find required entry point in OpenGL shared library");
+        return PR_FALSE;
+    }
+
+    LibrarySymbolLoader::SymLoadStruct *sym14;
+    if (gGLXVersion < 0x0104) {
+        // Even if we don't have 1.4, we might have equivalent extensions
+        // (as on the Intel X server).
+        if (!HasExtension(extensionsStr, "GLX_ARB_get_proc_address")) {
+            return PR_FALSE;
+        }
+        sym14 = symbols14_ext;
+    } else {
+        sym14 = symbols14;
+    }
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, sym14)) {
+        NS_WARNING("Couldn't find required entry point in OpenGL shared library");
+        return PR_FALSE;
+    }
 
     gIsATI = vendor && DoesVendorStringMatch(vendor, "ATI");
     gIsChromium = (vendor && DoesVendorStringMatch(vendor, "Chromium")) ||
@@ -439,7 +513,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 
     int numConfigs;
     ScopedXFree<GLXFBConfig> cfgs;
-    if (gIsATI) {
+    if (gIsATI || gGLXVersion < 0x0103) {
         const int attribs[] = {
             GLX_DOUBLEBUFFER, False,
             0
@@ -598,11 +672,22 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
         return nsnull;
     }
 
-   
-    GLXPixmap glxpixmap = sGLXLibrary.xCreatePixmap(display,
-                                                    cfgs[chosenIndex],
-                                                    xsurface->XDrawable(),
-                                                    NULL);
+
+    GLXPixmap glxpixmap;
+    // Handle slightly different signature between glXCreatePixmap and
+    // its pre-GLX-1.3 extension equivalent (though given the ABI, we
+    // might not need to).
+    if (gGLXVersion >= 0x0103) {
+        glxpixmap = sGLXLibrary.xCreatePixmap(display,
+                                              cfgs[chosenIndex],
+                                              xsurface->XDrawable(),
+                                              NULL);
+    } else {
+        glxpixmap = sGLXLibrary.xCreateGLXPixmapWithConfig(display,
+                                                           cfgs[chosenIndex],
+                                                           xsurface->
+                                                             XDrawable());
+    }
     if (glxpixmap == 0) {
         return nsnull;
     }

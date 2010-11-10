@@ -713,6 +713,10 @@ public:
         return mAvailableExtensions[aKnownExtension];
     }
 
+    // Shared code for GL extensions and GLX extensions.
+    static PRBool ListHasExtension(const GLubyte *extensions,
+                                   const char *extension);
+
 protected:
     PRPackedBool mInitialized;
     PRPackedBool mIsOffscreen;
