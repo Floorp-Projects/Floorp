@@ -115,6 +115,10 @@ const SEARCH_DELAY = 200;
 // "devtools.hud.loglimit" preference.
 const DEFAULT_LOG_LIMIT = 200;
 
+// Possible directions that can be passed to HUDService.animate().
+const ANIMATE_OUT = 0;
+const ANIMATE_IN = 1;
+
 // Constants used for defining the direction of JSTerm input history navigation.
 const HISTORY_BACK = -1;
 const HISTORY_FORWARD = 1;
@@ -2735,7 +2739,7 @@ HUD_SERVICE.prototype =
   function HS_appendGroupIfNecessary(aConsoleNode, aTimestamp)
   {
     let hudBox = aConsoleNode;
-    while (hudBox != null && hudBox.getAttribute("class") !== "hud-box") {
+    while (hudBox && !hudBox.classList.contains("hud-box")) {
       hudBox = hudBox.parentNode;
     }
 
@@ -3040,6 +3044,53 @@ HUD_SERVICE.prototype =
       aWindow.commandController = new CommandController(aWindow);
       aWindow.controllers.insertControllerAt(0, aWindow.commandController);
     }
+  },
+
+  /**
+   * Animates the Console appropriately.
+   *
+   * @param string aHUDId The ID of the console.
+   * @param string aDirection Whether to animate the console appearing
+   *        (ANIMATE_IN) or disappearing (ANIMATE_OUT).
+   * @param function aCallback An optional callback, which will be called with
+   *        the "transitionend" event passed as a parameter once the animation
+   *        finishes.
+   */
+  animate: function HS_animate(aHUDId, aDirection, aCallback)
+  {
+    let hudBox = this.getOutputNodeById(aHUDId);
+    if (!hudBox.classList.contains("animated") && aCallback) {
+      aCallback();
+      return;
+    }
+
+    switch (aDirection) {
+      case ANIMATE_OUT:
+        hudBox.style.height = 0;
+        break;
+      case ANIMATE_IN:
+        var contentWindow = hudBox.ownerDocument.defaultView;
+        hudBox.style.height = Math.ceil(contentWindow.innerHeight / 3) + "px";
+        break;
+    }
+
+    if (aCallback) {
+      hudBox.addEventListener("transitionend", aCallback, false);
+    }
+  },
+
+  /**
+   * Disables all animation for a console, for unit testing. After this call,
+   * the console will instantly take on a reasonable height, and the close
+   * animation will not occur.
+   *
+   * @param string aHUDId The ID of the console.
+   */
+  disableAnimation: function HS_disableAnimation(aHUDId)
+  {
+    let hudBox = this.getOutputNodeById(aHUDId);
+    hudBox.classList.remove("animated");
+    hudBox.style.height = "300px";
   }
 };
 
@@ -3264,11 +3315,8 @@ HeadsUpDisplay.prototype = {
     let self = this;
     this.HUDBox = this.makeXULNode("vbox");
     this.HUDBox.setAttribute("id", this.hudId);
-    this.HUDBox.setAttribute("class", "hud-box");
-
-    var height = Math.ceil((this.contentWindow.innerHeight * .33)) + "px";
-    var style = "height: " + height + ";";
-    this.HUDBox.setAttribute("style", style);
+    this.HUDBox.setAttribute("class", "hud-box animated");
+    this.HUDBox.style.height = 0;
 
     let outerWrap = this.makeXULNode("vbox");
     outerWrap.setAttribute("class", "hud-outer-wrapper");
@@ -5025,12 +5073,22 @@ HeadsUpDisplayUICommands = {
     var linkedBrowser = gBrowser.selectedTab.linkedBrowser;
     var tabId = gBrowser.getNotificationBox(linkedBrowser).getAttribute("id");
     var hudId = "hud_" + tabId;
-    var hud = gBrowser.selectedTab.ownerDocument.getElementById(hudId);
+    var ownerDocument = gBrowser.selectedTab.ownerDocument;
+    var hud = ownerDocument.getElementById(hudId);
     if (hud) {
-      HUDService.deactivateHUDForContext(gBrowser.selectedTab);
+      HUDService.animate(hudId, ANIMATE_OUT, function() {
+        // If the user closes the console while the console is animating away,
+        // then these callbacks will queue up, but all the callbacks after the
+        // first will have no console to operate on. This test handles this
+        // case gracefully.
+        if (ownerDocument.getElementById(hudId)) {
+          HUDService.deactivateHUDForContext(gBrowser.selectedTab);
+        }
+      });
     }
     else {
       HUDService.activateHUDForContext(gBrowser.selectedTab);
+      HUDService.animate(hudId, ANIMATE_IN);
     }
   },
 

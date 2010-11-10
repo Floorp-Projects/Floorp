@@ -42,6 +42,10 @@
   text-shadow: none;
 }
 
+.hud-box.animated {
+  -moz-transition: height 350ms;
+}
+
 .hud-outer-wrapper {
   width: 100%;
   height: 100%;
