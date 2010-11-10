@@ -92,11 +92,9 @@
 <!-- Confirm Merge Options -->
 <!ENTITY setup.optionsConfirmPage.title "Confirm">
 <!ENTITY confirm.merge.label    "&syncBrand.fullName.label; will now merge all this computer's browser data into your Sync account.">
-<!ENTITY confirm.client.label         "All &brandShortName; data on this computer will be deleted, including the following:">
+<!ENTITY confirm.client2.label         "Warning: The following &brandShortName; data on this computer will be deleted:">
 <!ENTITY confirm.client.moreinfo.label "&brandShortName; will then copy your &syncBrand.fullName.label; data to this computer.">
-<!ENTITY confirm.client.warning.label "WARNING: This will result in all &brandShortName; data on this computer being replaced!">
-<!ENTITY confirm.server.label         "The following devices will be overwritten with your local data:">
-<!ENTITY confirm.server.warning.label "WARNING: Your local data will replace all &brandShortName; data on these devices!">
+<!ENTITY confirm.server2.label         "Warning: The following devices will be overwritten with your local data:">
 
 <!-- New & Existing Account: Setup Complete -->
 <!ENTITY setup.successPage.title "Setup Complete">
