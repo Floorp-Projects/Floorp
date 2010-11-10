@@ -48,6 +48,7 @@ _TEST_FILES =	bug500931_helper.html \
 		inner.html \
 		bug92773_helper.html \
 		bug504877_helper.html \
+		bug571849_helper.html \
 		chrome_wrappers_helper.html \
 		file_doublewrappedcompartments.html \
 		file_evalInSandbox.html \
