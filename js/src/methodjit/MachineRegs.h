@@ -48,6 +48,10 @@ namespace js {
 namespace mjit {
 
 struct Registers {
+    enum CallConvention {
+        NormalCall,
+        FastCall
+    };
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
@@ -170,6 +174,70 @@ struct Registers {
         uint32 mask = maskReg(reg);
         JS_ASSERT(mask & AvailRegs);
         return bool(mask & SavedRegs);
+    }
+
+    static inline uint32 numArgRegs(CallConvention convention) {
+#if defined(JS_CPU_X86)
+# if defined(JS_NO_FASTCALL)
+        return 0;
+# else
+        return (convention == FastCall) ? 2 : 0;
+# endif
+#elif defined(JS_CPU_X64)
+# ifdef _WIN64
+        return 4;
+# else
+        return 6;
+# endif
+#elif defined(JS_CPU_ARM)
+        return 4;
+#endif
+    }
+
+    static inline bool regForArg(CallConvention conv, uint32 i, RegisterID *reg) {
+#if defined(JS_CPU_X86)
+        static const RegisterID regs[] = {
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::edx
+        };
+
+# if defined(JS_NO_FASTCALL)
+        return false;
+# else
+        if (conv == NormalCall)
+            return false;
+# endif
+#elif defined(JS_CPU_X64)
+# ifdef _WIN64
+        static const RegisterID regs[] = {
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::edx,
+            JSC::X86Registers::r8,
+            JSC::X86Registers::r9
+        };
+# else
+        static const RegisterID regs[] = {
+            JSC::X86Registers::edi,
+            JSC::X86Registers::esi,
+            JSC::X86Registers::edx,
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::r8,
+            JSC::X86Registers::r9
+        };
+# endif
+#elif defined(JS_CPU_ARM)
+        static const RegisterID regs[] = {
+            JSC::ARMRegisters::r0,
+            JSC::ARMRegisters::r1,
+            JSC::ARMRegisters::r2,
+            JSC::ARMRegisters::r3
+        };
+#endif
+        JS_ASSERT(numArgRegs(conv) == JS_ARRAY_LENGTH(regs));
+        if (i > JS_ARRAY_LENGTH(regs))
+            return false;
+        *reg = regs[i];
+        return true;
     }
 
     Registers()
