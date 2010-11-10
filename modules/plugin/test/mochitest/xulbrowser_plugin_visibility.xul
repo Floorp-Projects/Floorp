@@ -98,6 +98,7 @@
       }
 
       clearInterval(paintInterval);
+
       ok(true, "Plugin in tab 1 should be visible.");
       is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
          "Plugin in tab 1 should have painted once.");
@@ -107,17 +108,29 @@
          "Plugin in tab 2 should not have painted.");
 
       tabbox.selectedIndex = 1;
-      setTimeout(part2, 100);
+      paintGiveUp = Date.now() + kTimeout;
+      paintInterval = setInterval(part2, 100);
     }
 
     function part2() {
+      if (!plugin2.isVisible()) {
+        if (Date.now() < paintGiveUp)
+          return;
+
+        ok(false, "Plugin in tab 2 never became visible.");
+        done();
+        return;
+      }
+
+      clearInterval(paintInterval);
+
+      ok(true, "Plugin in tab 2 became visible.");
+      is(plugin2.getPaintCount(), 1 * doubleForDoublePass(),
+         "Plugin in tab 2 should have painted once.");
+
       ok(!plugin1.isVisible(), "Plugin in tab 1 should have become invisible.");
       is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
          "Plugin in tab 1 should not have repainted.");
-
-      ok(plugin2.isVisible(), "Plugin in tab 2 should have become visible.");
-      is(plugin2.getPaintCount(), 1 * doubleForDoublePass(),
-         "Plugin in tab 2 should have painted once.");
 
       // Setcolor invalidates
       plugin1.setColor('FF00FF00');
