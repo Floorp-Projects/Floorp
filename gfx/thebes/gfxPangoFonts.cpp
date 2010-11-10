@@ -2031,7 +2031,7 @@ gfxPangoFontGroup::MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
     }
 
     nsAutoTArray<nsString, 20> fcFamilyList;
-    GetFcFamilies(&fcFamilyList, langGroup ? langGroup : mStyle.language);
+    GetFcFamilies(&fcFamilyList, langGroup ? langGroup : mStyle.language.get());
 
     // To consider: A fontset cache here could be helpful.
 
