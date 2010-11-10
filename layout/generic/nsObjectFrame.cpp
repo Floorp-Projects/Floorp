@@ -1982,39 +1982,36 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         RECT dirty;
         nativeDraw.TransformToNativeRect(dirtyGfxRect, dirty);
 
-        // XXX how can we be sure that window->window doesn't point to
-        // a dead DC and hdc has been reallocated at the same address?
-        if (reinterpret_cast<HDC>(window->window) != hdc ||
-            window->x != dest.left || window->y != dest.top) {
-          window->window = hdc;
-          window->x = dest.left;
-          window->y = dest.top;
-          window->clipRect.left = 0;
-          window->clipRect.top = 0;
-          // if we're painting, we're visible.
-          window->clipRect.right = window->width;
-          window->clipRect.bottom = window->height;
+        window->window = hdc;
+        window->x = dest.left;
+        window->y = dest.top;
+        window->clipRect.left = 0;
+        window->clipRect.top = 0;
+        // if we're painting, we're visible.
+        window->clipRect.right = window->width;
+        window->clipRect.bottom = window->height;
 
-          // Windowless plugins on windows need a special event to update their location,
-          // see bug 135737.
-          //
-          // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
-          // relative to the window it is contained in, which is useful for the plugin to
-          // correctly translate mouse coordinates.
-          //
-          // this does not mesh with the comments for bug 135737 which imply that the rectangle
-          // must be clipped in some way to prevent the plugin attempting to paint over areas
-          // it shouldn't.
-          //
-          // since the two uses of the rectangle are mutually exclusive in some cases, and
-          // since I don't see any incorrect painting (at least with Flash and ViewPoint -
-          // the originator of bug 135737), it seems that windowless plugins are not relying
-          // on information here for clipping their drawing, and we can safely use this message
-          // to tell the plugin exactly where it is in all cases.
+        // Windowless plugins on windows need a special event to update their location,
+        // see bug 135737.
+        //
+        // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
+        // relative to the window it is contained in, which is useful for the plugin to
+        // correctly translate mouse coordinates.
+        //
+        // this does not mesh with the comments for bug 135737 which imply that the rectangle
+        // must be clipped in some way to prevent the plugin attempting to paint over areas
+        // it shouldn't.
+        //
+        // since the two uses of the rectangle are mutually exclusive in some cases, and
+        // since I don't see any incorrect painting (at least with Flash and ViewPoint -
+        // the originator of bug 135737), it seems that windowless plugins are not relying
+        // on information here for clipping their drawing, and we can safely use this message
+        // to tell the plugin exactly where it is in all cases.
 
-          nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
-          nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
+        nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
+        nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
 
+        if (mWindowlessRect != winlessRect) {
           mWindowlessRect = winlessRect;
 
           WINDOWPOS winpos;
@@ -2030,9 +2027,10 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
           pluginEvent.wParam = 0;
           pluginEvent.lParam = (LPARAM)&winpos;
           inst->HandleEvent(&pluginEvent, nsnull);
-
-          inst->SetWindow(window);
         }
+
+        inst->SetWindow(window);
+
         mInstanceOwner->Paint(dirty, hdc);
         nativeDraw.EndNativeDrawing();
       } while (nativeDraw.ShouldRenderAgain());
