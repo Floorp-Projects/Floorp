@@ -697,7 +697,8 @@ var BrowserUI = {
     let tab = null;
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     if (ss.getClosedTabCount(window) > (aIndex || 0)) {
-      tab = ss.undoCloseTab(window, aIndex || 0);
+      let chromeTab = ss.undoCloseTab(window, aIndex || 0);
+      tab = Browser.getTabFromChrome(chromeTab);
     }
     return tab;
   },
@@ -1121,11 +1122,16 @@ var BrowserUI = {
 
 var TapHighlightHelper = {
   get _overlay() {
-    delete this._overlay;
-    return this._overlay = document.getElementById("content-overlay");
+    if (Browser.selectedTab)
+      return Browser.selectedTab.overlay;
+    return null;
   },
 
   show: function show(aRects) {
+    let overlay = this._overlay;
+    if (!overlay)
+      return;
+
     let browser = getBrowser();
     let scroll = browser.getPosition();
 
@@ -1134,7 +1140,6 @@ var TapHighlightHelper = {
     }, new Rect(0, 0, 0, 0)).map(function(val) val * browser.scale)
                             .translate(-scroll.x, -scroll.y);
 
-    let overlay = this._overlay;
     overlay.setAttribute("width", canvasArea.width);
     overlay.setAttribute("height", canvasArea.height);
 
@@ -1145,6 +1150,7 @@ var TapHighlightHelper = {
 
     overlay.setAttribute("left", canvasArea.left);
     overlay.setAttribute("top", canvasArea.top);
+    ctx.clearRect(0, 0, canvasArea.width, canvasArea.height);
     ctx.fillStyle = "rgba(0, 145, 255, .5)";
     for (let i = aRects.length - 1; i >= 0; i--) {
       let rect = aRects[i];
@@ -1162,7 +1168,7 @@ var TapHighlightHelper = {
    * highlight should be shown before it disappears.
    */
   hide: function hide(aGuaranteeShowMsecs) {
-    if (this._overlay.style.display == "none")
+    if (!this._overlay || this._overlay.style.display == "none")
       return;
 
     this._guaranteeShow = Math.max(0, aGuaranteeShowMsecs);
