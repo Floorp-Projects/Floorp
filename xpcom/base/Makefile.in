@@ -96,6 +96,10 @@ EXPORTS_mozilla = \
 	FunctionTimer.h \
 	$(NULL)
 
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += nsSetDllDirectory.cpp
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_DEBUG
 CSRCS		+= pure_api.c
