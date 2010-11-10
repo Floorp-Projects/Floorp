@@ -77,7 +77,7 @@ namespace nanojit
 #define NJ_MAX_PARAMETERS               1
 
 #define NJ_JTBL_SUPPORTED               0
-#define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
+#define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
 #define NJ_DIVI_SUPPORTED               0
@@ -296,7 +296,7 @@ namespace nanojit
         Format_3A(2, rd, op3, (cond & 0xF) << 14 | (opf_cc & 0x7) << 11 | (opf_low & 0x3F) << 5 | _reg_(rs2)); \
     } \
     void IntegerOperation(Register rs1, Register rs2, Register rd, int32_t op3, const char *opcode); \
-    void Assembler::IntegerOperationI(Register rs1, int32_t simm13, Register rd, int32_t op3, const char *opcode); \
+    void IntegerOperationI(Register rs1, int32_t simm13, Register rd, int32_t op3, const char *opcode); \
     void FloatOperation(Register rs1, Register rs2, Register rd, int32_t op3, const char *opcode); \
     void Bicc(int32_t a, int32_t dsp22, int32_t cond, const char *opcode); \
     void FBfcc(int32_t a, int32_t dsp22, int32_t cond, const char *opcode); \
@@ -308,7 +308,7 @@ namespace nanojit
     void ShiftOperation(Register rs1, Register rs2, Register rd, int32_t op3, const char* opcode); \
     void ShiftOperationI(Register rs1, int32_t shcnt32, Register rd, int32_t op3, const char* opcode); \
     void Store(Register rd, Register rs1, Register rs2, int32_t op3, const char* opcode); \
-    void Assembler::StoreI(Register rd, int32_t simm13, Register rs1, int32_t op3, const char* opcode); \
+    void StoreI(Register rd, int32_t simm13, Register rs1, int32_t op3, const char* opcode); \
     void ADD(Register rs1, Register rs2, Register rd); \
     void ADDCC(Register rs1, Register rs2, Register rd); \
     void AND(Register rs1, Register rs2, Register rd); \
@@ -355,17 +355,26 @@ namespace nanojit
     void FMOVD(Register rs2, Register rd); \
     void FNEGD(Register rs2, Register rd); \
     void FITOD(Register rs2, Register rd); \
+    void FDTOS(Register rs2, Register rd); \
+    void FSTOD(Register rs2, Register rd); \
     void JMPL(Register rs1, Register rs2, Register rd); \
     void JMPLI(Register rs1, int32_t simm13, Register rd); \
     void LDF(Register rs1, Register rs2, Register rd); \
     void LDFI(Register rs1, int32_t simm13, Register rd); \
+    void LDF32(Register rs1, int32_t immI, Register rd); \
     void LDDF32(Register rs1, int32_t immI, Register rd); \
     void LDUB(Register rs1, Register rs2, Register rd); \
     void LDUBI(Register rs1, int32_t simm13, Register rd); \
     void LDUB32(Register rs1, int32_t immI, Register rd); \
+    void LDSB(Register rs1, Register rs2, Register rd); \
+    void LDSBI(Register rs1, int32_t simm13, Register rd); \
+    void LDSB32(Register rs1, int32_t immI, Register rd); \
     void LDUH(Register rs1, Register rs2, Register rd); \
     void LDUHI(Register rs1, int32_t simm13, Register rd); \
     void LDUH32(Register rs1, int32_t immI, Register rd); \
+    void LDSH(Register rs1, Register rs2, Register rd); \
+    void LDSHI(Register rs1, int32_t simm13, Register rd); \
+    void LDSH32(Register rs1, int32_t immI, Register rd); \
     void LDSW(Register rs1, Register rs2, Register rd); \
     void LDSWI(Register rs1, int32_t simm13, Register rd); \
     void LDSW32(Register rs1, int32_t immI, Register rd); \
@@ -428,6 +437,9 @@ namespace nanojit
     void STW(Register rd, Register rs1, Register rs2); \
     void STWI(Register rd, int32_t simm13, Register rs1); \
     void STW32(Register rd, int32_t immI, Register rs1); \
+    void STH(Register rd, Register rs1, Register rs2); \
+    void STHI(Register rd, int32_t simm13, Register rs1); \
+    void STH32(Register rd, int32_t immI, Register rs1); \
     void STB(Register rd, Register rs1, Register rs2); \
     void STBI(Register rd, int32_t simm13, Register rs1); \
     void STB32(Register rd, int32_t immI, Register rs1); \
