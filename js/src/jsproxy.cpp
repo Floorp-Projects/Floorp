@@ -205,8 +205,11 @@ JSProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoIdVector props(cx);
-    if (!enumerate(cx, proxy, props))
+    if ((flags & JSITER_OWNONLY)
+        ? !enumerateOwn(cx, proxy, props)
+        : !enumerate(cx, proxy, props)) {
         return false;
+    }
     return EnumeratedIdVectorToIterator(cx, proxy, flags, props, vp);
 }
 
