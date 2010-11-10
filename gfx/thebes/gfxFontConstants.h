@@ -62,9 +62,5 @@
 #define NS_FONT_STRETCH_EXPANDED        2
 #define NS_FONT_STRETCH_EXTRA_EXPANDED  3
 #define NS_FONT_STRETCH_ULTRA_EXPANDED  4
-// These need to be more than double all of the values above so that we
-// can add any multiple of any of these values to the values above.
-#define NS_FONT_STRETCH_WIDER           10
-#define NS_FONT_STRETCH_NARROWER        (-10)
 
 #endif
