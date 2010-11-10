@@ -174,7 +174,8 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                            aData.mCbCrStride,
                            size.width*4,
                            type,
-                           gfx::ROTATE_0);
+                           gfx::ROTATE_0,
+                           gfx::FILTER_BILINEAR);
   }
   else {
     gfx::ConvertYCbCrToRGB32(aData.mYChannel,
