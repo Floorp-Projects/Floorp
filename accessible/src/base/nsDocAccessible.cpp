@@ -679,8 +679,10 @@ nsDocAccessible::Shutdown()
     mParent->RemoveChild(this);
   }
 
-  PRUint32 childDocCount = mChildDocuments.Length();
-  for (PRUint32 idx = 0; idx < childDocCount; idx++)
+  // Walk the array backwards because child documents remove themselves from the
+  // array as they are shutdown.
+  PRInt32 childDocCount = mChildDocuments.Length();
+  for (PRInt32 idx = childDocCount - 1; idx >= 0; idx--)
     mChildDocuments[idx]->Shutdown();
 
   mChildDocuments.Clear();

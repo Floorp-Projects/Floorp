@@ -176,7 +176,7 @@ JetpackChild::ActorDestroy(ActorDestroyReason why)
 
 bool
 JetpackChild::RecvSendMessage(const nsString& messageName,
-                              const nsTArray<Variant>& data)
+                              const InfallibleTArray<Variant>& data)
 {
   JSAutoRequest request(mCx);
 
@@ -228,7 +228,7 @@ JetpackChild::GetThis(JSContext* cx)
 
 struct MessageResult {
   nsString msgName;
-  nsTArray<Variant> data;
+  InfallibleTArray<Variant> data;
 };
 
 static JSBool
@@ -291,7 +291,7 @@ JetpackChild::CallMessage(JSContext* cx, uintN argc, jsval* vp)
   if (!MessageCommon(cx, argc, vp, &smr))
     return JS_FALSE;
 
-  nsTArray<Variant> results;
+  InfallibleTArray<Variant> results;
   if (!GetThis(cx)->CallCallMessage(smr.msgName, smr.data, &results)) {
     JS_ReportError(cx, "Failed to callMessage");
     return JS_FALSE;

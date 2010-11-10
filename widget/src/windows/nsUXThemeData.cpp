@@ -312,18 +312,18 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   wc.lpszClassName = className.get();
   ::RegisterClassW(&wc);
 
-  // Create a transparent, descendent of the window passed in. This
+  // Create a minimized descendant of the window passed in. This
   // keeps the window from showing up on the desktop or the taskbar.
   // Note the parent (browser) window is usually still hidden, we
   // don't want to display it, so we can't query it directly.
-  HWND hWnd = CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_LAYERED,
+  HWND hWnd = CreateWindowExW(WS_EX_NOACTIVATE,
                               className.get(), L"",
                               WS_OVERLAPPEDWINDOW,
                               0, 0, 0, 0, aWnd, NULL,
                               nsToolkit::mDllInstance, NULL);
   NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
 
-  ShowWindow(hWnd, SW_SHOWNOACTIVATE);
+  ShowWindow(hWnd, SW_SHOWMINNOACTIVE);
   TITLEBARINFOEX info = {0};
   info.cbSize = sizeof(TITLEBARINFOEX);
   SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 

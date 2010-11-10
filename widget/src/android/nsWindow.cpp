@@ -435,6 +435,9 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         case nsSizeMode_Minimized:
             AndroidBridge::Bridge()->MoveTaskToBack();
             break;
+        case nsSizeMode_Fullscreen:
+            MakeFullScreen(PR_TRUE);
+            break;
     }
     return NS_OK;
 }
@@ -584,6 +587,13 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
         return status;
     }
     return nsEventStatus_eIgnore;
+}
+
+NS_IMETHODIMP
+nsWindow::MakeFullScreen(PRBool aFullScreen)
+{
+    AndroidBridge::Bridge()->SetFullScreen(aFullScreen);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -853,13 +863,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
-    AndroidBridge::AutoLocalJNIFrame jniFrame;
-
     ALOG(">> OnDraw");
-
-    AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
-
-    NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
 
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
@@ -873,6 +877,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
+    AndroidBridge::AutoLocalJNIFrame jniFrame;
+
+    AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
+
+    NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
+
     if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
         jobject bytebuf = sview.GetSoftwareDrawBuffer();
         if (!bytebuf) {
@@ -882,8 +892,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
         int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
-        if (!buf || cap < (mBounds.width * mBounds.height * 2)) {
-            ALOG("### Software drawing, but too small a buffer %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
+        if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
+            ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
             return;
         }
 
@@ -894,7 +904,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                                 gfxASurface::ImageFormatRGB16_565);
 
         DrawTo(targetSurface);
-        sview.Draw2D(bytebuf);
+        sview.Draw2D(bytebuf, mBounds.width * 2);
     } else {
         int drawType = sview.BeginDrawing();
 

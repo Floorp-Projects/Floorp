@@ -1436,6 +1436,9 @@ asserts(1) != 542116-2.html 542116-2-ref.html # bug 596901
 == 546033-1.html 546033-1-ref.html
 random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 549184-1.html 549184-1-ref.html
+== 550325-1.html 550325-1-ref.html
+== 550325-2.html 550325-1-ref.html
+== 550325-3.html 550325-1-ref.html
 == 550716-1.html 550716-1-ref.html
 == 551463-1.html 551463-1-ref.html
 == 551699-1.html 551699-1-ref.html

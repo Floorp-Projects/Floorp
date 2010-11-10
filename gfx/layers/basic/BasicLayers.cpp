@@ -2404,7 +2404,7 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 #endif
 
   // forward this transaction's changeset to our ShadowLayerManager
-  nsAutoTArray<EditReply, 10> replies;
+  AutoInfallibleTArray<EditReply, 10> replies;
   if (HasShadowManager() && ShadowLayerForwarder::EndTransaction(&replies)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];

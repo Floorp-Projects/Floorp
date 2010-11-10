@@ -321,9 +321,9 @@ ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
 }
 
 bool
-ContentChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
-                                 const nsTArray<ResourceMapping>& resources,
-                                 const nsTArray<OverrideMapping>& overrides)
+ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
+                                 const InfallibleTArray<ResourceMapping>& resources,
+                                 const InfallibleTArray<OverrideMapping>& overrides)
 {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryContent* chromeRegistry =

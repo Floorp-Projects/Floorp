@@ -49,15 +49,14 @@ import android.text.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
+import android.content.res.*;
+import android.content.pm.*;
 import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
 
 import android.util.*;
-import android.content.DialogInterface; 
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 
 class GeckoAppShell
@@ -593,9 +592,18 @@ class GeckoAppShell
     }
 
     public static int getDpi() {
-         DisplayMetrics metrics = new DisplayMetrics();
-         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-         return metrics.densityDpi;
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.densityDpi;
+    }
+
+    public static void setFullScreen(boolean fullscreen) {
+        GeckoApp.mFullscreen = fullscreen;
+
+        // force a reconfiguration to hide/show the system bar
+        GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
     }
     public static String showFilePicker(String aFilters) {
         return GeckoApp.mAppContext.

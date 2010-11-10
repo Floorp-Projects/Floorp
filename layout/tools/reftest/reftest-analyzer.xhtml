@@ -137,7 +137,7 @@ function process_log(contents) {
 	gTestItems = [];
 	for (var j in lines) {
 		var line = lines[j];
-		var match = line.match(/^REFTEST (.*)$/);
+		var match = line.match(/^(?:NEXT ERROR )?REFTEST (.*)$/);
 		if (!match)
 			continue;
 		line = match[1];
