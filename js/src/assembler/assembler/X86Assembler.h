@@ -383,7 +383,9 @@ public:
 
     void push_i32(int imm)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "pushl      %s$0x%x\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(imm));
         m_formatter.oneByteOp(OP_PUSH_Iz);
         m_formatter.immediate32(imm);
     }

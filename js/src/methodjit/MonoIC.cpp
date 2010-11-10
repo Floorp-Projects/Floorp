@@ -515,10 +515,10 @@ class CallCompiler : public BaseCompiler
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
         if (ic.frameSize.isStatic()) {
             masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
-            masm.stubCall(compilePtr, script->code, ic.frameSize.staticFrameDepth());
+            masm.fallibleVMCall(compilePtr, script->code, ic.frameSize.staticFrameDepth());
         } else {
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
-            masm.stubCallWithDynamicDepth(compilePtr, script->code);
+            masm.fallibleVMCall(compilePtr, script->code, -1);
         }
         masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
 
@@ -670,8 +670,8 @@ class CallCompiler : public BaseCompiler
 
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
-            masm.stubCall(JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
-                          f.regs.pc, initialFrameDepth);
+            masm.fallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, ic::SplatApplyArgs),
+                                f.regs.pc, initialFrameDepth);
         }
 
         Registers tempRegs;
@@ -696,7 +696,7 @@ class CallCompiler : public BaseCompiler
         /* Store fp. */
         masm.storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
 
-        /* Grab cx early on to avoid stack mucking on x86. */
+        /* Grab cx. */
 #ifdef JS_CPU_X86
         RegisterID cxReg = tempRegs.takeAnyReg();
 #else
@@ -737,67 +737,24 @@ class CallCompiler : public BaseCompiler
             masm.storeValue(v, Address(vpReg, sizeof(Value)));
         }
 
-#ifdef JS_CPU_X86
-        /* x86's stack should be 16-byte aligned. */
-        masm.subPtr(Imm32(16), Assembler::stackPointerRegister);
-        masm.storePtr(vpReg, Address(Assembler::stackPointerRegister, 8));
-#endif
-
-        /* Push argc. */
-#ifdef JS_CPU_X86
+        masm.setupABICall(Registers::NormalCall, 3);
+        masm.storeArg(2, vpReg);
         if (ic.frameSize.isStatic())
-            masm.store32(Imm32(ic.frameSize.staticArgc()), Address(Assembler::stackPointerRegister, 4));
+            masm.storeArg(1, Imm32(ic.frameSize.staticArgc()));
         else
-            masm.store32(argcReg.reg(), Address(Assembler::stackPointerRegister, 4));
-#else
-        if (ic.frameSize.isStatic())
-            masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
-        else if (argcReg.reg() != Registers::ArgReg1)
-            masm.move(argcReg.reg(), Registers::ArgReg1);
-#endif
-
-        /* Push cx. */
-#ifdef JS_CPU_X86
-        masm.storePtr(cxReg, Address(Assembler::stackPointerRegister, 0));
-#endif
-
-#ifdef _WIN64
-        /* x64 needs to pad the stack */
-        masm.subPtr(Imm32(32), Assembler::stackPointerRegister);
-#endif
-        /* Make the call. */
-        Assembler::Call call = masm.call();
-
-#ifdef JS_CPU_X86
-        masm.addPtr(Imm32(16), Assembler::stackPointerRegister);
-#endif
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-        // Usually JaegerThrowpoline got called from return address.
-        // So in JaegerThrowpoline without fastcall, esp was added by 8.
-        // If we just want to jump there, we need to sub esp by 8 first.
-        masm.subPtr(Imm32(8), Assembler::stackPointerRegister);
-#endif
+            masm.storeArg(1, argcReg.reg());
+        masm.storeArg(0, cxReg);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native));
 
         Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
         
 
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-        // Usually JaegerThrowpoline got called from return address.
-        // So in JaegerThrowpoline without fastcall, esp was added by 8.
-        // If we just want to jump there, we need to sub esp by 8 first.
-        masm.addPtr(Imm32(8), Assembler::stackPointerRegister);
-#elif defined(_WIN64)
-        /* JaegerThrowpoline expcets that stack is added by 32 for padding */
-        masm.addPtr(Imm32(32), Assembler::stackPointerRegister);
-#endif
-
         Jump done = masm.jump();
 
         /* Move JaegerThrowpoline into register for very far jump on x64. */
         hasException.linkTo(masm.label(), &masm);
-        masm.move(ImmPtr(JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline)), Registers::ReturnReg);
-        masm.jump(Registers::ReturnReg);
+        masm.throwInJIT();
 
         JSC::ExecutablePool *ep = poolForSize(masm.size(), CallICInfo::Pool_NativeStub);
         if (!ep)
@@ -805,7 +762,6 @@ class CallCompiler : public BaseCompiler
 
         JSC::LinkBuffer buffer(&masm, ep);
         buffer.link(done, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
-        buffer.link(call, JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native)));
         buffer.link(funGuard, ic.slowPathStart);
         masm.finalize(buffer);
         
