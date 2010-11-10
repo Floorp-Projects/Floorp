@@ -325,6 +325,7 @@ var Browser = {
 
     var os = Services.obs;
     os.addObserver(XPInstallObserver, "addon-install-blocked", false);
+    os.addObserver(XPInstallObserver, "addon-install-started", false);
     os.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
     os.addObserver(ContentCrashObserver, "ipc:content-shutdown", false);
     os.addObserver(MemoryObserver, "memory-pressure", false);
@@ -457,6 +458,7 @@ var Browser = {
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
+    os.removeObserver(XPInstallObserver, "addon-install-started");
     os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(ContentCrashObserver, "ipc:content-shutdown");
     os.removeObserver(MemoryObserver, "memory-pressure");
@@ -1993,6 +1995,10 @@ var XPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     switch (aTopic) {
+      case "addon-install-started":
+        var messageString = Elements.browserBundle.getString("alertAddonsDownloading");
+        ExtensionsView.showAlert(messageString);
+        break;
       case "addon-install-blocked":
         var installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
         var host = installInfo.originatingURI.host;

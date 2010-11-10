@@ -711,6 +711,23 @@ var ExtensionsView = {
           element.setAttribute("updating", "true");
         break;
     }
+  },
+  showAlert: function ev_showAlert(aMessage) {
+    if (this.visible)
+      return;
+
+    let strings = Elements.browserBundle;
+
+    let observer = {
+      observe: function (aSubject, aTopic, aData) {
+        if (aTopic == "alertclickcallback")
+          BrowserUI.showPanel("addons-container");
+      }
+    };
+
+    let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
+                                 aMessage, true, "", observer, "addons");
   }
 };
 
@@ -826,7 +843,13 @@ AddonInstallListener.prototype = {
   },
 
   onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {
-    var element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
+    let element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
+
+#ifdef ANDROID
+    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+    progressListener.onProgress("addons", aInstall.progress, aInstall.maxProgress);
+#endif
     if (!element)
       return;
 
@@ -867,31 +890,13 @@ AddonInstallListener.prototype = {
     messageString = messageString.replace("#3", brandShortName);
     messageString = messageString.replace("#4", Services.appinfo.version);
     
-    this._showAlert(messageString);
+    ExtensionsView.showAlert(messageString);
   },
 
   _showInstallCompleteAlert: function xpidm_showAlert(aSucceeded) {
     let strings = Elements.browserBundle;
     let msg = aSucceeded ? strings.getString("alertAddonsInstalled") :
                            strings.getString("alertAddonsFail");
-    this._showAlert(msg);
+    ExtensionsView.showAlert(msg);
   },
-  
-  _showAlert: function xpidm_showAlert(aMessage) {
-    if (ExtensionsView.visible)
-      return;
-
-    let strings = Elements.browserBundle;
-
-    let observer = {
-      observe: function (aSubject, aTopic, aData) {
-        if (aTopic == "alertclickcallback")
-          BrowserUI.showPanel("addons-container");
-      }
-    };
-
-    let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 aMessage, true, "", observer, "addons");
-  }
 };
