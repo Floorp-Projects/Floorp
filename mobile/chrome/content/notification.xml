@@ -34,27 +34,14 @@
     </content>
 
     <implementation implements="nsIDOMEventListener">
-      <constructor>
-        <![CDATA[
-          this._chromeTab = Browser.selectedTab.chromeTab;
-          document.addEventListener("TabSelect", this, true);
-          document.addEventListener("TabClose", this, true);
-        ]]>
-      </constructor>
-
       // We need to override the close method here, otherwise the destructor
       // is not called on removeChild (see bug 230086)
       <method name="close">
         <body>
           <![CDATA[
             var control = this.control;
-            if (control) {
-              document.removeEventListener("TabClose", this, true);
-              document.removeEventListener("TabSelect", this, true);
+            if (control)
               control.removeNotification(this);
-            } else {
-              this.hidden = true;
-            }
             
             // Fire an event when closing a notification
             let event = document.createEvent("Events");
@@ -63,32 +50,10 @@
           ]]>
         </body>
       </method>
-
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            switch(aEvent.type) {
-              case "TabSelect":
-                if (this._chromeTab == aEvent.target)
-                  this.hidden = false;
-                else
-                  this.hidden = true;
-                break;
-
-              case "TabClose":
-                if (this._chromeTab == aEvent.target)
-                  this.close();
-                break;
-            }
-          ]]>
-        </body>
-      </method>      
     </implementation>
   </binding>
 
   <binding id="geo-notification" extends="chrome://browser/content/notification.xml#notification">
-
     <resources>
       <stylesheet src="chrome://browser/skin/notification.css"/>
     </resources>
