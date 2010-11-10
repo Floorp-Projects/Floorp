@@ -568,6 +568,13 @@ struct gfxPangoFcFont {
     PangoCoverage *mCoverage;
     gfxFcFont *mGfxFont;
 
+    // The gfxPangoFcFont holds a reference to |aGfxFont| and |aFontPattern|.
+    // Providing one of fontconfig's font patterns uses much less memory than
+    // using a fully resolved pattern, because fontconfig's font patterns are
+    // shared and will exist anyway.
+    static nsReturnRef<PangoFont>
+    NewFont(gfxFcFont *aGfxFont, FcPattern *aFontPattern);
+
     static nsReturnRef<PangoFont>
     NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern);
 
@@ -585,6 +592,7 @@ struct gfxPangoFcFont {
     }
 
 private:
+    void SetFontMap();
     void SetGfxFont();
 };
 
@@ -593,6 +601,40 @@ struct gfxPangoFcFontClass {
 };
 
 G_DEFINE_TYPE (gfxPangoFcFont, gfx_pango_fc_font, PANGO_TYPE_FC_FONT)
+
+/* static */ nsReturnRef<PangoFont>
+gfxPangoFcFont::NewFont(gfxFcFont *aGfxFont, FcPattern *aFontPattern)
+{
+    // The font pattern is needed for pango_fc_font_finalize.
+    gfxPangoFcFont *font = static_cast<gfxPangoFcFont*>
+        (g_object_new(GFX_TYPE_PANGO_FC_FONT, "pattern", aFontPattern, NULL));
+
+    NS_ADDREF(aGfxFont);
+    font->mGfxFont = aGfxFont;
+    font->SetFontMap();
+
+    PangoFcFont *fc_font = &font->parent_instance;
+    cairo_scaled_font_t *scaled_font = aGfxFont->CairoScaledFont();
+    // Normally the is_hinted field of PangoFcFont is set based on the
+    // FC_HINTING property on the pattern at construction, but this property
+    // is not on an unresolved aFontPattern.  is_hinted is used by
+    // pango_fc_font_kern_glyphs, which is sometimes used by
+    // pango_ot_buffer_output.
+    cairo_font_options_t *options = cairo_font_options_create();
+    cairo_scaled_font_get_font_options(scaled_font, options);
+    cairo_hint_style_t hint_style = cairo_font_options_get_hint_style(options);
+    cairo_font_options_destroy(options);
+    fc_font->is_hinted = hint_style != CAIRO_HINT_STYLE_NONE;
+
+    // is_transformed does not appear to be used anywhere but looks
+    // like it should be set.
+    cairo_matrix_t matrix;
+    cairo_scaled_font_get_font_matrix(scaled_font, &matrix);
+    fc_font->is_transformed = (matrix.xy != 0.0 || matrix.yx != 0.0 ||
+                               matrix.xx != matrix.yy);
+
+    return nsReturnRef<PangoFont>(PANGO_FONT(font));
+}
 
 /* static */ nsReturnRef<PangoFont>
 gfxPangoFcFont::NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
@@ -617,6 +659,14 @@ gfxPangoFcFont::NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
     FcPatternReference(aRequestedPattern);
     font->mRequestedPattern = aRequestedPattern;
 
+    font->SetFontMap();
+
+    return nsReturnRef<PangoFont>(PANGO_FONT(font));
+}
+
+void
+gfxPangoFcFont::SetFontMap()
+{
     // PangoFcFont::get_coverage wants a PangoFcFontMap.  (PangoFcFontMap
     // would usually set this after calling PangoFcFontMap::create_font()
     // or new_font().)
@@ -624,9 +674,9 @@ gfxPangoFcFont::NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
     // In Pango-1.24.4, we can use the "fontmap" property; by setting the
     // property, the PangoFcFont base class manages the pointer (as a weak
     // reference).
-    PangoFcFont *fc_font = &font->parent_instance;
+    PangoFcFont *fc_font = &parent_instance;
     if (gUseFontMapProperty) {
-        g_object_set(font, "fontmap", fontmap, NULL);
+        g_object_set(this, "fontmap", fontmap, NULL);
     } else {
         // In Pango versions up to 1.20.5, the parent class will decrement
         // the reference count of the fontmap during shutdown() or
@@ -636,8 +686,6 @@ gfxPangoFcFont::NewFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
         fc_font->fontmap = fontmap;
         g_object_ref(fc_font->fontmap);
     }
-
-    return nsReturnRef<PangoFont>(PANGO_FONT(font));
 }
 
 void
