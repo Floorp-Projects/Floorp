@@ -1938,6 +1938,12 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
     : gfxFontGroup(families, aStyle, aUserFontSet),
       mPangoLanguage(GuessPangoLanguage(aStyle->language))
 {
+    // This language is passed to the font for shaping.
+    // Shaping doesn't know about lang groups so make it a real language.
+    if (mPangoLanguage) {
+        mStyle.language = do_GetAtom(pango_language_to_string(mPangoLanguage));
+    }
+
     mFonts.AppendElements(1);
 }
 
