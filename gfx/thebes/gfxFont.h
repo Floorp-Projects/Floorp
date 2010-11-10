@@ -156,7 +156,7 @@ struct THEBES_API gfxFontStyle {
     // the language (may be an internal langGroup code rather than an actual
     // language code) specified in the document or element's lang property,
     // or inferred from the charset
-    nsIAtom *language;
+    nsRefPtr<nsIAtom> language;
 
     // Language system tag, to override document language;
     // an OpenType "language system" tag represented as a 32-bit integer
