@@ -71,7 +71,12 @@ gfxPlatformMac::~gfxPlatformMac()
 gfxPlatformFontList*
 gfxPlatformMac::CreatePlatformFontList()
 {
-    return new gfxMacPlatformFontList();
+    gfxPlatformFontList* list = new gfxMacPlatformFontList();
+    if (NS_SUCCEEDED(list->InitFontList())) {
+        return list;
+    }
+    gfxPlatformFontList::Shutdown();
+    return nsnull;
 }
 
 already_AddRefed<gfxASurface>

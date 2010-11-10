@@ -51,7 +51,7 @@ tabbrowser {
   -moz-transition: opacity .25s;
 }
 
-.tabbrowser-tab[pinned] {
+.tabbrowser-tabs:not([pinnedonly]) > .tabbrowser-tab[pinned] {
   position: fixed;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
 }
@@ -80,7 +80,7 @@ toolbar[printpreview="true"] {
   -moz-box-ordinal-group: 10;
 }
 
-%ifdef MENUBAR_CAN_AUTOHIDE
+%ifdef CAN_DRAW_IN_TITLEBAR
 #main-window[inFullscreen] > #titlebar {
   display: none;
 }

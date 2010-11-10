@@ -467,9 +467,6 @@ nsAccessible::GetFirstChild(nsIAccessible **aFirstChild)
   NS_ENSURE_ARG_POINTER(aFirstChild);
   *aFirstChild = nsnull;
 
-  if (gIsCacheDisabled)
-    InvalidateChildren();
-
   PRInt32 childCount = GetChildCount();
   NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
 
@@ -2733,6 +2730,9 @@ nsAccessible::InvalidateChildren()
 PRBool
 nsAccessible::AppendChild(nsAccessible* aChild)
 {
+  if (!aChild)
+    return PR_FALSE;
+
   if (!mChildren.AppendElement(aChild))
     return PR_FALSE;
 
@@ -2746,11 +2746,16 @@ nsAccessible::AppendChild(nsAccessible* aChild)
 PRBool
 nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
 {
+  if (!aChild)
+    return PR_FALSE;
+
   if (!mChildren.InsertElementAt(aIndex, aChild))
     return PR_FALSE;
 
-  for (PRUint32 idx = aIndex + 1; idx < mChildren.Length(); idx++)
-    mChildren[idx]->mIndexInParent++;
+  for (PRUint32 idx = aIndex + 1; idx < mChildren.Length(); idx++) {
+    NS_ASSERTION(mChildren[idx]->mIndexInParent == idx - 1, "Accessible child index doesn't match");
+    mChildren[idx]->mIndexInParent = idx;
+  }
 
   if (nsAccUtils::IsText(aChild))
     mChildrenFlags = eMixedChildren;
@@ -2764,23 +2769,28 @@ nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
 PRBool
 nsAccessible::RemoveChild(nsAccessible* aChild)
 {
-  if (aChild->mParent != this || aChild->mIndexInParent == -1)
+  if (!aChild)
     return PR_FALSE;
 
-  if (aChild->mIndexInParent >= mChildren.Length() ||
-      mChildren[aChild->mIndexInParent] != aChild) {
+  PRInt32 index = aChild->mIndexInParent;
+  if (aChild->mParent != this || index == -1)
+    return PR_FALSE;
+
+  if (index >= mChildren.Length() || mChildren[index] != aChild) {
     NS_ERROR("Child is bound to parent but parent hasn't this child at its index!");
     aChild->UnbindFromParent();
     return PR_FALSE;
   }
 
-  for (PRUint32 idx = aChild->mIndexInParent + 1; idx < mChildren.Length(); idx++)
-    mChildren[idx]->mIndexInParent--;
-
-  mChildren.RemoveElementAt(aChild->mIndexInParent);
-  mEmbeddedObjCollector = nsnull;
+  for (PRUint32 idx = index + 1; idx < mChildren.Length(); idx++) {
+    NS_ASSERTION(mChildren[idx]->mIndexInParent == idx, "Accessible child index doesn't match");
+    mChildren[idx]->mIndexInParent = idx - 1;
+  }
 
   aChild->UnbindFromParent();
+  mChildren.RemoveElementAt(index);
+  mEmbeddedObjCollector = nsnull;
+
   return PR_TRUE;
 }
 

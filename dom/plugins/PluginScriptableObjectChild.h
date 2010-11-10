@@ -93,12 +93,12 @@ public:
 
   virtual bool
   AnswerInvoke(PPluginIdentifierChild* aId,
-               const nsTArray<Variant>& aArgs,
+               const InfallibleTArray<Variant>& aArgs,
                Variant* aResult,
                bool* aSuccess);
 
   virtual bool
-  AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
+  AnswerInvokeDefault(const InfallibleTArray<Variant>& aArgs,
                       Variant* aResult,
                       bool* aSuccess);
 
@@ -123,11 +123,11 @@ public:
                        bool* aSuccess);
 
   virtual bool
-  AnswerEnumerate(nsTArray<PPluginIdentifierChild*>* aProperties,
+  AnswerEnumerate(InfallibleTArray<PPluginIdentifierChild*>* aProperties,
                   bool* aSuccess);
 
   virtual bool
-  AnswerConstruct(const nsTArray<Variant>& aArgs,
+  AnswerConstruct(const InfallibleTArray<Variant>& aArgs,
                   Variant* aResult,
                   bool* aSuccess);
 

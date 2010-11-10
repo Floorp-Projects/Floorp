@@ -194,6 +194,7 @@ public:
   
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty() { return IsEmpty(); }
+  virtual nscoord GetBaseline() const;
   
   /**
    * @return PR_TRUE if this text frame ends with a newline character.  It

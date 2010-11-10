@@ -28,7 +28,6 @@ var gExpectedResult = {
 var gResultCount = 0;
 
 function onError(event, id) {
-  event.stopPropagation();
   is('error', gExpectedResult[id], 'unexpected error loading ' + id);
   gResultCount++;
   dump('error('+id+') expected ' + gExpectedResult[id] + ' gResultCount=' + gResultCount + '\n');
@@ -47,11 +46,10 @@ function onMetaData(id) {
 ]]>
 </script>
 
-<video id='a1' onerror="onError(event, 'a1');" onloadedmetadata="onMetaData('a1');"><sauce/><source type="bad" src="
-404"/></video>
-<video id='a2' onerror="onError(event, 'a2');" onloadedmetadata="onMetaData('a2');"><source/></video>
-<video id='a3' onerror="onError(event, 'a3');" onloadedmetadata="onMetaData('a3');"><html:source/></video>
-<video id='a4' onerror="onError(event, 'a4');" onloadedmetadata="onMetaData('a4');"><svg:source/><source type="bad" src="404"/></video>
+<video id='a1' onloadedmetadata="onMetaData('a1');"><sauce/><source type="bad" src="404" onerror="onError(event, 'a1');"/></video>
+<video id='a2' onloadedmetadata="onMetaData('a2');"><source onerror="onError(event, 'a2');"/></video>
+<video id='a3' onloadedmetadata="onMetaData('a3');"><html:source onerror="onError(event, 'a3');"/></video>
+<video id='a4' onloadedmetadata="onMetaData('a4');"><svg:source/><source onerror="onError(event, 'a4');" type="bad" src="404"/></video>
 
 <script class="testbody" type="text/javascript">
 <![CDATA[

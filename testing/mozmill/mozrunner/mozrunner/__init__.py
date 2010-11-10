@@ -51,12 +51,9 @@ import platform
 
 from distutils import dir_util
 from time import sleep
+from xml.dom import minidom
 
 # conditional (version-dependent) imports
-try:
-    from xml.etree import ElementTree
-except ImportError:
-    from elementtree import ElementTree
 try:
     import simplejson
 except ImportError:
@@ -199,14 +196,52 @@ class Profile(object):
         profile = tempfile.mkdtemp(suffix='.mozrunner')
         return profile
 
+    ### methods related to addons
+
+    @classmethod
+    def addon_id(self, addon_path):
+        """
+        return the id for a given addon, or None if not found
+        - addon_path : path to the addon directory
+        """
+        
+        def find_id(desc):
+            """finds the addon id give its description"""
+            
+            addon_id = None
+            for elem in desc:
+                apps = elem.getElementsByTagName('em:targetApplication')
+                if apps:
+                    for app in apps:
+                        # remove targetApplication nodes, they contain id's we aren't interested in
+                        elem.removeChild(app)
+                    if elem.getElementsByTagName('em:id'):
+                        addon_id = str(elem.getElementsByTagName('em:id')[0].firstChild.data)
+                    elif elem.hasAttribute('em:id'):
+                        addon_id = str(elem.getAttribute('em:id'))
+            return addon_id
+
+        doc = minidom.parse(os.path.join(addon_path, 'install.rdf')) 
+
+        for tag in 'Description', 'RDF:Description':
+            desc = doc.getElementsByTagName(tag)
+            addon_id = find_id(desc)
+            if addon_id:
+                return addon_id
+
+
     def install_addon(self, path):
         """Installs the given addon or directory of addons in the profile."""
+        
+        # if the addon is a directory, install all addons in it
         addons = [path]
         if not path.endswith('.xpi') and not os.path.exists(os.path.join(path, 'install.rdf')):
             addons = [os.path.join(path, x) for x in os.listdir(path)]
 
+        # install each addon
         for addon in addons:
-            tmpdir = None
+
+            # if the addon is an .xpi, uncompress it to a temporary directory
             if addon.endswith('.xpi'):
                 tmpdir = tempfile.mkdtemp(suffix = "." + os.path.split(addon)[-1])
                 compressed_file = zipfile.ZipFile(addon, "r")
@@ -221,40 +256,28 @@ class Profile(object):
                         f.write(data) ; f.close()
                 addon = tmpdir
 
-            tree = ElementTree.ElementTree(file=os.path.join(addon, 'install.rdf'))
-            # description_element =
-            # tree.find('.//{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description/')
+            # determine the addon id
+            addon_id = Profile.addon_id(addon)
+            assert addon_id is not None, "The addon id could not be found: %s" % addon
 
-            desc = tree.find('.//{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description')
-            apps = desc.findall('.//{http://www.mozilla.org/2004/em-rdf#}targetApplication')
-            for app in apps:
-              desc.remove(app)
-            if len(desc) and desc.attrib.has_key('{http://www.mozilla.org/2004/em-rdf#}id'):
-                addon_id = desc.attrib['{http://www.mozilla.org/2004/em-rdf#}id']
-            elif len(desc) and desc.find('.//{http://www.mozilla.org/2004/em-rdf#}id') is not None:
-                addon_id = desc.find('.//{http://www.mozilla.org/2004/em-rdf#}id').text
-            else:
-                about = [e for e in tree.findall(
-                            './/{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description') if
-                             e.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about') ==
-                             'urn:mozilla:install-manifest'
-                        ]
-
-                x = e.find('.//{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description')
-
-                if len(about) == 0:
-                    addon_element = tree.find('.//{http://www.mozilla.org/2004/em-rdf#}id')
-                    addon_id = addon_element.text
-                else:
-                    addon_id = about[0].get('{http://www.mozilla.org/2004/em-rdf#}id')
-
+            # copy the addon to the profile
             addon_path = os.path.join(self.profile, 'extensions', addon_id)
             copytree(addon, addon_path, preserve_symlinks=1)
             self.addons_installed.append(addon_path)
 
+    def clean_addons(self):
+        """Cleans up addons in the profile."""
+        for addon in self.addons_installed:
+            if os.path.isdir(addon):
+                rmtree(addon)
+
+    ### methods related to preferences
+
     def set_preferences(self, preferences):
         """Adds preferences dict to profile preferences"""
+
         prefs_file = os.path.join(self.profile, 'user.js')
+
         # Ensure that the file exists first otherwise create an empty file
         if os.path.isfile(prefs_file):
             f = open(prefs_file, 'a+')
@@ -279,11 +302,7 @@ class Profile(object):
         f = open(os.path.join(self.profile, 'user.js'), 'w')
         f.write(cleaned_prefs) ; f.flush() ; f.close()
 
-    def clean_addons(self):
-        """Cleans up addons in the profile."""
-        for addon in self.addons_installed:
-            if os.path.isdir(addon):
-                rmtree(addon)
+    ### cleanup 
 
     def cleanup(self):
         """Cleanup operations on the profile."""
@@ -609,3 +628,10 @@ class CLI(object):
 
 def cli():
     CLI().run()
+
+def print_addon_ids(args=sys.argv[1:]):
+    """print addon ids for testing"""
+    for arg in args:
+        print Profile.addon_id(arg)
+    
+    

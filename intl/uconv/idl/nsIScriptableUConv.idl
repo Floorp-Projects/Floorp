@@ -51,7 +51,7 @@ interface nsIInputStream;
  * @created         8/Jun/2000
  * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
  */
-[scriptable, uuid(1ea19c6c-c59f-4fd7-9fc7-151e946baca0)]
+[scriptable, uuid(f36ee324-5c1c-437f-ba10-2b4db7a18031)]
 interface nsIScriptableUnicodeConverter : nsISupports
 {
   /**
@@ -101,4 +101,13 @@ interface nsIScriptableUnicodeConverter : nsISupports
    *        The requested charset is not supported.
    */
   attribute string charset;
+
+  /**
+   * Internal use
+   *
+   * When this attribute is set, all charsets may be accessed.
+   * When it is not set (the default), charsets with the isXSSVulnerable flag
+   *  may not be accessed
+   */
+  attribute boolean isInternal;
 };

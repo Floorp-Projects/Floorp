@@ -82,6 +82,16 @@
 #include "nsPermissionManager.h"
 #endif
 
+#if defined(ANDROID) || defined(LINUX)
+#include <sys/time.h>
+#include <sys/resource.h>
+// TODO: For other platforms that support setpriority, figure out
+//       appropriate values of niceness
+static const int kRelativeNiceness = 10;
+#endif
+
+#include "nsAccelerometer.h"
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -209,7 +219,19 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #endif
 
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
-  
+
+#if defined(ANDROID) || defined(LINUX)
+    // XXX We change the behavior of Linux child processes here. That
+    // means that, not just in Fennec, but also in Firefox, once it has
+    // child processes, those will be niced. IOW, Firefox with child processes
+    // will have different performance profiles on Linux than other
+    // platforms. This may alter Talos results and so forth.
+    char* relativeNicenessStr = getenv("MOZ_CHILD_PROCESS_RELATIVE_NICENESS");
+    setpriority(PRIO_PROCESS, 0, getpriority(PRIO_PROCESS, 0) +
+            (relativeNicenessStr ? atoi(relativeNicenessStr) :
+             kRelativeNiceness));
+#endif
+
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
@@ -299,9 +321,9 @@ ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
 }
 
 bool
-ContentChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
-                                 const nsTArray<ResourceMapping>& resources,
-                                 const nsTArray<OverrideMapping>& overrides)
+ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
+                                 const InfallibleTArray<ResourceMapping>& resources,
+                                 const InfallibleTArray<OverrideMapping>& overrides)
 {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryContent* chromeRegistry =
@@ -466,6 +488,16 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 #endif
 
   return true;
+}
+bool
+ContentChild::RecvAccelerationChanged(const double& x, const double& y,
+                                      const double& z)
+{
+    nsCOMPtr<nsIAccelerometerUpdate> acu = 
+        do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (acu)
+        acu->AccelerationChanged(x, y, z);
+    return true;
 }
 
 } // namespace dom

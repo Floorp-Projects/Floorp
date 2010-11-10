@@ -227,7 +227,7 @@ public:
     return nsContentUtils::DispatchTrustedEvent(mElement->GetOwnerDoc(),
                                                 mSource,
                                                 NS_LITERAL_STRING("error"),
-                                                PR_TRUE,
+                                                PR_FALSE,
                                                 PR_TRUE);
   }
 };
@@ -2266,7 +2266,7 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
   return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
                                               static_cast<nsIContent*>(this),
                                               aName,
-                                              PR_TRUE,
+                                              PR_FALSE,
                                               PR_TRUE);
 }
 

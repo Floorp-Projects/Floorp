@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=372345
+-->
+<head>
+  <title>Test for Bug 372345</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372345">Mozilla Bug 372345</a>
+<p id="display"></p>
+<div id="content">
+  <iframe src="data:text/html,<body>"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 372345 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var iframe = document.querySelector("iframe");
+  var doc = iframe.contentDocument;
+  var content = doc.body;
+  var link = content.querySelector("a");
+  function testCursor(post) {
+    setTimeout(function() {
+      var link = document.createElement("a");
+      link.href = "http://mozilla.org/";
+      link.textContent = "link";
+      link.style.cursor = "pointer";
+      content.appendChild(link);
+      is(iframe.contentWindow.getComputedStyle(link, null).cursor, "pointer", "Make sure that the cursor is set to pointer");
+      setTimeout(post, 0);
+    }, 0);
+  }
+  testCursor(function() {
+    doc.designMode = "on";
+    testCursor(function() {
+      doc.designMode = "off";
+      testCursor(function() {
+        content.setAttribute("contenteditable", "true");
+        testCursor(function() {
+          content.removeAttribute("contenteditable");
+          testCursor(function() {
+            SimpleTest.finish();
+          });
+        });
+      });
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

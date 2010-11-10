@@ -91,6 +91,7 @@ _TEST_FILES = \
 		test_bug547996-1.html \
 		test_bug547996-2.xhtml \
 		test_bug556493.html \
+		test_bug574663.html \
 		test_bug586961.xul \
 		test_clickevent_on_input.html \
 		test_bug593959.html \

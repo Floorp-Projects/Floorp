@@ -66,7 +66,7 @@ typedef bool (*nsLoadScriptCallback)(void* aCallbackData, const nsAString& aURL)
 typedef bool (*nsSyncMessageCallback)(void* aCallbackData,
                                       const nsAString& aMessage,
                                       const nsAString& aJSON,
-                                      nsTArray<nsString>* aJSONRetVal);
+                                      InfallibleTArray<nsString>* aJSONRetVal);
 typedef bool (*nsAsyncMessageCallback)(void* aCallbackData,
                                        const nsAString& aMessage,
                                        const nsAString& aJSON);
@@ -129,7 +129,7 @@ public:
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           PRBool aSync, const nsAString& aJSON,
                           JSObject* aObjectsArray,
-                          nsTArray<nsString>* aJSONRetVal,
+                          InfallibleTArray<nsString>* aJSONRetVal,
                           JSContext* aContext = nsnull);
   void AddChildManager(nsFrameMessageManager* aManager,
                        PRBool aLoadScripts = PR_TRUE);

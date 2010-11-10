@@ -72,6 +72,7 @@
 #endif
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
+#include "nsAccelerometer.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
@@ -198,7 +199,7 @@ ContentParent::IsAlive()
 }
 
 bool
-ContentParent::RecvReadPrefsArray(nsTArray<PrefTuple> *prefs)
+ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefTuple> *prefs)
 {
     EnsurePrefService();
     mPrefService->MirrorPreferences(prefs);
@@ -217,7 +218,7 @@ ContentParent::EnsurePrefService()
 }
 
 bool
-ContentParent::RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions)
+ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions)
 {
 #ifdef MOZ_PERMISSIONS
     nsRefPtr<nsPermissionManager> permissionManager =
@@ -288,7 +289,7 @@ ContentParent::Observe(nsISupports* aSubject,
             }
         }
 
-        RecvGeolocationStop();
+        RecvRemoveGeolocationListener();
             
         Close();
         XRE_GetIOMessageLoop()->PostTask(
@@ -460,9 +461,9 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
                                   const nsString& title,
                                   const nsString& defaultFile,
                                   const nsString& defaultExtension,
-                                  const nsTArray<nsString>& filters,
-                                  const nsTArray<nsString>& filterNames,
-                                  nsTArray<nsString>* files,
+                                  const InfallibleTArray<nsString>& filters,
+                                  const InfallibleTArray<nsString>& filterNames,
+                                  InfallibleTArray<nsString>* files,
                                   PRInt16* retValue,
                                   nsresult* result)
 {
@@ -600,7 +601,7 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
 
 bool
 ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
-                               nsTArray<nsString>* aRetvals)
+                               InfallibleTArray<nsString>* aRetvals)
 {
   nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sParentProcessManager;
   if (ppm) {
@@ -622,7 +623,7 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON)
 }
 
 bool
-ContentParent::RecvGeolocationStart()
+ContentParent::RecvAddGeolocationListener()
 {
   if (mGeolocationWatchID == -1) {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
@@ -635,7 +636,7 @@ ContentParent::RecvGeolocationStart()
 }
 
 bool
-ContentParent::RecvGeolocationStop()
+ContentParent::RecvRemoveGeolocationListener()
 {
   if (mGeolocationWatchID != -1) {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
@@ -646,6 +647,26 @@ ContentParent::RecvGeolocationStop()
     mGeolocationWatchID = -1;
   }
   return true;
+}
+
+bool
+ContentParent::RecvAddAccelerometerListener()
+{
+    nsCOMPtr<nsIAccelerometer> ac = 
+        do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac)
+        ac->AddListener(this);
+    return true;
+}
+
+bool
+ContentParent::RecvRemoveAccelerometerListener()
+{
+    nsCOMPtr<nsIAccelerometer> ac = 
+        do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac)
+        ac->RemoveListener(this);
+    return true;
 }
 
 NS_IMETHODIMP
@@ -689,6 +710,20 @@ ContentParent::RecvScriptError(const nsString& aMessage,
   svc->LogMessage(msg);
   return true;
 }
+
+NS_IMETHODIMP
+ContentParent::OnAccelerationChange(nsIAcceleration *aAcceleration)
+{
+    double x, y, z;
+    aAcceleration->GetX(&x);
+    aAcceleration->GetY(&y);
+    aAcceleration->GetZ(&z);
+
+    mozilla::dom::ContentParent::GetSingleton()->
+        SendAccelerationChanged(x, y, z);
+    return NS_OK;
+}
+
 
 } // namespace dom
 } // namespace mozilla

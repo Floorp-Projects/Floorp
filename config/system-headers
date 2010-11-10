@@ -1051,3 +1051,7 @@ pixman.h
 #if MOZ_ENABLE_MEEGOTOUCHSHARE
 shareuiinterface.h
 #endif
+#if MOZ_NATIVE_LIBVPX==1
+vpx/vpx_decoder.h
+vpx/vp8dx.h
+#endif

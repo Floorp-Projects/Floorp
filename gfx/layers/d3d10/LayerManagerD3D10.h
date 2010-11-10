@@ -191,11 +191,9 @@ public:
 
   /**
    * This will render a child layer to whatever render target is currently
-   * active. aOpacity and aTransform will pass any 'carried' transformations
-   * and/or opacity from the parent. This allows the parent to avoid
-   * rendering to intermediate surfaces when possible.
+   * active.
    */
-  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform) = 0;
+  virtual void RenderLayer() = 0;
   virtual void Validate() {}
 
   ID3D10Device1 *device() const { return mD3DManager->device(); }
@@ -203,6 +201,16 @@ public:
 
   /* Called by the layer manager when it's destroyed */
   virtual void LayerManagerDestroyed() {}
+
+  void SetEffectTransformAndOpacity()
+  {
+    Layer* layer = GetLayer();
+    const gfx3DMatrix& transform = layer->GetEffectiveTransform();
+    void* raw = &const_cast<gfx3DMatrix&>(transform)._11;
+    effect()->GetVariableByName("mLayerTransform")->SetRawValue(raw, 0, 64);
+    effect()->GetVariableByName("fLayerOpacity")->AsScalar()->SetFloat(layer->GetEffectiveOpacity());
+  }
+
 protected:
   LayerManagerD3D10 *mD3DManager;
 };

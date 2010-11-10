@@ -46,14 +46,18 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug381167.xhtml \
 		test_bug393970.xul \
-		test_resizer.xul \
-		window_resizer.xul \
-		window_resizer_element.xul \
 		test_bug477754.xul \
 		test_stack.xul \
 		test_bug511075.html \
 		test_splitter.xul \
 		$(NULL)
+
+ifneq (mobile,$(MOZ_BUILD_APP))
+_TEST_FILES +=	test_resizer.xul \
+		window_resizer.xul \
+		window_resizer_element.xul \
+		$(NULL)
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

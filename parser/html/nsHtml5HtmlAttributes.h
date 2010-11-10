@@ -67,8 +67,8 @@ class nsHtml5HtmlAttributes
   private:
     PRInt32 mode;
     PRInt32 length;
-    jArray<nsHtml5AttributeName*,PRInt32> names;
-    jArray<nsString*,PRInt32> values;
+    autoJArray<nsHtml5AttributeName*,PRInt32> names;
+    autoJArray<nsString*,PRInt32> values;
   public:
     nsHtml5HtmlAttributes(PRInt32 mode);
     ~nsHtml5HtmlAttributes();
@@ -91,10 +91,6 @@ class nsHtml5HtmlAttributes
     static void initializeStatics();
     static void releaseStatics();
 };
-
-#ifdef nsHtml5HtmlAttributes_cpp__
-nsHtml5HtmlAttributes* nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES = nsnull;
-#endif
 
 
 

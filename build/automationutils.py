@@ -115,10 +115,18 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   for d in dumps:
     log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
     if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
-      nullfd = open(os.devnull, 'w')
-      # eat minidump_stackwalk errors
-      subprocess.call([stackwalkPath, d, symbolsPath], stderr=nullfd)
-      nullfd.close()
+      p = subprocess.Popen([stackwalkPath, d, symbolsPath],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+      (out, err) = p.communicate()
+      if len(out) > 3:
+        # minidump_stackwalk is chatty, so ignore stderr when it succeeds.
+        print out
+      else:
+        print "stderr from minidump_stackwalk:"
+        print err
+      if p.returncode != 0:
+        print "minidump_stackwalk exited with return code %d" % p.returncode
     elif stackwalkCGI and symbolsPath and isURL(symbolsPath):
       f = None
       try:
@@ -131,7 +139,11 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
         datagen, headers = multipart_encode({"minidump": f,
                                              "symbols": symbolsPath})
         request = urllib2.Request(stackwalkCGI, datagen, headers)
-        print urllib2.urlopen(request).read()
+        result = urllib2.urlopen(request).read()
+        if len(result) > 3:
+          print result
+        else:
+          print "stackwalkCGI returned nothing."
       finally:
         if f:
           f.close()

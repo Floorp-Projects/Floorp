@@ -32,7 +32,6 @@ function finish(evt) {
 }
 
 function errorHandler(evt) {
-  evt.stopPropagation();
   evt.target.parentNode._error++;
 }
 
@@ -46,6 +45,7 @@ var extenstion = {
 
 function startTest(test, token) {
   var v = document.createElement('video');
+  v.addEventListener("error", function(){ok(false,"Error events on source children should not bubble");}, false);
   v.token = token;
   manager.started(token);
   v._error = 0;

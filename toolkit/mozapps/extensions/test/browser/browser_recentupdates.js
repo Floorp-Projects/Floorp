@@ -84,3 +84,18 @@ add_test(function() {
   }
   run_next_test();
 });
+
+
+add_test(function() {
+  close_manager(gManagerWindow, function() {
+    open_manager(null, function(aWindow) {
+      gManagerWindow = aWindow;
+      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+      var recentCat = gManagerWindow.gCategories.get("addons://updates/recent");
+      is(gCategoryUtilities.isVisible(recentCat), true, "Recent Updates category should still be visible");
+
+      run_next_test();
+    });
+  });
+});

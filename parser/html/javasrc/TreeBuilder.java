@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import nu.validator.htmlparser.annotation.Auto;
 import nu.validator.htmlparser.annotation.Const;
 import nu.validator.htmlparser.annotation.IdType;
 import nu.validator.htmlparser.annotation.Inline;
@@ -167,7 +168,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU = 50;
 
-    final static int ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION = 51;
+    final static int ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_NAV_OR_SECTION_OR_SUMMARY = 51;
 
     final static int RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR = 52;
 
@@ -385,11 +386,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private T contextNode;
 
-    private StackNode<T>[] stack;
+    private @Auto StackNode<T>[] stack;
 
     private int currentPtr = -1;
 
-    private StackNode<T>[] listOfActiveFormattingElements;
+    private @Auto StackNode<T>[] listOfActiveFormattingElements;
 
     private int listPtr = -1;
 
@@ -402,7 +403,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     private T deepTreeSurrogateParent;
 
-    protected char[] charBuffer;
+    protected @Auto char[] charBuffer;
 
     protected int charBufferLen = 0;
 
@@ -1403,7 +1404,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 stack[currentPtr].release();
                 currentPtr--;
             }
-            Portability.releaseArray(stack);
             stack = null;
         }
         if (listOfActiveFormattingElements != null) {
@@ -1413,16 +1413,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 }
                 listPtr--;
             }
-            Portability.releaseArray(listOfActiveFormattingElements);
             listOfActiveFormattingElements = null;
         }
         // [NOCPP[
         idLocations.clear();
         // ]NOCPP]
-        if (charBuffer != null) {
-            Portability.releaseArray(charBuffer);
-            charBuffer = null;
-        }
+        charBuffer = null;
         end();
     }
 
@@ -1844,7 +1840,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case P:
                             case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
                             case UL_OR_OL_OR_DL:
-                            case ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION:
+                            case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_NAV_OR_SECTION_OR_SUMMARY:
                                 implicitlyCloseP();
                                 appendToCurrentNodeAndPushElementMayFoster(
                                         "http://www.w3.org/1999/xhtml",
@@ -2078,10 +2074,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         HtmlAttributes.EMPTY_ATTRIBUTES);
                                 int promptIndex = attributes.getIndex(AttributeName.PROMPT);
                                 if (promptIndex > -1) {
-                                    char[] prompt = Portability.newCharArrayFromString(attributes.getValue(promptIndex));
+                                    @Auto char[] prompt = Portability.newCharArrayFromString(attributes.getValue(promptIndex));
                                     appendCharacters(stack[currentPtr].node,
                                             prompt, 0, prompt.length);
-                                    Portability.releaseArray(prompt);
                                 } else {
                                     appendIsindexPrompt(stack[currentPtr].node);
                                 }
@@ -2953,7 +2948,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         int charsetState = CHARSET_INITIAL;
         int start = -1;
         int end = -1;
-        char[] buffer = Portability.newCharArrayFromString(attributeValue);
+        @Auto char[] buffer = Portability.newCharArrayFromString(attributeValue);
 
         charsetloop: for (int i = 0; i < buffer.length; i++) {
             char c = buffer[i];
@@ -3101,7 +3096,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             charset = Portability.newStringFromBuffer(buffer, start, end
                     - start);
         }
-        Portability.releaseArray(buffer);
         return charset;
     }
 
@@ -3419,7 +3413,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case PRE_OR_LISTING:
                         case FIELDSET:
                         case BUTTON:
-                        case ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION:
+                        case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_NAV_OR_SECTION_OR_SUMMARY:
                             eltPos = findLastInScope(name);
                             if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
                                 err("Stray end tag \u201C" + name + "\u201D.");
@@ -4240,7 +4234,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (currentPtr == stack.length) {
             StackNode<T>[] newStack = new StackNode[stack.length + 64];
             System.arraycopy(stack, 0, newStack, 0, stack.length);
-            Portability.releaseArray(stack);
             stack = newStack;
         }
         stack[currentPtr] = node;
@@ -4252,7 +4245,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (currentPtr == stack.length) {
             StackNode<T>[] newStack = new StackNode[stack.length + 64];
             System.arraycopy(stack, 0, newStack, 0, stack.length);
-            Portability.releaseArray(stack);
             stack = newStack;
         }
         stack[currentPtr] = node;
@@ -4264,7 +4256,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             StackNode<T>[] newList = new StackNode[listOfActiveFormattingElements.length + 64];
             System.arraycopy(listOfActiveFormattingElements, 0, newList, 0,
                     listOfActiveFormattingElements.length);
-            Portability.releaseArray(listOfActiveFormattingElements);
             listOfActiveFormattingElements = newList;
         }
         listOfActiveFormattingElements[listPtr] = node;
@@ -5081,7 +5072,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (newLen > charBuffer.length) {
             char[] newBuf = new char[newLen];
             System.arraycopy(charBuffer, 0, newBuf, 0, charBufferLen);
-            Portability.releaseArray(charBuffer);
             charBuffer = newBuf;
         }
         System.arraycopy(buf, start, charBuffer, charBufferLen, length);
@@ -5457,7 +5447,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             }
         }
         if (listOfActiveFormattingElements.length < listLen) {
-            Portability.releaseArray(listOfActiveFormattingElements);
             listOfActiveFormattingElements = new StackNode[listLen];
         }
         listPtr = listLen - 1;
@@ -5466,7 +5455,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             stack[i].release();
         }
         if (stack.length < stackLen) {
-            Portability.releaseArray(stack);
             stack = new StackNode[stackLen];
         }
         currentPtr = stackLen - 1;

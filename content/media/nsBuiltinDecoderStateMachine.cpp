@@ -1263,10 +1263,13 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
         // duration.
         RenderVideoFrame(videoData);
       }
-      mDecoder->GetMonitor().NotifyAll();
       frameDuration = videoData->mEndTime - videoData->mTime;
       videoData = nsnull;
     }
+
+    // Kick the decode thread in case it filled its buffers and put itself
+    // to sleep.
+    mDecoder->GetMonitor().NotifyAll();
 
     // Cap the current time to the larger of the audio and video end time.
     // This ensures that if we're running off the system clock, we don't

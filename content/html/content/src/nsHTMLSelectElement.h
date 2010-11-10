@@ -495,14 +495,6 @@ protected:
     return PR_TRUE;
   }
 
-  /**
-   * Helper method to get the default size.
-   */
-  PRInt32 GetDefaultSize() const
-  {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ? 4 : 1;
-  }
-
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */

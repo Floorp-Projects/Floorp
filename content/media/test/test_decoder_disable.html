@@ -70,7 +70,6 @@ function finishTest() {
 }
 
 function videoError(event, id) {
-  event.stopPropagation();
   gLoadError[id]++;
   gErrorCount++;
   if (gErrorCount >= 4) {
@@ -80,9 +79,9 @@ function videoError(event, id) {
 
 </script>
 
-<video id="video1" onerror="videoError(event, 'video1');">
-  <source type="video/ogg" src="320x240.ogv"/>
-  <source type="audio/wave" src="r11025_u8_c1.wav" id='s2'/>
+<video id="video1">
+  <source type="video/ogg" src="320x240.ogv" onerror="videoError(event, 'video1');"/>
+  <source type="audio/wave" src="r11025_u8_c1.wav" id='s2' onerror="videoError(event, 'video1');"/>
 </video>
 
 <video id="video2" src="320x240.ogv" onerror="videoError(event, 'video2');"></video>

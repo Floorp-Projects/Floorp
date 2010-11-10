@@ -992,7 +992,7 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.6 python2.5 python2.4 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1846,8 +1846,6 @@ case "$host" in
     ;;
 
 *cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
-    # we need Python 2.5 on Windows
-    PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1921,8 +1919,7 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.4 or newer of Python to build,
-dnl and 2.5 or newer on Windows.
+dnl We require version 2.5 or newer of Python to build.
 AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
 changequote(,)
 $PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
@@ -2645,7 +2642,7 @@ ia64*-hpux*)
     DSO_LDOPTS='-Zdll'
     BIN_FLAGS='-Zlinker /ST:0x100000'
     IMPLIB='emximp -o'
-    FILTER='emxexp -o'
+    FILTER='true'
     LDFLAGS='-Zmap'
     WARNINGS_AS_ERRORS='-Werror'
     MOZ_DEBUG_FLAGS="-g -fno-inline"
@@ -2681,9 +2678,8 @@ ia64*-hpux*)
                         [return 0;],
                         ac_os2_declspec="yes",
                         ac_os2_declspec="no")])
-    if test "$ac_os2_declspec" = "yes"; then
-        FILTER='true'
-        MOZ_OS2_USE_DECLSPEC='1'
+    if test "$ac_os2_declspec" != "yes"; then
+        AC_MSG_ERROR([Compiler does not support __declspec(dllexport), install GCC-4.3.2 or newer])
     fi
     ;;
 
@@ -3408,11 +3404,9 @@ case $target in
 *-os2*)
     ;;
 *)
-    AC_CHECK_LIB(m, atan)
-    AC_CHECK_LIB(dl, dlopen,
-    AC_CHECK_HEADER(dlfcn.h, 
-        LIBS="-ldl $LIBS"
-        AC_DEFINE(HAVE_LIBDL)))
+    AC_SEARCH_LIBS(dlopen, dl, 
+        AC_CHECK_HEADER(dlfcn.h, 
+        AC_DEFINE(HAVE_DLOPEN)))
     ;;
 esac
 
@@ -4728,10 +4722,10 @@ AC_CHECK_PROGS(YASM, yasm, "")
 if test -n "$YASM"; then
   dnl Pull out yasm's version string
   changequote(,)
-  _YASM_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*|\1|p'
+  _YASM_VER_FILTER='s|.* \([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\).*|\1|p'
   changequote([,])
 
-  YASM_VERSION=`yasm --version | sed -nre "$_YASM_VER_FILTER"`
+  YASM_VERSION=`yasm --version | sed -ne "$_YASM_VER_FILTER"`
   _YASM_MAJOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $1 }'`
   _YASM_MINOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $2 }'`
   _YASM_RELEASE=`      echo ${YASM_VERSION} | $AWK -F\. '{ print $3 }'`
@@ -4942,7 +4936,6 @@ MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
-MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_INSTALLER=1
 MOZ_IPC=1
 MOZ_JAVAXPCOM=
@@ -4964,7 +4957,11 @@ MOZ_MEDIA=
 MOZ_WEBM=1
 VPX_AS=
 VPX_ASFLAGS=
+VPX_AS_DASH_C_FLAG=
+VPX_AS_CONVERSION=
+VPX_ASM_SUFFIX=
 VPX_X86_ASM=
+VPX_ARM_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -5994,8 +5991,50 @@ MOZ_ARG_DISABLE_BOOL(webm,
     MOZ_WEBM=,
     MOZ_WEBM=1)
 
+dnl system libvpx Support
+dnl ========================================================
+MOZ_ARG_WITH_STRING(system-libvpx,
+[  --with-system-libvpx=[PFX]
+                          Use system libvpx [installed at prefix PFX]],
+    LIBVPX_DIR=$withval)
+
+MOZ_NATIVE_LIBVPX=
+MOZ_LIBVPX_INCLUDES=
+MOZ_LIBVPX_LIBS=
+
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
+
+    if test -n "$LIBVPX_DIR" -a "$LIBVPX_DIR" != no; then
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_LDFLAGS=$LDFLAGS
+        _SAVE_LIBS=$LIBS
+        if test "${LIBVPX_DIR}" = "yes"; then
+            LIBVPX_DIR=/usr
+        fi
+        CFLAGS="-I${LIBVPX_DIR}/include $CFLAGS"
+        LDFLAGS="-L${LIBVPX_DIR}/lib $LDFLAGS"
+        AC_CHECK_HEADER(vpx/vpx_decoder.h,
+                        [if test ! -f "${LIBVPX_DIR}/include/vpx/vpx_decoder.h"; then
+                             AC_MSG_ERROR([vpx/vpx_decoder.h found, but is not in ${LIBVPX_DIR}/include])
+                         fi],
+                        AC_MSG_ERROR([--with-system-libvpx requested but vpx/vpx_decoder.h not found]))
+        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver,
+                     [MOZ_NATIVE_LIBVPX=1
+                      MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
+                      MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
+                     ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
+        CFLAGS=$_SAVE_CFLAGS
+        LDFLAGS=$_SAVE_LDFLAGS
+        LIBS=$_SAVE_LIBS
+    fi
+fi
+
+AC_SUBST(MOZ_NATIVE_LIBVPX)
+AC_SUBST(MOZ_LIBVPX_INCLUDES)
+AC_SUBST(MOZ_LIBVPX_LIBS)
+
+if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_MEDIA=1
     case "$target_cpu" in
@@ -6009,8 +6048,10 @@ if test -n "$MOZ_WEBM"; then
 
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
-    dnl We currently require yasm on all platforms and require yasm 1.1.0 on Win32.
+    dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
+    dnl We currently require gcc on all arm platforms.
     VPX_AS=$YASM
+    VPX_ASM_SUFFIX=asm
 
     dnl See if we have assembly on this platform.  
     case "$OS_ARCH:$CPU_ARCH" in
@@ -6057,6 +6098,17 @@ if test -n "$MOZ_WEBM"; then
         fi
       fi
     ;;
+    *:arm*)
+      if test -n "$GNU_AS" ; then
+        VPX_AS=$AS
+        dnl These flags are a lie; they're just used to enable the requisite
+        dnl opcodes; actual arch detection is done at runtime.
+        VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
+        VPX_DASH_C_FLAG="-c"
+        VPX_AS_CONVERSION="$PERL ${srcdir}/media/libvpx/build/make/ads2gas.pl"
+        VPX_ASM_SUFFIX="$ASM_SUFFIX"
+        VPX_ARM_ASM=1
+      fi
     esac
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
@@ -6065,6 +6117,8 @@ if test -n "$MOZ_WEBM"; then
 
     if test -n "$VPX_X86_ASM"; then
       AC_DEFINE(VPX_X86_ASM)
+    elif test -n "$VPX_ARM_ASM"; then
+      AC_DEFINE(VPX_ARM_ASM)
     else
       AC_MSG_WARN([No assembler or assembly support for libvpx. Using unoptimized C routines.])
     fi
@@ -6367,13 +6421,9 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
 fi
 
-dnl xforms requires xtf and schema-validation
+dnl xforms requires xtf
 if test -z "$MOZ_XTF" -a `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
-fi
-if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTENSIONS" | grep -c schema-validation` -eq 0; then
-    AC_MSG_WARN([Cannot build XForms without schema validation.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 
@@ -6417,33 +6467,6 @@ for extension in $MOZ_EXTENSIONS; do
         AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
     fi
 done
-
-dnl ========================================================
-dnl Image encoders
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(image-encoders,
-[  --enable-image-encoders[={mod1,mod2,default,all,none}]
-                          Enable specific image encoders],
-[ for option in `echo $enableval | sed 's/,/ /g'`; do
-    if test "$option" = "yes" -o "$option" = "all"; then
-        addencoder="$MOZ_IMG_ENCODERS_DEFAULT"
-    elif test "$option" = "no" -o "$option" = "none"; then
-        MOZ_IMG_ENCODERS=""
-        addencoder=""
-    elif test "$option" = "default"; then
-        addencoder="$MOZ_IMG_ENCODERS_DEFAULT"
-    elif test `echo "$option" | grep -c \^-` != 0; then
-        option=`echo $option | sed 's/^-//'`
-        addencoder=`echo "$MOZ_IMG_ENCODERS" | sed "s/ ${option}//"`
-    else
-        addencoder="$option"
-    fi
-    MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS $addencoder"
-done],
-    MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS_DEFAULT")
-
-dnl Remove dupes
-MOZ_IMG_ENCODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_ENCODERS}`
 
 dnl ========================================================
 dnl MathML on by default
@@ -8573,7 +8596,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_TREE_PIXMAN"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
     else
-        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.17.3)
+        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
         MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
     fi
@@ -8848,7 +8871,6 @@ AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_EXTENSIONS)
-AC_SUBST(MOZ_IMG_ENCODERS)
 AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(MOZ_PLUGINS)
 AC_SUBST(MOZ_LOG_REFCNT)
@@ -8911,7 +8933,6 @@ AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)
 AC_SUBST(MOZ_OS2_TOOLS)
-AC_SUBST(MOZ_OS2_USE_DECLSPEC)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
@@ -9078,7 +9099,11 @@ AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
+AC_SUBST(VPX_DASH_C_FLAG)
+AC_SUBST(VPX_AS_CONVERSION)
+AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
+AC_SUBST(VPX_ARM_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

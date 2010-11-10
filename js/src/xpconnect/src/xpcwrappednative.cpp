@@ -1073,20 +1073,6 @@ XPCWrappedNative::GatherScriptableCreateInfo(
     return sciProto;
 }
 
-void
-XPCWrappedNative::TraceOtherWrapper(JSTracer* trc)
-{
-    // Note: This isn't wrapped by a MapLock, however, this is normally called
-    // during GC, where nobody should be playing with the wrapper map anyway,
-    // so this should be OK.
-    JSObject *otherWrapper = GetScope()->GetWrapperMap()->Find(mFlatJSObject);
-    if(otherWrapper)
-    {
-        JS_CALL_OBJECT_TRACER(trc, otherWrapper,
-                              "XPCWrappedNative::mOtherWrapper");
-    }
-}
-
 #ifdef DEBUG_slimwrappers
 static PRUint32 sMorphedSlimWrappers;
 #endif
@@ -1343,8 +1329,6 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
             to->SetInterface(nsnull);
         }
     }
-
-    GetScope()->GetWrapperMap()->Remove(mFlatJSObject);
 
     if(IsWrapperExpired())
     {

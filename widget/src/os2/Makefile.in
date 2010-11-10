@@ -92,10 +92,6 @@ EXTRA_DSO_LDOPTS = \
 		$(QCMS_LIBS) \
 		$(NULL)
 
-ifdef ENABLE_TESTS
-HAS_EXTRAEXPORTS = 1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

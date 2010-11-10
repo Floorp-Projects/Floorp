@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function doTest()
+{
+  var r = document.documentElement;
+  while(r.firstChild) { r.removeChild(r.firstChild); }
+  var body = document.createElementNS("http://www.w3.org/1999/xhtml", "body"); 
+  r.appendChild(body); 
+  body.contentEditable = "true"; 
+  document.execCommand("inserthtml", false, "<span style=\"position:relative;left:0.8px\">a<select></select>a</span>"); 
+
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+
+<body></body>
+</html>

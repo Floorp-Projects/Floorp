@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div style="opacity:0.999;">
+  <canvas id="c" width="200" height="20" style="position:absolute; top:10.4px; left:0; border:1px solid black"></canvas>
+</div>
+<div style="position:absolute; top:10px; left:0; width:200px; height:19px;
+            opacity:0.999; border:1px solid black; border-top:2px solid black; background-color:white"></div>
+<script>
+var c = document.getElementById("c");
+var ctx = c.getContext("2d");
+ctx.fillStyle = "black";
+ctx.fillRect(0, 0, 200, 1);
+</script>
+</body>
+</html>

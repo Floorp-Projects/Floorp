@@ -353,9 +353,18 @@ def main():
 
     # Start the webserver
     reftest.startWebServer(options)
+
+    # Hack in a symbolic link for jsreftest
+    os.system("ln -s ../jsreftest jsreftest")
+
+    # Dynamically build the reftest URL if possible
+    manifest = args[0]
+    if os.path.exists(args[0]):
+        manifest = "http://" + str(options.remoteWebServer) + ":" + str(options.httpPort) + "/" + args[0]
+
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
-    reftest.runTests(args[0], options)
+    reftest.runTests(manifest, options)
     reftest.stopWebServer(options)
 
 if __name__ == "__main__":

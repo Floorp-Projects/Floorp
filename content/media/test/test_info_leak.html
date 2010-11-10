@@ -63,7 +63,6 @@ function nextTest() {
 
 function listener(evt) {
   //log('event ' + evt.type);
-  evt.stopPropagation();
   ok(gEventNum < gExpectedEvents.length, "Too many events received");
   var expected = (gEventNum < gExpectedEvents.length) ? gExpectedEvents[gEventNum] : "NoEvent";
   is(evt.type, expected, "Events received in wrong order");

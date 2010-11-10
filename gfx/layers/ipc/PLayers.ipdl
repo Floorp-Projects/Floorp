@@ -87,6 +87,7 @@ struct ThebesBuffer {
   nsIntRect rect;
   nsIntPoint rotation; 
 };
+union OptionalThebesBuffer { ThebesBuffer; null_t; };
 
 struct OpCreateThebesBuffer {
   PLayer layer;
@@ -214,6 +215,14 @@ struct OpThebesBufferSwap {
   nsIntRegion newValidRegion;
   float newXResolution;
   float newYResolution;
+  // If the parent took the child's old back buffer and returned its
+  // old front buffer, |readOnlyFrontBuffer| may (if non-null) contain
+  // the child's old back buffer (parent's new front buffer).  This
+  // buffer can be used to read back the newly updated region into the
+  // child's new back buffer.  This buffer must be considered
+  // read-only, but sadly that's not enforced.
+  OptionalThebesBuffer readOnlyFrontBuffer;
+  nsIntRegion frontUpdatedRegion;
 };
 
 // Unit of a "changeset reply".  This is a weird abstraction, probably

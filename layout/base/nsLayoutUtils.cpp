@@ -1093,7 +1093,8 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
                                 PRBool aShouldIgnoreSuppression,
                                 PRBool aIgnoreRootScrollFrame)
 {
-  nsDisplayListBuilder builder(aFrame, PR_TRUE, PR_FALSE);
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::EVENT_DELIVERY,
+		                       PR_FALSE);
   nsDisplayList list;
   nsRect target(aRect);
 
@@ -1266,7 +1267,8 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   // *and after* we draw.
   PRBool willFlushRetainedLayers = (aFlags & PAINT_HIDE_CARET) != 0;
 
-  nsDisplayListBuilder builder(aFrame, PR_FALSE, !(aFlags & PAINT_HIDE_CARET));
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
+		                       !(aFlags & PAINT_HIDE_CARET));
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
@@ -1650,7 +1652,7 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
 }
 
 nsresult
-nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
+nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame,
                                       nsIFontMetrics** aFontMetrics)
 {
   return nsLayoutUtils::GetFontMetricsForStyleContext(aFrame->GetStyleContext(),

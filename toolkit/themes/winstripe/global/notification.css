@@ -56,3 +56,94 @@ notification[type="critical"] .messageImage {
 .messageCloseButton > .toolbarbutton-icon {
   -moz-margin-end: 5px;
 }
+
+/* Popup notification button */
+
+.popup-notification-menubutton {
+  margin-top: 17px;
+}
+
+%ifdef XP_WIN
+@media all and (-moz-windows-default-theme) {
+  .popup-notification-menubutton[type="menu-button"] {
+    -moz-appearance: none;
+    border: 1px solid rgba(0,0,0,.35);
+    border-radius: 3px;
+    padding: 0;
+%ifndef WINSTRIPE_AERO
+    background-color: rgba(250,250,250,.3);
+%endif    
+  }
+
+  .popup-notification-menubutton[type="menu-button"]:hover:active {
+    border-color: rgba(0,0,0,.5);
+  }
+
+  .popup-notification-menubutton > .button-menubutton-button,
+  .popup-notification-menubutton > .button-menubutton-dropmarker {
+    -moz-appearance: none;
+    margin: 0;
+%ifdef WINSTRIPE_AERO
+    background-image: -moz-linear-gradient(top, rgba(250,250,250,.6), rgba(175,175,175,.25) 49%, rgba(0,0,0,.12) 51%, rgba(0,0,0,.09) 60%, rgba(0,0,0,.05));
+    box-shadow: 0 0 1px 1px rgba(255,255,255,.75) inset;
+%else
+    box-shadow: 0 1px 0 rgba(255,255,255,.5) inset,
+                0 2px 2px rgba(255,255,255,.35) inset,
+                0 -1px 2px rgba(0,0,0,.1) inset,
+                0 1px 0 rgba(255,255,255,.35);
+%endif
+  }
+
+  .popup-notification-menubutton > .button-menubutton-button {
+%ifdef WINSTRIPE_AERO
+    padding: 0;
+%else
+    padding: 2px 0;
+%endif
+    -moz-padding-start: 8px;
+    -moz-padding-end: 5px;
+    -moz-border-end: 1px solid rgba(0,0,0,.35);
+  }
+
+  .popup-notification-menubutton > .button-menubutton-dropmarker {
+    padding: 9px 5px 8px;
+    width: auto;
+    height: auto;
+    list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
+  }
+
+%ifdef WINSTRIPE_AERO
+  .popup-notification-menubutton > .button-menubutton-button:-moz-locale-dir(ltr),
+  .popup-notification-menubutton > .button-menubutton-dropmarker:-moz-locale-dir(rtl) {
+    border-radius: 2px 0 0 2px;
+  }
+
+  .popup-notification-menubutton > .button-menubutton-button:-moz-locale-dir(rtl),
+  .popup-notification-menubutton > .button-menubutton-dropmarker:-moz-locale-dir(ltr) {
+    border-radius: 0 2px 2px 0;
+  }
+%endif
+
+  .popup-notification-menubutton > .button-menubutton-button:hover,
+  .popup-notification-menubutton > .button-menubutton-dropmarker:hover {
+%ifdef WINSTRIPE_AERO
+    background-image: -moz-linear-gradient(top, rgba(250,250,250,.9), rgba(200,200,200,.6) 49%, rgba(0,0,0,.23) 51%, rgba(0,0,0,.17) 60%, rgba(0,0,0,.05));
+    box-shadow: 0 0 0 1px white inset,
+                0 0 2px 1px rgba(255,255,255,.75) inset;
+%else
+    background-color: rgba(250,250,250,.6);
+%endif
+  }
+
+  .popup-notification-menubutton > .button-menubutton-button:hover:active,
+  .popup-notification-menubutton > .button-menubutton-dropmarker:hover:active,
+  .popup-notification-menubutton[open="true"] > .button-menubutton-dropmarker {
+%ifdef WINSTRIPE_AERO
+    background-image: -moz-linear-gradient(top, rgba(250,250,250,.9), rgba(200,200,200,.6) 49%, rgba(0,0,0,.23) 51%, rgba(0,0,0,.17) 60%, rgba(0,0,0,.05));
+%else
+    background-color: rgba(0,0,0,.05);
+%endif
+    box-shadow: 0 0 2px rgba(0,0,0,.65) inset;
+  }
+}
+%endif

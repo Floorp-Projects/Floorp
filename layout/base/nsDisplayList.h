@@ -136,15 +136,25 @@ public:
    * @param aBuildCaret whether or not we should include the caret in any
    * display lists that we make.
    */
-  nsDisplayListBuilder(nsIFrame* aReferenceFrame, PRBool aIsForEvents,
-                       PRBool aBuildCaret);
+  enum Mode {
+	PAINTING,
+	EVENT_DELIVERY,
+	PLUGIN_GEOMETRY,
+	OTHER
+  };
+  nsDisplayListBuilder(nsIFrame* aReferenceFrame, Mode aMode, PRBool aBuildCaret);
   ~nsDisplayListBuilder();
 
   /**
    * @return PR_TRUE if the display is being built in order to determine which
    * frame is under the mouse position.
    */
-  PRBool IsForEventDelivery() { return mEventDelivery; }
+  PRBool IsForEventDelivery() { return mMode == EVENT_DELIVERY; }
+  /**
+   * @return PR_TRUE if the display list is being build to compute geometry
+   * for plugins.
+   */
+  PRBool IsForPluginGeometry() { return mMode == PLUGIN_GEOMETRY; }
   /**
    * @return PR_TRUE if "painting is suppressed" during page load and we
    * should paint only the background of the document.
@@ -393,8 +403,8 @@ private:
   nsAutoTArray<PresShellState,8> mPresShellStates;
   nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
   nsDisplayTableItem*            mCurrentTableItem;
+  Mode                           mMode;
   PRPackedBool                   mBuildCaret;
-  PRPackedBool                   mEventDelivery;
   PRPackedBool                   mIgnoreSuppression;
   PRPackedBool                   mHadToIgnoreSuppression;
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;

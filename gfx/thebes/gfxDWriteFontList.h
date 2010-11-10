@@ -191,6 +191,9 @@ public:
         return static_cast<gfxDWriteFontList*>(sPlatformFontList);
     }
 
+    // initialize font lists
+    virtual nsresult InitFontList();
+
     virtual gfxFontEntry* GetDefaultFont(const gfxFontStyle* aStyle,
                                          PRBool& aNeedsBold);
 
@@ -209,9 +212,6 @@ public:
 
 private:
     friend class gfxDWriteFontFamily;
-
-    // initialize font lists
-    virtual void InitFontList();
 
     nsresult GetFontSubstitutes();
 

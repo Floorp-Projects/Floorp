@@ -199,11 +199,7 @@ gfxDWriteFont::ComputeMetrics()
         mFontFace->ReleaseFontTable(tableContext);
     }
 
-    mMetrics.internalLeading = 
-        ceil(((gfxFloat)(fontMetrics.ascent + 
-                    fontMetrics.descent - 
-                    fontMetrics.designUnitsPerEm) / 
-                    fontMetrics.designUnitsPerEm) * mAdjustedSize);
+    mMetrics.internalLeading = NS_MAX(mMetrics.maxHeight - mMetrics.emHeight, 0.0);
     mMetrics.externalLeading = 
         ceil(((gfxFloat)fontMetrics.lineGap /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize);

@@ -53,13 +53,13 @@ protected:
 
     NS_OVERRIDE
     virtual bool RecvTest1(
-            const nsTArray<int>& i1,
-            nsTArray<int>* o1);
+            const InfallibleTArray<int>& i1,
+            InfallibleTArray<int>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest2(
-            const nsTArray<PTestDataStructuresSubParent*>& i1,
-            nsTArray<PTestDataStructuresSubParent*>* o1);
+            const InfallibleTArray<PTestDataStructuresSubParent*>& i1,
+            InfallibleTArray<PTestDataStructuresSubParent*>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest3(
@@ -70,8 +70,8 @@ protected:
 
     NS_OVERRIDE
     virtual bool RecvTest4(
-            const nsTArray<IntDouble>& i1,
-            nsTArray<IntDouble>* o1);
+            const InfallibleTArray<IntDouble>& i1,
+            InfallibleTArray<IntDouble>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest5(
@@ -84,8 +84,8 @@ protected:
 
     NS_OVERRIDE
     virtual bool RecvTest6(
-            const nsTArray<IntDoubleArrays>& i1,
-            nsTArray<IntDoubleArrays>* o1);
+            const InfallibleTArray<IntDoubleArrays>& i1,
+            InfallibleTArray<IntDoubleArrays>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest7(
@@ -98,8 +98,8 @@ protected:
 
     NS_OVERRIDE
     virtual bool RecvTest8(
-            const nsTArray<Actors>& i1,
-            nsTArray<Actors>* o1);
+            const InfallibleTArray<Actors>& i1,
+            InfallibleTArray<Actors>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest9(
@@ -114,8 +114,8 @@ protected:
 
     NS_OVERRIDE
     virtual bool RecvTest10(
-            const nsTArray<Unions>& i1,
-            nsTArray<Unions>* o1);
+            const InfallibleTArray<Unions>& i1,
+            InfallibleTArray<Unions>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest11(
@@ -156,10 +156,10 @@ protected:
             WithUnions* o);
 
     NS_OVERRIDE
-    virtual bool RecvTest17(const nsTArray<Op>& sa);
+    virtual bool RecvTest17(const InfallibleTArray<Op>& sa);
 
     NS_OVERRIDE
-    virtual bool RecvTest18(const nsTArray<nsIntRegion>& ra);
+    virtual bool RecvTest18(const InfallibleTArray<nsIntRegion>& ra);
 
     NS_OVERRIDE
     virtual bool RecvDummy(const ShmemUnion& su, ShmemUnion* rsu)
@@ -178,7 +178,7 @@ protected:
     }
 
 private:
-    nsTArray<PTestDataStructuresSubParent*> mKids;
+    InfallibleTArray<PTestDataStructuresSubParent*> mKids;
 };
 
 
@@ -236,7 +236,7 @@ private:
     void Test17();
     void Test18();
 
-    nsTArray<PTestDataStructuresSubChild*> mKids;
+    InfallibleTArray<PTestDataStructuresSubChild*> mKids;
 };
 
 

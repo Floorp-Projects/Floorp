@@ -9,7 +9,7 @@
     <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=377399 -->
 
     <defs>
-        <pattern id="test" viewBox="0 0 40 40" patternContentUnits="objectBoundingBox">
+        <pattern id="test" width="100%" height="100%" viewBox="0 0 40 40" patternContentUnits="objectBoundingBox">
             <rect x="0" y="0" width="40" height="40" fill="lime" />
         </pattern>
     </defs>

@@ -60,6 +60,9 @@
 #include "nsIScriptContext.h"
 #include "nsIJSContextStack.h"
 
+/* XXX private JS headers. */
+#include "jscompartment.h"
+
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
  * script hook.  This was a hack to avoid some js engine problems that should
@@ -1319,10 +1322,14 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
     JSAutoRequest ar(cx);
 
     JSString *jsstr;
-    if (fun)
+    if (fun) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, JS_GetFunctionObject(fun)))
+            return NS_ERROR_FAILURE;
         jsstr = JS_DecompileFunction (cx, fun, 4);
-    else {
+    } else {
         JSScript *script = JSD_GetJSScript (mCx, mScript);
+        js::SwitchToCompartment sc(cx, script->compartment);
         jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
     }
     if (!jsstr)

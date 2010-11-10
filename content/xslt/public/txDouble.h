@@ -77,6 +77,10 @@ typedef union txdpun {
 #endif
     } s;
     PRFloat64 d;
+public:
+    operator double() const {
+        return d;
+    }
 } txdpun;
 
 #if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2

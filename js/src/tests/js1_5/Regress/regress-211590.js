@@ -40,7 +40,7 @@
 var BUGNUMBER = 211590;
 var summary = 'Math.random should be random';
 var actual = '';
-var expect = 'between 48% and 52%';
+var expect = 'between 47.5% and 52.5%';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
@@ -64,7 +64,7 @@ for ( var i = 0; i < n; ++i )
 odd1 *= 100 / n;
 odd2 *= 100 / n;
 
-if (odd1 >= 48 && odd1 <= 52)
+if (odd1 >= 47.5 && odd1 <= 52.5)
 {
   actual = expect;
 }
@@ -75,7 +75,7 @@ else
 
 reportCompare(expect, actual, summary);
 
-if (odd2 >= 48 && odd2 <= 52)
+if (odd2 >= 47.5 && odd2 <= 52.5)
 {
   actual = expect;
 }

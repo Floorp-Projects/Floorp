@@ -57,14 +57,8 @@
 #ifdef MOZ_STATIC_BUILD
 # define cairo_public
 #else
-# if defined(XP_WIN) || defined(XP_BEOS)
+# if defined(XP_WIN) || defined(XP_BEOS) || defined(XP_OS2)
 #  define cairo_public extern __declspec(dllexport)
-# elif defined(XP_OS2)
-#  ifdef __declspec
-#   define cairo_public extern __declspec(dllexport)
-#  else
-#   define cairo_public extern
-#  endif
 # else
 #  ifdef HAVE_VISIBILITY_ATTRIBUTE
 #   define cairo_public extern __attribute__((visibility("default")))

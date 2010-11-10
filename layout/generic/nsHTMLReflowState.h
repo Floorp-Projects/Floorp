@@ -187,13 +187,19 @@ public:
 #endif
 
 private:
-  // Computes margin values from the specified margin style information, and
-  // fills in the mComputedMargin member
-  void ComputeMargin(nscoord aContainingBlockWidth);
+  /**
+   * Computes margin values from the specified margin style information, and
+   * fills in the mComputedMargin member.
+   * @return PR_TRUE if the margin is dependent on the containing block width
+   */
+  PRBool ComputeMargin(nscoord aContainingBlockWidth);
   
-  // Computes padding values from the specified padding style information, and
-  // fills in the mComputedPadding member
-  void ComputePadding(nscoord aContainingBlockWidth);
+  /**
+   * Computes padding values from the specified padding style information, and
+   * fills in the mComputedPadding member.
+   * @return PR_TRUE if the padding is dependent on the containing block width
+   */
+   PRBool ComputePadding(nscoord aContainingBlockWidth);
 
 protected:
 

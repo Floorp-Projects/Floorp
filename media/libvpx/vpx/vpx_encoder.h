@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -171,7 +171,7 @@ extern "C" {
     {
         VPX_RC_ONE_PASS,   /**< Single pass mode */
         VPX_RC_FIRST_PASS, /**< First pass of multi-pass mode */
-        VPX_RC_LAST_PASS  /**< Final pass of multi-pass mode */
+        VPX_RC_LAST_PASS   /**< Final pass of multi-pass mode */
     };
 
 

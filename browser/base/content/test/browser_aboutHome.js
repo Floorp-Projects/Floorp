@@ -94,6 +94,32 @@ let gTests = [
   }
 },
 
+{
+  desc: "Check default snippets are shown if snippets are invalid xml",
+  setup: function ()
+  {
+    let storage = getStorage();
+    // This must be some incorrect xhtml code.
+    storage.setItem("snippets", "<p><b></p></b>");
+  },
+  run: function ()
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+
+    let snippetsElt = doc.getElementById("snippets");
+    ok(snippetsElt, "Found snippets element");
+    ok(snippetsElt.hidden, "Snippets element is hidden");
+
+    let defaultsElt = doc.getElementById("defaultSnippets");
+    ok(defaultsElt, "Found default snippets element")
+    ok(Array.some(defaultsElt.getElementsByTagName("span"), function(elt) {
+      return !elt.hidden;
+    }), "A default snippet is visible.");
+
+    executeSoon(runNextTest);
+  }
+},
+
 ];
 
 function test()

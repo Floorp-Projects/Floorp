@@ -31,8 +31,6 @@ function checkComplete() {
 }
  
 function loadError(evt) {
-  // Prevent mochitest's onerror handler catching the 'error' event on bubble.
-  evt.stopPropagation();
   // If no referer is sent then the sjs returns an error
   ok(false, "check referer is sent with media request");
   evt.target._complete = true;

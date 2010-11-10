@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+<script>
+<![CDATA[
+
+function boom()
+{
+  try {
+    document.getElementById("set").beginElementAt(NaN);
+    return;
+  } catch (e) {}
+  try {
+    document.getElementById("set").endElementAt(NaN);
+    return;
+  } catch (e) {}
+
+  // If we got here we threw both exceptions and skipped both early-returns, as
+  // expected.
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+<set id="set" attributeName="fill" to="green" begin="indefinite"/>
+
+</svg>
