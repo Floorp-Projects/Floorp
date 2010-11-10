@@ -54,7 +54,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(c1b8faa0-ca89-11df-bd3b-0800200c9a66)]
+[scriptable, uuid(6fe08cd4-a848-4e5c-991c-4f35120e6081)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -93,13 +93,12 @@ interface nsIIDBObjectStore : nsISupports
   nsIIDBRequest
   clear();
 
-  // Success fires IDBTransactionEvent, result == IDBCursor or
-  // IDBCursorPreloadedRequest if preload == true. result == null if no match.
+  // Success fires IDBTransactionEvent, result == IDBCursor or result == null if
+  // no match.
   [optional_argc]
   nsIIDBRequest
   openCursor([optional /* null */] in nsIIDBKeyRange range,
-             [optional /* NEXT */] in unsigned short direction,
-             [optional /* false */] in boolean preload);
+             [optional /* NEXT */] in unsigned short direction);
 
   // Returns object immediately
   nsIIDBIndex
