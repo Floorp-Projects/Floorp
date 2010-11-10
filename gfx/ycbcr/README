@@ -2,23 +2,14 @@ This color conversion code is from the Chromium open source project available he
 
 http://code.google.com/chromium/
 
-The code comes from svn revision 40876.
+The code comes from svn revision 638400 on 2010-10-26.
 
 The code was copied from a Chromium svn checkout using the 'update.sh' script which then applies patches for our build and to add dynamic CPU detection.
 
 convert.patch: Change Chromium code to build using Mozilla build system.
                Add runtime CPU detection for MMX
                Move default C implementation to work on all platforms.
-
-picture_region.patch: Change Chromium code to allow a picture region.
-                      The YUV conversion will convert within this 
-                      picture region only.
-
-remove_scale.patch: Removes Chromium scaling code.
-export.patch: Fix export for building on comm-central
-win64_mac64.patch: Fallback to C implementation on Windows and Mac OS X 64 bit
-yv24.patch: Adds YCbCr 4:4:4 support
-row_c_fix.patch: Fix broken C fallback code (See bug 561385).
-bug572034_mac_64bit.patch: Fix x86_64 linux code so it works on OS X.
-solaris.patch: Adds Solaris support, fallback to C implementation on SPARC
-add_scale.patch: re-adds Chromium scaling code
+               Change Chromium code to allow a picture region.
+               The YUV conversion will convert within this 
+               picture region only.
+               Add YCbCr 4:4:4 support

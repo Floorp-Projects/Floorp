@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -20,11 +20,18 @@
 
 // Header for low level row functions.
 #include "yuv_row.h"
+#define MOZILLA_SSE_INCLUDE_HEADER_FOR_SSE2
+#define MOZILLA_SSE_INCLUDE_HEADER_FOR_MMX
 #include "mozilla/SSE.h"
 
 namespace mozilla {
 
 namespace gfx {
+ 
+// 16.16 fixed point arithmetic
+const int kFractionBits = 16;
+const int kFractionMax = 1 << kFractionBits;
+const int kFractionMask = ((1 << kFractionBits) - 1);
 
 // Convert a frame of YUV to 32 bit ARGB.
 NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
@@ -67,45 +74,147 @@ NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
       rgb_row += 4;
     }
 
-    if (has_sse)
+    if (has_sse) {
       FastConvertYUVToRGB32Row(y_ptr,
                                u_ptr,
                                v_ptr,
                                rgb_row,
                                x_width);
-    else
+    }
+    else {
       FastConvertYUVToRGB32Row_C(y_ptr,
                                  u_ptr,
                                  v_ptr,
                                  rgb_row,
                                  x_width,
                                  x_shift);
+    }
   }
 
-#ifdef ARCH_CPU_X86_FAMILY
-  // SSE used for FastConvertYUVToRGB32Row requires emms instruction.
+  // MMX used for FastConvertYUVToRGB32Row requires emms instruction.
   if (has_sse)
     EMMS();
-#endif
 }
+
+#if defined(MOZILLA_COMPILE_WITH_SSE2)
+// FilterRows combines two rows of the image using linear interpolation.
+// SSE2 version does 16 pixels at a time
+static void FilterRows(uint8* ybuf, const uint8* y0_ptr, const uint8* y1_ptr,
+                       int source_width, int source_y_fraction) {
+  __m128i zero = _mm_setzero_si128();
+  __m128i y1_fraction = _mm_set1_epi16(source_y_fraction);
+  __m128i y0_fraction = _mm_set1_epi16(256 - source_y_fraction);
+
+  const __m128i* y0_ptr128 = reinterpret_cast<const __m128i*>(y0_ptr);
+  const __m128i* y1_ptr128 = reinterpret_cast<const __m128i*>(y1_ptr);
+  __m128i* dest128 = reinterpret_cast<__m128i*>(ybuf);
+  __m128i* end128 = reinterpret_cast<__m128i*>(ybuf + source_width);
+
+  do {
+    __m128i y0 = _mm_loadu_si128(y0_ptr128);
+    __m128i y1 = _mm_loadu_si128(y1_ptr128);
+    __m128i y2 = _mm_unpackhi_epi8(y0, zero);
+    __m128i y3 = _mm_unpackhi_epi8(y1, zero);
+    y0 = _mm_unpacklo_epi8(y0, zero);
+    y1 = _mm_unpacklo_epi8(y1, zero);
+    y0 = _mm_mullo_epi16(y0, y0_fraction);
+    y1 = _mm_mullo_epi16(y1, y1_fraction);
+    y2 = _mm_mullo_epi16(y2, y0_fraction);
+    y3 = _mm_mullo_epi16(y3, y1_fraction);
+    y0 = _mm_add_epi16(y0, y1);
+    y2 = _mm_add_epi16(y2, y3);
+    y0 = _mm_srli_epi16(y0, 8);
+    y2 = _mm_srli_epi16(y2, 8);
+    y0 = _mm_packus_epi16(y0, y2);
+    *dest128++ = y0;
+    ++y0_ptr128;
+    ++y1_ptr128;
+  } while (dest128 < end128);
+}
+#elif defined(MOZILLA_COMPILE_WITH_MMX)
+// MMX version does 8 pixels at a time
+static void FilterRows(uint8* ybuf, const uint8* y0_ptr, const uint8* y1_ptr,
+                       int source_width, int source_y_fraction) {
+  __m64 zero = _mm_setzero_si64();
+  __m64 y1_fraction = _mm_set1_pi16(source_y_fraction);
+  __m64 y0_fraction = _mm_set1_pi16(256 - source_y_fraction);
+
+  const __m64* y0_ptr64 = reinterpret_cast<const __m64*>(y0_ptr);
+  const __m64* y1_ptr64 = reinterpret_cast<const __m64*>(y1_ptr);
+  __m64* dest64 = reinterpret_cast<__m64*>(ybuf);
+  __m64* end64 = reinterpret_cast<__m64*>(ybuf + source_width);
+
+  do {
+    __m64 y0 = *y0_ptr64++;
+    __m64 y1 = *y1_ptr64++;
+    __m64 y2 = _mm_unpackhi_pi8(y0, zero);
+    __m64 y3 = _mm_unpackhi_pi8(y1, zero);
+    y0 = _mm_unpacklo_pi8(y0, zero);
+    y1 = _mm_unpacklo_pi8(y1, zero);
+    y0 = _mm_mullo_pi16(y0, y0_fraction);
+    y1 = _mm_mullo_pi16(y1, y1_fraction);
+    y2 = _mm_mullo_pi16(y2, y0_fraction);
+    y3 = _mm_mullo_pi16(y3, y1_fraction);
+    y0 = _mm_add_pi16(y0, y1);
+    y2 = _mm_add_pi16(y2, y3);
+    y0 = _mm_srli_pi16(y0, 8);
+    y2 = _mm_srli_pi16(y2, 8);
+    y0 = _mm_packs_pu16(y0, y2);
+    *dest64++ = y0;
+  } while (dest64 < end64);
+}
+#else  // no MMX or SSE2
+// C version does 8 at a time to mimic MMX code
+static void FilterRows(uint8* ybuf, const uint8* y0_ptr, const uint8* y1_ptr,
+                       int source_width, int source_y_fraction) {
+  int y1_fraction = source_y_fraction;
+  int y0_fraction = 256 - y1_fraction;
+  uint8* end = ybuf + source_width;
+  do {
+    ybuf[0] = (y0_ptr[0] * y0_fraction + y1_ptr[0] * y1_fraction) >> 8;
+    ybuf[1] = (y0_ptr[1] * y0_fraction + y1_ptr[1] * y1_fraction) >> 8;
+    ybuf[2] = (y0_ptr[2] * y0_fraction + y1_ptr[2] * y1_fraction) >> 8;
+    ybuf[3] = (y0_ptr[3] * y0_fraction + y1_ptr[3] * y1_fraction) >> 8;
+    ybuf[4] = (y0_ptr[4] * y0_fraction + y1_ptr[4] * y1_fraction) >> 8;
+    ybuf[5] = (y0_ptr[5] * y0_fraction + y1_ptr[5] * y1_fraction) >> 8;
+    ybuf[6] = (y0_ptr[6] * y0_fraction + y1_ptr[6] * y1_fraction) >> 8;
+    ybuf[7] = (y0_ptr[7] * y0_fraction + y1_ptr[7] * y1_fraction) >> 8;
+    y0_ptr += 8;
+    y1_ptr += 8;
+    ybuf += 8;
+  } while (ybuf < end);
+}
+#endif
 
 // Scale a frame of YUV to 32 bit ARGB.
 NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* y_buf,
                                 const uint8* u_buf,
                                 const uint8* v_buf,
                                 uint8* rgb_buf,
+                                int source_width,
+                                int source_height,
                                 int width,
                                 int height,
-                                int scaled_width,
-                                int scaled_height,
                                 int y_pitch,
                                 int uv_pitch,
                                 int rgb_pitch,
                                 YUVType yuv_type,
-                                Rotate view_rotate) {
-  unsigned int y_shift = yuv_type == YV12 ? 1 : 0;
-  unsigned int x_shift = yuv_type == YV24 ? 0 : 1;
+                                Rotate view_rotate,
+                                ScaleFilter filter) {
   bool has_mmx = supports_mmx();
+
+  // 4096 allows 3 buffers to fit in 12k.
+  // Helps performance on CPU with 16K L1 cache.
+  // Large enough for 3830x2160 and 30" displays which are 2560x1600.
+  const int kFilterBufferSize = 4096;
+  // Disable filtering if the screen is too big (to avoid buffer overflows).
+  // This should never happen to regular users: they don't have monitors
+  // wider than 4096 pixels.
+  // TODO(fbarchard): Allow rotated videos to filter.
+  if (source_width > kFilterBufferSize || view_rotate)
+    filter = FILTER_NONE;
+
+  unsigned int y_shift = yuv_type == YV12 ? 1 : 0;
   // Diagram showing origin and direction of source sampling.
   // ->0   4<-
   // 7       3
@@ -117,103 +226,148 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* y_buf,
       (view_rotate == ROTATE_270) ||
       (view_rotate == MIRROR_ROTATE_0) ||
       (view_rotate == MIRROR_ROTATE_90)) {
-    y_buf += width - 1;
-    u_buf += width / 2 - 1;
-    v_buf += width / 2 - 1;
-    width = -width;
+    y_buf += source_width - 1;
+    u_buf += source_width / 2 - 1;
+    v_buf += source_width / 2 - 1;
+    source_width = -source_width;
   }
   // Rotations that start at bottom of image.
   if ((view_rotate == ROTATE_90) ||
       (view_rotate == ROTATE_180) ||
       (view_rotate == MIRROR_ROTATE_90) ||
       (view_rotate == MIRROR_ROTATE_180)) {
-    y_buf += (height - 1) * y_pitch;
-    u_buf += ((height >> y_shift) - 1) * uv_pitch;
-    v_buf += ((height >> y_shift) - 1) * uv_pitch;
-    height = -height;
+    y_buf += (source_height - 1) * y_pitch;
+    u_buf += ((source_height >> y_shift) - 1) * uv_pitch;
+    v_buf += ((source_height >> y_shift) - 1) * uv_pitch;
+    source_height = -source_height;
   }
 
   // Handle zero sized destination.
-  if (scaled_width == 0 || scaled_height == 0)
+  if (width == 0 || height == 0)
     return;
-  int scaled_dx = width * 16 / scaled_width;
-  int scaled_dy = height * 16 / scaled_height;
-
-  int scaled_dx_uv = scaled_dx;
+  int source_dx = source_width * kFractionMax / width;
+  int source_dy = source_height * kFractionMax / height;
+  int source_dx_uv = source_dx;
 
   if ((view_rotate == ROTATE_90) ||
       (view_rotate == ROTATE_270)) {
-    int tmp = scaled_height;
-    scaled_height = scaled_width;
-    scaled_width = tmp;
-    tmp = height;
+    int tmp = height;
     height = width;
     width = tmp;
-    int original_dx = scaled_dx;
-    int original_dy = scaled_dy;
-    scaled_dx = ((original_dy >> 4) * y_pitch) << 4;
-    scaled_dx_uv = ((original_dy >> 4) * uv_pitch) << 4;
-    scaled_dy = original_dx;
+    tmp = source_height;
+    source_height = source_width;
+    source_width = tmp;
+    int original_dx = source_dx;
+    int original_dy = source_dy;
+    source_dx = ((original_dy >> kFractionBits) * y_pitch) << kFractionBits;
+    source_dx_uv = ((original_dy >> kFractionBits) * uv_pitch) << kFractionBits;
+    source_dy = original_dx;
     if (view_rotate == ROTATE_90) {
       y_pitch = -1;
       uv_pitch = -1;
-      height = -height;
+      source_height = -source_height;
     } else {
       y_pitch = 1;
       uv_pitch = 1;
     }
   }
 
-  for (int y = 0; y < scaled_height; ++y) {
+  // Need padding because FilterRows() will write 1 to 16 extra pixels
+  // after the end for SSE2 version.
+  uint8 yuvbuf[16 + kFilterBufferSize * 3 + 16];
+  uint8* ybuf =
+      reinterpret_cast<uint8*>(reinterpret_cast<PRUptrdiff>(yuvbuf + 15) & ~15);
+  uint8* ubuf = ybuf + kFilterBufferSize;
+  uint8* vbuf = ubuf + kFilterBufferSize;
+  // TODO(fbarchard): Fixed point math is off by 1 on negatives.
+  int yscale_fixed = (source_height << kFractionBits) / height;
+
+  // TODO(fbarchard): Split this into separate function for better efficiency.
+  for (int y = 0; y < height; ++y) {
     uint8* dest_pixel = rgb_buf + y * rgb_pitch;
-    int scaled_y = (y * height / scaled_height);
-    const uint8* y_ptr = y_buf + scaled_y * y_pitch;
-    const uint8* u_ptr = u_buf + (scaled_y >> y_shift) * uv_pitch;
-    const uint8* v_ptr = v_buf + (scaled_y >> y_shift) * uv_pitch;
+    int source_y_subpixel = (y * yscale_fixed);
+    if (yscale_fixed >= (kFractionMax * 2)) {
+      source_y_subpixel += kFractionMax / 2;  // For 1/2 or less, center filter.
+    }
+    int source_y = source_y_subpixel >> kFractionBits;
 
-#if defined(_MSC_VER) && defined(_M_IX86)
-    if (scaled_width == (width * 2)) {
-      DoubleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                          dest_pixel, scaled_width);
-    } else if ((scaled_dx & 15) == 0) {  // Scaling by integer scale factor.
-      if (scaled_dx_uv == scaled_dx) {   // Not rotated.
-        if (scaled_dx == 16) {           // Not scaled
-          if (has_mmx)
-            FastConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                                     dest_pixel, scaled_width);
-          else
-            FastConvertYUVToRGB32Row_C(y_ptr, u_ptr, v_ptr,
-                                      dest_pixel, scaled_width, x_shift);
-        } else {  // Simple scale down. ie half
-          ConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                               dest_pixel, scaled_width, scaled_dx >> 4);
-        }
+    const uint8* y0_ptr = y_buf + source_y * y_pitch;
+    const uint8* y1_ptr = y0_ptr + y_pitch;
+
+    const uint8* u0_ptr = u_buf + (source_y >> y_shift) * uv_pitch;
+    const uint8* u1_ptr = u0_ptr + uv_pitch;
+    const uint8* v0_ptr = v_buf + (source_y >> y_shift) * uv_pitch;
+    const uint8* v1_ptr = v0_ptr + uv_pitch;
+
+    // vertical scaler uses 16.8 fixed point
+    int source_y_fraction = (source_y_subpixel & kFractionMask) >> 8;
+    int source_uv_fraction =
+        ((source_y_subpixel >> y_shift) & kFractionMask) >> 8;
+
+    const uint8* y_ptr = y0_ptr;
+    const uint8* u_ptr = u0_ptr;
+    const uint8* v_ptr = v0_ptr;
+    // Apply vertical filtering if necessary.
+    // TODO(fbarchard): Remove memcpy when not necessary.
+    if (filter & mozilla::gfx::FILTER_BILINEAR_V) {
+      if (yscale_fixed != kFractionMax &&
+          source_y_fraction && ((source_y + 1) < source_height)) {
+        FilterRows(ybuf, y0_ptr, y1_ptr, source_width, source_y_fraction);
       } else {
-        RotateConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                                   dest_pixel, scaled_width,
-                                   scaled_dx >> 4, scaled_dx_uv >> 4);
+        memcpy(ybuf, y0_ptr, source_width);
       }
-#else
-    if (scaled_dx == 16) {           // Not scaled
-      if (has_mmx)
-        FastConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                                 dest_pixel, scaled_width);
-      else
-        FastConvertYUVToRGB32Row_C(y_ptr, u_ptr, v_ptr,
-                                   dest_pixel, scaled_width, x_shift);
-#endif
+      y_ptr = ybuf;
+      ybuf[source_width] = ybuf[source_width-1];
+      int uv_source_width = (source_width + 1) / 2;
+      if (yscale_fixed != kFractionMax &&
+          source_uv_fraction &&
+          (((source_y >> y_shift) + 1) < (source_height >> y_shift))) {
+        FilterRows(ubuf, u0_ptr, u1_ptr, uv_source_width, source_uv_fraction);
+        FilterRows(vbuf, v0_ptr, v1_ptr, uv_source_width, source_uv_fraction);
+      } else {
+        memcpy(ubuf, u0_ptr, uv_source_width);
+        memcpy(vbuf, v0_ptr, uv_source_width);
+      }
+      u_ptr = ubuf;
+      v_ptr = vbuf;
+      ubuf[uv_source_width] = ubuf[uv_source_width - 1];
+      vbuf[uv_source_width] = vbuf[uv_source_width - 1];
+    }
+    if (source_dx == kFractionMax) {  // Not scaled
+      FastConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                               dest_pixel, width);
     } else {
-      if (has_mmx) 
+      if (filter & FILTER_BILINEAR_H) {
+        LinearScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                                 dest_pixel, width, source_dx);
+    } else {
+// Specialized scalers and rotation.
+#if defined(_MSC_VER) && defined(_M_IX86)
+        if (width == (source_width * 2)) {
+          DoubleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                              dest_pixel, width);
+        } else if ((source_dx & kFractionMask) == 0) {
+          // Scaling by integer scale factor. ie half.
+          ConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                               dest_pixel, width,
+                               source_dx >> kFractionBits);
+        } else if (source_dx_uv == source_dx) {  // Not rotated.
+          ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                             dest_pixel, width, source_dx);
+        } else {
+          RotateConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                                     dest_pixel, width,
+                                     source_dx >> kFractionBits,
+                                     source_dx_uv >> kFractionBits);
+        }
+#else
         ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                           dest_pixel, scaled_width, scaled_dx);
-      else
-        ScaleYUVToRGB32Row_C(y_ptr, u_ptr, v_ptr,
-                             dest_pixel, scaled_width, scaled_dx, x_shift);
-
-    }  
+                           dest_pixel, width, source_dx);
+#endif
+      }      
+    }
   }
-
-  // MMX used for FastConvertYUVToRGB32Row requires emms instruction.
+  // MMX used for FastConvertYUVToRGB32Row and FilterRows requires emms.
   if (has_mmx)
     EMMS();
 }
