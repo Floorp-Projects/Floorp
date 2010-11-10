@@ -803,8 +803,7 @@ static inline void Destroy(T &t)
     t.~T();
 }
 
-void
-mjit::JITScript::release()
+mjit::JITScript::~JITScript()
 {
 #if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
     void *addr = code.m_code.executableAddress();
@@ -843,17 +842,17 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     // must protect against calling ReleaseScriptCode twice.
 
     if (script->jitNormal) {
-        script->jitNormal->release();
-        script->jitArityCheckNormal = NULL;
+        script->jitNormal->~JITScript();
         cx->free(script->jitNormal);
         script->jitNormal = NULL;
+        script->jitArityCheckNormal = NULL;
     }
 
     if (script->jitCtor) {
-        script->jitCtor->release();
-        script->jitArityCheckCtor = NULL;
+        script->jitCtor->~JITScript();
         cx->free(script->jitCtor);
         script->jitCtor = NULL;
+        script->jitArityCheckCtor = NULL;
     }
 }
 

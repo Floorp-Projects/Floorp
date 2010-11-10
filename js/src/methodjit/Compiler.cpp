@@ -426,7 +426,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         return Compile_Error;
     }
 
-    JITScript *jit = (JITScript *)cursor;
+    JITScript *jit = new(cursor) JITScript;
     cursor += sizeof(JITScript);
 
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
