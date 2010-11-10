@@ -90,6 +90,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xGetVisualFromFBConfig, { "glXGetVisualFromFBConfig", NULL } },
         { (PRFuncPtr*) &xGetFBConfigAttrib, { "glXGetFBConfigAttrib", NULL } },
         { (PRFuncPtr*) &xSwapBuffers, { "glXSwapBuffers", NULL } },
+        { (PRFuncPtr*) &xQueryExtensionsString, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xQueryServerString, { "glXQueryServerString", NULL } },
         { (PRFuncPtr*) &xCreatePixmap, { "glXCreatePixmap", NULL } },
         { (PRFuncPtr*) &xDestroyPixmap, { "glXDestroyPixmap", NULL } },

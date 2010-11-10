@@ -85,6 +85,9 @@ public:
     typedef void (GLAPIENTRY * PFNGLXSWAPBUFFERS) (Display *,
                                                    GLXDrawable);
     PFNGLXSWAPBUFFERS xSwapBuffers;
+    typedef const char * (GLAPIENTRY * PFNGLXQUERYEXTENSIONSSTRING) (Display *,
+                                                                     int);
+    PFNGLXQUERYEXTENSIONSSTRING xQueryExtensionsString;
     typedef const char * (GLAPIENTRY * PFNGLXQUERYSERVERSTRING) (Display *,
                                                                  int,
                                                                  int);
