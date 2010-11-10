@@ -54,7 +54,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(6fe08cd4-a848-4e5c-991c-4f35120e6081)]
+[scriptable, uuid(6c5cc421-b397-40ee-b82d-e4ecf6ca234d)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -87,7 +87,7 @@ interface nsIIDBObjectStore : nsISupports
 
   // Success fires IDBTransactionEvent, result == null
   nsIIDBRequest
-  remove(in nsIVariant key);
+  delete(in nsIVariant key);
 
   // Success fires IDBTransactionEvent, result == null
   nsIIDBRequest
@@ -111,5 +111,5 @@ interface nsIIDBObjectStore : nsISupports
   index(in AString name);
 
   void
-  removeIndex(in AString name);
+  deleteIndex(in AString name);
 };

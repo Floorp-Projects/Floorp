@@ -281,7 +281,7 @@
           is(cursor.value, "foo", "Correct value");
 
           if (keyIndex == 4) {
-            request = cursor.remove();
+            request = cursor.delete();
             request.onerror = errorHandler;
             request.onsuccess = function(event) {
               is(event.result, sortedKeys[4], "Correct key");
