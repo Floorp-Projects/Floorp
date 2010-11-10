@@ -119,6 +119,28 @@ function do_get_addon(aName) {
   return do_get_file("addons/" + aName + ".xpi");
 }
 
+function do_get_addon_hash(aName, aAlgorithm) {
+  if (!aAlgorithm)
+    aAlgorithm = "sha1";
+
+  let file = do_get_addon(aName);
+
+  let crypto = AM_Cc["@mozilla.org/security/hash;1"].
+               createInstance(AM_Ci.nsICryptoHash);
+  crypto.initWithString(aAlgorithm);
+  let fis = AM_Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(AM_Ci.nsIFileInputStream);
+  fis.init(file, -1, -1, false);
+  crypto.updateFromStream(fis, file.fileSize);
+
+  // return the two-digit hexadecimal code for a byte
+  function toHexString(charCode)
+    ("0" + charCode.toString(16)).slice(-2);
+
+  let binary = crypto.finish(false);
+  return aAlgorithm + ":" + [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
+}
+
 /**
  * Returns an extension uri spec
  *
