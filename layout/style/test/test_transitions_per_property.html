@@ -670,12 +670,12 @@ function test_font_weight(prop) {
   is(cs.getPropertyValue(prop), "500",
      "font-weight property " + prop + ": interpolation of font-weights");
   check_distance(prop, "400", "500", "800");
-  div.style.setProperty(prop, "lighter", "");
-  is(cs.getPropertyValue(prop), "lighter",
-     "font-weight property " + prop + ": can't interpolate bolder/lighter");
+
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "900", "");
   is(cs.getPropertyValue(prop), "900",
      "font-weight property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "100", "");
   is(cs.getPropertyValue(prop), "700",
      "font-weight property " + prop + ": interpolation of font-weights");
