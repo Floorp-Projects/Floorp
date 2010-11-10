@@ -648,12 +648,11 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
     DatabaseInfo* info;
     if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
       NS_ERROR("This should never fail!");
-      return NS_ERROR_UNEXPECTED;
     }
 
     if (!info->GetObjectStoreNames(stackArray)) {
       NS_ERROR("Out of memory!");
-      return NS_ERROR_OUT_OF_MEMORY;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     arrayOfNames = &stackArray;
@@ -665,8 +664,9 @@ IDBTransaction::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   PRUint32 count = arrayOfNames->Length();
   for (PRUint32 index = 0; index < count; index++) {
     NS_ENSURE_TRUE(list->Add(arrayOfNames->ElementAt(index)),
-                   NS_ERROR_OUT_OF_MEMORY);
+                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
+
   list.forget(aObjectStores);
   return NS_OK;
 }
@@ -678,7 +678,7 @@ IDBTransaction::ObjectStore(const nsAString& aName,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   ObjectStoreInfo* info = nsnull;
@@ -689,11 +689,11 @@ IDBTransaction::ObjectStore(const nsAString& aName,
   }
 
   if (!info) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
   nsRefPtr<IDBObjectStore> objectStore = GetOrCreateObjectStore(aName, info);
-  NS_ENSURE_TRUE(objectStore, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(objectStore, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   objectStore.forget(_retval);
   return NS_OK;
@@ -705,7 +705,7 @@ IDBTransaction::Abort()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   mAborted = true;
@@ -812,7 +812,7 @@ CommitHelper::Run()
     else {
       event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR));
     }
-    NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     PRBool dummy;
     if (NS_FAILED(mTransaction->DispatchEvent(event, &dummy))) {

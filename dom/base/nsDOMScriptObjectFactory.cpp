@@ -92,6 +92,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_SVG);
 #endif
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_XPATH);
+      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_INDEXEDDB);
       xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_XPCONNECT);
     }
 
@@ -398,6 +399,8 @@ nsDOMExceptionProvider::GetException(nsresult result,
       return CreateXPConnectException(result, aDefaultException, _retval);
     case NS_ERROR_MODULE_DOM_FILE:
       return NS_NewFileException(result, aDefaultException, _retval);
+    case NS_ERROR_MODULE_DOM_INDEXEDDB:
+      return NS_NewIDBDatabaseException(result, aDefaultException, _retval);
     default:
       return NS_NewDOMException(result, aDefaultException, _retval);
   }
