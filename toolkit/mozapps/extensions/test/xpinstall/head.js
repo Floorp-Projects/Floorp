@@ -72,39 +72,53 @@ var Harness = {
   installCount: null,
   runningInstalls: null,
 
+  waitingForFinish: false,
+
   // Setup and tear down functions
   setup: function() {
-    waitForExplicitFinish();
-    Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
-    Services.obs.addObserver(this, "addon-install-started", false);
-    Services.obs.addObserver(this, "addon-install-blocked", false);
-    Services.obs.addObserver(this, "addon-install-failed", false);
-    Services.obs.addObserver(this, "addon-install-complete", false);
-    Services.wm.addListener(this);
+    if (!this.waitingForFinish) {
+      waitForExplicitFinish();
+      this.waitingForFinish = true;
 
-    AddonManager.addInstallListener(this);
+      Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
+      Services.obs.addObserver(this, "addon-install-started", false);
+      Services.obs.addObserver(this, "addon-install-blocked", false);
+      Services.obs.addObserver(this, "addon-install-failed", false);
+      Services.obs.addObserver(this, "addon-install-complete", false);
+
+      AddonManager.addInstallListener(this);
+
+      Services.wm.addListener(this);
+
+      var self = this;
+      registerCleanupFunction(function() {
+        Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+        Services.obs.removeObserver(self, "addon-install-started");
+        Services.obs.removeObserver(self, "addon-install-blocked");
+        Services.obs.removeObserver(self, "addon-install-failed");
+        Services.obs.removeObserver(self, "addon-install-complete");
+
+        AddonManager.removeInstallListener(self);
+
+        Services.wm.removeListener(self);
+
+        AddonManager.getAllInstalls(function(aInstalls) {
+          is(aInstalls.length, 0, "Should be no active installs at the end of the test");
+          installs.forEach(function(aInstall) {
+            info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
+            aInstall.cancel();
+          });
+        });
+      });
+    }
+
     this.installCount = 0;
     this.pendingCount = 0;
     this.runningInstalls = [];
-
-    var self = this;
-    registerCleanupFunction(function() {
-      Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
-      Services.obs.removeObserver(self, "addon-install-started");
-      Services.obs.removeObserver(self, "addon-install-blocked");
-      Services.obs.removeObserver(self, "addon-install-failed");
-      Services.obs.removeObserver(self, "addon-install-complete");
-      Services.wm.removeListener(self);
-
-      AddonManager.removeInstallListener(self);
-    });
   },
 
   finish: function() {
-    AddonManager.getAllInstalls(function(installs) {
-      is(installs.length, 0, "Should be no active installs at the end of the test");
-      finish();
-    });
+    finish();
   },
 
   endTest: function() {

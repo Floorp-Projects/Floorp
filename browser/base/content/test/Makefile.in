@@ -145,6 +145,7 @@ _BROWSER_FILES = \
                  browser_bug561636.js \
                  browser_bug562649.js \
                  browser_bug563588.js \
+                 browser_bug565575.js \
                  browser_bug575561.js \
                  browser_bug577121.js \
                  browser_bug579872.js \
@@ -159,6 +160,7 @@ _BROWSER_FILES = \
                  browser_bug595507.js \
                  browser_bug596687.js \
                  browser_bug597218.js \
+                 browser_bug609700.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \

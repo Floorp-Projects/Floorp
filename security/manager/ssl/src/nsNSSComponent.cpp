@@ -283,10 +283,15 @@ nsTokenEventRunnable::Run()
   return nssComponent->DispatchEvent(mType, mTokenName);
 }
 
+PRBool nsPSMInitPanic::isPanic = PR_FALSE;
+
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
 PRBool EnsureNSSInitialized(EnsureNSSOperator op)
 {
+  if (nsPSMInitPanic::GetPanic())
+    return PR_FALSE;
+
 #ifdef MOZ_IPC
   if (GeckoProcessType_Default != XRE_GetProcessType())
   {
@@ -1577,8 +1582,10 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
       ConfigureInternalPKCS11Token();
       SECStatus init_rv = NSS_NoDB_Init(NULL);
-      if (init_rv != SECSuccess)
+      if (init_rv != SECSuccess) {
+        nsPSMInitPanic::SetPanic();
         return NS_ERROR_NOT_AVAILABLE;
+      }
     }
     else
     {
@@ -1607,8 +1614,10 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
     // and therefore need separate nsIFile instances.
     // Keep cfmSecurityPath instance, obtain new instance for MachO profilePath.
     rv = cfmSecurityPath->GetParent(getter_AddRefs(profilePath));
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      nsPSMInitPanic::SetPanic();
       return rv;
+    }
   #endif
 
     const char *dbdir_override = getenv("MOZPSM_NSSDBDIR_OVERRIDE");
@@ -1625,8 +1634,10 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
   #else
       rv = profilePath->GetNativePath(profileStr);
   #endif
-      if (NS_FAILED(rv)) 
+      if (NS_FAILED(rv)) {
+        nsPSMInitPanic::SetPanic();
         return rv;
+      }
     }
 
     hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare,
@@ -1686,8 +1697,10 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
         which_nss_problem = problem_no_security_at_all;
 
         init_rv = NSS_NoDB_Init(profileStr.get());
-        if (init_rv != SECSuccess)
+        if (init_rv != SECSuccess) {
+          nsPSMInitPanic::SetPanic();
           return NS_ERROR_NOT_AVAILABLE;
+        }
       }
     } // have profile dir
     } // lock
@@ -1777,7 +1790,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
   }
 
   if (problem_none != which_nss_problem) {
-    nsString message;
+    nsPSMInitPanic::SetPanic();
 
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS problem, trying to bring up GUI error message\n"));
 

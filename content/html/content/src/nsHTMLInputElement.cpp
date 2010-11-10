@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Geoff Lankow <geoff@darktrojan.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -540,6 +541,9 @@ UploadLastDir::StoreLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
   NS_PRECONDITION(aFile, "aFile is null");
   nsCOMPtr<nsIFile> parentFile;
   aFile->GetParent(getter_AddRefs(parentFile));
+  if (!parentFile) {
+    return NS_OK;
+  }
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(parentFile);
 
   // Store the data in memory instead of the CPS during private browsing mode

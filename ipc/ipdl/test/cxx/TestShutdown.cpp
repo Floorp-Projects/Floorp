@@ -26,9 +26,7 @@ TestShutdownParent::ActorDestroy(ActorDestroyReason why)
 void
 TestShutdownSubParent::ActorDestroy(ActorDestroyReason why)
 {
-    nsTArray<PTestShutdownSubParent*> broArr; // grumble grumble
-    Manager()->ManagedPTestShutdownSubParent(broArr);
-    if (broArr.Length() == 0)
+    if (Manager()->ManagedPTestShutdownSubParent().Length() == 0)
         fail("manager should still have managees!");
 
     if (mExpectCrash && AbnormalShutdown != why)

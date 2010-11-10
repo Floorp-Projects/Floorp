@@ -50,7 +50,7 @@ nsHtml5MetaScanner::nsHtml5MetaScanner()
    charsetIndex(-1),
    stateSave(NS_HTML5META_SCANNER_DATA),
    strBufLen(0),
-   strBuf(jArray<PRUnichar,PRInt32>(36))
+   strBuf(jArray<PRUnichar,PRInt32>::newJArray(36))
 {
   MOZ_COUNT_CTOR(nsHtml5MetaScanner);
 }
@@ -58,7 +58,6 @@ nsHtml5MetaScanner::nsHtml5MetaScanner()
 nsHtml5MetaScanner::~nsHtml5MetaScanner()
 {
   MOZ_COUNT_DTOR(nsHtml5MetaScanner);
-  strBuf.release();
 }
 
 void

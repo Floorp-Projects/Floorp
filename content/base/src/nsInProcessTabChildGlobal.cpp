@@ -54,7 +54,7 @@
 bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aMessage,
                              const nsAString& aJSON,
-                             nsTArray<nsString>* aJSONRetVal)
+                             InfallibleTArray<nsString>* aJSONRetVal)
 {
   nsInProcessTabChildGlobal* tabChild =
     static_cast<nsInProcessTabChildGlobal*>(aCallbackData);

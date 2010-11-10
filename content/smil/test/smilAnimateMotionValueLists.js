@@ -113,12 +113,18 @@ const gValidPath = [
  "m0 0", "M0, 0"
 ];
 
+// paths must start with at least a valid "M" segment to be valid
 const gInvalidPath = [
- "m0 0 L30,,30",
- "M20 20em",
  "M20in 20",
  "h30",
  "L50 50",
  "abc",
+];
+
+// paths that at least start with a valid "M" segment are valid - the spec says
+// to parse everything up to the first invalid token
+const gValidPathWithErrors = [
+ "M20 20em",
+ "m0 0 L30,,30",
  "M10 10 L50 50 abc",
 ];

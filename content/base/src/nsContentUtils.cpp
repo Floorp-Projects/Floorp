@@ -6303,6 +6303,40 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
   return !zombieViewer;
 }
 
+void
+nsContentUtils::FlushLayoutForTree(nsIDOMWindow* aWindow)
+{
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
+    if (!piWin)
+        return;
+
+    // Note that because FlushPendingNotifications flushes parents, this
+    // is O(N^2) in docshell tree depth.  However, the docshell tree is
+    // usually pretty shallow.
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aWindow->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    if (doc) {
+        doc->FlushPendingNotifications(Flush_Layout);
+    }
+
+    nsCOMPtr<nsIDocShellTreeNode> node =
+        do_QueryInterface(piWin->GetDocShell());
+    if (node) {
+        PRInt32 i = 0, i_end;
+        node->GetChildCount(&i_end);
+        for (; i < i_end; ++i) {
+            nsCOMPtr<nsIDocShellTreeItem> item;
+            node->GetChildAt(i, getter_AddRefs(item));
+            nsCOMPtr<nsIDOMWindow> win = do_GetInterface(item);
+            if (win) {
+                FlushLayoutForTree(win);
+            }
+        }
+    }
+}
+
 void nsContentUtils::RemoveNewlines(nsString &aString)
 {
   // strip CR/LF and null

@@ -373,8 +373,7 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 {
   NS_ENSURE_ARG(aContext);
 
-  nsCString ctxId;
-  ctxId.Assign(NS_LossyConvertUTF16toASCII(aContextId));
+  NS_LossyConvertUTF16toASCII ctxId(aContextId);
 
   // check that ctxId is clamped to A-Za-z0-9_-
   for (PRUint32 i = 0; i < ctxId.Length(); i++) {
