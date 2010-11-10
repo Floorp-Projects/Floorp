@@ -647,12 +647,11 @@ function test_font_stretch(prop) {
   is(cs.getPropertyValue(prop), "semi-expanded",
      "font-stretch property " + prop + ": interpolation of font-stretches");
   check_distance(prop, "normal", "semi-expanded", "ultra-expanded");
-  div.style.setProperty(prop, "wider", "");
-  is(cs.getPropertyValue(prop), "wider",
-     "font-stretch property " + prop + ": can't interpolate wider/narrower");
+  div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "expanded", "");
   is(cs.getPropertyValue(prop), "expanded",
      "font-stretch property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "extra-condensed", "");
   is(cs.getPropertyValue(prop), "normal",
      "font-stretch property " + prop + ": interpolation of font-stretches");
