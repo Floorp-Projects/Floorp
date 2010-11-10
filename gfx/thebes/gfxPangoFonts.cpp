@@ -110,6 +110,7 @@ int moz_pango_units_from_double(double d) {
 static PangoLanguage *GuessPangoLanguage(nsIAtom *aLanguage);
 
 static cairo_scaled_font_t *CreateScaledFont(FcPattern *aPattern);
+static PRBool CanTakeFastPath(PRUint32 aFlags);
 static void SetMissingGlyphs(gfxTextRun *aTextRun, const gchar *aUTF8,
                              PRUint32 aUTF8Length, PRUint32 *aUTF16Offset);
 
@@ -534,9 +535,16 @@ public:
     static already_AddRefed<gfxFcFont>
     GetOrMakeFont(FcPattern *aRenderPattern, gfxPangoFcFont *aPangoFont);
 
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript);
+
 #if defined(ENABLE_FAST_PATH_8BIT)
-    nsresult InitGlyphRunFast(gfxTextRun *aTextRun,
-                              const PRUnichar *aString, PRUint32 aLength);
+    nsresult InitGlyphRunFast(gfxTextRun *aTextRun, const PRUnichar *aString,
+                              PRUint32 aStart, PRUint32 aLength);
 #endif
     PRBool InitGlyphRunWithPango(gfxTextRun *aTextRun,
                                  const PRUnichar *aString,
@@ -2320,6 +2328,39 @@ gfxFcFont::~gfxFcFont()
     }
 }
 
+PRBool
+gfxFcFont::InitTextRun(gfxContext *aContext,
+                       gfxTextRun *aTextRun,
+                       const PRUnichar *aString,
+                       PRUint32 aRunStart,
+                       PRUint32 aRunLength,
+                       PRInt32 aRunScript)
+{
+    PRBool useFastPath = PR_FALSE;
+#if defined(ENABLE_FAST_PATH_8BIT)
+    if (CanTakeFastPath(aTextRun->GetFlags())) {
+        PRUint32 allBits = 0;
+        for (PRUint32 i = aRunStart; i < aRunStart + aRunLength; ++i) {
+            allBits |= aString[i];
+        }
+        useFastPath = (allBits & 0xFF00) == 0;
+    }
+
+    if (useFastPath &&
+        NS_SUCCEEDED(InitGlyphRunFast(aTextRun, aString,
+                                      aRunStart, aRunLength))) {
+        return PR_TRUE;
+    }
+#endif
+
+    const PangoScript script = static_cast<PangoScript>(aRunScript);
+    PRBool ok = InitGlyphRunWithPango(aTextRun,
+                                      aString, aRunStart, aRunLength, script);
+
+    NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
+    return ok;
+}
+
 /* static */ void
 gfxPangoFontGroup::Shutdown()
 {
@@ -2667,8 +2708,8 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 }
 
 #if defined(ENABLE_FAST_PATH_8BIT)
-PRBool
-gfxPangoFontGroup::CanTakeFastPath(PRUint32 aFlags)
+static PRBool
+CanTakeFastPath(PRUint32 aFlags)
 {
     // Can take fast path only if OPTIMIZE_SPEED is set and IS_RTL isn't.
     // We need to always use Pango for RTL text, in case glyph mirroring is
@@ -3411,17 +3452,18 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
 {
     gfxFcFont *gfxFont = GetBaseFont();
     aTextRun->AddGlyphRun(gfxFont, 0);
-    return gfxFont->InitGlyphRunFast(aTextRun, aString, aLength);
+    return gfxFont->InitGlyphRunFast(aTextRun, aString, 0, aLength);
 }
 
 nsresult
-gfxFcFont::InitGlyphRunFast(gfxTextRun *aTextRun,
-                            const PRUnichar *aString, PRUint32 aLength)
+gfxFcFont::InitGlyphRunFast(gfxTextRun *aTextRun, const PRUnichar *aString,
+                            PRUint32 aStart, PRUint32 aLength)
 {
     gfxTextRun::CompressedGlyph g;
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
-    for (PRUint32 utf16Offset = 0; utf16Offset < aLength; ++utf16Offset) {
+    PRUint32 end = aStart + aLength;
+    for (PRUint32 utf16Offset = aStart; utf16Offset < end; ++utf16Offset) {
 
         PRUint32 ch = aString[utf16Offset];
         NS_ASSERTION(!gfxFontGroup::IsInvalidChar(ch), "Invalid char detected");
