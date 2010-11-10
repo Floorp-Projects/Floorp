@@ -595,7 +595,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
   AutoRemoveObjectStore autoRemove(mDatabaseId, aName);
 
   nsRefPtr<IDBObjectStore> objectStore =
-    IDBObjectStore::Create(transaction, objectStoreInfo);
+    transaction->GetOrCreateObjectStore(aName, objectStoreInfo);
   NS_ENSURE_TRUE(objectStore, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
