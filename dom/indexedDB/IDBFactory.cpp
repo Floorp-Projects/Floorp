@@ -501,27 +501,6 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
   return NS_OK;
 }
 
-inline
-nsresult
-ValidateVariantForKey(nsIVariant* aVariant)
-{
-  PRUint16 type;
-  nsresult rv = aVariant->GetDataType(&type);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch (type) {
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_INT32:
-    case nsIDataType::VTYPE_DOUBLE:
-      break;
-
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
-
-  return NS_OK;
-}
-
 } // anonyomous namespace
 
 // static
@@ -878,106 +857,6 @@ IDBFactory::Open(const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeSingleKeyRange(nsIVariant* aValue,
-                               nsIIDBKeyRange** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aValue);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(aValue, aValue, PRUint16(nsIIDBKeyRange::LEFT_BOUND |
-                                                 nsIIDBKeyRange::RIGHT_BOUND));
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeLeftBoundKeyRange(nsIVariant* aBound,
-                                  PRBool aOpen,
-                                  nsIIDBKeyRange** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aBound);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  PRUint16 flags = aOpen ?
-                   PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
-                   PRUint16(nsIIDBKeyRange::LEFT_BOUND);
-
-  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(aBound, nsnull, flags);
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeRightBoundKeyRange(nsIVariant* aBound,
-                                   PRBool aOpen,
-                                   nsIIDBKeyRange** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aBound);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  PRUint16 flags = aOpen ?
-                   PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
-                   PRUint16(nsIIDBKeyRange::RIGHT_BOUND);
-
-  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(nsnull, aBound, flags);
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeBoundKeyRange(nsIVariant* aLeft,
-                              nsIVariant* aRight,
-                              PRBool aOpenLeft,
-                              PRBool aOpenRight,
-                              nsIIDBKeyRange **_retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aLeft);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  rv = ValidateVariantForKey(aRight);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  PRUint16 flags = aOpenLeft ?
-                   PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
-                   PRUint16(nsIIDBKeyRange::LEFT_BOUND);
-
-  flags |= aOpenRight ?
-           PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
-           PRUint16(nsIIDBKeyRange::RIGHT_BOUND);
-
-  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(aLeft, aRight, flags);
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
   return NS_OK;
 }
 

@@ -53,27 +53,10 @@ interface nsIVariant;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBFactory
  * for more information.
  */
-[scriptable, uuid(ee8c8813-e91a-494f-88f1-9f3e7de50466)]
+[scriptable, uuid(137d17a5-fac5-4788-87b5-bc3806d7cfaf)]
 interface nsIIDBFactory : nsISupports
 {
   [implicit_jscontext]
   nsIIDBRequest
   open(in AString name);
-
-  nsIIDBKeyRange
-  makeSingleKeyRange(in nsIVariant value);
-
-  nsIIDBKeyRange
-  makeLeftBoundKeyRange(in nsIVariant bound,
-                        [optional /* false */] in boolean open);
-
-  nsIIDBKeyRange
-  makeRightBoundKeyRange(in nsIVariant bound,
-                         [optional /* false */] in boolean open);
-
-  nsIIDBKeyRange
-  makeBoundKeyRange(in nsIVariant left,
-                    in nsIVariant right,
-                    [optional /* false */] in boolean openLeft,
-                    [optional /* false */] in boolean openRight);
 };
