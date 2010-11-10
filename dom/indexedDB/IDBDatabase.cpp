@@ -258,7 +258,6 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
 
   db->mDatabaseId = aDatabaseInfo->id;
   db->mName = aDatabaseInfo->name;
-  db->mDescription = aDatabaseInfo->description;
   db->mFilePath = aDatabaseInfo->filePath;
   db->mASCIIOrigin = aASCIIOrigin;
 
@@ -486,14 +485,6 @@ IDBDatabase::GetName(nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   aName.Assign(mName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabase::GetDescription(nsAString& aDescription)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  aDescription.Assign(mDescription);
   return NS_OK;
 }
 

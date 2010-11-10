@@ -45,7 +45,6 @@
 
       let db = event.result;
       is(db.name, name, "Bad name");
-      is(db.description, description, "Bad description");
       is(db.version, "", "Bad version");
       is(db.objectStoreNames.length, 0, "Bad objectStores list");
 
