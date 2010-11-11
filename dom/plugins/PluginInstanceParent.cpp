@@ -172,6 +172,19 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         UnsubclassPluginWindow();
     }
 #endif
+    // After this method, the data backing the remote surface may no
+    // longer be calid. The X surface may be destroyed, or the shared
+    // memory backing this surface may no longer be valid. The right
+    // way to inform the nsObjectFrame that the surface is no longer
+    // valid is with an invalidate call.
+    if (mFrontSurface) {
+        mFrontSurface = NULL;
+        const NPRect rect = {0, 0, 0, 0};
+        RecvNPN_InvalidateRect(rect);
+#ifdef MOZ_X11
+        XSync(DefaultXDisplay(), False);
+#endif
+    }
 }
 
 NPError
