@@ -1519,6 +1519,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
   #appmenu[count="5"] > .appmenu-button:nth-child(4),
   #appmenu[count="5"] > .appmenu-button:nth-child(5),
   #appmenu[count="6"] > .appmenu-button {
-    width: 33%;
+    width: 33.33%;
   }
 }
