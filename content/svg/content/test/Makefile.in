@@ -44,6 +44,10 @@ relativesrcdir  = content/svg/content/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# Disabled:
+#		bbox-helper.svg \
+#		test_length.xhtml \
+
 _TEST_FILES = \
 		test_animLengthObjectIdentity.xhtml \
 		test_animLengthReadonly.xhtml \
