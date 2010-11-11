@@ -5011,7 +5011,7 @@ TraceRecorder::joinEdgesToEntry(TreeFragment* peer_root)
                         trashSelf = true;
                     else
                         whichTreesToTrash.addUnique(uexit->fragment->root);
-                    return;
+                    break;
                 }
                 uexit = uexit->next;
             }
