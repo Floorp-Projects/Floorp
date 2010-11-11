@@ -57,8 +57,21 @@
 #include "nsILocalFile.h"
 #include "mozilla/FileUtils.h"
 
-class nsZipFind;
+#if defined(XP_WIN)
+#define MOZ_WIN_MEM_TRY_BEGIN __try {
+#define MOZ_WIN_MEM_TRY_CATCH(cmd) }                                \
+  __except(GetExceptionCode()==EXCEPTION_IN_PAGE_ERROR ?            \
+           EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)   \
+  {                                                                 \
+    NS_WARNING("EXCEPTION_IN_PAGE_ERROR in " __FUNCTION__);         \
+    cmd;                                                            \
+  }
+#else
+#define MOZ_WIN_MEM_TRY_BEGIN {
+#define MOZ_WIN_MEM_TRY_CATCH(cmd) }
+#endif
 
+class nsZipFind;
 struct PRFileDesc;
 
 /**
