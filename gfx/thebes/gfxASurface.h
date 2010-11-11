@@ -150,6 +150,17 @@ public:
      */
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
                                                                const gfxIntSize& aSize);
+
+    /**
+     * Returns an image surface for this surface, or nsnull if not supported.
+     * This will not copy image data, just wraps an image surface around
+     * pixel data already available in memory.
+     */
+    virtual already_AddRefed<gfxImageSurface> GetAsImageSurface()
+    {
+      return nsnull;
+    }
+
     /**
      * Return trues if offscreen surfaces created from this surface
      * would behave differently depending on the gfxContentType. Returns

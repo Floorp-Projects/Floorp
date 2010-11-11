@@ -468,8 +468,7 @@ protected:
         nsRefPtr<gfxImageSurface> uploadImage;
 
         if (aUpdateSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-            gfxWindowsSurface* ws = static_cast<gfxWindowsSurface*>(aUpdateSurface);
-            uploadImage = ws->GetImageSurface();
+            uploadImage = aUpdateSurface->GetAsImageSurface();
         } else {
             uploadImage = new gfxImageSurface(mUpdateSize, mUpdateFormat);
             nsRefPtr<gfxContext> cx(new gfxContext(uploadImage));

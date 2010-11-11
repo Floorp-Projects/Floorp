@@ -147,7 +147,7 @@ gfxWindowsSurface::GetDCWithClip(gfxContext *ctx)
 }
 
 already_AddRefed<gfxImageSurface>
-gfxWindowsSurface::GetImageSurface()
+gfxWindowsSurface::GetAsImageSurface()
 {
     if (!mSurfaceValid) {
         NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
