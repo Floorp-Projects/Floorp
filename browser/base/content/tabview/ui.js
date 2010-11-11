@@ -250,9 +250,7 @@ let UI = {
 
   // Property: rtl
   // Returns true if we are in RTL mode, false otherwise
-  get rtl() {
-    return document.documentElement.getAttribute("dir") == "rtl";
-  },
+  rtl: false,
 
   // Function: reset
   // Resets the Panorama view to have just one group with all tabs
@@ -369,7 +367,9 @@ let UI = {
   _initPageDirection: function UI__initPageDirection() {
     let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
                     getService(Ci.nsIXULChromeRegistry);
-    document.documentElement.setAttribute("dir", chromeReg.isLocaleRTL("global") ? "rtl" : "ltr");
+    let dir = chromeReg.isLocaleRTL("global");
+    document.documentElement.setAttribute("dir", dir ? "rtl" : "ltr");
+    this.rtl = dir;
   },
 
   // ----------
