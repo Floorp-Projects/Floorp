@@ -43,17 +43,24 @@ function test_syncID() {
 }
 
 function test_lastSync() {
-  _("SyncEngine.lastSync corresponds to preference and stores floats");
+  _("SyncEngine.lastSync and SyncEngine.lastSyncLocal correspond to preferences");
   let engine = makeSteamEngine();
   try {
     // Ensure pristine environment
     do_check_eq(Svc.Prefs.get("steam.lastSync"), undefined);
     do_check_eq(engine.lastSync, 0);
+    do_check_eq(Svc.Prefs.get("steam.lastSyncLocal"), undefined);
+    do_check_eq(engine.lastSyncLocal, 0);
 
     // Floats are properly stored as floats and synced with the preference
     engine.lastSync = 123.45;
     do_check_eq(engine.lastSync, 123.45);
     do_check_eq(Svc.Prefs.get("steam.lastSync"), "123.45");
+
+    // Integer is properly stored
+    engine.lastSyncLocal = 67890;
+    do_check_eq(engine.lastSyncLocal, 67890);
+    do_check_eq(Svc.Prefs.get("steam.lastSyncLocal"), "67890");
 
     // resetLastSync() resets the value (and preference) to 0
     engine.resetLastSync();
@@ -70,11 +77,14 @@ function test_resetClient() {
   try {
     // Ensure pristine environment
     do_check_eq(Svc.Prefs.get("steam.lastSync"), undefined);
+    do_check_eq(Svc.Prefs.get("steam.lastSyncLocal"), undefined);
 
     engine.lastSync = 123.45;
+    engine.lastSyncLocal = 67890;
 
     engine.resetClient();
     do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.lastSyncLocal, 0);
   } finally {
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
     Svc.Prefs.resetBranch("");

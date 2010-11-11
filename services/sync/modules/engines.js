@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
  *  Myk Melez <myk@mozilla.org>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -306,6 +307,9 @@ SyncEngine.prototype = {
     Svc.Prefs.set(this.name + ".syncID", value);
   },
 
+  /*
+   * lastSync is a timestamp in server time.
+   */
   get lastSync() {
     return parseFloat(Svc.Prefs.get(this.name + ".lastSync", "0"));
   },
@@ -319,6 +323,27 @@ SyncEngine.prototype = {
     this._log.debug("Resetting " + this.name + " last sync time");
     Svc.Prefs.reset(this.name + ".lastSync");
     Svc.Prefs.set(this.name + ".lastSync", "0");
+    this.lastSyncLocal = 0;
+  },
+
+  /*
+   * lastSyncLocal is a timestamp in local time.
+   */
+  get lastSyncLocal() {
+    return parseInt(Svc.Prefs.get(this.name + ".lastSyncLocal", "0"), 10);
+  },
+  set lastSyncLocal(value) {
+    // Store as a string because pref can only store C longs as numbers.
+    Svc.Prefs.set(this.name + ".lastSyncLocal", value.toString());
+  },
+
+  /*
+   * Returns a mapping of IDs -> changed timestamp. Engine implementations
+   * can override this method to bypass the tracker for certain or all
+   * changed items.
+   */
+  getChangedIDs: function getChangedIDs() {
+    return this._tracker.changedIDs;
   },
 
   // Create a new record using the store and add in crypto fields
@@ -411,14 +436,22 @@ SyncEngine.prototype = {
       CryptoMetas.set(meta.uri, meta);
     }
 
-    // Mark all items to be uploaded, but treat them as changed from long ago
-    if (!this.lastSync) {
+    this._maybeLastSyncLocal = Date.now();
+    if (this.lastSync) {
+      this._modified = this.getChangedIDs();
+      // Clear the tracker now but remember the changed IDs in case we
+      // need to roll back.
+      this._backupChangedIDs = this._tracker.changedIDs;
+      this._tracker.clearChangedIDs();
+    } else {
+      // Mark all items to be uploaded, but treat them as changed from long ago
       this._log.debug("First sync, uploading all items");
+      this._modified = {};
       for (let id in this._store.getAllIDs())
-        this._tracker.addChangedID(id, 0);
+        this._modified[id] = 0;
     }
 
-    let outnum = [i for (i in this._tracker.changedIDs)].length;
+    let outnum = [i for (i in this._modified)].length;
     this._log.info(outnum + " outgoing items pre-reconciliation");
 
     // Keep track of what to delete at the end of sync
@@ -471,7 +504,7 @@ SyncEngine.prototype = {
 
         // Upload a new record to replace the bad one if we have it
         if (this._store.itemExists(item.id))
-          this._tracker.addChangedID(item.id, 0);
+          this._modified[item.id] = 0;
       }
       this._tracker.ignoreAll = false;
       Sync.sleep(0);
@@ -586,7 +619,7 @@ SyncEngine.prototype = {
       this._log.trace("Incoming: " + item);
 
     this._log.trace("Reconcile step 1: Check for conflicts");
-    if (item.id in this._tracker.changedIDs) {
+    if (item.id in this._modified) {
       // If the incoming and local changes are the same, skip
       if (this._isEqual(item)) {
         this._tracker.removeChangedID(item.id);
@@ -595,7 +628,7 @@ SyncEngine.prototype = {
 
       // Records differ so figure out which to take
       let recordAge = Resource.serverTime - item.modified;
-      let localAge = Date.now() / 1000 - this._tracker.changedIDs[item.id];
+      let localAge = Date.now() / 1000 - this._modified[item.id];
       this._log.trace("Record age vs local age: " + [recordAge, localAge]);
 
       // Apply the record if the record is newer (server wins)
@@ -622,7 +655,7 @@ SyncEngine.prototype = {
   // Upload outgoing records
   _uploadOutgoing: function SyncEngine__uploadOutgoing() {
     let failed = {};
-    let outnum = [i for (i in this._tracker.changedIDs)].length;
+    let outnum = [i for (i in this._modified)].length;
     if (outnum) {
       this._log.trace("Preparing " + outnum + " outgoing records");
 
@@ -640,7 +673,7 @@ SyncEngine.prototype = {
           throw resp;
         }
 
-        // Record the modified time of the upload
+        // Update server timestamp from the upload.
         let modified = resp.headers["x-weave-timestamp"];
         if (modified > this.lastSync)
           this.lastSync = modified;
@@ -649,7 +682,7 @@ SyncEngine.prototype = {
         // can mark them changed again.
         let failed_ids = [];
         for (let id in resp.obj.failed) {
-          failed[id] = this._tracker.changedIDs[id];
+          failed[id] = this._modified[id];
           failed_ids.push(id);
         }
         if (failed_ids.length)
@@ -660,7 +693,7 @@ SyncEngine.prototype = {
         up.clearRecords();
       });
 
-      for (let id in this._tracker.changedIDs) {
+      for (let id in this._modified) {
         try {
           let out = this._createRecord(id);
           if (this._log.level <= Log4Moz.Level.Trace)
@@ -684,7 +717,11 @@ SyncEngine.prototype = {
       if (count % MAX_UPLOAD_RECORDS > 0)
         doUpload(count >= MAX_UPLOAD_RECORDS ? "last batch" : "all");
     }
-    this._tracker.clearChangedIDs();
+
+    // Update local timestamp.
+    this.lastSyncLocal = this._maybeLastSyncLocal;
+    delete this._modified;
+    delete this._backupChangedIDs;
 
     // Mark failed WBOs as changed again so they are reuploaded next time.
     for (let id in failed) {
@@ -721,6 +758,15 @@ SyncEngine.prototype = {
     }
   },
 
+  _rollback: function _rollback() {
+    if (!this._backupChangedIDs)
+      return;
+
+    for (let [id, when] in Iterator(this._backupChangedIDs)) {
+      this._tracker.addChangedID(id, when);
+    }
+  },
+
   _sync: function SyncEngine__sync() {
     try {
       this._syncStartup();
@@ -731,6 +777,7 @@ SyncEngine.prototype = {
       this._syncFinish();
     }
     catch (e) {
+      this._rollback();
       this._log.warn("Sync failed");
       throw e;
     }
