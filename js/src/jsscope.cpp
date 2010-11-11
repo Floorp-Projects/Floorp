@@ -921,11 +921,13 @@ JSObject::putProperty(JSContext *cx, jsid id,
             }
         }
 
+        JS_ASSERT(uint8(attrs) == attrs);
+        JS_ASSERT(int16(shortid) == shortid);
         shape->rawGetter = getter;
         shape->rawSetter = setter;
-        shape->attrs = attrs;
+        shape->attrs = uint8(attrs);
         shape->flags = flags | Shape::IN_DICTIONARY;
-        shape->shortid = shortid;
+        shape->shortid = int16(shortid);
 
         /*
          * We are done updating shape and lastProp. Now we may need to update
