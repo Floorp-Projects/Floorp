@@ -39,6 +39,11 @@ function run_test() {
   testserver = new nsHttpServer();
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
+  testserver.registerPathHandler("/redirect", function(aRequest, aResponse) {
+    aResponse.setStatusLine(null, 301, "Moved Permanently");
+    let url = aRequest.host + ":" + aRequest.port + aRequest.queryString;
+    aResponse.setHeader("Location", "http://" + url);
+  });
   testserver.start(4444);
 
   do_test_pending();
@@ -1466,6 +1471,46 @@ function run_test_25() {
 
     ensure_test_completed();
 
-    end_test();
+    run_test_26();
   }, "application/x-xpinstall", do_get_addon_hash("test_install3"));
+}
+
+function run_test_26() {
+  prepare_test({ }, [
+    "onNewInstall",
+    "onDownloadStarted",
+    "onDownloadCancelled"
+  ]);
+
+  let observerService = AM_Cc["@mozilla.org/network/http-activity-distributor;1"].
+                        getService(AM_Ci.nsIHttpActivityDistributor);
+  observerService.addObserver({
+    observeActivity: function(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+                              aStringData) {
+      aChannel.QueryInterface(AM_Ci.nsIChannel);
+      // Wait for the final event for the redirected URL
+      if (aChannel.URI.spec != "http://localhost:4444/addons/test_install1.xpi" ||
+          aType != AM_Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
+          aSubtype != AM_Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
+        return;
+
+      // Request should have been cancelled
+      do_check_eq(aChannel.status, Components.results.NS_BINDING_ABORTED);
+
+      observerService.removeObserver(this);
+
+      do_test_finished();
+    }
+  });
+
+  let url = "http://localhost:4444/redirect?/addons/test_install1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onDownloadProgress: function(aInstall) {
+        aInstall.cancel();
+      }
+    });
+
+    aInstall.install();
+  }, "application/x-xpinstall");
 }
