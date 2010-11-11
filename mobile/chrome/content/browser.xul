@@ -252,7 +252,6 @@
                              autocompletepopup="popup_autocomplete"
                              completeselectedindex="true"
                              minresultsforpopup="0"
-                             oncontextmenu="event.preventDefault();"
                              onsearchbegin="BrowserUI.updateAwesomeHeader(this.controller.searchString);"
                              placeholder="&urlbar.emptytext;"
                              collapsed="true"
@@ -551,6 +550,15 @@
         <richlistbox id="context-commands" onclick="ContextHelper.hide();" flex="1">
           <richlistitem class="context-command" id="context-copy" type="copy" onclick="ContextCommands.copy();">
             <label value="&copy.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-copy-all" type="copy-all" onclick="ContextCommands.copy();">
+            <label value="&copyAll.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-paste" type="paste" onclick="ContextCommands.paste();">
+            <label value="&paste.label;"/>
+          </richlistitem>
+          <richlistitem class="context-command" id="context-select-all" type="select-all" onclick="ContextCommands.selectAll();">
+            <label value="&selectAll.label;"/>
           </richlistitem>
           <richlistitem class="context-command" id="context-openinnewtab" type="link-openable" onclick="ContextCommands.openInNewTab();">
             <label value="&contextOpenInNewTab.label;"/>

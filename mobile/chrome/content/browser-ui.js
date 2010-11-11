@@ -2584,6 +2584,23 @@ var ContextCommands = {
   copy: function cc_copy() {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     clipboard.copyString(ContextHelper.popupState.string);
+
+    let target = ContextHelper.popupState.target;
+    if (target)
+      target.focus();
+  },
+
+  paste: function cc_paste() {
+    let data = ContextHelper.popupState.data;
+    let target = ContextHelper.popupState.target;
+    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+    target.focus();
+  },
+
+  selectAll: function cc_selectAll() {
+    let target = ContextHelper.popupState.target;
+    target.editor.selectAll();
+    target.focus();
   },
 
   openInNewTab: function cc_openInNewTab() {

@@ -237,5 +237,6 @@ arrowbox {
 /* Disable context menus in textboxes */
 .textbox-input-box,
 .textbox-input-box[spellcheck="true"] {
-  -moz-binding: none;
+  -moz-binding: url("chrome://browser/content/bindings.xml#input-box");
+}
 }
