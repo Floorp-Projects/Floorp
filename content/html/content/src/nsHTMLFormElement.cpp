@@ -1245,7 +1245,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aChild);
-    radio->WillRemoveFromRadioGroup(aNotify);
+    radio->WillRemoveFromRadioGroup();
   }
 
   // Determine whether to remove the child from the elements list
