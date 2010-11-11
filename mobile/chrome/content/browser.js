@@ -197,7 +197,7 @@ var Browser = {
 
     let keySender = new ContentCustomKeySender(Elements.browsers);
     let mouseModule = new MouseModule();
-    let gestureModule = new GestureModule();
+    let gestureModule = new GestureModule(Elements.browsers);
     let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
 
     ContentTouchHandler.init();

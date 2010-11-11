@@ -981,12 +981,12 @@ ScrollwheelModule.prototype = {
 // chrome-only, we must listen for the simple gesture events during
 // the capturing phase and call stopPropagation on every event.
 
-function GestureModule() {
-  window.addEventListener("MozSwipeGesture", this, true);
-  window.addEventListener("MozMagnifyGestureStart", this, true);
-  window.addEventListener("MozMagnifyGestureUpdate", this, true);
-  window.addEventListener("MozMagnifyGesture", this, true);
-  window.addEventListener("CancelTouchSequence", this, true);
+function GestureModule(aElement) {
+  aElement.addEventListener("MozSwipeGesture", this, true);
+  aElement.addEventListener("MozMagnifyGestureStart", this, true);
+  aElement.addEventListener("MozMagnifyGestureUpdate", this, true);
+  aElement.addEventListener("MozMagnifyGesture", this, true);
+  aElement.addEventListener("CancelTouchSequence", this, true);
 }
 
 GestureModule.prototype = {
@@ -1072,7 +1072,7 @@ GestureModule.prototype = {
     event.initEvent("CancelTouchSequence", true, true);
     let success = aEvent.target.dispatchEvent(event);
 
-    if (!success || (aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom)
+    if (!success || !Browser.selectedTab.allowZoom)
       return;
 
     // create the AnimatedZoom object for fast arbitrary zooming
