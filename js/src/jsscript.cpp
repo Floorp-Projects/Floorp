@@ -1037,8 +1037,10 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     }
 
     if (totalClosed != 0) {
-        script->nClosedArgs = nClosedArgs;
-        script->nClosedVars = nClosedVars;
+        JS_ASSERT(uint16(nClosedArgs) == nClosedArgs);
+        JS_ASSERT(uint16(nClosedVars) == nClosedVars);
+        script->nClosedArgs = uint16(nClosedArgs);
+        script->nClosedVars = uint16(nClosedVars);
         script->closedSlots = (uint32 *)cursor;
         cursor += totalClosed * sizeof(uint32);
     }
