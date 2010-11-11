@@ -54,6 +54,7 @@ TEST_FILES = \
   test_create_objectStore.html \
   test_cursors.html \
   test_cursor_update_updates_indexes.html \
+  test_event_propagation.html \
   test_event_source.html \
   test_getAll.html \
   test_global_data.html \
@@ -82,10 +83,6 @@ TEST_FILES = \
   test_setVersion_events.html \
   test_writer_starvation.html \
   $(NULL)
-
-# disabled for the moment
-#  test_event_propagation.html \
-
 
 ifeq (browser,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
