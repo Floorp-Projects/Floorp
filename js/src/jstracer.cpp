@@ -14672,7 +14672,12 @@ TraceRecorder::record_JSOP_IN()
      * The interpreter fuses comparisons and the following branch, so we have
      * to do that here as well.
      */
-    fuseIf(cx->regs->pc + 1, cond, x);
+    jsbytecode *pc = cx->regs->pc;
+    fuseIf(pc + 1, cond, x);
+
+    /* If the branch was to a loop header, we may need to close it. */
+    if (pc[1] == JSOP_IFNE || pc[1] == JSOP_IFEQ)
+        CHECK_STATUS_A(checkTraceEnd(pc + 1));
 
     /*
      * We update the stack after the guard. This is safe since the guard bails
