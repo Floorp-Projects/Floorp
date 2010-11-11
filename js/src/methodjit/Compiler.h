@@ -87,6 +87,7 @@ class Compiler : public BaseCompiler
             struct {
                 bool typeConst;
                 bool dataConst;
+                bool usePropertyCache;
             } name;
             struct {
                 uint32 pcOffs;
@@ -381,8 +382,8 @@ class Compiler : public BaseCompiler
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
-    void jsop_setgname(uint32 index);
-    void jsop_setgname_slow(uint32 index);
+    void jsop_setgname(uint32 index, bool usePropertyCache);
+    void jsop_setgname_slow(uint32 index, bool usePropertyCache);
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();

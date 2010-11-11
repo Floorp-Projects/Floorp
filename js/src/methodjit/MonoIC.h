@@ -134,6 +134,7 @@ struct MICInfo {
             bool touched : 1;
             bool typeConst : 1;
             bool dataConst : 1;
+            bool usePropertyCache : 1;
         } name;
     } u;
 };
