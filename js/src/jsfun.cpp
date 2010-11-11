@@ -1406,60 +1406,67 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
 
         if (&fun->compiledFunObj() == &funobj && fun->methodAtom()) {
             JSObject *thisp = &thisv.toObject();
-            JS_ASSERT(thisp->canHaveMethodBarrier());
 
-            if (thisp->hasMethodBarrier()) {
-                const Shape *shape = thisp->nativeLookup(ATOM_TO_JSID(fun->methodAtom()));
-
+            do {
                 /*
-                 * The method property might have been deleted while the method
-                 * barrier flag stuck, so we must lookup and test here.
-                 *
-                 * Two cases follow: the method barrier was not crossed yet, so
-                 * we cross it here; the method barrier *was* crossed, in which
-                 * case we must fetch and validate the cloned (unjoined) funobj
-                 * in the method property's slot.
-                 *
-                 * In either case we must allow for the method property to have
-                 * been replaced, or its value to have been overwritten.
+                 * No point worrying about anything above a non-native object
+                 * on the |this| object's prototype chain, as a non-native is
+                 * responsible for handling its entire prototype chain.
                  */
-                if (shape) {
-                    if (shape->isMethod() && &shape->methodObject() == &funobj) {
-                        if (!thisp->methodReadBarrier(cx, *shape, vp))
-                            return false;
-                        calleeValue().setObject(vp->toObject());
-                        return true;
-                    }
-                    if (shape->hasSlot()) {
-                        Value v = thisp->getSlot(shape->slot);
-                        JSObject *clone;
+                if (!thisp->isNative())
+                    break;
 
-                        if (IsFunctionObject(v, &clone) &&
-                            GET_FUNCTION_PRIVATE(cx, clone) == fun &&
-                            clone->hasMethodObj(*thisp)) {
-                            JS_ASSERT(clone != &funobj);
-                            *vp = v;
-                            calleeValue().setObject(*clone);
+                const Shape *shape = thisp->nativeLookup(ATOM_TO_JSID(fun->methodAtom()));
+                if (shape) {
+                    if (thisp->hasMethodBarrier()) {
+                        /*
+                         * Two cases follow: the method barrier was not crossed
+                         * yet, so we cross it here; the method barrier *was*
+                         * crossed but after the call, in which case we fetch
+                         * and validate the cloned (unjoined) funobj from the
+                         * method property's slot.
+                         *
+                         * In either case we must allow for the method property
+                         * to have been replaced, or its value overwritten.
+                         */
+                        if (shape->isMethod() && &shape->methodObject() == &funobj) {
+                            if (!thisp->methodReadBarrier(cx, *shape, vp))
+                                return false;
+                            calleeValue().setObject(vp->toObject());
                             return true;
                         }
-                    }
-                }
 
-                /*
-                 * If control flows here, we can't find an already-existing
-                 * clone (or force to exist a fresh clone) created via thisp's
-                 * method read barrier, so we must clone fun and store it in
-                 * fp's callee to avoid re-cloning upon repeated foo.caller
-                 * access. It seems that there are no longer any properties
-                 * referring to fun.
-                 */
-                JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent());
-                if (!newfunobj)
-                    return false;
-                newfunobj->setMethodObj(*thisp);
-                calleeValue().setObject(*newfunobj);
-                return true;
-            }
+                        if (shape->hasSlot()) {
+                            Value v = thisp->getSlot(shape->slot);
+                            JSObject *clone;
+
+                            if (IsFunctionObject(v, &clone) &&
+                                GET_FUNCTION_PRIVATE(cx, clone) == fun &&
+                                clone->hasMethodObj(*thisp)) {
+                                JS_ASSERT(clone != &funobj);
+                                *vp = v;
+                                calleeValue().setObject(*clone);
+                                return true;
+                            }
+                        }
+
+                        /*
+                         * If control flow reaches here, we couldn't find an
+                         * already-existing clone (or force to exist a fresh
+                         * clone) created via thisp's method read barrier, so
+                         * we must clone fun and store it in fp's callee to
+                         * avoid re-cloning upon repeated foo.caller access.
+                         * There are not any properties left referring to fun.
+                         */
+                        JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent());
+                        if (!newfunobj)
+                            return false;
+                        newfunobj->setMethodObj(*thisp);
+                        calleeValue().setObject(*newfunobj);
+                    }
+                    return true;
+                }
+            } while ((thisp = thisp->getProto()) != NULL);
         }
     }
 
