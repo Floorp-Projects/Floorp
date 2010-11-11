@@ -87,6 +87,11 @@ __defineSetter__("_maxUsedThemes", function(aVal) {
   return this._maxUsedThemes = aVal;
 });
 
+// Holds the ID of the theme being enabled while sending out the events so
+// cached AddonWrapper instances can return correct values for permissions and
+// pendingOperations
+var _themeIDBeingEnabled = null;
+
 var LightweightThemeManager = {
   get usedThemes () {
     try {
@@ -339,7 +344,8 @@ var LightweightThemeManager = {
 
     if (id) {
       let theme = this.getUsedTheme(id);
-      let wrapper = new AddonWrapper(theme, true);
+      _themeIDBeingEnabled = id;
+      let wrapper = new AddonWrapper(theme);
       if (aPendingRestart) {
         AddonManagerPrivate.callAddonListeners("onEnabling", wrapper, true);
         Services.prefs.setCharPref(PREF_LWTHEME_TO_SELECT, id);
@@ -352,6 +358,7 @@ var LightweightThemeManager = {
         this.themeChanged(theme);
         AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
+      _themeIDBeingEnabled = null;
     }
   },
 
@@ -401,7 +408,7 @@ var LightweightThemeManager = {
  * The AddonWrapper wraps lightweight theme to provide the data visible to
  * consumers of the AddonManager API.
  */
-function AddonWrapper(aTheme, aBeingEnabled) {
+function AddonWrapper(aTheme) {
   this.__defineGetter__("id", function() aTheme.id + ID_SUFFIX);
   this.__defineGetter__("type", function() ADDON_TYPE);
   this.__defineGetter__("isActive", function() {
@@ -474,7 +481,7 @@ function AddonWrapper(aTheme, aBeingEnabled) {
   });
 
   this.__defineGetter__("userDisabled", function() {
-    if (aBeingEnabled)
+    if (_themeIDBeingEnabled == aTheme.id)
       return false;
 
     try {
