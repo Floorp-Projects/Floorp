@@ -111,7 +111,7 @@ class InlineFrameAssembler {
 
         DataLabelPtr ncodePatch;
         if (frameSize.isStatic()) {
-            uint32 frameDepth = frameSize.staticFrameDepth();
+            uint32 frameDepth = frameSize.staticLocalSlots();
             AdjustedFrame newfp(sizeof(JSStackFrame) + frameDepth * sizeof(Value));
 
             Address flagsAddr = newfp.addrOf(JSStackFrame::offsetOfFlags());

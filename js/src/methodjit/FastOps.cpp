@@ -972,7 +972,7 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
     if (!fe->isTypeKnown() ||
         !(fe->isType(JSVAL_TYPE_BOOLEAN) || fe->isType(JSVAL_TYPE_INT32))) {
         stubcc.masm.infallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean),
-                                     frame.frameDepth());
+                                     frame.localSlots());
 
         jmpCvtExecScript.setJump(stubcc.masm.branchTest32(cond, Registers::ReturnReg,
                                                           Registers::ReturnReg));
@@ -1144,45 +1144,59 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 void
 mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 {
-    int amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
-    bool post = !!(js_CodeSpec[op].format & JOF_POST);
-    uint32 depth = frame.stackDepth();
+    if (popped || (op == JSOP_INCARG || op == JSOP_DECARG)) {
+        int amt = (op == JSOP_ARGINC || op == JSOP_INCARG) ? -1 : 1;
 
-    jsop_getarg(slot);
-    if (post && !popped)
+        // Before: 
+        // After:  V
+        frame.pushArg(slot);
+
+        // Before: V
+        // After:  V 1
+        frame.push(Int32Value(amt));
+
+        // Note, SUB will perform integer conversion for us.
+        // Before: V 1
+        // After:  N+1
+        jsop_binary(JSOP_SUB, stubs::Sub);
+
+        // Before: N+1
+        // After:  N+1
+        frame.storeArg(slot, popped);
+
+        if (popped)
+            frame.pop();
+    } else {
+        int amt = (op == JSOP_ARGINC || op == JSOP_INCARG) ? 1 : -1;
+
+        // Before:
+        // After: V
+        frame.pushArg(slot);
+
+        // Before: V
+        // After:  N
+        jsop_pos();
+
+        // Before: N
+        // After:  N N
         frame.dup();
 
-    FrameEntry *fe = frame.peek(-1);
-    Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
-    stubcc.linkExit(notInt, Uses(0));
+        // Before: N N
+        // After:  N N 1
+        frame.push(Int32Value(amt));
 
-    RegisterID reg = frame.ownRegForData(fe);
-    frame.pop();
+        // Before: N N 1
+        // After:  N N+1
+        jsop_binary(JSOP_ADD, stubs::Add);
 
-    Jump ovf;
-    if (amt > 0)
-        ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
-    else
-        ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf, Uses(0));
+        // Before: N N+1
+        // After:  N N+1
+        frame.storeArg(slot, true);
 
-    stubcc.leave();
-    stubcc.masm.addPtr(Imm32(JSStackFrame::offsetOfFormalArg(fun, slot)),
-                       JSFrameReg, Registers::ArgReg1);
-    stubcc.vpInc(op, depth);
-
-    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-    fe = frame.peek(-1);
-
-    Address address = Address(JSFrameReg, JSStackFrame::offsetOfFormalArg(fun, slot));
-    frame.storeTo(fe, address, popped);
-
-    if (post || popped)
+        // Before: N N+1
+        // After:  N
         frame.pop();
-    else
-        frame.forgetType(fe);
-
-    stubcc.rejoin(Changes((post || popped) ? 0 : 1));
+    }
 }
 
 static inline bool

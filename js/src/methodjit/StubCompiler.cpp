@@ -64,12 +64,6 @@ StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame,
 #endif
 }
 
-bool
-StubCompiler::init(uint32 nargs)
-{
-    return true;
-}
-
 void
 StubCompiler::linkExitDirect(Jump j, Label L)
 {
@@ -136,7 +130,7 @@ StubCompiler::linkExit(Jump j, Uses uses)
 void
 StubCompiler::linkExitForBranch(Jump j)
 {
-    Label l = syncExit(Uses(frame.frameDepth()));
+    Label l = syncExit(Uses(frame.frameSlots()));
     linkExitDirect(j, l);
 }
 
