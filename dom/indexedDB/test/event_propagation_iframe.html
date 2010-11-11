@@ -26,9 +26,14 @@
     }
 
     function finishTest() {
-      setTimeout(testGenerator.close, 0);
-      ok(windowErrorCount == 1, "Good window.onerror count");
-      window.parent.postMessage("SimpleTest.finish();", "*");
+      // Let window.onerror have a chance to fire
+      setTimeout(function() {
+        setTimeout(function() {
+          testGenerator.close();
+          ok(windowErrorCount == 1, "Good window.onerror count");
+          window.parent.postMessage("SimpleTest.finish();", "*");
+        }, 0);
+      }, 0);
     }
 
     const eventChain = [
@@ -39,6 +44,7 @@
 
     let captureCount = 0;
     let bubbleCount = 0;
+    let atTargetCount = 0;
     let windowErrorCount = 0;
 
     window.onerror = function(event) {
@@ -53,6 +59,7 @@
 
       let constructor;
       if (event.eventPhase == event.AT_TARGET) {
+        atTargetCount++;
         constructor = eventChain[0];
       }
       else if (event.eventPhase == event.CAPTURING_PHASE) {
@@ -70,13 +77,11 @@
       if (bubbleCount == eventChain.length - 1) {
         ok(bubbleCount == captureCount,
            "Got same number of calls for both phases");
+        ok(atTargetCount == 1, "Got one atTarget event");
 
-        if (!windowErrorCount) {
-          captureCount = bubbleCount = 0;
-        }
-        else {
-          // Let window.onerror have a chance to fire
-          setTimeout(finishTest, 0);
+        captureCount = bubbleCount = atTargetCount = 0;
+        if (windowErrorCount) {
+          finishTest();
         }
       }
     }
