@@ -1303,6 +1303,10 @@ soinfo *find_library(const char *name)
         }
     }
 
+    si = dlopen(name, RTLD_LAZY);
+    if (si)
+      return si;
+
     TRACE("[ %5d '%s' has not been loaded yet.  Locating...]\n", pid, name);
     si = load_library(name);
     if(si == NULL)
