@@ -534,8 +534,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
         mUpdateRect = aRegion.GetBounds();
     }
 
-    // the basic impl can't upload updates to disparate regions,
-    // only rects
+    // the basic impl can only upload updates to rectangles
     aRegion = nsIntRegion(mUpdateRect);
 
     nsIntSize rgnSize = mUpdateRect.Size();
@@ -614,6 +613,12 @@ BasicTextureImage::EndUpdate()
           DEBUG_GL_ERROR_CHECK(mGLContext);
         }
     } else {
+        // By default, mUpdateOffset is initialized to (0, 0), so we will
+        // upload from the origin of the update surface. Subclasses can set
+        // mUpdateOffset in an overridden BeginUpdate or EndUpdate to change
+        // this.
+        unsigned char* data = uploadImage->Data() + mUpdateOffset.x * 4 +
+                                                    mUpdateOffset.y * uploadImage->Stride();
         mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                                    0,
                                    mUpdateRect.x,
@@ -622,7 +627,7 @@ BasicTextureImage::EndUpdate()
                                    mUpdateRect.height,
                                    LOCAL_GL_RGBA,
                                    LOCAL_GL_UNSIGNED_BYTE,
-                                   uploadImage->Data());
+                                   data);
     }
     mUpdateContext = NULL;
 

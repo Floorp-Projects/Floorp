@@ -268,6 +268,7 @@ protected:
         : TextureImage(aTexture, aSize, aContentType)
         , mTextureInited(PR_FALSE)
         , mGLContext(aContext)
+        , mUpdateOffset(0, 0)
     {}
 
     virtual already_AddRefed<gfxASurface>
@@ -281,6 +282,9 @@ protected:
     nsRefPtr<gfxImageSurface> mBackingSurface;
     nsRefPtr<gfxContext> mUpdateContext;
     nsIntRect mUpdateRect;
+
+    // The offset into the update surface at which the update rect is located.
+    nsIntPoint mUpdateOffset;
 };
 
 struct THEBES_API ContextFormat

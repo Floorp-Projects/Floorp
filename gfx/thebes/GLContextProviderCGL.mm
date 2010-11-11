@@ -272,6 +272,51 @@ class TextureImageCGL : public BasicTextureImage
                                           GLContext*);
 
 protected:
+    virtual gfxContext*
+    BeginUpdate(nsIntRegion& aRegion)
+    {
+        ImageFormat format;
+        if (GetContentType() == gfxASurface::CONTENT_COLOR)
+            format = gfxASurface::ImageFormatRGB24;
+        else
+            format = gfxASurface::ImageFormatARGB32;
+
+        if (!mTextureInited || !mBackingSurface || !mUpdateSurface ||
+            nsIntSize(mBackingSurface->Width(), mBackingSurface->Height()) < mSize ||
+            mBackingSurface->Format() != format)
+        {
+            mUpdateSurface = nsnull;
+            mClippedRect = nsIntRect(0, 0, 0, 0);
+            // We need to (re)create our backing store. Let the base class to that.
+            return BasicTextureImage::BeginUpdate(aRegion);
+        }
+
+        // the basic impl can only upload updates to rectangles
+        mUpdateRect = aRegion.GetBounds();
+        aRegion = nsIntRegion(mUpdateRect);
+
+        if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
+            NS_ERROR("update outside of image");
+            return NULL;
+        }
+
+        mUpdateContext = new gfxContext(mUpdateSurface);
+        mUpdateContext->Clip(gfxRect(mUpdateRect.x, mUpdateRect.y,
+                                     mUpdateRect.width, mUpdateRect.height));
+        mUpdateOffset = mUpdateRect.TopLeft();
+
+        return mUpdateContext;
+    }
+
+    virtual PRBool
+    EndUpdate()
+    {
+        if (!mUpdateSurface)
+            mUpdateSurface = mUpdateContext->OriginalSurface();
+
+        return BasicTextureImage::EndUpdate();
+    }
+
     virtual already_AddRefed<gfxASurface>
     CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
     {
@@ -313,6 +358,7 @@ private:
     {}
 
     ImageFormat mUpdateFormat;
+    nsRefPtr<gfxASurface> mUpdateSurface;
 };
 
 already_AddRefed<TextureImage>
