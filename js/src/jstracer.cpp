@@ -4622,11 +4622,6 @@ class SlotMap : public SlotVisitorBase
     }
 
     JS_REQUIRES_STACK virtual void
-    adjustTail(TypeConsensus consensus)
-    {
-    }
-
-    JS_REQUIRES_STACK virtual void
     adjustTypes()
     {
         for (unsigned i = 0; i < length(); i++)
@@ -4738,7 +4733,8 @@ TraceRecorder::selfTypeStability(SlotMap& slotMap)
     if (consensus == TypeConsensus_Okay)
         return TypeConsensus_Okay;
 
-    /* If the only thing keeping this loop from being stable is undemotions, then mark relevant
+    /*
+     * If the only thing keeping this loop from being stable is undemotions, then mark relevant
      * slots as undemotable.
      */
     if (consensus == TypeConsensus_Undemotes)
@@ -4750,23 +4746,19 @@ TraceRecorder::selfTypeStability(SlotMap& slotMap)
 JS_REQUIRES_STACK TypeConsensus
 TraceRecorder::peerTypeStability(SlotMap& slotMap, const void* ip, TreeFragment** pPeer)
 {
-    /* See if there are any peers that would make this stable */
-    JS_ASSERT(fragment->root == tree);
-    TreeFragment* peer = LookupLoop(traceMonitor, ip, tree->globalObj, tree->globalShape, tree->argc);
+    JS_ASSERT(tree->first == LookupLoop(traceMonitor, ip, tree->globalObj, tree->globalShape, tree->argc));
 
-    /* This condition is possible with recursion */
-    JS_ASSERT_IF(!peer, tree->ip != ip);
-    if (!peer)
-        return TypeConsensus_Bad;
+    /* See if there are any peers that would make this stable */
     bool onlyUndemotes = false;
-    for (; peer != NULL; peer = peer->peer) {
+    for (TreeFragment *peer = tree->first; peer != NULL; peer = peer->peer) {
         if (!peer->code() || peer == fragment)
             continue;
         debug_only_printf(LC_TMTracer, "Checking type stability against peer=%p\n", (void*)peer);
         TypeConsensus consensus = slotMap.checkTypes(peer);
         if (consensus == TypeConsensus_Okay) {
             *pPeer = peer;
-            /* Return this even though there will be linkage; the trace itself is not stable.
+            /*
+             * Return this even though there will be linkage; the trace itself is not stable.
              * Caller should inspect ppeer to check for a compatible peer.
              */
             return TypeConsensus_Okay;
@@ -4778,35 +4770,26 @@ TraceRecorder::peerTypeStability(SlotMap& slotMap, const void* ip, TreeFragment*
     return onlyUndemotes ? TypeConsensus_Undemotes : TypeConsensus_Bad;
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::closeLoop()
-{
-    return closeLoop(snapshot(UNSTABLE_LOOP_EXIT));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::closeLoop(VMSideExit* exit)
-{
-    DefaultSlotMap slotMap(*this);
-    VisitSlots(slotMap, cx, 0, *tree->globalSlots);
-    return closeLoop(slotMap, exit);
-}
-
 /*
  * Complete and compile a trace and link it to the existing tree if
  * appropriate.  Returns ARECORD_ABORTED or ARECORD_STOP, depending on whether
  * the recorder was deleted. Outparam is always set.
  */
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
+TraceRecorder::closeLoop()
 {
+    VMSideExit *exit = snapshot(UNSTABLE_LOOP_EXIT);
+
+    DefaultSlotMap slotMap(*this);
+    VisitSlots(slotMap, cx, 0, *tree->globalSlots);
+
     /*
      * We should have arrived back at the loop header, and hence we don't want
      * to be in an imacro here and the opcode should be either JSOP_TRACE or, in
      * case this loop was blacklisted in the meantime, JSOP_NOTRACE.
      */
-    JS_ASSERT((*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOTRACE) &&
-              !cx->fp()->hasImacropc());
+    JS_ASSERT(*cx->regs->pc == JSOP_TRACE || *cx->regs->pc == JSOP_NOTRACE);
+    JS_ASSERT(!cx->fp()->hasImacropc());
 
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer,
@@ -4816,17 +4799,13 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         return ARECORD_STOP;
     }
 
-    JS_ASSERT_IF(exit->exitType == UNSTABLE_LOOP_EXIT,
-                 exit->numStackSlots == tree->nStackTypes);
-
+    JS_ASSERT(exit->numStackSlots == tree->nStackTypes);
     JS_ASSERT(fragment->root == tree);
+    JS_ASSERT(!trashSelf);
 
     TreeFragment* peer = NULL;
 
-    TypeConsensus consensus = TypeConsensus_Bad;
-
-    if (exit->exitType == UNSTABLE_LOOP_EXIT)
-        consensus = selfTypeStability(slotMap);
+    TypeConsensus consensus = selfTypeStability(slotMap);
     if (consensus != TypeConsensus_Okay) {
         TypeConsensus peerConsensus = peerTypeStability(slotMap, tree->ip, &peer);
         /* If there was a semblance of a stable peer (even if not linkable), keep the result. */
@@ -4839,17 +4818,12 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         AUDIT(unstableLoopVariable);
 #endif
 
-    JS_ASSERT(!trashSelf);
-
     /*
      * This exit is indeed linkable to something now. Process any promote or
      * demotes that are pending in the slot map.
      */
     if (consensus == TypeConsensus_Okay)
         slotMap.adjustTypes();
-
-    /* Give up-recursion a chance to pop the stack frame. */
-    slotMap.adjustTail(consensus);
 
     if (consensus != TypeConsensus_Okay || peer) {
         fragment->lastIns = w.x(createGuardRecord(exit));
