@@ -224,3 +224,10 @@ gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
   , mParent(aParent)
 {
 }
+
+already_AddRefed<gfxImageSurface>
+gfxImageSurface::GetAsImageSurface()
+{
+  nsRefPtr<gfxImageSurface> surface = this;
+  return surface.forget();
+}
