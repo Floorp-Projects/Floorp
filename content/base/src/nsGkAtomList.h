@@ -258,9 +258,7 @@ GK_ATOM(count, "count")
 GK_ATOM(crop, "crop")
 GK_ATOM(curpos, "curpos")
 GK_ATOM(current, "current")
-#ifdef MOZ_MEDIA
 GK_ATOM(currentloop, "currentloop")
-#endif
 GK_ATOM(cycler, "cycler")
 GK_ATOM(data, "data")
 GK_ATOM(datalist, "datalist")
