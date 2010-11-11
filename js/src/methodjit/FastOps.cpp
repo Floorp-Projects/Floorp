@@ -1625,7 +1625,10 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             return;
         }
 
+        RegisterID data = frame.tempRegForData(test);
+        frame.pinReg(data);
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+        frame.unpinReg(data);
         
         /* Is the other side boolean? */
         Jump notBoolean;
@@ -1634,15 +1637,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         /* Do a dynamic test. */
         bool val = lhsTest ? lhs->getValue().toBoolean() : rhs->getValue().toBoolean();
-#if defined JS_CPU_X86 || defined JS_CPU_ARM
-        if (frame.shouldAvoidDataRemat(test))
-            masm.set32(cond, masm.payloadOf(frame.addressOf(test)), Imm32(val), result);
-        else
-            masm.set32(cond, frame.tempRegForData(test), Imm32(val), result);
-#elif defined JS_CPU_X64
-        RegisterID r = frame.tempRegForData(test);
-        masm.set32(cond, r, Imm32(val), result);
-#endif
+        masm.set32(cond, data, Imm32(val), result);
 
         if (!test->isTypeKnown()) {
             Jump done = masm.jump();
