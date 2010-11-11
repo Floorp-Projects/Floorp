@@ -51,6 +51,7 @@
 
 #include "GLDefs.h"
 #include "gfxASurface.h"
+#include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsISupportsImpl.h"
@@ -277,6 +278,7 @@ protected:
 
     PRBool mTextureInited;
     GLContext* mGLContext;
+    nsRefPtr<gfxImageSurface> mBackingSurface;
     nsRefPtr<gfxContext> mUpdateContext;
     nsIntRect mUpdateRect;
 };
