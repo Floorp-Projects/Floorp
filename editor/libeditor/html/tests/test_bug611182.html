@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=611182
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -15,6 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=611182
 <p id="display"></p>
 <div id="content">
   <iframe></iframe>
+  <iframe id="ref" src="data:text/html,foo bar"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -23,31 +25,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=611182
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var iframe = document.querySelector("iframe");
+  var refElem = document.querySelector("#ref");
+  var ref = snapshotWindow(refElem.contentWindow, false);
 
   function findTextNode(doc) {
-    var body = doc.body;
+    var body = doc.documentElement;
     var result = findTextNodeWorker(body);
     ok(result, "Failed to find the text node");
     return result;
   }
 
   function findTextNodeWorker(root) {
+    if (root.isContentEditable) {
+      root.focus();
+    }
     for (var i = 0; i < root.childNodes.length; ++i) {
       var node = root.childNodes[i];
       if (node.nodeType == node.TEXT_NODE &&
           node.nodeValue == "fooz bar") {
-        root.focus();
         return node;
       }
       if (node.nodeType == node.ELEMENT_NODE) {
         node = findTextNodeWorker(node);
         if (node) {
-          root.focus();
           return node;
         }
       }
     }
-    ok(false, "Failed to find the text node");
     return null;
   }
 
@@ -58,6 +62,8 @@ SimpleTest.waitForFocus(function() {
 
       var doc = iframe.contentDocument;
       var win = iframe.contentWindow;
+      doc.body.setAttribute("spellcheck", "false");
+
       iframe.focus();
       var textNode = findTextNode(doc);
       var sel = win.getSelection();
@@ -65,7 +71,8 @@ SimpleTest.waitForFocus(function() {
       synthesizeKey("VK_BACK_SPACE", {});
       is(textNode.textContent, "foo bar", "Backspace should work correctly");
 
-      // TODO: compare screenshots to make sure that no bogus node exists in the document
+      var snapshot = snapshotWindow(win, false);
+      ok(compareSnapshots(snapshot, ref, true)[0], "No bogus node should exist in the document");
 
       callback();
     }, false);
@@ -73,13 +80,17 @@ SimpleTest.waitForFocus(function() {
   }
 
   const TEST_URIS = [
+    "data:text/html,<html contenteditable>fooz bar</html>",
+    "data:text/html,<html contenteditable><body>fooz bar</body></html>",
     "data:text/html,<body contenteditable>fooz bar</body>",
     "data:text/html,<body contenteditable><p>fooz bar</p></body>",
     "data:text/html,<body contenteditable><div>fooz bar</div></body>",
     "data:text/html,<body contenteditable><span>fooz bar</span></body>",
-    "data:text/html,<p contenteditable>fooz bar</p>",
+    "data:text/html,<p contenteditable style='outline:none'>fooz bar</p>",
     "data:text/html,<!DOCTYPE html><html><body contenteditable>fooz bar</body></html>",
+    "data:text/html,<!DOCTYPE html><html contenteditable><body>fooz bar</body></html>",
     'data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
+    'data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true"><body>fooz bar</body></html>',
     "data:text/html,<body onload=\"document.designMode='on'\">fooz bar</body>",
     'data:text/html,<html><script>' +
                      'onload = function() {' +
@@ -167,6 +178,48 @@ SimpleTest.waitForFocus(function() {
                        'b.setAttribute("contenteditable", "true");' +
                        'r.appendChild(b);' +
                        'b.appendChild(document.createTextNode("fooz bar"));' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'document.open();' +
+                       'document.write("<body contenteditable>fooz bar</body>");' +
+                       'document.close();' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'document.open();' +
+                       'document.write("<body contenteditable><div>fooz bar</div></body>");' +
+                       'document.close();' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'document.open();' +
+                       'document.write("<body contenteditable><span>fooz bar</span></body>");' +
+                       'document.close();' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'document.open();' +
+                       'document.write("<p contenteditable style=\\"outline: none\\">fooz bar</p>");' +
+                       'document.close();' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'document.open();' +
+                       'document.write("<html contenteditable>fooz bar</html>");' +
+                       'document.close();' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'document.open();' +
+                       'document.write("<html contenteditable><body>fooz bar</body></html>");' +
+                       'document.close();' +
                      '};' +
                    '<\/script><body></body></html>',
   ];
