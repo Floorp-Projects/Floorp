@@ -1955,7 +1955,7 @@ str_search(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     if (vp->isTrue())
-        vp->setInt32(res->get(0, 0));
+        vp->setInt32(res->matchStart());
     else
         vp->setInt32(-1);
     return true;
@@ -2044,26 +2044,6 @@ InterpretDollar(JSContext *cx, RegExpStatics *res, jschar *dp, jschar *ep, Repla
     }
     return false;
 }
-
-class PreserveRegExpStatics
-{
-    js::RegExpStatics *const original;
-    js::RegExpStatics buffer;
-
-  public:
-    explicit PreserveRegExpStatics(RegExpStatics *original)
-     : original(original),
-       buffer(RegExpStatics::InitBuffer())
-    {}
-
-    bool init(JSContext *cx) {
-        return original->save(cx, &buffer);
-    }
-
-    ~PreserveRegExpStatics() {
-        original->restore();
-    }
-};
 
 static bool
 FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t *sizep)
@@ -2155,7 +2135,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         }
 
         /* Push match index and input string. */
-        session[argi++].setInt32(res->get(0, 0));
+        session[argi++].setInt32(res->matchStart());
         session[argi].setString(rdata.str);
 
         if (!session.invoke(cx))
@@ -2222,8 +2202,8 @@ ReplaceCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
     JSString *str = rdata.str;
     size_t leftoff = rdata.leftIndex;
     const jschar *left = str->chars() + leftoff;
-    size_t leftlen = res->get(0, 0) - leftoff;
-    rdata.leftIndex = res->get(0, 1);
+    size_t leftlen = res->matchStart() - leftoff;
+    rdata.leftIndex = res->matchLimit();
 
     size_t replen = 0;  /* silence 'unused' warning */
     if (!FindReplaceLength(cx, res, rdata, &replen))

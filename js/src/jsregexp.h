@@ -59,11 +59,14 @@ namespace js {
 class RegExpStatics
 {
     typedef Vector<int, 20, SystemAllocPolicy> MatchPairs;
-    MatchPairs    matchPairs;
-    JSString      *input;
-    uintN         flags;
-    RegExpStatics *bufferLink;
-    bool          copied;
+    MatchPairs      matchPairs;
+    /* The input that was used to produce matchPairs. */
+    JSString        *matchPairsInput;
+    /* The input last set on the statics. */
+    JSString        *pendingInput;
+    uintN           flags;
+    RegExpStatics   *bufferLink;
+    bool            copied;
 
     bool createDependent(JSContext *cx, size_t start, size_t end, Value *out) const;
 
@@ -76,7 +79,8 @@ class RegExpStatics
         dst.matchPairs.clear();
         /* 'save' has already reserved space in matchPairs */
         JS_ALWAYS_TRUE(dst.matchPairs.append(matchPairs));
-        dst.input = input;
+        dst.matchPairsInput = matchPairsInput;
+        dst.pendingInput = pendingInput;
         dst.flags = flags;
     }
 
@@ -86,25 +90,6 @@ class RegExpStatics
             bufferLink->copied = true;
         }
     }
-
-    /*
-     * Check whether the index at |checkValidIndex| is valid (>= 0).
-     * If so, construct a string for it and place it in |*out|.
-     * If not, place undefined in |*out|.
-     */
-    bool makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out) const;
-    static const uintN allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_STICKY | JSREG_MULTILINE;
-    friend class RegExp;
-
-  public:
-    RegExpStatics() : bufferLink(NULL), copied(false) { clear(); }
-
-    struct InitBuffer {};
-    explicit RegExpStatics(InitBuffer) : bufferLink(NULL), copied(false) {}
-
-    static RegExpStatics *extractFrom(JSObject *global);
-
-    /* Mutators. */
 
     bool save(JSContext *cx, RegExpStatics *buffer) {
         JS_ASSERT(!buffer->copied && !buffer->bufferLink);
@@ -123,6 +108,76 @@ class RegExpStatics
         bufferLink = bufferLink->bufferLink;
     }
 
+    void checkInvariants() {
+#if DEBUG
+        if (pairCount() == 0) {
+            JS_ASSERT(!matchPairsInput);
+            return;
+        }
+
+        /* Pair count is non-zero, so there must be match pairs input. */
+        JS_ASSERT(matchPairsInput);
+        size_t mpiLen = matchPairsInput->length();
+
+        JS_ASSERT(pairIsPresent(0));
+
+        /* Present pairs must be valid. */
+        for (size_t i = 0; i < pairCount(); ++i) {
+            if (!pairIsPresent(i))
+                continue;
+            int start = get(i, 0);
+            int limit = get(i, 1);
+            JS_ASSERT(mpiLen >= size_t(limit) && limit >= start && start >= 0);
+        }
+#endif
+    }
+
+    int get(size_t pairNum, bool which) const {
+        JS_ASSERT(pairNum < pairCount());
+        return matchPairs[2 * pairNum + which];
+    }
+
+    /*
+     * Check whether the index at |checkValidIndex| is valid (>= 0).
+     * If so, construct a string for it and place it in |*out|.
+     * If not, place undefined in |*out|.
+     */
+    bool makeMatch(JSContext *cx, size_t checkValidIndex, size_t pairNum, Value *out) const;
+
+    static const uintN allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_STICKY | JSREG_MULTILINE;
+
+    struct InitBuffer {};
+    explicit RegExpStatics(InitBuffer) : bufferLink(NULL), copied(false) {}
+
+    friend class PreserveRegExpStatics;
+
+  public:
+    RegExpStatics() : bufferLink(NULL), copied(false) { clear(); }
+
+    static RegExpStatics *extractFrom(JSObject *global);
+
+    /* Mutators. */
+
+    /* 
+     * The inputOffset parameter is added to the present (i.e. non-negative) match items to emulate
+     * sticky mode.
+     */
+    bool updateFromMatch(JSContext *cx, JSString *input, int *buf, size_t matchItemCount) {
+        aboutToWrite();
+        pendingInput = input;
+
+        if (!matchPairs.resizeUninitialized(matchItemCount)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        for (size_t i = 0; i < matchItemCount; ++i)
+            matchPairs[i] = buf[i];
+
+        matchPairsInput = input;
+        return true;
+    }
+
     void setMultiline(bool enabled) {
         aboutToWrite();
         if (enabled)
@@ -133,43 +188,61 @@ class RegExpStatics
 
     void clear() {
         aboutToWrite();
-        input = 0;
         flags = 0;
+        pendingInput = NULL;
+        matchPairsInput = NULL;
         matchPairs.clear();
     }
 
-    void checkInvariants() {
-        if (pairCount() > 0) {
-            JS_ASSERT(input);
-            JS_ASSERT(get(0, 0) <= get(0, 1));
-            JS_ASSERT(get(0, 1) <= int(input->length()));
-        }
-    }
+    bool pairIsPresent(size_t pairNum) { return get(0, 0) != -1; }
 
+    /* Corresponds to JSAPI functionality to set the pending RegExp input. */
     void reset(JSString *newInput, bool newMultiline) {
         aboutToWrite();
         clear();
-        input = newInput;
+        pendingInput = newInput;
         setMultiline(newMultiline);
         checkInvariants();
     }
 
-    void setInput(JSString *newInput) {
+    void setPendingInput(JSString *newInput) {
         aboutToWrite();
-        input = newInput;
+        pendingInput = newInput;
     }
 
     /* Accessors. */
 
-    JSString *getInput() const { return input; }
+    JSString *getPendingInput() const { return pendingInput; }
     uintN getFlags() const { return flags; }
     bool multiline() const { return flags & JSREG_MULTILINE; }
-    bool matched() const { JS_ASSERT(pairCount() > 0); return get(0, 1) - get(0, 0) > 0; }
-    size_t getParenCount() const { JS_ASSERT(pairCount() > 0); return pairCount() - 1; }
+
+    size_t matchStart() const {
+        int start = get(0, 0);
+        JS_ASSERT(start >= 0);
+        return size_t(start);
+    }
+
+    size_t matchLimit() const {
+        int limit = get(0, 1);
+        JS_ASSERT(size_t(limit) >= matchStart() && limit >= 0);
+        return size_t(limit);
+    }
+
+    bool matched() const {
+        JS_ASSERT(pairCount() > 0);
+        return get(0, 1) - get(0, 0) > 0;
+    }
+
+    size_t getParenCount() const {
+        JS_ASSERT(pairCount() > 0);
+        return pairCount() - 1;
+    }
 
     void mark(JSTracer *trc) const {
-        if (input)
-            JS_CALL_STRING_TRACER(trc, input, "res->input");
+        if (pendingInput)
+            JS_CALL_STRING_TRACER(trc, pendingInput, "res->pendingInput");
+        if (matchPairsInput)
+            JS_CALL_STRING_TRACER(trc, matchPairsInput, "res->matchPairsInput");
     }
 
     size_t getParenLength(size_t parenNum) const {
@@ -178,14 +251,9 @@ class RegExpStatics
         return get(parenNum + 1, 1) - get(parenNum + 1, 0);
     }
 
-    int get(size_t pairNum, bool which) const {
-        JS_ASSERT(pairNum < pairCount());
-        return matchPairs[2 * pairNum + which];
-    }
-
     /* Value creators. */
 
-    bool createInput(JSContext *cx, Value *out) const;
+    bool createPendingInput(JSContext *cx, Value *out) const;
     bool createLastMatch(JSContext *cx, Value *out) const { return makeMatch(cx, 0, 0, out); }
     bool createLastParen(JSContext *cx, Value *out) const;
     bool createLeftContext(JSContext *cx, Value *out) const;
@@ -202,6 +270,26 @@ class RegExpStatics
     void getLastParen(JSSubString *out) const;
     void getLeftContext(JSSubString *out) const;
     void getRightContext(JSSubString *out) const;
+};
+
+class PreserveRegExpStatics
+{
+    RegExpStatics *const original;
+    RegExpStatics buffer;
+
+  public:
+    explicit PreserveRegExpStatics(RegExpStatics *original)
+     : original(original),
+       buffer(RegExpStatics::InitBuffer())
+    {}
+
+    bool init(JSContext *cx) {
+        return original->save(cx, &buffer);
+    }
+
+    ~PreserveRegExpStatics() {
+        original->restore();
+    }
 };
 
 }
