@@ -2962,6 +2962,8 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
      * function objects, even if obj->getGlobal() would suffice. This should be
      * revisited when parent is narrowed to exist only for function objects and
      * possibly a few prehistoric scope objects (e.g. event targets).
+     *
+     * FIXME: bug 611190.
      */
     bool wasDelegate = obj->isDelegate();
 
