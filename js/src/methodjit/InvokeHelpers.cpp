@@ -88,7 +88,7 @@ top:
         JSTryNoteArray *tnarray = script->trynotes();
         for (unsigned i = 0; i < tnarray->length; ++i) {
             JSTryNote *tn = &tnarray->vector[i];
-            JS_ASSERT(offset < script->length);
+
             // The following if condition actually tests two separate conditions:
             //   (1) offset - tn->start >= tn->length
             //       means the PC is not in the range of this try note, so we
