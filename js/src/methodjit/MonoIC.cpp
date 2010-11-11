@@ -528,7 +528,7 @@ class CallCompiler : public BaseCompiler
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
         if (ic.frameSize.isStatic()) {
             masm.move(Imm32(ic.frameSize.staticArgc()), Registers::ArgReg1);
-            masm.fallibleVMCall(compilePtr, script->code, ic.frameSize.staticFrameDepth());
+            masm.fallibleVMCall(compilePtr, script->code, ic.frameSize.staticLocalSlots());
         } else {
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), Registers::ArgReg1);
             masm.fallibleVMCall(compilePtr, script->code, -1);
@@ -642,7 +642,7 @@ class CallCompiler : public BaseCompiler
          */
         Value *vp;
         if (ic.frameSize.isStatic()) {
-            JS_ASSERT(f.regs.sp - f.regs.fp->slots() == (int)ic.frameSize.staticFrameDepth());
+            JS_ASSERT(f.regs.sp - f.regs.fp->slots() == (int)ic.frameSize.staticLocalSlots());
             vp = f.regs.sp - (2 + ic.frameSize.staticArgc());
         } else {
             JS_ASSERT(*f.regs.pc == JSOP_FUNAPPLY && GET_ARGC(f.regs.pc) == 2);

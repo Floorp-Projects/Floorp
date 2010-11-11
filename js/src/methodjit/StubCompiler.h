@@ -96,8 +96,6 @@ class StubCompiler
   public:
     StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
 
-    bool init(uint32 nargs);
-
     size_t size() {
         return masm.size();
     }
