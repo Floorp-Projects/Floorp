@@ -122,41 +122,49 @@ ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
     stubs::GetGlobalName(f);
 }
 
+template <JSBool strict>
 static void JS_FASTCALL
-SetGlobalNameSlow(VMFrame &f, uint32 index)
+DisabledSetGlobal(VMFrame &f, ic::MICInfo *ic)
 {
     JSScript *script = f.fp()->script();
     JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
-    if (script->strictModeCode)
-        stubs::SetGlobalName<true>(f, atom);
-    else
-        stubs::SetGlobalName<false>(f, atom);
+    stubs::SetGlobalName<strict>(f, atom);
 }
+
+template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::MICInfo *ic);
+template void JS_FASTCALL DisabledSetGlobal<false>(VMFrame &f, ic::MICInfo *ic);
+
+template <JSBool strict>
+static void JS_FASTCALL
+DisabledSetGlobalNoCache(VMFrame &f, ic::MICInfo *ic)
+{
+    JSScript *script = f.fp()->script();
+    JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
+    stubs::SetGlobalNameNoCache<strict>(f, atom);
+}
+
+template void JS_FASTCALL DisabledSetGlobalNoCache<true>(VMFrame &f, ic::MICInfo *ic);
+template void JS_FASTCALL DisabledSetGlobalNoCache<false>(VMFrame &f, ic::MICInfo *ic);
 
 static void
 PatchSetFallback(VMFrame &f, ic::MICInfo *ic)
 {
-    JSC::RepatchBuffer repatch(ic->stubEntry.executableAddress(), 64);
-    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, SetGlobalNameSlow));
-    repatch.relink(ic->stubCall, fptr);
-}
-
-static VoidStubAtom
-GetStubForSetGlobalName(VMFrame &f)
-{
     JSScript *script = f.fp()->script();
-    // The property cache doesn't like inc ops, so we use a simpler
-    // stub for that case.
-    return js_CodeSpec[*f.regs.pc].format & (JOF_INC | JOF_DEC)
-         ? STRICT_VARIANT(stubs::SetGlobalNameDumb)
-         : STRICT_VARIANT(stubs::SetGlobalName);
+
+    JSC::RepatchBuffer repatch(ic->stubEntry.executableAddress(), 64);
+    VoidStubMIC stub = ic->u.name.usePropertyCache
+                       ? STRICT_VARIANT(DisabledSetGlobal)
+                       : STRICT_VARIANT(DisabledSetGlobalNoCache);
+    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stub));
+    repatch.relink(ic->stubCall, fptr);
 }
 
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
 {
     JSObject *obj = f.fp()->scopeChain().getGlobal();
-    JSAtom *atom = f.fp()->script()->getAtom(GET_INDEX(f.regs.pc));
+    JSScript *script = f.fp()->script();
+    JSAtom *atom = script->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
     JS_ASSERT(ic->kind == ic::MICInfo::SET);
@@ -169,7 +177,10 @@ ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
     {
         if (shape)
             PatchSetFallback(f, ic);
-        GetStubForSetGlobalName(f)(f, atom);
+        if (ic->u.name.usePropertyCache)
+            STRICT_VARIANT(stubs::SetGlobalName)(f, atom);
+        else
+            STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, atom);
         return;
     }
     uint32 slot = shape->slot;
@@ -201,8 +212,10 @@ ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
     stores.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
 #endif
 
-    // Actually implement the op the slow way.
-    GetStubForSetGlobalName(f)(f, atom);
+    if (ic->u.name.usePropertyCache)
+        STRICT_VARIANT(stubs::SetGlobalName)(f, atom);
+    else
+        STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, atom);
 }
 
 class EqualityICLinker : public LinkerHelper

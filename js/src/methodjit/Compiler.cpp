@@ -474,6 +474,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                 scriptMICs[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
                 scriptMICs[i].u.name.typeConst = mics[i].u.name.typeConst;
                 scriptMICs[i].u.name.dataConst = mics[i].u.name.dataConst;
+                scriptMICs[i].u.name.usePropertyCache = mics[i].u.name.usePropertyCache;
 #if defined JS_PUNBOX64
                 scriptMICs[i].patchValueOffset = mics[i].patchValueOffset;
 #endif
@@ -1834,7 +1835,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
-            jsop_setgname(fullAtomIndex(PC));
+            jsop_setgname(fullAtomIndex(PC), true);
           END_CASE(JSOP_SETGNAME)
 
           BEGIN_CASE(JSOP_REGEXP)
@@ -3769,7 +3770,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shift(-1);
         // OBJ V+1
 
-        jsop_setgname(index);
+        jsop_setgname(index, false);
         // V+1
 
         if (pop)
@@ -3804,7 +3805,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shift(-1);
         // N OBJ N+1
 
-        jsop_setgname(index);
+        jsop_setgname(index, false);
         // N N+1
 
         frame.pop();
@@ -4394,18 +4395,21 @@ mjit::Compiler::jsop_getgname(uint32 index)
 }
 
 void
-mjit::Compiler::jsop_setgname_slow(uint32 index)
+mjit::Compiler::jsop_setgname_slow(uint32 index, bool usePropertyCache)
 {
     JSAtom *atom = script->getAtom(index);
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    INLINE_STUBCALL(STRICT_VARIANT(stubs::SetGlobalName));
+    if (usePropertyCache)
+        INLINE_STUBCALL(STRICT_VARIANT(stubs::SetGlobalName));
+    else
+        INLINE_STUBCALL(STRICT_VARIANT(stubs::SetGlobalNameNoCache));
     frame.popn(2);
     frame.pushSynced();
 }
 
 void
-mjit::Compiler::jsop_setgname(uint32 index)
+mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
 {
 #if defined JS_MONOIC
     FrameEntry *objFe = frame.peek(-2);
@@ -4457,6 +4461,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
 
     mic.u.name.typeConst = fe->isTypeKnown();
     mic.u.name.dataConst = fe->isConstant();
+    mic.u.name.usePropertyCache = usePropertyCache;
 
     if (!mic.u.name.dataConst) {
         dataReg = frame.ownRegForData(fe);
@@ -4523,7 +4528,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
 
     mics.append(mic);
 #else
-    jsop_setgname_slow(index);
+    jsop_setgname_slow(index, usePropertyCache);
 #endif
 }
 
