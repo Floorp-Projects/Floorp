@@ -42,6 +42,7 @@
 #include <AppKit/NSOpenGL.h>
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
+#include "gfxQuartzSurface.h"
 #include "gfxPlatform.h"
 
 namespace mozilla {
@@ -281,16 +282,24 @@ protected:
     virtual already_AddRefed<gfxImageSurface>
     GetImageForUpload(gfxASurface* aUpdateSurface)
     {
-        // FIXME/bug 575521: make me fast!
-        nsRefPtr<gfxImageSurface> image =
-            new gfxImageSurface(gfxIntSize(mUpdateRect.width,
-                                           mUpdateRect.height),
-                                mUpdateFormat);
-        nsRefPtr<gfxContext> tmpContext = new gfxContext(image);
+        nsRefPtr<gfxImageSurface> image = aUpdateSurface->GetAsImageSurface();
 
-        tmpContext->SetSource(aUpdateSurface);
-        tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpContext->Paint();
+        if (image && image->Format() != mUpdateFormat) {
+          image = nsnull;
+        }
+
+        // If we don't get an image directly from the quartz surface, we have
+        // to take the slow boat.
+        if (!image) {
+          image = new gfxImageSurface(gfxIntSize(mUpdateRect.width,
+                                                 mUpdateRect.height),
+                                      mUpdateFormat);
+          nsRefPtr<gfxContext> tmpContext = new gfxContext(image);
+
+          tmpContext->SetSource(aUpdateSurface);
+          tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+          tmpContext->Paint();
+        }
 
         return image.forget();
     }
