@@ -2797,7 +2797,7 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     if (op == JSOP_ARGUMENTS || op == JSOP_CALLEE) {
         if (js_Emit1(cx, cg, op) < 0)
             return JS_FALSE;
-        if (callContext && js_Emit1(cx, cg, JSOP_NULL) < 0)
+        if (callContext && js_Emit1(cx, cg, JSOP_PUSH) < 0)
             return JS_FALSE;
     } else {
         if (!pn->pn_cookie.isFree()) {
