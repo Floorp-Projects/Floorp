@@ -1653,11 +1653,11 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
             const JSErrorReport* report;
             if(nsnull != (report = JS_ErrorFromException(cx, s)))
             {
-                JSAutoByteString message;
+                const char* message = nsnull;
                 JSString* str;
                 if(nsnull != (str = JS_ValueToString(cx, s)))
-                    message.encode(cx, str);
-                return JSErrorToXPCException(ccx, message.ptr(), ifaceName,
+                    message = JS_GetStringBytes(str);
+                return JSErrorToXPCException(ccx, message, ifaceName,
                                              methodName, report, exceptn);
             }
 
@@ -1696,13 +1696,10 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
             if(!str)
                 return NS_ERROR_FAILURE;
 
-            JSAutoByteString strBytes(cx, str);
-            if (!strBytes)
-                return NS_ERROR_FAILURE;
-
             return ConstructException(NS_ERROR_XPC_JS_THREW_JS_OBJECT,
-                                      strBytes.ptr(), ifaceName, methodName,
-                                      nsnull, exceptn, cx, &s);
+                                      JS_GetStringBytes(str),
+                                      ifaceName, methodName, nsnull,
+                                      exceptn, cx, &s);
         }
     }
 
@@ -1770,15 +1767,10 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
 
     JSString* str = JS_ValueToString(cx, s);
     if(str)
-    {
-        JSAutoByteString strBytes(cx, str);
-        if(!!strBytes)
-        {
-            return ConstructException(NS_ERROR_XPC_JS_THREW_STRING,
-                                      strBytes.ptr(), ifaceName, methodName,
-                                      nsnull, exceptn, cx, &s);
-        }
-    }
+        return ConstructException(NS_ERROR_XPC_JS_THREW_STRING,
+                                  JS_GetStringBytes(str),
+                                  ifaceName, methodName, nsnull,
+                                  exceptn, cx, &s);
     return NS_ERROR_FAILURE;
 }
 

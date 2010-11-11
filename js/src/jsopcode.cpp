@@ -289,8 +289,8 @@ js_DumpScript(JSContext *cx, JSScript *script)
     return js_Disassemble(cx, script, true, stdout);
 }
 
-static bool
-ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
+const char *
+ToDisassemblySource(JSContext *cx, jsval v)
 {
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
@@ -302,13 +302,13 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             Shape::Range r = obj->lastProperty()->all();
             while (!r.empty()) {
                 const Shape &shape = r.front();
-                JSAutoByteString bytes;
-                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id), &bytes))
+                const char *bytes = js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id));
+                if (!bytes)
                     return NULL;
 
                 r.popFront();
                 source = JS_sprintf_append(source, "%s: %d%s",
-                                           bytes.ptr(), shape.shortid,
+                                           bytes, shape.shortid,
                                            !r.empty() ? ", " : "");
             }
 
@@ -319,7 +319,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             JSString *str = JS_NewString(cx, source, strlen(source));
             if (!str)
                 return NULL;
-            return bytes->encode(cx, str);
+            return js_GetStringBytes(cx, str);
         }
 
         if (clasp == &js_FunctionClass) {
@@ -327,18 +327,18 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (!str)
                 return NULL;
-            return bytes->encode(cx, str);
+            return js_GetStringBytes(cx, str);
         }
 
         if (clasp == &js_RegExpClass) {
             AutoValueRooter tvr(cx);
             if (!js_regexp_toString(cx, obj, tvr.addr()))
                 return NULL;
-            return bytes->encode(cx, JSVAL_TO_STRING(Jsvalify(tvr.value())));
+            return js_GetStringBytes(cx, JSVAL_TO_STRING(Jsvalify(tvr.value())));
         }
     }
 
-    return !!js_ValueToPrintable(cx, Valueify(v), bytes, true);
+    return js_ValueToPrintableSource(cx, Valueify(v));
 }
 
 JS_FRIEND_API(uintN)
@@ -353,6 +353,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     uintN index;
     JSObject *obj;
     jsval v;
+    const char *bytes;
     jsint i;
 
     op = (JSOp)*pc;
@@ -403,23 +404,19 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 obj = script->getRegExp(index);
             v = OBJECT_TO_JSVAL(obj);
         }
-        {
-            JSAutoByteString bytes;
-            if (!ToDisassemblySource(cx, v, &bytes))
-                return 0;
-            fprintf(fp, " %s", bytes.ptr());
-        }
+        bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
+            return 0;
+        fprintf(fp, " %s", bytes);
         break;
 
       case JOF_GLOBAL:
         atom = script->getGlobalAtom(GET_SLOTNO(pc));
         v = ATOM_TO_JSVAL(atom);
-        {
-            JSAutoByteString bytes;
-            if (!ToDisassemblySource(cx, v, &bytes))
-                return 0;
-            fprintf(fp, " %s", bytes.ptr());
-        }
+        bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
+            return 0;
+        fprintf(fp, " %s", bytes);
         break;
 
       case JOF_UINT16PAIR:
@@ -477,10 +474,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
 
-            JSAutoByteString bytes;
-            if (!ToDisassemblySource(cx, Jsvalify(script->getConst(constIndex)), &bytes))
+            bytes = ToDisassemblySource(cx, Jsvalify(script->getConst(constIndex)));
+            if (!bytes)
                 return 0;
-            fprintf(fp, "\n\t%s: %d", bytes.ptr(), (intN) off);
+            fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
             npairs--;
         }
         len = 1 + pc2 - pc;
@@ -496,7 +493,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_SLOTATOM:
-      case JOF_SLOTOBJECT: {
+      case JOF_SLOTOBJECT:
         fprintf(fp, " %u", GET_SLOTNO(pc));
         index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
@@ -506,13 +503,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
         }
-
-        JSAutoByteString bytes;
-        if (!ToDisassemblySource(cx, v, &bytes))
+        bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
             return 0;
-        fprintf(fp, " %s", bytes.ptr());
+        fprintf(fp, " %s", bytes);
         break;
-      }
 
       case JOF_UINT24:
         JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY);
@@ -1466,13 +1461,10 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         } else {
             lval = GetLocal(ss, i);
         }
-        {
-            JSAutoByteString bytes;
-            if (atom)
-                lval = js_AtomToPrintableString(cx, atom, &bytes);
-            LOCAL_ASSERT(lval);
-            todo = SprintCString(&ss->sprinter, lval);
-        }
+        if (atom)
+            lval = js_AtomToPrintableString(cx, atom);
+        LOCAL_ASSERT(lval);
+        todo = SprintCString(&ss->sprinter, lval);
         if (op != JSOP_SETLOCALPOP) {
             pc += oplen;
             if (pc == endpc)

@@ -689,11 +689,9 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
                     return JS_FALSE;
                 if (!prefix->empty()) {
                     Value v = StringValue(prefix);
-                    JSAutoByteString bytes;
-                    if (js_ValueToPrintable(cx, v, &bytes)) {
-                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                             JSMSG_BAD_XML_NAMESPACE, bytes.ptr());
-                    }
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_BAD_XML_NAMESPACE,
+                                         js_ValueToPrintableString(cx, v));
                     return JS_FALSE;
                 }
             }
@@ -1233,11 +1231,9 @@ ParseNodeToQName(Parser *parser, JSParseNode *pn,
 
         if (!uri) {
             Value v = StringValue(prefix);
-            JSAutoByteString bytes;
-            if (js_ValueToPrintable(parser->context, v, &bytes)) {
-                ReportCompileErrorNumber(parser->context, &parser->tokenStream, pn,
-                                         JSREPORT_ERROR, JSMSG_BAD_XML_NAMESPACE, bytes.ptr());
-            }
+            ReportCompileErrorNumber(parser->context, &parser->tokenStream, pn,
+                                     JSREPORT_ERROR, JSMSG_BAD_XML_NAMESPACE,
+                                     js_ValueToPrintableString(parser->context, v));
             return NULL;
         }
 
@@ -1454,12 +1450,9 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
             for (pn3 = head; pn3 != pn2; pn3 = pn3->pn_next->pn_next) {
                 if (pn3->pn_atom == pn2->pn_atom) {
                     Value v = StringValue(ATOM_TO_STRING(pn2->pn_atom));
-                    JSAutoByteString bytes;
-                    if (js_ValueToPrintable(cx, v, &bytes)) { 
-                        ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
-                                                 JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
-                                                 bytes.ptr());
-                    }
+                    ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
+                                             JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
+                                             js_ValueToPrintableString(cx, v));
                     goto fail;
                 }
             }
@@ -1551,12 +1544,9 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
                 if (js_EqualStrings(GetURI(attrjqn), GetURI(qn)) &&
                     js_EqualStrings(GetLocalName(attrjqn), GetLocalName(qn))) {
                     Value v = StringValue(ATOM_TO_STRING(pn2->pn_atom));
-                    JSAutoByteString bytes;
-                    if (js_ValueToPrintable(cx, v, &bytes)) {
-                        ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
-                                                 JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
-                                                 bytes.ptr());
-                    }
+                    ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
+                                             JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
+                                             js_ValueToPrintableString(cx, v));
                     goto fail;
                 }
             }
@@ -1594,11 +1584,9 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
         } else if (pn->pn_type == TOK_XMLPI) {
             if (IS_XML(str)) {
                 Value v = StringValue(str);
-                JSAutoByteString bytes;
-                if (js_ValueToPrintable(cx, v, &bytes)) { 
-                    ReportCompileErrorNumber(cx, &parser->tokenStream, pn,
-                                             JSREPORT_ERROR, JSMSG_RESERVED_ID, bytes.ptr());
-                }
+                ReportCompileErrorNumber(cx, &parser->tokenStream, pn,
+                                         JSREPORT_ERROR, JSMSG_RESERVED_ID,
+                                         js_ValueToPrintableString(cx, v));
                 goto fail;
             }
 
@@ -2180,12 +2168,12 @@ GetNamespace(JSContext *cx, JSObject *qn, const JSXMLArray *inScopeNSes)
     prefix = GetPrefix(qn);
     JS_ASSERT(uri);
     if (!uri) {
-        JSAutoByteString bytes;
-        const char *s = !prefix ?
-                        js_undefined_str
-                        : js_ValueToPrintable(cx, StringValue(prefix), &bytes);
-        if (s)
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_XML_NAMESPACE, s);
+        Value v = StringValue(prefix);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_XML_NAMESPACE,
+                             prefix
+                             ? js_ValueToPrintableString(cx, v)
+                             : js_undefined_str);
         return NULL;
     }
 
@@ -2921,9 +2909,9 @@ out:
     return obj;
 
 bad:
-    JSAutoByteString bytes;
-    if (js_ValueToPrintable(cx, StringValue(name), &bytes))
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_XML_NAME, bytes.ptr());
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_XML_NAME,
+                         js_ValueToPrintableString(cx, StringValue(name)));
     return NULL;
 }
 
@@ -4476,11 +4464,9 @@ out:
     return ok;
 
 type_error:
-    {
-        JSAutoByteString bytes;
-        if (js_ValueToPrintable(cx, IdToValue(id), &bytes))
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_XMLLIST_PUT, bytes.ptr());
-    }
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_XMLLIST_PUT,
+                         js_ValueToPrintableString(cx, IdToValue(id)));
 bad:
     ok = JS_FALSE;
     goto out;
@@ -5180,11 +5166,9 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 
     fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp));
     JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
-    JSAutoByteString funNameBytes;
-    if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NON_LIST_XML_METHOD,
-                             funName, numBuf);
-    }
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_NON_LIST_XML_METHOD,
+                         JS_GetFunctionName(fun), numBuf);
     return NULL;
 }
 
@@ -7391,6 +7375,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     JSXML *xml;
     JSBool found;
     JSProperty *prop;
+    const char *printable;
 
     JS_ASSERT(nameval.isObject());
     nameobj = &nameval.toObject();
@@ -7444,10 +7429,11 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
         }
     } while ((obj = obj->getParent()) != NULL);
 
-    JSAutoByteString printable;
-    if (js_ValueToPrintable(cx, ObjectValue(*nameobj), &printable)) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
-                                     JSMSG_UNDEFINED_XML_NAME, printable.ptr());
+    printable = js_ValueToPrintableString(cx, ObjectValue(*nameobj));
+    if (printable) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                     js_GetErrorMessage, NULL,
+                                     JSMSG_UNDEFINED_XML_NAME, printable);
     }
     return JS_FALSE;
 }

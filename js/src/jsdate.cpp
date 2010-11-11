@@ -2299,18 +2299,21 @@ date_toLocaleTimeString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_toLocaleFormat(JSContext *cx, uintN argc, Value *vp)
 {
+    JSString *fmt;
+    const char *fmtbytes;
+
     if (argc == 0)
         return date_toLocaleString(cx, argc, vp);
 
-    JSString *fmt = js_ValueToString(cx, vp[2]);
+    fmt = js_ValueToString(cx, vp[2]);
     if (!fmt)
         return JS_FALSE;
     vp[2].setString(fmt);
-    JSAutoByteString fmtbytes(cx, fmt);
+    fmtbytes = js_GetStringBytes(cx, fmt);
     if (!fmtbytes)
         return JS_FALSE;
 
-    return date_toLocaleHelper(cx, fmtbytes.ptr(), vp);
+    return date_toLocaleHelper(cx, fmtbytes, vp);
 }
 
 static JSBool

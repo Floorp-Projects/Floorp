@@ -294,6 +294,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       jsval v;
       const PRUnichar *name, *URL;
       const PRUnichar *iconURL = nsnull;
+      const char *hash;
 
       for (int i = 0; i < ida->length && !abortLoad; i++ )
       {
@@ -308,7 +309,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         name = reinterpret_cast<const PRUnichar*>(JS_GetStringChars( str ));
 
         URL = iconURL = nsnull;
-        JSAutoByteString hash;
+        hash = nsnull;
         JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), reinterpret_cast<const jschar*>(name), nsCRT::strlen(name), &v );
         if ( JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) )
         {
@@ -333,10 +334,11 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "Hash", &v2) && !JSVAL_IS_VOID(v2)) {
             JSString *str = JS_ValueToString(cx, v2);
-            if (!str || !hash.encode(cx, str)) {
+            if (!str) {
               abortLoad = PR_TRUE;
               break;
             }
+            hash = reinterpret_cast<const char*>(JS_GetStringBytes(str));
           }
         }
         else
