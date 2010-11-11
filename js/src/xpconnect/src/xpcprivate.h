@@ -566,6 +566,7 @@ public:
     // nsCycleCollectionLanguageRuntime
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
+    virtual nsresult FinishTraverse();
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual void Collect();
@@ -654,8 +655,8 @@ public:
     }
 
     inline XPCRootSetElem* GetNextRoot() { return mNext; }
-    void AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead);
-    void RemoveFromRootSet(JSRuntime* rt);
+    void AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead);
+    void RemoveFromRootSet(XPCLock *lock);
 
 private:
     XPCRootSetElem *mNext;
@@ -2533,7 +2534,13 @@ public:
     GetIdentityObject() const {return mIdentity;}
 
     JSObject*
-    GetFlatJSObject() const {return mFlatJSObject;}
+    GetFlatJSObjectAndMark() const
+        {if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
+             mFlatJSObject->markIfUnmarked();
+         return mFlatJSObject;}
+
+    JSObject*
+    GetFlatJSObjectNoMark() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
