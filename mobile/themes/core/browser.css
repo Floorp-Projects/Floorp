@@ -1339,6 +1339,11 @@ pageaction:not([image]) > hbox >.pageaction-image {
   background-repeat: repeat-x;
 }
 
+#form-helper-autofill > .autorepeatbutton-down,
+#form-helper-autofill > .autorepeatbutton-up {
+  border: none;
+}
+
 #form-helper-autofill > .autorepeatbutton-down {
   list-style-image: url("chrome://browser/skin/images/arrowright-16.png");
 }
