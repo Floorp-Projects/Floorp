@@ -1198,7 +1198,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
         JSONParser *jp = js_BeginJSONParse(cx, vp, /* suppressErrors = */true);
         if (jp != NULL) {
             /* Run JSON-parser on string inside ( and ). */
-            JSBool ok = js_ConsumeJSONText(cx, jp, chars + 1, length - 2);
+            bool ok = js_ConsumeJSONText(cx, jp, chars + 1, length - 2);
             ok &= js_FinishJSONParse(cx, jp, NullValue());
             if (ok)
                 return true;
@@ -4210,7 +4210,7 @@ js_CheckForStringIndex(jsid id)
         if (oldIndex < -(JSID_INT_MIN / 10) ||
             (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
         {
-            id = INT_TO_JSID(jsint(-index));
+            id = INT_TO_JSID(-jsint(index));
         }
     } else {
         if (oldIndex < JSID_INT_MAX / 10 ||
