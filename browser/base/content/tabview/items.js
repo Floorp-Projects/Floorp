@@ -970,7 +970,7 @@ let Items = {
 
     let initialOffset = 0;
     if (UI.rtl) {
-      initialOffset = bounds.width - tabWidth;
+      initialOffset = bounds.width - tabWidth - padding;
     }
     var box = new Rect(bounds.left + initialOffset, bounds.top, tabWidth, tabHeight);
 
