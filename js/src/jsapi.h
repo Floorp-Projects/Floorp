@@ -360,6 +360,8 @@ JSID_TO_INT(jsid id)
     return ((int32)JSID_BITS(id)) >> 1;
 }
 
+// Note: when changing these values, verify that their use in
+// js_CheckForStringIndex is still valid.
 #define JSID_INT_MIN  (-(1 << 30))
 #define JSID_INT_MAX  ((1 << 30) - 1)
 

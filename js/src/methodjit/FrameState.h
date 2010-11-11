@@ -236,6 +236,7 @@ class FrameState
         RematInfo::RematType type_;
     };
 
+    FrameState *thisFromCtor() { return this; }
   public:
     FrameState(JSContext *cx, JSScript *script, Assembler &masm);
     ~FrameState();

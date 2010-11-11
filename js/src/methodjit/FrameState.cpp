@@ -49,7 +49,7 @@ JS_STATIC_ASSERT(sizeof(FrameEntry) % 8 == 0);
 FrameState::FrameState(JSContext *cx, JSScript *script, Assembler &masm)
   : cx(cx), script(script), masm(masm), entries(NULL),
 #if defined JS_NUNBOX32
-    reifier(cx, *this),
+    reifier(cx, *thisFromCtor()),
 #endif
     inTryBlock(false)
 {
