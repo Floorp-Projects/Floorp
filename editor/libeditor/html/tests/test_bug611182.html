@@ -52,6 +52,7 @@ SimpleTest.waitForFocus(function() {
   }
 
   function testBackspace(src, callback) {
+    ok(true, "Testing " + src);
     iframe.addEventListener("load", function() {
       iframe.removeEventListener("load", arguments.callee, false);
 
@@ -72,8 +73,6 @@ SimpleTest.waitForFocus(function() {
   }
 
   const TEST_URIS = [
-    "data:text/html,<html contenteditable>fooz bar</html>",
-    "data:text/html,<html contenteditable><body>fooz bar</body></html>",
     "data:text/html,<body contenteditable>fooz bar</body>",
     "data:text/html,<body contenteditable><p>fooz bar</p></body>",
     "data:text/html,<body contenteditable><div>fooz bar</div></body>",
@@ -82,6 +81,94 @@ SimpleTest.waitForFocus(function() {
     "data:text/html,<!DOCTYPE html><html><body contenteditable>fooz bar</body></html>",
     'data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
     "data:text/html,<body onload=\"document.designMode='on'\">fooz bar</body>",
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'r.appendChild(b);' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                       'b.contentEditable = "true";' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                       'b.contentEditable = "true";' +
+                       'r.appendChild(b);' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'r.appendChild(b);' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                       'b.setAttribute("contenteditable", "true");' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                       'b.setAttribute("contenteditable", "true");' +
+                       'r.appendChild(b);' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'r.appendChild(b);' +
+                       'b.contentEditable = "true";' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'b.contentEditable = "true";' +
+                       'r.appendChild(b);' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'r.appendChild(b);' +
+                       'b.setAttribute("contenteditable", "true");' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                     '};' +
+                   '<\/script><body></body></html>',
+    'data:text/html,<html><script>' +
+                     'onload = function() {' +
+                       'var old = document.body;' +
+                       'old.parentNode.removeChild(old);' +
+                       'var r = document.documentElement;' +
+                       'var b = document.createElement("body");' +
+                       'b.setAttribute("contenteditable", "true");' +
+                       'r.appendChild(b);' +
+                       'b.appendChild(document.createTextNode("fooz bar"));' +
+                     '};' +
+                   '<\/script><body></body></html>',
   ];
   var currentTest = 0;
   function runAllTests() {
