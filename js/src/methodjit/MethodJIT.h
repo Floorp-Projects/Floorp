@@ -74,7 +74,7 @@ struct VMFrame
     JSFrameRegs  regs;
     JSContext    *cx;
     Value        *stackLimit;
-    JSStackFrame *entryFp;
+    JSStackFrame *entryfp;
 
 #if defined(JS_CPU_X86)
     void *savedEBX;
