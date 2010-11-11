@@ -3147,9 +3147,7 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
         str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
         if (!str)
             return JS_FALSE;
-        JSAutoByteString filename(cx, str);
-        if (!filename)
-            return JS_FALSE;
+        filename = JS_GetStringBytes(str);
         fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
         if (fd < 0) {
             JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
@@ -3203,15 +3201,16 @@ TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSString *str;
+    const char *caption;
+
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
-    JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+    str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return JS_FALSE;
-    JSAutoByteString caption(cx, str);
-    if (!caption)
-        return JS_FALSE;
+    caption = JS_GetStringBytes(str);
     NS_TraceMallocLogTimestamp(caption);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -3220,17 +3219,18 @@ TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocDumpAllocations(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSString *str;
+    const char *pathname;
+
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
-    JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+    str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return JS_FALSE;
-    JSAutoByteString pathname(cx, str);
-    if (!pathname)
-        return JS_FALSE;
+    pathname = JS_GetStringBytes(str);
     if (NS_TraceMallocDumpAllocations(pathname) < 0) {
-        JS_ReportError(cx, "can't dump to %s: %s", pathname.ptr(), strerror(errno));
+        JS_ReportError(cx, "can't dump to %s: %s", pathname, strerror(errno));
         return JS_FALSE;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);

@@ -90,9 +90,9 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
                  offsetof(JSAtomState, typeAtoms) - ATOM_OFFSET_START);
 
 const char *
-js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes)
+js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 {
-    return js_ValueToPrintable(cx, StringValue(ATOM_TO_STRING(atom)), bytes);
+    return js_ValueToPrintableString(cx, StringValue(ATOM_TO_STRING(atom)));
 }
 
 #define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;

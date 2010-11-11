@@ -174,11 +174,8 @@ class JSAPITest
 
     JSAPITestString toSource(jsval v) {
         JSString *str = JS_ValueToSource(cx, v);
-        if (str) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes)
-                return JSAPITestString(bytes.ptr());
-        }
+        if (str)
+            return JSAPITestString(JS_GetStringBytes(str));
         JS_ClearPendingException(cx);
         return JSAPITestString("<<error converting value to string>>");
     }
@@ -210,11 +207,8 @@ class JSAPITest
             JS_GetPendingException(cx, v.addr());
             JS_ClearPendingException(cx);
             JSString *s = JS_ValueToString(cx, v);
-            if (s) {
-                JSAutoByteString bytes(cx, s);
-                if (!!bytes)
-                    msg += bytes.ptr();
-            }
+            if (s)
+                msg += JS_GetStringBytes(s);
         }
         fprintf(stderr, "%s:%d:%.*s\n", filename, lineno, (int) msg.length(), msg.begin());
         msgs += msg;

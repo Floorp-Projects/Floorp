@@ -870,7 +870,8 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
                                 PK11SlotInfo **slot, PRBool willEscrow)
 {
   JSString  *jsString;
-  JSAutoByteString params, keyGenAlg;
+  char    *params, *keyGenAlg; //Never free these strings cause
+                               //they are owned by the JS layer.
   int    keySize;
   nsresult  rv;
 
@@ -880,12 +881,13 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
     return NS_ERROR_FAILURE;
   }
   keySize = JSVAL_TO_INT(argv[0]);
-  if (!JSVAL_IS_NULL(argv[1])) {
+  if (JSVAL_IS_NULL(argv[1])) {
+    params = nsnull;
+  } else {
     jsString = JS_ValueToString(cx,argv[1]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[1] = STRING_TO_JSVAL(jsString);
-    params.encode(cx, jsString);
-    NS_ENSURE_TRUE(!!params, NS_ERROR_OUT_OF_MEMORY);
+    params   = JS_GetStringBytes(jsString);
   }
 
   if (JSVAL_IS_NULL(argv[2])) {
@@ -896,13 +898,12 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   jsString = JS_ValueToString(cx, argv[2]);
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[2] = STRING_TO_JSVAL(jsString);
-  keyGenAlg.encode(cx, jsString);
-  NS_ENSURE_TRUE(!!keyGenAlg, NS_ERROR_OUT_OF_MEMORY);
-  keyGenType->keyGenType = cryptojs_interpret_key_gen_type(keyGenAlg.ptr());
+  keyGenAlg = JS_GetStringBytes(jsString);
+  keyGenType->keyGenType = cryptojs_interpret_key_gen_type(keyGenAlg);
   if (keyGenType->keyGenType == invalidKeyGen) {
     JS_ReportError(cx, "%s%s%s", JS_ERROR,
                    "invalid key generation argument:",
-                   keyGenAlg.ptr());
+                   keyGenAlg);
     goto loser;
   }
   if (*slot == nsnull) {
@@ -911,13 +912,13 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
       goto loser;
   }
 
-  rv = cryptojs_generateOneKeyPair(cx,keyGenType,keySize,params.ptr(),uiCxt,
-                                   *slot,willEscrow);
+  rv = cryptojs_generateOneKeyPair(cx,keyGenType,keySize,params,uiCxt,*slot,
+                                   willEscrow);
 
   if (rv != NS_OK) {
     JS_ReportError(cx,"%s%s%s", JS_ERROR,
                    "could not generate the key for algorithm ",
-                   keyGenAlg.ptr());
+                   keyGenAlg);
     goto loser;
   }
   return NS_OK;
@@ -1848,32 +1849,37 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   JSString *jsString = JS_ValueToString(cx,argv[0]);
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[0] = STRING_TO_JSVAL(jsString);
-  JSAutoByteString reqDN(cx,jsString);
-  NS_ENSURE_TRUE(!!reqDN, NS_ERROR_OUT_OF_MEMORY);
-
-  JSAutoByteString regToken;
-  if (!JSVAL_IS_NULL(argv[1])) {
+  
+  char * reqDN = JS_GetStringBytes(jsString);
+  char *regToken;
+  if (JSVAL_IS_NULL(argv[1])) {
+    regToken           = nsnull;
+  } else {
     jsString = JS_ValueToString(cx, argv[1]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[1] = STRING_TO_JSVAL(jsString);
-    regToken.encode(cx, jsString);
-    NS_ENSURE_TRUE(!!regToken, NS_ERROR_OUT_OF_MEMORY);
+
+    regToken = JS_GetStringBytes(jsString);
   }
-  JSAutoByteString authenticator;
-  if (!JSVAL_IS_NULL(argv[2])) {
+  char *authenticator;
+  if (JSVAL_IS_NULL(argv[2])) {
+    authenticator           = nsnull;
+  } else {
     jsString      = JS_ValueToString(cx, argv[2]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[2] = STRING_TO_JSVAL(jsString);
-    authenticator.encode(cx, jsString);
-    NS_ENSURE_TRUE(!!authenticator, NS_ERROR_OUT_OF_MEMORY);
+
+    authenticator = JS_GetStringBytes(jsString);
   }
-  JSAutoByteString eaCert;
-  if (!JSVAL_IS_NULL(argv[3])) {
+  char *eaCert;
+  if (JSVAL_IS_NULL(argv[3])) {
+    eaCert           = nsnull;
+  } else {
     jsString     = JS_ValueToString(cx, argv[3]);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[3] = STRING_TO_JSVAL(jsString);
-    eaCert.encode(cx, jsString);
-    NS_ENSURE_TRUE(!!eaCert, NS_ERROR_OUT_OF_MEMORY);
+
+    eaCert       = JS_GetStringBytes(jsString);
   }
   if (JSVAL_IS_NULL(argv[4])) {
     JS_ReportError(cx, "%s%s\n", JS_ERROR, "no completion "
@@ -1883,8 +1889,6 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   jsString = JS_ValueToString(cx, argv[4]);
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[4] = STRING_TO_JSVAL(jsString);
-  JSAutoByteString jsCallback(cx, jsString);
-  NS_ENSURE_TRUE(!!jsCallback, NS_ERROR_OUT_OF_MEMORY);
 
   nrv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx),
                         static_cast<nsIDOMCrypto *>(this),
@@ -1901,9 +1905,9 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   nsNSSCertificate *escrowCert = nsnull;
   nsCOMPtr<nsIX509Cert> nssCert;
   PRBool willEscrow = PR_FALSE;
-  if (!!eaCert) {
+  if (eaCert) {
     SECItem certDer = {siBuffer, nsnull, 0};
-    SECStatus srv = ATOB_ConvertAsciiToItem(&certDer, eaCert.ptr());
+    SECStatus srv = ATOB_ConvertAsciiToItem(&certDer, eaCert);
     if (srv != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
@@ -1968,10 +1972,9 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   if (slot) 
     PK11_FreeSlot(slot);
 
-  char *encodedRequest = nsCreateReqFromKeyPairs(keyids,numRequests,
-                                                 reqDN.ptr(),regToken.ptr(),
-                                                 authenticator.ptr(),
-                                                 escrowCert);
+  char *encodedRequest = nsCreateReqFromKeyPairs(keyids, numRequests,
+                                                 reqDN, regToken, 
+                                                 authenticator,escrowCert);
 #ifdef DEBUG_javi
   printf ("Created the folloing CRMF request:\n%s\n", encodedRequest);
 #endif
@@ -2020,7 +2023,8 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   args->m_kungFuDeathGrip = GetISupportsFromContext(cx);
   args->m_scope      = JS_GetParent(cx, script_obj);
 
-  args->m_jsCallback.Adopt(!!jsCallback ? nsCRT::strdup(jsCallback.ptr()) : 0);
+  char *jsCallback = JS_GetStringBytes(jsString);
+  args->m_jsCallback.Adopt(jsCallback ? nsCRT::strdup(jsCallback) : 0);
   args->m_principals = principals;
   
   nsCryptoRunnable *cryptoRunnable = new nsCryptoRunnable(args);
@@ -2546,14 +2550,15 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
   PRUint32 numCAs = argc - 2;
   if (numCAs > 0) {
-    jsval *argv = nsnull;
-    ncc->GetArgvPtr(&argv);
-
-    nsAutoArrayPtr<JSAutoByteString> caNameBytes(new JSAutoByteString[numCAs]);
-    if (!caNameBytes) {
+    nsAutoArrayPtr<char*> caNames(new char*[numCAs]);
+    if (!caNames) {
       aResult.Append(internalError);
+
       return NS_OK;
     }
+
+    jsval *argv = nsnull;
+    ncc->GetArgvPtr(&argv);
 
     JSAutoRequest ar(cx);
 
@@ -2562,18 +2567,14 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
       JSString *caName = JS_ValueToString(cx, argv[i]);
       NS_ENSURE_TRUE(caName, NS_ERROR_OUT_OF_MEMORY);
       argv[i] = STRING_TO_JSVAL(caName);
-      caNameBytes[i - 2].encode(cx, caName);
-      NS_ENSURE_TRUE(!!caNameBytes[i - 2], NS_ERROR_OUT_OF_MEMORY);
-    }
 
-    nsAutoArrayPtr<char*> caNames(new char*[numCAs]);
-    if (!caNames) {
-      aResult.Append(internalError);
-      return NS_OK;
-    }
+      if (!caName) {
+        aResult.Append(internalError);
 
-    for (i = 0; i < numCAs; ++i)
-      caNames[i] = caNameBytes[i].ptr();
+        return NS_OK;
+      }
+      caNames[i - 2] = JS_GetStringBytes(caName);
+    }
 
     if (certList &&
         CERT_FilterCertListByCANames(certList, numCAs, caNames,

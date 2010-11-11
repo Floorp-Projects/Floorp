@@ -388,8 +388,7 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     }
 
     /* Get a line from the infile */
-    JSAutoByteString strBytes(cx, str);
-    if (!strBytes || !GetLine(cx, buf, gInFile, strBytes.ptr()))
+    if (!GetLine(cx, buf, gInFile, JS_GetStringBytes(str)))
         return JS_FALSE;
 
     /* Strip newline character added by GetLine() */
@@ -423,10 +422,7 @@ Print(JSContext *cx, uintN argc, jsval *vp)
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
-        JSAutoByteString strBytes(cx, str);
-        if (!strBytes)
-            return JS_FALSE;
-        fprintf(gOutFile, "%s%s", i ? " " : "", strBytes.ptr());
+        fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
         fflush(gOutFile);
     }
     n++;
@@ -459,6 +455,7 @@ Load(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN i;
     JSString *str;
+    const char *filename;
     JSScript *script;
     JSBool ok;
     jsval result;
@@ -474,17 +471,14 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
-        JSAutoByteString filename(cx, str);
-        if (!filename)
-            return JS_FALSE;
-        file = fopen(filename.ptr(), "r");
+        filename = JS_GetStringBytes(str);
+        file = fopen(filename, "r");
         if (!file) {
-            JS_ReportError(cx, "cannot open file '%s' for reading",
-                           filename.ptr());
+            JS_ReportError(cx, "cannot open file '%s' for reading", filename);
             return JS_FALSE;
         }
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(),
-                                                   file, gJSPrincipals);
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
+                                                   gJSPrincipals);
         fclose(file);
         if (!script)
             return JS_FALSE;
@@ -589,6 +583,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 {
+    char *fileName = NULL;
     void* startThing = NULL;
     uint32 startTraceKind = 0;
     void *thingToFind = NULL;
@@ -601,7 +596,6 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
     vp = argv + 0;
-    JSAutoByteString fileName;
     if (argc > 0 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         JSString *str;
 
@@ -609,8 +603,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
-        if (!fileName.encode(cx, str))
-            return JS_FALSE;
+        fileName = JS_GetStringBytes(str);
     }
 
     vp = argv + 1;
@@ -647,10 +640,10 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     if (!fileName) {
         dumpFile = gOutFile;
     } else {
-        dumpFile = fopen(fileName.ptr(), "w");
+        dumpFile = fopen(fileName, "w");
         if (!dumpFile) {
             fprintf(gErrFile, "dumpHeap: can't open %s: %s\n",
-                    fileName.ptr(), strerror(errno));
+                    fileName, strerror(errno));
             return JS_FALSE;
         }
     }
@@ -783,6 +776,7 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 {
     uint32 optset, flag;
     JSString *str;
+    const char *opt;
     char *names;
     JSBool found;
 
@@ -793,10 +787,10 @@ Options(JSContext *cx, uintN argc, jsval *vp)
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
-        JSAutoByteString opt(cx, str);
+        opt = JS_GetStringBytes(str);
         if (!opt)
             return JS_FALSE;
-        flag = MapContextOptionNameToFlag(cx,  opt.ptr());
+        flag = MapContextOptionNameToFlag(cx,  opt);
         if (!flag)
             return JS_FALSE;
         optset |= flag;
@@ -896,6 +890,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
     JSString *idstr, *valstr;
+    const char *name, *value;
     int rv;
 
     jsval idval;
@@ -906,16 +901,12 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     valstr = JS_ValueToString(cx, *vp);
     if (!idstr || !valstr)
         return JS_FALSE;
-    JSAutoByteString name(cx, idstr);
-    if (!name)
-        return JS_FALSE;
-    JSAutoByteString value(cx, valstr);
-    if (!value)
-        return JS_FALSE;
+    name = JS_GetStringBytes(idstr);
+    value = JS_GetStringBytes(valstr);
 #if defined XP_WIN || defined HPUX || defined OSF1 || defined IRIX \
     || defined SCO
     {
-        char *waste = JS_smprintf("%s=%s", name.ptr(), value.ptr());
+        char *waste = JS_smprintf("%s=%s", name, value);
         if (!waste) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -933,10 +924,10 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 #endif
     }
 #else
-    rv = setenv(name.ptr(), value.ptr(), 1);
+    rv = setenv(name, value, 1);
 #endif
     if (rv < 0) {
-        JS_ReportError(cx, "can't set envariable %s to %s", name.ptr(), value.ptr());
+        JS_ReportError(cx, "can't set envariable %s to %s", name, value);
         return JS_FALSE;
     }
     *vp = STRING_TO_JSVAL(valstr);
@@ -981,6 +972,7 @@ env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     JSString *idstr, *valstr;
+    const char *name, *value;
 
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
@@ -992,16 +984,14 @@ env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     idstr = JS_ValueToString(cx, idval);
     if (!idstr)
         return JS_FALSE;
-    JSAutoByteString name(cx, idstr);
-    if (!name)
-        return JS_FALSE;
-    const char *value = getenv(name.ptr());
+    name = JS_GetStringBytes(idstr);
+    value = getenv(name);
     if (value) {
         valstr = JS_NewStringCopyZ(cx, value);
         if (!valstr)
             return JS_FALSE;
-        if (!JS_DefinePropertyById(cx, obj, id, STRING_TO_JSVAL(valstr),
-                                   NULL, NULL, JSPROP_ENUMERATE)) {
+        if (!JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
+                               NULL, NULL, JSPROP_ENUMERATE)) {
             return JS_FALSE;
         }
         *objp = obj;
@@ -1132,9 +1122,9 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
                     older = JS_SetErrorReporter(cx, NULL);
                     str = JS_ValueToString(cx, result);
                     JS_SetErrorReporter(cx, older);
-                    JSAutoByteString bytes;
-                    if (str && bytes.encode(cx, str))
-                        fprintf(gOutFile, "%s\n", bytes.ptr());
+
+                    if (str)
+                        fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                     else
                         ok = JS_FALSE;
                 }

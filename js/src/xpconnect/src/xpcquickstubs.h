@@ -412,15 +412,16 @@ struct xpc_qsArgValArray
  * Convert a jsval to char*, returning JS_TRUE on success.
  *
  * @param cx
- *     A context.
- * @param v
- *     A value to convert.
- * @param bytes
- *     Out. On success it receives the converted string unless v is null or
- *     undefinedin which case bytes->ptr() remains null.
+ *      A context.
+ * @param pval
+ *     In/out. *pval is the jsval to convert; the function may write to *pval,
+ *     using it as a GC root (like xpc_qsDOMString's constructor).
+ * @param pstr
+ *     Out. On success *pstr receives the converted string or NULL if *pval is
+ *     null or undefined. Unicode data is garbled as with JS_GetStringBytes.
  */
 JSBool
-xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes);
+xpc_qsJsvalToCharStr(JSContext *cx, jsval v, jsval *pval, char **pstr);
 
 JSBool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr);

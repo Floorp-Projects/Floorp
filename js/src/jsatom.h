@@ -133,10 +133,11 @@ IdToJsval(jsid id)
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
- * The lifetime of the result matches the lifetime of bytes.
+ * The lifetime of the result extends at least until the next GC activation,
+ * longer if cx's string newborn root is not overwritten.
  */
 extern const char *
-js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes);
+js_AtomToPrintableString(JSContext *cx, JSAtom *atom);
 
 struct JSAtomListElement {
     JSHashEntry         entry;

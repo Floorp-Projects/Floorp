@@ -398,11 +398,11 @@ class MainQueue : public EventQueue, public WorkerParent
                 if (result == Event::forwardToParent) {
                     // FIXME - pointlessly truncates the string to 8 bits
                     jsval data;
-                    JSAutoByteString bytes;
+                    const char *s;
                     if (event->deserializeData(cx, &data) &&
                         JSVAL_IS_STRING(data) &&
-                        bytes.encode(cx, JSVAL_TO_STRING(data))) {
-                        JS_ReportError(cx, "%s", bytes.ptr());
+                        (s = JS_GetStringBytesZ(cx, JSVAL_TO_STRING(data)))) {
+                        JS_ReportError(cx, "%s", s);
                     } else {
                         JS_ReportOutOfMemory(cx);
                     }
@@ -890,11 +890,11 @@ class InitEvent : public Event
         if (!deserializeData(cx, &s))
             return fail;
         JS_ASSERT(JSVAL_IS_STRING(s));
-        JSAutoByteString filename(cx, JSVAL_TO_STRING(s));
+        const char *filename = JS_GetStringBytesZ(cx, JSVAL_TO_STRING(s));
         if (!filename)
             return fail;
 
-        JSScript *script = JS_CompileFile(cx, child->getGlobal(), filename.ptr());
+        JSScript *script = JS_CompileFile(cx, child->getGlobal(), filename);
         if (!script)
             return fail;
 
