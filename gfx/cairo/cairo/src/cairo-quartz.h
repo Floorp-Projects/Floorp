@@ -68,6 +68,9 @@ cairo_quartz_get_cg_context_with_clip (cairo_t *cr);
 cairo_public void
 cairo_quartz_finish_cg_context_with_clip (cairo_t *cr);
 
+cairo_public cairo_surface_t *
+cairo_quartz_surface_get_image (cairo_surface_t *surface);
+
 #if CAIRO_HAS_QUARTZ_FONT
 
 /*

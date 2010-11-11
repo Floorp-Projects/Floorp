@@ -1885,14 +1885,14 @@ _cairo_quartz_surface_finish (void *abstract_surface)
     }
 
     if (surface->imageSurfaceEquiv) {
+	_cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
 	cairo_surface_destroy (surface->imageSurfaceEquiv);
 	surface->imageSurfaceEquiv = NULL;
+    } else if (surface->imageData) {
+        free (surface->imageData);
     }
 
-    if (surface->imageData) {
-	free (surface->imageData);
-	surface->imageData = NULL;
-    }
+    surface->imageData = NULL;
 
     if (surface->cgLayer) {
         CGLayerRelease (surface->cgLayer);
@@ -3203,6 +3203,18 @@ cairo_quartz_finish_cg_context_with_clip (cairo_t *cr)
 	return;
 
     CGContextRestoreGState (quartz->cgContext);
+}
+
+cairo_surface_t *
+cairo_quartz_surface_get_image (cairo_surface_t *surface)
+{
+    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t *)surface;
+    cairo_image_surface_t *image;
+
+    if (_cairo_quartz_get_image(quartz, &image))
+        return NULL;
+
+    return (cairo_surface_t *)image;
 }
 
 /* Debug stuff */
