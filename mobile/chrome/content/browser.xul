@@ -272,8 +272,6 @@
               </box>
             </box>
 
-            <notificationbox id="notifications" class="window-width"/>
-
             <!-- Content viewport -->
             <vbox id="content-viewport" class="window-width window-height">
               <!-- Content viewport -->

@@ -317,14 +317,6 @@ var Browser = {
     }
     window.addEventListener("fullscreen", fullscreenHandler, false);
 
-    function notificationHandler() {
-      // Let the view know that the layout might have changed
-      Browser.forceChromeReflow();
-    }
-    let notifications = document.getElementById("notifications");
-    notifications.addEventListener("AlertActive", notificationHandler, false);
-    notifications.addEventListener("AlertClose", notificationHandler, false);
-
     BrowserUI.init();
 
     window.controllers.appendController(this);
