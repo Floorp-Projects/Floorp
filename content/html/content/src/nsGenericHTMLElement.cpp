@@ -2384,8 +2384,7 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
 }
 
 void
-nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
-                                    PRBool aNotify)
+nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm)
 {
   NS_ASSERTION((mForm != nsnull) == HasFlag(ADDED_TO_FORM),
                "Form control should have had flag set correctly");
@@ -2399,7 +2398,7 @@ nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
     GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
     GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
 
-    mForm->RemoveElement(this, true, aNotify);
+    mForm->RemoveElement(this, true);
 
     if (!nameVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, nameVal);
@@ -2514,12 +2513,12 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // Might need to unset mForm
     if (aNullParent) {
       // No more parent means no more form
-      ClearForm(PR_TRUE, PR_TRUE);
+      ClearForm(PR_TRUE);
     } else {
       // Recheck whether we should still have an mForm.
       if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
           !FindAncestorForm(mForm)) {
-        ClearForm(PR_TRUE, PR_TRUE);
+        ClearForm(PR_TRUE);
       } else {
         UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }
@@ -2571,7 +2570,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mForm->RemoveElementFromTable(this, tmp);
       }
 
-      mForm->RemoveElement(this, false, aNotify);
+      mForm->RemoveElement(this, false);
 
       // Removing the element from the form can make it not be the default
       // control anymore.  Go ahead and notify on that change, though we might
@@ -2893,8 +2892,7 @@ nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   bool hadForm = mForm;
 
   if (!aBindToTree) {
-    // TODO: we should get ride of this aNotify parameter, bug 589977.
-    ClearForm(PR_TRUE, PR_TRUE);
+    ClearForm(PR_TRUE);
   }
 
   if (!mForm) {

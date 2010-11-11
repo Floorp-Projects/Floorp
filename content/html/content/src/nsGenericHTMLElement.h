@@ -834,7 +834,7 @@ public:
   // nsIFormControl
   virtual mozilla::dom::Element* GetFormElement();
   virtual void SetForm(nsIDOMHTMLFormElement* aForm);
-  virtual void ClearForm(PRBool aRemoveFromForm, PRBool aNotify);
+  virtual void ClearForm(PRBool aRemoveFromForm);
 
   nsresult GetForm(nsIDOMHTMLFormElement** aForm);
 
