@@ -808,14 +808,16 @@ getNative(nsISupports *idobj,
 }
 
 inline nsresult
-getNativeFromWrapper(XPCWrappedNative *wrapper,
+getNativeFromWrapper(JSContext *cx,
+                     XPCWrappedNative *wrapper,
                      const nsIID &iid,
                      void **ppThis,
                      nsISupports **pThisRef,
                      jsval *vp)
 {
     return getNative(wrapper->GetIdentityObject(), wrapper->GetOffsets(),
-                     wrapper->GetFlatJSObject(), iid, ppThis, pThisRef, vp);
+                     wrapper->GetFlatJSObjectAndMark(), iid, ppThis, pThisRef,
+                     vp);
 }
 
 
@@ -856,7 +858,8 @@ castNative(JSContext *cx,
 {
     if(wrapper)
     {
-        nsresult rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
+        nsresult rv = getNativeFromWrapper(cx,wrapper, iid, ppThis, pThisRef,
+                                           vp);
 
         if(lccx && NS_SUCCEEDED(rv))
             lccx->SetWrapper(wrapper, tearoff);
