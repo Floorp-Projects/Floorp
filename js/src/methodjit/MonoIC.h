@@ -73,7 +73,7 @@ class FrameSize
         return frameDepth_ == 0;
     }
 
-    uint32 staticFrameDepth() const {
+    uint32 staticLocalSlots() const {
         JS_ASSERT(isStatic());
         return frameDepth_;
     }

@@ -254,10 +254,10 @@ OPDEF(JSOP_DEFSHARP,  93, "defsharp",   NULL,         5,  0,  0,  0,  JOF_UINT16
 OPDEF(JSOP_USESHARP,  94, "usesharp",   NULL,         5,  0,  1,  0,  JOF_UINT16PAIR|JOF_SHARPSLOT)
 
 /* Fast inc/dec ops for args and locals. */
-OPDEF(JSOP_INCARG,    95, "incarg",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_INC|JOF_TMPSLOT2)
-OPDEF(JSOP_DECARG,    96, "decarg",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_DEC|JOF_TMPSLOT2)
-OPDEF(JSOP_ARGINC,    97, "arginc",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_INC|JOF_POST|JOF_TMPSLOT2)
-OPDEF(JSOP_ARGDEC,    98, "argdec",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT2)
+OPDEF(JSOP_INCARG,    95, "incarg",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_INC|JOF_TMPSLOT3)
+OPDEF(JSOP_DECARG,    96, "decarg",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_DEC|JOF_TMPSLOT3)
+OPDEF(JSOP_ARGINC,    97, "arginc",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_INC|JOF_POST|JOF_TMPSLOT3)
+OPDEF(JSOP_ARGDEC,    98, "argdec",     NULL,         3,  0,  1, 15,  JOF_QARG |JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3)
 
 OPDEF(JSOP_INCLOCAL,  99, "inclocal",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_INC|JOF_TMPSLOT3)
 OPDEF(JSOP_DECLOCAL,  100,"declocal",   NULL,         3,  0,  1, 15,  JOF_LOCAL|JOF_NAME|JOF_DEC|JOF_TMPSLOT3)
