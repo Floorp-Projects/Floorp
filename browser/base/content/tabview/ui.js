@@ -262,8 +262,11 @@ let UI = {
     pageBounds.inset(padding, padding);
 
     let $actions = iQ("#actions");
-    if ($actions)
+    if ($actions) {
       pageBounds.width -= $actions.width();
+      if (UI.rtl)
+        pageBounds.left += $actions.width() - padding;
+    }
 
     // ___ make a fresh groupItem
     let box = new Rect(pageBounds);
@@ -271,7 +274,7 @@ let UI = {
                          pageBounds.width - (welcomeWidth + padding));
     box.height = box.height * 0.667;
     if (UI.rtl) {
-      box.right = pageBounds.width + pageBounds.left;
+      box.left = pageBounds.left + welcomeWidth + 2 * padding;
     }
 
     GroupItems.groupItems.forEach(function(group) {
@@ -301,7 +304,7 @@ let UI = {
 
       newTabItem.parent.remove(newTabItem);
       let aspect = TabItems.tabHeight / TabItems.tabWidth;
-      let welcomeBounds = new Rect(box.right + padding, box.top,
+      let welcomeBounds = new Rect(UI.rtl ? pageBounds.left : box.right, box.top,
                                    welcomeWidth, welcomeWidth * aspect);
       newTabItem.setBounds(welcomeBounds, true);
       GroupItems.setActiveGroupItem(groupItem);
