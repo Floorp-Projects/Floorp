@@ -132,7 +132,7 @@ Recompiler::recompile()
          f = f->previous) {
 
         // Scan all frames owned by this VMFrame.
-        JSStackFrame *end = f->entryFp->prev();
+        JSStackFrame *end = f->entryfp->prev();
         for (JSStackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
             // Remember the latest frame for each type of JIT'd code, so the
             // compiler will have a frame to re-JIT from.

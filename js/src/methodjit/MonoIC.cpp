@@ -880,7 +880,7 @@ BumpStack(VMFrame &f, uintN inc)
         if (f.regs.sp + inc < f.stackLimit)
             return true;
         StackSpace &stack = f.cx->stack();
-        if (!stack.bumpCommitAndLimit(f.entryFp, f.regs.sp, inc, &f.stackLimit)) {
+        if (!stack.bumpCommitAndLimit(f.entryfp, f.regs.sp, inc, &f.stackLimit)) {
             js_ReportOverRecursed(f.cx);
             return false;
         }
@@ -906,7 +906,7 @@ BumpStack(VMFrame &f, uintN inc)
         return true;
 
     StackSpace &stack = f.cx->stack();
-    if (stack.bumpCommitAndLimit(f.entryFp, f.regs.sp, incWithSpace, &f.stackLimit))
+    if (stack.bumpCommitAndLimit(f.entryfp, f.regs.sp, incWithSpace, &f.stackLimit))
         return true;
 
     if (!stack.ensureSpace(f.cx, f.regs.sp, incWithSpace))
