@@ -117,6 +117,23 @@ PRInt32 gfxQuartzSurface::GetDefaultContextFlags() const
     return 0;
 }
 
+already_AddRefed<gfxImageSurface> gfxQuartzSurface::GetAsImageSurface()
+{
+    cairo_surface_t *surface = cairo_quartz_surface_get_image(mSurface);
+    if (!surface)
+        return nsnull;
+
+    nsRefPtr<gfxASurface> img = Wrap(surface);
+
+    // cairo_quartz_surface_get_image returns a referenced image, and thebes
+    // shares the refcounts of Cairo surfaces. However, Wrap also adds a
+    // reference to the image. We need to remove one of these references
+    // explicitly so we don't leak.
+    img->Release();
+
+    return static_cast<gfxImageSurface*>(img.forget().get());
+}
+
 gfxQuartzSurface::~gfxQuartzSurface()
 {
     CGContextRelease(mCGContext);
