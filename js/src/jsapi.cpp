@@ -253,10 +253,11 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
                 if (fun) {
                     char numBuf[12];
                     JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_MORE_ARGS_NEEDED,
-                                         JS_GetFunctionName(fun), numBuf,
-                                         (argc == 1) ? "" : "s");
+                    JSAutoByteString funNameBytes;
+                    if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
+                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                                             name, numBuf, (argc == 1) ? "" : "s");
+                    }
                 }
                 return JS_FALSE;
             }
@@ -5017,8 +5018,11 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
              * Although constructors may return primitives (via proxies), this
              * API is asking for an object, so we report an error.
              */
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_NEW_RESULT,
-                                 js_ValueToPrintableString(cx, args.rval()));
+            JSAutoByteString bytes;
+            if (js_ValueToPrintable(cx, args.rval(), &bytes)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_NEW_RESULT,
+                                     bytes.ptr());
+            }
         }
     }
 

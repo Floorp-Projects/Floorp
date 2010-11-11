@@ -3441,24 +3441,29 @@ TraceRecorder::importImpl(Address addr, const void* p, JSValueType t,
     void* mark = NULL;
     jsuword* localNames = NULL;
     const char* funName = NULL;
+    JSAutoByteString funNameBytes;
     if (*prefix == 'a' || *prefix == 'v') {
         mark = JS_ARENA_MARK(&cx->tempPool);
         if (fp->fun()->hasLocalNames())
             localNames = fp->fun()->getLocalNameArray(cx, &cx->tempPool);
         funName = fp->fun()->atom
-                ? js_AtomToPrintableString(cx, fp->fun()->atom)
+                  ? js_AtomToPrintableString(cx, fp->fun()->atom, &funNameBytes)
                 : "<anonymous>";
     }
     if (!strcmp(prefix, "argv")) {
         if (index < fp->numFormalArgs()) {
             JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
-            JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
+            JSAutoByteString atomBytes;
+            JS_snprintf(name, sizeof name, "$%s.%s", funName,
+                        js_AtomToPrintableString(cx, atom, &atomBytes));
         } else {
             JS_snprintf(name, sizeof name, "$%s.<arg%d>", funName, index);
         }
     } else if (!strcmp(prefix, "vars")) {
         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->numFormalArgs() + index]);
-        JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
+        JSAutoByteString atomBytes;
+        JS_snprintf(name, sizeof name, "$%s.%s", funName,
+                    js_AtomToPrintableString(cx, atom, &atomBytes));
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
     }
@@ -10099,8 +10104,9 @@ TraceRecorder::record_EnterFrame()
     if (++callDepth >= MAX_CALLDEPTH)
         RETURN_STOP_A("exceeded maximum call depth");
 
+    debug_only_stmt(JSAutoByteString funBytes);
     debug_only_printf(LC_TMTracer, "EnterFrame %s, callDepth=%d\n",
-                      js_AtomToPrintableString(cx, cx->fp()->fun()->atom),
+                      js_AtomToPrintableString(cx, cx->fp()->fun()->atom, &funBytes),
                       callDepth);
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
@@ -10301,9 +10307,10 @@ TraceRecorder::record_JSOP_RETURN()
     } else {
         rval_ins = get(&rval);
     }
+    debug_only_stmt(JSAutoByteString funBytes);
     debug_only_printf(LC_TMTracer,
                       "returning from %s\n",
-                      js_AtomToPrintableString(cx, fp->fun()->atom));
+                      js_AtomToPrintableString(cx, fp->fun()->atom, &funBytes));
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
 
     return ARECORD_CONTINUE;
@@ -11357,7 +11364,16 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     ci->_abi = ABI_CDECL;
     ci->_typesig = typesig;
 #ifdef DEBUG
-    ci->_name = JS_GetFunctionName(fun);
+    ci->_name = js_anonymous_str;
+    if (fun->atom) {
+        JSAutoByteString bytes(cx, ATOM_TO_STRING(fun->atom));
+        if (!!bytes) {
+            size_t n = strlen(bytes.ptr()) + 1;
+            char *buffer = new (traceAlloc()) char[n];
+            memcpy(buffer, bytes.ptr(), n);
+            ci->_name = buffer;
+        }
+    }
  #endif
 
     // Generate a JSSpecializedNative structure on the fly.

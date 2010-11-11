@@ -3697,18 +3697,18 @@ js_NewStringCopyZ(JSContext *cx, const char *s)
     return js_NewStringCopyN(cx, s, strlen(s));
 }
 
-JS_FRIEND_API(const char *)
-js_ValueToPrintable(JSContext *cx, const Value &v, JSValueToStringFun v2sfun)
+const char *
+js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool asSource)
 {
     JSString *str;
 
-    str = v2sfun(cx, v);
+    str = (asSource ? js_ValueToSource : js_ValueToString)(cx, v);
     if (!str)
         return NULL;
     str = js_QuoteString(cx, str, 0);
     if (!str)
         return NULL;
-    return js_GetStringBytes(cx, str);
+    return bytes->encode(cx, str);
 }
 
 JSString *

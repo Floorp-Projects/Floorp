@@ -1232,16 +1232,16 @@ static JSBool
 ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
-    const char *name;
+    JSAutoByteString name;
 
     JS_ASSERT(tc->inFunction());
     if (tc->fun->atom) {
-        name = js_AtomToPrintableString(cx, tc->fun->atom);
+        if (!js_AtomToPrintableString(cx, tc->fun->atom, &name))
+            return false;
     } else {
         errnum = anonerrnum;
-        name = NULL;
     }
-    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name);
+    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name.ptr());
 }
 
 static JSBool
@@ -1264,10 +1264,10 @@ CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
         JSAtom *atom = lhs->pn_atom;
         JSAtomState *atomState = &cx->runtime->atomState;
         if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
-            const char *name = js_AtomToPrintableString(cx, atom);
-            if (!name ||
+            JSAutoByteString name;
+            if (!js_AtomToPrintableString(cx, atom, &name) ||
                 !ReportStrictModeError(cx, TS(tc->parser), tc, lhs, JSMSG_DEPRECATED_ASSIGN,
-                                       name)) {
+                                       name.ptr())) {
                 return false;
             }
         }
@@ -1289,10 +1289,10 @@ CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, JSParseNode *
 
     JSAtomState *atomState = &cx->runtime->atomState;
     if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (!name)
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name))
             return false;
-        return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, name);
+        return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, name.ptr());
     }
     return true;
 }
@@ -1329,9 +1329,10 @@ CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
         JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
         if (dn->pn_op == JSOP_GETARG)
             pn = dn;
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_DUPLICATE_FORMAL, name)) {
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name) ||
+            !ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_DUPLICATE_FORMAL,
+                                   name.ptr())) {
             return false;
         }
     }
@@ -1343,9 +1344,9 @@ CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
         /* The definition's source position will be more precise. */
         JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
         JS_ASSERT(dn->pn_atom == atom);
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !ReportStrictModeError(cx, TS(tc->parser), tc, dn, JSMSG_BAD_BINDING, name)) {
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name) ||
+            !ReportStrictModeError(cx, TS(tc->parser), tc, dn, JSMSG_BAD_BINDING, name.ptr())) {
             return false;
         }
     }
@@ -2888,15 +2889,15 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
             JS_ASSERT(dn->pn_defn);
 
             if (JS_HAS_STRICT_OPTION(context) || dn_kind == JSDefinition::CONST) {
-                const char *name = js_AtomToPrintableString(context, funAtom);
-                if (!name ||
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(context, funAtom, &name) ||
                     !reportErrorNumber(NULL,
                                        (dn_kind != JSDefinition::CONST)
                                        ? JSREPORT_WARNING | JSREPORT_STRICT
                                        : JSREPORT_ERROR,
                                        JSMSG_REDECLARED_VAR,
                                        JSDefinition::kindString(dn_kind),
-                                       name)) {
+                                       name.ptr())) {
                     return NULL;
                 }
             }
@@ -3378,14 +3379,14 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     blockObj = tc->blockChain();
     ale = tc->decls.lookup(atom);
     if (ale && ALE_DEFN(ale)->pn_blockid == tc->blockid()) {
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (name) {
+        JSAutoByteString name;
+        if (js_AtomToPrintableString(cx, atom, &name)) {
             ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                      JSREPORT_ERROR, JSMSG_REDECLARED_VAR,
                                      (ale && ALE_DEFN(ale)->isConst())
                                      ? js_const_str
                                      : js_variable_str,
-                                     name);
+                                     name.ptr());
         }
         return false;
     }
@@ -3620,22 +3621,21 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (stmt || ale) {
         JSDefinition *dn = ale ? ALE_DEFN(ale) : NULL;
         JSDefinition::Kind dn_kind = dn ? dn->kind() : JSDefinition::VAR;
-        const char *name;
 
         if (dn_kind == JSDefinition::ARG) {
-            name = js_AtomToPrintableString(cx, atom);
-            if (!name)
+            JSAutoByteString name;
+            if (!js_AtomToPrintableString(cx, atom, &name))
                 return JS_FALSE;
 
             if (op == JSOP_DEFCONST) {
                 ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                          JSREPORT_ERROR, JSMSG_REDECLARED_PARAM,
-                                         name);
+                                         name.ptr());
                 return JS_FALSE;
             }
             if (!ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                           JSREPORT_WARNING | JSREPORT_STRICT,
-                                          JSMSG_VAR_HIDES_ARG, name)) {
+                                          JSMSG_VAR_HIDES_ARG, name.ptr())) {
                 return JS_FALSE;
             }
         } else {
@@ -3647,15 +3647,15 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
             if (JS_HAS_STRICT_OPTION(cx)
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
                 : error) {
-                name = js_AtomToPrintableString(cx, atom);
-                if (!name ||
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(cx, atom, &name) ||
                     !ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                               !error
                                               ? JSREPORT_WARNING | JSREPORT_STRICT
                                               : JSREPORT_ERROR,
                                               JSMSG_REDECLARED_VAR,
                                               JSDefinition::kindString(dn_kind),
-                                              name)) {
+                                              name.ptr())) {
                     return JS_FALSE;
                 }
             }
@@ -8429,10 +8429,10 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 JSAtomListElement *ale = seen.lookup(atom);
                 if (ale) {
                     if (ALE_INDEX(ale) & attributesMask) {
-                        const char *name = js_AtomToPrintableString(context, atom);
-                        if (!name ||
+                        JSAutoByteString name;
+                        if (!js_AtomToPrintableString(context, atom, &name) ||
                             !ReportStrictModeError(context, &tokenStream, tc, NULL,
-                                                   JSMSG_DUPLICATE_PROPERTY, name)) {
+                                                   JSMSG_DUPLICATE_PROPERTY, name.ptr())) {
                             return NULL;
                         }
                     }
