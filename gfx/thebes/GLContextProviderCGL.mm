@@ -286,7 +286,7 @@ protected:
             mBackingSurface->Format() != format)
         {
             mUpdateSurface = nsnull;
-            mClippedRect = nsIntRect(0, 0, 0, 0);
+            mUpdateOffset = nsIntPoint(0, 0);
             // We need to (re)create our backing store. Let the base class to that.
             return BasicTextureImage::BeginUpdate(aRegion);
         }
