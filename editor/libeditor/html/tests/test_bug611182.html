@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=611182
+-->
+<head>
+  <title>Test for Bug 611182</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=611182">Mozilla Bug 611182</a>
+<p id="display"></p>
+<div id="content">
+  <iframe></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 611182 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var iframe = document.querySelector("iframe");
+
+  function findTextNode(doc) {
+    var body = doc.body;
+    var result = findTextNodeWorker(body);
+    ok(result, "Failed to find the text node");
+    return result;
+  }
+
+  function findTextNodeWorker(root) {
+    for (var i = 0; i < root.childNodes.length; ++i) {
+      var node = root.childNodes[i];
+      if (node.nodeType == node.TEXT_NODE &&
+          node.nodeValue == "fooz bar") {
+        root.focus();
+        return node;
+      }
+      if (node.nodeType == node.ELEMENT_NODE) {
+        node = findTextNodeWorker(node);
+        if (node) {
+          root.focus();
+          return node;
+        }
+      }
+    }
+    ok(false, "Failed to find the text node");
+    return null;
+  }
+
+  function testBackspace(src, callback) {
+    iframe.addEventListener("load", function() {
+      iframe.removeEventListener("load", arguments.callee, false);
+
+      var doc = iframe.contentDocument;
+      var win = iframe.contentWindow;
+      iframe.focus();
+      var textNode = findTextNode(doc);
+      var sel = win.getSelection();
+      sel.collapse(textNode, 4);
+      synthesizeKey("VK_BACK_SPACE", {});
+      is(textNode.textContent, "foo bar", "Backspace should work correctly");
+
+      // TODO: compare screenshots to make sure that no bogus node exists in the document
+
+      callback();
+    }, false);
+    iframe.src = src;
+  }
+
+  const TEST_URIS = [
+    "data:text/html,<html contenteditable>fooz bar</html>",
+    "data:text/html,<html contenteditable><body>fooz bar</body></html>",
+    "data:text/html,<body contenteditable>fooz bar</body>",
+    "data:text/html,<body contenteditable><p>fooz bar</p></body>",
+    "data:text/html,<body contenteditable><div>fooz bar</div></body>",
+    "data:text/html,<body contenteditable><span>fooz bar</span></body>",
+    "data:text/html,<p contenteditable>fooz bar</p>",
+    "data:text/html,<!DOCTYPE html><html><body contenteditable>fooz bar</body></html>",
+    'data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
+    "data:text/html,<body onload=\"document.designMode='on'\">fooz bar</body>",
+  ];
+  var currentTest = 0;
+  function runAllTests() {
+    if (currentTest == TEST_URIS.length) {
+      SimpleTest.finish();
+      return;
+    }
+    testBackspace(TEST_URIS[currentTest++], runAllTests);
+  }
+  runAllTests();
+});
+
+</script>
+</pre>
+</body>
+</html>
