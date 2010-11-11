@@ -564,6 +564,13 @@ BasicTextureImage::EndUpdate()
         return PR_FALSE;
 
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+
+    // The images that come out of the cairo quartz surface are 16-byte aligned
+    // for performance. We know this is an RGBA surface, so we divide the
+    // stride by 4 to represent the number of elements long the row is.
+    mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH,
+                             uploadImage->Stride() / 4);
+
     if (!mTextureInited)
     {
         mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
@@ -588,6 +595,10 @@ BasicTextureImage::EndUpdate()
                                    uploadImage->Data());
     }
     mUpdateContext = NULL;
+
+    // Reset row length to use the default.
+    mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+
     return PR_TRUE;         // mTexture is bound
 }
 
