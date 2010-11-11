@@ -2699,7 +2699,8 @@ PluginInstanceChild::ShowPluginFrame()
         PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
     }
 
-    NPRect r = { rect.y, rect.x, rect.YMost(), rect.XMost() };
+    NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
+                 (uint16_t)rect.YMost(), (uint16_t)rect.XMost() };
     SurfaceDescriptor currSurf;
 #ifdef MOZ_X11
     if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
