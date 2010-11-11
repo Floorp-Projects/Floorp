@@ -778,12 +778,6 @@ MOZ_WIN_MEM_TRY_BEGIN
 MOZ_WIN_MEM_TRY_CATCH(return nsnull)
 }
 
-PRBool 
-nsZipArchive::CheckCRC(nsZipItem* aItem, const PRUint8* aItemData) {
-  PRUint32 crc = crc32(0, (const unsigned char*)aItemData, aItem->Size());
-  return crc == aItem->CRC32();
-}
-
 //------------------------------------------
 // nsZipArchive constructor and destructor
 //------------------------------------------
