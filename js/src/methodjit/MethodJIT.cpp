@@ -116,14 +116,14 @@ extern "C" void JaegerTrampolineReturn();
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.cx->jaegerCompartment()->pushActiveFrame(&f);
+    f.entryfp->script()->compartment->jaegerCompartment->pushActiveFrame(&f);
     f.regs.fp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
 }
 
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    f.cx->jaegerCompartment()->popActiveFrame();
+    f.entryfp->script()->compartment->jaegerCompartment->popActiveFrame();
 }
 
 extern "C" void JS_FASTCALL
@@ -206,7 +206,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
      * rcx = inlineCallCount
      * fp must go into rbx
      */
-    "pushq %rsi"                         "\n" /* entryFp */
+    "pushq %rsi"                         "\n" /* entryfp */
     "pushq %rcx"                         "\n" /* inlineCallCount */
     "pushq %rdi"                         "\n" /* cx */
     "pushq %rsi"                         "\n" /* fp */
@@ -317,7 +317,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Build the JIT frame. Push fields in order, 
      * then align the stack to form esp == VMFrame. */
     "movl  12(%ebp), %ebx"               "\n"   /* load fp */
-    "pushl %ebx"                         "\n"   /* entryFp */
+    "pushl %ebx"                         "\n"   /* entryfp */
     "pushl 20(%ebp)"                     "\n"   /* stackLimit */
     "pushl 8(%ebp)"                      "\n"   /* cx */
     "pushl %ebx"                         "\n"   /* fp */
@@ -396,7 +396,7 @@ SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
 
 JS_STATIC_ASSERT(sizeof(VMFrame) == 80);
 JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) ==          (4*19));
-JS_STATIC_ASSERT(offsetof(VMFrame, entryFp) ==          (4*10));
+JS_STATIC_ASSERT(offsetof(VMFrame, entryfp) ==          (4*10));
 JS_STATIC_ASSERT(offsetof(VMFrame, stackLimit) ==       (4*9));
 JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) ==          (4*7));
@@ -451,7 +451,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ r6        ]   | considering that we might not use them anyway.
      *  [ r5        ]   |
      *  [ r4        ]   /
-     *  [ entryFp   ]
+     *  [ entryfp   ]
      *  [ stkLimit  ]
      *  [ cx        ]
      *  [ regs.fp   ]
@@ -467,7 +467,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /* Push callee-saved registers. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
-"   push    {r1}"                               "\n"    /* entryFp */
+"   push    {r1}"                               "\n"    /* entryfp */
 "   push    {r3}"                               "\n"    /* stackLimit */
 "   push    {r0}"                               "\n"    /* cx */
 "   push    {r1}"                               "\n"    /* regs.fp */
