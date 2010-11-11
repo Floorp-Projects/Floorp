@@ -74,6 +74,8 @@ quartz-cglayers.patch: add support for cairo surfaces backed by CGLayers
 
 quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in previous patch
 
+quartz-get-image.patch: Bug 575521; add a way to get the image surface associated with a surface
+
 premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
 
 xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
