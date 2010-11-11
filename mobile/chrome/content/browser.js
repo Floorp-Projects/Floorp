@@ -1576,11 +1576,11 @@ function ContentCustomKeySender(container) {
 
 ContentCustomKeySender.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-
     let browser = getBrowser();
-    if (browser) {
+    if (browser && browser.getAttribute("remote") == "true") {
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
+
       browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
         type: aEvent.type,
         keyCode: aEvent.keyCode,
