@@ -313,7 +313,7 @@ FT_BEGIN_HEADER
 
 #endif /* __arm__ && !__thumb__ */
 
-#if defined( i386 )
+#if defined( __i386__ )
 #define FT_MULFIX_ASSEMBLER  FT_MulFix_i386
 
   static __inline__ FT_Int32
