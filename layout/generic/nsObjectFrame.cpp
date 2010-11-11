@@ -1711,8 +1711,10 @@ PRBool
 nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
 {
   mInstance->GetSurface(getter_AddRefs(mLayerSurface));
-  if (!mLayerSurface)
+  if (!mLayerSurface) {
+    aContainer->SetCurrentImage(nsnull);
     return PR_FALSE;
+  }
 
   Image::Format format = Image::CAIRO_SURFACE;
   nsRefPtr<Image> image;
