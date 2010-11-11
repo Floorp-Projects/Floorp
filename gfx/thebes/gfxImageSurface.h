@@ -106,6 +106,8 @@ public:
      */
     already_AddRefed<gfxSubimageSurface> GetSubimage(const gfxRect& aRect);
 
+    virtual already_AddRefed<gfxImageSurface> GetAsImageSurface();
+
 protected:
     gfxImageSurface();
     void InitWithData(unsigned char *aData, const gfxIntSize& aSize,
