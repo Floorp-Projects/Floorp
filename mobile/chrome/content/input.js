@@ -525,9 +525,6 @@ var ScrollUtils = {
           scrollbox = elem;
           qinterface = elem.scrollBoxObject;
           break;
-        } else if (elem.customDragger) {
-          scrollbox = elem;
-          break;
         } else if (elem.boxObject) {
           let qi = (elem._cachedSBO) ? elem._cachedSBO
                                      : elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
@@ -536,6 +533,9 @@ var ScrollUtils = {
             scrollbox._cachedSBO = qinterface = qi;
             break;
           }
+        } else if (elem.customDragger) {
+          scrollbox = elem;
+          break;
         }
       } catch (e) { /* we aren't here to deal with your exceptions, we'll just keep
                        traversing until we find something more well-behaved, as we
@@ -1072,7 +1072,8 @@ GestureModule.prototype = {
     event.initEvent("CancelTouchSequence", true, true);
     let success = aEvent.target.dispatchEvent(event);
 
-    if (!success || (aEvent.target instanceof XULElement) || !Browser.selectedTab.allowZoom)
+    if (!success || (aEvent.target instanceof XULElement) ||
+        !Browser.selectedTab.allowZoom)
       return;
 
     // create the AnimatedZoom object for fast arbitrary zooming
