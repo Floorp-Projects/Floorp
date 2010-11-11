@@ -19,6 +19,7 @@
 <!ENTITY selectAll.label       "Select All">
 <!ENTITY noSuggestions.label   "(No suggestions)">
 <!ENTITY addToDictionary.label "Add to Dictionary">
+<!ENTITY inputMethod.label     "Select Input Method">
 
 <!ENTITY allPagesHeader.label      "All Pages">
 <!ENTITY bookmarksHeader.label     "Bookmarks">
@@ -109,6 +110,5 @@
 <!ENTITY pageactions.search.addNew   "Add Search Engine">
 
 <!ENTITY selectHelper.emptytext      "Filter List">
-<!ENTITY inputMethod.label           "Select Input Method">
 
 <!ENTITY appMenu.siteOptions         "Site Options">

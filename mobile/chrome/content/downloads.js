@@ -426,6 +426,29 @@ var DownloadsView = {
       BrowserUI.newTab(uri);
   },
 
+  showAlert: function dv_showAlert(aName, aMessage, aTitle, aIcon) {
+    if (this.visible)
+      return;
+
+    var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+
+    // Callback for tapping on the alert popup
+    let observer = {
+      observe: function (aSubject, aTopic, aData) {
+        if (aTopic == "alertclickcallback")
+          BrowserUI.showPanel("downloads-container");
+      }
+    };
+    let strings = Elements.browserBundle;
+    
+    if (!aTitle)
+      aTitle = strings.getString("alertDownloads");
+    if (!aIcon)
+      aIcon = URI_GENERIC_ICON_DOWNLOAD;
+
+    notifier.showAlertNotification(aIcon, aTitle, aMessage, true, "", observer, aName);
+  },
+
   observe: function (aSubject, aTopic, aData) {
     if (aTopic == "download-manager-remove-download") {
       // A null subject here indicates "remove multiple", so we just rebuild.
@@ -444,37 +467,25 @@ var DownloadsView = {
       this._ifEmptyShowMessage();
     }
     else {
-      // We only show alerts if the download view is not visible
-      if (this.visible)
-        return;
-
       let download = aSubject.QueryInterface(Ci.nsIDownload);
       let strings = Elements.browserBundle;
-      var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+      let msgKey = "";
 
-      // Callback for tapping on the alert popup
-      let observer = {
-        observe: function (aSubject, aTopic, aData) {
-          if (aTopic == "alertclickcallback")
-            BrowserUI.showPanel("downloads-container");
+      if (aTopic == "dl-start") {
+        msgKey = "alertDownloadsStart";
+        if (!this._progressAlert) {
+          if (!this._dlmgr)
+            this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+          this._progressAlert = new AlertDownloadProgressListener();
+          this._dlmgr.addListener(this._progressAlert);
         }
-      };
+      } else if (aTopic == "dl-done") {
+        msgKey = "alertDownloadsDone";
+      }
 
-      let msgKey = aTopic == "dl-start" ? "alertDownloadsStart" : "alertDownloadsDone";
-      notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                     strings.getFormattedString(msgKey, [download.displayName]), true, "", observer,
-                                     download.target.spec.replace("file:", "download:"));
-
-#ifdef ANDROID
-    if (aTopic == "dl-start") {
-      if (this._dlmgr == null)
-        this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-
-      this._progressAlert = new AlertDownloadProgressListener();
-      this._dlmgr.addListener(this._progressAlert);
-    }
-#endif
-
+      if (msgKey)
+        this.showAlert(download.target.spec.replace("file:", "download:"),
+                       strings.getFormattedString(msgKey, [download.displayName]));
     }
   },
 
@@ -574,7 +585,7 @@ DownloadProgressListener.prototype = {
   }
 };
 
-#ifdef ANDROID
+
 // AlertDownloadProgressListener is used to display progress in the alert notifications.
 function AlertDownloadProgressListener() { }
 
@@ -582,6 +593,22 @@ AlertDownloadProgressListener.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadProgressListener
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) {
+    let strings = Elements.browserBundle;
+    let availableSpace = -1;
+    try {
+      // diskSpaceAvailable is not implemented on all systems
+      let availableSpace = aDownload.targetFile.diskSpaceAvailable;
+    } catch(ex) { }
+    let contentLength = aDownload.size;
+    if (availableSpace > 0 && contentLength > 0 && contentLength > availableSpace) {
+      DownloadsView.showAlert(aDownload.target.spec.replace("file:", "download:"),
+                              strings.getString("alertDownloadsNoSpace"),
+                              strings.getString("alertDownloadsSize"));
+
+      Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager).cancelDownload(aDownload.id);
+    }
+
+#ifdef ANDROID
     if (aDownload.percentComplete == -1) {
       // Undetermined progress is not supported yet
       return;
@@ -590,9 +617,11 @@ AlertDownloadProgressListener.prototype = {
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
     let notificationName = aDownload.target.spec.replace("file:", "download:");
     progressListener.onProgress(notificationName, aDownload.percentComplete, 100);
+#endif
   },
 
   onDownloadStateChange: function(aState, aDownload) {
+#ifdef ANDROID 
     let state = aDownload.state;
     switch (state) {
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
@@ -607,6 +636,7 @@ AlertDownloadProgressListener.prototype = {
         break;
       }
     }
+#endif
   },
 
   onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload) { },
@@ -621,4 +651,3 @@ AlertDownloadProgressListener.prototype = {
     return this;
   }
 };
-#endif
