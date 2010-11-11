@@ -45,14 +45,13 @@
 #endif
 #define TAB "    "
 
-static const char* JSVAL2String(JSContext* cx, jsval val, JSBool* isString,
-                                JSAutoByteString *bytes)
+static const char* JSVAL2String(JSContext* cx, jsval val, JSBool* isString)
 {
     JSAutoRequest ar(cx);
     const char* value = nsnull;
     JSString* value_str = JS_ValueToString(cx, val);
     if(value_str)
-        value = bytes->encode(cx, value_str);
+        value = JS_GetStringBytes(value_str);
     if(value)
     {
         const char* found = strstr(value, "function ");
@@ -80,6 +79,8 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     JSFunction* fun = nsnull;
     uint32 namedArgCount = 0;
     jsval val;
+    const char* name;
+    const char* value;
     JSBool isString;
 
     // get the info for this stack frame
@@ -138,13 +139,11 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSPropertyDesc* desc = &callProps.array[i];
             if(desc->flags & JSPD_ARGUMENT)
             {
-                JSAutoByteString nameBytes;
-                const char* name = JSVAL2String(cx, desc->id, &isString, &nameBytes);
+                name = JSVAL2String(cx, desc->id, &isString);
                 if(!isString)
                     name = nsnull;
-                JSAutoByteString valueBytes;
-                const char* value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
-                
+                value = JSVAL2String(cx, desc->value, &isString);
+
                 buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
                                         namedArgCount ? ", " : "",
                                         name ? name :"",
@@ -175,8 +174,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 
                     if(JS_GetProperty(cx, argsObj, number, &val))
                     {
-                        JSAutoByteString valueBytes;
-                        const char *value = JSVAL2String(cx, val, &isString, &valueBytes);
+                        value = JSVAL2String(cx, val, &isString);
                         buf = JS_sprintf_append(buf, "%s%s%s%s",
                                         k ? ", " : "",
                                         isString ? "\"" : "",
@@ -206,10 +204,8 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSPropertyDesc* desc = &callProps.array[i];
             if(desc->flags & JSPD_VARIABLE)
             {
-                JSAutoByteString nameBytes;
-                JSAutoByteString valueBytes;
-                const char *name = JSVAL2String(cx, desc->id, nsnull, &nameBytes);
-                const char *value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
+                name = JSVAL2String(cx, desc->id, nsnull);
+                value = JSVAL2String(cx, desc->value, &isString);
 
                 if(name && value)
                 {
@@ -231,12 +227,12 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
         if(gotThisVal)
         {
             JSString* thisValStr;
-            JSAutoByteString thisValBytes;
+            char* thisValChars;
 
             if(nsnull != (thisValStr = JS_ValueToString(cx, thisVal)) &&
-               thisValBytes.encode(cx, thisValStr))
+               nsnull != (thisValChars = JS_GetStringBytes(thisValStr)))
             {
-                buf = JS_sprintf_append(buf, TAB "this = %s\n", thisValBytes.ptr());
+                buf = JS_sprintf_append(buf, TAB "this = %s\n", thisValChars);
                 if(!buf) goto out;
             }
         }
@@ -254,10 +250,9 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             JSPropertyDesc* desc = &thisProps.array[i];
             if(desc->flags & JSPD_ENUMERATE)
             {
-                JSAutoByteString nameBytes;
-                JSAutoByteString valueBytes;
-                const char *name = JSVAL2String(cx, desc->id, nsnull, &nameBytes);
-                const char *value = JSVAL2String(cx, desc->value, &isString, &valueBytes);
+
+                name = JSVAL2String(cx, desc->id, nsnull);
+                value = JSVAL2String(cx, desc->value, &isString);
                 if(name && value)
                 {
                     buf = JS_sprintf_append(buf, TAB "this.%s = %s%s%s\n",
@@ -373,12 +368,12 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
 
     jsval rval;
     JSString* str;
-    JSAutoByteString bytes;
+    const char* chars;
     if(JS_EvaluateInStackFrame(cx, fp, text, strlen(text), "eval", 1, &rval) &&
        nsnull != (str = JS_ValueToString(cx, rval)) &&
-       bytes.encode(cx, str))
+       nsnull != (chars = JS_GetStringBytes(str)))
     {
-        printf("%s\n", bytes.ptr());
+        printf("%s\n", chars);
     }
     else
         puts("eval failed!");

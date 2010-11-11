@@ -85,9 +85,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
   if (JSID_IS_STRING(aId)) {
-    ::JSAutoByteString idBytes(aCtx, JSID_TO_STRING(aId));
-    NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
-    nsDependentCString jsid(idBytes.ptr());
+    nsDependentCString jsid(::JS_GetStringBytes(JSID_TO_STRING(aId)));
 
     PRUint32 idx;
     nsresult rv = mStatement->GetColumnIndex(jsid, &idx);
@@ -164,9 +162,8 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   // prototype chain to be checked for the property.
 
   if (JSID_IS_STRING(aId)) {
-    ::JSAutoByteString idBytes(aCtx, JSID_TO_STRING(aId));
-    NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
-    nsDependentCString name(idBytes.ptr());
+    JSString *str = JSID_TO_STRING(aId);
+    nsDependentCString name(::JS_GetStringBytes(str));
 
     PRUint32 idx;
     nsresult rv = mStatement->GetColumnIndex(name, &idx);
@@ -178,7 +175,9 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
       return NS_OK;
     }
 
-    *_retval = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID,
+    *_retval = ::JS_DefineUCProperty(aCtx, aScopeObj, ::JS_GetStringChars(str),
+                                     ::JS_GetStringLength(str),
+                                     JSVAL_VOID,
                                      nsnull, nsnull, 0);
     *_objp = aScopeObj;
     return NS_OK;

@@ -944,9 +944,16 @@ js_NewStringCopyZ(JSContext *cx, const char *s);
 /*
  * Convert a value to a printable C string.
  */
-extern const char *
-js_ValueToPrintable(JSContext *cx, const js::Value &,
-                    JSAutoByteString *bytes, bool asSource = false);
+typedef JSString *(*JSValueToStringFun)(JSContext *cx, const js::Value &v);
+
+extern JS_FRIEND_API(const char *)
+js_ValueToPrintable(JSContext *cx, const js::Value &, JSValueToStringFun v2sfun);
+
+#define js_ValueToPrintableString(cx,v) \
+    js_ValueToPrintable(cx, v, js_ValueToString)
+
+#define js_ValueToPrintableSource(cx,v) \
+    js_ValueToPrintable(cx, v, js_ValueToSource)
 
 /*
  * Convert a value to a string, returning null after reporting an error,

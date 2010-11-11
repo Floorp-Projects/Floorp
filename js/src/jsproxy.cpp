@@ -310,9 +310,8 @@ GetFundamentalTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
         return false;
 
     if (!js_IsCallable(*fvalp)) {
-        JSAutoByteString bytes;
-        if (js_AtomToPrintableString(cx, atom, &bytes))
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_FUNCTION, bytes.ptr());
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_FUNCTION,
+                             js_AtomToPrintableString(cx, atom));
         return false;
     }
 
@@ -473,11 +472,9 @@ static bool
 ReturnedValueMustNotBePrimitive(JSContext *cx, JSObject *proxy, JSAtom *atom, const Value &v)
 {
     if (v.isPrimitive()) {
-        JSAutoByteString bytes;
-        if (js_AtomToPrintableString(cx, atom, &bytes)) {
-            js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                                 JSDVG_SEARCH_STACK, ObjectOrNullValue(proxy), NULL, bytes.ptr());
-        }
+        js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
+                             JSDVG_SEARCH_STACK, ObjectOrNullValue(proxy), NULL,
+                             js_AtomToPrintableString(cx, atom));
         return false;
     }
     return true;

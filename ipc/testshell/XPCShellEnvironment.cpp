@@ -254,10 +254,7 @@ Print(JSContext *cx,
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
-        JSAutoByteString bytes(cx, str);
-        if (!bytes)
-            return JS_FALSE;
-        fprintf(stdout, "%s%s", i ? " " : "", bytes.ptr());
+        fprintf(stdout, "%s%s", i ? " " : "", JS_GetStringBytes(str));
         fflush(stdout);
     }
     n++;
@@ -307,6 +304,7 @@ Load(JSContext *cx,
 {
     uintN i;
     JSString *str;
+    const char *filename;
     JSScript *script;
     JSBool ok;
     jsval result;
@@ -322,15 +320,13 @@ Load(JSContext *cx,
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
-        JSAutoByteString filename(cx, str);
-        if (!filename)
-            return JS_FALSE;
-        file = fopen(filename.ptr(), "r");
+        filename = JS_GetStringBytes(str);
+        file = fopen(filename, "r");
         if (!file) {
-            JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
+            JS_ReportError(cx, "cannot open file '%s' for reading", filename);
             return JS_FALSE;
         }
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(), file,
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
                                                    Environment(cx)->GetPrincipal());
         fclose(file);
         if (!script)
@@ -434,7 +430,7 @@ DumpHeap(JSContext *cx,
          uintN argc,
          jsval *vp)
 {
-    JSAutoByteString fileName;
+    char *fileName = NULL;
     void* startThing = NULL;
     uint32 startTraceKind = 0;
     void *thingToFind = NULL;
@@ -454,8 +450,7 @@ DumpHeap(JSContext *cx,
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
-        if (!fileName.encode(cx, str))
-            return JS_FALSE;
+        fileName = JS_GetStringBytes(str);
     }
 
     vp = argv + 1;
@@ -492,10 +487,10 @@ DumpHeap(JSContext *cx,
     if (!fileName) {
         dumpFile = stdout;
     } else {
-        dumpFile = fopen(fileName.ptr(), "w");
+        dumpFile = fopen(fileName, "w");
         if (!dumpFile) {
             fprintf(stderr, "dumpHeap: can't open %s: %s\n",
-                    fileName.ptr(), strerror(errno));
+                    fileName, strerror(errno));
             return JS_FALSE;
         }
     }
@@ -676,13 +671,10 @@ ProcessFile(JSContext *cx,
                     /* Suppress error reports from JS_ValueToString(). */
                     older = JS_SetErrorReporter(cx, NULL);
                     str = JS_ValueToString(cx, result);
-                    JSAutoByteString bytes;
-                    if (str)
-                        bytes.encode(cx, str);
                     JS_SetErrorReporter(cx, older);
 
-                    if (!!bytes)
-                        fprintf(stdout, "%s\n", bytes.ptr());
+                    if (str)
+                        fprintf(stdout, "%s\n", JS_GetStringBytes(str));
                     else
                         ok = JS_FALSE;
                 }

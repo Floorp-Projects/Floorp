@@ -785,10 +785,9 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         /* Need to grab input from statics. */
         str = res->getInput();
         if (!str) {
-            JSAutoByteString sourceBytes(cx, re->getSource());
-            if (!!sourceBytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_INPUT,
-                                     sourceBytes.ptr(),
+            const char *sourceBytes = js_GetStringBytes(cx, re->getSource());
+            if (sourceBytes) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_INPUT, sourceBytes,
                                      re->global() ? "g" : "",
                                      re->ignoreCase() ? "i" : "",
                                      re->multiline() ? "m" : "",
