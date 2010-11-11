@@ -509,6 +509,8 @@ BasicTextureImage::~BasicTextureImage()
         mGLContext->MakeCurrent();
         mGLContext->fDeleteTextures(1, &mTexture);
     }
+
+    mBackingSurface = nsnull;
 }
 
 gfxContext*
@@ -517,25 +519,31 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     NS_ASSERTION(!mUpdateContext, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
-    if (!mTextureInited)
-        // if the texture hasn't been initialized yet, force the
+    ImageFormat format =
+        (GetContentType() == gfxASurface::CONTENT_COLOR) ?
+        gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32;
+    if (!mTextureInited || !mBackingSurface ||
+        mBackingSurface->GetSize() != gfxIntSize(mSize.width, mSize.height) ||
+        mBackingSurface->Format() != format) {
+        // if the texture hasn't been initialized yet, or something important
+        // changed, we need to recreate our backing surface and force the
         // client to paint everything
         mUpdateRect = nsIntRect(nsIntPoint(0, 0), mSize);
-    else
+        mTextureInited = PR_FALSE;
+    } else {
         mUpdateRect = aRegion.GetBounds();
+    }
+
     // the basic impl can't upload updates to disparate regions,
     // only rects
     aRegion = nsIntRegion(mUpdateRect);
-        
+
     nsIntSize rgnSize = mUpdateRect.Size();
     if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
         NS_ERROR("update outside of image");
         return NULL;
     }
 
-    ImageFormat format =
-        (GetContentType() == gfxASurface::CONTENT_COLOR) ?
-        gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32;
     nsRefPtr<gfxASurface> updateSurface =
         CreateUpdateSurface(gfxIntSize(rgnSize.width, rgnSize.height),
                             format);
@@ -572,8 +580,17 @@ BasicTextureImage::EndUpdate()
     mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH,
                              uploadImage->Stride() / 4);
 
+    DEBUG_GL_ERROR_CHECK(mGLContext);
+
     if (!mTextureInited)
     {
+        // If we can use the client storage extension, we should.
+        if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
+            mGLContext->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE,
+                                     LOCAL_GL_TRUE);
+            DEBUG_GL_ERROR_CHECK(mGLContext);
+        }
+
         mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                                 0,
                                 LOCAL_GL_RGBA,
@@ -583,7 +600,19 @@ BasicTextureImage::EndUpdate()
                                 LOCAL_GL_RGBA,
                                 LOCAL_GL_UNSIGNED_BYTE,
                                 uploadImage->Data());
+
+        DEBUG_GL_ERROR_CHECK(mGLContext);
+
         mTextureInited = PR_TRUE;
+
+        // Reset the pixel store attribute, and hold on to the update surface
+        // because we're using the client storage extension.
+        if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
+            mBackingSurface = uploadImage;
+            mGLContext->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE,
+                                     LOCAL_GL_FALSE);
+          DEBUG_GL_ERROR_CHECK(mGLContext);
+        }
     } else {
         mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                                    0,
@@ -597,7 +626,7 @@ BasicTextureImage::EndUpdate()
     }
     mUpdateContext = NULL;
 
-    // Reset row length to use the default.
+    // Reset pixel store attributes to use the defaults.
     mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
 
     return PR_TRUE;         // mTexture is bound
