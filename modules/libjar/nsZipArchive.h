@@ -221,8 +221,6 @@ public:
    */
   const PRUint8* GetData(nsZipItem* aItem);
 
-  PRBool CheckCRC(nsZipItem* aItem, const PRUint8* aData);
-
 private:
   //--- private members ---
 
@@ -352,6 +350,25 @@ public:
 
   operator const T*() const {
     return Buffer();
+  }
+
+  /**
+   * Relinquish ownership of zip member if compressed.
+   * Copy member into a new buffer if uncompressed.
+   * @return a buffer with whole zip member. It is caller's responsibility to free() it.
+   */
+  T* Forget() {
+    if (!mReturnBuf)
+      return NULL;
+    // In uncompressed mmap case, give up buffer
+    if (mAutoBuf.get() == mReturnBuf) {
+      mReturnBuf = NULL;
+      return (T*) mAutoBuf.forget();
+    }
+    T *ret = (T*) malloc(Length());
+    memcpy(ret, mReturnBuf, Length());
+    mReturnBuf = NULL;
+    return ret;
   }
 };
 
