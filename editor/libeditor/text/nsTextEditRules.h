@@ -75,6 +75,7 @@ public:
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty);
+  NS_IMETHOD DocumentModified();
 
   // nsTextEditRules action id's
   enum 

@@ -9160,3 +9160,28 @@ nsHTMLEditRules::WillRelativeChangeZIndex(nsISelection *aSelection,
   PRInt32 zIndex;
   return absPosHTMLEditor->RelativeChangeElementZIndex(elt, aChange, &zIndex);
 }
+
+NS_IMETHODIMP
+nsHTMLEditRules::DocumentModified()
+{
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, &nsHTMLEditRules::DocumentModifiedWorker));
+  return NS_OK;
+}
+
+void
+nsHTMLEditRules::DocumentModifiedWorker()
+{
+  nsCOMPtr<nsISelection> selection;
+  nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(res, );
+
+  // Delete our bogus node, if we have one, since the document might not be
+  // empty any more.
+  if (mBogusNode) {
+    mEditor->DeleteNode(mBogusNode);
+    mBogusNode = nsnull;
+  }
+
+  // Try to recreate the bogus node if needed.
+  CreateBogusNodeIfNeeded(selection);
+}
