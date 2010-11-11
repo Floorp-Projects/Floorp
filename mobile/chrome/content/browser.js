@@ -207,26 +207,27 @@ var Browser = {
     // to redo all the dragging code.
     this.contentScrollbox = Elements.browsers;
     this.contentScrollboxScroller = {
-      scrollBy: function(dx, dy) {
-        getBrowser().scrollBy(dx, dy);
+      scrollBy: function(aDx, aDy) {
+        getBrowser().scrollBy(aDx, aDy);
 
-        let scrollX = {}, scrollY = {};
-        getBrowser().getPosition(scrollX, scrollY);
-
-        let x = scrollX.value + dx;
-        let y = scrollY.value + dy;
-        document.getElementById("browsers").style.backgroundPosition = (-x % 128) + "px " + (-y % 128) + "px";
+        let scroll = getBrowser().getPosition();
+        this._updateBackground(scroll.x, scroll.y);
       },
 
-      scrollTo: function(x, y) {
-        getBrowser().scrollTo(x, y);
-        document.getElementById("browsers").style.backgroundPosition = (-x % 128) + "px " + (-y % 128) + "px";
+      scrollTo: function(aX, aY) {
+        getBrowser().scrollTo(aX, aY);
+        this._updateBackground(aX, aY);
       },
 
-      getPosition: function(scrollX, scrollY) {
+      getPosition: function(aScrollX, aScrollY) {
         let { x: x, y: y } = getBrowser().getPosition();
-        scrollX.value = x;
-        scrollY.value = y;
+        aScrollX.value = x;
+        aScrollY.value = y;
+      },
+
+      _updateBackground: function _updateBackground(aX, aY) {
+        let position = (-aX % 128) + "px " + (-aY % 128) + "px";
+        document.getElementById("browsers").style.backgroundPosition = position;
       }
     };
 
