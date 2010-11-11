@@ -706,6 +706,7 @@ public:
         OES_packed_depth_stencil,
         IMG_read_format,
         EXT_read_format_bgra,
+        APPLE_client_storage,
         Extensions_Max
     };
 
