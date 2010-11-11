@@ -404,7 +404,7 @@ toolbarbutton.choice-remotetabs {
   background-image: url(chrome://browser/content/checkerboard.png);
 }
 
-#content-stack > div:-moz-focusring {
+.input-overlay:-moz-focusring {
   outline: 0 !important;
 }
 
@@ -412,7 +412,7 @@ toolbarbutton.choice-remotetabs {
  * These rules prevent browser to steal the focus while touching the screen
  * to allow panning/zooming of the browser view without closing the VKB
  */
-#content-stack > deck > browser {
+#browsers > notificationbox > browser {
   -moz-user-focus: ignore;
 }
 
