@@ -1778,6 +1778,8 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    CGContextFlush(surface->cgContext);
+
     if (surface->imageSurfaceEquiv) {
 	*image_out = (cairo_image_surface_t*) cairo_surface_reference(surface->imageSurfaceEquiv);
 	return CAIRO_STATUS_SUCCESS;
