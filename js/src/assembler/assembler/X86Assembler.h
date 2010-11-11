@@ -2253,6 +2253,10 @@ private:
     {
         intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
         ASSERT(offset == static_cast<int32_t>(offset));
+#define JS_CRASH(x) *(int *)x = 0
+        if (offset != static_cast<int32_t>(offset))
+            JS_CRASH(0xC0DE);
+#undef JS_CRASH
 
         js::JaegerSpew(js::JSpew_Insns,
                        ISPFX "##setRel32 ((from=%p)) ((to=%p))\n", from, to);
