@@ -499,10 +499,11 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
                            : thisv.isUndefined()
                            ? js_undefined_str
                            : "value";
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_INCOMPATIBLE_PROTO,
-                             clasp->name, JS_GetFunctionName(fun),
-                             name);
+        JSAutoByteString funNameBytes;
+        if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                                 clasp->name, funName, name);
+        }
     }
 }
 
@@ -1113,7 +1114,8 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : isFunction
            ? js_function_str
            : js_var_str;
-    name = js_ValueToPrintableString(cx, IdToValue(id));
+    JSAutoByteString bytes;
+    name = js_ValueToPrintable(cx, IdToValue(id), &bytes);
     if (!name)
         return JS_FALSE;
     return !!JS_ReportErrorFlagsAndNumber(cx, report,
@@ -1218,12 +1220,12 @@ InstanceOfSlow(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
     if (argv) {
         JSFunction *fun = js_ValueToFunction(cx, &argv[-2], 0);
         if (fun) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_INCOMPATIBLE_PROTO,
-                                 clasp->name, JS_GetFunctionName(fun),
-                                 obj
-                                 ? obj->getClass()->name
-                                 : js_null_str);
+            JSAutoByteString funNameBytes;
+            if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                                     clasp->name, funName,
+                                     obj ? obj->getClass()->name : js_null_str);
+            }
         }
     }
     return false;
@@ -1269,10 +1271,12 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
     if (args.rval().isPrimitive()) {
         if (clasp != &js_FunctionClass) {
             /* native [[Construct]] returning primitive is error */
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_NEW_RESULT,
-                                 js_ValueToPrintableString(cx, args.rval()));
-            return false;
+            JSAutoByteString bytes;
+            if (js_ValueToPrintable(cx, args.rval(), &bytes)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_NEW_RESULT, bytes.ptr());
+                return false;
+            }
         }
 
         /* The interpreter fixes rval for us. */
@@ -6967,13 +6971,11 @@ END_CASE(JSOP_ARRAYPUSH)
 
   atom_not_defined:
     {
-        const char *printable;
-
-        printable = js_AtomToPrintableString(cx, atomNotDefined);
-        if (printable)
-            js_ReportIsNotDefined(cx, printable);
-        goto error;
+        JSAutoByteString printable;
+        if (js_AtomToPrintableString(cx, atomNotDefined, &printable))
+            js_ReportIsNotDefined(cx, printable.ptr());
     }
+    goto error;
 
     /*
      * This path is used when it's guaranteed the method can be finished

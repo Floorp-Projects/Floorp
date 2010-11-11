@@ -1806,15 +1806,17 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_ENCODE) {
         fun = GET_FUNCTION_PRIVATE(cx, *objp);
         if (!FUN_INTERPRETED(fun)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_NOT_SCRIPTED_FUNCTION,
-                                 JS_GetFunctionName(fun));
+            JSAutoByteString funNameBytes;
+            if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_SCRIPTED_FUNCTION,
+                                     name);
+            }
             return false;
         }
         if (fun->u.i.wrapper) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_XDR_CLOSURE_WRAPPER,
-                                 JS_GetFunctionName(fun));
+            JSAutoByteString funNameBytes;
+            if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes))
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_XDR_CLOSURE_WRAPPER, name);
             return false;
         }
         JS_ASSERT((fun->u.i.wrapper & ~1U) == 0);
@@ -2188,13 +2190,12 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     if (!js_IsCallable(fval)) {
         JSString *str = js_ValueToString(cx, fval);
         if (str) {
-            const char *bytes = js_GetStringBytes(cx, str);
-
-            if (bytes) {
+            JSAutoByteString bytes(cx, str);
+            if (!!bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
                                      js_Function_str, js_call_str,
-                                     bytes);
+                                     bytes.ptr());
             }
         }
         return JS_FALSE;
@@ -2238,11 +2239,12 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     Value fval = vp[1];
     if (!js_IsCallable(fval)) {
         if (JSString *str = js_ValueToString(cx, fval)) {
-            if (const char *bytes = js_GetStringBytes(cx, str)) {
+            JSAutoByteString bytes(cx, str);
+            if (!!bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
                                      js_Function_str, js_apply_str,
-                                     bytes);
+                                     bytes.ptr());
             }
         }
         return false;
@@ -2414,10 +2416,11 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     /* Step 2. */
     if (!target->isCallable()) {
         if (JSString *str = js_ValueToString(cx, vp[1])) {
-            if (const char *bytes = js_GetStringBytes(cx, str)) {
+            JSAutoByteString bytes(cx, str);
+            if (!!bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, "bind", bytes);
+                                     js_Function_str, "bind", bytes.ptr());
             }
         }
         return false;
@@ -2636,12 +2639,14 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
                 /* Check for a duplicate parameter name. */
                 if (fun->lookupLocal(cx, atom, NULL) != JSLOCAL_NONE) {
-                    const char *name;
-
-                    name = js_AtomToPrintableString(cx, atom);
-                    if (!name && ReportCompileErrorNumber(cx, &ts, NULL,
-                                                          JSREPORT_WARNING | JSREPORT_STRICT,
-                                                          JSMSG_DUPLICATE_FORMAL, name)) {
+                    JSAutoByteString name;
+                    if (!js_AtomToPrintableString(cx, atom, &name)) {
+                        state = BAD;
+                        goto after_args;
+                    }
+                    if (!ReportCompileErrorNumber(cx, &ts, NULL,
+                                                  JSREPORT_WARNING | JSREPORT_STRICT,
+                                                  JSMSG_DUPLICATE_FORMAL, name.ptr())) {
                         goto after_args;
                     }
                 }

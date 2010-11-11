@@ -913,18 +913,17 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
 {
     JSSecurityCallbacks *callbacks;
     JSPrincipals *scopePrincipals;
-    const char *callerstr;
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (callbacks && callbacks->findObjectPrincipals) {
         scopePrincipals = callbacks->findObjectPrincipals(cx, scopeobj);
         if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
-            callerstr = js_AtomToPrintableString(cx, caller);
-            if (!callerstr)
+            JSAutoByteString callerstr;
+            if (!js_AtomToPrintableString(cx, caller, &callerstr))
                 return JS_FALSE;
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_INDIRECT_CALL, callerstr);
+                                 JSMSG_BAD_INDIRECT_CALL, callerstr.ptr());
             return JS_FALSE;
         }
     }
@@ -1949,8 +1948,10 @@ Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
         jsid idstr;
         if (!js_ValueToStringId(cx, IdToValue(id), &idstr))
            return JS_FALSE;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
-                             JS_GetStringBytes(JSID_TO_STRING(idstr)));
+        JSAutoByteString bytes(cx, JSID_TO_STRING(idstr));
+        if (!bytes)
+            return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber, bytes.ptr());
         return JS_FALSE;
     }
 
@@ -5150,13 +5151,13 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         return true;
     }
 
-    const char *bytes = js_GetStringBytes(cx, propname);
-    return bytes &&
+    JSAutoByteString bytes(cx, propname);
+    return !!bytes &&
            JS_ReportErrorFlagsAndNumber(cx,
                                         (JSREPORT_WARNING | JSREPORT_STRICT
                                          | JSREPORT_STRICT_MODE_ERROR),
                                         js_GetErrorMessage, NULL,
-                                        JSMSG_UNDECLARED_VAR, bytes);
+                                        JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
 bool

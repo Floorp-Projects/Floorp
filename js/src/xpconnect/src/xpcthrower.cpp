@@ -199,11 +199,13 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
         {
             id = ccx.GetMember()->GetName();
         }
-        const char *name = JSID_IS_VOID(id) ? "Unknown" : JS_GetStringBytes(JSID_TO_STRING(id));
-        sz = JS_smprintf("%s [%s.%s]",
-                         *psz,
-                         iface->GetNameString(),
-                         name);
+        JSAutoByteString bytes;
+        const char *name = JSID_IS_VOID(id) ? "Unknown" : bytes.encode(ccx, JSID_TO_STRING(id));
+        if(!name)
+        {
+            name = "";
+        }
+        sz = JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name);
     }
 
     if(sz)

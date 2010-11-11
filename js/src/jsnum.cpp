@@ -731,7 +731,10 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     if (!num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(vp->isString());
-    num = js_GetStringBytes(cx, vp->toString());
+    JSAutoByteString numBytes(cx, vp->toString());
+    if (!numBytes)
+        return JS_FALSE;
+    num = numBytes.ptr();
     if (!num)
         return JS_FALSE;
 
