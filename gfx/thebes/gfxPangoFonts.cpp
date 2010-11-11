@@ -536,7 +536,8 @@ public:
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
-                               PRInt32 aRunScript);
+                               PRInt32 aRunScript,
+                               PRBool aPreferPlatformShaping);
 
 #if defined(ENABLE_FAST_PATH_8BIT)
     nsresult InitGlyphRunFast(gfxTextRun *aTextRun, const PRUnichar *aString,
@@ -1918,7 +1919,8 @@ gfxFcFont::InitTextRun(gfxContext *aContext,
                        const PRUnichar *aString,
                        PRUint32 aRunStart,
                        PRUint32 aRunLength,
-                       PRInt32 aRunScript)
+                       PRInt32 aRunScript,
+                       PRBool aPreferPlatformShaping)
 {
     PRBool useFastPath = PR_FALSE;
 #if defined(ENABLE_FAST_PATH_8BIT)
