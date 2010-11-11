@@ -3,20 +3,10 @@
 <style>
 
 p {
-  /* We use powers of two here to avoid floating-point issues.
-     See bug 590181. */
-
-  height: 256px;
-  width: 512px;
+  height: 200px;
+  width: 400px;
   background: blue;
-  border-radius: -moz-calc((1/32 * 100%) + 5px)
-                 -moz-calc((1/64 * 100%) - 2px)
-                 -moz-calc(10px + (1/256 * 100%))
-                 -moz-calc((1/16 * 100%) - 3px) /
-                 -moz-calc((1/32 * 100%) - (1px + (1/128 * 100%)))
-                 -moz-calc(1/16 * 100%)
-                 -moz-calc(10px)
-                 3px;
+  border-radius: -moz-calc(2% + 5px) -moz-calc(4% - 2px) -moz-calc(10px + 1%) -moz-calc(2% - 3px) / -moz-calc(3% - (1px + 1%)) -moz-calc(1%) -moz-calc(10px) 3px;
 }
 
 </style>
