@@ -148,7 +148,7 @@ public:
 
   /* ------------ nsPlaintextEditor overrides -------------- */
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
-  NS_IMETHODIMP BeginningOfDocument();
+  NS_IMETHOD BeginningOfDocument();
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual already_AddRefed<nsIContent> GetFocusedContent();
   virtual PRBool IsActiveInDOMWindow();
