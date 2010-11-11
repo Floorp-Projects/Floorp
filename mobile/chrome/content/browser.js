@@ -141,7 +141,7 @@ function onDebugKeyPress(ev) {
       let e = document.createEvent("SimpleGestureEvent");
       e.initSimpleGestureEvent("MozMagnifyGesture"+aName, true, true, window, null,
                                0, 0, 0, 0, false, false, false, false, 0, null, 0, aDelta);
-      Browser.selectedTab.inputHandler.dispatchEvent(e);
+      document.getElementById("inputhandler-overlay").dispatchEvent(e);
     }
     dispatchMagnifyEvent("Start", 0);
 
@@ -193,12 +193,13 @@ var Browser = {
     // XXX change
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
-    Elements.browsers.customDragger = new Browser.MainDragger();
+    let inputHandlerOverlay = document.getElementById("inputhandler-overlay");
+    inputHandlerOverlay.customDragger = new Browser.MainDragger();
 
-    let keySender = new ContentCustomKeySender(Elements.browsers);
+    let keySender = new ContentCustomKeySender(inputHandlerOverlay);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule();
-    let scrollWheelModule = new ScrollwheelModule(Elements.browsers);
+    let scrollWheelModule = new ScrollwheelModule(inputHandlerOverlay);
 
     ContentTouchHandler.init();
 
@@ -719,7 +720,7 @@ var Browser = {
     if (this._selectedTab == tab) {
       // Deck does not update its selectedIndex when children
       // are removed. See bug 602708
-      Elements.browsers.selectedPanel = tab.notification;
+      Elements.browsers.selectedPanel = tab.browser;
       return;
     }
 
@@ -744,11 +745,18 @@ var Browser = {
     if (this._selectedTab.isLoading())
       BrowserUI.lockToolbar();
 
-    if (lastTab)
-      lastTab.active = false;
+    if (oldBrowser) {
+      oldBrowser.setAttribute("type", "content");
+      oldBrowser.messageManager.sendAsyncMessage("Browser:Blur", {});
+    }
 
-    if (tab)
-      tab.active = true;
+    if (browser) {
+      browser.setAttribute("type", "content-primary");
+      Elements.browsers.selectedPanel = browser;
+      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
+    }
+
+    document.getElementById("tabs").selectedTab = tab.chromeTab;
 
     if (!isFirstTab) {
       // Update all of our UI to reflect the new tab's location
@@ -795,8 +803,22 @@ var Browser = {
   },
 
   getNotificationBox: function getNotificationBox(aBrowser) {
-    let browser = aBrowser || this.selectedBrowser;
-    return browser.parentNode;
+    return document.getElementById("notifications");
+  },
+
+  removeTransientNotificationsForTab: function removeTransientNotificationsForTab(aTab) {
+    let notificationBox = this.getNotificationBox();
+    let notifications = notificationBox.allNotifications;
+    for (let n = notifications.length - 1; n >= 0; n--) {
+      let notification = notifications[n];
+      if (notification._chromeTab != aTab.chromeTab)
+        continue;
+
+      if (notification.persistence)
+        notification.persistence--;
+      else if (Date.now() > notification.timeout)
+        notificationBox.removeNotification(notification);
+    }
   },
 
   /**
@@ -1494,7 +1516,7 @@ const ContentTouchHandler = {
    */
   _targetIsContent: function _targetIsContent(aEvent) {
     let target = aEvent.target;
-    return target && target.classList.contains("inputHandler");
+    return target && target.id == "inputhandler-overlay";
   },
 
   _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
@@ -2307,7 +2329,7 @@ ProgressController.prototype = {
       TapHighlightHelper.hide();
 
       this.browser.lastLocation = location;
-      Browser.getNotificationBox(this.browser).removeTransientNotifications();
+      Browser.removeTransientNotificationsForTab(this._tab);
       this._tab.resetZoomLevel();
 
       if (this._tab == Browser.selectedTab) {
@@ -2466,7 +2488,6 @@ var OfflineApps = {
 function Tab(aURI, aParams) {
   this._id = null;
   this._browser = null;
-  this._notification = null;
   this._state = null;
   this._listener = null;
   this._loading = false;
@@ -2488,28 +2509,12 @@ Tab.prototype = {
     return this._browser;
   },
 
-  get notification() {
-    return this._notification;
-  },
-
   get chromeTab() {
     return this._chromeTab;
   },
 
   get metadata() {
     return this._metadata || kDefaultMetadata;
-  },
-
-  get inputHandler() {
-    if (!this._notification)
-      return null;
-    return this._notification.inputHandler;
-  },
-  
-  get overlay() {
-    if (!this._notification)
-      return null;
-    return this._notification.overlay;    
   },
 
   /** Update browser styles when the viewport metadata changes. */
@@ -2628,10 +2633,6 @@ Tab.prototype = {
   _createBrowser: function _createBrowser(aURI, aInsertBefore) {
     if (this._browser)
       throw "Browser already exists";
- 
-    // Create a notification box around the browser
-    let notification = this._notification = document.createElement("notificationbox");
-    notification.classList.add("inputHandler");
 
     // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
@@ -2645,8 +2646,7 @@ Tab.prototype = {
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 
     // Append the browser to the document, which should start the page load
-    notification.appendChild(browser);
-    Elements.browsers.insertBefore(notification, aInsertBefore);
+    Elements.browsers.insertBefore(browser, aInsertBefore);
 
     // stop about:blank from loading
     browser.stop();
@@ -2669,17 +2669,15 @@ Tab.prototype = {
 
   _destroyBrowser: function _destroyBrowser() {
     if (this._browser) {
-      let notification = this._notification;
       let browser = this._browser;
       browser.removeProgressListener(this._listener);
       browser.messageManager.sendAsyncMessage("Browser:Blur", {});
 
-      this._notification = null;
       this._browser = null;
       this._listener = null;
       this._loading = false;
 
-      Elements.browsers.removeChild(notification);
+      Elements.browsers.removeChild(browser);
     }
   },
 
@@ -2766,31 +2764,6 @@ Tab.prototype = {
 
     this._thumbnailWindowId = browser.contentWindowId;
     this._chromeTab.updateThumbnail(browser, browser.contentWindowWidth, browser.contentWindowHeight);
-  },
-
-  set active(aActive) {
-    if (!this._browser)
-      return;
-
-    let notification = this._notification;
-    let browser = this._browser;
-
-    if (aActive) {
-      browser.setAttribute("type", "content-primary");
-      Elements.browsers.selectedPanel = notification;
-      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
-      document.getElementById("tabs").selectedTab = this._chromeTab;
-    }
-    else {
-      browser.setAttribute("type", "content");
-      browser.messageManager.sendAsyncMessage("Browser:Blur", {});
-    }
-  },
-
-  get active() {
-    if (!this._browser)
-      return false;
-    return this._browser.getAttribute("type") == "content-primary";
   },
 
   toString: function() {

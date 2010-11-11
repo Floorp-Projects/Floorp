@@ -8,41 +8,7 @@
 <bindings
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xbl="http://www.mozilla.org/xbl"
-    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml">
-
-  <binding id="stacked-notificationbox" extends="chrome://global/content/bindings/notification.xml#notificationbox">
-    <content>
-      <xul:stack xbl:inherits="hidden=notificationshidden">
-        <xul:spacer/>
-        <children includes="notification"/>
-      </xul:stack>
-      <xul:stack flex="1">
-        <children/>
-        <html:canvas anonid="content-overlay"/>
-        <html:div flex="1" class="input-overlay" anonid="input-overlay"/>
-      </xul:stack>
-    </content>
-    <implementation>
-      <property name="inputHandler">
-        <getter>
-          return document.getAnonymousElementByAttribute(this, "anonid", "input-overlay");
-        </getter>
-      </property>
-
-      <property name="overlay">
-        <getter>
-          return document.getAnonymousElementByAttribute(this, "anonid", "content-overlay");
-        </getter>
-      </property>
-
-      <property name="customDragger">
-        <getter>
-          return this.parentNode.customDragger;
-        </getter>
-      </property>
-    </implementation>
-  </binding>
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="notification" extends="chrome://global/content/bindings/notification.xml#notification">
     <resources>
@@ -68,14 +34,27 @@
     </content>
 
     <implementation implements="nsIDOMEventListener">
+      <constructor>
+        <![CDATA[
+          this._chromeTab = Browser.selectedTab.chromeTab;
+          document.addEventListener("TabSelect", this, true);
+          document.addEventListener("TabClose", this, true);
+        ]]>
+      </constructor>
+
       // We need to override the close method here, otherwise the destructor
       // is not called on removeChild (see bug 230086)
       <method name="close">
         <body>
           <![CDATA[
             var control = this.control;
-            if (control)
+            if (control) {
+              document.removeEventListener("TabClose", this, true);
+              document.removeEventListener("TabSelect", this, true);
               control.removeNotification(this);
+            } else {
+              this.hidden = true;
+            }
             
             // Fire an event when closing a notification
             let event = document.createEvent("Events");
@@ -84,10 +63,32 @@
           ]]>
         </body>
       </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            switch(aEvent.type) {
+              case "TabSelect":
+                if (this._chromeTab == aEvent.target)
+                  this.hidden = false;
+                else
+                  this.hidden = true;
+                break;
+
+              case "TabClose":
+                if (this._chromeTab == aEvent.target)
+                  this.close();
+                break;
+            }
+          ]]>
+        </body>
+      </method>      
     </implementation>
   </binding>
 
   <binding id="geo-notification" extends="chrome://browser/content/notification.xml#notification">
+
     <resources>
       <stylesheet src="chrome://browser/skin/notification.css"/>
     </resources>
