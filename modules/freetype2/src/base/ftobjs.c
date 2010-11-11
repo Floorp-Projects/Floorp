@@ -142,7 +142,7 @@
     if ( !args )
       return FT_Err_Invalid_Argument;
 
-    memory   = library->memory;
+    memory = library->memory;
 
     if ( FT_NEW( stream ) )
       goto Exit;
@@ -1574,6 +1574,7 @@
       FT_TRACE3(( "POST fragment[%d]: offsets=0x%08x, rlen=0x%08x, flags=0x%04x\n",
                    i, offsets[i], rlen, flags ));
 
+      /* postpone the check of rlen longer than buffer until FT_Stream_Read() */
       if ( ( flags >> 8 ) == 0 )        /* Comment, should not be loaded */
         continue;
 
@@ -1612,6 +1613,10 @@
         pfb_data[pfb_pos++] = 0;
         pfb_data[pfb_pos++] = 0;
       }
+
+      error = FT_Err_Cannot_Open_Resource;
+      if ( pfb_pos > pfb_len || pfb_pos + rlen > pfb_len )
+        goto Exit2;
 
       error = FT_Stream_Read( stream, (FT_Byte *)pfb_data + pfb_pos, rlen );
       if ( error )
@@ -1960,9 +1965,9 @@
     FT_Error     error;
     FT_Driver    driver;
     FT_Memory    memory;
-    FT_Stream    stream = 0;
-    FT_Face      face = 0;
-    FT_ListNode  node = 0;
+    FT_Stream    stream = NULL;
+    FT_Face      face   = NULL;
+    FT_ListNode  node   = NULL;
     FT_Bool      external_stream;
     FT_Module*   cur;
     FT_Module*   limit;
@@ -2186,6 +2191,8 @@
 
       internal->transform_delta.x = 0;
       internal->transform_delta.y = 0;
+
+      internal->refcount = 1;
     }
 
     if ( aface )
@@ -2274,6 +2281,17 @@
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_Error )
+  FT_Reference_Face( FT_Face  face )
+  {
+    face->internal->refcount++;
+
+    return FT_Err_Ok;
+  }
+
+
+  /* documentation is in freetype.h */
+
+  FT_EXPORT_DEF( FT_Error )
   FT_Done_Face( FT_Face  face )
   {
     FT_Error     error;
@@ -2285,22 +2303,29 @@
     error = FT_Err_Invalid_Face_Handle;
     if ( face && face->driver )
     {
-      driver = face->driver;
-      memory = driver->root.memory;
-
-      /* find face in driver's list */
-      node = FT_List_Find( &driver->faces_list, face );
-      if ( node )
-      {
-        /* remove face object from the driver's list */
-        FT_List_Remove( &driver->faces_list, node );
-        FT_FREE( node );
-
-        /* now destroy the object proper */
-        destroy_face( memory, face, driver );
+      face->internal->refcount--;
+      if ( face->internal->refcount > 0 )
         error = FT_Err_Ok;
+      else
+      {
+        driver = face->driver;
+        memory = driver->root.memory;
+
+        /* find face in driver's list */
+        node = FT_List_Find( &driver->faces_list, face );
+        if ( node )
+        {
+          /* remove face object from the driver's list */
+          FT_List_Remove( &driver->faces_list, node );
+          FT_FREE( node );
+
+          /* now destroy the object proper */
+          destroy_face( memory, face, driver );
+          error = FT_Err_Ok;
+        }
       }
     }
+
     return error;
   }
 
@@ -4265,10 +4290,21 @@
   /* documentation is in ftmodapi.h */
 
   FT_EXPORT_DEF( FT_Error )
+  FT_Reference_Library( FT_Library  library )
+  {
+    library->refcount++;
+
+    return FT_Err_Ok;
+  }
+
+
+  /* documentation is in ftmodapi.h */
+
+  FT_EXPORT_DEF( FT_Error )
   FT_New_Library( FT_Memory    memory,
                   FT_Library  *alibrary )
   {
-    FT_Library  library = 0;
+    FT_Library  library = NULL;
     FT_Error    error;
 
 
@@ -4303,6 +4339,8 @@
     library->version_major = FREETYPE_MAJOR;
     library->version_minor = FREETYPE_MINOR;
     library->version_patch = FREETYPE_PATCH;
+
+    library->refcount = 1;
 
     /* That's ok now */
     *alibrary = library;
@@ -4360,40 +4398,64 @@
     if ( !library )
       return FT_Err_Invalid_Library_Handle;
 
+    library->refcount--;
+    if ( library->refcount > 0 )
+      goto Exit;
+
     memory = library->memory;
 
     /* Discard client-data */
     if ( library->generic.finalizer )
       library->generic.finalizer( library );
 
-    /* Close all faces in the library.  If we don't do
-     * this, we can have some subtle memory leaks.
+    /*
+     * Close all faces in the library.  If we don't do this, we can have
+     * some subtle memory leaks.
+     *
      * Example:
      *
      *  - the cff font driver uses the pshinter module in cff_size_done
      *  - if the pshinter module is destroyed before the cff font driver,
      *    opened FT_Face objects managed by the driver are not properly
      *    destroyed, resulting in a memory leak
+     *
+     * Some faces are dependent on other faces, like Type42 faces that
+     * depend on TrueType faces synthesized internally.
+     *
+     * The order of drivers should be specified in driver_name[].
      */
     {
-      FT_UInt  n;
+      FT_UInt      m, n;
+      const char*  driver_name[] = { "type42", NULL };
 
 
-      for ( n = 0; n < library->num_modules; n++ )
+      for ( m = 0;
+            m < sizeof ( driver_name ) / sizeof ( driver_name[0] );
+            m++ )
       {
-        FT_Module  module = library->modules[n];
-        FT_List    faces;
-
-
-        if ( ( module->clazz->module_flags & FT_MODULE_FONT_DRIVER ) == 0 )
-          continue;
-
-        faces = &FT_DRIVER(module)->faces_list;
-        while ( faces->head )
+        for ( n = 0; n < library->num_modules; n++ )
         {
-          FT_Done_Face( FT_FACE( faces->head->data ) );
-          if ( faces->head )
-            FT_TRACE0(( "FT_Done_Library: failed to free some faces\n" ));
+          FT_Module    module      = library->modules[n];
+          const char*  module_name = module->clazz->module_name;
+          FT_List      faces;
+
+
+          if ( driver_name[m]                                &&
+               ft_strcmp( module_name, driver_name[m] ) != 0 )
+            continue;
+
+          if ( ( module->clazz->module_flags & FT_MODULE_FONT_DRIVER ) == 0 )
+            continue;
+
+          FT_TRACE7(( "FT_Done_Library: close faces for %s\n", module_name ));
+
+          faces = &FT_DRIVER( module )->faces_list;
+          while ( faces->head )
+          {
+            FT_Done_Face( FT_FACE( faces->head->data ) );
+            if ( faces->head )
+              FT_TRACE0(( "FT_Done_Library: failed to free some faces\n" ));
+          }
         }
       }
     }
@@ -4435,6 +4497,8 @@
 #endif
 
     FT_FREE( library );
+
+  Exit:
     return FT_Err_Ok;
   }
 
