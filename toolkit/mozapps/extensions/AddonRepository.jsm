@@ -1190,7 +1190,7 @@ var AddonDatabase = {
       this.connection = Services.storage.openUnsharedDatabase(dbfile);
     } catch (e) {
       this.initialized = false;
-      ERROR("Failed to open database: " + e);
+      ERROR("Failed to open database", e);
       if (aSecondAttempt || dbMissing) {
         this.databaseOk = false;
         throw e;
@@ -1741,7 +1741,7 @@ var AddonDatabase = {
       this.connection.schemaVersion = DB_SCHEMA;
       this.connection.commitTransaction();
     } catch (e) {
-      ERROR("Failed to create database schema");
+      ERROR("Failed to create database schema", e);
       this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
       this.connection.rollbackTransaction();
       throw e;
