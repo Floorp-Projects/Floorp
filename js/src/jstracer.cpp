@@ -6885,6 +6885,38 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     state.innermost = innermost;
 }
 
+static jsbytecode *
+GetLoopBottom(JSContext *cx, jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_TRACE || *pc == JSOP_NOTRACE);
+    JSScript *script = cx->fp()->script();
+    jssrcnote *sn = js_GetSrcNote(script, pc);
+    if (!sn)
+        return NULL;
+    return pc + js_GetSrcNoteOffset(sn, 0);
+}
+
+JS_ALWAYS_INLINE void
+TraceRecorder::assertInsideLoop()
+{
+#ifdef DEBUG
+    /* Asserts at callDepth == 0 will catch problems at the call op. */
+    if (callDepth > 0)
+        return;
+
+    jsbytecode *pc = cx->regs->fp->hasImacropc() ? cx->regs->fp->imacropc() : cx->regs->pc;
+    jsbytecode *beg = (jsbytecode *)tree->ip;
+    jsbytecode *end = GetLoopBottom(cx, beg);
+
+    /*
+     * In some cases (continue in a while loop), we jump to the goto
+     * immediately preceeding a loop (the one that jumps to the loop
+     * condition).
+     */
+    JS_ASSERT(pc >= beg - JSOP_GOTO_LENGTH && pc <= end);
+#endif
+}
+
 JS_REQUIRES_STACK MonitorResult
 RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
@@ -6896,6 +6928,7 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
 
     /* Is the recorder currently active? */
     if (tm->recorder) {
+        tm->recorder->assertInsideLoop();
         jsbytecode* pc = cx->regs->pc;
         if (pc == tm->recorder->tree->ip) {
             tm->recorder->closeLoop();
@@ -6904,7 +6937,6 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
             JS_ASSERT((r == MONITOR_RECORDING) == (TRACE_RECORDER(cx) != NULL));
             if (r == MONITOR_RECORDING || r == MONITOR_ERROR)
                 return r;
-
 
             /*
              * recordLoopEdge will invoke an inner tree if we have a matching
@@ -7102,6 +7134,7 @@ TraceRecorder::monitorRecording(JSOp op)
 {
     TraceMonitor &localtm = JS_TRACE_MONITOR(cx);
     debug_only_stmt( JSContext *localcx = cx; )
+    assertInsideLoop();
 
     /* Process needFlush requests now. */
     if (localtm.needFlush) {
@@ -10286,7 +10319,9 @@ TraceRecorder::record_JSOP_GOTO()
      */
     jssrcnote* sn = js_GetSrcNote(cx->fp()->script(), cx->regs->pc);
 
-    if (sn && (SN_TYPE(sn) == SRC_BREAK || SN_TYPE(sn) == SRC_CONT2LABEL)) {
+    if (sn &&
+        (SN_TYPE(sn) == SRC_BREAK || SN_TYPE(sn) == SRC_CONT2LABEL ||
+         SN_TYPE(sn) == SRC_BREAK2LABEL)) {
         AUDIT(breakLoopExits);
         return endLoop();
     }
@@ -16308,12 +16343,7 @@ static const uintN MAX_PROFILE_OPS = 4096;
 static jsbytecode *
 GetLoopBottom(JSContext *cx)
 {
-    jsbytecode* pc = cx->regs->pc;
-    JSScript *script = cx->fp()->script();
-    jssrcnote *sn = js_GetSrcNote(script, pc);
-    if (!sn)
-        return NULL;
-    return pc + js_GetSrcNoteOffset(sn, 0);
+    return GetLoopBottom(cx, cx->regs->pc);
 }
 
 static LoopProfile *
