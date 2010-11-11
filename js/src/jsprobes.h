@@ -50,7 +50,7 @@ class Probes {
     static const char *FunctionClassname(const JSFunction *fun);
     static const char *ScriptFilename(JSScript *script);
     static int FunctionLineNumber(JSContext *cx, const JSFunction *fun);
-    static const char *FunctionName(JSContext *cx, const JSFunction *fun);
+    static const char *FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString *bytes);
 
     static void enterJSFunImpl(JSContext *cx, JSFunction *fun, JSScript *script);
     static void handleFunctionReturn(JSContext *cx, JSFunction *fun, JSScript *script);

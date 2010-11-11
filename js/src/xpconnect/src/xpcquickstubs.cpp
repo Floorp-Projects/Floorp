@@ -561,9 +561,10 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
         format = "";
     }
 
+    JSAutoByteString memberNameBytes;
     if (!memberName) {
         memberName = JSID_IS_STRING(memberId)
-                     ? JS_GetStringBytes(JSID_TO_STRING(memberId))
+                     ? memberNameBytes.encode(cx, JSID_TO_STRING(memberId))
                      : "unknown";
     }
     if(nsXPCException::NameAndFormatForNSResult(rv, &name, nsnull)
@@ -633,9 +634,10 @@ ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
 
+    JSAutoByteString memberNameBytes;
     if (!memberName) {
         memberName = JSID_IS_STRING(memberId)
-                     ? JS_GetStringBytes(JSID_TO_STRING(memberId))
+                     ? memberNameBytes.encode(cx, JSID_TO_STRING(memberId))
                      : "unknown";
     }
     sz = JS_smprintf("%s arg %u [%s.%s]",
@@ -770,9 +772,14 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
         *pval = STRING_TO_JSVAL(s);  // Root the new string.
     }
 
-    const char *bytes = JS_GetStringBytes(s);
-    size_t len = s->length();
-    new(mBuf) implementation_type(bytes, len);
+    JSAutoByteString bytes(cx, s);
+    if(!bytes)
+    {
+        mValid = JS_FALSE;
+        return;
+    }
+
+    new(mBuf) implementation_type(bytes.ptr(), strlen(bytes.ptr()));
     mValid = JS_TRUE;
 }
 
@@ -1013,28 +1020,25 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
 }
 
 JSBool
-xpc_qsJsvalToCharStr(JSContext *cx, jsval v, jsval *pval, char **pstr)
+xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
     JSString *str;
 
+    JS_ASSERT(!bytes->ptr());
     if(JSVAL_IS_STRING(v))
     {
         str = JSVAL_TO_STRING(v);
     }
     else if(JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))
     {
-        *pstr = NULL;
-        return JS_TRUE;
+        return true;
     }
     else
     {
         if(!(str = JS_ValueToString(cx, v)))
-            return JS_FALSE;
-        *pval = STRING_TO_JSVAL(str);  // Root the new string.
+            return false;
     }
-
-    *pstr = JS_GetStringBytes(str);
-    return JS_TRUE;
+    return !!bytes->encode(cx, str);
 }
 
 JSBool
