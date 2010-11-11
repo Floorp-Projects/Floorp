@@ -51,6 +51,7 @@
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
+let Cr = Components.results;
 
 function getBrowser() {
   return Browser.selectedBrowser;
