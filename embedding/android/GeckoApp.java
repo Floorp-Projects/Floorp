@@ -131,76 +131,9 @@ abstract public class GeckoApp
                            new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT,
                                                         FrameLayout.LayoutParams.FILL_PARENT));
 
-        boolean useLaunchButton = false;
-
-        String intentAction = getIntent().getAction();
-        if (intentAction != null && intentAction.equals("org.mozilla.gecko.DEBUG"))
-            useLaunchButton = true;
-
         setContentView(mainLayout,
                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
                                                   ViewGroup.LayoutParams.FILL_PARENT));
-
-        if (!GeckoAppShell.sGeckoRunning) {
-            checkAndLaunchUpdate();
-
-            try {
-                BufferedReader reader =
-                    new BufferedReader(new FileReader("/proc/cpuinfo"));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    int index = line.indexOf("Processor");
-                    if (index == -1)
-                        continue;
-
-                    int version = 5;
-                    if (line.indexOf("(v8l)") != -1)
-                        version = 8;
-                    if (line.indexOf("(v7l)") != -1)
-                        version = 7;
-                    if (line.indexOf("(v6l)") != -1)
-                        version = 6;
-
-                    if (version < getMinCPUVersion()) {
-                        showErrorDialog(
-                            getString(R.string.incompatable_cpu_error));
-                        return;
-                    }
-                    else {
-                        break;
-                    }
-                }
-                
-            } catch (Exception ex) {
-                // Not much we can do here, just continue assuming we're okay
-                Log.i("GeckoApp", "exception: " + ex);
-            }
-
-            if (!useLaunchButton)
-                mProgressDialog = 
-                    ProgressDialog.show(GeckoApp.this, "",
-                                        getString(R.string.splash_screen_label),
-                                        true);
-            // Load our JNI libs; we need to do this before launch() because
-            // setInitialSize will be called even before Gecko is actually up
-            // and running.
-            GeckoAppShell.loadGeckoLibs(getApplication().getPackageResourcePath());
-
-            if (useLaunchButton) {
-                final Button b = new Button(this);
-                b.setText("Launch"); // don't need to localize
-                b.setOnClickListener(new Button.OnClickListener() {
-                        public void onClick (View v) {
-                            // hide the button so we can't be launched again
-                            mainLayout.removeView(b);
-                            launch();
-                        }
-                    });
-                mainLayout.addView(b, 300, 200);
-            } else {
-                launch();
-            }
-        }
     }
 
     @Override
@@ -281,6 +214,73 @@ abstract public class GeckoApp
     {
         Log.i("GeckoApp", "start");
         super.onStart();
+
+        boolean useLaunchButton = false;
+
+        String intentAction = getIntent().getAction();
+        if (intentAction != null && intentAction.equals("org.mozilla.gecko.DEBUG"))
+            useLaunchButton = true;
+
+        if (!GeckoAppShell.sGeckoRunning) {
+            checkAndLaunchUpdate();
+
+            try {
+                BufferedReader reader =
+                    new BufferedReader(new FileReader("/proc/cpuinfo"));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    int index = line.indexOf("Processor");
+                    if (index == -1)
+                        continue;
+
+                    int version = 5;
+                    if (line.indexOf("(v8l)") != -1)
+                        version = 8;
+                    if (line.indexOf("(v7l)") != -1)
+                        version = 7;
+                    if (line.indexOf("(v6l)") != -1)
+                        version = 6;
+
+                    if (version < getMinCPUVersion()) {
+                        showErrorDialog(
+                            getString(R.string.incompatable_cpu_error));
+                        return;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                
+            } catch (Exception ex) {
+                // Not much we can do here, just continue assuming we're okay
+                Log.i("GeckoApp", "exception: " + ex);
+            }
+
+            if (!useLaunchButton)
+                mProgressDialog = 
+                    ProgressDialog.show(GeckoApp.this, "",
+                                        getString(R.string.splash_screen_label),
+                                        true);
+            // Load our JNI libs; we need to do this before launch() because
+            // setInitialSize will be called even before Gecko is actually up
+            // and running.
+            GeckoAppShell.loadGeckoLibs(getApplication().getPackageResourcePath());
+
+            if (useLaunchButton) {
+                final Button b = new Button(this);
+                b.setText("Launch"); // don't need to localize
+                b.setOnClickListener(new Button.OnClickListener() {
+                        public void onClick (View v) {
+                            // hide the button so we can't be launched again
+                            mainLayout.removeView(b);
+                            launch();
+                        }
+                    });
+                mainLayout.addView(b, 300, 200);
+            } else {
+                launch();
+            }
+        }
     }
 
     @Override
