@@ -1300,34 +1300,96 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     return metrics;
 }
 
+#define MAX_SHAPING_LENGTH  32760 // slightly less than 32K, trying to avoid
+                                  // over-stressing platform shapers
+
+#define BACKTRACK_LIMIT  1024 // If we can't find a space or a cluster start
+                              // within 1K chars, just chop arbitrarily.
+                              // Limiting backtrack here avoids pathological
+                              // behavior on long runs with no whitespace.
+
 PRBool
 gfxFont::InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aRunStart,
                      PRUint32 aRunLength,
-                     PRInt32 aRunScript)
+                     PRInt32 aRunScript,
+                     PRBool aPreferPlatformShaping)
 {
-    PRBool ok = PR_FALSE;
+    PRBool ok;
 
-    if (mHarfBuzzShaper) {
-        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
-            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
-            ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
-                                              aRunStart, aRunLength, aRunScript);
-        }
-    }
+    do {
+        // Because various shaping backends struggle with very long runs,
+        // we look for appropriate break locations (preferring whitespace),
+        // and shape sub-runs of no more than 32K characters at a time.
+        // See bug 606714 (CoreText), and similar Uniscribe issues.
+        // This loop always executes at least once, and "processes" up to
+        // MAX_RUN_LENGTH_FOR_SHAPING characters, updating aRunStart and
+        // aRunLength accordingly. It terminates when the entire run has
+        // been processed, or when shaping fails.
 
-    if (!ok) {
-        if (!mPlatformShaper) {
-            CreatePlatformShaper();
-            NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
+        PRUint32 thisRunLength;
+        ok = PR_FALSE;
+
+        if (aRunLength <= MAX_SHAPING_LENGTH) {
+            thisRunLength = aRunLength;
+        } else {
+            // We're splitting this font run because it's very long
+            PRUint32 offset = aRunStart + MAX_SHAPING_LENGTH;
+            PRUint32 clusterStart = 0;
+            while (offset > aRunStart + MAX_SHAPING_LENGTH - BACKTRACK_LIMIT) {
+                if (aTextRun->IsClusterStart(offset)) {
+                    if (!clusterStart) {
+                        clusterStart = offset;
+                    }
+                    if (aString[offset] == ' ' || aString[offset - 1] == ' ') {
+                        break;
+                    }
+                }
+                --offset;
+            }
+            
+            if (offset > MAX_SHAPING_LENGTH - BACKTRACK_LIMIT) {
+                // we found a space, so break the run there
+                thisRunLength = offset - aRunStart;
+            } else if (clusterStart != 0) {
+                // didn't find a space, but we found a cluster start
+                thisRunLength = clusterStart - aRunStart;
+            } else {
+                // otherwise we'll simply break at MAX_SHAPING_LENGTH chars,
+                // which may interfere with shaping behavior (but in practice
+                // only pathological cases will lack ANY whitespace or cluster
+                // boundaries, so we don't really care; it won't affect any
+                // "real" text)
+                thisRunLength = MAX_SHAPING_LENGTH;
+            }
         }
-        if (mPlatformShaper) {
-            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
-                                              aRunStart, aRunLength, aRunScript);
+
+        if (mHarfBuzzShaper && !aPreferPlatformShaping) {
+            if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+                gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+                ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                                  aRunStart, thisRunLength,
+                                                  aRunScript);
+            }
         }
-    }
+
+        if (!ok) {
+            if (!mPlatformShaper) {
+                CreatePlatformShaper();
+                NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
+            }
+            if (mPlatformShaper) {
+                ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                                  aRunStart, thisRunLength,
+                                                  aRunScript);
+            }
+        }
+        
+        aRunStart += thisRunLength;
+        aRunLength -= thisRunLength;
+    } while (ok && aRunLength > 0);
 
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
     return ok;
