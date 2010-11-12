@@ -330,6 +330,7 @@ public:
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
                             const nsIntSize& aSize,
+                            GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
                             GLContext* aContext);
 
@@ -449,6 +450,7 @@ class TextureImageWGL : public BasicTextureImage
     friend already_AddRefed<TextureImage>
     GLContextWGL::CreateBasicTextureImage(GLuint,
                                           const nsIntSize&,
+                                          GLenum,
                                           TextureImage::ContentType,
                                           GLContext*);
 
@@ -483,9 +485,10 @@ protected:
 private:
     TextureImageWGL(GLuint aTexture,
                     const nsIntSize& aSize,
+                    GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aContentType, aContext)
+        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
     {}
 
     gfxIntSize mUpdateSize;
@@ -495,11 +498,12 @@ private:
 already_AddRefed<TextureImage>
 GLContextWGL::CreateBasicTextureImage(GLuint aTexture,
                                       const nsIntSize& aSize,
+                                      GLenum aWrapMode,
                                       TextureImage::ContentType aContentType,
                                       GLContext* aContext)
 {
-    nsRefPtr<TextureImageWGL> teximage(
-        new TextureImageWGL(aTexture, aSize, aContentType, aContext));
+    nsRefPtr<TextureImageWGL> teximage
+        (new TextureImageWGL(aTexture, aSize, aWrapMode, aContentType, aContext));
     return teximage.forget();
 }
 

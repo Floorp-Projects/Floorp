@@ -50,6 +50,25 @@ namespace layers {
 using gl::GLContext;
 using gl::TextureImage;
 
+// BindAndDrawQuadWithTextureRect can work with either GL_REPEAT (preferred)
+// or GL_CLAMP_TO_EDGE textures.  We select based on whether REPEAT is
+// valid for non-power-of-two textures -- if we have NPOT support we use it,
+// otherwise we stick with CLAMP_TO_EDGE and decompose.
+static already_AddRefed<TextureImage>
+CreateClampOrRepeatTextureImage(GLContext *aGl,
+                                const nsIntSize& aSize,
+                                TextureImage::ContentType aContentType)
+{
+  GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
+  if (aGl->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
+      aGl->IsExtensionSupported(GLContext::OES_texture_npot))
+  {
+    wrapMode = LOCAL_GL_REPEAT;
+  }
+
+  return aGl->CreateTextureImage(aSize, aContentType, wrapMode);
+}
+
 // |aTexCoordRect| is the rectangle from the texture that we want to
 // draw using the given program.  The program already has a necessary
 // offset and scale, so the geometry that needs to be drawn is a unit
@@ -58,10 +77,11 @@ using gl::TextureImage;
 // |aTexSize| is the actual size of the texture, as it can be larger
 // than the rectangle given by |aTexCoordRect|.
 static void
-BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
+BindAndDrawQuadWithTextureRect(GLContext* aGl,
+                               LayerProgram *aProg,
                                const nsIntRect& aTexCoordRect,
                                const nsIntSize& aTexSize,
-                               GLContext* aGl)
+                               GLenum aWrapMode)
 {
   GLuint vertAttribIndex =
     aProg->AttribLocation(LayerProgram::VertexAttrib);
@@ -81,7 +101,18 @@ BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
   // (which is required for the REPEAT wrap mode).
 
   GLContext::RectTriangles rects;
-  GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, aTexSize, rects);
+
+  if (aWrapMode == LOCAL_GL_REPEAT) {
+    rects.addRect(/* dest rectangle */
+                  0.0f, 0.0f, 1.0f, 1.0f,
+                  /* tex coords */
+                  aTexCoordRect.x / GLfloat(aTexSize.width),
+                  aTexCoordRect.y / GLfloat(aTexSize.height),
+                  aTexCoordRect.XMost() / GLfloat(aTexSize.width),
+                  aTexCoordRect.YMost() / GLfloat(aTexSize.height));
+  } else {
+    GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, aTexSize, rects);
+  }
 
   aGl->fVertexAttribPointer(vertAttribIndex, 2,
                             LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
@@ -187,7 +218,9 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     sqr.RoundOut();
     nsIntRect scaledQuadRect(sqr.pos.x, sqr.pos.y, sqr.size.width, sqr.size.height);
 
-    BindAndDrawQuadWithTextureRect(program, scaledQuadRect, mTexImage->GetSize(), gl());
+    BindAndDrawQuadWithTextureRect(gl(), program, scaledQuadRect,
+                                   mTexImage->GetSize(),
+                                   mTexImage->GetWrapMode());
     DEBUG_GL_ERROR_CHECK(gl());
   }
 }
@@ -222,7 +255,7 @@ public:
   {
     NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
-    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_CLAMP_TO_EDGE);
+    mTexImage = CreateClampOrRepeatTextureImage(gl(), aSize, aType);
     return mTexImage ? mTexImage->GetBackingSurface() : nsnull;
   }
 
@@ -352,8 +385,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
         // We can't do a real self-copy because the buffer is rotated.
         // So allocate a new buffer for the destination.
         destBufferRect = visibleBounds;
-        destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
-                                              LOCAL_GL_CLAMP_TO_EDGE);
+        destBuffer = CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
         DEBUG_GL_ERROR_CHECK(gl());
         if (!destBuffer)
           return result;
@@ -371,8 +403,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
   } else {
     // The buffer's not big enough, so allocate a new one
     destBufferRect = visibleBounds;
-    destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
-                                          LOCAL_GL_CLAMP_TO_EDGE);
+    destBuffer = CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
     DEBUG_GL_ERROR_CHECK(gl());
     if (!destBuffer)
       return result;
@@ -401,8 +432,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
       } else {
         // can't blit, just draw everything
         destBufferRect = visibleBounds;
-        destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
-                                              LOCAL_GL_CLAMP_TO_EDGE);
+        destBuffer = CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
       }
     }
 
@@ -567,7 +597,7 @@ public:
   {
     NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
-    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_CLAMP_TO_EDGE);
+    mTexImage = CreateClampOrRepeatTextureImage(gl(), aSize, aType);
   }
 
   void Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
