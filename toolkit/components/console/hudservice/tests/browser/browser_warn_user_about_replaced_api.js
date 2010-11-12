@@ -21,7 +21,6 @@
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
  *  Mihai Șucan <mihai.sucan@gmail.com>
- *  Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,7 +65,9 @@ function testWarning()
   const successMsg = "Found the warning message";
   const errMsg = "Could not find the warning message about the replaced API";
 
-  outputNode = HUDService.hudWeakReferences[hudId].get().outputNode;
+  var display = HUDService.getDisplayByURISpec(content.location.href);
+  var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
   testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
 
   finishTest();
