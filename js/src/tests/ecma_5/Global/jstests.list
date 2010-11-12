@@ -5,3 +5,4 @@ script eval-02.js
 script eval-inside-with-is-direct.js
 script parenthesized-eval-is-direct.js
 script eval-native-callback-is-indirect.js
+script direct-eval-but-not.js

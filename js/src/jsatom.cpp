@@ -506,7 +506,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
          * compartment lock.
          */
         if (!needNewString && str->isFlat()) {
-            str->flatClearMutable();
+            str->flatClearExtensible();
             key = str;
             atoms.add(p, StringToInitialAtomEntry(key));
         } else {
@@ -635,7 +635,7 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
             fputs("<uninitialized>", fp);
         } else {
             JSString *key = AtomEntryToKey(entry);
-            js_FileEscapedString(fp, key, '"');
+            FileEscapedString(fp, key, '"');
             uintN flags = AtomEntryFlags(entry);
             if (flags != 0) {
                 fputs((flags & (ATOM_PINNED | ATOM_INTERNED))

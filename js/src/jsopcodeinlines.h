@@ -13,12 +13,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is the Mozilla SpiderMonkey JaegerMonkey implementation
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ *   Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2002-2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -39,13 +38,20 @@
 
 #include "jsautooplen.h"
 
+namespace js {
+
+/* 
+ * Warning: this does not skip JSOP_RESETBASE* or JSOP_INDEXBASE* ops, so it is
+ * useful only when checking for optimization opportunities.
+ */
 JS_ALWAYS_INLINE jsbytecode *
-js_AdvanceOverBlockchain(jsbytecode *pc)
+AdvanceOverBlockchainOp(jsbytecode *pc)
 {
     if (*pc == JSOP_NULLBLOCKCHAIN)
         return pc + JSOP_NULLBLOCKCHAIN_LENGTH;
-    else if (*pc == JSOP_BLOCKCHAIN)
+    if (*pc == JSOP_BLOCKCHAIN)
         return pc + JSOP_BLOCKCHAIN_LENGTH;
-    else
-        return pc;
+    return pc;
+}
+
 }

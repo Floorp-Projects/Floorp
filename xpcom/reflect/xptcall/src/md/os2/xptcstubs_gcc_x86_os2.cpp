@@ -99,12 +99,8 @@ PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
 }
 } // extern "C"
 
-#if defined(__declspec)
 #define SYMBOL_EXPORT(sym) \
     ".stabs \"" sym ",0=" sym ",code\", 0x6c,0,0,-42\n\t"
-#else
-#define SYMBOL_EXPORT(sym)
-#endif 
 
 #define STUB_ENTRY(n) \
 asm(".text\n\t" \

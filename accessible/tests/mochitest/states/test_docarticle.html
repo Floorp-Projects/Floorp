@@ -17,7 +17,7 @@
 
   <script type="application/javascript">
     function doTest()
-    {      
+    {
       var docAcc = getAccessible(document, [nsIAccessibleDocument]);
       if (docAcc) {
         testStates(docAcc, STATE_READONLY);
@@ -27,6 +27,7 @@
         document.designMode = "on";
 
         testStates(docAcc, 0, EXT_STATE_EDITABLE);
+        testStates("article", 0, EXT_STATE_EDITABLE);
         testStates("article", 0, EXT_STATE_EDITABLE);
         testStates("editable_article", 0, EXT_STATE_EDITABLE);
   

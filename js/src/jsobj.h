@@ -175,10 +175,10 @@ typedef Vector<PropDesc, 1> PropDescArray;
 } /* namespace js */
 
 struct JSObjectMap {
-    static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
-
     uint32 shape;       /* shape identifier */
     uint32 slotSpan;    /* one more than maximum live slot number */
+
+    static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
 
     explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
     JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
@@ -208,12 +208,18 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
                   js::PropertyOp getter, js::PropertyOp setter, uintN attrs);
 
 extern JSBool
-js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, js::Value *vp);
+
+inline JSBool
+js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp)
+{
+    return js_GetProperty(cx, obj, obj, id, vp);
+}
 
 namespace js {
 
 extern JSBool
-GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, Value def, Value *vp);
+GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, Value *vp);
 
 } /* namespace js */
 
@@ -412,6 +418,7 @@ struct JSObject : js::gc::Cell {
 
     bool isDelegate() const     { return !!(flags & DELEGATE); }
     void setDelegate()          { flags |= DELEGATE; }
+    void clearDelegate()        { flags &= ~DELEGATE; }
 
     bool isBoundFunction() const { return !!(flags & BOUND_FUNCTION); }
 
@@ -430,7 +437,7 @@ struct JSObject : js::gc::Cell {
      */
     bool branded()              { return !!(flags & BRANDED); }
 
-    bool brand(JSContext *cx, uint32 slot, js::Value v);
+    bool brand(JSContext *cx);
     bool unbrand(JSContext *cx);
 
     bool generic()              { return !!(flags & GENERIC); }
@@ -826,6 +833,7 @@ struct JSObject : js::gc::Cell {
     inline void setArgsCallee(const js::Value &callee);
 
     inline const js::Value &getArgsElement(uint32 i) const;
+    inline js::Value *getArgsElements() const;
     inline js::Value *addressOfArgsElement(uint32 i);
     inline void setArgsElement(uint32 i, const js::Value &v);
 
@@ -1092,9 +1100,13 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
     }
 
-    JSBool getProperty(JSContext *cx, jsid id, js::Value *vp) {
+    JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp) {
         js::PropertyIdOp op = getOps()->getProperty;
-        return (op ? op : js_GetProperty)(cx, this, id, vp);
+        return (op ? op : (js::PropertyIdOp)js_GetProperty)(cx, this, receiver, id, vp);
+    }
+
+    JSBool getProperty(JSContext *cx, jsid id, js::Value *vp) {
+        return getProperty(cx, this, id, vp);
     }
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
@@ -1113,7 +1125,7 @@ struct JSObject : js::gc::Cell {
     }
 
     JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict) {
-        js::StrictPropertyIdOp op = getOps()->deleteProperty;
+        js::DeleteIdOp op = getOps()->deleteProperty;
         return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
     }
 
@@ -1599,8 +1611,9 @@ extern JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, js::Value *vp);
 
 extern bool
-js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, jsid id, uint32 getHow,
-                              js::Value *vp, const js::Shape **shapeOut, JSObject **holderOut);
+js_GetPropertyHelperWithShape(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
+                              uint32 getHow, js::Value *vp,
+                              const js::Shape **shapeOut, JSObject **holderOut);
 
 extern JSBool
 js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
@@ -1631,7 +1644,14 @@ js_SetNativeAttributes(JSContext *cx, JSObject *obj, js::Shape *shape,
 
 namespace js {
 
-extern JSBool
+/*
+ * If obj has a data property methodid which is a function object for the given
+ * native, return that function object. Otherwise, return NULL.
+ */
+extern JSObject *
+HasNativeMethod(JSObject *obj, jsid methodid, Native native);
+
+extern bool
 DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
 
 extern JSBool

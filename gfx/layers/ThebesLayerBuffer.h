@@ -182,6 +182,14 @@ protected:
     return tmp.forget();
   }
 
+  /**
+   * Get a context at the specified resolution for updating |aBounds|,
+   * which must be contained within a single quadrant.
+   */
+  already_AddRefed<gfxContext>
+  GetContextForQuadrantUpdate(const nsIntRect& aBounds,
+                              float aXResolution, float aYResolution);
+
 private:
   PRBool BufferSizeOkFor(const nsIntSize& aSize)
   {

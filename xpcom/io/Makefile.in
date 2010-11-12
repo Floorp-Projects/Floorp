@@ -94,7 +94,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS		+= nsLocalFileWin.cpp
+CPPSRCS		+= nsLocalFileWin.cpp nsMediaCacheRemover.cpp
 else
 CPPSRCS		+= nsLocalFileUnix.cpp
 endif # windows

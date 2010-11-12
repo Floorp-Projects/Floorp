@@ -60,7 +60,6 @@
 #include "nsIComponentManager.h"
 #include "nsHTMLParts.h"
 #include "nsLinebreakConverter.h"
-#include "nsILinkHandler.h"
 #include "nsIHTMLDocument.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -77,6 +76,8 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsLayoutErrors.h"
+
+namespace dom = mozilla::dom;
 
 nsIFrame*
 NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -196,7 +197,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsCOMPtr<nsINodeInfo> hrInfo;
   hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML);
 
-  NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo.forget(), PR_FALSE);
+  NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo.forget(),
+                    dom::NOT_FROM_PARSER);
   if (!mPreHr || !aElements.AppendElement(mPreHr))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -215,7 +217,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   inputInfo = nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_XHTML);
 
   NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo.forget(),
-                    PR_FALSE);
+                    dom::NOT_FROM_PARSER);
   if (!mInputContent)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -231,7 +233,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // Create an hr
   hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML);
-  NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo.forget(), PR_FALSE);
+  NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo.forget(),
+                    dom::NOT_FROM_PARSER);
   if (!mPostHr || !aElements.AppendElement(mPostHr))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -347,8 +350,6 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
   // End ProcessAsURLEncoded
 
   // make the url string
-  nsILinkHandler *handler = aPresContext->GetLinkHandler();
-
   nsAutoString href;
 
   // Get the document.
@@ -426,10 +427,9 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
                      flatDocCharset.get(), baseURI);
   if (NS_FAILED(result)) return result;
 
-  // Now pass on absolute url to the click handler
-  if (handler) {
-    handler->OnLinkClick(mContent, uri, nsnull);
-  }
+  // Now pretend we're triggering a link
+  nsContentUtils::TriggerLink(mContent, aPresContext, uri,
+                              EmptyString(), PR_TRUE, PR_TRUE);
   return result;
 }
 

@@ -85,3 +85,66 @@ notification[type="critical"] .messageImage {
   box-shadow: 0 0 2px 1px -moz-mac-focusring,
               0 0 0 2px -moz-mac-focusring inset;
 }
+
+/* Popup notification */
+
+.popup-notification-description {
+  margin-bottom: 10px;
+  -moz-margin-start: 5px;
+}
+
+.popup-notification-menubutton[type="menu-button"] {
+  -moz-appearance: none;
+}
+
+.popup-notification-menubutton > .button-menubutton-button,
+.popup-notification-menubutton > .button-menubutton-dropmarker {
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0,0,0,.5);
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.65);
+  background: -moz-linear-gradient(rgba(110,110,110,.9), rgba(70,70,70,.9) 49%,
+                                   rgba(50,50,50,.9) 51%, rgba(40,40,40,.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2),
+              inset 0 0 1px rgba(255,255,255,.1),
+              0 1px 0 rgba(255,255,255,.1);
+  background-clip: padding-box;
+  background-origin: padding-box;
+}
+
+.popup-notification-menubutton > .button-menubutton-button {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 5px;
+  -moz-border-end: 1px solid rgba(0,0,0,.65);
+}
+
+.popup-notification-menubutton > .button-menubutton-dropmarker {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 8px;
+  -moz-margin-start: -1px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-white.png");
+}
+
+.popup-notification-menubutton > .button-menubutton-button:-moz-locale-dir(ltr),
+.popup-notification-menubutton > .button-menubutton-dropmarker:-moz-locale-dir(rtl) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.popup-notification-menubutton > .button-menubutton-button:-moz-locale-dir(rtl),
+.popup-notification-menubutton > .button-menubutton-dropmarker:-moz-locale-dir(ltr) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.popup-notification-menubutton > .button-menubutton-button:hover:active,
+.popup-notification-menubutton[open="true"] > .button-menubutton-dropmarker {
+  background: -moz-linear-gradient(rgba(40,40,40,.9), rgba(70,70,70,.9));
+  box-shadow: inset 0 0 3px rgba(0,0,0,.2),
+              inset 0 1px 7px rgba(0,0,0,.4),
+              0 1px 0 rgba(255,255,255,.1);
+}

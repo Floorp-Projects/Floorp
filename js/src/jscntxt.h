@@ -702,12 +702,6 @@ class StackSpace
     friend class AllFramesIter;
     StackSegment *getCurrentSegment() const { return currentSegment; }
 
-    /*
-     * Allocate nvals on the top of the stack, report error on failure.
-     * N.B. the caller must ensure |from == firstUnused()|.
-     */
-    inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
-
 #ifdef XP_WIN
     /* Commit more memory from the reserved stack space. */
     JS_FRIEND_API(bool) bumpCommit(Value *from, ptrdiff_t nvals) const;
@@ -752,9 +746,6 @@ class StackSpace
      * TraceNativeStorage as a conservative upper bound.
      */
     inline bool ensureEnoughSpaceToEnterTrace();
-
-    /* See stubs::HitStackQuota. */
-    inline bool bumpCommitEnd(Value *from, uintN nslots);
 
     /* +1 for slow native's stack frame. */
     static const ptrdiff_t MAX_TRACE_SPACE_VALS =
@@ -834,6 +825,12 @@ class StackSpace
      * if fully committed or if 'limit' exceeds 'base' + STACK_QUOTA.
      */
     bool bumpCommitAndLimit(JSStackFrame *base, Value *from, uintN nvals, Value **limit) const;
+
+    /*
+     * Allocate nvals on the top of the stack, report error on failure.
+     * N.B. the caller must ensure |from >= firstUnused()|.
+     */
+    inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
@@ -1810,7 +1807,6 @@ OptionsSameVersionFlags(uint32 self, uint32 other)
 namespace VersionFlags {
 static const uint32 MASK =        0x0FFF; /* see JSVersion in jspubtd.h */
 static const uint32 HAS_XML =     0x1000; /* flag induced by XML option */
-static const uint32 ANONFUNFIX =  0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
 }
 
 static inline JSVersion
@@ -1832,12 +1828,6 @@ VersionShouldParseXML(JSVersion version)
     return VersionHasXML(version) || VersionNumber(version) >= JSVERSION_1_6;
 }
 
-static inline bool
-VersionHasAnonFunFix(JSVersion version)
-{
-    return !!(version & VersionFlags::ANONFUNFIX);
-}
-
 static inline void
 VersionSetXML(JSVersion *version, bool enable)
 {
@@ -1845,15 +1835,6 @@ VersionSetXML(JSVersion *version, bool enable)
         *version = JSVersion(uint32(*version) | VersionFlags::HAS_XML);
     else
         *version = JSVersion(uint32(*version) & ~VersionFlags::HAS_XML);
-}
-
-static inline void
-VersionSetAnonFunFix(JSVersion *version, bool enable)
-{
-    if (enable)
-        *version = JSVersion(uint32(*version) | VersionFlags::ANONFUNFIX);
-    else
-        *version = JSVersion(uint32(*version) & ~VersionFlags::ANONFUNFIX);
 }
 
 static inline JSVersion
@@ -2196,7 +2177,7 @@ struct JSContext
 
     void doFunctionCallback(const JSFunction *fun,
                             const JSScript *scr,
-                            JSBool entering) const
+                            int entering) const
     {
         if (functionCallback)
             functionCallback(fun, scr, this, entering);

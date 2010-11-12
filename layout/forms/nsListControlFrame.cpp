@@ -469,25 +469,6 @@ GetNumberOfOptionsRecursive(nsIContent* aContent)
   return optionCount;
 }
 
-static nscoord
-GetOptGroupLabelsHeight(nsIContent*    aContent,
-                        nscoord        aRowHeight)
-{
-  nscoord height = 0;
-  const PRUint32 childCount = aContent ? aContent->GetChildCount() : 0;
-  for (PRUint32 index = 0; index < childCount; ++index) {
-    nsIContent* child = aContent->GetChildAt(index);
-    if (::IsOptGroup(child)) {
-      PRUint32 numOptions = ::GetNumberOfOptionsRecursive(child);
-      nscoord optionsHeight = aRowHeight * numOptions;
-      nsIFrame* frame = child->GetPrimaryFrame();
-      nscoord totalHeight = frame ? frame->GetSize().height : 0;
-      height += NS_MAX(0, totalHeight - optionsHeight);
-    }
-  }
-  return height;
-}
-
 //-----------------------------------------------------------------
 // Main Reflow for ListBox/Dropdown
 //-----------------------------------------------------------------
@@ -1914,40 +1895,15 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
 {
   NS_PRECONDITION(!IsInDropDownMode(),
                   "Shouldn't be in dropdown mode when we call this");
-  
+
   mNumDisplayRows = 1;
   GetSizeAttribute(&mNumDisplayRows);
 
-  // Extra height to tack on to aHeightOfARow * mNumDisplayRows
-  nscoord extraHeight = 0;
-  
   if (mNumDisplayRows < 1) {
-    // When SIZE=0 or unspecified we constrain the height to
-    // [2..kMaxDropDownRows] rows.  We add in the height of optgroup labels
-    // (within the constraint above), bug 300474.
-    nscoord labelHeight = ::GetOptGroupLabelsHeight(mContent, aHeightOfARow);
-
-    if (GetMultiple()) {
-      if (aNumberOfOptions < 2) {
-        // Add in 1 aHeightOfARow also when aNumberOfOptions == 0
-        mNumDisplayRows = 1;
-        extraHeight = NS_MAX(aHeightOfARow, labelHeight);
-      }
-      else if (aNumberOfOptions * aHeightOfARow + labelHeight >
-               kMaxDropDownRows * aHeightOfARow) {
-        mNumDisplayRows = kMaxDropDownRows;
-      } else {
-        mNumDisplayRows = aNumberOfOptions;
-        extraHeight = labelHeight;
-      }
-    }
-    else {
-      NS_NOTREACHED("Shouldn't hit this case -- we should a be a combobox if "
-                    "we have no size set and no multiple set!");
-    }
+    mNumDisplayRows = 4;
   }
 
-  return mNumDisplayRows * aHeightOfARow + extraHeight;
+  return mNumDisplayRows * aHeightOfARow;
 }
 
 //----------------------------------------------------------------------

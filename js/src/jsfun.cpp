@@ -2241,20 +2241,6 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-struct STATIC_SKIP_INFERENCE CopyNonHoleArgs
-{
-    CopyNonHoleArgs(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
-    JSObject *aobj;
-    Value *dst;
-    void operator()(uintN argi, Value *src) {
-        if (aobj->getArgsElement(argi).isMagic(JS_ARGS_HOLE))
-            dst->setUndefined();
-        else
-            *dst = *src;
-        ++dst;
-    }
-};
-
 /* ES5 15.3.4.3 */
 JSBool
 js_fun_apply(JSContext *cx, uintN argc, Value *vp)
@@ -2281,6 +2267,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     if (argc < 2 || vp[3].isNullOrUndefined())
         return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
+    /* N.B. Changes need to be propagated to stubs::SplatApplyArgs. */
+
     /* Step 3. */
     if (!vp[3].isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
@@ -2293,23 +2281,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
      */
     JSObject *aobj = &vp[3].toObject();
     jsuint length;
-    if (aobj->isArray()) {
-        length = aobj->getArrayLength();
-    } else if (aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
-        length = aobj->getArgsInitialLength();
-    } else {
-        Value &lenval = vp[0];
-        if (!aobj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), &lenval))
-            return false;
-
-        if (lenval.isInt32()) {
-            length = jsuint(lenval.toInt32()); /* jsuint cast does ToUint32 */
-        } else {
-            JS_STATIC_ASSERT(sizeof(jsuint) == sizeof(uint32_t));
-            if (!ValueToECMAUint32(cx, lenval, (uint32_t *)&length))
-                return false;
-        }
-    }
+    if (!js_GetLengthProperty(cx, aobj, &length))
+        return false;
 
     LeaveTrace(cx);
 
@@ -2325,32 +2298,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     args.thisv() = vp[2];
 
     /* Steps 7-8. */
-    if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
-        /*
-         * Two cases, two loops: note how in the case of an active stack frame
-         * backing aobj, even though we copy from fp->argv, we still must check
-         * aobj->getArgsElement(i) for a hole, to handle a delete on the
-         * corresponding arguments element. See args_delProperty.
-         */
-        JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate();
-        Value *argv = args.argv();
-        if (fp) {
-            JS_ASSERT(fp->numActualArgs() <= JS_ARGS_LENGTH_MAX);
-            fp->forEachCanonicalActualArg(CopyNonHoleArgs(aobj, argv));
-        } else {
-            for (uintN i = 0; i < n; i++) {
-                argv[i] = aobj->getArgsElement(i);
-                if (argv[i].isMagic(JS_ARGS_HOLE))
-                    argv[i].setUndefined();
-            }
-        }
-    } else {
-        Value *argv = args.argv();
-        for (uintN i = 0; i < n; i++) {
-            if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), &argv[i]))
-                return JS_FALSE;
-        }
-    }
+    if (!GetElements(cx, aobj, n, args.argv()))
+        return false;
 
     /* Step 9. */
     if (!Invoke(cx, args, 0))
@@ -2999,7 +2948,7 @@ js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun)
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
+js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
                   uintN nargs, uintN attrs,
                   JSTypeHandler handler, const char *fullName)
 {
@@ -3021,17 +2970,64 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
     } else {
         gsop = NULL;
     }
+
+    /*
+     * Historically, all objects have had a parent member as intrinsic scope
+     * chain link. We want to move away from this universal parent, but JS
+     * requires that function objects have something like parent (ES3 and ES5
+     * call it the [[Scope]] internal property), to bake a particular static
+     * scope environment into each function object.
+     *
+     * All function objects thus have parent, including all native functions.
+     * All native functions defined by the JS_DefineFunction* APIs are created
+     * via the call below to js_NewFunction, which passes obj as the parent
+     * parameter, and so binds fun's parent to obj using JSObject::setParent,
+     * under js_NewFunction (in JSObject::init, called from NewObject -- see
+     * jsobjinlines.h).
+     *
+     * But JSObject::setParent sets the DELEGATE object flag on its receiver,
+     * to mark the object as a proto or parent of another object. Such objects
+     * may intervene in property lookups and scope chain searches, so require
+     * special handling when caching lookup and search results (since such
+     * intervening objects can in general grow shadowing properties later).
+     *
+     * Thus using setParent prematurely flags certain objects, notably class
+     * prototypes, so that defining native methods on them, where the method's
+     * name (e.g., toString) is already bound on Object.prototype, triggers
+     * shadowingShapeChange events and gratuitous shape regeneration.
+     *
+     * To fix this longstanding bug, we set check whether obj is already a
+     * delegate, and if not, then if js_NewFunction flagged obj as a delegate,
+     * we clear the flag.
+     *
+     * We thus rely on the fact that native functions (including indirect eval)
+     * do not use the property cache or equivalent JIT techniques that require
+     * this bit to be set on their parent-linked scope chain objects.
+     *
+     * Note: we keep API compatibility by setting parent to obj for all native
+     * function objects, even if obj->getGlobal() would suffice. This should be
+     * revisited when parent is narrowed to exist only for function objects and
+     * possibly a few prehistoric scope objects (e.g. event targets).
+     *
+     * FIXME: bug 611190.
+     */
+    bool wasDelegate = obj->isDelegate();
+
     fun = js_NewFunction(cx, NULL, native, nargs,
                          attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO),
-                         obj, atom, handler, fullName);
+                         obj,
+                         JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL,
+                         handler, fullName);
     if (!fun)
         return NULL;
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectValue(*fun),
-                             gsop, gsop, attrs & ~JSFUN_FLAGS_MASK)) {
-        return NULL;
-    }
 
-    cx->addTypePropertyId(obj->getTypeObject(), ATOM_TO_JSID(atom), ObjectValue(*fun));
+    if (!wasDelegate && obj->isDelegate())
+        obj->clearDelegate();
+
+    if (!obj->defineProperty(cx, id, ObjectValue(*fun), gsop, gsop, attrs & ~JSFUN_FLAGS_MASK))
+        return NULL;
+
+    cx->addTypePropertyId(obj->getTypeObject(), id, ObjectValue(*fun));
     return fun;
 }
 

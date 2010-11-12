@@ -172,10 +172,10 @@ STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
-    JS_ASSERT(from == firstUnused());
+    JS_ASSERT(from >= firstUnused());
 #ifdef XP_WIN
     JS_ASSERT(from <= commitEnd);
-    if (JS_LIKELY(commitEnd - from >= nvals))
+    if (commitEnd - from >= nvals)
         goto success;
     if (end - from < nvals) {
         if (maybecx)
@@ -189,7 +189,7 @@ StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
     }
     goto success;
 #else
-    if (JS_LIKELY(end - from < nvals)) {
+    if (end - from < nvals) {
         if (maybecx)
             js_ReportOutOfScriptQuota(maybecx);
         return false;
@@ -248,7 +248,7 @@ StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag)
 
     Value *vp = start;
     Value *vpend = vp + nvals;
-    MakeValueRangeGCSafe(vp, vpend);
+    /* Don't need to MakeValueRangeGCSafe: the VM stack is conservatively marked. */
 
     /* Use invokeArgEnd to root [vp, vpend) until the frame is pushed. */
     ag->prevInvokeArgEnd = invokeArgEnd;
@@ -736,6 +736,21 @@ CallJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id,
 {
     assertSameCompartment(cx, obj, id, *vp);
     return op(cx, obj, id, vp);
+}
+
+inline bool
+CallSetter(JSContext *cx, JSObject *obj, jsid id, PropertyOp op, uintN attrs, uintN shortid,
+           js::Value *vp)
+{
+    if (attrs & JSPROP_SETTER)
+        return ExternalGetOrSet(cx, obj, id, CastAsObjectJsval(op), JSACC_WRITE, 1, vp, vp);
+
+    if (attrs & JSPROP_GETTER)
+        return js_ReportGetterOnlyAssignment(cx);
+
+    if (attrs & JSPROP_SHORTID)
+        id = INT_TO_JSID(shortid);
+    return CallJSPropertyOpSetter(cx, op, obj, id, vp);
 }
 
 }  /* namespace js */

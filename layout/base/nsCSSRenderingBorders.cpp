@@ -1014,15 +1014,19 @@ nsCSSBorderRenderer::DrawBorders()
   PRBool brBordersSame = AreBorderSideFinalStylesSame(SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT);
   PRBool allBordersSame = AreBorderSideFinalStylesSame(SIDE_BITS_ALL);
   if (allBordersSame &&
-      mCompositeColors[0] == NULL &&
-      (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
-       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
-       mBorderColors[0] == NS_RGBA(0,0,0,0)))
+      ((mCompositeColors[0] == NULL &&
+       (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
+        mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
+        mBorderColors[0] == NS_RGBA(0,0,0,0))) ||
+       (mCompositeColors[0] &&
+        (mCompositeColors[0]->mColor == NS_RGBA(0,0,0,0) &&
+         !mCompositeColors[0]->mNext))))
   {
     // All borders are the same style, and the style is either none or hidden, or the color
     // is transparent.
-    // This doesn't check if the composite colors happen to be all transparent, but that should
-    // happen very rarely in practice.
+    // This also checks if the first composite color is transparent, and there are
+    // no others. It doesn't check if there are subsequent transparent ones, because
+    // that would be very silly.
     return;
   }
 

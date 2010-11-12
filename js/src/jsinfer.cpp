@@ -2675,7 +2675,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_CALL:
       case JSOP_SETCALL:
       case JSOP_EVAL:
-      case JSOP_APPLY:
+      case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
       case JSOP_NEW: {
         /* Construct the base call information about this site. */
         unsigned argCount = GetUseCount(script, offset) - 2;

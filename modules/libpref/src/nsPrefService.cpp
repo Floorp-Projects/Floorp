@@ -144,7 +144,7 @@ nsresult nsPrefService::Init()
 #ifdef MOZ_IPC
   using mozilla::dom::ContentChild;
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    nsTArray<PrefTuple> array;
+    InfallibleTArray<PrefTuple> array;
     ContentChild::GetSingleton()->SendReadPrefsArray(&array);
 
     // Store the array
@@ -350,7 +350,7 @@ NS_IMETHODIMP nsPrefService::MirrorPreference(const nsACString& aPrefName,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrefService::MirrorPreferences(nsTArray<PrefTuple> *aArray)
+NS_IMETHODIMP nsPrefService::MirrorPreferences(nsTArray<PrefTuple, nsTArrayInfallibleAllocator> *aArray)
 {
   aArray->SetCapacity(PL_DHASH_TABLE_SIZE(&gHashTable));
 

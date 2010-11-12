@@ -68,10 +68,10 @@
 class QRect;
 class QWidget;
 
-using mozilla::ipc::SharedMemorySysV;
-
 class nsShmImage {
     NS_INLINE_DECL_REFCOUNTING(nsShmImage)
+
+    typedef mozilla::ipc::SharedMemorySysV SharedMemorySysV;
 
 public:
     typedef gfxASurface::gfxImageFormat Format;

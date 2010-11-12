@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -279,9 +279,9 @@ void scale1d_c
 
     (void) source_length;
 
-    // These asserts are needed if there are boundary issues...
-    //assert ( dest_scale > source_scale );
-    //assert ( (source_length-1) * dest_scale >= (dest_length-1) * source_scale );
+    /* These asserts are needed if there are boundary issues... */
+    /*assert ( dest_scale > source_scale );*/
+    /*assert ( (source_length-1) * dest_scale >= (dest_length-1) * source_scale );*/
 
     for (i = 0; i < dest_length * dest_step; i += dest_step)
     {
@@ -334,7 +334,7 @@ void scale1d_c
 static
 void Scale2D
 (
-    //const
+    /*const*/
     unsigned char *source,
     int source_pitch,
     unsigned int source_width,
@@ -352,7 +352,7 @@ void Scale2D
     unsigned int interlaced
 )
 {
-    //unsigned
+    /*unsigned*/
     int i, j, k;
     int bands;
     int dest_band_height;
@@ -370,7 +370,7 @@ void Scale2D
     int ratio_scalable = 1;
     int interpolation = 0;
 
-    unsigned char *source_base; // = (unsigned char *) ((source_pitch >= 0) ? source : (source + ((source_height-1) * source_pitch)));
+    unsigned char *source_base; /* = (unsigned char *) ((source_pitch >= 0) ? source : (source + ((source_height-1) * source_pitch))); */
     unsigned char *line_src;
 
 
@@ -386,24 +386,24 @@ void Scale2D
         source_base += offset;
     }
 
-    // find out the ratio for each direction
+    /* find out the ratio for each direction */
     switch (hratio * 10 / hscale)
     {
     case 8:
-        // 4-5 Scale in Width direction
+        /* 4-5 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_5_4_scale;
         break;
     case 6:
-        // 3-5 Scale in Width direction
+        /* 3-5 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_5_3_scale;
         break;
     case 5:
-        // 1-2 Scale in Width direction
+        /* 1-2 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_2_1_scale;
         break;
     default:
-        // The ratio is not acceptable now
-        // throw("The ratio is not acceptable for now!");
+        /* The ratio is not acceptable now */
+        /* throw("The ratio is not acceptable for now!"); */
         ratio_scalable = 0;
         break;
     }
@@ -411,30 +411,30 @@ void Scale2D
     switch (vratio * 10 / vscale)
     {
     case 8:
-        // 4-5 Scale in vertical direction
+        /* 4-5 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_5_4_scale;
         source_band_height  = 5;
         dest_band_height    = 4;
         break;
     case 6:
-        // 3-5 Scale in vertical direction
+        /* 3-5 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_5_3_scale;
         source_band_height  = 5;
         dest_band_height    = 3;
         break;
     case 5:
-        // 1-2 Scale in vertical direction
+        /* 1-2 Scale in vertical direction */
 
         if (interlaced)
         {
-            //if the content is interlaced, point sampling is used
+            /* if the content is interlaced, point sampling is used */
             vert_band_scale     = vp8_vertical_band_2_1_scale;
         }
         else
         {
 
             interpolation = 1;
-            //if the content is progressive, interplo
+            /* if the content is progressive, interplo */
             vert_band_scale     = vp8_vertical_band_2_1_scale_i;
 
         }
@@ -443,8 +443,8 @@ void Scale2D
         dest_band_height    = 1;
         break;
     default:
-        // The ratio is not acceptable now
-        // throw("The ratio is not acceptable for now!");
+        /* The ratio is not acceptable now */
+        /* throw("The ratio is not acceptable for now!"); */
         ratio_scalable = 0;
         break;
     }
@@ -453,7 +453,7 @@ void Scale2D
     {
         if (source_height == dest_height)
         {
-            // for each band of the image
+            /* for each band of the image */
             for (k = 0; k < (int)dest_height; k++)
             {
                 horiz_line_scale(source, source_width, dest, dest_width);
@@ -474,10 +474,10 @@ void Scale2D
 
         for (k = 0; k < (int)(dest_height + dest_band_height - 1) / dest_band_height; k++)
         {
-            // scale one band horizontally
+            /* scale one band horizontally */
             for (i = 0; i < source_band_height; i++)
             {
-                // Trap case where we could read off the base of the source buffer
+                /* Trap case where we could read off the base of the source buffer */
 
                 line_src = (unsigned char *)source + i * source_pitch;
 
@@ -488,13 +488,13 @@ void Scale2D
                                  temp_area + (i + 1)*dest_pitch, dest_width);
             }
 
-            // Vertical scaling is in place
+            /* Vertical scaling is in place */
             vert_band_scale(temp_area + dest_pitch, dest_pitch, dest, dest_pitch, dest_width);
 
             if (interpolation)
                 vpx_memcpy(temp_area, temp_area + source_band_height * dest_pitch, dest_width);
 
-            // Next band...
+            /* Next band... */
             source += (unsigned long) source_band_height  * source_pitch;
             dest   += (unsigned long) dest_band_height * dest_pitch;
         }
@@ -515,7 +515,7 @@ void Scale2D
 
     if (source_height == dest_height)
     {
-        // for each band of the image
+        /* for each band of the image */
         for (k = 0; k < (int)dest_height; k++)
         {
             Scale1Dh(source, 1, hscale, source_width + 1, dest, 1, hratio, dest_width);
@@ -537,15 +537,15 @@ void Scale2D
         dest_band_height   = source_band_height * vratio / vscale;
     }
 
-    // first row needs to be done so that we can stay one row ahead for vertical zoom
+    /* first row needs to be done so that we can stay one row ahead for vertical zoom */
     Scale1Dh(source, 1, hscale, source_width + 1, temp_area, 1, hratio, dest_width);
 
-    // for each band of the image
+    /* for each band of the image */
     bands = (dest_height + dest_band_height - 1) / dest_band_height;
 
     for (k = 0; k < bands; k++)
     {
-        // scale one band horizontally
+        /* scale one band horizontally */
         for (i = 1; i < source_band_height + 1; i++)
         {
             if (k * source_band_height + i < (int) source_height)
@@ -553,24 +553,24 @@ void Scale2D
                 Scale1Dh(source + i * source_pitch, 1, hscale, source_width + 1,
                          temp_area + i * dest_pitch, 1, hratio, dest_width);
             }
-            else  //  Duplicate the last row
+            else  /*  Duplicate the last row */
             {
-                // copy temp_area row 0 over from last row in the past
+                /* copy temp_area row 0 over from last row in the past */
                 duck_memcpy(temp_area + i * dest_pitch, temp_area + (i - 1)*dest_pitch, dest_pitch);
             }
         }
 
-        // scale one band vertically
+        /* scale one band vertically */
         for (j = 0; j < (int)dest_width; j++)
         {
             Scale1Dv(&temp_area[j], dest_pitch, vscale, source_band_height + 1,
                      &dest[j], dest_pitch, vratio, dest_band_height);
         }
 
-        // copy temp_area row 0 over from last row in the past
+        /* copy temp_area row 0 over from last row in the past */
         duck_memcpy(temp_area, temp_area + source_band_height * dest_pitch, dest_pitch);
 
-        // move to the next band
+        /* move to the next band */
         source += source_band_height * source_pitch;
         dest   += dest_band_height * dest_pitch;
     }
@@ -617,7 +617,7 @@ void vp8_scale_frame
     int dw = (hscale - 1 + src->y_width * hratio) / hscale;
     int dh = (vscale - 1 + src->y_height * vratio) / vscale;
 
-    // call our internal scaling routines!!
+    /* call our internal scaling routines!! */
     Scale2D((unsigned char *) src->y_buffer, src->y_stride, src->y_width, src->y_height,
             (unsigned char *) dst->y_buffer, dst->y_stride, dw, dh,
             temp_area, temp_height, hscale, hratio, vscale, vratio, interlaced);
@@ -696,13 +696,13 @@ int any_ratio_2d_scale
     unsigned int src_band_height  = 0;
     unsigned int dest_band_height = 0;
 
-    // suggested scale factors
+    /* suggested scale factors */
     int hs = si->HScale;
     int hr = si->HRatio;
     int vs = si->VScale;
     int vr = si->VRatio;
 
-    // assume the ratios are scalable instead of should be centered
+    /* assume the ratios are scalable instead of should be centered */
     int ratio_scalable = 1;
 
     const unsigned char *source_base = ((source_pitch >= 0) ? source : (source + ((source_height - 1) * source_pitch)));
@@ -714,37 +714,37 @@ int any_ratio_2d_scale
 
     (void) si;
 
-    // find out the ratio for each direction
+    /* find out the ratio for each direction */
     switch (hr * 30 / hs)
     {
     case 24:
-        // 4-5 Scale in Width direction
+        /* 4-5 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_4_5_scale;
         break;
     case 22:
-        // 3-4 Scale in Width direction
+        /* 3-4 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_3_4_scale;
         break;
 
     case 20:
-        // 4-5 Scale in Width direction
+        /* 4-5 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_2_3_scale;
         break;
     case 18:
-        // 3-5 Scale in Width direction
+        /* 3-5 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_3_5_scale;
         break;
     case 15:
-        // 1-2 Scale in Width direction
+        /* 1-2 Scale in Width direction */
         horiz_line_scale = vp8_horizontal_line_1_2_scale;
         break;
     case 30:
-        // no scale in Width direction
+        /* no scale in Width direction */
         horiz_line_scale = horizontal_line_copy;
         break;
     default:
-        // The ratio is not acceptable now
-        // throw("The ratio is not acceptable for now!");
+        /* The ratio is not acceptable now */
+        /* throw("The ratio is not acceptable for now!"); */
         ratio_scalable = 0;
         break;
     }
@@ -752,50 +752,50 @@ int any_ratio_2d_scale
     switch (vr * 30 / vs)
     {
     case 24:
-        // 4-5 Scale in vertical direction
+        /* 4-5 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_4_5_scale;
         last_vert_band_scale = vp8_last_vertical_band_4_5_scale;
         src_band_height     = 4;
         dest_band_height    = 5;
         break;
     case 22:
-        // 3-4 Scale in vertical direction
+        /* 3-4 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_3_4_scale;
         last_vert_band_scale = vp8_last_vertical_band_3_4_scale;
         src_band_height     = 3;
         dest_band_height    = 4;
         break;
     case 20:
-        // 2-3 Scale in vertical direction
+        /* 2-3 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_2_3_scale;
         last_vert_band_scale = vp8_last_vertical_band_2_3_scale;
         src_band_height     = 2;
         dest_band_height    = 3;
         break;
     case 18:
-        // 3-5 Scale in vertical direction
+        /* 3-5 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_3_5_scale;
         last_vert_band_scale = vp8_last_vertical_band_3_5_scale;
         src_band_height     = 3;
         dest_band_height    = 5;
         break;
     case 15:
-        // 1-2 Scale in vertical direction
+        /* 1-2 Scale in vertical direction */
         vert_band_scale     = vp8_vertical_band_1_2_scale;
         last_vert_band_scale = vp8_last_vertical_band_1_2_scale;
         src_band_height     = 1;
         dest_band_height    = 2;
         break;
     case 30:
-        // no scale in Width direction
+        /* no scale in Width direction */
         vert_band_scale     = null_scale;
         last_vert_band_scale = null_scale;
         src_band_height     = 4;
         dest_band_height    = 4;
         break;
     default:
-        // The ratio is not acceptable now
-        // throw("The ratio is not acceptable for now!");
+        /* The ratio is not acceptable now */
+        /* throw("The ratio is not acceptable for now!"); */
         ratio_scalable = 0;
         break;
     }
@@ -805,13 +805,13 @@ int any_ratio_2d_scale
 
     horiz_line_scale(source, source_width, dest, dest_width);
 
-    // except last band
+    /* except last band */
     for (k = 0; k < (dest_height + dest_band_height - 1) / dest_band_height - 1; k++)
     {
-        // scale one band horizontally
+        /* scale one band horizontally */
         for (i = 1; i < src_band_height; i++)
         {
-            // Trap case where we could read off the base of the source buffer
+            /* Trap case where we could read off the base of the source buffer */
             line_src = source + i * source_pitch;
 
             if (line_src < source_base)
@@ -821,8 +821,8 @@ int any_ratio_2d_scale
                              dest + i * dest_pitch, dest_width);
         }
 
-        // first line of next band
-        // Trap case where we could read off the base of the source buffer
+        /* first line of next band */
+        /* Trap case where we could read off the base of the source buffer */
         line_src = source + src_band_height * source_pitch;
 
         if (line_src < source_base)
@@ -832,18 +832,18 @@ int any_ratio_2d_scale
                          dest + dest_band_height * dest_pitch,
                          dest_width);
 
-        // Vertical scaling is in place
+        /* Vertical scaling is in place */
         vert_band_scale(dest, dest_pitch, dest_width);
 
-        // Next band...
+        /* Next band... */
         source += src_band_height  * source_pitch;
         dest   += dest_band_height * dest_pitch;
     }
 
-    // scale one band horizontally
+    /* scale one band horizontally */
     for (i = 1; i < src_band_height; i++)
     {
-        // Trap case where we could read off the base of the source buffer
+        /* Trap case where we could read off the base of the source buffer */
         line_src = source + i * source_pitch;
 
         if (line_src < source_base)
@@ -854,7 +854,7 @@ int any_ratio_2d_scale
                          dest_width);
     }
 
-    // Vertical scaling is in place
+    /* Vertical scaling is in place */
     last_vert_band_scale(dest, dest_pitch, dest_width);
 
     return ratio_scalable;
@@ -885,7 +885,7 @@ int any_ratio_frame_scale(SCALE_VARS *scale_vars, int YOffset, int UVOffset)
     int ew;
     int eh;
 
-    // suggested scale factors
+    /* suggested scale factors */
     int hs = scale_vars->HScale;
     int hr = scale_vars->HRatio;
     int vs = scale_vars->VScale;
@@ -968,11 +968,11 @@ center_image(YV12_BUFFER_CONFIG *src_yuv_config, YV12_BUFFER_CONFIG *dst_yuv_con
     unsigned char *src_data_pointer;
     unsigned char *dst_data_pointer;
 
-    // center values
+    /* center values */
     row_offset = (dst_yuv_config->y_height - src_yuv_config->y_height) / 2;
     col_offset = (dst_yuv_config->y_width - src_yuv_config->y_width) / 2;
 
-    // Y's
+    /* Y's */
     src_data_pointer = src_yuv_config->y_buffer;
     dst_data_pointer = (unsigned char *)dst_yuv_config->y_buffer + (row_offset * dst_yuv_config->y_stride) + col_offset;
 
@@ -986,7 +986,7 @@ center_image(YV12_BUFFER_CONFIG *src_yuv_config, YV12_BUFFER_CONFIG *dst_yuv_con
     row_offset /= 2;
     col_offset /= 2;
 
-    // U's
+    /* U's */
     src_data_pointer = src_yuv_config->u_buffer;
     dst_data_pointer = (unsigned char *)dst_yuv_config->u_buffer + (row_offset * dst_yuv_config->uv_stride) + col_offset;
 
@@ -997,7 +997,7 @@ center_image(YV12_BUFFER_CONFIG *src_yuv_config, YV12_BUFFER_CONFIG *dst_yuv_con
         src_data_pointer += src_yuv_config->uv_stride;
     }
 
-    // V's
+    /* V's */
     src_data_pointer = src_yuv_config->v_buffer;
     dst_data_pointer = (unsigned char *)dst_yuv_config->v_buffer + (row_offset * dst_yuv_config->uv_stride) + col_offset;
 
@@ -1040,8 +1040,8 @@ vp8_yv12_scale_or_center
     int VRatio
 )
 {
-//    if ( ppi->post_processing_level )
-    //      update_umvborder ( ppi, frame_buffer );
+    /*if ( ppi->post_processing_level )
+          update_umvborder ( ppi, frame_buffer );*/
 
 
     switch (scaling_mode)
@@ -1050,12 +1050,12 @@ vp8_yv12_scale_or_center
     case MAINTAIN_ASPECT_RATIO:
     {
         SCALE_VARS scale_vars;
-        // center values
+        /* center values */
 #if 1
         int row = (dst_yuv_config->y_height - expanded_frame_height) / 2;
         int col = (dst_yuv_config->y_width  - expanded_frame_width) / 2;
-//        int YOffset  = row * dst_yuv_config->y_width + col;
-//        int UVOffset = (row>>1) * dst_yuv_config->uv_width + (col>>1);
+        /*int YOffset  = row * dst_yuv_config->y_width + col;
+        int UVOffset = (row>>1) * dst_yuv_config->uv_width + (col>>1);*/
         int YOffset  = row * dst_yuv_config->y_stride + col;
         int UVOffset = (row >> 1) * dst_yuv_config->uv_stride + (col >> 1);
 #else
@@ -1074,7 +1074,7 @@ vp8_yv12_scale_or_center
         scale_vars.expanded_frame_width = expanded_frame_width;
         scale_vars.expanded_frame_height = expanded_frame_height;
 
-        // perform center and scale
+        /* perform center and scale */
         any_ratio_frame_scale(&scale_vars, YOffset, UVOffset);
 
         break;

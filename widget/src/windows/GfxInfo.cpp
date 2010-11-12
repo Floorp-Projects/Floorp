@@ -42,6 +42,8 @@
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
+#include "prenv.h"
+#include "prprf.h"
 
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
 #include "nsExceptionHandler.h"
@@ -274,6 +276,12 @@ GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
 {
+  const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
+  if (spoofedDriverVersionString) {
+    aAdapterDriverVersion.AssignASCII(spoofedDriverVersionString);
+    return NS_OK;
+  }
+
   aAdapterDriverVersion = mDriverVersion;
   return NS_OK;
 }
@@ -290,6 +298,13 @@ GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
+  const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_VENDOR_ID");
+  if (spoofedVendor &&
+      1 == PR_sscanf(spoofedVendor, "%x", aAdapterVendorID))
+  {
+      return NS_OK;
+  }
+
   nsAutoString vendor(mDeviceID);
   ToUpperCase(vendor);
   PRInt32 start = vendor.Find(NS_LITERAL_CSTRING("VEN_"));
@@ -306,6 +321,13 @@ GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
+  const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
+  if (spoofedDevice &&
+      1 == PR_sscanf(spoofedDevice, "%x", aAdapterDeviceID))
+  {
+      return NS_OK;
+  }
+
   nsAutoString device(mDeviceID);
   ToUpperCase(device);
   PRInt32 start = device.Find(NS_LITERAL_CSTRING("&DEV_"));
@@ -577,13 +599,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
-  if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
-      gfxWindowsPlatform::WindowsOSVersion() < gfxWindowsPlatform::kWindowsXP)
-  {
-    *aStatus = FEATURE_BLOCKED_OS_VERSION;
-    return NS_OK;
-  }
-
   PRUint32 adapterVendor = 0;
   PRUint32 adapterDeviceID = 0;
   nsAutoString adapterDriverVersionString;
@@ -598,14 +613,30 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
     return NS_ERROR_FAILURE;
   }
-
+  
   PRUint64 suggestedDriverVersion = 0;
+
+  PRInt32 windowsVersion = 0;
+  const char *spoofedWindowsVersion = PR_GetEnv("MOZ_GFX_SPOOF_WINDOWS_VERSION");
+  if (spoofedWindowsVersion) {
+    if (1 != PR_sscanf(spoofedWindowsVersion, "%x", &windowsVersion))
+      return NS_ERROR_FAILURE;
+  } else {
+    windowsVersion = gfxWindowsPlatform::WindowsOSVersion();
+  }
+
+  if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
+      windowsVersion < gfxWindowsPlatform::kWindowsXP)
+  {
+    *aStatus = FEATURE_BLOCKED_OS_VERSION;
+    return NS_OK;
+  }
 
   const GfxDriverInfo *info = &driverInfo[0];
   while (info->windowsVersion) {
 
     if (info->windowsVersion != allWindowsVersions &&
-        info->windowsVersion != gfxWindowsPlatform::WindowsOSVersion())
+        info->windowsVersion != windowsVersion)
     {
       info++;
       continue;

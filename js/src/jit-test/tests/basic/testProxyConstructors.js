@@ -1,3 +1,5 @@
+// |jit-test| error: ExitCleanly
+
 // proxies can return primitives
 assertEq(new (Proxy.createFunction({}, function(){}, function(){})), undefined);
 
@@ -7,3 +9,8 @@ new(wrap(x))
 // proxies can return the callee
 var x = Proxy.createFunction({}, function (q) { return q; });
 new x(x);
+
+// not an error
+new (Proxy.createFunction({}, "".indexOf));
+
+throw "ExitCleanly"

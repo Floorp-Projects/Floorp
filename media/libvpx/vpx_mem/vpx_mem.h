@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -26,15 +26,15 @@
 /* end - vpx_mem version info */
 
 #ifndef VPX_TRACK_MEM_USAGE
-# define VPX_TRACK_MEM_USAGE       0  //enable memory tracking/integrity checks
+# define VPX_TRACK_MEM_USAGE       0  /* enable memory tracking/integrity checks */
 #endif
 #ifndef VPX_CHECK_MEM_FUNCTIONS
-# define VPX_CHECK_MEM_FUNCTIONS   0  //enable basic safety checks in _memcpy,
-//_memset, and _memmove
+# define VPX_CHECK_MEM_FUNCTIONS   0  /* enable basic safety checks in _memcpy,
+                                         _memset, and _memmove */
 #endif
 #ifndef REPLACE_BUILTIN_FUNCTIONS
-# define REPLACE_BUILTIN_FUNCTIONS 0  //replace builtin functions with their
-//vpx_ equivalents
+# define REPLACE_BUILTIN_FUNCTIONS 0  /* replace builtin functions with their
+                                         vpx_ equivalents */
 #endif
 
 #include <stdlib.h>
@@ -74,7 +74,7 @@ extern "C" {
     void *vpx_memset(void *dest, int val, size_t length);
     void *vpx_memmove(void *dest, const void *src, size_t count);
 
-// special memory functions
+    /* special memory functions */
     void *vpx_mem_alloc(int id, size_t size, size_t align);
     void vpx_mem_free(int id, void *mem, size_t size);
 

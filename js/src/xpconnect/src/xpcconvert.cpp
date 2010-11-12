@@ -609,22 +609,15 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         break;
     case nsXPTType::T_CHAR   :
         {
-            char* bytes=nsnull;
-            JSString* str;
+            JSString* str = JS_ValueToString(cx, s);
 
-            if(!(str = JS_ValueToString(cx, s))||
-               !(bytes = JS_GetStringBytes(str)))
+            if(str)
             {
                 return JS_FALSE;
             }
-#ifdef DEBUG
-            const jschar* chars=nsnull;
-            if(nsnull!=(chars = JS_GetStringCharsZ(cx, str)))
-            {
-                NS_ASSERTION((! ILLEGAL_RANGE(chars[0])),"U+0080/U+0100 - U+FFFF data lost");
-            }
-#endif // DEBUG
-            *((char*)d) = bytes[0];
+            jschar ch = JS_GetStringLength(str) ? JS_GetStringChars(str)[0] : 0;
+            NS_ASSERTION(!ILLEGAL_RANGE(ch), "U+0080/U+0100 - U+FFFF data lost");
+            *((char*)d) = char(ch);
             break;
         }
     case nsXPTType::T_WCHAR  :
@@ -1336,7 +1329,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
     // If we're not creating security wrappers, we can return the
     // XPCWrappedNative as-is here.
-    flat = wrapper->GetFlatJSObject();
+    flat = wrapper->GetFlatJSObjectAndMark();
     jsval v = OBJECT_TO_JSVAL(flat);
     if(!XPCPerThreadData::IsMainThread(lccx.GetJSContext()) ||
        !allowNativeWrapper)

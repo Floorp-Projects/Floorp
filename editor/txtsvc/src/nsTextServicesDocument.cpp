@@ -1809,8 +1809,8 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
 
   LOCK_DOC(this);
 
-  PRInt32 nodeIndex, tcount;
-  PRBool hasEntry;
+  PRInt32 nodeIndex = 0;
+  PRBool hasEntry = PR_FALSE;
   OffsetEntry *entry;
 
   nsresult result = NodeHasOffsetEntry(&mOffsetTable, aChild, &hasEntry, &nodeIndex);
@@ -1844,7 +1844,7 @@ nsTextServicesDocument::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
     NS_ERROR("DeleteNode called for current iterator node."); 
   }
 
-  tcount = mOffsetTable.Length();
+  PRInt32 tcount = mOffsetTable.Length();
 
   while (nodeIndex < tcount)
   {
@@ -1924,8 +1924,10 @@ nsTextServicesDocument::DidJoinNodes(nsIDOMNode  *aLeftNode,
   // Note: The editor merges the contents of the left node into the
   //       contents of the right.
 
-  PRInt32 leftIndex, rightIndex;
-  PRBool leftHasEntry, rightHasEntry;
+  PRInt32 leftIndex = 0;
+  PRInt32 rightIndex = 0;
+  PRBool leftHasEntry = PR_FALSE;
+  PRBool rightHasEntry = PR_FALSE;
 
   result = NodeHasOffsetEntry(&mOffsetTable, aLeftNode, &leftHasEntry, &leftIndex);
 
@@ -3846,8 +3848,8 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   if (aWordEndOffset)
     *aWordEndOffset = 0;
 
-  PRInt32 entryIndex;
-  PRBool hasEntry;
+  PRInt32 entryIndex = 0;
+  PRBool hasEntry = PR_FALSE;
 
   // It's assumed that aNode is a text node. The first thing
   // we do is get it's index in the offset table so we can
