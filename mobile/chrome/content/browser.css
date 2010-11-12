@@ -239,4 +239,7 @@ arrowbox {
 .textbox-input-box[spellcheck="true"] {
   -moz-binding: url("chrome://browser/content/bindings.xml#input-box");
 }
+
+textbox {
+  -moz-binding: url("chrome://browser/content/bindings.xml#textbox");
 }
