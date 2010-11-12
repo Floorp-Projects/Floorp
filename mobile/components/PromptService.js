@@ -384,6 +384,11 @@ Prompt.prototype = {
 
   confirmEx: function confirmEx(aTitle, aText, aButtonFlags, aButton0,
                       aButton1, aButton2, aCheckMsg, aCheckState) {
+
+    if (gPromptService.inContentProcess) {
+      return gPromptService.callProxy("confirmEx", ['ConfirmEx'].concat(Array.prototype.slice.call(arguments, 0)));
+    }
+
     let numButtons = 0;
     let titles = [aButton0, aButton1, aButton2];
 
