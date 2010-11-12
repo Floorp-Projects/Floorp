@@ -157,11 +157,8 @@ Installer.prototype = {
           }, this);
         }
         break;
-      case AddonManager.STATE_CANCELLED:
-        // Just ignore cancelled downloads
-        break;
       default:
-        WARN("Download of " + install.sourceURI.spec + " in unexpected state " +
+        WARN("Download of " + install.sourceURI + " in unexpected state " +
              install.state);
       }
     }

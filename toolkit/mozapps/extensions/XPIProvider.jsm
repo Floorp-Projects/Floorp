@@ -5322,8 +5322,6 @@ AddonInstall.prototype = {
       this.badCertHandler.asyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, aCallback);
     else
       aCallback.onRedirectVerifyCallback(Cr.NS_OK);
-
-    this.channel = aNewChannel;
   },
 
   /**
