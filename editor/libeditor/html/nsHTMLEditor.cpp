@@ -3794,7 +3794,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 NS_IMETHODIMP nsHTMLEditor::DeleteNode(nsIDOMNode * aNode)
 {
   // do nothing if the node is read-only
-  if (!IsModifiableNode(aNode)) {
+  if (!IsModifiableNode(aNode) && !IsMozEditorBogusNode(aNode)) {
     return NS_ERROR_FAILURE;
   }
 
