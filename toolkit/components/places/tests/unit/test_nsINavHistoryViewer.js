@@ -74,6 +74,8 @@ var resultObserver = {
     this.removedNode = node;
   },
 
+  nodeAnnotationChanged: function() {},
+
   newTitle: "",
   nodeChangedByTitle: null,
   nodeTitleChanged: function(node, newTitle) {
@@ -116,6 +118,10 @@ var resultObserver = {
   sortingMode: null,
   sortingChanged: function(sortingMode) {
     this.sortingMode = sortingMode;
+  },
+  inBatchMode: false,
+  batching: function(aToggleMode) {
+    this.inBatchMode = aToggleMode;
   },
   result: null,
   reset: function() {
@@ -181,6 +187,15 @@ function run_test() {
   do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
   do_check_eq(resultObserver.invalidatedContainer, result.root);
 
+  // nsINavHistoryResultObserver.batching
+  do_check_false(resultObserver.inBatchMode);
+  histsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
+
   // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
@@ -241,6 +256,15 @@ function run_test() {
   result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
   do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
   do_check_eq(resultObserver.invalidatedContainer, result.root);
+
+  // nsINavHistoryResultObserver.batching
+  do_check_false(resultObserver.inBatchMode);
+  bmsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
 
   // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;
