@@ -73,32 +73,24 @@ BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
   // "pointer mode"
   aGl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 
-  // NB: quadVertices and texCoords vertices must match
-  GLfloat quadVertices[] = {
-    0.0f, 0.0f,                 // bottom left
-    1.0f, 0.0f,                 // bottom right
-    0.0f, 1.0f,                 // top left
-    1.0f, 1.0f                  // top right
-  };
+  // Given what we know about these textures and coordinates, we can
+  // compute fmod(t, 1.0f) to get the same texture coordinate out.  If
+  // the texCoordRect dimension is < 0 or > width/height, then we have
+  // wraparound that we need to deal with by drawing multiple quads,
+  // because we can't rely on full non-power-of-two texture support
+  // (which is required for the REPEAT wrap mode).
+
+  GLContext::RectTriangles rects;
+  GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, aTexSize, rects);
+
   aGl->fVertexAttribPointer(vertAttribIndex, 2,
                             LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                            quadVertices);
-  DEBUG_GL_ERROR_CHECK(aGl);
-
-  GLfloat xleft = GLfloat(aTexCoordRect.x) / GLfloat(aTexSize.width);
-  GLfloat ytop = GLfloat(aTexCoordRect.y) / GLfloat(aTexSize.height);
-  GLfloat w = GLfloat(aTexCoordRect.width) / GLfloat(aTexSize.width);
-  GLfloat h = GLfloat(aTexCoordRect.height) / GLfloat(aTexSize.height);
-  GLfloat texCoords[] = {
-    xleft,     ytop,
-    w + xleft, ytop,
-    xleft,     h + ytop,
-    w + xleft, h + ytop,
-  };
+                            rects.vertexCoords);
 
   aGl->fVertexAttribPointer(texCoordAttribIndex, 2,
                             LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
-                            texCoords);
+                            rects.texCoords);
+
   DEBUG_GL_ERROR_CHECK(aGl);
 
   {
@@ -106,7 +98,7 @@ BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
     {
       aGl->fEnableVertexAttribArray(vertAttribIndex);
 
-      aGl->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+      aGl->fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.numRects * 6);
       DEBUG_GL_ERROR_CHECK(aGl);
 
       aGl->fDisableVertexAttribArray(vertAttribIndex);
@@ -230,7 +222,7 @@ public:
   {
     NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
-    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_REPEAT);
+    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_CLAMP_TO_EDGE);
     return mTexImage ? mTexImage->GetBackingSurface() : nsnull;
   }
 
@@ -361,7 +353,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
         // So allocate a new buffer for the destination.
         destBufferRect = visibleBounds;
         destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
-                                              LOCAL_GL_REPEAT);
+                                              LOCAL_GL_CLAMP_TO_EDGE);
         DEBUG_GL_ERROR_CHECK(gl());
         if (!destBuffer)
           return result;
@@ -380,7 +372,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
     // The buffer's not big enough, so allocate a new one
     destBufferRect = visibleBounds;
     destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
-                                          LOCAL_GL_REPEAT);
+                                          LOCAL_GL_CLAMP_TO_EDGE);
     DEBUG_GL_ERROR_CHECK(gl());
     if (!destBuffer)
       return result;
@@ -410,7 +402,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
         // can't blit, just draw everything
         destBufferRect = visibleBounds;
         destBuffer = gl()->CreateTextureImage(visibleBounds.Size(), aContentType,
-                                              LOCAL_GL_REPEAT);
+                                              LOCAL_GL_CLAMP_TO_EDGE);
       }
     }
 
@@ -575,7 +567,7 @@ public:
   {
     NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
-    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_REPEAT);
+    mTexImage = gl()->CreateTextureImage(aSize, aType, LOCAL_GL_CLAMP_TO_EDGE);
   }
 
   void Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,

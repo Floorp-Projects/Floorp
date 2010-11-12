@@ -697,6 +697,37 @@ public:
     void BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
                           TextureImage *aDst, const nsIntRect& aDstRect);
 
+    /** Helper for DecomposeIntoNoRepeatTriangles
+     */
+    struct RectTriangles {
+        RectTriangles() : numRects(0) { }
+
+        void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
+                     GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1);
+
+        int numRects;
+        /* max is 4 rectangles, each made up of 2 triangles (3 2-coord vertices each) */
+        GLfloat vertexCoords[4*3*2*2];
+        GLfloat texCoords[4*3*2*2];
+    };
+
+    /**
+     * Decompose drawing the possibly-wrapped aTexCoordRect rectangle
+     * of a texture of aTexSize into one or more rectangles (represented
+     * as 2 triangles) and associated tex coordinates, such that
+     * we don't have to use the REPEAT wrap mode.
+     *
+     * The resulting triangle vertex coordinates will be in the space of
+     * (0.0, 0.0) to (1.0, 1.0) -- transform the coordinates appropriately
+     * if you need a different space.
+     *
+     * The resulting vertex coordinates should be drawn using GL_TRIANGLES,
+     * and rects.numRects * 3 * 6
+     */
+    static void DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
+                                               const nsIntSize& aTexSize,
+                                               RectTriangles& aRects);
+
     /**
      * Known GL extensions that can be queried by
      * IsExtensionSupported.  The results of this are cached, and as
