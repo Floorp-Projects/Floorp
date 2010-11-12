@@ -460,7 +460,7 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
  * according to history and bookmark system events. Register this observer on a
  * result using nsINavHistoryResult::addObserver.
  */
-[scriptable, uuid(d746da3c-f698-48bc-ad73-2d428b23b0c6)]
+[scriptable, uuid(9ea86387-6a30-4ee2-b70d-26fbb718902f)]
 interface nsINavHistoryResultObserver : nsISupports
 {
   /**
@@ -677,6 +677,17 @@ interface nsINavHistoryResultObserver : nsISupports
    * get called if the sorting changes to update everything.
    */
   void sortingChanged(in unsigned short sortingMode);
+
+  /**
+   * This is called to indicate that a batch operation is about to start or end.
+   * The observer could want to disable some events or updates during batches,
+   * since multiple operations are packed in a short time.
+   * For example treeviews could temporarily suppress select notifications.
+   *
+   * @param aToggleMode
+   *        true if a batch is starting, false if it's ending.
+   */
+  void batching(in boolean aToggleMode);
 
   /**
    * Called by the result when this observer is added.
