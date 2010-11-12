@@ -68,6 +68,7 @@ class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
 class nsIChannel;
+class nsIArray;
 class mozIStorageService;
 class mozIThirdPartyUtil;
 class ReadCookieDBListener;
@@ -267,12 +268,13 @@ class nsCookieService : public nsICookieService
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
-    void                          PurgeCookies(PRInt64 aCurrentTimeInUsec);
+    already_AddRefed<nsIArray>    PurgeCookies(PRInt64 aCurrentTimeInUsec);
     PRBool                        FindCookie(const nsCString& aBaseDomain, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
     static void                   FindStaleCookie(nsCookieEntry *aEntry, PRInt64 aCurrentTime, nsListIter &aIter);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);
     void                          NotifyPurged(nsICookie2* aCookie);
+    already_AddRefed<nsIArray>    CreatePurgeList(nsICookie2* aCookie);
 
   protected:
     // cached members.
