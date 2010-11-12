@@ -205,7 +205,7 @@ Drag.prototype = {
 
     var snapRadius = (Keys.meta ? 0 : Trenches.defaultRadius);
     if (rect.left < swb.left + snapRadius ) {
-      if (stationaryCorner.indexOf('right') > -1)
+      if (stationaryCorner.indexOf('right') > -1 && !assumeConstantSize)
         rect.width = rect.right - swb.left;
       rect.left = swb.left;
       update = true;
@@ -228,7 +228,7 @@ Drag.prototype = {
       delete snappedTrenches.left;
     }
     if (rect.top < swb.top + snapRadius) {
-      if (stationaryCorner.indexOf('bottom') > -1)
+      if (stationaryCorner.indexOf('bottom') > -1 && !assumeConstantSize)
         rect.height = rect.bottom - swb.top;
       rect.top = swb.top;
       update = true;
