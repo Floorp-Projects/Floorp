@@ -3182,7 +3182,8 @@ nsNavHistoryQueryResultNode::OnItemVisited(PRInt64 aItemId,
   // for bookmark queries, "all bookmark" observer should get OnItemVisited
   // but it is ignored.
   if (mLiveUpdate != QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
-    NS_WARNING("history observers should not get OnItemVisited, but should get OnVisit instead");
+    NS_WARN_IF_FALSE(mResult && (mResult->mIsAllBookmarksObserver || mResult->mIsBookmarkFolderObserver),
+                     "history observers should not get OnItemVisited, but should get OnVisit instead");
   return NS_OK;
 }
 
@@ -4370,11 +4371,12 @@ nsNavHistoryResult::AddHistoryObserver(nsNavHistoryQueryResultNode* aNode)
       history->AddObserver(this, PR_TRUE);
       mIsHistoryObserver = PR_TRUE;
   }
-  if (mHistoryObservers.IndexOf(aNode) != mHistoryObservers.NoIndex) {
-    NS_WARNING("Attempting to register as a history observer twice!");
-    return;
+  // Don't add duplicate observers.  In some case we don't unregister when
+  // children are cleared (see ClearChildren) and the next FillChildren call
+  // will try to add the observer again.
+  if (mHistoryObservers.IndexOf(aNode) == mHistoryObservers.NoIndex) {
+    mHistoryObservers.AppendElement(aNode);
   }
-  mHistoryObservers.AppendElement(aNode);
 }
 
 
@@ -4390,11 +4392,12 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
     bookmarks->AddObserver(this, PR_TRUE);
     mIsAllBookmarksObserver = PR_TRUE;
   }
-  if (mAllBookmarksObservers.IndexOf(aNode) != mAllBookmarksObservers.NoIndex) {
-    NS_WARNING("Attempting to register an all bookmarks observer twice!");
-    return;
+  // Don't add duplicate observers.  In some case we don't unregister when
+  // children are cleared (see ClearChildren) and the next FillChildren call
+  // will try to add the observer again.
+  if (mAllBookmarksObservers.IndexOf(aNode) == mAllBookmarksObservers.NoIndex) {
+    mAllBookmarksObservers.AppendElement(aNode);
   }
-  mAllBookmarksObservers.AppendElement(aNode);
 }
 
 
@@ -4411,13 +4414,13 @@ nsNavHistoryResult::AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNod
     bookmarks->AddObserver(this, PR_TRUE);
     mIsBookmarkFolderObserver = PR_TRUE;
   }
-
+  // Don't add duplicate observers.  In some case we don't unregister when
+  // children are cleared (see ClearChildren) and the next FillChildren call
+  // will try to add the observer again.
   FolderObserverList* list = BookmarkFolderObserversForId(aFolder, PR_TRUE);
-  if (list->IndexOf(aNode) != list->NoIndex) {
-    NS_NOTREACHED("Attempting to register as a folder observer twice!");
-    return;
+  if (list->IndexOf(aNode) == list->NoIndex) {
+    list->AppendElement(aNode);
   }
-  list->AppendElement(aNode);
 }
 
 

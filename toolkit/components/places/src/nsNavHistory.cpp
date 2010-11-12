@@ -3054,10 +3054,9 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   }
 
   // Create the result that will hold nodes.  Inject batching status into it.
-  bool batchInProgress = isBatching() || bookmarks->isBatching();
   nsRefPtr<nsNavHistoryResult> result;
   rv = nsNavHistoryResult::NewHistoryResult(aQueries, aQueryCount, options,
-                                            rootNode, batchInProgress,
+                                            rootNode, isBatching(),
                                             getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
 
