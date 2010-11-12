@@ -119,7 +119,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
     jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
     jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
-
+    jHideProgressDialog = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideProgressDialog", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -523,6 +523,16 @@ void
 AndroidBridge::SetFullScreen(PRBool aFullScreen)
 {
     mJNIEnv->CallStaticIntMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
+}
+
+void
+AndroidBridge::HideProgressDialogOnce()
+{
+    static bool once = false;
+    if (!once) {
+        mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
+        once = true;
+    }
 }
 
 void

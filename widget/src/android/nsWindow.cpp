@@ -883,6 +883,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
 
+    AndroidBridge::Bridge()->HideProgressDialogOnce();
+
     if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
         jobject bytebuf = sview.GetSoftwareDrawBuffer();
         if (!bytebuf) {
