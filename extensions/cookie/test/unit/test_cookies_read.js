@@ -29,7 +29,7 @@ function do_run_test() {
   // completed. We may not be able to open one later once asynchronous writing
   // begins.
   do_check_true(do_get_cookie_file(profile).exists());
-  let db = new CookieDatabaseConnection(profile, 4);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
 
   for (let i = 0; i < 3000; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");

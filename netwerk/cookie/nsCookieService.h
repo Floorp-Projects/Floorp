@@ -152,12 +152,19 @@ struct CookieDomainTuple
 // conveniently switch state when entering or exiting private browsing.
 struct DBState
 {
-  DBState() : cookieCount(0), cookieOldestTime(LL_MAXINT)
+  DBState() : cookieCount(0), cookieOldestTime(LL_MAXINT), corruptFlag(OK)
   {
     hostTable.Init();
   }
 
   NS_INLINE_DECL_REFCOUNTING(DBState)
+
+  // State of the database connection.
+  enum CorruptFlag {
+    OK,                   // normal
+    CLOSING_FOR_REBUILD,  // corruption detected, connection closing
+    REBUILDING            // close complete, rebuilding database from memory
+  };
 
   nsTHashtable<nsCookieEntry>     hostTable;
   PRUint32                        cookieCount;
@@ -167,6 +174,7 @@ struct DBState
   nsCOMPtr<mozIStorageAsyncStatement> stmtInsert;
   nsCOMPtr<mozIStorageAsyncStatement> stmtDelete;
   nsCOMPtr<mozIStorageAsyncStatement> stmtUpdate;
+  CorruptFlag                     corruptFlag;
 
   // Various parts representing asynchronous read state. These are useful
   // while the background read is taking place.
@@ -242,6 +250,9 @@ class nsCookieService : public nsICookieService
     nsresult                      CreateTable();
     void                          CloseDBStates();
     void                          CloseDefaultDBConnection();
+    void                          HandleDBClosed(DBState* aDBState);
+    void                          HandleCorruptDB(DBState* aDBState);
+    void                          RebuildCorruptDB(DBState* aDBState);
     OpenDBResult                  Read();
     template<class T> nsCookie*   GetCookieFromRow(T &aRow);
     void                          AsyncReadComplete();
@@ -303,7 +314,9 @@ class nsCookieService : public nsICookieService
 
     // friends!
     friend PLDHashOperator purgeCookiesCallback(nsCookieEntry *aEntry, void *aArg);
+    friend class DBListenerErrorHandler;
     friend class ReadCookieDBListener;
+    friend class CloseCookieDBListener;
 
     static nsCookieService*       GetSingleton();
 #ifdef MOZ_IPC

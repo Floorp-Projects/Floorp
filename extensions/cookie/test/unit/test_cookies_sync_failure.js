@@ -113,6 +113,7 @@ function create_garbage_file(file)
                 createInstance(Ci.nsIFileOutputStream);
   ostream.init(file, -1, -1, 0);
   ostream.write(garbage, garbage.length);
+  ostream.flush();
   ostream.close();
 
   file = file.clone(); // Windows maintains a stat cache. It's lame.
@@ -191,7 +192,7 @@ function run_test_3(generator, schema)
 {
   // Manually create a schema 2 database, populate it, and set the schema
   // version to the desired number.
-  let schema2db = new CookieDatabaseConnection(profile, 2);
+  let schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
   schema2db.insertCookie(cookie);
   schema2db.db.schemaVersion = schema;
   schema2db.close();
@@ -218,7 +219,7 @@ function run_test_3(generator, schema)
 function run_test_4_exists(generator, schema, stmt)
 {
   // Manually create a database, populate it, and add the desired column.
-  let db = new CookieDatabaseConnection(profile, schema);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), schema);
   db.insertCookie(cookie);
   db.db.executeSimpleSQL(stmt);
   db.close();
@@ -248,7 +249,7 @@ function run_test_4_exists(generator, schema, stmt)
 function run_test_4_baseDomain(generator)
 {
   // Manually create a database and populate it with a bad host.
-  let db = new CookieDatabaseConnection(profile, 2);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
   let badCookie = new Cookie("oh", "hai", ".", "/", this.futureExpiry, this.now,
     this.now, false, false, false);
   db.insertCookie(badCookie);

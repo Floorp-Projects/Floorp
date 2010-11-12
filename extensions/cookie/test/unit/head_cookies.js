@@ -64,10 +64,9 @@ function do_finish_generator_test(generator)
   });
 }
 
-function _observer(generator, service, topic) {
+function _observer(generator, topic) {
   Services.obs.addObserver(this, topic, false);
 
-  this.service = service;
   this.generator = generator;
   this.topic = topic;
 }
@@ -83,7 +82,6 @@ _observer.prototype = {
       do_run_generator(this.generator);
 
     this.generator = null;
-    this.service = null;
     this.topic = null;
   }
 }
@@ -92,10 +90,10 @@ _observer.prototype = {
 // once the close is complete.
 function do_close_profile(generator, cleanse) {
   // Register an observer for db close.
-  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
-  let obs = new _observer(generator, service, "cookie-db-closed");
+  let obs = new _observer(generator, "cookie-db-closed");
 
   // Close the db.
+  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
   service.observe(null, "profile-before-change", cleanse ? cleanse : "");
 }
 
@@ -103,10 +101,10 @@ function do_close_profile(generator, cleanse) {
 // once the load is complete.
 function do_load_profile(generator) {
   // Register an observer for read completion.
-  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
-  let obs = new _observer(generator, service, "cookie-db-read");
+  let obs = new _observer(generator, "cookie-db-read");
 
   // Load the profile.
+  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
   service.observe(null, "profile-do-change", "");
 }
 
@@ -178,11 +176,10 @@ function Cookie(name,
 
 // Object representing a database connection and associated statements. The
 // implementation varies depending on schema version.
-function CookieDatabaseConnection(profile, schema)
+function CookieDatabaseConnection(file, schema)
 {
   // Manually generate a cookies.sqlite file with appropriate rows, columns,
   // and schema version. If it already exists, just set up our statements.
-  let file = do_get_cookie_file(profile);
   let exists = file.exists();
 
   this.db = Services.storage.openDatabase(file);

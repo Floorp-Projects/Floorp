@@ -24,7 +24,7 @@ function do_run_test() {
   let profile = do_get_profile();
 
   // Create a schema 2 database.
-  let schema2db = new CookieDatabaseConnection(profile, 2);
+  let schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
 
   let now = Date.now() * 1000;
   let futureExpiry = Math.round(now / 1e6 + 1000);
@@ -97,7 +97,7 @@ function do_run_test() {
   yield;
 
   // Open the database so we can execute some more schema 2 statements on it.
-  schema2db = new CookieDatabaseConnection(profile, 2);
+  schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
 
   // Populate it with more cookies.
   for (let i = 60; i < 80; ++i) {
@@ -130,8 +130,7 @@ function do_run_test() {
 
   // Back up the database, so we can test both asynchronous and synchronous
   // loading separately.
-  let file = profile.clone();
-  file.append("cookies.sqlite");
+  let file = do_get_cookie_file(profile);
   let copy = profile.clone();
   copy.append("cookies.sqlite.copy");
   file.copyTo(null, copy.leafName);
@@ -151,7 +150,7 @@ function do_run_test() {
   yield;
 
   // Open the database and prove that they were deleted.
-  schema2db = new CookieDatabaseConnection(profile, 2);
+  schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
   do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
   do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
   do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
@@ -174,7 +173,7 @@ function do_run_test() {
   yield;
 
   // Open the database and prove that they were deleted.
-  schema2db = new CookieDatabaseConnection(profile, 2);
+  schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
   do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
   do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
   do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
@@ -198,7 +197,7 @@ function do_run_test() {
   yield;
 
   // Open the database and prove that they were deleted.
-  schema2db = new CookieDatabaseConnection(profile, 2);
+  schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
   do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
   do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
   do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
