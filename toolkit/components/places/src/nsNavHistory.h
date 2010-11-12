@@ -62,6 +62,8 @@
 #include "nsNetCID.h"
 #include "nsToolkitCompsCID.h"
 #include "nsThreadUtils.h"
+#include "nsURIHashKey.h"
+#include "nsTHashtable.h"
 
 #include "nsINavBookmarksService.h"
 #include "nsIPrivateBrowsingService.h"
@@ -426,7 +428,7 @@ public:
   /**
    * Indicates if it is OK to notify history observers or not.
    *
-   * @returns true if it is OK to notify, false otherwise.
+   * @return true if it is OK to notify, false otherwise.
    */
   bool canNotify() { return mCanNotify; }
 
@@ -442,6 +444,30 @@ public:
    *         according to RecentEventFlags enum values.
    */
   PRUint32 GetRecentFlags(nsIURI *aURI);
+
+  /**
+   * Registers a TRANSITION_EMBED visit for the session.
+   *
+   * @param aURI
+   *        URI of the page.
+   * @param aTime
+   *        Visit time.  Only the last registered visit time is retained.
+   */
+  void registerEmbedVisit(nsIURI* aURI, PRInt64 aTime);
+
+  /**
+   * Returns whether the specified url has a embed visit.
+   *
+   * @param aURI
+   *        URI of the page.
+   * @return whether the page has a embed visit.
+   */
+  bool hasEmbedVisit(nsIURI* aURI);
+
+  /**
+   * Clears all registered embed visits.
+   */
+  void clearEmbedVisits();
 
   mozIStorageStatement* GetStatementById(
     enum mozilla::places::HistoryStatementId aStatementId
@@ -792,6 +818,24 @@ protected:
   RecentEventHash mRecentTyped;
   RecentEventHash mRecentLink;
   RecentEventHash mRecentBookmark;
+
+  // Embed visits tracking.
+  class VisitHashKey : public nsURIHashKey
+  {
+  public:
+    VisitHashKey(const nsIURI* aURI)
+    : nsURIHashKey(aURI)
+    {
+    }
+    VisitHashKey(const VisitHashKey& aOther)
+    : nsURIHashKey(aOther)
+    {
+      NS_NOTREACHED("Do not call me!");
+    }
+    PRTime visitTime;
+  };
+
+  nsTHashtable<VisitHashKey> mEmbedVisits;
 
   PRBool CheckIsRecentEvent(RecentEventHash* hashTable,
                             const nsACString& url);
