@@ -274,9 +274,7 @@ toolbar[type="menubar"] {
   min-height: 0 !important;
   border: 0 !important;
 }
-%endif
-
-%ifdef XP_WIN
+%else
 toolbar[type="menubar"][autohide="true"] {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-menubar-autohide");
   overflow: hidden;
