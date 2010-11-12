@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test cookie database migration from version 2 (Gecko 1.9.3) to the current
 // version, presently 4 (Gecko 2.0).
