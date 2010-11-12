@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that permissions with specific expiry times behave as expected.
 
