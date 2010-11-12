@@ -950,7 +950,9 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
                 goto fail;
             }
 
-            report_mapping(si->name, pbase, len, phdr->p_offset & (~PAGE_MASK));
+            report_mapping(si->name, pbase,
+                           (len + PAGE_MASK) & (~PAGE_MASK),
+                           phdr->p_offset & (~PAGE_MASK));
 
             /* If 'len' didn't end on page boundary, and it's a writable
              * segment, zero-fill the rest. */
