@@ -71,6 +71,7 @@ WIDGET_ATOM(_default, "default")
 WIDGET_ATOM(descending, "descending")
 WIDGET_ATOM(dir, "dir")
 WIDGET_ATOM(disabled, "disabled")
+WIDGET_ATOM(Clear, "Clear") // AppCommand to return to a previous state
 WIDGET_ATOM(_false, "false")
 WIDGET_ATOM(focused, "focused")
 WIDGET_ATOM(Forward, "Forward")
