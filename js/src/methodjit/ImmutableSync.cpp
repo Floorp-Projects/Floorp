@@ -215,7 +215,7 @@ ImmutableSync::syncCopy(FrameEntry *fe)
 
     Address addr = frame.addressOf(fe);
 
-    if (fe->isTypeKnown() && !e.learnedType) {
+    if (fe->isTypeKnown() && !fe->isType(JSVAL_TYPE_DOUBLE) && !e.learnedType) {
         e.learnedType = true;
         e.type = fe->getKnownType();
     }
@@ -238,7 +238,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
 
     Address addr = frame.addressOf(fe);
 
-    if (fe->isTypeKnown()) {
+    if (fe->isTypeKnown() && !fe->isType(JSVAL_TYPE_DOUBLE)) {
         e.learnedType = true;
         e.type = fe->getKnownType();
     }

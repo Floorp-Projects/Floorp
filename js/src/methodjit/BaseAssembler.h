@@ -191,11 +191,61 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             m_assembler.pinsrd_rr(hi, fpReg);
         } else {
             m_assembler.movd_rr(lo, fpReg);
-            m_assembler.movd_rr(hi, FPRegisters::Temp0);
-            m_assembler.unpcklps_rr(FPRegisters::Temp0, fpReg);
+            m_assembler.movd_rr(hi, FPRegisters::ConversionTemp);
+            m_assembler.unpcklps_rr(FPRegisters::ConversionTemp, fpReg);
         }
     }
 #endif
+
+    /*
+     * Move a register pair which may indicate either an int32 or double into fpreg,
+     * converting to double in the int32 case.
+     */
+    void moveInt32OrDouble(RegisterID data, RegisterID type, Address address, FPRegisterID fpreg)
+    {
+#ifdef JS_CPU_X86
+        fastLoadDouble(data, type, fpreg);
+        Jump notInteger = testInt32(Assembler::NotEqual, type);
+        convertInt32ToDouble(data, fpreg);
+        notInteger.linkTo(label(), this);
+#else
+        Jump notInteger = testInt32(Assembler::NotEqual, type);
+        convertInt32ToDouble(data, fpreg);
+        Jump fallthrough = jump();
+        notInteger.linkTo(label(), this);
+
+        /* Store the components, then read it back out as a double. */
+        storeValueFromComponents(type, data, address);
+        loadDouble(address, fpreg);
+
+        fallthrough.linkTo(label(), this);
+#endif
+    }
+
+    /*
+     * Move a memory address which contains either an int32 or double into fpreg,
+     * converting to double in the int32 case.
+     */
+    void moveInt32OrDouble(Address address, FPRegisterID fpreg)
+    {
+        Jump notInteger = testInt32(Assembler::NotEqual, address);
+        convertInt32ToDouble(payloadOf(address), fpreg);
+        Jump fallthrough = jump();
+        notInteger.linkTo(label(), this);
+        loadDouble(address, fpreg);
+        fallthrough.linkTo(label(), this);
+    }
+
+    void negateDouble(FPRegisterID fpreg)
+    {
+#if defined JS_CPU_X86 || defined JS_CPU_X64
+        static const uint64 DoubleNegMask = 0x8000000000000000ULL;
+        loadDouble(&DoubleNegMask, FPRegisters::ConversionTemp);
+        xorDouble(FPRegisters::ConversionTemp, fpreg);
+#elif defined JS_CPU_ARM
+        negDouble(fpreg, fpreg);
+#endif
+    }
 
     /*
      * Prepares for a stub call.

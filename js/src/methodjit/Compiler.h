@@ -291,6 +291,8 @@ class Compiler : public BaseCompiler
     bool addTraceHints;
 
 #ifdef JS_TYPE_INFERENCE
+    bool hasThisType;
+    JSValueType thisType;
     js::Vector<JSValueType, 16> argumentTypes;
     js::Vector<JSValueType, 16> localTypes;
 #endif
@@ -320,7 +322,9 @@ class Compiler : public BaseCompiler
     CompileStatus finishThisUp(JITScript **jitp);
 
     /* Analysis helpers. */
+    void fixDoubleTypes(Uses uses);
     void restoreAnalysisTypes(uint32 stackDepth);
+    JSValueType knownThisType();
     JSValueType knownArgumentType(uint32 arg);
     JSValueType knownLocalType(uint32 local);
     JSValueType knownPushedType(uint32 pushed);
@@ -340,7 +344,7 @@ class Compiler : public BaseCompiler
     void iterNext();
     bool iterMore();
     void iterEnd();
-    MaybeJump loadDouble(FrameEntry *fe, FPRegisterID fpReg);
+    MaybeJump loadDouble(FrameEntry *fe, FPRegisterID *fpReg, bool *allocated);
 #ifdef JS_POLYIC
     void passICAddress(BaseICInfo *ic);
 #endif
@@ -348,6 +352,16 @@ class Compiler : public BaseCompiler
     void passMICAddress(MICGenInfo &mic);
 #endif
     bool constructThis();
+    void ensureDouble(FrameEntry *fe);
+
+    /*
+     * Ensure fe is an integer, truncating from double if necessary, or jump to
+     * the slow path per uses.
+     */
+    void ensureInteger(FrameEntry *fe, Uses uses);
+
+    /* Convert fe from a double to integer (per ValueToECMAInt32) in place. */
+    void truncateDoubleToInt32(FrameEntry *fe, Uses uses);
 
     /* Opcode handlers. */
     bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
@@ -380,7 +394,7 @@ class Compiler : public BaseCompiler
     void jsop_getelem_slow();
     void jsop_callelem_slow();
     void jsop_unbrand();
-    bool jsop_getprop(JSAtom *atom, bool typeCheck = true, bool usePropCache = true);
+    bool jsop_getprop(JSAtom *atom, JSValueType type, bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
     bool jsop_setprop(JSAtom *atom, bool usePropCache = true);
     void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);

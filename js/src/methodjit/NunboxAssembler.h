@@ -59,7 +59,9 @@ struct ImmType : ImmTag
 {
     ImmType(JSValueType type)
       : ImmTag(JSVAL_TYPE_TO_TAG(type))
-    { }
+    {
+        JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+    }
 };
 
 struct ImmPayload : JSC::MacroAssembler::Imm32
@@ -312,6 +314,21 @@ class NunboxAssembler : public JSC::MacroAssembler
         }
         loadPayload(address, dataReg);
         return notHole;
+    }
+
+    /* :FIXME: borrowed from patch in bug 594247 */
+    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
+#ifdef JS_CPU_X86
+        // Move the low 32-bits of the 128-bit XMM register into dataReg.
+        // Then, right shift the 128-bit XMM register by 4 bytes.
+        // Finally, move the new low 32-bits of the 128-bit XMM register into typeReg.
+        m_assembler.movd_rr(srcDest, dataReg);
+        m_assembler.psrldq_rr(srcDest, 4);
+        m_assembler.movd_rr(srcDest, typeReg);
+#else
+        JS_STATIC_ASSERT(0);
+        JS_NOT_REACHED("implement this - push double, pop pop is easiest");
+#endif
     }
 };
 

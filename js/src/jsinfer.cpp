@@ -936,6 +936,8 @@ GetValueTypeFromTypeFlags(TypeFlags flags)
         return JSVAL_TYPE_BOOLEAN;
       case TYPE_FLAG_INT32:
         return JSVAL_TYPE_INT32;
+      case (TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE):
+        return JSVAL_TYPE_DOUBLE;
       case TYPE_FLAG_STRING:
         return JSVAL_TYPE_STRING;
       case TYPE_FLAG_OBJECT:
@@ -2119,6 +2121,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_BITNOT:
       case JSOP_RSH:
       case JSOP_LSH:
+      case JSOP_URSH:
+        /* :TODO: Add heuristics for guessing URSH which can overflow. */
         code->setFixed(cx, 0, TYPE_INT32);
         break;
       case JSOP_FALSE:
@@ -2138,7 +2142,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         code->setFixed(cx, 0, TYPE_BOOLEAN);
         break;
       case JSOP_DOUBLE:
-      case JSOP_DIV:
         code->setFixed(cx, 0, TYPE_DOUBLE);
         break;
       case JSOP_STRING:
@@ -2600,7 +2603,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_SUB:
       case JSOP_MUL:
       case JSOP_MOD:
-      case JSOP_URSH:
+      case JSOP_DIV:
+        /* :TODO: Add heuristics for guessing when dividing two ints produces a double. */
         code->popped(0)->addArith(cx, pool, code, code->pushed(0));
         code->popped(1)->addArith(cx, pool, code, code->pushed(0));
         break;
