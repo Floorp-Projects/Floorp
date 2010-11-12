@@ -399,6 +399,7 @@ static const char *sExtensionNames[] = {
     "GL_IMG_read_format",
     "GL_EXT_read_format_bgra",
     "GL_APPLE_client_storage",
+    "GL_ARB_texture_non_power_of_two",
     NULL
 };
 
@@ -491,7 +492,7 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
 already_AddRefed<TextureImage>
 GLContext::CreateTextureImage(const nsIntSize& aSize,
                               TextureImage::ContentType aContentType,
-                              GLint aWrapMode,
+                              GLenum aWrapMode,
                               PRBool aUseNearestFilter)
 {
   MakeCurrent();
@@ -509,7 +510,7 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
   DEBUG_GL_ERROR_CHECK(this);
 
-  return CreateBasicTextureImage(texture, aSize, aContentType, this);
+  return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
 }
 
 BasicTextureImage::~BasicTextureImage()
@@ -1163,26 +1164,34 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     float dy1 = 2.0 * float(aDstRect.y + aDstRect.height) / float(dstSize.height) - 1.0;
 
     RectTriangles rects;
-    DecomposeIntoNoRepeatTriangles(aSrcRect, srcSize,
-                                   rects);
+    if (aSrc->GetWrapMode() == LOCAL_GL_REPEAT) {
+        rects.addRect(/* dest rectangle */
+                      dx0, dy0, dx1, dy1,
+                      /* tex coords */
+                      aSrcRect.x / float(srcSize.width),
+                      aSrcRect.y / float(srcSize.height),
+                      aSrcRect.XMost() / float(srcSize.width),
+                      aSrcRect.YMost() / float(srcSize.height));
+    } else {
+        DecomposeIntoNoRepeatTriangles(aSrcRect, srcSize, rects);
 
-    GLfloat *quadTriangleCoords = rects.vertexCoords;
-    GLfloat *texCoords = rects.texCoords;
-
-    // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
-    // from the 0..1 that it comes out of decompose
-    for (int i = 0; i < rects.numRects * 6; ++i) {
-        quadTriangleCoords[i*2] = (quadTriangleCoords[i*2] * (dx1 - dx0)) + dx0;
-        quadTriangleCoords[i*2+1] = (quadTriangleCoords[i*2+1] * (dy1 - dy0)) + dy0;
+        // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
+        // from the 0..1 that it comes out of decompose
+        GLfloat *v = rects.vertexCoords;
+        for (int i = 0; i < rects.numRects * 6; ++i) {
+            v[i*2] = (v[i*2] * (dx1 - dx0)) + dx0;
+            v[i*2+1] = (v[i*2+1] * (dy1 - dy0)) + dy0;
+        }
     }
+
 
     fActiveTexture(LOCAL_GL_TEXTURE0);
     fBindTexture(LOCAL_GL_TEXTURE_2D, aSrc->Texture());
 
     fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 
-    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, quadTriangleCoords);
-    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, texCoords);
+    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertexCoords);
+    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoords);
 
     fEnableVertexAttribArray(0);
     fEnableVertexAttribArray(1);
