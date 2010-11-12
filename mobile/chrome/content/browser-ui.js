@@ -2553,8 +2553,8 @@ var ContextHelper = {
     label.value = this.popupState.label || "";
 
     this._panel.hidden = false;
-    BrowserUI.blurFocusedElement();
     window.addEventListener("resize", this, true);
+    window.addEventListener("keypress", this, true);
 
     this.sizeToContent();
     BrowserUI.pushPopup(this, [this._popup]);
@@ -2567,6 +2567,7 @@ var ContextHelper = {
     this.popupState = null;
     this._panel.hidden = true;
     window.removeEventListener("resize", this, true);
+    window.removeEventListener("keypress", this, true);
 
     BrowserUI.popPopup(this);
   },
@@ -2576,7 +2577,18 @@ var ContextHelper = {
   },
 
   handleEvent: function handleEvent(aEvent) {
-    this.sizeToContent();
+    switch (aEvent.type) {
+      case "resize":
+        this.sizeToContent();
+        break;
+      case "keypress":
+        // Hide the context menu so you can't type behind it.
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
+        if (aEvent.keyCode != aEvent.DOM_VK_ESCAPE)
+          this.hide();
+        break;
+    }
   }
 };
 

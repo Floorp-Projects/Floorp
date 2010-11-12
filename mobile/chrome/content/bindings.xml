@@ -120,6 +120,13 @@
           this._dontBlur = true;
         ]]>
       </handler>
+
+      <handler event="TapLong" phase="capturing">
+        <![CDATA[
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, true);
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
@@ -1604,35 +1611,48 @@
     </content>
   </binding>
 
-  <binding id="input-box" extends="xul:box">
+  <binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <handlers>
-      <handler event="contextmenu" phase="capturing">
+      <handler event="TapLong" phase="capturing">
         <![CDATA[
-          let textbox = this.parentNode;
-          while (textbox.localName != "textbox")
-            textbox = textbox.parentNode;
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, false);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
 
-          let selectionStart = textbox.selectionStart;
-          let selectionEnd = textbox.selectionEnd;
+  <binding id="input-box" extends="xul:box">
+    <implementation>
+      <method name="showContextMenu">
+        <parameter name="aTextbox"/>
+        <parameter name="aIgnoreReadOnly"/>
+        <body><![CDATA[
+          let selectionStart = aTextbox.selectionStart;
+          let selectionEnd = aTextbox.selectionEnd;
 
           let json = { types: [], string: "" };
           if (selectionStart != selectionEnd) {
             json.types.push("copy");
-            json.string = textbox.value.slice(selectionStart, selectionEnd);
-          } else if (textbox.value) {
+            json.string = aTextbox.value.slice(selectionStart, selectionEnd);
+          } else if (aTextbox.value) {
             json.types.push("copy-all");
-            json.string = textbox.value;
+            json.string = aTextbox.value;
           }
 
-          if (selectionStart > 0 || selectionEnd < textbox.textLength)
+          if (selectionStart > 0 || selectionEnd < aTextbox.textLength)
             json.types.push("select-all");
 
-          if (textbox.editor.canPaste(Ci.nsIClipboard.kGlobalClipboard))
+          let clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+          let flavors = ["text/unicode"];
+          let hasData = clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+
+          if (hasData && (!aTextbox.readOnly || aIgnoreReadOnly))
             json.types.push("paste");
 
-          ContextHelper.showPopup({ target: textbox, json: json });
-        ]]>
-      </handler>
-    </handlers>
+          ContextHelper.showPopup({ target: aTextbox, json: json });
+        ]]></body>
+      </method>
+    </implementation>
   </binding>
 </bindings>
