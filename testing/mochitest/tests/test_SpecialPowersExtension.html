@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for SpecialPowers extension **/
+is(content.window.SpecialPowers.sanityCheck(), "foo", "check to see whether the Special Powers extension is installed.");
+
+// Test a sync call into chrome
+content.window.SpecialPowers.setBoolPref('extensions.checkCompatibility', true);
+is(content.window.SpecialPowers.getBoolPref('extensions.checkCompatibility'), true, "Check to see if we can set a preference properly");
+
+// Test a int pref
+content.window.SpecialPowers.setIntPref('extensions.foobar', 42);
+is(content.window.SpecialPowers.getIntPref('extensions.foobar'), 42, "Check int pref");
+
+// Test a string pref
+content.window.SpecialPowers.setCharPref("extensions.foobaz", "hi there");
+is(content.window.SpecialPowers.getCharPref("extensions.foobaz"), "hi there", "Check string pref");
+
+// Test Complex Pref - TODO: Without chrome access, I don't know how you'd actually
+// set this preference since you have to create an XPCOM object.
+// Leaving untested for now.
+</script>
+</pre>
+</body>
+</html>
+
