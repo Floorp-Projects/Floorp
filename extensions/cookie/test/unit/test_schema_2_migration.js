@@ -128,21 +128,80 @@ function do_run_test() {
   schema2db.close();
   schema2db = null;
 
-  // Load the database, forcing a purge of the newly-added cookies. (Their
-  // baseDomain column will be NULL.)
-  do_load_profile();
+  // Back up the database, so we can test both asynchronous and synchronous
+  // loading separately.
+  let file = profile.clone();
+  file.append("cookies.sqlite");
+  let copy = profile.clone();
+  copy.append("cookies.sqlite.copy");
+  file.copyTo(null, copy.leafName);
+
+  // Load the database asynchronously, forcing a purge of the newly-added
+  // cookies. (Their baseDomain column will be NULL.)
+  do_load_profile(test_generator);
+  yield;
 
   // Test the expected set of cookies.
   do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
   do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
 
   do_close_profile(test_generator);
   yield;
 
   // Open the database and prove that they were deleted.
   schema2db = new CookieDatabaseConnection(profile, 2);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "cat.com"), 0);
+  do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
+  schema2db.close();
+
+  // Copy the database back.
+  file.remove(false);
+  copy.copyTo(null, file.leafName);
+
+  // Load the database host-at-a-time.
+  do_load_profile();
+
+  // Test the expected set of cookies.
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
+
+  do_close_profile(test_generator);
+  yield;
+
+  // Open the database and prove that they were deleted.
+  schema2db = new CookieDatabaseConnection(profile, 2);
+  do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
+  schema2db.close();
+
+  // Copy the database back.
+  file.remove(false);
+  copy.copyTo(null, file.leafName);
+
+  // Load the database synchronously, in its entirety.
+  do_load_profile();
+  do_check_eq(do_count_cookies(), 40);
+
+  // Test the expected set of cookies.
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
+
+  do_close_profile(test_generator);
+  yield;
+
+  // Open the database and prove that they were deleted.
+  schema2db = new CookieDatabaseConnection(profile, 2);
+  do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
   schema2db.close();
 
   finish_test();
