@@ -1667,7 +1667,7 @@ extern JS_REQUIRES_STACK MonitorResult
 ProfileLoopEdge(JSContext* cx, uintN& inlineCallCount);
 
 extern JS_REQUIRES_STACK TracePointAction
-RecordTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist);
+RecordTracePoint(JSContext*, uintN& inlineCallCount, uint32 *loopCounter, bool* blacklist);
 
 extern JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
