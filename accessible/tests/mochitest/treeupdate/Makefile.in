@@ -51,6 +51,7 @@ _TEST_FILES =\
 		test_list.html \
 		test_recreation.html \
 		test_tableinsubtree.html \
+		test_textleaf.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
