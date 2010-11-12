@@ -458,8 +458,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!options)
       options = {};
 
-    rect.width = Math.max(90, rect.width);
-    rect.height = Math.max(90, rect.height);
+    rect.width = Math.max(110, rect.width);
+    rect.height = Math.max(125, rect.height);
 
     var titleHeight = this.$titlebar.height();
 
@@ -1376,8 +1376,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
   setResizable: function GroupItem_setResizable(value, immediately) {
-    this.resizeOptions.minWidth = 90;
-    this.resizeOptions.minHeight = 90;
+    this.resizeOptions.minWidth = 110;
+    this.resizeOptions.minHeight = 125;
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();
