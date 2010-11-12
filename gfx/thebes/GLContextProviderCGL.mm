@@ -305,6 +305,12 @@ protected:
         mUpdateContext = new gfxContext(mUpdateSurface);
         mUpdateContext->Clip(gfxRect(mUpdateRect.x, mUpdateRect.y,
                                      mUpdateRect.width, mUpdateRect.height));
+        if (GetContentType() != gfxASurface::CONTENT_COLOR)
+        {
+            mUpdateContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+            mUpdateContext->Paint();
+            mUpdateContext->SetOperator(gfxContext::OPERATOR_OVER);
+        }
         mUpdateOffset = mUpdateRect.TopLeft();
 
         return mUpdateContext;
