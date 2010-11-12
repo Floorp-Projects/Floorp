@@ -43,13 +43,15 @@ relativesrcdir  = testing/mochitest
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =	MochiKit \
-	static \
-	dynamic \
-	tests \
-	chrome \
-	ssltunnel \
-	$(NULL)
+DIRS = \
+  MochiKit \
+  static \
+  dynamic \
+  tests \
+  chrome \
+  ssltunnel \
+  specialpowers \
+  $(NULL)
 
 
 NO_JS_MANIFEST = 1
