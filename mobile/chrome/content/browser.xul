@@ -594,6 +594,11 @@
           <richlistitem class="context-command" id="context-removebookmark" type="edit-bookmark" onclick="ContextCommands.removeBookmark();">
             <label value="&contextRemoveBookmark.label;"/>
           </richlistitem>
++#ifdef ANDROID
++          <richlistitem class="context-command" id="context-select-input" type="input-text" onclick="ContextCommands.selectInput();">
++            <label value="&inputMethod.label;"/>
++          </richlistitem>
++#endif
         </richlistbox>
       </vbox>
     </hbox>
