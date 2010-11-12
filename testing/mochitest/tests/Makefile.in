@@ -53,11 +53,8 @@ PARALLEL_DIRS = \
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
-  test_sanity.html \
-  test_SpecialPowersExtension.html \
-  test_SpecialPowersExtension2.html \
-  file_SpecialPowersFrame1.html \
-  $(NULL)
+	test_sanity.html \
+	$(NULL)
 
 # Copy the sanity tests into a subdirectory, so the top level is all dirs
 # in the test screen.
