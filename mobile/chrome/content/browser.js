@@ -2093,6 +2093,7 @@ var ContentCrashObserver = {
     // will be reloaded when selected.
     let title = Elements.browserBundle.getString("tabs.crashWarningTitle");
     let message = Elements.browserBundle.getString("tabs.crashWarningMsg");
+    let submitText = Elements.browserBundle.getString("tabs.crashSubmitReport");
     let reloadText = Elements.browserBundle.getString("tabs.crashReload");
     let closeText = Elements.browserBundle.getString("tabs.crashClose");
     let buttons = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
@@ -2100,7 +2101,7 @@ var ContentCrashObserver = {
                   (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
 
     this._waitingToClose = true;
-    let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, null, { value: false });
+    let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, submitText, { value: true });
     if (reload) {
       // Fire a TabSelect event to kick start the restore process
       let event = document.createEvent("Events");
