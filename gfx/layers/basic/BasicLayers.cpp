@@ -472,11 +472,9 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
   PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
-  PRBool opaqueBuffer = canUseOpaqueSurface &&
-    targetSurface->AreSimilarSurfacesSensitiveToContentType();
   Buffer::ContentType contentType =
-    opaqueBuffer ? gfxASurface::CONTENT_COLOR :
-                   gfxASurface::CONTENT_COLOR_ALPHA;
+    canUseOpaqueSurface ? gfxASurface::CONTENT_COLOR :
+                          gfxASurface::CONTENT_COLOR_ALPHA;
   float opacity = GetEffectiveOpacity();
 
   if (!BasicManager()->IsRetained() ||
