@@ -3146,6 +3146,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
          * sub-statement.
          */
         op = JSOP_DEFFUN;
+        outertc->noteHasDefFun();
     }
 
     funbox->kids = funtc.functionList;
