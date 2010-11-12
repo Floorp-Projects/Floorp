@@ -1157,29 +1157,24 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
 
     PushViewportRect(nsIntRect(0, 0, dstSize.width, dstSize.height));
 
-    float sx0 = float(aSrcRect.x) / float(srcSize.width);
-    float sy0 = float(aSrcRect.y) / float(srcSize.height);
-    float sx1 = float(aSrcRect.x + aSrcRect.width) / float(srcSize.width);
-    float sy1 = float(aSrcRect.y + aSrcRect.height) / float(srcSize.height);
-
     float dx0 = 2.0 * float(aDstRect.x) / float(dstSize.width) - 1.0;
     float dy0 = 2.0 * float(aDstRect.y) / float(dstSize.height) - 1.0;
     float dx1 = 2.0 * float(aDstRect.x + aDstRect.width) / float(dstSize.width) - 1.0;
     float dy1 = 2.0 * float(aDstRect.y + aDstRect.height) / float(dstSize.height) - 1.0;
 
-    float quadTriangleCoords[] = {
-        dx0, dy1,
-        dx0, dy0,
-        dx1, dy1,
-        dx1, dy0
-    };
+    RectTriangles rects;
+    DecomposeIntoNoRepeatTriangles(aSrcRect, srcSize,
+                                   rects);
 
-    float texCoords[] = {
-        sx0, sy1,
-        sx0, sy0,
-        sx1, sy1,
-        sx1, sy0
-    };
+    GLfloat *quadTriangleCoords = rects.vertexCoords;
+    GLfloat *texCoords = rects.texCoords;
+
+    // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
+    // from the 0..1 that it comes out of decompose
+    for (int i = 0; i < rects.numRects * 6; ++i) {
+        quadTriangleCoords[i*2] = (quadTriangleCoords[i*2] * (dx1 - dx0)) + dx0;
+        quadTriangleCoords[i*2+1] = (quadTriangleCoords[i*2+1] * (dy1 - dy0)) + dy0;
+    }
 
     fActiveTexture(LOCAL_GL_TEXTURE0);
     fBindTexture(LOCAL_GL_TEXTURE_2D, aSrc->Texture());
@@ -1194,7 +1189,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
 
     DEBUG_GL_ERROR_CHECK(this);
 
-    fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.numRects * 6);
 
     DEBUG_GL_ERROR_CHECK(this);
 
@@ -1221,6 +1216,161 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     fEnable(LOCAL_GL_BLEND);
 
     PopViewportRect();
+}
+
+void
+GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
+                                  GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1)
+{
+    NS_ASSERTION(numRects < 4, "Overflow in number of rectangles, max 4!");
+
+    GLfloat *v = &vertexCoords[numRects*6*2];
+    GLfloat *t = &texCoords[numRects*6*2];
+
+    *v++ = x0; *v++ = y0;
+    *v++ = x1; *v++ = y0;
+    *v++ = x0; *v++ = y1;
+
+    *v++ = x0; *v++ = y1;
+    *v++ = x1; *v++ = y0;
+    *v++ = x1; *v++ = y1;
+
+    *t++ = tx0; *t++ = ty0;
+    *t++ = tx1; *t++ = ty0;
+    *t++ = tx0; *t++ = ty1;
+
+    *t++ = tx0; *t++ = ty1;
+    *t++ = tx1; *t++ = ty0;
+    *t++ = tx1; *t++ = ty1;
+
+    numRects++;
+}
+
+static GLfloat
+WrapTexCoord(GLfloat v)
+{
+    // fmodf gives negative results for negative numbers;
+    // that is, fmodf(0.75, 1.0) == 0.75, but
+    // fmodf(-0.75, 1.0) == -0.75.  For the negative case,
+    // the result we need is 0.25, so we add 1.0f.
+    if (v < 0.0f) {
+        return 1.0f + fmodf(v, 1.0f);
+    }
+
+    return fmodf(v, 1.0f);
+}
+
+void
+GLContext::DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
+                                          const nsIntSize& aTexSize,
+                                          RectTriangles& aRects)
+{
+    // normalize this
+    nsIntRect tcr(aTexCoordRect);
+    while (tcr.x > aTexSize.width)
+        tcr.x -= aTexSize.width;
+    while (tcr.y > aTexSize.height)
+        tcr.y -= aTexSize.height;
+
+    // Compute top left and bottom right tex coordinates
+    GLfloat tl[2] =
+        { GLfloat(tcr.x) / GLfloat(aTexSize.width),
+          GLfloat(tcr.y) / GLfloat(aTexSize.height) };
+    GLfloat br[2] =
+        { GLfloat(tcr.XMost()) / GLfloat(aTexSize.width),
+          GLfloat(tcr.YMost()) / GLfloat(aTexSize.height) };
+
+    // then check if we wrap in either the x or y axis; if we do,
+    // then also use fmod to figure out the "true" non-wrapping
+    // texture coordinates.
+
+    bool xwrap = false, ywrap = false;
+    if (tcr.x < 0 || tcr.x > aTexSize.width ||
+        tcr.XMost() < 0 || tcr.XMost() > aTexSize.width)
+    {
+        xwrap = true;
+        tl[0] = WrapTexCoord(tl[0]);
+        br[0] = WrapTexCoord(br[0]);
+    }
+
+    if (tcr.y < 0 || tcr.y > aTexSize.height ||
+        tcr.YMost() < 0 || tcr.YMost() > aTexSize.height)
+    {
+        ywrap = true;
+        tl[1] = WrapTexCoord(tl[1]);
+        br[1] = WrapTexCoord(br[1]);
+    }
+
+    NS_ASSERTION(tl[0] >= 0.0f && tl[0] <= 1.0f &&
+                 tl[1] >= 0.0f && tl[1] <= 1.0f &&
+                 br[0] >= 0.0f && br[0] <= 1.0f &&
+                 br[1] >= 0.0f && br[1] <= 1.0f,
+                 "Somehow generated invalid texture coordinates");
+
+    // If xwrap is false, the texture will be sampled from tl[0]
+    // .. br[0].  If xwrap is true, then it will be split into tl[0]
+    // .. 1.0, and 0.0 .. br[0].  Same for the Y axis.  The
+    // destination rectangle is also split appropriately, according
+    // to the calculated xmid/ymid values.
+
+    // There isn't a 1:1 mapping between tex coords and destination coords;
+    // when computing midpoints, we have to take that into account.  We
+    // need to map the texture coords, which are (in the wrap case):
+    // |tl->1| and |0->br| to the |0->1| range of the vertex coords.  So
+    // we have the length (1-tl)+(br) that needs to map into 0->1.
+    // These are only valid if there is wrap involved, they won't be used
+    // otherwise.
+    GLfloat xlen = (1.0f - tl[0]) + br[0];
+    GLfloat ylen = (1.0f - tl[1]) + br[1];
+
+    NS_ASSERTION(!xwrap || xlen > 0.0f, "xlen isn't > 0, what's going on?");
+    NS_ASSERTION(!ywrap || ylen > 0.0f, "ylen isn't > 0, what's going on?");
+    NS_ASSERTION(aTexCoordRect.width <= aTexSize.width &&
+                 aTexCoordRect.height <= aTexSize.height, "tex coord rect would cause tiling!");
+
+    if (!xwrap && !ywrap) {
+        aRects.addRect(0.0f, 0.0f, 1.0f, 1.0f,
+                       tl[0], tl[1], br[0], br[1]);
+    } else if (!xwrap && ywrap) {
+        GLfloat ymid = (1.0f - tl[1]) / ylen;
+        aRects.addRect(0.0f, 0.0f,
+                       1.0f, ymid,
+                       tl[0], tl[1],
+                       br[0], 1.0f);
+        aRects.addRect(0.0f, ymid,
+                       1.0f, 1.0f,
+                       tl[0], 0.0f,
+                       br[0], br[1]);
+    } else if (xwrap && !ywrap) {
+        GLfloat xmid = (1.0f - tl[0]) / xlen;
+        aRects.addRect(0.0f, 0.0f,
+                       xmid, 1.0f,
+                       tl[0], tl[1],
+                       1.0f, br[1]);
+        aRects.addRect(xmid, 0.0f,
+                       1.0f, 1.0f,
+                       0.0f, tl[1],
+                       br[0], br[1]);
+    } else {
+        GLfloat xmid = (1.0f - tl[0]) / xlen;
+        GLfloat ymid = (1.0f - tl[1]) / ylen;
+        aRects.addRect(0.0f, 0.0f,
+                       xmid, ymid,
+                       tl[0], tl[1],
+                       1.0f, 1.0f);
+        aRects.addRect(xmid, 0.0f,
+                       1.0f, ymid,
+                       0.0f, tl[1],
+                       br[0], 1.0f);
+        aRects.addRect(0.0f, ymid,
+                       xmid, 1.0f,
+                       tl[0], 0.0f,
+                       1.0f, br[1]);
+        aRects.addRect(xmid, ymid,
+                       1.0f, 1.0f,
+                       0.0f, 0.0f,
+                       br[0], br[1]);
+    }
 }
 
 void
