@@ -1469,7 +1469,7 @@ _cairo_quartz_setup_surface_source (cairo_quartz_surface_t *surface,
     const cairo_pattern_t *source = &spat->base;
     CGContextRef context = state->context;
 
-    if (source->extend == CAIRO_EXTEND_NONE ||
+    if (source->extend == CAIRO_EXTEND_NONE || source->extend == CAIRO_EXTEND_PAD ||
         (CGContextDrawTiledImagePtr && source->extend == CAIRO_EXTEND_REPEAT))
     {
 	cairo_surface_t *pat_surf = spat->surface;
@@ -1480,14 +1480,14 @@ _cairo_quartz_setup_surface_source (cairo_quartz_surface_t *surface,
 	CGRect srcRect;
 	cairo_fixed_t fw, fh;
 	cairo_bool_t is_bounded;
+	cairo_bool_t repeat = source->extend == CAIRO_EXTEND_REPEAT;
         cairo_status_t status;
 
         cairo_matrix_invert(&m);
         _cairo_quartz_cairo_matrix_to_quartz (&m, &state->transform);
 
         /* Draw nonrepeating CGLayer surface using DO_LAYER */
-        if (source->extend == CAIRO_EXTEND_NONE ||
-            (CGContextDrawTiledImagePtr && source->extend == CAIRO_EXTEND_REPEAT))
+        if (!repeat && cairo_surface_get_type (pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
             cairo_quartz_surface_t *quartz_surf = (cairo_quartz_surface_t *) pat_surf;
             if (quartz_surf->cgLayer) {
          	state->imageRect = CGRectMake (0, 0, quartz_surf->extents.width, quartz_surf->extents.height);
@@ -1515,7 +1515,7 @@ _cairo_quartz_setup_surface_source (cairo_quartz_surface_t *surface,
 	is_bounded = _cairo_surface_get_extents (pat_surf, &extents);
 	assert (is_bounded);
 
-	if (source->extend == CAIRO_EXTEND_NONE) {
+	if (!repeat) {
 	    state->imageRect = CGRectMake (0, 0, extents.width, extents.height);
 	    state->action = DO_IMAGE;
 	    return;

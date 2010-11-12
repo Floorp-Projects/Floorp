@@ -144,6 +144,8 @@ fix-clip-test.patch: Use y 498c10032ea3f8631a928cd7df96766f2c8ddca4
 
 quartz-refactor-surface-setup.patch: Extract the surface-source setup chunk of _cairo_quartz_setup_state into its own function
 
+quartz-fix-PAD.patch: Treat PAD like NONE instead of REPEAT
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
