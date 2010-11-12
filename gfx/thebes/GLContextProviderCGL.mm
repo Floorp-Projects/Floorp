@@ -172,6 +172,7 @@ public:
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
                             const nsIntSize& aSize,
+                            GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
                             GLContext* aContext);
 
@@ -268,6 +269,7 @@ class TextureImageCGL : public BasicTextureImage
     friend already_AddRefed<TextureImage>
     GLContextCGL::CreateBasicTextureImage(GLuint,
                                           const nsIntSize&,
+                                          GLenum,
                                           TextureImage::ContentType,
                                           GLContext*);
 
@@ -352,9 +354,10 @@ protected:
 private:
     TextureImageCGL(GLuint aTexture,
                     const nsIntSize& aSize,
+                    GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aContentType, aContext)
+        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
     {}
 
     ImageFormat mUpdateFormat;
@@ -364,11 +367,12 @@ private:
 already_AddRefed<TextureImage>
 GLContextCGL::CreateBasicTextureImage(GLuint aTexture,
                                       const nsIntSize& aSize,
+                                      GLenum aWrapMode,
                                       TextureImage::ContentType aContentType,
                                       GLContext* aContext)
 {
-    nsRefPtr<TextureImageCGL> teximage(
-        new TextureImageCGL(aTexture, aSize, aContentType, aContext));
+    nsRefPtr<TextureImageCGL> teximage
+        (new TextureImageCGL(aTexture, aSize, aWrapMode, aContentType, aContext));
     return teximage.forget();
 }
 

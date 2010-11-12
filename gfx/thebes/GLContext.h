@@ -212,6 +212,7 @@ public:
     const nsIntSize& GetSize() const { return mSize; }
     ContentType GetContentType() const { return mContentType; }
     virtual PRBool InUpdate() const = 0;
+    GLenum GetWrapMode() const { return mWrapMode; }
 
     PRBool IsRGB() const { return mIsRGBFormat; }
 
@@ -224,15 +225,19 @@ protected:
      * TextureImage from GLContext::CreateTextureImage().  That is,
      * clients must not be given partially-constructed TextureImages.
      */
-    TextureImage(GLuint aTexture, const nsIntSize& aSize, ContentType aContentType, PRBool aIsRGB = PR_FALSE)
+    TextureImage(GLuint aTexture, const nsIntSize& aSize,
+                 GLenum aWrapMode, ContentType aContentType,
+                 PRBool aIsRGB = PR_FALSE)
         : mTexture(aTexture)
         , mSize(aSize)
+        , mWrapMode(aWrapMode)
         , mContentType(aContentType)
         , mIsRGBFormat(aIsRGB)
     {}
 
     GLuint mTexture;
     nsIntSize mSize;
+    GLenum mWrapMode;
     ContentType mContentType;
     PRPackedBool mIsRGBFormat;
 };
@@ -263,9 +268,10 @@ protected:
 
     BasicTextureImage(GLuint aTexture,
                       const nsIntSize& aSize,
+                      GLenum aWrapMode,
                       ContentType aContentType,
                       GLContext* aContext)
-        : TextureImage(aTexture, aSize, aContentType)
+        : TextureImage(aTexture, aSize, aWrapMode, aContentType)
         , mTextureInited(PR_FALSE)
         , mGLContext(aContext)
         , mUpdateOffset(0, 0)
@@ -643,7 +649,7 @@ public:
     virtual already_AddRefed<TextureImage>
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
-                       GLint aWrapMode,
+                       GLenum aWrapMode,
                        PRBool aUseNearestFilter=PR_FALSE);
 
     /**
@@ -750,6 +756,7 @@ public:
         IMG_read_format,
         EXT_read_format_bgra,
         APPLE_client_storage,
+        ARB_texture_non_power_of_two,
         Extensions_Max
     };
 
@@ -849,6 +856,7 @@ protected:
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
                             const nsIntSize& aSize,
+                            GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
                             GLContext* aContext)
     { return NULL; }
