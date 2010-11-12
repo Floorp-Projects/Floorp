@@ -2741,7 +2741,9 @@ _cairo_quartz_surface_mask (void *abstract_surface,
     if (unlikely (rv))
 	return rv;
 
-    if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
+    /* Using CGContextSetAlpha to implement mask alpha doesn't work for all operators. */
+    if (mask->type == CAIRO_PATTERN_TYPE_SOLID &&
+        op == CAIRO_OPERATOR_OVER) {
 	/* This is easy; we just need to paint with the alpha. */
 	cairo_solid_pattern_t *solid_mask = (cairo_solid_pattern_t *) mask;
 

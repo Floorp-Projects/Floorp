@@ -146,6 +146,8 @@ quartz-refactor-surface-setup.patch: Extract the surface-source setup chunk of _
 
 quartz-fix-PAD.patch: Treat PAD like NONE instead of REPEAT
 
+quartz-mask-non-OVER.patch: Don't use CGContextSetAlpha to optimize alpha masking for non-OVER operators
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
