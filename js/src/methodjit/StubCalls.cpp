@@ -2647,7 +2647,7 @@ stubs::DelElem(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::DefVar(VMFrame &f, JSAtom *atom)
+stubs::DefVarOrConst(VMFrame &f, JSAtom *atom)
 {
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.fp();
@@ -2657,18 +2657,25 @@ stubs::DefVar(VMFrame &f, JSAtom *atom)
     uintN attrs = JSPROP_ENUMERATE;
     if (!fp->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
+    if (JSOp(*f.regs.pc) == JSOP_DEFCONST)
+        attrs |= JSPROP_READONLY;
 
     /* Lookup id in order to check for redeclaration problems. */
     jsid id = ATOM_TO_JSID(atom);
     JSProperty *prop = NULL;
     JSObject *obj2;
 
-    /*
-     * Redundant declaration of a |var|, even one for a non-writable
-     * property like |undefined| in ES5, does nothing.
-     */
-    if (!obj->lookupProperty(cx, id, &obj2, &prop))
-        THROW();
+    if (JSOp(*f.regs.pc) == JSOP_DEFVAR) {
+        /*
+         * Redundant declaration of a |var|, even one for a non-writable
+         * property like |undefined| in ES5, does nothing.
+         */
+        if (!obj->lookupProperty(cx, id, &obj2, &prop))
+            THROW();
+    } else {
+        if (!CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
+            THROW();
+    }
 
     /* Bind a variable only if it's not yet defined. */
     if (!prop) {
@@ -2678,6 +2685,21 @@ stubs::DefVar(VMFrame &f, JSAtom *atom)
         }
         JS_ASSERT(prop);
         obj2 = obj;
+    }
+}
+
+void JS_FASTCALL
+stubs::SetConst(VMFrame &f, JSAtom *atom)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp();
+
+    JSObject *obj = &fp->varobj(cx);
+    const Value &ref = f.regs.sp[-1];
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
+                             PropertyStub, PropertyStub,
+                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
+        THROW();
     }
 }
 
