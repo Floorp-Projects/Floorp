@@ -2500,15 +2500,28 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT((cg->fun()->flags & JSFUN_LAMBDA) && atom == cg->fun()->atom);
 
             /*
-             * Leave pn->pn_op == JSOP_NAME if cg->fun() is heavyweight, as we
-             * cannot be sure cg->fun() is not something of the form:
+             * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight to
+             * address two cases: a new binding introduced by eval, and
+             * assignment to the name in strict mode.
              *
-             *   var ff = (function f(s) { eval(s); return f; });
+             *   var fun = (function f(s) { eval(s); return f; });
+             *   assertEq(fun("var f = 42"), 42);
              *
-             * where a caller invokes ff("var f = 42"). The result returned for
-             * such an invocation must be 42, since the callee name is
-             * lexically bound in an outer declarative environment from the
-             * function's activation. See jsfun.cpp:call_resolve.
+             * ECMAScript specifies that a function expression's name is bound
+             * in a lexical environment distinct from that used to bind its
+             * named parameters, the arguments object, and its variables.  The
+             * new binding for "var f = 42" shadows the binding for the
+             * function itself, so the name of the function will not refer to
+             * the function.
+             *
+             *    (function f() { "use strict"; f = 12; })();
+             *
+             * Outside strict mode, assignment to a function expression's name
+             * has no effect.  But in strict mode, this attempt to mutate an
+             * immutable binding must throw a TypeError.  We implement this by
+             * not optimizing such assignments and by marking such functions as
+             * heavyweight, ensuring that the function name is represented in
+             * the scope chain so that assignment will throw a TypeError.
              */
             JS_ASSERT(op != JSOP_DELNAME);
             if (!(cg->flags & TCF_FUN_HEAVYWEIGHT)) {
