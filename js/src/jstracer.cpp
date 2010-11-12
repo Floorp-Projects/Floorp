@@ -16587,6 +16587,15 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (op == JSOP_CALLPROP && loopStackDepth == 0)
         branchMultiplier *= mjit::GetCallTargetCount(script, cx->regs->pc);
 
+    if (op == JSOP_TABLESWITCH) {
+        jsint low = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN);
+        jsint high = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN*2);
+        branchMultiplier *= high - low + 1;
+    }
+
+    if (op == JSOP_LOOKUPSWITCH)
+        branchMultiplier *= GET_UINT16(pc + JUMP_OFFSET_LEN);
+    
     if (numAllOps >= MAX_PROFILE_OPS) {
         debug_only_print0(LC_TMProfiler, "Profiling complete (maxops)\n");
         tm->profile->decide(cx);
