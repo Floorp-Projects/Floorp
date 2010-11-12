@@ -133,6 +133,11 @@ static const char kPrefMaxCookiesPerHost[]  = "network.cookie.maxPerHost";
 static const char kPrefCookiePurgeAge[]     = "network.cookie.purgeAge";
 static const char kPrefThirdPartySession[]  = "network.cookie.thirdparty.sessionOnly";
 
+static void
+bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
+                     const nsCString &aBaseDomain,
+                     const nsCookie *aCookie);
+
 // struct for temporarily storing cookie attributes during header parsing
 struct nsCookieAttributes
 {
@@ -360,16 +365,21 @@ public:
 
   NS_IMETHOD HandleError(mozIStorageError* aError)
   {
-    // XXX Ignore corruption handling for now. See bug 547031.
-#ifdef PR_LOGGING
     PRInt32 result = -1;
     aError->GetResult(&result);
+
+#ifdef PR_LOGGING
     nsCAutoString message;
     aError->GetMessage(message);
     COOKIE_LOGSTRING(PR_LOG_WARNING,
-                     ("Error %d occurred while performing a %s operation.  Message: `%s`\n",
-                      result, GetOpType(), message.get()));
+      ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
+       "performing operation '%s' with message '%s'; rebuilding database.",
+       result, GetOpType(), message.get()));
 #endif
+
+    // Rebuild the database.
+    gCookieService->HandleCorruptDB(mDBState);
+
     return NS_OK;
   }
 };
@@ -394,6 +404,14 @@ public:
   }
   NS_IMETHOD HandleCompletion(PRUint16 aReason)
   {
+    // If we were rebuilding the db and we succeeded, make our corruptFlag say
+    // so.
+    if (mDBState->corruptFlag == DBState::REBUILDING &&
+        aReason == mozIStorageStatementCallback::REASON_FINISHED) {
+      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+        ("InsertCookieDBListener::HandleCompletion(): rebuild complete"));
+      mDBState->corruptFlag = DBState::OK;
+    }
     return NS_OK;
   }
 };
@@ -506,7 +524,7 @@ public:
       break;
     case mozIStorageStatementCallback::REASON_ERROR:
       // Nothing more to do here. DBListenerErrorHandler::HandleError()
-      // can take handle it.
+      // can handle it.
       COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read error"));
       break;
     default:
@@ -530,12 +548,7 @@ public:
 
   NS_IMETHOD Complete()
   {
-    COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Database closed"));
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs)
-      obs->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
-
+    gCookieService->HandleDBClosed(mDBState);
     return NS_OK;
   }
 };
@@ -1155,12 +1168,183 @@ nsCookieService::CloseDefaultDBConnection()
   mDefaultDBState->syncConn = NULL;
 
   // Manually null out our listeners. This is necessary because they hold a
-  // strong ref to the DBState itself.
+  // strong ref to the DBState itself. They'll stay alive until whatever
+  // statements are still executing complete.
   mDefaultDBState->readListener = NULL;
   mDefaultDBState->insertListener = NULL;
   mDefaultDBState->updateListener = NULL;
   mDefaultDBState->removeListener = NULL;
   mDefaultDBState->closeListener = NULL;
+}
+
+void
+nsCookieService::HandleDBClosed(DBState* aDBState)
+{
+  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+    ("HandleDBClosed(): DBState %x closed", aDBState));
+
+  switch (aDBState->corruptFlag) {
+  case DBState::OK: {
+    // Database is healthy. Notify of closure.
+    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    break;
+  }
+  case DBState::CLOSING_FOR_REBUILD: {
+    // Our close finished. Start the rebuild, and notify of db closure later.
+    RebuildCorruptDB(aDBState);
+    break;
+  }
+  case DBState::REBUILDING: {
+    // We encountered an error during rebuild, closed the database, and now
+    // here we are. We already have a 'cookies.sqlite.bak' from the original
+    // dead database; we don't want to overwrite it, so let's move this one to
+    // 'cookies.sqlite.bak-rebuild'.
+    nsCOMPtr<nsIFile> backupFile;
+    aDBState->cookieFile->Clone(getter_AddRefs(backupFile));
+    nsresult rv = backupFile->MoveToNative(NULL,
+      NS_LITERAL_CSTRING(COOKIES_FILE ".bak-rebuild"));
+
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+      ("HandleDBClosed(): DBState %x encountered error rebuilding db; move to "
+       "'cookies.sqlite.bak-rebuild' gave rv 0x%x", aDBState, rv));
+    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    break;
+  }
+  }
+}
+
+void
+nsCookieService::HandleCorruptDB(DBState* aDBState)
+{
+  if (mDefaultDBState != aDBState) {
+    // We've either closed the state or we've switched profiles. It's getting
+    // a bit late to rebuild -- bail instead.
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+      ("HandleCorruptDB(): DBState %x is already closed, aborting", aDBState));
+    return;
+  }
+
+  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+    ("HandleCorruptDB(): DBState %x has corruptFlag %u", aDBState,
+      aDBState->corruptFlag));
+
+  // Mark the database corrupt, so the close listener can begin reconstructing
+  // it.
+  switch (mDefaultDBState->corruptFlag) {
+  case DBState::OK: {
+    // Move to 'closing' state.
+    mDefaultDBState->corruptFlag = DBState::CLOSING_FOR_REBUILD;
+
+    // Cancel any pending read and close the database. If we do have an
+    // in-flight read we want to throw away all the results so far -- we have no
+    // idea how consistent the database is. Note that we may have already
+    // canceled the read but not emptied our readSet; do so now.
+    mDefaultDBState->readSet.Clear();
+    if (mDefaultDBState->pendingRead) {
+      CancelAsyncRead(PR_TRUE);
+      mDefaultDBState->syncConn = nsnull;
+    }
+
+    mDefaultDBState->dbConn->AsyncClose(mDefaultDBState->closeListener);
+    CloseDefaultDBConnection();
+    break;
+  }
+  case DBState::CLOSING_FOR_REBUILD: {
+    // We had an error while waiting for close completion. That's OK, just
+    // ignore it -- we're rebuilding anyway.
+    return;
+  }
+  case DBState::REBUILDING: {
+    // We had an error while rebuilding the DB. Game over. Close the database
+    // and let the close handler do nothing; then we'll move it out of the way.
+    mDefaultDBState->dbConn->AsyncClose(mDefaultDBState->closeListener);
+    CloseDefaultDBConnection();
+    break;
+  }
+  }
+}
+
+static PLDHashOperator
+RebuildDBCallback(nsCookieEntry *aEntry,
+                  void          *aArg)
+{
+  mozIStorageBindingParamsArray* paramsArray =
+    static_cast<mozIStorageBindingParamsArray*>(aArg);
+
+  const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    nsCookie* cookie = cookies[i];
+
+    if (!cookie->IsSession()) {
+      bindCookieParameters(paramsArray, aEntry->GetKey(), cookie);
+    }
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+void
+nsCookieService::RebuildCorruptDB(DBState* aDBState)
+{
+  NS_ASSERTION(!aDBState->dbConn, "shouldn't have an open db connection");
+  NS_ASSERTION(aDBState->corruptFlag == DBState::CLOSING_FOR_REBUILD,
+    "should be in CLOSING_FOR_REBUILD state");
+
+  aDBState->corruptFlag = DBState::REBUILDING;
+
+  if (mDefaultDBState != aDBState) {
+    // We've either closed the state or we've switched profiles. It's getting
+    // a bit late to rebuild -- bail instead. In any case, we were waiting
+    // on rebuild completion to notify of the db closure, which won't happen --
+    // do so now.
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+      ("RebuildCorruptDB(): DBState %x is stale, aborting", aDBState));
+    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    return;
+  }
+
+  COOKIE_LOGSTRING(PR_LOG_DEBUG,
+    ("RebuildCorruptDB(): creating new database"));
+
+  // The database has been closed, and we're ready to rebuild. Open a
+  // connection.
+  OpenDBResult result = TryInitDB(true);
+  if (result != RESULT_OK) {
+    // We're done. Reset our DB connection and statements, and notify of
+    // closure.
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+      ("RebuildCorruptDB(): TryInitDB() failed with result %u", result));
+    CloseDefaultDBConnection();
+    mDefaultDBState->corruptFlag = DBState::OK;
+    mObserverService->NotifyObservers(nsnull, "cookie-db-closed", nsnull);
+    return;
+  }
+
+  // Notify observers that we're beginning the rebuild.
+  mObserverService->NotifyObservers(nsnull, "cookie-db-rebuilding", nsnull);
+
+  // Enumerate the hash, and add cookies to the params array.
+  mozIStorageAsyncStatement* stmt = aDBState->stmtInsert;
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  aDBState->hostTable.EnumerateEntries(RebuildDBCallback, paramsArray.get());
+
+  // Make sure we've got something to write. If we don't, we're done.
+  PRUint32 length;
+  paramsArray->GetLength(&length);
+  if (length == 0) {
+    COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      ("RebuildCorruptDB(): nothing to write, rebuild complete"));
+    mDefaultDBState->corruptFlag = DBState::OK;
+    return;
+  }
+
+  // Execute the statement. If any errors crop up, we won't try again.
+  nsresult rv = stmt->BindParameters(paramsArray);
+  NS_ASSERT_SUCCESS(rv);
+  nsCOMPtr<mozIStoragePendingStatement> handle;
+  rv = stmt->ExecuteAsync(aDBState->insertListener, getter_AddRefs(handle));
+  NS_ASSERT_SUCCESS(rv);    
 }
 
 nsCookieService::~nsCookieService()
@@ -1454,16 +1638,20 @@ nsCookieService::RemoveAll()
       CancelAsyncRead(PR_TRUE);
     }
 
-    // XXX Ignore corruption for now. See bug 547031.
     nsCOMPtr<mozIStorageStatement> stmt;
     nsresult rv = mDefaultDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_cookies"), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<mozIStoragePendingStatement> handle;
-    rv = stmt->ExecuteAsync(mDefaultDBState->removeListener,
-      getter_AddRefs(handle));
-    NS_ASSERT_SUCCESS(rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<mozIStoragePendingStatement> handle;
+      rv = stmt->ExecuteAsync(mDefaultDBState->removeListener,
+        getter_AddRefs(handle));
+      NS_ASSERT_SUCCESS(rv);
+    } else {
+      // Recreate the database.
+      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+        ("RemoveAll(): corruption detected with rv 0x%x", rv));
+      HandleCorruptDB(mDefaultDBState);
+    }
   }
 
   NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
@@ -1632,6 +1820,7 @@ nsCookieService::Read()
   // point, we cannot fail without altering the cleanup code in InitDBStates()
   // to handle closing of the now-asynchronous connection.
   mDefaultDBState->readSet.Init();
+  mDefaultDBState->hostArray.SetCapacity(kMaxNumberOfCookies);
 
   mDefaultDBState->readListener = new ReadCookieDBListener(mDefaultDBState);
   rv = stmtRead->ExecuteAsync(mDefaultDBState->readListener,
@@ -1777,8 +1966,14 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
       "WHERE baseDomain = :baseDomain"),
       getter_AddRefs(mDefaultDBState->stmtReadDomain));
 
-    // XXX Ignore corruption for now. See bug 547031.
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+      // Recreate the database.
+      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+        ("EnsureReadDomain(): corruption detected when creating statement "
+         "with rv 0x%x", rv));
+      HandleCorruptDB(mDefaultDBState);
+      return;
+    }
   }
 
   NS_ASSERTION(mDefaultDBState->syncConn, "should have a sync db connection");
@@ -1790,19 +1985,29 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
   NS_ASSERT_SUCCESS(rv);
 
   PRBool hasResult;
-  PRUint32 readCount = 0;
   nsCString name, value, host, path;
+  nsAutoTArray<nsRefPtr<nsCookie>, kMaxCookiesPerHost> array;
   while (1) {
     rv = mDefaultDBState->stmtReadDomain->ExecuteStep(&hasResult);
-    // XXX Ignore corruption for now. See bug 547031.
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+      // Recreate the database.
+      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+        ("EnsureReadDomain(): corruption detected when reading result "
+         "with rv 0x%x", rv));
+      HandleCorruptDB(mDefaultDBState);
+      return;
+    }
 
     if (!hasResult)
       break;
 
-    nsCookie* newCookie = GetCookieFromRow(mDefaultDBState->stmtReadDomain);
-    AddCookieToList(aBaseDomain, newCookie, mDefaultDBState, NULL, PR_FALSE);
-    ++readCount;
+    array.AppendElement(GetCookieFromRow(mDefaultDBState->stmtReadDomain));
+  }
+
+  // Add the cookies to the table in a single operation. This makes sure that
+  // either all the cookies get added, or in the case of corruption, none.
+  for (PRUint32 i = 0; i < array.Length(); ++i) {
+    AddCookieToList(aBaseDomain, array[i], mDefaultDBState, NULL, PR_FALSE);
   }
 
   // Add it to the hashset of read entries, so we don't read it again.
@@ -1810,7 +2015,7 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
     ("EnsureReadDomain(): %ld cookies read for base domain %s",
-     readCount, aBaseDomain.get()));
+     array.Length(), aBaseDomain.get()));
 }
 
 void
@@ -1843,16 +2048,28 @@ nsCookieService::EnsureReadComplete()
     "FROM moz_cookies "
     "WHERE baseDomain NOTNULL"), getter_AddRefs(stmt));
 
-  // XXX Ignore corruption for now. See bug 547031.
-  if (NS_FAILED(rv)) return;
+  if (NS_FAILED(rv)) {
+    // Recreate the database.
+    COOKIE_LOGSTRING(PR_LOG_DEBUG,
+      ("EnsureReadComplete(): corruption detected when creating statement "
+       "with rv 0x%x", rv));
+    HandleCorruptDB(mDefaultDBState);
+    return;
+  }
 
   nsCString baseDomain, name, value, host, path;
   PRBool hasResult;
-  PRUint32 readCount = 0;
+  nsAutoTArray<CookieDomainTuple, kMaxNumberOfCookies> array;
   while (1) {
     rv = stmt->ExecuteStep(&hasResult);
-    // XXX Ignore corruption for now. See bug 547031.
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+      // Recreate the database.
+      COOKIE_LOGSTRING(PR_LOG_DEBUG,
+        ("EnsureReadComplete(): corruption detected when reading result "
+         "with rv 0x%x", rv));
+      HandleCorruptDB(mDefaultDBState);
+      return;
+    }
 
     if (!hasResult)
       break;
@@ -1862,16 +2079,24 @@ nsCookieService::EnsureReadComplete()
     if (mDefaultDBState->readSet.GetEntry(baseDomain))
       continue;
 
-    nsCookie* newCookie = GetCookieFromRow(stmt);
-    AddCookieToList(baseDomain, newCookie, mDefaultDBState, NULL, PR_FALSE);
-    ++readCount;
+    CookieDomainTuple* tuple = array.AppendElement();
+    tuple->baseDomain = baseDomain;
+    tuple->cookie = GetCookieFromRow(stmt);
+  }
+
+  // Add the cookies to the table in a single operation. This makes sure that
+  // either all the cookies get added, or in the case of corruption, none.
+  for (PRUint32 i = 0; i < array.Length(); ++i) {
+    CookieDomainTuple& tuple = array[i];
+    AddCookieToList(tuple.baseDomain, tuple.cookie, mDefaultDBState, NULL,
+      PR_FALSE);
   }
 
   mDefaultDBState->syncConn = nsnull;
   mDefaultDBState->readSet.Clear();
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
-    ("EnsureReadComplete(): %ld cookies read", readCount));
+    ("EnsureReadComplete(): %ld cookies read", array.Length()));
 }
 
 NS_IMETHODIMP
@@ -3448,7 +3673,7 @@ nsCookieService::RemoveCookieFromList(const nsListIter              &aIter,
   --mDBState->cookieCount;
 }
 
-static void
+void
 bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
                      const nsCString &aBaseDomain,
                      const nsCookie *aCookie)
