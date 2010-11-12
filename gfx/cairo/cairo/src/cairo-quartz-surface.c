@@ -2047,7 +2047,8 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
     cairo_format_t format;
 
     if (surface->cgLayer)
-        return cairo_quartz_surface_create_cg_layer (abstract_surface, width, height);
+        return cairo_quartz_surface_create_cg_layer (abstract_surface, content,
+                                                     width, height);
 
     if (content == CAIRO_CONTENT_COLOR_ALPHA)
 	format = CAIRO_FORMAT_ARGB32;
@@ -2967,13 +2968,13 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
  * cairo_quartz_cglayer_surface_create_similar
  * @surface: The returned surface can be efficiently drawn into this
  * destination surface (if tiling is not used)."
+ * @content: the content type of the surface
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
  *
  * Creates a Quartz surface backed by a CGLayer, if the given surface
  * is a Quartz surface; the CGLayer is created to match the surface's
- * Quartz context. Otherwise just calls cairo_surface_create_similar
- * with CAIRO_CONTENT_COLOR_ALPHA.
+ * Quartz context. Otherwise just calls cairo_surface_create_similar.
  * The returned surface can be efficiently blitted to the given surface,
  * but tiling and 'extend' modes other than NONE are not so efficient.
  *
@@ -2983,6 +2984,7 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
  **/
 cairo_surface_t *
 cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
+                                      cairo_content_t content,
                                       unsigned int width,
                                       unsigned int height)
 {
@@ -2993,7 +2995,7 @@ cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
 
     cgContext = cairo_quartz_surface_get_cg_context (surface);
     if (!cgContext)
-        return cairo_surface_create_similar (surface, CAIRO_CONTENT_COLOR_ALPHA,
+        return cairo_surface_create_similar (surface, content,
                                              width, height);
 
     if (!_cairo_quartz_verify_surface_size(width, height))
@@ -3004,7 +3006,7 @@ cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
      */
     if (width == 0 || height == 0) {
         return (cairo_surface_t*)
-            _cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
+            _cairo_quartz_surface_create_internal (NULL, content,
                                                    width, height);
     }
 
@@ -3023,8 +3025,8 @@ cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
     CGContextScaleCTM (ctx, 1, -1);
 
     CGContextRetain (ctx);
-    surf = _cairo_quartz_surface_create_internal (ctx, CAIRO_CONTENT_COLOR_ALPHA,
-              width, height);
+    surf = _cairo_quartz_surface_create_internal (ctx, content,
+                                                  width, height);
     if (surf->base.status) {
         CGLayerRelease (layer);
         // create_internal will have set an error
