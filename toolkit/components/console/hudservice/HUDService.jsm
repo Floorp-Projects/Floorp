@@ -1438,6 +1438,40 @@ HUD_SERVICE.prototype =
   saveRequestAndResponseBodies: false,
 
   /**
+   * Event handler to get window errors
+   * TODO: a bit of a hack but is able to associate
+   * errors thrown in a window's scope we do not know
+   * about because of the nsIConsoleMessages not having a
+   * window reference.
+   * see bug 567165
+   *
+   * @param nsIDOMWindow aWindow
+   * @returns boolean
+   */
+  setOnErrorHandler: function HS_setOnErrorHandler(aWindow) {
+    var self = this;
+    var window = aWindow.wrappedJSObject;
+    var console = window.console;
+    var origOnerrorFunc = window.onerror;
+    window.onerror = function windowOnError(aErrorMsg, aURL, aLineNumber)
+    {
+      if (aURL && !(aURL in self.uriRegistry)) {
+        var lineNum = "";
+        if (aLineNumber) {
+          lineNum = self.getFormatStr("errLine", [aLineNumber]);
+        }
+        console.error(aErrorMsg + " @ " + aURL + " " + lineNum);
+      }
+
+      if (origOnerrorFunc) {
+        origOnerrorFunc(aErrorMsg, aURL, aLineNumber);
+      }
+
+      return false;
+    };
+  },
+
+  /**
    * Tell the HUDService that a HeadsUpDisplay can be activated
    * for the window or context that has 'aContextDOMId' node id
    *
@@ -1942,6 +1976,27 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * get the nsIDOMNode outputNode via a nsIURI.spec
+   *
+   * @param string aURISpec
+   * @returns nsIDOMNode
+   */
+  getDisplayByURISpec: function HS_getDisplayByURISpec(aURISpec)
+  {
+    // TODO: what about data:uris? see bug 568626
+    var hudIds = this.uriRegistry[aURISpec];
+    if (hudIds.length == 1) {
+      // only one HUD connected to this URISpec
+      return this.getHeadsUpDisplay(hudIds[0]);
+    }
+    else {
+      // TODO: how to determine more fully the origination of this activity?
+      // see bug 567165
+      return this.getHeadsUpDisplay(hudIds[0]);
+    }
+  },
+
+  /**
    * Returns the hudId that is corresponding to the hud activated for the
    * passed aContentWindow. If there is no matching hudId null is returned.
    *
@@ -1950,40 +2005,13 @@ HUD_SERVICE.prototype =
    */
   getHudIdByWindow: function HS_getHudIdByWindow(aContentWindow)
   {
-    // Fast path: check the cached window registry.
     for (let hudId in this.windowRegistry) {
       if (this.windowRegistry[hudId] &&
           this.windowRegistry[hudId].indexOf(aContentWindow) != -1) {
         return hudId;
       }
     }
-
-    // As a fallback, do a little pointer chasing to try to find the Web
-    // Console. This fallback approach occurs when opening the Console on a
-    // page with subframes.
-    let [ , tabBrowser, browser ] = ConsoleUtils.getParents(aContentWindow);
-    if (!tabBrowser) {
-      return null;
-    }
-
-    let notificationBox = tabBrowser.getNotificationBox(browser);
-    let hudBox = notificationBox.querySelector(".hud-box");
-    if (!hudBox) {
-      return null;
-    }
-
-    // Cache it!
-    let hudId = hudBox.id;
-    this.windowRegistry[hudId].push(aContentWindow);
-
-    let uri = aContentWindow.document.location.href;
-    if (!this.uriRegistry[uri]) {
-      this.uriRegistry[uri] = [ hudId ];
-    } else {
-      this.uriRegistry[uri].push(hudId);
-    }
-
-    return hudId;
+    return null;
   },
 
   /**
@@ -2015,6 +2043,20 @@ HUD_SERVICE.prototype =
    */
   displays: function HS_displays() {
     return this._headsUpDisplays;
+  },
+
+  /**
+   * Get an array of HUDIds that match a uri.spec
+   *
+   * @param string aURISpec
+   * @returns array
+   */
+  getHUDIdsForURISpec: function HS_getHUDIdsForURISpec(aURISpec)
+  {
+    if (this.uriRegistry[aURISpec]) {
+      return this.uriRegistry[aURISpec];
+    }
+    return [];
   },
 
   /**
@@ -2175,6 +2217,34 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * report consoleMessages recieved via the HUDConsoleObserver service
+   * @param nsIConsoleMessage aConsoleMessage
+   * @returns void
+   */
+  reportConsoleServiceMessage:
+  function HS_reportConsoleServiceMessage(aConsoleMessage)
+  {
+    this.logActivity("console-listener", null, aConsoleMessage);
+  },
+
+  /**
+   * report scriptErrors recieved via the HUDConsoleObserver service
+   * @param nsIScriptError aScriptError
+   * @returns void
+   */
+  reportConsoleServiceContentScriptError:
+  function HS_reportConsoleServiceContentScriptError(aScriptError)
+  {
+    try {
+      var uri = Services.io.newURI(aScriptError.sourceName, null, null);
+    }
+    catch(ex) {
+      var uri = { spec: "" };
+    }
+    this.logActivity("console-listener", uri, aScriptError);
+  },
+
+  /**
    * generates an nsIScriptError
    *
    * @param object aMessage
@@ -2326,7 +2396,8 @@ HUD_SERVICE.prototype =
             };
 
             // Add a new output entry.
-            let loggedNode = self.logActivity("network", hudId, httpActivity);
+            let loggedNode =
+              self.logActivity("network", aChannel.URI, httpActivity);
 
             // In some cases loggedNode can be undefined (e.g. if an image was
             // requested). Don't continue in such a case.
@@ -2513,15 +2584,13 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Logs network activity.
+   * Logs network activity
    *
-   * @param string aType
-   *        The severity of the message.
+   * @param nsIURI aURI
    * @param object aActivityObject
-   *        The activity to log.
    * @returns void
    */
-  logNetActivity: function HS_logNetActivity(aType, aActivityObject)
+  logNetActivity: function HS_logNetActivity(aType, aURI, aActivityObject)
   {
     var outputNode, hudId;
     try {
@@ -2565,16 +2634,28 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Logs console listener activity.
+   * Logs console listener activity
    *
-   * @param string aHUDId
-   *        The ID of the HUD to which to send the message.
+   * @param nsIURI aURI
    * @param object aActivityObject
-   *        The message to log.
    * @returns void
    */
-  logConsoleActivity: function HS_logConsoleActivity(aHUDId, aActivityObject)
+  logConsoleActivity: function HS_logConsoleActivity(aURI, aActivityObject)
   {
+    var displayNode, outputNode, hudId;
+    try {
+        var hudIds = this.uriRegistry[aURI.spec];
+        hudId = hudIds[0];
+    }
+    catch (ex) {
+      // TODO: uri spec is not tracked becasue the net request is
+      // using a different loadGroup
+      // see bug 568034
+      if (!displayNode) {
+        return;
+      }
+    }
+
     var _msgLogLevel = this.scriptMsgLogLevel[aActivityObject.flags];
     var msgLogLevel = this.getStr(_msgLogLevel);
 
@@ -2589,7 +2670,7 @@ HUD_SERVICE.prototype =
     var message = {
       activity: aActivityObject,
       origin: "console-listener",
-      hudId: aHUDId,
+      hudId: hudId,
     };
 
     var lineColSubs = [aActivityObject.lineNumber,
@@ -2610,7 +2691,8 @@ HUD_SERVICE.prototype =
                       lineCol + " " +
                       msgCategory + " " + aActivityObject.category;
 
-    outputNode = this.hudWeakReferences[aHUDId].get().outputNode;
+    displayNode = this.getHeadsUpDisplay(hudId);
+    outputNode = displayNode.querySelectorAll(".hud-output-node")[0];
 
     var messageObject =
     this.messageFactory(message, message.level, outputNode, aActivityObject);
@@ -2619,24 +2701,25 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Calls logNetActivity() or logConsoleActivity() as appropriate to log the
-   * given message to the appropriate console.
+   * Parse log messages for origin or listener type
+   * Get the correct outputNode if it exists
+   * Finally, call logMessage to write this message to
+   * storage and optionally, a DOM output node
    *
    * @param string aType
-   *        The type of message; one of "network" or "console-listener".
-   * @param string aHUDId
-   *        The ID of the console to which to send the message.
+   * @param nsIURI aURI
    * @param object (or nsIScriptError) aActivityObj
-   *        The message to send.
    * @returns void
    */
-  logActivity: function HS_logActivity(aType, aHUDId, aActivityObject)
+  logActivity: function HS_logActivity(aType, aURI, aActivityObject)
   {
+    var displayNode, outputNode, hudId;
+
     if (aType == "network") {
-      return this.logNetActivity(aType, aActivityObject);
+      return this.logNetActivity(aType, aURI, aActivityObject);
     }
     else if (aType == "console-listener") {
-      this.logConsoleActivity(aHUDId, aActivityObject);
+      this.logConsoleActivity(aURI, aActivityObject);
     }
   },
 
@@ -2678,6 +2761,25 @@ HUD_SERVICE.prototype =
 
     aConsoleNode.appendChild(groupNode);
     return groupNode;
+  },
+
+  /**
+   * gets the DOM Node that maps back to what context/tab that
+   * activity originated via the URI
+   *
+   * @param nsIURI aURI
+   * @returns nsIDOMNode
+   */
+  getActivityOutputNode: function HS_getActivityOutputNode(aURI)
+  {
+    // determine which outputNode activity tied to aURI should be logged to.
+    var display = this.getDisplayByURISpec(aURI.spec);
+    if (display) {
+      return this.getOutputNodeById(display);
+    }
+    else {
+      throw new Error("Cannot get outputNode by hudId");
+    }
   },
 
   /**
@@ -2921,6 +3023,9 @@ HUD_SERVICE.prototype =
     else {
       aContentWindow.wrappedJSObject.console = hud.console;
     }
+
+    // capture JS Errors
+    this.setOnErrorHandler(aContentWindow);
 
     // register the controller to handle "select all" properly
     this.createController(xulWindow);
@@ -4954,79 +5059,6 @@ ConsoleUtils = {
     let boxObject = scrollBoxNode.boxObject;
     let nsIScrollBoxObject = boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     nsIScrollBoxObject.ensureElementIsVisible(aNode);
-  },
-
-  /**
-   * Given an instance of nsIScriptError, attempts to work out the IDs of HUDs
-   * to which the script should be sent.
-   *
-   * @param nsIScriptError aScriptError
-   *        The script error that was received.
-   * @returns Array<string>
-   */
-  getHUDIdsForScriptError:
-  function ConsoleUtils_getHUDIdsForScriptError(aScriptError) {
-    if (aScriptError instanceof Ci.nsIScriptError2) {
-      let windowID = aScriptError.outerWindowID;
-      if (windowID) {
-        // We just need some arbitrary window here so that we can GI to
-        // nsIDOMWindowUtils...
-        let someWindow = Services.wm.getMostRecentWindow(null);
-        if (someWindow) {
-          let windowUtils = someWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIDOMWindowUtils);
-
-          // In the future (post-Electrolysis), getOuterWindowWithId() could
-          // return null, because the originating window could have gone away
-          // while we were in the process of receiving and/or processing a
-          // message. For future-proofing purposes, we do a null check here.
-          let content = windowUtils.getOuterWindowWithId(windowID);
-          if (content) {
-            let hudId = HUDService.getHudIdByWindow(content);
-            if (hudId) {
-              return [ hudId ];
-            }
-          }
-        }
-      }
-    }
-
-    // The error had no window ID. As a less precise fallback, see whether we
-    // can find some consoles to send to via the URI.
-    let hudIds = HUDService.uriRegistry[aScriptError.sourceName];
-    return hudIds ? hudIds : [];
-  },
-
-  /**
-   * Returns the chrome window, the tab browser, and the browser that
-   * contain the given content window.
-   *
-   * NB: This function only works in Firefox.
-   *
-   * @param nsIDOMWindow aContentWindow
-   *        The content window to query. If this parameter is not a content
-   *        window, then [ null, null, null ] will be returned.
-   */
-  getParents: function ConsoleUtils_getParents(aContentWindow) {
-    if (aContentWindow instanceof Ci.nsIDOMChromeWindow) {
-      return [ null, null, null ];
-    }
-
-    let chromeEventHandler =
-      aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell)
-                    .chromeEventHandler;
-    let chromeWindow = chromeEventHandler.ownerDocument.defaultView;
-    let gBrowser = XPCNativeWrapper.unwrap(chromeWindow).gBrowser;
-    let documentElement = chromeWindow.document.documentElement;
-    if (!documentElement || !gBrowser ||
-        documentElement.getAttribute("windowtype") !== "navigator:browser") {
-      // Not a browser window.
-      return [ chromeWindow, null, null ];
-    }
-
-    return [ chromeWindow, gBrowser, chromeEventHandler ];
   }
 };
 
@@ -5484,26 +5516,86 @@ HUDConsoleObserver = {
     }
 
     if (aSubject instanceof Ci.nsIScriptError) {
-      let hudIds = ConsoleUtils.getHUDIdsForScriptError(aSubject);
-
       switch (aSubject.category) {
         // We ignore chrome-originating errors as we only
         // care about content.
         case "XPConnect JavaScript":
+          // nsXPCWrappedJSClass::CheckForException()
+          // nsXPCComponents_Utils::ReportError()
         case "component javascript":
         case "chrome javascript":
+          // ScriptErrorEvent in nsJSEnvironment.cpp
         case "chrome registration":
+          // nsChromeRegistry::LogMessageWithContext()
         case "XBL":
+          // nsXBLService
         case "XBL Prototype Handler":
+          // nsXBLPrototypeHandler::ReportKeyConflict()
         case "XBL Content Sink":
+          // nsXBLContentSink
         case "xbl javascript":
+          // XBL_ProtoErrorReporter in nsXBLDocumentInfo.cpp
         case "FrameConstructor":
+          // nsCSSFrameConstructor::ProcessChildren()
           return;
 
+        // Display the messages from the following categories.
+        case "HUDConsole":
+        case "CSS Parser":
+          // nsCSSScanner::OutputError()
+        case "CSS Loader":
+          // SheetLoadData::OnStreamComplete()
+        case "content javascript":
+          // ScriptErrorEvent in nsJSEnvironment.cpp
+        case "DOM Events":
+          // nsHtml5StreamParser::ContinueAfterScripts()
+          // ReportUseOfDeprecatedMethod() in nsGlobalWindow.cpp,
+          // nsHTMLDocument.cpp, nsDOMEvent.cpp
+          // nsDOMEvent::ReportWrongPropertyAccessWarning()
+          // nsHTMLDocument::WriteCommon()
+        case "DOM:HTML":
+          // PrintWarningOnConsole() in nsDOMClassInfo.cpp
+        case "DOM Window":
+          // nsGlobalWindow::Close()
+          // TODO: This message is never displayed because its origin cannot be
+          // determined, no sourceName is given. See bug 603711.
+        case "SVG":
+          // nsSVGUtils::ReportToConsole()
+          // nsSVGElement::ReportAttributeParseFailure()
+        case "ImageMap":
+          // logMessage() in nsImageMap.cpp
+        case "HTML":
+          // SendJSWarning() in nsFormSubmission.cpp
+        case "Canvas":
+          // nsCanvasRenderingContext2D::SetStyleFromStringOrInterface()
+          // TODO: This message is never displayed because its origin cannot be
+          // determined, no sourceName is given. See bug 603714.
+        case "DOM3 Load":
+          // ReportUseOfDeprecatedMethod() in nsXMLDocument.cpp
+          // TODO: This message is generally not displayed because its origin
+          // (sourceName) points to the previous URI of the document object -
+          // not the URI of the page in which the script tries to load the new
+          // URI. See bug 603720.
+        case "DOM":
+          // nsDocument::ReportEmptyGetElementByIdArg()
+          //   TODO: This message is never displayed because its origin cannot
+          //   be determined, no sourceName is given. See bug 603723.
+          // nsXMLDocument::Load() - for chrome code.
+        case "malformed-xml":
+          // nsExpatDriver::HandleError()
+          // TODO: This message is only displayed when its origin (sourceName)
+          // is the same as the tab location for which a Web Console is open.
+          // See bug 603727.
+        case "DOM Worker javascript":
+          // nsReportErrorRunnable and DOMWorkerErrorReporter in
+          // nsDOMThreadService.cpp
+          // TODO: This message is never displayed because its origin
+          // (sourceName) points us only to the script that thrown the exception
+          // - no way to associate it to a specific tab. See bug 603730.
+          HUDService.reportConsoleServiceContentScriptError(aSubject);
+          return;
         default:
-          for (let i = 0; i < hudIds.length; i++) {
-            HUDService.logActivity("console-listener", hudIds[i], aSubject);
-          }
+          HUDService.reportConsoleServiceMessage(aSubject);
           return;
       }
     }
