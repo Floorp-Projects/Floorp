@@ -196,6 +196,47 @@ function CookieDatabaseConnection(profile, schema)
   this.db.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
 
   switch (schema) {
+  case 1:
+    {
+      if (!exists) {
+        this.db.executeSimpleSQL(
+          "CREATE TABLE moz_cookies (       \
+             id INTEGER PRIMARY KEY,        \
+             name TEXT,                     \
+             value TEXT,                    \
+             host TEXT,                     \
+             path TEXT,                     \
+             expiry INTEGER,                \
+             isSecure INTEGER,              \
+             isHttpOnly INTEGER)");
+      }
+
+      this.stmtInsert = this.db.createStatement(
+        "INSERT INTO moz_cookies (        \
+           id,                            \
+           name,                          \
+           value,                         \
+           host,                          \
+           path,                          \
+           expiry,                        \
+           isSecure,                      \
+           isHttpOnly)                    \
+           VALUES (                       \
+           :id,                           \
+           :name,                         \
+           :value,                        \
+           :host,                         \
+           :path,                         \
+           :expiry,                       \
+           :isSecure,                     \
+           :isHttpOnly)");
+
+      this.stmtDelete = this.db.createStatement(
+        "DELETE FROM moz_cookies WHERE id = :id");
+
+      break;
+    }
+
   case 2:
     {
       if (!exists) {
@@ -370,6 +411,17 @@ CookieDatabaseConnection.prototype =
 
     switch (this.schema)
     {
+    case 1:
+      this.stmtInsert.bindByName("id", cookie.creationTime);
+      this.stmtInsert.bindByName("name", cookie.name);
+      this.stmtInsert.bindByName("value", cookie.value);
+      this.stmtInsert.bindByName("host", cookie.host);
+      this.stmtInsert.bindByName("path", cookie.path);
+      this.stmtInsert.bindByName("expiry", cookie.expiry);
+      this.stmtInsert.bindByName("isSecure", cookie.isSecure);
+      this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
+      break;
+
     case 2:
       this.stmtInsert.bindByName("id", cookie.creationTime);
       this.stmtInsert.bindByName("name", cookie.name);
@@ -395,7 +447,7 @@ CookieDatabaseConnection.prototype =
       this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
       break;
 
-    case 3:
+    case 4:
       this.stmtInsert.bindByName("baseDomain", cookie.baseDomain);
       this.stmtInsert.bindByName("name", cookie.name);
       this.stmtInsert.bindByName("value", cookie.value);
@@ -422,6 +474,7 @@ CookieDatabaseConnection.prototype =
 
     switch (this.db.schemaVersion)
     {
+    case 1:
     case 2:
     case 3:
       this.stmtDelete.bindByName("id", cookie.creationTime);
@@ -447,6 +500,9 @@ CookieDatabaseConnection.prototype =
 
     switch (this.db.schemaVersion)
     {
+    case 1:
+      do_throw("can't update a schema 1 cookie!");
+
     case 2:
     case 3:
       this.stmtUpdate.bindByName("id", cookie.creationTime);
@@ -471,7 +527,8 @@ CookieDatabaseConnection.prototype =
   {
     this.stmtInsert.finalize();
     this.stmtDelete.finalize();
-    this.stmtUpdate.finalize();
+    if (this.stmtUpdate)
+      this.stmtUpdate.finalize();
     this.db.close();
 
     this.stmtInsert = null;

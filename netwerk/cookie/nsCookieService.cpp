@@ -99,7 +99,7 @@ static nsCookieService *gCookieService;
 // This is a hack to hide HttpOnly cookies from older browsers
 static const char kHttpOnlyPrefix[] = "#HttpOnly_";
 
-static const char kCookieFileName[] = "cookies.sqlite";
+#define COOKIES_FILE "cookies.sqlite"
 #define COOKIES_SCHEMA_VERSION 4
 
 static const PRInt64 kCookieStaleThreshold = 60 * PR_USEC_PER_SEC; // 1 minute in microseconds
@@ -656,32 +656,15 @@ nsCookieService::Init()
 void
 nsCookieService::InitDBStates()
 {
-  NS_ASSERTION(!mDBState, "already have a DB state");
+  NS_ASSERTION(!mDBState, "already have a DBState");
+  NS_ASSERTION(!mDefaultDBState, "already have a default DBState");
+  NS_ASSERTION(!mPrivateDBState, "already have a private DBState");
 
-  // Create a new default DBState.
+  // Create a new default DBState and set our current one.
   mDefaultDBState = new DBState();
   mDBState = mDefaultDBState;
 
-  // attempt to open and read the database
-  nsresult rv = TryInitDB(PR_FALSE);
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    COOKIE_LOGSTRING(PR_LOG_WARNING, ("InitDB(): db corrupt, trying again", rv));
-
-    // Synchronously close the connection, clean up the default DBState, and try
-    // again.
-    CloseDefaultDBConnection();
-    rv = TryInitDB(PR_TRUE);
-  }
-
-  if (NS_FAILED(rv)) {
-    // Reset our DB connection and statements, and run without a db connection.
-    // This is nonfatal -- we can run fine without persistent storage, e.g. if
-    // there's no profile.
-    CloseDefaultDBConnection();
-    COOKIE_LOGSTRING(PR_LOG_WARNING, ("TryInitDB() gave error %x", rv));
-  }
-
-  // If we're in private browsing mode, switch the DBState over.
+  // If we're in private browsing mode, create a private DBState.
   nsCOMPtr<nsIPrivateBrowsingService> pbs =
     do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
   if (pbs) {
@@ -692,35 +675,82 @@ nsCookieService::InitDBStates()
       mDBState = mPrivateDBState;
     }
   }
+
+  // Get our cookie file.
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+    getter_AddRefs(mDefaultDBState->cookieFile));
+  if (NS_FAILED(rv)) {
+    // We've already set up our DBStates appropriately; nothing more to do.
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+      ("InitDBStates(): couldn't get cookie file"));
+    return;
+  }
+  mDefaultDBState->cookieFile->AppendNative(NS_LITERAL_CSTRING(COOKIES_FILE));
+
+  // Attempt to open and read the database. If TryInitDB() returns RESULT_RETRY,
+  // do so.
+  OpenDBResult result = TryInitDB(false);
+  if (result == RESULT_RETRY) {
+    // Database may be corrupt. Synchronously close the connection, clean up the
+    // default DBState, and try again.
+    COOKIE_LOGSTRING(PR_LOG_WARNING, ("InitDBStates(): retrying TryInitDB()"));
+
+    CloseDefaultDBConnection();
+    result = TryInitDB(true);
+    if (result == RESULT_RETRY) {
+      // We're done. Change the code to failure so we clean up below.
+      result = RESULT_FAILURE;
+    }
+  }
+
+  if (result == RESULT_FAILURE) {
+    COOKIE_LOGSTRING(PR_LOG_WARNING,
+      ("InitDBStates(): TryInitDB() failed, closing connection"));
+
+    // Connection failure is unrecoverable. Clean up our connection. We can run
+    // fine without persistent storage -- e.g. if there's no profile.
+    CloseDefaultDBConnection();
+  }
 }
 
-nsresult
-nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
+/* Attempt to open and read the database. If 'aRecreateDB' is true, try to
+ * move the existing database file out of the way and create a new one.
+ *
+ * @returns RESULT_OK if opening or creating the database succeeded;
+ *          RESULT_RETRY if the database cannot be opened, is corrupt, or some
+ *          other failure occurred that might be resolved by recreating the
+ *          database; or RESULT_FAILED if there was an unrecoverable error and
+ *          we must run without a database.
+ *
+ * If RESULT_RETRY or RESULT_FAILED is returned, the caller should perform
+ * cleanup of the default DBState.
+ */
+OpenDBResult
+nsCookieService::TryInitDB(bool aRecreateDB)
 {
   NS_ASSERTION(!mDefaultDBState->dbConn, "nonnull dbConn");
   NS_ASSERTION(!mDefaultDBState->stmtInsert, "nonnull stmtInsert");
   NS_ASSERTION(!mDefaultDBState->insertListener, "nonnull insertListener");
   NS_ASSERTION(!mDefaultDBState->syncConn, "nonnull syncConn");
 
-  nsCOMPtr<nsIFile> cookieFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-    getter_AddRefs(cookieFile));
-  if (NS_FAILED(rv)) return rv;
-
-  cookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
-
-  // remove an existing db, if we've been told to (i.e. it's corrupt)
-  if (aDeleteExistingDB) {
-    rv = cookieFile->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Ditch an existing db, if we've been told to (i.e. it's corrupt). We don't
+  // want to delete it outright, since it may be useful for debugging purposes,
+  // so we move it out of the way.
+  nsresult rv;
+  if (aRecreateDB) {
+    nsCOMPtr<nsIFile> backupFile;
+    mDefaultDBState->cookieFile->Clone(getter_AddRefs(backupFile));
+    rv = backupFile->MoveToNative(NULL,
+      NS_LITERAL_CSTRING(COOKIES_FILE ".bak"));
+    NS_ENSURE_SUCCESS(rv, RESULT_FAILURE);
   }
 
   // open a connection to the cookie database, and only cache our connection
   // and statements upon success. The connection is opened unshared to eliminate
   // cache contention between the main and background threads.
-  rv = mStorageService->OpenUnsharedDatabase(cookieFile,
+  rv = mStorageService->OpenUnsharedDatabase(mDefaultDBState->cookieFile,
     getter_AddRefs(mDefaultDBState->dbConn));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   // Set up our listeners.
   mDefaultDBState->insertListener = new InsertCookieDBListener(mDefaultDBState);
@@ -736,27 +766,30 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
     &tableExists);
   if (!tableExists) {
     rv = CreateTable();
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   } else {
     // table already exists; check the schema version before reading
     PRInt32 dbSchemaVersion;
     rv = mDefaultDBState->dbConn->GetSchemaVersion(&dbSchemaVersion);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
     // Start a transaction for the whole migration block.
     mozStorageTransaction transaction(mDefaultDBState->dbConn, PR_TRUE);
 
     switch (dbSchemaVersion) {
-    // upgrading.
-    // every time you increment the database schema, you need to implement
-    // the upgrading code from the previous version to the new one.
+    // Upgrading.
+    // Every time you increment the database schema, you need to implement
+    // the upgrading code from the previous version to the new one. If migration
+    // fails for any reason, it's a bug -- so we return RESULT_RETRY such that
+    // the original database will be saved, in the hopes that we might one day
+    // see it and fix it.
     case 1:
       {
         // Add the lastAccessed column to the table.
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE moz_cookies ADD lastAccessed INTEGER"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // Fall through to the next upgrade.
 
@@ -765,7 +798,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         // Add the baseDomain column and index to the table.
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE moz_cookies ADD baseDomain TEXT"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         // Compute the baseDomains for the table. This must be done eagerly
         // otherwise we won't be able to synchronously read in individual
@@ -773,19 +806,19 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         nsCOMPtr<mozIStorageStatement> select;
         rv = mDefaultDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
           "SELECT id, host FROM moz_cookies"), getter_AddRefs(select));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         nsCOMPtr<mozIStorageStatement> update;
         rv = mDefaultDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
           "UPDATE moz_cookies SET baseDomain = :baseDomain WHERE id = :id"),
           getter_AddRefs(update));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         nsCString baseDomain, host;
         PRBool hasResult;
         while (1) {
           rv = select->ExecuteStep(&hasResult);
-          NS_ENSURE_SUCCESS(rv, rv);
+          NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
           if (!hasResult)
             break;
@@ -794,8 +827,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
           select->GetUTF8String(1, host);
 
           rv = GetBaseDomainFromHost(host, baseDomain);
-          if (NS_FAILED(rv))
-            continue;
+          NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
           mozStorageStatementScoper scoper(update);
 
@@ -807,13 +839,13 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
           NS_ASSERT_SUCCESS(rv);
 
           rv = update->ExecuteStep(&hasResult);
-          NS_ENSURE_SUCCESS(rv, rv);
+          NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
         }
 
         // Create an index on baseDomain.
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain)"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // Fall through to the next upgrade.
 
@@ -835,18 +867,18 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
           "SELECT id, name, host, path FROM moz_cookies "
             "ORDER BY name ASC, host ASC, path ASC, expiry ASC"),
           getter_AddRefs(select));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         nsCOMPtr<mozIStorageStatement> deleteExpired;
         rv = mDefaultDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
           "DELETE FROM moz_cookies WHERE id = :id"),
           getter_AddRefs(deleteExpired));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         // Read the first row.
         PRBool hasResult;
         rv = select->ExecuteStep(&hasResult);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         if (hasResult) {
           nsCString name1, host1, path1;
@@ -859,7 +891,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
           while (1) {
             // Read the second row.
             rv = select->ExecuteStep(&hasResult);
-            NS_ENSURE_SUCCESS(rv, rv);
+            NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
             if (!hasResult)
               break;
@@ -879,7 +911,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
               NS_ASSERT_SUCCESS(rv);
 
               rv = deleteExpired->ExecuteStep(&hasResult);
-              NS_ENSURE_SUCCESS(rv, rv);
+              NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
             }
 
             // Make the second row the first for the next iteration.
@@ -893,25 +925,25 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         // Add the creationTime column to the table.
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE moz_cookies ADD creationTime INTEGER"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         // Copy the id of each row into the new creationTime column.
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "UPDATE moz_cookies SET creationTime = "
             "(SELECT id WHERE id = moz_cookies.id)"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         // Create a unique index on (name, host, path) to allow fast lookup.
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "CREATE UNIQUE INDEX moz_uniqueid "
           "ON moz_cookies (name, host, path)"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // Fall through to the next upgrade.
 
       // No more upgrades. Update the schema version.
       rv = mDefaultDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
     case COOKIES_SCHEMA_VERSION:
       break;
@@ -926,7 +958,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         // re-set the schema version in the db, in case the checks succeed (if
         // they don't, we're dropping the table anyway).
         rv = mDefaultDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       // fall through to downgrade check
 
@@ -960,10 +992,10 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         // our columns aren't there - drop the table!
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "DROP TABLE moz_cookies"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         rv = CreateTable();
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
       break;
     }
@@ -1006,23 +1038,23 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
       ":isHttpOnly"
     ")"),
     getter_AddRefs(mDefaultDBState->stmtInsert));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   rv = mDefaultDBState->dbConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_cookies "
     "WHERE name = :name AND host = :host AND path = :path"),
     getter_AddRefs(mDefaultDBState->stmtDelete));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   rv = mDefaultDBState->dbConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_cookies SET lastAccessed = :lastAccessed "
     "WHERE name = :name AND host = :host AND path = :path"),
     getter_AddRefs(mDefaultDBState->stmtUpdate));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   // if we deleted a corrupt db, don't attempt to import - return now
-  if (aDeleteExistingDB)
-    return NS_OK;
+  if (aRecreateDB)
+    return RESULT_OK;
 
   // check whether to import or just read in the db
   if (tableExists)
@@ -1031,20 +1063,19 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   nsCOMPtr<nsIFile> oldCookieFile;
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
     getter_AddRefs(oldCookieFile));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return RESULT_OK;
 
+  // Import cookies, and clean up the old file regardless of success or failure.
+  // Note that we have to switch out our DBState temporarily, in case we're in
+  // private browsing mode; otherwise ImportCookies() won't be happy.
+  DBState* initialState = mDBState;
+  mDBState = mDefaultDBState;
   oldCookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
-  rv = ImportCookies(oldCookieFile);
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_FILE_NOT_FOUND)
-      return NS_OK;
-
-    return rv;
-  }
-
-  // we're done importing - delete the old cookie file
+  ImportCookies(oldCookieFile);
   oldCookieFile->Remove(PR_FALSE);
-  return NS_OK;
+  mDBState = initialState;
+
+  return RESULT_OK;
 }
 
 // Sets the schema version and creates the moz_cookies table.
@@ -1553,7 +1584,8 @@ nsCookieService::Remove(const nsACString &aHost,
  * private file I/O functions
  ******************************************************************************/
 
-nsresult
+// Begin an asynchronous read from the database.
+OpenDBResult
 nsCookieService::Read()
 {
   // Set up a statement for the read. Note that our query specifies that
@@ -1573,7 +1605,7 @@ nsCookieService::Read()
       "baseDomain "
     "FROM moz_cookies "
     "WHERE baseDomain NOTNULL"), getter_AddRefs(stmtRead));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   // Set up a statement to delete any rows with a NULL 'baseDomain'
   // column. This takes care of any cookies set by browsers that don't
@@ -1583,7 +1615,7 @@ nsCookieService::Read()
   rv = mDefaultDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_cookies WHERE baseDomain ISNULL"),
     getter_AddRefs(stmtDeleteNull));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
   // Init our readSet hash and execute the statements. Note that, after this
   // point, we cannot fail without altering the cleanup code in InitDBStates()
@@ -1600,7 +1632,7 @@ nsCookieService::Read()
     getter_AddRefs(handle));
   NS_ASSERT_SUCCESS(rv);
 
-  return NS_OK;
+  return RESULT_OK;
 }
 
 // Extract data from a single result row and create an nsCookie.
@@ -1705,14 +1737,11 @@ mozIStorageConnection*
 nsCookieService::GetSyncDBConn()
 {
   NS_ASSERTION(!mDefaultDBState->syncConn, "already have sync db connection");
+  NS_ASSERTION(mDefaultDBState->cookieFile, "no cookie file");
 
   // Start a new connection for sync reads to reduce contention with the
   // background thread.
-  nsCOMPtr<nsIFile> cookieFile;
-  mDefaultDBState->dbConn->GetDatabaseFile(getter_AddRefs(cookieFile));
-  NS_ASSERTION(cookieFile, "no cookie file on connection");
-
-  mStorageService->OpenUnsharedDatabase(cookieFile,
+  mStorageService->OpenUnsharedDatabase(mDefaultDBState->cookieFile,
     getter_AddRefs(mDefaultDBState->syncConn));
   if (!mDefaultDBState->syncConn) {
     NS_ERROR("can't open sync db connection");
@@ -3571,3 +3600,4 @@ nsCookieService::UpdateCookieInList(nsCookie                      *aCookie,
     NS_ASSERT_SUCCESS(rv);
   }
 }
+
