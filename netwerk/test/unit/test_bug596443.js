@@ -6,29 +6,23 @@ function getCacheService() {
             .getService(Components.interfaces.nsICacheService);
 }
 
-function setupChannel(suffix, xRequest, flags) {
+function setupChannel(suffix, flags) {
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
     var chan = ios.newChannel("http://localhost:4444" + suffix, "", null);
     if (flags)
         chan.loadFlags |= flags;
-
-    var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
-    httpChan.setRequestHeader("x-request", xRequest, false);
-        
-    return httpChan;
+    return chan;
 }
 
-function Listener(response, finalResponse, chainedHandler) {
+function Listener(response, finalResponse) {
     this._response = response;
     this._finalResponse = finalResponse;
-    this._chainedHandler = chainedHandler;
 }
 Listener.prototype = {
     _response: null,
     _buffer: null,
     _finalResponse: false,
-    _chainedHandler: undefined,
 
     QueryInterface: function(iid) {
         if (iid.equals(Components.interfaces.nsIStreamListener) ||
@@ -45,13 +39,12 @@ Listener.prototype = {
         this._buffer = this._buffer.concat(read_stream(stream, count));
     },
     onStopRequest: function (request, ctx, status) {
-        do_check_eq(this._buffer, this._response);
+        var expected = "Response"+this._response;
+        do_check_eq(this._buffer, expected);
         if (this._finalResponse)
             do_timeout(10, function() {
                         httpserver.stop(do_test_finished);
                     });
-        if (this._chainedHandler != undefined)
-            do_timeout(10, handlers[this._chainedHandler]);
     }
 };
 
@@ -66,28 +59,27 @@ function run_test() {
     getCacheService().evictEntries(
             Components.interfaces.nsICache.STORE_ANYWHERE);
 
-    var ch0 = setupChannel("/bug596443", "Response0", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch0.asyncOpen(new Listener("Response0", false), null);
+    var ch0 = setupChannel("/bug596443", Ci.nsIRequest.LOAD_BYPASS_CACHE);
+    ch0.asyncOpen(new Listener(0), null);
 
-    var ch1 = setupChannel("/bug596443", "Response1", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch1.asyncOpen(new Listener("Response1", false, 0), null);
+    var ch1 = setupChannel("/bug596443", Ci.nsIRequest.LOAD_BYPASS_CACHE);
+    ch1.asyncOpen(new Listener(1), null);
 
-    var ch2 = setupChannel("/bug596443", "Should not be used");
-    ch2.asyncOpen(new Listener("Response1", true), null); // Note param: we expect this to come from cache
+    var ch2 = setupChannel("/bug596443");
+    ch2.asyncOpen(new Listener(1, true), null); // Note param: we expect this to come from cache
 
     do_test_pending();
 }
 
-// Sequence is as follows:
-//   we trigger the handler for the second request
-//   Necko will call CacheEntryAvailable, making the third request finish
-//   before finishing, handler for second req triggers handler for first req
-// 
 function triggerHandlers() {
-    do_timeout(100, handlers[1]);
+    do_timeout(100, function() {
+        do_timeout(100, initialHandlers[1]);
+        do_timeout(100, initialHandlers[0]);
+    });
 }
 
-var handlers = [];
+var initialHandlers = [];
+var handlerNo = 0;
 function handler(metadata, response) {
     var func = function(body) {
         return function() {
@@ -100,9 +92,9 @@ function handler(metadata, response) {
          }};
 
     response.processAsync();
-    var request = metadata.getHeader("x-request");
-    handlers.push(func(request));
+    initialHandlers[handlerNo] = func("Response"+handlerNo);
+    handlerNo++;
 
-    if (handlers.length > 1)
+    if (handlerNo > 1)
         triggerHandlers();
 }
