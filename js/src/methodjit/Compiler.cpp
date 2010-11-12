@@ -1718,15 +1718,33 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFVAR)
+          BEGIN_CASE(JSOP_DEFCONST)
           {
             uint32 index = fullAtomIndex(PC);
             JSAtom *atom = script->getAtom(index);
 
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(atom), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefVar);
+            INLINE_STUBCALL(stubs::DefVarOrConst);
           }
           END_CASE(JSOP_DEFVAR)
+
+          BEGIN_CASE(JSOP_SETCONST)
+          {
+            uint32 index = fullAtomIndex(PC);
+            JSAtom *atom = script->getAtom(index);
+
+            if (fun) {
+                JSLocalKind localKind = fun->lookupLocal(cx, atom, NULL);
+                if (localKind != JSLOCAL_NONE)
+                    frame.syncAndForgetEverything();
+            }
+
+            prepareStubCall(Uses(1));
+            masm.move(ImmPtr(atom), Registers::ArgReg1);
+            INLINE_STUBCALL(stubs::SetConst);
+          }
+          END_CASE(JSOP_SETCONST)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
