@@ -166,9 +166,6 @@ static PRInt32 GetClassicWindowFrameButtonState(nsEventStates eventState)
 
 static void QueryForButtonData(nsIFrame *aFrame)
 {
-  if (nsUXThemeData::sTitlebarInfoPopulated)
-    return;
-
   nsIWidget* widget = aFrame->GetNearestWidget();
   nsWindow * window = static_cast<nsWindow*>(widget);
   if (!window)
