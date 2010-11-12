@@ -39,6 +39,7 @@ load 457537-1.html
 load 457537-2.html
 load 478219-1.xhtml
 load 513113-1.html
+load 538062-1.xhtml
 load 570624-1.html
 load 498698-1.html
 asserts(1) load 578604-1.html # bug 584564

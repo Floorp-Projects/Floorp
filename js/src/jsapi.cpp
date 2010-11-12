@@ -1027,7 +1027,6 @@ CheckOptionVersionSync(JSContext *cx)
     uint32 options = cx->options;
     JSVersion version = cx->findVersion();
     JS_ASSERT(OptionsHasXML(options) == VersionHasXML(version));
-    JS_ASSERT(OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version));
 #endif
 }
 
@@ -2203,7 +2202,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
                     JS_snprintf(buf, bufsize, "%p", fun);
                 } else {
                     if (fun->atom)
-                        js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
+                        PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
                 }
             } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
                 JS_snprintf(buf, bufsize, "%p", obj->getPrivate());
@@ -2214,7 +2213,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
           }
 
           case JSTRACE_STRING:
-            js_PutEscapedString(buf, bufsize, (JSString *)thing, 0);
+            PutEscapedString(buf, bufsize, (JSString *)thing, 0);
             break;
 
 #if JS_HAS_XML_SUPPORT
@@ -4199,6 +4198,19 @@ JS_NewFunctionWithType(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                           handler, fullName);
 }
 
+JS_PUBLIC_API(JSFunction *)
+JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSObject *parent,
+                   jsid id)
+{
+    JS_ASSERT(JSID_IS_STRING(id));
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->defaultCompartment);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, parent);
+
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent,
+                          JSID_TO_ATOM(id), NULL, NULL);
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
@@ -4541,7 +4553,9 @@ JS_DefineFunctionWithType(JSContext *cx, JSObject *obj, const char *name, JSNati
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
-    return atom ? js_DefineFunction(cx, obj, atom, Valueify(call), nargs, attrs, handler, fullName) : NULL;
+    if (!atom)
+        return NULL;
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, handler, fullName);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4554,7 +4568,19 @@ JS_DefineUCFunctionWithType(JSContext *cx, JSObject *obj,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    return atom ? js_DefineFunction(cx, obj, atom, Valueify(call), nargs, attrs, handler, fullName) : NULL;
+    if (!atom)
+        return NULL;
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), Valueify(call), nargs, attrs, handler, fullName);
+}
+
+extern JS_PUBLIC_API(JSFunction *)
+JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
+                    uintN nargs, uintN attrs)
+{
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->defaultCompartment);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    return js_DefineFunction(cx, obj, id, Valueify(call), nargs, attrs, NULL, NULL);
 }
 
 inline static void
@@ -4616,6 +4642,17 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj, const jschar *chars, size_t len
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->defaultCompartment);
     return JS_CompileUCScriptForPrincipals(cx, obj, NULL, chars, length, filename, lineno);
+}
+
+JS_PUBLIC_API(JSScript *)
+JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                     JSPrincipals *principals,
+                                     const char *bytes, size_t length,
+                                     const char *filename, uintN lineno,
+                                     JSVersion version)
+{
+    AutoVersionAPI ava(cx, version);
+    return JS_CompileScriptForPrincipals(cx, obj, principals, bytes, length, filename, lineno);   
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4737,6 +4774,14 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *file
     }
     LAST_FRAME_CHECKS(cx, script);
     return script;
+}
+
+JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj, const char *filename,
+                                         FILE *file, JSPrincipals *principals, JSVersion version)
+{
+    AutoVersionAPI ava(cx, version);
+    return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, principals);
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4957,7 +5002,10 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN inde
     JSString *str;
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, script);
+#ifdef DEBUG
+    if (cx->compartment != script->compartment)
+        CompartmentChecker::fail(cx->compartment, script->compartment);
+#endif
     jp = js_NewPrinter(cx, name, NULL,
                        indent & ~JS_DONT_PRETTY_PRINT,
                        !(indent & JS_DONT_PRETTY_PRINT),
@@ -5010,6 +5058,15 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
+
+JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
+                        JSVersion version)
+{
+    AutoVersionAPI ava(cx, version);
+    return JS_ExecuteScript(cx, obj, script, rval);
+}
+
 
 JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
@@ -5073,6 +5130,16 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *princ
                                                  filename, lineno, rval);
     cx->free(chars);
     return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+                                      const char *bytes, uintN nbytes,
+                                      const char *filename, uintN lineno, jsval *rval, JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return JS_EvaluateScriptForPrincipals(cx, obj, principals, bytes, nbytes, filename, lineno,
+                                          rval);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5163,9 +5230,20 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     memcpy(args.argv(), argv, argc * sizeof(jsval));
 
     bool ok = InvokeConstructor(cx, args);
-    JSObject *obj = (ok && args.rval().isObject())
-                    ? &args.rval().toObject()
-                    : NULL;
+
+    JSObject *obj = NULL;
+    if (ok) {
+        if (args.rval().isObject()) {
+            obj = &args.rval().toObject();
+        } else {
+            /*
+             * Although constructors may return primitives (via proxies), this
+             * API is asking for an object, so we report an error.
+             */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_NEW_RESULT,
+                                 js_ValueToPrintableString(cx, args.rval()));
+        }
+    }
 
     LAST_FRAME_CHECKS(cx, ok);
     return obj;
@@ -5414,7 +5492,7 @@ JS_GetStringChars(JSString *str)
             s = str->dependentChars();
         }
     } else {
-        str->flatClearMutable();
+        str->flatClearExtensible();
         s = str->flatChars();
     }
     return s;
@@ -5434,6 +5512,13 @@ JS_GetStringBytesZ(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsAndLength(JSString *str, size_t *lengthp)
+{
+    *lengthp = str->length();
+    return str->chars();
+}
+
+JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str)
 {
     assertSameCompartment(cx, str);
@@ -5444,6 +5529,24 @@ JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2)
 {
     return js_CompareStrings(str1, str2);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_MatchStringAndAscii(JSString *str, const char *asciiBytes)
+{
+    return MatchStringAndAscii(str, asciiBytes);
+}
+
+JS_PUBLIC_API(size_t)
+JS_PutEscapedString(char *buffer, size_t size, JSString *str, char quote)
+{
+    return PutEscapedString(buffer, size, str, quote);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_FileEscapedString(FILE *fp, JSString *str, char quote)
+{
+    return FileEscapedString(fp, str, quote);
 }
 
 JS_PUBLIC_API(JSString *)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -128,7 +128,7 @@ void vp8_sixtap_predict4x4_mmx
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 16*16);  // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 16*16);  /* Temp data bufffer used in filtering */
     const short *HFilter, *VFilter;
     HFilter = vp8_six_tap_mmx[xoffset];
     vp8_filter_block1d_h6_mmx(src_ptr - (2 * src_pixels_per_line), FData2, src_pixels_per_line, 1, 9, 8, HFilter);
@@ -149,7 +149,7 @@ void vp8_sixtap_predict16x16_mmx
 )
 {
 
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 24*24);  // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 24*24);  /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -181,7 +181,7 @@ void vp8_sixtap_predict8x8_mmx
 )
 {
 
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);    // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);    /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -207,7 +207,7 @@ void vp8_sixtap_predict8x4_mmx
 )
 {
 
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);    // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);    /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -253,7 +253,7 @@ void vp8_sixtap_predict16x16_sse2
 
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 24*24);    // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 24*24);    /* Temp data bufffer used in filtering */
 
     const short *HFilter, *VFilter;
 
@@ -268,14 +268,14 @@ void vp8_sixtap_predict16x16_sse2
         }
         else
         {
-            // First-pass only
+            /* First-pass only */
             HFilter = vp8_six_tap_mmx[xoffset];
             vp8_filter_block1d16_h6_only_sse2(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 16, HFilter);
         }
     }
     else
     {
-        // Second-pass only
+        /* Second-pass only */
         VFilter = vp8_six_tap_mmx[yoffset];
         vp8_unpack_block1d16_h6_sse2(src_ptr - (2 * src_pixels_per_line), FData2,   src_pixels_per_line, 21, 32);
         vp8_filter_block1d16_v6_sse2(FData2 + 32, dst_ptr,   dst_pitch, 32, 16 , 16, dst_pitch, VFilter);
@@ -293,7 +293,7 @@ void vp8_sixtap_predict8x8_sse2
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);  // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);  /* Temp data bufffer used in filtering */
     const short *HFilter, *VFilter;
 
     if (xoffset)
@@ -307,14 +307,14 @@ void vp8_sixtap_predict8x8_sse2
         }
         else
         {
-            // First-pass only
+            /* First-pass only */
             HFilter = vp8_six_tap_mmx[xoffset];
             vp8_filter_block1d8_h6_only_sse2(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 8, HFilter);
         }
     }
     else
     {
-        // Second-pass only
+        /* Second-pass only */
         VFilter = vp8_six_tap_mmx[yoffset];
         vp8_filter_block1d8_v6_only_sse2(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 8, VFilter);
     }
@@ -331,7 +331,7 @@ void vp8_sixtap_predict8x4_sse2
     int dst_pitch
 )
 {
-    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);  // Temp data bufffer used in filtering
+    DECLARE_ALIGNED_ARRAY(16, unsigned short, FData2, 256);  /* Temp data bufffer used in filtering */
     const short *HFilter, *VFilter;
 
     if (xoffset)
@@ -345,14 +345,14 @@ void vp8_sixtap_predict8x4_sse2
         }
         else
         {
-            // First-pass only
+            /* First-pass only */
             HFilter = vp8_six_tap_mmx[xoffset];
             vp8_filter_block1d8_h6_only_sse2(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 4, HFilter);
         }
     }
     else
     {
-        // Second-pass only
+        /* Second-pass only */
         VFilter = vp8_six_tap_mmx[yoffset];
         vp8_filter_block1d8_v6_only_sse2(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 4, VFilter);
     }
@@ -444,13 +444,13 @@ void vp8_sixtap_predict16x16_ssse3
         }
         else
         {
-            // First-pass only
+            /* First-pass only */
             vp8_filter_block1d16_h6_ssse3(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 16, xoffset);
         }
     }
     else
     {
-        // Second-pass only
+        /* Second-pass only */
         vp8_filter_block1d16_v6_ssse3(src_ptr - (2 * src_pixels_per_line) , src_pixels_per_line, dst_ptr, dst_pitch, 16, yoffset);
     }
 }
@@ -481,7 +481,7 @@ void vp8_sixtap_predict8x8_ssse3
     }
     else
     {
-        // Second-pass only
+        /* Second-pass only */
         vp8_filter_block1d8_v6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 8, yoffset);
     }
 }
@@ -508,13 +508,13 @@ void vp8_sixtap_predict8x4_ssse3
         }
         else
         {
-            // First-pass only
+            /* First-pass only */
             vp8_filter_block1d8_h6_ssse3(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 4, xoffset);
         }
     }
     else
     {
-        // Second-pass only
+        /* Second-pass only */
         vp8_filter_block1d8_v6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 4, yoffset);
     }
 }

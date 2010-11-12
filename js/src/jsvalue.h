@@ -566,10 +566,10 @@ class Value
         return data.asBits != rhs.data.asBits;
     }
 
-    JS_ALWAYS_INLINE
-    friend bool SameType(const Value &lhs, const Value &rhs) {
-        return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
-    }
+    /* This function used to be inlined here, but this triggered a gcc bug
+       due to SameType being used in a template method.
+       See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38850 */
+    friend bool SameType(const Value &lhs, const Value &rhs);
 
     /*** Extract the value's typed payload ***/
 
@@ -728,6 +728,10 @@ class Value
         return data.asPtr;
     }
 
+    const jsuword *payloadWord() const {
+        return &data.s.payload.word;
+    }
+
   private:
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -739,6 +743,12 @@ class Value
 
     jsval_layout data;
 } JSVAL_ALIGNMENT;
+
+JS_ALWAYS_INLINE bool
+SameType(const Value &lhs, const Value &rhs)
+{
+    return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
+}
 
 static JS_ALWAYS_INLINE Value
 NullValue()
@@ -898,9 +908,11 @@ typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                  PropertyOp getter, PropertyOp setter, uintN attrs);
 typedef JSBool
-(* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+(* PropertyIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 typedef JSBool
 (* StrictPropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
+typedef JSBool
+(* DeleteIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict);
 typedef JSBool
 (* CallOp)(JSContext *cx, uintN argc, Value *vp);
 typedef JSBool
@@ -999,7 +1011,7 @@ struct ObjectOps {
     js::StrictPropertyIdOp  setProperty;
     js::AttributesOp        getAttributes;
     js::AttributesOp        setAttributes;
-    js::StrictPropertyIdOp  deleteProperty;
+    js::DeleteIdOp          deleteProperty;
     js::NewEnumerateOp      enumerate;
     js::TypeOfOp            typeOf;
     js::TraceOp             trace;

@@ -1529,8 +1529,7 @@ EmitKnownBlockChain(JSContext *cx, JSCodeGenerator *cg, JSObjectBox *box)
 {
     if (box)
         return EmitIndexOp(cx, JSOP_BLOCKCHAIN, box->index, cg);
-    else
-        return js_Emit1(cx, cg, JSOP_NULLBLOCKCHAIN) >= 0;
+    return js_Emit1(cx, cg, JSOP_NULLBLOCKCHAIN) >= 0;
 }
 
 static JSBool
@@ -2257,6 +2256,13 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     }
 
     if (dn->pn_dflags & PND_GVAR) {
+        /*
+         * JSOP_DEFFUN could introduce a shadowing definition, so if it
+         * is present, we can't optimize to JSOP_GETGLOBAL.
+         */
+        if (cg->hasDefFun())
+            return JS_TRUE;
+
         switch (op) {
           case JSOP_NAME:     op = JSOP_GETGLOBAL; break;
           case JSOP_SETNAME:  op = JSOP_SETGLOBAL; break;
@@ -2798,7 +2804,7 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     if (op == JSOP_ARGUMENTS || op == JSOP_CALLEE) {
         if (js_Emit1(cx, cg, op) < 0)
             return JS_FALSE;
-        if (callContext && js_Emit1(cx, cg, JSOP_NULL) < 0)
+        if (callContext && js_Emit1(cx, cg, JSOP_PUSH) < 0)
             return JS_FALSE;
     } else {
         if (!pn->pn_cookie.isFree()) {
@@ -5097,7 +5103,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 } else
 #endif
                 if (pn3->pn_type == TOK_LP) {
-                    JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
+                    JS_ASSERT(pn3->pn_xflags & PNX_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
@@ -6497,8 +6503,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!useful) {
                 off = noteIndex = -1;
             } else {
-                if (pn2->pn_op == JSOP_SETCALL)
-                    pn2->pn_op = JSOP_CALL;
+                JS_ASSERT_IF(pn2->pn_type == TOK_LP, !(pn2->pn_xflags & PNX_SETCALL));
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
                 off = CG_OFFSET(cg);
@@ -6638,6 +6643,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (PN_OP(pn) == JSOP_EVAL) {
             EMIT_UINT16_IMM_OP(JSOP_LINENO, pn->pn_pos.begin.lineno);
             if (EmitBlockChain(cx, cg) < 0)
+                return JS_FALSE;
+        }
+        if (pn->pn_xflags & PNX_SETCALL) {
+            if (js_Emit1(cx, cg, JSOP_SETCALL) < 0)
                 return JS_FALSE;
         }
         break;

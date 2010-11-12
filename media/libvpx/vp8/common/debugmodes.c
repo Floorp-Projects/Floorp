@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -21,7 +21,7 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
     int mb_index = 0;
     FILE *mvs = fopen("mvs.stt", "a");
 
-    // print out the macroblock Y modes
+    /* print out the macroblock Y modes */
     mb_index = 0;
     fprintf(mvs, "Mb Modes for Frame %d\n", frame);
 
@@ -60,7 +60,7 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
 
     fprintf(mvs, "\n");
 
-    // print out the macroblock UV modes
+    /* print out the macroblock UV modes */
     mb_index = 0;
     fprintf(mvs, "UV Modes for Frame %d\n", frame);
 
@@ -80,7 +80,7 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
 
     fprintf(mvs, "\n");
 
-    // print out the block modes
+    /* print out the block modes */
     mb_index = 0;
     fprintf(mvs, "Mbs for Frame %d\n", frame);
     {
@@ -108,7 +108,7 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
     }
     fprintf(mvs, "\n");
 
-    // print out the macroblock mvs
+    /* print out the macroblock mvs */
     mb_index = 0;
     fprintf(mvs, "MVs for Frame %d\n", frame);
 
@@ -128,7 +128,7 @@ void vp8_print_modes_and_motion_vectors(MODE_INFO *mi, int rows, int cols, int f
     fprintf(mvs, "\n");
 
 
-    // print out the block modes
+    /* print out the block modes */
     mb_index = 0;
     fprintf(mvs, "MVs for Frame %d\n", frame);
     {

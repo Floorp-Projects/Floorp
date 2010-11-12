@@ -182,6 +182,7 @@ public:
      * a dummy BeginUpdate/EndUpdate pair.
      */
     virtual void Resize(const nsIntSize& aSize) {
+        mSize = aSize;
         nsIntRegion r(nsIntRect(0, 0, aSize.width, aSize.height));
         BeginUpdate(r);
         EndUpdate();
@@ -295,10 +296,11 @@ struct THEBES_API ContextFormat
     };
 
     ContextFormat() {
-        memset(this, 0, sizeof(this));
+        memset(this, 0, sizeof(*this));
     }
 
     ContextFormat(const StandardContextFormat cf) {
+        memset(this, 0, sizeof(*this));
         switch (cf) {
         case BasicRGBA32:
             red = green = blue = alpha = 8;

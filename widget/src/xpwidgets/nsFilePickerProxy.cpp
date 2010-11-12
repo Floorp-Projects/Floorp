@@ -172,7 +172,7 @@ NS_IMETHODIMP nsFilePickerProxy::Show(PRInt16* aReturn)
     mozilla::dom::ContentChild *cc = mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cc, "Content Protocol is NULL!");
     
-    nsTArray<nsString> filePaths;
+    InfallibleTArray<nsString> filePaths;
     
     nsresult rv;
     cc->SendShowFilePicker(mMode, mSelectedType, mTitle,

@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<window title="Content/chrome integration subwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTests()">\
+  <!-- We're mainly testing that a) translucent chrome elements cause the plugin to be clipped away and
+       b) translucent content elements do NOT cause the plugin to be clipped away -->
+  <stack style="height:100px; width:150px;">
+    <iframe type="content" style="border:none;" id="f"
+            src="data:text/html,&lt;embed id='e' type='application/x-test' wmode='window'
+                                style='position:absolute;left:0;top:0;width:100px;height:100px'&gt;&lt;/embed&gt;
+                                &lt;div style='position:absolute;left:0;top:80px;width:100px;height:10px;background:rgba(0,0,128,0.5)'&gt;&lt;/div&gt;
+                                &lt;div style='position:absolute;left:0;top:90px;width:100px;height:10px;background:blue'&gt;&lt;/div&gt;
+                                "/>
+    <vbox>
+      <vbox style="height:25px; background:yellow;"/> <!-- plugin should be covered here -->
+      <vbox style="height:25px; background:rgba(0,128,0,0.5);"/> <!-- plugin should be covered here -->
+      <vbox style="height:50px;"/> <!-- plugin should be visible here -->
+    </vbox>
+  </stack>
+
+  <script type="application/javascript">
+    <![CDATA[
+    var imports = [ "SimpleTest", "is", "isnot", "ok", "todo" ];
+    for each (var import in imports) {
+      window[import] = window.opener.wrappedJSObject[import];
+    }
+
+    var plugin;
+    function waitForPaint() {
+      if (plugin.getPaintCount() < 1) {
+        setTimeout(waitForPaint, 0);
+        return;
+      }
+
+      if (plugin.hasWidget()) {
+        is(plugin.getClipRegionRectCount(), 1, "plugin clip rect count");
+        var left = plugin.getEdge(0);
+        var top = plugin.getEdge(1);
+        is(plugin.getClipRegionRectEdge(0,0) - left, 0, "plugin clip rect left");
+        // our two vboxes with backgrounds should cause the top of the plugin to be clipped
+        is(plugin.getClipRegionRectEdge(0,1) - top, 50, "plugin clip rect top");
+        is(plugin.getClipRegionRectEdge(0,2) - left, 100, "plugin clip rect right");
+        // of the two content DIVs, the first one should not cause the plugin to be clipped because
+        // it's transparent. The second one should cause the plugin to be clipped.
+        is(plugin.getClipRegionRectEdge(0,3) - top, 90, "plugin clip rect bottom");
+      } else {
+        todo(false, "Test only tests windowed plugins");
+      }
+
+      var tester = window.SimpleTest;
+      window.close();
+      tester.finish();
+    }
+
+    function runTests() {
+      plugin = document.getElementById("f").contentDocument.getElementById("e").wrappedJSObject;
+      waitForPaint();
+    }
+    ]]>
+  </script>
+</window>

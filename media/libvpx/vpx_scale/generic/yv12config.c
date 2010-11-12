@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -45,7 +45,7 @@ vp8_yv12_de_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf)
 int
 vp8_yv12_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height, int border)
 {
-//NOTE:
+/*NOTE:*/
 
     int yplane_size = (height + 2 * border) * (width + 2 * border);
     int uvplane_size = ((1 + height) / 2 + border) * ((1 + width) / 2 + border);
@@ -65,9 +65,10 @@ vp8_yv12_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height, int 
         ybf->border = border;
         ybf->frame_size = yplane_size + 2 * uvplane_size;
 
-        // Added 2 extra lines to framebuffer so that copy12x12 doesn't fail
-        // when we have a large motion vector in V on the last v block.
-        // Note : We never use these pixels anyway so this doesn't hurt.
+        /* Added 2 extra lines to framebuffer so that copy12x12 doesn't fail
+         * when we have a large motion vector in V on the last v block.
+         * Note : We never use these pixels anyway so this doesn't hurt.
+         */
         ybf->buffer_alloc = (unsigned char *) duck_memalign(32,  ybf->frame_size + (ybf->y_stride * 2) + 32, 0);
 
         if (ybf->buffer_alloc == NULL)

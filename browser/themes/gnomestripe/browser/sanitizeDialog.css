@@ -36,7 +36,7 @@
 }
 
 #sanitizeEverythingWarningIcon {
-  list-style-image: url("chrome://global/skin/icons/warning-large.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dialog");
   padding: 0;
   margin: 0;
 }

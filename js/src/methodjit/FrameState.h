@@ -236,10 +236,11 @@ class FrameState
         RematInfo::RematType type_;
     };
 
+    FrameState *thisFromCtor() { return this; }
   public:
-    FrameState(JSContext *cx, JSScript *script, Assembler &masm);
+    FrameState(JSContext *cx, JSScript *script, JSFunction *fun, Assembler &masm);
     ~FrameState();
-    bool init(uint32 nargs);
+    bool init();
 
     /*
      * Pushes a synced slot that may have a known type.
@@ -268,9 +269,10 @@ class FrameState
 
     /*
      * Pushes a type register and data register pair, converting to the specified
-     * known type if necessary.
+     * known type if necessary.  If the type is JSVAL_TYPE_DOUBLE, the registers
+     * are converted into a floating point register, which is returned.
      */
-    inline void pushRegs(RegisterID type, RegisterID data, JSValueType knownType);
+    inline FPRegisterID pushRegs(RegisterID type, RegisterID data, JSValueType knownType);
 
     /* Push a value which is definitely a double. */
     void pushDouble(FPRegisterID fpreg);
@@ -278,9 +280,6 @@ class FrameState
 
     /* Ensure that fe is definitely a double.  It must already be either int or double. */
     void ensureDouble(FrameEntry *fe);
-
-    /* Ensure that in-memory fe is definitely a double. */
-    void ensureInMemoryDouble(FrameEntry *fe, Assembler &masm) const;
 
     /* Forget that fe is definitely a double. */
     void forgetKnownDouble(FrameEntry *fe);
@@ -339,12 +338,16 @@ class FrameState
     inline void enterBlock(uint32 n);
     inline void leaveBlock(uint32 n);
 
-    /*
-     * Pushes a copy of a local variable.
-     */
+    // Pushes a copy of a slot (formal argument, local variable, or stack slot)
+    // onto the operation stack.
     void pushLocal(uint32 n, JSValueType knownType);
+    void pushArg(uint32 n, JSValueType knownType);
+    void pushCallee();
+    void pushThis();
+    inline void learnThisIsObject();
 
     inline FrameEntry *getLocal(uint32 slot);
+    inline FrameEntry *getArg(uint32 slot);
 
     /*
      * Allocates a temporary register for a FrameEntry's type. The register
@@ -553,6 +556,7 @@ class FrameState
      * used as a temporary.
      */
     void loadForReturn(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
+    void loadThisForReturn(RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
 
     /*
      * Stores the top stack slot back to a local or slot.  type indicates any known
@@ -560,8 +564,11 @@ class FrameState
      */
     void storeLocal(uint32 n, bool popGuaranteed = false,
                     JSValueType type = JSVAL_TYPE_UNKNOWN);
+    void storeArg(uint32 n, bool popGuaranteed = false,
+                  JSValueType type = JSVAL_TYPE_UNKNOWN);
     void storeTop(FrameEntry *target, bool popGuaranteed = false,
                   JSValueType type = JSVAL_TYPE_UNKNOWN);
+    void finishStore(FrameEntry *fe, bool closed);
 
     /*
      * Restores state from a slow path.
@@ -582,7 +589,7 @@ class FrameState
 
     /* Syncs and kills everything. */
     void syncAndKillEverything() {
-        syncAndKill(Registers(Registers::AvailRegs), Uses(frameDepth()));
+        syncAndKill(Registers(Registers::AvailRegs), Uses(frameSlots()));
     }
 
     /*
@@ -719,17 +726,32 @@ class FrameState
      */
     inline void giveOwnRegs(FrameEntry *fe);
 
-    /*
-     * Returns the current stack depth of the frame.
-     */
     uint32 stackDepth() const { return sp - spBase; }
-    uint32 frameDepth() const { return stackDepth() + script->nfixed; }
+
+    // Returns the number of entries in the frame, that is:
+    //   2 for callee, this +
+    //   nargs +
+    //   nfixed +
+    //   currently pushed stack slots
+    uint32 frameSlots() const { return uint32(sp - entries); }
+
+    // Returns the number of local variables and active stack slots.
+    uint32 localSlots() const { return uint32(sp - locals); }
 
 #ifdef DEBUG
     void assertValidRegisterState() const;
 #endif
 
+    // Return an address, relative to the JSStackFrame, that represents where
+    // this FrameEntry is stored in memory. Note that this is its canonical
+    // address, not its backing store. There is no guarantee that the memory
+    // is coherent.
     Address addressOf(const FrameEntry *fe) const;
+
+    // Returns an address, relative to the JSStackFrame, that represents where
+    // this FrameEntry is backed in memory. This is not necessarily its
+    // canonical address, but the address for which the payload has been synced
+    // to memory. The caller guarantees that the payload has been synced.
     Address addressForDataRemat(const FrameEntry *fe) const;
 
     inline StateRemat dataRematInfo(const FrameEntry *fe) const;
@@ -755,10 +777,9 @@ class FrameState
      */
     void shift(int32 n);
 
-    /*
-     * Notifies the frame of a slot that can escape.
-     */
+    // Notifies the frame that a local variable or argument slot is closed over.
     inline void setClosedVar(uint32 slot);
+    inline void setClosedArg(uint32 slot);
 
     inline void setInTryBlock(bool inTryBlock) {
         this->inTryBlock = inTryBlock;
@@ -785,9 +806,11 @@ class FrameState
     inline void syncType(FrameEntry *fe);
     inline void syncData(FrameEntry *fe);
 
+    inline FrameEntry *getOrTrack(uint32 index);
+    inline FrameEntry *getCallee();
+    inline FrameEntry *getThis();
     inline void forgetAllRegs(FrameEntry *fe);
     inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
-    inline uint32 localIndex(uint32 n);
     void pushCopyOf(uint32 index);
 #if defined JS_NUNBOX32
     void syncFancy(Assembler &masm, Registers avail, FrameEntry *resumeAt,
@@ -819,23 +842,24 @@ class FrameState
         return &entries[index];
     }
 
-    RegisterID evictSomeReg() {
-        return evictSomeReg(Registers::AvailRegs);
-    }
-
-    uint32 indexOf(int32 depth) {
+    RegisterID evictSomeReg() { return evictSomeReg(Registers::AvailRegs); }
+    uint32 indexOf(int32 depth) const {
+        JS_ASSERT(uint32((sp + depth) - entries) < feLimit());
         return uint32((sp + depth) - entries);
     }
-
     uint32 indexOfFe(FrameEntry *fe) const {
+        JS_ASSERT(uint32(fe - entries) < feLimit());
         return uint32(fe - entries);
     }
+    uint32 feLimit() const { return script->nslots + nargs + 2; }
 
     inline bool isClosedVar(uint32 slot);
+    inline bool isClosedArg(uint32 slot);
 
   private:
     JSContext *cx;
     JSScript *script;
+    JSFunction *fun;
     uint32 nargs;
     Assembler &masm;
 
@@ -845,6 +869,9 @@ class FrameState
 
     /* Cache of FrameEntry objects. */
     FrameEntry *entries;
+
+    FrameEntry *callee_;
+    FrameEntry *this_;
 
     /* Base pointer for arguments. */
     FrameEntry *args;
@@ -873,9 +900,13 @@ class FrameState
 #endif
 
     JSPackedBool *closedVars;
+    JSPackedBool *closedArgs;
     bool eval;
+    bool usesArguments;
     bool inTryBlock;
 };
+
+class AutoPreserveAcrossSyncAndKill;
 
 } /* namespace mjit */
 } /* namespace js */

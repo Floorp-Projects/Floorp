@@ -90,7 +90,7 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 }
 
 inline bool
-JSObject::brand(JSContext *cx, uint32 slot, js::Value v)
+JSObject::brand(JSContext *cx)
 {
     JS_ASSERT(!generic());
     JS_ASSERT(!branded());
@@ -438,6 +438,13 @@ JSObject::getArgsElement(uint32 i) const
     JS_ASSERT(isArguments());
     JS_ASSERT(i < getArgsInitialLength());
     return getArgsData()->slots[i];
+}
+
+inline js::Value *
+JSObject::getArgsElements() const
+{
+    JS_ASSERT(isArguments());
+    return getArgsData()->slots;
 }
 
 inline js::Value *

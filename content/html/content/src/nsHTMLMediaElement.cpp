@@ -121,6 +121,7 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 // Under certain conditions there may be no-one holding references to
@@ -226,7 +227,7 @@ public:
     return nsContentUtils::DispatchTrustedEvent(mElement->GetOwnerDoc(),
                                                 mSource,
                                                 NS_LITERAL_STRING("error"),
-                                                PR_TRUE,
+                                                PR_FALSE,
                                                 PR_TRUE);
   }
 };
@@ -1265,7 +1266,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
 }
 
 nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                       PRUint32 aFromParser)
+                                       FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
@@ -2265,7 +2266,7 @@ nsresult nsHTMLMediaElement::DispatchEvent(const nsAString& aName)
   return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
                                               static_cast<nsIContent*>(this),
                                               aName,
-                                              PR_TRUE,
+                                              PR_FALSE,
                                               PR_TRUE);
 }
 

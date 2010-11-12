@@ -95,7 +95,10 @@ struct StateRemat {
     bool isConstant() const { return offset_ == CONSTANT; }
     bool inRegister() const { return offset_ >= 0 &&
                                      offset_ <= int32(JSC::MacroAssembler::TotalRegisters); }
-    bool inMemory() const { return offset_ >= int32(sizeof(JSStackFrame)); }
+    bool inMemory() const {
+        return offset_ >= int32(sizeof(JSStackFrame)) ||
+               offset_ < 0;
+    }
 
     int32 toInt32() const { return offset_; }
     Address address() const {

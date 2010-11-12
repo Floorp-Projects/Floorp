@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,7 +12,7 @@
 #ifndef __INC_TREECODER_H
 #define __INC_TREECODER_H
 
-typedef unsigned char vp8bc_index_t; // probability index
+typedef unsigned char vp8bc_index_t; /* probability index */
 
 
 typedef unsigned char vp8_prob;

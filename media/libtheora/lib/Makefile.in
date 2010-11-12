@@ -34,15 +34,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= theora
-LIBRARY_NAME	= theora
-FORCE_STATIC_LIB= 1
+MODULE           = theora
+LIBRARY_NAME     = theora
+FORCE_STATIC_LIB = 1
 
 # The encoder is currently not included.
 DEFINES += -DTHEORA_DISABLE_ENCODE
@@ -50,51 +50,103 @@ DEFINES += -DTHEORA_DISABLE_ENCODE
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifneq ($(OS_ARCH),SunOS)
 ifneq ($(OS_ARCH)$(OS_TEST),WINNTx86_64)
-DEFINES += -DOC_X86_ASM -DUSE_ASM
+DEFINES += -DOC_X86_ASM
+ifeq (64,$(findstring 64,$(OS_TEST)))
+DEFINES += -DOC_X86_64_ASM
+endif
 endif
 endif
 endif
 
-VPATH		:= $(srcdir)
+VPATH := $(srcdir)
 
-CSRCS		= \
-		apiwrapper.c \
-		bitpack.c \
-		decapiwrapper.c \
-		decinfo.c \
-		decode.c \
-		dequant.c \
-		encoder_disabled.c \
-		fragment.c \
-		huffdec.c \
-		idct.c \
-		info.c \
-		internal.c \
-		quant.c \
-		state.c \
-		$(NULL)
+CSRCS = \
+  apiwrapper.c \
+  bitpack.c \
+  decapiwrapper.c \
+  decinfo.c \
+  decode.c \
+  dequant.c \
+  fragment.c \
+  huffdec.c \
+  idct.c \
+  info.c \
+  internal.c \
+  quant.c \
+  state.c \
+  $(NULL)
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifdef _MSC_VER
 ifneq (64,$(findstring 64,$(OS_TEST)))
-VPATH		+= $(srcdir)/x86_vc
+VPATH += $(srcdir)/x86_vc
 
-CSRCS		+= \
-		mmxidct.c \
-		mmxfrag.c \
-		mmxstate.c \
-		x86state.c \
-		$(NULL)
+CSRCS += \
+  mmxidct.c \
+  mmxfrag.c \
+  mmxstate.c \
+  x86state.c \
+  x86cpu.c \
+  $(NULL)
 endif
 else
-VPATH		+= $(srcdir)/x86
+VPATH += $(srcdir)/x86
 
-CSRCS		+= \
-		mmxidct.c \
-		mmxfrag.c \
-		mmxstate.c \
-		x86state.c \
-		$(NULL)
+CSRCS += \
+  mmxidct.c \
+  mmxfrag.c \
+  mmxstate.c \
+  sse2idct.c \
+  x86state.c \
+  x86cpu.c \
+  $(NULL)
+endif
+endif
+
+ifdef GNU_AS
+ifeq ($(findstring arm,$(OS_TEST)), arm)
+
+VPATH += $(srcdir)/arm
+
+CSRCS += \
+  armcpu.c \
+  armstate.c \
+  $(NULL)
+
+DEFINES += -DOC_ARM_ASM -DOC_ARM_ASM_EDSP -DOC_ARM_ASM_MEDIA -DOC_ARM_ASM_NEON
+
+# The Android NDK doesn't pre-define anything to indicate the OS it's on, so
+# do it for them.
+ifeq ($(OS_TARGET),Android)
+DEFINES += -D__linux__
+endif
+
+THEORA_ASFILES  = \
+  armbits.s \
+  armfrag.s \
+  armidct.s \
+  armloop.s \
+  armopts.s \
+  $(NULL)
+
+ASFILES = $(patsubst %.s,%-gnu.$(ASM_SUFFIX),$(THEORA_ASFILES))
+
+# These flags are a lie; they're just used to enable the requisite
+# opcodes; actual arch detection is done at runtime.
+ASFLAGS = -march=armv7-a -mfpu=neon
+
+armfrag-gnu.$(ASM_SUFFIX): armopts-gnu.S
+armidct-gnu.$(ASM_SUFFIX): armopts-gnu.S
+armloop-gnu.$(ASM_SUFFIX): armopts-gnu.S
+
+# armopts needs a specific rule, because arm2gnu.pl will always add the .S
+# suffix when translating the files that include it.
+armopts-gnu.S: armopts.s
+	$(PERL) $(srcdir)/arm/arm2gnu.pl < $< > $@
+# For all others, we can use an implicit rule with the configured $(ASM_SUFFIX).
+%-gnu.$(ASM_SUFFIX): %.s
+	$(PERL) $(srcdir)/arm/arm2gnu.pl < $< > $@
+
 endif
 endif
 

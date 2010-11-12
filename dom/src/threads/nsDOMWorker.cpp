@@ -624,14 +624,14 @@ nsDOMWorkerScope::AddProperty(nsIXPConnectWrappedNative* aWrapper,
     return NS_OK;
   }
 
-  const char* name = JS_GetStringBytes(JSID_TO_STRING(aId));
+  JSString *str = JSID_TO_STRING(aId);
 
   // Figure out which listener we're setting.
   SetListenerFunc func;
-  if (!strcmp(name, "onmessage")) {
+  if (JS_MatchStringAndAscii(str, "onmessage")) {
     func = &nsDOMWorkerScope::SetOnmessage;
   }
-  else if (!strcmp(name, "onerror")) {
+  else if (JS_MatchStringAndAscii(str, "onerror")) {
     func = &nsDOMWorkerScope::SetOnerror;
   }
   else {

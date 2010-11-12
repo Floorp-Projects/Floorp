@@ -48,6 +48,10 @@ namespace js {
 namespace mjit {
 
 struct Registers {
+    enum CallConvention {
+        NormalCall,
+        FastCall
+    };
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
@@ -55,7 +59,7 @@ struct Registers {
 #if defined(JS_CPU_X64)
     static const RegisterID TypeMaskReg = JSC::X86Registers::r13;
     static const RegisterID PayloadMaskReg = JSC::X86Registers::r14;
-    static const RegisterID ValueReg = JSC::X86Registers::r15;
+    static const RegisterID ValueReg = JSC::X86Registers::r10;
 #endif
 
     // Register that homes the current JSStackFrame.
@@ -107,7 +111,6 @@ struct Registers {
 # if defined(JS_CPU_X64)
         | (1 << JSC::X86Registers::r8)
         | (1 << JSC::X86Registers::r9)
-        | (1 << JSC::X86Registers::r10)
 #  if !defined(_MSC_VER)
         | (1 << JSC::X86Registers::esi)
         | (1 << JSC::X86Registers::edi)
@@ -121,7 +124,7 @@ struct Registers {
           (1 << JSC::X86Registers::r12)
     // r13 is TypeMaskReg.
     // r14 is PayloadMaskReg.
-    // r15 is ValueReg.
+        | (1 << JSC::X86Registers::r15)
 #  if defined(_MSC_VER)
         | (1 << JSC::X86Registers::esi)
         | (1 << JSC::X86Registers::edi)
@@ -166,6 +169,76 @@ struct Registers {
 #endif
 
     static const uint32 AvailRegs = SavedRegs | TempRegs;
+
+    static bool isSaved(RegisterID reg) {
+        uint32 mask = maskReg(reg);
+        JS_ASSERT(mask & AvailRegs);
+        return bool(mask & SavedRegs);
+    }
+
+    static inline uint32 numArgRegs(CallConvention convention) {
+#if defined(JS_CPU_X86)
+# if defined(JS_NO_FASTCALL)
+        return 0;
+# else
+        return (convention == FastCall) ? 2 : 0;
+# endif
+#elif defined(JS_CPU_X64)
+# ifdef _WIN64
+        return 4;
+# else
+        return 6;
+# endif
+#elif defined(JS_CPU_ARM)
+        return 4;
+#endif
+    }
+
+    static inline bool regForArg(CallConvention conv, uint32 i, RegisterID *reg) {
+#if defined(JS_CPU_X86)
+        static const RegisterID regs[] = {
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::edx
+        };
+
+# if defined(JS_NO_FASTCALL)
+        return false;
+# else
+        if (conv == NormalCall)
+            return false;
+# endif
+#elif defined(JS_CPU_X64)
+# ifdef _WIN64
+        static const RegisterID regs[] = {
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::edx,
+            JSC::X86Registers::r8,
+            JSC::X86Registers::r9
+        };
+# else
+        static const RegisterID regs[] = {
+            JSC::X86Registers::edi,
+            JSC::X86Registers::esi,
+            JSC::X86Registers::edx,
+            JSC::X86Registers::ecx,
+            JSC::X86Registers::r8,
+            JSC::X86Registers::r9
+        };
+# endif
+#elif defined(JS_CPU_ARM)
+        static const RegisterID regs[] = {
+            JSC::ARMRegisters::r0,
+            JSC::ARMRegisters::r1,
+            JSC::ARMRegisters::r2,
+            JSC::ARMRegisters::r3
+        };
+#endif
+        JS_ASSERT(numArgRegs(conv) == JS_ARRAY_LENGTH(regs));
+        if (i > JS_ARRAY_LENGTH(regs))
+            return false;
+        *reg = regs[i];
+        return true;
+    }
 
     Registers()
       : freeMask(AvailRegs)

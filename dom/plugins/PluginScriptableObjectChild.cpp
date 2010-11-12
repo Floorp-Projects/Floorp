@@ -353,7 +353,7 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   NS_ASSERTION(actor, "This shouldn't ever be null!");
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
-  nsAutoTArray<PPluginIdentifierChild*, 10> identifiers;
+  AutoInfallibleTArray<PPluginIdentifierChild*, 10> identifiers;
   bool success;
   actor->CallEnumerate(&identifiers, &success);
 
@@ -667,7 +667,7 @@ PluginScriptableObjectChild::AnswerHasMethod(PPluginIdentifierChild* aId,
 
 bool
 PluginScriptableObjectChild::AnswerInvoke(PPluginIdentifierChild* aId,
-                                          const nsTArray<Variant>& aArgs,
+                                          const InfallibleTArray<Variant>& aArgs,
                                           Variant* aResult,
                                           bool* aSuccess)
 {
@@ -737,7 +737,7 @@ PluginScriptableObjectChild::AnswerInvoke(PPluginIdentifierChild* aId,
 }
 
 bool
-PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
+PluginScriptableObjectChild::AnswerInvokeDefault(const InfallibleTArray<Variant>& aArgs,
                                                  Variant* aResult,
                                                  bool* aSuccess)
 {
@@ -947,7 +947,7 @@ PluginScriptableObjectChild::AnswerRemoveProperty(PPluginIdentifierChild* aId,
 }
 
 bool
-PluginScriptableObjectChild::AnswerEnumerate(nsTArray<PPluginIdentifierChild*>* aProperties,
+PluginScriptableObjectChild::AnswerEnumerate(InfallibleTArray<PPluginIdentifierChild*>* aProperties,
                                              bool* aSuccess)
 {
   AssertPluginThread();
@@ -990,7 +990,7 @@ PluginScriptableObjectChild::AnswerEnumerate(nsTArray<PPluginIdentifierChild*>* 
 }
 
 bool
-PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
+PluginScriptableObjectChild::AnswerConstruct(const InfallibleTArray<Variant>& aArgs,
                                              Variant* aResult,
                                              bool* aSuccess)
 {

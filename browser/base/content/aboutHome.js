@@ -139,6 +139,10 @@ function loadSnippets()
   let updateURL = localStorage["snippets-update-url"];
   if (updateURL && (!lastUpdate ||
                     Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
+    // Even if fetching should fail we don't want to spam the server, thus
+    // set the last update time regardless its results.  Will retry tomorrow.
+    localStorage["snippets-last-update"] = Date.now();
+
     // Try to update from network.
     let xhr = new XMLHttpRequest();
     xhr.open('GET', updateURL, true);
@@ -149,7 +153,6 @@ function loadSnippets()
     {
       if (xhr.status == 200) {
         localStorage["snippets"] = xhr.responseText;
-        localStorage["snippets-last-update"] = Date.now();
       }
       showSnippets();
     };
@@ -162,32 +165,39 @@ function loadSnippets()
 function showSnippets()
 {
   let snippets = localStorage["snippets"];
+  // If there are remotely fetched snippets, try to to show them.
   if (snippets) {
     let snippetsElt = document.getElementById("snippets");
-    snippetsElt.innerHTML = snippets;
-    // Scripts injected by innerHTML are inactive, so we have to relocate them
-    // through DOM manipulation to activate their contents.
-    Array.forEach(snippetsElt.getElementsByTagName("script"), function(elt) {
-      let relocatedScript = document.createElement("script");
-      relocatedScript.type = "text/javascript;version=1.8";
-      relocatedScript.text = elt.text;
-      elt.parentNode.replaceChild(relocatedScript, elt);
-    });
-    snippetsElt.hidden = false;
-  } else {
-    // If there are no saved snippets, show one of the default ones.
-    let defaultSnippetsElt = document.getElementById("defaultSnippets");
-    let entries = defaultSnippetsElt.querySelectorAll("span");
-    // Choose a random snippet.  Assume there is always at least one.
-    let randIndex = Math.round(Math.random() * (entries.length - 1));
-    let entry = entries[randIndex];
-    // Inject url in the eventual link.
-    if (DEFAULT_SNIPPETS_URLS[randIndex]) {
-      let links = entry.getElementsByTagName("a");
-      if (links.length != 1)
-        return; // Something is messed up in this entry, we support just 1 link.
-      links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
+    // Injecting snippets can throw if they're invalid XML.
+    try {
+      snippetsElt.innerHTML = snippets;
+      // Scripts injected by innerHTML are inactive, so we have to relocate them
+      // through DOM manipulation to activate their contents.
+      Array.forEach(snippetsElt.getElementsByTagName("script"), function(elt) {
+        let relocatedScript = document.createElement("script");
+        relocatedScript.type = "text/javascript;version=1.8";
+        relocatedScript.text = elt.text;
+        elt.parentNode.replaceChild(relocatedScript, elt);
+      });
+      snippetsElt.hidden = false;
+      return;
+    } catch (ex) {
+      // Bad content, continue to show default snippets.
     }
-    entry.hidden = false;
   }
+
+  // Show default snippets otherwise.
+  let defaultSnippetsElt = document.getElementById("defaultSnippets");
+  let entries = defaultSnippetsElt.querySelectorAll("span");
+  // Choose a random snippet.  Assume there is always at least one.
+  let randIndex = Math.round(Math.random() * (entries.length - 1));
+  let entry = entries[randIndex];
+  // Inject url in the eventual link.
+  if (DEFAULT_SNIPPETS_URLS[randIndex]) {
+    let links = entry.getElementsByTagName("a");
+    if (links.length != 1)
+      return; // Something is messed up in this entry, we support just 1 link.
+    links[0].href = DEFAULT_SNIPPETS_URLS[randIndex];
+  }
+  entry.hidden = false;
 }

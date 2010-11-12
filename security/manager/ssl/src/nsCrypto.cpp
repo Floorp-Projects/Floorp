@@ -1890,9 +1890,6 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[4] = STRING_TO_JSVAL(jsString);
 
-  char *jsCallback = JS_GetStringBytes(jsString);
-
-
   nrv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx),
                         static_cast<nsIDOMCrypto *>(this),
                         NS_GET_IID(nsIDOMCrypto), getter_AddRefs(holder));
@@ -2025,6 +2022,8 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   args->m_cx         = cx;
   args->m_kungFuDeathGrip = GetISupportsFromContext(cx);
   args->m_scope      = JS_GetParent(cx, script_obj);
+
+  char *jsCallback = JS_GetStringBytes(jsString);
   args->m_jsCallback.Adopt(jsCallback ? nsCRT::strdup(jsCallback) : 0);
   args->m_principals = principals;
   

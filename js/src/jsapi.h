@@ -326,6 +326,12 @@ JSID_TO_STRING(jsid id)
     return (JSString *)(JSID_BITS(id));
 }
 
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_ZERO(jsid id)
+{
+    return JSID_BITS(id) == 0;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_StringHasBeenInterned(JSString *str);
 
@@ -354,6 +360,10 @@ JSID_TO_INT(jsid id)
     return ((int32)JSID_BITS(id)) >> 1;
 }
 
+/*
+ * Note: when changing these values, verify that their use in
+ * js_CheckForStringIndex is still valid.
+ */
 #define JSID_INT_MIN  (-(1 << 30))
 #define JSID_INT_MAX  ((1 << 30) - 1)
 
@@ -485,16 +495,16 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
                                            if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
-#define JSFUN_CONSTRUCTOR       0x02    /* native that can be called as a ctor
-                                           without creating a this object */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
+#define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
+                                           without creating a this object */
 
-#define JSFUN_FLAGS_MASK      0x07fa    /* overlay JSFUN_* attributes --
+#define JSFUN_FLAGS_MASK      0x07f8    /* overlay JSFUN_* attributes --
                                            bits 12-15 are used internally to
                                            flag interpreted functions */
 
@@ -2429,6 +2439,14 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
                                   NULL, NULL);
 }
 
+/*
+ * Create the function with the name given by the id. JSID_IS_STRING(id) must
+ * be true.
+ */
+extern JS_PUBLIC_API(JSFunction *)
+JS_NewFunctionById(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+                   JSObject *parent, jsid id);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);
 
@@ -2513,6 +2531,10 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                                        nargs, attrs, NULL, NULL);
 }
 
+extern JS_PUBLIC_API(JSFunction *)
+JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
+                      uintN nargs, uintN attrs);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 
@@ -2593,6 +2615,13 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSScript *)
+JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                     JSPrincipals *principals,
+                                     const char *bytes, size_t length,
+                                     const char *filename, uintN lineno,
+                                     JSVersion version);
+
+extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
                    const jschar *chars, size_t length,
                    const char *filename, uintN lineno);
@@ -2621,6 +2650,11 @@ extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *fh,
                                   JSPrincipals *principals);
+
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                         const char *filename, FILE *fh,
+                                         JSPrincipals *principals);
 
 /*
  * NB: you must use JS_NewScriptObject and root a pointer to its return value
@@ -2739,6 +2773,10 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
 
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval,
+                        JSVersion version);
+
 /*
  * Execute either the function-defining prolog of a script, or the script's
  * main body, but not both.
@@ -2757,6 +2795,13 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
                                const char *bytes, uintN length,
                                const char *filename, uintN lineno,
                                jsval *rval);
+
+extern JS_PUBLIC_API(JSBool)
+JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                      JSPrincipals *principals,
+                                      const char *bytes, uintN length,
+                                      const char *filename, uintN lineno,
+                                      jsval *rval, JSVersion version);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
@@ -2818,7 +2863,7 @@ Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsva
     return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
 }
 
-} /* namespace JS */
+} /* namespace js */
 
 JS_BEGIN_EXTERN_C
 #endif /* __cplusplus */
@@ -2915,6 +2960,9 @@ JS_InternUCString(JSContext *cx, const jschar *s);
 extern JS_PUBLIC_API(char *)
 JS_GetStringBytes(JSString *str);
 
+/*
+ * Deprecated. Use JS_GetStringCharsZ() instead.
+ */
 extern JS_PUBLIC_API(jschar *)
 JS_GetStringChars(JSString *str);
 
@@ -2924,11 +2972,27 @@ JS_GetStringLength(JSString *str);
 extern JS_PUBLIC_API(const char *)
 JS_GetStringBytesZ(JSContext *cx, JSString *str);
 
+/*
+ * Return the char array and length for this string. The array is not
+ * null-terminated.
+ */
+extern JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsAndLength(JSString *str, size_t *lengthp);
+
 extern JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str);
 
 extern JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2);
+
+extern JS_PUBLIC_API(JSBool)
+JS_MatchStringAndAscii(JSString *str, const char *asciiBytes);
+
+extern JS_PUBLIC_API(size_t)
+JS_PutEscapedString(char *buffer, size_t size, JSString *str, char quote);
+
+extern JS_PUBLIC_API(JSBool)
+JS_FileEscapedString(FILE *fp, JSString *str, char quote);
 
 /*
  * This function is now obsolete and behaves the same as JS_NewUCString.  Use
@@ -3432,8 +3496,17 @@ JS_ClearContextThread(JSContext *cx);
 typedef void (*JSFunctionCallback)(const JSFunction *fun,
                                    const JSScript *scr,
                                    const JSContext *cx,
-                                   JSBool entering);
+                                   int entering);
 
+/*
+ * The callback is expected to be quick and noninvasive. It should not
+ * trigger interrupts, turn on debugging, or produce uncaught JS
+ * exceptions. The state of the stack and registers in the context
+ * cannot be relied upon, since this callback may be invoked directly
+ * from either JIT. The 'entering' field means we are entering a
+ * function if it is positive, leaving a function if it is zero or
+ * negative.
+ */
 extern JS_PUBLIC_API(void)
 JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb);
 

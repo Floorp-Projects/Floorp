@@ -566,6 +566,7 @@ public:
     // nsCycleCollectionLanguageRuntime
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
+    virtual nsresult FinishTraverse();
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual void Collect();
@@ -654,8 +655,8 @@ public:
     }
 
     inline XPCRootSetElem* GetNextRoot() { return mNext; }
-    void AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead);
-    void RemoveFromRootSet(JSRuntime* rt);
+    void AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead);
+    void RemoveFromRootSet(XPCLock *lock);
 
 private:
     XPCRootSetElem *mNext;
@@ -1765,9 +1766,6 @@ public:
 
     inline JSBool HasAncestor(const nsIID* iid) const;
 
-    const char* GetMemberName(XPCCallContext& ccx,
-                              const XPCNativeMember* member) const;
-
     PRUint16 GetMemberCount() const
         {NS_ASSERTION(!IsMarked(), "bad"); return mMemberCount;}
     XPCNativeMember* GetMemberAt(PRUint16 i)
@@ -2004,7 +2002,6 @@ public:
     JSBool WantTrace()                    GET_IT(WANT_TRACE)
     JSBool WantEquality()                 GET_IT(WANT_EQUALITY)
     JSBool WantOuterObject()              GET_IT(WANT_OUTER_OBJECT)
-    JSBool WantInnerObject()              GET_IT(WANT_INNER_OBJECT)
     JSBool UseJSStubForAddProperty()      GET_IT(USE_JSSTUB_FOR_ADDPROPERTY)
     JSBool UseJSStubForDelProperty()      GET_IT(USE_JSSTUB_FOR_DELPROPERTY)
     JSBool UseJSStubForSetProperty()      GET_IT(USE_JSSTUB_FOR_SETPROPERTY)
@@ -2537,7 +2534,13 @@ public:
     GetIdentityObject() const {return mIdentity;}
 
     JSObject*
-    GetFlatJSObject() const {return mFlatJSObject;}
+    GetFlatJSObjectAndMark() const
+        {if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
+             mFlatJSObject->markIfUnmarked();
+         return mFlatJSObject;}
+
+    JSObject*
+    GetFlatJSObjectNoMark() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
@@ -2546,10 +2549,10 @@ public:
     XPCNativeSet*
     GetSet() const {XPCAutoLock al(GetLock()); return mSet;}
 
-private:
     void
     SetSet(XPCNativeSet* set) {XPCAutoLock al(GetLock()); mSet = set;}
 
+private:
     inline void
     ExpireWrapper()
         {mMaybeScope = (XPCWrappedNativeScope*)

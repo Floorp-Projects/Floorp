@@ -225,9 +225,8 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc)
         return GET_UINT16(pc);
       default:
         /* stack: fun, this, [argc arguments] */
-        JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL ||
-                  op == JSOP_EVAL || op == JSOP_SETCALL ||
-                  op == JSOP_APPLY);
+        JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
+                  op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
         return 2 + GET_ARGC(pc);
     }
 }
@@ -1948,7 +1947,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
     JS_BEGIN_MACRO                                                            \
         if (ss->opcodes[ss->top - 1] == JSOP_CALL ||                          \
             ss->opcodes[ss->top - 1] == JSOP_EVAL ||                          \
-            ss->opcodes[ss->top - 1] == JSOP_APPLY) {                         \
+            ss->opcodes[ss->top - 1] == JSOP_FUNCALL ||                       \
+            ss->opcodes[ss->top - 1] == JSOP_FUNAPPLY) {                      \
             saveop = JSOP_CALL;                                               \
         }                                                                     \
     JS_END_MACRO
@@ -2074,9 +2074,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                           case JSOP_ENUMELEM:
                           case JSOP_ENUMCONSTELEM:
                             op = JSOP_GETELEM;
-                            break;
-                          case JSOP_SETCALL:
-                            op = JSOP_CALL;
                             break;
                           case JSOP_GETTHISPROP:
                             /*
@@ -3586,8 +3583,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_NEW:
               case JSOP_CALL:
               case JSOP_EVAL:
-              case JSOP_APPLY:
-              case JSOP_SETCALL:
+              case JSOP_FUNCALL:
+              case JSOP_FUNAPPLY:
                 argc = GET_ARGC(pc);
                 argv = (char **)
                     cx->malloc((size_t)(argc + 1) * sizeof *argv);
@@ -3613,7 +3610,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                               (saveop == JSOP_NEW &&
                                (op == JSOP_CALL ||
                                 op == JSOP_EVAL ||
-                                op == JSOP_APPLY ||
+                                op == JSOP_FUNCALL ||
+                                op == JSOP_FUNAPPLY ||
                                 (js_CodeSpec[op].format & JOF_CALLOP)))
                               ? JSOP_NAME
                               : saveop);
@@ -3652,11 +3650,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 cx->free(argv);
                 if (!ok)
                     return NULL;
-                if (op == JSOP_SETCALL) {
-                    if (!PushOff(ss, todo, op))
-                        return NULL;
-                    todo = Sprint(&ss->sprinter, "");
-                }
+                break;
+
+              case JSOP_SETCALL:
+                todo = Sprint(&ss->sprinter, "");
                 break;
 
               case JSOP_DELNAME:
@@ -4112,10 +4109,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc += len;
                     if (*pc == JSOP_BLOCKCHAIN) {
                         pc += JSOP_BLOCKCHAIN_LENGTH;
-                    } else if (*pc == JSOP_NULLBLOCKCHAIN) {
-                        pc += JSOP_NULLBLOCKCHAIN_LENGTH;
                     } else {
-                        JS_NOT_REACHED("should see block chain operation");
+                        LOCAL_ASSERT(*pc == JSOP_NULLBLOCKCHAIN);
+                        pc += JSOP_NULLBLOCKCHAIN_LENGTH;
                     }
                     LOCAL_ASSERT(*pc == JSOP_PUSH);
                     pc += JSOP_PUSH_LENGTH;

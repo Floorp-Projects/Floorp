@@ -1164,8 +1164,11 @@ public:
                             // will compute the appropriate height/width based on
                             // view lineHeight and generate line scroll events
                             // as needed.
-    kNoDefer =      1 << 5  // For scrollable views, indicates scroll should not
+    kNoDefer =      1 << 5, // For scrollable views, indicates scroll should not
                             // occur asynchronously.
+    kIsMomentum =   1 << 6  // Marks scroll events that aren't controlled by the
+                            // user but fire automatically as the result of a
+                            // "momentum" scroll.
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)

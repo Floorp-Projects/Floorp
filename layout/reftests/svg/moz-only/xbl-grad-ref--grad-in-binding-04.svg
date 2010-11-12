@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=587585 -->
+
+  <title>Test gradient reference in binding for gradient inside &lt;bindings&gt; with external binding</title>
+
+  <g style="-moz-binding: url(xbl-grad-ref--grad-in-binding-04.xbl#lime);"/>
+
+</svg>

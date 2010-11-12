@@ -74,6 +74,7 @@
 
 // General helper includes
 #include "nsGlobalWindow.h"
+#include "nsHistory.h"
 #include "nsIContent.h"
 #include "nsIAttribute.h"
 #include "nsIDocument.h"
@@ -661,7 +662,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(BarProp, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
+                           ARRAY_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
   NS_DEFINE_CLASSINFO_DATA(Screen, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
@@ -4582,15 +4584,6 @@ nsDOMClassInfo::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
-nsDOMClassInfo::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                            JSObject * obj, JSObject * *_retval)
-{
-  NS_WARNING("nsDOMClassInfo::InnerObject Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
 static nsresult
 GetExternalClassInfo(nsScriptNameSpaceManager *aNameSpaceManager,
                      const nsString &aName,
@@ -6187,15 +6180,15 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   {
     JSObject *winobj = aWin->FastGetGlobalJSObject();
 
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, winobj)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
     JSObject *proto = nsnull;
 
     if (class_parent_name) {
       jsval val;
+
+      JSAutoEnterCompartment ac;
+      if (!ac.enter(cx, winobj)) {
+        return NS_ERROR_UNEXPECTED;
+      }
 
       if (!::JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
         return NS_ERROR_UNEXPECTED;
@@ -6220,7 +6213,8 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
       if (proto &&
           (!xpc_proto_proto ||
            JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
-        if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
+        if (!JS_WrapObject(cx, &proto) ||
+            !JS_SetPrototype(cx, dot_prototype, proto)) {
           return NS_ERROR_UNEXPECTED;
         }
       }
@@ -6873,8 +6867,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         win->InitJavaProperties(); 
 
         PRBool hasProp;
-        PRBool ok = ::JS_HasProperty(cx, obj, ::JS_GetStringBytes(str),
-                                     &hasProp);
+        PRBool ok = ::JS_HasPropertyById(cx, obj, id, &hasProp);
 
         isResolvingJavaProperties = PR_FALSE;
 
@@ -7097,7 +7090,7 @@ nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
   if (!sgo) {
     NS_WARNING("Refusing to create a location in the wrong scope because the "
-	       "docshell is being destroyed");
+               "docshell is being destroyed");
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -8720,10 +8713,8 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
   if (id == sItem_id || id == sNamedItem_id) {
     // Define the item() or namedItem() method.
 
-    JSFunction *fnc =
-      ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(JSID_TO_STRING(id)),
-                          CallToGetPropMapper, 0, JSPROP_ENUMERATE);
-
+    JSFunction *fnc = ::JS_DefineFunctionById(cx, obj, id, CallToGetPropMapper,
+                                              0, JSPROP_ENUMERATE);
     *objp = obj;
 
     return fnc != nsnull;
@@ -9020,11 +9011,8 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     if (id == sOpen_id) {
-      JSString *str = JSID_TO_STRING(id);
-      JSFunction *fnc =
-        ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
-                            DocumentOpen, 0, JSPROP_ENUMERATE);
-
+      JSFunction *fnc =::JS_DefineFunctionById(cx, obj, id, DocumentOpen, 0,
+                                               JSPROP_ENUMERATE);
       *objp = obj;
 
       return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
@@ -9915,6 +9903,28 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 // History helper
 
 NS_IMETHODIMP
+nsHistorySH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj)
+{
+  nsHistory *history = (nsHistory *)nativeObj;
+  nsIDocShell *ds = history->GetDocShell();
+  if (!ds) {
+    NS_WARNING("Refusing to create a history object in the wrong scope");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
+  if (!sgo) {
+    NS_WARNING("Refusing to create a history object in the wrong scope because the "
+               "docshell is being destroyed");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *parentObj = sgo->GetGlobalJSObject();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHistorySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval)
 {
@@ -9924,19 +9934,6 @@ nsHistorySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!is_number) {
     return NS_OK;
   }
-
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, sItem_id,
-                                 nsIXPCSecurityManager::ACCESS_CALL_METHOD);
-
-  if (NS_FAILED(rv)) {
-    // Let XPConnect know that the access was not granted.
-    *_retval = PR_FALSE;
-
-    return NS_OK;
-  }
-
-  // sec check
 
   return nsStringArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
 }

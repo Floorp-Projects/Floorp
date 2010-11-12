@@ -414,10 +414,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       NS_NewElement(getter_AddRefs(newContent),
                     ns, nodeInfo.forget(),
                     (mOpCode == eTreeOpCreateElementNetwork ?
-                     NS_FROM_PARSER_NETWORK
+                     dom::FROM_PARSER_NETWORK
                      : (aBuilder->IsFragmentMode() ?
-                        NS_FROM_PARSER_FRAGMENT :
-                        NS_FROM_PARSER_DOCUMENT_WRITE)));
+                        dom::FROM_PARSER_FRAGMENT :
+                        dom::FROM_PARSER_DOCUMENT_WRITE)));
       NS_ASSERTION(newContent, "Element creation created null pointer.");
 
       aBuilder->HoldElement(*target = newContent);      
@@ -458,7 +458,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
           NS_NewElement(getter_AddRefs(optionElt), 
                         optionNodeInfo->NamespaceID(), 
                         ni.forget(),
-                        PR_TRUE);
+                        (mOpCode == eTreeOpCreateElementNetwork ?
+                         dom::FROM_PARSER_NETWORK
+                         : (aBuilder->IsFragmentMode() ?
+                            dom::FROM_PARSER_FRAGMENT :
+                            dom::FROM_PARSER_DOCUMENT_WRITE)));
           nsCOMPtr<nsIContent> optionText;
           NS_NewTextNode(getter_AddRefs(optionText), 
                          aBuilder->GetNodeInfoManager());

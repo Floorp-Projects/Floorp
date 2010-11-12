@@ -87,7 +87,7 @@ button[type="menu-button"] {
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
   -moz-appearance: none !important;
-  border: none !important;
+  border: none;
   background-color: transparent !important;
   margin: 1px;
 }

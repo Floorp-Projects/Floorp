@@ -316,8 +316,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
   // XXX What about mNextBinding and mInsertionPointTable?
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLBinding)
-  nsCOMPtr<nsISupports> iface = do_QueryObject(tmp->mPrototypeBinding->XBLDocumentInfo());
-  cb.NoteXPCOMChild(iface);
+  cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(
+                      tmp->mPrototypeBinding->XBLDocumentInfo()));
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNextBinding, nsXBLBinding)
   if (tmp->mInsertionPointTable)

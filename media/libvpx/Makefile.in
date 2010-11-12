@@ -53,8 +53,10 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/media/libvpx \
   -I$(topsrcdir)/media/libvpx/vp8/ \
   -I$(topsrcdir)/media/libvpx/vp8/common/ \
+  -I$(topsrcdir)/media/libvpx/vp8/common/arm \
   -I$(topsrcdir)/media/libvpx/vp8/common/x86 \
   -I$(topsrcdir)/media/libvpx/vp8/decoder \
+  -I$(topsrcdir)/media/libvpx/vp8/decoder/arm \
   -I$(topsrcdir)/media/libvpx/vp8/decoder/x86 \
   -I$(topsrcdir)/media/libvpx/vpx_codec \
   -I$(topsrcdir)/media/libvpx/vpx_mem/ \
@@ -64,25 +66,35 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 VPATH += \
+  $(srcdir)/build/make \
   $(srcdir)/vpx \
   $(srcdir)/vpx/src \
   $(srcdir)/vpx_mem \
   $(srcdir)/vpx_mem/include \
   $(srcdir)/vpx_ports \
   $(srcdir)/vpx_scale \
+  $(srcdir)/vpx_scale/arm \
   $(srcdir)/vpx_scale/generic \
   $(srcdir)/vp8 \
   $(srcdir)/vp8/common \
+  $(srcdir)/vp8/common/arm \
+  $(srcdir)/vp8/common/arm/armv6 \
+  $(srcdir)/vp8/common/arm/neon \
   $(srcdir)/vp8/common/generic \
   $(srcdir)/vp8/common/x86 \
   $(srcdir)/vp8/decoder \
+  $(srcdir)/vp8/decoder/arm \
+  $(srcdir)/vp8/decoder/arm/armv6 \
+  $(srcdir)/vp8/decoder/arm/neon \
   $(srcdir)/vp8/decoder/generic \
   $(srcdir)/vp8/decoder/x86 \
   $(NULL)
 
-ASM_SUFFIX=asm
+#Setup the libvpx assembler config.
 AS=$(VPX_AS)
-ASFLAGS=$(VPX_ASFLAGS) -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/libvpx/vpx_ports/
+ASFLAGS=$(VPX_ASFLAGS) -I. -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/libvpx/vpx_ports/
+AS_DASH_C_FLAG=$(VPX_DASH_C_FLAG)
+ASM_SUFFIX=$(VPX_ASM_SUFFIX)
 
 EXPORTS_NAMESPACES = vpx
 
@@ -104,6 +116,7 @@ EXPORTS_vpx = \
   mem.h \
   vpx_integer.h \
   vpx_timer.h \
+  arm.h \
   x86.h \
   scale_mode.h \
   vpxscale.h \
@@ -145,9 +158,9 @@ CSRCS += \
   dboolhuff.c \
   decodemv.c \
   decodframe.c \
-  demode.c \
   dequantize.c \
   detokenize.c \
+  reconintra_mt.c \
   idct_blk.c \
   onyxd_if.c \
   threading.c \
@@ -168,6 +181,7 @@ CSRCS += \
 ifdef VPX_X86_ASM
 # Building on an x86 platform with a supported assembler, include
 # the optimized assembly in the build.
+
 CSRCS += \
   idct_blk_mmx.c \
   idct_blk_sse2.c \
@@ -196,7 +210,116 @@ ASFILES += \
   $(NULL)
 
 endif
- 
+
+ifdef VPX_ARM_ASM
+# Building on an ARM platform with a supported assembler, include
+# the optimized assembly in the build.
+
+# The Android NDK doesn't pre-define anything to indicate the OS it's on, so
+# do it for them.
+ifeq ($(OS_TARGET),Android)
+DEFINES += -D__linux__
+endif
+
+CSRCS += \
+  arm_cpudetect.c \
+  arm_systemdependent.c \
+  bilinearfilter_arm.c \
+  filter_arm.c \
+  loopfilter_arm.c \
+  reconintra_arm.c \
+  arm_dsystemdependent.c \
+  dequantize_arm.c \
+  idct_blk_v6.c \
+  idct_blk_neon.c \
+  recon_neon.c \
+  $(NULL)
+
+VPX_ASFILES = \
+  detokenize.asm \
+  bilinearfilter_v6.asm \
+  copymem8x4_v6.asm \
+  copymem8x8_v6.asm \
+  copymem16x16_v6.asm \
+  dc_only_idct_add_v6.asm \
+  iwalsh_v6.asm \
+  filter_v6.asm \
+  idct_v6.asm \
+  loopfilter_v6.asm \
+  recon_v6.asm \
+  simpleloopfilter_v6.asm \
+  sixtappredict8x4_v6.asm \
+  bilinearpredict4x4_neon.asm \
+  bilinearpredict8x4_neon.asm \
+  bilinearpredict8x8_neon.asm \
+  bilinearpredict16x16_neon.asm \
+  copymem8x4_neon.asm \
+  copymem8x8_neon.asm \
+  copymem16x16_neon.asm \
+  dc_only_idct_add_neon.asm \
+  iwalsh_neon.asm \
+  loopfilter_neon.asm \
+  loopfiltersimplehorizontaledge_neon.asm \
+  loopfiltersimpleverticaledge_neon.asm \
+  mbloopfilter_neon.asm \
+  recon2b_neon.asm \
+  recon4b_neon.asm \
+  reconb_neon.asm \
+  shortidct4x4llm_1_neon.asm \
+  shortidct4x4llm_neon.asm \
+  sixtappredict4x4_neon.asm \
+  sixtappredict8x4_neon.asm \
+  sixtappredict8x8_neon.asm \
+  sixtappredict16x16_neon.asm \
+  recon16x16mb_neon.asm \
+  buildintrapredictorsmby_neon.asm \
+  save_neon_reg.asm \
+  dequant_dc_idct_v6.asm \
+  dequant_idct_v6.asm \
+  dequantize_v6.asm \
+  idct_dequant_dc_full_2x_neon.asm \
+  idct_dequant_dc_0_2x_neon.asm \
+  dequant_idct_neon.asm \
+  idct_dequant_full_2x_neon.asm \
+  idct_dequant_0_2x_neon.asm \
+  dequantizeb_neon.asm \
+  $(NULL)
+
+# The ARM asm needs to extract the offsets of various C struct members.
+# We need a program that runs on the host to pull them out of a .o file.
+HOST_CSRCS = obj_int_extract.c
+HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
+
+ifdef VPX_AS_CONVERSION
+# The ARM asm is written in ARM RVCT syntax, but we actually build it with
+# gas using GNU syntax. Add some rules to perform the conversion.
+VPX_CONVERTED_ASFILES = $(addsuffix .$(ASM_SUFFIX), $(VPX_ASFILES))
+
+ASFILES += $(VPX_CONVERTED_ASFILES)
+GARBAGE += $(VPX_CONVERTED_ASFILES)
+
+%.asm.$(ASM_SUFFIX): %.asm
+	$(VPX_AS_CONVERSION) < $< > $@
+
+vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+	./$(HOST_PROGRAM) rvds $< | $(VPX_AS_CONVERSION) > $@
+
+detokenize.asm.$(OBJ_SUFFIX): vpx_asm_offsets.asm
+
+else
+ASFILES += $(VPX_ASFILES)
+
+vpx_asm_offsets.asm: vpx_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+	./$(HOST_PROGRAM) rvds $< > $@
+
+detokenize.$(OBJ_SUFFIX): vpx_asm_offsets.asm
+
+endif
+
+GARBAGE += vpx_asm_offsets.$(OBJ_SUFFIX) vpx_asm_offsets.asm
+
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # Workaround a bug of Sun Studio (CR 6963410)
