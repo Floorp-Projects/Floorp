@@ -292,8 +292,7 @@ public:
    * drawn before this is called. The contents of the buffer are drawn
    * to aTarget.
    */
-  void DrawTo(ThebesLayer* aLayer, PRBool aIsOpaqueContent,
-              gfxContext* aTarget, float aOpacity);
+  void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity);
 
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(ContentType aType, const nsIntSize& aSize);
@@ -528,7 +527,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, canUseOpaqueSurface, target, opacity);
+  mBuffer.DrawTo(this, target, opacity);
 }
 
 static PRBool
@@ -542,7 +541,6 @@ IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
 
 void
 BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
-                               PRBool aIsOpaqueContent,
                                gfxContext* aTarget,
                                float aOpacity)
 {
@@ -558,9 +556,6 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
     // we might sample pixels outside GetVisibleRegion(), which is wrong
     // and may cause gray lines.
     gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetVisibleRegion());
-  }
-  if (aIsOpaqueContent) {
-    aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
   DrawBufferWithRotation(aTarget, aOpacity,
                          aLayer->GetXResolution(), aLayer->GetYResolution());
@@ -1995,7 +1990,7 @@ BasicShadowThebesLayer::Paint(gfxContext* aContext,
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
 
-  mFrontBuffer.DrawTo(this, CanUseOpaqueSurface(), target, GetEffectiveOpacity());
+  mFrontBuffer.DrawTo(this, target, GetEffectiveOpacity());
 }
 
 class BasicShadowContainerLayer : public ShadowContainerLayer, BasicImplData {
