@@ -658,11 +658,13 @@ public:
 
     virtual PRBool TextureImageSupportsGetBackingSurface()
     {
-#ifdef MOZ_WIDGET_QT
+#if defined(MOZ_WIDGET_QT)
         return (gfxASurface::SurfaceTypeXlib ==
             gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType());
-#else
+#elif defined(MOZ_X11)
         return PR_TRUE;
+#else
+        return PR_FALSE;
 #endif
     }
 

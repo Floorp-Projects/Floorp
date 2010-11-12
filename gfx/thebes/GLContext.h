@@ -469,9 +469,15 @@ public:
         return mIsGLES2;
     }
 
-    enum { VendorIntel, VendorNVIDIA, VendorATI, VendorOther };
+    enum {
+        VendorIntel,
+        VendorNVIDIA,
+        VendorATI,
+        VendorQualcomm,
+        VendorOther
+    };
 
-    PRBool Vendor() const {
+    int Vendor() const {
         return mVendor;
     }
 
@@ -731,7 +737,7 @@ protected:
     PRPackedBool mIsGlobalSharedContext;
     PRPackedBool mWindowOriginBottomLeft;
 
-    int mVendor;
+    PRInt32 mVendor;
 
     enum {
         DebugEnabled = 1 << 0,

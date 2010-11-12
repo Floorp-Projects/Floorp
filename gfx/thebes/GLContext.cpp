@@ -330,20 +330,38 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
 
         const char *glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
-        mVendor = DoesVendorStringMatch(glVendorString, "Intel")  ? VendorIntel
-                : DoesVendorStringMatch(glVendorString, "NVIDIA") ? VendorNVIDIA
-                : DoesVendorStringMatch(glVendorString, "ATI")    ? VendorATI
-                : VendorOther;
+        const char *vendorMatchStrings[VendorOther] = {
+                "Intel",
+                "NVIDIA",
+                "ATI",
+                "Qualcomm"
+        };
+
+        mVendor = VendorOther;
+        for (int i = 0; i < VendorOther; ++i) {
+            if (DoesVendorStringMatch(glVendorString, vendorMatchStrings[i])) {
+                mVendor = i;
+                break;
+            }
+        }
 
 #ifdef DEBUG
         static bool once = false;
         if (!once) {
+            const char *vendors[VendorOther] = {
+                "Intel",
+                "NVIDIA",
+                "ATI",
+                "Qualcomm"
+            };
+
             once = true;
-            printf_stderr("OpenGL vendor recognized as: %s\n", mVendor == VendorIntel ? "Intel"
-                                                             : mVendor == VendorNVIDIA ? "NVIDIA"
-                                                             : mVendor == VendorATI ? "ATI"
-                                                             : mVendor == VendorOther ? "<other>"
-                                                             : "!!! bad mVendor value !!!");
+            if (mVendor < VendorOther) {
+                printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
+                              glVendorString, vendors[mVendor]);
+            } else {
+                printf_stderr("OpenGL vendor ('%s') unrecognized\n", glVendorString);
+            }
         }
 #endif
     }
@@ -1116,6 +1134,13 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
     NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
 
+    // only save/restore this stuff on Qualcomm Adreno, to work
+    // around an apparent bug
+    int savedFb = 0;
+    if (mVendor == VendorQualcomm) {
+        fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
+    }
+
     fDisable(LOCAL_GL_SCISSOR_TEST);
     fDisable(LOCAL_GL_BLEND);
 
@@ -1179,7 +1204,18 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, NULL);
     fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, NULL);
 
+    // unbind the previous texture from the framebuffer
     SetBlitFramebufferForDestTexture(0);
+
+    // then put back the previous framebuffer, and don't
+    // enable stencil if it wasn't enabled on entry to work
+    // around Adreno 200 bug that causes us to crash if
+    // we enable scissor test while the current FBO is invalid
+    // (which it will be, once we assign texture 0 to the color
+    // attachment)
+    if (mVendor == VendorQualcomm) {
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
+    }
 
     fEnable(LOCAL_GL_SCISSOR_TEST);
     fEnable(LOCAL_GL_BLEND);
