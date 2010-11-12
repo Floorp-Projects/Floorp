@@ -16,6 +16,11 @@ chrome.jar:
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 
+  skin/images/appmenu-addons-hdpi.png       (images/appmenu-addons-hdpi.png)
+  skin/images/appmenu-active-hdpi.png       (images/appmenu-active-hdpi.png)
+  skin/images/appmenu-downloads-hdpi.png    (images/appmenu-downloads-hdpi.png)
+  skin/images/appmenu-preferences-hdpi.png  (images/appmenu-preferences-hdpi.png)
+  skin/images/appmenu-site-hdpi.png         (images/appmenu-site-hdpi.png)
   skin/images/aboutBackground.jpg           (images/aboutBackground.jpg)
   skin/images/button-bg.png                 (images/button-bg.png)
   skin/images/textbox-bg.png                (images/textbox-bg.png)

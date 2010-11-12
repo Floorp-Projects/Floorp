@@ -1502,8 +1502,8 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 .appmenu-button:hover:active {
-  background: #ffc000;
-  box-shadow: inset 1px 2px 5px #333;
+  background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
+  background-size: 100% 100%;
 }
 
 #appmenu > .appmenu-button .toolbarbutton-text {
