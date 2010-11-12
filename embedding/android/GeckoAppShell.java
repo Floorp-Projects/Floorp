@@ -616,4 +616,11 @@ class GeckoAppShell
         InputMethodManager imm = (InputMethodManager) GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showInputMethodPicker();       
     }
+
+    public static void hideProgressDialog() {
+        if (GeckoApp.mAppContext.mProgressDialog != null) {
+            GeckoApp.mAppContext.mProgressDialog.dismiss();
+            GeckoApp.mAppContext.mProgressDialog = null;
+        }
+    }
 }
