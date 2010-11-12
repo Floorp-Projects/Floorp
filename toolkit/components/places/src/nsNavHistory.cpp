@@ -161,6 +161,12 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 // Max number of containers, used to initialize the params hash.
 #define HISTORY_DATE_CONT_MAX 10
 
+// Initial size of the embed visits cache.
+#define EMBED_VISITS_INITIAL_CACHE_SIZE 128
+
+// Initial size of the recent events caches.
+#define RECENT_EVENTS_INITIAL_CACHE_SIZE 128
+
 // Observed topics.
 #ifdef MOZ_XUL
 #define TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING "autocomplete-will-enter-text"
@@ -488,10 +494,18 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // recent events hash tables
-  NS_ENSURE_TRUE(mRecentTyped.Init(128), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(mRecentLink.Init(128), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(mRecentBookmark.Init(128), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(mRecentRedirects.Init(128), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRecentTyped.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE),
+                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRecentLink.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE),
+                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRecentBookmark.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE),
+                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRecentRedirects.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE),
+                 NS_ERROR_OUT_OF_MEMORY);
+  
+  // Rmbed visits hash table.
+  NS_ENSURE_TRUE(mEmbedVisits.Init(EMBED_VISITS_INITIAL_CACHE_SIZE),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -2726,6 +2740,14 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     return NS_OK;
   }
 
+  // Embed visits are not added to database, but registered in a  session cache.
+  // For the above reason they don't have a visit id.
+  if (aTransitionType == TRANSITION_EMBED) {
+    registerEmbedVisit(aURI, GetNow());
+    *aVisitID = 0;
+    return NS_OK;
+  }
+
   // This will prevent corruption since we have to do a two-phase add.
   // Generally this won't do anything because AddURI has its own transaction.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
@@ -4325,6 +4347,9 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
   rv = RemovePagesInternal(deletePlaceIdsQueryString);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Clear the registered embed visits.
+  clearEmbedVisits();
+
   // force a full refresh calling onEndUpdateBatch (will call Refresh())
   if (aDoBatchNotify)
     UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
@@ -4438,11 +4463,14 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
     hostPlaceIds.AppendInt(placeId);
   }
 
-  // force a full refresh calling onEndUpdateBatch (will call Refresh())
-  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
-
   rv = RemovePagesInternal(hostPlaceIds);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear the registered embed visits.
+  clearEmbedVisits();
+
+  // force a full refresh calling onEndUpdateBatch (will call Refresh())
+  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
 
   return NS_OK;
 }
@@ -4494,6 +4522,9 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 
   rv = RemovePagesInternal(deletePlaceIdsQueryString);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear the registered embed visits.
+  clearEmbedVisits();
 
   // force a full refresh calling onEndUpdateBatch (will call Refresh())
   UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to observers
@@ -4587,6 +4618,9 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Clear the registered embed visits.
+  clearEmbedVisits();
+
   // Invalidate the cached value for whether there's history or not.
   mHasHistoryEntries = -1;
 
@@ -4629,6 +4663,9 @@ nsNavHistory::RemoveAllPages()
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear the registered embed visits.
+  clearEmbedVisits();
 
   // Invalidate the cached value for whether there's history or not.
   mHasHistoryEntries = -1;
@@ -5069,7 +5106,7 @@ nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
   nsresult rv = aURI->GetSpec(utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = IsURIStringVisited(utf8URISpec);
+  *_retval = hasEmbedVisit(aURI) ? PR_TRUE : IsURIStringVisited(utf8URISpec);
   return NS_OK;
 }
 
@@ -6253,6 +6290,33 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   return NS_OK;
 }
 
+void
+nsNavHistory::registerEmbedVisit(nsIURI* aURI,
+                                 PRInt64 aTime)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  VisitHashKey* visit = mEmbedVisits.PutEntry(aURI);
+  if (!visit) {
+    NS_WARNING("Unable to register a EMBED visit.");
+    return;
+  }
+  visit->visitTime = aTime;
+}
+
+bool
+nsNavHistory::hasEmbedVisit(nsIURI* aURI) {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  return !!mEmbedVisits.GetEntry(aURI);
+}
+
+void
+nsNavHistory::clearEmbedVisits() {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  mEmbedVisits.Clear();
+}
 
 // nsNavHistory::CheckIsRecentEvent
 //
@@ -6734,8 +6798,12 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
     PRBool hasURL = PR_FALSE;
     rv = stmt->ExecuteStep(&hasURL);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (! hasURL) {
-      // we don't have the URL, give up
+    if (!hasURL) {
+      // If the url is unknown, either the page had an embed visit, or we have
+      // never seen it.  While the former is fine, the latter is an error.
+      if (hasEmbedVisit(aURI)) {
+        return NS_OK;
+      }
       return NS_ERROR_NOT_AVAILABLE;
     }
 

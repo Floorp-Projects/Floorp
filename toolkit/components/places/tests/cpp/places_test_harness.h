@@ -204,8 +204,11 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
 
   PRBool hasResults;
   rv = stmt->ExecuteStep(&hasResults);
-  do_check_true(hasResults);
   do_check_success(rv);
+  if (!hasResults) {
+    result.id = 0;
+    return;
+  }
 
   rv = stmt->GetInt64(0, &result.id);
   do_check_success(rv);
@@ -241,8 +244,12 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
 
   PRBool hasResults;
   rv = stmt->ExecuteStep(&hasResults);
-  do_check_true(hasResults);
   do_check_success(rv);
+
+  if (!hasResults) {
+    result.id = 0;
+    return;
+  }
 
   rv = stmt->GetInt64(0, &result.id);
   do_check_success(rv);

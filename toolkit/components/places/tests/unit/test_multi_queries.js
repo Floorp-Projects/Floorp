@@ -36,59 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get history service
-var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsINavHistoryService);
-
 /**
- * Adds a test URI visit to the database, and checks for a valid place ID.
+ * Adds a test URI visit to history.
  *
  * @param aURI
  *        The URI to add a visit for.
  * @param aReferrer
  *        The referring URI for the given URI.  This can be null.
- * @returns the place id for aURI.
  */
 function add_visit(aURI, aDayOffset, aTransition) {
-  var visitID = histsvc.addVisit(aURI,
-                                 (Date.now() + aDayOffset*86400000) * 1000,
-                                 null,
-                                 aTransition,
-                                 false, // not redirect
-                                 0);
-  do_check_true(visitID > 0);
-  return visitID;
+  PlacesUtils.history.addVisit(aURI, (Date.now() + aDayOffset*86400000) * 1000,
+                               null, aTransition, false, 0);
 }
 
-// main
 function run_test() {
-   var testURI = uri("http://mirror1.mozilla.com/a");
-  add_visit(testURI, -1, histsvc.TRANSITION_LINK);
-  testURI = uri("http://mirror2.mozilla.com/b");
-  add_visit(testURI, -2, histsvc.TRANSITION_LINK);
-  testURI = uri("http://mirror3.mozilla.com/c");
-  add_visit(testURI, -4, histsvc.TRANSITION_FRAMED_LINK);
-  testURI = uri("http://mirror1.google.com/b");
-  add_visit(testURI, -1, histsvc.TRANSITION_EMBED);
-  testURI = uri("http://mirror2.google.com/a");
-  add_visit(testURI, -2, histsvc.TRANSITION_LINK);
-  testURI = uri("http://mirror1.apache.org/b");
-  add_visit(testURI, -3, histsvc.TRANSITION_LINK);
-  testURI = uri("http://mirror2.apache.org/a");
-  add_visit(testURI, -4, histsvc.TRANSITION_FRAMED_LINK);
+  add_visit(uri("http://mirror1.mozilla.com/a"), -1, TRANSITION_LINK);
+  add_visit(uri("http://mirror2.mozilla.com/b"), -2, TRANSITION_LINK);
+  add_visit(uri("http://mirror3.mozilla.com/c"), -4, TRANSITION_FRAMED_LINK);
+  add_visit(uri("http://mirror1.google.com/b"), -1, TRANSITION_EMBED);
+  add_visit(uri("http://mirror2.google.com/a"), -2, TRANSITION_LINK);
+  add_visit(uri("http://mirror1.apache.org/b"), -3, TRANSITION_LINK);
+  add_visit(uri("http://mirror2.apache.org/a"), -4, TRANSITION_FRAMED_LINK);
 
-
-  var options = histsvc.getNewQueryOptions();
-  var queries = [];
-  queries.push(histsvc.getNewQuery());
-  queries.push(histsvc.getNewQuery());
-
+  let queries = [
+    PlacesUtils.history.getNewQuery(),
+    PlacesUtils.history.getNewQuery()
+  ];
   queries[0].domain = "mozilla.com";
   queries[1].domain = "google.com";
 
-  var result = histsvc.executeQueries(queries, queries.length, options);
-  var root = result.root;
+  let root = PlacesUtils.history.executeQueries(
+    queries, queries.length, PlacesUtils.history.getNewQueryOptions()
+  ).root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 3);
+  let childCount = root.childCount;
   root.containerOpen = false;
+
+  do_check_eq(childCount, 3);
 }

@@ -39,39 +39,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
-
-// adds a test URI visit to the database, and checks for a valid place ID
 function add_visit(aURI, aType) {
-  var placeID = histsvc.addVisit(uri(aURI),
-                                 Date.now() * 1000,
-                                 null, // no referrer
-                                 aType,
-                                 false, // not redirect
-                                 0);
-  do_check_true(placeID > 0);
-  return placeID;
+  PlacesUtils.history.addVisit(uri(aURI), Date.now() * 1000, null, aType,
+                                 false, 0);
 }
 
 const TOTAL_SITES = 20;
 
-// main
 function run_test() {
-  // add visits
-  for (var i=0; i < TOTAL_SITES; i++) {
-    for (var j=0; j<=i; j++) {
-      add_visit("http://www.test-" + i + ".com/", histsvc.TRANSITION_TYPED);
-      // because these are embedded visits, they should not show up on our
-      // query results.  If they do, we have a problem.
-      add_visit("http://www.hidden.com/hidden.gif", histsvc.TRANSITION_EMBED);
-      add_visit("http://www.alsohidden.com/hidden.gif", histsvc.TRANSITION_FRAMED_LINK);
+  PlacesUtils.history.runInBatchMode({
+    runBatched: function (aUserData) {
+      for (let i = 0; i < TOTAL_SITES; i++) {
+        for (let j = 0; j <= i; j++) {
+          add_visit("http://www.test-" + i + ".com/", TRANSITION_TYPED);
+          // because these are embedded visits, they should not show up on our
+          // query results.  If they do, we have a problem.
+          add_visit("http://www.hidden.com/hidden.gif", TRANSITION_EMBED);
+          add_visit("http://www.alsohidden.com/hidden.gif", TRANSITION_FRAMED_LINK);
+        }
+      }
     }
-  }
+  }, null);
 
   // test our optimized query for the "Most Visited" item
   // in the "Smart Bookmarks" folder
@@ -81,19 +69,18 @@ function run_test() {
   // http://www.test-19.com/
   // ...
   // http://www.test-10.com/
-  var options = histsvc.getNewQueryOptions();
+  let options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
   options.maxResults = 10;
   options.resultType = options.RESULTS_AS_URI;
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
+  let root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
+                                              options).root;
   root.containerOpen = true;
-  var cc = root.childCount;
+  let cc = root.childCount;
   do_check_eq(cc, options.maxResults);
-  for (var i=0; i < cc; i++) {
-    var node = root.getChild(i);
-    var site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
+  for (let i = 0; i < cc; i++) {
+    let node = root.getChild(i);
+    let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
     do_check_eq(node.uri, site);
     do_check_eq(node.type, options.RESULTS_AS_URI);
   }
@@ -106,18 +93,17 @@ function run_test() {
   // http://www.test-19.com/
   // ...
   // http://www.test-10.com/
-  var options = histsvc.getNewQueryOptions();
+  let options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_VISITCOUNT_DESCENDING;
   options.resultType = options.RESULTS_AS_URI;
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
+  let root = PlacesUtils.history.executeQuery(PlacesUtils.history.getNewQuery(),
+                                              options).root;
   root.containerOpen = true;
-  var cc = root.childCount;
+  let cc = root.childCount;
   do_check_eq(cc, TOTAL_SITES);
-  for (var i=0; i < 10; i++) {
-    var node = root.getChild(i);
-    var site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
+  for (let i = 0; i < 10; i++) {
+    let node = root.getChild(i);
+    let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
     do_check_eq(node.uri, site);
     do_check_eq(node.type, options.RESULTS_AS_URI);
   }
