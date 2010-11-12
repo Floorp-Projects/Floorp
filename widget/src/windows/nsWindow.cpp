@@ -2123,7 +2123,7 @@ nsWindow::SetNonClientMargins(nsIntMargin &margins)
       margins.right == -1 && margins.bottom == -1) {
     mCustomNonClient = PR_FALSE;
     mNonClientMargins = margins;
-    RemoveProp(mWnd, kManageWindowInfoProperty);
+    RemovePropW(mWnd, kManageWindowInfoProperty);
     // Force a reflow of content based on the new client
     // dimensions.
     ResetLayout();
@@ -5297,7 +5297,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   case WM_DWMCOMPOSITIONCHANGED:
     UpdateNonClientMargins();
-    RemoveProp(mWnd, kManageWindowInfoProperty);
+    RemovePropW(mWnd, kManageWindowInfoProperty);
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
     DispatchStandardEvent(NS_THEMECHANGED);
     UpdateGlass();
