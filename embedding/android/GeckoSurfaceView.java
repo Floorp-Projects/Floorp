@@ -235,11 +235,6 @@ class GeckoSurfaceView
      * locked. Surface lock -> Canvas lock will lead to AB-BA deadlocks.
      */
     public void draw2D(ByteBuffer buffer, int stride) {
-        if (GeckoApp.mAppContext.mProgressDialog != null) {
-            GeckoApp.mAppContext.mProgressDialog.dismiss();
-            GeckoApp.mAppContext.mProgressDialog = null;
-        }
-
         // mSurfaceLock ensures that we get mSyncDraw/mSoftwareBuffer/etc.
         // set correctly before determining whether we should do a sync draw
         mSurfaceLock.lock();
