@@ -16283,19 +16283,29 @@ LoopProfile::LoopProfile(JSStackFrame *entryfp, jsbytecode *top, jsbytecode *bot
       top(top),
       bottom(bottom),
       hits(0),
-      profiled(false),
-      traceOK(false),
-      execOK(false),
-      numAllOps(0),
-      numSelfOps(0),
-      numSelfOpsMult(0),
-      branchMultiplier(1),
-      shortLoop(false),
-      maybeShortLoop(false),
-      numInnerLoops(0),
-      loopStackDepth(0),
-      sp(0)
+      undecided(false),
+      expensive(false),
+      unprofitable(false)
 {
+    reset();
+}
+
+void
+LoopProfile::reset()
+{
+    profiled = false;
+    traceOK = false;
+    execOK = false;
+    numAllOps = 0;
+    numSelfOps = 0;
+    numSelfOpsMult = 0;
+    branchMultiplier = 1;
+    shortLoop = false;
+    maybeShortLoop = false;
+    numInnerLoops = 0;
+    loopStackDepth = 0;
+    sp = 0;
+
     memset(allOps, 0, sizeof(allOps));
     memset(selfOps, 0, sizeof(selfOps));
 }
@@ -16396,7 +16406,7 @@ LookupOrAddProfile(JSContext *cx, TraceMonitor *tm, void** traceData, uintN *tra
 
 JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
-                  void** traceData, uintN *traceEpoch)
+                  void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits)
 {
     if (!cx->profilingEnabled)
         return RecordTracePoint(cx, inlineCallCount, blacklist, true);
@@ -16417,7 +16427,8 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
         return TPA_Nothing;
     }
 
-    if (prof->hits++ < PROFILE_HOTLOOP)
+    prof->hits += hits;
+    if (prof->hits < PROFILE_HOTLOOP)
         return TPA_Nothing;
 
     AutoRetBlacklist autoRetBlacklist(cx->regs->pc, blacklist);
@@ -16439,6 +16450,11 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
         return TPA_Error;
 
     JS_ASSERT(!cx->throwing);
+
+    if (prof->undecided) {
+        *loopCounter = 5000;
+        prof->reset();
+    }
     
     return TPA_RanStuff;
 }
@@ -16469,8 +16485,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     JSScript *script = fp->script();
 
     if (!PCWithinLoop(fp, pc, *this)) {
-        debug_only_printf(LC_TMProfiler, "Profiling complete (loop exit) at %d (line %u)\n",
-                          (int)(cx->regs->pc - script->code),
+        debug_only_printf(LC_TMProfiler, "Profiling complete (loop exit) at line %u\n",
                           js_FramePCToLineNumber(cx, cx->fp()));
         tm->profile->decide(cx);
         tm->profile = NULL;
@@ -16478,7 +16493,8 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     }
 
     while (loopStackDepth > 0 && !PCWithinLoop(fp, pc, loopStack[loopStackDepth-1])) {
-        debug_only_print0(LC_TMProfiler, "Profiler: Exiting inner loop\n");
+        debug_only_printf(LC_TMProfiler, "Profiler: Exiting inner loop at line %u\n",
+                          js_FramePCToLineNumber(cx, cx->fp()));
         loopStackDepth--;
     }
 
@@ -16491,7 +16507,8 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
                 return ProfComplete;
             }
 
-            debug_only_print0(LC_TMProfiler, "Profiler: Entering inner loop\n");
+            debug_only_printf(LC_TMProfiler, "Profiler: Entering inner loop at line %d\n",
+                              js_FramePCToLineNumber(cx, cx->fp()));
             loopStack[loopStackDepth++] = InnerLoop(fp, pc, GetLoopBottom(cx));
         }
     }
@@ -16532,6 +16549,8 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         Value& lval = cx->regs->sp[op == JSOP_GETELEM ? -2 : -3];
         if (lval.isObject() && js_IsTypedArray(&lval.toObject()))
             increment(OP_TYPED_ARRAY);
+        else if (lval.isObject() && lval.toObject().isDenseArray() && op == JSOP_GETELEM)
+            increment(OP_ARRAY_READ);
     }
 
     if (op == JSOP_CALL) {
@@ -16642,36 +16661,26 @@ LookupLoopProfile(JSContext *cx, jsbytecode *pc)
         return NULL;
 }
 
-/*
- * Returns true if the loop would probably take a long time to
- * compile. Since this function recurses into nested loops, we
- * pass a depth argument to ensure that we don't recurse too
- * far and overflow the stack. Mostly, we're guarding against
- * the possibility that we (incorrectly) track a loop as being
- * nested inside itself, leading to infinite recursion.
- */
+/* Returns true if the loop would probably take a long time to compile. */
 bool
-LoopProfile::isCompilationExpensive(JSContext *cx, uintN depth)
+LoopProfile::isCompilationExpensive(JSContext *cx)
 {
-    if (depth == 0)
-        return true;
-
     /* Too many ops to compile? */
     if (numSelfOps == MAX_PROFILE_OPS)
-        return true;
+        expensive = true;
 
     /* Is the code too branchy? */
     if (numSelfOpsMult > numSelfOps*100000)
-        return true;
+        expensive = true;
 
     /* Ensure that inner loops aren't too expensive. */
     for (uintN i=0; i<numInnerLoops; i++) {
         LoopProfile *prof = LookupLoopProfile(cx, innerLoops[i].top);
-        if (prof && prof->isCompilationExpensive(cx, depth-1))
-            return true;
+        if (prof && prof->expensive)
+            expensive = true;
     }
 
-    return false;
+    return expensive;
 }
 
 /*
@@ -16681,30 +16690,32 @@ LoopProfile::isCompilationExpensive(JSContext *cx, uintN depth)
  * expensive.
  */
 bool
-LoopProfile::isCompilationUnprofitable(JSContext *cx, uintN depth)
+LoopProfile::isCompilationUnprofitable(JSContext *cx, uintN goodOps)
 {
-    if (depth == 0)
-        return true;
-
-    if (numAllOps < 15 && allOps[OP_FWDJUMP])
-        return true;
+    if (goodOps <= 20 && allOps[OP_FWDJUMP])
+        unprofitable = true;
     
     /* Ensure that inner loops aren't fleeting. */
     for (uintN i=0; i<numInnerLoops; i++) {
         LoopProfile *prof = LookupLoopProfile(cx, innerLoops[i].top);
-        if (prof && prof->isCompilationUnprofitable(cx, depth-1))
-            return true;
+        if (prof && prof->unprofitable)
+            unprofitable = true;
     }
 
-    return false;
+    return unprofitable;
 }
 
 /* After profiling is done, this method decides whether to trace the loop. */
 void
 LoopProfile::decide(JSContext *cx)
 {
+    bool wasUndecided = undecided;
     profiled = true;
+    undecided = false;
 
+    if (traceOK)
+        return; /* We must have enabled it from an outer loop already. */
+    
 #ifdef DEBUG
     uintN line = js_PCToLineNumber(cx, script, top);
 
@@ -16725,6 +16736,7 @@ LoopProfile::decide(JSContext *cx)
     debug_only_printf(LC_TMProfiler, "FEATURE eval %d\n", allOps[OP_EVAL]);
     debug_only_printf(LC_TMProfiler, "FEATURE new %d\n", allOps[OP_NEW]);
     debug_only_printf(LC_TMProfiler, "FEATURE call %d\n", allOps[OP_CALL]);
+    debug_only_printf(LC_TMProfiler, "FEATURE arrayread %d\n", allOps[OP_ARRAY_READ]);
     debug_only_printf(LC_TMProfiler, "FEATURE typedarray %d\n", allOps[OP_TYPED_ARRAY]);
     debug_only_printf(LC_TMProfiler, "FEATURE fwdjump %d\n", allOps[OP_FWDJUMP]);
     debug_only_printf(LC_TMProfiler, "FEATURE recursive %d\n", allOps[OP_RECURSIVE]);
@@ -16744,17 +16756,20 @@ LoopProfile::decide(JSContext *cx)
         debug_only_print0(LC_TMProfiler, "NOTRACE: >3 inner loops\n");
     } else if (shortLoop) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: short\n");
-    } else if (maybeShortLoop && numInnerLoops < 2) {
-        debug_only_print0(LC_TMProfiler, "NOTRACE: maybe short\n");
-    } else if (isCompilationExpensive(cx, 4)) {
+    } else if (isCompilationExpensive(cx)) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: expensive\n");
-    } else if (isCompilationUnprofitable(cx, 4)) {
-        debug_only_print0(LC_TMProfiler, "NOTRACE: unprofitable\n");
+    } else if (maybeShortLoop && numInnerLoops < 2) {
+        if (wasUndecided) {
+            debug_only_print0(LC_TMProfiler, "NOTRACE: maybe short\n");
+        } else {
+            debug_only_print0(LC_TMProfiler, "UNDECIDED: maybe short\n");
+            undecided = true; /* Profile the loop again to see if it's still short. */
+        }
     } else {
         uintN goodOps = 0;
 
         /* The tracer handles these ops well because of type specialization. */
-        goodOps += count(OP_FLOAT)*10 + count(OP_BIT)*10 + count(OP_INT)*5;
+        goodOps += count(OP_FLOAT)*10 + count(OP_BIT)*10 + count(OP_INT)*5 + count(OP_EQ)*15;
 
         /* The tracer handles these ops well because of inlining. */
         goodOps += (count(OP_CALL) + count(OP_NEW))*20;
@@ -16762,9 +16777,14 @@ LoopProfile::decide(JSContext *cx)
         /* The tracer specialized typed array access. */
         goodOps += count(OP_TYPED_ARRAY)*10;
 
+        /* The methodjit is faster at array writes, but the tracer is faster for reads. */
+        goodOps += count(OP_ARRAY_READ)*15;
+
         debug_only_printf(LC_TMProfiler, "FEATURE goodOps %u\n", goodOps);
-        
-        if (goodOps >= numAllOps)
+
+        if (isCompilationUnprofitable(cx, goodOps))
+            debug_only_print0(LC_TMProfiler, "NOTRACE: unprofitable\n");
+        else if (goodOps >= numAllOps)
             traceOK = true;
     }
 
@@ -16791,7 +16811,7 @@ LoopProfile::decide(JSContext *cx)
         }
     }
 
-    if (!traceOK) {
+    if (!traceOK && !undecided) {
         debug_only_printf(LC_TMProfiler, "Blacklisting at %d\n", line);
         Blacklist(top);
     }
@@ -16819,7 +16839,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     if (prof->hits++ < PROFILE_HOTLOOP)
         return MONITOR_NOT_RECORDING;
 
-    if (prof->profiled) {
+    if (prof->profiled || prof->undecided) {
         if (prof->traceOK)
             return RecordLoopEdge(cx, inlineCallCount, prof->execOK);
         return MONITOR_NOT_RECORDING;
@@ -16841,6 +16861,7 @@ AbortProfiling(JSContext *cx)
     tm->profile->profiled = true;
     tm->profile->traceOK = false;
     tm->profile->execOK = false;
+    tm->profile->undecided = false;
     tm->profile = NULL;
 }
 
@@ -16853,6 +16874,17 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 }
 
 #endif /* JS_METHODJIT */
+
+uint32
+GetHotloop(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    if (cx->profilingEnabled)
+        return PROFILE_HOTLOOP;
+    else
+#endif
+        return 1;
+}
 
 } /* namespace js */
 
