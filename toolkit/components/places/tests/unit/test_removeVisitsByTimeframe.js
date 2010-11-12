@@ -389,8 +389,8 @@ function run_next_test() {
     let test = gTests.shift();
     print("\n ***Test: " + test.desc);
     waitForClearHistory(function() {
-      DBConn().executeSimpleSQL("DELETE FROM moz_places");
       remove_all_bookmarks();
+      DBConn().executeSimpleSQL("DELETE FROM moz_places");
       test.run.call(test);
     });
   }

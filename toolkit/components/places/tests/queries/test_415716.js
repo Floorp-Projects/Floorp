@@ -36,32 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsINavHistoryService);
-let annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-              getService(Ci.nsIAnnotationService);
-
 function modHistoryTypes(val){
   switch(val % 8) {
     case 0:
     case 1:
-      return histsvc.TRANSITION_LINK;
+      return TRANSITION_LINK;
     case 2:
-      return histsvc.TRANSITION_TYPED;
+      return TRANSITION_TYPED;
     case 3:
-      return histsvc.TRANSITION_BOOKMARK;
+      return TRANSITION_BOOKMARK;
     case 4:
-      return histsvc.TRANSITION_EMBED;
+      return TRANSITION_EMBED;
     case 5:
-      return histsvc.TRANSITION_REDIRECT_PERMANENT;
+      return TRANSITION_REDIRECT_PERMANENT;
     case 6:
-      return histsvc.TRANSITION_REDIRECT_TEMPORARY;
+      return TRANSITION_REDIRECT_TEMPORARY;
     case 7:
-      return histsvc.TRANSITION_DOWNLOAD;
+      return TRANSITION_DOWNLOAD;
     case 8:
-      return histsvc.TRANSITION_FRAMED_LINK;
+      return TRANSITION_FRAMED_LINK;
   }
-  return histsvc.TRANSITION_TYPED;
+  return TRANSITION_TYPED;
 }
 
 /**
@@ -73,27 +68,24 @@ function buildTestDatabase() {
   // why we add more visits to the same URIs.
   let testURI = uri("http://www.foo.com");
 
-  for (let i = 0; i < 12; ++i) {
-    histsvc.addVisit(testURI,
-                     today,
-                     null,
-                     modHistoryTypes(i), // will work with different values, for ex: histsvc.TRANSITION_TYPED,
-                     false,
-                     0);
-  }
-  
-  testURI = uri("http://foo.com/youdontseeme.html");
-  let testAnnoName = "moz-test-places/testing123";
-  let testAnnoVal = "test";
-  for (let i = 0; i < 12; ++i) {
-    histsvc.addVisit(testURI,
-                     today,
-                     null,
-                     modHistoryTypes(i), // will work with different values, for ex: histsvc.TRANSITION_TYPED,
-                     false,
-                     0);
-  }
-  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, 0);
+  PlacesUtils.history.runInBatchMode({
+    runBatched: function (aUserData) {
+      for (let i = 0; i < 12; ++i) {
+        PlacesUtils.history.addVisit(testURI, today, null, modHistoryTypes(i),
+                                     false, 0);
+      }
+      
+      testURI = uri("http://foo.com/youdontseeme.html");
+      let testAnnoName = "moz-test-places/testing123";
+      let testAnnoVal = "test";
+      for (let i = 0; i < 12; ++i) {
+        PlacesUtils.history.addVisit(testURI, today, null, modHistoryTypes(i),
+                                     false, 0);
+      }
+      PlacesUtils.annotations.setPageAnnotation(testURI, testAnnoName,
+                                                testAnnoVal, 0, 0);
+    }
+  }, null);
 }
 
 /**
@@ -107,22 +99,22 @@ function buildTestDatabase() {
  */
 function run_test() {
   buildTestDatabase();
-  let query = histsvc.getNewQuery();
+  let query = PlacesUtils.history.getNewQuery();
   query.annotation = "moz-test-places/testing123";
   query.beginTime = daybefore * 1000;
-  query.beginTimeReference = histsvc.TIME_RELATIVE_NOW;
+  query.beginTimeReference = PlacesUtils.history.TIME_RELATIVE_NOW;
   query.endTime = today * 1000;
-  query.endTimeReference = histsvc.TIME_RELATIVE_NOW;
+  query.endTimeReference = PlacesUtils.history.TIME_RELATIVE_NOW;
   query.minVisits = 2;
   query.maxVisits = 10;
 
   // Options
-  let options = histsvc.getNewQueryOptions();
+  let options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.resultType = options.RESULTS_AS_VISIT;
 
   // Results
-  let root = histsvc.executeQuery(query, options).root;
+  let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
   let cc = root.childCount;
   dump("----> cc is: " + cc + "\n");

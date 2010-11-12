@@ -70,6 +70,7 @@ function check_results_callback(aSequence) {
       case Ci.nsINavHistoryService.TRANSITION_DOWNLOAD:
         return redirectsMode != Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET;
       case Ci.nsINavHistoryService.TRANSITION_EMBED:
+        return false;
       case Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK:
         return includeHidden && redirectsMode != Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET;
       case Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY:
@@ -211,8 +212,6 @@ function cartProd(aSequences, aCallback)
  *   visit -> redirect_temp -> redirect_perm
  */
 function add_visits_to_database() {
-  // Clean up the database.
-  PlacesUtils.bhistory.removeAllPages();
   remove_all_bookmarks();
 
   // We don't really bother on this, but we need a time to add visits.
@@ -224,7 +223,9 @@ function add_visits_to_database() {
     Ci.nsINavHistoryService.TRANSITION_LINK,
     Ci.nsINavHistoryService.TRANSITION_TYPED,
     Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
-    Ci.nsINavHistoryService.TRANSITION_EMBED,
+    // Embed visits are not added to the database and we don't want redirects
+    // to them, thus just avoid addition.
+    //Ci.nsINavHistoryService.TRANSITION_EMBED,
     Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK,
     // Would make hard sorting by visit date because last_visit_date is actually
     // calculated excluding download transitions, but the query includes

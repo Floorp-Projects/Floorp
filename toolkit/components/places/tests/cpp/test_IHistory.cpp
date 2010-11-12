@@ -545,7 +545,8 @@ test_visituri_transition_embed()
   do_get_place(visitedURI, place);
   do_get_lastVisit(place.id, visit);
 
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_EMBED);
+  do_check_eq(place.id, 0);
+  do_check_eq(visit.id, 0);
 
   run_next_test();
 }
