@@ -1206,6 +1206,10 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 
   if (needsGroup) {
     mTarget->PopGroupToSource();
+    // If the layer is opaque in its visible region we pushed a CONTENT_COLOR
+    // group. We need to make sure that only pixels inside the layer's visible
+    // region are copied back to the destination.
+    gfxUtils::ClipToRegionSnapped(mTarget, aLayer->GetEffectiveVisibleRegion());
     mTarget->Paint(aLayer->GetEffectiveOpacity());
   }
 
