@@ -148,7 +148,7 @@ ImageLayerD3D9::GetLayer()
 }
 
 void
-ImageLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
+ImageLayerD3D9::RenderLayer()
 {
   if (!GetContainer()) {
     return;
@@ -172,16 +172,7 @@ ImageLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
                                                           yuvImage->mSize.height),
                                        1);
 
-    gfx3DMatrix transform = mTransform * aTransform;
-    device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
-
-    float opacity[4];
-    /*
-     * We always upload a 4 component float, but the shader will
-     * only use the the first component since it's declared as a 'float'.
-     */
-    opacity[0] = GetOpacity() * aOpacity;
-    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
+    SetShaderTransformAndOpacity();
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
 
@@ -221,16 +212,7 @@ ImageLayerD3D9::RenderLayer(float aOpacity, const gfx3DMatrix &aTransform)
                                                           cairoImage->mSize.height),
                                        1);
 
-    gfx3DMatrix transform = mTransform * aTransform;
-    device()->SetVertexShaderConstantF(CBmLayerTransform, &transform._11, 4);
-
-    float opacity[4];
-    /*
-     * We always upload a 4 component float, but the shader will
-     * only use the the first component since it's declared as a 'float'.
-     */
-    opacity[0] = GetOpacity() * aOpacity;
-    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
+    SetShaderTransformAndOpacity();
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 

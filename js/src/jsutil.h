@@ -344,6 +344,18 @@ PodArrayZero(T (&t)[N])
     memset(t, 0, N * sizeof(T));
 }
 
+template <class T>
+JS_ALWAYS_INLINE static void
+PodCopy(T *dst, T *src, size_t nelem)
+{
+    if (nelem < 128) {
+        for (T *srcend = src + nelem; src != srcend; ++src, ++dst)
+            *dst = *src;
+    } else {
+        memcpy(dst, src, nelem * sizeof(T));
+    }
+}
+
 } /* namespace js */
 
 #endif /* defined(__cplusplus) */

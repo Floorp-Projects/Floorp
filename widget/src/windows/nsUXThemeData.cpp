@@ -68,8 +68,6 @@ PRPackedBool
 nsUXThemeData::sIsXPOrLater = PR_FALSE;
 PRPackedBool
 nsUXThemeData::sIsVistaOrLater = PR_FALSE;
-PRPackedBool
-nsUXThemeData::sHaveCompositor = PR_FALSE;
 
 PRBool nsUXThemeData::sTitlebarInfoPopulated = PR_FALSE;
 SIZE nsUXThemeData::sCommandButtons[4];
@@ -299,6 +297,8 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
 
   // Query a temporary, visible window with command buttons to get
   // the right metrics. 
+  nsAutoString className;
+  className.AssignLiteral(kClassNameTemp);
   WNDCLASSW wc;
   wc.style         = 0;
   wc.lpfnWndProc   = ::DefWindowProcW;
@@ -309,21 +309,21 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   wc.hCursor       = NULL;
   wc.hbrBackground = NULL;
   wc.lpszMenuName  = NULL;
-  wc.lpszClassName = kClassNameTemp;
+  wc.lpszClassName = className.get();
   ::RegisterClassW(&wc);
 
-  // Create a transparent, descendent of the window passed in. This
+  // Create a minimized descendant of the window passed in. This
   // keeps the window from showing up on the desktop or the taskbar.
   // Note the parent (browser) window is usually still hidden, we
   // don't want to display it, so we can't query it directly.
-  HWND hWnd = CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_LAYERED,
-                              kClassNameTemp, L"",
+  HWND hWnd = CreateWindowExW(WS_EX_NOACTIVATE,
+                              className.get(), L"",
                               WS_OVERLAPPEDWINDOW,
                               0, 0, 0, 0, aWnd, NULL,
                               nsToolkit::mDllInstance, NULL);
   NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
 
-  ShowWindow(hWnd, SW_SHOW);
+  ShowWindow(hWnd, SW_SHOWMINNOACTIVE);
   TITLEBARINFOEX info = {0};
   info.cbSize = sizeof(TITLEBARINFOEX);
   SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 

@@ -131,23 +131,17 @@ JSStackFrame::resetInvokeCallFrame()
 }
 
 inline void
-JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flagsArg)
+JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 flagsArg,
+                                      void *ncode)
 {
     JS_ASSERT((flagsArg & ~(JSFRAME_CONSTRUCTING |
                             JSFRAME_FUNCTION |
                             JSFRAME_OVERFLOW_ARGS |
                             JSFRAME_UNDERFLOW_ARGS)) == 0);
-    JSFrameRegs *regs = cx->regs;
 
-    /* Initialize the caller half of the stack frame members. */
     flags_ = JSFRAME_FUNCTION | flagsArg;
-    args.nactual = nactual;  /* only need to write if over/under-flow */
-    prev_ = regs->fp;
-    JS_ASSERT(!hasImacropc());
-    JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
-
-    JS_ASSERT(!hasCallObj());
+    prev_ = cx->regs->fp;
+    ncode_ = ncode;
 }
 
 /*
@@ -155,10 +149,11 @@ JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flag
  * of slow paths before initializing the rest of the members.
  */
 inline void
-JSStackFrame::initCallFrameEarlyPrologue(JSFunction *fun, void *ncode)
+JSStackFrame::initCallFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
 {
     exec.fun = fun;
-    ncode_ = ncode;
+    if (flags_ & (JSFRAME_OVERFLOW_ARGS | JSFRAME_UNDERFLOW_ARGS))
+        args.nactual = nactual;
 }
 
 /*
@@ -317,6 +312,33 @@ JSStackFrame::forEachFormalArg(Op op)
     uintN i = 0;
     for (js::Value *p = formals; p != formalsEnd; ++p, ++i)
         op(i, p);
+}
+
+namespace js {
+
+struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
+{
+    CopyNonHoleArgsTo(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
+    JSObject *aobj;
+    Value *dst;
+    void operator()(uintN argi, Value *src) {
+        if (aobj->getArgsElement(argi).isMagic(JS_ARGS_HOLE))
+            dst->setUndefined();
+        else
+            *dst = *src;
+        ++dst;
+    }
+};
+
+struct CopyTo
+{
+    Value *dst;
+    CopyTo(Value *dst) : dst(dst) {}
+    void operator()(uintN, Value *src) {
+        *dst++ = *src;
+    }
+};
+
 }
 
 JS_ALWAYS_INLINE void
@@ -570,7 +592,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     JSBool ok;
     {
         AutoPreserveEnumerators preserve(cx);
-        Probes::enterJSFun(cx, fp->fun());
+        Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
         AutoInterpPreparer prepareInterp(cx, script_);
         ok = mjit::EnterMethodJIT(cx, fp, code_, stackLimit_);
@@ -579,7 +601,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         cx->regs->pc = script_->code;
         ok = Interpret(cx, cx->fp());
 #endif
-        Probes::exitJSFun(cx, fp->fun());
+        Probes::exitJSFun(cx, fp->fun(), script_);
     }
 
     PutActivationObjects(cx, fp);
@@ -684,7 +706,9 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 static inline bool
 ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
 {
-    Probes::exitJSFun(cx, fp->maybeFun());
+    if (!fp->isExecuteFrame())
+        Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
+
     JSInterpreterHook hook = cx->debugHooks->callHook;
     if (hook && fp->hasHookData() && !fp->isExecuteFrame())
         hook(cx, fp, JS_FALSE, &ok, fp->hookData());

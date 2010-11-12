@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -107,7 +107,7 @@ filter_block1d8_h6_rowloop:
         paddsw      xmm4,       xmm6
 
         paddsw      xmm4,       xmm1
-        paddsw      xmm4,       [rd GLOBAL]
+        paddsw      xmm4,       [GLOBAL(rd)]
 
         psraw       xmm4,       7
 
@@ -231,7 +231,7 @@ filter_block1d16_h6_sse2_rowloop:
         paddsw      xmm4,       xmm6
 
         paddsw      xmm4,       xmm1
-        paddsw      xmm4,       [rd GLOBAL]
+        paddsw      xmm4,       [GLOBAL(rd)]
 
         psraw       xmm4,       7
 
@@ -284,7 +284,7 @@ filter_block1d16_h6_sse2_rowloop:
         paddsw      xmm4,       xmm6
 
         paddsw      xmm4,       xmm2
-        paddsw      xmm4,       [rd GLOBAL]
+        paddsw      xmm4,       [GLOBAL(rd)]
 
         psraw       xmm4,       7
 
@@ -351,7 +351,7 @@ sym(vp8_filter_block1d8_v6_sse2):
         movsxd      rcx,        DWORD PTR arg(5) ;[output_height]
         pxor        xmm0,       xmm0                        ; clear xmm0
 
-        movdqa      xmm7,       XMMWORD PTR [rd GLOBAL]
+        movdqa      xmm7,       XMMWORD PTR [GLOBAL(rd)]
 %if ABI_IS_32BIT=0
         movsxd      r8,         dword ptr arg(2) ; dst_ptich
 %endif
@@ -489,7 +489,7 @@ vp8_filter_block1d16_v6_sse2_loop:
         pmullw      xmm5,       [rax + 80]
         pmullw      xmm6,       [rax + 80]
 
-        movdqa      xmm7,       XMMWORD PTR [rd GLOBAL]
+        movdqa      xmm7,       XMMWORD PTR [GLOBAL(rd)]
         pxor        xmm0,       xmm0                        ; clear xmm0
 
         paddsw      xmm1,       xmm3
@@ -608,7 +608,7 @@ filter_block1d8_h6_only_rowloop:
         paddsw      xmm4,       xmm6
 
         paddsw      xmm4,       xmm1
-        paddsw      xmm4,       [rd GLOBAL]
+        paddsw      xmm4,       [GLOBAL(rd)]
 
         psraw       xmm4,       7
 
@@ -723,7 +723,7 @@ filter_block1d16_h6_only_sse2_rowloop:
         paddsw      xmm4,       xmm6
 
         paddsw      xmm4,       xmm1
-        paddsw      xmm4,       [rd GLOBAL]
+        paddsw      xmm4,       [GLOBAL(rd)]
 
         psraw       xmm4,       7
 
@@ -773,7 +773,7 @@ filter_block1d16_h6_only_sse2_rowloop:
         paddsw      xmm4,       xmm6
 
         paddsw      xmm4,       xmm2
-        paddsw      xmm4,       [rd GLOBAL]
+        paddsw      xmm4,       [GLOBAL(rd)]
 
         psraw       xmm4,       7
 
@@ -832,7 +832,7 @@ sym(vp8_filter_block1d8_v6_only_sse2):
 
         pxor        xmm0,       xmm0                        ; clear xmm0
 
-        movdqa      xmm7,       XMMWORD PTR [rd GLOBAL]
+        movdqa      xmm7,       XMMWORD PTR [GLOBAL(rd)]
 %if ABI_IS_32BIT=0
         movsxd      r8,         dword ptr arg(3) ; dst_ptich
 %endif
@@ -978,7 +978,7 @@ sym(vp8_bilinear_predict16x16_sse2):
     ;const short *HFilter = bilinear_filters_mmx[xoffset]
     ;const short *VFilter = bilinear_filters_mmx[yoffset]
 
-        lea         rcx,        [sym(vp8_bilinear_filters_mmx) GLOBAL]
+        lea         rcx,        [GLOBAL(sym(vp8_bilinear_filters_mmx))]
         movsxd      rax,        dword ptr arg(2) ;xoffset
 
         cmp         rax,        0      ;skip first_pass filter if xoffset=0
@@ -1033,10 +1033,10 @@ sym(vp8_bilinear_predict16x16_sse2):
         paddw       xmm3,       xmm5
         paddw       xmm4,       xmm6
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
-        paddw       xmm4,       [rd GLOBAL]
+        paddw       xmm4,       [GLOBAL(rd)]
         psraw       xmm4,       VP8_FILTER_SHIFT
 
         movdqa      xmm7,       xmm3
@@ -1074,10 +1074,10 @@ next_row:
         pmullw      xmm5,       [rax]
         pmullw      xmm6,       [rax]
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
-        paddw       xmm4,       [rd GLOBAL]
+        paddw       xmm4,       [GLOBAL(rd)]
         psraw       xmm4,       VP8_FILTER_SHIFT
 
         movdqa      xmm7,       xmm3
@@ -1089,10 +1089,10 @@ next_row:
         paddw       xmm3,       xmm5
         paddw       xmm4,       xmm6
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
-        paddw       xmm4,       [rd GLOBAL]
+        paddw       xmm4,       [GLOBAL(rd)]
         psraw       xmm4,       VP8_FILTER_SHIFT
 
         packuswb    xmm3,       xmm4
@@ -1154,10 +1154,10 @@ next_row_spo:
         paddw       xmm3,       xmm5
         paddw       xmm4,       xmm6
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
-        paddw       xmm4,       [rd GLOBAL]
+        paddw       xmm4,       [GLOBAL(rd)]
         psraw       xmm4,       VP8_FILTER_SHIFT
 
         packuswb    xmm3,       xmm4
@@ -1198,10 +1198,10 @@ next_row_fpo:
         paddw       xmm3,       xmm5
         paddw       xmm4,       xmm6
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
-        paddw       xmm4,       [rd GLOBAL]
+        paddw       xmm4,       [GLOBAL(rd)]
         psraw       xmm4,       VP8_FILTER_SHIFT
 
         packuswb    xmm3,       xmm4
@@ -1249,7 +1249,7 @@ sym(vp8_bilinear_predict8x8_sse2):
 
     ;const short *HFilter = bilinear_filters_mmx[xoffset]
     ;const short *VFilter = bilinear_filters_mmx[yoffset]
-        lea         rcx,        [sym(vp8_bilinear_filters_mmx) GLOBAL]
+        lea         rcx,        [GLOBAL(sym(vp8_bilinear_filters_mmx))]
 
         mov         rsi,        arg(0) ;src_ptr
         movsxd      rdx,        dword ptr arg(1) ;src_pixels_per_line
@@ -1315,7 +1315,7 @@ sym(vp8_bilinear_predict8x8_sse2):
 
         paddw       xmm3,       xmm4
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
         movdqa      xmm7,       xmm3
@@ -1334,7 +1334,7 @@ next_row8x8:
         paddw       xmm3,       xmm4
         pmullw      xmm7,       xmm5
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
         movdqa      xmm4,       xmm3
@@ -1344,11 +1344,11 @@ next_row8x8:
 
         movdqa      xmm7,       xmm4
 
-        paddw       xmm3,       [rd GLOBAL]         ; xmm3 += round value
+        paddw       xmm3,       [GLOBAL(rd)]        ; xmm3 += round value
         psraw       xmm3,       VP8_FILTER_SHIFT        ; xmm3 /= 128
 
         packuswb    xmm3,       xmm0
-        movq        QWORD PTR [rdi], xmm3           ; store the results in the destination
+        movq        [rdi],      xmm3                 ; store the results in the destination
 
         add         rsp,        16                 ; next line
         add         rdi,        rdx

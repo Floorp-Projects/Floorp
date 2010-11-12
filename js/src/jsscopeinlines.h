@@ -176,6 +176,10 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
     table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
     flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
 {
+#define JS_CRASH(addr) *(int *) addr = 0
+    if (JSID_IS_ZERO(id))
+        JS_CRASH(0xa8);
+#undef JS_CRASH
     JS_ASSERT_IF(slotSpan != SHAPE_INVALID_SLOT, slotSpan < JSObject::NSLOTS_LIMIT);
     JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
     JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER), setterObj->isCallable());
@@ -234,7 +238,7 @@ Shape::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint
 }
 
 inline bool
-Shape::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp) const
+Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js::Value* vp) const
 {
     JS_ASSERT(!JSID_IS_VOID(this->id));
     JS_ASSERT(!hasDefaultGetter());
@@ -242,7 +246,7 @@ Shape::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp) const
     if (hasGetterValue()) {
         JS_ASSERT(!isMethod());
         js::Value fval = getterValue();
-        return js::ExternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
+        return js::ExternalGetOrSet(cx, receiver, id, fval, JSACC_READ, 0, 0, vp);
     }
 
     if (isMethod()) {

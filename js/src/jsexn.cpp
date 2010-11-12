@@ -61,6 +61,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
+#include "jswrapper.h"
 
 #include "jscntxtinlines.h"
 #include "jsinferinlines.h"
@@ -261,15 +262,6 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
     return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
-struct CopyTo
-{
-    Value *dst;
-    CopyTo(jsval *dst) : dst(Valueify(dst)) {}
-    void operator()(uintN, Value *src) {
-        *dst++ = *src;
-    }
-};
-
 static JSBool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                JSString *filename, uintN lineno, JSErrorReport *report)
@@ -355,7 +347,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                             ? ATOM_TO_STRING(fp->fun()->atom)
                             : cx->runtime->emptyString;
             elem->argc = fp->numActualArgs();
-            fp->forEachCanonicalActualArg(CopyTo(values));
+            fp->forEachCanonicalActualArg(CopyTo(Valueify(values)));
             values += elem->argc;
         }
         elem->ulineno = 0;
@@ -547,9 +539,14 @@ ValueToShortSource(JSContext *cx, jsval v)
     JSString *str;
 
     /* Avoid toSource bloat and fallibility for object types. */
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        str = js_ValueToSource(cx, Valueify(v));
-    } else if (VALUE_IS_FUNCTION(cx, v)) {
+    if (JSVAL_IS_PRIMITIVE(v))
+        return js_ValueToSource(cx, Valueify(v));
+
+    AutoCompartment ac(cx, JSVAL_TO_OBJECT(v));
+    if (!ac.enter())
+        return NULL;
+
+    if (VALUE_IS_FUNCTION(cx, v)) {
         /*
          * XXX Avoid function decompilation bloat for now.
          */
@@ -572,6 +569,11 @@ ValueToShortSource(JSContext *cx, jsval v)
                     JSVAL_TO_OBJECT(v)->getClass()->name);
         str = JS_NewStringCopyZ(cx, buf);
     }
+
+    ac.leave();
+
+    if (!str || !cx->compartment->wrap(cx, &str))
+        return NULL;
     return str;
 }
 
@@ -1071,10 +1073,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
          * object, which could trigger accesses on its properties.
          */
         cx->markTypeBuiltinFunction(cx->getTypeObject(fullName, false, true));
-
-        /* Make a constructor function for the current name. */
-        JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
-        JSFunction *fun = js_DefineFunction(cx, obj, atom, Exception, 3, JSFUN_CONSTRUCTOR,
+        
+        jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
+        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 3, JSFUN_CONSTRUCTOR,
                                             error_TypeNew, fullName);
         if (!fun)
             return NULL;
@@ -1094,7 +1095,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         /* Add the name property to the prototype. */
         if (!JS_DefinePropertyWithType(cx, proto, js_name_str,
-                                       STRING_TO_JSVAL(ATOM_TO_STRING(atom)),
+                                       STRING_TO_JSVAL(JSID_TO_STRING(id)),
                                        NULL, NULL, JSPROP_ENUMERATE)) {
             return NULL;
         }

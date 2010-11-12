@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: decinfo.c 16503 2009-08-22 18:14:02Z giles $
+    last mod: $Id: decinfo.c 17276 2010-06-05 05:57:05Z tterribe $
 
  ********************************************************************/
 
@@ -128,6 +128,10 @@ static int oc_comment_unpack(oc_pack_buf *_opb,th_comment *_tc){
    _tc->comments*sizeof(_tc->comment_lengths[0]));
   _tc->user_comments=(char **)_ogg_malloc(
    _tc->comments*sizeof(_tc->user_comments[0]));
+  if(_tc->comment_lengths==NULL||_tc->user_comments==NULL){
+    _tc->comments=0;
+    return TH_EFAULT;
+  }
   for(i=0;i<_tc->comments;i++){
     len=oc_unpack_length(_opb);
     if(len<0||len>oc_pack_bytes_left(_opb)){

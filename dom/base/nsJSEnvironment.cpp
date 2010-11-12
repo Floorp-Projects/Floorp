@@ -1119,7 +1119,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
                                            cx->debugHooks->
                                            debuggerHandlerData)) {
       case JSTRAP_RETURN:
-        fp->setReturnValue(js::Valueify(rval));
+        JS_SetFrameReturnValue(cx, fp, rval);
         return JS_TRUE;
       case JSTRAP_ERROR:
         cx->throwing = JS_FALSE;
@@ -3624,10 +3624,14 @@ nsJSContext::CC(nsICycleCollectorListener *aListener)
   sCCSuspectChanges = 0;
   // nsCycleCollector_collect() no longer forces a JS garbage collection,
   // so we have to do it ourselves here.
-  nsContentUtils::XPConnect()->GarbageCollect();
+  if (nsContentUtils::XPConnect()) {
+    nsContentUtils::XPConnect()->GarbageCollect();
+  }
   sCollectedObjectsCounts = nsCycleCollector_collect(aListener);
   sCCSuspectedCount = nsCycleCollector_suspectedCount();
-  sSavedGCCount = JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER);
+  if (nsJSRuntime::sRuntime) {
+    sSavedGCCount = JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER);
+  }
 #ifdef DEBUG_smaug
   printf("Collected %u objects, %u suspected objects, took %lldms\n",
          sCollectedObjectsCounts, sCCSuspectedCount,
@@ -3684,6 +3688,10 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
   if (aHigherProbability ||
       sCollectedObjectsCounts > NS_COLLECTED_OBJECTS_LIMIT) {
     sDelayedCCollectCount *= NS_PROBABILITY_MULTIPLIER;
+  } else if (!sUserIsActive && sCCSuspectChanges > NS_MAX_SUSPECT_CHANGES) {
+    // If user is inactive and there are lots of new suspected objects, 
+    // increase the probability for cycle collection.
+    sDelayedCCollectCount += (sCCSuspectChanges / NS_MAX_SUSPECT_CHANGES);
   }
 
   if (!sGCTimer &&
@@ -3704,6 +3712,15 @@ nsJSContext::CCIfUserInactive()
     MaybeCC(PR_TRUE);
   } else {
     IntervalCC();
+  }
+}
+
+//static
+void
+nsJSContext::MaybeCCIfUserInactive()
+{
+  if (!sUserIsActive) {
+    MaybeCC(PR_FALSE);
   }
 }
 
@@ -3914,7 +3931,7 @@ nsJSRuntime::Startup()
   sDelayedCCollectCount = 0;
   sCCollectCount = 0;
   sUserIsActive = PR_FALSE;
-  sPreviousCCTime = 0;
+  sPreviousCCTime = PR_Now();
   sCollectedObjectsCounts = 0;
   sSavedGCCount = 0;
   sCCSuspectChanges = 0;
@@ -3982,7 +3999,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
      * In the browser, we don't cap the amount of GC-owned memory.
      */
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
-                      64L * 1024L * 1024L);
+                      128L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
                       0xffffffff);
   } else {

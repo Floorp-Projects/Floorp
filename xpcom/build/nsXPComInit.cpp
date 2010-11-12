@@ -179,6 +179,10 @@ static BrowserProcessSubThread* sIOThread;
 extern nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 
+#ifdef XP_WIN
+extern nsresult ScheduleMediaCacheRemover();
+#endif
+
 #ifdef DEBUG
 extern void _FreeAutoLockStatics();
 #endif
@@ -555,7 +559,10 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, 
                                   nsnull,
                                   NS_XPCOM_STARTUP_OBSERVER_ID);
-    
+#ifdef XP_WIN
+    ScheduleMediaCacheRemover();
+#endif
+
     return NS_OK;
 }
 
@@ -633,6 +640,8 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
             (void) observerService->
                 NotifyObservers(nsnull, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
                                 nsnull);
+
+        nsCycleCollector_shutdownThreads();
 
         NS_ProcessPendingEvents(thread);
 

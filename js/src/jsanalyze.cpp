@@ -341,6 +341,13 @@ Script::analyze(JSContext *cx)
     }
 
     /*
+     * If the script is in debug mode, JS_SetFrameReturnValue can be called at
+     * any safe point.
+     */
+    if (cx->compartment->debugMode)
+        usesRval = true;
+
+    /*
      * If we are in the middle of one or more jumps, the offset of the highest
      * target jumping over this bytecode.  Includes implicit jumps from
      * try/catch/finally blocks.
@@ -655,10 +662,14 @@ Script::analyze(JSContext *cx)
           case JSOP_SETLOCAL:
           case JSOP_FORLOCAL: {
             uint32 local = GET_SLOTNO(pc);
-            JS_ASSERT_IF(local < nfixed &&
-                         locals[local] != LOCAL_CONDITIONALLY_DEFINED &&
-                         locals[local] != LOCAL_USE_BEFORE_DEF,
-                         locals[local] <= offset);
+
+            /*
+             * The local variable may already have been marked as unconditionally
+             * defined at a later point in the script, if that definition was in the
+             * condition for a loop which then jumped back here.  In such cases we
+             * will not treat the variable as ever being defined in the loop body
+             * (see setLocal).
+             */
             if (local < nfixed && locals[local] == LOCAL_CONDITIONALLY_DEFINED) {
                 if (forwardJump) {
                     /* Add this local to the variables defined after this bytecode. */

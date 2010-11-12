@@ -189,6 +189,20 @@ nsCharsetConverterManager::GetUnicodeEncoderRaw(const char * aDest,
 }
 
 NS_IMETHODIMP
+nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc,
+                                                nsIUnicodeDecoder ** aResult)
+{
+  nsresult rv;
+
+  nsAutoString str;
+  rv = GetCharsetData(aSrc, NS_LITERAL_STRING(".isXSSVulnerable").get(), str);
+  if (NS_SUCCEEDED(rv))
+    return NS_ERROR_UCONV_NOCONV;
+
+  return GetUnicodeDecoderRawInternal(aSrc, aResult);
+}
+
+NS_IMETHODIMP
 nsCharsetConverterManager::GetUnicodeDecoder(const char * aSrc, 
                                              nsIUnicodeDecoder ** aResult)
 {
@@ -203,8 +217,22 @@ nsCharsetConverterManager::GetUnicodeDecoder(const char * aSrc,
 }
 
 NS_IMETHODIMP
-nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc, 
-                                                nsIUnicodeDecoder ** aResult)
+nsCharsetConverterManager::GetUnicodeDecoderInternal(const char * aSrc, 
+                                                     nsIUnicodeDecoder ** aResult)
+{
+  // resolve the charset first
+  nsCAutoString charset;
+  
+  // fully qualify to possibly avoid vtable call
+  nsCharsetConverterManager::GetCharsetAlias(aSrc, charset);
+
+  return nsCharsetConverterManager::GetUnicodeDecoderRawInternal(charset.get(),
+                                                                 aResult);
+}
+
+NS_IMETHODIMP
+nsCharsetConverterManager::GetUnicodeDecoderRawInternal(const char * aSrc, 
+                                                        nsIUnicodeDecoder ** aResult)
 {
   *aResult= nsnull;
   nsCOMPtr<nsIUnicodeDecoder> decoder;

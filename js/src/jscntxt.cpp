@@ -397,7 +397,7 @@ StackSpace::pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameG
 bool
 StackSpace::bumpCommitAndLimit(JSStackFrame *base, Value *sp, uintN nvals, Value **limit) const
 {
-    JS_ASSERT(sp == firstUnused());
+    JS_ASSERT(sp >= firstUnused());
     JS_ASSERT(sp + nvals >= *limit);
 #ifdef XP_WIN
     if (commitEnd <= *limit) {
@@ -744,13 +744,11 @@ js::SyncOptionsToVersion(JSContext* cx)
 {
     JSVersion version = cx->findVersion();
     uint32 options = cx->options;
-    if (OptionsHasXML(options) == VersionHasXML(version) &&
-        OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version)) {
+    if (OptionsHasXML(options) == VersionHasXML(version)) {
         /* No need to override. */
         return false;
     }
     VersionSetXML(&version, OptionsHasXML(options));
-    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
     cx->maybeOverrideVersion(version);
     return true;
 }

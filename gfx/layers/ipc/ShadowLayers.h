@@ -53,6 +53,7 @@ namespace layers {
 
 struct Edit;
 struct EditReply;
+class OptionalThebesBuffer;
 class PLayerChild;
 class PLayersChild;
 class PLayersParent;
@@ -231,7 +232,7 @@ public:
    * |aReplies| are directions from the ShadowLayerManager to the
    * caller of EndTransaction().
    */
-  PRBool EndTransaction(nsTArray<EditReply>* aReplies);
+  PRBool EndTransaction(InfallibleTArray<EditReply>* aReplies);
 
   /**
    * True if this is forwarding to a ShadowLayerManager.
@@ -505,7 +506,8 @@ public:
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        ThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
-       float* aNewXResolution, float* aNewYResolution) = 0;
+       float* aNewXResolution, float* aNewYResolution,
+       OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY

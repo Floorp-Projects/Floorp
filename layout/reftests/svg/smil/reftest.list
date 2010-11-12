@@ -93,6 +93,9 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg
 
+# animate path data:
+== anim-path-d-01.svg anim-path-d-01-ref.svg
+
 # animate some enumeration attributes:
 == anim-feComposite-operator-01.svg lime.svg
 == anim-filter-filterUnits-01.svg lime.svg

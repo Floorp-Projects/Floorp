@@ -292,8 +292,7 @@ Dump(JSContext *cx,
     str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return JS_FALSE;
-
-    fputs(JS_GetStringBytes(str), stdout);
+    JS_FileEscapedString(stdout, str, 0);
     fflush(stdout);
     return JS_TRUE;
 }

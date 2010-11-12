@@ -85,7 +85,6 @@ var gPrefObserver = {
 
 function CSPWarning(aMsg) {
   var textMessage = 'CSP WARN:  ' + aMsg + "\n";
-  dump(textMessage);
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
@@ -99,7 +98,6 @@ function CSPWarning(aMsg) {
 
 function CSPError(aMsg) {
   var textMessage = 'CSP ERROR:  ' + aMsg + "\n";
-  dump(textMessage);
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
@@ -115,7 +113,6 @@ function CSPdebug(aMsg) {
   if (!gPrefObserver.debugEnabled) return;
 
   aMsg = 'CSP debug: ' + aMsg + "\n";
-  dump(aMsg);
   Components.classes["@mozilla.org/consoleservice;1"]
                     .getService(Components.interfaces.nsIConsoleService)
                     .logStringMessage(aMsg);

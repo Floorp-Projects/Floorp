@@ -62,7 +62,7 @@ BEGIN_TEST(testTrap_gc)
 
     JS_GC(cx);
 
-    CHECK(0 == strcmp(trapClosureText, JS_GetStringBytes(trapClosure)));
+    CHECK(JS_MatchStringAndAscii(trapClosure, trapClosureText));
 
     // execute
     CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
@@ -70,7 +70,7 @@ BEGIN_TEST(testTrap_gc)
 
     JS_GC(cx);
 
-    CHECK(0 == strcmp(trapClosureText, JS_GetStringBytes(trapClosure)));
+    CHECK(JS_MatchStringAndAscii(trapClosure, trapClosureText));
 
     return true;
 }

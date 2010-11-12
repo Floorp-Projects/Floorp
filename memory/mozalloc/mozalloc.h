@@ -52,6 +52,8 @@
 #endif
 
 
+#define MOZALLOC_HAVE_XMALLOC
+
 #if defined(MOZALLOC_EXPORT)
 /* do nothing: it's been defined to __declspec(dllexport) by
  * mozalloc*.cpp on platforms where that's required. */

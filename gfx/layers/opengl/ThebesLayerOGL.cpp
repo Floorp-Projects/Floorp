@@ -178,7 +178,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     nsIntRect quadRect = *iterRect;
     program->Activate();
     program->SetLayerQuadRect(quadRect);
-    program->SetLayerOpacity(mLayer->GetOpacity());
+    program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
     program->SetLayerTransform(mLayer->GetEffectiveTransform());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
@@ -650,7 +650,9 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
                            const nsIntRegion& aUpdatedRegion,
                            ThebesBuffer* aNewBack,
                            nsIntRegion* aNewBackValidRegion,
-                           float* aNewXResolution, float* aNewYResolution)
+                           float* aNewXResolution, float* aNewYResolution,
+                           OptionalThebesBuffer* aReadOnlyFront,
+                           nsIntRegion* aFrontUpdatedRegion)
 {
   if (!mDestroyed && mBuffer) {
     nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
@@ -661,6 +663,8 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
   *aNewBackValidRegion = mValidRegion;
   *aNewXResolution = 1.0;
   *aNewYResolution = 1.0;
+  *aReadOnlyFront = null_t();
+  aFrontUpdatedRegion->SetEmpty();
 }
 
 void

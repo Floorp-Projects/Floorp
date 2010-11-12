@@ -255,6 +255,7 @@ private:
     void Init();
 
     PRBool mUseDirectWrite;
+    PRBool mUsingGDIFonts;
 
 #ifdef CAIRO_HAS_DWRITE_FONT
     nsRefPtr<IDWriteFactory> mDWriteFactory;

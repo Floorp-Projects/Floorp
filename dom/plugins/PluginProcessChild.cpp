@@ -52,6 +52,21 @@
 
 using mozilla::ipc::IOThreadChild;
 
+#ifdef OS_WIN
+#include "nsSetDllDirectory.h"
+#include <algorithm>
+
+namespace {
+
+std::size_t caseInsensitiveFind(std::string aHaystack, std::string aNeedle) {
+    std::transform(aHaystack.begin(), aHaystack.end(), aHaystack.begin(), ::tolower);
+    std::transform(aNeedle.begin(), aNeedle.end(), aNeedle.begin(), ::tolower);
+    return aHaystack.find(aNeedle);
+}
+
+}
+#endif
+
 namespace mozilla {
 namespace plugins {
 
@@ -85,6 +100,18 @@ PluginProcessChild::Init()
     NS_ABORT_IF_FALSE(values.size() >= 1, "not enough loose args");
 
     pluginFilename = WideToUTF8(values[0]);
+
+    bool protectCurrentDirectory = true;
+    // Don't use SetDllDirectory for Shockwave Director
+    const std::string shockwaveDirectorPluginFilename("\\np32dsw.dll");
+    std::size_t index = caseInsensitiveFind(pluginFilename, shockwaveDirectorPluginFilename);
+    if (index != std::string::npos &&
+        index + shockwaveDirectorPluginFilename.length() == pluginFilename.length()) {
+        protectCurrentDirectory = false;
+    }
+    if (protectCurrentDirectory) {
+        NS_SetDllDirectory(L"");
+    }
 
 #else
 #  error Sorry

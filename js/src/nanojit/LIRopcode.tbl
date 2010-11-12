@@ -309,7 +309,23 @@ OP_64(q2i,     110, Op1,  I,    1)  // truncate quad to int (removes the high 32
 
 OP___(i2d,     111, Op1,  D,    1)  // convert int to double
 OP___(ui2d,    112, Op1,  D,    1)  // convert unsigned int to double
-OP___(d2i,     113, Op1,  I,    1)  // convert double to int (no exceptions raised, platform rounding rules)
+
+// The rounding behavior of LIR_d2i is platform specific.
+//
+// Platform     Asm code		Behavior
+// --------     --------		--------
+// x86 w/ x87   fist            uses current FP control word (default is rounding)
+// x86 w/ SSE   cvttsd2si       performs round to zero (truncate)
+// x64 (SSE)    cvttsd2si       performs round to zero (truncate) 
+// PowerPC                      unsupported
+// ARM          ftosid          round to nearest
+// MIPS         trunc.w.d       performs round to zero (truncate)
+// SH4          frtc            performs round to zero (truncate)
+// SPARC        fdtoi           performs round to zero (truncate)
+//
+// round to zero examples:  1.9 -> 1, 1.1 -> 1, -1.1 -> -1, -1.9 -> -1
+// round to nearest examples: 1.9 -> 2, 1.1 -> 1, -1.1 -> -1, -1.9 -> -2
+OP___(d2i,     113, Op1,  I,    1)  // convert double to int (no exceptions raised)
 
 OP_64(dasq,    114, Op1,  Q,    1)  // interpret the bits of a double as a quad
 OP_64(qasd,    115, Op1,  D,    1)  // interpret the bits of a quad as a double

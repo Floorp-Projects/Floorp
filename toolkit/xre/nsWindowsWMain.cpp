@@ -7,6 +7,7 @@
 #endif
 
 #include "nsUTF8Utils.h"
+#include "nsSetDllDirectory.h"
 
 #if defined(_MSC_VER) && defined(_M_IX86) && defined(XRE_WANT_DLL_BLOCKLIST)
 #include "nsWindowsDllBlocklist.cpp"
@@ -90,14 +91,9 @@ void ExtractEnvironmentFromCL(int &argc, char **&argv)
 
 int wmain(int argc, WCHAR **argv)
 {
-  typedef BOOL
-  (WINAPI *pfnSetDllDirectory) (LPCWSTR);
-  pfnSetDllDirectory setDllDirectory =
-    reinterpret_cast<pfnSetDllDirectory>
-    (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
-  if (setDllDirectory) {
-    setDllDirectory(L"");
-  }
+#ifndef XRE_DONT_PROTECT_DLL_LOAD
+  mozilla::NS_SetDllDirectory(L"");
+#endif
 
 #ifdef XRE_WANT_DLL_BLOCKLIST
   SetupDllBlocklist();

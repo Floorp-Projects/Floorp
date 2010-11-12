@@ -112,6 +112,8 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIBidiKeyboard.h"
 #endif // IBMBIDI
 
+#include "nsDOMError.h"
+
 //#define DEBUG_TABLE 1
 
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -2085,18 +2087,28 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
 
       if (textNode)
       {
-        if (aOffset > childIndex)
+        if (theNode->GetPrimaryFrame())
         {
-          PRUint32 textLength = 0;
+          if (aOffset > childIndex)
+          {
+            PRUint32 textLength = 0;
 
-          nsresult rv = textNode->GetLength(&textLength);
-          if (NS_FAILED(rv))
-            return nsnull;
+            nsresult rv = textNode->GetLength(&textLength);
+            if (NS_FAILED(rv))
+              return nsnull;
 
-          *aReturnOffset = (PRInt32)textLength;
+            *aReturnOffset = (PRInt32)textLength;
+          }
+          else
+            *aReturnOffset = 0;
         }
         else
-          *aReturnOffset = 0;
+        {
+          // If we're at a collapsed whitespace content node (which
+          // does not have a primary frame), just use the original node
+          // to get the frame on which we should put the caret.
+          theNode = aNode;
+        }
       }
     }
   }
@@ -4967,7 +4979,7 @@ nsTypedSelection::CollapseToStart()
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
   if (NS_FAILED(rv) || cnt <= 0)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   // Get the first range
   nsIRange* firstRange = mRanges[0].mRange;
@@ -4987,7 +4999,7 @@ nsTypedSelection::CollapseToEnd()
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
   if (NS_FAILED(rv) || cnt <= 0)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   // Get the last range
   nsIRange* lastRange = mRanges[cnt-1].mRange;
@@ -5012,13 +5024,13 @@ nsTypedSelection::GetIsCollapsed(PRBool* aIsCollapsed)
     *aIsCollapsed = PR_TRUE;
     return NS_OK;
   }
-  
+
   if (cnt != 1)
   {
     *aIsCollapsed = PR_FALSE;
     return NS_OK;
   }
-  
+
   *aIsCollapsed = mRanges[0].mRange->Collapsed();
   return NS_OK;
 }
@@ -5036,7 +5048,7 @@ nsTypedSelection::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 {
   *aReturn = mRanges.SafeElementAt(aIndex, sEmptyData).mRange;
   if (!*aReturn) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   NS_ADDREF(*aReturn);
@@ -5073,7 +5085,7 @@ nsTypedSelection::CopyRangeToAnchorFocus(nsIRange *aRange)
       return NS_ERROR_FAILURE;//???
   }
   else if (NS_FAILED(mAnchorFocusRange->SetEnd(endNode,endOffset)))
-          return NS_ERROR_FAILURE;//???
+    return NS_ERROR_FAILURE;//???
   return NS_OK;
 }
 

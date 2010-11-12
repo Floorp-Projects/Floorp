@@ -122,30 +122,34 @@ Recompiler::recompile()
     Vector<PatchableAddress> normalPatches(cx);
     Vector<PatchableAddress> ctorPatches(cx);
 
-    /* Scan the stack, saving the ncode elements of the frames. */
     JSStackFrame *firstCtorFrame = NULL;
     JSStackFrame *firstNormalFrame = NULL;
-    for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (!firstCtorFrame && i.fp()->maybeScript() == script && i.fp()->isConstructing())
-            firstCtorFrame = i.fp();
-        else if (!firstNormalFrame && i.fp()->maybeScript() == script && !i.fp()->isConstructing())
-            firstNormalFrame = i.fp();
-        void **addr = i.fp()->addressOfNativeReturnAddress();
-        if (!*addr)
-            continue;
-        if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
-            if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
-                return false;
-        } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
-            if (!normalPatches.append(findPatch(script->jitNormal, addr)))
-                return false;
-        }
-    }
 
-    /* Iterate over VMFrames saving the machine and scripted return. */
-    for (VMFrame *f = cx->jaegerCompartment()->activeFrame();
+    // Find all JIT'd stack frames to account for return addresses that will
+    // need to be patched after recompilation.
+    for (VMFrame *f = script->compartment->jaegerCompartment->activeFrame();
          f != NULL;
          f = f->previous) {
+
+        // Scan all frames owned by this VMFrame.
+        JSStackFrame *end = f->entryfp->prev();
+        for (JSStackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
+            // Remember the latest frame for each type of JIT'd code, so the
+            // compiler will have a frame to re-JIT from.
+            if (!firstCtorFrame && fp->script() == script && fp->isConstructing())
+                firstCtorFrame = fp;
+            else if (!firstNormalFrame && fp->script() == script && !fp->isConstructing())
+                firstNormalFrame = fp;
+
+            void **addr = fp->addressOfNativeReturnAddress();
+            if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
+                if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
+                    return false;
+            } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
+                if (!normalPatches.append(findPatch(script->jitNormal, addr)))
+                    return false;
+            }
+        }
 
         void **addr = f->returnAddressLocation();
         if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
@@ -157,25 +161,51 @@ Recompiler::recompile()
         }
     }
 
+    Vector<CallSite> normalSites(cx);
+    Vector<CallSite> ctorSites(cx);
+
+    if (script->jitNormal && !saveTraps(script->jitNormal, &normalSites))
+        return false;
+    if (script->jitCtor && !saveTraps(script->jitCtor, &ctorSites))
+        return false;
+
     ReleaseScriptCode(cx, script);
 
-    if (normalPatches.length() && !recompile(firstNormalFrame, normalPatches))
+    if (normalPatches.length() &&
+        !recompile(firstNormalFrame, normalPatches, normalSites)) {
         return false;
+    }
 
-    if (ctorPatches.length() && !recompile(firstCtorFrame, ctorPatches))
+    if (ctorPatches.length() &&
+        !recompile(firstCtorFrame, ctorPatches, ctorSites)) {
         return false;
+    }
 
     return true;
 }
 
 bool
-Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches)
+Recompiler::saveTraps(JITScript *jit, Vector<CallSite> *sites)
+{
+    for (uint32 i = 0; i < jit->nCallSites; i++) {
+        CallSite &site = jit->callSites[i];
+        if (site.isTrap() && !sites->append(site))
+            return false;
+    }
+    return true;
+}
+
+bool
+Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches,
+                      Vector<CallSite> &sites)
 {
     /* If we get this far, the script is live, and we better be safe to re-jit. */
     JS_ASSERT(cx->compartment->debugMode);
     JS_ASSERT(fp);
 
     Compiler c(cx, fp);
+    if (!c.loadOldTraps(sites))
+        return false;
     if (c.compile() != Compile_Okay)
         return false;
 

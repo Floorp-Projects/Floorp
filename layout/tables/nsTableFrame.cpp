@@ -1949,10 +1949,13 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
     }
   }
 
-  if (nsnull != GetNextInFlow()) {
-    nsTableFrame* nextInFlow = (nsTableFrame*)GetNextInFlow();
+  if (frames.IsEmpty()) {
+    return;
+  }
 
-    // Insert the frames after any repeated header and footer frames
+  nsTableFrame* nextInFlow = static_cast<nsTableFrame*>(GetNextInFlow());
+  if (nextInFlow) {
+    // Insert the frames after any repeated header and footer frames.
     nsIFrame* firstBodyFrame = nextInFlow->GetFirstBodyRowGroupFrame();
     nsIFrame* prevSibling = nsnull;
     if (firstBodyFrame) {
@@ -1964,8 +1967,8 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
     nextInFlow->mFrames.InsertFrames(nextInFlow, prevSibling,
                                      frames);
   }
-  else if (frames.NotEmpty()) {
-    // Add the frames to our overflow list
+  else {
+    // Add the frames to our overflow list.
     SetOverflowFrames(PresContext(), frames);
   }
 }

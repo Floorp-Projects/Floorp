@@ -65,4 +65,7 @@
 <uses-permission android:name="android.permission.SET_TIME"></uses-permission>
 
 
+
+<uses-permission android:name="android.permission.SET_TIME_ZONE"></uses-permission>
+
 </manifest> 
