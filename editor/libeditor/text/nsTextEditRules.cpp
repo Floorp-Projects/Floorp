@@ -1136,7 +1136,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
     bodyChild->GetNextSibling(getter_AddRefs(temp));
     bodyChild = do_QueryInterface(temp);
   }
-  if (needsBogusContent)
+  // Skip adding the bogus node if body is read-only
+  if (needsBogusContent && mEditor->IsModifiableNode(body))
   {
     // create a br
     nsCOMPtr<nsIContent> newContent;
