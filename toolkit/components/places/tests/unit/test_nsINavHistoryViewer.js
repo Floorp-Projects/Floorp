@@ -38,18 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
-
-// Get global history service
-try {
-  var bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
+var histsvc = PlacesUtils.history;
+var bhist = PlacesUtils.bhistory;
+var bmsvc = PlacesUtils.bookmarks;
 
 // adds a test URI visit to the database, and checks for a valid place ID
 function add_visit(aURI, aDate) {
@@ -195,6 +186,12 @@ function run_test() {
     }
   }, null);
   do_check_false(resultObserver.inBatchMode);
+  bmsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
 
   // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;
@@ -205,12 +202,6 @@ function run_test() {
   
   // Reset the result observer.
   resultObserver.reset();
-
-  try {
-    var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-  } catch(ex) {
-    do_throw("Could not get nav-bookmarks-service\n");
-  }
 
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
@@ -258,6 +249,12 @@ function run_test() {
   do_check_eq(resultObserver.invalidatedContainer, result.root);
 
   // nsINavHistoryResultObserver.batching
+  do_check_false(resultObserver.inBatchMode);
+  histsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
   do_check_false(resultObserver.inBatchMode);
   bmsvc.runInBatchMode({
     runBatched: function (aUserData) {

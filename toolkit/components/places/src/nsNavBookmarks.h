@@ -161,9 +161,6 @@ public:
    */
   PRBool IsRealBookmark(PRInt64 aPlaceId);
 
-  nsresult BeginUpdateBatch();
-  nsresult EndUpdateBatch();
-
   PRBool ItemExists(PRInt64 aItemId);
 
   /**
@@ -181,10 +178,6 @@ public:
         return GetStatement(mDBFindRedirectedBookmark);
     }
     return nsnull;
-  }
-
-  bool isBatching() {
-    return mBatchLevel > 0;
   }
 
 private:
@@ -237,11 +230,6 @@ private:
 
   // personal toolbar folder
   PRInt64 mToolbarFolder;
-
-  // The level of batches' nesting, 0 when no batches are open.
-  PRInt32 mBatchLevel;
-  // Current active transaction for a batch.
-  mozStorageTransaction* mBatchDBTransaction;
 
   nsresult GetParentAndIndexOfFolder(PRInt64 aFolder,
                                      PRInt64* aParent,
@@ -468,22 +456,5 @@ private:
    */
   nsresult UpdateKeywordsHashForRemovedBookmark(PRInt64 aItemId);
 };
-
-struct nsBookmarksUpdateBatcher
-{
-  nsBookmarksUpdateBatcher()
-  {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (bookmarks)
-      bookmarks->BeginUpdateBatch();
-  }
-  ~nsBookmarksUpdateBatcher()
-  {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (bookmarks)
-      bookmarks->EndUpdateBatch();
-  }
-};
-
 
 #endif // nsNavBookmarks_h_
