@@ -39,6 +39,11 @@
     -moz-border-right-colors: rgba(255,255,255,.5) rgba(43,8,65,.9);
   }
 
+  #appmenu-popup {
+    margin-top: -1px;
+    -moz-margin-start: 1px;
+  }
+
   /* Bug 413060, comment 16: Vista Aero is a special case where we use a
      tooltip appearance for the address bar popup panels */
   #identity-popup,
