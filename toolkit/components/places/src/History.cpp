@@ -79,7 +79,6 @@ public:
   static nsresult Start(nsIURI* aURI)
   {
     NS_PRECONDITION(aURI, "Null URI");
-    return NS_OK;
 
 #ifdef MOZ_IPC
   // If we are a content process, always remote the request to the
