@@ -222,8 +222,8 @@ static inline JSObject *
 NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, clasp);
-    if (obj && clasp->ext.equality)
-        obj->flags |= JSObject::HAS_EQUALITY;
+    if (obj)
+        obj->syncSpecialEquality();
     return obj;
 }
 
@@ -712,8 +712,6 @@ Namespace(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
-    if (thisobj)
-        thisobj->flags |= JSObject::HAS_EQUALITY;
     return NamespaceHelper(cx, thisobj, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
@@ -849,8 +847,6 @@ QName(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
-    if (thisobj)
-        thisobj->flags |= JSObject::HAS_EQUALITY;
     return QNameHelper(cx, thisobj, &js_QNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 

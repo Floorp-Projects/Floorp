@@ -429,8 +429,14 @@ struct JSObject : js::gc::Cell {
     bool generic()              { return !!(flags & GENERIC); }
     void setGeneric()           { flags |= GENERIC; }
 
-    bool hasSpecialEquality()   { return !!(flags & HAS_EQUALITY); }
-    
+    bool hasSpecialEquality() const { return !!(flags & HAS_EQUALITY); }
+    void assertSpecialEqualitySynced() const {
+        JS_ASSERT(!!clasp->ext.equality == hasSpecialEquality());
+    }
+
+    /* Sets an object's HAS_EQUALITY flag based on its clasp. */
+    inline void syncSpecialEquality();
+
   private:
     void generateOwnShape(JSContext *cx);
 
