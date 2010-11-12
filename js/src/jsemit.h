@@ -252,6 +252,11 @@ struct JSStmtInfo {
 #define TCF_COMPILE_FOR_EVAL     0x2000000
 
 /*
+ * The function contains a JSOP_DEFFUN bytecode.
+ */
+#define TCF_FUN_HAS_DEFFUN       0x4000000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
@@ -267,6 +272,7 @@ struct JSStmtInfo {
                                  TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS          |                    \
                                  TCF_FUN_CALLS_EVAL      |                    \
+                                 TCF_FUN_HAS_DEFFUN      |                    \
                                  TCF_FUN_MUTATES_PARAMETER |                  \
                                  TCF_STRICT_MODE_CODE)
 
@@ -376,6 +382,14 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     bool callsEval() const {
         return flags & TCF_FUN_CALLS_EVAL;
+    }
+
+    void noteHasDefFun() {
+        flags |= TCF_FUN_HAS_DEFFUN;
+    }
+
+    bool hasDefFun() const {
+        return flags & TCF_FUN_HAS_DEFFUN;
     }
 
     void noteParameterMutation() {
