@@ -6556,7 +6556,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
 #endif
     
 #ifdef JS_METHODJIT
-    if (cx->methodJitEnabled) {
+    if (cx->methodJitEnabled && !cx->profilingEnabled) {
         if (lr->exitType == LOOP_EXIT && f->iters < MIN_LOOP_ITERS
             && f->execs >= LOOP_CHECK_ITERS)
         {
@@ -16169,7 +16169,8 @@ class AutoRetBlacklist
 };
 
 JS_REQUIRES_STACK TracePointAction
-RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool execAllowed)
+RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, uint32 *loopCounter,
+                 bool execAllowed)
 {
     JSStackFrame* fp = cx->fp();
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -16209,6 +16210,8 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
                 return TPA_Nothing;
             }
 
+            uintN oldIters = match->iters;
+
             /* Best case - just go and execute. */
             if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
                 return TPA_Error;
@@ -16216,6 +16219,15 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
             if (!lr)
                 return TPA_Nothing;
 
+            if (lr->exitType == LOOP_EXIT
+                && match->iters - oldIters < MIN_LOOP_ITERS/LOOP_CHECK_ITERS
+                && match->execs >= LOOP_CHECK_ITERS)
+            {
+                debug_only_printf(LC_TMMinimal, "  Wait-and-see at line %u (executed only %d iters)\n",
+                                  match->treeLineNumber, match->iters);
+                *loopCounter = 5000;
+            }
+            
             switch (lr->exitType) {
               case UNSTABLE_LOOP_EXIT:
                 if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL))
@@ -16409,7 +16421,7 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
                   void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits)
 {
     if (!cx->profilingEnabled)
-        return RecordTracePoint(cx, inlineCallCount, blacklist, true);
+        return RecordTracePoint(cx, inlineCallCount, blacklist, loopCounter, true);
 
     *blacklist = false;
 
@@ -16435,7 +16447,7 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
 
     if (prof->profiled) {
         if (prof->traceOK) {
-            return RecordTracePoint(cx, inlineCallCount, blacklist, prof->execOK);
+            return RecordTracePoint(cx, inlineCallCount, blacklist, loopCounter, prof->execOK);
         } else {
             return TPA_Nothing;
         }
@@ -16715,7 +16727,7 @@ LoopProfile::decide(JSContext *cx)
 
     if (traceOK)
         return; /* We must have enabled it from an outer loop already. */
-    
+
 #ifdef DEBUG
     uintN line = js_PCToLineNumber(cx, script, top);
 
@@ -16752,7 +16764,7 @@ LoopProfile::decide(JSContext *cx)
         debug_only_print0(LC_TMProfiler, "NOTRACE: recursive\n");
     } else if (count(OP_EVAL)) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: eval\n");
-    } else if (numInnerLoops > 3) {
+    } else if (numInnerLoops > 7) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: >3 inner loops\n");
     } else if (shortLoop) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: short\n");
