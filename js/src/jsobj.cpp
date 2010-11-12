@@ -2771,7 +2771,10 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
     gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
-    return NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
+    JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
+    if (obj)
+        obj->syncSpecialEquality();
+    return obj;
 }
 
 JSObject *
@@ -3592,6 +3595,8 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!proto)
         return NULL;
 
+    proto->syncSpecialEquality();
+    
     /* After this point, control must exit via label bad or out. */
     AutoObjectRooter tvr(cx, proto);
 
@@ -4059,6 +4064,8 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
     JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
     if (!obj)
         return NULL;
+
+    obj->syncSpecialEquality();
 
     Value rval;
     if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))

@@ -111,6 +111,13 @@ JSObject::unbrand(JSContext *cx)
 }
 
 inline void
+JSObject::syncSpecialEquality()
+{
+    if (clasp->ext.equality)
+        flags |= JSObject::HAS_EQUALITY;
+}
+
+inline void
 JSObject::finalize(JSContext *cx, unsigned thingKind)
 {
     JS_ASSERT(thingKind >= js::gc::FINALIZE_OBJECT0 &&

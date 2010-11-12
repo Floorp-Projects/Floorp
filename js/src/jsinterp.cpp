@@ -3380,16 +3380,8 @@ END_CASE(JSOP_BITAND)
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
-
-#define EXTENDED_EQUALITY_OP(OP)                                              \
-    if (EqualityOp eq = l->getClass()->ext.equality) {                        \
-        if (!eq(cx, l, &rval, &cond))                                         \
-            goto error;                                                       \
-        cond = cond OP JS_TRUE;                                               \
-    } else
 #else
 #define XML_EQUALITY_OP(OP)             /* nothing */
-#define EXTENDED_EQUALITY_OP(OP)        /* nothing */
 #endif
 
 #define EQUALITY_OP(OP, IFNAN)                                                \
@@ -3407,8 +3399,14 @@ END_CASE(JSOP_BITAND)
                 cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
             } else if (lval.isObject()) {                                     \
                 JSObject *l = &lval.toObject(), *r = &rval.toObject();        \
-                EXTENDED_EQUALITY_OP(OP)                                      \
-                cond = l OP r;                                                \
+                l->assertSpecialEqualitySynced();                             \
+                if (EqualityOp eq = l->getClass()->ext.equality) {            \
+                    if (!eq(cx, l, &rval, &cond))                             \
+                        goto error;                                           \
+                    cond = cond OP JS_TRUE;                                   \
+                } else {                                                      \
+                    cond = l OP r;                                            \
+                }                                                             \
             } else {                                                          \
                 cond = lval.payloadAsRawUint32() OP rval.payloadAsRawUint32();\
             }                                                                 \
