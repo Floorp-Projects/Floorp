@@ -3033,14 +3033,14 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     queries.AppendObject(query);
   }
 
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
   // root node
   nsRefPtr<nsNavHistoryContainerResultNode> rootNode;
   PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, options);
   if (folderId) {
     // In the simple case where we're just querying children of a single bookmark
     // folder, we can more efficiently generate results.
-    nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     nsRefPtr<nsNavHistoryResultNode> tempRootNode;
     rv = bookmarks->ResultNodeForContainer(folderId, options,
                                            getter_AddRefs(tempRootNode));
@@ -3053,9 +3053,11 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     NS_ENSURE_TRUE(rootNode, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  // result object
+  // Create the result that will hold nodes.  Inject batching status into it.
+  bool batchInProgress = isBatching() || bookmarks->isBatching();
   nsRefPtr<nsNavHistoryResult> result;
-  rv = nsNavHistoryResult::NewHistoryResult(aQueries, aQueryCount, options, rootNode,
+  rv = nsNavHistoryResult::NewHistoryResult(aQueries, aQueryCount, options,
+                                            rootNode, batchInProgress,
                                             getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
 
