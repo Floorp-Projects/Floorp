@@ -3843,9 +3843,20 @@ NoteLValue(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN dflag = PND_
 
     pn->pn_dflags |= dflag;
 
+    /*
+     * Both arguments and the enclosing function's name are immutable bindings
+     * in ES5, so assignments to them must do nothing or throw a TypeError
+     * depending on code strictness.  Assignment to arguments is a syntax error
+     * in strict mode and thus cannot happen.  Outside strict mode, we optimize
+     * away assignment to the function name.  For assignment to function name
+     * to fail in strict mode, we must have a binding for it in the scope
+     * chain; we ensure this happens by making such functions heavyweight.
+     */
     JSAtom *lname = pn->pn_atom;
-    if (lname == cx->runtime->atomState.argumentsAtom)
+    if (lname == cx->runtime->atomState.argumentsAtom ||
+        (tc->inFunction() && lname == tc->fun()->atom)) {
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
+    }
 }
 
 #if JS_HAS_DESTRUCTURING
