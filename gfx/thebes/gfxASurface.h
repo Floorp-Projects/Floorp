@@ -161,20 +161,6 @@ public:
       return nsnull;
     }
 
-    /**
-     * Return trues if offscreen surfaces created from this surface
-     * would behave differently depending on the gfxContentType. Returns
-     * false if they don't (i.e. the surface returned by
-     * CreateOffscreenSurface is always as if you passed
-     * CONTENT_COLOR_ALPHA). Knowing this can be useful to avoid
-     * recreating a surface just because it changed from opaque to
-     * transparent.
-     */
-    virtual PRBool AreSimilarSurfacesSensitiveToContentType()
-    {
-        return PR_TRUE;
-    }
-
     enum TextQuality {
         /**
          * TEXT_QUALITY_OK means that text is always rendered to a
