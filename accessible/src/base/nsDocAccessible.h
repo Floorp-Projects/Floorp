@@ -220,7 +220,7 @@ public:
   bool BindToDocument(nsAccessible* aAccessible, nsRoleMapEntry* aRoleMapEntry);
 
   /**
-   * Remove the existing accessible from document caches and shutdown it.
+   * Remove from document and shutdown the given accessible.
    */
   void UnbindFromDocument(nsAccessible* aAccessible);
 
