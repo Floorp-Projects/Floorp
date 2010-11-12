@@ -412,7 +412,7 @@ toolbarbutton.choice-remotetabs {
  * These rules prevent browser to steal the focus while touching the screen
  * to allow panning/zooming of the browser view without closing the VKB
  */
-#browsers > notificationbox > browser {
+#browsers > notificationbox {
   -moz-user-focus: ignore;
 }
 
