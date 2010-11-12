@@ -434,7 +434,7 @@
 #ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
   <hbox id="titlebar-content">
-    <hbox id="appmenu-button-container" align="start">
+    <hbox id="appmenu-button-container">
       <button id="appmenu-button"
               type="menu"
               label="&brandShortName;"
@@ -443,7 +443,7 @@
       </button>
     </hbox>
     <spacer id="titlebar-spacer" flex="1"/>
-    <hbox id="titlebar-buttonbox">
+    <hbox id="titlebar-buttonbox" align="start">
       <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
       <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
       <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
