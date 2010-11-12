@@ -122,7 +122,7 @@ function do_run_test() {
   schema2db.insertCookie(cookie);
 
   // Check that there is, indeed, a singular cookie for baz.com.
-  do_check_eq(do_count_cookies_in_db(profile, "baz.com"), 1);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "baz.com"), 1);
 
   // Close it.
   schema2db.close();
@@ -141,7 +141,9 @@ function do_run_test() {
   yield;
 
   // Open the database and prove that they were deleted.
-  do_check_eq(do_count_cookies_in_db(profile, "cat.com"), 0);
+  schema2db = new CookieDatabaseConnection(profile, 2);
+  do_check_eq(do_count_cookies_in_db(schema2db.db, "cat.com"), 0);
+  schema2db.close();
 
   finish_test();
 }

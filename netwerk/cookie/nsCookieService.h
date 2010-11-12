@@ -245,7 +245,6 @@ class nsCookieService : public nsICookieService
     template<class T> nsCookie*   GetCookieFromRow(T &aRow);
     void                          AsyncReadComplete();
     void                          CancelAsyncRead(PRBool aPurgeReadSet);
-    mozIStorageConnection*        GetSyncDBConn();
     void                          EnsureReadDomain(const nsCString &aBaseDomain);
     void                          EnsureReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
