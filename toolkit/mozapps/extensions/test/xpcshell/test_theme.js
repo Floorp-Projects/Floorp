@@ -1034,54 +1034,6 @@ function run_test_20() {
     catch (e) {
     }
 
-    run_test_21();
-  });
-}
-
-// Tests that cached copies of a lightweight theme have the right permissions
-// and pendingOperations during the onEnabling event
-function run_test_21() {
-  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
-    // Switch to a custom theme so we can test pendingOperations properly.
-
-    prepare_test({
-      "theme1@tests.mozilla.org": [
-        "onEnabling"
-      ],
-      "default@tests.mozilla.org": [
-        "onDisabling"
-      ]
-    });
-
-    t1.userDisabled = false;
-    ensure_test_completed();
-
-    restartManager();
-
-    AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
-      AddonManager.addAddonListener({
-        onEnabling: function(aAddon) {
-          do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
-          do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_ENABLE));
-
-          do_check_eq(aAddon.permissions, p1.permissions);
-          do_check_eq(aAddon.pendingOperations, p1.pendingOperations);
-        }
-      });
-
-      prepare_test({
-        "1@personas.mozilla.org": [
-          "onEnabling"
-        ],
-        "theme1@tests.mozilla.org": [
-          "onDisabling"
-        ]
-      });
-
-      p1.userDisabled = false;
-      ensure_test_completed();
-
-      end_test();
-    });
+    end_test();
   });
 }
