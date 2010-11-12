@@ -1126,7 +1126,6 @@ nsCookieService::CloseDBStates()
     // read listener.
     if (mDefaultDBState->pendingRead) {
       CancelAsyncRead(PR_TRUE);
-      mDefaultDBState->syncConn = nsnull;
     }
 
     // Asynchronously close the connection. We will null it below.
@@ -1149,10 +1148,11 @@ nsCookieService::CloseDefaultDBConnection()
   mDefaultDBState->stmtDelete = NULL;
   mDefaultDBState->stmtUpdate = NULL;
 
-  // Null out the db. If it has not been used for any asynchronous operations
-  // yet, this will synchronously close it; otherwise, it's expected that the
-  // caller has performed an AsyncClose prior.
+  // Null out the database connections. If 'dbConn' has not been used for any
+  // asynchronous operations yet, this will synchronously close it; otherwise,
+  // it's expected that the caller has performed an AsyncClose prior.
   mDefaultDBState->dbConn = NULL;
+  mDefaultDBState->syncConn = NULL;
 
   // Manually null out our listeners. This is necessary because they hold a
   // strong ref to the DBState itself.
@@ -1452,7 +1452,6 @@ nsCookieService::RemoveAll()
     // read listener.
     if (mDefaultDBState->pendingRead) {
       CancelAsyncRead(PR_TRUE);
-      mDefaultDBState->syncConn = nsnull;
     }
 
     // XXX Ignore corruption for now. See bug 547031.
@@ -1617,6 +1616,13 @@ nsCookieService::Read()
     getter_AddRefs(stmtDeleteNull));
   NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
+  // Start a new connection for sync reads, to reduce contention with the
+  // background thread. We need to do this before we kick off write statements,
+  // since they can lock the database and prevent connections from being opened.
+  rv = mStorageService->OpenUnsharedDatabase(mDefaultDBState->cookieFile,
+    getter_AddRefs(mDefaultDBState->syncConn));
+  NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
   // Init our readSet hash and execute the statements. Note that, after this
   // point, we cannot fail without altering the cleanup code in InitDBStates()
   // to handle closing of the now-asynchronous connection.
@@ -1733,25 +1739,6 @@ nsCookieService::CancelAsyncRead(PRBool aPurgeReadSet)
     mDefaultDBState->readSet.Clear();
 }
 
-mozIStorageConnection*
-nsCookieService::GetSyncDBConn()
-{
-  NS_ASSERTION(!mDefaultDBState->syncConn, "already have sync db connection");
-  NS_ASSERTION(mDefaultDBState->cookieFile, "no cookie file");
-
-  // Start a new connection for sync reads to reduce contention with the
-  // background thread.
-  mStorageService->OpenUnsharedDatabase(mDefaultDBState->cookieFile,
-    getter_AddRefs(mDefaultDBState->syncConn));
-  if (!mDefaultDBState->syncConn) {
-    NS_ERROR("can't open sync db connection");
-    COOKIE_LOGSTRING(PR_LOG_DEBUG,
-      ("GetSyncDBConn(): can't open sync db connection"));
-  }
-
-  return mDefaultDBState->syncConn;
-}
-
 void
 nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
 {
@@ -1769,9 +1756,6 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
   // Read in the data synchronously.
   nsresult rv;
   if (!mDefaultDBState->stmtReadDomain) {
-    if (!GetSyncDBConn())
-      return;
-
     // Cache the statement, since it's likely to be used again.
     rv = mDefaultDBState->syncConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT "
@@ -1836,9 +1820,6 @@ nsCookieService::EnsureReadComplete()
 
   // Cancel the pending read, so we don't get any more results.
   CancelAsyncRead(PR_FALSE);
-
-  if (!mDefaultDBState->syncConn && !GetSyncDBConn())
-    return;
 
   // Read in the data synchronously.
   nsCOMPtr<mozIStorageStatement> stmt;

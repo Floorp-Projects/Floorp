@@ -182,18 +182,13 @@ function CookieDatabaseConnection(profile, schema)
 {
   // Manually generate a cookies.sqlite file with appropriate rows, columns,
   // and schema version. If it already exists, just set up our statements.
-  let file = profile.clone();
-  file.append("cookies.sqlite");
+  let file = do_get_cookie_file(profile);
   let exists = file.exists();
 
   this.db = Services.storage.openDatabase(file);
   this.schema = schema;
   if (!exists)
     this.db.schemaVersion = schema;
-
-  // Open an exclusive connection, so we error out if the database is open
-  // by another reader.
-  this.db.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
 
   switch (schema) {
   case 1:
@@ -538,14 +533,17 @@ CookieDatabaseConnection.prototype =
   }
 }
 
-// Count the cookies from 'host' in a database. If 'host' is null, count all
-// cookies.
-function do_count_cookies_in_db(profile, host)
+function do_get_cookie_file(profile)
 {
   let file = profile.clone();
   file.append("cookies.sqlite");
-  let connection = Services.storage.openDatabase(file);
+  return file;
+}
 
+// Count the cookies from 'host' in a database. If 'host' is null, count all
+// cookies.
+function do_count_cookies_in_db(connection, host)
+{
   let select = null;
   if (host) {
     select = connection.createStatement(
@@ -560,7 +558,6 @@ function do_count_cookies_in_db(profile, host)
   let result = select.getInt32(0);
   select.reset();
   select.finalize();
-  connection.close();
   return result;
 }
 
