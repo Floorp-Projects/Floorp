@@ -254,7 +254,7 @@ struct FPRegisters {
     typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-    static const uint32 TotalFPRegisters = 8;
+    static const uint32 TotalFPRegisters = 7;
     static const uint32 TempFPRegs =
           (1 << JSC::X86Registers::xmm0)
         | (1 << JSC::X86Registers::xmm1)
@@ -262,25 +262,16 @@ struct FPRegisters {
         | (1 << JSC::X86Registers::xmm3)
         | (1 << JSC::X86Registers::xmm4)
         | (1 << JSC::X86Registers::xmm5)
-        | (1 << JSC::X86Registers::xmm6)
-        | (1 << JSC::X86Registers::xmm7);
-    /* FIXME: Temporary hack until FPRegister allocation exists. */
-    static const FPRegisterID First  = JSC::X86Registers::xmm0;
-    static const FPRegisterID Second = JSC::X86Registers::xmm1;
-    static const FPRegisterID Temp0 = JSC::X86Registers::xmm2;
-    static const FPRegisterID Temp1 = JSC::X86Registers::xmm3;
+        | (1 << JSC::X86Registers::xmm6);
+    /* For shuffling FP values around, or loading GPRs into a FP reg. */
+    static const FPRegisterID ConversionTemp = JSC::X86Registers::xmm7;
 #elif defined(JS_CPU_ARM)
-    static const uint32 TotalFPRegisters = 4;
+    static const uint32 TotalFPRegisters = 3;
     static const uint32 TempFPRegs = 
           (1 << JSC::ARMRegisters::d0)
         | (1 << JSC::ARMRegisters::d1)
-        | (1 << JSC::ARMRegisters::d2)
-        | (1 << JSC::ARMRegisters::d3);
-    /* FIXME: Temporary hack until FPRegister allocation exists. */
-    static const FPRegisterID First  = JSC::ARMRegisters::d0;
-    static const FPRegisterID Second = JSC::ARMRegisters::d1;
-    static const FPRegisterID Temp0 = JSC::ARMRegisters::d2;
-    static const FPRegisterID Temp1 = JSC::ARMRegisters::d3;
+        | (1 << JSC::ARMRegisters::d2);
+    static const FPRegisterID ConversionTemp = JSC::ARMRegisters::d3;
 #else
 # error "Unsupported platform"
 #endif

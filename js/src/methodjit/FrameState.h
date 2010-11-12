@@ -242,19 +242,14 @@ class FrameState
     bool init(uint32 nargs);
 
     /*
-     * Pushes a synced slot.
+     * Pushes a synced slot that may have a known type.
      */
-    inline void pushSynced();
+    inline void pushSynced(JSValueType knownType);
 
     /*
      * Pushes a slot that has a known, synced type and payload.
      */
-    inline void pushSyncedType(JSValueType type);
-
-    /*
-     * Pushes a slot that has a known, synced type and payload.
-     */
-    inline void pushSynced(JSValueType type, RegisterID reg);
+    inline void pushSynced(JSValueType knownType, RegisterID reg);
 
     /*
      * Pushes a constant value.
@@ -264,7 +259,7 @@ class FrameState
     /*
      * Loads a value from memory and pushes it.
      */
-    inline void push(Address address);
+    inline void push(Address address, JSValueType knownType);
 
     /*
      * Pushes a known type and allocated payload onto the operation stack.
@@ -272,9 +267,23 @@ class FrameState
     inline void pushTypedPayload(JSValueType type, RegisterID payload);
 
     /*
-     * Pushes a type register and data register pair.
+     * Pushes a type register and data register pair, converting to the specified
+     * known type if necessary.
      */
-    inline void pushRegs(RegisterID type, RegisterID data);
+    inline void pushRegs(RegisterID type, RegisterID data, JSValueType knownType);
+
+    /* Push a value which is definitely a double. */
+    void pushDouble(FPRegisterID fpreg);
+    void pushDouble(Address address);
+
+    /* Ensure that fe is definitely a double.  It must already be either int or double. */
+    void ensureDouble(FrameEntry *fe);
+
+    /* Ensure that in-memory fe is definitely a double. */
+    void ensureInMemoryDouble(FrameEntry *fe, Assembler &masm) const;
+
+    /* Forget that fe is definitely a double. */
+    void forgetKnownDouble(FrameEntry *fe);
 
     /*
      * Pushes a known type and allocated payload onto the operation stack.
@@ -298,7 +307,7 @@ class FrameState
      * was synced, then popping both and pushing a maybe-int32 does not need
      * to be synced.
      */
-    inline void pushNumber(MaybeRegisterID payload, bool asInt32 = false);
+    inline void pushNumber(RegisterID payload, bool asInt32 = false);
 
     /*
      * Pushes an int32 onto the operation stack. This is a specialized version
@@ -333,7 +342,7 @@ class FrameState
     /*
      * Pushes a copy of a local variable.
      */
-    void pushLocal(uint32 n);
+    void pushLocal(uint32 n, JSValueType knownType);
 
     inline FrameEntry *getLocal(uint32 slot);
 
@@ -359,6 +368,7 @@ class FrameState
      * The compiler should NOT explicitly free it.
      */
     inline RegisterID tempRegForData(FrameEntry *fe);
+    inline FPRegisterID tempFPRegForData(FrameEntry *fe);
 
     /*
      * Same as above, except register must match identically.
@@ -414,14 +424,6 @@ class FrameState
     RegisterID copyDataIntoReg(Assembler &masm, FrameEntry *fe);
 
     /*
-     * Allocates a FPRegister for a FrameEntry, such that the compiler
-     * can modify it in-place. The FrameState is not modified.
-     */
-    FPRegisterID copyEntryIntoFPReg(FrameEntry *fe, FPRegisterID fpreg);
-    FPRegisterID copyEntryIntoFPReg(Assembler &masm, FrameEntry *fe,
-                                    FPRegisterID fpreg);
-
-    /*
      * Allocates a register for a FrameEntry's type, such that the compiler
      * can modify it in-place. The actual FE is not modified.
      */
@@ -455,6 +457,8 @@ class FrameState
         MaybeRegisterID rhsData;
         MaybeRegisterID extraFree;
         RegisterID result;  // mutable result reg
+        FPRegisterID lhsFP; // mutable scratch floating point reg
+        FPRegisterID rhsFP; // mutable scratch floating point reg
         bool resultHasRhs;  // whether the result has the RHS instead of the LHS
         bool lhsNeedsRemat; // whether LHS needs memory remat
         bool rhsNeedsRemat; // whether RHS needs memory remat
@@ -513,6 +517,7 @@ class FrameState
      * is not spilled; the backing data becomes invalidated!
      */
     inline void freeReg(RegisterID reg);
+    inline void freeFPReg(FPRegisterID reg);
 
     /*
      * Allocates a register. If none are free, one may be spilled from the
@@ -520,6 +525,7 @@ class FrameState
      * then this is considered a compiler bug and an assert will fire.
      */
     inline RegisterID allocReg();
+    inline FPRegisterID allocFPReg();
 
     /*
      * Allocates a register, except using a mask.
@@ -549,10 +555,13 @@ class FrameState
     void loadForReturn(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
 
     /*
-     * Stores the top stack slot back to a slot.
+     * Stores the top stack slot back to a local or slot.  type indicates any known
+     * type for the local/slot.
      */
-    void storeLocal(uint32 n, bool popGuaranteed = false, bool typeChange = true);
-    void storeTop(FrameEntry *target, bool popGuaranteed = false, bool typeChange = true);
+    void storeLocal(uint32 n, bool popGuaranteed = false,
+                    JSValueType type = JSVAL_TYPE_UNKNOWN);
+    void storeTop(FrameEntry *target, bool popGuaranteed = false,
+                  JSValueType type = JSVAL_TYPE_UNKNOWN);
 
     /*
      * Restores state from a slow path.
@@ -601,9 +610,10 @@ class FrameState
     void discardFrame();
 
     /*
-     * Mark an existing slot with a type.
+     * Mark an existing slot with a type.  unsync indicates whether type is already synced.
      */
     inline void learnType(FrameEntry *fe, JSValueType type, bool unsync = true);
+    inline void learnType(FrameEntry *fe, JSValueType type, RegisterID payload);
 
     /*
      * Forget a type, syncing in the process.
@@ -669,12 +679,14 @@ class FrameState
      * no matter what. In addition, pinReg() can only be used on registers
      * which are associated with FrameEntries.
      */
-    inline void pinReg(RegisterID reg);
+    inline void pinReg(RegisterID reg) { regstate[reg].pin(); }
+    inline void pinFPReg(FPRegisterID reg) { fpregstate[reg].pin(); }
 
     /*
      * Unpins a previously pinned register.
      */
-    inline void unpinReg(RegisterID reg);
+    inline void unpinReg(RegisterID reg) { regstate[reg].unpin(); }
+    inline void unpinFPReg(FPRegisterID reg) { fpregstate[reg].unpin(); }
 
     /*
      * Same as unpinReg(), but does not restore the FrameEntry.
@@ -755,10 +767,13 @@ class FrameState
   private:
     inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type);
     inline void forgetReg(RegisterID reg);
+    inline void forgetFPReg(FPRegisterID reg);
     RegisterID evictSomeReg(uint32 mask);
+    FPRegisterID evictSomeFPReg();
     void evictReg(RegisterID reg);
     inline FrameEntry *rawPush();
     inline void addToTracker(FrameEntry *fe);
+    inline void setFPRegister(FrameEntry *fe, FPRegisterID fpreg, bool reassociate = false);
 
     /* Guarantee sync, but do not set any sync flag. */
     inline void ensureFeSynced(const FrameEntry *fe, Assembler &masm) const;
@@ -826,6 +841,7 @@ class FrameState
 
     /* All allocated registers. */
     Registers freeRegs;
+    FPRegisters freeFPRegs;
 
     /* Cache of FrameEntry objects. */
     FrameEntry *entries;
@@ -850,6 +866,7 @@ class FrameState
      * entry is active, you must check the allocated registers.
      */
     RegisterState regstate[Assembler::TotalRegisters];
+    RegisterState fpregstate[FPRegisters::TotalFPRegisters];
 
 #if defined JS_NUNBOX32
     mutable ImmutableSync reifier;

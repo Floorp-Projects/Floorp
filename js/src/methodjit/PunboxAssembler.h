@@ -66,7 +66,9 @@ struct ImmType : ImmTag
 {
     ImmType(JSValueType type)
       : ImmTag(JSValueShiftedTag(JSVAL_TYPE_TO_SHIFTED_TAG(type)))
-    { }
+    {
+        JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
+    }
 };
 
 struct ImmPayload : Imm64
@@ -325,6 +327,14 @@ class PunboxAssembler : public JSC::MacroAssembler
             loadPayload(address, dataReg);
         }
         return notHole;
+    }
+
+    /* :FIXME: borrowed from patch in bug 594247 */
+    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
+        m_assembler.movq_rr(srcDest, typeReg);
+        move(Registers::PayloadMaskReg, dataReg);
+        andPtr(typeReg, dataReg);
+        xorPtr(dataReg, typeReg);
     }
 };
 

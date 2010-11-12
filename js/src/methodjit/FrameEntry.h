@@ -41,6 +41,7 @@
 #define jsjaeger_valueinfo_h__
 
 #include "jsapi.h"
+#include "jsnum.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
 #include "assembler/assembler/MacroAssembler.h"
@@ -72,6 +73,10 @@ class FrameEntry
         return type.isConstant();
     }
 
+    /*
+     * The known type should not be used in generated code if it is JSVAL_TYPE_DOUBLE.
+     * In such cases either the value is constant, in memory or in a floating point register.
+     */
     JSValueType getKnownType() const {
         JS_ASSERT(isTypeKnown());
         return knownType;
@@ -79,6 +84,7 @@ class FrameEntry
 
 #if defined JS_NUNBOX32
     JSValueTag getKnownTag() const {
+        JS_ASSERT(v_.s.tag != JSVAL_TAG_CLEAR);
         return v_.s.tag;
     }
 #elif defined JS_PUNBOX64
@@ -114,12 +120,18 @@ class FrameEntry
     }
 #endif
 
-    bool isCachedNumber() const {
-        return isNumber;
-    }
-
     bool hasSameBacking(const FrameEntry *other) const {
         return backing() == other->backing();
+    }
+
+    /* For a constant double FrameEntry, truncate to an int32. */
+    void convertConstantDoubleToInt32(JSContext *cx) {
+        JS_ASSERT(isType(JSVAL_TYPE_DOUBLE) && isConstant());
+        int32 value;
+        ValueToECMAInt32(cx, getValue(), &value);
+
+        Value newValue = Int32Value(value);
+        setConstant(Jsvalify(newValue));
     }
 
   private:
@@ -132,7 +144,6 @@ class FrameEntry
         v_.asBits |= JSVAL_TYPE_TO_SHIFTED_TAG(type_);
 #endif
         knownType = type_;
-        JS_ASSERT(!isNumber);
     }
 
     void track(uint32 index) {
@@ -144,7 +155,6 @@ class FrameEntry
     void clear() {
         copied = false;
         copy = NULL;
-        isNumber = false;
     }
 
     uint32 trackerIndex() {
@@ -242,9 +252,8 @@ class FrameEntry
     uint32     index_;
     FrameEntry *copy;
     bool       copied;
-    bool       isNumber;
     bool       tracked;
-    char       padding[1];
+    char       padding[2];
 };
 
 } /* namespace mjit */

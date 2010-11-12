@@ -3718,7 +3718,7 @@ END_CASE(JSOP_ADD)
         double d = d1 OP d2;                                                  \
         regs.sp--;                                                            \
         regs.sp[-1].setNumber(d);                                             \
-        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());     \
+        TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());      \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_SUB)
@@ -3758,7 +3758,7 @@ BEGIN_CASE(JSOP_DIV)
         d1 /= d2;
         regs.sp[-1].setNumber(d1);
     }
-    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], false);
+    TYPE_MONITOR_RESULT(cx, 0, regs.sp[-1], !regs.sp[-1].isInt32());
 }
 END_CASE(JSOP_DIV)
 
