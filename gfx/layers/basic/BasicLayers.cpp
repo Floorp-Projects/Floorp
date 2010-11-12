@@ -1412,8 +1412,9 @@ class BasicShadowableThebesLayer : public BasicThebesLayer,
   typedef BasicThebesLayer Base;
 
 public:
-  BasicShadowableThebesLayer(BasicShadowLayerManager* aManager) :
-    BasicThebesLayer(aManager)
+  BasicShadowableThebesLayer(BasicShadowLayerManager* aManager)
+    : BasicThebesLayer(aManager)
+    , mIsNewBuffer(false)
   {
     MOZ_COUNT_CTOR(BasicShadowableThebesLayer);
   }
@@ -1470,6 +1471,8 @@ private:
   // copy of the descriptor here so that we can call
   // DestroySharedSurface() on the descriptor.
   SurfaceDescriptor mBackBuffer;
+
+  PRPackedBool mIsNewBuffer;
 };
 
 void
@@ -1526,10 +1529,22 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
     return;
   }
 
+  nsIntRegion updatedRegion;
+  if (mIsNewBuffer) {
+    // A buffer reallocation clears both buffers. The front buffer has all the
+    // content by now, but the back buffer is still clear. Here, in effect, we
+    // are saying to copy all of the pixels of the front buffer to the back.
+    updatedRegion = mVisibleRegion;
+    mIsNewBuffer = false;
+  } else {
+    updatedRegion = aRegionToDraw;
+  }
+
+
   NS_ABORT_IF_FALSE(IsSurfaceDescriptorValid(mBackBuffer),
                     "should have a back buffer by now");
   BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
-                                      aRegionToDraw,
+                                      updatedRegion,
                                       mBuffer.BufferRect(),
                                       mBuffer.BufferRotation(),
                                       mBackBuffer);
@@ -1560,6 +1575,10 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
                                          &tmpFront,
                                          &mBackBuffer))
     NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+
+  NS_ABORT_IF_FALSE(!mIsNewBuffer,
+                    "Bad! Did we create a buffer twice without painting?");
+  mIsNewBuffer = true;
 
   BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
                                       nsIntRegion(),
