@@ -2602,6 +2602,13 @@ var ContextCommands = {
       target.focus();
   },
 
+#ifdef ANDROID
+  selectInput: function cc_selectInput() {
+    let imePicker = Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker);
+    imePicker.show();
+  },
+#endif
+
   paste: function cc_paste() {
     let data = ContextHelper.popupState.data;
     let target = ContextHelper.popupState.target;

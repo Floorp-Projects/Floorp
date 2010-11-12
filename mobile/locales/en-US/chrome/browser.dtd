@@ -109,5 +109,6 @@
 <!ENTITY pageactions.search.addNew   "Add Search Engine">
 
 <!ENTITY selectHelper.emptytext      "Filter List">
+<!ENTITY inputMethod.label           "Select Input Method">
 
 <!ENTITY appMenu.siteOptions         "Site Options">
