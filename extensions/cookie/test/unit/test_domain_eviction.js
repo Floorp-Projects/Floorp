@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that domain eviction occurs when the cookies per base domain limit is
 // reached, and that expired cookies are evicted before live cookies.

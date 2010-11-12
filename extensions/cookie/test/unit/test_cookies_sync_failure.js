@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test the various ways opening a cookie database can fail in a synchronous
 // (i.e. immediate) manner, and that the database is renamed and recreated
