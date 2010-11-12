@@ -745,6 +745,12 @@ Script::analyze(JSContext *cx)
                                         defineArray, defineCount)) {
                 return;
             }
+
+            /* Treat the fallthrough of a branch instruction as a jump target. */
+            if (type == JOF_JUMP || type == JOF_JUMPX)
+                nextcode->jumpTarget = true;
+            else
+                nextcode->fallthrough = true;
         }
     }
 

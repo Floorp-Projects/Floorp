@@ -254,6 +254,7 @@ private:
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_XORPD_VpdWpd    = 0x57,
         OP2_MOVD_VdEd       = 0x6E,
+        OP2_PSRLDQ_Vd       = 0x73,
         OP2_MOVD_EdVd       = 0x7E,
         OP2_JCC_rel32       = 0x80,
         OP_SETCC            = 0x90,
@@ -1860,6 +1861,27 @@ public:
                        nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVD_VdEd, (RegisterID)dst, src);
+    }
+
+    /* :FIXME: borrowed from patch in bug 594247 */
+
+    void psrldq_rr(XMMRegisterID dest, int shift)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "pslldq     %s, %d\n", MAYBE_PAD,
+                       nameFPReg(dest), shift);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)3, (RegisterID)dest);
+        m_formatter.immediate8(shift);
+    }
+
+    void movd_rr(XMMRegisterID src, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movd       %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameIReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVD_EdVd, (RegisterID)src, dst);
     }
 
 #if WTF_CPU_X86_64

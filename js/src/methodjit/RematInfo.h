@@ -200,6 +200,7 @@ struct ValueRemat {
  */
 struct RematInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
+    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
     enum SyncState {
         SYNCED,
@@ -221,8 +222,11 @@ struct RematInfo {
         /* Backing bits are known at compile time. */
         PhysLoc_Constant,
 
-        /* Backing bits are in a register. */
+        /* Backing bits are in a general purpose register. */
         PhysLoc_Register,
+
+        /* Backing bits are part of a floating point register. */
+        PhysLoc_FPRegister,
 
         /* Backing bits are invalid/unknown. */
         PhysLoc_Invalid
@@ -238,6 +242,16 @@ struct RematInfo {
         return reg_;
     }
 
+    void setFPRegister(FPRegisterID reg) {
+        fpreg_ = reg;
+        location_ = PhysLoc_FPRegister;
+    }
+
+    FPRegisterID fpreg() const {
+        JS_ASSERT(inFPRegister());
+        return fpreg_;
+    }
+
     void setMemory() {
         location_ = PhysLoc_Memory;
         sync_ = SYNCED;
@@ -251,6 +265,7 @@ struct RematInfo {
 
     bool isConstant() const { return location_ == PhysLoc_Constant; }
     bool inRegister() const { return location_ == PhysLoc_Register; }
+    bool inFPRegister() const { return location_ == PhysLoc_FPRegister; }
     bool inMemory() const { return location_ == PhysLoc_Memory; }
     bool synced() const { return sync_ == SYNCED; }
     void sync() {
@@ -267,8 +282,16 @@ struct RematInfo {
     }
 
   private:
-    /* Set if location is PhysLoc_Register. */
-    RegisterID reg_;
+    union {
+        /* Set if location is PhysLoc_Register. */
+        RegisterID reg_;
+
+        /*
+         * Set if location is PhysLoc_FPRegister.  This must be the data for a FE,
+         * and the known type is JSVAL_TYPE_DOUBLE.
+         */
+        FPRegisterID fpreg_;
+    };
 
     /* Remat source. */
     PhysLoc location_;

@@ -59,7 +59,10 @@ struct Bytecode
     friend class Script;
 
     /* Whether there are any incoming jumps to this instruction. */
-    bool jumpTarget : 1;
+    bool jumpTarget : 1;    
+
+    /* Whether there is fallthrough to this instruction from a non-branching instruction. */
+    bool fallthrough : 1;
 
     /* Whether this instruction has been analyzed to get its output defines and stack. */
     bool analyzed : 1;
