@@ -49,7 +49,7 @@ load 400779-1.xhtml
 load 402912-1.xhtml
 load 408904-1.xul
 load 412479-1.xhtml
-asserts(2) load 415394-1.xhtml # Bug 163838
+asserts(4) load 415394-1.xhtml # Bug 163838
 load 420424-1.xul
 load 430356-1.xhtml
 load 431738.xhtml
