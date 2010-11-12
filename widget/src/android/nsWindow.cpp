@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
+ *   Vivien Nicolas <vnicolas@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1322,11 +1324,18 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 {
     nsCOMPtr<nsIAtom> command;
     PRBool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
+    PRBool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
     PRBool doCommand = PR_FALSE;
     PRUint32 keyCode = ae->KeyCode();
 
     if (isDown) {
         switch (keyCode) {
+            case AndroidKeyEvent::KEYCODE_BACK:
+                if (isLongPress) {
+                    command = nsWidgetAtoms::Clear;
+                    doCommand = PR_TRUE;
+                }
+                break;
             case AndroidKeyEvent::KEYCODE_VOLUME_UP:
                 command = nsWidgetAtoms::VolumeUp;
                 doCommand = PR_TRUE;
@@ -1337,7 +1346,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
                 break;
             case AndroidKeyEvent::KEYCODE_MENU:
                 gMenu = PR_TRUE;
-                gMenuConsumed = PR_FALSE;
+                gMenuConsumed = isLongPress;
                 break;
         }
     } else {
