@@ -96,7 +96,6 @@ int
 main(int aArgc,
      char** aArgv)
 {
-  return 0;
   ScopedXPCOM xpcom(TEST_NAME);
 
   do_test_pending();
