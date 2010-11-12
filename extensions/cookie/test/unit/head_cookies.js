@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "permissions",
                                    "@mozilla.org/permissionmanager;1",
                                    "nsIPermissionManager");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "pb",
+                                   "@mozilla.org/privatebrowsing;1",
+                                   "nsIPrivateBrowsingService");
+
 function do_check_throws(f, result, stack)
 {
   if (!stack)

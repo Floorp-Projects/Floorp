@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,9 +54,12 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "mozIStorageStatement.h"
+#include "mozIStorageAsyncStatement.h"
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageRow.h"
+#include "mozIStorageCompletionCallback.h"
+#include "mozIStorageStatementCallback.h"
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
@@ -66,8 +69,6 @@ class nsIObserverService;
 class nsIURI;
 class nsIChannel;
 class mozIStorageService;
-class mozIStorageStatementCallback;
-class mozIStorageCompletionCallback;
 class mozIThirdPartyUtil;
 class ReadCookieDBListener;
 
@@ -150,15 +151,20 @@ struct CookieDomainTuple
 // conveniently switch state when entering or exiting private browsing.
 struct DBState
 {
-  DBState() : cookieCount(0), cookieOldestTime(LL_MAXINT) { }
+  DBState() : cookieCount(0), cookieOldestTime(LL_MAXINT)
+  {
+    hostTable.Init();
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(DBState)
 
   nsTHashtable<nsCookieEntry>     hostTable;
   PRUint32                        cookieCount;
   PRInt64                         cookieOldestTime;
   nsCOMPtr<mozIStorageConnection> dbConn;
-  nsCOMPtr<mozIStorageStatement>  stmtInsert;
-  nsCOMPtr<mozIStorageStatement>  stmtDelete;
-  nsCOMPtr<mozIStorageStatement>  stmtUpdate;
+  nsCOMPtr<mozIStorageAsyncStatement> stmtInsert;
+  nsCOMPtr<mozIStorageAsyncStatement> stmtDelete;
+  nsCOMPtr<mozIStorageAsyncStatement> stmtUpdate;
 
   // Various parts representing asynchronous read state. These are useful
   // while the background read is taking place.
@@ -175,6 +181,12 @@ struct DBState
   // in flight. This is used to keep track of which data in hostArray is stale
   // when the time comes to merge.
   nsTHashtable<nsCStringHashKey>        readSet;
+
+  // DB completion handlers.
+  nsCOMPtr<mozIStorageStatementCallback>  insertListener;
+  nsCOMPtr<mozIStorageStatementCallback>  updateListener;
+  nsCOMPtr<mozIStorageStatementCallback>  removeListener;
+  nsCOMPtr<mozIStorageCompletionCallback> closeListener;
 };
 
 // these constants represent a decision about a cookie based on user prefs.
@@ -215,10 +227,11 @@ class nsCookieService : public nsICookieService
 
   protected:
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
-    nsresult                      InitDB();
+    void                          InitDBStates();
     nsresult                      TryInitDB(PRBool aDeleteExistingDB);
     nsresult                      CreateTable();
-    void                          CloseDB();
+    void                          CloseDBStates();
+    void                          CloseDefaultDBConnection();
     nsresult                      Read();
     template<class T> nsCookie*   GetCookieFromRow(T &aRow);
     void                          AsyncReadComplete();
@@ -268,14 +281,8 @@ class nsCookieService : public nsICookieService
     // note that the private states' dbConn should always be null - we never
     // want to be dealing with the on-disk DB when in private browsing.
     DBState                      *mDBState;
-    DBState                       mDefaultDBState;
-    DBState                       mPrivateDBState;
-
-    // DB completion handlers.
-    nsCOMPtr<mozIStorageStatementCallback>  mInsertListener;
-    nsCOMPtr<mozIStorageStatementCallback>  mUpdateListener;
-    nsCOMPtr<mozIStorageStatementCallback>  mRemoveListener;
-    nsCOMPtr<mozIStorageCompletionCallback> mCloseListener;
+    nsRefPtr<DBState>             mDefaultDBState;
+    nsRefPtr<DBState>             mPrivateDBState;
 
     // cached prefs
     PRUint8                       mCookieBehavior; // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT}
