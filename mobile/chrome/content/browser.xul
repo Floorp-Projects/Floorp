@@ -616,19 +616,19 @@
     <hbox id="appmenu" bottom="0" collapsed="true" align="stretch" oncommand="AppMenu.hide();">
       <toolbarbutton class="appmenu-button"
         label="&appMenu.siteOptions;"
-        image="chrome://browser/skin/images/settings-default-64.png"
+        image="chrome://browser/skin/images/appmenu-site-hdpi.png"
         oncommand="getIdentityHandler().show(); event.stopPropagation();"/>
       <toolbarbutton class="appmenu-button"
         label="&prefsHeader.label;"
-        image="chrome://browser/skin/images/preferences-default-64.png"
+        image="chrome://browser/skin/images/appmenu-preferences-hdpi.png"
         oncommand="BrowserUI.showPanel('prefs-container');"/>
       <toolbarbutton class="appmenu-button"
         label="&addonsHeader.label;"
-        image="chrome://browser/skin/images/addons-default-64.png"
+        image="chrome://browser/skin/images/appmenu-addons-hdpi.png"
         oncommand="BrowserUI.showPanel('addons-container');"/>
       <toolbarbutton class="appmenu-button"
         label="&downloadsHeader.label;"
-        image="chrome://browser/skin/images/downloads-default-64.png"
+        image="chrome://browser/skin/images/appmenu-downloads-hdpi.png"
         oncommand="BrowserUI.showPanel('downloads-container');"/>
     </hbox>
   </stack>
