@@ -4927,14 +4927,7 @@ AddonInstall.prototype = {
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
                                                this.listeners, this.wrapper);
-      if (this.file && !(this.sourceURI instanceof Ci.nsIFileURL)) {
-        try {
-          this.file.remove(true);
-        }
-        catch (e) {
-          WARN("Failed to remove temporary file " + this.file.path, e);
-        }
-      }
+      this.removeTemporaryFile();
       break;
     case AddonManager.STATE_INSTALLED:
       LOG("Cancelling install of " + this.addon.id);
@@ -5322,6 +5315,8 @@ AddonInstall.prototype = {
       this.badCertHandler.asyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, aCallback);
     else
       aCallback.onRedirectVerifyCallback(Cr.NS_OK);
+
+    this.channel = aNewChannel;
   },
 
   /**
@@ -5377,8 +5372,10 @@ AddonInstall.prototype = {
     Services.obs.removeObserver(this, "network:offline-about-to-go-offline");
 
     // If the download was cancelled then all events will have already been sent
-    if (aStatus == Cr.NS_BINDING_ABORTED)
+    if (aStatus == Cr.NS_BINDING_ABORTED) {
+      this.removeTemporaryFile();
       return;
+    }
 
     LOG("Download of " + this.sourceURI.spec + " completed.");
 
