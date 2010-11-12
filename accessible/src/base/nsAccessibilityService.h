@@ -202,19 +202,6 @@ public:
       GetCachedAccessibleOrContainer(aNode->GetNodeParent()) : nsnull;
   }
 
-  /**
-   * Initialize an accessible and cache it. The method should be called for
-   * every created accessible.
-   *
-   * @param  aAccessible    [in] accessible to initialize.
-   * @param  aRoleMapEntry  [in] the role map entry role the ARIA role or nsnull
-   *                          if none
-   *
-   * @return true if the accessible was initialized, otherwise false
-   */
-  PRBool InitAccessible(nsAccessible *aAccessible,
-                        nsRoleMapEntry *aRoleMapEntry);
-
 protected:
   /**
    * Return an accessible for the DOM node in the given presentation shell if

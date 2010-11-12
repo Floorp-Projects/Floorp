@@ -211,18 +211,18 @@ public:
   nsAccessible* GetCachedAccessibleByUniqueIDInSubtree(void* aUniqueID);
 
   /**
-   * Cache the accessible.
+   * Initialize the newly created accessible and put it into document caches.
    *
-   * @param  aAccessible  [in] accessible to cache
-   *
-   * @return true if accessible being cached, otherwise false
+   * @param  aAccessible    [in] created accessible
+   * @param  aRoleMapEntry  [in] the role map entry role the ARIA role or nsnull
+   *                          if none
    */
-  PRBool CacheAccessible(nsAccessible *aAccessible);
+  bool BindToDocument(nsAccessible* aAccessible, nsRoleMapEntry* aRoleMapEntry);
 
   /**
-   * Shutdown the accessible and remove it from document cache.
+   * Remove the existing accessible from document caches and shutdown it.
    */
-  void ShutdownAccessible(nsAccessible *aAccessible);
+  void UnbindFromDocument(nsAccessible* aAccessible);
 
   /**
    * Process the event when the queue of pending events is untwisted. Fire
