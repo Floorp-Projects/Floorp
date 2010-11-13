@@ -558,6 +558,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     int32 value = 0;
     JSOp origOp = op;
     MaybeRegisterID reg;
+    MaybeJump preOverflow;
     if (!regs.resultHasRhs) {
         if (!regs.rhsData.isSet())
             value = rhs->getValue().toInt32();
@@ -569,6 +570,9 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
         else
             reg = regs.lhsData.reg();
         if (op == JSOP_SUB) {
+            // If the RHS is 0x80000000, the smallest negative value, neg does
+            // not work. Guard against this and treat it as an overflow.
+            preOverflow = masm.branch32(Assembler::Equal, regs.result, Imm32(0x80000000));
             masm.neg32(regs.result);
             op = JSOP_ADD;
         }
@@ -658,6 +662,8 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
      * know never to try and convert back to integer.
      */
     MaybeJump overflowDone;
+    if (preOverflow.isSet())
+        stubcc.linkExitDirect(preOverflow.get(), stubcc.masm.label());
     stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
     {
         if (regs.lhsNeedsRemat) {
