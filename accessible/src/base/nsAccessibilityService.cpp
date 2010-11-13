@@ -869,13 +869,13 @@ already_AddRefed<nsAccessible>
 nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
                                               nsIPresShell* aPresShell,
                                               nsIWeakReference* aWeakShell,
-                                              PRBool* aIsHidden)
+                                              bool* aIsSubtreeHidden)
 {
   if (!aPresShell || !aWeakShell || !aNode || gIsShutdown)
     return nsnull;
 
-  if (aIsHidden)
-    *aIsHidden = PR_FALSE;
+  if (aIsSubtreeHidden)
+    *aIsSubtreeHidden = false;
 
   // Check to see if we already have an accessible for this node in the cache.
   nsAccessible *cachedAccessible = GetCachedAccessible(aNode, aWeakShell);
@@ -916,10 +916,11 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   // methods on a dead frame pointer.
   nsWeakFrame weakFrame = content->GetPrimaryFrame();
 
-  // Check frame to see if it is hidden.
-  if (!weakFrame.GetFrame()) {
-    if (aIsHidden)
-      *aIsHidden = PR_TRUE;
+  // Check frame and its visibility. Note, hidden frame allows visible
+  // elements in subtree.
+  if (!weakFrame.GetFrame() || !weakFrame->GetStyleVisibility()->IsVisible()) {
+    if (aIsSubtreeHidden && !weakFrame.GetFrame())
+      *aIsSubtreeHidden = true;
 
     return nsnull;
   }
@@ -953,8 +954,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       f->GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
       if (renderedWhitespace.IsEmpty()) {
         // Really empty -- nothing is rendered
-        if (aIsHidden)
-          *aIsHidden = PR_TRUE;
+        if (aIsSubtreeHidden)
+          *aIsSubtreeHidden = true;
 
         return nsnull;
       }
@@ -982,8 +983,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     nsAutoString name;
     content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::name, name);
     if (!name.IsEmpty()) {
-      if (aIsHidden)
-        *aIsHidden = PR_TRUE;
+      if (aIsSubtreeHidden)
+        *aIsSubtreeHidden = true;
 
       return nsnull;
     }
@@ -1107,8 +1108,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         // captions. This could not be done in
         // nsTableCaptionFrame::GetAccessible() because the descendants of
         // the table caption would still be created. By setting
-        // *aIsHidden = PR_TRUE we ensure that no descendant accessibles are
-        // created.
+        // *aIsSubtreeHidden = true we ensure that no descendant accessibles
+        // are created.
         nsIFrame* f = weakFrame.GetFrame();
         if (!f) {
           f = aPresShell->GetRealPrimaryFrameFor(content);
@@ -1117,8 +1118,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
            f->GetRect().IsEmpty()) {
           // XXX This is not the ideal place for this code, but right now there
           // is no better place:
-          if (aIsHidden)
-            *aIsHidden = PR_TRUE;
+          if (aIsSubtreeHidden)
+            *aIsSubtreeHidden = true;
 
           return nsnull;
         }

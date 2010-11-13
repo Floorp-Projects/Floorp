@@ -237,11 +237,6 @@ nsresult
 nsTextEquivUtils::AppendFromAccessible(nsAccessible *aAccessible,
                                        nsAString *aString)
 {
-  // Ignore hidden accessible for name computation.
-  nsIFrame* frame = aAccessible->GetFrame();
-  if (!frame || !frame->GetStyleVisibility()->IsVisible())
-    return NS_OK;
-
   //XXX: is it necessary to care the accessible is not a document?
   if (aAccessible->IsContent()) {
     nsresult rv = AppendTextEquivFromTextContent(aAccessible->GetContent(),
