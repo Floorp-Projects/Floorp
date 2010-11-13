@@ -69,6 +69,7 @@ JSStackFrame::initPrev(JSContext *cx)
 inline void
 JSStackFrame::resetGeneratorPrev(JSContext *cx)
 {
+    flags_ |= JSFRAME_HAS_PREVPC;
     initPrev(cx);
 }
 
