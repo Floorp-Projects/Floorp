@@ -243,3 +243,15 @@ arrowbox {
 textbox {
   -moz-binding: url("chrome://browser/content/bindings.xml#textbox");
 }
+
+textbox[type="timed"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#timed-textbox");
+}
+
+textbox[type="search"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#search-textbox");
+}
+
+textbox[type="number"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#numberbox");
+}
