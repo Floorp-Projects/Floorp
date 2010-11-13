@@ -54,8 +54,6 @@ ExecutablePool::Allocation ExecutablePool::systemAlloc(size_t n)
     TInt errorCode = codeChunk->CreateLocalCode(n, n);
 
     char* allocation = reinterpret_cast<char*>(codeChunk->Base());
-    if (!allocation)
-        CRASH();
     ExecutablePool::Allocation alloc = { allocation, n, codeChunk };
     return alloc;
 }
