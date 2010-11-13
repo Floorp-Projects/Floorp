@@ -134,10 +134,12 @@
 
   #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
   #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar:not(:-moz-lwtheme) {
     border-top-left-radius: 3.5px;
     border-top-right-radius: 3.5px;
   }
+
   #main-window[sizemode="normal"]:not([inFullscreen="true"]) #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
     padding-left: 4px;
     padding-right: 4px;
