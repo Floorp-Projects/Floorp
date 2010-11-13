@@ -178,15 +178,6 @@
   -moz-margin-start: .5em;
 }
 
-/* menupopup > menu[_moz-menuactive="true"] etc. from menu.css doesn't match these nodes */
-.split-menuitem-item[_moz-menuactive="true"]:not([disabled]),
-.split-menuitem-menu[_moz-menuactive="true"]:not([disabled]),
-:-moz-any(#appmenuPrimaryPane, #appmenuSecondaryPane) > menu[_moz-menuactive="true"]:not([disabled]),
-:-moz-any(#appmenuPrimaryPane, #appmenuSecondaryPane) > menuitem[_moz-menuactive="true"]:not([disabled]) {
-  background-color: -moz-menuhover;
-  color: -moz-menuhovertext;
-}
-
 .split-menuitem-menu {
   -moz-box-pack: end;
 }
