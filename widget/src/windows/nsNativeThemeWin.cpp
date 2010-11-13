@@ -146,22 +146,22 @@ static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, nsEventStates eventSt
     return mozilla::widget::themeconst::BS_INACTIVE;
   }
 
-  if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
-    return mozilla::widget::themeconst::BS_PUSHED;
-  else if (eventState.HasState(NS_EVENT_STATE_HOVER))
+  if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+    if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
+      return mozilla::widget::themeconst::BS_PUSHED;
     return mozilla::widget::themeconst::BS_HOT;
-  else
-    return mozilla::widget::themeconst::BS_NORMAL;
+  }
+  return mozilla::widget::themeconst::BS_NORMAL;
 }
 
 static PRInt32 GetClassicWindowFrameButtonState(nsEventStates eventState)
 {
-  if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
-    return DFCS_BUTTONPUSH|DFCS_PUSHED;
-  else if (eventState.HasState(NS_EVENT_STATE_HOVER))
+  if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+    if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
+      return DFCS_BUTTONPUSH|DFCS_PUSHED; 
     return DFCS_BUTTONPUSH|DFCS_HOT;
-  else
-    return DFCS_BUTTONPUSH;
+  }
+  return DFCS_BUTTONPUSH;
 }
 
 static void QueryForButtonData(nsIFrame *aFrame)
