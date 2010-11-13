@@ -12,7 +12,7 @@
 #define kCoefficientsRgbV kCoefficientsRgbY + 4096
 
 extern "C" {
-#if defined(MOZILLA_COMPILE_WITH_SSE2)
+#if defined(MOZILLA_COMPILE_WITH_SSE2) && defined(_M_IX86)
 __declspec(naked)
 void FastConvertYUVToRGB32Row(const uint8* y_buf,
                               const uint8* u_buf,
