@@ -210,25 +210,16 @@ var Browser = {
     this.contentScrollboxScroller = {
       scrollBy: function(aDx, aDy) {
         getBrowser().scrollBy(aDx, aDy);
-
-        let scroll = getBrowser().getPosition();
-        this._updateBackground(scroll.x, scroll.y);
       },
 
       scrollTo: function(aX, aY) {
         getBrowser().scrollTo(aX, aY);
-        this._updateBackground(aX, aY);
       },
 
       getPosition: function(aScrollX, aScrollY) {
         let { x: x, y: y } = getBrowser().getPosition();
         aScrollX.value = x;
         aScrollY.value = y;
-      },
-
-      _updateBackground: function _updateBackground(aX, aY) {
-        let position = (-aX % 128) + "px " + (-aY % 128) + "px";
-        document.getElementById("browsers").style.backgroundPosition = position;
       }
     };
 
