@@ -2409,7 +2409,7 @@ index b5049a5..627b8cb 100644
  extern "C" {
 -
 -#if USE_MMX
-+#if defined(MOZILLA_COMPILE_WITH_SSE2)
++#if defined(MOZILLA_COMPILE_WITH_SSE2) && defined(_M_IX86)
  __declspec(naked)
  void FastConvertYUVToRGB32Row(const uint8* y_buf,
                                const uint8* u_buf,
