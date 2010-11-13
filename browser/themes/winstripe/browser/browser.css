@@ -210,18 +210,20 @@
     border: 1px solid rgba(0,0,0,.5);
   }
   #appmenuPrimaryPane {
-    margin-right: -1px;
+    -moz-margin-end: -1px;
     background-color: rgba(255,255,255,0.5);
-    border-right: 1px solid #c4c4c5;
-    padding-left: 2px;
+    -moz-border-end: 1px solid #c4c4c5;
+    -moz-padding-start: 2px;
   }
   #appmenuSecondaryPane {
-    -moz-appearance: none;
     background-color: #f1f5fb;
     box-shadow: 1px 0 2px rgb(204,214,234) inset;
     border: 0;
     padding-top: 5px;
     font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+  }
+  #appmenuSecondaryPane:-moz-locale-dir(rtl) {
+    box-shadow: -1px 0 2px rgb(204,214,234) inset;
   }
 
   .appmenu-menuseparator {
