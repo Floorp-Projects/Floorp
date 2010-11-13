@@ -111,9 +111,9 @@ public:
   virtual void RemoveNativeRootAccessible(nsAccessible* aRootAccessible);
 
   virtual void ContentRangeInserted(nsIPresShell* aPresShell,
-                                      nsIContent* aContainer,
-                                      nsIContent* aStartChild,
-                                      nsIContent* aEndChild);
+                                    nsIContent* aContainer,
+                                    nsIContent* aStartChild,
+                                    nsIContent* aEndChild);
 
   virtual void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aContainer,
                               nsIContent* aChild);
@@ -138,16 +138,16 @@ public:
    * Return an accessible for the given DOM node from the cache or create new
    * one.
    *
-   * @param  aNode       [in] the given node
-   * @param  aPresShell  [in] the pres shell of the node
-   * @param  aWeakShell  [in] the weak shell for the pres shell
-   * @param  aIsHidden   [out, optional] indicates whether the node's frame is
-   *                       hidden
+   * @param  aNode             [in] the given node
+   * @param  aPresShell        [in] the pres shell of the node
+   * @param  aWeakShell        [in] the weak shell for the pres shell
+   * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
+   *                             frame and its subtree is hidden
    */
   already_AddRefed<nsAccessible>
     GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
                           nsIWeakReference* aWeakShell,
-                          PRBool* aIsHidden = nsnull);
+                          bool* aIsSubtreeHidden = nsnull);
 
   /**
    * Return an accessible for the given DOM node.
