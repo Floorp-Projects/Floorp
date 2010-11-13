@@ -1622,6 +1622,39 @@
     </handlers>
   </binding>
 
+  <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#timed-textbox">
+    <handlers>
+      <handler event="TapLong" phase="capturing">
+        <![CDATA[
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, false);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="search-textbox" extends="chrome://global/content/bindings/textbox.xml#search-textbox">
+    <handlers>
+      <handler event="TapLong" phase="capturing">
+        <![CDATA[
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, false);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="numberbox" extends="chrome://global/content/bindings/numberbox.xml#numberbox">
+    <handlers>
+      <handler event="TapLong" phase="capturing">
+        <![CDATA[
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, false);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="input-box" extends="xul:box">
     <implementation>
       <method name="showContextMenu">
