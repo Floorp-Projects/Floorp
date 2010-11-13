@@ -2491,10 +2491,13 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyBottomHeight = clientBounds.height - largest.YMost();
 
-    // The minimum glass height must be the caption buttons height,
-    // otherwise the buttons are drawn incorrectly.
-    margins.cyTopHeight = PR_MAX(largest.y,
-                                 nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
+    if (mCustomNonClient) {
+      // The minimum glass height must be the caption buttons height,
+      // otherwise the buttons are drawn incorrectly.
+      largest.y = PR_MAX(largest.y, 
+                         nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
+    }
+    margins.cyTopHeight = largest.y;
   }
 
   // Only update glass area if there are changes
