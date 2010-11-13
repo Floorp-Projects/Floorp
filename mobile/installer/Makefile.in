@@ -74,7 +74,6 @@ NO_PKG_FILES = \
 	$(MOZ_APP_NAME)-bin.elf \
 	xulrunner-config \
 	$(MOZ_APP_NAME)-bin$(BIN_SUFFIX) \
-	dictionaries* \
 	nspr-config \
 	regchrome* \
 	regxpcom* \
@@ -99,17 +98,7 @@ NO_PKG_FILES = \
 	proxy-create-threadsafety* \
 	rdfcat* \
 	rdfpoll* \
-	triplescat* \
-	screentopng* \
-	fix-linux-stack.pl* \
-	fix_stack_using_bpsyms.py* \
-	ShowAlignments* \
-	components/httpd.js \
-	components/tp-cmdline.js \
-	components/reftest-cmdline.js \
-	chrome/pageloader* \
-	chrome/reftest* \
-	chrome/xslt-qa* \
+	dictionaries* \
 	$(NULL)
 
 ifndef SYSTEM_LIBXUL
