@@ -2542,15 +2542,18 @@ obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     vp->setObject(*obj);
+    if (!obj->isExtensible())
+        return true;
 
     AutoIdVector props(cx);
     return obj->preventExtensions(cx, &props);
 }
 
 bool
-JSObject::sealOrFreeze(JSContext *cx, bool freeze)
+JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 {
     assertSameCompartment(cx, this);
+    JS_ASSERT(it == SEAL || it == FREEZE);
 
     AutoIdVector props(cx);
     if (isExtensible()) {
@@ -2573,7 +2576,7 @@ JSObject::sealOrFreeze(JSContext *cx, bool freeze)
 
         /* Make all attributes permanent; if freezing, make data attributes read-only. */
         uintN new_attrs;
-        if (freeze && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+        if (it == FREEZE && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
             new_attrs = JSPROP_PERMANENT | JSPROP_READONLY;
         else
             new_attrs = JSPROP_PERMANENT;
