@@ -708,22 +708,24 @@ struct JSObject : js::gc::Cell {
      */
 
   private:
+    enum ImmutabilityType { SEAL, FREEZE };
+
     /*
      * The guts of Object.seal (ES5 15.2.3.8) and Object.freeze (ES5 15.2.3.9): mark the
      * object as non-extensible, and adjust each property's attributes appropriately: each
      * property becomes non-configurable, and if |freeze|, data properties become
      * read-only as well.
      */
-    bool sealOrFreeze(JSContext *cx, bool freeze = false);
+    bool sealOrFreeze(JSContext *cx, ImmutabilityType it);
 
   public:
     bool isExtensible() const { return !(flags & NOT_EXTENSIBLE); }
     bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
-    
+
     /* ES5 15.2.3.8: non-extensible, all props non-configurable */
-    inline bool seal(JSContext *cx) { return sealOrFreeze(cx); }
+    inline bool seal(JSContext *cx) { return sealOrFreeze(cx, SEAL); }
     /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
-    bool freeze(JSContext *cx) { return sealOrFreeze(cx, true); }
+    bool freeze(JSContext *cx) { return sealOrFreeze(cx, FREEZE); }
         
     /*
      * Primitive-specific getters and setters.
