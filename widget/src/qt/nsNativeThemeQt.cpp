@@ -86,7 +86,7 @@ nsNativeThemeQt::~nsNativeThemeQt()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeThemeQt, nsITheme)
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeQt, nsNativeTheme, nsITheme)
 
 static inline QRect qRectInPixels(const nsRect &aRect,
                                   const PRInt32 p2a)

@@ -72,7 +72,7 @@
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 
-NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
 #ifdef WINCE
 
