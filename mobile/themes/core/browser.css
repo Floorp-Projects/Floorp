@@ -400,10 +400,6 @@ toolbarbutton.choice-remotetabs {
 }
 
 /* browsers ---------------------------------------------------------------- */
-#browsers {
-  background-image: url(chrome://browser/content/checkerboard.png);
-}
-
 .input-overlay:-moz-focusring {
   outline: 0 !important;
 }
