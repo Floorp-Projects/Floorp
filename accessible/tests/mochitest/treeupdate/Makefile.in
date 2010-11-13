@@ -46,12 +46,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
+		test_ariadialog.html \
 		test_doc.html \
 		test_list_editabledoc.html \
 		test_list.html \
 		test_recreation.html \
-		test_tableinsubtree.html \
 		test_textleaf.html \
+		test_visibility.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

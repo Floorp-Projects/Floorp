@@ -34,9 +34,10 @@
 
       this.invoke = function showARIADialog_invoke()
       {
-        this.node.style.display = "block";
+        getNode("dialog").style.display = "block";
+        getNode("table").style.visibility = "visible";
+        getNode("a").textContent = "link";
         getNode("input").value = "hello";
-        getNode("cell").textContent = "cell1";
         getNode("input").focus();
       }
 
@@ -46,22 +47,11 @@
           role: ROLE_DIALOG,
           children: [
             {
-              role: ROLE_TABLE,
-              children: [
-                {
-                  role: ROLE_ROW,
-                  children: [
-                    {
-                      role: ROLE_CELL,
-                      children: [ { role: ROLE_TEXT_LEAF } ]
-                    },
-                    {
-                      role: ROLE_CELL,
-                      children: [ { role: ROLE_ENTRY } ]
-                    }
-                  ]
-                }
-              ]
+              role: ROLE_PUSHBUTTON,
+              children: [ { role: ROLE_TEXT_LEAF } ]
+            },
+            {
+              role: ROLE_ENTRY
             }
           ]
         };
@@ -110,8 +100,18 @@
   </pre>
 
   <div id="dialog" role="dialog" style="display: none;">
-    <table>
-      <tr><td id="cell"></td><td><input id="input"></td>
+    <table id="table" role="presentation"
+           style="display: block; position: fixed; top: 88px; left: 312.5px; z-index: 10010; visibility: hidden;">
+      <tbody>
+        <tr>
+          <td role="presentation">
+            <div role="presentation">
+              <a id="a" role="button">text</a>
+            </div>
+            <input id="input">
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
