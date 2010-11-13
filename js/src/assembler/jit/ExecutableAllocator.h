@@ -206,6 +206,7 @@ public:
             delete allocator;
             return NULL;
         }
+        return allocator;
     }
 
     ~ExecutableAllocator() { delete m_smallAllocationPool; }
