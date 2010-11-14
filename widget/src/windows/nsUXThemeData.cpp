@@ -395,8 +395,8 @@ PRBool nsUXThemeData::IsDefaultWindowTheme()
 void
 nsUXThemeData::UpdateNativeThemeInfo()
 {
-  // Trigger a refresh of themed button metrics
-  sTitlebarInfoPopulatedThemed = PR_FALSE;
+  // Trigger a refresh of themed button metrics if needed
+  sTitlebarInfoPopulatedThemed = (nsWindow::GetWindowsVersion() < VISTA_VERSION);
 
   sIsDefaultWindowsTheme = PR_FALSE;
   sThemeId = nsILookAndFeel::eWindowsTheme_Generic;
