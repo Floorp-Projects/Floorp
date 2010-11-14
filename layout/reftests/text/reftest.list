@@ -27,6 +27,18 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 == soft-hyphens-1a.html soft-hyphens-1-ref.html
 == soft-hyphens-1b.html soft-hyphens-1-ref.html
 == soft-hyphens-1c.html soft-hyphens-1-ref.html
+# Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually)
+# and D2D have subpixel positioning.  The tests for pixel-snapping assume that
+# 1 CSS pixel == 1 device pixel
+skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
+# Platforms with subpixel positioning already have inconsistent glyphs by
+# design, but that is considered more tolerable because they are subpixel
+# inconsistencies.  On those platforms we just test that glyph positions are
+# subpixel.
+skip-if(!(d2d||cocoaWidget)) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
+# No platforms do subpixel positioning vertically
+== subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
+fails-if(d2d) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html # d2d is bug 610330
 == swash-1.html swash-1-ref.html
 # Test for bug 593564, synthetic bold should cause glyph metrics to increase
 # Random on Windows - fails on tinderbox Opt reftest, passes elsewhere - see bug 597300
