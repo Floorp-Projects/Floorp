@@ -5511,7 +5511,7 @@ if test "$MOZ_ENABLE_QT"
 then
     if test "$MOZ_PANGO"
     then
-        PKG_CHECK_MODULES(MOZ_PANGO, [pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION],
+        PKG_CHECK_MODULES(MOZ_PANGO, [pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION],
         [
             AC_SUBST(MOZ_PANGO_CFLAGS)
             AC_SUBST(MOZ_PANGO_LIBS)
