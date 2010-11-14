@@ -52,11 +52,18 @@
 #include "harfbuzz/hb-unicode.h"
 #include "harfbuzz/hb-ot.h"
 
+#include "cairo.h"
+
 #include "nsUnicodeRange.h"
 #include "nsCRT.h"
 
 #define FloatToFixed(f) (65536 * (f))
 #define FixedToFloat(f) ((f) * (1.0 / 65536.0))
+// Right shifts of negative (signed) integers are undefined, as are overflows
+// when converting unsigned to negative signed integers.
+// (If speed were an issue we could make some 2's complement assumptions.)
+#define FixedToIntRound(f) ((f) > 0 ?  ((32768 + (f)) >> 16) \
+                                    : -((32767 - (f)) >> 16))
 
 using namespace mozilla; // for AutoSwap_* types
 
@@ -871,6 +878,73 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     return PR_TRUE;
 }
 
+/**
+ * Work out whether cairo will snap inter-glyph spacing to pixels.
+ *
+ * Layout does not align text to pixel boundaries, so, with font drawing
+ * backends that snap glyph positions to pixels, it is important that
+ * inter-glyph spacing within words is always an integer number of pixels.
+ * This ensures that the drawing backend snaps all of the word's glyphs in the
+ * same direction and so inter-glyph spacing remains the same.
+ */
+static void
+GetRoundOffsetsToPixels(gfxContext *aContext,
+                        PRBool *aRoundX, PRBool *aRoundY)
+{
+    *aRoundX = PR_FALSE;
+    // Could do something fancy here for ScaleFactors of
+    // AxisAlignedTransforms, but we leave things simple.
+    // Not much point rounding if a matrix will mess things up anyway.
+    if (aContext->CurrentMatrix().HasNonTranslation()) {
+        *aRoundY = PR_FALSE;
+        return;
+    }
+
+    // All raster backends snap glyphs to pixels vertically.
+    // Print backends set CAIRO_HINT_METRICS_OFF.
+    *aRoundY = PR_TRUE;
+
+    cairo_t *cr = aContext->GetCairo();
+    cairo_scaled_font_t *scaled_font = cairo_get_scaled_font(cr);
+    // Sometimes hint metrics gets set for us, most notably for printing.
+    cairo_font_options_t *font_options = cairo_font_options_create();
+    cairo_scaled_font_get_font_options(scaled_font, font_options);
+    cairo_hint_metrics_t hint_metrics =
+        cairo_font_options_get_hint_metrics(font_options);
+    cairo_font_options_destroy(font_options);
+
+    switch (hint_metrics) {
+    case CAIRO_HINT_METRICS_OFF:
+        *aRoundY = PR_FALSE;
+        return;
+    case CAIRO_HINT_METRICS_DEFAULT:
+        // Here we mimic what cairo surface/font backends do.  Printing
+        // surfaces have already been handled by hint_metrics.  The
+        // fallback show_glyphs implementation composites pixel-aligned
+        // glyph surfaces, so we just pick surface/font combinations that
+        // override this.
+        switch (cairo_scaled_font_get_type(scaled_font)) {
+        case CAIRO_FONT_TYPE_DWRITE:
+            // show_glyphs is implemented on the font and so is used for
+            // all surface types.
+            return;
+        case CAIRO_FONT_TYPE_QUARTZ:
+            // Quartz surfaces implement show_glyphs for Quartz fonts
+            if (cairo_surface_get_type(cairo_get_target(cr)) ==
+                CAIRO_SURFACE_TYPE_QUARTZ) {
+                return;
+            }
+        default:
+            break;
+        }
+        // fall through:
+    case CAIRO_HINT_METRICS_ON:
+        break;
+    }
+    *aRoundX = PR_TRUE;
+    return;
+}
+
 #define SMALL_GLYPH_RUN 128 // some testing indicates that 90%+ of text runs
                             // will fit without requiring separate allocation
                             // for charToGlyphArray
@@ -910,8 +984,14 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     PRInt32 glyphStart = 0; // looking for a clump that starts at this glyph
     PRInt32 charStart = 0; // and this char index within the range of the run
 
+    PRBool roundX;
+    PRBool roundY;
+    GetRoundOffsetsToPixels(aContext, &roundX, &roundY);
+    // This is signed to avoid promotion to unsigned.
+    PRInt32 dev2appUnits = aTextRun->GetAppUnitsPerDevUnit();
     // factor to convert 16.16 fixed-point pixels to app units
-    float hb2appUnits = aTextRun->GetAppUnitsPerDevUnit() / 65536.0;
+    // (only used if not rounding)
+    double hb2appUnits = FixedToFloat(aTextRun->GetAppUnitsPerDevUnit());
 
     // keep track of y-position to set glyph offsets if needed
     nscoord yPos = 0;
@@ -1014,7 +1094,11 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         }
 
         // Check if it's a simple one-to-one mapping
-        nscoord advance = NS_roundf(hb2appUnits * posInfo[glyphStart].x_advance);
+        hb_position_t x_advance = posInfo[glyphStart].x_advance;
+        nscoord advance =
+            roundX ? dev2appUnits * FixedToIntRound(x_advance)
+            : NS_floor(hb2appUnits * x_advance + 0.5);
+
         if (glyphsInClump == 1 &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(ginfo[glyphStart].codepoint) &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
@@ -1035,18 +1119,34 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                 gfxTextRun::DetailedGlyph* details =
                     detailedGlyphs.AppendElement();
                 details->mGlyphID = ginfo[glyphStart].codepoint;
-                details->mXOffset = posInfo[glyphStart].x_offset == 0 ?
-                                        0 : hb2appUnits * posInfo[glyphStart].x_offset;
-                details->mYOffset = yPos - (posInfo[glyphStart].y_offset == 0 ?
-                                        0 : hb2appUnits * posInfo[glyphStart].y_offset);
+
+                // Rounding offsets independently of advances on the assumption
+                // that clusters use offsets and rounding of offsets should
+                // not accumulate, and that advances are typically between
+                // clusters.
+                hb_position_t x_offset = posInfo[glyphStart].x_offset;
+                details->mXOffset =
+                    roundX ? dev2appUnits * FixedToIntRound(x_offset)
+                    : NS_floor(hb2appUnits * x_offset + 0.5);
+                hb_position_t y_offset = posInfo[glyphStart].y_offset;
+                details->mYOffset = yPos -
+                    roundY ? dev2appUnits * FixedToIntRound(y_offset)
+                    : NS_floor(hb2appUnits * y_offset + 0.5);
+
                 details->mAdvance = advance;
-                if (posInfo[glyphStart].y_advance != 0) {
-                    yPos -= hb2appUnits * posInfo[glyphStart].y_advance;
+                hb_position_t y_advance = posInfo[glyphStart].y_advance;
+                if (y_advance != 0) {
+                    yPos -=
+                        roundY ? dev2appUnits * FixedToIntRound(y_advance)
+                        : NS_floor(hb2appUnits * y_advance + 0.5);
                 }
                 if (++glyphStart >= glyphEnd) {
                     break;
                 }
-                advance = NS_roundf(hb2appUnits * posInfo[glyphStart].x_advance);
+                x_advance = posInfo[glyphStart].x_advance;
+                advance =
+                    roundX ? dev2appUnits * FixedToIntRound(x_advance)
+                    : NS_floor(hb2appUnits * x_advance + 0.5);
             }
 
             gfxTextRun::CompressedGlyph g;
