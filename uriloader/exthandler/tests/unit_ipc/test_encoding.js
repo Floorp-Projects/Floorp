@@ -86,8 +86,16 @@ DownloadMgrUI.prototype = {
   getAttention: function () { }
 }
 
+function AlertsSVC() { }
+AlertsSVC.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAlertsService]),
+  contractID: "@mozilla.org/alerts-service;1",
+  showAlertNotification: function (url, title, text, clickable, cookie, listener, name) { },
+}
+
 registerTemporaryComponent(HelperAppDlg);
 registerTemporaryComponent(DownloadMgrUI);
+registerTemporaryComponent(AlertsSVC);
 
 function initChildTestEnv()
 {
