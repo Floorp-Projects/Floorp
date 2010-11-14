@@ -1104,6 +1104,9 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (!mBoundElementArrayBuffer)
         return ErrorInvalidOperation("DrawElements: must have element array buffer binding");
 
+    if (!mBoundElementArrayBuffer->Data())
+        return ErrorInvalidOperation("drawElements: bound element array buffer doesn't have any data");
+
     CheckedUint32 checked_neededByteCount = checked_byteCount + byteOffset;
 
     if (!checked_neededByteCount.valid())
