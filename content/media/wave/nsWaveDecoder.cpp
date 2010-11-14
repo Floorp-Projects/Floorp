@@ -1457,6 +1457,7 @@ nsWaveDecoder::PlaybackEnded()
   if (!mPlaybackStateMachine->IsEnded()) {
     return;
   }
+  mEnded = PR_TRUE;
 
   // Update ready state; now that we've finished playback, we should
   // switch to HAVE_CURRENT_DATA.
@@ -1512,9 +1513,6 @@ nsWaveDecoder::IsSeeking() const
 PRBool
 nsWaveDecoder::IsEnded() const
 {
-  if (mPlaybackStateMachine) {
-    return mPlaybackStateMachine->IsEnded();
-  }
   return mEnded;
 }
 
