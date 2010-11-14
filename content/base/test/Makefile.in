@@ -442,6 +442,7 @@ _TEST_FILES2 = \
 		file_bug604660-5.xml \
 		file_bug604660-6.xsl \
 		test_bug605982.html \
+		test_treewalker_nextsibling.xml \
 		$(NULL)
 
 # This test fails on the Mac for some reason
