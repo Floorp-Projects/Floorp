@@ -1473,7 +1473,17 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
 /* virtual */ void
 nsTableFrame::MarkIntrinsicWidthsDirty()
 {
-  LayoutStrategy()->MarkIntrinsicWidthsDirty();
+  nsITableLayoutStrategy* tls = LayoutStrategy();
+  if (NS_UNLIKELY(!tls)) {
+    // This is a FrameNeedsReflow() from nsBlockFrame::RemoveFrame()
+    // walking up the ancestor chain in a table next-in-flow.  In this case
+    // our original first-in-flow (which owns the TableLayoutStrategy) has
+    // already been destroyed and unhooked from the flow chain and thusly
+    // LayoutStrategy() returns null.  All the frames in the flow will be
+    // destroyed so no need to mark anything dirty here.  See bug 595758.
+    return;
+  }
+  tls->MarkIntrinsicWidthsDirty();
 
   // XXXldb Call SetBCDamageArea?
 
