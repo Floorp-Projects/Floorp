@@ -226,10 +226,15 @@ class nsHashKey;
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
 
+// A plugin was clicked or otherwise focused. NS_PLUGIN_ACTIVATE should be
+// used when the window is not active. NS_PLUGIN_FOCUS should be used when
+// the window is active. In the latter case, the dispatcher of the event
+// is expected to ensure that the plugin's widget is focused beforehand.
 #define NS_PLUGIN_ACTIVATE               (NS_WINDOW_START + 62)
+#define NS_PLUGIN_FOCUS                  (NS_WINDOW_START + 63)
 
-#define NS_OFFLINE                       (NS_WINDOW_START + 63)
-#define NS_ONLINE                        (NS_WINDOW_START + 64)
+#define NS_OFFLINE                       (NS_WINDOW_START + 64)
+#define NS_ONLINE                        (NS_WINDOW_START + 65)
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
@@ -1556,7 +1561,8 @@ enum nsDragDropEventStatus {
 #define NS_IS_ACTIVATION_EVENT(evnt) \
        (((evnt)->message == NS_ACTIVATE) || \
         ((evnt)->message == NS_DEACTIVATE) || \
-        ((evnt)->message == NS_PLUGIN_ACTIVATE))
+        ((evnt)->message == NS_PLUGIN_ACTIVATE) || \
+        ((evnt)->message == NS_PLUGIN_FOCUS))
 
 #define NS_IS_QUERY_CONTENT_EVENT(evnt) \
        (((evnt)->message == NS_QUERY_SELECTED_TEXT) || \
