@@ -466,12 +466,20 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: close
   // Closes this item (actually closes the tab associated with it, which automatically
   // closes the item.
+  // Returns true if this tab is removed.
   close: function TabItem_close() {
+    // when "TabClose" event is fired, the browser tab is about to close and our 
+    // item "close" is fired before the browser tab actually get closed. 
+    // Therefore, we need "tabRemoved" event below.
     gBrowser.removeTab(this.tab);
-    this._sendToSubscribers("tabRemoved");
+    let tabNotClosed = 
+      Array.some(gBrowser.tabs, function(tab) { return tab == this.tab; }, this);
+    if (!tabNotClosed)
+      this._sendToSubscribers("tabRemoved");
 
     // No need to explicitly delete the tab data, becasue sessionstore data
     // associated with the tab will automatically go away
+    return !tabNotClosed;
   },
 
   // ----------
@@ -549,9 +557,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       function onZoomDone() {
         UI.goToTab(tab);
 
-        if (isNewBlankTab)
-          gWindow.gURLBar.focus();
-
+        // tab might not be selected because hideTabView() is invoked after 
+        // UI.goToTab() so we need to setup everything for the gBrowser.selectedTab
+        if (tab != gBrowser.selectedTab) {
+          UI.onTabSelect(gBrowser.selectedTab);
+        } else { 
+          if (isNewBlankTab)
+            gWindow.gURLBar.focus();
+        }
         if (childHitResult.callback)
           childHitResult.callback();
       }
@@ -586,8 +599,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             onZoomDone();
           }
         });
-      } else
+      } else {
         setTimeout(onZoomDone, 0);
+      } 
     }
   },
 
