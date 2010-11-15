@@ -100,7 +100,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_595934_message_categories.js \
 	browser_webconsole_bug_601352_scroll.js \
 	browser_webconsole_bug_592442_closing_brackets.js \
-	browser_webconsole_bug_597460_filter_scroll.js \
 	head.js \
 	$(NULL)
 
