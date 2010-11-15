@@ -737,22 +737,6 @@ js_PurgeThreads(JSContext *cx)
 #endif
 }
 
-bool
-js::SyncOptionsToVersion(JSContext* cx)
-{
-    JSVersion version = cx->findVersion();
-    uint32 options = cx->options;
-    if (OptionsHasXML(options) == VersionHasXML(version) &&
-        OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version)) {
-        /* No need to override. */
-        return false;
-    }
-    VersionSetXML(&version, OptionsHasXML(options));
-    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
-    cx->maybeOverrideVersion(version);
-    return true;
-}
-
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
