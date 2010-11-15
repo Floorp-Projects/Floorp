@@ -2791,12 +2791,12 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
 void
 PluginInstanceChild::InvalidateRectDelayed(void)
 {
-    if (!mCurrentInvalidateTask || !IsVisible()) {
+    if (!mCurrentInvalidateTask) {
         return;
     }
 
     mCurrentInvalidateTask = nsnull;
-    if (mAccumulatedInvalidRect.IsEmpty()) {
+    if (mAccumulatedInvalidRect.IsEmpty() || !IsVisible()) {
         return;
     }
 
