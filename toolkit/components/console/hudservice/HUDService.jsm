@@ -3696,7 +3696,7 @@ function findCompletionBeginning(aStr)
         }
         else if (CLOSE_BODY.indexOf(c) != -1) {
           var last = bodyStack.pop();
-          if (OPEN_CLOSE_BODY[last.token] != c) {
+          if (!last || OPEN_CLOSE_BODY[last.token] != c) {
             return {
               err: "syntax error"
             };
