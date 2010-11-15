@@ -71,6 +71,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
       testRole("scrollbar", ROLE_SCROLLBAR);
       testRole("dir", ROLE_LIST);
 
+      // test document role map update
+      var testDoc = getAccessible(document, [nsIAccessibleDocument]);
+      testRole(testDoc, ROLE_DOCUMENT);
+      document.body.setAttribute("role", "application");
+      testRole(testDoc, ROLE_APPLICATION);
+
       SimpleTest.finish();
     }
 
@@ -84,6 +90,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 469688</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 520188</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 529289</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 607219</a>
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
