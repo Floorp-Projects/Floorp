@@ -326,12 +326,6 @@ JSID_TO_STRING(jsid id)
     return (JSString *)(JSID_BITS(id));
 }
 
-static JS_ALWAYS_INLINE JSBool
-JSID_IS_ZERO(jsid id)
-{
-    return JSID_BITS(id) == NULL;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_StringHasBeenInterned(JSString *str);
 
