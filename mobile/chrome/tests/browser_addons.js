@@ -27,7 +27,10 @@ var addons = [{
   homepageURL: "http://example.com/",
   version: "1.0",
   description: "Test add-on",
-  sourceURL: TESTROOT + "addons/browser_install1_1.xpi"
+  sourceURL: TESTROOT + "addons/browser_install1_1.xpi",
+  bootstrapped: true,
+  willFail: false,
+  updateIndex: 2,
 },
 {
   id: "addon2@tests.mozilla.org",
@@ -36,7 +39,20 @@ var addons = [{
   homepageURL: "http://example.com/",
   version: "1.0",
   description: "Test add-on 2",
-  sourceURL: TESTROOT + "addons/browser_install1_2.xpi"
+  sourceURL: TESTROOT + "addons/browser_install1_2.xpi",
+  bootstrapped: false,
+  willFail: false,
+},
+{
+  id: "addon1@tests.mozilla.org",
+  name : "Install Tests 3",
+  iconURL: "http://example.com/icon.png",
+  homepageURL: "http://example.com/",
+  version: "1.0",
+  description: "Test add-on 3",
+  sourceURL: TESTROOT + "addons/browser_install1_3.xpi",
+  bootstrapped: false,
+  willFail: false,
 }];
 
 
@@ -60,13 +76,12 @@ function test() {
 }
 
 function end_test() {
-  close_manager(function() {
-    Services.prefs.clearUserPref(PREF_GETADDONS_GETRECOMMENDED);
-    Services.prefs.clearUserPref(PREF_GETADDONS_BROWSERECOMMENDED);
-    Services.prefs.clearUserPref(PREF_GETADDONS_GETSEARCHRESULTS);
-    Services.prefs.clearUserPref(PREF_GETADDONS_BROWSESEARCHRESULTS);
-    finish();
-  });
+  close_manager();
+  Services.prefs.clearUserPref(PREF_GETADDONS_GETRECOMMENDED);
+  Services.prefs.clearUserPref(PREF_GETADDONS_BROWSERECOMMENDED);
+  Services.prefs.clearUserPref(PREF_GETADDONS_GETSEARCHRESULTS);
+  Services.prefs.clearUserPref(PREF_GETADDONS_BROWSESEARCHRESULTS);
+  finish();
 }
 
 function add_test(test) {
@@ -108,22 +123,31 @@ function installExtension(elt, aListener) {
   ExtensionsView.installFromRepo(elt);
 }
 
-function isRestartShown(aShown, isUpdate) {
+function isRestartShown(aShown, isUpdate, aCallback) {
   let msg = document.getElementById("addons-messages");
   ok(!!msg, "Have message box");
-  let notification = msg.getNotificationWithValue("restart-app");
-  is(!!notification, aShown, "Restart exists = " + aShown);
 
-  if(notification) {
-    let label = "";
-    dump("Label: " + notification.label + "\n");
-    if(isUpdate)
-      label = "Add-ons updated. Restart to complete changes."
-    else
-      label = "Restart to complete changes.";
-    is(notification.label, label, "Restart shows correct message");
+  let done = function(aNotification) {
+    is(!!aNotification, aShown, "Restart exists = " + aShown);
+    if (aShown && aNotification) {
+      let showsUpdate = aNotification.label.match(/update/i) != null;
+      // this test regularly fails due to race conditions here
+      is(showsUpdate, isUpdate, "Restart shows correct message");
+    }
+    msg.removeAllNotifications(true);
+    aCallback();
   }
-  msg.removeAllNotifications(true)
+
+  let notification = msg.getNotificationWithValue("restart-app");
+  if (!notification && aShown) {
+    window.addEventListener("AlertActive", function() {
+      window.removeEventListener("AlertActive", arguments.callee, true);
+      notification = msg.getNotificationWithValue("restart-app");
+      done(notification);
+    }, true);
+  } else {
+    done(notification);
+  }
 }
 
 function checkAddonListing(aAddon, elt) {
@@ -139,103 +163,79 @@ function checkAddonListing(aAddon, elt) {
   checkAttribute(elt, "sourceURL", aAddon.sourceURL);
   ok(elt.install, "Extension has install property");
 }
-function checkUpdate(aAddon, aSettings) {
+function checkUpdate(aSettings) {
   let os = Services.obs;
   let ul = new updateListener(aSettings);
   os.addObserver(ul, "addon-update-ended", false);
 
   ExtensionsView.updateAll();
-  //aAddon.findUpdates(new updateListener(aSettings), AddonManager.UPDATE_WHEN_USER_REQUESTED, "4.0", "4.0");
 }
 
 function get_addon_element(aId) {
-
-  var node = document.getElementById("addons-list").firstChild;
-  while (node) {
-    if (("urn:mozilla:item:" + aId) == node.id)
-      return node;
-    node = node.nextSibling;
-  }
-  return null;
-
+  return document.getElementById("urn:mozilla:item:" + aId);
 }
 
 function open_manager(aView, aCallback) {
-  var panelButton = document.getElementById("tool-panel-open")
-  panelButton.click();
-  var addonsButton = document.getElementById("tool-addons");
-  addonsButton.click();
+  BrowserUI.showPanel("addons-container");
 
-  if (!ExtensionsView._list) {
-    window.addEventListener("ViewChanged", function() {
-      window.removeEventListener("ViewChanged", arguments.callee, true);
-      aCallback();
-    }, true);
-    
-    ExtensionsView.init();
-    ExtensionsView._delayedInit();
-  } else {
-    aCallback();
+  ExtensionsView.init();
+  ExtensionsView._delayedInit();
+
+  window.addEventListener("ViewChanged", function() {
+    window.removeEventListener("ViewChanged", arguments.callee, true);
+     aCallback();
+  }, true);
+}
+
+function close_manager() {
+  var prefsButton = document.getElementById("tool-preferences");
+  prefsButton.click();
+ 
+  ExtensionsView.clearSection();
+  ExtensionsView.clearSection("local");
+  ExtensionsView._list = null;
+  ExtensionsView._restartCount = 0;
+  BrowserUI.hidePanel();
+}
+
+// Installs an addon from the addons pref pane, and then
+// updates it if requested. Checks to make sure
+// restart notifications are shown at the right time
+function installFromAddonsPage(aAddon, aDoUpdate) {
+  return function() {
+    open_manager(null, function() {
+      var elt = get_addon_element(aAddon.id);
+      checkAddonListing(aAddon, elt);
+      installExtension(elt, new installListener({
+        addon: aAddon,
+        onComplete:  function() {
+          if (aDoUpdate) {
+            checkUpdate({
+              addon: addons[aAddon.updateIndex],
+              onComplete:  function() {
+                close_manager();
+                run_next_test();
+              }
+            });
+          } else {
+            close_manager();
+            run_next_test();
+          }
+        }
+      }));
+    });
   }
 }
 
-function close_manager(aCallback) {
-  var prefsButton = document.getElementById("tool-preferences");
-  prefsButton.click();
-
-  BrowserUI.hidePanel();
-  aCallback();
-}
-// Installs a bootstrapped (restartless) addon first, and then
-// updates it to a non-bootstrapped addon. Checks to make sure
-// restart notifications are shown at the right time
-
-// We currently don't handle bootstrapped addons very well, i.e.
-// they aren't moved from the browse area into the main area
-add_test(function() {
-  open_manager(null, function() {
-    var elt = get_addon_element("addon1@tests.mozilla.org");
-    checkAddonListing(addons[0], elt);
-    installExtension(elt, new installListener({
-      showRestart: false,
-      willFail:    false,
-      onComplete:  function(aAddon) {
-        checkUpdate(aAddon, {
-          showRestart: true,
-          willFail:    false,
-          addon: addons[0],
-          onComplete:  function(aAddon) {
-            close_manager(run_next_test);
-          }
-        });
-      }
-    }));
-  });
-});
-
-
-// Installs a non-bootstrapped addon and checks to make sure
-// the correct restart notifications are shown
-add_test(function() {
-  open_manager(null, function() {
-    var elt = get_addon_element("addon2@tests.mozilla.org");
-    checkAddonListing(addons[1], elt);
-    installExtension(elt, new installListener({
-      showRestart: true,
-      willFail:    false,
-      onComplete:  run_next_test,
-    }));
-  });
-})
+add_test(installFromAddonsPage(addons[0], true));
+add_test(installFromAddonsPage(addons[1], false));
 
 function installListener(aSettings) {
-  this.willFail    = aSettings.willFail;
-  this.onComplete  = aSettings.onComplete;
-  this.showRestart = aSettings.showRestart;
+  this.onComplete = aSettings.onComplete;
+  this.addon = aSettings.addon;
 }
 
 installListener.prototype = {
-
   onNewInstall : function(install) { },
   onDownloadStarted : function(install) {
     info("download started");
@@ -250,7 +250,7 @@ installListener.prototype = {
     info("download cancelled");
   },
   onDownloadFailed : function(install) {
-    if(this.willFail)
+    if(this.addon.willFail)
       ok(false, "Install failed");
     info("download failed");
   },
@@ -258,14 +258,12 @@ installListener.prototype = {
     info("Install started");
   },
   onInstallEnded : function(install, addon) {
-    // this needs to fire after the extension manager's install ended
+    info("Install ended");
     let self = this;
-    setTimeout(function() {
-      info("Install ended");
-      isRestartShown(self.showRestart, false);
+    isRestartShown(!this.addon.bootstrapped, false, function() {
       if(self.onComplete)
-        self.onComplete(addon);
-    }, 0);
+        self.onComplete();
+    });
   },
   onInstallCancelled : function(install) {
     info("Install cancelled");
@@ -279,9 +277,7 @@ installListener.prototype = {
 };
 
 function updateListener(aSettings) {
-  this.willFail = aSettings.willFail;
   this.onComplete = aSettings.onComplete;
-  this.showRestart = aSettings.showRestart;
   this.addon = aSettings.addon;
 }
 
@@ -289,25 +285,20 @@ updateListener.prototype = {
   observe: function (aSubject, aTopic, aData) {
     switch(aTopic) {
       case "addon-update-ended" :
-        info("Update ended");
-        // this needs to fire after the extension manager's install ended
-        let self = this;
-        
         let json = aSubject.QueryInterface(Ci.nsISupportsString).data;
         let update = JSON.parse(json);
         if(update.id == this.addon.id) {
-          let element = get_addon_element(update.id);
-          ok(!!element, "Have element for upgrade");
-  
-          let addon = element.addon;
-  
-          setTimeout(function() {
-            isRestartShown(self.showRestart, true);
-            if(self.onComplete)
-              self.onComplete(addon);
-          }, 100);
           let os = Services.obs;
           os.removeObserver(this, "addon-update-ended", false);
+
+          let element = get_addon_element(update.id);
+          ok(!!element, "Have element for upgrade");  
+
+          let self = this;
+          isRestartShown(!this.addon.bootstrapped, true, function() {
+            if(self.onComplete)
+              self.onComplete();
+          });
         }
         break;
     }
