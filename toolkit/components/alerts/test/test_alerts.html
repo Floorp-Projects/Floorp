@@ -1,59 +1,78 @@
 <!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
 <head>
   <title>Test for Alerts Service</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
+
 <body>
 <p id="display"></p>
 
-Alerts service mochitest<br/>
-
-Did an alert appear anywhere?<br/>
-If so, the test will finish once the alert disappears. If not, the test will time out.<br/>
+<br>Alerts service, with observer "synchronous" case.
+<br>
+<br>Did a notification appear anywhere?
+<br>If so, the test will finish once the notification disappears.
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-var gReaperTimeoutId;
 var observer = {
   observe: function (aSubject, aTopic, aData) {
-    if (aTopic != "alertclickcallback") // Did someone click the alert while running mochitests?...
+    if (aTopic == "alertclickcallback")
+      todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
+    else
       is(aTopic, "alertfinished", "Checking the topic for a finished notification");
-
     is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
-    clearTimeout(gReaperTimeoutId);
-    SimpleTest.finish();
+
+    // finish(), yet let the test actually end first, to be safe.
+    SimpleTest.executeSoon(SimpleTest.finish);
   }
 };
 
-const kTimeoutSeconds = 15;
-function reaper() {
-  ok(false,"Observer is notified within " + kTimeoutSeconds + " seconds")
-  SimpleTest.finish();
-}
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-try {
-  SimpleTest.waitForExplicitFinish();
-  gReaperTimeoutId = setTimeout(reaper, kTimeoutSeconds * 1000);
-  var notifier = Cc["@mozilla.org/alerts-service;1"].
-                 getService(Ci.nsIAlertsService);
-  notifier.showAlertNotification(null, "Notification test", "Surprise! I'm here to test notifications!",
-                                 false, "foobarcookie", observer);
 
-} catch (ex) {
-  // Alerts service doesn't exist
-  todo(false, "Alerts service doesn't exist")
-  SimpleTest.finish();
+var gNotificationIsAvailable;
+
+if (!("@mozilla.org/alerts-service;1" in Cc)) {
+  todo(false, "Alerts service does not exist in this application");
+} else {
+  ok(true, "Alerts service exists in this application");
+
+  var notifier;
+  try {
+    notifier = Cc["@mozilla.org/alerts-service;1"].
+               getService(Ci.nsIAlertsService);
+    ok(true, "Alerts service is available");
+  } catch (ex) {
+    todo(false, "Alerts service is not available. (Mac OS X without Growl?)", ex);
+  }
+
+  if (notifier) {
+    try {
+      notifier.showAlertNotification(null, "Notification test",
+                                     "Surprise! I'm here to test notifications!",
+                                     false, "foobarcookie", observer);
+      ok(true, "showAlertNotification() succeeded");
+
+      gNotificationIsAvailable = true;
+    } catch (ex) {
+      todo(false, "showAlertNotification() failed. (Mac OS X without Growl?)", ex);
+    }
+  }
 }
 
+if (gNotificationIsAvailable) {
+  // Wait for the (asynchronous) notification callback.
+  SimpleTest.waitForExplicitFinish();
+  ok(true, "Waiting for notification callback to be triggered...");
+}
 </script>
 </pre>
 </body>
 </html>
-
