@@ -2763,9 +2763,11 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   if (!privileged) {
     // Check for dangerous headers
     const char *kInvalidHeaders[] = {
-      "accept-charset", "accept-encoding", "connection", "content-length",
-      "content-transfer-encoding", "date", "expect", "host", "keep-alive",
-      "referer", "te", "trailer", "transfer-encoding", "upgrade", "via"
+      "accept-charset", "accept-encoding", "access-control-request-headers",
+      "access-control-request-method", "connection", "content-length",
+      "cookie", "cookie2", "content-transfer-encoding", "date", "expect",
+      "host", "keep-alive", "origin", "referer", "te", "trailer",
+      "transfer-encoding", "upgrade", "user-agent", "via"
     };
     PRUint32 i;
     for (i = 0; i < NS_ARRAY_LENGTH(kInvalidHeaders); ++i) {
