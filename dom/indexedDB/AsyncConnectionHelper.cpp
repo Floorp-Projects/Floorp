@@ -145,8 +145,7 @@ AsyncConnectionHelper::Run()
       mRequest->SetDone();
     }
 
-    NS_ASSERTION(!gCurrentTransaction, "Should be null!");
-    gCurrentTransaction = mTransaction;
+    SetCurrentTransaction(mTransaction);
 
     // Call OnError if the database had an error or if the OnSuccess handler
     // has an error.
@@ -155,8 +154,9 @@ AsyncConnectionHelper::Run()
       OnError(mRequest, mResultCode);
     }
 
-    NS_ASSERTION(gCurrentTransaction == mTransaction, "Should be unchanged!");
-    gCurrentTransaction = nsnull;
+    NS_ASSERTION(GetCurrentTransaction() == mTransaction,
+                 "Should be unchanged!");
+    SetCurrentTransaction(nsnull);
 
     if (mDispatched && mTransaction) {
       mTransaction->OnRequestFinished();
@@ -318,6 +318,20 @@ AsyncConnectionHelper::GetCurrentTransaction()
 
   return gCurrentTransaction;
 }
+
+// static
+void
+AsyncConnectionHelper::SetCurrentTransaction(IDBTransaction* aTransaction)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (aTransaction) {
+    NS_ASSERTION(!gCurrentTransaction, "Overwriting current transaction!");
+  }
+
+  gCurrentTransaction = aTransaction;
+}
+
 
 nsresult
 AsyncConnectionHelper::Init()

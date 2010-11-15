@@ -811,8 +811,14 @@ ContinueRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
+  AsyncConnectionHelper::SetCurrentTransaction(cursor->mTransaction);
+
   PRBool dummy;
   cursor->mRequest->DispatchEvent(event, &dummy);
+
+  NS_ASSERTION(AsyncConnectionHelper::GetCurrentTransaction() ==
+               cursor->mTransaction, "Should be unchanged!");
+  AsyncConnectionHelper::SetCurrentTransaction(nsnull);
 
   cursor->mTransaction->OnRequestFinished();
   return NS_OK;
