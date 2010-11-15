@@ -90,20 +90,11 @@ enum FinalizeKind {
 #endif
     FINALIZE_SHORT_STRING,
     FINALIZE_STRING,
-    FINALIZE_EXTERNAL_STRING0,
-    FINALIZE_EXTERNAL_STRING1,
-    FINALIZE_EXTERNAL_STRING2,
-    FINALIZE_EXTERNAL_STRING3,
-    FINALIZE_EXTERNAL_STRING4,
-    FINALIZE_EXTERNAL_STRING5,
-    FINALIZE_EXTERNAL_STRING6,
-    FINALIZE_EXTERNAL_STRING7,
-    FINALIZE_EXTERNAL_STRING_LAST = FINALIZE_EXTERNAL_STRING7,
+    FINALIZE_EXTERNAL_STRING,
     FINALIZE_LIMIT
 };
 
 const uintN JS_FINALIZE_OBJECT_LIMIT = 6;
-const uintN JS_EXTERNAL_STRING_LIMIT = 8;
 
 /* Every arena has a header. */
 struct ArenaHeader {
@@ -270,8 +261,6 @@ template <typename T>
 inline Arena<T> *
 EmptyArenaLists::getTypedFreeList(unsigned thingKind) {
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
-    if (thingKind >= FINALIZE_EXTERNAL_STRING0)
-        thingKind = FINALIZE_STRING;
     Arena<T> *arena = (Arena<T>*) freeLists[thingKind];
     if (arena) {
         freeLists[thingKind] = freeLists[thingKind]->header()->next;
@@ -303,8 +292,6 @@ inline void
 EmptyArenaLists::insert(Arena<T> *arena) {
     unsigned thingKind = arena->header()->thingKind;
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
-    if (thingKind >= FINALIZE_EXTERNAL_STRING0)
-        thingKind = FINALIZE_STRING;
     arena->header()->next = freeLists[thingKind];
     freeLists[thingKind] = (Arena<FreeCell> *) arena;
 }
@@ -490,7 +477,7 @@ const float GC_HEAP_GROWTH_FACTOR = 3.0f;
 static inline size_t
 GetFinalizableTraceKind(size_t thingKind)
 {
-    JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
+    JS_STATIC_ASSERT(JSExternalString::TYPE_LIMIT == 8);
 
     static const uint8 map[FINALIZE_LIMIT] = {
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT0 */
@@ -505,14 +492,7 @@ GetFinalizableTraceKind(size_t thingKind)
 #endif
         JSTRACE_STRING,     /* FINALIZE_SHORT_STRING */
         JSTRACE_STRING,     /* FINALIZE_STRING */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING0 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING1 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING2 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING3 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING4 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING5 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING6 */
-        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING7 */
+        JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING */
     };
 
     JS_ASSERT(thingKind < FINALIZE_LIMIT);
@@ -523,7 +503,7 @@ static inline bool
 IsFinalizableStringKind(unsigned thingKind)
 {
     return unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
-           thingKind <= unsigned(FINALIZE_EXTERNAL_STRING_LAST);
+           thingKind <= unsigned(FINALIZE_EXTERNAL_STRING);
 }
 
 /*
@@ -531,14 +511,14 @@ IsFinalizableStringKind(unsigned thingKind)
  * with JS_NewExternalString.
  */
 static inline intN
-GetExternalStringGCType(JSString *str)
+GetExternalStringGCType(JSExternalString *str)
 {
-    JS_STATIC_ASSERT(FINALIZE_STRING + 1 == FINALIZE_EXTERNAL_STRING0);
+    JS_STATIC_ASSERT(FINALIZE_STRING + 1 == FINALIZE_EXTERNAL_STRING);
     JS_ASSERT(!JSString::isStatic(str));
 
-    unsigned thingKind = GetArena<JSString>((Cell *)str)->header()->thingKind;
+    unsigned thingKind = str->externalStringType;
     JS_ASSERT(IsFinalizableStringKind(thingKind));
-    return intN(thingKind) - intN(FINALIZE_EXTERNAL_STRING0);
+    return intN(thingKind);
 }
 
 static inline uint32
@@ -750,10 +730,6 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes);
 
 extern void
 js_FinishGC(JSRuntime *rt);
-
-extern intN
-js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
-                                 JSStringFinalizeOp newop);
 
 extern JSBool
 js_AddRoot(JSContext *cx, js::Value *vp, const char *name);

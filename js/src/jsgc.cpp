@@ -118,30 +118,25 @@ JS_STATIC_ASSERT(JSTRACE_XML    == 2);
 JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
 
 /*
- * Check consistency of external string constants from JSFinalizeGCThingKind.
- */
-JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
-                 JS_EXTERNAL_STRING_LIMIT - 1);
-
-/*
  * Everything we store in the heap must be a multiple of the cell size.
  */
-JS_STATIC_ASSERT(sizeof(JSString)       % sizeof(FreeCell) == 0);
-JS_STATIC_ASSERT(sizeof(JSShortString)  % sizeof(FreeCell) == 0);
-JS_STATIC_ASSERT(sizeof(JSObject)       % sizeof(FreeCell) == 0);
-JS_STATIC_ASSERT(sizeof(JSFunction)     % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSString)         % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSShortString)    % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSObject)         % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSFunction)       % sizeof(FreeCell) == 0);
 #ifdef JSXML
-JS_STATIC_ASSERT(sizeof(JSXML)          % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSXML)            % sizeof(FreeCell) == 0);
 #endif
 
 /*
  * All arenas must be exactly 4k.
  */
-JS_STATIC_ASSERT(sizeof(Arena<JSString>)        == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSShortString>)   == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSObject>)        == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSFunction>)      == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSXML>)           == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSString>)         == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSExternalString>) == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSShortString>)    == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSObject>)         == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSFunction>)       == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSXML>)            == 4096);
 
 #ifdef JS_GCMETER
 # define METER(x)               ((void) (x))
@@ -248,13 +243,12 @@ checkArenaListsForThing(JSCompartment *comp, void *thing) {
 #if JS_HAS_XML_SUPPORT
         comp->arenas[FINALIZE_XML].arenasContainThing<JSXML>(thing) ||
 #endif
+        comp->arenas[FINALIZE_STRING].arenasContainThing<JSString>(thing) ||
+        comp->arenas[FINALIZE_EXTERNAL_STRING].arenasContainThing<JSExternalString>(thing) ||
         comp->arenas[FINALIZE_SHORT_STRING].arenasContainThing<JSShortString>(thing)) {
             return true;
     }
-    for (unsigned i = FINALIZE_STRING; i <= FINALIZE_EXTERNAL_STRING_LAST; i++) {
-        if (comp->arenas[i].arenasContainThing<JSString>(thing))
-            return true;
-    }
+
     return false;
 }
 #endif
@@ -633,15 +627,10 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
             test = MarkCell<JSObject_Slots16>(cell, trc);
             break;
         case FINALIZE_STRING:
-        case FINALIZE_EXTERNAL_STRING0:
-        case FINALIZE_EXTERNAL_STRING1:
-        case FINALIZE_EXTERNAL_STRING2:
-        case FINALIZE_EXTERNAL_STRING3:
-        case FINALIZE_EXTERNAL_STRING4:
-        case FINALIZE_EXTERNAL_STRING5:
-        case FINALIZE_EXTERNAL_STRING6:
-        case FINALIZE_EXTERNAL_STRING7:
             test = MarkCell<JSString>(cell, trc);
+            break;
+        case FINALIZE_EXTERNAL_STRING:
+            test = MarkCell<JSExternalString>(cell, trc);
             break;
         case FINALIZE_SHORT_STRING:
             test = MarkCell<JSShortString>(cell, trc);
@@ -1139,15 +1128,9 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
       case FINALIZE_OBJECT16:
         return RefillTypedFreeList<JSObject_Slots16>(cx, thingKind);
       case FINALIZE_STRING:
-      case FINALIZE_EXTERNAL_STRING0:
-      case FINALIZE_EXTERNAL_STRING1:
-      case FINALIZE_EXTERNAL_STRING2:
-      case FINALIZE_EXTERNAL_STRING3:
-      case FINALIZE_EXTERNAL_STRING4:
-      case FINALIZE_EXTERNAL_STRING5:
-      case FINALIZE_EXTERNAL_STRING6:
-      case FINALIZE_EXTERNAL_STRING7:
         return RefillTypedFreeList<JSString>(cx, thingKind);
+      case FINALIZE_EXTERNAL_STRING:
+        return RefillTypedFreeList<JSExternalString>(cx, thingKind);
       case FINALIZE_SHORT_STRING:
         return RefillTypedFreeList<JSShortString>(cx, thingKind);
       case FINALIZE_FUNCTION:
@@ -1164,7 +1147,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 
 intN
 js_GetExternalStringGCType(JSString *str) {
-    return GetExternalStringGCType(str);
+    return GetExternalStringGCType((JSExternalString *)str);
 }
 
 uint32
@@ -1355,15 +1338,10 @@ GCMarker::markDelayedChildren()
                 reinterpret_cast<Arena<JSObject_Slots16> *>(a)->markDelayedChildren(this);
                 break;
             case FINALIZE_STRING:
-            case FINALIZE_EXTERNAL_STRING0:
-            case FINALIZE_EXTERNAL_STRING1:
-            case FINALIZE_EXTERNAL_STRING2:
-            case FINALIZE_EXTERNAL_STRING3:
-            case FINALIZE_EXTERNAL_STRING4:
-            case FINALIZE_EXTERNAL_STRING5:
-            case FINALIZE_EXTERNAL_STRING6:
-            case FINALIZE_EXTERNAL_STRING7:
                 reinterpret_cast<Arena<JSString> *>(a)->markDelayedChildren(this);
+                break;
+            case FINALIZE_EXTERNAL_STRING:
+                reinterpret_cast<Arena<JSExternalString> *>(a)->markDelayedChildren(this);
                 break;
             case FINALIZE_SHORT_STRING:
                 JS_ASSERT(false);
@@ -1766,19 +1744,6 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
     }
 }
 
-intN
-js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
-                                 JSStringFinalizeOp newop)
-{
-    for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
-        if (str_finalizers[i] == oldop) {
-            str_finalizers[i] = newop;
-            return intN(i);
-        }
-    }
-    return -1;
-}
-
 /*
  * This function is called from js_FinishAtomState to force the finalization
  * of the permanently interned strings when cx is not available.
@@ -1805,17 +1770,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
             return;
         if (thingKind == FINALIZE_STRING) {
             rt->free(chars);
-        } else if (thingKind != FINALIZE_SHORT_STRING) {
-            unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
-            JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
-            JSStringFinalizeOp finalizer = str_finalizers[type];
-            if (finalizer) {
-                /*
-                 * Assume that the finalizer for the permanently interned
-                 * string knows how to deal with null context.
-                 */
-                finalizer(NULL, str);
-            }
+        } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
+            ((JSExternalString *)str)->finalize();
         }
     }
 }
@@ -1875,7 +1831,7 @@ FinalizeArenaList(JSCompartment *comp, JSContext *cx, unsigned thingKind)
                 METER(nthings++);
                 continue;
             } else {
-                thing->finalize(cx, thingKind);
+                thing->finalize(cx);
 #ifdef DEBUG
                 memset(thing, JS_FREE_PATTERN, sizeof(T));
 #endif
@@ -2254,8 +2210,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     for (JSCompartment **comp = rt->compartments.begin(); comp != rt->compartments.end(); comp++) {
         FinalizeArenaList<JSShortString>(*comp, cx, FINALIZE_SHORT_STRING);
         FinalizeArenaList<JSString>(*comp, cx, FINALIZE_STRING);
-        for (unsigned i = FINALIZE_EXTERNAL_STRING0; i <= FINALIZE_EXTERNAL_STRING_LAST; ++i)
-            FinalizeArenaList<JSString>(*comp, cx, i);
+        FinalizeArenaList<JSExternalString>(*comp, cx, FINALIZE_EXTERNAL_STRING);
     }
 
     TIMESTAMP(sweepStringEnd);

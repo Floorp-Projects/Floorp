@@ -68,8 +68,6 @@ enum {
     NUM_HUNDRED_STRINGS      = 156U
 };
 
-extern JSStringFinalizeOp str_finalizers[8];
-
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
@@ -160,6 +158,7 @@ struct JSString {
                 JSString            *mRight; /* in rope interior and top nodes */
             };
         } e;
+        uintN                       externalStringType; /* for external strings. */
     };
 
     /*
@@ -527,8 +526,29 @@ struct JSString {
 
     static JSString *lookupStaticString(const jschar *chars, size_t length);
     
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 };
+
+struct JSExternalString : JSString {
+    static const uintN TYPE_LIMIT = 8;
+    static JSStringFinalizeOp str_finalizers[TYPE_LIMIT];
+
+    static intN changeFinalizer(JSStringFinalizeOp oldop,
+                                JSStringFinalizeOp newop) {
+        for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+            if (str_finalizers[i] == oldop) {
+                str_finalizers[i] = newop;
+                return intN(i);
+            }
+        }
+        return -1;
+    }
+
+    void finalize(JSContext *cx);
+    void finalize();
+};
+
+JS_STATIC_ASSERT(sizeof(JSString) == sizeof(JSExternalString));
 
 /*
  * Short strings should be created in cases where it's worthwhile to avoid
@@ -574,7 +594,7 @@ struct JSShortString : js::gc::Cell {
         return length <= MAX_SHORT_STRING_LENGTH;
     }
 
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 };
 
 /*
