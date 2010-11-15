@@ -1173,27 +1173,44 @@ PRBool IsSameTree(nsISHEntry* aEntry1, nsISHEntry* aEntry2)
 }
 
 PRBool
-nsSHistory::RemoveDuplicate(PRInt32 aIndex)
+nsSHistory::RemoveDuplicate(PRInt32 aIndex, PRBool aKeepNext)
 {
-  NS_ASSERTION(aIndex > 0, "aIndex must be > 0!");
+  NS_ASSERTION(aIndex >= 0, "aIndex must be >= 0!");
+  NS_ASSERTION(aIndex != mIndex, "Shouldn't remove mIndex!");
+  PRInt32 compareIndex = aKeepNext ? aIndex + 1 : aIndex - 1;
   nsCOMPtr<nsIHistoryEntry> rootHE1, rootHE2;
   GetEntryAtIndex(aIndex, PR_FALSE, getter_AddRefs(rootHE1));
-  GetEntryAtIndex(aIndex - 1, PR_FALSE, getter_AddRefs(rootHE2));
+  GetEntryAtIndex(compareIndex, PR_FALSE, getter_AddRefs(rootHE2));
   nsCOMPtr<nsISHEntry> root1 = do_QueryInterface(rootHE1);
   nsCOMPtr<nsISHEntry> root2 = do_QueryInterface(rootHE2);
   if (IsSameTree(root1, root2)) {
-    nsCOMPtr<nsISHTransaction> txToRemove, txToKeep, txNext;
+    nsCOMPtr<nsISHTransaction> txToRemove, txToKeep, txNext, txPrev;
     GetTransactionAtIndex(aIndex, getter_AddRefs(txToRemove));
-    GetTransactionAtIndex(aIndex - 1, getter_AddRefs(txToKeep));
+    GetTransactionAtIndex(compareIndex, getter_AddRefs(txToKeep));
     NS_ENSURE_TRUE(txToRemove, PR_FALSE);
     NS_ENSURE_TRUE(txToKeep, PR_FALSE);
     txToRemove->GetNext(getter_AddRefs(txNext));
+    txToRemove->GetPrev(getter_AddRefs(txPrev));
     txToRemove->SetNext(nsnull);
     txToRemove->SetPrev(nsnull);
-    // If txNext is non-null, this will set txNext's .prev
-    txToKeep->SetNext(txNext);
+    if (aKeepNext) {
+      if (txPrev) {
+        txPrev->SetNext(txToKeep);
+      } else {
+        txToKeep->SetPrev(nsnull);
+      }
+    } else {
+      txToKeep->SetNext(txNext);
+    }
+
+    if (aIndex == 0 && aKeepNext) {
+      NS_ASSERTION(txToRemove == mListRoot,
+                   "Transaction at index 0 should be mListRoot!");
+      // We're removing the very first session history transaction!
+      mListRoot = txToKeep;
+    }
     static_cast<nsDocShell*>(mRootDocShell)->HistoryTransactionRemoved(aIndex);
-    if (mIndex >= aIndex) {
+    if (mIndex > aIndex) {
       mIndex = mIndex - 1;
     }
     --mLength;
@@ -1207,15 +1224,17 @@ nsSHistory::RemoveEntries(nsTArray<PRUint64>& aIDs, PRInt32 aStartIndex)
 {
   PRInt32 index = aStartIndex;
   while(index >= 0 && RemoveChildEntries(this, --index, aIDs));
-  // Nothing was removed from minIndex if it is > 0!
-  PRInt32 minIndex = index >= 0 ? index : 0;
+  PRInt32 minIndex = index;
   index = aStartIndex;
   while(index >= 0 && RemoveChildEntries(this, index++, aIDs));
   
   // We need to remove duplicate nsSHEntry trees.
   PRBool didRemove = PR_FALSE;
-  while (index && index > minIndex) {
-    didRemove = RemoveDuplicate(index--) || didRemove;
+  while (index > minIndex) {
+    if (index != mIndex) {
+      didRemove = RemoveDuplicate(index, index < mIndex) || didRemove;
+    }
+    --index;
   }
   if (didRemove && mRootDocShell) {
     nsRefPtr<nsIRunnable> ev =
