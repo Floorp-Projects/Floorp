@@ -123,14 +123,7 @@ static const char *const GC_ARENA_NAMES[] = {
 #endif
     "short string",
     "string",
-    "external_string_0",
-    "external_string_1",
-    "external_string_2",
-    "external_string_3",
-    "external_string_4",
-    "external_string_5",
-    "external_string_6",
-    "external_string_7",
+    "external_string",
 };
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(GC_ARENA_NAMES) == FINALIZE_LIMIT);
 
@@ -163,15 +156,8 @@ void GetSizeAndThingsPerArena(int thingKind, size_t &thingSize, size_t &thingsPe
         case FINALIZE_OBJECT16:
             GetSizeAndThings<JSObject_Slots16>(thingSize, thingsPerArena);
             break;
+        case FINALIZE_EXTERNAL_STRING:
         case FINALIZE_STRING:
-        case FINALIZE_EXTERNAL_STRING0:
-        case FINALIZE_EXTERNAL_STRING1:
-        case FINALIZE_EXTERNAL_STRING2:
-        case FINALIZE_EXTERNAL_STRING3:
-        case FINALIZE_EXTERNAL_STRING4:
-        case FINALIZE_EXTERNAL_STRING5:
-        case FINALIZE_EXTERNAL_STRING6:
-        case FINALIZE_EXTERNAL_STRING7:
             GetSizeAndThings<JSString>(thingSize, thingsPerArena);
             break;
         case FINALIZE_SHORT_STRING:
