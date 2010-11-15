@@ -107,7 +107,8 @@ int moz_pango_units_from_double(double d) {
 
 static PangoLanguage *GuessPangoLanguage(nsIAtom *aLanguage);
 
-static cairo_scaled_font_t *CreateScaledFont(FcPattern *aPattern);
+static cairo_scaled_font_t *
+CreateScaledFont(FcPattern *aPattern, cairo_font_face_t *aFace);
 static PRBool CanTakeFastPath(PRUint32 aFlags);
 static void SetMissingGlyphs(gfxTextRun *aTextRun, const gchar *aUTF8,
                              PRUint32 aUTF8Length, PRUint32 *aUTF16Offset);
@@ -157,6 +158,36 @@ FindFunctionSymbol(const char *name)
 
     return result;
 }
+
+static cairo_user_data_key_t sFontEntryKey;
+
+/**
+ * gfxSystemFcFontEntry:
+ *
+ * An implementation of gfxFontEntry used by gfxFcFonts for system fonts,
+ * including those from regular family-name based font selection as well as
+ * those from src:local().
+ *
+ * All gfxFcFonts using the same cairo_font_face_t share the same FontEntry. 
+ */
+
+class gfxSystemFcFontEntry : public gfxFontEntry {
+public:
+    gfxSystemFcFontEntry(cairo_font_face_t *aFontFace, const nsAString& aName)
+        : gfxFontEntry(aName), mFontFace(aFontFace)
+    {
+        cairo_font_face_reference(mFontFace);
+        cairo_font_face_set_user_data(mFontFace, &sFontEntryKey, this, NULL);
+    }
+
+    ~gfxSystemFcFontEntry()
+    {
+        cairo_font_face_set_user_data(mFontFace, &sFontEntryKey, NULL, NULL);
+        cairo_font_face_destroy(mFontFace);
+    }
+private:
+    cairo_font_face_t *mFontFace;
+};
 
 // A namespace for @font-face family names in FcPatterns so that fontconfig
 // aliases do not pick up families from @font-face rules and so that
@@ -273,6 +304,11 @@ gfxFcFontEntry::AdjustPatternToCSS(FcPattern *aPattern)
  * gfxLocalFcFontEntry:
  *
  * An implementation of gfxFcFontEntry for local fonts from src:local().
+ *
+ * This class is used only in gfxUserFontSet and for providing FcPattern*
+ * handles to system fonts for font selection.  gfxFcFonts created from these
+ * patterns will use gfxSystemFcFontEntrys, which may be shared with
+ * gfxFcFonts from regular family-name based font selection.
  */
 
 class gfxLocalFcFontEntry : public gfxFcFontEntry {
@@ -302,6 +338,9 @@ public:
  * gfxDownloadedFcFontEntry:
  *
  * An implementation of gfxFcFontEntry for web fonts from src:url().
+ * 
+ * When a cairo_font_face_t is created for these fonts, the cairo_font_face_t
+ * keeps a reference to the FontEntry to keep the font data alive.
  */
 
 class gfxDownloadedFcFontEntry : public gfxFcFontEntry {
@@ -2072,6 +2111,13 @@ GetPixelSize(FcPattern *aPattern)
     return 0.0;
 }
 
+static void ReleaseDownloadedFontEntry(void *data)
+{
+    gfxDownloadedFcFontEntry *downloadedFontEntry =
+        static_cast<gfxDownloadedFcFontEntry*>(data);
+    NS_RELEASE(downloadedFontEntry);
+}
+
 /**
  * The following gfxFcFonts are accessed from the cairo_scaled_font or created
  * from the FcPattern, not from the gfxFontCache hash table.  The gfxFontCache
@@ -2091,8 +2137,55 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
 {
     nsAutoRef<FcPattern> renderPattern
         (FcFontRenderPrepare(NULL, aRequestedPattern, aFontPattern));
+    cairo_font_face_t *face =
+        cairo_ft_font_face_create_for_pattern(renderPattern);
 
-    cairo_scaled_font_t *cairoFont = CreateScaledFont(renderPattern);
+    // Reuse an existing font entry if available.
+    nsRefPtr<gfxFontEntry> fe = static_cast<gfxFontEntry*>
+        (cairo_font_face_get_user_data(face, &sFontEntryKey));
+    if (!fe) {
+        fe = GetDownloadedFontEntry(aFontPattern);
+        if (fe && cairo_font_face_status(face) == CAIRO_STATUS_SUCCESS) {
+            // Web font with cairo_font_face_t using the web font data.
+            if (CAIRO_STATUS_SUCCESS ==
+                cairo_font_face_set_user_data(face, &sFontEntryKey, fe,
+                                              ReleaseDownloadedFontEntry)) {
+                // Hold a reference to the font entry to keep the font face
+                // data.
+                NS_ADDREF(fe);
+            } else {
+                // OOM.  Let cairo pick a fallback font
+                cairo_font_face_destroy(face);
+                face = cairo_ft_font_face_create_for_pattern(aRequestedPattern);
+                fe = static_cast<gfxFontEntry*>
+                    (cairo_font_face_get_user_data(face, &sFontEntryKey));
+            }
+        }
+        if (!fe) {
+            // Get a unique name for the font face from the file and id.
+            nsAutoString name;
+            FcChar8 *fc_file;
+            if (FcPatternGetString(renderPattern,
+                                   FC_FILE, 0, &fc_file) == FcResultMatch) {
+                int index;
+                if (FcPatternGetInteger(renderPattern,
+                                        FC_INDEX, 0, &index) != FcResultMatch) {
+                    // cairo defaults to 0.
+                    index = 0;
+                }
+
+                AppendUTF8toUTF16(gfxFontconfigUtils::ToCString(fc_file), name);
+                if (index != 0) {
+                    name.AppendLiteral("/");
+                    name.AppendInt(index);
+                }
+            }
+
+            fe = new gfxSystemFcFontEntry(face, name);
+        }
+    }
+
+    cairo_scaled_font_t *cairoFont = CreateScaledFont(renderPattern, face);
 
     nsRefPtr<gfxFcFont> font = static_cast<gfxFcFont*>
         (cairo_scaled_font_get_user_data(cairoFont, &sGfxFontKey));
@@ -2116,37 +2209,6 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
                                NS_LITERAL_STRING(""),
                                NS_LITERAL_STRING("")); // TODO: no opentype feature support here yet
 
-        nsRefPtr<gfxFontEntry> fe;
-        FcChar8 *fc_file;
-        if (FcPatternGetString(renderPattern,
-                               FC_FILE, 0, &fc_file) == FcResultMatch) {
-            int index;
-            if (FcPatternGetInteger(renderPattern,
-                                    FC_INDEX, 0, &index) != FcResultMatch) {
-                // cairo won't know what to do with this pattern.
-                NS_NOTREACHED("No index in pattern for font face from file");
-                index = 0;
-            }
-
-            // Get a unique name for the font face data from the file and id.
-            nsAutoString name;
-            AppendUTF8toUTF16(gfxFontconfigUtils::ToCString(fc_file), name);
-            if (index != 0) {
-                name.AppendLiteral("/");
-                name.AppendInt(index);
-            }
-
-            fe = new gfxFontEntry(name);
-        } else {
-            fe = GetDownloadedFontEntry(renderPattern);
-            if (!fe) {
-                // cairo won't know which font to open without a file.
-                // (We don't create fonts from an FT_Face.)
-                NS_NOTREACHED("Fonts without a file is not a web font!?");
-                fe = new gfxFontEntry(nsString());
-            }
-        }
-
         // Note that a file/index pair (or FT_Face) and the gfxFontStyle are
         // not necessarily enough to provide a key that will describe a unique
         // font.  cairoFont contains information from renderPattern, which is a
@@ -2158,6 +2220,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
     }
 
     cairo_scaled_font_destroy(cairoFont);
+    cairo_font_face_destroy(face);
     return font.forget();
 }
 
@@ -2251,41 +2314,10 @@ CanTakeFastPath(PRUint32 aFlags)
 }
 #endif
 
-static void ReleaseDownloadedFontEntry(void *data)
-{
-    gfxDownloadedFcFontEntry *downloadedFontEntry =
-        static_cast<gfxDownloadedFcFontEntry*>(data);
-    NS_RELEASE(downloadedFontEntry);
-}
-
 // This will fetch an existing scaled_font if one exists.
 static cairo_scaled_font_t *
-CreateScaledFont(FcPattern *aPattern)
+CreateScaledFont(FcPattern *aPattern, cairo_font_face_t *aFace)
 {
-    cairo_font_face_t *face = cairo_ft_font_face_create_for_pattern(aPattern);
-
-    // If the face is created from a web font entry, hold a reference to the
-    // font entry to keep the font face data.
-    gfxDownloadedFcFontEntry *downloadedFontEntry =
-        GetDownloadedFontEntry(aPattern);
-    if (downloadedFontEntry &&
-        cairo_font_face_status(face) == CAIRO_STATUS_SUCCESS) {
-        static cairo_user_data_key_t sFontEntryKey;
-
-        // Check whether this is a new cairo face
-        void *currentEntry =
-            cairo_font_face_get_user_data(face, &sFontEntryKey);
-        if (!currentEntry) {
-            NS_ADDREF(downloadedFontEntry);
-            cairo_font_face_set_user_data(face, &sFontEntryKey,
-                                          downloadedFontEntry,
-                                          ReleaseDownloadedFontEntry);
-        } else {
-            NS_ASSERTION(currentEntry == downloadedFontEntry,
-                         "Unexpected cairo font face!");
-        }
-    }
-
     double size = GetPixelSize(aPattern);
         
     cairo_matrix_t fontMatrix;
@@ -2450,11 +2482,10 @@ CreateScaledFont(FcPattern *aPattern)
     cairo_font_options_set_antialias(fontOptions, antialias);
 
     cairo_scaled_font_t *scaledFont =
-        cairo_scaled_font_create(face, &fontMatrix, &identityMatrix,
+        cairo_scaled_font_create(aFace, &fontMatrix, &identityMatrix,
                                  fontOptions);
 
     cairo_font_options_destroy(fontOptions);
-    cairo_font_face_destroy(face);
 
     NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to create scaled font");
