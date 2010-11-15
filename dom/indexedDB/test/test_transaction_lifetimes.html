@@ -1,0 +1,55 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      let request = moz_indexedDB.open(window.location.pathname);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.result;
+      db.onerror = errorHandler;
+
+      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      event.transaction.oncomplete = continueToNextStep;
+
+      db.createObjectStore("foo", "", true);
+      yield;
+
+      let transaction = db.transaction("foo");
+      continueToNextStep();
+      yield;
+
+      try {
+        transaction.objectStore("foo");
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof IDBDatabaseException, "Got database exception.");
+        is(e.code, IDBDatabaseException.NOT_ALLOWED_ERR, "Good error code.");
+      }
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

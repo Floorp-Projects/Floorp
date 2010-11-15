@@ -78,6 +78,8 @@ TEST_FILES = \
   test_remove_objectStore.html \
   test_request_readyState.html \
   test_transaction_abort.html \
+  test_transaction_lifetimes.html \
+  test_transaction_lifetimes_nested.html \
   test_setVersion.html \
   test_setVersion_abort.html \
   test_setVersion_events.html \

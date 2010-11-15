@@ -636,7 +636,7 @@ IDBDatabase::SetVersion(const nsAString& aVersion,
   nsTArray<nsString> storesToOpen;
   nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(this, storesToOpen, IDBTransaction::VERSION_CHANGE,
-                           kDefaultDatabaseTimeoutSeconds);
+                           kDefaultDatabaseTimeoutSeconds, true);
   NS_ENSURE_TRUE(transaction, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<IDBVersionChangeRequest> request =
