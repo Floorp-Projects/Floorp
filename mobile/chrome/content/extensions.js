@@ -156,6 +156,7 @@ var ExtensionsView = {
     aMode = aMode || "normal";
 
     if (this._msg) {
+      this.hideAlerts();
       let strings = Elements.browserBundle;
       let message = "notificationRestart." + aMode;
       this.showMessage(strings.getString(message), "restart-app",
@@ -728,7 +729,15 @@ var ExtensionsView = {
     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
                                  aMessage, true, "", observer, "addons");
-  }
+  },
+
+  hideAlerts: function ev_hideAlerts() {
+#ifdef ANDROID
+    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+    progressListener.onCancel("addons");
+#endif
+  },
 };
 
 
@@ -880,8 +889,10 @@ AddonInstallListener.prototype = {
       error += "Blocklisted";
     else if (!aInstall.addon.isCompatible || !aInstall.addon.isPlatformCompatible)
       error += "Incompatible";
-    else
+    else {
+      ExtensionsView.hideAlerts();
       return; // no need to show anything in this case
+    }
 
     let messageString = strings.getString(error);
     messageString = messageString.replace("#1", aInstall.name);
