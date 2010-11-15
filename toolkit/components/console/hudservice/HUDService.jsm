@@ -3382,6 +3382,7 @@ HeadsUpDisplay.prototype = {
     this.outputNode.setAttribute("flex", "1");
     this.outputNode.setAttribute("orient", "vertical");
     this.outputNode.setAttribute("context", this.hudId + "-output-contextmenu");
+    this.outputNode.setAttribute("style", "direction: ltr;");
 
     this.outputNode.addEventListener("DOMNodeInserted", function(ev) {
       // DOMNodeInserted is also called when the output node is being *itself*
@@ -4838,6 +4839,7 @@ JSTermFirefoxMixin.prototype = {
   {
     let inputContainer = this.xulElementFactory("hbox");
     inputContainer.setAttribute("class", "jsterm-input-container");
+    inputContainer.setAttribute("style", "direction: ltr;");
 
     let inputNode = this.xulElementFactory("textbox");
     inputNode.setAttribute("class", "jsterm-input-node");
