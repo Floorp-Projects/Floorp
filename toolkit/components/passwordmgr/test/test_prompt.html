@@ -145,8 +145,40 @@ var storageObserver = {
   },
 
   observe : function (subject, topic, data) {
-    ok(true, "observer for " + topic);
+    ok(true, "observer for " + topic + " / " + data);
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     try {
+      switch (data) {
+        case "addLogin":
+            ok(subject instanceof Ci.nsILoginInfo, "subject QI 1");
+            ok(subject instanceof Ci.nsILoginMetaInfo, "subject QI 2");
+            dumpLogin("added: ", subject);
+            break;
+        case "modifyLogin":
+            ok(subject instanceof Ci.nsIArray, "subject QI");
+            is(subject.length, 2, "should be 2 items");
+            var oldLogin = subject.queryElementAt(0, Ci.nsILoginInfo);
+            var newLogin = subject.queryElementAt(1, Ci.nsILoginInfo);
+            dumpLogin("oldLogin: ", oldLogin);
+            dumpLogin("newLogin: ", newLogin);
+            break;
+        case "removeLogin":
+            ok(subject instanceof Ci.nsILoginInfo, "subject QI 1");
+            ok(subject instanceof Ci.nsILoginMetaInfo, "subject QI 2");
+            dumpLogin("removed: ", subject);
+            break;
+        case "removeAllLogins":
+            is(subject, null, "no subject");
+            break;
+        case "hostSavingEnabled":
+        case "hostSavingDisabled":
+            ok(subject instanceof Ci.nsISupportsString, "subject QI");
+            ok(true, "state is: " + subject.data);
+            break;
+        default:
+            do_throw("Unhandled notification: " + data + " / " + topic);
+      }
+
       if (this.notificationCallbacks.length)
         this.notificationCallbacks.splice(0, 1)[0]();
     } catch (e) { ok(false, "OBSERVER FAILED: " + e); }
