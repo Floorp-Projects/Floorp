@@ -961,6 +961,9 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   nsRefPtr<MediaLoadListener> loadListener = new MediaLoadListener(this);
   if (!loadListener) return NS_ERROR_OUT_OF_MEMORY;
 
+  // loadListener will be unregistered either on shutdown or when
+  // OnStartRequest fires.
+  nsContentUtils::RegisterShutdownObserver(loadListener);
   mChannel->SetNotificationCallbacks(loadListener);
 
   nsCOMPtr<nsIStreamListener> listener;
@@ -1010,10 +1013,6 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   // Else the channel must be open and starting to download. If it encounters
   // a non-catastrophic failure, it will set a new task to continue loading
   // another candidate.
-
-  // loadListener will be unregistered either on shutdown or when
-  // OnStartRequest for the channel we just opened fires.
-  nsContentUtils::RegisterShutdownObserver(loadListener);
   return NS_OK;
 }
 
