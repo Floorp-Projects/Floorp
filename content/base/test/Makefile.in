@@ -78,7 +78,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug276037-2.xhtml \
 		test_bug298064.html \
 		bug298064-subframe.html \
-		test_bug308484.html \
+		test_xhr_forbidden_headers.html \
 		test_bug311681.xml \
 		test_bug322317.html \
 		test_bug330925.xhtml \
