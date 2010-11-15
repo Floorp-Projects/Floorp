@@ -1024,8 +1024,21 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     }
   }
 
-  if (aAttribute == nsAccessibilityAtoms::role ||
-      aAttribute == nsAccessibilityAtoms::href ||
+  if (aAttribute == nsAccessibilityAtoms::role) {
+    if (mContent == aContent) {
+      // It is common for js libraries to set the role of the body element after
+      // the doc has loaded. In this case we just update the role map entry. 
+      SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aContent));
+    }
+    else {
+      // Recreate the accessible when role is changed because we might require a
+      // different accessible class for the new role or the accessible may
+      // expose a different sets of interfaces (COM restriction).
+      RecreateAccessible(aContent);
+    }
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::href ||
       aAttribute == nsAccessibilityAtoms::onclick) {
     // Not worth the expense to ensure which namespace these are in
     // It doesn't kill use to recreate the accessible even if the attribute was used
