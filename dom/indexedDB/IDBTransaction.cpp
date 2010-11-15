@@ -48,6 +48,7 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
+#include "AsyncConnectionHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBCursor.h"
 #include "IDBEvents.h"
@@ -60,6 +61,8 @@
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
+
+IDBTransaction::ThreadObserver* gThreadObserver = nsnull;
 
 PLDHashOperator
 DoomCachedStatements(const nsACString& aQuery,
@@ -78,7 +81,8 @@ already_AddRefed<IDBTransaction>
 IDBTransaction::Create(IDBDatabase* aDatabase,
                        nsTArray<nsString>& aObjectStoreNames,
                        PRUint16 aMode,
-                       PRUint32 aTimeout)
+                       PRUint32 aTimeout,
+                       bool aDispatchDelayed)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -101,6 +105,13 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
     return nsnull;
   }
 
+  if (!aDispatchDelayed) {
+    if (!ThreadObserver::BeginObserving(transaction)) {
+      return nsnull;
+    }
+    transaction->mCreating = true;
+  }
+
   return transaction.forget();
 }
 
@@ -111,7 +122,7 @@ IDBTransaction::IDBTransaction()
   mPendingRequests(0),
   mSavepointCount(0),
   mAborted(false),
-  mClosed(false)
+  mCreating(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -122,6 +133,7 @@ IDBTransaction::~IDBTransaction()
   NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
   NS_ASSERTION(!mSavepointCount, "Should have released them all!");
   NS_ASSERTION(!mConnection, "Should have called CommitOrRollback!");
+  NS_ASSERTION(!mCreating, "Should have been cleared already!");
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -150,10 +162,6 @@ IDBTransaction::OnRequestFinished()
     if (!mAborted) {
       NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
     }
-
-    NS_ASSERTION(!mClosed, "Shouldn't be closed yet!");
-    mClosed = true;
-
     CommitOrRollback();
   }
 }
@@ -533,16 +541,35 @@ IDBTransaction::GetCachedStatement(const nsACString& aQuery)
   return stmt.forget();
 }
 
-#ifdef DEBUG
 bool
 IDBTransaction::TransactionIsOpen() const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return (mReadyState == nsIIDBTransaction::INITIAL ||
-          mReadyState == nsIIDBTransaction::LOADING) &&
-         !mClosed;
+
+  // If we haven't started anything then we're open.
+  if (mReadyState == nsIIDBTransaction::INITIAL) {
+    NS_ASSERTION(AsyncConnectionHelper::GetCurrentTransaction() != this,
+                 "This should be some other transaction (or null)!");
+    return true;
+  }
+
+  // If we've already started then we need to check to see if we still have the
+  // mCreating flag set. If we do (i.e. we haven't returned to the event loop
+  // from the time we were created) then we are open. Otherwise check the
+  // currently running transaction to see if it's the same. We only allow other
+  // requests to be made if this transaction is currently running.
+  if (mReadyState == nsIIDBTransaction::LOADING) {
+    if (mCreating) {
+      return true;
+    }
+
+    if (AsyncConnectionHelper::GetCurrentTransaction() == this) {
+      return true;
+    }
+  }
+
+  return false;
 }
-#endif
 
 already_AddRefed<IDBObjectStore>
 IDBTransaction::GetOrCreateObjectStore(const nsAString& aName,
@@ -792,6 +819,234 @@ IDBTransaction::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return NS_OK;
 }
 
+IDBTransaction::
+ThreadObserver::ThreadObserver()
+: mBaseRecursionDepth(0),
+  mDone(false)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!gThreadObserver, "Multiple observers?!");
+}
+
+IDBTransaction::
+ThreadObserver::~ThreadObserver()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(gThreadObserver == this, "Multiple observers?!");
+
+#ifdef DEBUG
+  for (PRUint32 i = 0; i < mTransactions.Length(); i++) {
+    NS_ASSERTION(mTransactions[i].transactions.IsEmpty(),
+                 "Unprocessed transactions!");
+  }
+#endif
+
+  // Clear the global.
+  gThreadObserver = nsnull;
+}
+
+void
+IDBTransaction::
+ThreadObserver::UpdateNewlyCreatedTransactions(PRUint32 aRecursionDepth)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  for (PRUint32 i = 0; i < mTransactions.Length(); i++) {
+    TransactionInfo& info = mTransactions[i];
+
+    if (info.recursionDepth == aRecursionDepth) {
+      for (PRUint32 j = 0; j < info.transactions.Length(); j++) {
+        nsRefPtr<IDBTransaction>& transaction = info.transactions[j];
+
+        // Clear the mCreating flag now.
+        transaction->mCreating = false;
+
+        // And maybe set the readyState to DONE if there were no requests
+        // generated.
+        if (transaction->mReadyState == nsIIDBTransaction::INITIAL) {
+          transaction->mReadyState = nsIIDBTransaction::DONE;
+        }
+      }
+
+      // Don't hang on to transactions any longer than we have to.
+      info.transactions.Clear();
+
+      break;
+    }
+  }
+}
+
+// static
+bool
+IDBTransaction::
+ThreadObserver::BeginObserving(IDBTransaction* aTransaction)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aTransaction, "Null pointer!");
+
+  nsCOMPtr<nsIThreadInternal2> thread(do_QueryInterface(NS_GetCurrentThread()));
+  NS_ENSURE_TRUE(thread, false);
+
+  // We need the current recursion depth first.
+  PRUint32 depth;
+  nsresult rv = thread->GetRecursionDepth(&depth);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  NS_ASSERTION(depth, "This should never be 0!");
+  depth--;
+
+  // If we've already got an observer created then simply append this
+  // transaction to its list.
+  if (gThreadObserver) {
+    for (PRUint32 i = 0; i < gThreadObserver->mTransactions.Length(); i++) {
+      TransactionInfo& info = gThreadObserver->mTransactions[i];
+      if (info.recursionDepth == depth) {
+        if (!info.transactions.AppendElement(aTransaction)) {
+          NS_WARNING("Out of memory!");
+          return false;
+        }
+        return true;
+      }
+    }
+
+    // No transactions at this depth yet, make a new entry
+    TransactionInfo* newInfo = gThreadObserver->mTransactions.AppendElement();
+    if (!newInfo || !newInfo->transactions.AppendElement(aTransaction)) {
+      NS_WARNING("Out of memory!");
+      return false;
+    }
+    newInfo->recursionDepth = depth;
+
+    return true;
+  }
+
+  // Make a new thread observer and install it.
+  nsRefPtr<ThreadObserver> observer(new ThreadObserver());
+
+  TransactionInfo* info = observer->mTransactions.AppendElement();
+  NS_ASSERTION(info, "This should never fail!");
+
+  info->recursionDepth = observer->mBaseRecursionDepth = depth;
+
+  if (!info->transactions.AppendElement(aTransaction)) {
+    NS_WARNING("Out of memory!");
+    return false;
+  }
+
+  // We need to keep the thread observer chain intact so grab the previous
+  // observer.
+  rv = thread->GetObserver(getter_AddRefs(observer->mPreviousObserver));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Now set our new observer.
+  rv = thread->SetObserver(observer);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // And set the global so that we don't recreate it later.
+  gThreadObserver = observer;
+  return true;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(IDBTransaction::ThreadObserver, nsIThreadObserver)
+
+NS_IMETHODIMP
+IDBTransaction::
+ThreadObserver::OnDispatchedEvent(nsIThreadInternal* aThread)
+{
+  // This may be called on any thread!
+
+  // Nothing special is needed here, just call the previous observer.
+  if (mPreviousObserver) {
+    return mPreviousObserver->OnDispatchedEvent(aThread);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBTransaction::
+ThreadObserver::OnProcessNextEvent(nsIThreadInternal* aThread,
+                                   PRBool aMayWait,
+                                   PRUint32 aRecursionDepth)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aThread, "This should never be null!");
+  NS_ASSERTION(!mKungFuDeathGrip, "Shouldn't have a self-ref here!");
+
+  // If we're at the base recursion depth here then we're ready to unset
+  // ourselves as the thread observer.
+  if (aRecursionDepth == mBaseRecursionDepth || mDone) {
+    // From here on we'll continue to try to unset ourselves.
+    mDone = true;
+
+    nsCOMPtr<nsIThreadObserver> currentObserver;
+    if (NS_FAILED(aThread->GetObserver(getter_AddRefs(currentObserver)))) {
+      NS_WARNING("Can't get current observer?!");
+    }
+
+    // We can only set the previous observer if this is the current observer.
+    // Otherwise someone else has installed themselves into the chain and we
+    // have to hang around until they unset themselves.
+    if (currentObserver == this) {
+      // Setting a different thread observer could delete us. Maintain a
+      // reference until AfterProcessNextEvent is called.
+      mKungFuDeathGrip = this;
+
+      // Set our previous observer back on the thread.
+      if (NS_FAILED(aThread->SetObserver(mPreviousObserver))) {
+        NS_ERROR("This should never fail!");
+      }
+    }
+  }
+
+  // Take care of any transactions that were created at this recursion depth.
+  UpdateNewlyCreatedTransactions(aRecursionDepth);
+
+  // And call the previous observer.
+  if (mPreviousObserver) {
+    return mPreviousObserver->OnProcessNextEvent(aThread, aMayWait,
+                                                 aRecursionDepth);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBTransaction::
+ThreadObserver::AfterProcessNextEvent(nsIThreadInternal* aThread,
+                                      PRUint32 aRecursionDepth)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aThread, "This should never be null!");
+
+  nsRefPtr<ThreadObserver> kungFuDeathGrip;
+  nsCOMPtr<nsIThreadObserver> observer;
+
+  if (mKungFuDeathGrip) {
+    NS_ASSERTION(mDone, "Huh?!");
+
+    // We can drop the reference to this observer after this call.
+    kungFuDeathGrip.swap(mKungFuDeathGrip);
+
+    // And we don't need the previous observer after this call either.
+    observer.swap(mPreviousObserver);
+  }
+  else {
+    // Still call the previous observer.
+    observer = mPreviousObserver;
+  }
+
+  // We may have collected more transactions while the event was processed.
+  // Update them now.
+  UpdateNewlyCreatedTransactions(aRecursionDepth);
+
+  if (observer) {
+    return observer->AfterProcessNextEvent(aThread, aRecursionDepth);
+  }
+
+  return NS_OK;
+}
+
 CommitHelper::CommitHelper(IDBTransaction* aTransaction)
 : mTransaction(aTransaction),
   mAborted(!!aTransaction->mAborted),
@@ -809,8 +1064,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CommitHelper, nsIRunnable)
 NS_IMETHODIMP
 CommitHelper::Run()
 {
-  NS_ASSERTION(mTransaction->mClosed, "Should be closed!");
-
   if (NS_IsMainThread()) {
     NS_ASSERTION(mDoomedObjects.IsEmpty(), "Didn't release doomed objects!");
 
