@@ -178,6 +178,7 @@ static bool getFocusEventCount(NPObject* npobj, const NPVariant* args, uint32_t 
 static bool getEventModel(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getReflector(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -230,7 +231,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getFocusEventCount",
   "getEventModel",
   "getReflector",
-  "isVisible"
+  "isVisible",
+  "getWindowPosition"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -284,7 +286,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getFocusEventCount,
   getEventModel,
   getReflector,
-  isVisible
+  isVisible,
+  getWindowPosition
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -1387,6 +1390,13 @@ bool
 NPN_InvokeDefault(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result)
 {
   return sBrowserFuncs->invokeDefault(npp, obj, args, argCount, result);
+}
+
+bool
+NPN_Construct(NPP npp, NPObject* npobj, const NPVariant* args,
+	      uint32_t argCount, NPVariant* result)
+{
+  return sBrowserFuncs->construct(npp, npobj, args, argCount, result);
 }
 
 const char*
@@ -3123,4 +3133,43 @@ bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVari
 		       id->window.clipRect.bottom != 0 ||
 		       id->window.clipRect.right != 0, *result);
   return true;
+}
+
+bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  NPObject* window = NULL;
+  NPError err = NPN_GetValue(npp, NPNVWindowNPObject, &window);
+  if (NPERR_NO_ERROR != err || !window)
+    return false;
+
+  NPIdentifier arrayID = NPN_GetStringIdentifier("Array");
+  NPVariant arrayFunctionV;
+  bool ok = NPN_GetProperty(npp, window, arrayID, &arrayFunctionV);
+
+  NPN_ReleaseObject(window);
+
+  if (!ok)
+    return false;
+
+  if (!NPVARIANT_IS_OBJECT(arrayFunctionV)) {
+    NPN_ReleaseVariantValue(&arrayFunctionV);
+    return false;
+  }
+  NPObject* arrayFunction = NPVARIANT_TO_OBJECT(arrayFunctionV);
+
+  NPVariant elements[4];
+  INT32_TO_NPVARIANT(id->window.x, elements[0]);
+  INT32_TO_NPVARIANT(id->window.y, elements[1]);
+  INT32_TO_NPVARIANT(id->window.width, elements[2]);
+  INT32_TO_NPVARIANT(id->window.height, elements[3]);
+
+  NPObject* resultArray = NULL;
+  ok = NPN_InvokeDefault(npp, arrayFunction, elements, 4, result);
+
+  NPN_ReleaseObject(arrayFunction);
+
+  return ok;
 }

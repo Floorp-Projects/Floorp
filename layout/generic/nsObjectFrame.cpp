@@ -385,7 +385,7 @@ public:
   void BeginCGPaint();
   void EndCGPaint();
 #else // XP_MACOSX
-  void UpdateWindowClipRect(PRBool aSetWindow);
+  void UpdateWindowPositionAndClipRect(PRBool aSetWindow);
   void SetWindow();
   void UpdateWindowVisibility(PRBool aVisible);
 #endif // XP_MACOSX
@@ -1084,7 +1084,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
   window->clipRect.bottom = 0;
   window->clipRect.right = 0;
 #else
-  mInstanceOwner->UpdateWindowClipRect(PR_FALSE);
+  mInstanceOwner->UpdateWindowPositionAndClipRect(PR_FALSE);
 #endif
 
   NotifyPluginReflowObservers();
@@ -1319,6 +1319,8 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
   if (!mWidget) {
 #ifndef XP_MACOSX
     if (mInstanceOwner) {
+      // UpdateWindowVisibility will notify the plugin of position changes
+      // by updating the NPWindow and calling NPP_SetWindow/AsyncSetWindow.
       mInstanceOwner->UpdateWindowVisibility(!aRegion.IsEmpty());
     }
 #endif
@@ -6444,7 +6446,7 @@ nsPluginInstanceOwner::HidePluginWindow()
 
 #else // XP_MACOSX
 
-void nsPluginInstanceOwner::UpdateWindowClipRect(PRBool aSetWindow)
+void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(PRBool aSetWindow)
 {
   if (!mPluginWindow)
     return;
@@ -6455,7 +6457,13 @@ void nsPluginInstanceOwner::UpdateWindowClipRect(PRBool aSetWindow)
   if (aSetWindow && !mWidget && mPluginWindowVisible && !UseLayers())
     return;
 
-  const NPRect oldClipRect = mPluginWindow->clipRect;
+  const NPWindow oldWindow = *mPluginWindow;
+
+  PRBool windowless = (mPluginWindow->type == NPWindowTypeDrawable);
+  nsIntPoint origin = mObjectFrame->GetWindowOriginInPixels(windowless);
+
+  mPluginWindow->x = origin.x;
+  mPluginWindow->y = origin.y;
 
   mPluginWindow->clipRect.left = 0;
   mPluginWindow->clipRect.top = 0;
@@ -6471,10 +6479,12 @@ void nsPluginInstanceOwner::UpdateWindowClipRect(PRBool aSetWindow)
   if (!aSetWindow)
     return;
 
-  if ((mPluginWindow->clipRect.left   != oldClipRect.left   ||
-       mPluginWindow->clipRect.top    != oldClipRect.top    ||
-       mPluginWindow->clipRect.right  != oldClipRect.right  ||
-       mPluginWindow->clipRect.bottom != oldClipRect.bottom)) {
+  if (mPluginWindow->x               != oldWindow.x               ||
+      mPluginWindow->y               != oldWindow.y               ||
+      mPluginWindow->clipRect.left   != oldWindow.clipRect.left   ||
+      mPluginWindow->clipRect.top    != oldWindow.clipRect.top    ||
+      mPluginWindow->clipRect.right  != oldWindow.clipRect.right  ||
+      mPluginWindow->clipRect.bottom != oldWindow.clipRect.bottom) {
     SetWindow();
   }
 }
@@ -6496,7 +6506,7 @@ void
 nsPluginInstanceOwner::UpdateWindowVisibility(PRBool aVisible)
 {
   mPluginWindowVisible = aVisible;
-  UpdateWindowClipRect(PR_TRUE);
+  UpdateWindowPositionAndClipRect(PR_TRUE);
 }
 
 #endif // XP_MACOSX
