@@ -535,7 +535,7 @@ static JSBool
 ThrowCallFailed(JSContext *cx, nsresult rv,
                 const char *ifaceName, jsid memberId, const char *memberName)
 {
-    /* Only one memberId or memberName should be given. */
+    /* Only one of memberId or memberName should be given. */
     JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
     
     // From XPCThrower::ThrowBadResult.
