@@ -564,17 +564,25 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this._sendToSubscribers("close");
     this.removeTrenches();
 
-    iQ(this.container).animate({
-      opacity: 0,
-      "-moz-transform": "scale(.3)",
-    }, {
-      duration: 170,
-      complete: function() {
-        iQ(this).remove();
-        Items.unsquish();
-      }
-    });
-
+    if (this.hidden) {
+      iQ(this.container).remove();
+      if (this.$undoContainer) {
+        this.$undoContainer.remove();
+        this.$undoContainer = null;
+       }
+      Items.unsquish();
+    } else {
+      iQ(this.container).animate({
+        opacity: 0,
+        "-moz-transform": "scale(.3)",
+      }, {
+        duration: 170,
+        complete: function() {
+          iQ(this).remove();
+          Items.unsquish();
+        }
+      });
+    }
     this.deleteData();
   },
 
@@ -608,9 +616,106 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: _unhide
+  // Shows the hidden group.
+  _unhide: function GroupItem__unhide() {
+    let self = this;
+
+    this._cancelFadeAwayUndoButtonTimer();
+    this.hidden = false;
+    this.$undoContainer.remove();
+    this.$undoContainer = null;
+
+    iQ(this.container).show().animate({
+      "-moz-transform": "scale(1)",
+      "opacity": 1
+    }, {
+      duration: 170,
+      complete: function() {
+        self._children.forEach(function(child) {
+          iQ(child.container).show();
+        });
+      }
+    });
+
+    self._sendToSubscribers("groupShown", { groupItemId: self.id });
+  },
+
+  // ----------
+  // Function: closeHidden
+  // Removes the group item, its children and its container.
+  closeHidden: function GroupItem_closeHidden() {
+    let self = this;
+
+    this._cancelFadeAwayUndoButtonTimer();
+
+    // when "TabClose" event is fired, the browser tab is about to close and our 
+    // item "close" event is fired.  And then, the browser tab gets closed. 
+    // In other words, the group "close" event is fired before all browser
+    // tabs in the group are closed.  The below code would fire the group "close"
+    // event only after all browser tabs in that group are closed.
+    let shouldRemoveTabItems = [];
+    let toClose = this._children.concat();
+    toClose.forEach(function(child) {
+      child.removeSubscriber(self, "close");
+
+      let removed = child.close();
+      if (removed) {
+        shouldRemoveTabItems.push(child);
+      } else {
+        // child.removeSubscriber() must be called before child.close(), 
+        // therefore we call child.addSubscriber() if the tab is not removed.
+        child.addSubscriber(self, "close", function() {
+          self.remove(child);
+        });
+      }
+    });
+
+    if (shouldRemoveTabItems.length != toClose.length) {
+      // remove children without the assiciated tab and show the group item
+      shouldRemoveTabItems.forEach(function(child) {
+        self.remove(child, { dontArrange: true });
+      });
+
+      this.$undoContainer.fadeOut(function() { self._unhide() });
+    } else {
+      this.close();
+    }
+  },
+
+  // ----------
+  // Function: _fadeAwayUndoButton
+  // Fades away the undo button
+  _fadeAwayUndoButton: function GroupItem__fadeAwayUdoButton() {
+    let self = this;
+
+    if (this.$undoContainer) {
+      // if there is one or more orphan tabs or there is more than one group 
+      // and other groupS are not empty, fade away the undo button.
+      let shouldFadeAway = GroupItems.getOrphanedTabs().length > 0;
+      
+      if (!shouldFadeAway && GroupItems.groupItems.length > 1) {
+        shouldFadeAway = 
+          GroupItems.groupItems.some(function(groupItem) {
+            return (groupItem != self && groupItem.getChildren().length > 0);
+          });
+      }
+      if (shouldFadeAway) {
+        self.$undoContainer.animate({
+          color: "transparent",
+          opacity: 0
+        }, {
+          duration: this._fadeAwayUndoButtonDuration,
+          complete: function() { self.closeHidden(); }
+        });
+      }
+    }
+  },
+
+  // ----------
   // Function: _createUndoButton
   // Makes the affordance for undo a close group action
-  _createUndoButton: function() {
+  _createUndoButton: function GroupItem__createUndoButton() {
     let self = this;
     this.$undoContainer = iQ("<div/>")
       .addClass("undo")
@@ -629,6 +734,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
     this.hidden = true;
 
+    // hide group item and show undo container.
     setTimeout(function() {
       self.$undoContainer.animate({
         "-moz-transform": "scale(1)",
@@ -642,36 +748,17 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
     }, 50);
 
+    // add click handlers
     this.$undoContainer.click(function(e) {
       // Only do this for clicks on this actual element.
       if (e.target.nodeName != self.$undoContainer[0].nodeName)
         return;
 
-      self.$undoContainer.fadeOut(function() {
-        iQ(this).remove();
-        self.hidden = false;
-        self._cancelFadeAwayUndoButtonTimer();
-        self.$undoContainer = null;
-
-        iQ(self.container).show().animate({
-          "-moz-transform": "scale(1)",
-          "opacity": 1
-        }, {
-          duration: 170,
-          complete: function() {
-            self._children.forEach(function(child) {
-              iQ(child.container).show();
-            });
-          }
-        });
-
-        self._sendToSubscribers("groupShown", { groupItemId: self.id });
-      });
+      self.$undoContainer.fadeOut(function() { self._unhide(); });
     });
 
     undoClose.click(function() {
-      self._cancelFadeAwayUndoButtonTimer();
-      self.$undoContainer.fadeOut(function() { self._removeHiddenGroupItem(); });
+      self.$undoContainer.fadeOut(function() { self.closeHidden(); });
     });
 
     this.setupFadeAwayUndoButtonTimer();
@@ -703,60 +790,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     clearTimeout(this._undoButtonTimeoutId);
     this._undoButtonTimeoutId = null;
   }, 
-
-  // ----------
-  // Fades away the undo button
-  _fadeAwayUndoButton: function() {
-    let self = this;
-
-    if (this.$undoContainer) {
-      // if there is one or more orphan tabs or there is more than one group 
-      // and other groupS are not empty, fade away the undo button.
-      let shouldFadeAway = GroupItems.getOrphanedTabs().length > 0;
-      
-      if (!shouldFadeAway && GroupItems.groupItems.length > 1) {
-        shouldFadeAway = 
-          GroupItems.groupItems.some(function(groupItem) {
-            return (groupItem != self && groupItem.getChildren().length > 0);
-          });
-      }
-      if (shouldFadeAway) {
-        self.$undoContainer.animate({
-          color: "transparent",
-          opacity: 0
-        }, {
-          duration: this.fadeAwayUndoButtonDuration,
-          complete: function() { self._removeHiddenGroupItem(); }
-        });
-      }
-    }
-  },
-
-  // ----------
-  // Removes the group item, its children and its container.
-  _removeHiddenGroupItem: function() {
-    let self = this;
-
-    // close all children
-    let toClose = this._children.concat();
-    toClose.forEach(function(child) {
-      child.removeSubscriber(self, "close");
-      child.close();
-    });
- 
-    // remove all children
-    this.removeAll();
-    GroupItems.unregister(this);
-    this._sendToSubscribers("close");
-    this.removeTrenches();
-
-    iQ(this.container).remove();
-    this.$undoContainer.remove();
-    this.$undoContainer = null;
-    Items.unsquish();
-
-    this.deleteData();
-  },
 
   // ----------
   // Function: add
@@ -1496,6 +1529,7 @@ let GroupItems = {
   _cleanupFunctions: [],
   _arrangePaused: false,
   _arrangesPending: [],
+  _removingHiddenGroups: false,
 
   // ----------
   // Function: init
@@ -2158,19 +2192,16 @@ let GroupItems = {
   // Function: removeHiddenGroups
   // Removes all hidden groups' data and its browser tabs.
   removeHiddenGroups: function GroupItems_removeHiddenGroups() {
-    iQ(".undo").remove();
-    
-    // ToDo: encapsulate this in the group item. bug 594863
-    this.groupItems.forEach(function(groupItem) {
-      if (groupItem.hidden) {
-        let toClose = groupItem._children.concat();
-        toClose.forEach(function(child) {
-          child.removeSubscriber(groupItem, "close");
-          child.close();
-        });
+    if (this._removingHiddenGroups)
+      return;
+    this._removingHiddenGroups = true;
 
-        groupItem.deleteData();
-      }
-    });
+    let groupItems = this.groupItems.concat();
+    groupItems.forEach(function(groupItem) {
+      if (groupItem.hidden)
+        groupItem.closeHidden();
+     });
+
+    this._removingHiddenGroups = false;
   }
 };

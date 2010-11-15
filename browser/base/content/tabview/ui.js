@@ -471,6 +471,8 @@ let UI = {
     if (!this._isTabViewVisible())
       return;
 
+    // another tab might be select if user decides to stay on a page when
+    // a onclose confirmation prompts.
     GroupItems.removeHiddenGroups();
     TabItems.pausePainting();
 
@@ -699,6 +701,7 @@ let UI = {
   },
 
   // ----------
+  // Function: goToTab
   // Selects the given xul:tab in the browser.
   goToTab: function UI_goToTab(xulTab) {
     // If it's not focused, the onFocus listener would handle it.
@@ -730,6 +733,11 @@ let UI = {
     // selected tab, show chrome.
     if (this._isTabViewVisible())
       this.hideTabView();
+
+    // another tab might be selected when hideTabView() is invoked so a
+    // validation is needed.
+    if (this._currentTab != tab)
+      return;
 
     let oldItem = null;
     let newItem = null;
@@ -896,7 +904,7 @@ let UI = {
                  event.keyCode == KeyEvent.DOM_VK_ENTER) {
         let activeTab = self.getActiveTab();
         if (activeTab)
-            activeTab.zoomIn();
+          activeTab.zoomIn();
 
         event.stopPropagation();
         event.preventDefault();
