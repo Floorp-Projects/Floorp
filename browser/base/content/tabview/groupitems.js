@@ -428,7 +428,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     box.top += titleHeight;
     box.height -= titleHeight;
 
-    box.width -= this.$appTabTray.width();
+    var appTabTrayWidth = this.$appTabTray.width();
+    box.width -= appTabTrayWidth;
+    if (UI.rtl) {
+      box.left += appTabTrayWidth;
+    }
 
     // Make the computed bounds' "padding" and new tab button margin actually be
     // themeable --OR-- compute this from actual bounds. Bug 586546
