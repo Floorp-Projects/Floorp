@@ -155,6 +155,11 @@ nsPlacesDBFlush.prototype = {
 
   onBeginUpdateBatch: function DBFlush_onBeginUpdateBatch()
   {
+    // Since we observe both history and bookmarks, we can be notified twice
+    // about a batch.
+    if (this._inBatchMode)
+      return;
+
     this._inBatchMode = true;
 
     // We do not want to sync while we are doing batch work.
@@ -164,6 +169,11 @@ nsPlacesDBFlush.prototype = {
 
   onEndUpdateBatch: function DBFlush_onEndUpdateBatch()
   {
+    // Since we observe both history and bookmarks, we can be notified twice
+    // about a batch.
+    if (!this._inBatchMode)
+      return;
+
     this._inBatchMode = false;
 
     // Restore our timer
