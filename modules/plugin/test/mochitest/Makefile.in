@@ -93,6 +93,7 @@ _MOCHITEST_FILES = \
   test_bug539565-1.html \
   test_bug539565-2.html \
   test_enumerate.html \
+  test_npruntim_construct.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491
