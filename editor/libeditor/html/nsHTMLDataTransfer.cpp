@@ -90,6 +90,7 @@
 // netwerk
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsIMIMEService.h"
 
 // Drag & Drop, Clipboard
 #include "nsIClipboard.h"
@@ -1331,7 +1332,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       {
         nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
         NS_ENSURE_TRUE(mime, NS_ERROR_FAILURE);
-        nsAutoCString contentType;
+        nsCString contentType;
         rv = mime->GetTypeFromFile(fileObj, contentType);
         NS_ENSURE_SUCCESS(rv, rv);
 
