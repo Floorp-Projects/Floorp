@@ -556,7 +556,6 @@ JS_GetEmptyStringValue(JSContext *cx);
  *   j      int32           Rounded int32 (coordinate)
  *   d      jsdouble        IEEE double
  *   I      jsdouble        Integral IEEE double
- *   s      char *          C string
  *   S      JSString *      Unicode string, accessed by a JSString pointer
  *   W      jschar *        Unicode character vector, 0-terminated (W for wide)
  *   o      JSObject *      Object reference
