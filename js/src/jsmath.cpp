@@ -267,9 +267,6 @@ js_math_ceil_impl(jsdouble x)
 JSBool
 js_math_ceil(JSContext *cx, uintN argc, Value *vp)
 {
-    static int count = 0;
-    printf("COUNT %d\n", ++count);
-
     jsdouble x, z;
 
     if (argc == 0) {
