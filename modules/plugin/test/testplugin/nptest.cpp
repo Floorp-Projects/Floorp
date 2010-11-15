@@ -179,6 +179,7 @@ static bool getEventModel(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool getReflector(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool isVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool constructObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -232,7 +233,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getEventModel",
   "getReflector",
   "isVisible",
-  "getWindowPosition"
+  "getWindowPosition",
+  "constructObject"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -287,7 +289,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getEventModel,
   getReflector,
   isVisible,
-  getWindowPosition
+  getWindowPosition,
+  constructObject
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -3172,4 +3175,16 @@ bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount
   NPN_ReleaseObject(arrayFunction);
 
   return ok;
+}
+
+bool constructObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount == 0 || !NPVARIANT_IS_OBJECT(args[0]))
+    return false;
+
+  NPObject* ctor = NPVARIANT_TO_OBJECT(args[0]);
+  
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  return NPN_Construct(npp, ctor, args + 1, argCount - 1, result);
 }
