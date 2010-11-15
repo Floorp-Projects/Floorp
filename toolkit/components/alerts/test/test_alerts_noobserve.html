@@ -1,15 +1,21 @@
 <!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
 <head>
   <title>Test for Alerts Service</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
+
 <body>
 <p id="display"></p>
 
-Alerts service mochitest without observer<br/>
+<br>Alerts service, without observer "asynchronous" case.
+<br>
+<br>A notification should soon appear somewhere.
+<br>If there has been no crash when the notification (later) disappears, assume all is good.
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -17,18 +23,40 @@ netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-try {
-  var notifier = Cc["@mozilla.org/alerts-service;1"].
-                 getService(Ci.nsIAlertsService);
-  notifier.showAlertNotification(null, "Notification test", "This notification has no observer",
-                                 false, "foobarcookie", null);
-  ok(true, "If we don't crash, we're good.");
-} catch (ex) {
-  // Alerts service doesn't exist
+
+var gNotificationIsAvailable;
+
+if (!("@mozilla.org/alerts-service;1" in Cc)) {
+  todo(false, "Alerts service does not exist in this application");
+} else {
+  ok(true, "Alerts service exists in this application");
+
+  var notifier;
+  try {
+    notifier = Cc["@mozilla.org/alerts-service;1"].
+               getService(Ci.nsIAlertsService);
+    ok(true, "Alerts service is available");
+  } catch (ex) {
+    todo(false, "Alerts service is not available. (Mac OS X without Growl?)", ex);
+  }
+
+  if (notifier) {
+    try {
+      notifier.showAlertNotification(null, "Notification test",
+                                     "This notification has no observer");
+      ok(true, "showAlertNotification() succeeded");
+
+      gNotificationIsAvailable = true;
+    } catch (ex) {
+      todo(false, "showAlertNotification() failed. (Mac OS X without Growl?)", ex);
+    }
+  }
 }
 
+if (gNotificationIsAvailable) {
+  ok(true, "Notification should actually display during later tests... (Hope this doesn't disturb them!)");
+}
 </script>
 </pre>
 </body>
 </html>
-
