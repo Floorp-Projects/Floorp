@@ -20,6 +20,7 @@ pref("services.sync.engine.tabs.filteredUrls", "^(about:.*|chrome://weave/.*|wyc
 pref("services.sync.log.appender.console", "Warn");
 pref("services.sync.log.appender.dump", "Error");
 pref("services.sync.log.appender.debugLog", "Trace");
+pref("services.sync.log.appender.debugLog.enabled", false);
 pref("services.sync.log.rootLogger", "Debug");
 pref("services.sync.log.logger.service.main", "Debug");
 pref("services.sync.log.logger.authenticator", "Debug");

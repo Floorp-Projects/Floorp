@@ -181,6 +181,7 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     do_check_true(!!collection.wbos.scotsman.payload);
 
     engine.lastSync = Date.now() / 1000;
+    engine.lastSyncLocal = Date.now();
     engine._syncStartup();
 
     // The meta/global WBO has been filled with data about the engine
@@ -190,15 +191,13 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     // Sync was reset and server data was wiped
     do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
     // Bulk key was uploaded
     do_check_true(!!crypto_steam.payload);
     do_check_true(!!crypto_steam.data.keyring);
-
-    // WBO IDs are added to tracker (they're all marked for uploading)
-    do_check_eq(engine._tracker.changedIDs["rekolok"], 0);
 
   } finally {
     server.stop(do_test_finished);
@@ -248,10 +247,12 @@ function test_syncStartup_metaGet404() {
     do_check_true(!!collection.wbos.scotsman.payload);
 
     engine.lastSync = Date.now() / 1000;
+    engine.lastSyncLocal = Date.now();
     engine._syncStartup();
 
     _("Sync was reset and server data was wiped");
     do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
@@ -363,6 +364,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
 
     engine.lastSync = Date.now() / 1000;
+    engine.lastSyncLocal = Date.now();
     engine._syncStartup();
 
     // The engine has assumed the server's syncID 
@@ -370,6 +372,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
 
     // Sync was reset
     do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.lastSyncLocal, 0);
 
   } finally {
     server.stop(do_test_finished);
@@ -430,10 +433,12 @@ function test_syncStartup_badKeyWipesServerData() {
     do_check_true(!!collection.wbos.scotsman.payload);
 
     engine.lastSync = Date.now() / 1000;
+    engine.lastSyncLocal = Date.now();
     engine._syncStartup();
 
     // Sync was reset and server data was wiped
     do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
@@ -473,7 +478,6 @@ function test_processIncoming_emptyServer() {
     // Merely ensure that this code path is run without any errors
     engine._processIncoming();
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.toFetch.length, 0);
 
   } finally {
     server.stop(do_test_finished);
@@ -521,6 +525,10 @@ function test_processIncoming_createFromServer() {
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+
   try {
 
     // Confirm initial environment
@@ -531,6 +539,7 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine._store.items['../pathological'], undefined);
     do_check_eq(engine._store.items.wrong_keyuri, undefined);
 
+    engine._syncStartup();
     engine._processIncoming();
 
     // Timestamps of last sync and last server modification are set.
@@ -626,6 +635,10 @@ function test_processIncoming_reconcile() {
   // This record has been changed 2 mins later than the one on the server
   engine._tracker.addChangedID('olderidentical', Date.now()/1000);
 
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+
   try {
 
     // Confirm initial environment
@@ -636,7 +649,7 @@ function test_processIncoming_reconcile() {
     do_check_eq(engine._store.items.nukeme, "Nuke me!");
     do_check_true(engine._tracker.changedIDs['olderidentical'] > 0);
 
-    engine._delete = {}; // normally set up by _syncStartup
+    engine._syncStartup();
     engine._processIncoming();
 
     // Timestamps of last sync and last server modification are set.
@@ -676,14 +689,22 @@ function test_processIncoming_reconcile() {
 }
 
 
-function test_processIncoming_fetchNum() {
-  _("SyncEngine._processIncoming doesn't fetch everything at ones on mobile clients");
+function test_processIncoming_mobile_batchSize() {
+  _("SyncEngine._processIncoming doesn't fetch everything at once on mobile clients");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
   Svc.Prefs.set("client.type", "mobile");
   let crypto_steam = new ServerWBO('steam');
+
+  // A collection that logs each GET
   let collection = new ServerCollection();
+  collection.get_log = [];
+  collection._get = collection.get;
+  collection.get = function (options) {
+    this.get_log.push(options);
+    return this._get(options);
+  };
 
   // Let's create some 234 server side records. They're all at least
   // 10 minutes old.
@@ -704,74 +725,37 @@ function test_processIncoming_fetchNum() {
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
 
   try {
 
-    // On a mobile client, the first sync will only get the first 50
-    // objects from the server
+    // On a mobile client, we get new records from the server in batches of 50.
+    engine._syncStartup();
     engine._processIncoming();
-    do_check_eq([id for (id in engine._store.items)].length, 50);
+    do_check_eq([id for (id in engine._store.items)].length, 234);
     do_check_true('record-no-0' in engine._store.items);
     do_check_true('record-no-49' in engine._store.items);
-    do_check_eq(engine.toFetch.length, 234 - 50);
-
-
-    // The next sync will get another 50 objects, assuming the server
-    // hasn't got any new data.
-    engine._processIncoming();
-    do_check_eq([id for (id in engine._store.items)].length, 100);
     do_check_true('record-no-50' in engine._store.items);
-    do_check_true('record-no-99' in engine._store.items);
-    do_check_eq(engine.toFetch.length, 234 - 100);
-
-
-    // Now let's say there are some new items on the server
-    for (i=0; i < 5; i++) {
-      let id = 'new-record-no-' + i;
-      let payload = encryptPayload({id: id, denomination: "New record No. " + i});
-      let wbo = new ServerWBO(id, payload);
-      wbo.modified = Date.now()/1000 - 60*i;
-      collection.wbos[id] = wbo;
-    }
-    // Let's tell the engine the server has got newer data.  This is
-    // normally done by the WeaveSvc after retrieving info/collections.
-    engine.lastModified = Date.now() / 1000 + 1;
-
-    // Now we'll fetch another 50 items, but 5 of those are the new
-    // ones, so we've only fetched another 45 of the older ones.
-    engine._processIncoming();
-    do_check_eq([id for (id in engine._store.items)].length, 150);
-    do_check_true('new-record-no-0' in engine._store.items);
-    do_check_true('new-record-no-4' in engine._store.items);
-    do_check_true('record-no-100' in engine._store.items);
-    do_check_true('record-no-144' in engine._store.items);
-    do_check_eq(engine.toFetch.length, 234 - 100 - 45);
-
-
-    // Now let's modify a few existing records on the server so that
-    // they have to be refetched.
-    collection.wbos['record-no-3'].modified = Date.now()/1000 + 1;
-    collection.wbos['record-no-41'].modified = Date.now()/1000 + 1;
-    collection.wbos['record-no-122'].modified = Date.now()/1000 + 1;
-
-    // Once again we'll tell the engine that the server's got newer data
-    // and once again we'll fetch 50 items, but 3 of those are the
-    // existing records, so we're only fetching 47 new ones.
-    engine.lastModified = Date.now() / 1000 + 2;
-    engine._processIncoming();
-    do_check_eq([id for (id in engine._store.items)].length, 197);
-    do_check_true('record-no-145' in engine._store.items);
-    do_check_true('record-no-191' in engine._store.items);
-    do_check_eq(engine.toFetch.length, 234 - 100 - 45 - 47);
-
-
-    // Finally let's fetch the rest, making sure that will fetch
-    // everything up to the last record.
-    while(engine.toFetch.length) {
-      engine._processIncoming();
-    }
-    do_check_eq([id for (id in engine._store.items)].length, 234 + 5);
     do_check_true('record-no-233' in engine._store.items);
+
+    // Verify that the right number of GET requests with the right
+    // kind of parameters were made.
+    do_check_eq(collection.get_log.length,
+                Math.ceil(234 / MOBILE_BATCH_SIZE) + 1);
+    do_check_eq(collection.get_log[0].full, 1);
+    do_check_eq(collection.get_log[0].limit, MOBILE_BATCH_SIZE);
+    do_check_eq(collection.get_log[1].full, undefined);
+    do_check_eq(collection.get_log[1].limit, undefined);
+    for (let i = 1; i <= Math.floor(234 / MOBILE_BATCH_SIZE); i++) {
+      do_check_eq(collection.get_log[i+1].full, 1);
+      do_check_eq(collection.get_log[i+1].limit, undefined);
+      if (i < Math.floor(234 / MOBILE_BATCH_SIZE))
+        do_check_eq(collection.get_log[i+1].ids.length, MOBILE_BATCH_SIZE);
+      else
+        do_check_eq(collection.get_log[i+1].ids.length, 234 % MOBILE_BATCH_SIZE);
+    }
 
   } finally {
     server.stop(do_test_finished);
@@ -804,19 +788,28 @@ function test_uploadOutgoing_toEmptyServer() {
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
+  engine.lastSync = 123; // needs to be non-zero so that tracker is queried
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
   // Mark one of these records as changed 
   engine._tracker.addChangedID('scotsman', 0);
 
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+
   try {
 
     // Confirm initial environment
+    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
-    do_check_eq(engine._tracker.changedIDs['scotsman'], 0);
 
+    engine._syncStartup();
     engine._uploadOutgoing();
+
+    // Local timestamp has been set.
+    do_check_true(engine.lastSyncLocal > 0);
 
     // Ensure the marked record ('scotsman') has been uploaded and is
     // no longer marked.
@@ -859,10 +852,11 @@ function test_uploadOutgoing_failed() {
   createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
+  engine.lastSync = 123; // needs to be non-zero so that tracker is queried
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman",
                          peppercorn: "Peppercorn Class"};
-  // Mark one of these records as changed 
+  // Mark these records as changed 
   const FLYING_CHANGED = 12345;
   const SCOTSMAN_CHANGED = 23456;
   const PEPPERCORN_CHANGED = 34567;
@@ -870,15 +864,24 @@ function test_uploadOutgoing_failed() {
   engine._tracker.addChangedID('scotsman', SCOTSMAN_CHANGED);
   engine._tracker.addChangedID('peppercorn', PEPPERCORN_CHANGED);
 
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+
   try {
 
     // Confirm initial environment
+    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
     do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
+    engine._syncStartup();
     engine._uploadOutgoing();
+
+    // Local timestamp has been set.
+    do_check_true(engine.lastSyncLocal > 0);
 
     // Ensure the 'flying' record has been uploaded and is no longer marked.
     do_check_true(!!collection.wbos.flying.payload);
@@ -925,6 +928,10 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     collection.wbos[id] = new ServerWBO(id);
   }
 
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+
   let server = sync_httpd_setup({
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
@@ -938,6 +945,7 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     // Confirm initial environment
     do_check_eq(noOfUploads, 0);
 
+    engine._syncStartup();
     engine._uploadOutgoing();
 
     // Ensure all records have been uploaded
@@ -1087,6 +1095,72 @@ function test_syncFinish_deleteLotsInBatches() {
   }
 }
 
+function test_sync_rollback() {
+  _("SyncEngine.sync() rolls back tracker's changedIDs when syncing fails.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  // Set up a server without a "steam" collection handler, so sync will fail.
+  let crypto_steam = new ServerWBO('steam');
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler()
+  });
+  do_test_pending();
+  createAndUploadKeypair();
+  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+
+  let engine = makeSteamEngine();
+  engine.lastSync = 123; // needs to be non-zero so that tracker is queried
+  engine.lastSyncLocal = 456;
+  engine._store.items = {flying: "LNER Class A3 4472",
+                         scotsman: "Flying Scotsman",
+                         peppercorn: "Peppercorn Class"};
+
+  // Mark these records as changed 
+  const FLYING_CHANGED = 12345;
+  const SCOTSMAN_CHANGED = 23456;
+  const PEPPERCORN_CHANGED = 34567;
+  engine._tracker.addChangedID('flying', FLYING_CHANGED);
+  engine._tracker.addChangedID('scotsman', SCOTSMAN_CHANGED);
+  engine._tracker.addChangedID('peppercorn', PEPPERCORN_CHANGED);
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(engine.lastSyncLocal, 456);
+    do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+
+    engine.enabled = true;
+    let error;
+    try {
+      engine.sync();
+    } catch (ex) {
+      error = ex;
+    }
+    do_check_true(!!error);
+
+    // Verify that the tracker state and local timestamp has been rolled back.
+    do_check_eq(engine.lastSyncLocal, 456);
+    do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    CryptoMetas.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
 function test_canDecrypt_noCryptoMeta() {
   _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
@@ -1162,13 +1236,14 @@ function run_test() {
   test_processIncoming_emptyServer();
   test_processIncoming_createFromServer();
   test_processIncoming_reconcile();
-  test_processIncoming_fetchNum();
+  test_processIncoming_mobile_batchSize();
   test_uploadOutgoing_toEmptyServer();
   test_uploadOutgoing_failed();
   test_uploadOutgoing_MAX_UPLOAD_RECORDS();
   test_syncFinish_noDelete();
   test_syncFinish_deleteByIds();
   test_syncFinish_deleteLotsInBatches();
+  test_sync_rollback();
   test_canDecrypt_noCryptoMeta();
   test_canDecrypt_true();
 }
