@@ -1000,7 +1000,12 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             {
                 rs = *((nsACString**)d);
             }
+
             rs->SetLength(PRUint32(length));
+            if(rs->Length() != PRUint32(length))
+            {
+                return JS_FALSE;
+            }
             JS_EncodeStringToBuffer(str, rs->BeginWriting(), length);
 
             return JS_TRUE;

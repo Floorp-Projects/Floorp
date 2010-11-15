@@ -296,7 +296,6 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
                 return JS_FALSE;
             *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
             break;
-          case 's':
           case 'S':
           case 'W':
             str = js_ValueToString(cx, Valueify(*sp));
