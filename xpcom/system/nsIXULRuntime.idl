@@ -109,6 +109,15 @@ interface nsIXULRuntime : nsISupports
   void invalidateCachesOnRestart();
 
   /**
+   * Starts a child process. This method is intented to pre-start a
+   * content child process so that when it is actually needed, it is
+   * ready to go.
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE if not available.
+   */
+  void ensureContentProcess();
+
+  /**
    * Recorded timestamp indicating when the operating system began launching the app
     */
   readonly attribute unsigned long long launchTimestamp;
@@ -117,13 +126,4 @@ interface nsIXULRuntime : nsISupports
    * Recorded timestamp indicating when app startup began (essentially XRE_Main)
     */
   readonly attribute unsigned long long startupTimestamp;
-
-  /**
-   * Starts a child process. This method is intented to pre-start a
-   * content child process so that when it is actually needed, it is
-   * ready to go.
-   *
-   * @throw NS_ERROR_NOT_AVAILABLE if not available.
-   */
-  void ensureContentProcess();
 };
