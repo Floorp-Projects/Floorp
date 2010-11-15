@@ -1656,51 +1656,19 @@ HUD_SERVICE.prototype =
     let outputNode = displayNode.querySelector(".hud-output-node");
     let doc = outputNode.ownerDocument;
 
-    this.maintainScrollPosition(outputNode, function() {
-      this.liftNode(outputNode, function() {
-        let xpath = ".//*[contains(@class, 'hud-msg-node') and " +
-          "contains(@class, 'hud-" + aMessageType + "')]";
-        let result = doc.evaluate(xpath, outputNode, null,
-          Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        for (let i = 0; i < result.snapshotLength; i++) {
-          if (aState) {
-            result.snapshotItem(i).classList.remove("hud-filtered-by-type");
-          }
-          else {
-            result.snapshotItem(i).classList.add("hud-filtered-by-type");
-          }
+    this.liftNode(outputNode, function() {
+      let xpath = ".//*[contains(@class, 'hud-msg-node') and " +
+        "contains(@class, 'hud-" + aMessageType + "')]";
+      let result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        if (aState) {
+          result.snapshotItem(i).classList.remove("hud-filtered-by-type");
+        } else {
+          result.snapshotItem(i).classList.add("hud-filtered-by-type");
         }
-      });
+      }
     });
-  },
-
-  /**
-   * Maintain the scroll position after the execution of a callback function.
-   *
-   * @param nsIDOMNode aOutputNode
-   *        The outputNode for which the scroll position is rememebered.
-   * @param function aCallback
-   *        The callback function you want to execute.
-   * @returns void
-   */
-  maintainScrollPosition:
-  function HS_maintainScrollPosition(aOutputNode, aCallback)
-  {
-    let oldScrollTop = aOutputNode.scrollTop;
-    let scrolledToBottom = oldScrollTop +
-      aOutputNode.clientHeight == aOutputNode.scrollHeight;
-
-    aCallback.call(this);
-
-    // Scroll to the bottom if the scroll was at the bottom.
-    if (scrolledToBottom) {
-      aOutputNode.scrollTop = aOutputNode.scrollHeight -
-        aOutputNode.clientHeight;
-    }
-    else {
-      // Remember the scroll position.
-      aOutputNode.scrollTop = oldScrollTop;
-    }
   },
 
   /**
@@ -1753,25 +1721,22 @@ HUD_SERVICE.prototype =
     let displayNode = this.getOutputNodeById(aHUDId);
     let outputNode = displayNode.querySelector(".hud-output-node");
     let doc = outputNode.ownerDocument;
+    this.liftNode(outputNode, function() {
+      let xpath = './/*[contains(@class, "hud-msg-node") and ' +
+        'not(contains(@class, "hud-filtered-by-string")) and not(' + fn + ')]';
+      let result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        result.snapshotItem(i).classList.add("hud-filtered-by-string");
+      }
 
-    this.maintainScrollPosition(outputNode, function() {
-      this.liftNode(outputNode, function() {
-        let xpath = './/*[contains(@class, "hud-msg-node") and ' +
-          'not(contains(@class, "hud-filtered-by-string")) and not(' + fn + ')]';
-        let result = doc.evaluate(xpath, outputNode, null,
-          Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        for (let i = 0; i < result.snapshotLength; i++) {
-          result.snapshotItem(i).classList.add("hud-filtered-by-string");
-        }
-
-        xpath = './/*[contains(@class, "hud-msg-node") and contains(@class, ' +
-          '"hud-filtered-by-string") and ' + fn + ']';
-        result = doc.evaluate(xpath, outputNode, null,
-          Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        for (let i = 0; i < result.snapshotLength; i++) {
-          result.snapshotItem(i).classList.remove("hud-filtered-by-string");
-        }
-      });
+      xpath = './/*[contains(@class, "hud-msg-node") and contains(@class, ' +
+        '"hud-filtered-by-string") and ' + fn + ']';
+      result = doc.evaluate(xpath, outputNode, null,
+        Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+      for (let i = 0; i < result.snapshotLength; i++) {
+        result.snapshotItem(i).classList.remove("hud-filtered-by-string");
+      }
     });
   },
 
@@ -1782,8 +1747,7 @@ HUD_SERVICE.prototype =
    *        The ID of the HUD to alter.
    * @param nsIDOMNode aNewNode
    *        The newly-inserted console message.
-   * @returns boolean
-   *        True if the new node was hidden (filtered out) or false otherwise.
+   * @returns void
    */
   adjustVisibilityForNewlyInsertedNode:
   function HS_adjustVisibilityForNewlyInsertedNode(aHUDId, aNewNode) {
@@ -1793,12 +1757,9 @@ HUD_SERVICE.prototype =
     let doc = aNewNode.ownerDocument;
     let result = doc.evaluate(xpath, aNewNode, null,
       Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-    let hidden = false;
-
     if (result.snapshotLength === 0) {
       // The string filter didn't match, so the node is filtered.
       aNewNode.classList.add("hud-filtered-by-string");
-      hidden = true;
     }
 
     // Filter by the message type.
@@ -1814,10 +1775,7 @@ HUD_SERVICE.prototype =
     if (msgType !== null && !this.getFilterState(aHUDId, msgType)) {
       // The node is filtered by type.
       aNewNode.classList.add("hud-filtered-by-type");
-      hidden = true;
     }
-
-    return hidden;
   },
 
   /**
@@ -2123,6 +2081,7 @@ HUD_SERVICE.prototype =
                                                     aMessage.timestamp);
 
     lastGroupNode.appendChild(aMessageNode);
+    ConsoleUtils.scrollToVisible(aMessageNode);
 
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
@@ -2144,6 +2103,7 @@ HUD_SERVICE.prototype =
                                                    aMessageNode)
   {
     aConsoleNode.appendChild(aMessageNode);
+    ConsoleUtils.scrollToVisible(aMessageNode);
 
     // store this message in the storage module:
     this.storage.recordEntry(aMessage.hudId, aMessage);
@@ -3282,12 +3242,7 @@ HeadsUpDisplay.prototype = {
       let node = ev.target;
       if (node.nodeType === node.ELEMENT_NODE &&
           node.classList.contains("hud-msg-node")) {
-        let hidden = HUDService.
-          adjustVisibilityForNewlyInsertedNode(self.hudId, ev.target);
-
-        if (!hidden) {
-          ConsoleUtils.scrollToVisible(node);
-        }
+        HUDService.adjustVisibilityForNewlyInsertedNode(self.hudId, ev.target);
       }
     }, false);
 
@@ -4311,6 +4266,7 @@ JSTerm.prototype = {
     node.appendChild(textNode);
 
     lastGroupNode.appendChild(node);
+    ConsoleUtils.scrollToVisible(node);
     pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
@@ -4348,7 +4304,9 @@ JSTerm.prototype = {
 
     var textNode = this.textFactory(aOutputMessage + "\n");
     node.appendChild(textNode);
+
     lastGroupNode.appendChild(node);
+    ConsoleUtils.scrollToVisible(node);
     pruneConsoleOutputIfNecessary(this.outputNode);
   },
 
