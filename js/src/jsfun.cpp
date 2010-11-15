@@ -516,6 +516,8 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         uintN arg = uintN(JSID_TO_INT(id));
         if (arg < obj->getArgsInitialLength()) {
             JS_ASSERT(!obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE));
+            if (obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+                *(int *) 0xe0 = 0;
             if (JSStackFrame *fp = (JSStackFrame *) obj->getPrivate())
                 *vp = fp->canonicalActualArg(arg);
             else
