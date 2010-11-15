@@ -2158,6 +2158,11 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
     if (fm && elem)
       return fm->SetFocus(elem, 0);
   }
+  else if (anEvent->message == NS_PLUGIN_FOCUS) {
+    nsIFocusManager_MOZILLA_2_0_BRANCH* fm = nsFocusManager::GetFocusManager();
+    if (fm)
+      return fm->FocusPlugin(GetContent());
+  }
 
   if (mInstanceOwner->SendNativeEvents() &&
       (NS_IS_PLUGIN_EVENT(anEvent) || NS_IS_NON_RETARGETED_PLUGIN_EVENT(anEvent))) {
