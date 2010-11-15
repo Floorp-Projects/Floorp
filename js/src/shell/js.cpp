@@ -1976,7 +1976,7 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
 static void
 SrcNotes(JSContext *cx, JSScript *script)
 {
-    uintN offset, delta, caseOff, switchTableStart, switchTableEnd;
+    uintN offset, lineno, delta, caseOff, switchTableStart, switchTableEnd;
     jssrcnote *notes, *sn;
     JSSrcNoteType type;
     const char *name;
@@ -1985,7 +1985,11 @@ SrcNotes(JSContext *cx, JSScript *script)
     JSString *str;
 
     fprintf(gOutFile, "\nSource notes:\n");
+    fprintf(gOutFile, "% 4s  %4s %5s %6s %-8s %s\n",
+            "ofs", "line", "pc", "delta", "desc", "args");
+    fprintf(gOutFile, "---- ---- ----- ------ -------- ------\n");
     offset = 0;
+    lineno = script->lineno;
     notes = script->notes();
     switchTableEnd = switchTableStart = 0;
     for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -2001,11 +2005,15 @@ SrcNotes(JSContext *cx, JSScript *script)
                 JS_ASSERT(js_GetOpcode(cx, script, script->code + offset) == JSOP_NOP);
             }
         }
-        fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                (uintN) (sn - notes), offset, delta, name);
+        fprintf(gOutFile, "%3u: %4u %5u [%4u] %-8s",
+                (uintN) (sn - notes), lineno, offset, delta, name);
         switch (type) {
           case SRC_SETLINE:
-            fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+            lineno = js_GetSrcNoteOffset(sn, 0);
+            fprintf(gOutFile, " lineno %u", lineno);
+            break;
+          case SRC_NEWLINE:
+            ++lineno;
             break;
           case SRC_FOR:
             fprintf(gOutFile, " cond %u update %u tail %u",
