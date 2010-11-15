@@ -121,16 +121,18 @@ class AutoVersionAPI
     explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
       : cx(cx), oldVersion(cx->findVersion()), oldVersionWasOverride(cx->isVersionOverridden()),
         oldOptions(cx->options) {
+        /* 
+         * Note: ANONFUNFIX in newVersion is ignored for backwards
+         * compatibility, must be set via JS_SetOptions. (Because of this, we
+         * inherit the current ANONFUNFIX setting from the options.
+         */
         cx->options = VersionHasXML(newVersion)
                       ? (cx->options | JSOPTION_XML)
                       : (cx->options & ~JSOPTION_XML);
 
-        /* 
-         * Note: ANONFUNFIX is ignored for backwards compatibility, must be set
-         * via JS_SetOptions.
-         */
+        VersionSetAnonFunFix(&newVersion, OptionsHasAnonFunFix(cx->options));
         cx->maybeOverrideVersion(newVersion);
-        SyncOptionsToVersion(cx);
+        cx->checkOptionVersionSync();
     }
 
     ~AutoVersionAPI() {
@@ -1017,17 +1019,6 @@ JS_GetVersion(JSContext *cx)
     return VersionNumber(cx->findVersion());
 }
 
-static void
-CheckOptionVersionSync(JSContext *cx)
-{
-#if DEBUG
-    uint32 options = cx->options;
-    JSVersion version = cx->findVersion();
-    JS_ASSERT(OptionsHasXML(options) == VersionHasXML(version));
-    JS_ASSERT(OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version));
-#endif
-}
-
 JS_PUBLIC_API(JSVersion)
 JS_SetVersion(JSContext *cx, JSVersion newVersion)
 {
@@ -1044,9 +1035,9 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
     if (newVersionNumber != JSVERSION_DEFAULT && newVersionNumber <= JSVERSION_1_4)
         return oldVersionNumber;
 
-    VersionCloneFlags(oldVersion, &newVersion);
+    cx->optionFlagsToVersion(&newVersion);
     cx->maybeOverrideVersion(newVersion);
-    CheckOptionVersionSync(cx);
+    cx->checkOptionVersionSync();
     return oldVersionNumber;
 }
 
@@ -1108,9 +1099,9 @@ JS_SetOptions(JSContext *cx, uint32 options)
     AutoLockGC lock(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
-    SyncOptionsToVersion(cx);
+    cx->syncOptionsToVersion();
     cx->updateJITEnabled();
-    CheckOptionVersionSync(cx);
+    cx->checkOptionVersionSync();
     return oldopts;
 }
 
@@ -1118,12 +1109,12 @@ JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
     AutoLockGC lock(cx->runtime);
-    CheckOptionVersionSync(cx);
+    cx->checkOptionVersionSync();
     uint32 oldopts = cx->options;
     cx->options ^= options;
-    (void) SyncOptionsToVersion(cx);
+    cx->syncOptionsToVersion();
     cx->updateJITEnabled();
-    CheckOptionVersionSync(cx);
+    cx->checkOptionVersionSync();
     return oldopts;
 }
 
