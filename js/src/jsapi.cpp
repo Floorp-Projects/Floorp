@@ -95,6 +95,7 @@
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
 #include "jsregexpinlines.h"
+#include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
 
 #if ENABLE_YARR_JIT
@@ -2680,25 +2681,26 @@ JS_FlushCaches(JSContext *cx)
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
-    return js_ChangeExternalStringFinalizer(NULL, finalizer);
+    return JSExternalString::changeFinalizer(NULL, finalizer);
 }
 
 JS_PUBLIC_API(intN)
 JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
-    return js_ChangeExternalStringFinalizer(finalizer, NULL);
+    return JSExternalString::changeFinalizer(finalizer, NULL);
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT(uintN(type) < JS_EXTERNAL_STRING_LIMIT);
+    JS_ASSERT(uintN(type) < JSExternalString::TYPE_LIMIT);
 
-    JSString *str = js_NewGCExternalString(cx, uintN(type));
+    JSExternalString *str = js_NewGCExternalString(cx, uintN(type));
     if (!str)
         return NULL;
     str->initFlat(chars, length);
+    str->externalStringType = type;
     cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
     return str;
 }

@@ -118,11 +118,8 @@ JSObject::syncSpecialEquality()
 }
 
 inline void
-JSObject::finalize(JSContext *cx, unsigned thingKind)
+JSObject::finalize(JSContext *cx)
 {
-    JS_ASSERT(thingKind >= js::gc::FINALIZE_OBJECT0 &&
-              thingKind <= js::gc::FINALIZE_FUNCTION);
-
     /* Cope with stillborn objects that have no map. */
     if (!map)
         return;

@@ -89,11 +89,6 @@ using namespace js::gc;
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
 JS_STATIC_ASSERT(JSString::MAX_LENGTH <= JSVAL_INT_MAX);
 
-JS_STATIC_ASSERT(JS_EXTERNAL_STRING_LIMIT == 8);
-JSStringFinalizeOp str_finalizers[JS_EXTERNAL_STRING_LIMIT] = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
-
 const jschar *
 js_GetStringChars(JSContext *cx, JSString *str)
 {
@@ -188,6 +183,11 @@ JSString::flatten()
         }
     }
 }
+
+JS_STATIC_ASSERT(JSExternalString::TYPE_LIMIT == 8);
+JSStringFinalizeOp JSExternalString::str_finalizers[JSExternalString::TYPE_LIMIT] = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
 
 #ifdef JS_TRACER
 

@@ -990,7 +990,7 @@ struct JSObject : js::gc::Cell {
               void *priv, bool useHoles);
 
     inline void finish(JSContext *cx);
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thindKind);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 
     /*
      * Like init, but also initializes map. The catch: proto must be the result
