@@ -102,8 +102,10 @@ _MOCHITEST_FILES = \
 ifeq ($(OS_ARCH),WINNT)
 _MOCHITEST_FILES += \
   test_windowed_invalidate.html \
-  test_positioning.html \
   $(NULL)
+
+# test_positioning.html \ disabled due to oddness, perhaps scrolling of the
+# mochitest window?
 endif
 
 _MOCHICHROME_FILES = \
