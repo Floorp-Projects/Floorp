@@ -2166,7 +2166,9 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
 {
     AssertPluginThread();
 
-    mWindow.window = reinterpret_cast<void*>(aWindow.window);
+    NS_ASSERTION(!aWindow.window, "Remote window should be null.");
+
+    mWindow.window = NULL;
     if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) {
         mCurrentSurface = nsnull;
         mHelperSurface = nsnull;
