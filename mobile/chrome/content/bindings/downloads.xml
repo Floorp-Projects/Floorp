@@ -178,7 +178,13 @@
             document.getAnonymousElementByAttribute(this, "anonid", "showpage-button").setAttribute("disabled", "true");
 
           let file = DownloadsView._getLocalFile(this.getAttribute("file"));
-          if (!file.exists())
+          let mimeService = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
+          let mimeType;
+          try {
+            mimeType = mimeService.getTypeFromFile(file);
+          }
+          catch(e) {}
+          if (!file.exists() || !mimeType)
             document.getAnonymousElementByAttribute(this, "anonid", "open-button").setAttribute("disabled", "true");
         ]]>
       </constructor>
