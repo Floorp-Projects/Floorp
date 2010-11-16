@@ -159,8 +159,7 @@ CryptoMeta.prototype = {
       )
     );
 
-    unwrappedKey.hmacKey = Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC,
-      unwrappedKey);
+    unwrappedKey.hmacKey = Utils.makeHMACKey(unwrappedKey);
 
     // Cache the result after the first get and just return it
     return (this.getKey = function() unwrappedKey)();
@@ -193,7 +192,7 @@ CryptoMeta.prototype = {
 
   get hmacKey() {
     let passphrase = ID.get("WeaveCryptoID").passwordUTF8;
-    return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, passphrase);
+    return Utils.makeHMACKey(passphrase);
   }
 };
 
