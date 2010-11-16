@@ -42,6 +42,7 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
+#include "jsemit.h"
 #include "jsiter.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -440,6 +441,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->nCallSites = callSites.length();
     jit->invokeEntry = result;
+    jit->singleStepMode = script->singleStepMode;
 
     /* Build the pc -> ncode mapping. */
     NativeMapEntry *nmap = (NativeMapEntry *)cursor;
@@ -791,6 +793,32 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     return Compile_Okay;
 }
 
+class SrcNoteLineScanner {
+    ptrdiff_t offset;
+    jssrcnote *sn;
+
+public:
+    SrcNoteLineScanner(jssrcnote *sn) : offset(0), sn(sn) {}
+
+    bool firstOpInLine(ptrdiff_t relpc) {
+        while ((offset < relpc) && !SN_IS_TERMINATOR(sn)) {
+            offset += SN_DELTA(sn);
+            sn = SN_NEXT(sn);
+        }
+
+        while ((offset == relpc) && !SN_IS_TERMINATOR(sn)) {
+            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            if (type == SRC_SETLINE || type == SRC_NEWLINE)
+                return true;
+                
+            offset += SN_DELTA(sn);
+            sn = SN_NEXT(sn);
+        }
+
+        return false;
+    }
+};
+
 #ifdef DEBUG
 #define SPEW_OPCODE()                                                         \
     JS_BEGIN_MACRO                                                            \
@@ -815,16 +843,19 @@ CompileStatus
 mjit::Compiler::generateMethod()
 {
     mjit::AutoScriptRetrapper trapper(cx, script);
+    SrcNoteLineScanner scanner(script->notes());
 
     for (;;) {
         JSOp op = JSOp(*PC);
-        bool trap = (op == JSOP_TRAP);
-
-        if (trap) {
+        int trap = stubs::JSTRAP_NONE;
+        if (op == JSOP_TRAP) {
             if (!trapper.untrap(PC))
                 return Compile_Error;
             op = JSOp(*PC);
+            trap |= stubs::JSTRAP_TRAP;
         }
+        if (script->singleStepMode && scanner.firstOpInLine(PC - script->code))
+            trap |= stubs::JSTRAP_SINGLESTEP;
 
         analyze::Bytecode *opinfo = analysis->maybeCode(PC);
 
@@ -850,7 +881,7 @@ mjit::Compiler::generateMethod()
 
         if (trap) {
             prepareStubCall(Uses(0));
-            masm.move(ImmPtr(PC), Registers::ArgReg1);
+            masm.move(Imm32(trap), Registers::ArgReg1);
             Call cl = emitStubCall(JS_FUNC_TO_DATA_PTR(void *, stubs::Trap));
             InternalCallSite site(masm.callReturnOffset(cl), PC,
                                   CallSite::MAGIC_TRAP_ID, true, false);

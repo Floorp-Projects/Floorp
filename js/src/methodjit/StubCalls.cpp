@@ -1316,11 +1316,32 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 }
 
 void JS_FASTCALL
-stubs::Trap(VMFrame &f, jsbytecode *pc)
+stubs::Trap(VMFrame &f, uint32 trapTypes)
 {
     Value rval;
+    jsbytecode *pc = f.cx->regs->pc;
 
-    switch (JS_HandleTrap(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval))) {
+    /*
+     * Trap may be called for a single-step interrupt trap and/or a
+     * regular trap. Try the single-step first, and if it lets control
+     * flow through or does not exist, do the regular trap.
+     */
+    JSTrapStatus result = JSTRAP_CONTINUE;
+    if (trapTypes & JSTRAP_SINGLESTEP) {
+        /*
+         * single step mode may be paused without recompiling by
+         * setting the interruptHook to NULL.
+         */
+        JSInterruptHook hook = f.cx->debugHooks->interruptHook;
+        if (hook)
+            result = hook(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
+                          f.cx->debugHooks->interruptHookData);
+    }
+
+    if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
+        result = JS_HandleTrap(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval));
+
+    switch (result) {
       case JSTRAP_THROW:
         f.cx->throwing = JS_TRUE;
         f.cx->exception = rval;
