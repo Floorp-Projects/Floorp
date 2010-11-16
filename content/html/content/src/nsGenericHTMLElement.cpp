@@ -77,6 +77,7 @@
 #include "nsDOMError.h"
 #include "nsScriptLoader.h"
 #include "nsRuleData.h"
+#include "nsAHtml5FragmentParser.h"
 
 #include "nsPresState.h"
 #include "nsILayoutHistoryState.h"
@@ -745,9 +746,15 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     }
 
     PRInt32 oldChildCount = GetChildCount();
-    parser->ParseFragment(aInnerHTML, this, Tag(), GetNameSpaceID(),
-                          doc->GetCompatibilityMode() == eCompatibility_NavQuirks,
-                          PR_TRUE);
+    nsAHtml5FragmentParser* asFragmentParser =
+        static_cast<nsAHtml5FragmentParser*> (parser.get());
+    asFragmentParser->ParseHtml5Fragment(aInnerHTML,
+                                         this,
+                                         Tag(),
+                                         GetNameSpaceID(),
+                                         doc->GetCompatibilityMode() ==
+                                             eCompatibility_NavQuirks,
+                                         PR_TRUE);
     doc->SetFragmentParser(parser);
 
     // HTML5 parser has notified, but not fired mutation events.

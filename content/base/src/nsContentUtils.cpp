@@ -183,6 +183,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsTextEditorState.h"
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
+#include "nsAHtml5FragmentParser.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3898,23 +3899,27 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
+    nsAHtml5FragmentParser* asFragmentParser =
+        static_cast<nsAHtml5FragmentParser*> (parser.get());
     nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
     if (contextAsContent &&
         !(nsGkAtoms::html == contextAsContent->Tag() &&
           contextAsContent->IsHTML())) {
-      parser->ParseFragment(aFragment, 
-                            fragment, 
-                            contextAsContent->Tag(), 
-                            contextAsContent->GetNameSpaceID(), 
-                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks),
-                            PR_FALSE);
+      asFragmentParser->ParseHtml5Fragment(aFragment,
+                                           fragment,
+                                           contextAsContent->Tag(),
+                                           contextAsContent->GetNameSpaceID(),
+                                           (document->GetCompatibilityMode() ==
+                                               eCompatibility_NavQuirks),
+                                           PR_FALSE);
     } else {
-      parser->ParseFragment(aFragment, 
-                            fragment,
-                            nsGkAtoms::body, 
-                            kNameSpaceID_XHTML, 
-                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks),
-                            PR_FALSE);
+      asFragmentParser->ParseHtml5Fragment(aFragment,
+                                           fragment,
+                                           nsGkAtoms::body,
+                                           kNameSpaceID_XHTML,
+                                           (document->GetCompatibilityMode() ==
+                                               eCompatibility_NavQuirks),
+                                           PR_FALSE);
     }
   
     frag.swap(*aReturn);

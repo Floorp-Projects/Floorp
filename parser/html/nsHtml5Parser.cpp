@@ -428,11 +428,21 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
-                             nsIContent* aTargetNode,
-                             nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace,
-                             PRBool aQuirks,
-                             PRBool aPreventScriptExecution)
+                        nsIContent* aTargetNode,
+                        nsIAtom* aContextLocalName,
+                        PRInt32 aContextNamespace,
+                        PRBool aQuirks)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
+                                  nsIContent* aTargetNode,
+                                  nsIAtom* aContextLocalName,
+                                  PRInt32 aContextNamespace,
+                                  PRBool aQuirks,
+                                  PRBool aPreventScriptExecution)
 {
   nsIDocument* doc = aTargetNode->GetOwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
