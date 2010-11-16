@@ -106,6 +106,7 @@ chrome.jar:
   skin/images/task-back-rtl-hdpi.png        (images/task-back-rtl-hdpi.png)
   skin/images/autocomplete-desktop-hdpi.png      (images/autocomplete-desktop-hdpi.png)
   skin/images/autocomplete-bookmarked-hdpi.png   (images/autocomplete-bookmarked-hdpi.png)
+  skin/images/autocomplete-search-hdpi.png  (images/autocomplete-search-hdpi.png)
   skin/images/play-hdpi.png                 (images/play-hdpi.png)
   skin/images/pause-hdpi.png                (images/pause-hdpi.png)
   skin/images/mute-hdpi.png                 (images/mute-hdpi.png)
