@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,6 +54,11 @@
 #include "prlock.h"
 
 #include "nsDOMWorkerMessageHandler.h"
+
+// {1295EFB5-8644-42B2-8B8E-80EEF56E4284}
+#define NS_WORKERFACTORY_CID \
+ {0x1295efb5, 0x8644, 0x42b2, \
+  {0x8b, 0x8e, 0x80, 0xee, 0xf5, 0x6e, 0x42, 0x84} }
 
 class nsDOMWorker;
 class nsDOMWorkerFeature;
@@ -133,7 +138,7 @@ private:
 };
 
 class nsDOMWorker : public nsDOMWorkerMessageHandler,
-                    public nsIChromeWorker,
+                    public nsIWorker,
                     public nsITimerCallback,
                     public nsIJSNativeInitializer,
                     public nsIXPCScriptable
@@ -164,13 +169,13 @@ public:
                               PRUint8 optional_argc);
   NS_DECL_NSIABSTRACTWORKER
   NS_DECL_NSIWORKER
-  NS_DECL_NSICHROMEWORKER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSICLASSINFO
   NS_DECL_NSIXPCSCRIPTABLE
 
   static nsresult NewWorker(nsISupports** aNewObject);
   static nsresult NewChromeWorker(nsISupports** aNewObject);
+  static nsresult NewChromeDOMWorker(nsDOMWorker** aNewObject);
 
   enum WorkerPrivilegeModel { CONTENT, CHROME };
 
@@ -433,6 +438,13 @@ protected:
 private:
   PRPackedBool mHasId;
   PRPackedBool mFreeToDie;
+};
+
+class nsWorkerFactory : public nsIWorkerFactory
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWORKERFACTORY
 };
 
 #endif /* __NSDOMWORKER_H__ */
