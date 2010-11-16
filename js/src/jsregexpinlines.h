@@ -93,8 +93,9 @@ class RegExp
     void handlePCREError(JSContext *cx, int error);
     void handleYarrError(JSContext *cx, int error);
     static inline bool initArena(JSContext *cx);
-    static inline void checkMatchPairs(JSString *input, int *buf, size_t matchItemCount);
-    static JSObject *createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount);
+    static inline void checkMatchPairs(int *buf, size_t matchItemCount);
+    JSObject *createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount,
+                           size_t inputOffset);
     inline bool executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
                                 size_t *lastIndex, bool test, Value *rval);
 
@@ -217,29 +218,19 @@ RegExp::initArena(JSContext *cx)
 }
 
 inline void
-RegExp::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
+RegExp::checkMatchPairs(int *buf, size_t matchItemCount)
 {
 #if DEBUG
-    size_t inputLength = input->length();
-    int largestStartSeen = 0;
-    for (size_t i = 0; i < matchItemCount; i += 2) {
-        int start = buf[i];
-        int limit = buf[i + 1];
-        JS_ASSERT(limit >= start); /* Limit index must be larger than the start index. */
-        if (start == -1)
-            continue;
-        JS_ASSERT(start >= 0);
-        JS_ASSERT(size_t(limit) <= inputLength);
-        /* Test the monotonically increasing nature of left parens. */
-        JS_ASSERT(start >= largestStartSeen);
-        largestStartSeen = start;
-    }
+    for (size_t i = 0; i < matchItemCount; i += 2)
+        JS_ASSERT(buf[i + 1] >= buf[i]); /* Limit index must be larger than the start index. */
 #endif
 }
 
 inline JSObject *
-RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount)
+RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount,
+                     size_t inputOffset)
 {
+#define MATCH_VALUE(__index) (buf[(__index)] + inputOffset)
     /*
      * Create the result array for a match. Array contents:
      *  0:              matched string
@@ -251,13 +242,13 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
 
     RegExpMatchBuilder builder(cx, array);
     for (size_t i = 0; i < matchItemCount; i += 2) {
-        int start = buf[i];
-        int end = buf[i + 1];
+        int start = MATCH_VALUE(i);
+        int end = MATCH_VALUE(i + 1);
 
         JSString *captured;
         if (start >= 0) {
             JS_ASSERT(start <= end);
-            JS_ASSERT(unsigned(end) <= input->length());
+            JS_ASSERT((unsigned) end <= input->length());
             captured = js_NewDependentString(cx, input, start, end - start);
             if (!(captured && builder.append(i / 2, captured)))
                 return NULL;
@@ -270,11 +261,12 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
         }
     }
 
-    if (!builder.appendIndex(buf[0]) ||
+    if (!builder.appendIndex(MATCH_VALUE(0)) ||
         !builder.appendInput(input))
         return NULL;
 
     return array;
+#undef MATCH_VALUE
 }
 
 inline bool
@@ -305,11 +297,6 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
 
     const jschar *chars = input->chars();
     size_t len = input->length();
-
-    /* 
-     * inputOffset emulates sticky mode by matching from this offset into the char buf and
-     * subtracting the delta off at the end.
-     */
     size_t inputOffset = 0;
 
     if (sticky()) {
@@ -331,29 +318,27 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
         return true;
     }
 
-    /* 
-     * Adjust buf for the inputOffset. Use of sticky is rare and the matchItemCount is small, so
-     * just do another pass.
-     */
-    if (JS_UNLIKELY(inputOffset)) {
+    checkMatchPairs(buf, matchItemCount);
+
+    if (res) {
+        res->aboutToWrite();
+        res->input = input;
+        if (!res->matchPairs.resizeUninitialized(matchItemCount)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
         for (size_t i = 0; i < matchItemCount; ++i)
-            buf[i] = buf[i] < 0 ? -1 : buf[i] + inputOffset;
+            res->matchPairs[i] = buf[i] + inputOffset;
     }
 
-    /* Make sure the populated contents of |buf| are sane values against |input|. */
-    checkMatchPairs(input, buf, matchItemCount);
-
-    if (res)
-        res->updateFromMatch(cx, input, buf, matchItemCount);
-
-    *lastIndex = buf[1];
+    *lastIndex = buf[1] + inputOffset;
 
     if (test) {
         *rval = BooleanValue(true);
         return true;
     }
 
-    JSObject *array = createResult(cx, input, buf, matchItemCount);
+    JSObject *array = createResult(cx, input, buf, matchItemCount, inputOffset);
     if (!array)
         return false;
 
@@ -545,8 +530,8 @@ inline bool
 RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *out) const 
 {
     JS_ASSERT(start <= end);
-    JS_ASSERT(end <= matchPairsInput->length());
-    JSString *str = js_NewDependentString(cx, matchPairsInput, start, end - start);
+    JS_ASSERT(end <= input->length());
+    JSString *str = js_NewDependentString(cx, input, start, end - start);
     if (!str)
         return false;
     *out = StringValue(str);
@@ -554,9 +539,9 @@ RegExpStatics::createDependent(JSContext *cx, size_t start, size_t end, Value *o
 }
 
 inline bool
-RegExpStatics::createPendingInput(JSContext *cx, Value *out) const
+RegExpStatics::createInput(JSContext *cx, Value *out) const
 {
-    out->setString(pendingInput ? pendingInput : cx->runtime->emptyString);
+    out->setString(input ? input : cx->runtime->emptyString);
     return true;
 }
 
@@ -614,13 +599,13 @@ RegExpStatics::createRightContext(JSContext *cx, Value *out) const
         *out = UndefinedValue();
         return true;
     }
-    return createDependent(cx, matchPairs[1], matchPairsInput->length(), out);
+    return createDependent(cx, matchPairs[1], input->length(), out);
 }
 
 inline void
 RegExpStatics::getParen(size_t num, JSSubString *out) const
 {
-    out->chars = matchPairsInput->chars() + get(num + 1, 0);
+    out->chars = input->chars() + get(num + 1, 0);
     out->length = getParenLength(num);
 }
 
@@ -631,8 +616,8 @@ RegExpStatics::getLastMatch(JSSubString *out) const
         *out = js_EmptySubString;
         return;
     }
-    JS_ASSERT(matchPairsInput);
-    out->chars = matchPairsInput->chars() + get(0, 0);
+    JS_ASSERT(input);
+    out->chars = input->chars() + get(0, 0);
     JS_ASSERT(get(0, 1) >= get(0, 0));
     out->length = get(0, 1) - get(0, 0);
 }
@@ -645,7 +630,7 @@ RegExpStatics::getLastParen(JSSubString *out) const
         return;
     }
     size_t num = pairCount() - 1;
-    out->chars = matchPairsInput->chars() + get(num, 0);
+    out->chars = input->chars() + get(num, 0);
     JS_ASSERT(get(num, 1) >= get(num, 0));
     out->length = get(num, 1) - get(num, 0);
 }
@@ -657,7 +642,7 @@ RegExpStatics::getLeftContext(JSSubString *out) const
         *out = js_EmptySubString;
         return;
     }
-    out->chars = matchPairsInput->chars();
+    out->chars = input->chars();
     out->length = get(0, 0);
 }
 
@@ -668,9 +653,9 @@ RegExpStatics::getRightContext(JSSubString *out) const
         *out = js_EmptySubString;
         return;
     }
-    out->chars = matchPairsInput->chars() + get(0, 1);
-    JS_ASSERT(get(0, 1) <= int(matchPairsInput->length()));
-    out->length = matchPairsInput->length() - get(0, 1);
+    out->chars = input->chars() + get(0, 1);
+    JS_ASSERT(get(0, 1) <= int(input->length()));
+    out->length = input->length() - get(0, 1);
 }
 
 }

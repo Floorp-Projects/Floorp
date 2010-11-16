@@ -393,7 +393,7 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uint32 flags, JSObject **o
         code;                                                                   \
     }
 
-DEFINE_STATIC_GETTER(static_input_getter,        return res->createPendingInput(cx, Valueify(vp)))
+DEFINE_STATIC_GETTER(static_input_getter,        return res->createInput(cx, Valueify(vp)))
 DEFINE_STATIC_GETTER(static_multiline_getter,    *vp = BOOLEAN_TO_JSVAL(res->multiline());
                                                  return true)
 DEFINE_STATIC_GETTER(static_lastMatch_getter,    return res->createLastMatch(cx, Valueify(vp)))
@@ -423,7 +423,7 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 8, 
 DEFINE_STATIC_SETTER(static_input_setter,
                      if (!JSVAL_IS_STRING(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_STRING, vp))
                          return false;
-                     res->setPendingInput(JSVAL_TO_STRING(*vp)))
+                     res->setInput(JSVAL_TO_STRING(*vp)))
 DEFINE_STATIC_SETTER(static_multiline_setter,
                      if (!JSVAL_IS_BOOLEAN(*vp) && !JS_ConvertValue(cx, *vp, JSTYPE_BOOLEAN, vp))
                          return false;
@@ -783,7 +783,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         argv[0] = StringValue(str);
     } else {
         /* Need to grab input from statics. */
-        str = res->getPendingInput();
+        str = res->getInput();
         if (!str) {
             const char *sourceBytes = js_GetStringBytes(cx, re->getSource());
             if (sourceBytes) {
