@@ -762,6 +762,10 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
     savedThis_ = args_.thisv() = thisv;
 
     do {
+        /* In debug mode, script->getJIT(fp->isConstructing()) can change. */
+        if (cx->compartment->debugMode)
+            break;
+
         /* Hoist dynamic checks from scripted Invoke. */
         if (!calleev.isObject())
             break;
