@@ -595,6 +595,9 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         AutoPreserveEnumerators preserve(cx);
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
+        if (code_ != script_->getJIT(fp->isConstructing())->invokeEntry)
+            *(volatile int *)0x101 = 0;
+
         AutoInterpPreparer prepareInterp(cx, script_);
         ok = mjit::EnterMethodJIT(cx, fp, code_, stackLimit_);
         cx->regs->pc = stop_;
