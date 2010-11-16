@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: floor backend 1 implementation
- last mod: $Id: floor1.c 17079 2010-03-26 06:51:41Z xiphmont $
+ last mod: $Id: floor1.c 17555 2010-10-21 18:14:51Z tterribe $
 
  ********************************************************************/
 
@@ -1035,7 +1035,7 @@ static void *floor1_inverse1(vorbis_block *vb,vorbis_look_floor *in){
           }
         }
 
-        fit_value[i]=val+predicted;
+        fit_value[i]=val+predicted&0x7fff;
         fit_value[look->loneighbor[i-2]]&=0x7fff;
         fit_value[look->hineighbor[i-2]]&=0x7fff;
 
@@ -1066,13 +1066,18 @@ static int floor1_inverse2(vorbis_block *vb,vorbis_look_floor *in,void *memo,
     int hx=0;
     int lx=0;
     int ly=fit_value[0]*info->mult;
+    /* guard lookup against out-of-range values */
+    ly=(ly<0?0:ly>255?255:ly);
+
     for(j=1;j<look->posts;j++){
       int current=look->forward_index[j];
       int hy=fit_value[current]&0x7fff;
       if(hy==fit_value[current]){
 
-        hy*=info->mult;
         hx=info->postlist[current];
+        hy*=info->mult;
+        /* guard lookup against out-of-range values */
+        hy=(hy<0?0:hy>255?255:hy);
 
         render_line(n,lx,hx,ly,hy,out);
 

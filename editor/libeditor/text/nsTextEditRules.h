@@ -75,6 +75,7 @@ public:
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty);
+  NS_IMETHOD DocumentModified();
 
   // nsTextEditRules action id's
   enum 
@@ -204,9 +205,6 @@ protected:
 
 
   // helper functions
-  
-  /** replaces newllines with breaks, if needed.  acts on doc portion in aRange */
-  nsresult ReplaceNewlines(nsIDOMRange *aRange);
   
   /** creates a trailing break in the text doc if there is not one already */
   nsresult CreateTrailingBRIfNeeded();

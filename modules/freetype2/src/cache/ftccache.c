@@ -346,7 +346,7 @@
   static void
   FTC_Cache_Clear( FTC_Cache  cache )
   {
-    if ( cache )
+    if ( cache && cache->buckets )
     {
       FTC_Manager  manager = cache->manager;
       FT_UFast     i;

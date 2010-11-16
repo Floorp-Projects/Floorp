@@ -43,7 +43,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = ipdlunittest
 PROGRAM = $(MODULE)$(BIN_SUFFIX)
-ENABLE_CXX_EXCEPTIONS = 1
 
 NSDISTMODE = copy
 

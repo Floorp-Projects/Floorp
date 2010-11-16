@@ -113,6 +113,7 @@ XPIDLSRCS	= \
 		nsIPrintOptions.idl \
 		nsIIdleService.idl \
 		nsIGfxInfo.idl \
+		nsIIMEPicker.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

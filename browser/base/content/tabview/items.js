@@ -227,8 +227,7 @@ Item.prototype = {
         resizeInfo = new Drag(this, e, true); // true = isResizing
       },
       resize: function(e,ui) {
-        // TODO: maybe the stationaryCorner should be topright for rtl langs?
-        resizeInfo.snap('topleft', false, self.keepProportional);
+        resizeInfo.snap(UI.rtl ? 'topright' : 'topleft', false, self.keepProportional);
       },
       stop: function() {
         self.setUserSize();
@@ -601,7 +600,7 @@ Item.prototype = {
       // ___ mousemove
       var handleMouseMove = function(e) {
         // positioning
-        var mouse = new Point(e.pageX, e.pageY);		
+        var mouse = new Point(e.pageX, e.pageY);
         if (!startSent) {
           if(Math.abs(mouse.x - startMouse.x) > self.dragOptions.minDragDistance ||
              Math.abs(mouse.y - startMouse.y) > self.dragOptions.minDragDistance) {
@@ -769,7 +768,16 @@ Item.prototype = {
         var handleMouseMove = function(e) {
           var mouse = new Point(e.pageX, e.pageY);
           var box = self.getBounds();
-          box.width = Math.max(self.resizeOptions.minWidth || 0, startSize.x + (mouse.x - startMouse.x));
+          if (UI.rtl) {
+            var minWidth = (self.resizeOptions.minWidth || 0);
+            var oldWidth = box.width;
+            if (minWidth != oldWidth || mouse.x < startMouse.x) {
+              box.width = Math.max(minWidth, startSize.x - (mouse.x - startMouse.x));
+              box.left -= box.width - oldWidth;
+            }
+          } else {
+            box.width = Math.max(self.resizeOptions.minWidth || 0, startSize.x + (mouse.x - startMouse.x));
+          }
           box.height = Math.max(self.resizeOptions.minHeight || 0, startSize.y + (mouse.y - startMouse.y));
 
           if (self.resizeOptions.aspectRatio) {
@@ -892,39 +900,41 @@ let Items = {
   // maximizing item size but maintaining standard tab aspect ratio for each
   //
   // Parameters:
-  //   items - an array of <Item>s. Can be null if the pretend and count options are set.
+  //   items - an array of <Item>s. Can be null, in which case we won't
+  //     actually move anything.
   //   bounds - a <Rect> defining the space to arrange within
   //   options - an object with various properites (see below)
   //
   // Possible "options" properties:
   //   animate - whether to animate; default: true.
   //   z - the z index to set all the items; default: don't change z.
-  //   pretend - whether to collect and return the rectangle rather than moving the items; default: false
-  //   count - overrides the item count for layout purposes; default: the actual item count
+  //   return - if set to 'widthAndColumns', it'll return an object with the
+  //     width of children and the columns.
+  //   count - overrides the item count for layout purposes;
+  //     default: the actual item count
   //   padding - pixels between each item
+  //   columns - (int) a preset number of columns to use
   //
   // Returns:
-  //   the list of rectangles if the pretend option is set; otherwise null
+  //   an object with the width value of the child items and the number of columns, 
+  //   if the return option is set to 'widthAndColumns'; otherwise the list of <Rect>s
   arrange: function Items_arrange(items, bounds, options) {
-    var animate;
-    if (!options || typeof options.animate == 'undefined')
-      animate = true;
-    else
-      animate = options.animate;
-
     if (typeof options == 'undefined')
       options = {};
 
-    var rects = null;
-    if (options.pretend)
-      rects = [];
+    var animate = true;
+    if (typeof options.animate != 'undefined')
+      animate = options.animate;
+    var immediately = !animate;
+
+    var rects = [];
 
     var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
     var count = options.count || (items ? items.length : 0);
     if (!count)
       return rects;
 
-    var columns = 1;
+    var columns = options.columns || 1;
     // We'll assume for the time being that all the items have the same styling
     // and that the margin is the same width around.
     var itemMargin = items && items.length ?
@@ -954,20 +964,22 @@ let Items = {
       tabWidth = Math.min(tabWidth, (bounds.height - 2 * itemMargin) / tabAspect);
       tabHeight = tabWidth * tabAspect;
     }
+    
+    if (options.return == 'widthAndColumns')
+      return {childWidth: tabWidth, columns: columns};
 
-    var box = new Rect(bounds.left, bounds.top, tabWidth, tabHeight);
-    var row = 0;
+    let initialOffset = 0;
+    if (UI.rtl) {
+      initialOffset = bounds.width - tabWidth - padding;
+    }
+    var box = new Rect(bounds.left + initialOffset, bounds.top, tabWidth, tabHeight);
+
     var column = 0;
-    var immediately;
 
-    var a;
-    for (a = 0; a < count; a++) {
-      immediately = !animate;
-
-      if (rects)
-        rects.push(new Rect(box));
-      else if (items && a < items.length) {
-        var item = items[a];
+    for (let a = 0; a < count; a++) {
+      rects.push(new Rect(box));
+      if (items && a < items.length) {
+        let item = items[a];
         if (!item.locked.bounds) {
           item.setBounds(box, immediately);
           item.setRotation(0);
@@ -976,13 +988,12 @@ let Items = {
         }
       }
 
-      box.left += box.width + padding;
+      box.left += (UI.rtl ? -1 : 1) * (box.width + padding);
       column++;
       if (column == columns) {
-        box.left = bounds.left;
+        box.left = bounds.left + initialOffset;
         box.top += (box.height * yScale) + padding;
         column = 0;
-        row++;
       }
     }
 

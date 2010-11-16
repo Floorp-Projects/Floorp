@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.1 API Reference</title>
+<title>FreeType-2.4.3 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.1 API Reference</h1></center>
+<center><h1>FreeType-2.4.3 API Reference</h1></center>
 
 <center><h1>
 Cache Sub-System
@@ -63,7 +63,7 @@ Cache Sub-System
 <p>Note that all types and functions begin with the &lsquo;FTC_&rsquo; prefix.</p>
 <p>The cache is highly portable and thus doesn't know anything about the fonts installed on your system, or how to access them. This implies the following scheme:</p>
 <p>First, available or installed font faces are uniquely identified by <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a> values, provided to the cache by the client. Note that the cache only stores and compares these values, and doesn't try to interpret them in any way.</p>
-<p>Second, the cache calls, only when needed, a client-provided function to convert a <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a> into a new <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object. The latter is then completely managed by the cache, including its termination through <a href="ft2-base_interface.html#FT_Done_Face">FT_Done_Face</a>.</p>
+<p>Second, the cache calls, only when needed, a client-provided function to convert an <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a> into a new <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object. The latter is then completely managed by the cache, including its termination through <a href="ft2-base_interface.html#FT_Done_Face">FT_Done_Face</a>. To monitor termination of face objects, the finalizer callback in the &lsquo;generic&rsquo; field of the <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object can be used, which might also be used to store the <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a> of the face.</p>
 <p>Clients are free to map face IDs to anything else. The most simple usage is to associate them to a (pathname,face_index) pair that is used to call <a href="ft2-base_interface.html#FT_New_Face">FT_New_Face</a>. However, more complex schemes are also possible.</p>
 <p>Note that for the cache to work correctly, the face ID values must be <b>persistent</b>, which means that the contents they point to should not change at runtime, or that their value should not become invalid.</p>
 <p>If this is unavoidable (e.g., when a font is uninstalled at runtime), you should call <a href="ft2-cache_subsystem.html#FTC_Manager_RemoveFaceID">FTC_Manager_RemoveFaceID</a> as soon as possible, to let the cache get rid of any references to the old <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a> it may keep internally. Failure to do so will lead to incorrect behaviour or even crashes.</p>

@@ -70,7 +70,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
     static PRUnichar REPLACEMENT_CHARACTER[];
-    static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
+    static staticJArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
@@ -84,15 +84,15 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     nsIAtom* contextName;
     PRInt32 contextNamespace;
     nsIContent** contextNode;
-    jArray<nsHtml5StackNode*,PRInt32> stack;
+    autoJArray<nsHtml5StackNode*,PRInt32> stack;
     PRInt32 currentPtr;
-    jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
+    autoJArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements;
     PRInt32 listPtr;
     nsIContent** formPointer;
     nsIContent** headPointer;
     nsIContent** deepTreeSurrogateParent;
   protected:
-    jArray<PRUnichar,PRInt32> charBuffer;
+    autoJArray<PRUnichar,PRInt32> charBuffer;
     PRInt32 charBufferLen;
   private:
     PRBool quirks;
@@ -152,11 +152,12 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void removeFromStack(PRInt32 pos);
     void removeFromStack(nsHtml5StackNode* node);
     void removeFromListOfActiveFormattingElements(PRInt32 pos);
-    void adoptionAgencyEndTag(nsIAtom* name);
+    PRBool adoptionAgencyEndTag(nsIAtom* name);
     void insertIntoStack(nsHtml5StackNode* node, PRInt32 position);
     void insertIntoListOfActiveFormattingElements(nsHtml5StackNode* formattingClone, PRInt32 bookmark);
     PRInt32 findInListOfActiveFormattingElements(nsHtml5StackNode* node);
     PRInt32 findInListOfActiveFormattingElementsContainsBetweenEndAndLastMarker(nsIAtom* name);
+    void maybeForgetEarlierDuplicateFormattingElement(nsIAtom* name, nsHtml5HtmlAttributes* attributes);
     PRInt32 findLastOrRoot(nsIAtom* name);
     PRInt32 findLastOrRoot(PRInt32 group);
     PRBool addAttributesToBody(nsHtml5HtmlAttributes* attributes);
@@ -245,11 +246,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 #include "nsHtml5TreeBuilderHSupplement.h"
 };
 
-#ifdef nsHtml5TreeBuilder_cpp__
-PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
-jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
-#endif
-
 #define NS_HTML5TREE_BUILDER_OTHER 0
 #define NS_HTML5TREE_BUILDER_A 1
 #define NS_HTML5TREE_BUILDER_BASE 2
@@ -300,7 +296,7 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_EMBED_OR_IMG 48
 #define NS_HTML5TREE_BUILDER_AREA_OR_WBR 49
 #define NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU 50
-#define NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION 51
+#define NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_NAV_OR_SECTION_OR_SUMMARY 51
 #define NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR 52
 #define NS_HTML5TREE_BUILDER_RT_OR_RP 53
 #define NS_HTML5TREE_BUILDER_COMMAND 54
@@ -350,7 +346,6 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_CHARSET_DOUBLE_QUOTED 10
 #define NS_HTML5TREE_BUILDER_CHARSET_UNQUOTED 11
 #define NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK PR_INT32_MAX
-#define NS_HTML5TREE_BUILDER_AAA_MAX_ITERATIONS 10
 
 
 #endif

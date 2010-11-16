@@ -185,17 +185,18 @@ private:
   CFTypeRef mObject;
 };
 
-static Boolean ShouldIgnoreMIMEType(CFBundleRef bundle, CFStringRef mimeString) {
-  CFTypeRef bundleID = ::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("CFBundleIdentifier"));
-  if (!bundleID || ::CFGetTypeID(bundleID) != ::CFStringGetTypeID())
-    return false;
-    
-  // Workaround for bug 607444 (ignore pdf extension in Quicktime)
-  if ((::CFStringCompare(static_cast<CFStringRef>(bundleID), CFSTR("com.apple.QuickTime Plugin.plugin"), 0) == kCFCompareEqualTo) && 
-      (::CFStringCompare(static_cast<CFStringRef>(mimeString), CFSTR("application/pdf"), 0) == kCFCompareEqualTo))
+static Boolean MimeTypeEnabled(CFDictionaryRef mimeDict) {
+  if (!mimeDict) {
     return true;
+  }
   
-  return false;
+  CFTypeRef value;
+  if (::CFDictionaryGetValueIfPresent(mimeDict, CFSTR("WebPluginTypeEnabled"), &value)) {
+    if (value && ::CFGetTypeID(value) == ::CFBooleanGetTypeID()) {
+      return ::CFBooleanGetValue(static_cast<CFBooleanRef>(value));
+    }
+  }
+  return true;
 }
 
 static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
@@ -315,14 +316,18 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   ::CFDictionaryGetKeysAndValues(mimeDict, keys, values);
   for (int i = 0; i < mimeDictKeyCount; i++) {
     CFTypeRef mimeString = keys[i];
-    if (mimeString && ::CFGetTypeID(mimeString) == ::CFStringGetTypeID() && !ShouldIgnoreMIMEType(bundle, static_cast<CFStringRef>(mimeString))) {
-      info.fMimeTypeArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(mimeString));
-    }
-    else {
+    if (!mimeString || ::CFGetTypeID(mimeString) != ::CFStringGetTypeID()) {
       continue;
     }
     CFTypeRef mimeDict = values[i];
     if (mimeDict && ::CFGetTypeID(mimeDict) == ::CFDictionaryGetTypeID()) {
+      if (!MimeTypeEnabled(static_cast<CFDictionaryRef>(mimeDict))) {
+        continue;
+      }
+      info.fMimeTypeArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(mimeString));
+      if (!info.fMimeTypeArray[info.fVariantCount]) {
+        continue;
+      }
       CFTypeRef extensions = ::CFDictionaryGetValue(static_cast<CFDictionaryRef>(mimeDict), CFSTR("WebPluginExtensions"));
       if (extensions && ::CFGetTypeID(extensions) == ::CFArrayGetTypeID()) {
         int extensionCount = ::CFArrayGetCount(static_cast<CFArrayRef>(extensions));

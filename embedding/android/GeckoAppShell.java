@@ -347,6 +347,7 @@ class GeckoAppShell
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
             GeckoApp.mAppContext.finish();
+            System.exit(0);
         }
 
     }
@@ -605,8 +606,21 @@ class GeckoAppShell
         GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
     }
+
     public static String showFilePicker(String aFilters) {
         return GeckoApp.mAppContext.
             showFilePicker(getMimeTypeFromExtensions(aFilters));
+    }
+
+    public static void showInputMethodPicker() {
+        InputMethodManager imm = (InputMethodManager) GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showInputMethodPicker();       
+    }
+
+    public static void hideProgressDialog() {
+        if (GeckoApp.mAppContext.mProgressDialog != null) {
+            GeckoApp.mAppContext.mProgressDialog.dismiss();
+            GeckoApp.mAppContext.mProgressDialog = null;
+        }
     }
 }

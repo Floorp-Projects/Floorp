@@ -168,24 +168,8 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         NS_ASSERTION(IS_WN_WRAPPER(obj), "bad object");
 
         XPCWrappedNative *newwn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
-        if (newwn->GetSet()->GetInterfaceCount() == 1) {
-            // Some objects claim to implement nsIClassInfo, but don't
-            // actually implement GetInterfaces. In those cases, the
-            // newly-created WN will not have any useful functions or
-            // properties on it. We detect that here and use the old WN's
-            // set on the new wrapper.
-
-#ifdef DEBUG
-            {
-                XPCNativeInterface *iface = newwn->GetSet()->GetInterfaceAt(0);
-                JSString *name = JSID_TO_STRING(iface->GetName());
-                NS_ASSERTION(JS_MatchStringAndAscii(name, "nsISupports"), "weird interface");
-            }
-#endif
-
+        if (newwn->GetSet()->GetInterfaceCount() < wn->GetSet()->GetInterfaceCount())
             newwn->SetSet(wn->GetSet());
-        }
-
     }
 
     return DoubleWrap(cx, obj, flags);

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Style visibility tree update test</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    /**
+     * Hide parent while child stays visible.
+     */
+    function test1(aContainerID, aParentID, aChildID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode(aParentID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+      ];
+
+      this.invoke = function invoke()
+      {
+        var tree =
+          { SECTION: [
+            { SECTION: [
+              { SECTION: [
+                { TEXT_LEAF: [] }
+              ] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+
+        getNode(aParentID).style.visibility = "hidden";
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { SECTION: [
+            { SECTION: [
+              { TEXT_LEAF: [] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+      }
+
+      this.getID = function getID()
+      {
+        return "hide parent while child stays visible";
+      }
+    }
+
+    /**
+     * Hide grand parent while its children stay visible.
+     */
+    function test2(aContainerID, aGrandParentID, aChildID, aChild2ID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode(aGrandParentID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChild2ID)),
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+      ];
+
+      this.invoke = function invoke()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // grand parent
+              { SECTION: [
+                { SECTION: [ // child
+                  { TEXT_LEAF: [] }
+                ] },
+                { SECTION: [ // child2
+                  { TEXT_LEAF: [] }
+                ] }
+              ] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+
+        getNode(aGrandParentID).style.visibility = "hidden";
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // child
+              { TEXT_LEAF: [] }
+            ] },
+            { SECTION: [ // child2
+              { TEXT_LEAF: [] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+      }
+
+      this.getID = function getID()
+      {
+        return "hide grand parent while its children stay visible";
+      }
+    }
+
+    /**
+     * Change container style, hide parents while their children stay visible.
+     */
+    function test3(aContainerID, aParentID, aParent2ID, aChildID, aChild2ID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode(aParentID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
+        new invokerChecker(EVENT_HIDE, getNode(aParent2ID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChild2ID)),
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+      ];
+
+      this.invoke = function invoke()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // parent
+              { SECTION: [ // child
+                { TEXT_LEAF: [] }
+              ] }
+            ] },
+            { SECTION: [ // parent2
+              { SECTION: [ // child2
+                { TEXT_LEAF: [] }
+              ] },
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+
+        getNode(aContainerID).style.color = "red";
+        getNode(aParentID).style.visibility = "hidden";
+        getNode(aParent2ID).style.visibility = "hidden";
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // child
+              { TEXT_LEAF: [] }
+            ] },
+            { SECTION: [ // child2
+              { TEXT_LEAF: [] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+      }
+
+      this.getID = function getID()
+      {
+        return "change container style, hide parents while their children stay visible";
+      }
+    }
+
+    /**
+     * Change container style and make visible child inside the table.
+     */
+    function test4(aContainerID, aChildID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
+        new invokerChecker(EVENT_REORDER, getNode(aChildID).parentNode)
+      ];
+
+      this.invoke = function invoke()
+      {
+        var tree =
+          { SECTION: [
+            { TABLE: [
+              { ROW: [
+                { CELL: [ ] }
+              ] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+
+        getNode(aContainerID).style.color = "red";
+        getNode(aChildID).style.visibility = "visible";
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { SECTION: [
+            { TABLE: [
+              { ROW: [
+                { CELL: [
+                  { SECTION: [
+                    { TEXT_LEAF: [] }
+                  ] }
+              ] }
+            ] }
+          ] }
+        ] };
+        testAccessibleTree(aContainerID, tree);
+      }
+
+      this.getID = function getID()
+      {
+        return "change container style, make visible child insdie the table";
+      }
+    }
+
+    /**
+     * Hide subcontainer while child inside the table stays visible.
+     */
+    function test5(aContainerID, aSubContainerID, aChildID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode(aSubContainerID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+      ];
+
+      this.invoke = function invoke()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // subcontainer
+              { TABLE: [
+                { ROW: [
+                  { CELL: [
+                    { SECTION: [ // child
+                      { TEXT_LEAF: [] }
+                    ] }
+                  ] }
+                ] }
+              ] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+
+        getNode(aSubContainerID).style.visibility = "hidden";
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // child
+              { TEXT_LEAF: [] }
+            ] }
+          ] };
+        testAccessibleTree(aContainerID, tree);
+      }
+
+      this.getID = function getID()
+      {
+        return "hide subcontainer while child inside the table stays visible";
+      }
+    }
+
+    /**
+     * Hide subcontainer while its child and child inside the nested table stays visible.
+     */
+    function test6(aContainerID, aSubContainerID, aChildID, aChild2ID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode(aSubContainerID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChild2ID)),
+        new invokerChecker(EVENT_REORDER, getNode(aContainerID))
+      ];
+
+      this.invoke = function invoke()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // subcontainer
+              { TABLE: [
+                { ROW: [
+                  { CELL: [
+                    { TABLE: [ // nested table
+                      { ROW: [
+                        { CELL: [
+                          { SECTION: [ // child
+                            { TEXT_LEAF: [] } ]} ]} ]} ]} ]} ]} ]},
+              { SECTION: [ // child2
+                { TEXT_LEAF: [] } ]} ]} ]};
+
+        testAccessibleTree(aContainerID, tree);
+
+        // invoke
+        getNode(aSubContainerID).style.visibility = "hidden";
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { SECTION: [ // container
+            { SECTION: [ // child
+              { TEXT_LEAF: [] } ]},
+            { SECTION: [ // child2
+              { TEXT_LEAF: [] } ]} ]};
+
+        testAccessibleTree(aContainerID, tree);
+      }
+
+      this.getID = function getID()
+      {
+        return "hide subcontainer while its child and child inside the nested table stays visible";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new test1("t1_container", "t1_parent", "t1_child"));
+      gQueue.push(new test2("t2_container", "t2_grandparent", "t2_child", "t2_child2"));
+      gQueue.push(new test3("t3_container", "t3_parent", "t3_parent2", "t3_child", "t3_child2"));
+      gQueue.push(new test4("t4_container", "t4_child"));
+      gQueue.push(new test5("t5_container", "t5_subcontainer", "t5_child"));
+      gQueue.push(new test6("t6_container", "t6_subcontainer", "t6_child", "t6_child2"));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Develop a way to handle visibility style"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606125">
+    Mozilla Bug 606125
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- hide parent while child stays visible -->
+  <div id="t1_container">
+    <div id="t1_parent">
+      <div id="t1_child" style="visibility: visible">text</div>
+    </div>
+  </div>
+
+  <!-- hide grandparent while its children stay visible -->
+  <div id="t2_container">
+    <div id="t2_grandparent">
+      <div>
+        <div id="t2_child" style="visibility: visible">text</div>
+        <div id="t2_child2" style="visibility: visible">text</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- change container style, hide parents while their children stay visible -->
+  <div id="t3_container">
+    <div id="t3_parent">
+      <div id="t3_child" style="visibility: visible">text</div>
+    </div>
+    <div id="t3_parent2">
+      <div id="t3_child2" style="visibility: visible">text</div>
+    </div>
+  </div>
+
+  <!-- change container style, show child inside the table -->
+  <div id="t4_container">
+    <table>
+      <tr>
+        <td>
+          <div id="t4_child" style="visibility: hidden;">text</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- hide subcontainer while child inside the table stays visible -->
+  <div id="t5_container">
+    <div id="t5_subcontainer">
+      <table>
+        <tr>
+          <td>
+            <div id="t5_child" style="visibility: visible;">text</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- hide subcontainer while its child and child inside the nested table stays visible -->
+  <div id="t6_container">
+    <div id="t6_subcontainer">
+      <table>
+        <tr>
+          <td>
+            <table>
+              <tr>
+                <td>
+                  <div id="t6_child" style="visibility: visible;">text</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      <div id="t6_child2" style="visibility: visible">text</div>
+    </div>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>
