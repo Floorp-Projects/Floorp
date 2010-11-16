@@ -1,4 +1,3 @@
-# -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -43,12 +42,38 @@
 # ***** END LICENSE BLOCK *****
 
 const Ci = Components.interfaces;
+const Cc = Components.classes;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function Sidebar() {
+  // Depending on if we are in the parent or child, prepare to remote
+  // certain calls
+  var appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    // Parent process
+
+    this.inContentProcess = false;
+
+    // Used for wakeups service. FIXME: clean up with bug 593407
+    this.wrappedJSObject = this;
+
+    // Setup listener for child messages. We don't need to call
+    // addMessageListener as the wakeup service will do that for us.
+    this.receiveMessage = function(aMessage) {
+      switch (aMessage.name) {
+        case "Sidebar:AddSearchProvider":
+          this.AddSearchProvider(aMessage.json.descriptionURL);
+      }
+    };
+  } else {
+    // Child process
+
+    this.inContentProcess = true;
+    this.messageManager = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+  }
 }
 
 Sidebar.prototype = {
@@ -122,7 +147,13 @@ Sidebar.prototype = {
   AddSearchProvider: function AddSearchProvider(aDescriptionURL) {
     if (!this._validateSearchEngine(aDescriptionURL, ""))
       return;
-  
+
+    if (this.inContentProcess) {
+      this.messageManager.sendAsyncMessage("Sidebar:AddSearchProvider",
+        { descriptionURL: aDescriptionURL });
+      return;
+    }
+
     const typeXML = Ci.nsISearchEngine.DATA_XML;
     Services.search.addEngine(aDescriptionURL, typeXML, "", true);
   },
