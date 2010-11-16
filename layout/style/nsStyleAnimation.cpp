@@ -590,7 +590,6 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                           "unexpected unit");
         NS_ABORT_IF_FALSE(a1->Item(0) == a2->Item(0),
                           "unexpected function mismatch");
-        nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
         NS_ABORT_IF_FALSE(a1->Count() == a2->Count(),
                           "unexpected count mismatch");
         for (size_t i = 1, iEnd = NS_MIN(a1->Count(), a2->Count());
