@@ -696,12 +696,6 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
   mIsFullyLoaded = PR_TRUE;
   mHaveAnimations = mSVGDocumentWrapper->IsAnimated();
 
-  if (mHaveAnimations && mAnimationMode == kDontAnimMode) {
-    // We're not supposed to be animating -- stop any animation before our
-    // SVG document's timeline gets a chance to progress.
-    mSVGDocumentWrapper->StopAnimation();
-  }
-
 #ifdef MOZ_ENABLE_LIBXUL
   // Start listening to our image for rendering updates
   mRenderingObserver = new SVGRootRenderingObserver(mSVGDocumentWrapper, this);
