@@ -60,7 +60,6 @@
 #include "gfxRect.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGLength2.h"
-#include "nsSVGEffects.h"
 
 using namespace mozilla::dom;
 
@@ -299,12 +298,6 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
                             const PRUnichar *aData)
 {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    // Sever ties from rendering observers to helper-doc's root SVG node
-    nsSVGSVGElement* svgElem = GetRootSVGElem();
-    if (svgElem) {
-      nsSVGEffects::RemoveAllRenderingObservers(svgElem);
-    }
-
     // Clean up at XPCOM shutdown time.
     DestroyViewer();
     if (mListener)
