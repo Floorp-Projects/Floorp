@@ -924,6 +924,21 @@ var BrowserUI = {
         stmt.finalize();
 
         let download = dm.getDownload(json.id);
+#ifdef ANDROID
+        // since our content process doesn't have write permissions to the
+        // downloads dir, we save it to the tmp dir and then move it here
+        let dlFile = download.targetFile;
+        if (!dlFile.exists())
+          dlFile.create(file.NORMAL_FILE_TYPE, 0x666);
+        let tmpDir = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);  
+        let tmpFile = tmpDir.clone();
+        tmpFile.append(dlFile.leafName);
+
+        // we sometimes race with the content process, so make sure its finished
+        // creating/writing the file
+        while (!tmpFile.exists());
+        tmpFile.moveTo(dlFile.parent, dlFile.leafName);
+#endif
         try {
           DownloadsView.downloadCompleted(download);
           let element = DownloadsView.getElementForDownload(json.id);
@@ -1331,8 +1346,13 @@ var PageActions = {
     let downloadsDir = dm.defaultDownloadsDirectory;
 
 #ifdef ANDROID
+    // Create the final destination file location
     let file = downloadsDir.clone();
     file.append(fileName);
+    // The filename is used below to save the file to a temp location in 
+    // the content process. Make sure it's up to date.
+    file.createUnique(file.NORMAL_FILE_TYPE, 0x666);
+    fileName = file.leafName;
 #else
     let strings = Elements.browserBundle;
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -1376,6 +1396,14 @@ var PageActions = {
     }
     catch(e) {}
     Services.obs.notifyObservers(download, "dl-start", null);
+
+#ifdef ANDROID
+    let tmpDir = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);  
+    
+    file = tmpDir.clone();
+    file.append(fileName);
+ 
+#endif
 
     let data = {
       type: Ci.nsIPrintSettings.kOutputFormatPDF,
