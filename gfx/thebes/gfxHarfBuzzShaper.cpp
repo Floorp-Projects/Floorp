@@ -924,10 +924,12 @@ GetRoundOffsetsToPixels(gfxContext *aContext,
         // glyph surfaces, so we just pick surface/font combinations that
         // override this.
         switch (cairo_scaled_font_get_type(scaled_font)) {
+#if CAIRO_HAS_DWRITE_FONT // dwrite backend is not in std cairo releases yet
         case CAIRO_FONT_TYPE_DWRITE:
             // show_glyphs is implemented on the font and so is used for
             // all surface types.
             return;
+#endif
         case CAIRO_FONT_TYPE_QUARTZ:
             // Quartz surfaces implement show_glyphs for Quartz fonts
             if (cairo_surface_get_type(cairo_get_target(cr)) ==
