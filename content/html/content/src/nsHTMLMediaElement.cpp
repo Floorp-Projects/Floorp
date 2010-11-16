@@ -943,7 +943,8 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
     channelPolicy->SetContentSecurityPolicy(csp);
     channelPolicy->SetLoadType(nsIContentPolicy::TYPE_MEDIA);
   }
-  rv = NS_NewChannel(getter_AddRefs(mChannel),
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel),
                      aURI,
                      nsnull,
                      loadGroup,
@@ -952,41 +953,34 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // The listener holds a strong reference to us.  This creates a reference
-  // cycle which is manually broken in the listener's OnStartRequest method
-  // after it is finished with the element. The cycle will also be
-  // broken if we get a shutdown notification before OnStartRequest fires.
-  // Necko guarantees that OnStartRequest will eventually fire if we
-  // don't shut down first.
+  // The listener holds a strong reference to us.  This creates a
+  // reference cycle, once we've set mChannel, which is manually broken
+  // in the listener's OnStartRequest method after it is finished with
+  // the element. The cycle will also be broken if we get a shutdown
+  // notification before OnStartRequest fires.  Necko guarantees that
+  // OnStartRequest will eventually fire if we don't shut down first.
   nsRefPtr<MediaLoadListener> loadListener = new MediaLoadListener(this);
-  if (!loadListener) return NS_ERROR_OUT_OF_MEMORY;
 
-  // loadListener will be unregistered either on shutdown or when
-  // OnStartRequest fires.
-  nsContentUtils::RegisterShutdownObserver(loadListener);
-  mChannel->SetNotificationCallbacks(loadListener);
+  channel->SetNotificationCallbacks(loadListener);
 
   nsCOMPtr<nsIStreamListener> listener;
   if (ShouldCheckAllowOrigin()) {
-    nsCrossSiteListenerProxy* crossSiteListener =
+    listener =
       new nsCrossSiteListenerProxy(loadListener,
                                    NodePrincipal(),
-                                   mChannel,
+                                   channel,
                                    PR_FALSE,
                                    &rv);
-    listener = crossSiteListener;
-    NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = nsContentUtils::GetSecurityManager()->
            CheckLoadURIWithPrincipal(NodePrincipal(),
                                      aURI,
                                      nsIScriptSecurityManager::STANDARD);
-    NS_ENSURE_SUCCESS(rv,rv);
     listener = loadListener;
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(channel);
   if (hc) {
     // Use a byte range request from the start of the resource.
     // This enables us to detect if the stream supports byte range
@@ -998,21 +992,17 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
     SetRequestHeaders(hc);
   }
 
-  rv = mChannel->AsyncOpen(listener, nsnull);
-  if (NS_FAILED(rv)) {
-    // OnStartRequest is guaranteed to be called if the open succeeds.  If
-    // the open failed, the listener's OnStartRequest will never be called,
-    // so we need to break the element->channel->listener->element reference
-    // cycle here.  The channel holds the only reference to the listener,
-    // and is useless now anyway, so drop our reference to it to allow it to
-    // be destroyed.
-    mChannel = nsnull;
-    return rv;
-  }
+  rv = channel->AsyncOpen(listener, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Else the channel must be open and starting to download. If it encounters
   // a non-catastrophic failure, it will set a new task to continue loading
-  // another candidate.
+  // another candidate.  It's safe to set it as mChannel now.
+  mChannel = channel;
+
+  // loadListener will be unregistered either on shutdown or when
+  // OnStartRequest for the channel we just opened fires.
+  nsContentUtils::RegisterShutdownObserver(loadListener);
   return NS_OK;
 }
 
