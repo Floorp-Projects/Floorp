@@ -1436,6 +1436,9 @@ asserts(1) != 542116-2.html 542116-2-ref.html # bug 596901
 == 546033-1.html 546033-1-ref.html
 random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 549184-1.html 549184-1-ref.html
+== 550325-1.html 550325-1-ref.html
+== 550325-2.html 550325-1-ref.html
+== 550325-3.html 550325-1-ref.html
 == 550716-1.html 550716-1-ref.html
 == 551463-1.html 551463-1-ref.html
 == 551699-1.html 551699-1-ref.html
@@ -1501,6 +1504,7 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 577838-2.html 577838-2-ref.html
 random-if(layersGPUAccelerated) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
+# == 579985-1.html 579985-1-ref.html
 == 580160-1.html 580160-1-ref.html
 HTTP(..) == 580863-1.html 580863-1-ref.html
 random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html
@@ -1524,6 +1528,7 @@ asserts(0-1) == 582146-1.html about:blank
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
+== 603423-1.html 603423-1-ref.html
 == 600974-1.html 600974-1-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
@@ -1534,3 +1539,4 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 604737.html 604737-ref.html
 == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
+== 608636-1.html 608636-1-ref.html

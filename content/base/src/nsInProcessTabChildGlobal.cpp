@@ -280,24 +280,8 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
   nsContentUtils::XPConnect()->SetSecurityManagerForJSContext(cx, nsContentUtils::GetSecurityManager(), 0);
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
-  PRUint32 stackDummy;
-  jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
-
-  // 256k stack space.
-  const jsuword kStackSize = 0x40000;
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-  stackLimit = (currentStackAddr > kStackSize) ?
-               currentStackAddr - kStackSize :
-               0;
-#else
-  stackLimit = (currentStackAddr + kStackSize > currentStackAddr) ?
-               currentStackAddr + kStackSize :
-               (jsuword) -1;
-#endif
-
-  JS_SetThreadStackLimit(cx, stackLimit);
-  JS_SetScriptStackQuota(cx, 100*1024*1024);
+  JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
+  JS_SetScriptStackQuota(cx, 25 * sizeof(size_t) * 1024 * 1024);
 
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);

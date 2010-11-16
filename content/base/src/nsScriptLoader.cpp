@@ -169,6 +169,10 @@ nsScriptLoader::~nsScriptLoader()
     mAsyncRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
+  for (PRUint32 i = 0; i < mNonAsyncExternalScriptInsertedRequests.Length(); i++) {
+    mNonAsyncExternalScriptInsertedRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
+  }
+
   // Unblock the kids, in case any of them moved to a different document
   // subtree in the meantime and therefore aren't actually going away.
   for (PRUint32 j = 0; j < mPendingChildLoaders.Length(); ++j) {
@@ -571,10 +575,30 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     request->mJSVersion = version;
 
-    PRBool async = !aElement->GetParserCreated() || aElement->GetScriptAsync();
-
-    // we now have a request that may or may not be still loading
-    if (!async && aElement->GetScriptDeferred()) {
+    if (aElement->GetScriptAsync()) {
+      mAsyncRequests.AppendElement(request);
+      if (!request->mLoading) {
+        // The script is available already. Run it ASAP when the event
+        // loop gets a chance to spin.
+        ProcessPendingRequestsAsync();
+      }
+      return NS_OK;
+    }
+    if (!aElement->GetParserCreated()) {
+      // Violate the HTML5 spec in order to make LABjs and the "order" plug-in
+      // for RequireJS work with their Gecko-sniffed code path. See
+      // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
+      mNonAsyncExternalScriptInsertedRequests.AppendElement(request);
+      if (!request->mLoading) {
+        // The script is available already. Run it ASAP when the event
+        // loop gets a chance to spin.
+        ProcessPendingRequestsAsync();
+      }
+      return NS_OK;
+    }
+    // we now have a parser-inserted request that may or may not be still
+    // loading
+    if (aElement->GetScriptDeferred()) {
       // We don't want to run this yet.
       // If we come here, the script is a parser-created script and it has
       // the defer attribute but not the async attribute. Since a
@@ -585,15 +609,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
                    aElement->GetParserCreated() == FROM_PARSER_XSLT,
           "Non-XSLT Defer script on a document without an active parser; bug 592366.");
       mDeferRequests.AppendElement(request);
-      return NS_OK;
-    }
-    if (async) {
-      mAsyncRequests.AppendElement(request);
-      if (!request->mLoading) {
-        // The script is available already. Run it ASAP when the event
-        // loop gets a chance to spin.
-        ProcessPendingRequestsAsync();
-      }
       return NS_OK;
     }
 
@@ -714,6 +729,8 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 
   nsCOMPtr<nsIDocument> doc;
 
+  nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->mElement);
+
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
     // XXX This is inefficient - GetText makes multiple
@@ -725,14 +742,18 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   else {
     script = &aRequest->mScriptText;
 
-    nsCOMPtr<nsIContent> eltAsContent = do_QueryInterface(aRequest->mElement);
-    NS_ASSERTION(eltAsContent, "Script should QI to nsIContent.");
-    doc = eltAsContent->GetOwnerDoc();
+    doc = scriptElem->GetOwnerDoc();
+  }
+
+  nsCOMPtr<nsIScriptElement> oldParserInsertedScript;
+  PRUint32 parserCreated = aRequest->mElement->GetParserCreated();
+  if (parserCreated) {
+    oldParserInsertedScript = mCurrentParserInsertedScript;
+    mCurrentParserInsertedScript = aRequest->mElement;
   }
 
   FireScriptAvailable(NS_OK, aRequest);
 
-  nsCOMPtr<nsINode> scriptElem = do_QueryInterface(aRequest->mElement);
   PRBool runScript = PR_TRUE;
   nsContentUtils::DispatchTrustedEvent(scriptElem->GetOwnerDoc(),
                                        scriptElem,
@@ -741,15 +762,15 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 
   nsresult rv = NS_OK;
   if (runScript) {
-    aRequest->mElement->BeginEvaluating();
     if (doc) {
       doc->BeginEvaluatingExternalScript();
     }
+    aRequest->mElement->BeginEvaluating();
     rv = EvaluateScript(aRequest, *script);
+    aRequest->mElement->EndEvaluating();
     if (doc) {
       doc->EndEvaluatingExternalScript();
     }
-    aRequest->mElement->EndEvaluating();
 
     nsContentUtils::DispatchTrustedEvent(scriptElem->GetOwnerDoc(),
                                          scriptElem,
@@ -758,6 +779,10 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   }
 
   FireScriptEvaluated(rv, aRequest);
+
+  if (parserCreated) {
+    mCurrentParserInsertedScript = oldParserInsertedScript;
+  }
 
   return rv;
 }
@@ -907,6 +932,17 @@ nsScriptLoader::ProcessPendingRequests()
     ++i;
   }
 
+  while (mEnabled && !mNonAsyncExternalScriptInsertedRequests.IsEmpty() &&
+         !mNonAsyncExternalScriptInsertedRequests[0]->mLoading) {
+    // Violate the HTML5 spec and execute these in the insertion order in
+    // order to make LABjs and the "order" plug-in for RequireJS work with
+    // their Gecko-sniffed code path. See
+    // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
+    request.swap(mNonAsyncExternalScriptInsertedRequests[0]);
+    mNonAsyncExternalScriptInsertedRequests.RemoveElementAt(0);
+    ProcessRequest(request);
+  }
+
   if (mDocumentParsingDone && mXSLTRequests.IsEmpty()) {
     while (!mDeferRequests.IsEmpty() && !mDeferRequests[0]->mLoading) {
       request.swap(mDeferRequests[0]);
@@ -923,6 +959,7 @@ nsScriptLoader::ProcessPendingRequests()
 
   if (mDocumentParsingDone && mDocument &&
       !mParserBlockingRequest && mAsyncRequests.IsEmpty() &&
+      mNonAsyncExternalScriptInsertedRequests.IsEmpty() &&
       mXSLTRequests.IsEmpty() && mDeferRequests.IsEmpty()) {
     // No more pending scripts; time to unblock onload.
     // OK to unblock onload synchronously here, since callers must be
@@ -1094,6 +1131,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_FAILED(rv)) {
     if (mDeferRequests.RemoveElement(request) ||
         mAsyncRequests.RemoveElement(request) ||
+        mNonAsyncExternalScriptInsertedRequests.RemoveElement(request) ||
         mXSLTRequests.RemoveElement(request)) {
       FireScriptAvailable(rv, request);
     } else if (mParserBlockingRequest == request) {
@@ -1172,6 +1210,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   // wrong, especially if you see it more than once.
   NS_ASSERTION(mDeferRequests.IndexOf(aRequest) >= 0 ||
                mAsyncRequests.IndexOf(aRequest) >= 0 ||
+               mNonAsyncExternalScriptInsertedRequests.IndexOf(aRequest) >= 0 ||
                mXSLTRequests.IndexOf(aRequest) >= 0 ||
                mPreloads.Contains(aRequest, PreloadRequestComparator()) ||
                mParserBlockingRequest,
@@ -1225,6 +1264,7 @@ nsScriptLoader::ParsingComplete(PRBool aTerminated)
   if (aTerminated) {
     mDeferRequests.Clear();
     mAsyncRequests.Clear();
+    mNonAsyncExternalScriptInsertedRequests.Clear();
     mXSLTRequests.Clear();
     mParserBlockingRequest = nsnull;
   }

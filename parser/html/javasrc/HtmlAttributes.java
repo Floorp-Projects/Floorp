@@ -23,6 +23,7 @@
 
 package nu.validator.htmlparser.impl;
 
+import nu.validator.htmlparser.annotation.Auto;
 import nu.validator.htmlparser.annotation.IdType;
 import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NsUri;
@@ -58,9 +59,9 @@ public final class HtmlAttributes implements Attributes {
 
     private int length;
 
-    private AttributeName[] names;
+    private @Auto AttributeName[] names;
 
-    private String[] values; // XXX perhaps make this @NoLength?
+    private @Auto String[] values; // XXX perhaps make this @NoLength?
 
     // [NOCPP[
 
@@ -113,8 +114,6 @@ public final class HtmlAttributes implements Attributes {
 
     void destructor() {
         clear(0);
-        Portability.releaseArray(names);
-        Portability.releaseArray(values);
     }
     
     /**
@@ -373,11 +372,9 @@ public final class HtmlAttributes implements Attributes {
             // Hixie
             AttributeName[] newNames = new AttributeName[newLen];
             System.arraycopy(names, 0, newNames, 0, names.length);
-            Portability.releaseArray(names);
             names = newNames;
             String[] newValues = new String[newLen];
             System.arraycopy(values, 0, newValues, 0, values.length);
-            Portability.releaseArray(values);
             values = newValues;
         }
         names[length] = name;
@@ -465,6 +462,33 @@ public final class HtmlAttributes implements Attributes {
         }
         // ]NOCPP]
         return clone; // XXX!!!
+    }
+    
+    public boolean equalsAnother(HtmlAttributes other) {
+        assert mode == 0 || mode == 3 : "Trying to compare attributes in foreign content.";
+        int otherLength = other.getLength();
+        if (length != otherLength) {
+            return false;
+        }
+        for (int i = 0; i < length; i++) {
+            // Work around the limitations of C++
+            boolean found = false;
+            // The comparing just the local names is OK, since these attribute
+            // holders are both supposed to belong to HTML formatting elements
+            @Local String ownLocal = names[i].getLocal(AttributeName.HTML);
+            for (int j = 0; j < otherLength; j++) {
+                if (ownLocal == other.names[j].getLocal(AttributeName.HTML)) {
+                    found = true;
+                    if (!Portability.stringEqualsString(values[i], other.values[j])) {
+                        return false;
+                    }
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
     }
     
     // [NOCPP[

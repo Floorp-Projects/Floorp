@@ -79,8 +79,6 @@ else
 EXPORTS_mozilla/ipc += SharedMemoryBasic_chromium.h
 endif #}
 
-ENABLE_CXX_EXCEPTIONS = 1
-
 CPPSRCS += \
   AsyncChannel.cpp \
   BrowserProcessSubThread.cpp \

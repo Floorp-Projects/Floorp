@@ -56,9 +56,12 @@ FT_BEGIN_HEADER
    *   interpret them in any way.
    *
    *   Second, the cache calls, only when needed, a client-provided function
-   *   to convert a @FTC_FaceID into a new @FT_Face object.  The latter is
+   *   to convert an @FTC_FaceID into a new @FT_Face object.  The latter is
    *   then completely managed by the cache, including its termination
-   *   through @FT_Done_Face.
+   *   through @FT_Done_Face.  To monitor termination of face objects, the
+   *   finalizer callback in the `generic' field of the @FT_Face object can
+   *   be used, which might also be used to store the @FTC_FaceID of the
+   *   face.
    *
    *   Clients are free to map face IDs to anything else.  The most simple
    *   usage is to associate them to a (pathname,face_index) pair that is

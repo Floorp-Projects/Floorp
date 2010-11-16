@@ -68,7 +68,6 @@ struct DatabaseInfo
   bool ContainsStoreName(const nsAString& aName);
 
   nsString name;
-  nsString description;
   nsString version;
   PRUint32 id;
   nsString filePath;
@@ -136,4 +135,3 @@ struct IndexUpdateInfo
 END_INDEXEDDB_NAMESPACE
 
 #endif // mozilla_dom_indexeddb_databaseinfo_h__
-

@@ -186,8 +186,9 @@ SafeMoveOperation.prototype = {
       newFile.moveTo(aTargetDirectory, null);
     }
     catch (e) {
-      throw new Error("Failed to move file " + aFile.path + " to " +
-                      aTargetDirectory.path + ": " + e);
+      ERROR("Failed to move file " + aFile.path + " to " +
+            aTargetDirectory.path, e);
+      throw e;
     }
     this._movedFiles.push({ oldFile: oldFile, newFile: newFile });
   },
@@ -199,7 +200,8 @@ SafeMoveOperation.prototype = {
       newDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     }
     catch (e) {
-      throw new Error("Failed to create directory " + newDir.path + ": " + e);
+      ERROR("Failed to create directory " + newDir.path, e);
+      throw e;
     }
     this._createdDirs.push(newDir);
 
@@ -221,7 +223,8 @@ SafeMoveOperation.prototype = {
       aDirectory.remove(false);
     }
     catch (e) {
-      throw new Error("Failed to remove directory " + aDirectory.path + ": " + e);
+      ERROR("Failed to remove directory " + aDirectory.path, e);
+      throw e;
     }
 
     // Note we put the directory move in after all the file moves so the
@@ -251,7 +254,7 @@ SafeMoveOperation.prototype = {
       this._moveDirEntry(aFile, aTargetDirectory);
     }
     catch (e) {
-      ERROR("Failure moving " + aFile.path + " to " + aTargetDirectory.path + ": " + e);
+      ERROR("Failure moving " + aFile.path + " to " + aTargetDirectory.path);
       this.rollback();
       throw e;
     }
@@ -822,7 +825,7 @@ function extractFiles(aZipFile, aDir) {
         }
         catch (e) {
           ERROR("extractFiles: failed to create target directory for " +
-                "extraction file = " + target.path + ", exception = " + e);
+                "extraction file = " + target.path, e);
         }
       }
     }
@@ -1259,7 +1262,7 @@ var XPIProvider = {
         var location = new DirectoryInstallLocation(aName, dir, aScope, aLocked);
       }
       catch (e) {
-        WARN("Failed to add directory install location " + aName + " " + e);
+        WARN("Failed to add directory install location " + aName, e);
         return;
       }
 
@@ -1272,7 +1275,7 @@ var XPIProvider = {
         var location = new WinRegInstallLocation(aName, aRootkey, aScope);
       }
       catch (e) {
-        WARN("Failed to add registry install location " + aName + " " + e);
+        WARN("Failed to add registry install location " + aName, e);
         return;
       }
 
@@ -1461,7 +1464,7 @@ var XPIProvider = {
       this.currentSkin = this.selectedSkin;
     }
     catch (e) {
-      ERROR(e);
+      ERROR("Error applying theme change", e);
     }
     Services.prefs.clearUserPref(PREF_DSS_SWITCHPENDING);
   },
@@ -1619,7 +1622,7 @@ var XPIProvider = {
           }
           catch (e) {
             ERROR("Unable to read add-on manifest for " + stagedXPI.leafName +
-                  " in XPI stage of " + aLocation.name + ": " + e);
+                  " in XPI stage of " + aLocation.name, e);
             continue;
           }
 
@@ -1632,7 +1635,7 @@ var XPIProvider = {
               targetDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
             }
             catch (e) {
-              ERROR("Failed to create staging directory for add-on " + id + ": " + e);
+              ERROR("Failed to create staging directory for add-on " + id, e);
               continue;
             }
 
@@ -1641,7 +1644,7 @@ var XPIProvider = {
             }
             catch (e) {
               ERROR("Failed to extract staged XPI for add-on " + id + " in " +
-                    aLocation.name + ": " + e);
+                    aLocation.name, e);
             }
           }
           else {
@@ -1650,7 +1653,7 @@ var XPIProvider = {
             }
             catch (e) {
               ERROR("Failed to move staged XPI for add-on " + id + " in " +
-                    aLocation.name + ": " + e);
+                    aLocation.name, e);
             }
           }
         }
@@ -1709,7 +1712,7 @@ var XPIProvider = {
               aLocation.uninstallAddon(id);
             }
             catch (e) {
-              ERROR("Failed to uninstall add-on " + id + " in " + aLocation.name);
+              ERROR("Failed to uninstall add-on " + id + " in " + aLocation.name, e);
             }
             // The file check later will spot the removal and cleanup the database
             continue;
@@ -1721,8 +1724,8 @@ var XPIProvider = {
           var addonInstallLocation = aLocation.installAddon(id, stageDirEntry);
         }
         catch (e) {
-          ERROR("Failed to install staged add-on " + id + " in " + aLocation.name +
-                ": " + e);
+          ERROR("Failed to install staged add-on " + id + " in " + aLocation.name,
+                e);
           continue;
         }
 
@@ -1747,7 +1750,7 @@ var XPIProvider = {
           }
           catch (e) {
             ERROR("Unable to read add-on manifest for " + id + " in " +
-                  aLocation.name + ": " + e);
+                  aLocation.name, e);
           }
           finally {
             fis.close();
@@ -1836,7 +1839,7 @@ var XPIProvider = {
           throw new Error("Incorrect id in install manifest");
       }
       catch (e) {
-        WARN("Add-on is invalid: " + e);
+        WARN("Add-on is invalid", e);
         XPIDatabase.removeAddonMetadata(aOldAddon);
         if (!aInstallLocation.locked)
           aInstallLocation.uninstallAddon(aOldAddon.id);
@@ -2061,7 +2064,7 @@ var XPIProvider = {
           throw new Error("Incorrect id in install manifest");
       }
       catch (e) {
-        WARN("Add-on is invalid: " + e);
+        WARN("Add-on is invalid", e);
 
         // Remove the invalid add-on from the install location if the install
         // location isn't locked, no restart will be necessary
@@ -2123,7 +2126,7 @@ var XPIProvider = {
         // add-on will just be unavailable until we try again in a subsequent
         // startup
         ERROR("Failed to add add-on " + aId + " in " + aInstallLocation.name +
-              " to database: " + e);
+              " to database", e);
         return false;
       }
 
@@ -2355,7 +2358,7 @@ var XPIProvider = {
                                                          migrateData, null);
         }
         catch (e) {
-          ERROR("Error processing file changes: " + e);
+          ERROR("Error processing file changes", e);
         }
       }
 
@@ -2385,7 +2388,7 @@ var XPIProvider = {
     }
     catch (e) {
       ERROR("Error during startup file checks, rolling back any database " +
-            "changes: " + e);
+            "changes", e);
       XPIDatabase.rollbackTransaction();
     }
 
@@ -2879,7 +2882,7 @@ var XPIProvider = {
         loader.loadSubScript(spec, this.bootstrapScopes[aId]);
       }
       catch (e) {
-        WARN("Error loading bootstrap.js for " + aId + ": " + e);
+        WARN("Error loading bootstrap.js for " + aId, e);
       }
 
       // Copy the reason values from the global object into the bootstrap scope.
@@ -2946,7 +2949,7 @@ var XPIProvider = {
     }
     catch (e) {
       WARN("Exception running bootstrap method " + aMethod + " on " +
-           aId + ": " + e);
+           aId, e);
     }
   },
 
@@ -3463,18 +3466,18 @@ var XPIDatabase = {
       connection = Services.storage.openUnsharedDatabase(aDBFile);
     }
     catch (e) {
-      ERROR("Failed to open database (1st attempt): " + e);
+      ERROR("Failed to open database (1st attempt)", e);
       try {
         aDBFile.remove(true);
       }
       catch (e) {
-        ERROR("Failed to remove database that could not be opened: " + e);
+        ERROR("Failed to remove database that could not be opened", e);
       }
       try {
         connection = Services.storage.openUnsharedDatabase(aDBFile);
       }
       catch (e) {
-        ERROR("Failed to open database (2nd attempt): " + e);
+        ERROR("Failed to open database (2nd attempt)", e);
 
         // If we have got here there seems to be no way to open the real
         // database, instead open a temporary memory database so things will
@@ -3527,7 +3530,7 @@ var XPIDatabase = {
           this.connection = this.openDatabaseFile(dbfile);
         }
         catch (e) {
-          ERROR("Failed to remove old database: " + e);
+          ERROR("Failed to remove old database", e);
           // If the file couldn't be deleted then fall back to an in-memory
           // database
           this.connection = Services.storage.openSpecialDatabase("memory");
@@ -3554,7 +3557,7 @@ var XPIDatabase = {
           this.commitTransaction();
         }
         catch (e) {
-          ERROR("Error processing file changes: " + e);
+          ERROR("Error processing file changes", e);
           dump(e.stack);
           this.rollbackTransaction();
         }
@@ -3734,7 +3737,7 @@ var XPIDatabase = {
     }
     catch (e) {
       // An error here means the schema is too different to read
-      ERROR("Error migrating data: " + e);
+      ERROR("Error migrating data", e);
     }
     finally {
       if (taStmt)
@@ -3869,7 +3872,7 @@ var XPIDatabase = {
       this.commitTransaction();
     }
     catch (e) {
-      ERROR("Failed to create database schema");
+      ERROR("Failed to create database schema", e);
       logSQLError(this.connection.lastError, this.connection.lastErrorString);
       this.rollbackTransaction();
       this.connection.close();
@@ -4670,6 +4673,16 @@ var XPIDatabase = {
   }
 };
 
+function getHashStringForCrypto(aCrypto) {
+  // return the two-digit hexadecimal code for a byte
+  function toHexString(charCode)
+    ("0" + charCode.toString(16)).slice(-2);
+
+  // convert the binary hash data to a hex string.
+  let binary = aCrypto.finish(false);
+  return [toHexString(binary.charCodeAt(i)) for (i in binary)].join("").toLowerCase()
+}
+
 /**
  * Instantiates an AddonInstall and passes the new object to a callback when
  * it is complete.
@@ -4707,7 +4720,14 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
   this.installLocation = aInstallLocation;
   this.sourceURI = aUrl;
   this.releaseNotesURI = aReleaseNotesURI;
-  this.hash = aHash;
+  if (aHash) {
+    let hashSplit = aHash.toLowerCase().split(":");
+    this.originalHash = {
+      algorithm: hashSplit[0],
+      data: hashSplit[1]
+    };
+  }
+  this.hash = this.originalHash;
   this.loadGroup = aLoadGroup;
   this.listeners = [];
   this.existingAddon = aExistingAddon;
@@ -4736,13 +4756,25 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
     if (this.hash) {
       let crypto = Cc["@mozilla.org/security/hash;1"].
                    createInstance(Ci.nsICryptoHash);
+      try {
+        crypto.initWithString(this.hash.algorithm);
+      }
+      catch (e) {
+        WARN("Unknown hash algorithm " + this.hash.algorithm);
+        this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
+        aCallback(this);
+        return;
+      }
+
       let fis = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
       fis.init(this.file, -1, -1, false);
       crypto.updateFromStream(fis, this.file.fileSize);
-      let hash = crypto.finish(true);
-      if (hash != this.hash) {
-        WARN("Hash mismatch");
+      let calculatedHash = getHashStringForCrypto(crypto);
+      if (calculatedHash != this.hash.data) {
+        WARN("File hash (" + calculatedHash + ") did not match provided hash (" +
+             this.hash.data + ")");
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         aCallback(this);
@@ -4787,7 +4819,7 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
       });
     }
     catch (e) {
-      WARN("Invalid XPI: " + e);
+      WARN("Invalid XPI", e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_CORRUPT_FILE;
       aCallback(this);
@@ -4816,6 +4848,7 @@ AddonInstall.prototype = {
   wrapper: null,
   stream: null,
   crypto: null,
+  originalHash: null,
   hash: null,
   loadGroup: null,
   badCertHandler: null,
@@ -4855,6 +4888,18 @@ AddonInstall.prototype = {
     case AddonManager.STATE_DOWNLOADED:
       this.startInstall();
       break;
+    case AddonManager.STATE_DOWNLOAD_FAILED:
+    case AddonManager.STATE_INSTALL_FAILED:
+    case AddonManager.STATE_CANCELLED:
+      this.removeTemporaryFile();
+      this.state = AddonManager.STATE_AVAILABLE;
+      this.error = 0;
+      this.progress = 0;
+      this.maxProgress = -1;
+      this.hash = this.originalHash;
+      XPIProvider.installs.push(this);
+      this.startDownload();
+      break;
     case AddonManager.STATE_DOWNLOADING:
     case AddonManager.STATE_CHECKING:
     case AddonManager.STATE_INSTALLING:
@@ -4882,14 +4927,7 @@ AddonInstall.prototype = {
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
                                                this.listeners, this.wrapper);
-      if (this.file && !(this.sourceURI instanceof Ci.nsIFileURL)) {
-        try {
-          this.file.remove(true);
-        }
-        catch (e) {
-          WARN("Failed to remove temporary file " + this.file.path + ": " + e);
-        }
-      }
+      this.removeTemporaryFile();
       break;
     case AddonManager.STATE_INSTALLED:
       LOG("Cancelling install of " + this.addon.id);
@@ -4951,7 +4989,7 @@ AddonInstall.prototype = {
       this.ownsTempFile = false;
     }
     catch (e) {
-      WARN("Failed to remove temporary file " + this.file.path + ": " + e);
+      WARN("Failed to remove temporary file " + this.file.path, e);
     }
   },
 
@@ -4992,7 +5030,7 @@ AddonInstall.prototype = {
       }
       catch (e) {
         WARN("Failed to extract " + entryName + " from multi-package " +
-             "XPI: " + e);
+             "XPI", e);
         target.remove(false);
       }
     }
@@ -5018,7 +5056,7 @@ AddonInstall.prototype = {
       }
       catch (e) {
         WARN(this.file.leafName + " cannot be installed from multi-package " +
-             "XPI: " + e);
+             "XPI", e);
       }
     }
 
@@ -5200,7 +5238,7 @@ AddonInstall.prototype = {
                        FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE, 0);
     }
     catch (e) {
-      WARN("Failed to start download: " + e);
+      WARN("Failed to start download", e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
       XPIProvider.removeActiveInstall(this);
@@ -5226,7 +5264,7 @@ AddonInstall.prototype = {
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
     }
     catch (e) {
-      WARN("Failed to start download: " + e);
+      WARN("Failed to start download", e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_NETWORK_FAILURE;
       XPIProvider.removeActiveInstall(this);
@@ -5260,7 +5298,12 @@ AddonInstall.prototype = {
     if (!this.hash && aOldChannel.originalURI.schemeIs("https") &&
         aOldChannel instanceof Ci.nsIHttpChannel) {
       try {
-        this.hash = aOldChannel.getResponseHeader("X-Target-Digest");
+        let hashStr = aOldChannel.getResponseHeader("X-Target-Digest");
+        let hashSplit = hashStr.toLowerCase().split(":");
+        this.hash = {
+          algorithm: hashSplit[0],
+          data: hashSplit[1]
+        };
       }
       catch (e) {
       }
@@ -5272,6 +5315,8 @@ AddonInstall.prototype = {
       this.badCertHandler.asyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, aCallback);
     else
       aCallback.onRedirectVerifyCallback(Cr.NS_OK);
+
+    this.channel = aNewChannel;
   },
 
   /**
@@ -5283,13 +5328,11 @@ AddonInstall.prototype = {
     this.crypto = Cc["@mozilla.org/security/hash;1"].
                   createInstance(Ci.nsICryptoHash);
     if (this.hash) {
-      [alg, this.hash] = this.hash.split(":", 2);
-
       try {
-        this.crypto.initWithString(alg);
+        this.crypto.initWithString(this.hash.algorithm);
       }
       catch (e) {
-        WARN("Unknown hash algorithm " + alg);
+        WARN("Unknown hash algorithm " + this.hash.algorithm);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         XPIProvider.removeActiveInstall(this);
@@ -5329,8 +5372,10 @@ AddonInstall.prototype = {
     Services.obs.removeObserver(this, "network:offline-about-to-go-offline");
 
     // If the download was cancelled then all events will have already been sent
-    if (aStatus == Cr.NS_BINDING_ABORTED)
+    if (aStatus == Cr.NS_BINDING_ABORTED) {
+      this.removeTemporaryFile();
       return;
+    }
 
     LOG("Download of " + this.sourceURI.spec + " completed.");
 
@@ -5347,18 +5392,13 @@ AddonInstall.prototype = {
           }
         }
 
-        // return the two-digit hexadecimal code for a byte
-        function toHexString(charCode)
-          ("0" + charCode.toString(16)).slice(-2);
-
         // convert the binary hash data to a hex string.
-        let binary = this.crypto.finish(false);
-        let hash = [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
+        let calculatedHash = getHashStringForCrypto(this.crypto);
         this.crypto = null;
-        if (this.hash && hash.toLowerCase() != this.hash.toLowerCase()) {
+        if (this.hash && calculatedHash != this.hash.data) {
           this.downloadFailed(AddonManager.ERROR_INCORRECT_HASH,
-                              "Downloaded file hash (" + hash +
-                              ") did not match provided hash (" + this.hash + ")");
+                              "Downloaded file hash (" + calculatedHash +
+                              ") did not match provided hash (" + this.hash.data + ")");
           return;
         }
         try {
@@ -5405,13 +5445,17 @@ AddonInstall.prototype = {
    *         The error code to pass to the listeners
    */
   downloadFailed: function(aReason, aError) {
-    WARN("Download failed: " + aError);
+    WARN("Download failed", aError);
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
     this.error = aReason;
     XPIProvider.removeActiveInstall(this);
     AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
                                              this.wrapper);
-    this.removeTemporaryFile();
+
+    // If the listener hasn't restarted the download then remove any temporary
+    // file
+    if (this.state == AddonManager.STATE_DOWNLOAD_FAILED)
+      this.removeTemporaryFile();
   },
 
   /**
@@ -5620,7 +5664,7 @@ AddonInstall.prototype = {
       }
     }
     catch (e) {
-      WARN("Failed to install: " + e);
+      WARN("Failed to install", e);
       if (stagedAddon.exists())
         recursiveRemove(stagedAddon);
       this.state = AddonManager.STATE_INSTALL_FAILED;
@@ -5666,7 +5710,7 @@ AddonInstall.createInstall = function(aCallback, aFile) {
     new AddonInstall(aCallback, location, url);
   }
   catch(e) {
-    ERROR(e);
+    ERROR("Error creating install", e);
     aCallback(null);
   }
 };
@@ -6141,7 +6185,7 @@ DBAddonInternal.prototype = {
     catch (e) {
       // A failure just means that we discard the compatibility update
       ERROR("Failed to update target application info in the database for " +
-            "add-on " + this.id);
+            "add-on " + this.id, e);
       return;
     }
     XPIProvider.updateAddonDisabledState(this);
@@ -6761,7 +6805,7 @@ DirectoryInstallLocation.prototype = {
         recursiveRemove(trashDir);
       }
       catch (e) {
-        WARN("Failed to remove trash directory when installing " + aId);
+        WARN("Failed to remove trash directory when installing " + aId, e);
       }
     }
 
@@ -6820,7 +6864,7 @@ DirectoryInstallLocation.prototype = {
         recursiveRemove(trashDir);
       }
       catch (e) {
-        WARN("Failed to remove trash directory when uninstalling " + aId);
+        WARN("Failed to remove trash directory when uninstalling " + aId, e);
       }
     }
 

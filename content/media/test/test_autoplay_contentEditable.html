@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: play() method</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body contenteditable="true">
+<pre id="test">
+
+<script>
+
+var manager = new MediaTestManager;
+
+var tokens = {
+  0:                ["canplay"],
+  "canplay":        ["canplaythrough"],
+  "canplaythrough": ["canplay", "canplaythrough"]
+};
+
+function gotPlayEvent(event) {
+  var v = event.target;
+  ok(tokens[v._state].indexOf(event.type) >= 0,
+     "Check expected event got " + event.type + " at " + v._state + " for " + v.src +
+     " uneval(event.type)=" + uneval(event.type) + " typeof(event.type)=" + typeof(event.type) +
+     " uneval(v._state)=" + uneval(v._state) + " typeof(v._state)=" + typeof(v._state) + 
+     " tokens["+v._state+"]=" + tokens[v._state] +
+     " tokens["+v._state+"].indexOf(event.type)=" + tokens[v._state].indexOf(event.type));
+  v._state = event.type;
+}
+
+function goToNext(v) {
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
+}
+
+function initTest(test, token) {
+  var v = document.createElement('video');
+  v.token = token;
+  manager.started(token);
+  v._state = 0;
+ 
+  ["play", "canplay", "playing", "canplaythrough", "ended"].forEach(function (e) {
+    v.addEventListener(e, gotPlayEvent, false);
+  });
+
+  setTimeout(function() goToNext(v), 500);
+
+  v.src = test.name;
+  v.autoplay = true;
+  document.body.appendChild(v); // Causes load.
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
+</pre>
+</body>
+</html>

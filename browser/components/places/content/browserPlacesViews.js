@@ -567,6 +567,7 @@ PlacesViewBase.prototype = {
   nodeLastModifiedChanged: function() { },
   nodeKeywordChanged: function() { },
   sortingChanged: function() { },
+  batching: function() { },
   // Replaced by containerStateChanged.
   containerOpened: function() { },
   containerClosed: function() { },
@@ -658,8 +659,9 @@ PlacesViewBase.prototype = {
     if ("_isRTL" in this)
       return this._isRTL;
 
-    return this._isRTL = document.defaultView.getComputedStyle(this, "")
-                                 .direction == "rtl"
+    return this._isRTL = document.defaultView
+                                 .getComputedStyle(this.viewElt, "")
+                                 .direction == "rtl";
   },
 
   /**
@@ -1035,7 +1037,7 @@ PlacesToolbar.prototype = {
 
     // XXX (bug 508816) Scrollbox does not handle correctly RTL mode.
     // This workarounds the issue scrolling the box to the right.
-    if (this._isRTL)
+    if (this.isRTL)
       this._rootElt.scrollLeft = this._rootElt.scrollWidth;
 
     // Update the chevron on a timer.  This will avoid repeated work when
@@ -1054,8 +1056,9 @@ PlacesToolbar.prototype = {
       // Once a child overflows, all the next ones will.
       if (!childOverflowed) {
         let childRect = child.getBoundingClientRect();
-        childOverflowed = this._isRTL ? (childRect.left < scrollRect.left)
-                                      : (childRect.right > scrollRect.right);
+        childOverflowed = this.isRTL ? (childRect.left < scrollRect.left)
+                                     : (childRect.right > scrollRect.right);
+                                      
       }
       child.style.visibility = childOverflowed ? "hidden" : "visible";
     }
@@ -1260,16 +1263,16 @@ PlacesToolbar.prototype = {
         // If we are in the middle of it, drop inside it.
         // Otherwise, drop before it, with regards to RTL mode.
         let threshold = eltRect.width * 0.25;
-        if (this._isRTL ? (aEvent.clientX > eltRect.right - threshold)
-                        : (aEvent.clientX < eltRect.left + threshold)) {
+        if (this.isRTL ? (aEvent.clientX > eltRect.right - threshold)
+                       : (aEvent.clientX < eltRect.left + threshold)) {
           // Drop before this folder.
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
                                eltIndex, Ci.nsITreeView.DROP_BEFORE);
           dropPoint.beforeIndex = eltIndex;
         }
-        else if (this._isRTL ? (aEvent.clientX > eltRect.left + threshold)
-                             : (aEvent.clientX < eltRect.right - threshold)) {
+        else if (this.isRTL ? (aEvent.clientX > eltRect.left + threshold)
+                            : (aEvent.clientX < eltRect.right - threshold)) {
           // Drop inside this folder.
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(elt._placesNode),
@@ -1294,8 +1297,8 @@ PlacesToolbar.prototype = {
         // This is a non-folder node or a read-only folder.
         // Drop before it with regards to RTL mode.
         let threshold = eltRect.width * 0.5;
-        if (this._isRTL ? (aEvent.clientX > eltRect.left + threshold)
-                        : (aEvent.clientX < eltRect.left + threshold)) {
+        if (this.isRTL ? (aEvent.clientX > eltRect.left + threshold)
+                       : (aEvent.clientX < eltRect.left + threshold)) {
           // Drop before this bookmark.
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(this._resultNode),
@@ -1479,7 +1482,7 @@ PlacesToolbar.prototype = {
       let ind = this._dropIndicator;
       let halfInd = ind.clientWidth / 2;
       let translateX;
-      if (this._isRTL) {
+      if (this.isRTL) {
         halfInd = Math.ceil(halfInd);
         translateX = 0 - this._rootElt.getBoundingClientRect().right - halfInd;
         if (this._rootElt.firstChild) {

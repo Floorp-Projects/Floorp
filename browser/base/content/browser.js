@@ -1378,6 +1378,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   OfflineApps.init();
   IndexedDBPromptHelper.init();
   gFormSubmitObserver.init();
+  AddonManager.addAddonListener(AddonsMgrListener);
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -1641,6 +1642,7 @@ function BrowserShutdown()
   OfflineApps.uninit();
   gPrivateBrowsingUI.uninit();
   IndexedDBPromptHelper.uninit();
+  AddonManager.removeAddonListener(AddonsMgrListener);
 
   var enumerator = Services.wm.getEnumerator(null);
   enumerator.getNext();
@@ -2806,12 +2808,13 @@ function FillInHTMLTooltip(tipElement)
 #endif // MOZ_SVG
   var direction = tipElement.ownerDocument.dir;
 
-  // If the element is invalid per HTML5 Forms specifications,
-  // show the constraint validation error message instead of @tooltip.
-  if (tipElement instanceof HTMLInputElement ||
-      tipElement instanceof HTMLTextAreaElement ||
-      tipElement instanceof HTMLSelectElement ||
-      tipElement instanceof HTMLButtonElement) {
+  // If the element is invalid per HTML5 Forms specifications and has no title,
+  // show the constraint validation error message.
+  if ((tipElement instanceof HTMLInputElement ||
+       tipElement instanceof HTMLTextAreaElement ||
+       tipElement instanceof HTMLSelectElement ||
+       tipElement instanceof HTMLButtonElement) &&
+      !tipElement.hasAttribute('title')) {
     // If the element is barred from constraint validation or valid,
     // the validation message will be the empty string.
     titleText = tipElement.validationMessage;
@@ -3431,6 +3434,12 @@ function BrowserCustomizeToolbar()
   PlacesToolbarHelper.customizeStart();
   BookmarksMenuButton.customizeStart();
 
+  let addonBar = document.getElementById("addon-bar");
+  if (addonBar.collapsed) {
+    addonBar.wasCollapsed = addonBar.collapsed;
+    addonBar.collapsed = false;
+  }
+
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
@@ -3488,6 +3497,12 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
   PlacesToolbarHelper.customizeDone();
   BookmarksMenuButton.customizeDone();
+
+  let addonBar = document.getElementById("addon-bar");
+  if (addonBar.wasCollapsed === true) {
+    addonBar.collapsed = true;
+    delete addonBar.wasCollapsed;
+  }
 
   // The url bar splitter state is dependent on whether stop/reload
   // and the location bar are combined, so we need this ordering
@@ -5167,7 +5182,15 @@ function handleLinkClick(event, href, linkNode) {
 }
 
 function middleMousePaste(event) {
-  var url = getShortcutOrURI(readFromClipboard());
+  let clipboard = readFromClipboard();
+  if (!clipboard)
+    return;
+
+  // Strip embedded newlines and surrounding whitespace, to match the URL
+  // bar's behavior (stripsurroundingwhitespace)
+  clipboard.replace(/\s*\n\s*/g, "");
+
+  let url = getShortcutOrURI(clipboard);
   try {
     makeURI(url);
   } catch (ex) {
@@ -6594,10 +6617,15 @@ var FeedHandler = {
   onFeedButtonClick: function(event) {
     event.stopPropagation();
 
-    if (event.target.hasAttribute("feed") &&
-        event.eventPhase == Event.AT_TARGET &&
+    let feeds = gBrowser.selectedBrowser.feeds || [];
+    // If there are multiple feeds, the menu will open, so no need to do
+    // anything. If there are no feeds, nothing to do either.
+    if (feeds.length != 1)
+      return;
+
+    if (event.eventPhase == Event.AT_TARGET &&
         (event.button == 0 || event.button == 1)) {
-        this.subscribeToFeed(null, event);
+      this.subscribeToFeed(feeds[0].href, event);
     }
   },
 
@@ -6626,12 +6654,8 @@ var FeedHandler = {
     while (menuPopup.firstChild)
       menuPopup.removeChild(menuPopup.firstChild);
 
-    if (feeds.length == 1) {
-      var feedButton = document.getElementById("feed-button");
-      if (feedButton)
-        feedButton.setAttribute("feed", feeds[0].href);
+    if (feeds.length <= 1)
       return false;
-    }
 
     // Build the menu showing the available feed choices for viewing.
     for (var i = 0; i < feeds.length; ++i) {
@@ -6704,35 +6728,30 @@ var FeedHandler = {
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
-    var feedButton = document.getElementById("feed-button");
+    clearTimeout(this._updateFeedTimeout);
 
     var feeds = gBrowser.selectedBrowser.feeds;
-    if (!feeds || feeds.length == 0) {
-      if (feedButton) {
-        feedButton.disabled = true;
-        feedButton.removeAttribute("feed");
-      }
+    var haveFeeds = feeds && feeds.length > 0;
+
+    var feedButton = document.getElementById("feed-button");
+    if (feedButton)
+      feedButton.disabled = !haveFeeds;
+
+    if (!haveFeeds) {
       this._feedMenuitem.setAttribute("disabled", "true");
-      this._feedMenupopup.setAttribute("hidden", "true");
       this._feedMenuitem.removeAttribute("hidden");
+      this._feedMenupopup.setAttribute("hidden", "true");
+      return;
+    }
+
+    if (feeds.length > 1) {
+      this._feedMenuitem.setAttribute("hidden", "true");
+      this._feedMenupopup.removeAttribute("hidden");
     } else {
-      if (feedButton)
-        feedButton.disabled = false;
-
-      if (feeds.length > 1) {
-        this._feedMenuitem.setAttribute("hidden", "true");
-        this._feedMenupopup.removeAttribute("hidden");
-        if (feedButton)
-          feedButton.removeAttribute("feed");
-      } else {
-        if (feedButton)
-          feedButton.setAttribute("feed", feeds[0].href);
-
-        this._feedMenuitem.setAttribute("feed", feeds[0].href);
-        this._feedMenuitem.removeAttribute("disabled");
-        this._feedMenuitem.removeAttribute("hidden");
-        this._feedMenupopup.setAttribute("hidden", "true");
-      }
+      this._feedMenuitem.setAttribute("feed", feeds[0].href);
+      this._feedMenuitem.removeAttribute("disabled");
+      this._feedMenuitem.removeAttribute("hidden");
+      this._feedMenupopup.setAttribute("hidden", "true");
     }
   },
 
@@ -6749,10 +6768,13 @@ var FeedHandler = {
 
     browserForLink.feeds.push({ href: link.href, title: link.title });
 
+    // If this addition was for the current browser, update the UI. For
+    // background browsers, we'll update on tab switch.
     if (browserForLink == gBrowser.selectedBrowser) {
-      var feedButton = document.getElementById("feed-button");
-      if (feedButton)
-        feedButton.collapsed = false;
+      // Batch updates to avoid updating the UI for multiple onLinkAdded events
+      // fired within 100ms of each other.
+      clearTimeout(this._updateFeedTimeout);
+      this._updateFeedTimeout = setTimeout(this.updateFeeds.bind(this), 100);
     }
   }
 };
@@ -8030,3 +8052,33 @@ function duplicateTabIn(aTab, where, historyIndex) {
       break;
   }
 }
+
+/*
+ * When addons are installed/uninstalled, check and see if the number of items
+ * on the add-on bar changed:
+ * - If an add-on was installed, incrementing the count, show the bar.
+ * - If an add-on was uninstalled, and no more items are left, hide the bar.
+ */
+let AddonsMgrListener = {
+  get addonBar() document.getElementById("addon-bar"),
+  get statusBar() document.getElementById("status-bar"),
+  getAddonBarItemCount: function() {
+    // Take into account the contents of the status bar shim for the count.
+    return this.addonBar.childNodes.length - 1 +
+           this.statusBar.childNodes.length;
+  },
+  onInstalling: function(aAddon) {
+    this.lastAddonBarCount = this.getAddonBarItemCount();
+  },
+  onInstalled: function(aAddon) {
+    if (this.getAddonBarItemCount() > this.lastAddonBarCount)
+      setToolbarVisibility(this.addonBar, true);
+  },
+  onUninstalling: function(aAddon) {
+    this.lastAddonBarCount = this.getAddonBarItemCount();
+  },
+  onUninstalled: function(aAddon) {
+    if (this.lastAddonBarCount > 0 && this.getAddonBarItemCount() == 0)
+      setToolbarVisibility(this.addonBar, false);
+  }
+};

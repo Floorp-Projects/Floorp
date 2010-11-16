@@ -60,6 +60,7 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
+#include "nsIDOMDocumentFragment.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
@@ -427,10 +428,21 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
-                             nsIContent* aTargetNode,
-                             nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace,
-                             PRBool aQuirks)
+                        nsIContent* aTargetNode,
+                        nsIAtom* aContextLocalName,
+                        PRInt32 aContextNamespace,
+                        PRBool aQuirks)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
+                                  nsIContent* aTargetNode,
+                                  nsIAtom* aContextLocalName,
+                                  PRInt32 aContextNamespace,
+                                  PRBool aQuirks,
+                                  PRBool aPreventScriptExecution)
 {
   nsIDocument* doc = aTargetNode->GetOwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
@@ -448,7 +460,16 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
                                    aContextNamespace,
                                    &target,
                                    aQuirks);
-  mExecutor->EnableFragmentMode();
+
+#ifdef DEBUG
+  if (!aPreventScriptExecution) {
+    nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);
+    NS_ASSERTION(domFrag,
+        "If script execution isn't prevented, must parse to DOM fragment.");
+  }
+#endif
+
+  mExecutor->EnableFragmentMode(aPreventScriptExecution);
   
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Tried to start parse without initializing the parser.");
@@ -592,13 +613,22 @@ nsHtml5Parser::ParseUntilBlocked()
         // never release the last buffer.
         NS_ASSERTION(!mLastBuffer->getStart() && !mLastBuffer->getEnd(),
                      "Sentinel buffer had its indeces changed.");
-        if (mStreamParser && mReturnToStreamParserPermitted
-            && !mExecutor->IsScriptExecuting()) {
+        if (mStreamParser) {
+          if (mReturnToStreamParserPermitted &&
+              !mExecutor->IsScriptExecuting()) {
+            mTreeBuilder->Flush();
+            mReturnToStreamParserPermitted = PR_FALSE;
+            mStreamParser->ContinueAfterScripts(mTokenizer,
+                                                mTreeBuilder,
+                                                mLastWasCR);
+          }
+        } else {
+          // Script-created parser
           mTreeBuilder->Flush();
-          mReturnToStreamParserPermitted = PR_FALSE;
-          mStreamParser->ContinueAfterScripts(mTokenizer,
-                                              mTreeBuilder,
-                                              mLastWasCR);
+          // No need to flush the executor, because the executor is already
+          // in a flush
+          NS_ASSERTION(mExecutor->IsInFlushLoop(),
+              "How did we come here without being in the flush loop?");
         }
         return; // no more data for now but expecting more
       }

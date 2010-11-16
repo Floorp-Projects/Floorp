@@ -57,7 +57,7 @@ _BROWSER_TEST_FILES = \
 	browser_library_search.js \
 	browser_history_sidebar_search.js \
 	browser_bookmarksProperties.js \
-	browser_forgetthissite_single.js \
+	$(warning browser_forgetthissite_single.js temporarily disabled because of very frequent oranges, see bug 551540) \
 	browser_library_left_pane_commands.js \
 	browser_drag_bookmarks_on_toolbar.js \
 	browser_library_middleclick.js \

@@ -1931,18 +1931,21 @@
           y1 = SCALED( point[-2].y );
           x2 = SCALED( point[-1].x );
           y2 = SCALED( point[-1].y );
-          x3 = SCALED( point[ 0].x );
-          y3 = SCALED( point[ 0].y );
 
           if ( flipped )
           {
             SWAP_( x1, y1 );
             SWAP_( x2, y2 );
-            SWAP_( x3, y3 );
           }
 
           if ( point <= limit )
           {
+            x3 = SCALED( point[0].x );
+            y3 = SCALED( point[0].y );
+
+            if ( flipped )
+              SWAP_( x3, y3 );
+
             if ( Cubic_To( RAS_VARS x1, y1, x2, y2, x3, y3 ) )
               goto Fail;
             continue;
@@ -2495,7 +2498,7 @@
           PByte  p;
 
 
-          p = bits - e1*ras.target.pitch;
+          p = bits - e1 * ras.target.pitch;
           if ( ras.target.pitch > 0 )
             p += ( ras.target.rows - 1 ) * ras.target.pitch;
 
@@ -3382,6 +3385,7 @@
                 FT_Raster  *araster )
   {
      static TRaster  the_raster;
+     FT_UNUSED( memory );
 
 
      *araster = (FT_Raster)&the_raster;

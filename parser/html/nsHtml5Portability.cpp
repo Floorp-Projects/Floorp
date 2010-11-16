@@ -82,7 +82,7 @@ nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
   nsAutoString temp;
   local->ToString(temp);
   PRInt32 len = temp.Length();
-  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(len);
+  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>::newJArray(len);
   memcpy(arr, temp.BeginReading(), len * sizeof(PRUnichar));
   return arr;
 }
@@ -91,7 +91,7 @@ jArray<PRUnichar,PRInt32>
 nsHtml5Portability::newCharArrayFromString(nsString* string)
 {
   PRInt32 len = string->Length();
-  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(len);
+  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>::newJArray(len);
   memcpy(arr, string->BeginReading(), len * sizeof(PRUnichar));
   return arr;
 }
@@ -177,6 +177,12 @@ nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
     return PR_FALSE;
   }
   return string->EqualsASCII(literal);
+}
+
+PRBool
+nsHtml5Portability::stringEqualsString(nsString* one, nsString* other)
+{
+  return one->Equals(*other);
 }
 
 void

@@ -6445,7 +6445,7 @@ PresShell::HandleEvent(nsIView         *aView,
   if (!frame &&
       (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
        NS_IS_IME_RELATED_EVENT(aEvent) || NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
-       aEvent->message == NS_PLUGIN_ACTIVATE)) {
+       aEvent->message == NS_PLUGIN_ACTIVATE || aEvent->message == NS_PLUGIN_FOCUS)) {
     nsIView* targetView = aView;
     while (targetView && !targetView->GetClientData()) {
       targetView = targetView->GetParent();
@@ -7615,7 +7615,6 @@ PresShell::WillDoReflow()
   // XXXbz that comment makes no sense
   if (mCaret) {
     mCaret->InvalidateOutsideCaret();
-    mCaret->UpdateCaretPosition();
   }
 
   mPresContext->FlushUserFontSet();
@@ -9203,6 +9202,23 @@ void nsIPresShell::ReleaseStatics()
 void PresShell::QueryIsActive()
 {
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (mDocument) {
+    nsIDocument* displayDoc = mDocument->GetDisplayDocument();
+    if (displayDoc) {
+      // Ok, we're an external resource document -- we need to use our display
+      // document's docshell to determine "IsActive" status, since we lack
+      // a container.
+      NS_ABORT_IF_FALSE(!container,
+                        "external resource doc shouldn't have "
+                        "its own container");
+
+      nsIPresShell* displayPresShell = displayDoc->GetShell();
+      if (displayPresShell) {
+        container = displayPresShell->GetPresContext()->GetContainer();
+      }
+    }
+  }
+
   nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(container));
   if (docshell) {
     PRBool isActive;
@@ -9210,6 +9226,17 @@ void PresShell::QueryIsActive()
     if (NS_SUCCEEDED(rv))
       SetIsActive(isActive);
   }
+}
+
+// Helper for propagating mIsActive changes to external resources
+static PRBool
+SetExternalResourceIsActive(nsIDocument* aDocument, void* aClosure)
+{
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
+    shell->SetIsActive(*static_cast<PRBool*>(aClosure));
+  }
+  return PR_TRUE;
 }
 
 nsresult
@@ -9220,6 +9247,12 @@ PresShell::SetIsActive(PRBool aIsActive)
   if (presContext &&
       presContext->RefreshDriver()->PresContext() == presContext) {
     presContext->RefreshDriver()->SetThrottled(!mIsActive);
+  }
+
+  // Propagate state-change to my resource documents' PresShells
+  if (mDocument) {
+    mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
+                                          &aIsActive);
   }
   return UpdateImageLockingState();
 }

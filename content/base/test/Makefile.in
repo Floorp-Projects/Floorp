@@ -78,7 +78,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug276037-2.xhtml \
 		test_bug298064.html \
 		bug298064-subframe.html \
-		test_bug308484.html \
+		test_xhr_forbidden_headers.html \
 		test_bug311681.xml \
 		test_bug322317.html \
 		test_bug330925.xhtml \
@@ -425,12 +425,15 @@ _TEST_FILES2 = \
 		test_bug574596.html \
 		test_bug578096.html \
 		test_bug598877.html \
+		test_bug599588.html \
 		test_bug600466.html \
 		test_bug600468.html \
 		test_bug600471.html \
 		test_bug601803.html \
 		file_bug601803a.html \
 		file_bug601803b.html \
+		test_bug602838.html \
+		script_bug602838.sjs \
 		test_bug604660.html \
 		file_bug604660-1.xml \
 		file_bug604660-2.xsl \
@@ -439,6 +442,7 @@ _TEST_FILES2 = \
 		file_bug604660-5.xml \
 		file_bug604660-6.xsl \
 		test_bug605982.html \
+		test_treewalker_nextsibling.xml \
 		$(NULL)
 
 # This test fails on the Mac for some reason

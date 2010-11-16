@@ -23,3 +23,5 @@ asserts(1) == passwd-4.html passwd-ref.html # bug 596901
 == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
 == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
 == caret_after_reframe.html caret_after_reframe-ref.html
+== nobogusnode-1.html nobogusnode-ref.html
+== nobogusnode-2.html nobogusnode-ref.html

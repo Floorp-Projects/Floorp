@@ -122,18 +122,13 @@
   text-shadow: 0 0 1px rgba(0,0,0,.7),
                0 1px 1.5px rgba(0,0,0,.5);
   font-weight: bold;
-  padding: .1em 1.5em .15em;
+  padding: 0 1.5em .05em;
   margin: 0;
 }
 
-#main-window[privatebrowsingmode=temporary] #appmenu-button:not(:-moz-window-inactive) {
+#main-window[privatebrowsingmode=temporary] #appmenu-button {
   background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
   border-color: rgba(43,8,65,.9);
-}
-
-#appmenu-button:-moz-window-inactive {
-  background-image: none;
-  border-color: rgba(0,0,0,.4);
 }
 
 #appmenu-button:hover:not(:active):not([open]) {
@@ -183,15 +178,6 @@
   -moz-margin-start: .5em;
 }
 
-/* menupopup > menu[_moz-menuactive="true"] etc. from menu.css doesn't match these nodes */
-.split-menuitem-item[_moz-menuactive="true"]:not([disabled]),
-.split-menuitem-menu[_moz-menuactive="true"]:not([disabled]),
-:-moz-any(#appmenuPrimaryPane, #appmenuSecondaryPane) > menu[_moz-menuactive="true"]:not([disabled]),
-:-moz-any(#appmenuPrimaryPane, #appmenuSecondaryPane) > menuitem[_moz-menuactive="true"]:not([disabled]) {
-  background-color: -moz-menuhover;
-  color: -moz-menuhovertext;
-}
-
 .split-menuitem-menu {
   -moz-box-pack: end;
 }
@@ -215,18 +201,20 @@
     border: 1px solid rgba(0,0,0,.5);
   }
   #appmenuPrimaryPane {
-    margin-right: -1px;
+    -moz-margin-end: -1px;
     background-color: rgba(255,255,255,0.5);
-    border-right: 1px solid #c4c4c5;
-    padding-left: 2px;
+    -moz-border-end: 1px solid #c4c4c5;
+    -moz-padding-start: 2px;
   }
   #appmenuSecondaryPane {
-    -moz-appearance: none;
     background-color: #f1f5fb;
     box-shadow: 1px 0 2px rgb(204,214,234) inset;
     border: 0;
     padding-top: 5px;
     font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+  }
+  #appmenuSecondaryPane:-moz-locale-dir(rtl) {
+    box-shadow: -1px 0 2px rgb(204,214,234) inset;
   }
 
   .appmenu-menuseparator {
@@ -325,7 +313,6 @@
 #titlebar-content {
   margin-left: 15px;
   margin-right: 15px;
-  -moz-box-align: start;
 }
 
 @media all and (-moz-windows-classic) {

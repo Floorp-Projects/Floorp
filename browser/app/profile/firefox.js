@@ -475,21 +475,6 @@ pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
-// l12n and i18n
-pref("intl.accept_languages", "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more3",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more4",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.unicode",  "UTF-8, UTF-16LE, UTF-16BE, UTF-32, UTF-32LE, UTF-32BE");
-pref("intl.charset.detector", "chrome://global/locale/intl.properties");
-pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
-pref("font.language.group", "chrome://global/locale/intl.properties");
-pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
-pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
-
 // simple gestures support
 pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
 pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");

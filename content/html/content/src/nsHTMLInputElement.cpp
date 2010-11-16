@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Geoff Lankow <geoff@darktrojan.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -540,6 +541,9 @@ UploadLastDir::StoreLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
   NS_PRECONDITION(aFile, "aFile is null");
   nsCOMPtr<nsIFile> parentFile;
   aFile->GetParent(getter_AddRefs(parentFile));
+  if (!parentFile) {
+    return NS_OK;
+  }
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(parentFile);
 
   // Store the data in memory instead of the CPS during private browsing mode
@@ -774,7 +778,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
          (aName == nsGkAtoms::type && !mForm)) &&
         mType == NS_FORM_INPUT_RADIO &&
         (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
-      WillRemoveFromRadioGroup(aNotify);
+      WillRemoveFromRadioGroup();
     } else if (aNotify && aName == nsGkAtoms::src &&
                mType == NS_FORM_INPUT_IMAGE) {
       if (aValue) {
@@ -1681,7 +1685,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   if (mType == NS_FORM_INPUT_RADIO) {
     // OnValueChanged is going to be called for all radios in the radio group.
     nsCOMPtr<nsIRadioVisitor> visitor =
-      NS_GetRadioUpdateValueMissingVisitor(aNotify);
+      NS_GetRadioUpdateValueMissingVisitor();
     VisitGroup(visitor, aNotify);
   }
 }
@@ -2514,7 +2518,7 @@ nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   // of the case where we're removing from the document and we don't
   // have a form
   if (!mForm && mType == NS_FORM_INPUT_RADIO) {
-    WillRemoveFromRadioGroup(PR_FALSE);
+    WillRemoveFromRadioGroup();
   }
 
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
@@ -3410,7 +3414,7 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
 }
 
 void
-nsHTMLInputElement::WillRemoveFromRadioGroup(PRBool aNotify)
+nsHTMLInputElement::WillRemoveFromRadioGroup()
 {
   //
   // If the input element is not in a form and
@@ -3443,7 +3447,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup(PRBool aNotify)
     // Removing a checked radio from the group can change the validity state.
     // Let's ask other radio to update their value missing validity state.
     nsCOMPtr<nsIRadioVisitor> visitor =
-      NS_GetRadioUpdateValueMissingVisitor(aNotify);
+      NS_GetRadioUpdateValueMissingVisitor();
     VisitGroup(visitor, PR_FALSE);
   }
   
@@ -4157,9 +4161,8 @@ protected:
 
 class nsRadioUpdateValueMissingVisitor : public nsRadioVisitor {
 public:
-  nsRadioUpdateValueMissingVisitor(PRBool aNotify)
+  nsRadioUpdateValueMissingVisitor()
     : nsRadioVisitor()
-    , mNotify(aNotify)
     { }
 
   virtual ~nsRadioUpdateValueMissingVisitor() { };
@@ -4179,12 +4182,9 @@ public:
      */
     nsCOMPtr<nsITextControlElement> textCtl(do_QueryInterface(aRadio));
     NS_ASSERTION(textCtl, "Visit() passed a null or non-radio pointer");
-    textCtl->OnValueChanged(mNotify);
+    textCtl->OnValueChanged(PR_TRUE);
     return NS_OK;
   }
-
-protected:
-  PRBool mNotify;
 };
 
 nsresult
@@ -4268,9 +4268,9 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
  * See bug 586298
  */
 nsIRadioVisitor*
-NS_GetRadioUpdateValueMissingVisitor(PRBool aNotify)
+NS_GetRadioUpdateValueMissingVisitor()
 {
-  return new nsRadioUpdateValueMissingVisitor(aNotify);
+  return new nsRadioUpdateValueMissingVisitor();
 }
 
 NS_IMETHODIMP_(PRBool)

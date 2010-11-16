@@ -346,12 +346,10 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternAddString(fcPattern, FC_FAMILY,
                            (FcChar8 *)NS_ConvertUTF16toUTF8(GetName()).get());
 
-        // adjust font weight using the offset
         // The requirements outlined in gfxFont.h are difficult to meet without
         // having a table of available font weights, so we map the gfxFont
         // weight to possible FontConfig weights.
-        PRInt8 weight, offset;
-        GetStyle()->ComputeWeightAndOffset(&weight, &offset);
+        PRInt8 weight = GetStyle()->ComputeWeight();
         // gfxFont weight   FC weight
         //    400              80
         //    700             200
@@ -361,8 +359,6 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         while (i < nFcWeight && fcWeight[i] < fcW) {
             i++;
         }
-        // add the offset, but observe the available number of weights
-        i += offset;
         if (i < 0) {
             i = 0;
         } else if (i >= nFcWeight) {

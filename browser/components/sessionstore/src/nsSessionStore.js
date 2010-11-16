@@ -1459,13 +1459,6 @@ SessionStoreService.prototype = {
         tabData.pinned = true;
       else
         delete tabData.pinned;
-      if (browser.userTypedValue) {
-        tabData.userTypedValue = browser.userTypedValue;
-        tabData.userTypedClear = browser.userTypedClear;
-      } else {
-        delete tabData.userTypedValue;
-        delete tabData.userTypedClear;
-      }
       return tabData;
     }
     

@@ -188,8 +188,9 @@ using mozilla::TimeStamp;
 // 0.09 the file encoding is changed to UTF-8, bug 420285
 // 0.10 added plugin versions on appropriate platforms, bug 427743
 // 0.11 file name and full path fields now store expected values on all platforms, bug 488181
+// 0.12 force refresh due to quicktime pdf claim fix, bug 611197
 // The current plugin registry version (and the maximum version we know how to read)
-static const char *kPluginRegistryVersion = "0.11";
+static const char *kPluginRegistryVersion = "0.12";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 

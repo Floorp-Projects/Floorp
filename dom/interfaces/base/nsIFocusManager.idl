@@ -262,3 +262,17 @@ interface nsIFocusManager : nsISupports
    */
   [noscript] void fireDelayedEvents(in nsIDocument aDocument);
 };
+
+/**
+ * This interface extends nsIFocusManager for the 2.0 branch
+ */
+[scriptable, uuid(94a49833-0f6d-4d9b-b859-990546ad9b8d)]
+interface nsIFocusManager_MOZILLA_2_0_BRANCH : nsISupports
+{
+  /**
+   * Indicate that a plugin wishes to take the focus. This is similar to a
+   * normal focus except that the widget focus is not changed. Updating the
+   * widget focus state is the responsibility of the caller.
+   */
+  [noscript] void focusPlugin(in nsIContent aPlugin);
+};
