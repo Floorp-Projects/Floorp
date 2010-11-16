@@ -131,6 +131,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
+		-I$(srcdir)/../../js/src/xpconnect/src \
 		-I$(srcdir)/../../js/src/xpconnect/wrappers \
 		$(NULL)
 
