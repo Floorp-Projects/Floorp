@@ -711,8 +711,10 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
         Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
     JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (hook && fp->hasHookData() && !fp->isExecuteFrame())
-        hook(cx, fp, JS_FALSE, &ok, fp->hookData());
+    void* hookData;
+
+    if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame())
+        hook(cx, fp, JS_FALSE, &ok, hookData);
 
     /*
      * An eval frame's parent owns its activation objects. A yielding frame's

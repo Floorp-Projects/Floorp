@@ -628,10 +628,11 @@ stubs::LeaveScript(VMFrame &f)
 
     if (fp->script()->debugMode) {
         JSInterpreterHook hook = cx->debugHooks->callHook;
+        void *hookData;
 
-        if (hook && fp->hasHookData() && !fp->isExecuteFrame()) {
+        if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame()) {
             JSBool ok = JS_TRUE;
-            hook(cx, fp, JS_FALSE, &ok, fp->hookData());
+            hook(cx, fp, JS_FALSE, &ok, hookData);
             if (!ok)
                 THROW();
         }
