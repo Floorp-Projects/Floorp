@@ -10106,7 +10106,9 @@ TraceRecorder::record_EnterFrame()
 
     debug_only_stmt(JSAutoByteString funBytes);
     debug_only_printf(LC_TMTracer, "EnterFrame %s, callDepth=%d\n",
-                      js_AtomToPrintableString(cx, cx->fp()->fun()->atom, &funBytes),
+                      cx->fp()->fun()->atom ?
+                        js_AtomToPrintableString(cx, cx->fp()->fun()->atom, &funBytes) :
+                        "<anonymous>",
                       callDepth);
     debug_only_stmt(
         if (LogController.lcbits & LC_TMRecorder) {
@@ -10310,7 +10312,9 @@ TraceRecorder::record_JSOP_RETURN()
     debug_only_stmt(JSAutoByteString funBytes);
     debug_only_printf(LC_TMTracer,
                       "returning from %s\n",
-                      js_AtomToPrintableString(cx, fp->fun()->atom, &funBytes));
+                      fp->fun()->atom ?
+                        js_AtomToPrintableString(cx, fp->fun()->atom, &funBytes) :
+                        "<anonymous>");
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
 
     return ARECORD_CONTINUE;
