@@ -41,6 +41,7 @@
 
 #include "nsIEventTarget.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #error NS_ProxyRelease implementation depends on NSPR.
@@ -55,6 +56,21 @@ template <class T>
 inline NS_HIDDEN_(nsresult)
 NS_ProxyRelease
     (nsIEventTarget *target, nsCOMPtr<T> &doomed, PRBool alwaysProxy=PR_FALSE)
+{
+   T* raw = nsnull;
+   doomed.swap(raw);
+   return NS_ProxyRelease(target, raw, alwaysProxy);
+}
+
+/**
+ * Ensure that a nsRefPtr is released on the target thread.
+ *
+ * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, PRBool)
+ */
+template <class T>
+inline NS_HIDDEN_(nsresult)
+NS_ProxyRelease
+    (nsIEventTarget *target, nsRefPtr<T> &doomed, PRBool alwaysProxy=PR_FALSE)
 {
    T* raw = nsnull;
    doomed.swap(raw);
