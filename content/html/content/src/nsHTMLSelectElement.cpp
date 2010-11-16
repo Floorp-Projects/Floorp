@@ -1500,7 +1500,13 @@ nsHTMLSelectElement::IntrinsicState() const
     state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   }
 
-  return state | NS_EVENT_STATE_OPTIONAL;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
+    state |= NS_EVENT_STATE_REQUIRED;
+  } else {
+    state |= NS_EVENT_STATE_OPTIONAL;
+  }
+
+  return state;
 }
 
 // nsIFormControl

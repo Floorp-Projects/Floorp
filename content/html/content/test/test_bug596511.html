@@ -45,9 +45,25 @@ function checkRequiredAttribute(element)
     "select required attribute should be disabled");
 }
 
+function checkRequiredAndOptionalSelectors(element)
+{
+  is(document.querySelector("select:optional"), element, "select should be optional");
+  is(document.querySelector("select:required"), null, "select shouldn't be required");
+
+  element.required = true;
+
+  is(document.querySelector("select:optional"), null, "select shouldn't be optional");
+  is(document.querySelector("select:required"), element, "select should be required");
+
+  element.required = false;
+}
+
 var select = document.createElement("select");
+var content = document.getElementById('content');
+content.appendChild(select);
 
 checkRequiredAttribute(select);
+checkRequiredAndOptionalSelectors(select);
 
 </script>
 </pre>
