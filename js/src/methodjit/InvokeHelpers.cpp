@@ -308,18 +308,6 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
      */
     fp->initCallFrameEarlyPrologue(fun, nactual);
 
-    /* Empty script does nothing. */
-    bool callingNew = fp->isConstructing();
-    if (script->isEmpty()) {
-        RemovePartialFrame(cx, fp);
-        Value *vp = f.regs.sp - (nactual + 2);
-        if (callingNew)
-            vp[0] = vp[1];
-        else
-            vp[0].setUndefined();
-        return NULL;
-    }
-
     if (nactual != fp->numFormalArgs()) {
         fp = (JSStackFrame *)FixupArity(f, nactual);
         if (!fp)
@@ -339,7 +327,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 
     CompileStatus status = CanMethodJIT(cx, script, fp);
     if (status == Compile_Okay)
-        return script->getJIT(callingNew)->invokeEntry;
+        return script->getJIT(fp->isConstructing())->invokeEntry;
 
     /* Function did not compile... interpret it. */
     JSBool ok = Interpret(cx, fp);
@@ -422,9 +410,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
     Value *vp = f.regs.sp - (argc + 2);
 
     /* Try to do a fast inline call before the general Invoke path. */
-    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpreted() && 
-        !ucr->fun->script()->isEmpty())
-    {
+    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpreted()) {
         ucr->callee = &vp->toObject();
         if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ucr->codeAddr, argc))
             THROW();
@@ -476,12 +462,6 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
         ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
         if (ucr->fun->isInterpreted()) {
-            if (ucr->fun->u.i.script->isEmpty()) {
-                vp->setUndefined();
-                f.regs.sp = vp + 1;
-                return;
-            }
-
             if (!UncachedInlineCall(f, 0, &ucr->codeAddr, argc))
                 THROW();
             return;
