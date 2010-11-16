@@ -68,6 +68,7 @@
 #define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
 using namespace mozilla::places;
+using namespace mozilla::storage;
 
 namespace {
 
@@ -80,7 +81,7 @@ namespace {
  *        Page that should be fetched.
  */
 nsresult
-FetchPageInfo(nsCOMPtr<mozIStorageConnection>& aDBConn,
+FetchPageInfo(StatementCache<mozIStorageStatement>& aStmtCache,
               PageData& _page)
 {
   NS_PRECONDITION(_page.spec.Length(), "Must have a non-empty spec!");
@@ -117,13 +118,14 @@ FetchPageInfo(nsCOMPtr<mozIStorageConnection>& aDBConn,
       nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
     );
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT h.id, h.favicon_id, "
-           "(") + redirectedBookmarksFragment + NS_LITERAL_CSTRING(") "
-    "FROM moz_places h WHERE h.url = :page_url"
-  ), getter_AddRefs(stmt));
+  nsCOMPtr<mozIStorageStatement> stmt =
+    aStmtCache.GetCachedStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.favicon_id, "
+             "(") + redirectedBookmarksFragment + NS_LITERAL_CSTRING(") "
+      "FROM moz_places h WHERE h.url = :page_url"
+    ));
   NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
                                 _page.spec);
@@ -170,7 +172,7 @@ FetchPageInfo(nsCOMPtr<mozIStorageConnection>& aDBConn,
       // is different from the requested one, use it.
       if (!_page.bookmarkedSpec.Equals(_page.spec)) {
         _page.spec = _page.bookmarkedSpec;
-        rv = FetchPageInfo(aDBConn, _page);
+        rv = FetchPageInfo(aStmtCache, _page);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -188,19 +190,20 @@ FetchPageInfo(nsCOMPtr<mozIStorageConnection>& aDBConn,
  *        Icon that should be fetched.
  */
 nsresult
-FetchIconInfo(nsCOMPtr<mozIStorageConnection>& aDBConn,
+FetchIconInfo(StatementCache<mozIStorageStatement>& aStmtCache,
               IconData& _icon)
 {
   NS_PRECONDITION(_icon.spec.Length(), "Must have a non-empty spec!");
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, expiration, data, mime_type "
-    "FROM moz_favicons WHERE url = :icon_url"
-  ), getter_AddRefs(stmt));
+  nsCOMPtr<mozIStorageStatement> stmt =
+    aStmtCache.GetCachedStatement(NS_LITERAL_CSTRING(
+      "SELECT id, expiration, data, mime_type "
+      "FROM moz_favicons WHERE url = :icon_url"
+    ));
   NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
                                 _icon.spec);
@@ -459,7 +462,7 @@ AsyncFetchAndSetIconForPage::Run()
                   "This should not be called on the main thread");
 
   // Try to fetch the icon from the database.
-  nsresult rv = FetchIconInfo(mDBConn, mIcon);
+  nsresult rv = FetchIconInfo(mFaviconSvc->mSyncStatements, mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool isInvalidIcon = mIcon.data.IsEmpty() ||
@@ -700,7 +703,7 @@ AsyncAssociateIconToPage::Run()
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  nsresult rv = FetchPageInfo(mDBConn, mPage);
+  nsresult rv = FetchPageInfo(mFaviconSvc->mSyncStatements, mPage);
   if (rv == NS_ERROR_NOT_AVAILABLE){
     // We have never seen this page.  If we can add the page to history,
     // we will try to do it later, otherwise just bail out.
@@ -717,14 +720,15 @@ AsyncAssociateIconToPage::Run()
 
   // If there is no entry for this icon, or the entry is obsolete, replace it.
   if (mIcon.id == 0 || (mIcon.status & ICON_STATUS_CHANGED)) {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT OR REPLACE INTO moz_favicons "
-        "(id, url, data, mime_type, expiration) "
-      "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
-              ":icon_url, :data, :mime_type, :expiration) "
-    ), getter_AddRefs(stmt));
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
+        "INSERT OR REPLACE INTO moz_favicons "
+          "(id, url, data, mime_type, expiration) "
+        "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
+                ":icon_url, :data, :mime_type, :expiration) "
+      ));
     NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), mIcon.spec);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
@@ -740,7 +744,7 @@ AsyncAssociateIconToPage::Run()
     // Get the new icon id.  Do this regardless mIcon.id, since other code
     // could have added a entry before us.  Indeed we interrupted the thread
     // after the previous call to FetchIconInfo.
-    rv = FetchIconInfo(mDBConn, mIcon);
+    rv = FetchIconInfo(mFaviconSvc->mSyncStatements, mIcon);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mIcon.status |= ICON_STATUS_SAVED;
@@ -748,12 +752,13 @@ AsyncAssociateIconToPage::Run()
 
   // If the page does not have an id, try to insert a new one.
   if (mPage.id == 0) {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO moz_places (url, rev_host, favicon_id) "
-      "VALUES (:page_url, :rev_host, :favicon_id) "
-    ), getter_AddRefs(stmt));
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
+        "INSERT INTO moz_places (url, rev_host, favicon_id) "
+        "VALUES (:page_url, :rev_host, :favicon_id) "
+      ));
     NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
     NS_ENSURE_SUCCESS(rv, rv);
     // The rev_host can be null.
@@ -770,18 +775,19 @@ AsyncAssociateIconToPage::Run()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Get the new page id.
-    rv = FetchPageInfo(mDBConn, mPage);
+    rv = FetchPageInfo(mFaviconSvc->mSyncStatements, mPage);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mIcon.status |= ICON_STATUS_ASSOCIATED;
   }
   // Otherwise just associate the icon to the page, if needed.
   else if (mPage.iconId != mIcon.id) {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id"
-    ), getter_AddRefs(stmt));
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
+        "UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id"
+      ));
     NS_ENSURE_STATE(stmt);
+    mozStorageStatementScoper scoper(stmt);
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), mIcon.id);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
