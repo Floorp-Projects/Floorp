@@ -56,14 +56,6 @@ JS_BEGIN_EXTERN_C
 extern JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, JSIntn ln);
 
-#define JS_CRASH_UNLESS(__cond)                                                 \
-    JS_BEGIN_MACRO                                                              \
-        if (!(__cond)) {                                                        \
-            *(int *)(uintptr_t)0xccadbeef = 0;                                  \
-            ((void(*)())0)(); /* More reliable, but doesn't say CCADBEEF */     \
-        }                                                                       \
-    JS_END_MACRO
-
 #ifdef DEBUG
 
 #define JS_ASSERT(expr)                                                       \
