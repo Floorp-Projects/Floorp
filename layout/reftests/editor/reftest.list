@@ -47,3 +47,7 @@ asserts(1) == passwd-4.html passwd-ref.html # bug 596901
 == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
+== readwrite-non-editable.html readwrite-non-editable-ref.html
+== readwrite-editable.html readwrite-editable-ref.html
+== readonly-non-editable.html readonly-non-editable-ref.html
+== readonly-editable.html readonly-editable-ref.html
