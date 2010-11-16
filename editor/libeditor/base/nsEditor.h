@@ -581,7 +581,7 @@ public:
 
   /** returns true if aNode is an editable node */
   bool IsEditable(nsIDOMNode *aNode);
-  bool IsEditable(nsIContent *aNode);
+  virtual bool IsEditable(nsIContent *aNode);
 
   /**
    * aNode must be a non-null text node.
