@@ -3952,8 +3952,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIChromeWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIChromeWorker)
+  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
