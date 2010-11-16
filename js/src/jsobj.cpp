@@ -3532,9 +3532,9 @@ static void object_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
         if (site->returnTypes)
             site->returnTypes->addType(cx, (jstype) object);
     } else {
-        // the value is converted to an object. just monitor the call to see
-        // what value is produced.
-        cx->compartment->types.monitorBytecode(site->code);
+        /* The value is converted to an object, don't keep track of the return type. */
+        if (site->returnTypes)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
     }
 #endif
 }

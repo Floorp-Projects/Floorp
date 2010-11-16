@@ -1219,7 +1219,7 @@ mjit::Compiler::jsop_setelem()
     FrameEntry *id = frame.peek(-2);
     FrameEntry *value = frame.peek(-1);
 
-    if (!IsCacheableSetElem(obj, id, value)) {
+    if (!IsCacheableSetElem(obj, id, value) || analysis->monitored(PC)) {
         jsop_setelem_slow();
         return true;
     }

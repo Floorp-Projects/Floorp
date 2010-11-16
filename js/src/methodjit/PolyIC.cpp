@@ -1668,6 +1668,10 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     Value v;
     if (!obj->getProperty(f.cx, ATOM_TO_JSID(atom), &v))
         THROW();
+
+    if (v.isUndefined())
+        f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
+
     f.regs.sp[-1] = v;
 }
 
@@ -1833,6 +1837,8 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
             THROW();
     }
 #endif
+    if (regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
 }
 
 static void JS_FASTCALL
@@ -2246,6 +2252,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     {
         f.regs.sp[-1] = thisv;
     }
+    if (f.regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, f.regs.pc, 0);
 }
 
 void JS_FASTCALL
@@ -2291,6 +2299,11 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
+    if (f.regs.sp[-2].isUndefined()) {
+        if (idval.isInt32())
+            cx->addTypeProperty(obj->getTypeObject(), NULL, types::TYPE_UNDEFINED);
+        f.script()->typeMonitorUndefined(cx, f.regs.pc, 0);
+    }
 }
 
 #define APPLY_STRICTNESS(f, s)                          \

@@ -2417,15 +2417,6 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static void fun_TypeBind(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-#ifdef JS_TYPE_INFERENCE
-    // monitor all calls to bound functions.
-    TypeCallsite *site = Valueify(jssite);
-    cx->compartment->types.monitorBytecode(site->code);
-#endif
-}
-
 /* ES5 15.3.4.5. */
 static JSBool
 fun_bind(JSContext *cx, uintN argc, Value *vp)
@@ -2470,7 +2461,7 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     JSObject *funobj =
         js_NewFunction(cx, NULL, CallOrConstructBoundFunction, length,
                        JSFUN_CONSTRUCTOR, target, name,
-                       fun_TypeBind, "BoundFunction");
+                       JS_TypeHandlerDynamic, "BoundFunction");
     if (!funobj)
         return false;
 

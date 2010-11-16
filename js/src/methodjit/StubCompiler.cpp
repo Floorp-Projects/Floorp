@@ -180,10 +180,10 @@ StubCompiler::emitStubCall(void *ptr, int32 slots, uint32 id)
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     Call cl = masm.fallibleVMCall(ptr, cc.getPC(), slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
-    if (cc.debugMode()) {
-        Compiler::InternalCallSite site(masm.callReturnOffset(cl), cc.getPC(), id, true, true);
-        cc.addCallSite(site);
-    }
+
+    /* Add the call site for debugging and recompilation. */
+    Compiler::InternalCallSite site(masm.callReturnOffset(cl), cc.getPC(), id, true, true);
+    cc.addCallSite(site);
     return cl;
 }
 

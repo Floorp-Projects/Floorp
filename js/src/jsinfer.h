@@ -793,14 +793,15 @@ struct TypeCompartment
                               const char *name, bool isArray, bool isFunction);
 
     /*
-     * Add the specified type to the specified set, and do any necessary reanalysis
-     * stemming from the change.
+     * Add the specified type to the specified set, do any necessary reanalysis
+     * stemming from the change and recompile any affected scripts.
      */
-    void addDynamicType(JSContext *addCx, TypeSet *types, jstype type,
+    void addDynamicType(JSContext *cx, TypeSet *types, jstype type,
                         const char *format, ...);
+    void addDynamicPush(JSContext *cx, analyze::Bytecode &code, unsigned index, jstype type);
 
     /* Monitor future effects on a bytecode. */
-    inline void monitorBytecode(analyze::Bytecode *code);
+    void monitorBytecode(JSContext *cx, analyze::Bytecode *code);
 };
 
 } /* namespace types */

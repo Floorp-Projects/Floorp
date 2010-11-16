@@ -1413,7 +1413,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALL)
 
           BEGIN_CASE(JSOP_NAME)
-            jsop_name(script->getAtom(fullAtomIndex(PC)));
+            jsop_name(script->getAtom(fullAtomIndex(PC)), knownPushedType(0));
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_DOUBLE)
@@ -1957,7 +1957,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GETGNAME)
           BEGIN_CASE(JSOP_CALLGNAME)
-            jsop_getgname(fullAtomIndex(PC));
+            jsop_getgname(fullAtomIndex(PC), knownPushedType(0));
             if (op == JSOP_CALLGNAME)
                 frame.push(UndefinedValue());
           END_CASE(JSOP_GETGNAME)
@@ -2508,6 +2508,11 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 static bool
 IsLowerableFunCallOrApply(jsbytecode *pc)
 {
+#ifdef JS_TYPE_INFERENCE
+    /* :FIXME: see canUseApplyTricks */
+    return false;
+#endif
+
 #ifdef JS_MONOIC
     return (*pc == JSOP_FUNCALL && GET_ARGC(pc) >= 1) ||
            (*pc == JSOP_FUNAPPLY && GET_ARGC(pc) == 2);
@@ -2607,6 +2612,14 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
 bool
 mjit::Compiler::canUseApplyTricks()
 {
+#ifdef JS_TYPE_INFERENCE
+    /*
+     * :FIXME: Inference currently assumes that arguments passed via call and apply
+     * are monitored, and that short circuiting these doesn't happen.
+     */
+    return false;
+#endif
+
     JS_ASSERT(*PC == JSOP_ARGUMENTS);
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
@@ -2650,7 +2663,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
      * optimize. This lets us assume that callee/this have regs below.
      */
 #ifdef JS_MONOIC
-    if (debugMode() ||
+    if (debugMode() || analysis->monitored(PC) ||
         origCallee->isConstant() || origCallee->isNotType(JSVAL_TYPE_OBJECT) ||
         (lowerFunCallOrApply &&
          (origThis->isConstant() || origThis->isNotType(JSVAL_TYPE_OBJECT)))) {
@@ -3518,7 +3531,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     FrameEntry *rhs = frame.peek(-1);
 
     /* If the incoming type will never PIC, take slow path. */
-    if (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT) {
+    if (analysis->monitored(PC) ||
+        (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT)) {
         jsop_setprop_slow(atom, usePropCache);
         return true;
     }
@@ -3650,7 +3664,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 }
 
 void
-mjit::Compiler::jsop_name(JSAtom *atom)
+mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
 {
     PICGenInfo pic(ic::PICInfo::NAME, JSOp(*PC), true);
 
@@ -3672,7 +3686,7 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     }
 
     pic.fastPathRejoin = masm.label();
-    frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0));
+    frame.pushRegs(pic.shapeReg, pic.objReg, type);
 
     JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
 
@@ -3781,11 +3795,11 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 #else /* JS_POLYIC */
 
 void
-mjit::Compiler::jsop_name(JSAtom *atom)
+mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::Name);
-    frame.pushSynced(knownPushedType(0));
+    frame.pushSynced(type);
 }
 
 bool
@@ -3881,7 +3895,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     if (pop || (op == JSOP_INCGNAME || op == JSOP_DECGNAME)) {
         /* These cases are easy, the original value is not observed. */
 
-        jsop_getgname(index);
+        jsop_getgname(index, JSVAL_TYPE_UNKNOWN);
         // V
 
         frame.push(Int32Value(amt));
@@ -3911,7 +3925,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     } else {
         /* The pre-value is observed, making this more tricky. */
 
-        jsop_getgname(index);
+        jsop_getgname(index, JSVAL_TYPE_UNKNOWN);
         // V
 
         jsop_pos();
@@ -3967,10 +3981,14 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_NAMEINC || op == JSOP_INCNAME) ? -1 : 1;
 
+    bool monitored = analysis->monitored(PC);
+    if (monitored)
+        goto stub;
+
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
         /* These cases are easy, the original value is not observed. */
 
-        jsop_name(atom);
+        jsop_name(atom, JSVAL_TYPE_UNKNOWN);
         // V
 
         frame.push(Int32Value(amt));
@@ -4001,7 +4019,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     } else {
         /* The pre-value is observed, making this more tricky. */
 
-        jsop_name(atom);
+        jsop_name(atom, JSVAL_TYPE_UNKNOWN);
         // V
 
         jsop_pos();
@@ -4038,12 +4056,16 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 
     if (pop)
         PC += JSOP_POP_LENGTH;
-#else
-    prepareStubCall(Uses(0));
-    masm.move(ImmPtr(atom), Registers::ArgReg1);
-    INLINE_STUBCALL(stub);
-    frame.pushSynced(knownPushedType(0));
+
+  stub:
+    if (monitored)
 #endif
+    {
+        prepareStubCall(Uses(0));
+        masm.move(ImmPtr(atom), Registers::ArgReg1);
+        INLINE_STUBCALL(stub);
+        frame.pushSynced(knownPushedType(0));
+    }
 
     PC += JSOP_NAMEINC_LENGTH;
     return true;
@@ -4055,7 +4077,8 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
     FrameEntry *objFe = frame.peek(-1);
-    if (!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) {
+    if ((!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) &&
+        !analysis->monitored(PC)) {
         jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
         bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
         int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
@@ -4419,7 +4442,7 @@ mjit::Compiler::jsop_getgname_slow(uint32 index)
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::GetGlobalName);
-    frame.pushSynced(knownPushedType(0));
+    frame.pushSynced(JSVAL_TYPE_UNKNOWN);
 }
 
 void
@@ -4438,7 +4461,7 @@ mjit::Compiler::jsop_bindgname()
 }
 
 void
-mjit::Compiler::jsop_getgname(uint32 index)
+mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
 {
 #if defined JS_MONOIC
     jsop_bindgname();
@@ -4517,7 +4540,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, inlineValueLoadLabel));
 # endif
 
-    frame.pushRegs(treg, dreg, knownPushedType(0));
+    frame.pushRegs(treg, dreg, type);
 
     stubcc.rejoin(Changes(1));
     mics.append(mic);

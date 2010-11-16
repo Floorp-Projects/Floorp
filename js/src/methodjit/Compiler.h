@@ -406,7 +406,7 @@ class Compiler : public BaseCompiler
     bool jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
     bool jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);
-    void jsop_getgname(uint32 index);
+    void jsop_getgname(uint32 index, JSValueType type);
     void jsop_getgname_slow(uint32 index);
     void jsop_setgname(uint32 index, bool usePropertyCache);
     void jsop_setgname_slow(uint32 index, bool usePropertyCache);
@@ -425,7 +425,7 @@ class Compiler : public BaseCompiler
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
     bool jsop_instanceof();
-    void jsop_name(JSAtom *atom);
+    void jsop_name(JSAtom *atom, JSValueType type);
     bool jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();
@@ -499,11 +499,9 @@ class Compiler : public BaseCompiler
 #define INLINE_STUBCALL(stub)                                               \
     do {                                                                    \
         Call cl = emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)));        \
-        if (debugMode()) {                                                  \
-            InternalCallSite site(masm.callReturnOffset(cl), PC, __LINE__,  \
-                                  true, false);                             \
-            addCallSite(site);                                              \
-        }                                                                   \
+        InternalCallSite site(masm.callReturnOffset(cl), PC, __LINE__,      \
+                              true, false);                                 \
+        addCallSite(site);                                                  \
     } while (0)                                                             \
 
 // Given a stub call, emits the call into the out-of-line assembly path. If
