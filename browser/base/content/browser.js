@@ -1378,6 +1378,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   OfflineApps.init();
   IndexedDBPromptHelper.init();
   gFormSubmitObserver.init();
+  AddonManager.addAddonListener(AddonsMgrListener);
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -1641,6 +1642,7 @@ function BrowserShutdown()
   OfflineApps.uninit();
   gPrivateBrowsingUI.uninit();
   IndexedDBPromptHelper.uninit();
+  AddonManager.removeAddonListener(AddonsMgrListener);
 
   var enumerator = Services.wm.getEnumerator(null);
   enumerator.getNext();
@@ -8050,3 +8052,33 @@ function duplicateTabIn(aTab, where, historyIndex) {
       break;
   }
 }
+
+/*
+ * When addons are installed/uninstalled, check and see if the number of items
+ * on the add-on bar changed:
+ * - If an add-on was installed, incrementing the count, show the bar.
+ * - If an add-on was uninstalled, and no more items are left, hide the bar.
+ */
+let AddonsMgrListener = {
+  get addonBar() document.getElementById("addon-bar"),
+  get statusBar() document.getElementById("status-bar"),
+  getAddonBarItemCount: function() {
+    // Take into account the contents of the status bar shim for the count.
+    return this.addonBar.childNodes.length - 1 +
+           this.statusBar.childNodes.length;
+  },
+  onInstalling: function(aAddon) {
+    this.lastAddonBarCount = this.getAddonBarItemCount();
+  },
+  onInstalled: function(aAddon) {
+    if (this.getAddonBarItemCount() > this.lastAddonBarCount)
+      setToolbarVisibility(this.addonBar, true);
+  },
+  onUninstalling: function(aAddon) {
+    this.lastAddonBarCount = this.getAddonBarItemCount();
+  },
+  onUninstalled: function(aAddon) {
+    if (this.lastAddonBarCount > 0 && this.getAddonBarItemCount() == 0)
+      setToolbarVisibility(this.addonBar, false);
+  }
+};
