@@ -295,6 +295,7 @@ struct Shape : public JSObjectMap
     friend struct ::JSObject;
     friend struct ::JSFunction;
     friend class js::PropertyTree;
+    friend class js::Bindings;
     friend bool HasUnreachableGCThings(TreeFragment *f);
 
   protected:
@@ -494,7 +495,7 @@ struct Shape : public JSObjectMap
         /* Property stored in per-object dictionary, not shared property tree. */
         IN_DICTIONARY   = 0x08,
 
-        /* Prevent unwanted mutation of shared JSFunction::u.i.names nodes. */
+        /* Prevent unwanted mutation of shared Bindings::lastBinding nodes. */
         FROZEN          = 0x10
     };
 
@@ -879,7 +880,7 @@ Shape::isSharedPermanent() const
     return (~attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0;
 }
 
-}
+} // namespace js
 
 #ifdef _MSC_VER
 #pragma warning(pop)

@@ -96,6 +96,7 @@
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
 #include "jsregexpinlines.h"
+#include "jsscriptinlines.h"
 #include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
 
@@ -4241,7 +4242,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     uint32 i = uva->length;
     JS_ASSERT(i != 0);
 
-    for (Shape::Range r(fun->lastUpvar()); i-- != 0; r.popFront()) {
+    for (Shape::Range r(fun->script()->bindings.lastUpvar()); i-- != 0; r.popFront()) {
         JSObject *obj = parent;
         int skip = uva->vector[i].level();
         while (--skip > 0) {
@@ -4784,6 +4785,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             goto out2;
         }
     }
+
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
         goto out2;
@@ -4792,19 +4794,22 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         AutoObjectRooter tvr(cx, FUN_OBJECT(fun));
         MUST_FLOW_THROUGH("out");
 
+        Bindings bindings(cx);
         for (i = 0; i < nargs; i++) {
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
             if (!argAtom) {
                 fun = NULL;
                 goto out2;
             }
-            if (!fun->addLocal(cx, argAtom, JSLOCAL_ARG)) {
+
+            uint16 dummy;
+            if (!bindings.addArgument(cx, argAtom, &dummy)) {
                 fun = NULL;
                 goto out2;
             }
         }
 
-        if (!Compiler::compileFunctionBody(cx, fun, principals,
+        if (!Compiler::compileFunctionBody(cx, fun, principals, &bindings,
                                            chars, length, filename, lineno)) {
             fun = NULL;
             goto out2;

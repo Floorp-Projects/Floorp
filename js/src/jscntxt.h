@@ -2729,8 +2729,8 @@ class AutoLocalNameArray {
                                 JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : context(cx),
         mark(JS_ARENA_MARK(&cx->tempPool)),
-        names(fun->getLocalNameArray(cx, &cx->tempPool)),
-        count(fun->countLocalNames())
+        names(fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool)),
+        count(fun->script()->bindings.countLocalNames())
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }

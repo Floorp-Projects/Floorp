@@ -65,6 +65,8 @@
 #include "jsarray.h"
 #include "jsnum.h"
 
+#include "jsscriptinlines.h"
+
 using namespace js;
 
 namespace js {

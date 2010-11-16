@@ -44,6 +44,8 @@
 #include "jsnum.h"
 #include "jsscope.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
+
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"

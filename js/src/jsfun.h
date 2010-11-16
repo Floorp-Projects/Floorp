@@ -46,6 +46,7 @@
 #include "jspubtd.h"
 #include "jsobj.h"
 #include "jsatom.h"
+#include "jsscript.h"
 #include "jsstr.h"
 #include "jsopcode.h"
 
@@ -113,29 +114,6 @@
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
-/*
- * Formal parameters, local variables, and upvars are stored in a shape tree
- * path with its latest node at fun->u.i.names. The addLocal, lookupLocal, and
- * getLocalNameArray methods abstract away this detail.
- *
- * The lastArg, lastVar, and lastUpvar JSFunction methods provide more direct
- * access to the shape path. These methods may be used to make a Shape::Range
- * for iterating over the relevant shapes from youngest to oldest (i.e., last
- * or right-most to first or left-most in source order).
- *
- * Sometimes iteration order must be from oldest to youngest, however. For such
- * cases, use getLocalNameArray. The RAII helper class js::AutoLocalNameArray,
- * defined in jscntxt.h, should be used where possible instead of direct calls
- * to getLocalNameArray.
- */
-enum JSLocalKind {
-    JSLOCAL_NONE,
-    JSLOCAL_ARG,
-    JSLOCAL_VAR,
-    JSLOCAL_CONST,
-    JSLOCAL_UPVAR
-};
-
 struct JSFunction : public JSObject_Slots2
 {
     /* Functions always have two fixed slots (FUN_CLASS_RESERVED_SLOTS). */
@@ -152,9 +130,6 @@ struct JSFunction : public JSObject_Slots2
         } n;
         struct Scripted {
             JSScript    *script;  /* interpreted bytecode descriptor or null */
-            uint16      nvars;    /* number of local variables */
-            uint16      nupvars;  /* number of upvars (computable from script
-                                     but here for faster access) */
             uint16       skipmin; /* net skip amount up (toward zero) from
                                      script->staticLevel to nearest upvar,
                                      including upvars in nested functions */
@@ -183,84 +158,19 @@ struct JSFunction : public JSObject_Slots2
     /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;
 
-    uintN countVars() const {
-        JS_ASSERT(FUN_INTERPRETED(this));
-        return u.i.nvars;
+    void setArgCount(uint16 nargs) {
+        JS_ASSERT(this->nargs == 0);
+        this->nargs = nargs;
     }
 
     /* uint16 representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };
 
-    uintN countArgsAndVars() const {
-        JS_ASSERT(FUN_INTERPRETED(this));
-        return nargs + u.i.nvars;
-    }
-
-    uintN countLocalNames() const {
-        JS_ASSERT(FUN_INTERPRETED(this));
-        return countArgsAndVars() + u.i.nupvars;
-    }
-
-    bool hasLocalNames() const {
-        JS_ASSERT(FUN_INTERPRETED(this));
-        return countLocalNames() != 0;
-    }
-
-    int sharpSlotBase(JSContext *cx);
-
-    uint32 countUpvarSlots() const;
-
-    const js::Shape *lastArg() const;
-    const js::Shape *lastVar() const;
-    const js::Shape *lastUpvar() const { return u.i.names; }
-
-    /*
-     * The parser builds shape paths for functions, usable by Call objects at
-     * runtime, by calling addLocal. All locals of ARG kind must be addLocal'ed
-     * before any VAR kind, and VAR before UPVAR.
-     */
-    bool addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind);
-
-    /*
-     * Look up an argument or variable name returning its kind when found or
-     * JSLOCAL_NONE when no such name exists. When indexp is not null and the
-     * name exists, *indexp will receive the index of the corresponding
-     * argument or variable.
-     */
-    JSLocalKind lookupLocal(JSContext *cx, JSAtom *atom, uintN *indexp);
-
-    /*
-     * Function and macros to work with local names as an array of words.
-     * getLocalNameArray returns the array, or null if we are out of memory.
-     * This function must be called only when fun->hasLocalNames().
-     *
-     * The supplied pool is used to allocate the returned array, so the caller
-     * is obligated to mark and release to free it.
-     *
-     * The elements of the array with index less than fun->nargs correspond to
-     * the names of function formal parameters. An index >= fun->nargs
-     * addresses a var binding. Use JS_LOCAL_NAME_TO_ATOM to convert array's
-     * element to an atom pointer. This pointer can be null when the element is
-     * for a formal parameter corresponding to a destructuring pattern.
-     *
-     * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST
-     * to check if nameWord corresponds to the const declaration.
-     */
-    jsuword *getLocalNameArray(JSContext *cx, struct JSArenaPool *pool);
-
-    void freezeLocalNames(JSContext *cx);
-
-    /*
-     * If fun's formal parameters include any duplicate names, return one
-     * of them (chosen arbitrarily). If they are all unique, return NULL.
-     */
-    JSAtom *findDuplicateFormal() const;
-
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~(jsuword) 1))
 #define JS_LOCAL_NAME_IS_CONST(nameWord) ((((nameWord) & (jsuword) 1)) != 0)
 
     bool mightEscape() const {
-        return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
+        return isInterpreted() && (isFlatClosure() || !script()->bindings.hasUpvars());
     }
 
     bool joinable() const {
@@ -607,10 +517,16 @@ extern JSBool
 GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
+GetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+
+extern JSBool
 SetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
 SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+
+extern JSBool
+SetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 } // namespace js
 

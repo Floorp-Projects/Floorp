@@ -465,14 +465,14 @@ struct JSObject : js::gc::Cell {
 
     bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
 
-    void setMap(JSObjectMap *amap) {
+    void setMap(const JSObjectMap *amap) {
         JS_ASSERT(!hasOwnShape());
-        map = amap;
+        map = const_cast<JSObjectMap *>(amap);
         objShape = map->shape;
     }
 
     void setSharedNonNativeMap() {
-        setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
+        setMap(&JSObjectMap::sharedNonNative);
     }
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);

@@ -69,6 +69,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
@@ -1126,14 +1127,14 @@ JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 JS_PUBLIC_API(JSBool)
 JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 {
-    return fun->hasLocalNames();
+    return fun->script()->bindings.hasLocalNames();
 }
 
 extern JS_PUBLIC_API(jsuword *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
 {
     *markp = JS_ARENA_MARK(&cx->tempPool);
-    return fun->getLocalNameArray(cx, &cx->tempPool);
+    return fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool);
 }
 
 extern JS_PUBLIC_API(JSAtom *)
