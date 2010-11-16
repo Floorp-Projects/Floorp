@@ -225,11 +225,19 @@ Atob(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
-    const char* bytes = JS_GetStringBytesZ(cx, str);
-    if (!bytes)
+    size_t len = JS_GetStringEncodingLength(cx, str);
+    if (len == size_t(-1))
         return JS_FALSE;
 
-    nsDependentCString string(bytes, JS_GetStringLength(str));
+    JSUint32 alloc_len = (len + 1) * sizeof(char);
+    char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+    if (!buffer)
+        return JS_FALSE;
+
+    JS_EncodeStringToBuffer(str, buffer, len);
+    buffer[len] = '\0';
+
+    nsDependentCString string(buffer, JS_GetStringLength(str));
     nsCAutoString result;
 
     if (NS_FAILED(nsXPConnect::Base64Decode(string, result))) {
@@ -255,11 +263,19 @@ Btoa(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
-    const char* bytes = JS_GetStringBytesZ(cx, str);
-    if (!bytes)
+    size_t len = JS_GetStringEncodingLength(cx, str);
+    if (len == size_t(-1))
         return JS_FALSE;
 
-    nsDependentCString data(bytes, JS_GetStringLength(str));
+    JSUint32 alloc_len = (len + 1) * sizeof(char);
+    char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+    if (!buffer)
+        return JS_FALSE;
+
+    JS_EncodeStringToBuffer(str, buffer, len);
+    buffer[len] = '\0';
+
+    nsDependentCString data(buffer, len);
     nsCAutoString result;
 
     if (NS_FAILED(nsXPConnect::Base64Encode(data, result))) {
