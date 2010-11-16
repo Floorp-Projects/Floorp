@@ -119,10 +119,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
-ifndef WINCE
-ENABLE_CXX_EXCEPTIONS = 1
-endif
-
 include $(topsrcdir)/config/config.mk
 ifdef MOZ_IPC
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
