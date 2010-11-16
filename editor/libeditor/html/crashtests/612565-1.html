@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <iframe></iframe>
+  </body>
+  <script>
+    onload = function() {
+      var i = document.querySelector("iframe");
+      var doc = i.contentDocument;
+      doc.body.appendChild(doc.createTextNode("foo"));
+      doc.designMode = "on";
+      while (doc.body.firstChild) {
+        doc.body.removeChild(doc.body.firstChild);
+      }
+    };
+  </script>
+</html>
