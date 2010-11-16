@@ -145,8 +145,8 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
   return NS_OK;
 }
 
-void 
-nsStyleChangeList::Clear() 
+void
+nsStyleChangeList::Clear()
 {
   for (PRInt32 index = mCount - 1; index >= 0; --index) {
     nsIContent* content = mArray[index].mContent;
