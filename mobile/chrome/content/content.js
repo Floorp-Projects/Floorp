@@ -527,8 +527,6 @@ Content.prototype = {
 let contentObject = new Content();
 
 let ViewportHandler = {
-  metadata: null,
-
   init: function init() {
     addEventListener("DOMWindowCreated", this, false);
     addEventListener("DOMMetaAdded", this, false);
@@ -560,13 +558,11 @@ let ViewportHandler = {
   },
 
   resetMetadata: function resetMetadata() {
-    this.metadata = null;
     sendAsyncMessage("Browser:ViewportMetadata", null);
   },
 
   updateMetadata: function updateMetadata() {
-    this.metadata = this.getViewportMetadata();
-    sendAsyncMessage("Browser:ViewportMetadata", this.metadata);
+    sendAsyncMessage("Browser:ViewportMetadata", this.getViewportMetadata());
   },
 
   /**

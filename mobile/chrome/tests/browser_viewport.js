@@ -44,6 +44,11 @@ let testURL_blank = baseURI + "browser_blank_01.html";
 function testURL(n) {
   return baseURI + "browser_viewport.sjs?" + encodeURIComponent(gTestData[n].metadata);
 }
+function scaleRatio(n) {
+  if ("scaleRatio" in gTestData[n])
+    return gTestData[n].scaleRatio;
+  return 150; // Default value matches our main target hardware (N900, Nexus One, etc.)
+}
 
 let working_tab;
 
@@ -63,6 +68,8 @@ let loadUrl = function loadUrl(tab, url, callback) {
 let gTestData = [
   { metadata: "", width: 980, scale: 1 },
   { metadata: "width=device-width, initial-scale=1", width: 533.33, scale: 1.5 },
+  { metadata: "width=device-width", width: 533.33, scale: 1.5 },
+  { metadata: "width=device-width, initial-scale=1", scaleRatio: 100, width: 800, scale: 1 },
   { metadata: "width=320, initial-scale=1", width: 533.33, scale: 1.5 },
   { metadata: "initial-scale=1.0, user-scalable=no", width: 533.33, scale: 1.5, disableZoom: true },
   { metadata: "initial-scale=1.0, user-scalable=0", width: 533.33, scale: 1.5, disableZoom: true },
@@ -101,6 +108,7 @@ function test() {
 function startTest(n) {
   BrowserUI.goToURI(testURL_blank);
   loadUrl(working_tab, testURL_blank, verifyBlank(n));
+  Services.prefs.setIntPref("browser.viewport.scaleRatio", scaleRatio(n));
 }
 
 function verifyBlank(n) {
@@ -124,7 +132,6 @@ function is_approx(actual, expected, fuzz, description) {
 function verifyTest(n) {
   return function() {
     is(window.innerWidth, 800, "Test assumes window width is 800px");
-    is(Services.prefs.getIntPref("zoom.dpiScale") / 100, 1.5, "Test assumes zoom.dpiScale is 1.5");
 
     // Do sanity tests
     var uri = working_tab.browser.currentURI.spec;
@@ -173,6 +180,7 @@ function verifyTest(n) {
 }
 
 function finishTest(n) {
+  Services.prefs.clearUserPref("browser.viewport.scaleRatio");
   if (n+1 < gTestData.length) {
     startTest(n+1);
   } else {

@@ -495,7 +495,7 @@ var Browser = {
     this.contentScrollboxScroller.scrollTo(x.value, 0);
     this.pageScrollboxScroller.scrollTo(0, 0);
   },
-  
+
   // cmd_scrollBottom does not work in Fennec (Bug 590535).
   scrollContentToBottom: function scrollContentToBottom(aOptions) {
     let x = {}, y = {};
@@ -564,10 +564,10 @@ var Browser = {
       keyword = aURL.substr(0, offset);
       param = aURL.substr(offset + 1);
     }
-  
+
     if (!aPostDataRef)
       aPostDataRef = {};
-  
+
     let engine = Services.search.getEngineByAlias(keyword);
     if (engine) {
       let submission = engine.getSubmission(param);
@@ -830,7 +830,7 @@ var Browser = {
         // Add a new SSL exception for this URL
         let uri = Services.io.newURI(json.url, null, null);
         let sslExceptions = new SSLExceptions();
-  
+
         if (json.action == "permanent")
           sslExceptions.addPermanentException(uri);
         else
@@ -838,7 +838,7 @@ var Browser = {
       } catch (e) {
         dump("EXCEPTION handle content command: " + e + "\n" );
       }
-  
+
       // Automatically reload after the exception was added
       aMessage.target.reload();
     }
@@ -1478,7 +1478,7 @@ const ContentTouchHandler = {
 
     switch (aMessage.name) {
       case "Browser:ContextMenu":
-        // Long tap 
+        // Long tap
         this._contextMenu = { name: aMessage.name, json: aMessage.json, target: aMessage.target };
         break;
 
@@ -2217,7 +2217,7 @@ var AlertsHelper = {
     document.getElementById("alerts-image").setAttribute("src", aImageURL);
     document.getElementById("alerts-title").value = aTitle;
     document.getElementById("alerts-text").textContent = aText;
-    
+
     let container = this.container;
     container.hidden = false;
     container.height = container.getBoundingClientRect().height;
@@ -2229,15 +2229,15 @@ var AlertsHelper = {
       clearTimeout(this._timeoutID);
     this._timeoutID = setTimeout(function() { self._timeoutAlert(); }, timeout);
   },
-    
+
   _timeoutAlert: function ah__timeoutAlert() {
     this._timeoutID = -1;
-    
+
     this.container.classList.remove("showing");
     if (this._listener)
       this._listener.observe(null, "alertfinished", this._cookie);
   },
-  
+
   alertTransitionOver: function ah_alertTransitionOver() {
     let container = this.container;
     if (!container.classList.contains("showing")) {
@@ -2518,15 +2518,25 @@ Tab.prototype = {
       return null;
     return this._notification.inputHandler;
   },
-  
+
   get overlay() {
     if (!this._notification)
       return null;
-    return this._notification.overlay;    
+    return this._notification.overlay;
   },
 
   /** Update browser styles when the viewport metadata changes. */
   updateViewportMetadata: function updateViewportMetadata(aMetadata) {
+    if (aMetadata && aMetadata.autoScale) {
+      let scaleRatio = aMetadata.scaleRatio = this.getScaleRatio();
+
+      if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
+        aMetadata.defaultZoom *= scaleRatio;
+      if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
+        aMetadata.minZoom *= scaleRatio;
+      if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
+        aMetadata.maxZoom *= scaleRatio;
+    }
     this._metadata = aMetadata;
     this.updateViewportSize();
   },
@@ -2544,17 +2554,14 @@ Tab.prototype = {
     let viewportW, viewportH;
 
     let metadata = this.metadata;
-
-    let scaleRatio = this.getScaleRatio();
-    if (metadata.autoScale) {
-      metadata.defaultZoom *= scaleRatio;
-      metadata.minZoom *= scaleRatio;
-      metadata.maxZoom *= scaleRatio;
-    }
-
     if (metadata.autoSize) {
-      viewportW = screenW / metadata.defaultZoom;
-      viewportH = screenH / metadata.defaultZoom;
+      if ("scaleRatio" in metadata) {
+        viewportW = screenW / metadata.scaleRatio;
+        viewportH = screenH / metadata.scaleRatio;
+      } else {
+        viewportW = screenW;
+        viewportH = screenH;
+      }
     } else {
       viewportW = metadata.width;
       viewportH = metadata.height;
@@ -2583,7 +2590,18 @@ Tab.prototype = {
   // The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
   // This is higher on higher-dpi displays, so pages stay about the same physical size.
   getScaleRatio: function getScaleRatio() {
-    return Services.prefs.getIntPref("zoom.dpiScale") / 100;
+    let prefValue = Services.prefs.getIntPref("browser.viewport.scaleRatio");
+    if (prefValue > 0)
+      return prefValue / 100;
+
+    let dpi = Browser.windowUtils.displayDPI;
+    if (dpi < 200) // Includes desktop displays, and LDPI and MDPI Android devices
+      return 1;
+    else if (dpi < 300) // Includes Nokia N900, and HDPI Android devices
+      return 1.5;
+
+    // For very high-density displays like the iPhone 4, calculate an integer ratio.
+    return Math.floor(dpi / 150);
   },
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
@@ -2651,7 +2669,7 @@ Tab.prototype = {
   _createBrowser: function _createBrowser(aURI, aInsertBefore) {
     if (this._browser)
       throw "Browser already exists";
- 
+
     // Create a notification box around the browser
     let notification = this._notification = document.createElement("notificationbox");
     notification.classList.add("inputHandler");
