@@ -333,6 +333,10 @@ ifeq (WINNT,$(OS_ARCH))
 MOZ_FAKELIBS = 1
 endif
 
+ifeq (Android,$(OS_TARGET))
+MOZ_FAKELIBS = 1
+endif
+
 # This comes from configure
 ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
 NO_PROFILE_GUIDED_OPTIMIZE = 1
