@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -607,71 +608,83 @@ let Utils = {
   
   /**
    * PBKDF2 implementation in Javascript.
+   * 
+   * The arguments to this function correspond to items in 
+   * PKCS #5, v2.0 pp. 9-10 
+   * 
+   * P: the passphrase, an octet string:              e.g., "secret phrase"
+   * S: the salt, an octet string:                    e.g., "DNXPzPpiwn"
+   * c: the number of iterations, a positive integer: e.g., 4096
+   * dkLen: the length in octets of the destination 
+   *        key, a positive integer:                  e.g., 16
+   *        
+   * The output is an octet string of length dkLen, which you
+   * can encode as you wish.
    */
-  /* For HMAC-SHA-1 */
-  _hLen : 20,
-  
-  _arrayToString : function _arrayToString(arr) {
-    let ret = '';
-    for (let i = 0; i < arr.length; i++) {
-      ret += String.fromCharCode(arr[i]);
-    }
-    return ret;
-  },
-  
-  _XOR : function _XOR(a, b, isA) {
-    if (a.length != b.length) {
-      return false;
-    }
-
-    let val = [];
-    for (let i = 0; i < a.length; i++) {
-      if (isA) {
-        val[i] = a[i] ^ b[i];
-      } else {
-        val[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
-      }
-    }
-
-    return val;
-  },
-  
-  _F : function _F(PK, S, c, i, h) {
-    let ret;
-    let U = [];
-
-    /* Encode i into 4 octets: _INT */
-    let I = [];
-    I[0] = String.fromCharCode((i >> 24) & 0xff);
-    I[1] = String.fromCharCode((i >> 16) & 0xff);
-    I[2] = String.fromCharCode((i >> 8) & 0xff);
-    I[3] = String.fromCharCode(i & 0xff);
-
-    U[0] = this.sha1HMACBytes(S + I.join(''), PK, h);
-    for (let j = 1; j < c; j++) {
-      U[j] = this.sha1HMACBytes(U[j - 1], PK, h);
-    }
-
-    ret = U[0];
-    for (j = 1; j < c; j++) {
-      ret = this._arrayToString(this._XOR(ret, U[j]));
-    }
-
-    return ret;
-  },
-
-  /* PKCS #5, v2.0 pp. 9-10 */
   pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen) {
-    let l = Math.ceil(dkLen / this._hLen);
-    let r = dkLen - ((l - 1) * this._hLen);
+    /* For HMAC-SHA-1 */
+    const HLEN = 20;
+    
+    function F(PK, S, c, i, h) {
+    
+      function XOR(a, b, isA) {
+        if (a.length != b.length) {
+          return false;
+        }
+
+        let val = [];
+        for (let i = 0; i < a.length; i++) {
+          if (isA) {
+            val[i] = a[i] ^ b[i];
+          } else {
+            val[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
+          }
+        }
+
+        return val;
+      }
+    
+      function arrayToString(arr) {
+        let ret = '';
+        for (let i = 0; i < arr.length; i++) {
+          ret += String.fromCharCode(arr[i]);
+        }
+        return ret;
+      }
+      
+      let ret;
+      let U = [];
+
+      /* Encode i into 4 octets: _INT */
+      let I = [];
+      I[0] = String.fromCharCode((i >> 24) & 0xff);
+      I[1] = String.fromCharCode((i >> 16) & 0xff);
+      I[2] = String.fromCharCode((i >> 8) & 0xff);
+      I[3] = String.fromCharCode(i & 0xff);
+
+      U[0] = Utils.sha1HMACBytes(S + I.join(''), PK, h);
+      for (let j = 1; j < c; j++) {
+        U[j] = Utils.sha1HMACBytes(U[j - 1], PK, h);
+      }
+
+      ret = U[0];
+      for (j = 1; j < c; j++) {
+        ret = arrayToString(XOR(ret, U[j]));
+      }
+
+      return ret;
+    }
+    
+    let l = Math.ceil(dkLen / HLEN);
+    let r = dkLen - ((l - 1) * HLEN);
 
     // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
-    let PK = this.makeHMACKey(P);
-    let h = this.makeHMACHasher();
+    let PK = Utils.makeHMACKey(P);
+    let h = Utils.makeHMACHasher();
     
     T = [];
     for (let i = 0; i < l;) {
-      T[i] = this._F(PK, S, c, ++i, h);
+      T[i] = F(PK, S, c, ++i, h);
     }
 
     let ret = '';
@@ -682,7 +695,6 @@ let Utils = {
 
     return ret;
   },
-  
 
 
   /**

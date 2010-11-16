@@ -13,7 +13,7 @@ function _hexToString(hex) {
   return ret;
 }
 
-function test_sha1_hmac() {
+function run_test() {
   let test_data = 
    [{test_case:     1,
      key:           _hexToString("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),
@@ -59,8 +59,3 @@ function test_sha1_hmac() {
   do_check_eq(Utils.bytesAsHex(Utils.sha1HMACBytes(d.data, kk)), d.digest);
   do_check_eq(Utils.bytesAsHex(Utils.sha1HMACBytes(d.data, kk)), d.digest);
 }
-
-function run_test() {
-  test_sha1_hmac();
-}
-
