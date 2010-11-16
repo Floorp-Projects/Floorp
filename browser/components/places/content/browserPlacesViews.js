@@ -1055,7 +1055,7 @@ PlacesToolbar.prototype = {
       let child = this._rootElt.childNodes[i];
       // Once a child overflows, all the next ones will.
       if (!childOverflowed) {
-              let childRect = child.getBoundingClientRect();
+        let childRect = child.getBoundingClientRect();
         childOverflowed = this.isRTL ? (childRect.left < scrollRect.left)
                                      : (childRect.right > scrollRect.right);
                                       
