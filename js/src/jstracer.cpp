@@ -8051,12 +8051,12 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     vp = NULL;
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->formalArg(slot);
             nr.v = *vp;
-        } else if (shape->getterOp() == js_GetCallVar ||
-                   shape->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar ||
+                   shape->getterOp() == GetCallVarChecked) {
             JS_ASSERT(slot < cfp->numSlots());
             vp = &cfp->slots()[slot];
             nr.v = *vp;
@@ -8100,11 +8100,11 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
         // object loses its frame it never regains one, on trace we will also
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             JS_ASSERT(slot < ArgClosureTraits::slot_count(obj));
             slot += ArgClosureTraits::slot_offset(obj);
-        } else if (shape->getterOp() == js_GetCallVar ||
-                   shape->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar ||
+                   shape->getterOp() == GetCallVarChecked) {
             JS_ASSERT(slot < VarClosureTraits::slot_count(obj));
             slot += VarClosureTraits::slot_offset(obj);
         } else {
@@ -8137,10 +8137,10 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             cx_ins
         };
         const CallInfo* ci;
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             ci = &GetClosureArg_ci;
-        } else if (shape->getterOp() == js_GetCallVar ||
-                   shape->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar ||
+                   shape->getterOp() == GetCallVarChecked) {
             ci = &GetClosureVar_ci;
         } else {
             RETURN_STOP("dynamic property of Call object");
