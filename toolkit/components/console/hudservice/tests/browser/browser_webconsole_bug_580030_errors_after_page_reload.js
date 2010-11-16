@@ -102,7 +102,6 @@ var consoleObserver = {
     executeSoon(function() {
       testLogEntry(outputNode, "fooBazBaz",
                    { success: successMsg, err: errMsg });
-
       finishTest();
     });
   }

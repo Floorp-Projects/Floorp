@@ -66,7 +66,6 @@ function testNullAndUndefinedOutput() {
 
   let nodes = outputNode.querySelectorAll(".hud-msg-node");
   is(nodes.length, 2, "2 nodes in output");
-  log(nodes[1].textContent.toString());
   ok(nodes[1].textContent.indexOf("null") > -1, "'null' printed to output");
 
   jsterm.clearOutput();
@@ -74,7 +73,6 @@ function testNullAndUndefinedOutput() {
 
   nodes = outputNode.querySelectorAll(".hud-msg-node");
   is(nodes.length, 2, "2 nodes in output");
-  log(nodes[1].textContent.toString());
   ok(nodes[1].textContent.indexOf("undefined") > -1, "'undefined' printed to output");
 
   jsterm.clearOutput();
