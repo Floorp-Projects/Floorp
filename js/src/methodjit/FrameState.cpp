@@ -1347,11 +1347,19 @@ FrameState::uncopy(FrameEntry *original)
         JS_ASSERT(fe->isTypeKnown());
         JS_ASSERT(fe->getKnownType() == original->getKnownType());
     }
-    if (original->data.inMemory() && !fe->data.synced())
-        tempRegForData(original);
-    fe->data.inherit(original->data);
-    if (fe->data.inRegister())
-        regstate[fe->data.reg()].reassociate(fe);
+    if (original->isType(JSVAL_TYPE_DOUBLE)) {
+        if (original->data.inMemory() && !fe->data.synced())
+            tempFPRegForData(original);
+        fe->data.inherit(original->data);
+        if (fe->data.inFPRegister())
+            fpregstate[fe->data.fpreg()].reassociate(fe);
+    } else {
+        if (original->data.inMemory() && !fe->data.synced())
+            tempRegForData(original);
+        fe->data.inherit(original->data);
+        if (fe->data.inRegister())
+            regstate[fe->data.reg()].reassociate(fe);
+    }
 
     return fe;
 }
