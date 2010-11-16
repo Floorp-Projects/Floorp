@@ -62,7 +62,7 @@ const kBrowserFormZoomLevelMin = 0.8;
 const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 
-const kDefaultMetadata = { allowZoom: true };
+const kDefaultMetadata = { autoSize: false, allowZoom: true, autoScale: true };
 
 // Override sizeToContent in the main window. It breaks things (bug 565887)
 window.sizeToContent = function() {
@@ -2531,14 +2531,17 @@ Tab.prototype = {
     let viewportW, viewportH;
 
     let metadata = this.metadata;
+
+    let scaleRatio = this.getScaleRatio();
+    if (metadata.autoScale) {
+      metadata.defaultZoom *= scaleRatio;
+      metadata.minZoom *= scaleRatio;
+      metadata.maxZoom *= scaleRatio;
+    }
+
     if (metadata.autoSize) {
-      viewportW = screenW;
-      viewportH = screenH;
-      if (metadata.defaultZoom != 1.0) {
-        let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
-        viewportW /= dpiScale;
-        viewportH /= dpiScale;
-      }
+      viewportW = screenW / metadata.defaultZoom;
+      viewportH = screenH / metadata.defaultZoom;
     } else {
       viewportW = metadata.width;
       viewportH = metadata.height;
@@ -2560,7 +2563,14 @@ Tab.prototype = {
         viewportH = kDefaultBrowserWidth * (screenH / screenW);
       }
     }
+
     browser.setWindowSize(viewportW, viewportH);
+  },
+
+  // The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
+  // This is higher on higher-dpi displays, so pages stay about the same physical size.
+  getScaleRatio: function getScaleRatio() {
+    return Services.prefs.getIntPref("zoom.dpiScale") / 100;
   },
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {

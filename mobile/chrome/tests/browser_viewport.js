@@ -65,12 +65,15 @@ let gTestData = [
   { metadata: "width=device-width, initial-scale=1", width: 533.33, scale: 1.5 },
   { metadata: "width=320, initial-scale=1", width: 533.33, scale: 1.5 },
   { metadata: "initial-scale=1.0, user-scalable=no", width: 533.33, scale: 1.5, disableZoom: true },
+  { metadata: "initial-scale=1.0, user-scalable=0", width: 533.33, scale: 1.5, disableZoom: true },
+  { metadata: "initial-scale=1.0, user-scalable=false", width: 533.33, scale: 1.5, disableZoom: true },
+  { metadata: "initial-scale=1.0, user-scalable=NO", width: 533.33, scale: 1.5, disableZoom: false }, // values are case-sensitive
   { metadata: "width=200,height=500", width: 200, scale: 4 },
   { metadata: "width=2000, minimum-scale=0.75", width: 2000, scale: 1.125, minScale: 1.125 },
   { metadata: "width=100, maximum-scale=2.0", width: 266.67, scale: 3, maxScale: 3 },
   { metadata: "width=2000, initial-scale=0.75", width: 2000, scale: 1.125 },
   { metadata: "width=20000, initial-scale=100", width: 10000, scale: 4 },
-  { metadata: "XHTML", width: 533.33, scale: 1.5, disableZoom: true },
+  { metadata: "XHTML", width: 533.33, scale: 1.5, disableZoom: false },
   /* testing spaces between arguments (bug 572696) */
   { metadata: "width= 2000, minimum-scale=0.75", width: 2000, scale: 1.125 },
   { metadata: "width = 2000, minimum-scale=0.75", width: 2000, scale: 1.125 },
@@ -87,6 +90,7 @@ let gTestData = [
 function test() {
   // This test is async
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   working_tab = Browser.addTab("about:blank", true);
   ok(working_tab, "Tab Opened");
