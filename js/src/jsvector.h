@@ -489,7 +489,7 @@ Vector<T,N,AP>::convertToHeapStorage(size_t lengthInc)
 }
 
 template <class T, size_t N, class AP>
-JS_ALWAYS_INLINE bool
+JS_NEVER_INLINE bool
 Vector<T,N,AP>::growStorageBy(size_t incr)
 {
     JS_ASSERT(mLength + incr > mCapacity);
