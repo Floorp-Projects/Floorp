@@ -48,6 +48,7 @@
 #include "nsToolkitCompsCID.h"
 
 #include "mozilla/storage.h"
+#include "mozilla/storage/StatementCache.h"
 
 // Favicons bigger than this size should not be saved to the db to avoid
 // bloating it with large image blobs.
@@ -141,6 +142,13 @@ public:
   nsresult FinalizeStatements();
 
   void SendFaviconNotifications(nsIURI* aPage, nsIURI* aFaviconURI);
+
+  /**
+   * This cache should be used only for background thread statements.
+   *
+   * @pre must be running on the background thread of mDBConn.
+   */
+  mozilla::storage::StatementCache<mozIStorageStatement> mSyncStatements;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
