@@ -112,7 +112,8 @@ NS_IMPL_ISUPPORTS1(
 )
 
 nsFaviconService::nsFaviconService()
-: mFaviconsExpirationRunning(false)
+: mSyncStatements(mDBConn)
+, mFaviconsExpirationRunning(false)
 , mOptimizedIconDimension(OPTIMIZED_FAVICON_DIMENSION)
 , mFailedFaviconSerial(0)
 , mShuttingDown(false)
@@ -938,6 +939,14 @@ nsFaviconService::FinalizeStatements() {
     nsresult rv = nsNavHistory::FinalizeStatement(stmts[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // Finalize the statementCache on the correct thread.
+  nsRefPtr<FinalizeStatementCacheProxy<mozIStorageStatement>> event =
+    new FinalizeStatementCacheProxy<mozIStorageStatement>(mSyncStatements);
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(mDBConn);
+  NS_ENSURE_TRUE(target, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
