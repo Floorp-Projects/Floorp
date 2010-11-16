@@ -264,20 +264,28 @@
           <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
-              <image class="warning-icon"/>
-              <label class="global-warning-safemode" flex="1">
-                &warning.safemode.label;
-              </label>
-              <label class="global-warning-checkcompatibility" flex="1">
-                &warning.checkcompatibility.label;
-              </label>
+              <hbox class="global-warning-safemode" flex="1" align="center"
+                    tooltiptext="&warning.safemode.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.safemode.label;"/>
+              </hbox>
+              <hbox class="global-warning-checkcompatibility" flex="1" align="center"
+                    tooltiptext="&warning.checkcompatibility.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.checkcompatibility.label;"/>
+              </hbox>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity" flex="1">
-                &warning.updatesecurity.label;
-              </label>
+              <hbox class="global-warning-updatesecurity" flex="1" align="center"
+                    tooltiptext="&warning.updatesecurity.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.updatesecurity.label;"/>
+              </hbox>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
@@ -304,24 +312,32 @@
         </vbox>
 
         <!-- list view -->
-        <vbox id="list-view" flex="1" class="view-pane">
-          <hbox class="view-header global-warning-container" align="center">
+        <vbox id="list-view" flex="1" class="view-pane" align="stretch">
+          <hbox class="view-header global-warning-container">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
-              <image class="warning-icon"/>
-              <label class="global-warning-safemode" flex="1">
-                &warning.safemode.label;
-              </label>
-              <label class="global-warning-checkcompatibility" flex="1">
-                &warning.checkcompatibility.label;
-              </label>
+              <hbox class="global-warning-safemode" flex="1" align="center"
+                    tooltiptext="&warning.safemode.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.safemode.label;"/>
+              </hbox>
+              <hbox class="global-warning-checkcompatibility" flex="1" align="center"
+                    tooltiptext="&warning.checkcompatibility.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.checkcompatibility.label;"/>
+              </hbox>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity" flex="1">
-                &warning.updatesecurity.label;
-              </label>
+              <hbox class="global-warning-updatesecurity" flex="1" align="center"
+                    tooltiptext="&warning.updatesecurity.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.updatesecurity.label;"/>
+              </hbox>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
@@ -348,20 +364,28 @@
           <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
-              <image class="warning-icon"/>
-              <label class="global-warning-safemode" flex="1">
-                &warning.safemode.label;
-              </label>
-              <label class="global-warning-checkcompatibility" flex="1">
-                &warning.checkcompatibility.label;
-              </label>
+              <hbox class="global-warning-safemode" flex="1" align="center"
+                    tooltiptext="&warning.safemode.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.safemode.label;"/>
+              </hbox>
+              <hbox class="global-warning-checkcompatibility" flex="1" align="center"
+                    tooltiptext="&warning.checkcompatibility.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.checkcompatibility.label;"/>
+              </hbox>
               <button class="button-link global-warning-checkcompatibility"
                       label="&warning.checkcompatibility.enable.label;"
                       tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                       command="cmd_enableCheckCompatibility"/>
-              <label class="global-warning-updatesecurity" flex="1">
-                &warning.updatesecurity.label;
-              </label>
+              <hbox class="global-warning-updatesecurity" flex="1" align="center"
+                    tooltiptext="&warning.updatesecurity.label;">
+                <image class="warning-icon"/>
+                <label class="global-warning-text" flex="1" crop="end"
+                       value="&warning.updatesecurity.label;"/>
+              </hbox>
               <button class="button-link global-warning-updatesecurity"
                       label="&warning.updatesecurity.enable.label;"
                       tooltiptext="&warning.updatesecurity.enable.tooltip;"
@@ -393,20 +417,28 @@
         <scrollbox id="detail-view" flex="1" class="view-pane addon-view" orient="vertical">
           <!-- global warnings -->
           <hbox class="global-warning-container global-warning">
-            <image class="warning-icon"/>
-            <label class="global-warning-safemode" flex="1">
-              &warning.safemode.label;
-            </label>
-            <label class="global-warning-checkcompatibility" flex="1">
-              &warning.checkcompatibility.label;
-            </label>
+            <hbox class="global-warning-safemode" flex="1" align="center"
+                  tooltiptext="&warning.safemode.label;">
+              <image class="warning-icon"/>
+              <label class="global-warning-text" flex="1" crop="end"
+                     value="&warning.safemode.label;"/>
+            </hbox>
+            <hbox class="global-warning-checkcompatibility" flex="1" align="center"
+                  tooltiptext="&warning.checkcompatibility.label;">
+              <image class="warning-icon"/>
+              <label class="global-warning-text" flex="1" crop="end"
+                     value="&warning.checkcompatibility.label;"/>
+            </hbox>
             <button class="button-link global-warning-checkcompatibility"
                     label="&warning.checkcompatibility.enable.label;"
                     tooltiptext="&warning.checkcompatibility.enable.tooltip;"
                     command="cmd_enableCheckCompatibility"/>
-            <label class="global-warning-updatesecurity" flex="1">
-              &warning.updatesecurity.label;
-            </label>
+            <hbox class="global-warning-updatesecurity" flex="1" align="center"
+                  tooltiptext="&warning.updatesecurity.label;">
+              <image class="warning-icon"/>
+              <label class="global-warning-text" flex="1" crop="end"
+                     value="&warning.updatesecurity.label;"/>
+            </hbox>
             <button class="button-link global-warning-updatesecurity"
                     label="&warning.updatesecurity.enable.label;"
                     tooltiptext="&warning.updatesecurity.enable.tooltip;"
