@@ -156,11 +156,9 @@ static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, nsEventStates eventSt
 
 static PRInt32 GetClassicWindowFrameButtonState(nsEventStates eventState)
 {
-  if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
-    if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
-      return DFCS_BUTTONPUSH|DFCS_PUSHED; 
-    return DFCS_BUTTONPUSH|DFCS_HOT;
-  }
+  if (eventState.HasState(NS_EVENT_STATE_ACTIVE) &&
+      eventState.HasState(NS_EVENT_STATE_HOVER))
+    return DFCS_BUTTONPUSH|DFCS_PUSHED;
   return DFCS_BUTTONPUSH;
 }
 
