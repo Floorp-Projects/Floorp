@@ -2050,7 +2050,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         return NS_ERROR_FAILURE;
       }
 
-      outerObject = JS_TransplantWrapper(cx, mJSObject, outerObject);
+      outerObject = JS_TransplantObject(cx, mJSObject, outerObject);
       if (!outerObject) {
         NS_ERROR("unable to transplant wrappers, probably OOM");
         return NS_ERROR_FAILURE;
