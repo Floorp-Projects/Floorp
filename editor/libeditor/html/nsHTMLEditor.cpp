@@ -6030,3 +6030,22 @@ nsHTMLEditor::GetPreferredIMEState(PRUint32 *aState)
   *aState = nsIContent::IME_STATUS_ENABLE;
   return NS_OK;
 }
+
+PRBool
+nsHTMLEditor::IsEditable(nsIDOMNode* aNode) {
+  if (!nsPlaintextEditor::IsEditable(aNode)) {
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  if (!node) {
+    // If what we're dealing with is not a node, then it's not editable!
+    return PR_FALSE;
+  }
+  if (node->IsElement()) {
+    // If we're dealing with an element, then ask it whether it's editable.
+    return node->IsEditable();
+  }
+  // We might be dealing with a text node for example, which we always consider
+  // to be editable.
+  return PR_TRUE;
+}
