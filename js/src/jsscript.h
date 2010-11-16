@@ -198,12 +198,6 @@ struct JSScript {
      * to the newly made script's function, if any -- so callers of NewScript
      * are responsible for notifying the debugger after successfully creating any
      * kind (function or other) of new JSScript.
-     *
-     * NB: NewScript always creates a new script; it never returns the empty
-     * script singleton (JSScript::emptyScript()). Callers who know they can use
-     * that read-only singleton are responsible for choosing it instead of calling
-     * NewScript with length and nsrcnotes equal to 1 and other parameters save
-     * cx all zero.
      */
     static JSScript *NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                                uint32 nobjects, uint32 nupvars, uint32 nregexps,
@@ -397,19 +391,9 @@ struct JSScript {
     /*
      * The isEmpty method tells whether this script has code that computes any
      * result (not return value, result AKA normal completion value) other than
-     * JSVAL_VOID, or any other effects. It has a fast path for the case where
-     * |this| is the emptyScript singleton, but it also checks this->length and
-     * this->code, to handle debugger-generated mutable empty scripts.
+     * JSVAL_VOID, or any other effects.
      */
     inline bool isEmpty() const;
-
-    /*
-     * Accessor for the emptyScriptConst singleton, to consolidate const_cast.
-     * See the private member declaration.
-     */
-    static JSScript *emptyScript() {
-        return const_cast<JSScript *>(&emptyScriptConst);
-    }
 
     uint32 getClosedArg(uint32 index) {
         JS_ASSERT(index < nClosedArgs);
@@ -422,16 +406,6 @@ struct JSScript {
     }
 
     void copyClosedSlotsTo(JSScript *other);
-
-  private:
-    /*
-     * Use const to put this in read-only memory if possible. We are stuck with
-     * non-const JSScript * and jsbytecode * by legacy code (back in the 1990s,
-     * const wasn't supported correctly on all target platforms). The debugger
-     * does mutate bytecode, and script->u.object may be set after construction
-     * in some cases, so making JSScript pointers const will be "hard".
-     */
-    static const JSScript emptyScriptConst;
 };
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
@@ -575,18 +549,11 @@ js_CloneScript(JSContext *cx, JSScript *script);
  * If magic is null, js_XDRScript returns false on bad magic number errors,
  * which it reports.
  *
- * NB: after a successful JSXDR_DECODE, and provided that *scriptp is not the
- * JSScript::emptyScript() immutable singleton, js_XDRScript callers must do
- * any required subsequent set-up of owning function or script object and then
- * call js_CallNewScriptHook.
- *
- * If the caller requires a mutable empty script (for debugging or u.object
- * ownership setting), pass true for needMutableScript. Otherwise pass false.
- * Call js_CallNewScriptHook only with a mutable script, i.e. never with the
- * JSScript::emptyScript() singleton.
+ * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
+ * required subsequent set-up of owning function or script object and then call
+ * js_CallNewScriptHook.
  */
 extern JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
-             JSBool *hasMagic);
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic);
 
 #endif /* jsscript_h___ */

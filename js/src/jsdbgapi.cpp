@@ -265,12 +265,6 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
-    if (script == JSScript::emptyScript()) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
-                                     NULL, JSMSG_READ_ONLY, "empty script");
-        return JS_FALSE;
-    }
-
     JS_ASSERT((JSOp) *pc != JSOP_TRAP);
     junk = NULL;
     rt = cx->runtime;
