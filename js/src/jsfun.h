@@ -176,6 +176,7 @@ struct JSFunction : public JSObject_Slots2
     bool isNative()          const { return !FUN_INTERPRETED(this); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+    bool isFlatClosure()     const { return FUN_KIND(this) == JSFUN_FLAT_CLOSURE; }
 
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 

@@ -1322,10 +1322,10 @@ JSTreeContext::ensureSharpSlots()
         if (!sharpArrayAtom || !sharpDepthAtom)
             return false;
 
-        sharpSlotBase = fun->u.i.nvars;
-        if (!fun->addLocal(cx, sharpArrayAtom, JSLOCAL_VAR))
+        sharpSlotBase = fun()->u.i.nvars;
+        if (!fun()->addLocal(cx, sharpArrayAtom, JSLOCAL_VAR))
             return false;
-        if (!fun->addLocal(cx, sharpDepthAtom, JSLOCAL_VAR))
+        if (!fun()->addLocal(cx, sharpDepthAtom, JSLOCAL_VAR))
             return false;
     } else {
         /*
@@ -1706,11 +1706,11 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             if (cg->inFunction()) {
-                if (cg->fun->lookupLocal(cx, atom, NULL) != JSLOCAL_NONE)
+                if (cg->fun()->lookupLocal(cx, atom, NULL) != JSLOCAL_NONE)
                     break;
             } else {
                 JS_ASSERT(cg->compileAndGo());
-                obj = cg->scopeChain;
+                obj = cg->scopeChain();
 
                 const Shape *shape = obj->nativeLookup(ATOM_TO_JSID(atom));
                 if (shape) {
@@ -1883,7 +1883,7 @@ AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
 {
     JS_ASSERT((jsuint) slot < cg->maxStackDepth);
     if (cg->inFunction()) {
-        slot += cg->fun->u.i.nvars;
+        slot += cg->fun()->u.i.nvars;
         if ((uintN) slot >= SLOTNO_LIMIT) {
             ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
             slot = -1;
@@ -2011,7 +2011,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 
     JSAtomListElement *ale = cg->upvarList.lookup(atom);
     if (!ale) {
-        if (cg->inFunction() && !cg->fun->addLocal(cx, atom, JSLOCAL_UPVAR))
+        if (cg->inFunction() && !cg->fun()->addLocal(cx, atom, JSLOCAL_UPVAR))
             return false;
 
         ale = cg->upvarList.add(cg->parser, atom);
@@ -2213,8 +2213,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * as their parent by Parser::newFunction.
              */
             JSObject *scopeobj = cg->inFunction()
-                                 ? FUN_OBJECT(cg->fun)->getParent()
-                                 : cg->scopeChain;
+                                 ? FUN_OBJECT(cg->fun())->getParent()
+                                 : cg->scopeChain();
             if (scopeobj != cg->parser->callerVarObj)
                 return JS_TRUE;
 
@@ -2323,7 +2323,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->compileAndGo());
-        JS_ASSERT(caller->isFunctionFrame() && cg->parser->callerVarObj == evalcg->scopeChain);
+        JS_ASSERT(caller->isFunctionFrame());
+        JS_ASSERT(cg->parser->callerVarObj == evalcg->scopeChain());
 
         /*
          * Don't generate upvars on the left side of a for loop. See
@@ -2347,7 +2348,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JS_ASSERT(cg->inFunction());
         JS_ASSERT_IF(cookie.slot() != UpvarCookie::CALLEE_SLOT, cg->lexdeps.lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-        JS_ASSERT(cg->fun->u.i.skipmin <= skip);
+        JS_ASSERT(cg->fun()->u.i.skipmin <= skip);
 
         /*
          * If op is a mutating opcode, this upvar's lookup skips too many levels,
@@ -2360,7 +2361,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
 
-        if (FUN_FLAT_CLOSURE(cg->fun)) {
+        if (cg->fun()->isFlatClosure()) {
             op = JSOP_GETFCSLOT;
         } else {
             /*
@@ -2388,7 +2389,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (ale) {
             index = ALE_INDEX(ale);
         } else {
-            if (!cg->fun->addLocal(cx, atom, JSLOCAL_UPVAR))
+            if (!cg->fun()->addLocal(cx, atom, JSLOCAL_UPVAR))
                 return JS_FALSE;
 
             ale = cg->upvarList.add(cg->parser, atom);
@@ -2417,7 +2418,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     tc = tc->parent;
                 } while (tc->staticLevel != level);
                 if (tc->inFunction())
-                    slot += tc->fun->nargs;
+                    slot += tc->fun()->nargs;
             }
 
             vector[index].set(skip, slot);
@@ -2469,11 +2470,11 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case JSDefinition::VAR:
         if (PN_OP(dn) == JSOP_CALLEE) {
             JS_ASSERT(op != JSOP_CALLEE);
-            JS_ASSERT((cg->fun->flags & JSFUN_LAMBDA) && atom == cg->fun->atom);
+            JS_ASSERT((cg->fun()->flags & JSFUN_LAMBDA) && atom == cg->fun()->atom);
 
             /*
-             * Leave pn->pn_op == JSOP_NAME if cg->fun is heavyweight, as we
-             * cannot be sure cg->fun is not something of the form:
+             * Leave pn->pn_op == JSOP_NAME if cg->fun() is heavyweight, as we
+             * cannot be sure cg->fun() is not something of the form:
              *
              *   var ff = (function f(s) { eval(s); return f; });
              *
@@ -3820,7 +3821,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
 
     if (cg->inFunction() &&
         JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
-        pn->pn_cookie.slot() < cg->fun->u.i.nvars &&
+        pn->pn_cookie.slot() < cg->fun()->u.i.nvars &&
         cg->shouldNoteClosedName(pn))
     {
         if (!cg->closedVars.append(pn->pn_cookie.slot()))
@@ -4605,7 +4606,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
         }
 #endif
-        cg2->fun = fun;
+        cg2->setFunction(fun);
         cg2->funbox = pn->pn_funbox;
         cg2->parent = cg;
 
@@ -4675,7 +4676,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #ifdef DEBUG
             JSLocalKind localKind =
 #endif
-                cg->fun->lookupLocal(cx, fun->atom, &slot);
+                cg->fun()->lookupLocal(cx, fun->atom, &slot);
             JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;
@@ -7001,7 +7002,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * and lastIndex sharing, select JSOP_REGEXP.
          */
         JS_ASSERT(pn->pn_op == JSOP_REGEXP);
-        bool singleton = !cg->fun && cg->compileAndGo();
+        bool singleton = !(cg->inFunction() ? cg->fun() : cg->scopeChain()) && cg->compileAndGo();
         if (singleton) {
             for (JSStmtInfo *stmt = cg->topStmt; stmt; stmt = stmt->down) {
                 if (STMT_IS_LOOP(stmt)) {
