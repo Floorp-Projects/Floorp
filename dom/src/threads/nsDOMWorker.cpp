@@ -373,13 +373,19 @@ nsDOMWorkerFunctions::AtoB(JSContext* aCx,
     return JS_FALSE;
   }
 
-  // We want the bytes here, not the jschars.
-  const char* bytes = JS_GetStringBytesZ(aCx, str);
-  if (!bytes) {
-    return JS_FALSE;
-  }
+  size_t len = JS_GetStringEncodingLength(aCx, str);
+  if (len == size_t(-1))
+      return JS_FALSE;
 
-  nsDependentCString string(bytes, JS_GetStringLength(str));
+  JSUint32 alloc_len = (len + 1) * sizeof(char);
+  char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+  if (!buffer)
+      return JS_FALSE;
+
+  JS_EncodeStringToBuffer(str, buffer, len);
+  buffer[len] = '\0';
+
+  nsDependentCString string(buffer, len);
   nsCAutoString result;
 
   if (NS_FAILED(nsXPConnect::Base64Decode(string, result))) {
@@ -419,13 +425,19 @@ nsDOMWorkerFunctions::BtoA(JSContext* aCx,
     return JS_FALSE;
   }
 
-  // We want the bytes here, not the jschars.
-  const char* bytes = JS_GetStringBytesZ(aCx, str);
-  if (!bytes) {
-    return JS_FALSE;
-  }
+  size_t len = JS_GetStringEncodingLength(aCx, str);
+  if (len == size_t(-1))
+      return JS_FALSE;
 
-  nsDependentCString string(bytes, JS_GetStringLength(str));
+  JSUint32 alloc_len = (len + 1) * sizeof(char);
+  char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+  if (!buffer)
+      return JS_FALSE;
+
+  JS_EncodeStringToBuffer(str, buffer, len);
+  buffer[len] = '\0';
+
+  nsDependentCString string(buffer, len);
   nsCAutoString result;
 
   if (NS_FAILED(nsXPConnect::Base64Encode(string, result))) {
