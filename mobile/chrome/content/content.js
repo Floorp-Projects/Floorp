@@ -586,25 +586,34 @@ let ViewportHandler = {
     sendAsyncMessage("Browser:ViewportMetadata", this.metadata);
   },
 
+  /**
+   * Returns an object with the page's preferred viewport properties:
+   *   defaultZoom (optional float): The initial scale when the page is loaded.
+   *   minZoom (optional float): The minimum zoom level.
+   *   maxZoom (optional float): The maximum zoom level.
+   *   width (optional int): The CSS viewport width in px.
+   *   height (optional int): The CSS viewport height in px.
+   *   autoSize (boolean): Resize the CSS viewport when the window resizes.
+   *   allowZoom (boolean): Let the user zoom in or out.
+   *   autoScale (boolean): Adjust the viewport properties to account for display density.
+   */
   getViewportMetadata: function getViewportMetadata() {
-    let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
-
     let doctype = content.document.doctype;
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return { defaultZoom: dpiScale, autoSize: true };
+      return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
 
     let windowUtils = Util.getWindowUtils(content);
     let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
     if (handheldFriendly == "true")
-      return { defaultZoom: dpiScale, autoSize: true };
+      return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
 
     if (content.document instanceof XULDocument)
-      return { defaultZoom: 1.0, autoSize: true, allowZoom: false };
+      return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
 
     // HACK: Since we can't set the scale in local tabs (bug 597081), we force
     // them to device-width and scale=1 so they will lay out reasonably.
     if (Util.isParentProcess())
-      return { defaultZoom: 1.0, autoSize: true, allowZoom: false };
+      return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
 
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
@@ -612,43 +621,35 @@ let ViewportHandler = {
 
     // Note: These values will be NaN if parseFloat or parseInt doesn't find a number.
     // Remember that NaN is contagious: Math.max(1, NaN) == Math.min(1, NaN) == NaN.
-    let viewportScale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
-    let viewportMinScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
-    let viewportMaxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
-    let viewportWidthStr = windowUtils.getDocumentMetadata("viewport-width");
-    let viewportHeightStr = windowUtils.getDocumentMetadata("viewport-height");
+    let scale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
+    let minScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
+    let maxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
 
-    viewportScale = Util.clamp(viewportScale, kViewportMinScale, kViewportMaxScale);
-    viewportMinScale = Util.clamp(viewportMinScale, kViewportMinScale, kViewportMaxScale);
-    viewportMaxScale = Util.clamp(viewportMaxScale, kViewportMinScale, kViewportMaxScale);
+    let widthStr = windowUtils.getDocumentMetadata("viewport-width");
+    let heightStr = windowUtils.getDocumentMetadata("viewport-height");
+    let width = Util.clamp(parseInt(widthStr), kViewportMinWidth, kViewportMaxWidth);
+    let height = Util.clamp(parseInt(heightStr), kViewportMinHeight, kViewportMaxHeight);
+
+    let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
+    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
+
+    scale = Util.clamp(scale, kViewportMinScale, kViewportMaxScale);
+    minScale = Util.clamp(minScale, kViewportMinScale, kViewportMaxScale);
+    maxScale = Util.clamp(maxScale, kViewportMinScale, kViewportMaxScale);
 
     // If initial scale is 1.0 and width is not set, assume width=device-width
-    let autoSize = (viewportWidthStr == "device-width" ||
-                    viewportHeightStr == "device-height" ||
-                    (viewportScale == 1.0 && !viewportWidthStr));
-
-    let viewportWidth = Util.clamp(parseInt(viewportWidthStr), kViewportMinWidth, kViewportMaxWidth);
-    let viewportHeight = Util.clamp(parseInt(viewportHeightStr), kViewportMinHeight, kViewportMaxHeight);
-
-    // Zoom level is the final (device pixel : CSS pixel) ratio for content.
-    // Since web content specifies scale as (reference pixel : CSS pixel) ratio,
-    // multiply the requested scale by a constant (device pixel : reference pixel)
-    // factor to account for high DPI devices.
-    //
-    // See bug 561445 or any of the examples of chrome/tests/browser_viewport_XX.html
-    // for more information and examples.
-    let defaultZoom = viewportScale * dpiScale;
-    let minZoom = viewportMinScale * dpiScale;
-    let maxZoom = viewportMaxScale * dpiScale;
+    let autoSize = (widthStr == "device-width" ||
+                    (!widthStr && (heightStr == "device-height" || scale == 1.0)));
 
     return {
-      defaultZoom: defaultZoom,
-      minZoom: minZoom,
-      maxZoom: maxZoom,
-      width: viewportWidth,
-      height: viewportHeight,
+      defaultZoom: scale,
+      minZoom: minScale,
+      maxZoom: maxScale,
+      width: width,
+      height: height,
       autoSize: autoSize,
-      allowZoom: windowUtils.getDocumentMetadata("viewport-user-scalable") != "no"
+      allowZoom: allowZoom,
+      autoScale: true
     };
   }
 };
