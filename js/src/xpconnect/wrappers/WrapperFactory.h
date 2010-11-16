@@ -44,11 +44,11 @@ namespace xpc {
 
 class WrapperFactory {
   public:
-    enum { WAIVE_XRAY_WRAPPER_FLAG = (1<<0),
-           IS_XRAY_WRAPPER_FLAG = (1<<1),
-           SCRIPT_ACCESS_ONLY_FLAG = (1<<2),
-           PARTIALLY_TRANSPARENT = (1<<3),
-           SOW_FLAG = (1<<4) };
+    enum { WAIVE_XRAY_WRAPPER_FLAG = JSWrapper::LAST_USED_FLAG << 1,
+           IS_XRAY_WRAPPER_FLAG    = WAIVE_XRAY_WRAPPER_FLAG << 1,
+           SCRIPT_ACCESS_ONLY_FLAG = IS_XRAY_WRAPPER_FLAG << 1,
+           PARTIALLY_TRANSPARENT   = SCRIPT_ACCESS_ONLY_FLAG << 1,
+           SOW_FLAG                = PARTIALLY_TRANSPARENT << 1 };
 
     // Return true if any of any of the nested wrappers have the flag set.
     static bool HasWrapperFlag(JSObject *wrapper, uintN flag) {

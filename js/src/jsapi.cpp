@@ -1217,31 +1217,29 @@ JS_WrapValue(JSContext *cx, jsval *vp)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
+JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target)
 {
-    JS_ASSERT(wrapper->isWrapper());
-
-    /*
-     * This function is called when a window is navigating. In that case, we
-     * need to "move" the window from wrapper's compartment to target's
-     * compartment.
-     */
+     // This function is called when an object moves between two different
+     // compartments. In that case, we need to "move" the window from origobj's
+     // compartment to target's compartment.
     JSCompartment *destination = target->getCompartment();
-    if (wrapper->getCompartment() == destination) {
-        // If the wrapper is in the same compartment as the destination, then
-        // we know that we won't find wrapper in the destination's cross
-        // compartment map and that the same object will continue to work.
-        if (!wrapper->swap(cx, target))
+    if (origobj->getCompartment() == destination) {
+        // If the original object is in the same compartment as the
+        // destination, then we know that we won't find wrapper in the
+        // destination's cross compartment map and that the same object
+        // will continue to work.
+        if (!origobj->swap(cx, target))
             return NULL;
-        return wrapper;
+        return origobj;
     }
 
     JSObject *obj;
     WrapperMap &map = destination->crossCompartmentWrappers;
-    Value wrapperv = ObjectValue(*wrapper);
+    Value origv = ObjectValue(*origobj);
 
-    // There might already be a wrapper for the window in the new compartment.
-    if (WrapperMap::Ptr p = map.lookup(wrapperv)) {
+    // There might already be a wrapper for the original object in the new
+    // compartment.
+    if (WrapperMap::Ptr p = map.lookup(origv)) {
         // If there is, make it the primary outer window proxy around the
         // inner (accomplished by swapping target's innards with the old,
         // possibly security wrapper, innards).
@@ -1266,7 +1264,7 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
 
     for (JSCompartment **p = vector.begin(), **end = vector.end(); p != end; ++p) {
         WrapperMap &pmap = (*p)->crossCompartmentWrappers;
-        if (WrapperMap::Ptr wp = pmap.lookup(wrapperv)) {
+        if (WrapperMap::Ptr wp = pmap.lookup(origv)) {
             // We found a wrapper. Remember and root it.
             toTransplant.append(wp->value);
         }
@@ -1276,8 +1274,8 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
         JSObject *wobj = &begin->toObject();
         JSCompartment *wcompartment = wobj->compartment();
         WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
-        JS_ASSERT(pmap.lookup(wrapperv));
-        pmap.remove(wrapperv);
+        JS_ASSERT(pmap.lookup(origv));
+        pmap.remove(origv);
 
         // First, we wrap it in the new compartment. This will return a
         // new wrapper.
@@ -1296,15 +1294,15 @@ JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target)
         pmap.put(targetv, ObjectValue(*wobj));
     }
 
-    // Lastly, update the old outer window proxy to point to the new one.
+    // Lastly, update the original object to point to the new one.
     {
-        AutoCompartment ac(cx, wrapper);
+        AutoCompartment ac(cx, origobj);
         JSObject *tobj = obj;
         if (!ac.enter() || !JS_WrapObject(cx, &tobj))
             return NULL;
-        if (!wrapper->swap(cx, tobj))
+        if (!origobj->swap(cx, tobj))
             return NULL;
-        wrapper->getCompartment()->crossCompartmentWrappers.put(targetv, wrapperv);
+        origobj->getCompartment()->crossCompartmentWrappers.put(targetv, origv);
     }
 
     return obj;
