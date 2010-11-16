@@ -522,7 +522,7 @@ nsWindow::BringToFront()
     gTopLevelWindows.InsertElementAt(0, this);
 
     if (oldTop) {
-        nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, gTopLevelWindows[0]);
+        nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, oldTop);
         DispatchEvent(&event);
     }
 
