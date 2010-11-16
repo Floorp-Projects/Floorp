@@ -519,6 +519,8 @@ public:
       case DB_VISITS_FOR_FRECENCY:
         return NS_IsMainThread() ? mDBVisitsForFrecency
                                  : mDBAsyncThreadVisitsForFrecency;
+      default:
+        NS_NOTREACHED("Trying to handle an unknown statement");
     }
     return nsnull;
   }

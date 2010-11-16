@@ -774,24 +774,31 @@ AsyncAssociateIconToPage::Run()
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get the new page id.
-    rv = FetchPageInfo(mFaviconSvc->mSyncStatements, mPage);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mIcon.status |= ICON_STATUS_ASSOCIATED;
   }
   // Otherwise just associate the icon to the page, if needed.
   else if (mPage.iconId != mIcon.id) {
-    nsCOMPtr<mozIStorageStatement> stmt =
-      mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
+    nsCOMPtr<mozIStorageStatement> stmt;
+    if (mPage.id) {
+      stmt = mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
         "UPDATE moz_places SET favicon_id = :icon_id WHERE id = :page_id"
       ));
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
+      NS_ENSURE_STATE(stmt);
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      stmt = mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
+        "UPDATE moz_places SET favicon_id = :icon_id WHERE url = :page_url"
+      ));
+      NS_ENSURE_STATE(stmt);
+      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), mIcon.id);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPage.id);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    mozStorageStatementScoper scoper(stmt);
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
