@@ -3818,7 +3818,8 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         CG_SWITCH_TO_MAIN(cg);
     }
 
-    if (JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
+    if (cg->inFunction() &&
+        JOF_OPTYPE(pn->pn_op) == JOF_LOCAL &&
         pn->pn_cookie.slot() < cg->fun->u.i.nvars &&
         cg->shouldNoteClosedName(pn))
     {
