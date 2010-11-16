@@ -99,6 +99,17 @@ NO_PKG_FILES = \
 	rdfcat* \
 	rdfpoll* \
 	dictionaries* \
+	triplescat* \
+	screentopng* \
+	fix-linux-stack.pl* \
+	fix_stack_using_bpsyms.py* \
+	ShowAlignments* \
+	components/httpd* \
+	components/tp-cmdline* \
+	components/reftest-cmdline* \
+	chrome/pageloader* \
+	chrome/reftest* \
+	chrome/xslt-qa* \
 	$(NULL)
 
 ifndef SYSTEM_LIBXUL
