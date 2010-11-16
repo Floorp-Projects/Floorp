@@ -266,8 +266,7 @@ class nsIParser : public nsISupports {
                              nsIContent* aTargetNode,
                              nsIAtom* aContextLocalName,
                              PRInt32 aContextNamespace,
-                             PRBool aQuirks,
-                             PRBool aPreventScriptExecution) = 0;
+                             PRBool aQuirks) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

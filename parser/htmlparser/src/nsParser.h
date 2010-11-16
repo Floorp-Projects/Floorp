@@ -219,8 +219,7 @@ class nsParser : public nsIParser,
                              nsIContent* aTargetNode,
                              nsIAtom* aContextLocalName,
                              PRInt32 aContextNamespace,
-                             PRBool aQuirks,
-                             PRBool aPreventScriptExecution);
+                             PRBool aQuirks);
                              
     /**
      * This method gets called when the tokens have been consumed, and it's time

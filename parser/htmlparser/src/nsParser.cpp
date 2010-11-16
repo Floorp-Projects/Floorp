@@ -2126,8 +2126,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         nsIContent* aTargetNode,
                         nsIAtom* aContextLocalName,
                         PRInt32 aContextNamespace,
-                        PRBool aQuirks,
-                        PRBool aPreventScriptExecution)
+                        PRBool aQuirks)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
