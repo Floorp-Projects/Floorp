@@ -43,8 +43,11 @@
  * The nsIDOMHTMLAnchorElement interface is the interface to a [X]HTML
  * a element.
  *
- * For more information on this interface please see
+ * This interface is trying to follow the DOM Level 2 HTML specification:
  * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * with changes from the work-in-progress WHATWG HTML specification:
+ * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
 [scriptable, uuid(4e237175-3628-4dc8-892f-5270edc3c71a)]
