@@ -93,10 +93,12 @@ notification[type="critical"] .messageImage {
   -moz-margin-start: 5px;
 }
 
-.popup-notification-menubutton[type="menu-button"] {
+.popup-notification-menubutton {
   -moz-appearance: none;
+  margin-top: 17px;
 }
 
+.popup-notification-menubutton:not([type="menu-button"]),
 .popup-notification-menubutton > .button-menubutton-button,
 .popup-notification-menubutton > .button-menubutton-dropmarker {
   color: #fff;
@@ -110,6 +112,10 @@ notification[type="critical"] .messageImage {
               0 1px 0 rgba(255,255,255,.1);
   background-clip: padding-box;
   background-origin: padding-box;
+}
+
+.popup-notification-menubutton:not([type="menu-button"]) {
+  padding: 2px 9px;
 }
 
 .popup-notification-menubutton > .button-menubutton-button {
@@ -141,6 +147,7 @@ notification[type="critical"] .messageImage {
   border-bottom-left-radius: 0;
 }
 
+.popup-notification-menubutton:not([type="menu-button"]):hover:active,
 .popup-notification-menubutton > .button-menubutton-button:hover:active,
 .popup-notification-menubutton[open="true"] > .button-menubutton-dropmarker {
   background: -moz-linear-gradient(rgba(40,40,40,.9), rgba(70,70,70,.9));
