@@ -86,3 +86,9 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
   boolean checkValidity();
   void setCustomValidity(in DOMString error);
 };
+
+[scriptable, uuid(9b63d2d3-ccb0-4eed-a9e5-d1c142a805b7)]
+interface nsIDOMHTMLSelectElement_Mozilla_2_0_Branch : nsIDOMHTMLSelectElement
+{
+           attribute boolean                     required;
+};
