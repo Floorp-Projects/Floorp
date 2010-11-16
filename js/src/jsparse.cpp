@@ -979,7 +979,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     JS_DumpArenaStats(stdout);
 #endif
     script = JSScript::NewScriptFromCG(cx, &cg);
-    if (script && funbox && script != script->emptyScript())
+    if (script && funbox)
         script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER

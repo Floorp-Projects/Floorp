@@ -11447,7 +11447,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
 
     if (Probes::callTrackingActive(cx)) {
         JSScript *script = FUN_SCRIPT(fun);
-        if (! script || ! script->isEmpty()) {
+        if (!script || !script->isEmpty()) {
             LIns* args[] = { w.immi(1), w.nameImmpNonGC(fun), cx_ins };
             LIns* call_ins = w.call(&functionProbe_ci, args);
             guard(false, w.eqi0(call_ins), MISMATCH_EXIT);
@@ -13198,13 +13198,11 @@ TraceRecorder::interpretedFunctionCall(Value& fval, JSFunction* fun, uintN argc,
 {
     /*
      * The function's identity (JSFunction and therefore JSScript) is guarded,
-     * so we can optimize for the empty script singleton right away. No need to
-     * worry about crossing globals or relocating argv, even, in this case!
-     *
-     * Note that the interpreter shortcuts empty-script call and construct too,
-     * and does not call any TR::record_*CallComplete hook.
+     * so we can optimize away the function call if the corresponding script is
+     * empty. No need to worry about crossing globals or relocating argv, even,
+     * in this case!
      */
-    if (fun->u.i.script->isEmpty()) {
+    if (fun->script()->isEmpty()) {
         LIns* rval_ins;
         if (constructing) {
             LIns* args[] = { get(&fval), w.nameImmpNonGC(&js_ObjectClass), cx_ins };

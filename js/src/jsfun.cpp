@@ -1959,17 +1959,15 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             fun->freezeLocalNames(cx);
     }
 
-    if (!js_XDRScript(xdr, &fun->u.i.script, false, NULL))
+    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = FUN_OBJECT(fun);
-        if (fun->u.i.script != JSScript::emptyScript()) {
 #ifdef CHECK_SCRIPT_OWNER
-            fun->u.i.script->owner = NULL;
+        fun->script()->owner = NULL;
 #endif
-            js_CallNewScriptHook(cx, fun->u.i.script, fun);
-        }
+        js_CallNewScriptHook(cx, fun->script(), fun);
     }
 
     return true;
@@ -2717,7 +2715,18 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!fun)
         return NULL;
     fun->flags |= JSFUN_PROTOTYPE;
-    fun->u.i.script = JSScript::emptyScript();
+
+    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    if (!script)
+        return NULL;
+    script->setVersion(JSVERSION_DEFAULT);
+    script->noScriptRval = true;
+    script->code[0] = JSOP_STOP;
+    script->code[1] = SRC_NULL;
+#ifdef CHECK_SCRIPT_OWNER
+    script->owner = NULL;
+#endif
+    fun->u.i.script = script;
 
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
@@ -2821,18 +2830,16 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         if (cfun->isInterpreted()) {
             JSScript *script = cfun->u.i.script;
             JS_ASSERT(script);
-            if (script != JSScript::emptyScript()) {
-                JS_ASSERT(script->compartment == fun->compartment());
-                JS_ASSERT(script->compartment != cx->compartment);
-                cfun->u.i.script = js_CloneScript(cx, script);
-                if (!cfun->u.i.script)
-                    return NULL;
-                JS_ASSERT(cfun->u.i.script != JSScript::emptyScript());
+            JS_ASSERT(script->compartment == fun->compartment());
+            JS_ASSERT(script->compartment != cx->compartment);
+
+            cfun->u.i.script = js_CloneScript(cx, script);
+            if (!cfun->u.i.script)
+                return NULL;
 #ifdef CHECK_SCRIPT_OWNER
-                cfun->u.i.script->owner = NULL;
+            cfun->script()->owner = NULL;
 #endif
-                js_CallNewScriptHook(cx, cfun->u.i.script, cfun);
-            }
+            js_CallNewScriptHook(cx, cfun->script(), cfun);
         }
     }
     return clone;

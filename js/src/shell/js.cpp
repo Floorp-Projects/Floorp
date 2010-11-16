@@ -2139,11 +2139,6 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     if (!script)
         return JS_FALSE;
 
-    if (script->isEmpty()) {
-        JS_SET_RVAL(cx, vp, JSVAL_VOID);
-        return JS_TRUE;
-    }
-
     JSObject *obj = JS_NewScriptObject(cx, script);
     if (!obj)
         return JS_FALSE;

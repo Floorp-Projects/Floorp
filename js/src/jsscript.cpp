@@ -73,28 +73,6 @@
 using namespace js;
 using namespace js::gc;
 
-static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
-
-/* static */ const JSScript JSScript::emptyScriptConst = {
-    JS_INIT_STATIC_CLIST(NULL),
-    const_cast<jsbytecode*>(emptyScriptCode),
-    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, 0, true, false, false, false, false,
-    false,      /* usesEval */
-    false,      /* usesArguments */
-    true,       /* warnedAboutTwoArgumentEval */
-#ifdef JS_METHODJIT
-    false,      /* debugMode */
-#endif
-    const_cast<jsbytecode*>(emptyScriptCode),
-    {0, jsatomid(0)}, NULL, NULL, 0, 0, 0,
-    0,          /* nClosedArgs */
-    0,          /* nClosedVars */
-    NULL, {NULL},
-#ifdef CHECK_SCRIPT_OWNER
-    reinterpret_cast<JSThread*>(1)
-#endif
-};
-
 #if JS_HAS_XDR
 
 enum ScriptBits {
@@ -108,8 +86,7 @@ enum ScriptBits {
 };
 
 JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
-             JSBool *hasMagic)
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 {
     JSContext *cx;
     JSScript *script, *oldscript;
@@ -152,45 +129,10 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     if (hasMagic)
         *hasMagic = JS_TRUE;
 
-    /*
-     * Since the shortest possible script has JSOP_STOP as its only bytecode,
-     * encode only the length 0 for the emptyScript singleton, and return the
-     * emptyScript instead of a new script when decoding a script of length 0.
-     */
     if (xdr->mode == JSXDR_ENCODE)
-        length = (script == JSScript::emptyScript()) ? 0 : script->length;
+        length = script->length;
     if (!JS_XDRUint32(xdr, &length))
         return JS_FALSE;
-    if (length == 0) {
-        if (xdr->mode == JSXDR_ENCODE) {
-            JS_ASSERT(*scriptp == JSScript::emptyScript());
-            return JS_TRUE;
-        }
-
-        /* Decoding: check whether we need a mutable empty script. */
-        if (cx->debugHooks->newScriptHook)
-            needMutableScript = true;
-        if (needMutableScript) {
-            /*
-             * We need a mutable empty script but the encoder serialized only
-             * the shorthand (0 length word) for us. Make a new mutable empty
-             * script here and return it immediately.
-             */
-            script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            if (!script)
-                return JS_FALSE;
-
-            script->setVersion(JSVERSION_DEFAULT);
-            script->noScriptRval = true;
-            script->code[0] = JSOP_STOP;
-            script->code[1] = SRC_NULL;
-            *scriptp = script;
-            return JS_TRUE;
-        }
-
-        *scriptp = JSScript::emptyScript();
-        return JS_TRUE;
-    }
 
     if (xdr->mode == JSXDR_ENCODE) {
         prologLength = script->main - script->code;
@@ -1097,84 +1039,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
 
-    if (prologLength + mainLength <= 3 &&
-        !(cg->flags & TCF_IN_FUNCTION)) {
-        /*
-         * Check very short scripts to see whether they are "empty" and return
-         * the const empty-script singleton if so.
-         */
-        jsbytecode *pc = prologLength ? CG_PROLOG_BASE(cg) : CG_BASE(cg);
-
-        if ((cg->flags & TCF_NO_SCRIPT_RVAL) && JSOp(*pc) == JSOP_FALSE)
-            ++pc;
-
-        if (JSOp(*pc) == JSOP_STOP &&
-            !cx->debugHooks->newScriptHook &&
-            !(cg->flags & TCF_NEED_MUTABLE_SCRIPT))
-        {
-            /*
-             * We can probably use the immutable empty script singleton, just
-             * two hard cases (nupvars != 0, strict mode code) may stand in our
-             * way.
-             */
-            JSScript *empty = JSScript::emptyScript();
-
-            if (cg->inFunction()) {
-                fun = cg->fun();
-                JS_ASSERT(fun->isInterpreted() && !FUN_SCRIPT(fun));
-                if (cg->flags & TCF_STRICT_MODE_CODE) {
-                    /*
-                     * We can't use a script singleton for empty strict mode
-                     * functions because they have poison-pill caller and
-                     * arguments properties:
-                     *
-                     * function strict() { "use strict"; }
-                     * strict.caller; // calls [[ThrowTypeError]] function
-                     */
-                    goto skip_empty;
-                }
-                if (fun->u.i.nupvars != 0) {
-                    /*
-                     * FIXME: upvar uses that were all optimized away may leave
-                     * fun->u.i.nupvars non-zero, and since that count is added
-                     * into fun->countLocalNames() in order to discriminate the
-                     * fun->u.i.names union, we cannot force fun->u.i.nupvars
-                     * to 0 to match JSScript::emptyScript()->upvars()->length.
-                     * So we skip the empty script optimization.
-                     *
-                     * Fixing this requires the compiler to track upvar uses as
-                     * it analyzes and optimizes closures, and subsequently as
-                     * the emitter performs useless expression elimination.
-                     */
-                    goto skip_empty;
-                }
-                fun->freezeLocalNames(cx);
-                fun->u.i.script = empty;
-            }
-
-#ifdef DEBUG
-            {
-                jsrefcount newEmptyLive = JS_RUNTIME_METER(cx->runtime, liveEmptyScripts);
-                jsrefcount newLive = cx->runtime->liveScripts;
-                jsrefcount newTotal =
-                    JS_RUNTIME_METER(cx->runtime, totalEmptyScripts) + cx->runtime->totalScripts;
-
-                jsrefcount oldHigh = cx->runtime->highWaterLiveScripts;
-                if (newEmptyLive + newLive > oldHigh) {
-                    JS_ATOMIC_SET(&cx->runtime->highWaterLiveScripts, newEmptyLive + newLive);
-                    if (getenv("JS_DUMP_LIVE_SCRIPTS")) {
-                        fprintf(stderr, "high water script count: %d empty, %d not (total %d)\n",
-                                newEmptyLive, newLive, newTotal);
-                    }
-                }
-            }
-#endif
-
-            return empty;
-        }
-    }
-
-  skip_empty:
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
     uint16 nClosedArgs = uint16(cg->closedArgs.length());
     JS_ASSERT(nClosedArgs == cg->closedArgs.length());
@@ -1286,10 +1150,19 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     js_CallNewScriptHook(cx, script, fun);
 #ifdef DEBUG
     {
-        jsrefcount newLive = JS_RUNTIME_METER(cx->runtime, liveScripts);
-        jsrefcount newEmptyLive = cx->runtime->liveEmptyScripts;
-        jsrefcount newTotal =
-            JS_RUNTIME_METER(cx->runtime, totalScripts) + cx->runtime->totalEmptyScripts;
+        jsrefcount newEmptyLive, newLive, newTotal;
+        if (script->isEmpty()) {
+            newEmptyLive = JS_RUNTIME_METER(cx->runtime, liveEmptyScripts);
+            newLive = cx->runtime->liveScripts;
+            newTotal =
+                JS_RUNTIME_METER(cx->runtime, totalEmptyScripts) + cx->runtime->totalScripts;
+        } else {
+            newLive = JS_RUNTIME_METER(cx->runtime, liveScripts);
+            newEmptyLive = cx->runtime->liveEmptyScripts;
+            newTotal =
+                JS_RUNTIME_METER(cx->runtime, totalScripts) + cx->runtime->totalEmptyScripts;
+        }
+
         jsrefcount oldHigh = cx->runtime->highWaterLiveScripts;
         if (newEmptyLive + newLive > oldHigh) {
             JS_ATOMIC_SET(&cx->runtime->highWaterLiveScripts, newEmptyLive + newLive);
@@ -1311,8 +1184,6 @@ bad:
 JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
-    JS_ASSERT(script != JSScript::emptyScript());
-
     JSNewScriptHook hook;
 
     hook = cx->debugHooks->newScriptHook;
@@ -1326,8 +1197,6 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 JS_FRIEND_API(void)
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 {
-    JS_ASSERT(script != JSScript::emptyScript());
-
     JSDestroyScriptHook hook;
 
     hook = cx->debugHooks->destroyScriptHook;
@@ -1338,13 +1207,11 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 static void
 DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
 {
-    if (script == JSScript::emptyScript()) {
-        JS_RUNTIME_UNMETER(cx->runtime, liveEmptyScripts);
-        return;
-    }
-
 #ifdef DEBUG
-    JS_RUNTIME_UNMETER(cx->runtime, liveScripts);
+    if (script->isEmpty())
+        JS_RUNTIME_UNMETER(cx->runtime, liveEmptyScripts);
+    else
+        JS_RUNTIME_UNMETER(cx->runtime, liveScripts);
 #endif
 
     js_CallDestroyScriptHook(cx, script);
@@ -1481,7 +1348,6 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
     AutoScriptRooter root(cx, script);
 
     JS_ASSERT(!script->u.object);
-    JS_ASSERT(script != JSScript::emptyScript());
 
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
     if (!obj)
@@ -1733,7 +1599,6 @@ class DisablePrincipalsTranscoding {
 JSScript *
 js_CloneScript(JSContext *cx, JSScript *script)
 {
-    JS_ASSERT(script != JSScript::emptyScript());
     JS_ASSERT(cx->compartment != script->compartment);
     JS_ASSERT(script->compartment);
 
@@ -1770,7 +1635,7 @@ js_CloneScript(JSContext *cx, JSScript *script)
     JS_XDRMemSetData(w, NULL, 0);
 
     // We can't use the public API because it makes a script object.
-    if (!js_XDRScript(r, &script, true, NULL))
+    if (!js_XDRScript(r, &script, NULL))
         return NULL;
 
     JS_XDRDestroy(r);
@@ -1789,4 +1654,3 @@ JSScript::copyClosedSlotsTo(JSScript *other)
 {
     memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
 }
-
