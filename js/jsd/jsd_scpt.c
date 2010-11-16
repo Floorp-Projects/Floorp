@@ -587,6 +587,17 @@ jsd_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata)
     return JS_TRUE;
 }    
 
+JSBool
+jsd_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript* jsdscript, JSBool enable)
+{
+    JSBool rv;
+    JSD_LOCK();
+    rv = JS_SetSingleStepMode(jsdc->dumbContext, jsdscript->script, enable);
+    JSD_UNLOCK();
+    return rv;
+}
+
+
 /***************************************************************************/
 
 void
@@ -751,7 +762,7 @@ jsd_TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     }
 
     JSD_ASSERT_VALID_EXEC_HOOK(jsdhook);
-    JS_ASSERT(jsdhook->pc == (jsuword)pc);
+    JS_ASSERT(!jsdhook->pc || jsdhook->pc == (jsuword)pc);
     JS_ASSERT(jsdhook->jsdscript->script == script);
     JS_ASSERT(jsdhook->jsdscript->jsdc == jsdc);
 

@@ -577,6 +577,14 @@ JSD_SetInterruptHook(JSDContext*           jsdc,
 }
 
 JSD_PUBLIC_API(JSBool)
+JSD_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript* jsdscript, JSBool enable)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JSD_ASSERT_VALID_SCRIPT(jsdscript);
+    return jsd_EnableSingleStepInterrupts(jsdc, jsdscript, enable);
+}
+
+JSD_PUBLIC_API(JSBool)
 JSD_ClearInterruptHook(JSDContext* jsdc)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);

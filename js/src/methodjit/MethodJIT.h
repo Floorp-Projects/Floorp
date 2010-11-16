@@ -331,6 +331,7 @@ struct JITScript {
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */
     void            *arityCheckEntry;   /* arity check address */
+    bool            singleStepMode;     /* compiled in "single step mode" */
 
     ~JITScript();
 
