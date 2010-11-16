@@ -149,10 +149,17 @@ static FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName);
 
 #include <atlbase.h>
 #include "oaidl.h"
+#endif
+
+#ifdef XP_WIN
 // Nasty MS defines
+#ifdef GetClassInfo
 #undef GetClassInfo
+#endif
+#ifdef GetClassName
 #undef GetClassName
 #endif
+#endif /* XP_WIN */
 
 #include "nsINode.h"
 
@@ -554,6 +561,18 @@ public:
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
+
+    static nsresult Base64Encode(const nsACString &aString,
+                                 nsACString &aBinary);
+
+    static nsresult Base64Encode(const nsAString &aString,
+                                 nsAString &aBinaryData);
+
+    static nsresult Base64Decode(const nsACString &aBinaryData,
+                                 nsACString &aString);
+
+    static nsresult Base64Decode(const nsAString &aBinaryData,
+                                 nsAString &aString);
 
     // nsCycleCollectionParticipant
     NS_IMETHOD RootAndUnlinkJSObjects(void *p);
