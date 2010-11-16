@@ -613,13 +613,22 @@ nsHtml5Parser::ParseUntilBlocked()
         // never release the last buffer.
         NS_ASSERTION(!mLastBuffer->getStart() && !mLastBuffer->getEnd(),
                      "Sentinel buffer had its indeces changed.");
-        if (mStreamParser && mReturnToStreamParserPermitted
-            && !mExecutor->IsScriptExecuting()) {
+        if (mStreamParser) {
+          if (mReturnToStreamParserPermitted &&
+              !mExecutor->IsScriptExecuting()) {
+            mTreeBuilder->Flush();
+            mReturnToStreamParserPermitted = PR_FALSE;
+            mStreamParser->ContinueAfterScripts(mTokenizer,
+                                                mTreeBuilder,
+                                                mLastWasCR);
+          }
+        } else {
+          // Script-created parser
           mTreeBuilder->Flush();
-          mReturnToStreamParserPermitted = PR_FALSE;
-          mStreamParser->ContinueAfterScripts(mTokenizer,
-                                              mTreeBuilder,
-                                              mLastWasCR);
+          // No need to flush the executor, because the executor is already
+          // in a flush
+          NS_ASSERTION(mExecutor->IsInFlushLoop(),
+              "How did we come here without being in the flush loop?");
         }
         return; // no more data for now but expecting more
       }
