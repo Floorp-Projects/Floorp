@@ -58,8 +58,6 @@ EXPORTS_mozilla/gfx = \
 
 CPPSRCS = SharedDIB.cpp
 
-ENABLE_CXX_EXCEPTIONS	= 1
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS_mozilla/gfx += \
   SharedDIBWin.h \
