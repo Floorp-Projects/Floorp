@@ -1329,9 +1329,9 @@ class ScopeNameCompiler : public PICStubCompiler
 
         CallObjPropKind kind;
         const Shape *shape = getprop.shape;
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             kind = ARG;
-        } else if (shape->getterOp() == js_GetCallVar) {
+        } else if (shape->getterOp() == GetCallVar) {
             kind = VAR;
         } else {
             return disable("unhandled callobj sprop getter");
