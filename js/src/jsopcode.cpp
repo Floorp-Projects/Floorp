@@ -832,8 +832,8 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->pcstack = NULL;
     jp->fun = fun;
     jp->localNames = NULL;
-    if (fun && FUN_INTERPRETED(fun) && fun->hasLocalNames()) {
-        jp->localNames = fun->getLocalNameArray(cx, &jp->pool);
+    if (fun && fun->isInterpreted() && fun->script()->bindings.hasLocalNames()) {
+        jp->localNames = fun->script()->bindings.getLocalNameArray(cx, &jp->pool);
         if (!jp->localNames) {
             js_DestroyPrinter(jp);
             return NULL;
@@ -1340,7 +1340,7 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
     JSAtom *name;
 
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < jp->fun->countLocalNames(), NULL);
+    LOCAL_ASSERT_RV(slot < jp->fun->script()->bindings.countLocalNames(), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -2895,12 +2895,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->fun = jp->script->getFunction(0);
                 }
 
-                if (!jp->localNames)
-                    jp->localNames = jp->fun->getLocalNameArray(cx, &jp->pool);
+                if (!jp->localNames) {
+                    JS_ASSERT(fun == jp->fun);
+                    jp->localNames =
+                        jp->fun->script()->bindings.getLocalNameArray(cx, &jp->pool);
+                }
 
                 uintN index = GET_UINT16(pc);
-                if (index < jp->fun->u.i.nupvars) {
-                    index += jp->fun->countArgsAndVars();
+                if (index < jp->fun->script()->bindings.countUpvars()) {
+                    index += jp->fun->script()->bindings.countArgsAndVars();
                 } else {
                     JSUpvarArray *uva;
 #ifdef DEBUG
@@ -2919,8 +2922,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             fp = fp->prev();
                         JS_ASSERT(fp->script() == jp->script);
                         JS_ASSERT(fp->prev()->fun() == jp->fun);
-                        JS_ASSERT(FUN_INTERPRETED(jp->fun));
-                        JS_ASSERT(jp->script != jp->fun->u.i.script);
+                        JS_ASSERT(jp->fun->isInterpreted());
+                        JS_ASSERT(jp->script != jp->fun->script());
                         JS_ASSERT(JSScript::isValidOffset(jp->script->upvarsOffset));
                     }
 #endif
@@ -4097,14 +4100,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * release to mark before returning.
                      */
                     mark = JS_ARENA_MARK(&cx->tempPool);
-                    if (!fun->hasLocalNames()) {
-                        innerLocalNames = NULL;
-                    } else {
-                        innerLocalNames = fun->getLocalNameArray(cx, &cx->tempPool);
+                    if (fun->script()->bindings.hasLocalNames()) {
+                        innerLocalNames =
+                            fun->script()->bindings.getLocalNameArray(cx, &cx->tempPool);
                         if (!innerLocalNames)
                             return NULL;
+                    } else {
+                        innerLocalNames = NULL;
                     }
-                    inner = fun->u.i.script;
+                    inner = fun->script();
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
                         JS_ARENA_RELEASE(&cx->tempPool, mark);
                         return NULL;

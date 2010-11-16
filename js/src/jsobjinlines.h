@@ -493,6 +493,7 @@ JSObject::getFlatClosureUpvars() const
 inline js::Value
 JSObject::getFlatClosureUpvar(uint32 i) const
 {
+    JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
     return getFlatClosureUpvars()[i];
 }
 

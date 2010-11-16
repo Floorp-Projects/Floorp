@@ -72,6 +72,8 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "jsscriptinlines.h"
+
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif

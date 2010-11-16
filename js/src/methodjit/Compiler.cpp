@@ -1742,16 +1742,13 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DEFFUN)
           {
             uint32 index = fullAtomIndex(PC);
-            JSFunction *inner = script->getFunction(index);
+            JSFunction *innerFun = script->getFunction(index);
 
-            if (fun) {
-                JSLocalKind localKind = fun->lookupLocal(cx, inner->atom, NULL);
-                if (localKind != JSLOCAL_NONE)
-                    frame.syncAndForgetEverything();
-            }
+            if (fun && script->bindings.hasBinding(innerFun->atom))
+                frame.syncAndForgetEverything();
 
             prepareStubCall(Uses(0));
-            masm.move(ImmPtr(inner), Registers::ArgReg1);
+            masm.move(ImmPtr(innerFun), Registers::ArgReg1);
             INLINE_STUBCALL(STRICT_VARIANT(stubs::DefFun));
           }
           END_CASE(JSOP_DEFFUN)
@@ -1773,11 +1770,8 @@ mjit::Compiler::generateMethod()
             uint32 index = fullAtomIndex(PC);
             JSAtom *atom = script->getAtom(index);
 
-            if (fun) {
-                JSLocalKind localKind = fun->lookupLocal(cx, atom, NULL);
-                if (localKind != JSLOCAL_NONE)
-                    frame.syncAndForgetEverything();
-            }
+            if (fun && script->bindings.hasBinding(atom))
+                frame.syncAndForgetEverything();
 
             prepareStubCall(Uses(1));
             masm.move(ImmPtr(atom), Registers::ArgReg1);

@@ -3377,7 +3377,7 @@ struct VarClosureTraits
 {
     // See also UpvarVarTraits.
     static inline Value get_slot(JSStackFrame* fp, unsigned slot) {
-        JS_ASSERT(slot < fp->fun()->u.i.nvars);
+        JS_ASSERT(slot < fp->fun()->script()->bindings.countVars());
         return fp->slots()[slot];
     }
 
@@ -3391,7 +3391,7 @@ struct VarClosureTraits
     }
 
     static inline uint16 slot_count(JSObject* obj) {
-        return obj->getCallObjCalleeFunction()->u.i.nvars;
+        return obj->getCallObjCalleeFunction()->script()->bindings.countVars();
     }
 
 private:
@@ -3472,11 +3472,13 @@ TraceRecorder::importImpl(Address addr, const void* p, JSValueType t,
     JSAutoByteString funNameBytes;
     if (*prefix == 'a' || *prefix == 'v') {
         mark = JS_ARENA_MARK(&cx->tempPool);
-        if (fp->fun()->hasLocalNames())
-            localNames = fp->fun()->getLocalNameArray(cx, &cx->tempPool);
-        funName = fp->fun()->atom
-                  ? js_AtomToPrintableString(cx, fp->fun()->atom, &funNameBytes)
-                : "<anonymous>";
+        JSFunction *fun = fp->fun();
+        Bindings &bindings = fun->script()->bindings;
+        if (bindings.hasLocalNames())
+            localNames = bindings.getLocalNameArray(cx, &cx->tempPool);
+        funName = fun->atom
+                  ? js_AtomToPrintableString(cx, fun->atom, &funNameBytes)
+                  : "<anonymous>";
     }
     if (!strcmp(prefix, "argv")) {
         if (index < fp->numFormalArgs()) {
@@ -10224,7 +10226,7 @@ TraceRecorder::putActivationObjects()
     }
 
     if (have_call) {
-        int nslots = fp->fun()->countVars();
+        int nslots = fp->fun()->script()->bindings.countVars();
         LIns* slots_ins;
         if (nslots) {
             slots_ins = w.allocp(sizeof(Value) * nslots);
@@ -13328,8 +13330,8 @@ TraceRecorder::guardCallee(Value& callee)
      * we wish to optimize for the particular deactivated stack frame (null
      * private data) case as noted above.
      */
-    if (FUN_INTERPRETED(callee_fun) &&
-        (!FUN_NULL_CLOSURE(callee_fun) || callee_fun->u.i.nupvars != 0)) {
+    if (callee_fun->isInterpreted() &&
+        (!FUN_NULL_CLOSURE(callee_fun) || callee_fun->script()->bindings.hasUpvars())) {
         JSObject* parent = callee_obj.getParent();
 
         if (parent != globalObj) {
@@ -15270,14 +15272,15 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
           w.name(w.eqp(closure_ins, w.immpNull()), "guard(js_AllocFlatClosure)"),
           OOM_EXIT);
 
-    if (fun->u.i.nupvars) {
-        JSUpvarArray *uva = fun->u.i.script->upvars();
+    JSScript *script = fun->script();
+    if (script->bindings.hasUpvars()) {
+        JSUpvarArray *uva = script->upvars();
         LIns* upvars_ins = w.getObjPrivatizedSlot(closure_ins,
                                                   JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
         for (uint32 i = 0, n = uva->length; i < n; i++) {
             Value v;
-            LIns* v_ins = upvar(fun->u.i.script, uva, i, v);
+            LIns* v_ins = upvar(script, uva, i, v);
             if (!v_ins)
                 return ARECORD_STOP;
 

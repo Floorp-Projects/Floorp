@@ -92,6 +92,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
+#include "jsscriptinlines.h"
 
 // Grr, windows.h or something under it #defines CONST...
 #ifdef CONST
@@ -243,6 +244,7 @@ Parser::newObjectBox(JSObject *obj)
     traceListHead = objbox;
     objbox->emitLink = NULL;
     objbox->object = obj;
+    objbox->isFunctionBox = false;
     return objbox;
 }
 
@@ -268,6 +270,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     traceListHead = funbox;
     funbox->emitLink = NULL;
     funbox->object = obj;
+    funbox->isFunctionBox = true;
     funbox->node = fn;
     funbox->siblings = tc->functionList;
     tc->functionList = funbox;
@@ -275,6 +278,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     funbox->kids = NULL;
     funbox->parent = tc->funbox;
     funbox->methods = NULL;
+    new (&funbox->bindings) Bindings(context);
     funbox->queued = false;
     funbox->inLoop = false;
     for (JSStmtInfo *stmt = tc->topStmt; stmt; stmt = stmt->down) {
@@ -315,8 +319,13 @@ Parser::trace(JSTracer *trc)
     JSObjectBox *objbox = traceListHead;
     while (objbox) {
         MarkObject(trc, *objbox->object, "parser.object");
+        if (objbox->isFunctionBox)
+            static_cast<JSFunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
     }
+
+    for (JSTreeContext *tc = this->tc; tc; tc = tc->parent)
+        tc->trace(trc);
 }
 
 static void
@@ -1314,13 +1323,10 @@ static bool
 CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
                    JSParseNode *pn)
 {
-    JSAtom *atom;
-
     if (!tc->needStrictChecks())
         return true;
 
-    atom = fun->findDuplicateFormal();
-    if (atom) {
+    if (JSAtom *atom = tc->bindings.findDuplicateArgument()) {
         /*
          * We have found a duplicate parameter name. If we can find the
          * JSDefinition for the argument, that will have a more accurate source
@@ -1339,7 +1345,9 @@ CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
 
     if (tc->flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_PARAM_EVAL)) {
         JSAtomState *atoms = &cx->runtime->atomState;
-        atom = (tc->flags & TCF_FUN_PARAM_ARGUMENTS) ? atoms->argumentsAtom : atoms->evalAtom;
+        JSAtom *atom = (tc->flags & TCF_FUN_PARAM_ARGUMENTS)
+                       ? atoms->argumentsAtom
+                       : atoms->evalAtom;
 
         /* The definition's source position will be more precise. */
         JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
@@ -1643,7 +1651,7 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
  */
 bool
 Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
-                              const jschar *chars, size_t length,
+                              Bindings *bindings, const jschar *chars, size_t length,
                               const char *filename, uintN lineno)
 {
     Compiler compiler(cx, principals);
@@ -1667,6 +1675,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.setFunction(fun);
+    funcg.bindings.transfer(cx, bindings);
+    fun->setArgCount(funcg.bindings.countArgs());
     if (!GenerateBlockId(&funcg, funcg.bodyid))
         return NULL;
 
@@ -1683,7 +1693,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
              * NB: do not use AutoLocalNameArray because it will release space
              * allocated from cx->tempPool by DefineArg.
              */
-            jsuword *names = fun->getLocalNameArray(cx, &cx->tempPool);
+            jsuword *names = funcg.bindings.getLocalNameArray(cx, &cx->tempPool);
             if (!names) {
                 fn = NULL;
             } else {
@@ -1762,11 +1772,10 @@ struct BindData {
     bool fresh;
 };
 
-static JSBool
-BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
-                  JSLocalKind localKind, bool isArg)
+static bool
+BindLocalVariable(JSContext *cx, JSTreeContext *tc, JSAtom *atom, BindingKind kind, bool isArg)
 {
-    JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
+    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
 
     /*
      * Don't bind a variable with the hidden name 'arguments', per ECMA-262.
@@ -1778,15 +1787,14 @@ BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
      * arguments property.
      */
     if (atom == cx->runtime->atomState.argumentsAtom && !isArg)
-        return JS_TRUE;
+        return true;
 
-    return fun->addLocal(cx, atom, localKind);
+    return tc->bindings.add(cx, atom, kind);
 }
 
 #if JS_HAS_DESTRUCTURING
 static JSBool
-BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
-                     JSTreeContext *tc)
+BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
@@ -1796,6 +1804,11 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
 
     JS_ASSERT(tc->inFunction());
 
+    /*
+     * NB: Check tc->decls rather than tc->bindings, because destructuring
+     *     bindings aren't added to tc->bindings until after all arguments have
+     *     been parsed.
+     */
     if (tc->decls.lookup(atom)) {
         ReportCompileErrorNumber(cx, TS(tc->parser), NULL, JSREPORT_ERROR,
                                  JSMSG_DESTRUCT_DUP_ARG);
@@ -2725,6 +2738,8 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
         }
     }
 
+    funbox->bindings.transfer(funtc->parser->context, &funtc->bindings);
+
     return true;
 }
 
@@ -2733,13 +2748,12 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom);
 
 /*
  * FIXME? this Parser method was factored from Parser::functionDef with minimal
- * change, hence the funtc ref param, funbox, and fun. It probably should match
- * functionBody, etc., and use tc, tc->funbox, and tc->fun() instead of taking
- * explicit parameters.
+ * change, hence the funtc ref param and funbox. It probably should match
+ * functionBody, etc., and use tc and tc->funbox instead of taking explicit
+ * parameters.
  */
 bool
-Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
-                          JSParseNode **listp)
+Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **listp)
 {
     if (tokenStream.getToken() != TOK_LP) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_BEFORE_FORMAL);
@@ -2782,8 +2796,8 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunctio
                  * Adjust fun->nargs to count the single anonymous positional
                  * parameter that is to be destructured.
                  */
-                uintN slot = fun->nargs;
-                if (!fun->addLocal(context, NULL, JSLOCAL_ARG))
+                uint16 slot;
+                if (!funtc.bindings.addDestructuring(context, &slot))
                     return false;
 
                 /*
@@ -2822,14 +2836,20 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunctio
 
 #ifdef JS_HAS_DESTRUCTURING
                 /*
-                 * ECMA-262 requires us to support duplicate parameter names, but if the
-                 * parameter list includes destructuring, we consider the code to have
-                 * "opted in" to higher standards, and forbid duplicates. We may see a
-                 * destructuring parameter later, so always note duplicates now.
+                 * ECMA-262 requires us to support duplicate parameter names,
+                 * but if the parameter list includes destructuring, we
+                 * consider the code to have "opted in" to higher standards and
+                 * forbid duplicates. We may see a destructuring parameter
+                 * later, so always note duplicates now.
                  *
-                 * Duplicates are warned about (strict option) or cause errors (strict
-                 * mode code), but we do those tests in one place below, after having
-                 * parsed the body in case it begins with a "use strict"; directive.
+                 * Duplicates are warned about (strict option) or cause errors
+                 * (strict mode code), but we do those tests in one place
+                 * below, after having parsed the body in case it begins with a
+                 * "use strict"; directive.
+                 *
+                 * NB: Check funtc.decls rather than funtc.bindings, because
+                 *     destructuring bindings aren't added to funtc.bindings
+                 *     until after all arguments have been parsed.
                  */
                 if (funtc.decls.lookup(atom)) {
                     duplicatedArg = atom;
@@ -2838,10 +2858,10 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunctio
                 }
 #endif
 
-                if (!DefineArg(funbox->node, atom, fun->nargs, &funtc))
+                uint16 slot;
+                if (!funtc.bindings.addArgument(context, atom, &slot))
                     return false;
-
-                if (!fun->addLocal(context, atom, JSLOCAL_ARG))
+                if (!DefineArg(funbox->node, atom, slot, &funtc))
                     return false;
                 break;
               }
@@ -2971,15 +2991,15 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
              * already exists.
              */
             uintN index;
-            switch (tc->fun()->lookupLocal(context, funAtom, &index)) {
-              case JSLOCAL_NONE:
-              case JSLOCAL_ARG:
-                index = tc->fun()->u.i.nvars;
-                if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
+            switch (tc->bindings.lookup(funAtom, &index)) {
+              case NONE:
+              case ARGUMENT:
+                index = tc->bindings.countVars();
+                if (!tc->bindings.addVariable(context, funAtom))
                     return NULL;
                 /* FALL THROUGH */
 
-              case JSLOCAL_VAR:
+              case VARIABLE:
                 pn->pn_cookie.set(tc->staticLevel, index);
                 pn->pn_dflags |= PND_BOUND;
                 break;
@@ -3002,17 +3022,19 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 
     /* Now parse formal argument list and compute fun->nargs. */
     JSParseNode *prelude = NULL;
-    if (!functionArguments(funtc, funbox, fun, &prelude))
+    if (!functionArguments(funtc, funbox, &prelude))
         return NULL;
+
+    fun->setArgCount(funtc.bindings.countArgs());
 
 #if JS_HAS_DESTRUCTURING
     /*
      * If there were destructuring formal parameters, bind the destructured-to
      * local variables now that we've parsed all the regular and destructuring
-     * formal parameters. Because JSFunction::addLocal must be called first for
-     * all ARGs, then all VARs, finally all UPVARs, we can't bind vars induced
-     * by formal parameter destructuring until after Parser::functionArguments
-     * has returned.
+     * formal parameters. Because js::Bindings::add must be called first for
+     * all ARGUMENTs, then all VARIABLEs and CONSTANTs, and finally all UPVARs,
+     * we can't bind vars induced by formal parameter destructuring until after
+     * Parser::functionArguments has returned.
      */
     if (prelude) {
         JSAtomListIterator iter(&funtc.decls);
@@ -3024,8 +3046,8 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
             if (apn->pn_op != JSOP_SETLOCAL)
                 continue;
 
-            uintN index = fun->u.i.nvars;
-            if (!BindLocalVariable(context, fun, apn->pn_atom, JSLOCAL_VAR, true))
+            uint16 index = funtc.bindings.countVars();
+            if (!BindLocalVariable(context, &funtc, apn->pn_atom, VARIABLE, true))
                 return NULL;
             apn->pn_cookie.set(funtc.staticLevel, index);
         }
@@ -3802,8 +3824,8 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_TRUE;
     }
 
-    JSLocalKind localKind = tc->fun()->lookupLocal(cx, atom, NULL);
-    if (localKind == JSLOCAL_NONE) {
+    BindingKind kind = tc->bindings.lookup(atom, NULL);
+    if (kind == NONE) {
         /*
          * Property not found in current variable scope: we have not seen this
          * variable before. Define a new local variable by adding a property to
@@ -3812,10 +3834,10 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
          * runtime, by script prolog JSOP_DEFVAR opcodes generated for global
          * and heavyweight-function-local vars.
          */
-        localKind = (data->op == JSOP_DEFCONST) ? JSLOCAL_CONST : JSLOCAL_VAR;
+        kind = (data->op == JSOP_DEFCONST) ? CONSTANT : VARIABLE;
 
-        uintN index = tc->fun()->u.i.nvars;
-        if (!BindLocalVariable(cx, tc->fun(), atom, localKind, false))
+        uintN index = tc->bindings.countVars();
+        if (!BindLocalVariable(cx, tc, atom, kind, false))
             return JS_FALSE;
         pn->pn_op = JSOP_GETLOCAL;
         pn->pn_cookie.set(tc->staticLevel, index);
@@ -3823,12 +3845,12 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_TRUE;
     }
 
-    if (localKind == JSLOCAL_ARG) {
+    if (kind == ARGUMENT) {
         /* We checked errors and strict warnings earlier -- see above. */
         JS_ASSERT(ale && ALE_DEFN(ale)->kind() == JSDefinition::ARG);
     } else {
         /* Not an argument, must be a redeclared local var. */
-        JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
+        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
     }
     return JS_TRUE;
 }

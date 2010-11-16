@@ -2033,16 +2033,17 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
                 else if (FUN_FLAT_CLOSURE(fun))
                     fputs(" FLAT_CLOSURE", stdout);
 
-                if (fun->u.i.nupvars) {
+                JSScript *script = fun->script();
+                if (script->bindings.hasUpvars()) {
                     fputs("\nupvars: {\n", stdout);
 
                     void *mark = JS_ARENA_MARK(&cx->tempPool);
-                    jsuword *localNames = fun->getLocalNameArray(cx, &cx->tempPool);
+                    jsuword *localNames = script->bindings.getLocalNameArray(cx, &cx->tempPool);
                     if (!localNames)
                         return false;
 
-                    JSUpvarArray *uva = fun->u.i.script->upvars();
-                    uintN upvar_base = fun->countArgsAndVars();
+                    JSUpvarArray *uva = script->upvars();
+                    uintN upvar_base = script->bindings.countArgsAndVars();
 
                     for (uint32 i = 0, n = uva->length; i < n; i++) {
                         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[upvar_base + i]);
