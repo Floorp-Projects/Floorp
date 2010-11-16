@@ -3432,6 +3432,12 @@ function BrowserCustomizeToolbar()
   PlacesToolbarHelper.customizeStart();
   BookmarksMenuButton.customizeStart();
 
+  let addonBar = document.getElementById("addon-bar");
+  if (addonBar.collapsed) {
+    addonBar.wasCollapsed = addonBar.collapsed;
+    addonBar.collapsed = false;
+  }
+
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
@@ -3489,6 +3495,12 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
   PlacesToolbarHelper.customizeDone();
   BookmarksMenuButton.customizeDone();
+
+  let addonBar = document.getElementById("addon-bar");
+  if (addonBar.wasCollapsed === true) {
+    addonBar.collapsed = true;
+    delete addonBar.wasCollapsed;
+  }
 
   // The url bar splitter state is dependent on whether stop/reload
   // and the location bar are combined, so we need this ordering
