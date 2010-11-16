@@ -29,3 +29,13 @@ function div2(x, y)
   assertEq(z + 10, 20.5);
 }
 div2(105, 10);
+
+function uncopy(x, y)
+{
+  var q = x;
+  x += y;
+  q++;
+  assertEq(q, 2147483633);
+  assertEq(x, 2147483732);
+}
+uncopy(0x7ffffff0, 100);

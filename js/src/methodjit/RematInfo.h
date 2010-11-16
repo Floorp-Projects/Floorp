@@ -280,6 +280,7 @@ struct RematInfo {
     }
 
     void inherit(const RematInfo &other) {
+        JS_STATIC_ASSERT(sizeof(RegisterID) == sizeof(FPRegisterID));
         reg_ = other.reg_;
         location_ = other.location_;
     }
