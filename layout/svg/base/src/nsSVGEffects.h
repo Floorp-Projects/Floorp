@@ -80,6 +80,12 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   void InvalidateViaReferencedElement();
+
+  // When a nsSVGRenderingObserver list gets forcibly cleared, it uses this
+  // callback to notify every observer that's cleared from it, so they can
+  // react.
+  void NotifyEvictedFromRenderingObserverList();
+
   nsIFrame* GetReferencedFrame();
   PRBool IsInObserverList() const { return mInObserverList; }
 
@@ -256,6 +262,12 @@ public:
    */
   void InvalidateAll();
 
+  /**
+   * Drop all our observers, and notify them that we have dropped our reference
+   * to them.
+   */
+  void RemoveAll();
+
 private:
   nsTHashtable<nsVoidPtrHashKey> mObservers;
 };
@@ -350,6 +362,12 @@ public:
    * @param aFrame must be a first-continuation.
    */
   static void RemoveRenderingObserver(Element *aElement, nsSVGRenderingObserver *aObserver);
+
+  /**
+   * Removes all rendering observers from aElement.
+   */
+  static void RemoveAllRenderingObservers(Element *aElement);
+
   /**
    * This can be called on any frame. We invalidate the observers of aFrame's
    * element, if any, or else walk up to the nearest observable SVG parent
