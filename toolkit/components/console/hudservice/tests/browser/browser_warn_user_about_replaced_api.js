@@ -57,7 +57,6 @@ function testOpenWebConsole()
   hudId = HUDService.displaysIndex()[0];
   hud = HUDService.getHeadsUpDisplay(hudId);
 
-  HUDService.logWarningAboutReplacedAPI(hudId);
   testWarning();
 }
 
@@ -66,8 +65,9 @@ function testWarning()
   const successMsg = "Found the warning message";
   const errMsg = "Could not find the warning message about the replaced API";
 
-  outputNode = HUDService.hudWeakReferences[hudId].get().outputNode;
-  testLogEntry(outputNode, "disabled", { success: successMsg, err: errMsg });
+  testLogEntry(hud, "disabled",
+               { success: "Found disabled console error message",
+                 err: "disable msg not found"});
 
   finishTest();
 }

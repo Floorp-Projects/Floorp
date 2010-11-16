@@ -46,6 +46,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const CONSOLEAPI_CLASS_ID = "{b49c18f8-3379-4fc0-8c90-d7772c1a9ff3}";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -736,7 +738,7 @@ function NetworkPanel(aParent, aHttpActivity)
 
   // Set the document object and update the content once the panel is loaded.
   this.panel.addEventListener("load", function onLoad() {
-    self.panel.removeEventListener("load", onLoad, true)
+    self.panel.removeEventListener("load", onLoad, true);
     self.document = self.iframe.contentWindow.document;
     self.update();
   }, true);
@@ -1432,6 +1434,31 @@ HUD_SERVICE.prototype =
   filterPrefs: {},
 
   /**
+   * Gets the ID of the outer window of this DOM window
+   *
+   * @param nsIDOMWindow aWindow
+   * @returns integer
+   */
+  getWindowId: function HS_getWindowId(aWindow)
+  {
+    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  },
+
+  /**
+   * Gets the top level content window that has an outer window with
+   * the given ID or returns null if no such content window exists
+   *
+   * @param integer aId
+   * @returns nsIDOMWindow
+   */
+  getWindowByWindowId: function HS_getWindowByWindowId(aId)
+  {
+    let someWindow = Services.wm.getMostRecentWindow(null);
+    let windowUtils = someWindow.getInterface(Ci.nsIDOMWindowUtils);
+    return windowUtils.getOuterWindowWithId(aId);
+  },
+
+  /**
    * Whether to save the bodies of network requests and responses. Disabled by
    * default to save memory.
    */
@@ -1811,7 +1838,6 @@ HUD_SERVICE.prototype =
   /**
    * Register a new Heads Up Display
    *
-   * @param string aHUDId
    * @param nsIDOMWindow aContentWindow
    * @returns void
    */
@@ -1822,10 +1848,14 @@ HUD_SERVICE.prototype =
     if (!aHUDId || !aContentWindow){
       throw new Error(ERRORS.MISSING_ARGS);
     }
-    var URISpec = aContentWindow.document.location.href
+    var URISpec = aContentWindow.document.location.href;
     this.filterPrefs[aHUDId] = this.defaultFilterPrefs;
     this.displayRegistry[aHUDId] = URISpec;
-    this._headsUpDisplays[aHUDId] = { id: aHUDId, };
+
+    // get the window Id
+    var windowId = this.getWindowId(aContentWindow);
+    this._headsUpDisplays[aHUDId] = { id: aHUDId, windowId: windowId };
+
     this.registerActiveContext(aHUDId);
     // init storage objects:
     this.storage.createDisplay(aHUDId);
@@ -1896,12 +1926,6 @@ HUD_SERVICE.prototype =
     }
     // remove the DOM Nodes
     parent.removeChild(outputNode);
-
-    this.windowRegistry[id].forEach(function(aContentWindow) {
-      if (aContentWindow.console instanceof HUDConsole) {
-        delete aContentWindow.console;
-      }
-    });
 
     // remove our record of the DOM Nodes from the registry
     delete this._headsUpDisplays[id];
@@ -2125,10 +2149,9 @@ HUD_SERVICE.prototype =
       throw new Error(ERRORS.MISSING_ARGS);
     }
 
-    var hud = this.getHeadsUpDisplay(aMessage.hudId);
     switch (aMessage.origin) {
       case "network":
-      case "HUDConsole":
+      case "WebConsole":
       case "console-listener":
         this.logHUDMessage(aMessage, aConsoleNode, aMessageNode);
         break;
@@ -2175,22 +2198,6 @@ HUD_SERVICE.prototype =
     let messageObject =
     this.messageFactory(msgFormat, "error", outputNode, msgFormat.activityObject);
     this.logMessage(messageObject.messageObject, outputNode, messageObject.messageNode);
-  },
-
-  /**
-   * generates an nsIScriptError
-   *
-   * @param object aMessage
-   * @param integer flag
-   * @returns nsIScriptError
-   */
-  generateConsoleMessage:
-  function HS_generateConsoleMessage(aMessage, flag)
-  {
-    let message = scriptError; // nsIScriptError
-    message.init(aMessage.message, null, null, 0, 0, flag,
-                 "HUDConsole");
-    return message;
   },
 
   /**
@@ -2255,7 +2262,8 @@ HUD_SERVICE.prototype =
    *        NetworkPanel.
    * @returns NetworkPanel
    */
-  openNetworkPanel: function (aNode, aHttpActivity) {
+  openNetworkPanel: function HS_openNetworkPanel(aNode, aHttpActivity)
+  {
     let doc = aNode.ownerDocument;
     let parent = doc.getElementById("mainPopupSet");
     let netPanel = new NetworkPanel(parent, aHttpActivity);
@@ -2279,8 +2287,12 @@ HUD_SERVICE.prototype =
     var self = this;
     var httpObserver = {
       observeActivity :
-      function (aChannel, aActivityType, aActivitySubtype,
-                aTimestamp, aExtraSizeData, aExtraStringData)
+      function HS_SHO_observeActivity(aChannel,
+                                      aActivityType,
+                                      aActivitySubtype,
+                                      aTimestamp,
+                                      aExtraSizeData,
+                                      aExtraStringData)
       {
         if (aActivityType ==
               activityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION ||
@@ -2308,6 +2320,7 @@ HUD_SERVICE.prototype =
 
             // The httpActivity object will hold all information concerning
             // this request and later response.
+
             let httpActivity = {
               id: self.sequenceId(),
               hudId: hudId,
@@ -2855,24 +2868,12 @@ HUD_SERVICE.prototype =
       return;
     }
 
-    if (aContentWindow.document.location.href == "about:blank" &&
-        HUDWindowObserver.initialConsoleCreated == false) {
-      // TODO: need to make this work with about:blank in the future
-      // see bug 568661
-      return;
-    }
-
     xulWindow.addEventListener("unload", this.onWindowUnload, false);
 
     let gBrowser = xulWindow.gBrowser;
 
-
-    var container = gBrowser.tabContainer;
+    let container = gBrowser.tabContainer;
     container.addEventListener("TabClose", this.onTabClose, false);
-
-    if (gBrowser && !HUDWindowObserver.initialConsoleCreated) {
-      HUDWindowObserver.initialConsoleCreated = true;
-    }
 
     let _browser = gBrowser.
       getBrowserForDocument(aContentWindow.top.document);
@@ -2903,7 +2904,7 @@ HUD_SERVICE.prototype =
     if (!hudNode) {
       // get nBox object and call new HUD
       let config = { parentNode: nBox,
-                     contentWindow: aContentWindow,
+                     contentWindow: aContentWindow
                    };
 
       hud = new HeadsUpDisplay(config);
@@ -2913,16 +2914,17 @@ HUD_SERVICE.prototype =
     }
     else {
       hud = this.hudWeakReferences[hudId].get();
-      hud.reattachConsole(aContentWindow.top);
+      if (aContentWindow == aContentWindow.top) {
+        // TODO: name change?? doesn't actually re-attach the console
+        hud.reattachConsole(aContentWindow);
+      }
     }
 
-    // Check if aContentWindow has a console object. If so, don't attach
-    // our console, but warn the user about this.
-    if (aContentWindow.wrappedJSObject.console) {
+    // need to detect that the console component has been paved over
+    // TODO: change how we detect our console: bug 612405
+    let consoleObject = aContentWindow.wrappedJSObject.console;
+    if (consoleObject && consoleObject.classID != CONSOLEAPI_CLASS_ID) {
       this.logWarningAboutReplacedAPI(hudId);
-    }
-    else {
-      aContentWindow.wrappedJSObject.console = hud.console;
     }
 
     // register the controller to handle "select all" properly
@@ -3100,10 +3102,6 @@ function HeadsUpDisplay(aConfig)
                                     this.notificationBox.childNodes[1]);
 
   this.HUDBox.lastTimestamp = 0;
-
-  // Create the console object that is attached to the window later.
-  this._console = this.createConsole();
-
   // create the JSTerm input element
   try {
     this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
@@ -3115,6 +3113,7 @@ function HeadsUpDisplay(aConfig)
 }
 
 HeadsUpDisplay.prototype = {
+
   /**
    * L10N shortcut function
    *
@@ -3176,10 +3175,6 @@ HeadsUpDisplay.prototype = {
     this.contentWindow = aContentWindow;
     this.contentDocument = this.contentWindow.document;
     this.uriSpec = this.contentWindow.location.href;
-
-    if (!this._console) {
-      this._console = this.createConsole();
-    }
 
     if (!this.jsterm) {
       this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
@@ -3484,13 +3479,7 @@ HeadsUpDisplay.prototype = {
     }
   },
 
-  get console() {
-    if (!this._console) {
-      this._console = this.createConsole();
-    }
-
-    return this._console;
-  },
+  get console() { return this.contentWindow.wrappedJSObject.console; },
 
   getLogCount: function HUD_getLogCount()
   {
@@ -3502,18 +3491,6 @@ HeadsUpDisplay.prototype = {
     return this.outputNode.childNodes;
   },
 
-  /**
-   * This console will accept a message, get the tab's meta-data and send
-   * properly-formatted message object to the service identifying
-   * where it came from, etc...
-   *
-   * @returns console
-   */
-  createConsole: function HUD_createConsole()
-  {
-    return new HUDConsole(this);
-  },
-
   ERRORS: {
     HUD_BOX_DOES_NOT_EXIST: "Heads Up Display does not exist",
     TAB_ID_REQUIRED: "Tab DOM ID is required",
@@ -3523,80 +3500,79 @@ HeadsUpDisplay.prototype = {
 
 
 //////////////////////////////////////////////////////////////////////////////
-// HUDConsole factory function
+// ConsoleAPIObserver
 //////////////////////////////////////////////////////////////////////////////
 
-/**
- * The console object that is attached to each contentWindow
- *
- * @param object aHeadsUpDisplay
- * @returns object
- */
-function HUDConsole(aHeadsUpDisplay)
-{
-  let hud = aHeadsUpDisplay;
-  let hudId = hud.hudId;
-  let outputNode = hud.outputNode;
-  let chromeDocument = hud.chromeDocument;
+let ConsoleAPIObserver = {
 
-  let sendToHUDService = function console_send(aLevel, aArguments)
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  init: function CAO_init()
+  {
+    Services.obs.addObserver(this, "quit-application-granted", false);
+    Services.obs.addObserver(this, "console-api-log-event", false);
+  },
+
+  observe: function CAO_observe(aMessage, aTopic, aData)
+  {
+    if (aTopic == "console-api-log-event") {
+      aMessage = aMessage.wrappedJSObject;
+      let windowId = parseInt(aData);
+      try {
+        let win = HUDService.getWindowByWindowId(windowId).top;
+      }
+      catch (ex) {
+        // noop
+        return;
+      }
+
+      let hudId;
+      let displays = HUDService._headsUpDisplays;
+      let foundConsoleId = false;
+      for (let idx in displays) {
+        if (parseInt(displays[idx].windowId) == parseInt(windowId)) {
+          hudId = displays[idx].id;
+          foundConsoleId = true;
+          let webConsole = HUDService.hudWeakReferences[hudId].get();
+
+          this.sendToWebConsole(webConsole, aMessage.level, aMessage.arguments);
+        }
+      }
+    }
+    else if (aTopic == "quit-application-granted") {
+      this.shutdown();
+    }
+  },
+
+  shutdown: function CAO_shutdown()
+  {
+    Services.obs.removeObserver(this, "console-api-log-event");
+  },
+
+  sendToWebConsole:
+  function CAO_sendToWebConsole(aWebConsole, aLevel, aArguments)
   {
     let ts = ConsoleUtils.timestamp();
-    let messageNode = hud.makeXULNode("label");
-
+    let messageNode = aWebConsole.makeXULNode("label");
     let klass = "hud-msg-node hud-" + aLevel;
 
     messageNode.setAttribute("class", klass);
 
-    let argumentArray = [];
-    for (var i = 0; i < aArguments.length; i++) {
-      argumentArray.push(aArguments[i]);
-    }
+    let message = Array.join(aArguments, " ") + "\n";
+    let timestampedMessage = ConsoleUtils.timestampString(ts) + ": " + message;
 
-    let message = argumentArray.join(' ');
-    let timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
-      message + "\n";
-
-    messageNode.appendChild(chromeDocument.createTextNode(timestampedMessage));
-
+    messageNode.appendChild(aWebConsole.chromeDocument.createTextNode(timestampedMessage));
     // need a constructor here to properly set all attrs
     let messageObject = {
       logLevel: aLevel,
-      hudId: hud.hudId,
+      hudId: aWebConsole.hudId,
       message: message,
       timestamp: ts,
-      origin: "HUDConsole",
+      origin: "WebConsole",
     };
 
-    HUDService.logMessage(messageObject, hud.outputNode, messageNode);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Console API.
-  this.log = function console_log()
-  {
-    sendToHUDService("log", arguments);
+    HUDService.logMessage(messageObject, aWebConsole.outputNode, messageNode);
   },
-
-  this.info = function console_info()
-  {
-    sendToHUDService("info", arguments);
-  },
-
-  this.warn = function console_warn()
-  {
-    sendToHUDService("warn", arguments);
-  },
-
-  this.error = function console_error()
-  {
-    sendToHUDService("error", arguments);
-  },
-
-  this.exception = function console_exception()
-  {
-    sendToHUDService("exception", arguments);
-  }
 };
 
 /**
@@ -4098,6 +4074,7 @@ JSTerm.prototype = {
   {
     return this.context.get().QueryInterface(Ci.nsIDOMWindowInternal);
   },
+
   /**
    * Evaluates a string in the sandbox. The string is currently wrapped by a
    * with(window) { aString } construct, see bug 574033.
@@ -4109,7 +4086,7 @@ JSTerm.prototype = {
    */
   evalInSandbox: function JST_evalInSandbox(aString)
   {
-    return Cu.evalInSandbox(aString, this.sandbox, "1.8", "HUD Console", 1);
+    return Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
   },
 
 
@@ -4118,7 +4095,7 @@ JSTerm.prototype = {
     // attempt to execute the content of the inputNode
     aExecuteString = aExecuteString || this.inputNode.value;
     if (!aExecuteString) {
-      this.console.log("no value to execute");
+      this.writeOutput("no value to execute");
       return;
     }
 
@@ -4138,7 +4115,7 @@ JSTerm.prototype = {
       }
     }
     catch (ex) {
-      this.console.error(ex);
+      this.writeOutput(ex);
     }
 
     this.history.push(aExecuteString);
@@ -4638,7 +4615,7 @@ JSTerm.prototype = {
       }
       matches = completion.matches;
       matchIndexToUse = 0;
-      matchOffset = completion.matchProp.length
+      matchOffset = completion.matchProp.length;
       // Store this match;
       this.lastCompletion = {
         index: 0,
@@ -4826,6 +4803,7 @@ LogMessage.prototype = {
 
     this.messageNode.classList.add("hud-msg-node");
     this.messageNode.classList.add("hud-" + this.level);
+
 
     if (this.activityObject.category == "CSS Parser") {
       this.messageNode.classList.add("hud-cssparser");
@@ -5391,11 +5369,6 @@ HUDWindowObserver = {
     HUDService.shutdown();
   },
 
-  /**
-   * once an initial console is created set this to true so we don't
-   * over initialize
-   */
-  initialConsoleCreated: false,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5552,6 +5525,7 @@ try {
   var HUDService = new HUD_SERVICE();
   HUDWindowObserver.init();
   HUDConsoleObserver.init();
+  ConsoleAPIObserver.init();
 }
 catch (ex) {
   Cu.reportError("HUDService failed initialization.\n" + ex);
