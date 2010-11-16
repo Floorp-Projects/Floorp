@@ -540,27 +540,40 @@ void
 TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
 {
     if (type == TYPE_UNKNOWN) {
-        /* Access on an unknown object. this bytecode needs to be monitored. */
-        cx->compartment->types.monitorBytecode(code);
+        /*
+         * Access on an unknown object.  Reads produce an unknown result, writes
+         * need to be monitored.  Note: this isn't a problem for handling overflows
+         * on inc/dec below, as these go through a slow path which must call
+         * addTypeProperty.
+         */
+        if (assign)
+            cx->compartment->types.monitorBytecode(cx, code);
+        else
+            target->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
-    /* Monitor any bytecodes reading from objects which need to be monitored. */
+    /* Reads from monitored objects are unknown. */
     if (!assign && TypeIsObject(type)) {
         TypeObject *object = (TypeObject*)type;
-        if (object->monitored)
-            cx->compartment->types.monitorBytecode(code);
+        if (object->monitored) {
+            target->addType(cx, TYPE_UNKNOWN);
+            return;
+        }
     }
 
     /* Monitor assigns on the 'prototype' property. */
     if (assign && id == id_prototype(cx)) {
-        cx->compartment->types.monitorBytecode(code);
+        cx->compartment->types.monitorBytecode(cx, code);
         return;
     }
 
     /* Monitor accesses on other properties with special behavior we don't keep track of. */
     if (id == id___proto__(cx) || id == id_constructor(cx) || id == id_caller(cx)) {
-        cx->compartment->types.monitorBytecode(code);
+        if (assign)
+            cx->compartment->types.monitorBytecode(cx, code);
+        else
+            target->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
@@ -581,6 +594,8 @@ TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
         else
             types->addMonitorRead(cx, object->pool(), code, target);
     } else {
+        if (code->hasIncDecOverflow)
+            types->addType(cx, TYPE_DOUBLE);
         types->addArith(cx, object->pool(), code, types);
     }
 }
@@ -591,18 +606,15 @@ TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
     switch (type) {
       case TYPE_INT32:
       case TYPE_DOUBLE:
-        /* Integer index access, these are all covered by the JSID_VOID property. */
+        /*
+         * Integer index access, these are all covered by the JSID_VOID property.
+         * We are optimistically treat double accesses as getting an integer property,
+         * This needs to be checked at runtime.
+         */
         if (assign)
             object->addSetProperty(cx, code, target, JSID_VOID);
         else
             object->addGetProperty(cx, code, target, JSID_VOID);
-
-        /*
-         * Optimistically treat double accesses as getting an integer property,
-         * This needs to be checked at runtime.
-         */
-        if (type == TYPE_DOUBLE)
-            cx->compartment->types.monitorBytecode(code);
         break;
       default:
         /*
@@ -613,7 +625,7 @@ TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
          * element added.
          */
         if (assign)
-            cx->compartment->types.monitorBytecode(code);
+            cx->compartment->types.monitorBytecode(cx, code);
         else
             target->addType(cx, TYPE_UNKNOWN);
     }
@@ -624,23 +636,20 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
 {
     if (type == TYPE_UNKNOWN) {
         /* Monitor calls on unknown functions. */
-        cx->compartment->types.monitorBytecode(callsite->code);
+        cx->compartment->types.monitorBytecode(cx, callsite->code);
         return;
-    }
-
-    /* Monitor the return values of calls on non-function objects. */
-    if (TypeIsObject(type)) {
-        TypeObject *object = (TypeObject*)type;
-        if (!object->isFunction)
-            cx->compartment->types.monitorBytecode(callsite->code);
     }
 
     /* Get the function being invoked. */
     TypeFunction *function = NULL;
     if (TypeIsObject(type)) {
         TypeObject *object = (TypeObject*) type;
-        if (object->isFunction)
+        if (object->isFunction) {
             function = (TypeFunction*) object;
+        } else {
+            /* Unknown return value for calls on non-function objects. */
+            cx->compartment->types.monitorBytecode(cx, callsite->code);
+        }
     }
     if (!function)
         return;
@@ -651,12 +660,9 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
         JS_ASSERT(function->handler);
 
         if (function->handler == JS_TypeHandlerDynamic) {
-            /* Calls to functions with dynamic handlers need to be monitored. */
-            cx->compartment->types.monitorBytecode(callsite->code);
-
-            /* Add any guesses about the return types of this function to the callsite. */
+            /* Unknown result. */
             if (callsite->returnTypes)
-                function->returnTypes.addSubset(cx, function->pool(), callsite->returnTypes);
+                callsite->returnTypes->addType(cx, TYPE_UNKNOWN);
         } else if (function->isGeneric) {
             if (callsite->argumentCount == 0) {
                 /* Generic methods called with zero arguments generate runtime errors. */
@@ -768,16 +774,16 @@ TypeConstraintArith::newType(JSContext *cx, TypeSet *source, jstype type)
     if (other) {
         /*
          * Addition operation, consider these cases:
-         *   int x {int,bool} -> int
-         *   bool x bool -> int
+         *   {int,bool} x {int,bool} -> int
          *   float x {int,bool,float} -> float
          *   string x any -> string
          */
         switch (type) {
           case TYPE_UNDEFINED:
+          case TYPE_NULL:
           case TYPE_INT32:
           case TYPE_BOOLEAN:
-            /* Note: treating int + void as causing an overflow. */
+            /* Note: need to account for overflows from, e.g. int + void */
             if (other->typeFlags & (TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
                                     TYPE_FLAG_INT32 | TYPE_FLAG_BOOLEAN))
                 target->addType(cx, TYPE_INT32);
@@ -797,15 +803,25 @@ TypeConstraintArith::newType(JSContext *cx, TypeSet *source, jstype type)
              * Don't try to model arithmetic on objects, this can invoke valueOf,
              * operate on XML objects, etc.
              */
-            cx->compartment->types.monitorBytecode(code);
+            target->addType(cx, TYPE_UNKNOWN);
             break;
         }
     } else {
-        /* Monitor any arithmetic operation applied to a type other than int/float. */
-        if (type == TYPE_INT32 || type == TYPE_DOUBLE)
-            target->addType(cx, type);
-        else
-            cx->compartment->types.monitorBytecode(code);
+        /* Note: same issues with undefined as addition. */
+        switch (type) {
+          case TYPE_UNDEFINED:
+          case TYPE_NULL:
+          case TYPE_INT32:
+          case TYPE_BOOLEAN:
+            target->addType(cx, TYPE_INT32);
+            break;
+          case TYPE_DOUBLE:
+            target->addType(cx, TYPE_DOUBLE);
+            break;
+          default:
+            target->addType(cx, TYPE_UNKNOWN);
+            break;
+        }
     }
 }
 
@@ -857,13 +873,8 @@ TypeConstraintFilterPrimitive::newType(JSContext *cx, TypeSet *source, jstype ty
 void
 TypeConstraintMonitorRead::newType(JSContext *cx, TypeSet *source, jstype type)
 {
-    if (type == TYPE_UNKNOWN) {
-        cx->compartment->types.monitorBytecode(code);
-        return;
-    }
-
     if (type == (jstype) cx->getFixedTypeObject(TYPE_OBJECT_GETSET)) {
-        cx->compartment->types.monitorBytecode(code);
+        target->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
@@ -1365,15 +1376,114 @@ TypeCompartment::addDynamicType(JSContext *cx, TypeSet *types, jstype type,
     PrintType(cx, type);
 
     interpreting = false;
-
     uint64_t startTime = currentTime();
 
     types->addType(cx, type);
 
     uint64_t endTime = currentTime();
     analysisTime += (endTime - startTime);
-
     interpreting = true;
+}
+
+void
+TypeCompartment::addDynamicPush(JSContext *cx, analyze::Bytecode &code,
+                                unsigned index, jstype type)
+{
+    js::types::TypeSet *types = code.pushed(index);
+    JS_ASSERT(!types->hasType(type));
+
+    fprintf(out, "MonitorResult: #%u:%05u %u:", code.script->id, code.offset, index);
+    PrintType(cx, type);
+
+    interpreting = false;
+    uint64_t startTime = currentTime();
+
+    types->addType(cx, type);
+
+    /*
+     * For inc/dec ops, we need to go back and reanalyze the affected opcode
+     * taking the overflow into account.  We won't see an explicit adjustment
+     * of the type of the thing being inc/dec'ed, nor will adding the type to
+     * the pushed value affect the type.
+     */
+    JSOp op = JSOp(code.script->getScript()->code[code.offset]);
+    const JSCodeSpec *cs = &js_CodeSpec[op];
+    if (cs->format & (JOF_INC | JOF_DEC)) {
+        JS_ASSERT(!code.hasIncDecOverflow);
+        code.hasIncDecOverflow = true;
+
+        /* Inc/dec ops do not use the temporary analysis state. */
+        analyze::Script::TypeState state;
+        code.script->analyzeTypes(cx, &code, state);
+    }
+
+    uint64_t endTime = currentTime();
+    analysisTime += (endTime - startTime);
+    interpreting = true;
+}
+
+void
+TypeCompartment::monitorBytecode(JSContext *cx, analyze::Bytecode *code)
+{
+    if (code->monitorNeeded)
+        return;
+
+    /*
+     * Make sure monitoring is limited to property sets and calls where the
+     * target of the set/call could be statically unknown, and mark the bytecode
+     * results as unknown.
+     */
+    JSOp op = JSOp(code->script->getScript()->code[code->offset]);
+    switch (op) {
+      case JSOP_SETNAME:
+      case JSOP_SETELEM:
+      case JSOP_SETPROP:
+      case JSOP_SETMETHOD:
+        break;
+      case JSOP_INCNAME:
+      case JSOP_DECNAME:
+      case JSOP_NAMEINC:
+      case JSOP_NAMEDEC:
+      case JSOP_INCELEM:
+      case JSOP_DECELEM:
+      case JSOP_ELEMINC:
+      case JSOP_ELEMDEC:
+      case JSOP_INCPROP:
+      case JSOP_DECPROP:
+      case JSOP_PROPINC:
+      case JSOP_PROPDEC:
+      case JSOP_CALL:
+      case JSOP_SETCALL:
+      case JSOP_EVAL:
+      case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
+      case JSOP_NEW:
+        code->setFixed(cx, 0, TYPE_UNKNOWN);
+        break;
+      case JSOP_INITPROP:
+      case JSOP_INITMETHOD:
+      case JSOP_DEFFUN:
+      case JSOP_DEFFUN_FC:
+      case JSOP_FORNAME:
+      case JSOP_FORPROP:
+      case JSOP_FORELEM:
+      case JSOP_ENUMELEM:
+      case JSOP_SETXMLNAME:
+        /* :FIXME: handle these in JM. */
+        break;
+      default:
+        warnings = true;
+        fprintf(out, "warning: Monitoring unknown bytecode: %s\n", js_CodeNameTwo[op]);
+        break;
+    }
+
+    /* :FIXME: bug 608746 trigger recompilation of the script if necessary. */
+
+#ifdef JS_TYPES_DEBUG_SPEW
+    fprintf(out, "addMonitorNeeded: #%u:%05u\n", code->script->id, code->offset);
+#endif
+
+    code->monitorNeeded = true;
 }
 
 void
@@ -2242,13 +2352,13 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         if (vars && id != id___proto__(cx) && id != id_prototype(cx) && id != id_constructor(cx)) {
             TypeSet *types = vars->getVariable(cx, id);
             types->addMonitorRead(cx, *vars->pool, code, code->pushed(0));
-            if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME || op == JSOP_CALLNAME)
-                code->setFixed(cx, 1, TYPE_UNDEFINED);
         } else {
-            /* Ambiguous access, we need to monitor this bytecode. */
-            cx->compartment->types.monitorBytecode(code);
+            /* Ambiguous access, unknown result. */
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         }
 
+        if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME || op == JSOP_CALLNAME)
+            code->setFixed(cx, 1, TYPE_UNDEFINED);
         CheckNextTest(cx, code, pc);
         break;
       }
@@ -2286,7 +2396,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
                 TypeSet *types = stack->scopeScript->localTypes.getVariable(cx, id);
                 code->popped(0)->addSubset(cx, pool, types);
             }
-            cx->compartment->types.monitorBytecode(code);
+            cx->compartment->types.monitorBytecode(cx, code);
         }
 
         MergePushed(cx, pool, code, 0, code->popped(0));
@@ -2301,7 +2411,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
             TypeSet *types = vars->getVariable(cx, id);
             types->addSubset(cx, *vars->pool, code->pushed(0));
         } else {
-            cx->compartment->types.monitorBytecode(code);
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         }
 
         break;
@@ -2318,8 +2428,10 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
             TypeSet *types = vars->getVariable(cx, id);
             types->addSubset(cx, *vars->pool, code->pushed(0));
             types->addArith(cx, *vars->pool, code, types);
+            if (code->hasIncDecOverflow)
+                types->addType(cx, TYPE_DOUBLE);
         } else {
-            cx->compartment->types.monitorBytecode(code);
+            cx->compartment->types.monitorBytecode(cx, code);
         }
 
         break;
@@ -2344,6 +2456,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
         types->addArith(cx, cx->compartment->types.pool, code, types);
         MergePushed(cx, cx->compartment->types.pool, code, 0, types);
+        if (code->hasIncDecOverflow)
+            types->addType(cx, TYPE_DOUBLE);
         break;
       }
 
@@ -2356,6 +2470,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
         types->addArith(cx, cx->compartment->types.pool, code, types);
         MergePushed(cx, cx->compartment->types.pool, code, 0, types);
+        if (code->hasIncDecOverflow)
+            types->addType(cx, TYPE_DOUBLE);
         break;
       }
 
@@ -2386,12 +2502,12 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
             MergePushed(cx, pool, code, 0, types);
             if (op == JSOP_SETARG)
                 code->popped(0)->addSubset(cx, pool, types);
-            if (op == JSOP_CALLARG)
-                code->setFixed(cx, 1, TYPE_UNDEFINED);
         } else {
-            cx->compartment->types.monitorBytecode(code);
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         }
 
+        if (op == JSOP_CALLARG)
+            code->setFixed(cx, 1, TYPE_UNDEFINED);
         break;
       }
 
@@ -2404,12 +2520,14 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
         types->addArith(cx, pool, code, types);
         MergePushed(cx, pool, code, 0, types);
+        if (code->hasIncDecOverflow)
+            types->addType(cx, TYPE_DOUBLE);
         break;
       }
 
       case JSOP_ARGSUB:
-        // TODO: is this the right way to handle arguments[...] accesses?
-        cx->compartment->types.monitorBytecode(code);
+        // TODO: better way to handle arguments[...] accesses?
+        code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
 
       case JSOP_GETLOCAL:
@@ -2462,7 +2580,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         types->addArith(cx, evalParent()->pool, code, types);
         MergePushed(cx, evalParent()->pool, code, 0, types);
 
-        if (localHasUseBeforeDef(local) || !localDefined(local, pc))
+        if (code->hasIncDecOverflow)
             types->addType(cx, TYPE_DOUBLE);
         break;
       }
@@ -2668,7 +2786,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         if (res)
             res->addType(cx, (jstype) function);
         else
-            cx->compartment->types.monitorBytecode(code);
+            cx->compartment->types.monitorBytecode(cx, code);
         break;
       }
 
@@ -2753,7 +2871,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         TypeSet *types = object->properties(cx).getVariable(cx, id);
 
         if (id == id___proto__(cx) || id == id_prototype(cx))
-            cx->compartment->types.monitorBytecode(code);
+            cx->compartment->types.monitorBytecode(cx, code);
         else if (state.hasGetSet)
             types->addType(cx, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_GETSET));
         else
@@ -2812,7 +2930,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         if (vars) {
             SetForTypes(cx, code, vars->getVariable(cx, id));
         } else {
-            cx->compartment->types.monitorBytecode(code);
+            cx->compartment->types.monitorBytecode(cx, code);
 
             /*
              * We can't effectively monitor assigns to locals, so add the type to
@@ -2849,7 +2967,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_FORPROP:
       case JSOP_FORELEM:
       case JSOP_ENUMELEM:
-        cx->compartment->types.monitorBytecode(code);
+        cx->compartment->types.monitorBytecode(cx, code);
         break;
 
       case JSOP_ARRAYPUSH: {
@@ -2867,8 +2985,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
 
       case JSOP_EXCEPTION:
-        /* Always monitor the values pushed by generated exceptions. */
-        cx->compartment->types.monitorBytecode(code);
+        code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
 
       case JSOP_DEFVAR:
@@ -2915,13 +3032,18 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
 
       case JSOP_YIELD:
-        cx->compartment->types.monitorBytecode(code);
+        code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
 
       case JSOP_XMLNAME:
+        code->setFixed(cx, 1, TYPE_UNKNOWN);
+        /* FALLTHROUGH */
       case JSOP_CALLXMLNAME:
+        code->setFixed(cx, 0, TYPE_UNKNOWN);
+        break;
+
       case JSOP_SETXMLNAME:
-        cx->compartment->types.monitorBytecode(code);
+        cx->compartment->types.monitorBytecode(cx, code);
         break;
 
       case JSOP_BINDXMLNAME:

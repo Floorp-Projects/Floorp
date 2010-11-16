@@ -435,7 +435,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     if (!(flags & JSITER_OWNONLY)) {
         JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
         cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0,
-            (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR), true);
+            (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR));
     }
     return true;
 }
@@ -1298,7 +1298,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
             JS_ASSERT(JSOp(*yieldpc) == JSOP_YIELD);
 
             JSScript *script = gen->floatingFrame()->script();
-            script->typeMonitorResult(cx, yieldpc, 0, arg, true);
+            script->typeMonitorResult(cx, yieldpc, 0, arg);
         }
         gen->state = JSGEN_RUNNING;
         break;

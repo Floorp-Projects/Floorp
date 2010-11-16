@@ -1376,6 +1376,11 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, JSValueType type)
     FrameEntry *local = getLocal(n);
     storeTop(local, popGuaranteed, type);
 
+    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE) {
+        /* Known types are always in sync for locals. */
+        local->type.sync();
+    }
+
     bool closed = isClosedVar(n);
     if (!closed && !inTryBlock)
         return;
@@ -1390,6 +1395,12 @@ FrameState::storeArg(uint32 n, bool popGuaranteed, JSValueType type)
     // aliased (but not written to) via f.arguments.
     FrameEntry *arg = getArg(n);
     storeTop(arg, popGuaranteed, type);
+
+    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE) {
+        /* Known types are always in sync for args. */
+        arg->type.sync();
+    }
+
     finishStore(arg, isClosedArg(n));
 }
 
@@ -1424,10 +1435,6 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
         target->setCopyOf(NULL);
         target->setNotCopied();
         target->setConstant(Jsvalify(top->getValue()));
-
-        /* Types of arguments and locals are always in sync if known. */
-        if (target < spBase && type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE)
-            target->type.sync();
         return;
     }
 

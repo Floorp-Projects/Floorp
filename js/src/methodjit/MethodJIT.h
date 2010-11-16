@@ -136,6 +136,7 @@ struct VMFrame
     JSRuntime *runtime() { return cx->runtime; }
 
     JSStackFrame *&fp() { return regs.fp; }
+    JSScript *script() { return fp()->script(); }
 };
 
 #ifdef JS_CPU_ARM
