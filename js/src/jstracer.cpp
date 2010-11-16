@@ -14287,7 +14287,7 @@ TraceRecorder::record_JSOP_MOREITER()
             return ARECORD_ABORTED;
 
         cond = (rooter.value().isTrue());
-        cond_ins = is_boxed_true(AllocSlotsAddress(vp_ins));
+        cond_ins = w.eqi0(w.eqi0(is_boxed_true(AllocSlotsAddress(vp_ins))));
     }
 
     jsbytecode* pc = cx->regs->pc;
