@@ -701,7 +701,7 @@ Parser::parse(JSObject *chain)
      *   protected from the GC by a root or a stack frame reference.
      */
     JSTreeContext globaltc(this);
-    globaltc.scopeChain = chain;
+    globaltc.setScopeChain(chain);
     if (!GenerateBlockId(&globaltc, globaltc.bodyid))
         return NULL;
 
@@ -804,7 +804,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
     globalScope.cg = &cg;
     cg.flags |= tcflags;
-    cg.scopeChain = scopeChain;
+    cg.setScopeChain(scopeChain);
     compiler.globalScope = &globalScope;
     if (!SetStaticLevel(&cg, staticLevel))
         goto out;
@@ -1233,10 +1233,8 @@ ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
     JSAutoByteString name;
-
-    JS_ASSERT(tc->inFunction());
-    if (tc->fun->atom) {
-        if (!js_AtomToPrintableString(cx, tc->fun->atom, &name))
+    if (tc->fun()->atom) {
+        if (!js_AtomToPrintableString(cx, tc->fun()->atom, &name))
             return false;
     } else {
         errnum = anonerrnum;
@@ -1665,7 +1663,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
         return NULL;
 
     funcg.flags |= TCF_IN_FUNCTION;
-    funcg.fun = fun;
+    funcg.setFunction(fun);
     if (!GenerateBlockId(&funcg, funcg.bodyid))
         return NULL;
 
@@ -1797,7 +1795,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
 
     JS_ASSERT(tc->inFunction());
 
-    JSLocalKind localKind = tc->fun->lookupLocal(cx, atom, NULL);
+    JSLocalKind localKind = tc->fun()->lookupLocal(cx, atom, NULL);
     if (localKind != JSLOCAL_NONE) {
         ReportCompileErrorNumber(cx, TS(tc->parser), NULL, JSREPORT_ERROR,
                                  JSMSG_DESTRUCT_DUP_ARG);
@@ -1809,8 +1807,8 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     if (!Define(pn, atom, tc))
         return JS_FALSE;
 
-    uintN index = tc->fun->u.i.nvars;
-    if (!BindLocalVariable(cx, tc->fun, atom, JSLOCAL_VAR, true))
+    uintN index = tc->fun()->u.i.nvars;
+    if (!BindLocalVariable(cx, tc->fun(), atom, JSLOCAL_VAR, true))
         return JS_FALSE;
     pn->pn_op = JSOP_SETLOCAL;
     pn->pn_cookie.set(tc->staticLevel, index);
@@ -1835,11 +1833,9 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
      */
     while (tc->parent)
         tc = tc->parent;
-    parent = tc->inFunction() ? NULL : tc->scopeChain;
+    parent = tc->inFunction() ? NULL : tc->scopeChain();
 
-    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
-                         parent, atom);
-
+    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
@@ -2529,7 +2525,7 @@ EnterFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
     funtc->blockidGen = tc->blockidGen;
     if (!GenerateBlockId(funtc, funtc->bodyid))
         return NULL;
-    funtc->fun = fun;
+    funtc->setFunction(fun);
     funtc->funbox = funbox;
     if (!SetStaticLevel(funtc, tc->staticLevel + 1))
         return NULL;
@@ -2960,12 +2956,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                  * we add a variable even if a parameter with the given name
                  * already exists.
                  */
-                localKind = tc->fun->lookupLocal(context, funAtom, &index);
+                localKind = tc->fun()->lookupLocal(context, funAtom, &index);
                 switch (localKind) {
                   case JSLOCAL_NONE:
                   case JSLOCAL_ARG:
-                    index = tc->fun->u.i.nvars;
-                    if (!tc->fun->addLocal(context, funAtom, JSLOCAL_VAR))
+                    index = tc->fun()->u.i.nvars;
+                    if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
                         return NULL;
                     /* FALL THROUGH */
 
@@ -3755,7 +3751,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_TRUE;
     }
 
-    JSLocalKind localKind = tc->fun->lookupLocal(cx, atom, NULL);
+    JSLocalKind localKind = tc->fun()->lookupLocal(cx, atom, NULL);
     if (localKind == JSLOCAL_NONE) {
         /*
          * Property not found in current variable scope: we have not seen this
@@ -3767,8 +3763,8 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
          */
         localKind = (data->op == JSOP_DEFCONST) ? JSLOCAL_CONST : JSLOCAL_VAR;
 
-        uintN index = tc->fun->u.i.nvars;
-        if (!BindLocalVariable(cx, tc->fun, atom, localKind, false))
+        uintN index = tc->fun()->u.i.nvars;
+        if (!BindLocalVariable(cx, tc->fun(), atom, localKind, false))
             return JS_FALSE;
         pn->pn_op = JSOP_GETLOCAL;
         pn->pn_cookie.set(tc->staticLevel, index);
@@ -8073,7 +8069,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * the one passed to us.
      */
     JSTreeContext xmltc(this);
-    xmltc.scopeChain = chain;
+    xmltc.setScopeChain(chain);
 
     /* Set XML-only mode to turn off special treatment of {expr} in XML. */
     tokenStream.setXMLOnlyMode();
