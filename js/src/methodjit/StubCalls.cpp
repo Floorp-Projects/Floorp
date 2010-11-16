@@ -127,6 +127,8 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
     if (!obj)
         THROW();
 
+    f.script()->typeMonitorAssign(cx, f.regs.pc, obj, ATOM_TO_JSID(origAtom), rval);
+
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
 
@@ -280,6 +282,9 @@ stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
     if (!obj)
         THROW();
     Value rval = f.regs.sp[-1];
+
+    f.script()->typeMonitorAssign(f.cx, f.regs.pc, obj, ATOM_TO_JSID(atom), rval);
+
     if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
         THROW();
     f.regs.sp[-2] = rval;
@@ -499,6 +504,11 @@ stubs::GetElem(VMFrame &f)
 
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
+    if (copyFrom->isUndefined()) {
+        if (rref.isInt32())
+            cx->addTypeProperty(obj->getTypeObject(), NULL, TYPE_UNDEFINED);
+        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+    }
 }
 
 static inline bool
@@ -544,6 +554,8 @@ stubs::CallElem(VMFrame &f)
     {
         regs.sp[-1] = thisv;
     }
+    if (regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
 }
 
 template<JSBool strict>
@@ -566,6 +578,8 @@ stubs::SetElem(VMFrame &f)
 
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
         THROW();
+
+    f.script()->typeMonitorAssign(cx, regs.pc, obj, id, retval);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -690,7 +704,8 @@ stubs::Ursh(VMFrame &f)
 
     u >>= (j & 31);
 
-	f.regs.sp[-2].setNumber(uint32(u));
+	if (!f.regs.sp[-2].setNumber(uint32(u)))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
 }
 
 template <int32 N>
@@ -701,9 +716,10 @@ PostInc(VMFrame &f, Value *vp)
     if (!ValueToNumber(f.cx, *vp, &d))
         return false;
     f.regs.sp++;
-    f.regs.sp[-1].setDouble(d);
+    f.regs.sp[-1].setNumber(d);
     d += N;
-    vp->setDouble(d);
+    if (!vp->setNumber(d))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     return true;
 }
 
@@ -715,9 +731,10 @@ PreInc(VMFrame &f, Value *vp)
     if (!ValueToNumber(f.cx, *vp, &d))
         return false;
     d += N;
-    vp->setDouble(d);
+    if (!vp->setNumber(d))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     f.regs.sp++;
-    f.regs.sp[-1].setDouble(d);
+    f.regs.sp[-1].setNumber(d);
     return true;
 }
 
@@ -756,7 +773,8 @@ stubs::LocalInc(VMFrame &f, uint32 slot)
     if (!ValueToNumber(f.cx, f.regs.sp[-2], &d))
         THROW();
     f.regs.sp[-2].setNumber(d);
-    f.regs.sp[-1].setNumber(d + 1);
+    if (!f.regs.sp[-1].setNumber(d + 1))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     f.fp()->slots()[slot] = f.regs.sp[-1];
 }
 
@@ -767,7 +785,8 @@ stubs::LocalDec(VMFrame &f, uint32 slot)
     if (!ValueToNumber(f.cx, f.regs.sp[-2], &d))
         THROW();
     f.regs.sp[-2].setNumber(d);
-    f.regs.sp[-1].setNumber(d - 1);
+    if (!f.regs.sp[-1].setNumber(d - 1))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     f.fp()->slots()[slot] = f.regs.sp[-1];
 }
 
@@ -777,7 +796,8 @@ stubs::IncLocal(VMFrame &f, uint32 slot)
     double d;
     if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
         THROW();
-    f.regs.sp[-1].setNumber(d + 1);
+    if (!f.regs.sp[-1].setNumber(d + 1))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     f.fp()->slots()[slot] = f.regs.sp[-1];
 }
 
@@ -787,7 +807,8 @@ stubs::DecLocal(VMFrame &f, uint32 slot)
     double d;
     if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
         THROW();
-    f.regs.sp[-1].setNumber(d - 1);
+    if (!f.regs.sp[-1].setNumber(d - 1))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
     f.fp()->slots()[slot] = f.regs.sp[-1];
 }
 
@@ -1165,7 +1186,8 @@ stubs::Add(VMFrame &f)
                 THROW();
             l += r;
             regs.sp--;
-            regs.sp[-1].setNumber(l);
+            if (!regs.sp[-1].setNumber(l))
+                f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
         }
     }
     return;
@@ -1190,7 +1212,8 @@ stubs::Sub(VMFrame &f)
         THROW();
     }
     double d = d1 - d2;
-    regs.sp[-2].setNumber(d);
+    if (!regs.sp[-2].setNumber(d))
+        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
 }
 
 void JS_FASTCALL
@@ -1204,7 +1227,8 @@ stubs::Mul(VMFrame &f)
         THROW();
     }
     double d = d1 * d2;
-    regs.sp[-2].setNumber(d);
+    if (!regs.sp[-2].setNumber(d))
+        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
 }
 
 void JS_FASTCALL
@@ -1234,9 +1258,11 @@ stubs::Div(VMFrame &f)
         else
             vp = &rt->positiveInfinityValue;
         regs.sp[-2] = *vp;
+        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
     } else {
         d1 /= d2;
-        regs.sp[-2].setNumber(d1);
+        if (!regs.sp[-2].setNumber(d1))
+            f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
     }
 }
 
@@ -1265,6 +1291,7 @@ stubs::Mod(VMFrame &f)
             d1 = js_fmod(d1, d2);
             regs.sp[-2].setDouble(d1);
         }
+        f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
     }
 }
 
@@ -1367,7 +1394,8 @@ stubs::Neg(VMFrame &f)
     if (!ValueToNumber(f.cx, f.regs.sp[-1], &d))
         THROW();
     d = -d;
-    f.regs.sp[-1].setNumber(d);
+    if (!f.regs.sp[-1].setNumber(d))
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
 }
 
 JSObject * JS_FASTCALL
@@ -1658,13 +1686,17 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
         if (!ValueToNumber(cx, ref, &d))
             return false;
         if (POST) {
-            ref.setDouble(d);
+            ref.setNumber(d);
             d += N;
         } else {
             d += N;
-            ref.setDouble(d);
+            ref.setNumber(d);
         }
-        v.setDouble(d);
+        if (!v.setNumber(d)) {
+            f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
+            cx->addTypePropertyId(obj->getTypeObject(), id, TYPE_DOUBLE);
+        }
+        f.script()->typeMonitorAssign(cx, f.regs.pc, obj, id, v);
         fp->setAssigning();
         JSBool ok = obj->setProperty(cx, id, &v, strict);
         fp->clearAssigning();
@@ -1993,6 +2025,9 @@ InlineGetProp(VMFrame &f)
         }
     } while(0);
 
+    if (rval.isUndefined())
+        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+
     regs.sp[-1] = rval;
     return true;
 }
@@ -2016,6 +2051,9 @@ stubs::GetPropNoCache(VMFrame &f, JSAtom *atom)
 
     if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
         THROW();
+
+    if (vp->isUndefined())
+        f.script()->typeMonitorUndefined(cx, f.regs.pc, 0);
 }
 
 void JS_FASTCALL
@@ -2109,6 +2147,8 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             THROW();
     }
 #endif
+    if (rval.isUndefined())
+        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
 }
 
 void JS_FASTCALL
@@ -2581,6 +2621,8 @@ stubs::Pos(VMFrame &f)
 {
     if (!ValueToNumber(f.cx, &f.regs.sp[-1]))
         THROW();
+    if (!f.regs.sp[-1].isInt32())
+        f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
 }
 
 void JS_FASTCALL

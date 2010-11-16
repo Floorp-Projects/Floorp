@@ -290,7 +290,7 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
 {
 #ifdef JS_TYPE_INFERENCE
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
-    caller->script()->typeMonitorResult(this, caller->pc(this), 0, type, true);
+    caller->script()->typeMonitorResult(this, caller->pc(this), 0, type);
 #endif
 }
 
@@ -595,36 +595,41 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 
 inline void
 JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
-                            js::types::jstype type, bool force)
+                            js::types::jstype type)
 {
 #ifdef JS_TYPE_INFERENCE
     if (analysis->failed())
         return;
 
     js::analyze::Bytecode &code = analysis->getCode(pc);
-    if (!force && !code.monitorNeeded)
-        return;
-
     js::types::TypeSet *stackTypes = code.pushed(index);
     if (stackTypes->hasType(type))
         return;
 
-    if (!stackTypes->hasType(type)) {
-        const char *prefix = force ? "MonitorForce" : "MonitorResult";
-        cx->compartment->types.addDynamicType(cx, stackTypes, type,
-                                              "%s: #%u:%05u %u:", prefix,
-                                              analysis->id, code.offset, index);
-    }
+    if (!stackTypes->hasType(type))
+        cx->compartment->types.addDynamicPush(cx, code, index, type);
 #endif
 }
 
 inline void
 JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
-                            const js::Value &rval, bool force)
+                            const js::Value &rval)
 {
 #ifdef JS_TYPE_INFERENCE
-    typeMonitorResult(cx, pc, index, js::types::GetValueType(cx, rval), force);
+    typeMonitorResult(cx, pc, index, js::types::GetValueType(cx, rval));
 #endif
+}
+
+inline void
+JSScript::typeMonitorOverflow(JSContext *cx, const jsbytecode *pc, unsigned index)
+{
+    typeMonitorResult(cx, pc, index, js::types::TYPE_DOUBLE);
+}
+
+inline void
+JSScript::typeMonitorUndefined(JSContext *cx, const jsbytecode *pc, unsigned index)
+{
+    typeMonitorResult(cx, pc, index, js::types::TYPE_UNDEFINED);
 }
 
 inline void
@@ -897,21 +902,6 @@ TypeCompartment::resolvePending(JSContext *cx)
     }
 
     resolving = false;
-}
-
-inline void
-TypeCompartment::monitorBytecode(analyze::Bytecode *code)
-{
-    if (code->monitorNeeded)
-        return;
-
-    /* :FIXME: bug 608746 trigger recompilation of the script if necessary. */
-
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(out, "addMonitorNeeded: #%u:%05u\n", code->script->id, code->offset);
-#endif
-
-    code->monitorNeeded = true;
 }
 
 /////////////////////////////////////////////////////////////////////

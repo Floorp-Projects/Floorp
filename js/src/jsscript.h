@@ -303,14 +303,13 @@ struct JSScript {
     inline js::types::TypeObject *
     getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
 
-    /*
-     * Monitor a bytecode pushing some value, if necessary.  If force is set,
-     * the result may have been unexpected by the inference.
-     */
+    /* Monitor a bytecode pushing an unexpected value. */
     inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
-                                  js::types::jstype type, bool force);
+                                  js::types::jstype type);
     inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
-                                  const js::Value &rval, bool force);
+                                  const js::Value &rval);
+    inline void typeMonitorOverflow(JSContext *cx, const jsbytecode *pc, unsigned index);
+    inline void typeMonitorUndefined(JSContext *cx, const jsbytecode *pc, unsigned index);
 
     /* Monitor a bytecode assigning to an object's property, if necessary. */
     inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,

@@ -401,20 +401,26 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    void setNumber(uint32 ui) {
-        if (ui > JSVAL_INT_MAX)
+    bool setNumber(uint32 ui) {
+        if (ui > JSVAL_INT_MAX) {
             setDouble((double)ui);
-        else
+            return false;
+        } else {
             setInt32((int32)ui);
+            return true;
+        }
     }
 
     JS_ALWAYS_INLINE
-    void setNumber(double d) {
+    bool setNumber(double d) {
         int32_t i;
-        if (JSDOUBLE_IS_INT32(d, &i))
+        if (JSDOUBLE_IS_INT32(d, &i)) {
             setInt32(i);
-        else
+            return true;
+        } else {
             setDouble(d);
+            return false;
+        }
     }
 
     JS_ALWAYS_INLINE

@@ -231,7 +231,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     }
 
     /* Can do int math iff there is no double constant and the op is not division. */
-    bool canDoIntMath = op != JSOP_DIV &&
+    bool canDoIntMath = op != JSOP_DIV && knownPushedType(0) != JSVAL_TYPE_DOUBLE &&
                         !((rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_DOUBLE) ||
                           (lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_DOUBLE));
 

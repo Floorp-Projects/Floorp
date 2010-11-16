@@ -76,6 +76,9 @@ struct Bytecode
     /* Whether this is a method JIT safe point. */
     bool safePoint : 1;
 
+    /* For type inference, whether this bytecode needs to have its effects monitored dynamically. */
+    bool monitorNeeded : 1;
+
     /* Stack depth before this opcode. */
     uint32 stackDepth;
 
@@ -127,14 +130,17 @@ struct Bytecode
     /* Any new object created at this bytecode. */
     types::TypeObject *initObject;
 
-    /* Whether this bytecode needs to have its effects monitored dynamically. */
-    bool monitorNeeded;
+    /*
+     * For inc/dec operations, whether the operation dynamically overflowed to double.
+     * Should one of these overflow, we reanalyze the affected bytecode.
+     */
+    bool hasIncDecOverflow : 1;
 
     /*
      * For logging, whether we've generated warnings due to a mismatch between the
      * actual and inferred types at this bytecode.
      */
-    bool missingTypes;
+    bool missingTypes : 1;
 
     /* Pool which constraints on this instruction should use. */
     inline JSArenaPool &pool();
@@ -240,6 +246,9 @@ class Script
         return codeArray[offset] && codeArray[offset]->jumpTarget;
     }
     bool jumpTarget(const jsbytecode *pc) { return jumpTarget(pc - script->code); }
+
+    bool monitored(uint32 offset) { return getCode(offset).monitorNeeded; }
+    bool monitored(const jsbytecode *pc) { return getCode(pc).monitorNeeded; }
 
     /* Accessors for local variable information. */
 
