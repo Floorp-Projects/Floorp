@@ -54,6 +54,7 @@
 #include "nsHashKeys.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
+#include "nsIObserverService.h"
 
 #define NS_INTERFACE_PREFIX "nsI"
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
@@ -132,6 +133,10 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   return PR_TRUE;
 }
 
+NS_IMPL_ISUPPORTS2(nsScriptNameSpaceManager,
+                   nsIObserver,
+                   nsISupportsWeakReference)
+
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
   : mIsInitialized(PR_FALSE)
 {
@@ -188,93 +193,18 @@ nsScriptNameSpaceManager::GetConstructorProto(const nsGlobalNameStruct* aStruct)
 
 nsresult
 nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
-                                   const char *aCategory,
-                                   nsGlobalNameStruct::nametype aType,
-                                   PRBool aChromeOnly)
+                                   const char *aCategory)
 {
-  nsCOMPtr<nsIComponentRegistrar> registrar;
-  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsISimpleEnumerator> e;
-  rv = aCategoryManager->EnumerateCategory(aCategory, getter_AddRefs(e));
+  nsresult rv = aCategoryManager->EnumerateCategory(aCategory,
+                                                    getter_AddRefs(e));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString categoryEntry;
-  nsXPIDLCString contractId;
   nsCOMPtr<nsISupports> entry;
-
   while (NS_SUCCEEDED(e->GetNext(getter_AddRefs(entry)))) {
-    nsCOMPtr<nsISupportsCString> category(do_QueryInterface(entry));
-
-    if (!category) {
-      NS_WARNING("Category entry not an nsISupportsCString!");
-
-      continue;
-    }
-
-    rv = category->GetData(categoryEntry);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
-                                            getter_Copies(contractId));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCID *cidPtr;
-    rv = registrar->ContractIDToCID(contractId, &cidPtr);
-
+    rv = AddCategoryEntryToHash(aCategoryManager, aCategory, entry);
     if (NS_FAILED(rv)) {
-      NS_WARNING("Bad contract id registed with the script namespace manager");
-
-      continue;
-    }
-
-    // Copy CID onto the stack, so we can free it right away and avoid having
-    // to add cleanup code at every exit point from this loop/function.
-    nsCID cid = *cidPtr;
-    nsMemory::Free(cidPtr);
-
-    if (aType == nsGlobalNameStruct::eTypeExternalConstructor) {
-      nsXPIDLCString constructorProto;
-      rv = aCategoryManager->GetCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
-                                              categoryEntry.get(),
-                                              getter_Copies(constructorProto));
-      if (NS_SUCCEEDED(rv)) {
-        nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
-        NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-        if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
-          s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
-          if (!s->mAlias) {
-            // Free entry
-            NS_ConvertASCIItoUTF16 key(categoryEntry);
-            PL_DHashTableOperate(&mGlobalNames,
-                                 &key,
-                                 PL_DHASH_REMOVE);
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
-          s->mChromeOnly = PR_FALSE;
-          s->mAlias->mCID = cid;
-          AppendASCIItoUTF16(constructorProto, s->mAlias->mProtoName);
-          s->mAlias->mProto = nsnull;
-        } else {
-          NS_WARNING("Global script name not overwritten!");
-        }
-
-        continue;
-      }
-    }
-
-    nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
-    NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-    if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
-      s->mType = aType;
-      s->mCID = cid;
-      s->mChromeOnly = aChromeOnly;
-    } else {
-      NS_WARNING("Global script name not overwritten!");
+      return rv;
     }
   }
 
@@ -487,25 +417,29 @@ nsScriptNameSpaceManager::Init()
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                nsGlobalNameStruct::eTypeExternalConstructor, PR_FALSE);
+  rv = FillHash(cm, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
-                nsGlobalNameStruct::eTypeProperty, PR_FALSE);
+  rv = FillHash(cm, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY,
-                nsGlobalNameStruct::eTypeProperty, PR_TRUE);
+  rv = FillHash(cm, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY,
-                nsGlobalNameStruct::eTypeStaticNameSet, PR_FALSE);
+  rv = FillHash(cm, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY,
-                nsGlobalNameStruct::eTypeDynamicNameSet, PR_FALSE);
+  rv = FillHash(cm, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Initial filling of the has table has been done.
+  // Now, listen for changes.
+  nsCOMPtr<nsIObserverService> serv = 
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+
+  if (serv) {
+    serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID, PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -704,3 +638,126 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
 
   return NS_OK;
 }
+
+nsresult
+nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryManager,
+                                                 const char* aCategory,
+                                                 nsISupports* aEntry)
+{
+  nsCOMPtr<nsISupportsCString> strWrapper = do_QueryInterface(aEntry);
+
+  if (!strWrapper) {
+    NS_WARNING("Category entry not an nsISupportsCString!");
+    return NS_OK;
+  }
+
+  nsCAutoString categoryEntry;
+  nsresult rv = strWrapper->GetData(categoryEntry);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString contractId;
+  rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
+                                          getter_Copies(contractId));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCID *cidPtr;
+  rv = registrar->ContractIDToCID(contractId, &cidPtr);
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Bad contract id registed with the script namespace manager");
+    return NS_OK;
+  }
+
+  // Get the type from the category name.
+  // NOTE: we could have passed the type in FillHash() and guessed it in
+  // Observe() but this way, we have only one place to update and this is
+  // not performance sensitive.
+  nsGlobalNameStruct::nametype type;
+  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeExternalConstructor;
+  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0 ||
+             strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeProperty;
+  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeStaticNameSet;
+  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY) == 0) {
+    type = nsGlobalNameStruct::eTypeDynamicNameSet;
+  } else {
+    NS_WARNING("The category has no corresponding type!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Copy CID onto the stack, so we can free it right away and avoid having
+  // to add cleanup code at every exit point from this function.
+  nsCID cid = *cidPtr;
+  nsMemory::Free(cidPtr);
+
+  if (type == nsGlobalNameStruct::eTypeExternalConstructor) {
+    nsXPIDLCString constructorProto;
+    rv = aCategoryManager->GetCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
+                                            categoryEntry.get(),
+                                            getter_Copies(constructorProto));
+    if (NS_SUCCEEDED(rv)) {
+      nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
+      NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+      if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+        s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
+        s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
+        s->mChromeOnly = PR_FALSE;
+        s->mAlias->mCID = cid;
+        AppendASCIItoUTF16(constructorProto, s->mAlias->mProtoName);
+        s->mAlias->mProto = nsnull;
+      } else {
+        NS_WARNING("Global script name not overwritten!");
+      }
+
+      return NS_OK;
+    }
+  }
+
+  nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
+  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+  if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+    s->mType = type;
+    s->mCID = cid;
+    s->mChromeOnly =
+      strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0;
+  } else {
+    NS_WARNING("Global script name not overwritten!");
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptNameSpaceManager::Observe(nsISupports* aSubject, const char* aTopic,
+                                  const PRUnichar* aData)
+{
+  if (!aData) {
+    return NS_OK;
+  }
+
+  if (strcmp(aTopic, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID) == 0) {
+    nsCOMPtr<nsICategoryManager> cm =
+      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+    if (!cm) {
+      return NS_OK;
+    }
+
+    return AddCategoryEntryToHash(cm, NS_ConvertUTF16toUTF8(aData).get(),
+                                  aSubject);
+  }
+
+  // TODO: we could observe NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID
+  // and NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID but we are safe without it.
+  // See bug 600460.
+
+  return NS_OK;
+}
+

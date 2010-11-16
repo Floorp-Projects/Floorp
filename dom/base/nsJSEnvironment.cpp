@@ -4178,7 +4178,7 @@ nsJSRuntime::GetNameSpaceManager()
 
   if (!gNameSpaceManager) {
     gNameSpaceManager = new nsScriptNameSpaceManager;
-    NS_ENSURE_TRUE(gNameSpaceManager, nsnull);
+    NS_ADDREF(gNameSpaceManager);
 
     nsresult rv = gNameSpaceManager->Init();
     NS_ENSURE_SUCCESS(rv, nsnull);
@@ -4202,8 +4202,7 @@ nsJSRuntime::Shutdown()
     sLoadInProgressGCTimer = PR_FALSE;
   }
 
-  delete gNameSpaceManager;
-  gNameSpaceManager = nsnull;
+  NS_IF_RELEASE(gNameSpaceManager);
 
   if (!sContextCount) {
     // We're being shutdown, and there are no more contexts
