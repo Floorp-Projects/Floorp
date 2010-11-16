@@ -932,8 +932,9 @@ struct JSObjectBox {
     JSObjectBox         *traceLink;
     JSObjectBox         *emitLink;
     JSObject            *object;
-    uintN               index;
     JSObjectBox         *parent;
+    uintN               index;
+    bool                isFunctionBox;
 };
 
 #define JSFB_LEVEL_BITS 14
@@ -949,6 +950,7 @@ struct JSFunctionBox : public JSObjectBox
                                                    pn_link, since lambdas are
                                                    neither definitions nor uses
                                                    of a binding */
+    js::Bindings        bindings;               /* bindings for this function */
     uint32              queued:1,
                         inLoop:1,               /* in a loop in parent function */
                         level:JSFB_LEVEL_BITS;
@@ -1138,8 +1140,7 @@ private:
     bool recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember);
 
     enum FunctionType { GETTER, SETTER, GENERAL };
-    bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
-                           JSParseNode **list);
+    bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSParseNode **list);
     JSParseNode *functionBody();
     JSParseNode *functionDef(JSAtom *name, FunctionType type, uintN lambda);
 
@@ -1199,7 +1200,7 @@ struct Compiler
 
     static bool
     compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
-                        const jschar *chars, size_t length,
+                        js::Bindings *bindings, const jschar *chars, size_t length,
                         const char *filename, uintN lineno);
 
     static JSScript *

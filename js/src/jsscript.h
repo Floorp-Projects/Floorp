@@ -145,6 +145,8 @@ typedef struct JSConstArray {
     uint32          length;
 } JSConstArray;
 
+struct JSArenaPool;
+
 namespace js {
 
 struct GlobalSlotArray {
@@ -154,6 +156,162 @@ struct GlobalSlotArray {
     };
     Entry           *vector;
     uint32          length;
+};
+
+class Shape;
+
+enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT, UPVAR };
+
+/*
+ * Formal parameters, local variables, and upvars are stored in a shape tree
+ * path encapsulated within this class.  This class represents bindings for
+ * both function and top-level scripts (the latter is needed to track names in
+ * strict mode eval code, to give such code its own lexical environment).
+ */
+class Bindings {
+    js::Shape *lastBinding;
+    uint16 nargs;
+    uint16 nvars;
+    uint16 nupvars;
+
+  public:
+    inline Bindings(JSContext *cx);
+
+    /*
+     * Transfers ownership of bindings data from bindings into this fresh
+     * Bindings instance. Once such a transfer occurs, the old bindings must
+     * not be used again.
+     */
+    inline void transfer(JSContext *cx, Bindings *bindings);
+
+    /*
+     * Clones bindings data from bindings, which must be immutable, into this
+     * fresh Bindings instance. A Bindings instance may be cloned multiple
+     * times.
+     */
+    inline void clone(JSContext *cx, Bindings *bindings);
+
+    uint16 countArgs() const { return nargs; }
+    uint16 countVars() const { return nvars; }
+    uint16 countUpvars() const { return nupvars; }
+
+    uintN countArgsAndVars() const { return nargs + nvars; }
+
+    uintN countLocalNames() const { return nargs + nvars + nupvars; }
+
+    bool hasUpvars() const { return nupvars > 0; }
+    bool hasLocalNames() const { return countLocalNames() > 0; }
+
+    /* Returns the shape lineage generated for these bindings. */
+    inline const js::Shape *lastShape() const;
+
+    /*
+     * Add a local binding for the given name, of the given type, for the code
+     * being compiled.  If fun is non-null, this binding set is being created
+     * for that function, so adjust corresponding metadata in that function
+     * while adding.  Otherwise this set must correspond to a top-level script.
+     *
+     * A binding may be added twice with different kinds; the last one for a
+     * given name prevails.  (We preserve both bindings for the decompiler,
+     * which must deal with such cases.)  Pass null for name when indicating a
+     * destructuring argument.  Return true on success.
+     *
+     *
+     * The parser builds shape paths for functions, usable by Call objects at
+     * runtime, by calling addLocal. All ARGUMENT bindings must be added before
+     * before any VARIABLE or CONSTANT bindings, which themselves must be added
+     * before all UPVAR bindings.
+     */
+    bool add(JSContext *cx, JSAtom *name, BindingKind kind);
+
+    /* Convenience specializations. */
+    bool addVariable(JSContext *cx, JSAtom *name) {
+        return add(cx, name, VARIABLE);
+    }
+    bool addConstant(JSContext *cx, JSAtom *name) {
+        return add(cx, name, CONSTANT);
+    }
+    bool addUpvar(JSContext *cx, JSAtom *name) {
+        return add(cx, name, UPVAR);
+    }
+    bool addArgument(JSContext *cx, JSAtom *name, uint16 *slotp) {
+        JS_ASSERT(name != NULL); /* not destructuring */
+        *slotp = nargs;
+        return add(cx, name, ARGUMENT);
+    }
+    bool addDestructuring(JSContext *cx, uint16 *slotp) {
+        *slotp = nargs;
+        return add(cx, NULL, ARGUMENT);
+    }
+
+    /*
+     * Look up an argument or variable name, returning its kind when found or
+     * NONE when no such name exists. When indexp is not null and the name
+     * exists, *indexp will receive the index of the corresponding argument or
+     * variable.
+     */
+    BindingKind lookup(JSAtom *name, uintN *indexp) const;
+
+    /* Convenience method to check for any binding for a name. */
+    bool hasBinding(JSAtom *name) const {
+        return lookup(name, NULL) != NONE;
+    }
+
+    /*
+     * If this binding set for the given function includes duplicated argument
+     * names, return an arbitrary duplicate name.  Otherwise, return NULL.
+     */
+    JSAtom *findDuplicateArgument() const;
+
+    /*
+     * Function and macros to work with local names as an array of words.
+     * getLocalNameArray returns the array, or null if we are out of memory.
+     * This function must be called only when hasLocalNames().
+     *
+     * The supplied pool is used to allocate the returned array, so the caller
+     * is obligated to mark and release to free it.
+     *
+     * The elements of the array with index less than nargs correspond to the
+     * the names of arguments. An index >= nargs addresses a var binding. Use
+     * JS_LOCAL_NAME_TO_ATOM to convert array's element to an atom pointer.
+     * This pointer can be null when the element is for an argument
+     * corresponding to a destructuring pattern.
+     *
+     * If nameWord does not name an argument, use JS_LOCAL_NAME_IS_CONST to
+     * check if nameWord corresponds to the const declaration.
+     */
+    jsuword *
+    getLocalNameArray(JSContext *cx, JSArenaPool *pool);
+
+    /*
+     * Returns the slot where the sharp array is stored, or a value < 0 if no
+     * sharps are present or in case of failure.
+     */
+    int sharpSlotBase(JSContext *cx);
+
+    /*
+     * Protect stored bindings from mutation.  Subsequent attempts to add
+     * bindings will copy the existing bindings before adding to them, allowing
+     * the original bindings to be safely shared.
+     */
+    void makeImmutable();
+
+    /*
+     * These methods provide direct access to the shape path normally
+     * encapsulated by js::Bindings. These methods may be used to make a
+     * Shape::Range for iterating over the relevant shapes from youngest to
+     * oldest (i.e., last or right-most to first or left-most in source order).
+     *
+     * Sometimes iteration order must be from oldest to youngest, however. For
+     * such cases, use js::Bindings::getLocalNameArray. The RAII class
+     * js::AutoLocalNameArray, defined in jscntxt.h, should be used where
+     * possible instead of direct calls to getLocalNameArray.
+     */
+    const js::Shape *lastArgument() const;
+    const js::Shape *lastVariable() const;
+    const js::Shape *lastUpvar() const;
+
+    void trace(JSTracer *trc);
 };
 
 } /* namespace js */
@@ -255,6 +413,8 @@ struct JSScript {
     uint16          staticLevel;/* static level for display maintenance */
     uint16          nClosedArgs; /* number of args which are closed over. */
     uint16          nClosedVars; /* number of vars which are closed over. */
+    js::Bindings    bindings;   /* names of top-level variables in this script
+                                   (and arguments if this is a function script) */
     JSPrincipals    *principals;/* principals for this script */
     union {
         /*

@@ -974,7 +974,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (prev && prev->script()->hasSharps) {
             JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
             int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
-                       ? prev->fun()->sharpSlotBase(cx)
+                       ? prev->fun()->script()->bindings.sharpSlotBase(cx)
                        : prev->numFixed() - SHARP_NSLOTS;
             if (base < 0)
                 return false;
@@ -5301,7 +5301,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
         if (!names)
             goto error;
 
-        uintN index = fun->countArgsAndVars() + GET_UINT16(regs.pc);
+        uintN index = fun->script()->bindings.countArgsAndVars() + GET_UINT16(regs.pc);
         atom = JS_LOCAL_NAME_TO_ATOM(names[index]);
         id = ATOM_TO_JSID(atom);
 
@@ -5332,7 +5332,7 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
     uintN index = GET_UINT16(regs.pc);
     JSObject *obj = &argv[-2].toObject();
 
-    JS_ASSERT(index < obj->getFunctionPrivate()->u.i.nupvars);
+    JS_ASSERT(index < obj->getFunctionPrivate()->script()->bindings.countUpvars());
     PUSH_COPY(obj->getFlatClosureUpvar(index));
     if (op == JSOP_CALLFCSLOT)
         PUSH_UNDEFINED();

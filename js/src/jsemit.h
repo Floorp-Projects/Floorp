@@ -332,16 +332,21 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     JSParseNode     *innermostWith; /* innermost WITH parse node */
 
+    js::Bindings    bindings;       /* bindings in this code, including
+                                       arguments if we're compiling a function */
+
 #ifdef JS_SCOPE_DEPTH_METER
     uint16          scopeDepth;     /* current lexical scope chain depth */
     uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
 #endif
 
+    void trace(JSTracer *trc);
+
     JSTreeContext(js::Parser *prs)
-      : flags(0), bodyid(0), blockidGen(0),
-        topStmt(NULL), topScopeStmt(NULL), blockChainBox(NULL), blockNode(NULL),
-        parser(prs), scopeChain_(NULL), parent(prs->tc), staticLevel(0),
-        funbox(NULL), functionList(NULL), innermostWith(NULL), sharpSlotBase(-1)
+      : flags(0), bodyid(0), blockidGen(0), topStmt(NULL), topScopeStmt(NULL),
+        blockChainBox(NULL), blockNode(NULL), parser(prs), scopeChain_(NULL), parent(prs->tc),
+        staticLevel(0), funbox(NULL), functionList(NULL), innermostWith(NULL), bindings(prs->context),
+        sharpSlotBase(-1)
     {
         prs->tc = this;
         JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);

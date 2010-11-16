@@ -73,6 +73,252 @@
 using namespace js;
 using namespace js::gc;
 
+namespace js {
+
+BindingKind
+Bindings::lookup(JSAtom *name, uintN *indexp) const
+{
+    JS_ASSERT(lastBinding);
+
+    Shape *shape =
+        SHAPE_FETCH(Shape::search(const_cast<Shape **>(&lastBinding), ATOM_TO_JSID(name)));
+    if (!shape)
+        return NONE;
+
+    if (indexp)
+        *indexp = shape->shortid;
+
+    if (shape->getter() == GetCallArg)
+        return ARGUMENT;
+    if (shape->getter() == GetFlatUpvar)
+        return UPVAR;
+
+    return shape->writable() ? VARIABLE : CONSTANT;
+}
+
+bool
+Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
+{
+    JS_ASSERT(lastBinding);
+
+    /*
+     * We still follow 10.2.3 of ES3 and make argument and variable properties
+     * of the Call objects enumerable. ES5 reformulated all of its Clause 10 to
+     * avoid objects as activations, something we should do too.
+     */
+    uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
+
+    uint16 *indexp;
+    PropertyOp getter, setter;
+    uint32 slot = JSObject::CALL_RESERVED_SLOTS;
+
+    if (kind == ARGUMENT) {
+        JS_ASSERT(nvars == 0);
+        JS_ASSERT(nupvars == 0);
+        indexp = &nargs;
+        getter = GetCallArg;
+        setter = SetCallArg;
+        slot += nargs;
+    } else if (kind == UPVAR) {
+        indexp = &nupvars;
+        getter = GetFlatUpvar;
+        setter = SetFlatUpvar;
+        slot = SHAPE_INVALID_SLOT;
+    } else {
+        JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+        JS_ASSERT(nupvars == 0);
+
+        indexp = &nvars;
+        getter = GetCallVar;
+        setter = SetCallVar;
+        if (kind == CONSTANT)
+            attrs |= JSPROP_READONLY;
+        slot += nargs + nvars;
+    }
+
+    if (*indexp == JS_BITMASK(16)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             (kind == ARGUMENT)
+                             ? JSMSG_TOO_MANY_FUN_ARGS
+                             : JSMSG_TOO_MANY_LOCALS);
+        return false;
+    }
+
+    jsid id;
+    if (!name) {
+        JS_ASSERT(kind == ARGUMENT); /* destructuring */
+        id = INT_TO_JSID(nargs);
+    } else {
+        id = ATOM_TO_JSID(name);
+    }
+
+    Shape child(id, getter, setter, slot, attrs, Shape::HAS_SHORTID, *indexp);
+
+    Shape *shape = lastBinding->getChild(cx, child, &lastBinding);
+    if (!shape)
+        return false;
+
+    JS_ASSERT(lastBinding == shape);
+    ++*indexp;
+    return true;
+}
+
+/*
+ * This algorithm is O(n^2)! But this method is only called if the function is
+ * strict mode code or if JSOPTION_STRICT is set, so for now we'll tolerate the
+ * quadratic blowup.
+ */
+JSAtom *
+Bindings::findDuplicateArgument() const
+{
+    JS_ASSERT(lastBinding);
+
+    if (nargs <= 1)
+        return NULL;
+
+    for (Shape::Range r = lastArgument(); !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+        for (Shape::Range r2 = shape.previous(); !r2.empty(); r2.popFront()) {
+            if (r2.front().id == shape.id)
+                return JSID_TO_ATOM(shape.id);
+        }
+    }
+
+    return NULL;
+}
+
+
+jsuword *
+Bindings::getLocalNameArray(JSContext *cx, JSArenaPool *pool)
+{
+   JS_ASSERT(lastBinding);
+
+   JS_ASSERT(hasLocalNames());
+
+    uintN n = countLocalNames();
+    jsuword *names;
+
+    JS_ASSERT(SIZE_MAX / size_t(n) > sizeof *names);
+    JS_ARENA_ALLOCATE_CAST(names, jsuword *, pool, size_t(n) * sizeof *names);
+    if (!names) {
+        js_ReportOutOfScriptQuota(cx);
+        return NULL;
+    }
+
+#ifdef DEBUG
+    for (uintN i = 0; i != n; i++)
+        names[i] = 0xdeadbeef;
+#endif
+
+    for (Shape::Range r = lastBinding; !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+        uintN index = uint16(shape.shortid);
+        jsuword constFlag = 0;
+
+        if (shape.getter() == GetCallArg) {
+            JS_ASSERT(index < nargs);
+        } else if (shape.getter() == GetFlatUpvar) {
+            JS_ASSERT(index < nupvars);
+            index += nargs + nvars;
+        } else {
+            JS_ASSERT(index < nvars);
+            index += nargs;
+            if (!shape.writable())
+                constFlag = 1;
+        }
+
+        JSAtom *atom;
+        if (JSID_IS_ATOM(shape.id)) {
+            atom = JSID_TO_ATOM(shape.id);
+        } else {
+            JS_ASSERT(JSID_IS_INT(shape.id));
+            JS_ASSERT(shape.getter() == GetCallArg);
+            atom = NULL;
+        }
+
+        names[index] = jsuword(atom);
+    }
+
+#ifdef DEBUG
+    for (uintN i = 0; i != n; i++)
+        JS_ASSERT(names[i] != 0xdeadbeef);
+#endif
+    return names;
+}
+
+const Shape *
+Bindings::lastArgument() const
+{
+    JS_ASSERT(lastBinding);
+
+    const js::Shape *shape = lastVariable();
+    if (nvars > 0) {
+        while (shape->previous() && shape->getter() != GetCallArg)
+            shape = shape->previous();
+    }
+    return shape;
+}
+
+const Shape *
+Bindings::lastVariable() const
+{
+    JS_ASSERT(lastBinding);
+
+    const js::Shape *shape = lastUpvar();
+    if (nupvars > 0) {
+        while (shape->getter() == GetFlatUpvar)
+            shape = shape->previous();
+    }
+    return shape;
+}
+
+const Shape *
+Bindings::lastUpvar() const
+{
+    JS_ASSERT(lastBinding);
+    return lastBinding;
+}
+
+int
+Bindings::sharpSlotBase(JSContext *cx)
+{
+    JS_ASSERT(lastBinding);
+#if JS_HAS_SHARP_VARS
+    if (JSAtom *name = js_Atomize(cx, "#array", 6, 0)) {
+        uintN index = uintN(-1);
+#ifdef DEBUG
+        BindingKind kind =
+#endif
+            lookup(name, &index);
+        JS_ASSERT(kind == VARIABLE);
+        return int(index);
+    }
+#endif
+    return -1;
+}
+
+void
+Bindings::makeImmutable()
+{
+    JS_ASSERT(lastBinding);
+    Shape *shape = lastBinding;
+    if (shape->inDictionary()) {
+        do {
+            JS_ASSERT(!shape->frozen());
+            shape->setFrozen();
+        } while ((shape = shape->parent) != NULL);
+    }
+}
+
+void
+Bindings::trace(JSTracer *trc)
+{
+    for (const Shape *shape = lastBinding; shape; shape = shape->previous())
+        shape->trace(trc);
+}
+
+} // namespace js
+
 #if JS_HAS_XDR
 
 enum ScriptBits {
@@ -87,30 +333,30 @@ enum ScriptBits {
 JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 {
-    JSContext *cx;
-    JSScript *script, *oldscript;
+    JSScript *oldscript;
     JSBool ok;
     jsbytecode *code;
-    uint32 length, lineno, nslots, magic;
-    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nupvars, nregexps, nconsts, i;
+    uint32 length, lineno, nslots;
+    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32 prologLength, version, encodedClosedCount;
     uint16 nClosedArgs = 0, nClosedVars = 0;
     JSPrincipals *principals;
     uint32 encodeable;
     JSBool filenameWasSaved;
-    jssrcnote *notes, *sn;
+    jssrcnote *sn;
     JSSecurityCallbacks *callbacks;
     uint32 scriptBits = 0;
 
-    cx = xdr->cx;
-    script = *scriptp;
-    nsrcnotes = ntrynotes = natoms = nobjects = nupvars = nregexps = nconsts = 0;
+    JSContext *cx = xdr->cx;
+    JSScript *script = *scriptp;
+    nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
     filenameWasSaved = JS_FALSE;
-    notes = NULL;
+    jssrcnote *notes = NULL;
 
     /* Should not XDR scripts optimized for a single global object. */
     JS_ASSERT_IF(script, !JSScript::isValidOffset(script->globalsOffset));
 
+    uint32 magic;
     if (xdr->mode == JSXDR_ENCODE)
         magic = JSXDR_MAGIC_SCRIPT_CURRENT;
     if (!JS_XDRUint32(xdr, &magic))
@@ -127,6 +373,116 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     }
     if (hasMagic)
         *hasMagic = JS_TRUE;
+
+    /* XDR arguments, local vars, and upvars. */
+    uint16 nargs, nvars, nupvars;
+    uint32 argsVars, paddingUpvars;
+    if (xdr->mode == JSXDR_ENCODE) {
+        nargs = script->bindings.countArgs();
+        nvars = script->bindings.countVars();
+        nupvars = script->bindings.countUpvars();
+        argsVars = (nargs << 16) | nvars;
+        paddingUpvars = nupvars;
+    }
+    if (!JS_XDRUint32(xdr, &argsVars) || !JS_XDRUint32(xdr, &paddingUpvars))
+        return false;
+    if (xdr->mode == JSXDR_DECODE) {
+        nargs = argsVars >> 16;
+        nvars = argsVars & 0xFFFF;
+        JS_ASSERT((paddingUpvars >> 16) == 0);
+        nupvars = paddingUpvars & 0xFFFF;
+    }
+
+    Bindings bindings(cx);
+    uint32 nameCount = nargs + nvars + nupvars;
+    if (nameCount > 0) {
+        struct AutoMark {
+          JSArenaPool * const pool;
+          void * const mark;
+          AutoMark(JSArenaPool *pool) : pool(pool), mark(JS_ARENA_MARK(pool)) { }
+          ~AutoMark() {
+            JS_ARENA_RELEASE(pool, mark);
+          }
+        } automark(&cx->tempPool);
+
+        /*
+         * To xdr the names we prefix the names with a bitmap descriptor and
+         * then xdr the names as strings. For argument names (indexes below
+         * nargs) the corresponding bit in the bitmap is unset when the name
+         * is null. Such null names are not encoded or decoded. For variable
+         * names (indexes starting from nargs) bitmap's bit is set when the
+         * name is declared as const, not as ordinary var.
+         * */
+        uintN bitmapLength = JS_HOWMANY(nameCount, JS_BITS_PER_UINT32);
+        uint32 *bitmap;
+        JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &cx->tempPool,
+                               bitmapLength * sizeof *bitmap);
+        if (!bitmap) {
+            js_ReportOutOfScriptQuota(cx);
+            return false;
+        }
+
+        jsuword *names;
+        if (xdr->mode == JSXDR_ENCODE) {
+            names = script->bindings.getLocalNameArray(cx, &cx->tempPool);
+            if (!names)
+                return false;
+            PodZero(bitmap, bitmapLength);
+            for (uintN i = 0; i < nameCount; i++) {
+                if (i < nargs
+                    ? JS_LOCAL_NAME_TO_ATOM(names[i]) != NULL
+                    : JS_LOCAL_NAME_IS_CONST(names[i]))
+                {
+                    bitmap[i >> JS_BITS_PER_UINT32_LOG2] |= JS_BIT(i & (JS_BITS_PER_UINT32 - 1));
+                }
+            }
+        }
+#ifdef __GNUC__
+        else {
+            names = NULL;   /* quell GCC uninitialized warning */
+        }
+#endif
+        for (uintN i = 0; i < bitmapLength; ++i) {
+            if (!JS_XDRUint32(xdr, &bitmap[i]))
+                return false;
+        }
+
+        for (uintN i = 0; i < nameCount; i++) {
+            if (i < nargs &&
+                !(bitmap[i >> JS_BITS_PER_UINT32_LOG2] & JS_BIT(i & (JS_BITS_PER_UINT32 - 1))))
+            {
+                if (xdr->mode == JSXDR_DECODE) {
+                    uint16 dummy;
+                    if (!bindings.addDestructuring(cx, &dummy))
+                        return false;
+                } else {
+                    JS_ASSERT(!JS_LOCAL_NAME_TO_ATOM(names[i]));
+                }
+                continue;
+            }
+
+            JSAtom *name;
+            if (xdr->mode == JSXDR_ENCODE)
+                name = JS_LOCAL_NAME_TO_ATOM(names[i]);
+            if (!js_XDRAtom(xdr, &name))
+                return false;
+            if (xdr->mode == JSXDR_DECODE) {
+                BindingKind kind = (i < nargs)
+                                   ? ARGUMENT
+                                   : (i < nargs + nvars)
+                                   ? (bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
+                                      JS_BIT(i & (JS_BITS_PER_UINT32 - 1))
+                                      ? CONSTANT
+                                      : VARIABLE)
+                                   : UPVAR;
+                if (!bindings.add(cx, name, kind))
+                    return false;
+            }
+        }
+
+        if (xdr->mode == JSXDR_DECODE)
+            bindings.makeImmutable();
+    }
 
     if (xdr->mode == JSXDR_ENCODE)
         length = script->length;
@@ -152,7 +508,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         if (JSScript::isValidOffset(script->objectsOffset))
             nobjects = script->objects()->length;
         if (JSScript::isValidOffset(script->upvarsOffset))
-            nupvars = script->upvars()->length;
+            JS_ASSERT(script->bindings.countUpvars() == script->upvars()->length);
         if (JSScript::isValidOffset(script->regexpsOffset))
             nregexps = script->regexps()->length;
         if (JSScript::isValidOffset(script->trynotesOffset))
@@ -186,8 +542,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         return JS_FALSE;
 
     /*
-     * To fuse allocations, we need srcnote, atom, objects, upvar, regexp,
-     * and trynote counts early.
+     * To fuse allocations, we need srcnote, atom, objects, regexp, and trynote
+     * counts early.
      */
     if (!JS_XDRUint32(xdr, &natoms))
         return JS_FALSE;
@@ -196,8 +552,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (!JS_XDRUint32(xdr, &ntrynotes))
         return JS_FALSE;
     if (!JS_XDRUint32(xdr, &nobjects))
-        return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nupvars))
         return JS_FALSE;
     if (!JS_XDRUint32(xdr, &nregexps))
         return JS_FALSE;
@@ -219,6 +573,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
                                      nClosedVars);
         if (!script)
             return JS_FALSE;
+
+        script->bindings.transfer(cx, &bindings);
 
         script->main += prologLength;
         script->setVersion(JSVersion(version & 0xffff));
@@ -894,10 +1250,11 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     PodZero(script);
     script->length = length;
     script->setVersion(cx->findVersion());
+    new (&script->bindings) Bindings(cx);
 
     uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
 
-    cursor = (uint8 *)script + sizeof(JSScript);
+    cursor = scriptEnd;
     if (nobjects != 0) {
         script->objectsOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSObjectArray);
@@ -928,7 +1285,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     } else {
         script->globalsOffset = JSScript::INVALID_OFFSET;
     }
-    JS_ASSERT((cursor - (uint8 *)script) < 0xFF);
+    JS_ASSERT(cursor - scriptEnd < 0xFF);
     if (nconsts != 0) {
         script->constOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSConstArray);
@@ -1067,7 +1424,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
     nfixed = cg->inFunction()
-             ? cg->fun()->u.i.nvars
+             ? cg->bindings.countVars()
              : cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
@@ -1136,6 +1493,9 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                script->nClosedVars * sizeof(uint32));
     }
 
+    cg->bindings.makeImmutable();
+    script->bindings.transfer(cx, &cg->bindings);
+
     /*
      * We initialize fun->u.script to be the script constructed above
      * so that the debugger has a valid FUN_SCRIPT(fun).
@@ -1143,13 +1503,14 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     fun = NULL;
     if (cg->inFunction()) {
         fun = cg->fun();
-        JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
+        JS_ASSERT(fun->isInterpreted());
+        JS_ASSERT(!fun->script());
+#ifdef DEBUG
         if (JSScript::isValidOffset(script->upvarsOffset))
-            JS_ASSERT(script->upvars()->length == fun->u.i.nupvars);
+            JS_ASSERT(script->upvars()->length == script->bindings.countUpvars());
         else
-            fun->u.i.nupvars = 0;
-
-        fun->freezeLocalNames(cx);
+            JS_ASSERT(script->bindings.countUpvars() == 0);
+#endif
         fun->u.i.script = script;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
@@ -1343,6 +1704,8 @@ js_TraceScript(JSTracer *trc, JSScript *script)
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
+
+    script->bindings.trace(trc);
 }
 
 JSBool
