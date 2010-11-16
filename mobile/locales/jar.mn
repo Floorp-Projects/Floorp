@@ -13,6 +13,8 @@
   locale/@AB_CD@/browser/preferences.dtd          (%chrome/preferences.dtd)
   locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
+  locale/@AB_CD@/browser/sync.dtd                 (%chrome/sync.dtd)
+  locale/@AB_CD@/browser/sync.properties          (%chrome/sync.properties)
   locale/@AB_CD@/browser/prompt.dtd               (%chrome/prompt.dtd)
   locale/@AB_CD@/browser/feedback.dtd             (%chrome/feedback.dtd)
   locale/@AB_CD@/browser/bookmarks.json           (bookmarks.json)

@@ -51,6 +51,10 @@
 %brandDTD;
 <!ENTITY % prefsDTD SYSTEM "chrome://browser/locale/preferences.dtd">
 %prefsDTD;
+#ifdef MOZ_SERVICES_SYNC
+<!ENTITY % syncDTD SYSTEM "chrome://browser/locale/sync.dtd">
+%syncDTD;
+#endif
 ]>
 
 <window id="main-window"
@@ -438,13 +442,14 @@
                 </setting>
 #ifdef MOZ_SERVICES_SYNC
                 <settings id="prefs-sync" label="&sync.title;">
-                  <setting id="sync-account" type="string" title="&sync.account2;"/>
-                  <setting id="sync-pass" type="string" inputtype="password" title="&sync.password;"/>
-                  <setting id="sync-secret" type="string" inputtype="string" title="&sync.syncKey;"/>
-                  <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
-                  <setting id="sync-connect" type="control">
-                    <button label="&sync.connect;" oncommand="WeaveGlue.connect();" />
+                  <setting id="sync-connect" title="&sync.notconnected;" type="control">
+                    <button label="&sync.connect;" oncommand="WeaveGlue.show();" />
                   </setting>
+                  <setting id="sync-connected" title="&sync.connected;" type="control" collapsed="true">
+                    <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="true" checked="false" oncommand="WeaveGlue.showDetails();" />
+                  </setting>
+                  <setting id="sync-autosync" type="bool" title="&sync.synchronize.label;" onlabel="&sync.synchronize.yes;" offlabel="&sync.synchronize.no;" onchange="WeaveGlue.changeSync();" collapsed="true"/>
+                  <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
                   <setting id="sync-disconnect" type="control" collapsed="true">
                     <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
                   </setting>
@@ -512,6 +517,55 @@
       <remotetabslist id="remotetabs-items" onopen="RemoteTabsList.openLink(event)" flex="1" hidden="true"/>
 #endif
     </vbox>
+
+#ifdef MOZ_SERVICES_SYNC
+    <vbox id="syncsetup-container" class="panel-dark window-width window-height" hidden="true">
+      <scrollbox align="center" orient="vertical" flex="1">
+        <vbox id="syncsetup-jpake" align="center" style="padding: 8px" flex="1">
+          <description>&sync.setup.title;</description>
+          <separator/>
+          <hbox align="start">
+            <description flex="1">&sync.setup.jpake;</description>
+          </hbox>
+          <separator/>
+          <vbox align="center">
+            <textbox readonly="true">code</textbox>
+            <textbox readonly="true">goes</textbox>
+            <textbox readonly="true">here</textbox>
+          </vbox>
+          <separator/>
+          <description style="font-size: 18px; text-decoration: underline" onclick="document.getElementById('syncsetup-jpake').hidden = true; document.getElementById('syncsetup-manual').hidden = false;">&sync.fallback;</description>
+          <separator/>
+          <hbox pack="center">
+            <button oncommand="WeaveGlue.close();">Cancel</button>
+          </hbox>
+        </vbox>
+        <vbox id="syncsetup-manual" style="padding: 8px" flex="1" hidden="true">
+          <hbox pack="center">
+            <description>&sync.setup.title;</description>
+          </hbox>
+          <separator/>
+          <description>&sync.setup.manual;</description>
+          <separator/>
+          <textbox id="syncsetup-account" placeholder="&sync.account;"/>
+          <textbox id="syncsetup-password" placeholder="&sync.password;" type="password"/>
+          <textbox id="syncsetup-synckey" placeholder="&sync.syncKey;"/>
+          <separator/>
+          <button id="syncsetup-customserver-checkbox" type="checkbox" class="button-checkbox" pack="start">
+            <image class="button-image-icon"/>
+            <description class="prompt-checkbox-label" flex="1">&sync.customServer;</description>
+          </button>
+          <textbox id="syncsetup-customserver" placeholder="&sync.serverURL;"/>
+          <separator/>
+          <hbox pack="center">
+            <button oncommand="WeaveGlue.close();">Cancel</button>
+            <separator/>
+            <button oncommand="WeaveGlue.close(); WeaveGlue.connect();">Connect</button>
+          </hbox>
+        </vbox>
+      </scrollbox>
+    </vbox>
+#endif
 
     <arrowbox id="search-engines-popup" hidden="true" class="window-width" offset="18">
       <hbox id="search-engines-list" class="prompt-buttons window-width"/>
