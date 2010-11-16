@@ -1151,8 +1151,7 @@ WeaveSvc.prototype = {
     }
 
     // Recompute HMAC for symmetric bulk keys based on UTF-8 encoded passphrase.
-    let oldHmacKey = Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC,
-                                                  this.passphrase);
+    let oldHmacKey = Utils.makeHMACKey(this.passphrase);
     let enginesToWipe = [];
 
     for each (let engine in Engines.getAll()) {

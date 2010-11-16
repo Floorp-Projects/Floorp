@@ -481,7 +481,7 @@ let Utils = {
   exceptionStr: function Weave_exceptionStr(e) {
     let message = e.message ? e.message : e;
     return message + " " + Utils.stackTrace(e);
- },
+  },
 
   stackTraceFromFrame: function Weave_stackTraceFromFrame(frame) {
     let output = [];
@@ -563,16 +563,127 @@ let Utils = {
   sha1Base32: function sha1Base32(message) {
     return Utils.encodeBase32(Utils._sha1(message));
   },
+  
+  /**
+   * Produce an HMAC key object from a key string.
+   */
+  makeHMACKey: function makeHMACKey(str) {
+    return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, str);
+  },
+    
+  /**
+   * Produce an HMAC hasher.
+   */
+  makeHMACHasher: function makeHMACHasher() {
+    return Cc["@mozilla.org/security/hmac;1"]
+             .createInstance(Ci.nsICryptoHMAC);
+  },
 
+  /**
+   * Generate a sha1 HMAC for a message, not UTF-8 encoded,
+   * and a given nsIKeyObject.
+   * Optionally provide an existing hasher, which will be 
+   * initialized and reused.
+   */
+  sha1HMACBytes: function sha1HMACBytes(message, key, hasher) {
+    let h = hasher || this.makeHMACHasher();
+    h.init(h.SHA1, key);
+    
+    // No UTF-8 encoding for you, sunshine.
+    let bytes = [b.charCodeAt() for each (b in message)];
+    h.update(bytes, bytes.length);
+    return h.finish(false);
+  },
+  
   /**
    * Generate a sha256 HMAC for a string message and a given nsIKeyObject
    */
   sha256HMAC: function sha256HMAC(message, key) {
-    let hasher = Cc["@mozilla.org/security/hmac;1"].
-      createInstance(Ci.nsICryptoHMAC);
+    let hasher = this.makeHMACHasher();
     hasher.init(hasher.SHA256, key);
     return Utils.bytesAsHex(Utils.digest(message, hasher));
   },
+  
+  
+  /**
+   * PBKDF2 implementation in Javascript.
+   */
+  /* For HMAC-SHA-1 */
+  _hLen : 20,
+  
+  _arrayToString : function _arrayToString(arr) {
+    let ret = '';
+    for (let i = 0; i < arr.length; i++) {
+      ret += String.fromCharCode(arr[i]);
+    }
+    return ret;
+  },
+  
+  _XOR : function _XOR(a, b, isA) {
+    if (a.length != b.length) {
+      return false;
+    }
+
+    let val = [];
+    for (let i = 0; i < a.length; i++) {
+      if (isA) {
+        val[i] = a[i] ^ b[i];
+      } else {
+        val[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
+      }
+    }
+
+    return val;
+  },
+  
+  _F : function _F(PK, S, c, i, h) {
+    let ret;
+    let U = [];
+
+    /* Encode i into 4 octets: _INT */
+    let I = [];
+    I[0] = String.fromCharCode((i >> 24) & 0xff);
+    I[1] = String.fromCharCode((i >> 16) & 0xff);
+    I[2] = String.fromCharCode((i >> 8) & 0xff);
+    I[3] = String.fromCharCode(i & 0xff);
+
+    U[0] = this.sha1HMACBytes(S + I.join(''), PK, h);
+    for (let j = 1; j < c; j++) {
+      U[j] = this.sha1HMACBytes(U[j - 1], PK, h);
+    }
+
+    ret = U[0];
+    for (j = 1; j < c; j++) {
+      ret = this._arrayToString(this._XOR(ret, U[j]));
+    }
+
+    return ret;
+  },
+
+  /* PKCS #5, v2.0 pp. 9-10 */
+  pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen) {
+    let l = Math.ceil(dkLen / this._hLen);
+    let r = dkLen - ((l - 1) * this._hLen);
+
+    // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
+    let PK = this.makeHMACKey(P);
+    let h = this.makeHMACHasher();
+    
+    T = [];
+    for (let i = 0; i < l;) {
+      T[i] = this._F(PK, S, c, ++i, h);
+    }
+
+    let ret = '';
+    for (i = 0; i < l-1;) {
+      ret += T[i++];
+    }
+    ret += T[l - 1].substr(0, r);
+
+    return ret;
+  },
+  
+
 
   /**
    * Base32 encode (RFC 4648) a string
