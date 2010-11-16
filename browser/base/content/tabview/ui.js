@@ -398,6 +398,11 @@ let UI = {
     if (this.isTabViewVisible())
       return;
 
+    // Update the tab we're looking at, so that the correct image is used 
+    // to zoom out to the TabView.
+    if (!gBrowser.selectedTab.pinned)
+      TabItems._update(gBrowser.selectedTab);
+
     // initialize the direction of the page
     this._initPageDirection();
 
@@ -453,6 +458,9 @@ let UI = {
       self.setActiveTab(null);
       dispatchEvent(event);
     }
+
+    // Flush pending updates
+    GroupItems.flushAppTabUpdates();
 
     TabItems.resumePainting();
   },

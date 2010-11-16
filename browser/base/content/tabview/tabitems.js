@@ -853,12 +853,9 @@ let TabItems = {
         Date.now() - this._lastUpdateTime < this._heartbeatTiming
       );
 
-      let isCurrentTab = (
-        !UI.isTabViewVisible() &&
-        tab == gBrowser.selectedTab
-      );
-
-      if (shouldDefer && !isCurrentTab) {
+      if (shouldDefer) {
+        if (!tab.tabItem.reconnected)
+          this.reconnect(tab.tabItem);
         if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
           this._tabsWaitingForUpdate.push(tab);
         this.startHeartbeat();
@@ -1252,7 +1249,9 @@ TabCanvas.prototype = {
       ctx.save();
       ctx.scale(scaler, scaler);
       try{
-        ctx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff");
+        ctx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, 
+          w/scaler, h/scaler, "#fff",
+          Ci.nsIDOMCanvasRenderingContext2D.DRAWWINDOW_DO_NOT_FLUSH);
       } catch(e) {
         Utils.error('paint', e);
       }
