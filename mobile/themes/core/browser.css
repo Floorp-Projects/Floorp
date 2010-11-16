@@ -694,7 +694,7 @@ placeitem[src=""] .bookmark-item-container > image {
 .autocomplete-item-container[search="true"] {
   background-repeat: no-repeat;
   background-position: 100% 2px;
-  background-size: 24px 24px;
+  background-size: 26px 26px;
 }
 
 .autocomplete-item-container[favorite="true"] {
@@ -706,7 +706,7 @@ placeitem[src=""] .bookmark-item-container > image {
 }
 
 .autocomplete-item-container[search="true"] {
-  background-image: url("chrome://browser/skin/images/search-glass-30.png");
+  background-image: url("chrome://browser/skin/images/autocomplete-search-hdpi.png");
 }
 
 .autocomplete-item-container[favorite="true"][remote="true"] {
@@ -731,7 +731,7 @@ placeitem[src=""] .bookmark-item-container > image {
 .bookmark-item-url {
   color: blue;
   font-size: 18px !important;
-  -moz-margin-end: 24px;
+  -moz-margin-end: 26px;
 }
 
 .autocomplete-item-container[favorite="true"] .autocomplete-item-label,
