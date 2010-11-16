@@ -331,67 +331,7 @@ public:
     NS_PRECONDITION(!NS_IsMainThread(),
                     "This should not be called on the main thread");
 
-    mozStorageTransaction transaction(mDBConn, PR_FALSE,
-                                      mozIStorageConnection::TRANSACTION_IMMEDIATE);
     bool known = FetchPageInfo(mPlace);
-
-    // If the page was in moz_places, we need to update the entry.
-    if (known) {
-      NS_ASSERTION(mPlace.placeId > 0, "must have a valid place id!");
-
-      nsCOMPtr<mozIStorageStatement> stmt =
-        mHistory->syncStatements.GetCachedStatement(
-          "UPDATE moz_places "
-          "SET hidden = :hidden, typed = :typed "
-          "WHERE id = :page_id "
-        );
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-
-      nsresult rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"),
-                                          mPlace.typed);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), mPlace.hidden);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    // Otherwise, the page was not in moz_places, so now we have to add it.
-    else {
-      NS_ASSERTION(mPlace.placeId == 0, "should not have a valid place id!");
-
-      nsCOMPtr<mozIStorageStatement> stmt =
-        mHistory->syncStatements.GetCachedStatement(
-          "INSERT INTO moz_places "
-            "(url, rev_host, hidden, typed) "
-          "VALUES (:page_url, :rev_host, :hidden, :typed) "
-        );
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-
-      nsAutoString revHost;
-      nsresult rv = GetReversedHostname(mPlace.uri, revHost);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.uri);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"), revHost);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), mPlace.typed);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), mPlace.hidden);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Now, we need to get the id of what we just added.
-      bool added = FetchPageInfo(mPlace);
-      NS_ASSERTION(added, "not known after adding the place!");
-    }
 
     // If we had a referrer, we want to know about its last visit to put this
     // new visit into the same session.
@@ -411,7 +351,51 @@ public:
       }
     }
 
-    nsresult rv = AddVisit(mPlace, mReferrer);
+    mozStorageTransaction transaction(mDBConn, PR_FALSE,
+                                      mozIStorageConnection::TRANSACTION_IMMEDIATE);
+    nsresult rv;
+    nsCOMPtr<mozIStorageStatement> stmt;
+    // If the page was in moz_places, we need to update the entry.
+    if (known) {
+      NS_ASSERTION(mPlace.placeId > 0, "must have a valid place id!");
+
+      stmt = mHistory->syncStatements.GetCachedStatement(
+          "UPDATE moz_places "
+          "SET hidden = :hidden, typed = :typed "
+          "WHERE id = :page_id "
+        );
+      NS_ENSURE_STATE(stmt);
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Otherwise, the page was not in moz_places, so now we have to add it.
+    else {
+      NS_ASSERTION(mPlace.placeId == 0, "should not have a valid place id!");
+
+      stmt = mHistory->syncStatements.GetCachedStatement(
+          "INSERT INTO moz_places "
+            "(url, rev_host, hidden, typed) "
+          "VALUES (:page_url, :rev_host, :hidden, :typed) "
+        );
+      NS_ENSURE_STATE(stmt);
+      nsAutoString revHost;
+      nsresult rv = GetReversedHostname(mPlace.uri, revHost);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"), revHost);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.uri);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), mPlace.typed);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), mPlace.hidden);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mozStorageStatementScoper scoper(stmt);
+    rv = stmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = AddVisit(mPlace, mReferrer);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = UpdateFrecency(mPlace);
@@ -560,20 +544,30 @@ private:
   nsresult AddVisit(VisitData& _place,
                     const VisitData& aReferrer)
   {
-    nsCOMPtr<mozIStorageStatement> stmt =
-      mHistory->syncStatements.GetCachedStatement(
+    nsresult rv;
+    nsCOMPtr<mozIStorageStatement> stmt;
+    if (_place.placeId) {
+      stmt = mHistory->syncStatements.GetCachedStatement(
         "INSERT INTO moz_historyvisits "
           "(from_visit, place_id, visit_date, visit_type, session) "
         "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
       );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("from_visit"),
-                                        aReferrer.visitId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                               _place.placeId);
+      NS_ENSURE_STATE(stmt);
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      stmt = mHistory->syncStatements.GetCachedStatement(
+        "INSERT INTO moz_historyvisits "
+          "(from_visit, place_id, visit_date, visit_type, session) "
+        "VALUES (:from_visit, (SELECT id FROM moz_places WHERE url = :page_url), :visit_date, :visit_type, :session) "      
+      );
+      NS_ENSURE_STATE(stmt);
+      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.uri);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("from_visit"),
+                               aReferrer.visitId);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("visit_date"),
                                _place.visitTime);
@@ -589,6 +583,7 @@ private:
                                _place.sessionId);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    mozStorageStatementScoper scoper(stmt);
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -608,37 +603,60 @@ private:
    */
   nsresult UpdateFrecency(const VisitData& aPlace)
   {
+    nsresult rv;
     { // First, set our frecency to the proper value.
-      nsCOMPtr<mozIStorageStatement> stmt =
-        mHistory->syncStatements.GetCachedStatement(
+      nsCOMPtr<mozIStorageStatement> stmt;
+      if (aPlace.placeId) {
+        stmt = mHistory->syncStatements.GetCachedStatement(
           "UPDATE moz_places "
           "SET frecency = CALCULATE_FRECENCY(:page_id) "
           "WHERE id = :page_id"
         );
-      NS_ENSURE_STATE(stmt);
+        NS_ENSURE_STATE(stmt);
+        rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      else {
+        stmt = mHistory->syncStatements.GetCachedStatement(
+          "UPDATE moz_places "
+          "SET frecency = CALCULATE_FRECENCY(id) "
+          "WHERE url = :page_url"
+        );
+        NS_ENSURE_STATE(stmt);
+        rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.uri);
+        NS_ENSURE_SUCCESS(rv, rv);      
+      }
       mozStorageStatementScoper scoper(stmt);
 
-      nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                                          aPlace.placeId);
-      NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->Execute();
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     { // Now, we need to mark the page as not hidden if the frecency is now
       // nonzero.
-      nsCOMPtr<mozIStorageStatement> stmt =
-        mHistory->syncStatements.GetCachedStatement(
+      nsCOMPtr<mozIStorageStatement> stmt;
+      if (aPlace.placeId) {
+        stmt = mHistory->syncStatements.GetCachedStatement(
           "UPDATE moz_places "
           "SET hidden = 0 "
           "WHERE id = :page_id AND frecency <> 0"
         );
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
+        NS_ENSURE_STATE(stmt);
+        rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      else {
+        stmt = mHistory->syncStatements.GetCachedStatement(
+          "UPDATE moz_places "
+          "SET hidden = 0 "
+          "WHERE url = :page_url AND frecency <> 0"
+        );
+        NS_ENSURE_STATE(stmt);
+        rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.uri);
+        NS_ENSURE_SUCCESS(rv, rv);      
+      }
 
-      nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                                          aPlace.placeId);
-      NS_ENSURE_SUCCESS(rv, rv);
+      mozStorageStatementScoper scoper(stmt);
       rv = stmt->Execute();
       NS_ENSURE_SUCCESS(rv, rv);
     }
