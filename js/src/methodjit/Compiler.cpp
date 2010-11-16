@@ -4336,6 +4336,20 @@ mjit::Compiler::jsop_bindgname()
 void
 mjit::Compiler::jsop_getgname(uint32 index)
 {
+    /* Optimize undefined, NaN and Infinity. */
+    JSAtom *atom = script->getAtom(index);
+    if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID]) {
+        frame.push(UndefinedValue());
+        return;
+    }
+    if (atom == cx->runtime->atomState.NaNAtom) {
+        frame.push(cx->runtime->NaNValue);
+        return;
+    }
+    if (atom == cx->runtime->atomState.InfinityAtom) {
+        frame.push(cx->runtime->positiveInfinityValue);
+        return;
+    }
 #if defined JS_MONOIC
     jsop_bindgname();
 
