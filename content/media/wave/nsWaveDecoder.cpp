@@ -1320,6 +1320,7 @@ nsresult
 nsWaveDecoder::Seek(float aTime)
 {
   if (mPlaybackStateMachine) {
+    mEnded = PR_FALSE;
     PinForSeek();
     mPlaybackStateMachine->Seek(aTime);
     return StartStateMachineThread();
@@ -1364,6 +1365,7 @@ nsresult
 nsWaveDecoder::Play()
 {
   if (mPlaybackStateMachine) {
+    mEnded = PR_FALSE;
     mPlaybackStateMachine->Play();
     return StartStateMachineThread();
   }
@@ -1457,6 +1459,7 @@ nsWaveDecoder::PlaybackEnded()
   if (!mPlaybackStateMachine->IsEnded()) {
     return;
   }
+  mEnded = PR_TRUE;
 
   // Update ready state; now that we've finished playback, we should
   // switch to HAVE_CURRENT_DATA.
@@ -1512,9 +1515,6 @@ nsWaveDecoder::IsSeeking() const
 PRBool
 nsWaveDecoder::IsEnded() const
 {
-  if (mPlaybackStateMachine) {
-    return mPlaybackStateMachine->IsEnded();
-  }
   return mEnded;
 }
 

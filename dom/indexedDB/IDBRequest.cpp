@@ -46,19 +46,34 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMJSUtils.h"
+#include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
+#include "IDBTransaction.h"
 
 USING_INDEXEDDB_NAMESPACE
+
+IDBRequest::IDBRequest()
+: mReadyState(nsIIDBRequest::LOADING)
+{
+}
+
+IDBRequest::~IDBRequest()
+{
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+}
 
 // static
 already_AddRefed<IDBRequest>
 IDBRequest::Create(nsISupports* aSource,
                    nsIScriptContext* aScriptContext,
-                   nsPIDOMWindow* aOwner)
+                   nsPIDOMWindow* aOwner,
+                   IDBTransaction* aTransaction)
 {
   if (!aScriptContext || !aOwner) {
     NS_ERROR("Null context and owner!");
@@ -68,6 +83,7 @@ IDBRequest::Create(nsISupports* aSource,
   nsRefPtr<IDBRequest> request(new IDBRequest());
 
   request->mSource = aSource;
+  request->mTransaction = aTransaction;
   request->mScriptContext = aScriptContext;
   request->mOwner = aOwner;
 
@@ -133,11 +149,20 @@ NS_IMPL_RELEASE_INHERITED(IDBRequest, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBRequest, IDBRequest)
 
+nsresult
+IDBRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mParentTarget = mTransaction;
+  return NS_OK;
+}
+
 // static
 already_AddRefed<IDBVersionChangeRequest>
 IDBVersionChangeRequest::Create(nsISupports* aSource,
                                 nsIScriptContext* aScriptContext,
-                                nsPIDOMWindow* aOwner)
+                                nsPIDOMWindow* aOwner,
+                                IDBTransaction* aTransaction)
 {
   if (!aScriptContext || !aOwner) {
     NS_ERROR("Null context and owner!");
@@ -147,6 +172,7 @@ IDBVersionChangeRequest::Create(nsISupports* aSource,
   nsRefPtr<IDBVersionChangeRequest> request(new IDBVersionChangeRequest());
 
   request->mSource = aSource;
+  request->mTransaction = aTransaction;
   request->mScriptContext = aScriptContext;
   request->mOwner = aOwner;
 

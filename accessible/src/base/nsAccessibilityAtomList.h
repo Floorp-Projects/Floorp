@@ -101,6 +101,7 @@ ACCESSIBILITY_ATOM(abbr, "abbr")
 ACCESSIBILITY_ATOM(acronym, "acronym")
 ACCESSIBILITY_ATOM(area, "area")
 ACCESSIBILITY_ATOM(article, "article") // HTML landmark
+ACCESSIBILITY_ATOM(aside, "aside") // HTML landmark
 ACCESSIBILITY_ATOM(autocomplete, "autocomplete")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")

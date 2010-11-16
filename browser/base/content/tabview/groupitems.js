@@ -175,16 +175,17 @@ function GroupItem(listOfEls, options) {
     if (!self.getTitle()) {
       self.$title
         .addClass("defaultName")
-        .val(self.defaultName);
+        .val(self.defaultName)
+        .css({"background-image":null, "-moz-padding-start":null});
     } else {
-      self.$title.css({"background":"none"});
+      self.$title.css({"background-image":"none"});
       if (immediately) {
         self.$title.css({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           });
       } else {
         self.$title.animate({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           }, {
             duration: 200,
             easing: "tabviewBounce"
@@ -408,7 +409,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   adjustTitleSize: function GroupItem_adjustTitleSize() {
     Utils.assert(this.bounds, 'bounds needs to have been set');
     let closeButton = iQ('.close', this.container);
-    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css('right')),
+    var dimension = UI.rtl ? 'left' : 'right';
+    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css(dimension)),
                      Math.max(150, this.getTitle().length * 6));
     // The * 6 multiplier calculation is assuming that characters in the title
     // are approximately 6 pixels wide. Bug 586545
@@ -1020,19 +1022,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: shouldStack
-  // Returns true if the groupItem, given "count", should stack (instead of grid).
+  // Returns true if the groupItem should stack (instead of grid).
   shouldStack: function GroupItem_shouldStack(count) {
     if (count <= 1)
       return false;
 
     var bb = this.getContentBounds();
     var options = {
-      pretend: true,
-      count: count
+      return: 'widthAndColumns',
+      count: count || this._children.length
     };
+    let {childWidth, columns} = Items.arrange(null, bb, options);
 
-    var rects = Items.arrange(null, bb, options);
-    return (rects[0].width < 55);
+    let shouldStack = childWidth < TabItems.minTabWidth * 1.35;
+    this._columns = shouldStack ? null : columns;
+
+    return shouldStack;
   },
 
   // ----------
@@ -1049,16 +1054,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
     } else {
       var bb = this.getContentBounds();
-      var count = this._children.length;
-      if (!this.shouldStack(count)) {
+      if (!this.shouldStack()) {
         if (!options)
           options = {};
-
-        var animate;
-        if (typeof options.animate == 'undefined')
-          animate = true;
-        else
-          animate = options.animate;
 
         this._children.forEach(function(child) {
             child.removeClass("stacked")
@@ -1066,17 +1064,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         this.topChild = null;
 
-        var arrangeOptions = Utils.copy(options);
-        Utils.extend(arrangeOptions, {
-          pretend: true,
-          count: count
-        });
-
-        if (!count) {
+        if (!this._children.length) {
           this.xDensity = 0;
           this.yDensity = 0;
           return;
         }
+
+        var arrangeOptions = Utils.copy(options);
+        Utils.extend(arrangeOptions, {
+          columns: this._columns
+        });
+
+        // Items.arrange will rearrange the children, but also return an array
+        // of the Rect's used.
 
         var rects = Items.arrange(this._children, bb, arrangeOptions);
 
@@ -1088,24 +1088,18 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         // tab) / (the total available content width)
 
         // first, find the right of the rightmost tab! luckily, they're in order.
-        // TODO: does this change for rtl?
         var rightMostRight = 0;
-        for each (var rect in rects) {
-          if (rect.right > rightMostRight)
-            rightMostRight = rect.right;
-          else
-            break;
+        if (UI.rtl) {
+          rightMostRight = rects[0].right;
+        } else {
+          for each (var rect in rects) {
+            if (rect.right > rightMostRight)
+              rightMostRight = rect.right;
+            else
+              break;
+          }
         }
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
-
-        this._children.forEach(function(child, index) {
-          if (!child.locked.bounds) {
-            child.setBounds(rects[index], !animate);
-            child.setRotation(0);
-            if (options.z)
-              child.setZ(options.z);
-          }
-        });
 
         this._isStacked = false;
       } else
@@ -1188,7 +1182,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         child.addClass("stacked");
         child.setBounds(box, !animate);
-        child.setRotation(self._randRotate(maxRotation, index));
+        child.setRotation((UI.rtl ? -1 : 1) * self._randRotate(maxRotation, index));
       }
     });
 
@@ -1382,8 +1376,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
   setResizable: function GroupItem_setResizable(value, immediately) {
-    this.resizeOptions.minWidth = 90;
-    this.resizeOptions.minHeight = 90;
+    this.resizeOptions.minWidth = 110;
+    this.resizeOptions.minHeight = 125;
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();

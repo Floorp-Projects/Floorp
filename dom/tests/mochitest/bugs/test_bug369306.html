@@ -25,12 +25,10 @@ var gOldPrefValue = null;
 
 function focusShouldNotChange(aAction, nextTest)
 {
-  var w = window.open('', '', 'foo');
+  var w = window.open('about:blank', '', 'foo');
   var fail = false;
 
-  w.addEventListener("focus", function(aEvent) {
-    aEvent.target.removeEventListener("focus", arguments.callee, false);
-
+  SimpleTest.waitForFocus(function () {
     function failHandler() { fail = true; }
 
     originatingWindow.addEventListener("focus", failHandler, false);
@@ -45,13 +43,10 @@ function focusShouldNotChange(aAction, nextTest)
       ok(!fail, "The focus should not have been changed!");
 
       // Cleaning and running next test.
-      originatingWindow.addEventListener("focus", function() {
-        originatingWindow.removeEventListener("focus", arguments.callee, false);
-        SimpleTest.executeSoon(nextTest);
-      }, false);
       w.close();
+      SimpleTest.waitForFocus(nextTest, originatingWindow);
     });
-  }, false);
+  }, w, true);
 }
 
 function focusShouldNotChange2(aURL, nextTest)
@@ -59,9 +54,7 @@ function focusShouldNotChange2(aURL, nextTest)
   var w = window.open(aURL, '', 'foo');
   var fail = false;
 
-  w.addEventListener("focus", function(aEvent) {
-    aEvent.target.removeEventListener("focus", arguments.callee, false);
-
+  SimpleTest.waitForFocus(function () {
     function failHandler() { fail = true; }
 
     originatingWindow.addEventListener("focus", failHandler, false);
@@ -80,13 +73,10 @@ function focusShouldNotChange2(aURL, nextTest)
       ok(!fail, "The focus should not have been changed with URL=" + aURL);
 
       // Cleaning and running next test.
-      originatingWindow.addEventListener("focus", function() {
-        originatingWindow.removeEventListener("focus", arguments.callee, false);
-        SimpleTest.executeSoon(nextTest);
-      }, false);
       w.close();
+      SimpleTest.waitForFocus(nextTest, originatingWindow);
     }, 1000);
-  }, false);
+  }, w);
 }
 
 function test1()
@@ -111,23 +101,18 @@ function test4()
 
 function test5()
 {
-  var w = window.open('', '', 'foo');
+  var w = window.open('about:blank', '', 'foo');
 
-  w.addEventListener("focus", function(aEvent) {
-    aEvent.target.removeEventListener("focus", arguments.callee, false);
-
-    originatingWindow.addEventListener("focus", function(aEvent) {
-      aEvent.target.removeEventListener("focus", arguments.callee, false);
-
-      w.addEventListener("focus", function(aEvent) {
-        aEvent.target.removeEventListener("focus", arguments.callee, false);
+  SimpleTest.waitForFocus(function () {
+    SimpleTest.waitForFocus(function () {
+      SimpleTest.waitForFocus(function () {
         ok(true, "The last opened window should be able to get focus");
         w.close();
         SimpleTest.executeSoon(finished);
-      }, false);
+      }, w, true);
 
       w.focus();
-    }, false);
+    }, originatingWindow);
 
     SimpleTest.executeSoon(function() {
       // We have to focus back the originating window but we can't do that with
@@ -137,7 +122,7 @@ function test5()
                           getService(Components.interfaces.nsIFocusManager);
       fm.focusedWindow = window;
     });
-  }, false);
+  }, w, true);
 }
 
 function finished()

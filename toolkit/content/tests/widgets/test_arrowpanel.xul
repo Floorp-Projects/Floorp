@@ -14,7 +14,9 @@
   <label id="topright" value="Top Right" right="0" top="0"/>
   <label id="bottomleft" value="Bottom Left" left="0" bottom="0"/>
   <label id="bottomright" value="Bottom Right" right="0" bottom="0"/>
-  <label id="middle" value="Middle" left="150" top="150"/>
+  <!-- Our SimpleTest/TestRunner.js runs tests inside an iframe which sizes are W=500 H=300.
+       'left' and 'top' values need to be set so that the panel (popup) has enough room to display on its 4 sides. -->
+  <label id="middle" value="+/- Centered" left="225" top="135"/>
 </stack>
 
 <panel id="panel" type="arrow" onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">

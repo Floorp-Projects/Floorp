@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=599588
+-->
+<head>
+  <title>Test for Bug 599588</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=599588">Mozilla Bug 599588</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 599588 **/
+
+var div = document.createElement("div");
+div.innerHTML = "\u003Cscript>ok(false, 'Scripts created by innerHTML should not run.');\u003C/script>";
+document.body.appendChild(div);
+
+var contextualFragmentRan = false;
+
+var range = document.createRange();
+range.selectNode(document.body);
+var fragment = range.createContextualFragment("\u003Cscript>contextualFragmentRan = true;\u003C/script>");
+document.body.appendChild(fragment);
+
+ok(contextualFragmentRan, "Script from createContextualFragment should have run.");
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: single-block PCM synthesis
- last mod: $Id: synthesis.c 17027 2010-03-25 05:21:20Z xiphmont $
+ last mod: $Id: synthesis.c 17474 2010-09-30 03:41:41Z gmaxwell $
 
  ********************************************************************/
 
@@ -111,14 +111,13 @@ int vorbis_synthesis_trackonly(vorbis_block *vb,ogg_packet *op){
 
   /* read our mode and pre/post windowsize */
   mode=oggpack_read(opb,b->modebits);
-  if(mode==-1) {
-    return(OV_EBADPACKET);
-  }
+  if(mode==-1)return(OV_EBADPACKET);
 
   vb->mode=mode;
-  if(!ci->mode_param[mode]) {
-    return(OV_EBADPACKET); 
+  if(!ci->mode_param[mode]){
+    return(OV_EBADPACKET);
   }
+  
   vb->W=ci->mode_param[mode]->blockflag;
   if(vb->W){
     vb->lW=oggpack_read(opb,1);

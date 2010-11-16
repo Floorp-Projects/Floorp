@@ -782,9 +782,15 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_EMBEDDED_OBJECT = 122;
 
   /**
+   * A note. Originally intended to be hidden until activated, but now also used
+   * for things like html 'aside'.
+   */
+  const unsigned long ROLE_NOTE = 123;
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 123;
+  const unsigned long ROLE_LAST_ENTRY = 124;
 };
 

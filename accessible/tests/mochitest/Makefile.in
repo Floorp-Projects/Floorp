@@ -51,6 +51,7 @@ DIRS	= \
   selectable \
   states \
   table \
+  text \
   tree \
   treeupdate \
   $(null)
@@ -121,6 +122,7 @@ _TEST_FILES =\
 		test_value.html \
 		test_value.xul \
 		testTextboxes.js \
+		text.js \
 		treeview.css \
 		treeview.js \
 		$(NULL)

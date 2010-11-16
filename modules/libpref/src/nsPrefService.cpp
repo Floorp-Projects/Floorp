@@ -870,12 +870,16 @@ static nsresult pref_InitAppDefaultsFromOmnijar()
 
   nsAutoPtr<nsZipFind> find(findPtr);
 
-  nsCAutoString prefName;
+  nsTArray<nsCString> prefEntries;
   const char *entryName;
   PRUint16 entryNameLen;
   while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-    prefName = nsDependentCSubstring(entryName, entryName + entryNameLen);
-    rv = pref_ReadPrefFromJar(jarReader, prefName.get());
+    prefEntries.AppendElement(Substring(entryName, entryName + entryNameLen));
+  }
+
+  prefEntries.Sort();
+  for (PRUint32 i = prefEntries.Length(); i--; ) {
+    rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
     if (NS_FAILED(rv))
       NS_WARNING("Error parsing preferences.");
   }

@@ -81,7 +81,7 @@ function safeCall(aCallback) {
     aCallback.apply(null, args);
   }
   catch (e) {
-    WARN("Exception calling callback: " + e);
+    WARN("Exception calling callback", e);
   }
 }
 
@@ -107,8 +107,9 @@ function callProvider(aProvider, aMethod, aDefault) {
 
   try {
     return aProvider[aMethod].apply(aProvider, args);
-  } catch (e) {
-    ERROR("Exception calling provider." + aMethod + ": " + e);
+  }
+  catch (e) {
+    ERROR("Exception calling provider" + aMethod, e);
     return aDefault;
   }
 }
@@ -250,7 +251,7 @@ var AddonManagerInternal = {
         Components.utils.import(url, {});
       }
       catch (e) {
-        ERROR("Exception loading default provider \"" + url + "\": " + e);
+        ERROR("Exception loading default provider \"" + url + "\"", e);
       }
     });
 
@@ -267,7 +268,7 @@ var AddonManagerInternal = {
       }
       catch (e) {
         ERROR("Exception loading provider " + entry + " from category \"" +
-              url + "\": " + e);
+              url + "\"", e);
       }
     }
 
@@ -412,7 +413,7 @@ var AddonManagerInternal = {
         }
       }
       catch (e) {
-        WARN("InstallListener threw exception when calling " + aMethod + ": " + e);
+        WARN("InstallListener threw exception when calling " + aMethod, e);
       }
     });
     return result;
@@ -433,7 +434,7 @@ var AddonManagerInternal = {
           listener[aMethod].apply(listener, args);
       }
       catch (e) {
-        WARN("AddonListener threw exception when calling " + aMethod + ": " + e);
+        WARN("AddonListener threw exception when calling " + aMethod, e);
       }
     });
   },
@@ -664,7 +665,7 @@ var AddonManagerInternal = {
       // In the event that the weblistener throws during instatiation or when
       // calling onWebInstallBlocked or onWebInstallRequested all of the
       // installs should get cancelled.
-      WARN("Failure calling web installer: " + e);
+      WARN("Failure calling web installer", e);
       aInstalls.forEach(function(aInstall) {
         aInstall.cancel();
       });

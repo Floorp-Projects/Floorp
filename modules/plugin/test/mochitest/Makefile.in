@@ -93,6 +93,7 @@ _MOCHITEST_FILES = \
   test_bug539565-1.html \
   test_bug539565-2.html \
   test_enumerate.html \
+  test_npruntime_construct.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491
@@ -102,6 +103,9 @@ ifeq ($(OS_ARCH),WINNT)
 _MOCHITEST_FILES += \
   test_windowed_invalidate.html \
   $(NULL)
+
+# test_positioning.html \ disabled due to oddness, perhaps scrolling of the
+# mochitest window?
 endif
 
 _MOCHICHROME_FILES = \
@@ -110,6 +114,18 @@ _MOCHICHROME_FILES = \
   test_wmode.xul \
   test_bug479979.xul \
   $(NULL)
+
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_MOCHITEST_FILES += \
+  test_visibility.html \
+  $(NULL)
+
+_MOCHICHROME_FILES += \
+  test_xulbrowser_plugin_visibility.xul \
+  xulbrowser_plugin_visibility.xul \
+  plugin_visibility_loader.html \
+  $(NULL)
+endif
 
 # Temporarily disable the tests on Linux, see bug 573290 and bug 583591.
 ifneq ($(OS_ARCH),Linux)

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test whether windowless plugins receive correct visible/invisible notifications.</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <style type="text/css">
+  body {
+    height: 10000px;
+  }
+  </style>
+
+<body onload="startTest()">
+  <p id="display"></p>
+
+  <embed id="theplugin" type="application/x-test" width="200" height="200"></embed>
+
+  <script type="application/javascript;version=1.8">
+  SimpleTest.waitForExplicitFinish();
+
+  var p = document.getElementById('theplugin');
+
+  function startTest() {
+    // Wait for the plugin to have painted once
+    var interval = setInterval(function() {
+      if (!p.getPaintCount())
+        return;
+
+      clearInterval(interval);
+      doScroll();
+    }, 100);
+  }
+
+  const kScrollAmount = 1000;
+  var startY;
+
+  function doScroll() {
+    let [x, y, w, h] = p.getWindowPosition();
+    startY = y;
+
+    scrollBy(0, kScrollAmount);
+    setTimeout(checkScroll, 500);
+  }
+
+  function checkScroll() {
+    let [x, y, w, h] = p.getWindowPosition();
+
+    is(y, startY - kScrollAmount, "Window should be informed of its new position.");
+    SimpleTest.finish();
+  }
+  </script>

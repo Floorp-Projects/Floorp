@@ -57,8 +57,21 @@
 #include "nsILocalFile.h"
 #include "mozilla/FileUtils.h"
 
-class nsZipFind;
+#if defined(XP_WIN)
+#define MOZ_WIN_MEM_TRY_BEGIN __try {
+#define MOZ_WIN_MEM_TRY_CATCH(cmd) }                                \
+  __except(GetExceptionCode()==EXCEPTION_IN_PAGE_ERROR ?            \
+           EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)   \
+  {                                                                 \
+    NS_WARNING("EXCEPTION_IN_PAGE_ERROR in " __FUNCTION__);         \
+    cmd;                                                            \
+  }
+#else
+#define MOZ_WIN_MEM_TRY_BEGIN {
+#define MOZ_WIN_MEM_TRY_CATCH(cmd) }
+#endif
 
+class nsZipFind;
 struct PRFileDesc;
 
 /**
@@ -208,8 +221,6 @@ public:
    */
   const PRUint8* GetData(nsZipItem* aItem);
 
-  PRBool CheckCRC(nsZipItem* aItem, const PRUint8* aData);
-
 private:
   //--- private members ---
 
@@ -339,6 +350,25 @@ public:
 
   operator const T*() const {
     return Buffer();
+  }
+
+  /**
+   * Relinquish ownership of zip member if compressed.
+   * Copy member into a new buffer if uncompressed.
+   * @return a buffer with whole zip member. It is caller's responsibility to free() it.
+   */
+  T* Forget() {
+    if (!mReturnBuf)
+      return NULL;
+    // In uncompressed mmap case, give up buffer
+    if (mAutoBuf.get() == mReturnBuf) {
+      mReturnBuf = NULL;
+      return (T*) mAutoBuf.forget();
+    }
+    T *ret = (T*) malloc(Length());
+    memcpy(ret, mReturnBuf, Length());
+    mReturnBuf = NULL;
+    return ret;
   }
 };
 

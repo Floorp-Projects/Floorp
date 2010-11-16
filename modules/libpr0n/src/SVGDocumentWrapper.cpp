@@ -302,6 +302,10 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
       mListener = nsnull;
     if (mLoadGroup)
       mLoadGroup = nsnull;
+
+    // Turn off "registered" flag, or else we'll try to unregister when we die.
+    // (No need for that now, and the try would fail anyway -- it's too late.)
+    mRegisteredForXPCOMShutdown = PR_FALSE;
   } else {
     NS_ERROR("Unexpected observer topic.");
   }

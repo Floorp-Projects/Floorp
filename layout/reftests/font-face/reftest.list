@@ -87,7 +87,7 @@ HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
 == local-1.html local-1-ref.html
 HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html
-random-if(gtk2Widget) HTTP(..) == synthetic-variations.html synthetic-variations-ref.html # bug 419962
+HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
 
 # Leak test
 HTTP(..) load 486974-1.html

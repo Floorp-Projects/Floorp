@@ -162,3 +162,16 @@ interface nsIThreadEventFilter : nsISupports
    */
   [notxpcom] boolean acceptEvent(in nsIRunnable event);
 };
+
+/**
+ * Temporary interface, will be merged into nsIThreadInternal.
+ */
+[scriptable, uuid(718e9346-74cb-4859-8bcc-c9ec37bfb668)]
+interface nsIThreadInternal2 : nsIThreadInternal
+{
+  /**
+   * The current recursion depth, 0 when no events are running, 1 when a single
+   * event is running, and higher when nested events are running.
+   */
+  readonly attribute unsigned long recursionDepth;
+};
