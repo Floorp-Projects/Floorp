@@ -200,6 +200,7 @@
       <method name="onBeforeValueSet">
         <parameter name="aValue"/>
         <body><![CDATA[
+          this._hideOverLink();
           this._value = aValue;
           var returnValue = aValue;
           var action = this._parseActionUrl(aValue);
@@ -642,19 +643,21 @@
       <method name="setOverLink">
         <parameter name="aURL"/>
         <body><![CDATA[
-          // If the over-link is already scheduled to appear or hide, cancel it.
-          if (this._overLinkDelayTimer) {
-            clearTimeout(this._overLinkDelayTimer);
-            this._overLinkDelayTimer = null;
+          this._cancelOverLinkDelayTimer();
+
+          // Hide the over-link immediately if necessary.
+          if (!aURL && (XULBrowserWindow.hideOverLinkImmediately ||
+                        this._hideOverLinkImmediately)) {
+            this._setOverLinkState(null);
+            return;
           }
 
-          // Hide the over-link if aURL is falsey or if the URL bar is focused.
-          if (!aURL || this.focused) {
+          // If aURL is falsey, fade it out after a delay.  This happens on
+          // mouseout for example.
+          if (!aURL) {
             this._overLinkDelayTimer = setTimeout(function overLinkOut(self) {
               self._overLinkDelayTimer = null;
-              let style = window.getComputedStyle(self._overLinkBox, null);
-              self._overLinkTransitioning = style.opacity != 0;
-              self.removeAttribute("overlinkstate");
+              self._setOverLinkState("fade-out");
             }, this._overLinkOutDelay, this);
             return;
           }
@@ -662,8 +665,7 @@
           // If it's in transition, update and show it immediately.
           if (this._overLinkTransitioning) {
             this._updateOverLink(aURL);
-            this._overLinkTransitioning = false;
-            this.setAttribute("overlinkstate", "showing");
+            this._setOverLinkState("showing");
             return;
           }
 
@@ -673,10 +675,51 @@
           this._overLinkDelayTimer = setTimeout(function overLinkIn(self) {
             self._overLinkDelayTimer = null;
             self._updateOverLink(aURL);
-            let style = window.getComputedStyle(self._overLinkBox, null);
-            self._overLinkTransitioning = style.opacity != 1;
-            self.setAttribute("overlinkstate", "fade-in");
+            self._setOverLinkState("fade-in");
           }, this._overLinkInDelay, this);
+        ]]></body>
+      </method>
+
+      <method name="_hideOverLink">
+        <body><![CDATA[
+          this._hideOverLinkImmediately = true;
+          this.setOverLink("");
+          this._hideOverLinkImmediately = false;
+        ]]></body>
+      </method>
+
+      <method name="_cancelOverLinkDelayTimer">
+        <body><![CDATA[
+          if (this._overLinkDelayTimer) {
+            clearTimeout(this._overLinkDelayTimer);
+            this._overLinkDelayTimer = null;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_setOverLinkState">
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          switch (aVal) {
+          case "fade-in":
+            var style = window.getComputedStyle(this._overLinkBox);
+            this._overLinkTransitioning = style.opacity != 1;
+            this.setAttribute("overlinkstate", aVal);
+            break;
+          case "fade-out":
+            style = window.getComputedStyle(this._overLinkBox);
+            this._overLinkTransitioning = style.opacity != 0;
+            this.setAttribute("overlinkstate", aVal);
+            break;
+          case "showing":
+            this._overLinkTransitioning = false;
+            this.setAttribute("overlinkstate", aVal);
+            break;
+          default:
+            this._overLinkTransitioning = false;
+            this.removeAttribute("overlinkstate");
+            break;
+          }
         ]]></body>
       </method>
 
@@ -761,8 +804,8 @@
       ]]></handler>
 
       <handler event="focus" phase="capturing"><![CDATA[
+        this._hideOverLink();
         this._hideURLTooltip();
-        this.setOverLink(null);
       ]]></handler>
 
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>

@@ -3994,14 +3994,16 @@ var XULBrowserWindow = {
     this.defaultStatus = status;
   },
 
-  setOverLink: function (link) {
-    // Encode bidirectional formatting characters.
-    // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-    link = link.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+  setOverLink: function (url, anchorElt) {
+    if (gURLBar) {
+      // Encode bidirectional formatting characters.
+      // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
+      url = url.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
                         encodeURIComponent);
-    gURLBar.setOverLink(link);
+      gURLBar.setOverLink(url);
+    }
   },
-  
+
   // Called before links are navigated to to allow us to retarget them if needed.
   onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
     // Don't modify non-default targets or targets that aren't in top-level app
@@ -4198,7 +4200,9 @@ var XULBrowserWindow = {
     else
       this.isImage.setAttribute('disabled', 'true');
 
+    this.hideOverLinkImmediately = true;
     this.setOverLink("", null);
+    this.hideOverLinkImmediately = false;
 
     // We should probably not do this if the value has changed since the user
     // searched
