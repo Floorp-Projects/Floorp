@@ -57,6 +57,7 @@ function testOpenWebConsole()
   hudId = HUDService.displaysIndex()[0];
   hud = HUDService.getHeadsUpDisplay(hudId);
 
+  HUDService.logWarningAboutReplacedAPI(hudId);
   testWarning();
 }
 
