@@ -18,11 +18,3 @@
 <!ENTITY homepage.none                             "Blank Page">
 <!ENTITY homepage.default                          "&brandShortName; Start">
 <!ENTITY homepage.currentpage                      "Use Current Page">
-<!ENTITY sync.title                                "Sync">
-<!ENTITY sync.account2                             "Account Name">
-<!ENTITY sync.password                             "Password">
-<!ENTITY sync.syncKey                              "Sync Key">
-<!ENTITY sync.deviceName                           "Device Name">
-<!ENTITY sync.connect                              "Connect">
-<!ENTITY sync.disconnect                           "Disconnect">
-<!ENTITY sync.syncNow                              "Sync Now">
