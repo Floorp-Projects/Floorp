@@ -14,6 +14,7 @@ function boom()
   document["appendChild"](r);
 
   setTimeout(function() {
+    getSelection().collapse(div, 0);
     document.execCommand("inserthtml", false, "a");
     setTimeout(function() {
       document.documentElement.removeAttribute("class");

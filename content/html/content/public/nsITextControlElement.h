@@ -40,6 +40,7 @@
 #define nsITextControlElement_h___
 
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
 class nsIContent;
 class nsAString;
 class nsIEditor;
@@ -226,6 +227,9 @@ public:
    * elements be initialized eagerly.
    */
   NS_IMETHOD_(bool) HasCachedSelection() = 0;
+
+  static already_AddRefed<nsITextControlElement>
+  GetTextControlElementFromEditingHost(nsIContent* aHost);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,

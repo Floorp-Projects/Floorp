@@ -910,8 +910,6 @@ protected:
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 
-  void UpdateEditableFormControlState(bool aNotify);
-
   /**
    * This method will update the form owner, using @form or looking to a parent.
    *
