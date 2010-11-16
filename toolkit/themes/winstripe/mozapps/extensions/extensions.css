@@ -71,6 +71,10 @@
 
 /*** global warnings ***/
 
+.global-warning-container {
+  overflow-x: hidden;
+}
+
 .global-warning {
   -moz-box-align: center;
   padding: 0 8px;
@@ -92,6 +96,12 @@
 #detail-view .global-warning {
   padding: 4px 12px;
   border-bottom: 1px solid #A8A8A8;  
+}
+
+@media all and (max-width: 700px) {
+  .global-warning-text {
+    display: none;
+  }
 }
 
 /*** notification icons ***/
@@ -501,6 +511,7 @@
 #search-filter {
   padding: 5px 20px;
   font-size: 120%;
+  overflow-x: hidden;
 }
 
 #search-filter-label {
