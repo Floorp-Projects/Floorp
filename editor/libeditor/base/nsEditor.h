@@ -548,7 +548,7 @@ public:
   virtual bool IsContainer(nsIDOMNode *aNode);
 
   /** returns true if aNode is an editable node */
-  bool IsEditable(nsIDOMNode *aNode);
+  virtual bool IsEditable(nsIDOMNode *aNode);
 
   virtual bool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
 
