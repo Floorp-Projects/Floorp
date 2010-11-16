@@ -1481,6 +1481,20 @@ jsdScript::LineToPc(PRUint32 aLine, PRUint32 aPcmap, PRUint32 *_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::EnableSingleStepInterrupts(PRBool enable)
+{
+    ASSERT_VALID_EPHEMERAL;
+
+    /* Must have set interrupt hook before enabling */
+    if (enable && !jsdService::GetService()->CheckInterruptHook())
+        return NS_ERROR_NOT_INITIALIZED;
+
+    JSD_EnableSingleStepInterrupts(mCx, mScript, enable);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
