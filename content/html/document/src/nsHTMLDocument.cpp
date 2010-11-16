@@ -1002,6 +1002,29 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 void
 nsHTMLDocument::StopDocumentLoad()
 {
+  if (nsHtml5Module::sEnabled) {
+    BlockOnload();
+    if (mWriteState == eDocumentOpened) {
+      NS_ASSERTION(IsHTML(), "document.open()ed doc is not HTML?");
+
+      // Marking the document as closed, since pending scripts will be
+      // stopped by nsDocument::StopDocumentLoad() below
+      mWriteState = eDocumentClosed;
+
+      // Remove the wyciwyg channel request from the document load group
+      // that we added in OpenCommon().
+      NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
+                   "Trying to remove nonexistent wyciwyg channel!");
+      RemoveWyciwygChannel();
+      NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
+                   "nsIWyciwygChannel could not be removed!");
+    }
+    nsDocument::StopDocumentLoad();
+    UnblockOnload(PR_FALSE);
+    return;
+  }
+  // Code for the old parser:
+
   // If we're writing (i.e., there's been a document.open call), then
   // nsDocument::StopDocumentLoad will do the wrong thing and simply terminate
   // our parser.
