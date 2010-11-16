@@ -552,6 +552,8 @@ struct JSObject : js::gc::Cell {
 
     inline bool hasPropertyTable() const;
 
+    /* gc::FinalizeKind */ unsigned finalizeKind() const;
+
     uint32 numSlots() const { return capacity; }
 
     size_t slotsAndStructSize(uint32 nslots) const;
@@ -1131,7 +1133,9 @@ struct JSObject : js::gc::Cell {
 
     inline JSObject *getThrowTypeError() const;
 
-    bool swap(JSContext *cx, JSObject *obj);
+    JS_FRIEND_API(JSObject *) clone(JSContext *cx, JSObject *proto, JSObject *parent);
+    JS_FRIEND_API(bool) copyPropertiesFrom(JSContext *cx, JSObject *obj);
+    bool swap(JSContext *cx, JSObject *other);
 
     const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
 
