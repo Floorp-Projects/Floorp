@@ -42,7 +42,7 @@
  * <datalist> element.
  *
  * For more information on this interface, please see
- * http://dev.w3.org/html5/spec/forms.html#the-datalist-element
+ * http://www.whatwg.org/specs/web-apps/current-work/#the-datalist-element
  *
  * @status UNDER_DEVELOPMENT
  */
