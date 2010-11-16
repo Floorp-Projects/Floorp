@@ -82,6 +82,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 EXPORTS		+= nsIDragSessionBeOS.h
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+EXPORTS		+= \
+		nsIPrintDialogService.h \
+		$(NULL)
+endif
+
 ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS		+= \
 		nsIDragSessionGTK.h \
