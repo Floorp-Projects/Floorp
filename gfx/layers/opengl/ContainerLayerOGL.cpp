@@ -52,6 +52,8 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
     aChild->SetPrevSibling(nsnull);
     if (oldFirstChild) {
       oldFirstChild->SetPrevSibling(aChild);
+    } else {
+      aContainer->mLastChild = aChild;
     }
     NS_ADDREF(aChild);
     return;
@@ -64,6 +66,8 @@ ContainerInsertAfter(Container* aContainer, Layer* aChild, Layer* aAfter)
       aChild->SetNextSibling(oldNextSibling);
       if (oldNextSibling) {
         oldNextSibling->SetPrevSibling(aChild);
+      } else {
+        aContainer->mLastChild = aChild;
       }
       aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
@@ -81,6 +85,8 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
     aContainer->mFirstChild = aContainer->GetFirstChild()->GetNextSibling();
     if (aContainer->mFirstChild) {
       aContainer->mFirstChild->SetPrevSibling(nsnull);
+    } else {
+      aContainer->mLastChild = nsnull;
     }
     aChild->SetNextSibling(nsnull);
     aChild->SetPrevSibling(nsnull);
@@ -96,6 +102,8 @@ ContainerRemoveChild(Container* aContainer, Layer* aChild)
       lastChild->SetNextSibling(child->GetNextSibling());
       if (child->GetNextSibling()) {
         child->GetNextSibling()->SetPrevSibling(lastChild);
+      } else {
+        aContainer->mLastChild = lastChild;
       }
       child->SetNextSibling(nsnull);
       child->SetPrevSibling(nsnull);

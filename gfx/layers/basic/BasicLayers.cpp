@@ -226,6 +226,9 @@ ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
   NS_ADDREF(aChild);
 
   aChild->SetParent(aContainer);
+  if (aAfter == aContainer->mLastChild) {
+    aContainer->mLastChild = aChild;
+  }
   if (!aAfter) {
     aChild->SetNextSibling(aContainer->mFirstChild);
     if (aContainer->mFirstChild) {
@@ -262,6 +265,8 @@ ContainerRemoveChild(Layer* aChild, Container* aContainer)
   }
   if (next) {
     next->SetPrevSibling(prev);
+  } else {
+    aContainer->mLastChild = prev;
   }
 
   aChild->SetNextSibling(nsnull);
