@@ -1806,22 +1806,17 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * Keeps a weak reference for each HeadsUpDisplay that is created
-   *
+   * Keeps a reference for each HeadsUpDisplay that is created
    */
-  hudWeakReferences: {},
+  hudReferences: {},
 
   /**
-   * Register a weak reference of each HeadsUpDisplay that is created
-   *
-   * @param object aHUDRef
-   * @param string aHUDId
-   * @returns void
+   * Register a reference of each HeadsUpDisplay that is created
    */
-  registerHUDWeakReference:
-  function HS_registerHUDWeakReference(aHUDRef, aHUDId)
+  registerHUDReference:
+  function HS_registerHUDReference(aHUD)
   {
-    this.hudWeakReferences[aHUDId] = aHUDRef;
+    this.hudReferences[aHUD.hudId] = aHUD;
   },
 
   /**
@@ -1832,7 +1827,7 @@ HUD_SERVICE.prototype =
    */
   deleteHeadsUpDisplay: function HS_deleteHeadsUpDisplay(aHUDId)
   {
-    delete this.hudWeakReferences[aHUDId].get();
+    delete this.hudReferences[aHUDId];
   },
 
   /**
@@ -2626,7 +2621,7 @@ HUD_SERVICE.prototype =
                       lineCol + " " +
                       msgCategory + " " + aActivityObject.category;
 
-    let outputNode = this.hudWeakReferences[aHUDId].get().outputNode;
+    let outputNode = this.hudReferences[aHUDId].outputNode;
 
     var messageObject =
     this.messageFactory(message, message.level, outputNode, aActivityObject);
@@ -2909,11 +2904,10 @@ HUD_SERVICE.prototype =
 
       hud = new HeadsUpDisplay(config);
 
-      let hudWeakRef = Cu.getWeakReference(hud);
-      HUDService.registerHUDWeakReference(hudWeakRef, hudId);
+      HUDService.registerHUDReference(hud);
     }
     else {
-      hud = this.hudWeakReferences[hudId].get();
+      hud = this.hudReferences[hudId];
       if (aContentWindow == aContentWindow.top) {
         // TODO: name change?? doesn't actually re-attach the console
         hud.reattachConsole(aContentWindow);
@@ -3533,7 +3527,7 @@ let ConsoleAPIObserver = {
         if (parseInt(displays[idx].windowId) == parseInt(windowId)) {
           hudId = displays[idx].id;
           foundConsoleId = true;
-          let webConsole = HUDService.hudWeakReferences[hudId].get();
+          let webConsole = HUDService.hudReferences[hudId];
 
           this.sendToWebConsole(webConsole, aMessage.level, aMessage.arguments);
         }

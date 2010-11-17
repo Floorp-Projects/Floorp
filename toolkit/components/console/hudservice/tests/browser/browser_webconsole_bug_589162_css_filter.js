@@ -17,7 +17,7 @@ function onContentLoaded()
   browser.removeEventListener("load", arguments.callee, true);
 
   hudId = HUDService.displaysIndex()[0];
-  HUD = HUDService.hudWeakReferences[hudId].get().HUDBox;
+  HUD = HUDService.hudReferences[hudId].HUDBox;
   let filterBox = HUD.querySelector(".hud-filter-box");
   let outputNode = HUD.querySelector(".hud-output-node");
 
