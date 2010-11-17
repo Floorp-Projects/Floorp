@@ -2891,24 +2891,12 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  if (doc) {
-    // Get the script global object owner and use that as the
-    // notification callback.
-    nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
-    if (global) {
-      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(global);
-      callbacks = do_QueryInterface(webNav);
-    }
-  }
-
   nsCOMPtr<nsIChannel> channel;
-
   rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull,
     nsnull, /* do not add this internal plugin's channel
             on the load group otherwise this channel could be canceled
             form |nsDocShell::OnLinkClickSync| bug 166613 */
-    callbacks);
+    listenerPeer);
   if (NS_FAILED(rv))
     return rv;
 
