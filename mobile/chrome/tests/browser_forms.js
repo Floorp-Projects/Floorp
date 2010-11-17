@@ -46,6 +46,10 @@ function testShowUIForElements() {
     ok(json.result, "canShowUI for input type='password'");
   });
 
+  AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='8']" }, function(json) {
+    ok(json.result, "canShowUI for contenteditable div");
+  });
+
   AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='3']" }, function(json) {
     is(json.result, false, "!canShowUI for input type='submit'");
   });
@@ -94,6 +98,10 @@ function testTabIndexNavigation() {
 
   AsyncTests.waitFor("Test:Next", { value: "*[tabindex='7']" }, function(json) {
     is(json.result, true, "Focus should be on element with tab-index : 7");
+  });
+
+  AsyncTests.waitFor("Test:Next", { value: "*[tabindex='8']" }, function(json) {
+    is(json.result, true, "Focus should be on element with tab-index : 8");
   });
 
   AsyncTests.waitFor("Test:Next", { value: "*[tabindex='0']" }, function(json) {

@@ -47,6 +47,8 @@ dump("###################################### forms.js loaded\n");
 let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
 let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
 let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
+let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
+let HTMLBodyElement = Ci.nsIDOMHTMLBodyElement;
 let HTMLLabelElement = Ci.nsIDOMHTMLLabelElement;
 let HTMLButtonElement = Ci.nsIDOMHTMLButtonElement;
 let HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
@@ -116,6 +118,11 @@ FormAssistant.prototype = {
       this._elements = [];
       return this._open = false;
     }
+
+    // If the element have the isContentEditable property we want to open the
+    // top level element for it
+    if (aElement.isContentEditable)
+      aElement = this._getTopLevelEditable(aElement);
 
     // Checking if the element is the current focused one while the form assistant is open
     // allow the user to reposition the caret into an input element
@@ -219,9 +226,25 @@ FormAssistant.prototype = {
         sendAsyncMessage("FormAssist:Resize");
         break;
       case "focus":
+        let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
+
+        // If a body element is editable and the body is the child of an
+        // iframe we can assume this is an advanced HTML editor, so let's 
+        // redirect the form helper selection to the iframe element
+        if (focusedElement) {
+          let editableElement = this._getTopLevelEditable(focusedElement);
+          if (editableElement.isContentEditable && this._isValidElement(editableElement)) {
+            let self = this;
+            let timer = new Util.Timeout(function() {
+              self.open(editableElement);
+            });
+            timer.once(0);
+            return;
+          }
+        }
+
         // if an element is focused while we're closed but the element can be handle
         // by the assistant, try to activate it
-        let focusedElement = gFocusManager.focusedElement;
         if (!this.currentElement) {
           if (focusedElement && this._isValidElement(focusedElement)) {
             let self = this;
@@ -285,6 +308,34 @@ FormAssistant.prototype = {
     }
   },
 
+  _filterEditables: function formHelperFilterEditables(aNodes) {
+    let result = [];
+    for (let i = 0; i < aNodes.length; i++) {
+      let node = aNodes[i];
+
+      if (node.isContentEditable || node instanceof HTMLIFrameElement) {
+        let editableElement = this._getTopLevelEditable(node);
+        if (result.indexOf(editableElement) == -1)
+          result.push(editableElement);
+      }
+      else {
+        result.push(node);
+      }
+    }
+
+    return result;
+  },
+  
+  _getTopLevelEditable: function formHelperGetTopLevelEditable(aElement) {
+    while (aElement && aElement.parentNode.isContentEditable)
+      aElement = aElement.parentNode;
+
+    if (aElement && aElement instanceof HTMLBodyElement && aElement.ownerDocument.defaultView != content.document.defaultView)
+      return aElement.ownerDocument.defaultView.frameElement;
+
+    return aElement;
+  },
+
   _isAutocomplete: function formHelperIsAutocomplete(aElement) {
     if (aElement instanceof HTMLInputElement) {
       let autocomplete = aElement.getAttribute("autocomplete");
@@ -309,7 +360,7 @@ FormAssistant.prototype = {
   },
 
   _isNavigableElement: function formHelperIsNavigableElement(aElement) {
-    if (aElement.disabled)
+    if (aElement.disabled || aElement.getAttribute("tabindex") == "-1")
       return false;
 
     if (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex"))
@@ -321,7 +372,10 @@ FormAssistant.prototype = {
     if (aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement)
       return !(aElement.type == "hidden");
 
-    return false;
+    if (aElement instanceof HTMLIFrameElement && aElement.contentDocument.body.isContentEditable)
+      return true;
+
+    return aElement.isContentEditable;
   },
 
   _isVisibleElement: function formHelperIsVisibleElement(aElement) {
@@ -402,7 +456,8 @@ FormAssistant.prototype = {
 
     let elements = this._elements;
     for (let i = 0; i < documents.length; i++) {
-      let nodes = documents[i].querySelectorAll("input, button, select, textarea, [role=button]");
+      let selector = "input, button, select, textarea, [role=button], iframe[tabindex], [contenteditable=true]";
+      let nodes = documents[i].querySelectorAll(selector);
       nodes = this._filterRadioButtons(nodes);
 
       for (let j = 0; j < nodes.length; j++) {
@@ -413,6 +468,7 @@ FormAssistant.prototype = {
         elements.push(node);
       }
     }
+    this._elements = this._filterEditables(elements);
 
     function orderByTabIndex(a, b) {
       // for an explanation on tabbing navigation see
@@ -423,7 +479,7 @@ FormAssistant.prototype = {
 
       return a.tabIndex > b.tabIndex;
     }
-    elements = elements.sort(orderByTabIndex);
+    this._elements = elements.sort(orderByTabIndex);
 
     // retrieve the correct index
     let currentIndex = this._getIndexForElement(aElement);
