@@ -110,6 +110,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
         "checkNewScriptNoXML();";
     JSScript *toActivate = fakeScript(toActivateChars, sizeof(toActivateChars) - 1);
     CHECK(toActivate);
+    JSObject *scriptObject = JS_GetScriptObject(toActivate);
     CHECK(hasXML(toActivate));
 
     disableXML();
@@ -124,6 +125,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
     JSFunction *f4 = JS_DefineFunction(cx, global, "checkNewScriptNoXML", CheckNewScriptNoXML,
                                        0, 0);
     CHECK(f4);
+    CHECK(scriptObject);
 
     /* Activate the script. */
     jsval dummy;
