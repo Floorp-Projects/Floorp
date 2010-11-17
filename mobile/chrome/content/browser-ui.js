@@ -1812,6 +1812,10 @@ var FormHelperUI = {
   _currentCaretRect: null,
   _currentElementRect: null,
 
+  get enabled() {
+    return Services.prefs.getBoolPref("formhelper.enabled");
+  },
+
   _visibleScreenArea: null,
   get visibleScreenArea() {
     let visibleRect = Rect.fromRect(Browser.selectedBrowser.getBoundingClientRect());
@@ -1909,9 +1913,8 @@ var FormHelperUI = {
         // if the user has manually disabled the Form Assistant UI we still
         // want to show a UI for <select /> element but not managed by
         // FormHelperUI
-        let enabled = Services.prefs.getBoolPref("formhelper.enabled");
-        enabled ? this.show(json.current, json.hasPrevious, json.hasNext)
-                : SelectHelperUI.show(json.current.choices);
+        this.enabled ? this.show(json.current, json.hasPrevious, json.hasNext)
+                     : SelectHelperUI.show(json.current.choices);
         break;
 
       case "FormAssist:Hide":
