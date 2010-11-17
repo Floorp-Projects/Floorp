@@ -82,11 +82,14 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
+    info("opening new tab")
     this._currentTab = Browser.addTab(testURL_02, true);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow", function(aMessage) {
+      info("got a pageshow: " + gCurrentTest._currentTab.browser.currentURI.spec)
       if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        info("got the right pageshow")
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
         gCurrentTest.onPageReady();
       }
@@ -96,10 +99,12 @@ gTests.push({
   onPageReady: function() {
     // Wait for the bookmarks to load, then do the test
     window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+    info("opening nav panel")
     BrowserUI.doCommand("cmd_bookmarks");
   },
 
   onBookmarksReady: function() {
+    info("nav panel is open")
     window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
 
     let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
