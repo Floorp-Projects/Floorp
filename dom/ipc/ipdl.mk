@@ -35,6 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 IPDLSRCS = \
+  PAudio.ipdl \
   PBrowser.ipdl \
   PContent.ipdl \
   PContentDialog.ipdl \
