@@ -84,6 +84,7 @@ libs:: unit/test_jsctypes.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 	  $^ > $(xpctestdir)/test_jsctypes.js
 	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(xpctestdir)
+	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(DEPTH)/_tests/testing/mochitest/chrome/libraries
 	$(TEST_INSTALLER) $(xpctestdir)/test_jsctypes.js $(chrometestdir)
 	$(TEST_INSTALLER) $(xpctestdir)/$(SHARED_LIBRARY) $(chrometestdir)
 	$(RM) $(xpctestdir)/test_jsctypes.js.in

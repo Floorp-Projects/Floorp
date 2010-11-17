@@ -42,6 +42,7 @@
 
 #include "mozilla/jetpack/JetpackChild.h"
 #include "mozilla/jetpack/Handle.h"
+#include "mozilla/IntentionalCrash.h"
 
 #include "jsarray.h"
 
@@ -75,6 +76,8 @@ JetpackChild::sImplMethods[] = {
 #ifdef JS_GC_ZEAL
   JS_FN("gczeal", GCZeal, 1, IMPL_METHOD_FLAGS),
 #endif
+  JS_FN("_noteIntentionalCrash", NoteIntentionalCrash, 0,
+        IMPL_METHOD_FLAGS),
   JS_FS_END
 };
 
@@ -562,6 +565,13 @@ JetpackChild::GCZeal(JSContext* cx, uintN argc, jsval *vp)
   return JS_TRUE;
 }
 #endif
+
+JSBool
+JetpackChild::NoteIntentionalCrash(JSContext* cx, uintN argc, jsval *vp)
+{
+  mozilla::NoteIntentionalCrash("jetpack");
+  return JS_TRUE;
+}
 
 } // namespace jetpack
 } // namespace mozilla
