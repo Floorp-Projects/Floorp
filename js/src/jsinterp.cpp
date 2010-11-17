@@ -749,6 +749,10 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
 #ifdef JS_TRACER
     if (TRACE_RECORDER(cx))
         AbortRecording(cx, "attempt to reenter VM while recording");
+#ifdef JS_METHODJIT
+    if (TRACE_PROFILER(cx))
+        AbortProfiling(cx);
+#endif
     LeaveTrace(cx);
 #endif
 
@@ -2337,11 +2341,21 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
     /* Check for too deep of a native thread stack. */
 #ifdef JS_TRACER
+#ifdef JS_METHODJIT
+    JS_CHECK_RECURSION(cx, do {
+            if (TRACE_RECORDER(cx))
+                AbortRecording(cx, "too much recursion");
+            if (TRACE_PROFILER(cx))
+                AbortProfiling(cx);
+            return JS_FALSE;
+        } while (0););
+#else
     JS_CHECK_RECURSION(cx, do {
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "too much recursion");
             return JS_FALSE;
         } while (0););
+#endif
 #else
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 #endif
@@ -2404,7 +2418,13 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             MonitorResult r = MonitorLoopEdge(cx, inlineCallCount);           \
             if (r == MONITOR_RECORDING) {                                     \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
+                JS_ASSERT(!TRACE_PROFILER(cx));                               \
                 MONITOR_BRANCH_TRACEVIS;                                      \
+                ENABLE_INTERRUPTS();                                          \
+                CLEAR_LEAVE_ON_TRACE_POINT();                                 \
+            } else if (r == MONITOR_PROFILING) {                              \
+                JS_ASSERT(TRACE_PROFILER(cx));                                \
+                JS_ASSERT(!TRACE_RECORDER(cx));                               \
                 ENABLE_INTERRUPTS();                                          \
                 CLEAR_LEAVE_ON_TRACE_POINT();                                 \
             }                                                                 \
@@ -2440,6 +2460,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 # define LEAVE_ON_SAFE_POINT()                                                \
     do {                                                                      \
         JS_ASSERT_IF(leaveOnSafePoint, !TRACE_RECORDER(cx));                  \
+        JS_ASSERT_IF(leaveOnSafePoint, !TRACE_PROFILER(cx));                  \
         if (leaveOnSafePoint && !regs.fp->hasImacropc() &&                    \
             script->maybeNativeCodeForPC(regs.fp->isConstructing(), regs.pc)) { \
             JS_ASSERT(!TRACE_RECORDER(cx));                                   \
@@ -2551,11 +2572,20 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
      */
     if (interpMode == JSINTERP_RECORD) {
         JS_ASSERT(TRACE_RECORDER(cx));
+        JS_ASSERT(!TRACE_PROFILER(cx));
         ENABLE_INTERRUPTS();
+#ifdef JS_METHODJIT
     } else if (interpMode == JSINTERP_PROFILE) {
+        JS_ASSERT(TRACE_PROFILER(cx));
+        JS_ASSERT(!TRACE_RECORDER(cx));
         ENABLE_INTERRUPTS();
+#endif
     } else if (TRACE_RECORDER(cx)) {
         AbortRecording(cx, "attempt to reenter interpreter while recording");
+#ifdef JS_METHODJIT
+    } else if (TRACE_PROFILER(cx)) {
+        AbortProfiling(cx);
+#endif
     }
 
     if (regs.fp->hasImacropc())
@@ -2630,6 +2660,10 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
                 AbortRecording(cx, "interrupt hook");
+#ifdef JS_METHODJIT
+            if (TRACE_PROFILER(cx))
+                AbortProfiling(cx);
+#endif
 #endif
             Value rval;
             switch (hook(cx, script, regs.pc, Jsvalify(&rval),
@@ -2654,6 +2688,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #ifdef JS_TRACER
 #ifdef JS_METHODJIT
         if (LoopProfile *prof = TRACE_PROFILER(cx)) {
+            JS_ASSERT(!TRACE_RECORDER(cx));
             LoopProfile::ProfileAction act = prof->profileOperation(cx, op);
             switch (act) {
                 case LoopProfile::ProfComplete:
@@ -2667,6 +2702,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         }
 #endif
         if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
+            JS_ASSERT(!TRACE_PROFILER(cx));
             AbortableRecordingStatus status = tr->monitorRecording(op);
             JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
 
