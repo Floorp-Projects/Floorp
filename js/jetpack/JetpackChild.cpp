@@ -361,9 +361,7 @@ ReceiverCommon(JSContext* cx, uintN argc, jsval* vp,
   if (arity < 2)
     return JS_TRUE;
 
-  if (!JSVAL_IS_OBJECT(argv[1]) ||
-      !JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(argv[1])))
-  {
+  if (JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
     JS_ReportError(cx, "%s expects a function as its second argument",
                    methodName);
     return JS_FALSE;

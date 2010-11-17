@@ -265,6 +265,9 @@ JetpackParent::Destroy()
     Close();
 
   NS_ASSERTION(!mSubprocess, "ActorDestroy should have been called.");
+
+  ClearReceivers();
+
   return NS_OK;
 }
 
