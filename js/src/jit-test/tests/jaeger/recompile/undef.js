@@ -22,6 +22,18 @@ function name(v)
 }
 name({});
 
+function letname(v)
+{
+  if (v) {
+    let x;
+    with (v) {
+      x = "twelve";
+    }
+    assertEq(x, "twelve");
+  }
+}
+letname({});
+
 function upvar()
 {
   var x;

@@ -2236,8 +2236,21 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 
     RegisterID reg = frame.allocReg();
     Address address = masm.objSlotRef(globalObj, reg, slot);
-    frame.freeReg(reg);
     frame.push(address, knownPushedType(0));
+    frame.freeReg(reg);
+
+    /*
+     * If the global is currently undefined, it might still be undefined at the point
+     * of this access, which type inference will not account for. Insert a check.
+     */
+    if (globalObj->getSlot(slot).isUndefined() &&
+        (JSOp(*PC) == JSOP_CALLGLOBAL || PC[JSOP_GETGLOBAL_LENGTH] != JSOP_POP)) {
+        Jump jump = masm.testUndefined(Assembler::Equal, address);
+        stubcc.linkExit(jump, Uses(0));
+        stubcc.leave();
+        OOL_STUBCALL(stubs::UndefinedHelper);
+        stubcc.rejoin(Changes(0));
+    }
 }
 
 void
@@ -3688,9 +3701,17 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
     pic.fastPathRejoin = masm.label();
     frame.pushRegs(pic.shapeReg, pic.objReg, type);
 
+    /* Always test for undefined. */
+    Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
+
     JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
 
     stubcc.rejoin(Changes(1));
+
+    stubcc.linkExit(undefinedGuard, Uses(0));
+    stubcc.leave();
+    OOL_STUBCALL(stubs::UndefinedHelper);
+    stubcc.rejoin(Changes(0));
 
     pics.append(pic);
 }
@@ -3731,9 +3752,17 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     frame.pop();
     frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0));
 
+    /* Always test for undefined. */
+    Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
+
     JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
 
     stubcc.rejoin(Changes(1));
+
+    stubcc.linkExit(undefinedGuard, Uses(0));
+    stubcc.leave();
+    OOL_STUBCALL(stubs::UndefinedHelper);
+    stubcc.rejoin(Changes(0));
 
     pics.append(pic);
     return true;
@@ -4548,6 +4577,12 @@ mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
 #else
     jsop_getgname_slow(index);
 #endif
+
+    /*
+     * Note: no undefined check is needed for GNAME opcodes. These were not declared with
+     * 'var', so cannot be undefined without triggering an error or having been a pre-existing
+     * global whose value is undefined (which type inference will know about).
+     */
 }
 
 void

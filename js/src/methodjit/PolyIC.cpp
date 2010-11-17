@@ -1871,6 +1871,9 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
     if (!cc.retrieve(&rval))
         THROW();
     f.regs.sp[-1] = rval;
+
+    if (rval.isUndefined())
+        script->typeMonitorUndefined(f.cx, f.regs.pc, 0);
 }
 
 void JS_FASTCALL
@@ -1888,6 +1891,9 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
     if (!cc.retrieve(&rval))
         THROW();
     f.regs.sp[0] = rval;
+
+    if (rval.isUndefined())
+        script->typeMonitorUndefined(f.cx, f.regs.pc, 0);
 }
 
 static void JS_FASTCALL
