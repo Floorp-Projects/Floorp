@@ -1355,6 +1355,7 @@ private:
                                            nsIWidget *aRootWidget);
 
   void FireResizeEvent();
+  void FireBeforeResizeEvent();
   static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
   nsCOMPtr<nsITimer> mAsyncResizeEventTimer;
@@ -2830,6 +2831,11 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (!mIsDestroying && !mResizeEvent.IsPending() &&
+      !mAsyncResizeTimerIsActive) {
+    FireBeforeResizeEvent();
+  }
+
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
   // There isn't anything useful we can do if the initial reflow hasn't happened
@@ -2903,6 +2909,22 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
   }
 
   return NS_OK; //XXX this needs to be real. MMP
+}
+
+void
+PresShell::FireBeforeResizeEvent()
+{
+  if (mIsDocumentGone)
+    return;
+
+  // Send beforeresize event from here.
+  nsEvent event(PR_TRUE, NS_BEFORERESIZE_EVENT);
+
+  nsPIDOMWindow *window = mDocument->GetWindow();
+  if (window) {
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+    nsEventDispatcher::Dispatch(window, mPresContext, &event);
+  }
 }
 
 void
