@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345624
   <button id='b' oninvalid="invalidEventHandler(event);"></button>
   <select id='s' oninvalid="invalidEventHandler(event);"></select>
   <textarea id='t' oninvalid="invalidEventHandler(event);"></textarea>
+  <output id='o' oninvalid="invalidEventHandler(event);"></output>
   <keygen id='k'></keygen>
-  <output id='o'></output>
   <object id='obj'></object>
 </div>
 <pre id="test">
@@ -94,8 +94,8 @@ function checkDefaultPseudoClass()
      "Nor :valid and :invalid should apply");
 
   is(window.getComputedStyle(document.getElementById('o'), null)
-       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
-     "Nor :valid and :invalid should apply");
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid should apply");
 
   is(window.getComputedStyle(document.getElementById('obj'), null)
        .getPropertyValue('background-color'), "rgb(0, 0, 0)",
@@ -126,9 +126,9 @@ function checkSpecificWillValidate()
 {
   // fieldset, output, object, keygen (TODO) and select elements
   ok(!document.getElementById('f').willValidate, "Fielset element should be barred from constraint validation");
-  ok(!document.getElementById('o').willValidate, "Output element should be barred from constraint validation");
   ok(!document.getElementById('obj').willValidate, "Object element should be barred from constraint validation");
   todo(!document.getElementById('k').willValidate, "Keygen element should be barred from constraint validation");
+  ok(document.getElementById('o').willValidate, "Output element should not be barred from constraint validation");
   ok(document.getElementById('s').willValidate, "Select element should not be barred from constraint validation");
 
   // input element
@@ -189,13 +189,16 @@ function checkCommonWillValidate(element)
 {
   // Not checking the default value because it has been checked previously.
 
-  element.disabled = true;
-  ok(!element.willValidate, "Disabled element should be barred from constraint validation");
+  // Not checking output elements because they can't be disabled.
+  if (element.tagName != 'OUTPUT') {
+    element.disabled = true;
+    ok(!element.willValidate, "Disabled element should be barred from constraint validation");
 
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+       "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
 
-  element.removeAttribute('disabled');
+    element.removeAttribute('disabled');
+  }
 
   // TODO: If an element has a datalist element ancestor, it is barred from constraint validation.
 }
@@ -293,28 +296,30 @@ checkDefaultPseudoClass();
 
 checkSpecificWillValidate();
 
-// Not checking fieldset, output, object and keygen
+// Not checking fieldset, object and keygen
 // because they are always barred from constraint validation.
 checkCommonWillValidate(document.getElementById('i'));
 checkCommonWillValidate(document.getElementById('b'));
 checkCommonWillValidate(document.getElementById('s'));
 checkCommonWillValidate(document.getElementById('t'));
+checkCommonWillValidate(document.getElementById('o'));
 
 /* TODO: add "keygen" element */
 checkCustomError(document.getElementById('i'), false);
 checkCustomError(document.getElementById('b'), false);
 checkCustomError(document.getElementById('s'), false);
 checkCustomError(document.getElementById('t'), false);
+checkCustomError(document.getElementById('o'), false);
 checkCustomError(document.getElementById('f'), true);
-checkCustomError(document.getElementById('o'), true);
 checkCustomError(document.getElementById('obj'), true);
 
-// Not checking fieldset, output, object and keygen
+// Not checking fieldset, object and keygen
 // because they are always barred from constraint validation.
 checkCheckValidity(document.getElementById('i'));
 checkCheckValidity(document.getElementById('b'));
 checkCheckValidity(document.getElementById('s'));
 checkCheckValidity(document.getElementById('t'));
+checkCheckValidity(document.getElementById('o'));
 
 /* TODO: add "keygen" element */
 checkValidityStateObjectAliveWithoutElement("fieldset");
