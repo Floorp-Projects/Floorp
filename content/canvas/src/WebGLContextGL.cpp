@@ -3822,7 +3822,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     PRUint32 bytesNeeded = checked_neededByteLength.value();
  
     if (byteLength < bytesNeeded)
-        return ErrorInvalidValue("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
+        return ErrorInvalidOperation("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
 
