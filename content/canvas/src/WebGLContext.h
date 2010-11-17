@@ -1253,19 +1253,19 @@ public:
         return mAttachedShaders.RemoveElement(shader);
     }
 
-    PRBool HasBothShaderTypesAttached() {
-        PRBool haveVertex = PR_FALSE;
-        PRBool haveFrag = PR_FALSE;
+    PRBool HasAttachedShaderOfType(GLenum shaderType) {
         for (PRUint32 i = 0; i < mAttachedShaders.Length(); ++i) {
-            if (mAttachedShaders[i]->ShaderType() == LOCAL_GL_FRAGMENT_SHADER)
-                haveFrag = PR_TRUE;
-            else if (mAttachedShaders[i]->ShaderType() == LOCAL_GL_VERTEX_SHADER)
-                haveVertex = PR_TRUE;
-            if (haveFrag && haveVertex)
+            if (mAttachedShaders[i]->ShaderType() == shaderType) {
                 return PR_TRUE;
+            }
         }
-
         return PR_FALSE;
+    }
+
+    PRBool HasBothShaderTypesAttached() {
+        return
+            HasAttachedShaderOfType(LOCAL_GL_VERTEX_SHADER) &&
+            HasAttachedShaderOfType(LOCAL_GL_FRAGMENT_SHADER);
     }
 
     PRBool NextGeneration()

@@ -162,6 +162,12 @@ WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
         !GetConcreteObjectAndGLName("attachShader: shader", shobj, &shader, &shadername))
         return NS_OK;
 
+    // Per GLSL ES 2.0, we can only have one of each type of shader
+    // attached.  This renders the next test somewhat moot, but we'll
+    // leave it for when we support more than one shader of each type.
+    if (program->HasAttachedShaderOfType(shader->ShaderType()))
+        return ErrorInvalidOperation("AttachShader: only one of each type of shader may be attached to a program");
+
     if (!program->AttachShader(shader))
         return ErrorInvalidOperation("AttachShader: shader is already attached");
 
