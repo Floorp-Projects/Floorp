@@ -217,7 +217,7 @@ nsresult imgFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
       mWinSurface = new gfxWindowsSurface(gfxIntSize(mSize.width, mSize.height), mFormat);
       if (mWinSurface && mWinSurface->CairoStatus() == 0) {
         // no error
-        mImageSurface = mWinSurface->GetImageSurface();
+        mImageSurface = mWinSurface->GetAsImageSurface();
       } else {
         mWinSurface = nsnull;
       }

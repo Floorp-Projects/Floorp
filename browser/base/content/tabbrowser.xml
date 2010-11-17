@@ -2745,6 +2745,8 @@
         <body><![CDATA[
           switch (aEvent.type) {
             case "resize":
+              if (aEvent.target != window)
+                break;
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();

@@ -117,6 +117,11 @@ private:
     virtual PTestShellParent* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellParent* shell);
 
+    virtual PAudioParent* AllocPAudio(const PRInt32&,
+                                     const PRInt32&,
+                                     const PRInt32&);
+    virtual bool DeallocPAudio(PAudioParent*);
+
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
 

@@ -59,7 +59,7 @@ gfxQuartzImageSurface::~gfxQuartzImageSurface()
 }
 
 already_AddRefed<gfxImageSurface>
-gfxQuartzImageSurface::GetImageSurface()
+gfxQuartzImageSurface::GetAsImageSurface()
 {
     if (!mSurfaceValid)
         return nsnull;

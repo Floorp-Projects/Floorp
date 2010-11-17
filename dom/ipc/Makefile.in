@@ -52,6 +52,8 @@ EXPORTS = TabMessageUtils.h PCOMContentPermissionRequestChild.h
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+  AudioChild.h \
+  AudioParent.h \
   ContentChild.h \
   ContentParent.h \
   ContentProcess.h \
@@ -60,6 +62,8 @@ EXPORTS_mozilla/dom = \
   $(NULL)
 
 CPPSRCS = \
+  AudioChild.cpp \
+  AudioParent.cpp \
   ContentProcess.cpp \
   ContentParent.cpp \
   ContentChild.cpp \

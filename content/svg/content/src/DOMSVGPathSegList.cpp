@@ -394,7 +394,10 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
   }
 
   PRUint32 internalIndex = mItems[aIndex].mInternalDataIndex;
-  PRUint32 oldArgCount = SVGPathSegUtils::ArgCountForType(domItem->Type());
+  // We use InternalList() to get oldArgCount since we may not have a DOM
+  // wrapper at the index being replaced.
+  PRUint32 oldType = SVGPathSegUtils::DecodeType(InternalList().mData[internalIndex]);
+  PRUint32 oldArgCount = SVGPathSegUtils::ArgCountForType(oldType);
   PRUint32 newArgCount = SVGPathSegUtils::ArgCountForType(domItem->Type());
 
   float segAsRaw[1 + NS_SVG_PATH_SEG_MAX_ARGS];

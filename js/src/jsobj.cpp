@@ -3763,16 +3763,9 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     if (!hasSlotsArray())
         return allocSlots(cx, actualCapacity);
 
-    Value *oldslots = slots;
     Value *tmpslots = (Value*) cx->realloc(slots, actualCapacity * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
-    // If slots has changed, that means some other thread changed it while we
-    // were realloc'ing, which is very bad.
-#define JS_CRASH(addr) *(int *) addr = 0;
-    if (oldslots != slots)
-        JS_CRASH(0xf0);
-#undef JS_CRASH
     slots = tmpslots;
     capacity = actualCapacity;
 

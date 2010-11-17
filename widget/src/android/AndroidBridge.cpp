@@ -118,7 +118,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jAlertsProgressListener_OnCancel = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "alertsProgressListener_OnCancel", "(Ljava/lang/String;)V");
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
     jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
-
+    jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
+    jHideProgressDialog = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideProgressDialog", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -521,13 +522,29 @@ AndroidBridge::ShowFilePicker(nsAString& aFilePath, nsAString& aFilters)
 void
 AndroidBridge::SetFullScreen(PRBool aFullScreen)
 {
-    mJNIEnv->CallStaticIntMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
+}
+
+void
+AndroidBridge::HideProgressDialogOnce()
+{
+    static bool once = false;
+    if (!once) {
+        mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
+        once = true;
+    }
 }
 
 void
 AndroidBridge::SetSurfaceView(jobject obj)
 {
     mSurfaceView.Init(obj);
+}
+
+void
+AndroidBridge::ShowInputMethodPicker()
+{
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jShowInputMethodPicker);
 }
 
 void *

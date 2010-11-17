@@ -839,8 +839,11 @@ class MinidumpWriter {
     for (MappingList::const_iterator iter = mapping_info_.begin();
          iter != mapping_info_.end();
          ++iter) {
-      if (iter->first.start_addr == mapping.start_addr &&
-          iter->first.size == mapping.size) {
+      // Ignore any mappings that are wholly contained within
+      // mappings in the mapping_info_ list.
+      if (mapping.start_addr >= iter->first.start_addr &&
+          (mapping.start_addr + mapping.size) <=
+          (iter->first.start_addr + iter->first.size)) {
         return true;
       }
     }
@@ -857,7 +860,7 @@ class MinidumpWriter {
 
     for (unsigned i = 0; i < dumper_.mappings().size(); ++i) {
       const MappingInfo& mapping = *dumper_.mappings()[i];
-      if (ShouldIncludeMapping(mapping))
+      if (ShouldIncludeMapping(mapping) && !HaveMappingInfo(mapping))
         num_output_mappings++;
     }
 

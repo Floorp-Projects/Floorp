@@ -43,8 +43,11 @@
  * The nsIDOMHTMLFieldSetElement interface is the interface to a
  * [X]HTML fieldset element.
  *
- * For more information on this interface please see
+ * This interface is trying to follow the DOM Level 2 HTML specification:
  * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * with changes from the work-in-progress WHATWG HTML specification:
+ * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
 interface nsIDOMValidityState;
@@ -61,7 +64,7 @@ interface nsIDOMHTMLFieldSetElement : nsIDOMHTMLElement
   readonly attribute nsIDOMHTMLCollection   elements;
 
   // The following lines are parte of the constraint validation API, see:
-  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
+  // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
   readonly attribute boolean               willValidate;
   readonly attribute nsIDOMValidityState   validity;
   readonly attribute DOMString             validationMessage;

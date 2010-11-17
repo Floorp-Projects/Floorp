@@ -66,6 +66,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
+#include "AudioParent.h"
 
 #ifdef MOZ_PERMISSIONS
 #include "nsPermissionManager.h"
@@ -360,6 +361,24 @@ ContentParent::DeallocPTestShell(PTestShellParent* shell)
 {
   delete shell;
   return true;
+}
+ 
+PAudioParent*
+ContentParent::AllocPAudio(const PRInt32& numChannels,
+                           const PRInt32& rate,
+                           const PRInt32& format)
+{
+    AudioParent *parent = new AudioParent(numChannels, rate, format);
+    parent->AddRef();
+    return parent;
+}
+
+bool
+ContentParent::DeallocPAudio(PAudioParent* doomed)
+{
+    AudioParent *parent = static_cast<AudioParent*>(doomed);
+    NS_RELEASE(parent);
+    return true;
 }
 
 PNeckoParent* 

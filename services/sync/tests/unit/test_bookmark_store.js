@@ -42,6 +42,13 @@ function run_test() {
 
     _("The calculated sort index is based on frecency data.");
     do_check_true(newrecord.sortindex >= 150);
+
+    _("Folders have high sort index to ensure they're synced first.");
+    let folder_id = Svc.Bookmark.createFolder(Svc.Bookmark.toolbarFolder,
+                                              "Test Folder", 0);
+    let folder_guid = Svc.Bookmark.getItemGUID(folder_id);
+    let folder_record = store.createRecord(folder_guid, "http://fake/uri");
+    do_check_eq(folder_record.sortindex, 1000000);
   } finally {
     _("Clean up.");
     store.wipe();

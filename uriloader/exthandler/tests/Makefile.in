@@ -52,7 +52,10 @@ MODULE          = test_uriloader_exthandler
 XPCSHELL_TESTS  = unit
 
 ifdef MOZ_IPC
+#FIXME/bug 575918: out-of-process xpcshell is broken on OS X
+ifneq ($(OS_ARCH),Darwin)
 XPCSHELL_TESTS += unit_ipc
+endif
 endif
 
 CPPSRCS =	\

@@ -17,17 +17,17 @@ function tabLoad(aEvent) {
   let HUD = HUDService.hudWeakReferences[hudId].get();
 
   let longMessage = "";
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 50; i++) {
     longMessage += "LongNonwrappingMessage";
   }
 
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 50; i++) {
     HUD.console.log("test message " + i);
   }
 
   HUD.console.log(longMessage);
 
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 50; i++) {
     HUD.console.log("test message " + i);
   }
 

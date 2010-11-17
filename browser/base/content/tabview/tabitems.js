@@ -382,11 +382,19 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         let widthRange, proportion;
 
         if (this.inStack()) {
-          $fav.css({top:0, left:0});
+          if (UI.rtl) {
+            $fav.css({top:0, right:0});
+          } else {
+            $fav.css({top:0, left:0});
+          }
           widthRange = new Range(70, 90);
           proportion = widthRange.proportion(css.width); // between 0 and 1
         } else {
-          $fav.css({top:4,left:4});
+          if (UI.rtl) {
+            $fav.css({top:4, right:2});
+          } else {
+            $fav.css({top:4, left:4});
+          }
           widthRange = new Range(40, 45);
           proportion = widthRange.proportion(css.width); // between 0 and 1
         }
@@ -399,8 +407,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         var pad = 1 + 5 * proportion;
         var alphaRange = new Range(0.1,0.2);
         $fav.css({
-         "padding-left": pad + "px",
-         "padding-right": pad + 2 + "px",
+         "-moz-padding-start": pad + "px",
+         "-moz-padding-end": pad + 2 + "px",
          "padding-top": pad + "px",
          "padding-bottom": pad + "px",
          "border-color": "rgba(0,0,0,"+ alphaRange.scale(proportion) +")",

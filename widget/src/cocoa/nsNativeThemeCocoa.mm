@@ -226,7 +226,7 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
   return [win isMainWindow] && ![win attachedSheet];
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
@@ -1678,6 +1678,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_BUTTON:
       if (IsDefaultButton(aFrame)) {
+        if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 10)) {
+          NS_WARNING("Unable to animate button!");
+        }
         DrawButton(cgContext, kThemePushButton, macRect, true,
                    kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
       } else if (IsButtonTypeMenu(aFrame)) {
@@ -1797,6 +1800,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_PROGRESSBAR:
+      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
+        NS_WARNING("Unable to animate progressbar!");
+      }
       DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
                    PR_TRUE, GetProgressValue(aFrame),
                    GetProgressMaxValue(aFrame), aFrame);
@@ -2380,13 +2386,11 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_DIALOG:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_GROUPBOX:
-      *aShouldRepaint = PR_FALSE;
-      return NS_OK;
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
-      *aShouldRepaint = (aAttribute == nsWidgetAtoms::step);
+      *aShouldRepaint = PR_FALSE;
       return NS_OK;
   }
 
@@ -2407,7 +2411,6 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::sortdirection ||
         aAttribute == nsWidgetAtoms::focused ||
         aAttribute == nsWidgetAtoms::_default ||
-        aAttribute == nsWidgetAtoms::step ||
         aAttribute == nsWidgetAtoms::open)
       *aShouldRepaint = PR_TRUE;
   }

@@ -1687,6 +1687,36 @@ void nsCocoaWindow::SetPopupWindowLevel()
   }
 }
 
+PRBool nsCocoaWindow::IsChildInFailingLeftClickThrough(NSView *aChild)
+{
+  if ([aChild isKindOfClass:[ChildView class]]) {
+    ChildView* childView = (ChildView*) aChild;
+    if ([childView isInFailingLeftClickThrough])
+      return PR_TRUE;
+  }
+  NSArray* subviews = [aChild subviews];
+  if (subviews) {
+    NSUInteger count = [subviews count];
+    for (NSUInteger i = 0; i < count; ++i) {
+      NSView* aView = (NSView*) [subviews objectAtIndex:i];
+      if (IsChildInFailingLeftClickThrough(aView))
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+// Don't focus a plugin if we're in a left click-through that will
+// fail (see [ChildView isInFailingLeftClickThrough]).  Called from
+// [ChildView shouldFocusPlugin].
+PRBool nsCocoaWindow::ShouldFocusPlugin()
+{
+  if (IsChildInFailingLeftClickThrough([mWindow contentView]))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 @implementation WindowDelegate
 
 // We try to find a gecko menu bar to paint. If one does not exist, just paint

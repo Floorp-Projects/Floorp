@@ -722,7 +722,7 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
 
 void gfxFT2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun)
 {
-    ComputeRanges(mRanges, mString.get(), 0, mString.Length());
+    ComputeRanges(mRanges, mString.get(), 0, mString.Length(), 0);
 
     PRUint32 offset = 0;
     for (PRUint32 i = 0; i < mRanges.Length(); ++i) {

@@ -6060,10 +6060,8 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
 
   case eCSSFontDesc_Stretch:
     // property is VARIANT_HK|VARIANT_SYSFONT
-    return (ParseVariant(aValue, VARIANT_KEYWORD,
-                         nsCSSProps::kFontStretchKTable) &&
-            (aValue.GetIntValue() != NS_STYLE_FONT_STRETCH_WIDER &&
-             aValue.GetIntValue() != NS_STYLE_FONT_STRETCH_NARROWER));
+    return ParseVariant(aValue, VARIANT_KEYWORD,
+                        nsCSSProps::kFontStretchKTable);
 
     // These two are unique to @font-face and have their own special grammar.
   case eCSSFontDesc_Src:

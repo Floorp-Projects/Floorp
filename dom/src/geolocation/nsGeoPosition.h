@@ -94,13 +94,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITIONCOORDS
   
-  nsGeoPositionCoords(const double aLat,
-                      const double aLong,
-                      const double aAlt,
-                      const double aHError,
-                      const double aVError,
-                      const double aHeading,
-                      const double aSpeed);
+  nsGeoPositionCoords(double aLat, double aLong,
+                      double aAlt, double aHError,
+                      double aVError, double aHeading,
+                      double aSpeed);
 private:
   ~nsGeoPositionCoords();
   const double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;

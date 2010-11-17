@@ -98,8 +98,10 @@ function initLogins() {
 }
 
 function finishTest() {
+  try {
   ok(true, "finishTest removing testing logins...");
-ok(true, "currently have " + pwmgr.getAllLogins().length + " logins.");
+  dumpLogins(pwmgr);
+ok(true, "removing login 1...");
   pwmgr.removeLogin(login1);
 ok(true, "removing login 2A...");
   pwmgr.removeLogin(login2A);
@@ -119,6 +121,7 @@ ok(true, "removing login 4...");
   pwmgr.removeLogin(login4);
 ok(true, "removing proxyLogin...");
   pwmgr.removeLogin(proxyLogin);
+  } catch (e) { ok(false, "finishTest FAILED: " + e); }
 ok(true, "whee, done!");
 
   SimpleTest.finish();
@@ -142,8 +145,43 @@ var storageObserver = {
   },
 
   observe : function (subject, topic, data) {
-   if (this.notificationCallbacks.length)
-      this.notificationCallbacks.splice(0, 1)[0]();
+    ok(true, "observer for " + topic + " / " + data);
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    try {
+      switch (data) {
+        case "addLogin":
+            ok(subject instanceof Ci.nsILoginInfo, "subject QI 1");
+            ok(subject instanceof Ci.nsILoginMetaInfo, "subject QI 2");
+            dumpLogin("added: ", subject);
+            break;
+        case "modifyLogin":
+            ok(subject instanceof Ci.nsIArray, "subject QI");
+            is(subject.length, 2, "should be 2 items");
+            var oldLogin = subject.queryElementAt(0, Ci.nsILoginInfo);
+            var newLogin = subject.queryElementAt(1, Ci.nsILoginInfo);
+            dumpLogin("oldLogin: ", oldLogin);
+            dumpLogin("newLogin: ", newLogin);
+            break;
+        case "removeLogin":
+            ok(subject instanceof Ci.nsILoginInfo, "subject QI 1");
+            ok(subject instanceof Ci.nsILoginMetaInfo, "subject QI 2");
+            dumpLogin("removed: ", subject);
+            break;
+        case "removeAllLogins":
+            is(subject, null, "no subject");
+            break;
+        case "hostSavingEnabled":
+        case "hostSavingDisabled":
+            ok(subject instanceof Ci.nsISupportsString, "subject QI");
+            ok(true, "state is: " + subject.data);
+            break;
+        default:
+            do_throw("Unhandled notification: " + data + " / " + topic);
+      }
+
+      if (this.notificationCallbacks.length)
+        this.notificationCallbacks.splice(0, 1)[0]();
+    } catch (e) { ok(false, "OBSERVER FAILED: " + e); }
   }
 };
 
@@ -476,6 +514,8 @@ function handleLoad() {
         // just delete it and we'll re-add it as the next test.
         function clearIt() {
           netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+          ok(true, "1004's clearIt() called.");
+         try {
           tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
                         "mochiuser3", "mochipass3-new", "", "");
           pwmgr.removeLogin(tmpLogin);
@@ -483,6 +523,7 @@ function handleLoad() {
           // Trigger a new prompt, so we can test adding a new login.
           startCallbackTimer();
           iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+         } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
         }
         addNotificationCallback(clearIt);
 
@@ -496,6 +537,7 @@ function handleLoad() {
         var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
                       getService(Ci.nsIHttpAuthManager);
         authMgr.clearAll();
+        ok(true, "authMgr cleared cached auth");
         break;
 
     case 1005:

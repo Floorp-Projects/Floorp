@@ -48,6 +48,8 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
   test_404.html \
+  test_atob.html \
+  atob_worker.js \
   test_close.html \
   close_worker.js \
   test_closeOnGC.html \

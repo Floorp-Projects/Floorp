@@ -160,7 +160,7 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
 
 #ifdef XP_WIN
       if (sourceSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-        sourceSurface = static_cast<gfxWindowsSurface*>(sourceSurface.get())->GetImageSurface();
+        sourceSurface = sourceSurface->GetAsImageSurface();
         if (!sourceSurface)
           sourceSurface = mCanvasSurface;
       }

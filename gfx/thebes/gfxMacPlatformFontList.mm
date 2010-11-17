@@ -443,7 +443,12 @@ gfxMacFontFamily::FindStyleVariations()
         } else if (macTraits & NSExpandedFontMask) {
             fontEntry->mStretch = NS_FONT_STRETCH_EXPANDED;
         }
-        if (macTraits & NSItalicFontMask) {
+        // Cocoa fails to set the Italic traits bit for HelveticaLightItalic,
+        // at least (see bug 611855), so check for style name endings as well
+        if ((macTraits & NSItalicFontMask) ||
+            [facename hasSuffix:@"Italic"] ||
+            [facename hasSuffix:@"Oblique"])
+        {
             fontEntry->mItalic = PR_TRUE;
         }
         if (macTraits & NSFixedPitchFontMask) {

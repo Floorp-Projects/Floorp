@@ -49,6 +49,7 @@ import android.text.style.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
+import android.R;
 
 import android.util.*;
 
@@ -62,14 +63,14 @@ public class GeckoInputConnection
 
     @Override
     public boolean beginBatchEdit() {
-        Log.d("GeckoAppJava", "IME: beginBatchEdit");
+        //Log.d("GeckoAppJava", "IME: beginBatchEdit");
 
         return true;
     }
 
     @Override
     public boolean commitCompletion(CompletionInfo text) {
-        Log.d("GeckoAppJava", "IME: commitCompletion");
+        //Log.d("GeckoAppJava", "IME: commitCompletion");
 
         return commitText(text.getText(), 1);
     }
@@ -86,7 +87,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean deleteSurroundingText(int leftLength, int rightLength) {
-        Log.d("GeckoAppJava", "IME: deleteSurroundingText");
+        //Log.d("GeckoAppJava", "IME: deleteSurroundingText");
 
         /* deleteSurroundingText is supposed to ignore the composing text,
             so we cancel any pending composition, delete the text, and then
@@ -137,7 +138,7 @@ public class GeckoInputConnection
 
     @Override
     public boolean endBatchEdit() {
-        Log.d("GeckoAppJava", "IME: endBatchEdit");
+        //Log.d("GeckoAppJava", "IME: endBatchEdit");
 
         return true;
     }
@@ -178,6 +179,58 @@ public class GeckoInputConnection
             Thread.currentThread().getStackTrace()[0].toString());
 
         return null;
+    }
+
+    @Override
+    public boolean performContextMenuAction(int id) {
+        //Log.d("GeckoAppJava", "IME: performContextMenuAction");
+
+        // First we need to ask Gecko to tell us the full contents of the
+        // text field we're about to operate on.
+        String text;
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.IME_GET_TEXT, 0, Integer.MAX_VALUE));
+        try {
+            text = mQueryResult.take();
+        } catch (InterruptedException e) {
+            Log.e("GeckoAppJava", "IME: performContextMenuAction interrupted");
+            return false;
+        }
+
+        switch (id) {
+            case R.id.selectAll:
+                setSelection(0, mUpdateExtract.text.length());
+                break;
+            case R.id.cut:
+                // Fill the clipboard
+                GeckoAppShell.setClipboardText(text);
+                // If GET_TEXT returned an empty selection, we'll select everything
+                if (mSelectionLength <= 0)
+                    GeckoAppShell.sendEventToGecko(
+                        new GeckoEvent(GeckoEvent.IME_SET_SELECTION, 0, text.length()));
+                GeckoAppShell.sendEventToGecko(
+                    new GeckoEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
+                break;
+            case R.id.paste:
+                commitText(GeckoAppShell.getClipboardText(), 1);
+                break;
+            case R.id.copy:
+                // If there is no selection set, we must be doing "Copy All",
+                // otherwise, we need to get the selection from Gecko
+                if (mSelectionLength > 0) {
+                    GeckoAppShell.sendEventToGecko(
+                        new GeckoEvent(GeckoEvent.IME_GET_SELECTION, 0, 0));
+                    try {
+                        text = mQueryResult.take();
+                    } catch (InterruptedException e) {
+                        Log.e("GeckoAppJava", "IME: performContextMenuAction interrupted");
+                        return false;
+                    }
+                }
+                GeckoAppShell.setClipboardText(text);
+                break;
+        }
+        return true;
     }
 
     @Override

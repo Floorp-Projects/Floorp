@@ -172,7 +172,12 @@ typedef enum
   HB_SCRIPT_OLD_TURKIC,             /* Orkh */
   HB_SCRIPT_SAMARITAN,              /* Samr */
   HB_SCRIPT_TAI_THAM,               /* Lana */
-  HB_SCRIPT_TAI_VIET                /* Tavt */
+  HB_SCRIPT_TAI_VIET,               /* Tavt */
+
+  /* Unicode-6.0 additions */
+  HB_SCRIPT_BATAK,                  /* Batk */
+  HB_SCRIPT_BRAHMI,                 /* Brah */
+  HB_SCRIPT_MANDAIC                 /* Mand */
 } hb_script_t;
 
 

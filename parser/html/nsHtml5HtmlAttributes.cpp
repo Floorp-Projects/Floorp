@@ -235,6 +235,32 @@ nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* interner)
   return clone;
 }
 
+PRBool 
+nsHtml5HtmlAttributes::equalsAnother(nsHtml5HtmlAttributes* other)
+{
+
+  PRInt32 otherLength = other->getLength();
+  if (length != otherLength) {
+    return PR_FALSE;
+  }
+  for (PRInt32 i = 0; i < length; i++) {
+    PRBool found = PR_FALSE;
+    nsIAtom* ownLocal = names[i]->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
+    for (PRInt32 j = 0; j < otherLength; j++) {
+      if (ownLocal == other->names[j]->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML)) {
+        found = PR_TRUE;
+        if (!nsHtml5Portability::stringEqualsString(values[i], other->values[j])) {
+          return PR_FALSE;
+        }
+      }
+    }
+    if (!found) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 void
 nsHtml5HtmlAttributes::initializeStatics()
 {

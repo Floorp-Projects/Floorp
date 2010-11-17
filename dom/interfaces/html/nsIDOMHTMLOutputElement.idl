@@ -42,7 +42,7 @@
  * <output> element.
  *
  * For more information on this interface, please see
- * http://dev.w3.org/html5/spec/forms.html#the-output-element
+ * http://www.whatwg.org/specs/web-apps/current-work/#the-output-element
  *
  * @status UNDER_DEVELOPMENT
  */

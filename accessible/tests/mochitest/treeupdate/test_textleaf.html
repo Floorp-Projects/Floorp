@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test accessible recreation</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function textLeafUpdate(aID, aIsTextLeafLinkable)
+    {
+      this.node = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.node.parentNode)
+      ];
+
+      this.finalCheck = function textLeafUpdate_finalCheck()
+      {
+        var textLeaf = getAccessible(this.node).firstChild;
+        is(textLeaf.numActions, (aIsTextLeafLinkable ? 1 : 0),
+           "Wrong action numbers!");
+      }
+    }
+
+    function setOnClickAttr(aID)
+    {
+      this.__proto__ = new textLeafUpdate(aID, true);
+
+      this.invoke = function setOnClickAttr_invoke()
+      {
+        this.node.setAttribute("onclick", "alert(3);");
+      }
+
+      this.getID = function setOnClickAttr_getID()
+      {
+        return "make " + prettyName(aID) + " linkable";
+      }
+    }
+
+    function removeOnClickAttr(aID)
+    {
+      this.__proto__ = new textLeafUpdate(aID, false);
+
+      this.invoke = function removeOnClickAttr_invoke()
+      {
+        this.node.removeAttribute("onclick");
+      }
+
+      this.getID = function removeOnClickAttr_getID()
+      {
+        return "unmake " + prettyName(aID) + " linkable";
+      }
+    }
+
+    function setOnClickNRoleAttrs(aID)
+    {
+      this.__proto__ = new textLeafUpdate(aID, true);
+
+      this.invoke = function setOnClickAttr_invoke()
+      {
+        this.node.setAttribute("role", "link");
+        this.node.setAttribute("onclick", "alert(3);");
+      }
+
+      this.getID = function setOnClickAttr_getID()
+      {
+        return "make " + prettyName(aID) + " linkable";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      // adds onclick on element, text leaf should inherit its action
+      gQueue.push(new setOnClickAttr("div"));
+
+      // remove onclick attribute, text leaf shouldn't have any action
+      gQueue.push(new removeOnClickAttr("div"));
+
+      // set onclick attribute making span accessible, it's inserted into tree
+      // and adopts text leaf accessible, text leaf should have an action
+      gQueue.push(new setOnClickNRoleAttrs("span"));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Clean up the code of accessible initialization and binding to the tree"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=545465">
+    Mozilla Bug 545465
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="container">
+    <div id="div">div</div>
+    <span id="span">span</span>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

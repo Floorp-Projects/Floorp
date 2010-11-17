@@ -525,7 +525,7 @@ public:
     const elem_type* iter = Elements() + start, *end = Elements() + Length();
     for (; iter != end; ++iter) {
       if (comp.Equals(*iter, item))
-        return iter - Elements();
+        return index_type(iter - Elements());
     }
     return NoIndex;
   }

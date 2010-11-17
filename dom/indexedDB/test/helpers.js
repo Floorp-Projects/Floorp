@@ -71,6 +71,7 @@ ExpectError.prototype = {
   handleEvent: function(event)
   {
     is(this._code, event.code, "Expected error was thrown.");
+    event.preventDefault();
     grabEventAndContinueHandler(event);
   }
 };

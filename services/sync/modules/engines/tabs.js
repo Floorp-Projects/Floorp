@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Myk Melez <myk@mozilla.org>
  *  Jono DiCarlo <jdicarlo@mozilla.com>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,6 +70,14 @@ TabEngine.prototype = {
   _trackerObj: TabTracker,
   _recordObj: TabSetRecord,
 
+  getChangedIDs: function getChangedIDs() {
+    // No need for a proper timestamp (no conflict resolution needed).
+    let changedIDs = {};
+    if (this._tracker.modified)
+      changedIDs[Clients.localID] = 0;
+    return changedIDs;
+  },
+
   // API for use by Weave UI code to give user choices of tabs to open:
   getAllClients: function TabEngine_getAllClients() {
     return this._store._remoteClients;
@@ -81,6 +90,7 @@ TabEngine.prototype = {
   _resetClient: function TabEngine__resetClient() {
     SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
+    this._tracker.modified = true;
   },
 
   /* The intent is not to show tabs in the menu if they're already
@@ -237,6 +247,14 @@ TabTracker.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
+  loadChangedIDs: function loadChangedIDs() {
+    // Don't read changed IDs from disk at start up.
+  },
+
+  clearChangedIDs: function clearChangedIDs() {
+    this.modified = false;
+  },
+
   _topics: ["pageshow", "TabOpen", "TabClose", "TabSelect"],
   _registerListenersForWindow: function registerListenersFW(window) {
     this._log.trace("Registering tab listeners in window");
@@ -292,7 +310,7 @@ TabTracker.prototype = {
         break;
       case "private-browsing":
         if (aData == "enter" && !PBPrefs.get("autostart"))
-          this.clearChangedIDs();
+          this.modified = false;
     }
   },
 
@@ -303,7 +321,7 @@ TabTracker.prototype = {
     }
 
     this._log.trace("onTab event: " + event.type);
-    this.addChangedID(Clients.localID);
+    this.modified = true;
 
     // For pageshow events, only give a partial score bump (~.1)
     let chance = .1;

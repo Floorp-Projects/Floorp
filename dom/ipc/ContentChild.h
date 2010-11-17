@@ -83,6 +83,11 @@ public:
     virtual bool DeallocPTestShell(PTestShellChild*);
     virtual bool RecvPTestShellConstructor(PTestShellChild*);
 
+    virtual PAudioChild* AllocPAudio(const PRInt32&,
+                                     const PRInt32&,
+                                     const PRInt32&);
+    virtual bool DeallocPAudio(PAudioChild*);
+
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);
 
