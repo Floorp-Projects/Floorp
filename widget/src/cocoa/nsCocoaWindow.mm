@@ -2282,8 +2282,9 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   BOOL stateChanged = ([self drawsContentsIntoWindowFrame] != aState);
   [super setDrawsContentsIntoWindowFrame:aState];
-  if (stateChanged) {
-    nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
+  if (stateChanged && [[self delegate] isKindOfClass:[WindowDelegate class]]) {
+    WindowDelegate *windowDelegate = (WindowDelegate *)[self delegate];
+    nsCocoaWindow *geckoWindow = [windowDelegate geckoWidget];
     if (geckoWindow) {
       // Re-layout our contents.
       geckoWindow->ReportSizeEvent();
@@ -2306,13 +2307,16 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
   RollUpPopups();
 
-  nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
-  if (!geckoWindow)
-    return;
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
-  guiEvent.time = PR_IntervalNow();
-  geckoWindow->DispatchEvent(&guiEvent, status);
+  if ([[self delegate] isKindOfClass:[WindowDelegate class]]) {
+    WindowDelegate *windowDelegate = (WindowDelegate *)[self delegate];
+    nsCocoaWindow *geckoWindow = [windowDelegate geckoWidget];
+    if (!geckoWindow)
+      return;
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
+    guiEvent.time = PR_IntervalNow();
+    geckoWindow->DispatchEvent(&guiEvent, status);
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
