@@ -50,7 +50,7 @@
 
 #include "nsIDocShell.h"
 
-#include "nsICanvasRenderingContextWebGL.h"
+#include "nsIDOMWebGLRenderingContext.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsHTMLCanvasElement.h"
 #include "nsWeakReference.h"
@@ -314,7 +314,7 @@ struct WebGLContextOptions {
 };
 
 class WebGLContext :
-    public nsICanvasRenderingContextWebGL,
+    public nsIDOMWebGLRenderingContext,
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference
 {
@@ -324,9 +324,9 @@ public:
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(WebGLContext, nsIDOMWebGLRenderingContext)
 
-    NS_DECL_NSICANVASRENDERINGCONTEXTWEBGL
+    NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsHTMLCanvasElement* aParentCanvas);

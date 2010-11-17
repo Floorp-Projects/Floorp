@@ -134,7 +134,7 @@ interface nsIWebGLUniformLocation : nsISupports
 
 
 [scriptable, uuid(2f21ca21-9720-4eee-ad94-27eefe4f72dc)]
-interface nsICanvasRenderingContextWebGL : nsISupports
+interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
   //  CONSTANTS
