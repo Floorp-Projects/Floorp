@@ -444,10 +444,12 @@
       </button>
     </hbox>
     <spacer id="titlebar-spacer" flex="1"/>
-    <hbox id="titlebar-buttonbox" align="start">
-      <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
-      <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-      <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
+    <hbox id="titlebar-buttonbox-container" align="start">
+      <hbox id="titlebar-buttonbox">
+        <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
+        <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+        <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
+      </hbox>
     </hbox>
   </hbox>
 </vbox>
