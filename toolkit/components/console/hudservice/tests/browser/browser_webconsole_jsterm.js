@@ -62,7 +62,7 @@ function testJSTerm()
 
   hudId = HUDService.displaysIndex()[0];
   let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.hudReferences[hudId];
   jsterm = hud.jsterm;
   let outputNode = hudBox.querySelector(".hud-output-node");
 

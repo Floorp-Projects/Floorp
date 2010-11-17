@@ -22,7 +22,7 @@ function testSelectionWhenMovingBetweenBoxes() {
   openConsole();
 
   let hudId = HUDService.displaysIndex()[0];
-  let jsterm = HUDService.hudWeakReferences[hudId].get().jsterm;
+  let jsterm = HUDService.hudReferences[hudId].jsterm;
 
   // Fill the console with some output.
   jsterm.clearOutput();
