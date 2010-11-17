@@ -57,7 +57,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      db.removeObjectStore(objectStore.name);
+      db.deleteObjectStore(objectStore.name);
       is(db.objectStoreNames.length, 0, "Correct objectStores list");
 
       objectStore = db.createObjectStore(objectStoreName, "foo");
@@ -72,7 +72,7 @@
       }
       event = yield;
 
-      db.removeObjectStore(objectStore.name);
+      db.deleteObjectStore(objectStore.name);
       is(db.objectStoreNames.length, 0, "Correct objectStores list");
 
       continueToNextStep();
@@ -89,7 +89,7 @@
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
 
-      db.removeObjectStore(objectStoreName);
+      db.deleteObjectStore(objectStoreName);
 
       event = yield;
 

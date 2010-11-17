@@ -45,6 +45,7 @@ const Cu = Components.utils;
 const PARENT_ANNO = "weave/parent";
 const PREDECESSOR_ANNO = "weave/predecessor";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
+const FOLDER_SORTINDEX = 1000000;
 
 try {
   Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -862,6 +863,10 @@ BookmarksStore.prototype = {
   },
 
   _calculateIndex: function _calculateIndex(record) {
+    // Ensure folders have a very high sort index so they're not synced last.
+    if (record.type == "folder")
+      return FOLDER_SORTINDEX;
+
     // For anything directly under the toolbar, give it a boost of more than an
     // unvisited bookmark
     let index = 0;

@@ -193,6 +193,13 @@ nsSVGRenderingObserver::InvalidateViaReferencedElement()
 }
 
 void
+nsSVGRenderingObserver::NotifyEvictedFromRenderingObserverList()
+{
+  mInObserverList = PR_FALSE; // We've been removed from rendering-obs. list.
+  StopListening();            // Remove ourselves from mutation-obs. list.
+}
+
+void
 nsSVGRenderingObserver::AttributeChanged(nsIDocument* aDocument,
                                          dom::Element* aElement,
                                          PRInt32 aNameSpaceID,
@@ -542,6 +549,21 @@ nsSVGRenderingObserverList::InvalidateAll()
   }
 }
 
+void
+nsSVGRenderingObserverList::RemoveAll()
+{
+  nsAutoTArray<nsSVGRenderingObserver*,10> observers;
+
+  // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
+  mObservers.EnumerateEntries(GatherEnumerator, &observers);
+
+  // Our list is now cleared.  We need to notify the observers we've removed,
+  // so they can update their state & remove themselves as mutation-observers.
+  for (PRUint32 i = 0; i < observers.Length(); ++i) {
+    observers[i]->NotifyEvictedFromRenderingObserverList();
+  }
+}
+
 static void
 DestroyObservers(void *aObject, nsIAtom *aPropertyName,
                  void *aPropertyValue, void *aData)
@@ -574,6 +596,16 @@ nsSVGEffects::RemoveRenderingObserver(Element *aElement, nsSVGRenderingObserver 
     if (observerList->IsEmpty()) {
       aElement->SetHasRenderingObservers(false);
     }
+  }
+}
+
+void
+nsSVGEffects::RemoveAllRenderingObservers(Element *aElement)
+{
+  nsSVGRenderingObserverList *observerList = GetObserverList(aElement);
+  if (observerList) {
+    observerList->RemoveAll();
+    aElement->SetHasRenderingObservers(false);
   }
 }
 

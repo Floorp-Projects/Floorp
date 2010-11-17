@@ -43,8 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = hudservice
-
 EXTRA_JS_MODULES = HUDService.jsm \
 		PropertyPanel.jsm \
 		$(NULL)

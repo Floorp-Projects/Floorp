@@ -17,4 +17,9 @@
   </filter>
   <rect width='100' height='100' fill='blue'/>
   <path d='M0,0 h100 v100 h-100 z M20,20 v60 h60 v-60 z' filter='url(#f)'/>
+
+  <!-- Cover two spots in the test whose rendering differs in opt builds
+       vs. debug builds (see Bug 610945). -->
+  <rect x='78' y='18' width='4' height='4'/>
+  <rect x='18' y='78' width='4' height='4'/>
 </svg>

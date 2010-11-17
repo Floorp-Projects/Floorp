@@ -41,6 +41,7 @@
 #include "nsAccCache.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsDocAccessible.h"
 #include "nsEventShell.h"
 
 #include "nsITreeSelection.h"
@@ -729,25 +730,23 @@ nsXULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
   NS_PRECONDITION(aColumn, "No tree column!");
 
   void* key = static_cast<void*>(aColumn);
-  nsRefPtr<nsAccessible> accessible = mAccessibleCache.GetWeak(key);
+  nsAccessible* cachedCell = mAccessibleCache.GetWeak(key);
+  if (cachedCell)
+    return cachedCell;
 
-  if (!accessible) {
-    accessible =
-      new nsXULTreeGridCellAccessibleWrap(mContent, mWeakShell, this, mTree,
-                                          mTreeView, mRow, aColumn);
-    if (!accessible)
-      return nsnull;
+  nsRefPtr<nsAccessible> cell =
+    new nsXULTreeGridCellAccessibleWrap(mContent, mWeakShell, this, mTree,
+                                        mTreeView, mRow, aColumn);
+  if (cell) {
+    if (mAccessibleCache.Put(key, cell)) {
+      if (GetDocAccessible()->BindToDocument(cell, nsnull))
+        return cell;
 
-    if (!accessible->Init()) {
-      accessible->Shutdown();
-      return nsnull;
+      mAccessibleCache.Remove(key);
     }
-
-    if (!mAccessibleCache.Put(key, accessible))
-      return nsnull;
   }
 
-  return accessible;
+  return nsnull;
 }
 
 void

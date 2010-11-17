@@ -426,7 +426,7 @@ protected:
   // The audio stream resource. Used on the state machine, audio, and main
   // threads. You must hold the mAudioMonitor, and must NOT hold the decoder
   // monitor when using the audio stream!
-  nsAutoPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<nsAudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the play state machine's constructor, and destroyed

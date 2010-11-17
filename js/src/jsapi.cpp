@@ -628,7 +628,7 @@ JSRuntime::init(uint32 maxbytes)
         return false;
 
 #if ENABLE_YARR_JIT
-    regExpAllocator = new JSC::ExecutableAllocator();
+    regExpAllocator = JSC::ExecutableAllocator::create();
     if (!regExpAllocator)
         return false;
 #endif

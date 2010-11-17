@@ -974,7 +974,7 @@ nsPrintEngine::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings
 nsresult
 nsPrintEngine::CheckForPrinters(nsIPrintSettings* aPrintSettings)
 {
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(ANDROID)
   // Mac doesn't support retrieving a printer list.
   return NS_OK;
 #else

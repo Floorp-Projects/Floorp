@@ -113,16 +113,16 @@ nsAccTreeWalker::GetNextChildInternal(PRBool aNoWalkUp)
     nsIContent* childNode = mState->childList->GetNodeAt(mState->childIdx);
     mState->childIdx++;
 
-    PRBool isHidden = PR_FALSE;
+    bool isSubtreeHidden = false;
     nsRefPtr<nsAccessible> accessible =
       GetAccService()->GetOrCreateAccessible(childNode, presShell, mWeakShell,
-                                             &isHidden);
+                                             &isSubtreeHidden);
 
     if (accessible)
       return accessible.forget();
 
     // Walk down into subtree to find accessibles.
-    if (!isHidden) {
+    if (!isSubtreeHidden) {
       if (!PushState(childNode))
         break;
 

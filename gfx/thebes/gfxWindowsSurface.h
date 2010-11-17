@@ -75,7 +75,7 @@ public:
 
     HDC GetDCWithClip(gfxContext *);
 
-    already_AddRefed<gfxImageSurface> GetImageSurface();
+    already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
     already_AddRefed<gfxWindowsSurface> OptimizeToDDB(HDC dc,
                                                       const gfxIntSize& size,

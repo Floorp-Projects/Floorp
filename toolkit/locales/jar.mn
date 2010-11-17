@@ -65,7 +65,6 @@
   locale/@AB_CD@/global/crashes.dtd                     (%crashreporter/crashes.dtd)
   locale/@AB_CD@/global/crashes.properties              (%crashreporter/crashes.properties)
 % locale global-region @AB_CD@ %locale/@AB_CD@/global-region/
-+ locale/@AB_CD@/global-region/region.dtd               (%chrome/global-region/region.dtd)
 + locale/@AB_CD@/global-region/region.properties        (%chrome/global-region/region.properties)
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/
   locale/@AB_CD@/global-platform/mac/platformKeys.properties  (%chrome/global-platform/mac/platformKeys.properties)

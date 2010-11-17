@@ -14,7 +14,10 @@ body {
 ----------------------------------*/
 
 .tab {
-  padding: 4px 6px 6px 4px;
+  padding-top: 4px;
+  -moz-padding-end: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 4px;
   background-color: #E0EAF5;
   border-radius: 0.4em;
   box-shadow:
@@ -27,6 +30,15 @@ body {
   margin: 4px;
 }
 
+html[dir=rtl] .tab {
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
+    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 1px 1.5px rgba(4, 38, 60, 0.4);
+}
+
 .tab canvas,
 .cached-thumb {
   border: 1px solid rgba(73, 99, 119, 0.3);
@@ -37,16 +49,32 @@ body {
   background-color: white;  
 }
 
+html[dir=rtl] .thumb {
+  box-shadow: -1px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
 .favicon {
   background-color: #E0EAF5;
-  border-bottom-right-radius: 0.4em;
-  padding: 4px 6px 6px 4px;
+  padding-top: 4px;
+  -moz-padding-end: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 4px;
   top: 4px;
   left: 4px;
-  border-right: 1px solid rgba(73, 99, 119, 0.3);
+  -moz-border-end: 1px solid rgba(73, 99, 119, 0.3);
   border-bottom: 1px solid rgba(73, 99, 119, 0.3);
   height: 17px;
   width: 17px;
+}
+
+html[dir=ltr] .favicon {
+  border-bottom-right-radius: 0.4em;
+}
+
+html[dir=rtl] .favicon {
+  border-bottom-left-radius: 0.4em;
+  left: auto;
+  right: 2px;
 }
 
 .favicon img {
@@ -67,6 +95,11 @@ body {
   opacity: 0.2;
 }
 
+html[dir=rtl] .close {
+  right: auto;
+  left: 6px;
+}
+
 .expander {
   bottom: 6px;
   right: 6px;
@@ -77,6 +110,12 @@ body {
   -moz-transition-duration: 0.5s;
   -moz-transition-timing-function: ease-out;
   opacity: 0.2;
+}
+
+html[dir=rtl] .expander {
+  right: auto;
+  left: 6px;
+  -moz-transform: scaleX(-1);
 }
 
 .close:hover,
@@ -111,10 +150,18 @@ body {
   box-shadow: rgba(0,0,0,.2) 1px 1px 4px;
 }
 
+html[dir=rtl] .stacked .thumb {
+  box-shadow: rgba(0,0,0,.2) -1px 1px 4px;
+}
+
 .stack-trayed .tab-title {
   text-shadow: rgba(0,0,0,1) 1px 1px 1.5px;
   color: #EEE;
   font-size: 11px;
+}
+
+html[dir=rtl] .stack-trayed .tab-title {
+  text-shadow: rgba(0,0,0,1) -1px 1px 1.5px;
 }
 
 .stack-trayed .thumb {
@@ -127,6 +174,15 @@ body {
     0 -1px 1px #FFFFFF inset,
     1px 0 1px #FFFFFF inset,
     -1px 0 1px #FFFFFF inset,
+    0 0 5.5px #007ECE;
+}
+
+html[dir=rtl] .tab.focus {
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px #FFFFFF inset,
+    -1px 0 1px #FFFFFF inset,
+    1px 0 1px #FFFFFF inset,
     0 0 5.5px #007ECE;
 }
 
@@ -173,29 +229,43 @@ body {
     0 1px 3px rgba(4, 38, 60, 0.6);
 }
 
+html[dir=rtl] .groupItem {
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
+    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 1px 3px rgba(4, 38, 60, 0.6);
+}
+
 .groupItem.activeGroupItem {
   box-shadow:
     rgba(0,0,0,0.6) 1px 1px 5.5px;
 }
 
-.phantom {
+html[dir=rtl] .groupItem.activeGroupItem {
+  box-shadow:
+    rgba(0,0,0,0.6) -1px 1px 5.5px;
 }
 
 .overlay {
   background-color: rgba(0,0,0,.7) !important;
   box-shadow: 3px 3px 5.5px rgba(0,0,0,.5);
   border-radius: 0.4em;
-  /*
-  border: 1px solid rgba(230,230,230,1);
-  background-color: rgba(248,248,248,1);
-  box-shadow:
-    rgba(0,0,0, .3) 2px 2px 5.5px,
-    inset rgba(255, 255, 255, 0.6) 0 0 0 2px; */
+}
+
+html[dir=rtl] .overlay {
+  box-shadow: -3px 3px 5.5px rgba(0,0,0,.5);
 }
 
 .appTabTray {
   top: 34px;
   right: 1px;
+}
+
+html[dir=rtl] .appTabTray {
+  right: auto;
+  left: 1px;
 }
 
 .appTabIcon {
@@ -228,6 +298,11 @@ body {
   opacity: 0.5;
 }
 
+html[dir=rtl] .undo .close {
+  left: auto;
+  right: 4px;
+}
+
 .undo .close:hover{
   opacity: 1.0;
 }
@@ -245,6 +320,12 @@ body {
     rgba(0,0,0, .2) 1px 1px 3px;
 }
 
+.info-item {
+  box-shadow:
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+    rgba(0,0,0, .2) -1px 1px 3px;
+}
+
 .intro {
   margin: 10px;
 }
@@ -256,8 +337,12 @@ body {
   opacity: 0.9;
   border: 1px dashed  rgba(0,0,0,.12);
   border-bottom: none;
-  border-right: none;
+  -moz-border-end: none;
   box-shadow: 1px 1px 0 rgba(255,255,255,.15);
+}
+
+html[dir=rtl] .guideTrench {
+  box-shadow: -1px 1px 0 rgba(255,255,255,.15);
 }
 
 .visibleTrench {
@@ -295,6 +380,11 @@ body {
   background-image: url(chrome://browser/skin/tabview/new-tab.png);
 }
 
+html[dir=rtl] .newTabButton {
+  left: auto;
+  right: 10px;
+}
+
 .newTabButton:hover {
   opacity: 1;
 }
@@ -303,8 +393,16 @@ body {
   box-shadow: 5px 5px 3px rgba(0,0,0,.5);
 }
 
+html[dir=rtl] .active {
+  box-shadow: -5px 5px 3px rgba(0,0,0,.5);
+}
+
 .acceptsDrop {
   box-shadow: 2px 2px 7px -1px rgba(0,0,0,.6);
+}
+
+html[dir=rtl] .acceptsDrop {
+  box-shadow: -2px 2px 7px -1px rgba(0,0,0,.6);
 }
 
 .titlebar {
@@ -317,10 +415,17 @@ input.name {
   background: transparent;
   border: 1px solid transparent;
   color: #999;
-  margin: 3px 0px 0px 3px;
+  margin-top: 3px;
+  -moz-margin-end: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 3px;
   padding: 1px;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  padding-left: 20px;
+  -moz-padding-start: 20px;
+}
+
+html[dir=rtl] input.name {
+  background-position: right top;
 }
 
 .title-container:hover input.name {
@@ -351,12 +456,20 @@ input.defaultName {
 }
 
 .title-shield {
-  margin: 3px 0px 0px 3px;
+  margin-top: 3px;
+  -moz-margin-end: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 3px;
   padding: 1px;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
+}
+
+html[dir=rtl] .title-shield {
+  left: auto;
+  right: 0;
 }
 
 .transparentBorder {
@@ -386,6 +499,12 @@ input.defaultName {
   opacity: .2;
 }
 
+html[dir=rtl] .resizer {
+  right: auto;
+  left: 0;
+  -moz-transform: scaleX(-1);
+}
+
 .iq-resizable-handle {
   font-size: 0.1px;
 }
@@ -398,6 +517,12 @@ input.defaultName {
   bottom: 1px;
 }
 
+html[dir=rtl] .iq-resizable-se {
+  cursor: sw-resize;
+  right: auto;
+  left: 1px;
+}
+
 /* Exit button
 +----------------------------------*/
 #exit-button {
@@ -408,9 +533,15 @@ input.defaultName {
   height: 27px;
   background: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 18, 18, 0) no-repeat scroll 4px 4px #b7b7b7;
   border-bottom: 1px solid #909090;
-  border-left: 1px solid #B7B7B7;
+  -moz-border-start: 1px solid #B7B7B7;
   border-top: 1px solid #CFCFCF;
   border-radius: 3px 0 0 3px;
+}
+
+html[dir=rtl] #exit-button {
+  right: auto;
+  left: 0;
+  border-radius: 0 3px 3px 0;
 }
 
 /* Search
@@ -430,7 +561,8 @@ input.defaultName {
   border: none;
   background-color: #272727;
   border-radius: 0.4em;
-  padding-left:5px; padding-right: 5px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 5px;
   font-size: 14px;  
 }
 
@@ -439,11 +571,20 @@ input.defaultName {
   height: 30px;
   background-color: #CFDBE8;
   border: none;
-  border-bottom-left-radius: 0.4em;
-  border-top-left-radius: 0.4em;    
   box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.8), inset 6px 6px 9px rgba(0,0,0,.56);
   opacity: .64;
   text-align: center;
+}
+
+html[dir=ltr] #actions {
+  border-bottom-left-radius: 0.4em;
+  border-top-left-radius: 0.4em;
+}
+
+html[dir=rtl] #actions {
+  border-bottom-right-radius: 0.4em;
+  border-top-right-radius: 0.4em;
+  box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.8), inset -6px 6px 9px rgba(0,0,0,.56);
 }
 
 #actions #searchbutton{
@@ -472,11 +613,16 @@ input.defaultName {
   box-shadow: 0px -1px 0px rgba(255,255,255,.1), inset 0px 2px 5px rgba(0,0,0,.3);
 }
 
+html[dir=rtl] #otherresults {
+  left: auto;
+  right: 0;
+}
+
 #otherresults .label {
   color: #999;
   line-height: 30px;
-  margin-left: 5px;
-  margin-right: 5px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 5px;
 }
 
 .inlineMatch {
@@ -484,10 +630,10 @@ input.defaultName {
   border-radius: 0.4em;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  padding-left: 3px;
-  padding-right: 3px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 3px;
   height: 20px;
-  margin-right: 5px;
+  -moz-margin-end: 5px;
   cursor: pointer;
 }
 
@@ -496,7 +642,7 @@ input.defaultName {
 }
 
 .inlineMatch > img {
-  margin-right: 5px;
+  -moz-margin-end: 5px;
   position: relative;
   top: 2px;
 }

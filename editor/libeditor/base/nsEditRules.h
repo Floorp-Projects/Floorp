@@ -40,8 +40,8 @@
 
 // FB45AC36-E8F1-44ae-8FB7-466E1BE119B0
 #define NS_IEDITRULES_IID \
-{ 0xfb45ac36, 0xe8f1, 0x44ae, \
-  { 0x8f, 0xb7, 0x46, 0x6e, 0x1b, 0xe1, 0x19, 0xb0 } }
+{ 0x2cc50d11, 0x9909, 0x433f, \
+  { 0xb6, 0xfb, 0x4c, 0xf2, 0x56, 0xe5, 0xe5, 0x71 } }
 
 class nsPlaintextEditor;
 class nsISelection;
@@ -79,6 +79,7 @@ public:
   NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
+  NS_IMETHOD DocumentModified()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEditRules, NS_IEDITRULES_IID)

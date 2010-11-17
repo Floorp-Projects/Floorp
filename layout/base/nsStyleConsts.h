@@ -422,8 +422,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // We should eventually stop using the NS_STYLE_* variants here.
 #define NS_STYLE_FONT_WEIGHT_NORMAL             NS_FONT_WEIGHT_NORMAL
 #define NS_STYLE_FONT_WEIGHT_BOLD               NS_FONT_WEIGHT_BOLD
-#define NS_STYLE_FONT_WEIGHT_BOLDER             NS_FONT_WEIGHT_BOLDER
-#define NS_STYLE_FONT_WEIGHT_LIGHTER            NS_FONT_WEIGHT_LIGHTER
+// The constants below appear only in style sheets and not computed style.
+#define NS_STYLE_FONT_WEIGHT_BOLDER             (-1)
+#define NS_STYLE_FONT_WEIGHT_LIGHTER            (-2)
 
 // See nsStyleFont
 #define NS_STYLE_FONT_SIZE_XXSMALL              0
@@ -448,8 +449,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FONT_STRETCH_EXPANDED          NS_FONT_STRETCH_EXPANDED
 #define NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED    NS_FONT_STRETCH_EXTRA_EXPANDED
 #define NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED    NS_FONT_STRETCH_ULTRA_EXPANDED
-#define NS_STYLE_FONT_STRETCH_WIDER             NS_FONT_STRETCH_WIDER
-#define NS_STYLE_FONT_STRETCH_NARROWER          NS_FONT_STRETCH_NARROWER
 
 // See nsStyleFont - system fonts
 #define NS_STYLE_FONT_CAPTION                   1		// css2

@@ -104,7 +104,7 @@ var Harness = {
 
         AddonManager.getAllInstalls(function(aInstalls) {
           is(aInstalls.length, 0, "Should be no active installs at the end of the test");
-          installs.forEach(function(aInstall) {
+          aInstalls.forEach(function(aInstall) {
             info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
             aInstall.cancel();
           });

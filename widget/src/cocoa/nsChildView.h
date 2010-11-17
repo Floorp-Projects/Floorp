@@ -234,6 +234,10 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 - (BOOL)isPluginView;
 
+// Are we processing an NSLeftMouseDown event that will fail to click through?
+// If so, we shouldn't focus or unfocus a plugin.
+- (BOOL)isInFailingLeftClickThrough;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
@@ -409,6 +413,8 @@ public:
 
   void PaintQD();
 
+  nsCocoaWindow*    GetXULWindowWidget();
+
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
 
@@ -420,7 +426,6 @@ protected:
   // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
-  nsCocoaWindow*    GetXULWindowWidget();
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()

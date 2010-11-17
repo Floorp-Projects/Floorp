@@ -1910,6 +1910,9 @@
         FT_UInt  i;
 
 
+        FT_TRACE4(( "tt_loader_init: grayscale change,"
+                    " re-executing `prep' table\n" ));
+
         exec->grayscale = grayscale;
 
         for ( i = 0; i < size->cvt_size; i++ )

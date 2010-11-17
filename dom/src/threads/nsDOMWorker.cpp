@@ -36,19 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jscntxt.h"
-
 #include "nsDOMWorker.h"
-#include "nsAtomicRefcnt.h"
 
 #include "nsIDOMEvent.h"
 #include "nsIEventTarget.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIXPConnect.h"
 
+#include "jscntxt.h"
 #ifdef MOZ_SHARK
 #include "jsdbgapi.h"
 #endif
+#include "nsAtomicRefcnt.h"
 #include "nsAutoLock.h"
 #include "nsAXPCNativeCallContext.h"
 #include "nsContentUtils.h"
@@ -59,6 +58,7 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsNativeCharsetUtils.h"
+#include "xpcprivate.h"
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
@@ -104,6 +104,12 @@ public:
   NewWorker(JSContext* aCx, uintN aArgc, jsval* aVp) {
     return MakeNewWorker(aCx, aArgc, aVp, nsDOMWorker::CONTENT);
   }
+
+  static JSBool
+  AtoB(JSContext* aCx, uintN aArgc, jsval* aVp);
+
+  static JSBool
+  BtoA(JSContext* aCx, uintN aArgc, jsval* aVp);
 
   // Chrome-only functions
   static JSBool
@@ -345,6 +351,98 @@ nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
 }
 
 JSBool
+nsDOMWorkerFunctions::AtoB(JSContext* aCx,
+                           uintN aArgc,
+                           jsval* aVp)
+{
+  nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  if (worker->IsCanceled()) {
+    return JS_FALSE;
+  }
+
+  if (!aArgc) {
+    JS_ReportError(aCx, "Function requires at least 1 parameter");
+    return JS_FALSE;
+  }
+
+  JSString* str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+  if (!str) {
+    NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
+    return JS_FALSE;
+  }
+
+  // We want the bytes here, not the jschars.
+  const char* bytes = JS_GetStringBytesZ(aCx, str);
+  if (!bytes) {
+    return JS_FALSE;
+  }
+
+  nsDependentCString string(bytes, JS_GetStringLength(str));
+  nsCAutoString result;
+
+  if (NS_FAILED(nsXPConnect::Base64Decode(string, result))) {
+    JS_ReportError(aCx, "Failed to decode base64 string!");
+    return JS_FALSE;
+  }
+
+  str = JS_NewStringCopyN(aCx, result.get(), result.Length());
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(aCx, aVp, STRING_TO_JSVAL(str));
+  return JS_TRUE;
+}
+
+JSBool
+nsDOMWorkerFunctions::BtoA(JSContext* aCx,
+                           uintN aArgc,
+                           jsval* aVp)
+{
+  nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  if (worker->IsCanceled()) {
+    return JS_FALSE;
+  }
+
+  if (!aArgc) {
+    JS_ReportError(aCx, "Function requires at least 1 parameter");
+    return JS_FALSE;
+  }
+
+  JSString* str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+  if (!str) {
+    NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
+    return JS_FALSE;
+  }
+
+  // We want the bytes here, not the jschars.
+  const char* bytes = JS_GetStringBytesZ(aCx, str);
+  if (!bytes) {
+    return JS_FALSE;
+  }
+
+  nsDependentCString string(bytes, JS_GetStringLength(str));
+  nsCAutoString result;
+
+  if (NS_FAILED(nsXPConnect::Base64Encode(string, result))) {
+    JS_ReportError(aCx, "Failed to encode base64 data!");
+    return JS_FALSE;
+  }
+
+  str = JS_NewStringCopyN(aCx, result.get(), result.Length());
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(aCx, aVp, STRING_TO_JSVAL(str));
+  return JS_TRUE;
+}
+
+JSBool
 nsDOMWorkerFunctions::NewChromeWorker(JSContext* aCx,
                                       uintN aArgc,
                                       jsval* aVp)
@@ -489,6 +587,8 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "importScripts",       nsDOMWorkerFunctions::LoadScripts,         1, 0 },
   { "XMLHttpRequest",      nsDOMWorkerFunctions::NewXMLHttpRequest,   0, 0 },
   { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, 0 },
+  { "atob",                nsDOMWorkerFunctions::AtoB,                1, 0 },
+  { "btoa",                nsDOMWorkerFunctions::BtoA,                1, 0 },
 #ifdef MOZ_SHARK
   { "startShark",          js_StartShark,                             0, 0 },
   { "stopShark",           js_StopShark,                              0, 0 },

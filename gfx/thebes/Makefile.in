@@ -290,12 +290,16 @@ ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+EXPORTS	+= \
+	gfxPDFSurface.h \
+	$(NULL)
 CPPSRCS += \
 	gfxAndroidPlatform.cpp \
 	gfxFT2Fonts.cpp \
 	gfxFT2FontBase.cpp \
 	gfxFT2Utils.cpp \
 	gfxFT2FontList.cpp \
+	gfxPDFSurface.cpp \
 	nsUnicodeRange.cpp \
 	$(NULL)
 endif

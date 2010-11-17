@@ -40,7 +40,6 @@
 #include "CheckPermissionsHelper.h"
 
 #include "nsIDOMWindow.h"
-#include "nsIIDBDatabaseException.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
@@ -161,7 +160,7 @@ CheckPermissionsHelper::Run()
                permission == nsIPermissionManager::DENY_ACTION,
                "Unknown permission!");
 
-  helper->SetError(nsIIDBDatabaseException::NOT_ALLOWED_ERR);
+  helper->SetError(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
   return helper->Run();
 }
 

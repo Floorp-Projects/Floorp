@@ -126,6 +126,18 @@ public:
    * LayerManager ceases to exist.
    */
   virtual void ClearCachedResources() {}
+
+  /**
+   * This variable is used by layer manager in order to
+   * MarkLeafLayersCoveredByOpaque() before painting.
+   * We keep it here for now. Once we need to cull completely covered
+   * non-Basic layers, mCoveredByOpaque should be moved to Layer.
+   */
+  void SetCoveredByOpaque(PRBool aCovered) { mCoveredByOpaque = aCovered; }
+  PRBool IsCoveredByOpaque() const { return mCoveredByOpaque; }
+
+protected:
+  PRPackedBool mCoveredByOpaque;
 };
 
 static BasicImplData*
@@ -226,6 +238,9 @@ ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
   NS_ADDREF(aChild);
 
   aChild->SetParent(aContainer);
+  if (aAfter == aContainer->mLastChild) {
+    aContainer->mLastChild = aChild;
+  }
   if (!aAfter) {
     aChild->SetNextSibling(aContainer->mFirstChild);
     if (aContainer->mFirstChild) {
@@ -262,6 +277,8 @@ ContainerRemoveChild(Layer* aChild, Container* aContainer)
   }
   if (next) {
     next->SetPrevSibling(prev);
+  } else {
+    aContainer->mLastChild = prev;
   }
 
   aChild->SetNextSibling(nsnull);
@@ -292,8 +309,7 @@ public:
    * drawn before this is called. The contents of the buffer are drawn
    * to aTarget.
    */
-  void DrawTo(ThebesLayer* aLayer, PRBool aIsOpaqueContent,
-              gfxContext* aTarget, float aOpacity);
+  void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity);
 
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(ContentType aType, const nsIntSize& aSize);
@@ -472,11 +488,9 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
 
   PRBool canUseOpaqueSurface = CanUseOpaqueSurface();
-  PRBool opaqueBuffer = canUseOpaqueSurface &&
-    targetSurface->AreSimilarSurfacesSensitiveToContentType();
   Buffer::ContentType contentType =
-    opaqueBuffer ? gfxASurface::CONTENT_COLOR :
-                   gfxASurface::CONTENT_COLOR_ALPHA;
+    canUseOpaqueSurface ? gfxASurface::CONTENT_COLOR :
+                          gfxASurface::CONTENT_COLOR_ALPHA;
   float opacity = GetEffectiveOpacity();
 
   if (!BasicManager()->IsRetained() ||
@@ -530,7 +544,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, canUseOpaqueSurface, target, opacity);
+  mBuffer.DrawTo(this, target, opacity);
 }
 
 static PRBool
@@ -544,7 +558,6 @@ IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
 
 void
 BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
-                               PRBool aIsOpaqueContent,
                                gfxContext* aTarget,
                                float aOpacity)
 {
@@ -560,9 +573,6 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
     // we might sample pixels outside GetVisibleRegion(), which is wrong
     // and may cause gray lines.
     gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetVisibleRegion());
-  }
-  if (aIsOpaqueContent) {
-    aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
   DrawBufferWithRotation(aTarget, aOpacity,
                          aLayer->GetXResolution(), aLayer->GetYResolution());
@@ -931,6 +941,14 @@ ToOutsideIntRect(const gfxRect &aRect)
   return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
 }
 
+static nsIntRect
+ToInsideIntRect(const gfxRect& aRect)
+{
+  gfxRect r = aRect;
+  r.RoundIn();
+  return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
+}
+
 /**
  * Returns false if there is at most one leaf layer overlapping aBounds
  * and that layer is opaque.
@@ -1092,6 +1110,81 @@ BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   mTarget = aTarget;
 }
 
+static void
+TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
+                 nsIntRect (*aRoundMethod)(const gfxRect&))
+{
+  gfxRect gr = gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  gr = aMatrix.TransformBounds(gr);
+  aRect = (*aRoundMethod)(gr);
+}
+
+// This implementation assumes that GetEffectiveTransform transforms
+// all layers to the same coordinate system. It can't be used as is
+// by accelerated layers because of intermediate surfaces.
+static void
+MarkLeafLayersCoveredByOpaque(Layer* aLayer, const nsIntRect& aClipRect,
+                              nsIntRegion& aRegion)
+{
+  Layer* child = aLayer->GetLastChild();
+  BasicImplData* data = ToData(aLayer);
+  data->SetCoveredByOpaque(PR_FALSE);
+
+  const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
+  nsIntRect newClipRect(aClipRect);
+
+  // Allow aLayer or aLayer's descendants to cover underlying layers
+  // only if it's opaque. GetEffectiveOpacity() could be used instead,
+  // but it does extra passes from descendant to ancestor.
+  if (aLayer->GetOpacity() != 1.0f) {
+    newClipRect.SetRect(0, 0, 0, 0);
+  }
+
+  if (clipRect) {
+    nsIntRect cr = *clipRect;
+    gfxMatrix tr;
+    if (aLayer->GetEffectiveTransform().Is2D(&tr)) {
+      TransformIntRect(cr, tr, ToInsideIntRect);
+      newClipRect.IntersectRect(newClipRect, cr);
+    } else {
+      newClipRect.SetRect(0, 0, 0, 0);
+    }
+  }
+
+  if (!child) {
+    gfxMatrix transform;
+    if (!aLayer->GetEffectiveTransform().Is2D(&transform)) {
+      return;
+    }
+
+    nsIntRegion region = aLayer->GetEffectiveVisibleRegion();
+    nsIntRect r = region.GetBounds();
+    TransformIntRect(r, transform, ToOutsideIntRect);
+    data->SetCoveredByOpaque(aRegion.Contains(r));
+
+    // Allow aLayer to cover underlying layers only if aLayer's
+    // content is opaque
+    if (!(aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
+      return;
+    }
+
+    nsIntRegionRectIterator it(region);
+    while (const nsIntRect* sr = it.Next()) {
+      r = *sr;
+      TransformIntRect(r, transform, ToInsideIntRect);
+
+      r.IntersectRect(r, newClipRect);
+      if (!r.IsEmpty()) {
+        aRegion.Or(aRegion, r);
+      }
+    }
+  } else {
+    for (; child; child = child->GetPrevSibling()) {
+      MarkLeafLayersCoveredByOpaque(child, newClipRect, aRegion);
+    }
+  }
+}
+
 void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
@@ -1127,6 +1220,11 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     mSnapEffectiveTransforms =
       !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING);
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix::From2D(mTarget->CurrentMatrix()));
+
+    nsIntRegion region;
+    MarkLeafLayersCoveredByOpaque(mRoot,
+                                  mRoot->GetEffectiveVisibleRegion().GetBounds(),
+                                  region);
     PaintLayer(mRoot, aCallback, aCallbackData);
 
     if (useDoubleBuffering) {
@@ -1204,7 +1302,14 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
   /* Only paint ourself, or our children - This optimization relies on this! */
   Layer* child = aLayer->GetFirstChild();
   if (!child) {
-    ToData(aLayer)->Paint(mTarget, aCallback, aCallbackData);
+    BasicImplData* data = ToData(aLayer);
+#ifdef MOZ_LAYERS_HAVE_LOG
+    MOZ_LAYERS_LOG(("%s (0x%p) is covered: %i\n", __FUNCTION__,
+                   (void*)aLayer, data->IsCoveredByOpaque()));
+#endif
+    if (!data->IsCoveredByOpaque()) {
+      data->Paint(mTarget, aCallback, aCallbackData);
+    }
   } else {
     for (; child; child = child->GetNextSibling()) {
       PaintLayer(child, aCallback, aCallbackData);
@@ -1213,6 +1318,10 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 
   if (needsGroup) {
     mTarget->PopGroupToSource();
+    // If the layer is opaque in its visible region we pushed a CONTENT_COLOR
+    // group. We need to make sure that only pixels inside the layer's visible
+    // region are copied back to the destination.
+    gfxUtils::ClipToRegionSnapped(mTarget, aLayer->GetEffectiveVisibleRegion());
     mTarget->Paint(aLayer->GetEffectiveOpacity());
   }
 
@@ -1415,8 +1524,9 @@ class BasicShadowableThebesLayer : public BasicThebesLayer,
   typedef BasicThebesLayer Base;
 
 public:
-  BasicShadowableThebesLayer(BasicShadowLayerManager* aManager) :
-    BasicThebesLayer(aManager)
+  BasicShadowableThebesLayer(BasicShadowLayerManager* aManager)
+    : BasicThebesLayer(aManager)
+    , mIsNewBuffer(false)
   {
     MOZ_COUNT_CTOR(BasicShadowableThebesLayer);
   }
@@ -1473,6 +1583,8 @@ private:
   // copy of the descriptor here so that we can call
   // DestroySharedSurface() on the descriptor.
   SurfaceDescriptor mBackBuffer;
+
+  PRPackedBool mIsNewBuffer;
 };
 
 void
@@ -1529,10 +1641,22 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
     return;
   }
 
+  nsIntRegion updatedRegion;
+  if (mIsNewBuffer) {
+    // A buffer reallocation clears both buffers. The front buffer has all the
+    // content by now, but the back buffer is still clear. Here, in effect, we
+    // are saying to copy all of the pixels of the front buffer to the back.
+    updatedRegion = mVisibleRegion;
+    mIsNewBuffer = false;
+  } else {
+    updatedRegion = aRegionToDraw;
+  }
+
+
   NS_ABORT_IF_FALSE(IsSurfaceDescriptorValid(mBackBuffer),
                     "should have a back buffer by now");
   BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
-                                      aRegionToDraw,
+                                      updatedRegion,
                                       mBuffer.BufferRect(),
                                       mBuffer.BufferRotation(),
                                       mBackBuffer);
@@ -1563,6 +1687,10 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
                                          &tmpFront,
                                          &mBackBuffer))
     NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+
+  NS_ABORT_IF_FALSE(!mIsNewBuffer,
+                    "Bad! Did we create a buffer twice without painting?");
+  mIsNewBuffer = true;
 
   BasicManager()->CreatedThebesBuffer(BasicManager()->Hold(this),
                                       nsIntRegion(),
@@ -1997,7 +2125,7 @@ BasicShadowThebesLayer::Paint(gfxContext* aContext,
   gfxContext* target = BasicManager()->GetTarget();
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
 
-  mFrontBuffer.DrawTo(this, CanUseOpaqueSurface(), target, GetEffectiveOpacity());
+  mFrontBuffer.DrawTo(this, target, GetEffectiveOpacity());
 }
 
 class BasicShadowContainerLayer : public ShadowContainerLayer, BasicImplData {

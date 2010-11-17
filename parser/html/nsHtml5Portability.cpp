@@ -179,6 +179,12 @@ nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
   return string->EqualsASCII(literal);
 }
 
+PRBool
+nsHtml5Portability::stringEqualsString(nsString* one, nsString* other)
+{
+  return one->Equals(*other);
+}
+
 void
 nsHtml5Portability::initializeStatics()
 {

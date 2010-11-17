@@ -94,6 +94,9 @@ function PrivateBrowsingService() {
   this._obs.addObserver(this, "private-browsing", true);
   this._obs.addObserver(this, "command-line-startup", true);
   this._obs.addObserver(this, "sessionstore-browser-state-restored", true);
+
+  // List of nsIXULWindows we are going to be closing during the transition
+  this._windowsToClose = [];
 }
 
 PrivateBrowsingService.prototype = {
@@ -125,9 +128,6 @@ PrivateBrowsingService.prototype = {
 
   // List of view source window URIs for restoring later
   _viewSrcURLs: [],
-
-  // List of nsIXULWindows we are going to be closing during the transition
-  _windowsToClose: [],
 
   // Whether private browsing has been turned on from the command line
   _lastChangedByCommandLine: false,

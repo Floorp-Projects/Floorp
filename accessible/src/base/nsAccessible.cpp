@@ -2621,19 +2621,6 @@ nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLe
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode public methods
 
-PRBool
-nsAccessible::Init()
-{
-  if (!nsAccessNodeWrap::Init())
-    return PR_FALSE;
-
-  nsDocAccessible* document =
-    GetAccService()->GetDocAccessible(mContent->GetOwnerDoc());
-  NS_ASSERTION(document, "Cannot cache new nsAccessible!");
-
-  return document ? document->CacheAccessible(this) : PR_FALSE;
-}
-
 void
 nsAccessible::Shutdown()
 {
@@ -2911,20 +2898,6 @@ nsAccessible::GetIndexOfEmbeddedChild(nsAccessible* aChild)
 
   return GetIndexOf(aChild);
 }
-
-#ifdef DEBUG
-PRBool
-nsAccessible::IsInCache()
-{
-  nsDocAccessible *docAccessible =
-    GetAccService()->GetDocAccessible(mContent->GetOwnerDoc());
-  if (docAccessible)
-    return docAccessible->GetCachedAccessibleByUniqueID(UniqueID()) ? PR_TRUE : PR_FALSE;
-
-  return PR_FALSE;
-}
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // HyperLinkAccessible methods

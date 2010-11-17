@@ -38,18 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
-
-// Get global history service
-try {
-  var bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
+var histsvc = PlacesUtils.history;
+var bhist = PlacesUtils.bhistory;
+var bmsvc = PlacesUtils.bookmarks;
 
 // adds a test URI visit to the database, and checks for a valid place ID
 function add_visit(aURI, aDate) {
@@ -73,6 +64,8 @@ var resultObserver = {
   nodeRemoved: function(parent, node, oldIndex) {
     this.removedNode = node;
   },
+
+  nodeAnnotationChanged: function() {},
 
   newTitle: "",
   nodeChangedByTitle: null,
@@ -117,6 +110,11 @@ var resultObserver = {
   sortingChanged: function(sortingMode) {
     this.sortingMode = sortingMode;
   },
+  inBatchMode: false,
+  batching: function(aToggleMode) {
+    do_check_neq(this.inBatchMode, aToggleMode);
+    this.inBatchMode = aToggleMode;
+  },
   result: null,
   reset: function() {
     this.insertedNode = null;
@@ -132,10 +130,18 @@ var resultObserver = {
   }
 };
 
+var testURI = uri("http://mozilla.com");
+
 // main
 function run_test() {
+  check_history_query();
+  resultObserver.reset();
+  check_bookmarks_query();
+  resultObserver.reset();
+  check_mixed_query();
+}
 
-  // history query
+function check_history_query() {
   var options = histsvc.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.resultType = options.RESULTS_AS_VISIT;
@@ -150,7 +156,6 @@ function run_test() {
 
   // nsINavHistoryResultObserver.nodeInserted
   // add a visit
-  var testURI = uri("http://mozilla.com");
   add_visit(testURI);
   do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
@@ -181,22 +186,28 @@ function run_test() {
   do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
   do_check_eq(resultObserver.invalidatedContainer, result.root);
 
+  // nsINavHistoryResultObserver.batching
+  do_check_false(resultObserver.inBatchMode);
+  histsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
+  bmsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
+
   // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;
   do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
   result.removeObserver(resultObserver);
+}
 
-  // bookmarks query
-  
-  // Reset the result observer.
-  resultObserver.reset();
-
-  try {
-    var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-  } catch(ex) {
-    do_throw("Could not get nav-bookmarks-service\n");
-  }
-
+function check_bookmarks_query() {
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
   query.setFolders([bmsvc.bookmarksMenuFolder], 1);
@@ -241,6 +252,54 @@ function run_test() {
   result.sortingMode = options.SORT_BY_TITLE_ASCENDING;
   do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
   do_check_eq(resultObserver.invalidatedContainer, result.root);
+
+  // nsINavHistoryResultObserver.batching
+  do_check_false(resultObserver.inBatchMode);
+  histsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
+  bmsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
+
+  // nsINavHistoryResultObserver.containerClosed
+  root.containerOpen = false;
+  do_check_eq(resultObserver.closedContainer, resultObserver.openedContainer);
+  result.removeObserver(resultObserver);
+}
+
+function check_mixed_query() {
+  var options = histsvc.getNewQueryOptions();
+  var query = histsvc.getNewQuery();
+  query.onlyBookmarked = true;
+  var result = histsvc.executeQuery(query, options);
+  result.addObserver(resultObserver, false);
+  var root = result.root;
+  root.containerOpen = true;
+
+  // nsINavHistoryResultObserver.containerOpened
+  do_check_neq(resultObserver.openedContainer, null);
+
+  // nsINavHistoryResultObserver.batching
+  do_check_false(resultObserver.inBatchMode);
+  histsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
+  bmsvc.runInBatchMode({
+    runBatched: function (aUserData) {
+      do_check_true(resultObserver.inBatchMode);
+    }
+  }, null);
+  do_check_false(resultObserver.inBatchMode);
 
   // nsINavHistoryResultObserver.containerClosed
   root.containerOpen = false;

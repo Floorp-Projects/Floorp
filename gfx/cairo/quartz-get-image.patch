@@ -1,0 +1,127 @@
+diff --git a/gfx/cairo/README b/gfx/cairo/README
+--- a/gfx/cairo/README
++++ b/gfx/cairo/README
+@@ -69,16 +69,18 @@ quartz-state.patch: bug 522859; refactor
+ quartz-cache-CGImageRef.patch: cache CGImageRef for a CGBitmapContext; when we reuse it, Quartz will cache stuff, improving performance
+ 
+ quartz-remove-snapshot.patch: remove broken implementation of backend snapshot
+ 
+ quartz-cglayers.patch: add support for cairo surfaces backed by CGLayers
+ 
+ quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in previous patch
+ 
++quartz-get-image.patch: Bug 575521; add a way to get the image surface associated with a surface
++
+ premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
+ 
+ xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
+ 
+ remove-comma: remove a comma from enum
+ 
+ d2d.patch: add d2d support
+ 
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -1880,24 +1880,24 @@ _cairo_quartz_surface_finish (void *abst
+     surface->cgContext = NULL;
+ 
+     if (surface->bitmapContextImage) {
+         CGImageRelease (surface->bitmapContextImage);
+         surface->bitmapContextImage = NULL;
+     }
+ 
+     if (surface->imageSurfaceEquiv) {
++	_cairo_image_surface_assume_ownership_of_data (surface->imageSurfaceEquiv);
+ 	cairo_surface_destroy (surface->imageSurfaceEquiv);
+ 	surface->imageSurfaceEquiv = NULL;
++    } else if (surface->imageData) {
++        free (surface->imageData);
+     }
+ 
+-    if (surface->imageData) {
+-	free (surface->imageData);
+-	surface->imageData = NULL;
+-    }
++    surface->imageData = NULL;
+ 
+     if (surface->cgLayer) {
+         CGLayerRelease (surface->cgLayer);
+     }
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+@@ -3200,16 +3200,28 @@ cairo_quartz_finish_cg_context_with_clip
+     cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t*)surface;
+ 
+     if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
+ 	return;
+ 
+     CGContextRestoreGState (quartz->cgContext);
+ }
+ 
++cairo_surface_t *
++cairo_quartz_surface_get_image (cairo_surface_t *surface)
++{
++    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t *)surface;
++    cairo_image_surface_t *image;
++
++    if (_cairo_quartz_get_image(quartz, &image))
++        return NULL;
++
++    return (cairo_surface_t *)image;
++}
++
+ /* Debug stuff */
+ 
+ #ifdef QUARTZ_DEBUG
+ 
+ #include <Movies.h>
+ 
+ void ExportCGImageToPNGFile(CGImageRef inImageRef, char* dest)
+ {
+diff --git a/gfx/cairo/cairo/src/cairo-quartz.h b/gfx/cairo/cairo/src/cairo-quartz.h
+--- a/gfx/cairo/cairo/src/cairo-quartz.h
++++ b/gfx/cairo/cairo/src/cairo-quartz.h
+@@ -63,16 +63,19 @@ cairo_public CGContextRef
+ cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
+ 
+ cairo_public CGContextRef
+ cairo_quartz_get_cg_context_with_clip (cairo_t *cr);
+ 
+ cairo_public void
+ cairo_quartz_finish_cg_context_with_clip (cairo_t *cr);
+ 
++cairo_public cairo_surface_t *
++cairo_quartz_surface_get_image (cairo_surface_t *surface);
++
+ #if CAIRO_HAS_QUARTZ_FONT
+ 
+ /*
+  * Quartz font support
+  */
+ 
+ cairo_public cairo_font_face_t *
+ cairo_quartz_font_face_create_for_cgfont (CGFontRef font);
+diff --git a/gfx/cairo/cairo/src/cairo-rename.h b/gfx/cairo/cairo/src/cairo-rename.h
+--- a/gfx/cairo/cairo/src/cairo-rename.h
++++ b/gfx/cairo/cairo/src/cairo-rename.h
+@@ -178,16 +178,17 @@
+ #define cairo_qpainter_surface_get_qpainter _moz_cairo_qpainter_surface_get_qpainter
+ #define cairo_quartz_font_face_create_for_atsu_font_id _moz_cairo_quartz_font_face_create_for_atsu_font_id
+ #define cairo_quartz_font_face_create_for_cgfont _moz_cairo_quartz_font_face_create_for_cgfont
+ #define cairo_quartz_image_surface_create _moz_cairo_quartz_image_surface_create
+ #define cairo_quartz_image_surface_get_image _moz_cairo_quartz_image_surface_get_image
+ #define cairo_quartz_surface_create _moz_cairo_quartz_surface_create
+ #define cairo_quartz_surface_create_for_cg_context _moz_cairo_quartz_surface_create_for_cg_context
+ #define cairo_quartz_surface_get_cg_context _moz_cairo_quartz_surface_get_cg_context
++#define cairo_quartz_surface_get_image _moz_cairo_quartz_surface_get_image
+ #define cairo_rectangle _moz_cairo_rectangle
+ #define cairo_rectangle_list_destroy _moz_cairo_rectangle_list_destroy
+ #define cairo_reference _moz_cairo_reference
+ #define cairo_rel_curve_to _moz_cairo_rel_curve_to
+ #define cairo_rel_line_to _moz_cairo_rel_line_to
+ #define cairo_rel_move_to _moz_cairo_rel_move_to
+ #define cairo_reset_clip _moz_cairo_reset_clip
+ #define cairo_restore _moz_cairo_restore

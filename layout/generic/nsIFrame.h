@@ -1977,6 +1977,14 @@ public:
   void Invalidate(const nsRect& aDamageRect)
   { return InvalidateWithFlags(aDamageRect, 0); }
 
+#ifndef MOZ_ENABLE_LIBXUL
+  /**
+   * Same as InvalidateOverflowRect, just for non-libxul builds.
+   */
+  virtual void InvalidateOverflowRectExternal()
+  { return InvalidateOverflowRect(); }
+#endif
+
   /**
    * As Invalidate above, except that this should be called when the
    * rendering that has changed is performed using layers so we can avoid

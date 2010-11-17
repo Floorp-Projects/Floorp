@@ -1,4 +1,47 @@
 
+CHANGES BETWEEN 2.4.2 and 2.4.3
+
+  I. IMPORTANT BUG FIXES
+
+    - Fix rendering of certain cubic, S-shaped arcs.   This regression
+      has been introduced in version 2.4.0.
+
+
+  II. MISCELLANEOUS
+
+    - To  fix  the  above  mentioned  rendering  issue,  a  new spline
+      flattening algorithm  has been  introduced which  speeds up both
+      conic and cubic arcs.
+
+    - Handling of broken fonts has been further improved.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.4.1 and 2.4.2
+
+  I. IMPORTANT BUG FIXES
+
+    - A stack overflow in CFF Type2 CharStrings interpreter is fixed.
+
+    - Handling Type 42 font deallocation was broken; additionally, the
+      library is now more robust against malformed Type 42 fonts.
+
+
+  II. MISCELLANEOUS
+
+    - Two new functions,  `FT_Reference_Library' (in FT_MODULE_H)  and
+      `FT_Reference_Face'  (in  FT_FREETYPE_H),  have  been  added  to
+      simplify life-cycle management.  A counter gets initialized to 1
+      at the  time an  FT_Library (or  FT_Face) structure  is created.
+      The  two  new   functions  increment  the  respective   counter.
+      `FT_Done_Library' and `FT_Done_Face' then only destroy a library
+      or face if the counter is 1, otherwise they simply decrement the
+      counter. 
+
+
+======================================================================
+
 CHANGES BETWEEN 2.4.0 and 2.4.1
 
   I. IMPORTANT CHANGES

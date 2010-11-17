@@ -53,8 +53,11 @@
 #include "nsPIDOMWindow.h"
 
 nsNativeTheme::nsNativeTheme()
+: mAnimatedContentTimeout(PR_UINT32_MAX)
 {
 }
+
+NS_IMPL_ISUPPORTS1(nsNativeTheme, nsITimerCallback)
 
 nsIPresShell *
 nsNativeTheme::GetPresShell(nsIFrame* aFrame)
@@ -475,4 +478,68 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent)
   }
 
   return PR_FALSE;
+}
+
+PRBool
+nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
+                                              PRUint32 aMinimumFrameRate)
+{
+  NS_ASSERTION(aContent, "Null pointer!");
+  NS_ASSERTION(aMinimumFrameRate, "aMinimumFrameRate must be non-zero!");
+  NS_ASSERTION(aMinimumFrameRate <= 1000,
+               "aMinimumFrameRate must be less than 1000!");
+
+  PRUint32 timeout = PRUint32(NS_floor(1000 / aMinimumFrameRate));
+  timeout = PR_MIN(mAnimatedContentTimeout, timeout);
+
+  if (!mAnimatedContentTimer) {
+    mAnimatedContentTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    NS_ENSURE_TRUE(mAnimatedContentTimer, PR_FALSE);
+  }
+
+  if (mAnimatedContentList.IsEmpty() || timeout != mAnimatedContentTimeout) {
+    nsresult rv;
+    if (!mAnimatedContentList.IsEmpty()) {
+      rv = mAnimatedContentTimer->Cancel();
+      NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    }
+
+    rv = mAnimatedContentTimer->InitWithCallback(this, timeout,
+                                                 nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    mAnimatedContentTimeout = timeout;
+  }
+
+  if (!mAnimatedContentList.AppendElement(aContent)) {
+    NS_WARNING("Out of memory!");
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsNativeTheme::Notify(nsITimer* aTimer)
+{
+  NS_ASSERTION(aTimer == mAnimatedContentTimer, "Wrong timer!");
+
+  // XXX Assumes that calling nsIFrame::Invalidate won't reenter
+  //     QueueAnimatedContentForRefresh.
+
+  PRUint32 count = mAnimatedContentList.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    nsIFrame* frame = mAnimatedContentList[index]->GetPrimaryFrame();
+    if (frame) {
+#ifdef MOZ_ENABLE_LIBXUL
+      frame->InvalidateOverflowRect();
+#else
+      frame->InvalidateOverflowRectExternal();
+#endif
+    }
+  }
+
+  mAnimatedContentList.Clear();
+  mAnimatedContentTimeout = PR_UINT32_MAX;
+  return NS_OK;
 }

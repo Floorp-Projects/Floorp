@@ -149,7 +149,7 @@ function runTest() {
       is(res.didFail, true, "should have failed for " + allowOrigin);
       is(res.responseText, "", "should have no text for " + allowOrigin);
       is(res.status, 0, "should have no status for " + allowOrigin);
-      is(res.statusText, undefined, "wrong status text for " + allowOrigin);
+      is(res.statusText, "", "wrong status text for " + allowOrigin);
       is(res.responseXML, null, "should have no XML for " + allowOrigin);
       is(res.events.join(","),
          "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
