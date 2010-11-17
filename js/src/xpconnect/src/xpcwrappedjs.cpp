@@ -112,7 +112,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXPCWrappedJS)
             }
 
             if(tmp->mRefCnt > 1)
-                tmp->RemoveFromRootSet(rt->GetJSRuntime());
+                tmp->RemoveFromRootSet(rt->GetMapLock());
         }
 
         tmp->mJSObj = nsnull;
@@ -161,7 +161,6 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     if(aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)))
     {
-        NS_ADDREF(this);
         *aInstancePtr =
             NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
         return NS_OK;
@@ -246,7 +245,7 @@ do_decrement:
     if(1 == cnt)
     {
         if(IsValid())
-            RemoveFromRootSet(rt->GetJSRuntime());
+            RemoveFromRootSet(rt->GetMapLock());
 
         // If we are not the root wrapper or if we are not being used from a
         // weak reference, then this extra ref is not needed and we can let

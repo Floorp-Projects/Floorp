@@ -313,8 +313,6 @@ namespace nanojit
             debug_only( void        resourceConsistencyCheck(); )
             debug_only( void        registerConsistencyCheck(); )
 
-            CodeList*   codeList;                   // finished blocks of code.
-
         private:
             void        gen(LirFilter* toCompile);
             NIns*       genPrologue();
@@ -401,6 +399,7 @@ namespace nanojit
             // temporarily swap all the code/exit variables below (using
             // swapCodeChunks()).  Afterwards we swap them all back and set
             // _inExit to false again.
+            CodeList*   codeList;               // finished blocks of code.
             bool        _inExit, vpad2[3];
             NIns        *codeStart, *codeEnd;   // current normal code chunk
             NIns        *exitStart, *exitEnd;   // current exit code chunk
@@ -487,6 +486,7 @@ namespace nanojit
             NIns*       asm_branch_ov(LOpcode op, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
+            void        asm_insert_random_nop();
             void        emitJumpTable(SwitchInfo* si, NIns* target);
             void        assignSavedRegs();
             void        reserveSavedRegs();

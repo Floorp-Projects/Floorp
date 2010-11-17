@@ -362,7 +362,7 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
     if(wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
     {
         JSTracer* trc = (JSTracer *)arg;
-        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObject(),
+        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObjectNoMark(),
                               "XPCWrappedNative::mFlatJSObject");
     }
 
@@ -406,12 +406,12 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
        wrapper->HasExternalReference() &&
        !wrapper->IsWrapperExpired())
     {
-        NS_ASSERTION(NS_IsMainThread(), 
-                     "Suspecting wrapped natives from non-main thread");
+        NS_ASSERTION(NS_IsMainThread() || NS_IsCycleCollectorThread(), 
+                     "Suspecting wrapped natives from non-CC thread");
 
         // Only suspect wrappedJSObjects that are in a compartment that
         // participates in cycle collection.
-        JSObject* obj = wrapper->GetFlatJSObject();
+        JSObject* obj = wrapper->GetFlatJSObjectAndMark();
         if(!xpc::ParticipatesInCycleCollection(closure->cx, obj))
             return JS_DHASH_NEXT;
 

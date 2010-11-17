@@ -3953,8 +3953,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIChromeWorker)
-    DOM_CLASSINFO_MAP_ENTRY(nsIChromeWorker)
+  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -6890,8 +6889,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         win->InitJavaProperties(); 
 
         PRBool hasProp;
-        PRBool ok = ::JS_HasProperty(cx, obj, ::JS_GetStringBytes(str),
-                                     &hasProp);
+        PRBool ok = ::JS_HasPropertyById(cx, obj, id, &hasProp);
 
         isResolvingJavaProperties = PR_FALSE;
 
@@ -8737,10 +8735,8 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
   if (id == sItem_id || id == sNamedItem_id) {
     // Define the item() or namedItem() method.
 
-    JSFunction *fnc =
-      ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(JSID_TO_STRING(id)),
-                          CallToGetPropMapper, 0, JSPROP_ENUMERATE);
-
+    JSFunction *fnc = ::JS_DefineFunctionById(cx, obj, id, CallToGetPropMapper,
+                                              0, JSPROP_ENUMERATE);
     *objp = obj;
 
     return fnc != nsnull;
@@ -9037,11 +9033,8 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     if (id == sOpen_id) {
-      JSString *str = JSID_TO_STRING(id);
-      JSFunction *fnc =
-        ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
-                            DocumentOpen, 0, JSPROP_ENUMERATE);
-
+      JSFunction *fnc =::JS_DefineFunctionById(cx, obj, id, DocumentOpen, 0,
+                                               JSPROP_ENUMERATE);
       *objp = obj;
 
       return fnc ? NS_OK : NS_ERROR_UNEXPECTED;

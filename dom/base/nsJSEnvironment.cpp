@@ -1119,7 +1119,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
                                            cx->debugHooks->
                                            debuggerHandlerData)) {
       case JSTRAP_RETURN:
-        fp->setReturnValue(js::Valueify(rval));
+        JS_SetFrameReturnValue(cx, fp, rval);
         return JS_TRUE;
       case JSTRAP_ERROR:
         cx->throwing = JS_FALSE;
@@ -2112,10 +2112,16 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     return NS_OK;
   }
 
-  NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME,
-                       __LINE__, JS_GetFunctionName(static_cast<JSFunction *>(JS_GetPrivate(mContext, static_cast<JSObject *>(aHandler)))));
+#ifdef NS_FUNCTION_TIMER
+  {
+    JSObject *obj = static_cast<JSObject *>(aHandler);
+    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj));
+    JSAutoByteString bytes;
+    const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
+    NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
+  }
+#endif
 
- 
   JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
@@ -3136,7 +3142,6 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
 {
     int fd;
     JSString *str;
-    char *filename;
 
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -3147,10 +3152,12 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
         str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
         if (!str)
             return JS_FALSE;
-        filename = JS_GetStringBytes(str);
-        fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        JSAutoByteString filename(cx, str);
+        if (!filename)
+            return JS_FALSE;
+        fd = open(filename.ptr(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         if (fd < 0) {
-            JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
+            JS_ReportError(cx, "can't open %s: %s", filename.ptr(), strerror(errno));
             return JS_FALSE;
         }
     }
@@ -3201,17 +3208,16 @@ TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSString *str;
-    const char *caption;
-
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
-    str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+    JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return JS_FALSE;
-    caption = JS_GetStringBytes(str);
-    NS_TraceMallocLogTimestamp(caption);
+    JSAutoByteString caption(cx, str);
+    if (!caption)
+        return JS_FALSE;
+    NS_TraceMallocLogTimestamp(caption.ptr());
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
@@ -3219,18 +3225,17 @@ TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocDumpAllocations(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSString *str;
-    const char *pathname;
-
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
-    str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
+    JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return JS_FALSE;
-    pathname = JS_GetStringBytes(str);
-    if (NS_TraceMallocDumpAllocations(pathname) < 0) {
-        JS_ReportError(cx, "can't dump to %s: %s", pathname, strerror(errno));
+    JSAutoByteString pathname(cx, str);
+    if (!pathname)
+        return JS_FALSE;
+    if (NS_TraceMallocDumpAllocations(pathname.ptr()) < 0) {
+        JS_ReportError(cx, "can't dump to %s: %s", pathname.ptr(), strerror(errno));
         return JS_FALSE;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -3999,7 +4004,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
      * In the browser, we don't cap the amount of GC-owned memory.
      */
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
-                      64L * 1024L * 1024L);
+                      128L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
                       0xffffffff);
   } else {

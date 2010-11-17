@@ -575,7 +575,6 @@ js_dmod(jsdouble a, jsdouble b);
 #endif /* !JS_TRACER */
 
 /* Defined in jsarray.cpp. */
-JS_DECLARE_CALLINFO(js_Array_dense_setelem_hole)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewPreallocatedArray)
 JS_DECLARE_CALLINFO(js_InitializerArray)
