@@ -135,7 +135,11 @@ typedef struct _nsCocoaWindowList {
 
 @end
 
+#if defined( MAC_OS_X_VERSION_10_6 ) && ( MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6 )
+@interface WindowDelegate : NSObject <NSWindowDelegate>
+#else
 @interface WindowDelegate : NSObject
+#endif
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
   // Used to avoid duplication when we send NS_ACTIVATE and
