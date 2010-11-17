@@ -51,7 +51,6 @@
 #include "mozIStorageStatement.h"
 #include "mozIStoragePendingStatement.h"
 #include "nsThreadUtils.h"
-#include <sstream>
 
 static int gTotalTests = 0;
 static int gPassedTests = 0;
@@ -79,18 +78,27 @@ static int gPassedTests = 0;
 #define do_check_success(aResult) \
   do_check_true(NS_SUCCEEDED(aResult))
 
-#define do_check_eq(aFirst, aSecond) \
+#ifdef LINUX
+// XXX Linux opt builds on tinderbox are orange due to linking with stdlib.
+// This is sad and annoying, but it's a workaround that works.
+#define do_check_eq(aExpected, aActual) \
+  do_check_true(aExpected == aActual)
+#else
+#include <sstream>
+
+#define do_check_eq(aExpected, aActual) \
   PR_BEGIN_MACRO \
     gTotalTests++; \
-    if (aFirst == aSecond) { \
+    if (aExpected == aActual) { \
       gPassedTests++; \
     } else { \
       std::ostringstream temp; \
-      temp << "Expected '" << aFirst << "', got '" << aSecond <<"' at "; \
+      temp << "Expected '" << aExpected << "', got '" << aActual <<"' at "; \
       temp << __FILE__ << ":" << __LINE__ << "!"; \
       fail(temp.str().c_str()); \
     } \
   PR_END_MACRO
+#endif
 
 already_AddRefed<mozIStorageService>
 getService()
