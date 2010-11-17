@@ -598,7 +598,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsAutoPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<nsAudioStream> mAudioStream;
 
   // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.

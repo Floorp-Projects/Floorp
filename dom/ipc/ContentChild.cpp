@@ -47,12 +47,15 @@
 
 #include "ContentChild.h"
 #include "TabChild.h"
+#include "AudioChild.h"
 
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
+
+#include "nsAudioStream.h"
 
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
@@ -284,6 +287,22 @@ bool
 ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
 {
     actor->SendPContextWrapperConstructor()->SendPObjectWrapperConstructor(true);
+    return true;
+}
+
+PAudioChild*
+ContentChild::AllocPAudio(const PRInt32& numChannels,
+                          const PRInt32& rate,
+                          const PRInt32& format)
+{
+    PAudioChild *child = new AudioChild();
+    return child;
+}
+
+bool
+ContentChild::DeallocPAudio(PAudioChild* doomed)
+{
+    delete doomed;
     return true;
 }
 
