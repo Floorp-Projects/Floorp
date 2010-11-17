@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>window.console test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body id="body">
+
+<script type="application/javascript;version=1.8">
+
+function doTest() {
+  ok(window.console, "console exists");
+
+  try {
+    ok(!console.foo, "random property doesn't throw");
+  } catch (ex) {
+    ok(false, "random property threw: " + ex);
+  }
+
+  var expectedProps = {
+    "log": "function",
+    "info": "function",
+    "warn": "function",
+    "error": "function",
+    "classID": "object" // XXX Bug 612405
+  };
+
+  var foundProps = 0;
+  for (var prop in console) {
+    foundProps++;
+    is(typeof(console[prop]), expectedProps[prop], "expect console prop " + prop + " exists");
+  }
+  is(foundProps, Object.keys(expectedProps).length, "found correct number of properties");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+</script>
+
+<p id="display"></p>
+
+</body>
+</html>
