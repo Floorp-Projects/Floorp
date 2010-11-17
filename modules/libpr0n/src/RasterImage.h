@@ -164,7 +164,7 @@ public:
   NS_DECL_IMGICONTAINERDEBUG
 #endif
 
-  // BEGIN NS_DECL_IMGICONTAINER
+  // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
   // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
   NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth);
   NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight);
@@ -179,8 +179,6 @@ public:
   NS_SCRIPTABLE NS_IMETHOD RequestDecode(void);
   NS_SCRIPTABLE NS_IMETHOD LockImage(void);
   NS_SCRIPTABLE NS_IMETHOD UnlockImage(void);
-  NS_SCRIPTABLE NS_IMETHOD GetAnimationMode(PRUint16 *aAnimationMode);
-  NS_SCRIPTABLE NS_IMETHOD SetAnimationMode(PRUint16 aAnimationMode);
   NS_SCRIPTABLE NS_IMETHOD ResetAnimation(void);
   // END NS_DECL_IMGICONTAINER
 
@@ -467,9 +465,6 @@ private: // data
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
   RasterImage::Anim*        mAnim;
-  
-  //! See imgIContainer for mode constants
-  PRUint16                   mAnimationMode;
   
   //! # loops remaining before animation stops (-1 no stop)
   PRInt32                    mLoopCount;
