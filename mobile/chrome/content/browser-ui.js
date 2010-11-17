@@ -159,12 +159,13 @@ var BrowserUI = {
 
   _updateToolbar: function _updateToolbar() {
     let mode = Elements.urlbarState.getAttribute("mode");
-    if (Browser.selectedTab.isLoading() && mode != "loading") {
+    if (mode == "edit" && this.activePanel)
+      return;
+
+    if (Browser.selectedTab.isLoading() && mode != "loading")
       Elements.urlbarState.setAttribute("mode", "loading");
-    }
-    else if (mode != "view") {
+    else if (mode != "view")
       Elements.urlbarState.setAttribute("mode", "view");
-    }
   },
 
   _tabSelect: function(aEvent) {
@@ -287,7 +288,6 @@ var BrowserUI = {
     if (willHidePanel) {
       awesomePanel.hidden = true;
       awesomeHeader.hidden = false;
-      this._updateToolbar();
       this._edit.reset();
       this._edit.detachController();
       this.popDialog();
@@ -518,16 +518,14 @@ var BrowserUI = {
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
-        if (Elements.urlbarState.getAttribute("mode") != "edit")
-          this._updateToolbar();
+        this._updateToolbar();
 
         this._updateIcon(browser.mIconURL);
         this.unlockToolbar();
         break;
 
       case TOOLBARSTATE_LOADING:
-        if (Elements.urlbarState.getAttribute("mode") != "edit")
-          this._updateToolbar();
+        this._updateToolbar();
 
         browser.mIconURL = "";
         this._updateIcon();
@@ -884,6 +882,7 @@ var BrowserUI = {
       case "NavigationPanelHidden": {
         this._edit.collapsed = true;
         this._title.collapsed = false;
+        this._updateToolbar();
 
         let button = document.getElementById("urlbar-icons");
         button.removeAttribute("open");
