@@ -51,6 +51,9 @@ BEGIN_TEST(testThreads_bug561444)
     }
 END_TEST(testThreads_bug561444)
 
+const PRUint32 NATIVE_STACK_SIZE = 64 * 1024;
+const PRUint32 NATIVE_STACK_HEADROOM = 8 * 1024;
+
 template <class T>
 class Repeat {
     size_t n;
@@ -96,7 +99,7 @@ class Parallel {
         size_t i;
         for (i = 0; i < n; i++) {
             thread[i] = PR_CreateThread(PR_USER_THREAD, threadMain, &p, PR_PRIORITY_NORMAL,
-                                        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, NATIVE_STACK_SIZE);
             if (thread[i] == NULL) {
                 p.ok = false;
                 break;
@@ -125,6 +128,7 @@ class eval {
 	if (!cx)
 	    return false;
 
+        JS_SetNativeStackQuota(cx, NATIVE_STACK_SIZE - NATIVE_STACK_HEADROOM);
         bool ok = false;
 	{
 	    JSAutoRequest ar(cx);
@@ -151,5 +155,20 @@ BEGIN_TEST(testThreads_bug604782)
     return true;
 }
 END_TEST(testThreads_bug604782)
+
+BEGIN_TEST(testThreads_bug609103)
+{
+    const char *code = 
+        "var x = {};\n"
+        "for (var i = 0; i < 10000; i++)\n"
+        "    x = {next: x};\n";
+
+    jsrefcount rc = JS_SuspendRequest(cx);
+    bool ok = parallel(2, eval(rt, code))();
+    JS_ResumeRequest(cx, rc);
+    CHECK(ok);
+    return true;
+}
+END_TEST(testThreads_bug609103)
 
 #endif
