@@ -426,7 +426,7 @@ nsThread::Dispatch(nsIRunnable *event, PRUint32 flags)
 
     while (wrapper->IsPending())
       NS_ProcessNextEvent(thread);
-    return rv;
+    return wrapper->Result();
   }
 
   NS_ASSERTION(flags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
@@ -755,7 +755,7 @@ NS_IMETHODIMP
 nsThreadSyncDispatch::Run()
 {
   if (mSyncTask) {
-    mSyncTask->Run();
+    mResult = mSyncTask->Run();
     mSyncTask = nsnull;
     // unblock the origin thread
     mOrigin->Dispatch(this, NS_DISPATCH_NORMAL);

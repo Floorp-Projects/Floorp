@@ -154,11 +154,15 @@ private:
 class nsThreadSyncDispatch : public nsRunnable {
 public:
   nsThreadSyncDispatch(nsIThread *origin, nsIRunnable *task)
-    : mOrigin(origin), mSyncTask(task) {
+    : mOrigin(origin), mSyncTask(task), mResult(NS_ERROR_NOT_INITIALIZED) {
   }
 
   PRBool IsPending() {
     return mSyncTask != nsnull;
+  }
+
+  nsresult Result() {
+    return mResult;
   }
 
 private:
@@ -166,6 +170,7 @@ private:
 
   nsCOMPtr<nsIThread> mOrigin;
   nsCOMPtr<nsIRunnable> mSyncTask;
+  nsresult mResult;
 };
 
 #endif  // nsThread_h__
