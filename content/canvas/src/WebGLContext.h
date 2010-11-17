@@ -67,6 +67,7 @@
 #define CONTEXT_LOST_WEBGL             0x9242
 
 class nsIDocShell;
+class nsIPropertyBag;
 
 namespace mozilla {
 
@@ -277,6 +278,39 @@ struct WebGLVertexAttribData {
     }
 };
 
+struct WebGLContextOptions {
+    // these are defaults
+    WebGLContextOptions()
+        : alpha(true), depth(true), stencil(false),
+          premultipliedAlpha(true), antialiasHint(false)
+    { }
+
+    bool operator==(const WebGLContextOptions& other) const {
+        return
+            alpha == other.alpha &&
+            depth == other.depth &&
+            stencil == other.stencil &&
+            premultipliedAlpha == other.premultipliedAlpha &&
+            antialiasHint == other.antialiasHint;
+    }
+
+    bool operator!=(const WebGLContextOptions& other) const {
+        return
+            alpha != other.alpha ||
+            depth != other.depth ||
+            stencil != other.stencil ||
+            premultipliedAlpha != other.premultipliedAlpha ||
+            antialiasHint != other.antialiasHint;
+    }
+
+    bool alpha;
+    bool depth;
+    bool stencil;
+
+    bool premultipliedAlpha;
+    bool antialiasHint;
+};
+
 class WebGLContext :
     public nsICanvasRenderingContextWebGL,
     public nsICanvasRenderingContextInternal,
@@ -305,6 +339,8 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
+    NS_IMETHOD SetContextOptions(nsIPropertyBag *aOptions);
+
     NS_IMETHOD SetIsIPC(PRBool b) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
@@ -360,9 +396,12 @@ protected:
     PRInt32 mWidth, mHeight;
     CheckedUint32 mGeneration;
 
+    WebGLContextOptions mOptions;
+
     PRPackedBool mInvalidated;
     PRPackedBool mResetLayer;
     PRPackedBool mVerbose;
+    PRPackedBool mOptionsFrozen;
 
     WebGLuint mActiveTexture;
     WebGLenum mSynthesizedGLError;
@@ -729,13 +768,14 @@ public:
     NS_DECL_NSIWEBGLTEXTURE
 
 protected:
+    friend class WebGLContext;
+    friend class WebGLFramebuffer;
+
     PRBool mDeleted;
     WebGLuint mName;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-/////// everything below that point is only used for the texture completeness/npot business
-/////// (sections 3.7.10 and 3.8.2 in GL ES 2.0.24 spec)
-////////////////////////////////////////////////////////////////////////////////////////////////////
+    // we store information about the various images that are part of
+    // this texture (cubemap faces, mipmap levels)
 
     struct ImageInfo {
         ImageInfo() : mWidth(0), mHeight(0), mFormat(0), mType(0), mIsDefined(PR_FALSE) {}
@@ -1328,6 +1368,7 @@ public:
     WebGLFramebuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE),
+        mColorAttachment0HasAlpha(PR_FALSE),
         mHasDepthAttachment(PR_FALSE),
         mHasStencilAttachment(PR_FALSE),
         mHasDepthStencilAttachment(PR_FALSE)
@@ -1341,6 +1382,8 @@ public:
     }
     PRBool Deleted() { return mDeleted; }
     WebGLuint GLName() { return mName; }
+
+    PRBool ColorAttachment0HasAlpha() { return mColorAttachment0HasAlpha; }
 
     nsresult FramebufferRenderbuffer(WebGLenum target,
                                      WebGLenum attachment,
@@ -1405,14 +1448,19 @@ public:
                 {
                     return mContext->ErrorInvalidOperation(badAttachmentFormatMsg);
                 }
+
+                // ReadPixels needs alpha and size information, but only
+                // for COLOR_ATTACHMENT0
+                if (attachment == LOCAL_GL_COLOR_ATTACHMENT0) {
+                    setDimensions(wrb);
+                    mColorAttachment0HasAlpha = InternalFormatHasAlpha(wrb->mInternalFormat);
+                } else {
+                    mColorAttachment0HasAlpha = PR_FALSE;
+                }
             }
             mColorRenderbufferAttachment = wrb;
             break;
         }
-
-        // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
-        if (attachment == LOCAL_GL_COLOR_ATTACHMENT0)
-            setDimensions(wrb);
 
         mContext->MakeContextCurrent();
         mContext->gl->fFramebufferRenderbuffer(target, attachment, rbtarget, renderbuffername);
@@ -1460,13 +1508,25 @@ public:
             {
                 return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: attachment", attachment);
             }
-            // nothing to do for color buffers. all textures have a color-renderable format.
+
+            // keep data for readPixels, function only uses COLOR_ATTACHMENT0
+            if (attachment == LOCAL_GL_COLOR_ATTACHMENT0) {
+                setDimensions(wtex);
+
+                if (wtex) {
+                    const WebGLTexture::ImageInfo& ia = wtex->ImageInfoAt
+                        (level, textarget == LOCAL_GL_TEXTURE_2D
+                         ? 0
+                         : textarget - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+                    mColorAttachment0HasAlpha = InternalFormatHasAlpha(ia.mFormat);
+                } else {
+                    mColorAttachment0HasAlpha = PR_FALSE;
+                }
+            }
+
+            // nothing else to do for color buffers. all textures have a color-renderable format.
             break;
         }
-
-        // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
-        if (attachment == LOCAL_GL_COLOR_ATTACHMENT0)
-            setDimensions(wtex);
 
         mContext->MakeContextCurrent();
         mContext->gl->fFramebufferTexture2D(target, attachment, textarget, texturename, level);
@@ -1499,6 +1559,14 @@ public:
         return int(mHasDepthAttachment) +
                int(mHasStencilAttachment) +
                int(mHasDepthStencilAttachment) > 1;
+    }
+
+    static PRBool InternalFormatHasAlpha(WebGLenum aInternalFormat) {
+        return
+            aInternalFormat == LOCAL_GL_RGBA ||
+            aInternalFormat == LOCAL_GL_ALPHA ||
+            aInternalFormat == LOCAL_GL_RGBA4 ||
+            aInternalFormat == LOCAL_GL_RGB5_A1;
     }
 
 protected:
@@ -1605,7 +1673,8 @@ protected:
     }
 
     WebGLuint mName;
-    PRBool mDeleted;
+    PRPackedBool mDeleted;
+    PRPackedBool mColorAttachment0HasAlpha;
 
     // we only store pointers to attached renderbuffers, not to attached textures, because
     // we will only need to initialize renderbuffers. Textures are already initialized.
