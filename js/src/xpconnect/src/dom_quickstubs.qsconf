@@ -458,6 +458,7 @@ members = [
     '-nsICanvasRenderingContextWebGL.getUniform',
     '-nsICanvasRenderingContextWebGL.getVertexAttrib',
     '-nsICanvasRenderingContextWebGL.getShaderParameter',
+    '-nsICanvasRenderingContextWebGL.getContextAttributes',
 
     # Audio
     'nsIDOMNotifyAudioAvailableEvent.frameBuffer',
