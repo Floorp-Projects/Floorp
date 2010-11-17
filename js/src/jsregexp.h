@@ -142,6 +142,11 @@ class RegExpStatics
         return matchPairs[2 * pairNum + which];
     }
 
+    int getCrash(size_t pairNum, bool which) const {
+         JS_CRASH_UNLESS(pairNum < pairCountCrash());
+         return get(pairNum, which);
+    }
+
     /*
      * Check whether the index at |checkValidIndex| is valid (>= 0).
      * If so, construct a string for it and place it in |*out|.
