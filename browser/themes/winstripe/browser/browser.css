@@ -325,7 +325,7 @@
   -moz-appearance: -moz-window-button-box;
 }
 
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
+#main-window[sizemode="maximized"] #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box-maximized;
 }
 
@@ -339,7 +339,7 @@
   -moz-appearance: -moz-window-button-maximize;
 }
 
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox > #titlebar-max {
+#main-window[sizemode="maximized"] #titlebar-max {
   -moz-appearance: -moz-window-button-restore;
 }
 
