@@ -1413,6 +1413,7 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
 == 534919-1.html 534919-1-ref.html
+== 536061.html 536061-ref.html
 == 537507-1.xul 537507-1-ref.xul
 == 537507-2.html 537507-2-ref.html
 == 537471-1.html 537471-1-ref.html
