@@ -13,6 +13,7 @@ function test() {
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
   // We call "finish()" when the tests are finished
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   // Start the tests
   setTimeout(runNextTest, 200);

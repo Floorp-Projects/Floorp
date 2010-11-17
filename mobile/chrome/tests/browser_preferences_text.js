@@ -30,11 +30,6 @@ function getPreferencesElements() {
    return prefElements;
 }
 
-function getHeight(element){
-  let style = window.getComputedStyle(element, null);
-  return style.height;
-}
-
 function test() {
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
   // We call "finish()" when the tests are finished
@@ -130,20 +125,6 @@ gTests.push({
     var clearDataRegion = prefsPrivacy.lastChild;
     var clearDataButton = document.getElementById(clearData.element_id);
     is(clearDataButton.tagName, clearData.tagName, "Check for Clear Private Data button type");
-
-    // 3. Verify content & privacy and security reasons are gray and of same height
-    // Check for height
-    let aboutRegionHeight = getHeight(aboutRegion);
-    let imageRegionHeight = getHeight(imageRegion);
-    let cookiesRegionHeight = getHeight(cookiesRegion);
-
-    ok(aboutRegionHeight == getHeight(homepageRegion), "The About Page and the Fennec Start are of same height");
-    ok(imageRegionHeight == getHeight(jsRegion), "The fields of Content region are of same height");
-    todo((cookiesRegionHeight == getHeight(passwordsRegion)) && (cookiesRegionHeight == getHeight(clearDataRegion)),
-       "The fields of Privacy & Security are of same height");
-    todo(aboutRegionHeight == imageRegionHeight, "The fields of Content Region and above are of same height");
-    todo(aboutRegionHeight == cookiesRegionHeight, "The fields of Privacy & Security and above are of same height");
-    ok(imageRegionHeight == cookiesRegionHeight, "The fields of Content and Privacy & Security are of same height");
 
     prefs.panelClose.click()
     is(document.getElementById("panel-container").hidden, true, "Preferences panel should be closed");

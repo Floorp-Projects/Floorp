@@ -207,10 +207,7 @@ gTests.push({
 
   onEditorReady: function() {
     let bookmarkitem = document.getElementById("bookmark-item");    
-    EventUtils.synthesizeMouse(bookmarkitem, bookmarkitem.clientWidth / 2, bookmarkitem.clientHeight / 2, {});
-
-    let uritextbox = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "uri");
-    uritextbox.value = testURL_01;
+    bookmarkitem.spec = testURL_01;
 
     let donebutton = document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "done-button");
     donebutton.click();
