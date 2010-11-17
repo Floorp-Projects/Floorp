@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  // BEGIN NS_DECL_IMGICONTAINER
+  // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
   // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
   NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth);
   NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight);
@@ -74,8 +74,6 @@ public:
   NS_SCRIPTABLE NS_IMETHOD RequestDecode(void);
   NS_SCRIPTABLE NS_IMETHOD LockImage(void);
   NS_SCRIPTABLE NS_IMETHOD UnlockImage(void);
-  NS_SCRIPTABLE NS_IMETHOD GetAnimationMode(PRUint16 *aAnimationMode);
-  NS_SCRIPTABLE NS_IMETHOD SetAnimationMode(PRUint16 aAnimationMode);
   NS_SCRIPTABLE NS_IMETHOD ResetAnimation(void);
   // END NS_DECL_IMGICONTAINER
 
@@ -100,6 +98,7 @@ public:
 protected:
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();
+  virtual PRBool   ShouldAnimate();
 
 private:
   nsWeakPtr                          mObserver;   //! imgIDecoderObserver
@@ -117,8 +116,6 @@ private:
                                           // most recently passed to
                                           // mSVGDocumentWrapper as its
                                           // viewport-bounds.
-
-  PRUint16       mAnimationMode;          // Are we allowed to animate?
 
   PRPackedBool   mIsInitialized:1;        // Have we been initalized?
   PRPackedBool   mIsFullyLoaded:1;        // Has OnStopRequest been called?
