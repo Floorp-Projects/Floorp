@@ -205,6 +205,8 @@ gTests.push({
   desc: "Test opening the awesome panel and checking the urlbar selection",
 
   run: function() {
+    info("is nav panel open: " + BrowserUI.isAutoCompleteOpen())
+    BrowserUI.closeAutoComplete(true);
     info("opening new tab")
     this._currentTab = BrowserUI.newTab(testURL_01);
 

@@ -82,6 +82,8 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
+    info("is nav panel open: " + BrowserUI.isAutoCompleteOpen())
+    BrowserUI.closeAutoComplete(true);
     info("opening new tab")
     this._currentTab = Browser.addTab(testURL_02, true);
 
