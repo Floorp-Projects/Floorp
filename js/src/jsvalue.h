@@ -728,6 +728,10 @@ class Value
         return data.asPtr;
     }
 
+    const jsuword *payloadWord() const {
+        return &data.s.payload.word;
+    }
+
   private:
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);

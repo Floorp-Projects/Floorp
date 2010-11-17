@@ -48,18 +48,20 @@ using namespace js;
 using namespace mjit;
 
 StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script)
-  : cx(cx), cc(cc), frame(frame), script(script), generation(1), lastGeneration(0),
-    exits(SystemAllocPolicy()), joins(SystemAllocPolicy()), jumpList(SystemAllocPolicy())
+: cx(cx),
+  cc(cc),
+  frame(frame),
+  script(script),
+  generation(1),
+  lastGeneration(0),
+  exits(CompilerAllocPolicy(cx, cc)),
+  joins(CompilerAllocPolicy(cx, cc)),
+  scriptJoins(CompilerAllocPolicy(cx, cc)),
+  jumpList(SystemAllocPolicy())
 {
 #ifdef DEBUG
     masm.setSpewPath(true);
 #endif
-}
-
-bool
-StubCompiler::init(uint32 nargs)
-{
-    return true;
 }
 
 void
@@ -128,7 +130,7 @@ StubCompiler::linkExit(Jump j, Uses uses)
 void
 StubCompiler::linkExitForBranch(Jump j)
 {
-    Label l = syncExit(Uses(frame.frameDepth()));
+    Label l = syncExit(Uses(frame.frameSlots()));
     linkExitDirect(j, l);
 }
 
@@ -167,17 +169,21 @@ typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 typedef JSC::MacroAssembler::Imm32 Imm32;
 
 JSC::MacroAssembler::Call
-StubCompiler::stubCall(void *ptr)
+StubCompiler::emitStubCall(void *ptr, uint32 id)
 {
-    return stubCall(ptr, frame.stackDepth() + script->nfixed);
+    return emitStubCall(ptr, frame.stackDepth() + script->nfixed, id);
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::stubCall(void *ptr, uint32 slots)
+StubCompiler::emitStubCall(void *ptr, int32 slots, uint32 id)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
-    Call cl = masm.stubCall(ptr, cc.getPC(), slots);
+    Call cl = masm.fallibleVMCall(ptr, cc.getPC(), slots);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");
+    if (cc.debugMode()) {
+        Compiler::InternalCallSite site(masm.callReturnOffset(cl), cc.getPC(), id, true, true);
+        cc.addCallSite(site);
+    }
     return cl;
 }
 
@@ -231,7 +237,7 @@ StubCompiler::vpInc(JSOp op, uint32 depth)
         break;
     }
 
-    return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots);
+    return emitStubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots, __LINE__);
 }
 
 void

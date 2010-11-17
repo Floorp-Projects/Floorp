@@ -942,9 +942,9 @@ nsGlobalWindow::CleanupCachedXBLHandlers(nsGlobalWindow* aWindow)
       aWindow->mCachedXBLPrototypeHandlers.Count() > 0) {
     aWindow->mCachedXBLPrototypeHandlers.Clear();
 
-    nsCOMPtr<nsISupports> supports;
+    nsISupports* supports;
     aWindow->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                            getter_AddRefs(supports));
+                            reinterpret_cast<void**>(&supports));
     NS_ASSERTION(supports, "Failed to QI to nsCycleCollectionISupports?!");
 
     nsContentUtils::DropJSObjects(supports);
@@ -6386,9 +6386,9 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
     NS_ASSERTION(participant,
                  "Failed to QI to nsXPCOMCycleCollectionParticipant!");
 
-    nsCOMPtr<nsISupports> thisSupports;
+    nsISupports* thisSupports;
     QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                   getter_AddRefs(thisSupports));
+                   reinterpret_cast<void**>(&thisSupports));
     NS_ASSERTION(thisSupports, "Failed to QI to nsCycleCollectionISupports!");
 
     nsresult rv = nsContentUtils::HoldJSObjects(thisSupports, participant);

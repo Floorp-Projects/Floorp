@@ -55,6 +55,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jspropertytree.h"
+#include "jsstrinlines.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -551,7 +552,7 @@ struct Shape : public JSObjectMap
                                      uint32 aslot, uintN aattrs, uintN aflags,
                                      intN ashortid) const;
 
-    bool get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp) const;
+    bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
     bool set(JSContext* cx, JSObject *obj, js::Value* vp) const;
 
     inline bool isSharedPermanent() const;
@@ -642,6 +643,7 @@ JSObject::nativeSearch(jsid id, bool adding)
 inline const js::Shape *
 JSObject::nativeLookup(jsid id)
 {
+    JS_ASSERT(isNative());
     return SHAPE_FETCH(nativeSearch(id));
 }
 

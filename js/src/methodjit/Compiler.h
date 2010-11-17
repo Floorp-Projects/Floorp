@@ -55,6 +55,7 @@ namespace mjit {
 
 class Compiler : public BaseCompiler
 {
+    friend class StubCompiler;
 
     struct BranchPatch {
         BranchPatch(const Jump &j, jsbytecode *pc)
@@ -86,6 +87,7 @@ class Compiler : public BaseCompiler
             struct {
                 bool typeConst;
                 bool dataConst;
+                bool usePropertyCache;
             } name;
             struct {
                 uint32 pcOffs;
@@ -120,16 +122,13 @@ class Compiler : public BaseCompiler
     /* InlineFrameAssembler wants to see this. */
   public:
     struct CallGenInfo {
-        CallGenInfo(uint32 argc)
-          : argc(argc)
-        { }
+        CallGenInfo(jsbytecode *pc) : pc(pc) {}
 
         /*
          * These members map to members in CallICInfo. See that structure for
          * more comments.
          */
         jsbytecode   *pc;
-        uint32       argc;
         DataLabelPtr funGuard;
         Jump         funJump;
         Jump         hotJump;
@@ -143,7 +142,7 @@ class Compiler : public BaseCompiler
         Jump         oolJump;
         RegisterID   funObjReg;
         RegisterID   funPtrReg;
-        uint32       frameDepth;
+        FrameSize    frameSize;
     };
 
   private:
@@ -154,9 +153,11 @@ class Compiler : public BaseCompiler
      * absolute address of the join point is known.
      */
     struct CallPatchInfo {
+        CallPatchInfo() : hasFastNcode(false), hasSlowNcode(false) {}
         Label joinPoint;
         DataLabelPtr fastNcodePatch;
         DataLabelPtr slowNcodePatch;
+        bool hasFastNcode;
         bool hasSlowNcode;
     };
 
@@ -188,6 +189,18 @@ class Compiler : public BaseCompiler
         ValueRemat  id;
         MaybeJump   typeGuard;
         Jump        claspGuard;
+    };
+
+    struct SetElementICInfo : public BaseICInfo {
+        SetElementICInfo(JSOp op) : BaseICInfo(op)
+        { }
+        RegisterID  objReg;
+        StateRemat  objRemat;
+        ValueRemat  vr;
+        Jump        capacityGuard;
+        Jump        claspGuard;
+        Jump        holeGuard;
+        Int32Key    key;
     };
 
     struct PICGenInfo : public BaseICInfo {
@@ -234,10 +247,16 @@ class Compiler : public BaseCompiler
     };
 
     struct InternalCallSite {
-        bool stub;
-        Label location;
+        uint32 returnOffset;
         jsbytecode *pc;
         uint32 id;
+        bool call;
+        bool ool;
+
+        InternalCallSite(uint32 returnOffset, jsbytecode *pc, uint32 id,
+                         bool call, bool ool)
+          : returnOffset(returnOffset), pc(pc), id(id), call(call), ool(ool)
+        { }
     };
 
     struct DoublePatch {
@@ -254,30 +273,36 @@ class Compiler : public BaseCompiler
     bool isConstructing;
     analyze::Script *analysis;
     Label *jumpMap;
+    bool *savedTraps;
     jsbytecode *PC;
     Assembler masm;
     FrameState frame;
-    js::Vector<BranchPatch, 64> branchPatches;
+    js::Vector<BranchPatch, 64, CompilerAllocPolicy> branchPatches;
 #if defined JS_MONOIC
-    js::Vector<MICGenInfo, 64> mics;
-    js::Vector<CallGenInfo, 64> callICs;
-    js::Vector<EqualityGenInfo, 64> equalityICs;
-    js::Vector<TraceGenInfo, 64> traceICs;
+    js::Vector<MICGenInfo, 64, CompilerAllocPolicy> mics;
+    js::Vector<CallGenInfo, 64, CompilerAllocPolicy> callICs;
+    js::Vector<EqualityGenInfo, 64, CompilerAllocPolicy> equalityICs;
+    js::Vector<TraceGenInfo, 64, CompilerAllocPolicy> traceICs;
 #endif
 #if defined JS_POLYIC
-    js::Vector<PICGenInfo, 16> pics;
-    js::Vector<GetElementICInfo> getElemICs;
+    js::Vector<PICGenInfo, 16, CompilerAllocPolicy> pics;
+    js::Vector<GetElementICInfo, 16, CompilerAllocPolicy> getElemICs;
+    js::Vector<SetElementICInfo, 16, CompilerAllocPolicy> setElemICs;
 #endif
-    js::Vector<CallPatchInfo, 64> callPatches;
-    js::Vector<InternalCallSite, 64> callSites;
-    js::Vector<DoublePatch, 16> doubleList;
+    js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
+    js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
+    js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
-    bool debugMode;
+    bool debugMode_;
     bool addTraceHints;
+    bool oomInVector;       // True if we have OOM'd appending to a vector. 
+    enum { NoApplyTricks, LazyArgsObj } applyTricks;
 
     Compiler *thisFromCtor() { return this; }
+
+    friend class CompilerAllocPolicy;
   public:
     // Special atom index used to indicate that the atom is 'length'. This
     // follows interpreter usage in JSOP_LENGTH.
@@ -293,6 +318,11 @@ class Compiler : public BaseCompiler
     bool knownJump(jsbytecode *pc);
     Label labelOf(jsbytecode *target);
     void *findCallSite(const CallSite &callSite);
+    void addCallSite(const InternalCallSite &callSite);
+    void addReturnSite(Label joinPoint, uint32 id);
+    bool loadOldTraps(const Vector<CallSite> &site);
+
+    bool debugMode() { return debugMode_; }
 
   private:
     CompileStatus performCompilation(JITScript **jitp);
@@ -305,7 +335,7 @@ class Compiler : public BaseCompiler
     uint32 fullAtomIndex(jsbytecode *pc);
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
-    void addCallSite(uint32 id, bool stub);
+    bool canUseApplyTricks();
 
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
@@ -339,6 +369,11 @@ class Compiler : public BaseCompiler
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
     void emitUncachedCall(uint32 argc, bool callingNew);
+    void checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedArgc,
+                                   FrameEntry *origCallee, FrameEntry *origThis,
+                                   MaybeRegisterID origCalleeType, RegisterID origCalleeData,
+                                   MaybeRegisterID origThisType, RegisterID origThisData,
+                                   Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     void inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
@@ -347,11 +382,12 @@ class Compiler : public BaseCompiler
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
-    void jsop_setgname(uint32 index);
-    void jsop_setgname_slow(uint32 index);
+    void jsop_setgname(uint32 index, bool usePropertyCache);
+    void jsop_setgname_slow(uint32 index, bool usePropertyCache);
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
+    void jsop_callelem_slow();
     void jsop_unbrand();
     bool jsop_getprop(JSAtom *atom, bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
@@ -368,6 +404,7 @@ class Compiler : public BaseCompiler
     void enterBlock(JSObject *obj);
     void leaveBlock();
     void emitEval(uint32 argc);
+    void jsop_arguments();
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);
@@ -416,41 +453,40 @@ class Compiler : public BaseCompiler
     bool jsop_andor(JSOp op, jsbytecode *target);
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
-    void jsop_setelem();
-    bool jsop_getelem();
+    bool jsop_setelem();
+    bool jsop_getelem(bool isCall);
+    bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
     bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
-#define STUB_CALL_TYPE(type)                                            \
-    Call stubCall(type stub) {                                          \
-        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));             \
-    }
-
-    STUB_CALL_TYPE(JSObjStub);
-    STUB_CALL_TYPE(VoidStubUInt32);
-    STUB_CALL_TYPE(VoidStub);
-    STUB_CALL_TYPE(VoidPtrStubUInt32);
-    STUB_CALL_TYPE(VoidPtrStub);
-    STUB_CALL_TYPE(BoolStub);
-    STUB_CALL_TYPE(JSObjStubUInt32);
-    STUB_CALL_TYPE(JSObjStubFun);
-    STUB_CALL_TYPE(JSObjStubJSObj);
-    STUB_CALL_TYPE(VoidStubAtom);
-    STUB_CALL_TYPE(JSStrStub);
-    STUB_CALL_TYPE(JSStrStubUInt32);
-    STUB_CALL_TYPE(VoidStubJSObj);
-    STUB_CALL_TYPE(VoidPtrStubPC);
-    STUB_CALL_TYPE(VoidVpStub);
-    STUB_CALL_TYPE(VoidStubPC);
-    STUB_CALL_TYPE(BoolStubUInt32);
-    STUB_CALL_TYPE(VoidStubFun);
-
-#undef STUB_CALL_TYPE
+   
     void prepareStubCall(Uses uses);
-    Call stubCall(void *ptr);
+    Call emitStubCall(void *ptr);
 };
+
+// Given a stub call, emits the call into the inline assembly path. If
+// debug mode is on, adds the appropriate instrumentation for recompilation.
+#define INLINE_STUBCALL(stub)                                               \
+    do {                                                                    \
+        Call cl = emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)));        \
+        if (debugMode()) {                                                  \
+            InternalCallSite site(masm.callReturnOffset(cl), PC, __LINE__,  \
+                                  true, false);                             \
+            addCallSite(site);                                              \
+        }                                                                   \
+    } while (0)                                                             \
+
+// Given a stub call, emits the call into the out-of-line assembly path. If
+// debug mode is on, adds the appropriate instrumentation for recompilation.
+// Unlike the INLINE_STUBCALL variant, this returns the Call offset.
+#define OOL_STUBCALL(stub)                                                      \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), __LINE__)          \
+
+// Same as OOL_STUBCALL, but specifies a slot depth.
+#define OOL_STUBCALL_LOCAL_SLOTS(stub, slots)                                   \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), (slots), __LINE__) \
 
 } /* namespace js */
 } /* namespace mjit */

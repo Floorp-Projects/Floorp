@@ -199,6 +199,11 @@ class NunboxAssembler : public JSC::MacroAssembler
         }
     }
 
+    template <typename T>
+    Jump guardNotHole(T address) {
+        return branch32(Equal, tagOf(address), ImmType(JSVAL_TYPE_MAGIC));
+    }
+
     void loadPrivate(Address privAddr, RegisterID to) {
         loadPtr(privAddr, to);
     }

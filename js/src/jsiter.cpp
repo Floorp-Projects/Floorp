@@ -417,9 +417,11 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
          * We are always coming from js_ValueToIterator, and we are no longer on
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
+        JSAutoByteString bytes;
+        if (!js_AtomToPrintableString(cx, atom, &bytes))
+            return false;
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             -1, ObjectValue(*obj), NULL,
-                             js_AtomToPrintableString(cx, atom));
+                             -1, ObjectValue(*obj), NULL, bytes.ptr());
         return false;
     }
     return true;

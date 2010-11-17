@@ -60,19 +60,19 @@ xpc::PtrAndPrincipalHashKey::KeyEquals(const PtrAndPrincipalHashKey* aKey) const
 inline void
 XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant)
 {
-    variant->AddToRootSet(GetJSRuntime(), &mVariantRoots);
+    variant->AddToRootSet(GetMapLock(), &mVariantRoots);
 }
 
 inline void
 XPCJSRuntime::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS)
 {
-    wrappedJS->AddToRootSet(GetJSRuntime(), &mWrappedJSRoots);
+    wrappedJS->AddToRootSet(GetMapLock(), &mWrappedJSRoots);
 }
 
 inline void
 XPCJSRuntime::AddObjectHolderRoot(XPCJSObjectHolder* holder)
 {
-    holder->AddToRootSet(GetJSRuntime(), &mObjectHolderRoots);
+    holder->AddToRootSet(GetMapLock(), &mObjectHolderRoots);
 }
 
 /***************************************************************************/

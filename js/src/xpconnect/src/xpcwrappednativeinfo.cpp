@@ -175,9 +175,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         callback = XPC_WN_GetterSetter;
     }
 
-    const char *memberName = iface->GetMemberName(ccx, this);
-
-    JSFunction *fun = JS_NewFunction(ccx, callback, argc, 0, parent, memberName);
+    JSFunction *fun = JS_NewFunctionById(ccx, callback, argc, 0, parent, GetName());
     if(!fun)
         return JS_FALSE;
 
@@ -490,13 +488,6 @@ XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst)
 {
     inst->~XPCNativeInterface();
     delete [] (char*) inst;
-}
-
-const char*
-XPCNativeInterface::GetMemberName(XPCCallContext& ccx,
-                                  const XPCNativeMember* member) const
-{
-    return JS_GetStringBytes(JSID_TO_STRING(member->GetName()));
 }
 
 void
