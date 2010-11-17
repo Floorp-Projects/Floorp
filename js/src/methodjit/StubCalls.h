@@ -217,6 +217,9 @@ void JS_FASTCALL FastInstanceOf(VMFrame &f);
 void JS_FASTCALL ArgCnt(VMFrame &f);
 void JS_FASTCALL Unbrand(VMFrame &f);
 
+/* Helper for triggering recompilation should a name read produce an undefined value. */
+void JS_FASTCALL UndefinedHelper(VMFrame &f);
+
 } /* namespace stubs */
 
 /* 

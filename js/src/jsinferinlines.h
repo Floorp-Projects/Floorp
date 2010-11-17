@@ -643,30 +643,7 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
             return;
     }
 
-    js::types::TypeObject *object = obj->getTypeObject();
-    js::types::jstype rvtype = js::types::GetValueType(cx, rval);
-
-    id = js::types::MakeTypeId(id);
-    js::types::TypeSet *assignTypes = object->properties(cx).getVariable(cx, id);
-
-    /* Extra propagation for writes of the prototype property. */
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom) &&
-        js::types::TypeIsObject(rvtype) && object->isFunction) {
-        cx->addTypePrototype(object->asFunction()->getNewObject(cx), (js::types::TypeObject *) rvtype);
-    }
-
-    /* Extra propagation for writes of the __proto__ property. */
-    if (id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom) && js::types::TypeIsObject(rvtype))
-        cx->addTypePrototype(object, (js::types::TypeObject *) rvtype);
-
-    if (assignTypes->hasType(rvtype))
-        return;
-
-    cx->compartment->types.addDynamicType(cx, assignTypes, rvtype,
-                                          "MonitorAssign: #%u:%05u %s %s:",
-                                          analysis->id, pc - code,
-                                          cx->getTypeId(object->name),
-                                          cx->getTypeId(id));
+    cx->compartment->types.dynamicAssign(cx, obj, id, rval);
 #endif
 }
 
