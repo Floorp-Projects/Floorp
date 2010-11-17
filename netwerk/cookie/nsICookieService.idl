@@ -48,8 +48,17 @@ interface nsIChannel;
  * page load.  See nsICookieManager for methods to manipulate the cookie
  * database directly.  This separation of interface is mainly historical.
  *
- * This service broadcasts the following notifications when the cookie
- * list is changed, or a cookie is rejected:
+ * This service broadcasts the notifications detailed below when the cookie
+ * list is changed, or a cookie is rejected.
+ *
+ * NOTE: observers of these notifications *must* not attempt to change profile
+ *       or switch into or out of private browsing mode from within the
+ *       observer. Doing so will cause undefined behavior. Mutating the cookie
+ *       list (e.g. by calling methods on nsICookieService and friends) is
+ *       allowed, but beware that there may be pending notifications you haven't
+ *       seen yet -- for instance, a "batch-deleted" notification will likely be
+ *       immediately followed by "added". You may check the state of the cookie
+ *       list to determine if this is the case.
  *
  * topic  : "cookie-changed"
  *          broadcast whenever the cookie list changes in some way. see

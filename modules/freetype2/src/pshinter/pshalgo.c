@@ -1862,12 +1862,10 @@
             point->cur_u = hint->cur_pos + hint->cur_len +
                              FT_MulFix( delta - hint->org_len, scale );
 
-          else if ( hint->org_len > 0 )
+          else /* hint->org_len > 0 */
             point->cur_u = hint->cur_pos +
                              FT_MulDiv( delta, hint->cur_len,
                                         hint->org_len );
-          else
-            point->cur_u = hint->cur_pos;
         }
         psh_point_set_fitted( point );
       }

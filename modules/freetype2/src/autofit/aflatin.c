@@ -1534,21 +1534,18 @@
 
 
         /* compare to standard width */
-        if ( axis->width_count > 0 )
+        delta = dist - axis->widths[0].cur;
+
+        if ( delta < 0 )
+          delta = -delta;
+
+        if ( delta < 40 )
         {
-          delta = dist - axis->widths[0].cur;
+          dist = axis->widths[0].cur;
+          if ( dist < 48 )
+            dist = 48;
 
-          if ( delta < 0 )
-            delta = -delta;
-
-          if ( delta < 40 )
-          {
-            dist = axis->widths[0].cur;
-            if ( dist < 48 )
-              dist = 48;
-
-            goto Done_Width;
-          }
+          goto Done_Width;
         }
 
         if ( dist < 3 * 64 )

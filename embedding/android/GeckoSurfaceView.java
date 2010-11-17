@@ -124,13 +124,17 @@ class GeckoSurfaceView
 
             if (mSoftwareBuffer != null)
                 GeckoAppShell.scheduleRedraw();
-            if (!doSyncDraw)
+
+            if (!doSyncDraw) {
+                Canvas c = holder.lockCanvas();
+                c.drawARGB(255, 255, 255, 255);
+                holder.unlockCanvasAndPost(c);
                 return;
+            }
         } finally {
             mSurfaceLock.unlock();
         }
 
-        mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
         ByteBuffer bb = null;
         try {
             bb = mSyncBuf.take();
@@ -138,6 +142,7 @@ class GeckoSurfaceView
             Log.e("GeckoAppJava", "Threw exception while getting sync buf: " + ie);
         }
         if (bb != null && bb.capacity() == (width * height * 2)) {
+            mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
             mSoftwareBitmap.copyPixelsFromBuffer(bb);
             Canvas c = holder.lockCanvas();
             c.drawBitmap(mSoftwareBitmap, 0, 0, null);
@@ -216,29 +221,51 @@ class GeckoSurfaceView
         }
     }
 
+    /* How this works:
+     * Whenever we want to draw, we want to be sure that we do not lock
+     * the canvas unless we're sure we can draw. Locking the canvas clears
+     * the canvas to black in most cases, causing a black flash.
+     * At the same time, the surface can resize/disappear at any moment
+     * unless the canvas is locked.
+     * Draws originate from a different thread so the surface could change
+     * at any moment while we try to draw until we lock the canvas.
+     *
+     * Also, never try to lock the canvas while holding the surface lock
+     * unless you're in SurfaceChanged, in which case the canvas was already
+     * locked. Surface lock -> Canvas lock will lead to AB-BA deadlocks.
+     */
     public void draw2D(ByteBuffer buffer, int stride) {
-        if (GeckoApp.mAppContext.mProgressDialog != null) {
-            GeckoApp.mAppContext.mProgressDialog.dismiss();
-            GeckoApp.mAppContext.mProgressDialog = null;
-        }
-        if (mSyncDraw) {
-            if (stride != (mWidth * 2))
+        // mSurfaceLock ensures that we get mSyncDraw/mSoftwareBuffer/etc.
+        // set correctly before determining whether we should do a sync draw
+        mSurfaceLock.lock();
+        try {
+            if (mSyncDraw) {
+                if (buffer != mSoftwareBuffer || stride != (mWidth * 2))
+                    return;
+                mSyncDraw = false;
+                try {
+                    mSyncBuf.put(buffer);
+                } catch (InterruptedException ie) {
+                    Log.e("GeckoAppJava", "Threw exception while getting sync buf: " + ie);
+                }
                 return;
-            mSyncDraw = false;
-            try {
-                mSyncBuf.put(buffer);
-            } catch (InterruptedException ie) {
-                Log.e("GeckoAppJava", "Threw exception while getting sync buf: " + ie);
             }
-            return;
+        } finally {
+            mSurfaceLock.unlock();
         }
 
-        if (buffer != mSoftwareBuffer)
+        if (buffer != mSoftwareBuffer || stride != (mWidth * 2))
             return;
         Canvas c = getHolder().lockCanvas();
         if (c == null)
             return;
         if (buffer != mSoftwareBuffer || stride != (mWidth * 2)) {
+            /* We're screwed. Fill it with white and hope it isn't too noticable
+             * This could potentially happen if this function is called
+             * right before mSurfaceLock is locked in SurfaceChanged.
+             * However, I've never actually seen this code get hit.
+             */
+            c.drawARGB(255, 255, 255, 255);
             getHolder().unlockCanvasAndPost(c);
             return;
         }

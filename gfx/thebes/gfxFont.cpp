@@ -312,12 +312,8 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
 
     aNeedsSyntheticBold = PR_FALSE;
 
-    PRInt8 baseWeight, weightDistance;
-    aFontStyle.ComputeWeightAndOffset(&baseWeight, &weightDistance);
+    PRInt8 baseWeight = aFontStyle.ComputeWeight();
     PRBool wantBold = baseWeight >= 6;
-    if ((wantBold && weightDistance < 0) || (!wantBold && weightDistance > 0)) {
-        wantBold = !wantBold;
-    }
 
     // If the family has only one face, we simply return it; no further checking needed
     if (mAvailableFonts.Length() == 1) {
@@ -422,47 +418,11 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
                  "weight mapping should always find at least one font in a family");
 
     gfxFontEntry *matchFE = weightList[matchBaseWeight];
-    const PRInt8 absDistance = abs(weightDistance);
-    PRInt8 wghtSteps;
-
-    if (weightDistance != 0) {
-        direction = (weightDistance > 0) ? 1 : -1;
-        PRInt8 j;
-
-        // Synthetic bolding occurs when font itself is not a bold-face and
-        // either the absolute weight is at least 600 or the relative weight
-        // (e.g. 402) implies a darker face than the ones available.
-        // note: this means that (1) lighter styles *never* synthetic bold and
-        // (2) synthetic bolding always occurs at the first bolder step beyond
-        // available faces, no matter how light the boldest face
-
-        // Account for synthetic bold in lighter case
-        // if lighter is applied with an inherited bold weight,
-        // and no actual bold faces exist, synthetic bold is used
-        // so the matched weight above is actually one step down already
-
-        wghtSteps = 1; // account for initial mapped weight
-
-        if (weightDistance < 0 && baseWeight > 5 && matchBaseWeight < 6) {
-            wghtSteps++; // if no faces [600, 900] then synthetic bold at 700
-        }
-
-        for (j = matchBaseWeight + direction;
-             j < 10 && j > 0 && wghtSteps <= absDistance;
-             j += direction) {
-            if (weightList[j]) {
-                matchFE = weightList[j];
-                wghtSteps++;
-            }
-        }
-    }
 
     NS_ASSERTION(matchFE,
                  "weight mapping should always find at least one font in a family");
 
-    if (!matchFE->IsBold() &&
-        ((weightDistance == 0 && baseWeight >= 6) ||
-         (weightDistance > 0 && wghtSteps <= absDistance)))
+    if (!matchFE->IsBold() && baseWeight >= 6)
     {
         aNeedsSyntheticBold = PR_TRUE;
     }
@@ -628,12 +588,7 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
             }
             
             // weight
-            PRInt8 baseWeight, weightDistance;
-            style->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-
-            // xxx - not entirely correct, the one unit of weight distance reflects 
-            // the "next bolder/lighter face"
-            PRInt32 targetWeight = (baseWeight * 100) + (weightDistance * 100);
+            PRInt32 targetWeight = style->ComputeWeight() * 100;
 
             PRInt32 entryWeight = fe->Weight();
             if (entryWeight == targetWeight) {
@@ -1345,34 +1300,96 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     return metrics;
 }
 
+#define MAX_SHAPING_LENGTH  32760 // slightly less than 32K, trying to avoid
+                                  // over-stressing platform shapers
+
+#define BACKTRACK_LIMIT  1024 // If we can't find a space or a cluster start
+                              // within 1K chars, just chop arbitrarily.
+                              // Limiting backtrack here avoids pathological
+                              // behavior on long runs with no whitespace.
+
 PRBool
 gfxFont::InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aRunStart,
                      PRUint32 aRunLength,
-                     PRInt32 aRunScript)
+                     PRInt32 aRunScript,
+                     PRBool aPreferPlatformShaping)
 {
-    PRBool ok = PR_FALSE;
+    PRBool ok;
 
-    if (mHarfBuzzShaper) {
-        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
-            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
-            ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
-                                              aRunStart, aRunLength, aRunScript);
-        }
-    }
+    do {
+        // Because various shaping backends struggle with very long runs,
+        // we look for appropriate break locations (preferring whitespace),
+        // and shape sub-runs of no more than 32K characters at a time.
+        // See bug 606714 (CoreText), and similar Uniscribe issues.
+        // This loop always executes at least once, and "processes" up to
+        // MAX_RUN_LENGTH_FOR_SHAPING characters, updating aRunStart and
+        // aRunLength accordingly. It terminates when the entire run has
+        // been processed, or when shaping fails.
 
-    if (!ok) {
-        if (!mPlatformShaper) {
-            CreatePlatformShaper();
-            NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
+        PRUint32 thisRunLength;
+        ok = PR_FALSE;
+
+        if (aRunLength <= MAX_SHAPING_LENGTH) {
+            thisRunLength = aRunLength;
+        } else {
+            // We're splitting this font run because it's very long
+            PRUint32 offset = aRunStart + MAX_SHAPING_LENGTH;
+            PRUint32 clusterStart = 0;
+            while (offset > aRunStart + MAX_SHAPING_LENGTH - BACKTRACK_LIMIT) {
+                if (aTextRun->IsClusterStart(offset)) {
+                    if (!clusterStart) {
+                        clusterStart = offset;
+                    }
+                    if (aString[offset] == ' ' || aString[offset - 1] == ' ') {
+                        break;
+                    }
+                }
+                --offset;
+            }
+            
+            if (offset > MAX_SHAPING_LENGTH - BACKTRACK_LIMIT) {
+                // we found a space, so break the run there
+                thisRunLength = offset - aRunStart;
+            } else if (clusterStart != 0) {
+                // didn't find a space, but we found a cluster start
+                thisRunLength = clusterStart - aRunStart;
+            } else {
+                // otherwise we'll simply break at MAX_SHAPING_LENGTH chars,
+                // which may interfere with shaping behavior (but in practice
+                // only pathological cases will lack ANY whitespace or cluster
+                // boundaries, so we don't really care; it won't affect any
+                // "real" text)
+                thisRunLength = MAX_SHAPING_LENGTH;
+            }
         }
-        if (mPlatformShaper) {
-            ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
-                                              aRunStart, aRunLength, aRunScript);
+
+        if (mHarfBuzzShaper && !aPreferPlatformShaping) {
+            if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+                gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+                ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                                  aRunStart, thisRunLength,
+                                                  aRunScript);
+            }
         }
-    }
+
+        if (!ok) {
+            if (!mPlatformShaper) {
+                CreatePlatformShaper();
+                NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
+            }
+            if (mPlatformShaper) {
+                ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                                  aRunStart, thisRunLength,
+                                                  aRunScript);
+            }
+        }
+        
+        aRunStart += thisRunLength;
+        aRunLength -= thisRunLength;
+    } while (ok && aRunLength > 0);
 
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
     return ok;
@@ -2233,13 +2250,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     PRUint32 runStart = 0, runLimit = aLength;
     PRInt32 runScript = HB_SCRIPT_LATIN;
     while (scriptRuns.Next(runStart, runLimit, runScript)) {
-        if (runScript <= HB_SCRIPT_INHERITED) {
-            // For unresolved "common" or "inherited" runs, default to Latin
-            // for now.
-            // (Should we somehow use the language or locale to try and infer
-            // a better default?)
-            runScript = HB_SCRIPT_LATIN;
-        }
         InitTextRun(aContext, aTextRun, aString, aLength,
                     runStart, runLimit, runScript);
     }
@@ -2258,7 +2268,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
     PRUint32 runStart = aScriptRunStart;
     nsAutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString, aScriptRunStart, aScriptRunEnd);
+    ComputeRanges(fontRanges, aString,
+                  aScriptRunStart, aScriptRunEnd, aRunScript);
     PRUint32 numRanges = fontRanges.Length();
 
     for (PRUint32 r = 0; r < numRanges; r++) {
@@ -2323,7 +2334,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
 
 already_AddRefed<gfxFont>
-gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, gfxFont *aPrevMatchedFont)
+gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
+                              PRInt32 aRunScript, gfxFont *aPrevMatchedFont)
 {
     nsRefPtr<gfxFont>    selectedFont;
 
@@ -2381,7 +2393,10 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, 
 }
 
 
-void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnichar *aString, PRUint32 begin, PRUint32 end)
+void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
+                                 const PRUnichar *aString,
+                                 PRUint32 begin, PRUint32 end,
+                                 PRInt32 aRunScript)
 {
     const PRUnichar *str = aString + begin;
     PRUint32 len = end - begin;
@@ -2404,16 +2419,11 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnicha
             ch = SURROGATE_TO_UCS4(ch, str[i]);
         }
 
-        // set up next ch
-        PRUint32 nextCh = 0;
-        if (i+1 < len) {
-            nextCh = str[i+1];
-            if ((i+2 < len) && NS_IS_HIGH_SURROGATE(nextCh) && NS_IS_LOW_SURROGATE(str[i+2]))
-                nextCh = SURROGATE_TO_UCS4(nextCh, str[i+2]);
-        }
-        
         // find the font for this char
-        nsRefPtr<gfxFont> font = FindFontForChar(ch, prevCh, nextCh, (aRanges.Length() == 0) ? nsnull : aRanges[aRanges.Length() - 1].font.get());
+        nsRefPtr<gfxFont> font =
+            FindFontForChar(ch, prevCh, aRunScript,
+                            (aRanges.Length() == 0) ?
+                            nsnull : aRanges[aRanges.Length() - 1].font.get());
 
         prevCh = ch;
 
@@ -2730,21 +2740,17 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     }
 }
 
-void
-gfxFontStyle::ComputeWeightAndOffset(PRInt8 *outBaseWeight, PRInt8 *outOffset) const
+PRInt8
+gfxFontStyle::ComputeWeight() const
 {
     PRInt8 baseWeight = (weight + 50) / 100;
-    PRInt8 offset = weight - baseWeight * 100;
 
     if (baseWeight < 0)
         baseWeight = 0;
     if (baseWeight > 9)
         baseWeight = 9;
 
-    if (outBaseWeight)
-        *outBaseWeight = baseWeight;
-    if (outOffset)
-        *outOffset = offset;
+    return baseWeight;
 }
 
 PRBool

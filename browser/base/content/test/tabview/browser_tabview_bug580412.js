@@ -59,6 +59,7 @@ function onTabViewWindowLoaded() {
 //    "There's currently 40 px between the first group and second group");
 
   let endGame = function() {
+    contentWindow.UI.reset();
     let onTabViewHidden = function() {
       window.removeEventListener("tabviewhidden", onTabViewHidden, false);
       ok(!TabView.isVisible(), "TabView is shown");
@@ -73,7 +74,6 @@ function onTabViewWindowLoaded() {
   }
   
   let part1 = function() {
-//    contentWindow.UI.reset();
     // move down 20 so we're far enough away from the top.
     checkSnap(currentActiveGroup, 0, 20, contentWindow, function(snapped){
       ok(!snapped,"Move away from the edge");
@@ -93,7 +93,9 @@ function onTabViewWindowLoaded() {
       });
     });
   }
-  
+
+  currentActiveGroup.setPosition(40, 40, true);
+  currentActiveGroup.arrange({animate: false});
   part1();
 }
 

@@ -55,6 +55,7 @@
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
 #include "nsJSEnvironment.h"
+#include "plbase64.h"
 #include "jstypedarray.h"
 
 #include "XrayWrapper.h"
@@ -2587,6 +2588,108 @@ nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
 
     // Set to the caller in XPC_WN_Helper_{Call,Construct}
     *aObj = ccx->GetFlattenedJSObject();
+}
+
+// static
+nsresult
+nsXPConnect::Base64Encode(const nsACString &aBinaryData,
+                          nsACString &aString)
+{
+  // Check for overflow.
+  if(aBinaryData.Length() > (PR_UINT32_MAX / 4) * 3)
+      return NS_ERROR_FAILURE;
+
+  PRUint32 stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
+
+  char *buffer;
+
+  // Add one byte for null termination.
+  if(aString.SetCapacity(stringLen + 1) &&
+     (buffer = aString.BeginWriting()) &&
+     PL_Base64Encode(aBinaryData.BeginReading(), aBinaryData.Length(), buffer))
+  {
+      // PL_Base64Encode doesn't null terminate the buffer for us when we pass
+      // the buffer in. Do that manually.
+      buffer[stringLen] = '\0';
+
+      aString.SetLength(stringLen);
+      return NS_OK;
+  }
+
+  aString.Truncate();
+  return NS_ERROR_INVALID_ARG;
+}
+
+// static
+nsresult
+nsXPConnect::Base64Encode(const nsAString &aString,
+                          nsAString &aBinaryData)
+{
+    NS_LossyConvertUTF16toASCII string(aString);
+    nsCAutoString binaryData;
+
+    nsresult rv = Base64Encode(string, binaryData);
+    if(NS_SUCCEEDED(rv))
+        CopyASCIItoUTF16(binaryData, aBinaryData);
+    else
+        aBinaryData.Truncate();
+
+    return rv;
+}
+
+// static
+nsresult
+nsXPConnect::Base64Decode(const nsACString &aString,
+                          nsACString &aBinaryData)
+{
+  // Check for overflow.
+  if(aString.Length() > PR_UINT32_MAX / 3)
+      return NS_ERROR_FAILURE;
+
+  PRUint32 binaryDataLen = ((aString.Length() * 3) / 4);
+
+  char *buffer;
+
+  // Add one byte for null termination.
+  if(aBinaryData.SetCapacity(binaryDataLen + 1) &&
+     (buffer = aBinaryData.BeginWriting()) &&
+     PL_Base64Decode(aString.BeginReading(), aString.Length(), buffer))
+  {
+      // PL_Base64Decode doesn't null terminate the buffer for us when we pass
+      // the buffer in. Do that manually, taking into account the number of '='
+      // characters we were passed.
+      if(!aString.IsEmpty() && aString[aString.Length() - 1] == '=')
+      {
+          if(aString.Length() > 1 && aString[aString.Length() - 2] == '=')
+              binaryDataLen -= 2;
+          else
+              binaryDataLen -= 1;
+      }
+      buffer[binaryDataLen] = '\0';
+
+      aBinaryData.SetLength(binaryDataLen);
+      return NS_OK;
+  }
+
+  aBinaryData.Truncate();
+  return NS_ERROR_INVALID_ARG;
+}
+
+// static
+nsresult
+nsXPConnect::Base64Decode(const nsAString &aBinaryData,
+                          nsAString &aString)
+{
+    NS_LossyConvertUTF16toASCII binaryData(aBinaryData);
+    nsCAutoString string;
+
+    nsresult rv = Base64Decode(binaryData, string);
+    if(NS_SUCCEEDED(rv))
+        CopyASCIItoUTF16(string, aString);
+    else
+        aString.Truncate();
+
+    return rv;
 }
 
 NS_IMETHODIMP

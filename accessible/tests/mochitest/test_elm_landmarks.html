@@ -25,12 +25,14 @@
       testRole("header", ROLE_HEADER);
       testRole("footer", ROLE_FOOTER);
       testRole("article", ROLE_SECTION);
+      testRole("aside", ROLE_NOTE);
 
       // Some AT may look for this
       testAttrs("nav", {"xml-roles" : "navigation"}, true);
       testAttrs("header", {"xml-roles" : "banner"}, true);
       testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
       testAttrs("article", {"xml-roles" : "main"}, true);
+      testAttrs("aside", {"xml-roles" : "note"}, true);
       testAttrs("document", {"xml-roles" : "document"}, true); // ARIA override
 
       // And some AT may look for this
@@ -38,6 +40,7 @@
       testAttrs("header", {"tag" : "HEADER"}, true);
       testAttrs("footer", {"tag" : "FOOTER"}, true);
       testAttrs("article", {"tag" : "ARTICLE"}, true);
+      testAttrs("aside", {"tag" : "ASIDE"}, true);
       testAttrs("document", {"tag" : "ARTICLE"}, true); // no override expected
 
       SimpleTest.finish();
@@ -61,6 +64,7 @@
   <header id="header">a header</header>
   <footer id="footer">a footer</footer>
   <article id="article">an article</article>
+  <aside id="aside">by the way I am an aside</aside>
 
   <article id="document" role="document">a document</article>
 

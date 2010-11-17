@@ -493,7 +493,7 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
     if (node->HasFlag(MAYBE_ORPHAN_FORM_ELEMENT)) {
       node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
-        node->ClearForm(PR_TRUE, PR_TRUE);
+        node->ClearForm(PR_TRUE);
 
         // When submit controls have no more form, they need to be updated.
         if (node->IsSubmitControl()) {
@@ -1235,8 +1235,7 @@ nsHTMLFormElement::AddElementToTable(nsGenericHTMLFormElement* aChild,
 
 nsresult
 nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
-                                 bool aUpdateValidity,
-                                 PRBool aNotify)
+                                 bool aUpdateValidity)
 {
   //
   // Remove it from the radio group if it's a radio button
@@ -1245,7 +1244,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aChild);
-    radio->WillRemoveFromRadioGroup(aNotify);
+    radio->WillRemoveFromRadioGroup();
   }
 
   // Determine whether to remove the child from the elements list
@@ -1282,7 +1281,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
     // Need to reset mDefaultSubmitElement.  Do this asynchronously so
     // that we're not doing it while the DOM is in flux.
     mDefaultSubmitElement = nsnull;
-    nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this, aNotify));
+    nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this));
 
     // Note that we don't need to notify on the old default submit (which is
     // being removed) because it's either being removed from the DOM or
@@ -1305,7 +1304,7 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
 }
 
 void
-nsHTMLFormElement::HandleDefaultSubmitRemoval(PRBool aNotify)
+nsHTMLFormElement::HandleDefaultSubmitRemoval()
 {
   if (mDefaultSubmitElement) {
     // Already got reset somehow; nothing else to do here
@@ -1331,7 +1330,7 @@ nsHTMLFormElement::HandleDefaultSubmitRemoval(PRBool aNotify)
                    "What happened here?");
 
   // Notify about change if needed.
-  if (aNotify && mDefaultSubmitElement) {
+  if (mDefaultSubmitElement) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
@@ -2093,12 +2092,12 @@ nsFormControlList::Clear()
   // Null out childrens' pointer to me.  No refcounting here
   PRInt32 i;
   for (i = mElements.Length()-1; i >= 0; i--) {
-    mElements[i]->ClearForm(PR_FALSE, PR_TRUE);
+    mElements[i]->ClearForm(PR_FALSE);
   }
   mElements.Clear();
 
   for (i = mNotInElements.Length()-1; i >= 0; i--) {
-    mNotInElements[i]->ClearForm(PR_FALSE, PR_TRUE);
+    mNotInElements[i]->ClearForm(PR_FALSE);
   }
   mNotInElements.Clear();
 

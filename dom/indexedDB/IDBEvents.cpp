@@ -45,6 +45,7 @@
 #include "jscntxt.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMException.h"
 #include "nsJSON.h"
 #include "nsThreadUtils.h"
 
@@ -82,79 +83,6 @@ private:
   nsCOMPtr<nsIDOMEventTarget> mTarget;
   nsCOMPtr<nsIDOMEvent> mEvent;
 };
-
-void
-GetMessageForErrorCode(PRUint16 aCode,
-                       nsAString& aMessage)
-{
-  switch (aCode) {
-    case nsIIDBDatabaseException::NON_TRANSIENT_ERR:
-      aMessage.AssignLiteral("This error occurred because an operation was not "
-                             "allowed on an object. A retry of the same "
-                             "operation would fail unless the cause of the "
-                             "error is corrected.");
-      break;
-    case nsIIDBDatabaseException::NOT_FOUND_ERR:
-      aMessage.AssignLiteral("The operation failed because the requested "
-                             "database object could not be found. For example, "
-                             "an object store did not exist but was being "
-                             "opened.");
-      break;
-    case nsIIDBDatabaseException::CONSTRAINT_ERR:
-      aMessage.AssignLiteral("A mutation operation in the transaction failed "
-                             "due to a because a constraint was not satisfied. "
-                             "For example, an object such as an object store "
-                             "or index already exists and a new one was being "
-                             "attempted to be created.");
-      break;
-    case nsIIDBDatabaseException::DATA_ERR:
-      aMessage.AssignLiteral("Data provided to an operation does not meet "
-                             "requirements.");
-      break;
-    case nsIIDBDatabaseException::NOT_ALLOWED_ERR:
-      aMessage.AssignLiteral("A mutation operation was attempted on a database "
-                             "that did not allow mutations.");
-      break;
-    case nsIIDBDatabaseException::SERIAL_ERR:
-      aMessage.AssignLiteral("The operation failed because of the size of the "
-                             "data set being returned or because there was a "
-                             "problem in serializing or deserializing the "
-                             "object being processed.");
-      break;
-    case nsIIDBDatabaseException::RECOVERABLE_ERR:
-      aMessage.AssignLiteral("The operation failed because the database was "
-                             "prevented from taking an action. The operation "
-                             "might be able to succeed if the application "
-                             "performs some recovery steps and retries the "
-                             "entire transaction. For example, there was not "
-                             "enough remaining storage space, or the storage "
-                             "quota was reached and the user declined to give "
-                             "more space to the database.");
-      break;
-    case nsIIDBDatabaseException::TRANSIENT_ERR:
-      aMessage.AssignLiteral("The operation failed because of some temporary "
-                             "problems. The failed operation might be able to "
-                             "succeed when the operation is retried without "
-                             "any intervention by application-level "
-                             "functionality.");
-      break;
-    case nsIIDBDatabaseException::TIMEOUT_ERR:
-      aMessage.AssignLiteral("A lock for the transaction could not be obtained "
-                             "in a reasonable time.");
-      break;
-    case nsIIDBDatabaseException::DEADLOCK_ERR:
-      aMessage.AssignLiteral("The current transaction was automatically rolled "
-                             "back by the database becuase of deadlock or "
-                             "other transaction serialization failures.");
-      break;
-    case nsIIDBDatabaseException::UNKNOWN_ERR:
-      // Fall through.
-    default:
-      aMessage.AssignLiteral("The operation failed for reasons unrelated to "
-                             "the database itself and not covered by any other "
-                             "error code.");
-  }
-}
 
 } // anonymous namespace
 
@@ -214,16 +142,26 @@ IDBEvent::GetSource(nsISupports** aSource)
 // static
 already_AddRefed<nsIDOMEvent>
 IDBErrorEvent::Create(IDBRequest* aRequest,
-                      PRUint16 aCode)
+                      nsresult aResult)
 {
+  NS_ASSERTION(NS_FAILED(aResult), "Not a failure code!");
+  NS_ASSERTION(NS_ERROR_GET_MODULE(aResult) == NS_ERROR_MODULE_DOM_INDEXEDDB,
+               "Not an IndexedDB error code!");
+
+  const char* name = nsnull;
+  const char* message = nsnull;
+  if (NS_FAILED(NS_GetNameAndMessageForDOMNSResult(aResult, &name, &message))) {
+    NS_ERROR("Need a name and message for this code!");
+  }
+
   nsRefPtr<IDBErrorEvent> event(new IDBErrorEvent());
 
   event->mSource = aRequest->Source();
-  event->mCode = aCode;
-  GetMessageForErrorCode(aCode, event->mMessage);
+  event->mCode = NS_ERROR_GET_CODE(aResult);
+  event->mMessage.AssignASCII(message);
 
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_FALSE,
-                                 PR_FALSE);
+  nsresult rv = event->InitEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_TRUE,
+                                 PR_TRUE);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   rv = event->SetTrusted(PR_TRUE);
@@ -235,13 +173,69 @@ IDBErrorEvent::Create(IDBRequest* aRequest,
 // static
 already_AddRefed<nsIRunnable>
 IDBErrorEvent::CreateRunnable(IDBRequest* aRequest,
-                              PRUint16 aCode)
+                              nsresult aResult)
 {
-  nsCOMPtr<nsIDOMEvent> event(Create(aRequest, aCode));
+  nsCOMPtr<nsIDOMEvent> event(Create(aRequest, aResult));
   NS_ENSURE_TRUE(event, nsnull);
 
   nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aRequest, event));
   return runnable.forget();
+}
+
+// static
+already_AddRefed<nsIDOMEvent>
+IDBErrorEvent::MaybeDuplicate(nsIDOMEvent* aOther)
+{
+  NS_ASSERTION(aOther, "Null pointer!");
+
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent(do_QueryInterface(aOther));
+  nsCOMPtr<nsIIDBErrorEvent> errorEvent(do_QueryInterface(aOther));
+
+  if (!domNSEvent || !errorEvent) {
+    return nsnull;
+  }
+
+  PRBool isTrusted;
+  nsresult rv = domNSEvent->GetIsTrusted(&isTrusted);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  if (!isTrusted) {
+    return nsnull;
+  }
+
+  nsString type;
+  rv = errorEvent->GetType(type);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  PRBool canBubble;
+  rv = errorEvent->GetBubbles(&canBubble);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<nsISupports> source;
+  rv = errorEvent->GetSource(getter_AddRefs(source));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  PRUint16 code;
+  rv = errorEvent->GetCode(&code);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsString message;
+  rv = errorEvent->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsRefPtr<IDBErrorEvent> event(new IDBErrorEvent());
+
+  event->mSource = source;
+  event->mCode = code;
+  event->mMessage = message;
+
+  rv = event->InitEvent(type, canBubble, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return ForgetEvent(event);
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBErrorEvent, IDBEvent)
@@ -262,23 +256,9 @@ IDBErrorEvent::GetCode(PRUint16* aCode)
 }
 
 NS_IMETHODIMP
-IDBErrorEvent::SetCode(PRUint16 aCode)
-{
-  mCode = aCode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 IDBErrorEvent::GetMessage(nsAString& aMessage)
 {
   aMessage.Assign(mMessage);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBErrorEvent::SetMessage(const nsAString& aMessage)
-{
-  mMessage.Assign(aMessage);
   return NS_OK;
 }
 
@@ -353,14 +333,14 @@ IDBSuccessEvent::GetResult(JSContext* aCx,
   }
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_STATE(xpc);
+  NS_ENSURE_TRUE(xpc, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   JSAutoRequest ar(aCx);
   JSObject* scope = JS_GetGlobalObject(aCx);
-  NS_ENSURE_STATE(scope);
+  NS_ENSURE_TRUE(scope, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv = xpc->VariantToJS(aCx, scope, mResult, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
 }
@@ -420,7 +400,7 @@ GetSuccessEvent::GetResult(JSContext* aCx,
       mCachedValue = JSVAL_VOID;
 
       NS_ERROR("Failed to decode!");
-      return rv;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
 
@@ -483,13 +463,13 @@ GetAllSuccessEvent::GetResult(JSContext* aCx,
     nsTArray<nsString> values;
     if (!mValues.SwapElements(values)) {
       NS_ERROR("Failed to swap elements!");
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
     if (!array) {
       NS_ERROR("Failed to make array!");
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     mCachedValue = OBJECT_TO_JSVAL(array);
@@ -498,7 +478,7 @@ GetAllSuccessEvent::GetResult(JSContext* aCx,
       if (!JS_SetArrayLength(aCx, array, jsuint(values.Length()))) {
         mCachedValue = JSVAL_VOID;
         NS_ERROR("Failed to set array length!");
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
       nsCOMPtr<nsIJSON> json(new nsJSON());
@@ -514,13 +494,13 @@ GetAllSuccessEvent::GetResult(JSContext* aCx,
         if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to decode!");
-          return rv;
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
         if (!JS_SetElement(aCx, array, index, value.jsval_addr())) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to set array element!");
-          return NS_ERROR_FAILURE;
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
       }
     }
@@ -544,13 +524,13 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
     nsTArray<Key> keys;
     if (!mKeys.SwapElements(keys)) {
       NS_ERROR("Failed to swap elements!");
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
     if (!array) {
       NS_ERROR("Failed to make array!");
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     mCachedValue = OBJECT_TO_JSVAL(array);
@@ -559,7 +539,7 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
       if (!JS_SetArrayLength(aCx, array, jsuint(keys.Length()))) {
         mCachedValue = JSVAL_VOID;
         NS_ERROR("Failed to set array length!");
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
       js::AutoValueRooter value(aCx);
@@ -574,13 +554,13 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
         if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
           NS_WARNING("Failed to get jsval for key!");
-          return rv;
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
         if (!JS_SetElement(aCx, array, index, value.jsval_addr())) {
           mCachedValue = JSVAL_VOID;
           NS_WARNING("Failed to set array element!");
-          return NS_ERROR_FAILURE;
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
       }
     }

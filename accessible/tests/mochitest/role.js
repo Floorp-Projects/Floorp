@@ -37,6 +37,7 @@ const ROLE_LISTITEM = nsIAccessibleRole.ROLE_LISTITEM;
 const ROLE_MENUITEM = nsIAccessibleRole.ROLE_MENUITEM;
 const ROLE_MENUPOPUP = nsIAccessibleRole.ROLE_MENUPOPUP;
 const ROLE_NOTHING = nsIAccessibleRole.ROLE_NOTHING;
+const ROLE_NOTE = nsIAccessibleRole.ROLE_NOTE;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
 const ROLE_OUTLINE = nsIAccessibleRole.ROLE_OUTLINE;
 const ROLE_OUTLINEITEM = nsIAccessibleRole.ROLE_OUTLINEITEM;

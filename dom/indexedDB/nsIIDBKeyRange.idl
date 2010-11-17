@@ -46,15 +46,11 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBKeyRange for more
  * information.
  */
-[scriptable, uuid(8e6b05f4-2358-420b-a6fd-03416543ed18)]
+[scriptable, uuid(a1505e41-7e48-4542-9fa5-3f2c98233567)]
 interface nsIIDBKeyRange : nsISupports
 {
-  const unsigned short LEFT_OPEN = 1 << 1;
-  const unsigned short RIGHT_OPEN = 1 << 2;
-  const unsigned short LEFT_BOUND = 1 << 3;
-  const unsigned short RIGHT_BOUND = 1 << 4;
-  readonly attribute unsigned short flags;
-
-  readonly attribute nsIVariant left;
-  readonly attribute nsIVariant right;
+  readonly attribute nsIVariant lower;
+  readonly attribute nsIVariant upper;
+  readonly attribute boolean lowerOpen;
+  readonly attribute boolean upperOpen;
 };

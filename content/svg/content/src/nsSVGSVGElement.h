@@ -221,6 +221,14 @@ public:
   }
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+#ifndef MOZ_ENABLE_LIBXUL
+  // XXXdholbert HACK to call static method
+  // nsSVGEffects::RemoveAllRenderingObservers() on myself, on behalf
+  // of imagelib in non-libxul builds.
+  virtual void RemoveAllRenderingObservers();
+#endif // !MOZ_LIBXUL
+
 protected:
   // nsSVGElement overrides
   PRBool IsEventName(nsIAtom* aName);

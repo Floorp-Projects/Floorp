@@ -708,12 +708,12 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
                     "    if (cache) {\n"
                     "      JSObject* wrapper = cache->GetWrapper();\n"
+                    "      NS_ASSERTION(cx->compartment == obj->compartment(),\n"
+                    "                   \"wrong compartment in object or context!\");\n"
                     "      if (wrapper &&\n"
                     # FIXME: Bug 585786, this check should go away
                     "          IS_SLIM_WRAPPER_OBJECT(wrapper) &&\n"
-                    # FIXME: Bug 585787 this should compare compartments
-                    "          xpc_GetGlobalForObject(wrapper) ==\n"
-                    "            xpc_GetGlobalForObject(obj)) {\n"
+                    "          cx->compartment == wrapper->compartment()) {\n"
                     "        *%s = OBJECT_TO_JSVAL(wrapper);\n"
                     "        return JS_TRUE;\n"
                     "      }\n"
@@ -1260,12 +1260,12 @@ def writeTraceableResultConv(f, type):
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
                     "    if (cache) {\n"
                     "      JSObject* wrapper = cache->GetWrapper();\n"
+                    "      NS_ASSERTION(cx->compartment == obj->compartment(),\n"
+                    "                   \"wrong compartment in object or context!\");\n"
                     "      if (wrapper &&\n"
                     # FIXME: Bug 585786, this check should go away
                     "          IS_SLIM_WRAPPER_OBJECT(wrapper) &&\n"
-                    # FIXME: Bug 585787 this should compare compartments
-                    "          xpc_GetGlobalForObject(wrapper) ==\n"
-                    "            xpc_GetGlobalForObject(obj)) {\n"
+                    "          cx->compartment == wrapper->compartment()) {\n"
                     "        vp.array[0] = OBJECT_TO_JSVAL(wrapper);\n"
                     "        return wrapper;\n"
                     "      }\n"

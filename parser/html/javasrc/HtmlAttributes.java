@@ -464,6 +464,33 @@ public final class HtmlAttributes implements Attributes {
         return clone; // XXX!!!
     }
     
+    public boolean equalsAnother(HtmlAttributes other) {
+        assert mode == 0 || mode == 3 : "Trying to compare attributes in foreign content.";
+        int otherLength = other.getLength();
+        if (length != otherLength) {
+            return false;
+        }
+        for (int i = 0; i < length; i++) {
+            // Work around the limitations of C++
+            boolean found = false;
+            // The comparing just the local names is OK, since these attribute
+            // holders are both supposed to belong to HTML formatting elements
+            @Local String ownLocal = names[i].getLocal(AttributeName.HTML);
+            for (int j = 0; j < otherLength; j++) {
+                if (ownLocal == other.names[j].getLocal(AttributeName.HTML)) {
+                    found = true;
+                    if (!Portability.stringEqualsString(values[i], other.values[j])) {
+                        return false;
+                    }
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     // [NOCPP[
     
     void processNonNcNames(TreeBuilder<?> treeBuilder, XmlViolationPolicy namePolicy) throws SAXException {

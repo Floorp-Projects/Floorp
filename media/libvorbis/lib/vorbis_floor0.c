@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: floor backend 0 implementation
- last mod: $Id: floor0.c 16227 2009-07-08 06:58:46Z xiphmont $
+ last mod: $Id: floor0.c 17558 2010-10-22 00:24:41Z tterribe $
 
  ********************************************************************/
 
@@ -91,6 +91,8 @@ static vorbis_info_floor *floor0_unpack (vorbis_info *vi,oggpack_buffer *opb){
   for(j=0;j<info->numbooks;j++){
     info->books[j]=oggpack_read(opb,8);
     if(info->books[j]<0 || info->books[j]>=ci->books)goto err_out;
+    if(ci->book_param[info->books[j]]->maptype==0)goto err_out;
+    if(ci->book_param[info->books[j]]->dim<1)goto err_out;
   }
   return(info);
 

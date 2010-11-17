@@ -49,7 +49,7 @@ struct nsIntSize;
 class nsNativeThemeWin : private nsNativeTheme,
                          public nsITheme {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,

@@ -480,34 +480,28 @@
         </vbox>
         <vbox id="chosenActionWipeClient" class="confirm">
           <description class="normal">
-            &confirm.client.label;
+            &confirm.client2.label;
           </description>
           <separator class="thin"/>
           <vbox id="dataList">
             <label class="data indent" id="bookmarkCount"/>
             <label class="data indent" id="historyCount"/>
             <label class="data indent" id="passwordCount"/>
+            <label class="data indent" id="prefsWipe"
+                   value="&engine.prefs.label;"/>
           </vbox>
           <separator class="thin"/>
           <description class="normal">
             &confirm.client.moreinfo.label;
           </description>
-          <separator class="thin"/>
-          <description class="warning">
-            &confirm.client.warning.label;
-          </description>
         </vbox>
         <vbox id="chosenActionWipeServer" class="confirm">
           <description class="normal">
-            &confirm.server.label;
+            &confirm.server2.label;
           </description>
           <separator class="thin"/>
           <vbox id="clientList">
           </vbox>
-          <separator class="thin"/>
-          <description class="warning">
-            &confirm.server.warning.label;
-          </description>
         </vbox>
       </deck>
   </wizardpage>

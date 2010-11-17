@@ -719,10 +719,8 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
     }
 
     if (ctorCall) {
-      JSObject *global = ::JS_GetGlobalForObject(cx, npjsobj->mJSObj);
       JSObject *newObj =
-        ::JS_ConstructObjectWithArguments(cx, JS_GET_CLASS(cx, npjsobj->mJSObj),
-                                          nsnull, global, argCount, jsargs);
+        ::JS_New(cx, npjsobj->mJSObj, argCount, jsargs);
 
       if (newObj) {
         v = OBJECT_TO_JSVAL(newObj);

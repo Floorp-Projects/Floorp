@@ -148,7 +148,7 @@ nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
   if (!effectProperties.mFilter)
     return aInvalidRect;
 
-  nsSVGFilterProperty *prop = nsSVGEffects::GetFilterProperty(aFrame);
+  nsSVGFilterProperty *prop = nsSVGEffects::GetFilterProperty(firstFrame);
   if (!prop || !prop->IsInObserverList()) {
     return aInvalidRect;
   }

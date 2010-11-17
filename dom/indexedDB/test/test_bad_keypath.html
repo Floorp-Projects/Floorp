@@ -15,7 +15,6 @@
     {
       const name = window.location.pathname;
       const description = "My Test Database";
-      const NS_ERROR_INVALID_ARG = 0x80070057;
 
       let request = moz_indexedDB.open(name, description);
       request.onerror = errorHandler;
@@ -40,7 +39,7 @@
         request = objectStore.add({});
       }
       catch (e) {
-        is(e.result, NS_ERROR_INVALID_ARG, "Good error");
+        is(e.code, IDBDatabaseException.DATA_ERR, "Good error");
       }
 
       finishTest();

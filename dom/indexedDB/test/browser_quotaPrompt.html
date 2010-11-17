@@ -39,7 +39,7 @@
         let request = db.setVersion("2");
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
-          db.removeObjectStore("foo");
+          db.deleteObjectStore("foo");
 
           testResult = "finished";
           testException = undefined;

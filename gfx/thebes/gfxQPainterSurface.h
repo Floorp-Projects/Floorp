@@ -60,7 +60,7 @@ public:
     QPainter *GetQPainter() { return mPainter; }
 
     QImage *GetQImage();
-    already_AddRefed<gfxImageSurface> GetImageSurface();
+    already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
 protected:
     QPainter *mPainter;

@@ -69,9 +69,6 @@ Nv3DVUtils::~Nv3DVUtils()
 void
 Nv3DVUtils::Initialize()
 {
-  nsCOMPtr<nsIConsoleService>
-  consoleCustom(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-
   /*
    * Detect if 3D Streaming object is already loaded. Do nothing in that case.
    */
@@ -85,18 +82,8 @@ Nv3DVUtils::Initialize()
    */
   HRESULT hr = CoCreateInstance(CLSID_NV3DVStreaming, NULL, CLSCTX_INPROC_SERVER, IID_INV3DVStreaming, (void**)(getter_AddRefs(m3DVStreaming)));
   if (FAILED(hr) || !m3DVStreaming) {
-    if (consoleCustom) {
-      nsString msg;
-      msg += NS_LITERAL_STRING("CoCreateInstance() FAILED.\n");
-      consoleCustom->LogStringMessage(msg.get());
-    }
+    NS_WARNING("Nv3DVStreaming CoCreateInstance failed (disabled).");
     return;
-  }
-
-  if (consoleCustom) {
-    nsString msg;
-    msg += NS_LITERAL_STRING("Nv3DVStreaming COM object instantiated successfully.\n");
-    consoleCustom->LogStringMessage(msg.get());
   }
 
   /*
@@ -105,21 +92,8 @@ Nv3DVUtils::Initialize()
   bool bRetVal = m3DVStreaming->Nv3DVInitialize();
 
   if (!bRetVal) {
-    if (consoleCustom) {
-      nsString msg;
-      msg += NS_LITERAL_STRING("Nv3DVInitialize() FAILED!\n");
-      consoleCustom->LogStringMessage(msg.get());
-    }
+    NS_WARNING("Nv3DVStreaming Nv3DVInitialize failed!");
     return;
-  }
-
-  /*
-   * Nv3DVUtils::Initialize() was successful
-   */
-  if (consoleCustom) {
-    nsString msg;
-    msg += NS_LITERAL_STRING("Nv3DVUtils::Initialize SUCCEEDED!\n");
-    consoleCustom->LogStringMessage(msg.get());
   }
 }
 
@@ -143,45 +117,24 @@ Nv3DVUtils::UnInitialize()
 void 
 Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
 {
-  nsCOMPtr<nsIConsoleService>
-  consoleCustom(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-
   if (!devUnknown) {
     NS_WARNING("D3D Device Pointer (IUnknown) is NULL.\n");
     return;
   }
 
-  if (m3DVStreaming) {
-    bool rv = false;
-    rv = m3DVStreaming->Nv3DVSetDevice(devUnknown);
-    if (!rv) {
-      if (consoleCustom) {
-        nsString msg;
-        msg += NS_LITERAL_STRING("Nv3DVSetDevice() FAILED!\n");
-        consoleCustom->LogStringMessage(msg.get());
-      }
+  if (!m3DVStreaming) {
       return;
-    }
+  }
 
-    rv = m3DVStreaming->Nv3DVControl(STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE);
-    if (!rv) {
-      if (consoleCustom) {
-        nsString msg;
-        msg += NS_LITERAL_STRING("Nv3DVControl() FAILED!\n");
-        consoleCustom->LogStringMessage(msg.get());
-      }
+  bool rv = false;
+  rv = m3DVStreaming->Nv3DVSetDevice(devUnknown);
+  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed!");
+
+  if (!rv)
       return;
-    }
 
-    if (consoleCustom) {
-      nsString msg;
-      msg += NS_LITERAL_STRING("Nv3DVSetDevice() and Nv3DVControl() both SUCCEEDED!\n");
-      consoleCustom->LogStringMessage(msg.get());
-    }
-
-  } // m3DVStreaming
-
-  return;
+  rv = m3DVStreaming->Nv3DVControl(STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE);
+  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed!");
 }
 
 /*
@@ -191,22 +144,11 @@ Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
 void 
 Nv3DVUtils::SendNv3DVControl(Stereo_Mode eStereoMode, bool bEnableStereo, DWORD dw3DVAppHandle)
 {
-  nsCOMPtr<nsIConsoleService>
-    consoleCustom(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!m3DVStreaming)
+      return;
 
-  if (m3DVStreaming) {
-    bool rv = m3DVStreaming->Nv3DVControl(eStereoMode, bEnableStereo, dw3DVAppHandle);
-    if (consoleCustom) {
-      nsString msg;
-      if (rv) {
-        msg += NS_LITERAL_STRING("Nv3DVControl() SUCCEEDED!\n");
-      } else {
-        msg += NS_LITERAL_STRING("Nv3DVControl()FAILED!\n");
-      }
-      consoleCustom->LogStringMessage(msg.get());
-    }
-  } // m3DVStreaming
-
+  bool rv = m3DVStreaming->Nv3DVControl(eStereoMode, bEnableStereo, dw3DVAppHandle);
+  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed");
 }
 
 /*
@@ -216,21 +158,11 @@ Nv3DVUtils::SendNv3DVControl(Stereo_Mode eStereoMode, bool bEnableStereo, DWORD 
 void 
 Nv3DVUtils::SendNv3DVMetaData(unsigned int dwWidth, unsigned int dwHeight, HANDLE hSrcLuma, HANDLE hDst)
 {
-  nsCOMPtr<nsIConsoleService>
-    consoleCustom(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!m3DVStreaming)
+      return;
 
-  if (m3DVStreaming) {
-    bool rv = m3DVStreaming->Nv3DVMetaData((DWORD)dwWidth, (DWORD)dwHeight, hSrcLuma, hDst);
-    if (consoleCustom) {
-      nsString msg;
-      if (rv) {
-        msg += NS_LITERAL_STRING("Nv3DVMetaData() SUCCEEDED!\n");
-      } else {
-        msg += NS_LITERAL_STRING("Nv3DVMetaData() FAILED!\n");
-      }
-      consoleCustom->LogStringMessage(msg.get());
-    }
-  } // m3DVStreaming
+  bool rv = m3DVStreaming->Nv3DVMetaData((DWORD)dwWidth, (DWORD)dwHeight, hSrcLuma, hDst);
+  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVMetaData failed!");
 }
 
 } /* namespace layers */

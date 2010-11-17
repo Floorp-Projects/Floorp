@@ -114,5 +114,16 @@ function testJSTerm()
   is(label.textContent.trim().search(/\[object XrayWrapper/), -1,
     "check for non-existence of [object XrayWrapper ");
 
+  // check that pprint(window) and keys(window) don't throw, bug 608358
+  jsterm.clearOutput();
+  jsterm.execute("pprint(window)");
+  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  ok(labels.length > 1, "more than one line of output for pprint(window)");
+
+  jsterm.clearOutput();
+  jsterm.execute("keys(window)");
+  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  ok(labels.length, "more than 0 lines of output for keys(window)");
+
   finishTest();
 }

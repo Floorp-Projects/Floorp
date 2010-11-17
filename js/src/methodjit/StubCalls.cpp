@@ -498,6 +498,8 @@ stubs::GetElem(VMFrame &f)
 
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
+    if (regs.sp[-2].isMagic(JS_ARGS_HOLE))
+        *(int *) 0xc0 = 0;
 }
 
 static inline bool

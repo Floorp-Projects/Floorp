@@ -126,6 +126,7 @@ public:
                                    PRUint32 aQueryCount,
                                    nsNavHistoryQueryOptions* aOptions,
                                    nsNavHistoryContainerResultNode* aRoot,
+                                   bool aBatchInProgress,
                                    nsNavHistoryResult** result);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
@@ -180,6 +181,8 @@ public:
   nsDataHashtable<nsTrimInt64HashKey, FolderObserverList*> mBookmarkFolderObservers;
   FolderObserverList* BookmarkFolderObserversForId(PRInt64 aFolderId, PRBool aCreate);
 
+  typedef nsTArray< nsRefPtr<nsNavHistoryContainerResultNode> > ContainerObserverList;
+
   void RecursiveExpandCollapse(nsNavHistoryContainerResultNode* aContainer,
                                PRBool aExpand);
 
@@ -189,6 +192,9 @@ public:
 
   nsMaybeWeakPtrArray<nsINavHistoryResultObserver> mObservers;
   PRBool mSuppressNotifications;
+
+  ContainerObserverList mRefreshParticipants;
+  void requestRefresh(nsNavHistoryContainerResultNode* aContainer);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
@@ -513,6 +519,7 @@ public:
     PRBool aReadOnly, const nsACString& aDynamicContainerType,
     nsNavHistoryQueryOptions* aOptions);
 
+  virtual nsresult Refresh();
   virtual ~nsNavHistoryContainerResultNode();
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
@@ -734,8 +741,6 @@ public:
   // this indicates whether the query contents are valid, they don't go away
   // after the container is closed until a notification comes in
   PRBool mContentsValid;
-
-  PRBool mBatchInProgress;
 
   nsresult FillChildren();
   void ClearChildren(PRBool unregister);

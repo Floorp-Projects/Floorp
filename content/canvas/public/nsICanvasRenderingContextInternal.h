@@ -50,6 +50,7 @@
 class nsHTMLCanvasElement;
 class gfxContext;
 class gfxASurface;
+class nsIPropertyBag;
 
 namespace mozilla {
 namespace layers {
@@ -114,6 +115,14 @@ public:
 
   // Redraw the dirty rectangle of this canvas.
   NS_IMETHOD Redraw(const gfxRect &dirty) = 0;
+
+  // Passes a generic nsIPropertyBag options argument, along with the
+  // previous one, if any.  Optional.
+  NS_IMETHOD SetContextOptions(nsIPropertyBag *aNewOptions) { return NS_OK; }
+
+  //
+  // shmem support
+  //
 
   // If this context can be set to use Mozilla's Shmem segments as its backing
   // store, this will set it to that state. Note that if you have drawn

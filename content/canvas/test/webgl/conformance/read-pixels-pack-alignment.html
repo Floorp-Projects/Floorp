@@ -44,8 +44,6 @@ var gl = null;
 var array = null;
 var pixel = [ 0, 0, 0, 0 ];
 var expectedColor = [ 0, 0, 0, 0 ];
-var pixelFormat = 0;
-var pixelType = 0;
 
 function calculatePixelBytes(format, type)
 {
@@ -168,38 +166,26 @@ function runTestIteration(format, type, packAlignment, width, height)
     var bytesPerPixel = calculatePixelBytes(format, type);
     var padding = calculatePaddingBytes(bytesPerPixel, packAlignment, width);
     var size = bytesPerPixel * width * height + padding * (height - 1);
-    var isShort = false;
-    switch (type) {
-    case gl.UNSIGNED_SHORT_5_6_5:
-    case gl.UNSIGNED_SHORT_4_4_4_4:
-    case gl.UNSIGNED_SHORT_5_5_5_1:
-        isShort = true;
+    if (type != gl.UNSIGNED_BYTE) {
+        throw "test error: only UNSIGNED_BYTE is valid to ReadPixels";
     }
-    if (isShort)
-        size /= 2;
     if (size < 0)
         size = 0;
-    if (type == gl.UNSIGNED_BYTE)
-        array = new Uint8Array(size);
-    else
-        array = new Uint16Array(size);
+    array = new Uint8Array(size);
     gl.readPixels(0, 0, width, height, format, type, array);
     if (width < 0 || height < 0) {
         glErrorShouldBe(gl, gl.INVALID_VALUE);
         return;
-    } else {
-        glErrorShouldBe(gl, gl.NO_ERROR);
-        if (!array.length)
-            return;
     }
+
+    glErrorShouldBe(gl, gl.NO_ERROR);
+    if (!array.length)
+        return;
+
     // Check the last pixel of the last row.
     var bytesPerRow = width * bytesPerPixel + padding;
     var pos = bytesPerRow * (height - 1) + (width - 1) * bytesPerPixel;
     var numComponents = bytesPerPixel;
-    if (isShort) {
-        pos /= 2;
-        numComponents /= 2;
-    }
     for (var i = 0; i < numComponents; ++i)
         pixel[i] = array[pos + i];
     for (var i = numComponents; i < 4; ++i)
@@ -209,75 +195,44 @@ function runTestIteration(format, type, packAlignment, width, height)
     shouldBe("pixel", "expectedColor");
 }
 
-function checkSupportedPixelFormatAndType()
-{
-    debug("Check supported pixel format/type besides RGBA/UNSIGNED_BYTE");
-    glErrorShouldBe(gl, gl.NO_ERROR);
-    pixelFormat = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT);
-    pixelType = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
-    glErrorShouldBe(gl, gl.NO_ERROR);
-    shouldBeFalse("pixelFormat == gl.RGBA && pixelType == gl.UNSIGNED_BYTE");
-}
-
 description('Verify readPixels() works fine with various PACK_ALIGNMENT values.');
 
 shouldBeNonNull("gl = initWebGL('example', 'vshader', 'fshader', [ 'pos', 'colorIn' ], [ 0, 0, 0, 1 ], 1)");
 gl.disable(gl.BLEND);
 
-checkSupportedPixelFormatAndType();
+var formats = [ gl.RGBA ];
+var formatNames = [ "RGBA" ];
 
-debug("Testing format = RGBA and type = UNSIGNED_BYTE");
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 1, 1, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 2, 1, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 1, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 1, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 2, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 2, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 3, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 3, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 4, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 4, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 5, 1);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 5, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 5, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 6, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 7, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 8, 2);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 1, 0, 0);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 2, 0, 0);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 0, 0);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, 0, 0);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 1, -1, 1);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 2, 1, -1);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 4, 0, -1);
-runTestIteration(gl.RGBA, gl.UNSIGNED_BYTE, 8, -1, -1);
+for (var i = 0; i < formats.length; ++i) {
+    var format = formats[i];
 
-debug("Testing the other supported format/type combination");
-runTestIteration(pixelFormat, pixelType, 1, 1, 2);
-runTestIteration(pixelFormat, pixelType, 2, 1, 2);
-runTestIteration(pixelFormat, pixelType, 4, 1, 2);
-runTestIteration(pixelFormat, pixelType, 8, 1, 2);
-runTestIteration(pixelFormat, pixelType, 4, 2, 2);
-runTestIteration(pixelFormat, pixelType, 8, 2, 2);
-runTestIteration(pixelFormat, pixelType, 4, 3, 2);
-runTestIteration(pixelFormat, pixelType, 8, 3, 2);
-runTestIteration(pixelFormat, pixelType, 4, 4, 2);
-runTestIteration(pixelFormat, pixelType, 8, 4, 2);
-runTestIteration(pixelFormat, pixelType, 8, 5, 1);
-runTestIteration(pixelFormat, pixelType, 4, 5, 2);
-runTestIteration(pixelFormat, pixelType, 8, 5, 2);
-runTestIteration(pixelFormat, pixelType, 8, 6, 2);
-runTestIteration(pixelFormat, pixelType, 8, 7, 2);
-runTestIteration(pixelFormat, pixelType, 8, 8, 2);
-runTestIteration(pixelFormat, pixelType, 1, 0, 0);
-runTestIteration(pixelFormat, pixelType, 2, 0, 0);
-runTestIteration(pixelFormat, pixelType, 4, 0, 0);
-runTestIteration(pixelFormat, pixelType, 8, 0, 0);
-runTestIteration(pixelFormat, pixelType, 1, -1, 1);
-runTestIteration(pixelFormat, pixelType, 2, 1, -1);
-runTestIteration(pixelFormat, pixelType, 4, 0, -1);
-runTestIteration(pixelFormat, pixelType, 8, -1, -1);
-
+    debug("Testing format = " + formatNames[i] + " and type = UNSIGNED_BYTE");
+    runTestIteration(format, gl.UNSIGNED_BYTE, 1, 1, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 2, 1, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 1, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 1, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 2, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 2, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 3, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 3, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 4, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 4, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 5, 1);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 5, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 5, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 6, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 7, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 8, 2);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 1, 0, 0);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 2, 0, 0);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 0, 0);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 0, 0);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 1, -1, 1);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 2, 1, -1);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 0, -1);
+    runTestIteration(format, gl.UNSIGNED_BYTE, 8, -1, -1);
+}
+    
 successfullyParsed = true;
 </script>
 <script src="../resources/js-test-post.js"></script>

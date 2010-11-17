@@ -62,7 +62,7 @@ interface nsIDOMNSHTMLTextAreaElement : nsISupports
   [Null(Stringify)] attribute DOMString wrap;
 
   // The following lines are parte of the constraint validation API, see:
-  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
+  // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
   readonly attribute boolean          willValidate;
   readonly attribute nsIDOMValidityState validity;
   readonly attribute DOMString        validationMessage;

@@ -282,8 +282,8 @@ gfxWindowsNativeDrawing::PaintToContext()
         // nothing to do, it already went to the context
         mRenderState = RENDER_STATE_DONE;
     } else if (mRenderState == RENDER_STATE_ALPHA_RECOVERY_WHITE_DONE) {
-        nsRefPtr<gfxImageSurface> black = mBlackSurface->GetImageSurface();
-        nsRefPtr<gfxImageSurface> white = mWhiteSurface->GetImageSurface();
+        nsRefPtr<gfxImageSurface> black = mBlackSurface->GetAsImageSurface();
+        nsRefPtr<gfxImageSurface> white = mWhiteSurface->GetAsImageSurface();
         if (!gfxAlphaRecovery::RecoverAlpha(black, white)) {
             NS_ERROR("Alpha recovery failure");
             return;

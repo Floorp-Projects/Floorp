@@ -1,0 +1,3 @@
+component {b49c18f8-3379-4fc0-8c90-d7772c1a9ff3} ConsoleAPI.js
+contract @mozilla.org/console-api;1 {b49c18f8-3379-4fc0-8c90-d7772c1a9ff3}
+category JavaScript-global-property console @mozilla.org/console-api;1

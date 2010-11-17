@@ -252,6 +252,33 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    FT_Reference_Library                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A counter gets initialized to~1 at the time an @FT_Library         */
+  /*    structure is created.  This function increments the counter.       */
+  /*    @FT_Done_Library then only destroys a library if the counter is~1, */
+  /*    otherwise it simply decrements the counter.                        */
+  /*                                                                       */
+  /*    This function helps in managing life-cycles of structures which    */
+  /*    reference @FT_Library objects.                                     */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    library :: A handle to a target library object.                    */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Since>                                                               */
+  /*    2.4.2                                                              */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Reference_Library( FT_Library  library );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    FT_New_Library                                                     */
   /*                                                                       */
   /* <Description>                                                         */
@@ -275,6 +302,10 @@ FT_BEGIN_HEADER
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
+  /* <Note>                                                                */
+  /*    See the discussion of reference counters in the description of     */
+  /*    @FT_Reference_Library.                                             */
+  /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_New_Library( FT_Memory    memory,
                   FT_Library  *alibrary );
@@ -294,6 +325,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    See the discussion of reference counters in the description of     */
+  /*    @FT_Reference_Library.                                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Done_Library( FT_Library  library );

@@ -43,8 +43,8 @@
   text-shadow: none;
 }
 
-.hud-group label {
-  padding-left: 1em;
+.hud-box.animated {
+  -moz-transition: height 350ms;
 }
 
 .hud-outer-wrapper {
@@ -63,38 +63,32 @@
   font-weight: bold;
 }
 
-.hud-output-node * {
-  -moz-user-select: text;
-  white-space: pre-wrap;
-  -moz-user-focus: normal;
-}
-
 .hud-clickable {
-  cursor: pointer !important;
+  cursor: pointer;
   text-decoration: underline;
 }
 
-.hud-output-node .hud-network {
+.hud-network {
   color: blue;
 }
 
-.hud-output-node .hud-error {
+.hud-error {
   color: red;
 }
 
-.hud-output-node .hud-log {
+.hud-log {
   color: black;
 }
 
-.hud-output-node .hud-warn {
+.hud-warn {
   color: orange;
 }
 
-.hud-output-node .hud-info {
+.hud-info {
   color: green;
 }
 
-.hud-output-node .hud-exception {
+.hud-exception {
   color: red;
   font-weight: bold;
 }
@@ -103,7 +97,10 @@
   width: 100%;
   margin-top: 0.3em;
   margin-bottom: 0.3em;
-  padding-left: 0.3em;
+  padding-left: 1em;
+  -moz-user-select: text;
+  white-space: pre-wrap;
+  -moz-user-focus: normal;
 }
 
 .hud-output-node {
@@ -121,14 +118,13 @@
   display: none;
 }
 
-.hud-group:first-child .hud-divider {
+.hud-group:first-child > .hud-divider {
   display: none;
 }
 
 .hud-filter-cat {
   color: #6b6b6b;
   font-weight: bold;
-  margin: 0px 12px 0px 0px;
 }
 
 /* JSTerm Styles */
@@ -154,10 +150,6 @@
   -moz-box-direction: reverse;
 }
 
-.jsterm-output-node div {
-  -moz-user-select: text;
-}
-
 .jsterm-scroll-to-node {
   height: 1px;
   width: 1px;
@@ -170,13 +162,13 @@
   font-family: monospace;
   font-size: 9pt;
   background: url("chrome://global/skin/icons/commandline.png") 4px 2px
-      no-repeat !important;
-  border: none !important;
-  padding: 0px 0px 0px 16px !important;
-  -moz-appearance: none !important;
+      no-repeat;
+  border: none;
+  padding: 0px 0px 0px 16px;
+  -moz-appearance: none;
 }
 
-.jsterm-input-node textarea {
+.jsterm-input-node > .textbox-input-box > .textbox-textarea {
   overflow-x: hidden;
 }
 
@@ -185,23 +177,23 @@
 }
 
 .hud-console-filter-toolbar {
-  background: @scopeBarBackground@ !important;
-  border-bottom: @scopeBarSeparatorBorder@ !important;
+  background: @scopeBarBackground@;
+  border-bottom: @scopeBarSeparatorBorder@;
   padding: 0px 1px;
-  -moz-appearance: none !important;
+  -moz-appearance: none;
   -moz-box-align: center;
 }
 
 .hud-console-filter-toolbar:-moz-lwtheme {
-  border-top: @scopeBarSeparatorBorder@ !important;
+  border-top: @scopeBarSeparatorBorder@;
 }
 
 .jsterm-close-button {
   list-style-image: url("chrome://global/skin/icons/console-close.png");
-  margin: 0px !important;
-  min-width: 0px !important;
-  padding: 1px 3px 1px 7px !important;
-  -moz-appearance: none !important;
+  margin: 0px;
+  min-width: 0px;
+  padding: 1px 3px 1px 7px;
+  -moz-appearance: none;
 }
 
 .jsterm-close-button:active {

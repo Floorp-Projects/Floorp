@@ -60,10 +60,6 @@ SharedDIB::Create(PRUint32 aSize)
   if (!mShMem || !mShMem->Create("", false, false, aSize))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // Map the entire section
-  if (!mShMem->Map(0))
-    return NS_ERROR_FAILURE;
-
   return NS_OK;
 }
 
@@ -95,9 +91,6 @@ SharedDIB::Attach(Handle aHandle, PRUint32 aSize)
   mShMem = new base::SharedMemory(aHandle, false);
   if(!mShMem)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  if (!mShMem->Map(aSize))
-    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }

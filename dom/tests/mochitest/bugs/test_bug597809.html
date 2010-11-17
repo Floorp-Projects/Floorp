@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=597809
+-->
+<head>
+  <title>Test for Bug 597809</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=597809">Mozilla Bug 597809</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 597809 **/
+
+SimpleTest.waitForExplicitFinish();
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var cm = Components.classes["@mozilla.org/categorymanager;1"]
+                   .getService(Components.interfaces.nsICategoryManager);
+cm.addCategoryEntry("JavaScript-global-property", "testSNSM", "@mozilla.org/embedcomp/prompt-service;1",
+                    false, true);
+
+SimpleTest.executeSoon(function () {
+  ok(window.testSNSM, "testSNSM should returns an object");
+  SimpleTest.finish();
+});
+
+
+</script>
+</pre>
+</body>
+</html>

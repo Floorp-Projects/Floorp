@@ -173,10 +173,6 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
     table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
     flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
 {
-#define JS_CRASH(addr) *(int *) addr = 0
-    if (JSID_IS_ZERO(id))
-        JS_CRASH(0xa8);
-#undef JS_CRASH
     JS_ASSERT_IF(slotSpan != SHAPE_INVALID_SLOT, slotSpan < JSObject::NSLOTS_LIMIT);
     JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
     JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER), setterObj->isCallable());

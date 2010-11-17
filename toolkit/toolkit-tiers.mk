@@ -49,7 +49,7 @@ tier_platform_dirs = tools/trace-malloc/lib
 endif
 
 ifdef MOZ_TREE_FREETYPE
-tier_platform_dirs += modules/freetype2
+tier_platform_staticdirs += modules/freetype2
 endif
 
 tier_platform_dirs += xpcom

@@ -41,11 +41,13 @@
 #include "nsIXMLHttpRequest.h"
 #include "nsIXPConnect.h"
 
+#include "jsapi.h"
 #include "nsAXPCNativeCallContext.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 
 #include "nsDOMWorkerMessageHandler.h"
+#include "nsDOMThreadService.h"
 #include "nsDOMWorkerXHR.h"
 #include "nsDOMWorkerXHRProxy.h"
 
@@ -253,6 +255,19 @@ nsDOMWorkerEvent::InitEvent(const nsAString& aEventTypeArg,
   mPreventDefaultCalled = PR_FALSE;
   mTimeStamp = PR_Now();
   return NS_OK;
+}
+
+nsDOMWorkerMessageEvent::~nsDOMWorkerMessageEvent()
+{
+  if (mData) {
+    JSContext* cx = nsDOMThreadService::GetCurrentContext();
+    if (cx) {
+      JS_free(cx, mData);
+    }
+    else {
+      NS_WARNING("Failed to get safe JSContext, leaking event data!");
+    }
+  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsDOMWorkerMessageEvent, nsDOMWorkerEvent,

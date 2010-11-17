@@ -59,7 +59,7 @@ let AllTabs = {
    *
    * @param eventName
    *        Name of the corresponding Tab* Event; one of "attrModified",
-   *        "close", "move", "open", "select".
+   *        "close", "move", "open", "select", "pinned", "unpinned".
    * @param callback
    *        Callback that gets called with the tab as the first argument and
    *        the event as the second argument.
@@ -79,7 +79,7 @@ let AllTabs = {
    *
    * @param eventName
    *        Name of the corresponding Tab* Event; one of "attrModified",
-   *        "close", "move", "open", "select".
+   *        "close", "move", "open", "select", "pinned", "unpinned".
    * @param callback
    *        The callback given for the original AllTabs.register call.
    * @usage AllTabs.unregister("close", handleClose);
@@ -107,7 +107,7 @@ __defineGetter__("browserWindows", function browserWindows() {
   return browserWindows;
 });
 
-let events = ["attrModified", "close", "move", "open", "select"];
+let events = ["attrModified", "close", "move", "open", "select", "pinned", "unpinned"];
 let eventListeners = {};
 
 function registerBrowserWindow(browserWindow) {

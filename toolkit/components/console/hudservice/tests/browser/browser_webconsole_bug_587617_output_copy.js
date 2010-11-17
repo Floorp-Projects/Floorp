@@ -4,6 +4,7 @@
  *
  * Contributor(s):
  *  Mihai Șucan <mihai.sucan@gmail.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -20,8 +21,8 @@ function tabLoaded() {
 
   // See bugs 574036, 586386 and 587617.
 
-  let HUD = HUDService.getDisplayByURISpec(
-    browser.contentWindow.wrappedJSObject.document.location.href);
+  hudId = HUDService.displaysIndex()[0];
+  let HUD = HUDService.hudWeakReferences[hudId].get().HUDBox;
   let filterBox = HUD.querySelector(".hud-filter-box");
   outputNode = HUD.querySelector(".hud-output-node");
   let selection = getSelection();

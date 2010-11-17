@@ -49,6 +49,8 @@
 #include "nsMappedAttributes.h"
 #include "nsNetUtil.h"
 #include "nsHTMLFormElement.h"
+#include "nsHtml5Module.h"
+
 
 // XXX nav4 has type= start= (same as OL/UL)
 extern nsAttrValue::EnumTable kListTypeTable[];
@@ -140,6 +142,22 @@ public:
 };
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
+
+/**
+ * When creating a isindex element, we should create a nsHTMLElement if the html5
+ * parser is enabled. Otherwise, a nsHTMLSharedElement should be created.
+ */
+nsGenericHTMLElement*
+NS_NewHTMLIsIndexElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                         mozilla::dom::FromParser aFromParser)
+{
+  if (nsHtml5Module::sEnabled) {
+    return NS_NewHTMLElement(aNodeInfo, aFromParser);
+  } else {
+    return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);
+  }
+}
+
 
 
 nsHTMLSharedElement::nsHTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo)

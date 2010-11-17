@@ -72,7 +72,7 @@
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 
-NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
 #ifdef WINCE
 
@@ -146,29 +146,26 @@ static PRInt32 GetWindowFrameButtonState(nsIFrame *aFrame, nsEventStates eventSt
     return mozilla::widget::themeconst::BS_INACTIVE;
   }
 
-  if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
-    return mozilla::widget::themeconst::BS_PUSHED;
-  else if (eventState.HasState(NS_EVENT_STATE_HOVER))
+  if (eventState.HasState(NS_EVENT_STATE_HOVER)) {
+    if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
+      return mozilla::widget::themeconst::BS_PUSHED;
     return mozilla::widget::themeconst::BS_HOT;
-  else
-    return mozilla::widget::themeconst::BS_NORMAL;
+  }
+  return mozilla::widget::themeconst::BS_NORMAL;
 }
 
 static PRInt32 GetClassicWindowFrameButtonState(nsEventStates eventState)
 {
-  if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
+  if (eventState.HasState(NS_EVENT_STATE_ACTIVE) &&
+      eventState.HasState(NS_EVENT_STATE_HOVER))
     return DFCS_BUTTONPUSH|DFCS_PUSHED;
-  else if (eventState.HasState(NS_EVENT_STATE_HOVER))
-    return DFCS_BUTTONPUSH|DFCS_HOT;
-  else
-    return DFCS_BUTTONPUSH;
+  return DFCS_BUTTONPUSH;
 }
 
 static void QueryForButtonData(nsIFrame *aFrame)
 {
-  if (nsUXThemeData::sTitlebarInfoPopulated)
+  if (nsUXThemeData::sTitlebarInfoPopulatedThemed && nsUXThemeData::sTitlebarInfoPopulatedAero)
     return;
-
   nsIWidget* widget = aFrame->GetNearestWidget();
   nsWindow * window = static_cast<nsWindow*>(widget);
   if (!window)

@@ -90,6 +90,25 @@ ok(u8v[0] == 0xaa && u8v[1] == 0xee && u8v[2] == 0x00 && u8v[3] == 0x03, "wrong 
 is(i32v[1], -1, "wrong value, expected -1 (0xffffffff)");
 is(u32v[0], 0xbbbbbbbb, "wrong value, expected 0xbbbbbbbb");
 
+var client = new XMLHttpRequest();
+client.onreadystatechange = function() {
+    if(client.readyState == 4) {
+      try {
+        is(client.responseXML, null, "responseXML should be null.");
+        is(client.responseText, "", "responseText should be empty string.");
+        is(client.status, 0, "status should be 0.");
+        is(client.statusText, "", "statusText should be empty string.");
+        is(client.getAllResponseHeaders(), "",
+           "getAllResponseHeaders() should return empty string.");
+      } catch(ex) {
+        ok(false, "Shouldn't throw! [" + ex + "]");
+      }
+    }
+  }
+client.open("GET", "file_XHR_pass1.xml", true);
+client.send();
+client.abort();
+
 </script>
 </pre>
 </body>

@@ -295,7 +295,7 @@ private:
   // Our audio stream.  Created on demand when entering playback state.  It
   // is destroyed when seeking begins and will not be reinitialized until
   // playback resumes, so it is possible for this to be null.
-  nsAutoPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<nsAudioStream> mAudioStream;
 
   // Maximum time to spend waiting for data during buffering.
   TimeDuration mBufferingWait;
@@ -906,7 +906,7 @@ nsWaveStateMachine::ChangeState(State aState)
 void
 nsWaveStateMachine::OpenAudioStream()
 {
-  mAudioStream = new nsAudioStream();
+  mAudioStream = nsAudioStream::AllocateStream();
   if (!mAudioStream) {
     LOG(PR_LOG_ERROR, ("Could not create audio stream"));
   } else {
@@ -1320,6 +1320,7 @@ nsresult
 nsWaveDecoder::Seek(float aTime)
 {
   if (mPlaybackStateMachine) {
+    mEnded = PR_FALSE;
     PinForSeek();
     mPlaybackStateMachine->Seek(aTime);
     return StartStateMachineThread();
@@ -1364,6 +1365,7 @@ nsresult
 nsWaveDecoder::Play()
 {
   if (mPlaybackStateMachine) {
+    mEnded = PR_FALSE;
     mPlaybackStateMachine->Play();
     return StartStateMachineThread();
   }
@@ -1457,6 +1459,7 @@ nsWaveDecoder::PlaybackEnded()
   if (!mPlaybackStateMachine->IsEnded()) {
     return;
   }
+  mEnded = PR_TRUE;
 
   // Update ready state; now that we've finished playback, we should
   // switch to HAVE_CURRENT_DATA.
@@ -1512,9 +1515,6 @@ nsWaveDecoder::IsSeeking() const
 PRBool
 nsWaveDecoder::IsEnded() const
 {
-  if (mPlaybackStateMachine) {
-    return mPlaybackStateMachine->IsEnded();
-  }
   return mEnded;
 }
 

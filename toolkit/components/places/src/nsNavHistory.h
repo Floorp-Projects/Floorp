@@ -602,6 +602,10 @@ public:
    */
   void NotifyTitleChange(nsIURI* aURI, const nsString& title);
 
+  bool isBatching() {
+    return mBatchLevel > 0;
+  }
+
 private:
   ~nsNavHistory();
 

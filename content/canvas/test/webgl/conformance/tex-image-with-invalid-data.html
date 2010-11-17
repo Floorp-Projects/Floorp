@@ -6,13 +6,12 @@
   <link rel="stylesheet" href="../resources/js-test-style.css"/>
   <script src="../resources/js-test-pre.js"></script>
   <script src="resources/webgl-test.js"></script>
-  <script src="resources/testrunner.js"></script>
 </head>
 <body>
 <div id="description"></div>
 <div id="console"></div>
 <canvas id="canvas" width="2" height="2"> </canvas>
-<script><!--
+<script type="text/javascript">
 description("texImage2D and texSubImage2D tests with invalid data");
 
 var canvas = document.getElementById("canvas");
@@ -22,63 +21,79 @@ if (!gl)
 else
   testPassed("Context created.");
 
+var tex;
 
-/* object containing all tests in this testsuite */
-var bug32619_tests = {
-  setup: function () {
-    bug32619_tests.tex = gl.createTexture();
+function setup() {
+    tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, bug32619_tests.tex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-  },
-  teardown: function () {
-    gl.deleteTexture(bug32619_tests.tex);
-  },
-
-  "Passing a buffer not large enough to texImage2D should generate an INVALID_OPERATION" : function () {
-    this.setup = function () {
-      var tooSmall = new Uint8Array(64);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, tooSmall);
-    };
-    this.expects = gl.INVALID_OPERATION;
-  },
-  "Passing texImage2D parameter data of Number type should throw a TypeError" : function () {
-    this.setup = function () {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, 42);
-    };
-    this.expects = "TypeError";
-  },
-  "Passing texImage2D parameter data of String type should throw a TypeError" : function () {
-    this.setup = function () {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, "not a buffer");
-    };
-    this.expects = "TypeError";
-  },
-  "Passing a buffer not large enough to texSubImage2D should generate an INVALID_OPERATION" : function () {
-    this.setup = function () {
-      var tooSmall = new Uint8Array(64);
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, tooSmall);
-    };
-    this.expects = gl.INVALID_OPERATION;
-  },
-  "Passing texSubImage2D parameter data of Number type should throw a TypeError" : function () {
-    this.setup = function () {
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, 42);
-    };
-    this.expects = "TypeError";
-  },
-  "Passing texSubImage2D parameter data of String type should throw a TypeError" : function () {
-    this.setup = function () {
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, "not a buffer");
-    };
-    this.expects = "TypeError";
-  },
 }
 
-runTestsuite(bug32619_tests);
+function teardown() {
+    gl.deleteTexture(tex);
+}
+
+function test(desc, func, expected) {
+    debug(desc);
+
+    var exc = null;
+    try {
+	func();
+    } catch (x) {
+	exc = x;
+    }
+
+    if (expected == gl.INVALID_OPERATION) {
+	glErrorShouldBe(gl, expected);
+    } else if (expected == "exception") {
+        if (exc) {
+	    testPassed("threw exception");
+	} else {
+	    testFailed("did not throw exception");
+	}
+    }
+}
+
+test("Passing a buffer not large enough to texImage2D should generate an INVALID_OPERATION",
+     function () {
+	 var tooSmall = new Uint8Array(64);
+	 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, tooSmall);
+     },
+     gl.INVALID_OPERATION);
+
+test("Passing texImage2D parameter data of Number type should throw an exception",
+     function () {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, 42);
+     },
+     "exception");
+
+test("Passing texImage2D parameter data of String type should throw a TypeError",
+     function () {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, "not a buffer");
+     },
+     "exception");
+test("Passing a buffer not large enough to texSubImage2D should generate an INVALID_OPERATION",
+     function () {
+	 var tooSmall = new Uint8Array(64);
+	 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, tooSmall);
+     },
+     gl.INVALID_OPERATION);
+
+test("Passing texSubImage2D parameter data of Number type should throw a TypeError",
+     function () {
+	 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, 42);
+     },
+     "exception");
+
+test("Passing texSubImage2D parameter data of String type should throw a TypeError",
+     function () {
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, "not a buffer");
+     },
+     "exception");
 
 debug("");
 successfullyParsed = true;
---></script>
+</script>
 <script src="../resources/js-test-post.js"></script>
 <script>
 </script>

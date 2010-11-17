@@ -677,7 +677,7 @@
 
         /* compute number of glyphs */
         if ( dict->cid_registry != 0xFFFFU )
-          cffface->num_glyphs = cff->charset.max_cid;
+          cffface->num_glyphs = cff->charset.max_cid + 1;
         else
           cffface->num_glyphs = cff->charstrings_index.count;
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- mOde: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -181,7 +181,7 @@ InlineReturn(VMFrame &f)
     JSContext *cx = f.cx;
     JSStackFrame *fp = f.regs.fp;
 
-    JS_ASSERT(f.fp() != f.entryFp);
+    JS_ASSERT(f.fp() != f.entryfp);
 
     JS_ASSERT(!js_IsActiveWithOrBlock(cx, &fp->scopeChain(), 0));
 
@@ -231,7 +231,7 @@ stubs::HitStackQuota(VMFrame &f)
     /* Include space to push another frame. */
     uintN nvals = f.fp()->script()->nslots + VALUES_PER_STACK_FRAME;
     JS_ASSERT(f.regs.sp == f.fp()->base());
-    if (f.cx->stack().bumpCommitAndLimit(f.entryFp, f.regs.sp, nvals, &f.stackLimit))
+    if (f.cx->stack().bumpCommitAndLimit(f.entryfp, f.regs.sp, nvals, &f.stackLimit))
         return;
 
     /* Remove the current partially-constructed frame before throwing. */
@@ -269,7 +269,7 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     /* Reserve enough space for a callee frame. */
     JSStackFrame *newfp = cx->stack().getInlineFrameWithinLimit(cx, (Value*) oldfp, nactual,
                                                                 fun, fun->script(), &flags,
-                                                                f.entryFp, &f.stackLimit);
+                                                                f.entryfp, &f.stackLimit);
     if (!newfp)
         THROWV(NULL);
 
@@ -364,7 +364,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     StackSpace &stack = cx->stack();
     JSStackFrame *newfp = stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
                                                           newfun, newscript, &flags,
-                                                          f.entryFp, &f.stackLimit);
+                                                          f.entryfp, &f.stackLimit);
     if (JS_UNLIKELY(!newfp))
         return false;
     JS_ASSERT_IF(!vp[1].isPrimitive() && !(flags & JSFRAME_CONSTRUCTING),
@@ -560,7 +560,7 @@ js_InternalThrow(VMFrame &f)
         // called into through js_Interpret). In this case, we still unwind,
         // but we shouldn't return from a JS function, because we're not in a
         // JS function.
-        bool lastFrame = (f.entryFp == f.fp());
+        bool lastFrame = (f.entryfp == f.fp());
         js_UnwindScope(cx, 0, cx->throwing);
 
         // For consistency with Interpret(), always run the script epilogue.

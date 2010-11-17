@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test cookie database migration from version 3 (prerelease Gecko 2.0) to the
 // current version, presently 4 (Gecko 2.0).
@@ -24,7 +23,7 @@ function do_run_test() {
   let profile = do_get_profile();
 
   // Create a schema 3 database.
-  let schema3db = new CookieDatabaseConnection(profile, 3);
+  let schema3db = new CookieDatabaseConnection(do_get_cookie_file(profile), 3);
 
   let now = Date.now() * 1000;
   let futureExpiry = Math.round(now / 1e6 + 1000);
@@ -97,7 +96,7 @@ function do_run_test() {
   yield;
 
   // Open the database so we can execute some more schema 3 statements on it.
-  schema3db = new CookieDatabaseConnection(profile, 3);
+  schema3db = new CookieDatabaseConnection(do_get_cookie_file(profile), 3);
 
   // Populate it with more cookies.
   for (let i = 60; i < 80; ++i) {

@@ -91,6 +91,7 @@ static nsSystemFontsMac *gSystemFonts = nsnull;
 static nsSystemFontsQt *gSystemFonts = nsnull;
 #elif defined(ANDROID)
 #include "nsSystemFontsAndroid.h"
+#include "gfxPDFSurface.h"
 static nsSystemFontsAndroid *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
@@ -1109,7 +1110,7 @@ nsThebesDeviceContext::CalcPrintingSize()
         size = reinterpret_cast<gfxImageSurface*>(mPrintingSurface.get())->GetSize();
         break;
 
-#if defined(MOZ_ENABLE_GTK2) || defined(XP_WIN) || defined(XP_OS2) || defined(MOZ_WIDGET_QT)
+#if defined(MOZ_PDF_PRINTING)
     case gfxASurface::SurfaceTypePDF:
         inPoints = PR_TRUE;
         size = reinterpret_cast<gfxPDFSurface*>(mPrintingSurface.get())->GetSize();

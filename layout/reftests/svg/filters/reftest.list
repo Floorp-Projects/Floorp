@@ -75,6 +75,8 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feDisplacementMap-alpha-01.svg pass.svg
 == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 
+== feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
+
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
 == feMorphology-radius-zero-01.svg pass.svg
@@ -84,5 +86,5 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 
 == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
-random-if(gtk2Widget) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg # bug 610945
+== feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
 

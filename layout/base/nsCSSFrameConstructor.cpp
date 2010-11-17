@@ -5560,10 +5560,9 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
         }
       }
 
-#ifdef DEBUG
-      if (!containingBlock)
-        NS_WARNING("Positioned frame that does not handle positioned kids; looking further up the parent chain");
-#endif
+      // We sometimes have a null containing block here because we
+      // haven't yet fixed bug 455338.  Once we fix that we shouldn't
+      // have to loop here.
     }
   }
 

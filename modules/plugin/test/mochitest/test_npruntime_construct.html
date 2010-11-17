@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test whether windowless plugins receive correct visible/invisible notifications.</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<body>
+  <p id="display"></p>
+
+  <embed id="theplugin" type="application/x-test"></embed>
+
+  <script type="application/javascript">
+    function MyFunc(arg) {
+      is(arg, "hi", "Argument passed to constructor function");
+      this.localProp = 'local';
+    }
+    MyFunc.prototype.protoProp = 't';
+
+    var theplugin = document.getElementById('theplugin');
+
+    ok(theplugin.constructObject(Array) instanceof Array, "Constructed Array");
+    var o = theplugin.constructObject(MyFunc, "hi");
+    ok(o instanceof MyFunc, "Constructed MyFunc");
+    is(o.localProp, 'local', "this property correct");
+    is(o.protoProp, 't', "prototype property correct");
+  </script>

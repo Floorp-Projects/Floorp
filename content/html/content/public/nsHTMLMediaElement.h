@@ -598,7 +598,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsAutoPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<nsAudioStream> mAudioStream;
 
   // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.
@@ -646,9 +646,6 @@ protected:
   // PR_TRUE if we've reported a "waiting" event since the last
   // readyState change to HAVE_CURRENT_DATA.
   PRPackedBool mWaitingFired;
-
-  // PR_TRUE if we're in BindToTree().
-  PRPackedBool mIsBindingToTree;
 
   // PR_TRUE if we're running the "load()" method.
   PRPackedBool mIsRunningLoadMethod;

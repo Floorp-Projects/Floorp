@@ -599,31 +599,6 @@ nsDocAccessible::GetCachedAccessible(nsINode *aNode)
   return accessible;
 }
 
-// nsDocAccessible public method
-PRBool
-nsDocAccessible::CacheAccessible(nsAccessible* aAccessible)
-{
-  if (aAccessible->IsPrimaryForNode() &&
-      !mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible))
-    return PR_FALSE;
-
-  return mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible);
-}
-
-// nsDocAccessible public method
-void
-nsDocAccessible::ShutdownAccessible(nsAccessible *aAccessible)
-{
-  // Remove an accessible from node to accessible map if it is presented there.
-  if (aAccessible->IsPrimaryForNode() &&
-      mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
-    mNodeToAccessibleMap.Remove(aAccessible->GetNode());
-
-  void* uniqueID = aAccessible->UniqueID();
-  aAccessible->Shutdown();
-  mAccessibleCache.Remove(uniqueID);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode
 
@@ -1049,8 +1024,21 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     }
   }
 
-  if (aAttribute == nsAccessibilityAtoms::role ||
-      aAttribute == nsAccessibilityAtoms::href ||
+  if (aAttribute == nsAccessibilityAtoms::role) {
+    if (mContent == aContent) {
+      // It is common for js libraries to set the role of the body element after
+      // the doc has loaded. In this case we just update the role map entry. 
+      SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aContent));
+    }
+    else {
+      // Recreate the accessible when role is changed because we might require a
+      // different accessible class for the new role or the accessible may
+      // expose a different sets of interfaces (COM restriction).
+      RecreateAccessible(aContent);
+    }
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::href ||
       aAttribute == nsAccessibilityAtoms::onclick) {
     // Not worth the expense to ensure which namespace these are in
     // It doesn't kill use to recreate the accessible even if the attribute was used
@@ -1343,6 +1331,56 @@ nsDocAccessible::GetCachedAccessibleByUniqueIDInSubtree(void* aUniqueID)
   }
 
   return nsnull;
+}
+
+bool
+nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
+                                nsRoleMapEntry* aRoleMapEntry)
+{
+  if (!aAccessible)
+    return false;
+
+  // Put into DOM node cache.
+  if (aAccessible->IsPrimaryForNode() &&
+      !mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible))
+    return false;
+
+  // Put into unique ID cache.
+  if (!mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible)) {
+    if (aAccessible->IsPrimaryForNode())
+      mNodeToAccessibleMap.Remove(aAccessible->GetNode());
+
+    return false;
+  }
+
+  // Initialize the accessible.
+  if (!aAccessible->Init()) {
+    NS_ERROR("Failed to initialize an accessible!");
+
+    UnbindFromDocument(aAccessible);
+    return false;
+  }
+
+  aAccessible->SetRoleMapEntry(aRoleMapEntry);
+  return true;
+}
+
+void
+nsDocAccessible::UnbindFromDocument(nsAccessible* aAccessible)
+{
+  // Remove an accessible from node-to-accessible map if it exists there.
+  if (aAccessible->IsPrimaryForNode() &&
+      mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
+    mNodeToAccessibleMap.Remove(aAccessible->GetNode());
+
+#ifdef DEBUG
+  NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
+               "Unbinding the unbound accessible!");
+#endif
+
+  void* uniqueID = aAccessible->UniqueID();
+  aAccessible->Shutdown();
+  mAccessibleCache.Remove(uniqueID);
 }
 
 void
@@ -1761,10 +1799,6 @@ nsDocAccessible::UncacheChildrenInSubtree(nsAccessible* aRoot)
 void
 nsDocAccessible::ShutdownChildrenInSubtree(nsAccessible* aAccessible)
 {
-#ifdef DEBUG
-  nsAccessible* incache = mAccessibleCache.GetWeak(aAccessible->UniqueID());
-#endif
-
   // Traverse through children and shutdown them before this accessible. When
   // child gets shutdown then it removes itself from children array of its
   //parent. Use jdx index to process the cases if child is not attached to the
@@ -1780,6 +1814,6 @@ nsDocAccessible::ShutdownChildrenInSubtree(nsAccessible* aAccessible)
     ShutdownChildrenInSubtree(child);
   }
 
-  ShutdownAccessible(aAccessible);
+  UnbindFromDocument(aAccessible);
 }
 

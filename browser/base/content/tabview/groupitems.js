@@ -175,16 +175,17 @@ function GroupItem(listOfEls, options) {
     if (!self.getTitle()) {
       self.$title
         .addClass("defaultName")
-        .val(self.defaultName);
+        .val(self.defaultName)
+        .css({"background-image":null, "-moz-padding-start":null});
     } else {
-      self.$title.css({"background":"none"});
+      self.$title.css({"background-image":"none"});
       if (immediately) {
         self.$title.css({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           });
       } else {
         self.$title.animate({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           }, {
             duration: 200,
             easing: "tabviewBounce"
@@ -408,7 +409,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   adjustTitleSize: function GroupItem_adjustTitleSize() {
     Utils.assert(this.bounds, 'bounds needs to have been set');
     let closeButton = iQ('.close', this.container);
-    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css('right')),
+    var dimension = UI.rtl ? 'left' : 'right';
+    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css(dimension)),
                      Math.max(150, this.getTitle().length * 6));
     // The * 6 multiplier calculation is assuming that characters in the title
     // are approximately 6 pixels wide. Bug 586545
@@ -1086,13 +1088,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         // tab) / (the total available content width)
 
         // first, find the right of the rightmost tab! luckily, they're in order.
-        // TODO: does this change for rtl?
         var rightMostRight = 0;
-        for each (var rect in rects) {
-          if (rect.right > rightMostRight)
-            rightMostRight = rect.right;
-          else
-            break;
+        if (UI.rtl) {
+          rightMostRight = rects[0].right;
+        } else {
+          for each (var rect in rects) {
+            if (rect.right > rightMostRight)
+              rightMostRight = rect.right;
+            else
+              break;
+          }
         }
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
 
@@ -1177,7 +1182,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         child.addClass("stacked");
         child.setBounds(box, !animate);
-        child.setRotation(self._randRotate(maxRotation, index));
+        child.setRotation((UI.rtl ? -1 : 1) * self._randRotate(maxRotation, index));
       }
     });
 
@@ -1371,8 +1376,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
   setResizable: function GroupItem_setResizable(value, immediately) {
-    this.resizeOptions.minWidth = 90;
-    this.resizeOptions.minHeight = 90;
+    this.resizeOptions.minWidth = 110;
+    this.resizeOptions.minHeight = 125;
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();

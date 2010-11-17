@@ -39,7 +39,6 @@
 
 #include "IDBFactory.h"
 
-#include "nsIIDBDatabaseException.h"
 #include "nsILocalFile.h"
 #include "nsIScriptContext.h"
 
@@ -127,20 +126,18 @@ class OpenDatabaseHelper : public AsyncConnectionHelper
 public:
   OpenDatabaseHelper(IDBRequest* aRequest,
                      const nsAString& aName,
-                     const nsAString& aDescription,
                      const nsACString& aASCIIOrigin)
   : AsyncConnectionHelper(static_cast<IDBDatabase*>(nsnull), aRequest),
-    mName(aName), mDescription(aDescription), mASCIIOrigin(aASCIIOrigin),
-    mDatabaseId(0), mLastObjectStoreId(0), mLastIndexId(0)
+    mName(aName), mASCIIOrigin(aASCIIOrigin), mDatabaseId(0),
+    mLastObjectStoreId(0), mLastIndexId(0)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
   nsString mName;
-  nsString mDescription;
   nsCString mASCIIOrigin;
 
   // Out-params.
@@ -163,7 +160,6 @@ CreateTables(mozIStorageConnection* aDBConn)
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE database ("
       "name TEXT NOT NULL, "
-      "description TEXT NOT NULL, "
       "version TEXT DEFAULT NULL"
     ");"
   ));
@@ -325,22 +321,19 @@ CreateTables(mozIStorageConnection* aDBConn)
 
 nsresult
 CreateMetaData(mozIStorageConnection* aConnection,
-               const nsAString& aName,
-               const nsAString& aDescription)
+               const nsAString& aName)
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
   NS_PRECONDITION(aConnection, "Null database!");
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO database (name, description) "
-    "VALUES (:name, :description)"
+    "INSERT OR REPLACE INTO database (name) "
+    "VALUES (:name)"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("description"), aDescription);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
@@ -349,7 +342,6 @@ CreateMetaData(mozIStorageConnection* aConnection,
 nsresult
 CreateDatabaseConnection(const nsACString& aASCIIOrigin,
                          const nsAString& aName,
-                         const nsAString& aDescription,
                          nsAString& aDatabaseFilePath,
                          mozIStorageConnection** aConnection)
 {
@@ -487,7 +479,7 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
     rv = CreateTables(connection);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = CreateMetaData(connection, aName, aDescription);
+    rv = CreateMetaData(connection, aName);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -506,27 +498,6 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
   NS_ENSURE_SUCCESS(rv, rv);
 
   connection.forget(aConnection);
-  return NS_OK;
-}
-
-inline
-nsresult
-ValidateVariantForKey(nsIVariant* aVariant)
-{
-  PRUint16 type;
-  nsresult rv = aVariant->GetDataType(&type);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch (type) {
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_INT32:
-    case nsIDataType::VTYPE_DOUBLE:
-      break;
-
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
-
   return NS_OK;
 }
 
@@ -816,7 +787,6 @@ DOMCI_DATA(IDBFactory, IDBFactory)
 
 NS_IMETHODIMP
 IDBFactory::Open(const nsAString& aName,
-                 const nsAString& aDescription,
                  JSContext* aCx,
                  nsIIDBRequest** _retval)
 {
@@ -829,7 +799,7 @@ IDBFactory::Open(const nsAString& aName,
     if (PR_NewThreadPrivateIndex(&gCurrentDatabaseIndex, NULL) != PR_SUCCESS) {
       NS_ERROR("PR_NewThreadPrivateIndex failed!");
       gCurrentDatabaseIndex = BAD_TLS_INDEX;
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
@@ -837,13 +807,13 @@ IDBFactory::Open(const nsAString& aName,
   }
 
   if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
   nsCOMPtr<nsIPrincipal> principal;
   rv = nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCString origin;
   if (nsContentUtils::IsSystemPrincipal(principal)) {
@@ -851,16 +821,16 @@ IDBFactory::Open(const nsAString& aName,
   }
   else {
     rv = nsContentUtils::GetASCIIOrigin(principal, origin);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (origin.EqualsLiteral("null")) {
       NS_WARNING("IndexedDB databases not allowed for this principal!");
-      return nsnull;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
 
   nsIScriptContext* context = GetScriptContextFromJSContext(aCx);
-  NS_ENSURE_STATE(context);
+  NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCOMPtr<nsPIDOMWindow> innerWindow;
 
@@ -869,128 +839,29 @@ IDBFactory::Open(const nsAString& aName,
   if (window) {
     innerWindow = window->GetCurrentInnerWindow();
   }
-  NS_ENSURE_STATE(innerWindow);
+  NS_ENSURE_TRUE(innerWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow,
+                                                    nsnull);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, aDescription, origin);
+    new OpenDatabaseHelper(request, aName, origin);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
     new CheckPermissionsHelper(openHelper, innerWindow, aName, origin);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = mgr->WaitForOpenAllowed(aName, origin, permissionHelper);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBFactory::MakeSingleKeyRange(nsIVariant* aValue,
-                               nsIIDBKeyRange** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsRefPtr<IDBKeyRange> range =
-    IDBKeyRange::Create(aValue, aValue, PRUint16(nsIIDBKeyRange::LEFT_BOUND |
-                                                 nsIIDBKeyRange::RIGHT_BOUND));
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeLeftBoundKeyRange(nsIVariant* aBound,
-                                  PRBool aOpen,
-                                  nsIIDBKeyRange** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aBound);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUint16 flags = aOpen ?
-                   PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
-                   PRUint16(nsIIDBKeyRange::LEFT_BOUND);
-
-  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(aBound, nsnull, flags);
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeRightBoundKeyRange(nsIVariant* aBound,
-                                   PRBool aOpen,
-                                   nsIIDBKeyRange** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aBound);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUint16 flags = aOpen ?
-                   PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
-                   PRUint16(nsIIDBKeyRange::RIGHT_BOUND);
-
-  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(nsnull, aBound, flags);
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBFactory::MakeBoundKeyRange(nsIVariant* aLeft,
-                              nsIVariant* aRight,
-                              PRBool aOpenLeft,
-                              PRBool aOpenRight,
-                              nsIIDBKeyRange **_retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = ValidateVariantForKey(aLeft);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = ValidateVariantForKey(aRight);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUint16 flags = aOpenLeft ?
-                   PRUint16(nsIIDBKeyRange::LEFT_OPEN) :
-                   PRUint16(nsIIDBKeyRange::LEFT_BOUND);
-
-  flags |= aOpenRight ?
-           PRUint16(nsIIDBKeyRange::RIGHT_OPEN) :
-           PRUint16(nsIIDBKeyRange::RIGHT_BOUND);
-
-  nsRefPtr<IDBKeyRange> range = IDBKeyRange::Create(aLeft, aRight, flags);
-  NS_ASSERTION(range, "Out of memory?");
-
-  range.forget(_retval);
-  return NS_OK;
-}
-
-PRUint16
+nsresult
 OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
 #ifdef DEBUG
@@ -1005,21 +876,20 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(!aConnection, "Huh?!");
 
   if (IndexedDatabaseManager::IsShuttingDown()) {
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDescription,
-                                         mDatabaseFilePath,
+  nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDatabaseFilePath,
                                          getter_AddRefs(connection));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mDatabaseId = HashString(mDatabaseFilePath);
   NS_ASSERTION(mDatabaseId, "HashString gave us 0?!");
 
   rv = IDBFactory::LoadDatabaseInformation(connection, mDatabaseId, mVersion,
                                            mObjectStores);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   for (PRUint32 i = 0; i < mObjectStores.Length(); i++) {
     nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
@@ -1030,10 +900,10 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     mLastObjectStoreId = PR_MAX(objectStoreInfo->id, mLastObjectStoreId);
   }
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   DatabaseInfo* dbInfo;
@@ -1044,7 +914,6 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 #ifdef DEBUG
     {
       NS_ASSERTION(dbInfo->name == mName &&
-                   dbInfo->description == mDescription &&
                    dbInfo->version == mVersion &&
                    dbInfo->id == mDatabaseId &&
                    dbInfo->filePath == mDatabaseFilePath,
@@ -1094,21 +963,20 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     nsAutoPtr<DatabaseInfo> newInfo(new DatabaseInfo());
 
     newInfo->name = mName;
-    newInfo->description = mDescription;
     newInfo->id = mDatabaseId;
     newInfo->filePath = mDatabaseFilePath;
     newInfo->referenceCount = 1;
 
     if (!DatabaseInfo::Put(newInfo)) {
       NS_ERROR("Failed to add to hash!");
-      return nsIIDBDatabaseException::UNKNOWN_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
     dbInfo = newInfo.forget();
 
     nsresult rv = IDBFactory::UpdateDatabaseMetadata(dbInfo, mVersion,
                                                      mObjectStores);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_ASSERTION(mObjectStores.IsEmpty(), "Should have swapped!");
   }
@@ -1120,9 +988,9 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBDatabase::Create(mRequest->ScriptContext(), mRequest->Owner(), dbInfo,
                         mASCIIOrigin);
   if (!db) {
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(db));
-  return OK;
+  return NS_OK;
 }

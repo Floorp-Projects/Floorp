@@ -113,7 +113,7 @@
 	* include/freetype/ftsnames.h (FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY,
 	FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY): Define.
 
-	* src/sfnt/sfobjs.h (sfnt_load_face): Check the arguments and
+	* src/sfnt/sfobjs.c (sfnt_load_face): Check the arguments and
 	ignore preferred family and subfamily names if requested.
 
 2010-01-27  Ken Sharp  <ken.sharp@artifex.com>
@@ -4525,7 +4525,7 @@
 	rasterizer.
 
 	* include/freetype/ftimage.h (FT_OUTLINE_SMART_DROPOUTS,
-	FT_OUTLINE_EXCLUDE_STUBS): New flags for for FT_Outline.
+	FT_OUTLINE_EXCLUDE_STUBS): New flags for FT_Outline.
 
 	* src/raster/ftraster.c (Vertical_Sweep_Drop, Horizontal_Sweep_Drop,
 	Horizontal_Gray_Sweep_Drop): Use same mode numbers as given in the

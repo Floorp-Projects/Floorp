@@ -54,13 +54,14 @@ typedef PRInt16 int16;
 #define ARCH_CPU_64_BITS 1
 #elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
 #define ARCH_CPU_X86_FAMILY 1
+#define ARCH_CPU_X86_32 1
 #define ARCH_CPU_X86 1
 #define ARCH_CPU_32_BITS 1
 #elif defined(__ARMEL__)
 #define ARCH_CPU_ARM_FAMILY 1
 #define ARCH_CPU_ARMEL 1
 #define ARCH_CPU_32_BITS 1
-#elif defined(__ppc__)
+#elif defined(__ppc__) || defined(__powerpc) || defined(__PPC__)
 #define ARCH_CPU_PPC_FAMILY 1
 #define ARCH_CPU_PPC 1
 #define ARCH_CPU_32_BITS 1

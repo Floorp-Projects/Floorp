@@ -69,6 +69,8 @@ TEST(MinidumpWriterTest, Setup) {
   close(fds[1]);
 }
 
+// Test that mapping info can be specified when writing a minidump,
+// and that it ends up in the module list of the minidump.
 TEST(MinidumpWriterTest, MappingInfo) {
   int fds[2];
   ASSERT_NE(-1, pipe(fds));
@@ -154,5 +156,110 @@ TEST(MinidumpWriterTest, MappingInfo) {
   EXPECT_EQ(module_identifier, module->debug_identifier());
 
   unlink(templ);
+  close(fds[1]);
+}
+
+// Test that mapping info can be specified, and that it overrides
+// existing mappings that are wholly contained within the specified
+// range.
+TEST(MinidumpWriterTest, MappingInfoContained) {
+  int fds[2];
+  ASSERT_NE(-1, pipe(fds));
+
+  // These are defined here so the parent can use them to check the
+  // data from the minidump afterwards.
+  const u_int32_t kMemorySize = sysconf(_SC_PAGESIZE);
+  const char* kMemoryName = "a fake module";
+  const u_int8_t kModuleGUID[sizeof(MDGUID)] = {
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
+  };
+  char module_identifier_buffer[37];
+  FileID::ConvertIdentifierToString(kModuleGUID,
+                                    module_identifier_buffer,
+                                    sizeof(module_identifier_buffer));
+  string module_identifier(module_identifier_buffer);
+  // Strip out dashes
+  size_t pos;
+  while ((pos = module_identifier.find('-')) != string::npos) {
+    module_identifier.erase(pos, 1);
+  }
+  // And append a zero, because module IDs include an "age" field
+  // which is always zero on Linux.
+  module_identifier += "0";
+  
+  // mmap a file
+  char tempfile[] = TEMPDIR "/minidump-writer-unittest-temp-XXXXXX";
+  mktemp(tempfile);
+  printf("tempfile: %s\n", tempfile);
+  int fd = open(tempfile, O_RDWR | O_CREAT, 0);
+  ASSERT_NE(-1, fd);
+  unlink(tempfile);
+  // fill with zeros
+  char buffer[kMemorySize];
+  memset(buffer, 0, kMemorySize);
+  ASSERT_EQ(kMemorySize, write(fd, buffer, kMemorySize));
+  lseek(fd, 0, SEEK_SET);
+
+  char* memory =
+    reinterpret_cast<char*>(mmap(NULL,
+                                 kMemorySize,
+                                 PROT_READ | PROT_WRITE,
+                                 MAP_PRIVATE,
+                                 fd,
+                                 0));
+  const u_int64_t kMemoryAddress = reinterpret_cast<u_int64_t>(memory);
+  ASSERT_TRUE(memory);
+  close(fd);
+
+  const pid_t child = fork();
+  if (child == 0) {
+    close(fds[1]);
+    char b;
+    HANDLE_EINTR(read(fds[0], &b, sizeof(b)));
+    close(fds[0]);
+    syscall(__NR_exit);
+  }
+  close(fds[0]);
+
+  ExceptionHandler::CrashContext context;
+  memset(&context, 0, sizeof(context));
+
+  char dumpfile[] = TEMPDIR "/minidump-writer-unittest-XXXXXX";
+  mktemp(dumpfile);
+
+  // Add information about the mapped memory. Report it as being larger than
+  // it actually is.
+  MappingInfo info;
+  info.start_addr = kMemoryAddress - kMemorySize;
+  info.size = kMemorySize * 3;
+  info.offset = 0;
+  strcpy(info.name, kMemoryName);
+
+  MappingList mappings;
+  std::pair<MappingInfo, u_int8_t[sizeof(MDGUID)]> mapping;
+  mapping.first = info;
+  memcpy(mapping.second, kModuleGUID, sizeof(MDGUID));
+  mappings.push_back(mapping);
+  ASSERT_TRUE(WriteMinidump(dumpfile, child, &context, sizeof(context), mappings));
+
+  // Read the minidump. Load the module list, and ensure that
+  // the mmap'ed |memory| is listed with the given module name
+  // and debug ID.
+  Minidump minidump(dumpfile);
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpModuleList* module_list = minidump.GetModuleList();
+  ASSERT_TRUE(module_list);
+  const MinidumpModule* module =
+    module_list->GetModuleForAddress(kMemoryAddress);
+  ASSERT_TRUE(module);
+
+  EXPECT_EQ(info.start_addr, module->base_address());
+  EXPECT_EQ(info.size, module->size());
+  EXPECT_EQ(kMemoryName, module->code_file());
+  EXPECT_EQ(module_identifier, module->debug_identifier());
+
+  unlink(dumpfile);
   close(fds[1]);
 }

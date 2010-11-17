@@ -7,6 +7,7 @@
 == css-required-password.html css-required-password-ref.html
 == css-required-tel.html css-required-tel-ref.html
 == css-required-search.html css-required-search-ref.html
+== css-required-select.html css-required-select-ref.html
 
 # Checking dynamic behavior with <input type='text'>
 == css-required-dyn-1.html css-required-text-ref.html
@@ -24,6 +25,5 @@
 == css-required-reset.html about:blank
 
 # Following elements can be optional but can't be required
-== css-required-select.html about:blank
 == css-required-button-element.html about:blank
 

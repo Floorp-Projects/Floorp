@@ -215,7 +215,7 @@ public:
    * @param aIndex  The index of the content object in the parent.
    */
   nsSafeOptionListMutation(nsIContent* aSelect, nsIContent* aParent,
-                           nsIContent* aKid, PRUint32 aIndex);
+                           nsIContent* aKid, PRUint32 aIndex, PRBool aNotify);
   ~nsSafeOptionListMutation();
   void MutationFailed() { mNeedsRebuild = PR_TRUE; }
 private:
@@ -236,7 +236,7 @@ private:
  * Implementation of &lt;select&gt;
  */
 class nsHTMLSelectElement : public nsGenericHTMLFormElement,
-                            public nsIDOMHTMLSelectElement,
+                            public nsIDOMHTMLSelectElement_Mozilla_2_0_Branch,
                             public nsISelectElement,
                             public nsIConstraintValidation
 {
@@ -261,6 +261,9 @@ public:
 
   // nsIDOMHTMLSelectElement
   NS_DECL_NSIDOMHTMLSELECTELEMENT
+
+  // nsIDOMHTMLSelectElement_Mozilla_2_0_Branch
+  NS_DECL_NSIDOMHTMLSELECTELEMENT_MOZILLA_2_0_BRANCH
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -327,7 +330,8 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   // nsIConstraintValidation
-  void UpdateBarredFromConstraintValidation();
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                ValidityStateType aType);
 
 protected:
   friend class nsSafeOptionListMutation;
@@ -349,13 +353,13 @@ protected:
    * Select some option if possible (generally the first non-disabled option).
    * @return true if something was selected, false otherwise
    */
-  PRBool SelectSomething();
+  PRBool SelectSomething(PRBool aNotify);
   /**
    * Call SelectSomething(), but only if nothing is selected
    * @see SelectSomething()
    * @return true if something was selected, false otherwise
    */
-  PRBool CheckSelectSomething();
+  PRBool CheckSelectSomething(PRBool aNotify);
   /**
    * Called to trigger notifications of frames and fixing selected index
    *
@@ -387,7 +391,8 @@ protected:
    */
   nsresult InsertOptionsIntoList(nsIContent* aOptions,
                                  PRInt32 aListIndex,
-                                 PRInt32 aDepth);
+                                 PRInt32 aDepth,
+                                 PRBool aNotify);
   /**
    * Remove option(s) from the options[] array
    * @param aOptions the option or optgroup being added
@@ -396,7 +401,8 @@ protected:
    */
   nsresult RemoveOptionsFromList(nsIContent* aOptions,
                                  PRInt32 aListIndex,
-                                 PRInt32 aDepth);
+                                 PRInt32 aDepth,
+                                 PRBool aNotify);
   /**
    * Insert option(s) into the options[] array (called by InsertOptionsIntoList)
    * @param aOptions the option or optgroup being added
@@ -417,6 +423,12 @@ protected:
                                         PRInt32 aRemoveIndex,
                                         PRInt32* aNumRemoved,
                                         PRInt32 aDepth);
+
+  // nsIConstraintValidation
+  void UpdateBarredFromConstraintValidation();
+  bool IsValueMissing();
+  void UpdateValueMissingValidityState();
+
   /**
    * Find out how deep this content is from the select (1=direct child)
    * @param aContent the content to check

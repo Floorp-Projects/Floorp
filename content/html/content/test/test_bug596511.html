@@ -1,0 +1,230 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=596511
+-->
+<head>
+  <title>Test for Bug 596511</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    select:valid { background-color: green; }
+    select:invalid { background-color: red; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=596511">Mozilla Bug 596511</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 596511 **/
+
+function checkNotSufferingFromBeingMissing(element, aTodo)
+{
+  if (aTodo) {
+    ok = todo;
+    is = todo_is;
+  }
+
+  ok(!element.validity.valueMissing,
+    "Element should not suffer from value missing");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "Element should be valid");
+
+  is(element.validationMessage, "",
+    "Validation message should be the empty string");
+
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 128, 0)", ":valid pseudo-class should apply");
+
+  if (aTodo) {
+    ok = SimpleTest.ok;
+    is = SimpleTest.is;
+  }
+}
+
+function checkSufferingFromBeingMissing(element, aTodo)
+{
+  if (aTodo) {
+    ok = todo;
+    is = todo_is;
+  }
+
+  ok(element.validity.valueMissing, "Element should suffer from value missing");
+  ok(!element.validity.valid, "Element should not be valid");
+  ok(!element.checkValidity(), "Element should not be valid");
+
+  is(element.validationMessage, "Please select an item in the list.",
+     "Validation message is wrong");
+
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+
+  if (aTodo) {
+    ok = SimpleTest.ok;
+    is = SimpleTest.is;
+  }
+}
+
+function checkRequiredAttribute(element)
+{
+  ok('required' in element, "select should have a required attribute");
+
+  ok(!element.required, "select required attribute should be disabled");
+  is(element.getAttribute('required'), null,
+    "select required attribute should be disabled");
+
+  element.required = true;
+  ok(element.required, "select required attribute should be enabled");
+  isnot(element.getAttribute('required'), null,
+    "select required attribute should be enabled");
+
+  element.removeAttribute('required');
+  element.setAttribute('required', '');
+  ok(element.required, "select required attribute should be enabled");
+  isnot(element.getAttribute('required'), null,
+    "select required attribute should be enabled");
+
+  element.removeAttribute('required');
+  ok(!element.required, "select required attribute should be disabled");
+  is(element.getAttribute('required'), null,
+    "select required attribute should be disabled");
+}
+
+function checkRequiredAndOptionalSelectors(element)
+{
+  is(document.querySelector("select:optional"), element,
+     "select should be optional");
+  is(document.querySelector("select:required"), null,
+     "select shouldn't be required");
+
+  element.required = true;
+
+  is(document.querySelector("select:optional"), null,
+     "select shouldn't be optional");
+  is(document.querySelector("select:required"), element,
+     "select should be required");
+
+  element.required = false;
+}
+
+function checkInvalidWhenValueMissing(element)
+{
+  checkNotSufferingFromBeingMissing(select);
+
+  element.required = true;
+  checkSufferingFromBeingMissing(select);
+
+  /**
+   * Non-multiple and size=1.
+   */
+  select.appendChild(new Option());
+  checkSufferingFromBeingMissing(select);
+
+  // When removing the required attribute, element should not be invalid.
+  element.required = false;
+  checkNotSufferingFromBeingMissing(select);
+
+  element.required = true;
+  select.options[0].textContent = "foo";
+  // TODO: having that working would require us to add a mutation observer on
+  // the select element.
+  checkNotSufferingFromBeingMissing(select, true);
+
+  select.remove(0);
+  checkSufferingFromBeingMissing(select);
+
+  select.add(new Option("foo", "foo"), null);
+  checkNotSufferingFromBeingMissing(select);
+
+  select.add(new Option(), null);
+  checkNotSufferingFromBeingMissing(select);
+
+  select.options[1].selected = true;
+  checkSufferingFromBeingMissing(select);
+
+  select.selectedIndex = 0;
+  checkNotSufferingFromBeingMissing(select);
+
+  select.selectedIndex = 1;
+  checkSufferingFromBeingMissing(select);
+
+  select.remove(1);
+  checkNotSufferingFromBeingMissing(select);
+
+  select.options[0].disabled = true;
+  // TODO: having that working would require us to add a mutation observer on
+  // the select element.
+  checkSufferingFromBeingMissing(select, true);
+
+  select.options[0].disabled = false
+  select.remove(0);
+  checkSufferingFromBeingMissing(select);
+
+  var option = new Option("foo", "foo");
+  option.disabled = true;
+  select.add(option, null);
+  select.add(new Option("bar"), null);
+  option.selected = true;
+  checkSufferingFromBeingMissing(select);
+
+  select.remove(0);
+  select.remove(0);
+
+  /**
+   * Non-multiple and size > 1.
+   * Everything should be the same except moving the selection.
+   */
+  select.multiple = false;
+  select.size = 4;
+  checkSufferingFromBeingMissing(select);
+
+  select.add(new Option("", "", true), null);
+  checkSufferingFromBeingMissing(select);
+
+  select.add(new Option("foo", "foo"), null);
+  select.remove(0);
+  checkSufferingFromBeingMissing(select);
+
+  select.options[0].selected = true;
+  checkNotSufferingFromBeingMissing(select);
+
+  select.remove(0);
+
+  /**
+   * Multiple, any size.
+   * We can select more than one element and at least needs a value.
+   */
+  select.multiple = true;
+  select.size = 4;
+  checkSufferingFromBeingMissing(select);
+
+  select.add(new Option("", "", true), null);
+  checkSufferingFromBeingMissing(select);
+
+  select.add(new Option("", "", true), null);
+  checkSufferingFromBeingMissing(select);
+
+  select.add(new Option("foo"), null);
+  checkSufferingFromBeingMissing(select);
+
+  select.options[2].selected = true;
+  checkNotSufferingFromBeingMissing(select);
+}
+
+var select = document.createElement("select");
+var content = document.getElementById('content');
+content.appendChild(select);
+
+checkRequiredAttribute(select);
+checkRequiredAndOptionalSelectors(select);
+checkInvalidWhenValueMissing(select);
+
+</script>
+</pre>
+</body>
+</html>

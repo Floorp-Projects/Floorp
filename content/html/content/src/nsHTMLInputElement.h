@@ -221,7 +221,7 @@ public:
   void SetCheckedChangedInternal(PRBool aCheckedChanged);
   PRBool GetCheckedChanged();
   void AddedToRadioGroup(PRBool aNotify = PR_TRUE);
-  void WillRemoveFromRadioGroup(PRBool aNotify);
+  void WillRemoveFromRadioGroup();
   /**
    * Get the radio group container for this button (form or document)
    * @return the radio group container (or null if no form or document)

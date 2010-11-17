@@ -337,8 +337,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private static final int NOT_FOUND_ON_STACK = Integer.MAX_VALUE;
 
-    private static final int AAA_MAX_ITERATIONS = 10;
-
     // [NOCPP[
 
     private static final @Local String HTML_LOCAL = "html";
@@ -1946,6 +1944,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
                             case FONT:
                                 reconstructTheActiveFormattingElements();
+                                maybeForgetEarlierDuplicateFormattingElement(elementName.name, attributes);
                                 appendToCurrentNodeAndPushFormattingElementMayFoster(
                                         "http://www.w3.org/1999/xhtml",
                                         elementName, attributes);
@@ -3529,12 +3528,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 }
                             }
                             break endtagloop;
-                        case A:
-                        case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
-                        case FONT:
-                        case NOBR:
-                            adoptionAgencyEndTag(name);
-                            break endtagloop;
                         case OBJECT:
                         case MARQUEE_OR_APPLET:
                             eltPos = findLastInScope(name);
@@ -3593,6 +3586,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             } else {
                                 // fall through
                             }
+                        case A:
+                        case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+                        case FONT:
+                        case NOBR:
+                            if (adoptionAgencyEndTag(name)) {
+                                break endtagloop;
+                            }
+                            // else handle like any other tag
                         default:
                             if (isCurrent(name)) {
                                 pop();
@@ -4326,10 +4327,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         listPtr--;
     }
 
-    private void adoptionAgencyEndTag(@Local String name) throws SAXException {
+    private boolean adoptionAgencyEndTag(@Local String name) throws SAXException {
         // If you crash around here, perhaps some stack node variable claimed to
         // be a weak ref isn't.
-        for (int i = 0; i < AAA_MAX_ITERATIONS; ++i) {
+        for (int i = 0; i < 8; ++i) {
             int formattingEltListPos = listPtr;
             while (formattingEltListPos > -1) {
                 StackNode<T> listNode = listOfActiveFormattingElements[formattingEltListPos]; // weak
@@ -4343,8 +4344,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 formattingEltListPos--;
             }
             if (formattingEltListPos == -1) {
-                err("No element \u201C" + name + "\u201D to close.");
-                return;
+                return false;
             }
             StackNode<T> formattingElt = listOfActiveFormattingElements[formattingEltListPos]; // this
             // *looks*
@@ -4372,11 +4372,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             if (formattingEltStackPos == -1) {
                 err("No element \u201C" + name + "\u201D to close.");
                 removeFromListOfActiveFormattingElements(formattingEltListPos);
-                return;
+                return true;
             }
             if (!inScope) {
                 err("No element \u201C" + name + "\u201D to close.");
-                return;
+                return true;
             }
             // stackPos now points to the formatting element and it is in scope
             if (errorHandler != null && formattingEltStackPos != currentPtr) {
@@ -4396,7 +4396,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     pop();
                 }
                 removeFromListOfActiveFormattingElements(formattingEltListPos);
-                return;
+                return true;
             }
             StackNode<T> commonAncestor = stack[formattingEltStackPos - 1]; // weak
             // ref
@@ -4405,7 +4405,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             int bookmark = formattingEltListPos;
             int nodePos = furthestBlockPos;
             StackNode<T> lastNode = furthestBlock; // weak ref
-            for (int j = 0; j < AAA_MAX_ITERATIONS; ++j) {
+            for (int j = 0; j < 3; ++j) {
                 nodePos--;
                 StackNode<T> node = stack[nodePos]; // weak ref
                 int nodeListPos = findInListOfActiveFormattingElements(node);
@@ -4483,6 +4483,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             insertIntoStack(formattingClone, furthestBlockPos);
             Portability.releaseElement(clone);
         }
+        return true;
     }
 
     private void insertIntoStack(StackNode<T> node, int position)
@@ -4534,6 +4535,26 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return -1;
     }
 
+
+    private void maybeForgetEarlierDuplicateFormattingElement(
+            @Local String name, HtmlAttributes attributes) throws SAXException {
+        int candidate = -1;
+        int count = 0;
+        for (int i = listPtr; i >= 0; i--) {
+            StackNode<T> node = listOfActiveFormattingElements[i];
+            if (node == null) {
+                break;
+            }
+            if (node.name == name && node.attributes.equalsAnother(attributes)) {
+                candidate = i;
+                ++count;
+            }
+        }
+        if (count >= 3) {
+            removeFromListOfActiveFormattingElements(candidate);
+        }
+    }
+    
     private int findLastOrRoot(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
             if (stack[i].name == name) {

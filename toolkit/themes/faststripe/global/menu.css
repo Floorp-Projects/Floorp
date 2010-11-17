@@ -168,10 +168,8 @@ popup > menuitem {
   max-width: 42em;
 }
 
-menupopup > menu[_moz-menuactive="true"],
-menupopup > menuitem[_moz-menuactive="true"],
-popup > menu[_moz-menuactive="true"],
-popup > menuitem[_moz-menuactive="true"] {
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
   background-color: -moz-menuhover;
   color: -moz-menuhovertext;
 }

@@ -579,7 +579,7 @@ LayerManagerOGL::Render()
 
   if (clipRect) {
     nsIntRect r = *clipRect;
-    if (!mGLContext->IsDoubleBuffered())
+    if (!mGLContext->IsDoubleBuffered() && !mTarget)
       mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
   } else {
@@ -594,7 +594,7 @@ LayerManagerOGL::Render()
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   // Render our layers.
-  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
+  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() && !mTarget ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
@@ -718,7 +718,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
   // XXX we keep track of whether the window size changed, so we can
   // skip this update if it hadn't since the last call.
   gfx3DMatrix viewMatrix;
-  if (mGLContext->IsDoubleBuffered()) {
+  if (mGLContext->IsDoubleBuffered() && !mTarget) {
     /* If it's double buffered, we don't have a frontbuffer FBO,
      * so put in a Y-flip in this transform.
      */
@@ -739,7 +739,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
 void
 LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 {
-  if (mGLContext->IsDoubleBuffered()) {
+  if (mGLContext->IsDoubleBuffered() && !mTarget) {
     mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
     return;
   }
@@ -796,13 +796,12 @@ LayerManagerOGL::CopyToTarget()
     new gfxImageSurface(gfxIntSize(width, height),
                         gfxASurface::ImageFormatARGB32);
 
-#ifdef USE_GLES2
-  // GLES2 promises that binding to any custom FBO will attach 
-  // to GL_COLOR_ATTACHMENT0 attachment point.
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
-                               mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO);
-#else
-  mGLContext->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
+                               mBackBufferFBO);
+#ifndef USE_GLES2
+  // GLES2 promises that binding to any custom FBO will attach
+  // to GL_COLOR_ATTACHMENT0 attachment point.
+    mGLContext->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
 #endif
 
   GLenum format = LOCAL_GL_RGBA;
@@ -817,6 +816,8 @@ LayerManagerOGL::CopyToTarget()
   if (currentPackAlignment != 4) {
     mGLContext->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
   }
+
+  mGLContext->fFinish();
 
   mGLContext->fReadPixels(0, 0,
                           width, height,

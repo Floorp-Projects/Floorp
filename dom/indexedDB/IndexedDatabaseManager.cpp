@@ -39,7 +39,6 @@
 
 #include "IndexedDatabaseManager.h"
 
-#include "nsIIDBDatabaseException.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
@@ -462,7 +461,7 @@ IndexedDatabaseManager::SetDatabaseVersion(IDBDatabase* aDatabase,
       }
 
       // Different database, we can't let this one succeed.
-      aHelper->SetError(nsIIDBDatabaseException::DEADLOCK_ERR);
+      aHelper->SetError(NS_ERROR_DOM_INDEXEDDB_DEADLOCK_ERR);
 
       rv = NS_DispatchToCurrentThread(aHelper);
       NS_ENSURE_SUCCESS(rv, rv);

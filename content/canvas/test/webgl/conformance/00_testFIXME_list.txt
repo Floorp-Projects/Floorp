@@ -7,7 +7,6 @@ buffer-data-array-buffer.html
 canvas-test.html
 constants.html
 context-attributes-alpha-depth-stencil-antialias.html
-context-attributes.html
 context-type-test.html
 copy-tex-image-and-sub-image-2d.html
 draw-arrays-out-of-bounds.html
@@ -17,11 +16,13 @@ framebuffer-object-attachment.html
 framebuffer-test.html
 get-active-test.html
 gl-bind-attrib-location-test.html
+gl-clear.html
 gl-drawelements.html
 gl-enable-enum-test.html
 gl-enable-vertex-attrib.html
 gl-enum-tests.html
 gl-get-active-attribute.html
+gl-get-active-uniform.html
 gl-get-calls.html
 gl-getstring.html
 gl-object-get-calls.html
@@ -45,10 +46,13 @@ index-validation-with-resized-buffer.html
 index-validation.html
 invalid-UTF-16.html
 invalid-passed-params.html
+is-object.html
 methods.html
 more-than-65536-points.html
 null-object-behaviour.html
 null-uniform-location.html
+object-deletion-behaviour.html
+origin-clean-conformance.html
 point-size.html
 program-test.html
 read-pixels-pack-alignment.html
@@ -72,7 +76,9 @@ texture-formats-test.html
 texture-npot.html
 texture-transparent-pixels-initialized.html
 triangle.html
-#uniform-location.html
+type-conversion-test.html
+uniform-location.html
 uniform-samplers-test.html
 uninitialized-test.html
 viewport-unchanged-upon-resize.html
+webgl-specific.html

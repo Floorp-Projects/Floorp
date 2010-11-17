@@ -102,6 +102,6 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
  * value missing validity state.
  */
 nsIRadioVisitor*
-NS_GetRadioUpdateValueMissingVisitor(PRBool aNotify);
+NS_GetRadioUpdateValueMissingVisitor();
 
 #endif // nsIRadioVisitor_h___

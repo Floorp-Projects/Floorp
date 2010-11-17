@@ -77,7 +77,7 @@
         is(event.result[i], values[i], "Same value");
       }
 
-      let keyRange = moz_indexedDB.makeBoundKeyRange(1, 9);
+      let keyRange = IDBKeyRange.bound(1, 9);
 
       request = db.transaction("foo").objectStore("foo").getAll(keyRange);
       request.onerror = errorHandler;
@@ -91,7 +91,7 @@
         is(event.result[i], values[i], "Same value");
       }
 
-      keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
+      keyRange = IDBKeyRange.bound(4, 7);
 
       request = db.transaction("foo").objectStore("foo").getAll(keyRange);
       request.onerror = errorHandler;
@@ -105,7 +105,7 @@
         is(event.result[i], values[parseInt(i) + 3], "Same value");
       }
 
-      keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
+      keyRange = IDBKeyRange.bound(4, 7);
 
       request = db.transaction("foo").objectStore("foo").getAll(keyRange, 2);
       request.onerror = errorHandler;
@@ -119,7 +119,7 @@
         is(event.result[i], values[parseInt(i) + 3], "Same value");
       }
 
-      keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
+      keyRange = IDBKeyRange.bound(4, 7);
 
       request = db.transaction("foo").objectStore("foo").getAll(keyRange, 50);
       request.onerror = errorHandler;
@@ -133,7 +133,7 @@
         is(event.result[i], values[parseInt(i) + 3], "Same value");
       }
 
-      keyRange = moz_indexedDB.makeBoundKeyRange(4, 7);
+      keyRange = IDBKeyRange.bound(4, 7);
 
       request = db.transaction("foo").objectStore("foo").getAll(keyRange, 0);
       request.onerror = errorHandler;
@@ -143,7 +143,7 @@
       is(event.result instanceof Array, true, "Got an array object");
       is(event.result.length, 0, "Correct length");
 
-      keyRange = moz_indexedDB.makeBoundKeyRange(4, 7, true, true);
+      keyRange = IDBKeyRange.bound(4, 7, true, true);
 
       request = db.transaction("foo").objectStore("foo").getAll(keyRange);
       request.onerror = errorHandler;

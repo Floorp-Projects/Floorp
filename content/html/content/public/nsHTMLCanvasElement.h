@@ -169,7 +169,7 @@ public:
 protected:
   nsIntSize GetWidthHeight();
 
-  nsresult UpdateContext();
+  nsresult UpdateContext(nsIPropertyBag *aNewContextOptions = nsnull);
   nsresult ExtractData(const nsAString& aType,
                        const nsAString& aOptions,
                        char*& aData,

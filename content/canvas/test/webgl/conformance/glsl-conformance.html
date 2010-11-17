@@ -223,6 +223,37 @@ foo
 <script id="vshaderWith__FILE__" type="text/something-not-javascript">
 __FILE__
 </script>
+<script id="fshaderWithdFdx" type="text/something-not-javascript">
+#extension GL_OES_standard_derivatives:enable
+precision mediump float;
+void main()
+{
+    gl_FragColor = vec4(dFdx(0.5),0.0,0.0,1.0);
+}
+</script>
+<script id="fshaderWithdFdxNoExt" type="text/something-not-javascript">
+precision mediump float;
+void main()
+{
+    gl_FragColor = vec4(dFdx(0.5),0.0,0.0,1.0);
+}
+</script>
+<script id="fshaderWith256CharacterIdentifier" type="text/something-not-javascript">
+precision mediump float;
+uniform float a123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345 = 2.0;
+void main()
+{
+  gl_FragColor = vec4(a123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345,0.0,0.0,1.0);
+}
+</script>
+<script id="fshaderWith257CharacterIdentifier" type="text/something-not-javascript">
+precision mediump float;
+uniform float a1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456 = 2.0;
+void main()
+{
+  gl_FragColor = vec4(a1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456,0.0,0.0,1.0);
+}
+</script>
 <canvas id="canvas" width="2" height="2"> </canvas>
 <script>
 description("This test ensures WebGL implementations allow proper GLES2 shaders compile and improper ones fail.");
@@ -309,6 +340,20 @@ if (!gl) {
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'fragment shader that uses gl_FragDepth should fail',
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithdFdx',
+      fShaderSuccess: false,
+      linkSuccess: false,
+      passMsg: 'fragment shader that uses dFdx should fail',
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWithdFdxNoExt',
+      fShaderSuccess: false,
+      linkSuccess: false,
+      passMsg: 'fragment shader that uses dFdx without #extension should fail',
     },
     { vShaderId: 'vshaderWithClipVertex',
       vShaderSuccess: false,
@@ -415,7 +460,21 @@ if (!gl) {
       fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'vertex shader uses #line directive should report correct line',
-    }
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWith256CharacterIdentifier',
+      fShaderSuccess: true,
+      linkSuccess: true,
+      passMsg: 'shared that uses 256 character identifier should succeed',
+    },
+    { vShaderId: 'vshader',
+      vShaderSuccess: true,
+      fShaderId: 'fshaderWith257CharacterIdentifier',
+      fShaderSuccess: false,
+      linkSuccess: false,
+      passMsg: 'shared that uses 257 character identifier should fail',
+    },
   ];
 
   // Read in all the shader source.

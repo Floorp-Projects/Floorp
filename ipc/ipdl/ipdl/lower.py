@@ -1701,7 +1701,7 @@ def _generateCxxStruct(sd):
     usingTypedefs = gettypedeps.usingTypedefs
     forwarddeclstmts = gettypedeps.forwardDeclStmts
 
-    struct = Class(sd.name, struct=1, final=1)
+    struct = Class(sd.name, final=1)
     struct.addstmts([ Label.PRIVATE ]
                     + usingTypedefs
                     + [ Whitespace.NL, Label.PUBLIC ])

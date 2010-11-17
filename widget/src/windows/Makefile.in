@@ -136,10 +136,6 @@ ifdef WINCE
 EXTRA_DSO_LDOPTS += ddraw.lib
 endif
 
-ifndef WINCE
-ENABLE_CXX_EXCEPTIONS = 1
-endif
-
 ifdef MOZ_IPC
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

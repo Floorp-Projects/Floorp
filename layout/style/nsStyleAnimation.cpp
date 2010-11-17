@@ -590,7 +590,6 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                           "unexpected unit");
         NS_ABORT_IF_FALSE(a1->Item(0) == a2->Item(0),
                           "unexpected function mismatch");
-        nsCSSKeyword tfunc = nsStyleTransformMatrix::TransformFunctionOf(a1);
         NS_ABORT_IF_FALSE(a1->Count() == a2->Count(),
                           "unexpected count mismatch");
         for (size_t i = 1, iEnd = NS_MIN(a1->Count(), a2->Count());
@@ -623,15 +622,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
             squareDistance += diff * diff;
           } else {
             NS_ABORT_IF_FALSE(v1.GetUnit() == v2.GetUnit(), "unit mismatch");
-            double diff;
-            if (tfunc == eCSSKeyword_skewx ||
-                tfunc == eCSSKeyword_skewy ||
-                tfunc == eCSSKeyword_skew) {
-              NS_ABORT_IF_FALSE(v1.GetUnit() == eCSSUnit_Radian, "unexpected unit");
-              diff = tan(v2.GetFloatValue()) - tan(v1.GetFloatValue());
-            } else {
-              diff = v2.GetFloatValue() - v1.GetFloatValue();
-            }
+            double diff = v2.GetFloatValue() - v1.GetFloatValue();
             squareDistance += diff * diff;
           }
         }
@@ -880,21 +871,6 @@ AddTransformScale(const nsCSSValue &aValue1, double aCoeff1,
   float result = v1 * aCoeff1 + v2 * aCoeff2;
   aResult.SetFloatValue(result + 1.0f, eCSSUnit_Number);
 }
-
-// FIXME: The spec still says skew should animate in angle space,
-// although I think we at least sort of agreed that it should animate
-// in tangent space.  So here I animate in in tangent space.
-// Animating in angle space would mean just using AddCSSValueAngle.
-static void
-AddTransformSkew(const nsCSSValue &aValue1, double aCoeff1,
-                 const nsCSSValue &aValue2, double aCoeff2,
-                 nsCSSValue &aResult)
-{
-  aResult.SetFloatValue(atan(aCoeff1 * tan(aValue1.GetAngleValueInRadians()) +
-                             aCoeff2 * tan(aValue2.GetAngleValueInRadians())),
-                        eCSSUnit_Radian);
-}
-
 
 static already_AddRefed<nsCSSValue::Array>
 AppendTransformFunction(nsCSSKeyword aTransformFunction,
@@ -1156,10 +1132,7 @@ AddTransformMatrix(const nsStyleTransformMatrix &aMatrix1, double aCoeff1,
 
   float rotate = rotate1 * aCoeff1 + rotate2 * aCoeff2;
 
-  // FIXME: The spec still says skew should animate in angle space,
-  // although I think we at least sort of agreed that it should animate
-  // in tangent space.  So here I animate in in tangent space.
-  float skewX = atanf(XYshear1 * aCoeff1 + XYshear2 * aCoeff2);
+  float skewX = atanf(XYshear1) * aCoeff1 + atanf(XYshear2) * aCoeff2;
 
   // Handle scale, and the two matrix components where identity is 1, by
   // subtracting 1, multiplying by the coefficients, and then adding 1
@@ -1280,6 +1253,11 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         break;
       }
+      // It would probably be nicer to animate skew in tangent space
+      // rather than angle space.  However, it's easy to specify
+      // skews with infinite tangents, and behavior changes pretty
+      // drastically when crossing such skews (since the direction of
+      // animation flips), so interop is probably more important here.
       case eCSSKeyword_skew: {
         NS_ABORT_IF_FALSE(a1->Count() == 2 || a1->Count() == 3,
                           "unexpected count");
@@ -1288,7 +1266,7 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         nsCSSValue zero(0.0f, eCSSUnit_Radian);
         // Add Y component of skew.
-        AddTransformSkew(a1->Count() == 3 ? a1->Item(2) : zero,
+        AddCSSValueAngle(a1->Count() == 3 ? a1->Item(2) : zero,
                          aCoeff1,
                          a2->Count() == 3 ? a2->Item(2) : zero,
                          aCoeff2,
@@ -1296,21 +1274,13 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         // Add X component of skew (which can be merged with case below
         // in non-DEBUG).
-        AddTransformSkew(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
+        AddCSSValueAngle(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
                          arr->Item(1));
 
         break;
       }
       case eCSSKeyword_skewx:
-      case eCSSKeyword_skewy: {
-        NS_ABORT_IF_FALSE(a1->Count() == 2, "unexpected count");
-        NS_ABORT_IF_FALSE(a2->Count() == 2, "unexpected count");
-
-        AddTransformSkew(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
-                         arr->Item(1));
-
-        break;
-      }
+      case eCSSKeyword_skewy:
       case eCSSKeyword_rotate: {
         NS_ABORT_IF_FALSE(a1->Count() == 2, "unexpected count");
         NS_ABORT_IF_FALSE(a2->Count() == 2, "unexpected count");

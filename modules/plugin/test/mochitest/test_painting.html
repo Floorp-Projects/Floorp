@@ -79,15 +79,23 @@ function show() {
   waitForPaint(invalidate);
 }
 
-function invalidate() {
-  var paintCount = 1;
+function doubleForDoublePass() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  if (SimpleTest.testPluginIsOOP())
+    return 1;
+
   try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled) {
-      paintCount = 2;
-    }
-  } catch(e) {}
-  
+    if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
+      return 2;
+  }
+  catch (e) { }
+
+  return 1;
+}
+
+function invalidate() {
+  var paintCount = 1 * doubleForDoublePass();
+
   is(clipped.getPaintCount(), paintCount, "partially clipped plugin painted once");  
   
   clipped.setColor("FF00FF00"); // plugin invalidates
@@ -96,14 +104,7 @@ function invalidate() {
 }
 
 function done() {
-  var paintCount = 2;
-  try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled) {
-      paintCount = 4;
-    }
-  } catch(e) {}
-  // With D2D we paint windowless plugin with 2 passes, 4 paints are expected.
+  var paintCount = 2 * doubleForDoublePass();
   is(clipped.getPaintCount(), paintCount, "painted after invalidate");
 
   SimpleTest.finish();  

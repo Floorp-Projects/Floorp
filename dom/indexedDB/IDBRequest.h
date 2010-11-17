@@ -54,6 +54,8 @@ class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+class IDBTransaction;
+
 class IDBRequest : public nsDOMEventTargetHelper,
                    public nsIIDBRequest
 {
@@ -66,7 +68,11 @@ public:
   static
   already_AddRefed<IDBRequest> Create(nsISupports* aSource,
                                       nsIScriptContext* aScriptContext,
-                                      nsPIDOMWindow* aOwner);
+                                      nsPIDOMWindow* aOwner,
+                                      IDBTransaction* aTransaction);
+
+  // nsPIDOMEventTarget
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
   nsISupports* Source()
   {
@@ -92,18 +98,11 @@ public:
   }
 
 protected:
-  IDBRequest()
-  : mReadyState(nsIIDBRequest::LOADING)
-  { }
-
-  ~IDBRequest()
-  {
-    if (mListenerManager) {
-      mListenerManager->Disconnect();
-    }
-  }
+  IDBRequest();
+  ~IDBRequest();
 
   nsCOMPtr<nsISupports> mSource;
+  nsRefPtr<IDBTransaction> mTransaction;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnSuccessListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
@@ -125,7 +124,8 @@ public:
   already_AddRefed<IDBVersionChangeRequest>
   Create(nsISupports* aSource,
          nsIScriptContext* aScriptContext,
-         nsPIDOMWindow* aOwner);
+         nsPIDOMWindow* aOwner,
+         IDBTransaction* aTransaction);
 
 protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnBlockedListener;

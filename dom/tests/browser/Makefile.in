@@ -48,6 +48,8 @@ _BROWSER_FILES = \
 		browser_focus_steal_from_chrome.js \
 		browser_focus_steal_from_chrome_during_mousedown.js \
 		browser_autofocus_background.js \
+		browser_ConsoleAPITests.js \
+		test-console-api.html \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)

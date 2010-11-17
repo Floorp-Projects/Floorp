@@ -183,7 +183,7 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
     nsRefPtr<gfxImageSurface> sourceSurface;
 
     if (mSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-      sourceSurface = static_cast<gfxWindowsSurface*>(mSurface.get())->GetImageSurface();
+      sourceSurface = mSurface->GetAsImageSurface();
       startBits = sourceSurface->Data() + sourceSurface->Stride() * aRect.y +
                   aRect.x * 4;
       sourceStride = sourceSurface->Stride();
