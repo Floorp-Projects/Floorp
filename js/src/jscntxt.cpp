@@ -2274,7 +2274,7 @@ JSContext::updateJITEnabled()
 # endif
                         ;
 #ifdef JS_TRACER
-    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
+    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled;
 #endif
 #endif
 }
