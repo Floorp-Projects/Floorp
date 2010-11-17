@@ -13,7 +13,6 @@ function test() {
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
   // We call "finish()" when the tests are finished
   waitForExplicitFinish();
-  requestLongerTimeout(2);
 
   // Start the tests
   setTimeout(runNextTest, 200);
@@ -206,12 +205,15 @@ gTests.push({
   desc: "Test opening the awesome panel and checking the urlbar selection",
 
   run: function() {
+    info("opening new tab")
     this._currentTab = BrowserUI.newTab(testURL_01);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow",
     function(aMessage) {
+      info("got a pageshow: " + gCurrentTest._currentTab.browser.currentURI.spec)
       if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+        info("got the right pageshow")
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
         gCurrentTest.onPageReady();
       }
@@ -220,10 +222,12 @@ gTests.push({
 
   onPageReady: function() {
     window.addEventListener("NavigationPanelShown", function(aEvent) {
+      info("nav panel is open")
       window.removeEventListener(aEvent.type, arguments.callee, false);
       gCurrentTest.onPopupReady();
     }, false);
 
+    info("opening nav panel")
     AllPagesList.doCommand();
   },
 
