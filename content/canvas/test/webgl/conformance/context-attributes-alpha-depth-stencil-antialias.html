@@ -60,7 +60,6 @@ function getWebGL(canvasName, contextAttribs, clearColor, clearDepth, clearStenc
         alert("No WebGL context found");
         return null;
     }
-    var actualContextAttribs = gl.getContextAttributes();
 
     // Add a console
     gl.console = ("console" in window) ? window.console : { log: function() { } };
@@ -146,6 +145,13 @@ function testAlpha(alpha)
     else
         shouldBeNonNull("webGL = getWebGL('alphaOff', { alpha: false, depth: false, stencil: false, antialias: false }, [ 0, 0, 0, 0 ], 1, 0)");
     shouldBeNonNull("contextAttribs = webGL.getContextAttributes()");
+
+    shouldBe("'depth' in contextAttribs", "true");
+    shouldBe("'stencil' in contextAttribs", "true");
+    shouldBe("'alpha' in contextAttribs", "true");
+    shouldBe("'antialias' in contextAttribs", "true");
+    shouldBe("'premultipliedAlpha' in contextAttribs", "true");
+
     shouldBe("contextAttribs.alpha", (alpha ? "true" : "false"));
     shouldBe("contextAttribs.depth", "false");
     shouldBe("contextAttribs.stencil", "false");
