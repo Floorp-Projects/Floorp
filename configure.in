@@ -2893,11 +2893,13 @@ esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
 dnl ========================================================
-dnl = Flags to strip unused symbols from .so components
+dnl = Flags to strip unused symbols from .so components and
+dnl = to export jemalloc symbols when linking a program
 dnl ========================================================
 case "$target" in
     *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
+        MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS='-rdynamic -Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/jemalloc-standalone-linkage-version-script'
         ;;
     *-solaris*)
         if test -z "$GNU_CC"; then
@@ -8935,6 +8937,7 @@ AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
+AC_SUBST(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
