@@ -19,7 +19,7 @@ function tabLoad1(aEvent) {
   openConsole();
 
   let hudId = HUDService.getHudIdByWindow(browser.contentWindow);
-  HUD = HUDService.hudWeakReferences[hudId].get();
+  HUD = HUDService.hudReferences[hudId];
 
   let display = HUDService.getOutputNodeById(hudId);
   outputNode = display.querySelector(".hud-output-node");
