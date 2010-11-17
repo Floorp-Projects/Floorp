@@ -315,7 +315,6 @@ struct TypeStack
 
     /* Variable set for any scope name binding pushed on this stack node. */
     VariableSet *scopeVars;
-    analyze::Script *scopeScript;
 
     /* Get the representative node for the equivalence class of this node. */
     inline TypeStack* group();
@@ -799,6 +798,7 @@ struct TypeCompartment
     void addDynamicType(JSContext *cx, TypeSet *types, jstype type,
                         const char *format, ...);
     void addDynamicPush(JSContext *cx, analyze::Bytecode &code, unsigned index, jstype type);
+    void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, analyze::Bytecode *code);

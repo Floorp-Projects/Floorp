@@ -76,7 +76,10 @@ struct Bytecode
     /* Whether this is a method JIT safe point. */
     bool safePoint : 1;
 
-    /* For type inference, whether this bytecode needs to have its effects monitored dynamically. */
+    /*
+     * For type inference, whether this bytecode needs to have its effects monitored dynamically.
+     * This is limited to property/name sets and calls.
+     */
     bool monitorNeeded : 1;
 
     /* Stack depth before this opcode. */

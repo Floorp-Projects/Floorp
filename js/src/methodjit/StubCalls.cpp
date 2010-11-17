@@ -402,6 +402,10 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 
     f.regs.sp++;
     f.regs.sp[-1] = rval;
+
+    if (rval.isUndefined())
+        f.script()->typeMonitorUndefined(cx, f.regs.pc, 0);
+
     if (callname) {
         Class *clasp;
         JSObject *thisp = obj;
@@ -1480,6 +1484,9 @@ stubs::GetUpvar(VMFrame &f, uint32 ck)
     UpvarCookie cookie;
     cookie.fromInteger(ck);
     f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
+
+    if (f.regs.sp[0].isUndefined())
+        f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
 }
 
 JSObject * JS_FASTCALL
@@ -2778,3 +2785,8 @@ stubs::In(VMFrame &f)
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
+void JS_FASTCALL
+stubs::UndefinedHelper(VMFrame &f)
+{
+    f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
+}

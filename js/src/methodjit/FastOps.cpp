@@ -455,7 +455,6 @@ void
 mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 {
     uint32 slot = script->getGlobalSlot(index);
-    JSValueType type = knownPushedType(0);
 
     bool popped = false;
     PC += JSOP_GLOBALINC_LENGTH;
@@ -472,22 +471,15 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     Address addr = masm.objSlotRef(globalObj, reg, slot);
     uint32 depth = frame.stackDepth();
 
-    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_INT32) {
-        data = frame.allocReg();
-        stubcc.linkExit(masm.jump(), Uses(0));
-    } else if (post && !popped) {
-        frame.push(addr, type);
+    if (post && !popped) {
+        frame.push(addr, JSVAL_TYPE_UNKNOWN);
         FrameEntry *fe = frame.peek(-1);
-        if (type == JSVAL_TYPE_UNKNOWN) {
-            Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
-            stubcc.linkExit(notInt, Uses(0));
-        }
+        Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
+        stubcc.linkExit(notInt, Uses(0));
         data = frame.copyDataIntoReg(fe);
     } else {
-        if (type == JSVAL_TYPE_UNKNOWN) {
-            Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
-            stubcc.linkExit(notInt, Uses(0));
-        }
+        Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
+        stubcc.linkExit(notInt, Uses(0));
         data = frame.allocReg();
         masm.loadPayload(addr, data);
     }
