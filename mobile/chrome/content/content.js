@@ -286,8 +286,6 @@ ProgressController.prototype = {
 
 /** Can't think of a good description of this class.  It probably does too much? */
 function Content() {
-  addMessageListener("Browser:Blur", this);
-  addMessageListener("Browser:Focus", this);
   addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseDown", this);
   addMessageListener("Browser:MouseUp", this);
@@ -368,17 +366,6 @@ Content.prototype = {
     let modifiers = json.modifiers;
 
     switch (aMessage.name) {
-      case "Browser:Blur": {
-        gFocusManager.clearFocus(content);
-        docShell.isActive = false;
-        this._selected = false;
-        break;
-      }
-      case "Browser:Focus":
-        docShell.isActive = true;
-        this._selected = true;
-        break;
-
       case "Browser:KeyEvent":
         let utils = Util.getWindowUtils(content);
         let defaultAction;
@@ -535,10 +522,6 @@ Content.prototype = {
   stopLoading: function stopLoading() {
     this._loading = false;
   },
-
-  isSelected: function isSelected() {
-    return this._selected;
-  }
 };
 
 let contentObject = new Content();
