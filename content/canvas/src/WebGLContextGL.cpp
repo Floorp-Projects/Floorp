@@ -539,6 +539,11 @@ WebGLContext::Clear(PRUint32 mask)
     if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
         return NS_OK;
 
+    PRUint32 m = mask & (LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+    if (mask != m) {
+        return ErrorInvalidValue("clear: invalid mask bits");
+    }
+
     gl->fClear(mask);
     Invalidate();
 
