@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is tabview search test.
+ * The Original Code is a test for bug 597399.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Sean Dunn <seanedunn@yahoo.com>
+ * Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,58 +38,45 @@
 function test() {
   waitForExplicitFinish();
 
-  // show the tab view
   window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-  ok(!TabView.isVisible(), "Tab View is hidden");
   TabView.toggle();
 }
 
 function onTabViewWindowLoaded() {
   window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
 
-  ok(TabView.isVisible(), "Tab View is visible");
-
   let contentWindow = document.getElementById("tab-view").contentWindow;
-  let searchButton = contentWindow.document.getElementById("searchbutton");
+  let number = -1;
 
-  ok(searchButton, "Search button exists");
-  
   let onSearchEnabled = function() {
-    contentWindow.removeEventListener(
-      "tabviewsearchenabled", onSearchEnabled, false);
-    let search = contentWindow.document.getElementById("search");
-    ok(search.style.display != "none", "Search is enabled");
-    escapeTest(contentWindow);
+    let searchBox = contentWindow.document.getElementById("searchbox");
+    is(searchBox.value, number, "The seach box matches the number: " + number);
+    contentWindow.hideSearch(null);
   }
-  contentWindow.addEventListener("tabviewsearchenabled", onSearchEnabled, 
-    false);
-  // enter search mode
-  EventUtils.sendMouseEvent({ type: "mousedown" }, searchButton, 
-    contentWindow);
-}
-
-function escapeTest(contentWindow) {  
   let onSearchDisabled = function() {
-    contentWindow.removeEventListener(
-      "tabviewsearchdisabled", onSearchDisabled, false);
+    if (++number <= 9) {
+      EventUtils.synthesizeKey(String(number), { }, contentWindow);
+    } else {
+      contentWindow.removeEventListener(
+        "tabviewsearchenabled", onSearchEnabled, false);
+      contentWindow.removeEventListener(
+        "tabviewsearchdisabled", onSearchDisabled, false);
 
-    let search = contentWindow.document.getElementById("search");
-    ok(search.style.display == "none", "Search is disabled");
-    toggleTabViewTest(contentWindow);
+      let endGame = function() {
+        window.removeEventListener("tabviewhidden", endGame, false);
+
+        ok(!TabView.isVisible(), "Tab View is hidden");
+        finish();
+      }
+      window.addEventListener("tabviewhidden", endGame, false);
+      TabView.toggle();
+    }
   }
-  contentWindow.addEventListener("tabviewsearchdisabled", onSearchDisabled, 
-    false);
-  EventUtils.synthesizeKey("VK_ESCAPE", { type: "keypress" }, contentWindow);
+  contentWindow.addEventListener(
+    "tabviewsearchenabled", onSearchEnabled, false);
+  contentWindow.addEventListener(
+    "tabviewsearchdisabled", onSearchDisabled, false);
+
+  onSearchDisabled();
 }
 
-function toggleTabViewTest(contentWindow) {
-  let onTabViewHidden = function() {
-    contentWindow.removeEventListener("tabviewhidden", onTabViewHidden, false);
-
-    ok(!TabView.isVisible(), "Tab View is hidden");
-    finish();
-  }
-  contentWindow.addEventListener("tabviewhidden", onTabViewHidden, false);
-  // Use keyboard shortcut to toggle back to browser view
-  EventUtils.synthesizeKey("e", { accelKey: true });
-}

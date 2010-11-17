@@ -335,9 +335,9 @@ SearchEventHandlerClass.prototype = {
   // Handles all keypresses before the search interface is brought up.
   beforeSearchKeyHandler: function (event) {
     // Only match reasonable text-like characters for quick search.
-    var key = String.fromCharCode(event.which);
     // TODO: Also include funky chars. Bug 593904
-    if (!key.match(/[A-Z0-9]/) || event.altKey || event.ctrlKey || event.metaKey)
+    if (!String.fromCharCode(event.which).match(/[a-zA-Z0-9]/) || event.altKey || 
+        event.ctrlKey || event.metaKey)
       return;
 
     // If we are already in an input field, allow typing as normal.
@@ -353,16 +353,17 @@ SearchEventHandlerClass.prototype = {
   // Handles all keypresses while search mode.
   inSearchKeyHandler: function (event) {
     var term = iQ("#searchbox").val();
-    
-    if (event.which == event.DOM_VK_ESCAPE) 
+
+    if ((event.keyCode == event.DOM_VK_ESCAPE) || 
+        (event.keyCode == event.DOM_VK_BACK_SPACE && term.length <= 1)) {
       hideSearch(event);
-    if (event.which == event.DOM_VK_BACK_SPACE && term.length <= 1) 
-      hideSearch(event);
+      return;
+    }
 
     var matcher = new TabMatcher(term);
     var matches = matcher.matched();
     var others =  matcher.matchedTabsFromOtherWindows();
-    if (event.which == event.DOM_VK_RETURN && (matches.length > 0 || others.length > 0)) {
+    if (event.keyCode == event.DOM_VK_RETURN && (matches.length > 0 || others.length > 0)) {
       hideSearch(event);
       if (matches.length > 0) 
         matches[0].zoomIn();
@@ -378,9 +379,9 @@ SearchEventHandlerClass.prototype = {
   switchToBeforeMode: function switchToBeforeMode() {
     var self = this;
     if (this.currentHandler)
-      iQ(document).unbind("keydown", this.currentHandler);
+      iQ(window).unbind("keypress", this.currentHandler);
     this.currentHandler = function(event) self.beforeSearchKeyHandler(event);
-    iQ(document).keydown(self.currentHandler);
+    iQ(window).keypress(this.currentHandler);
   },
   
   // ----------
@@ -390,9 +391,9 @@ SearchEventHandlerClass.prototype = {
   switchToInMode: function switchToInMode() {
     var self = this;
     if (this.currentHandler)
-      iQ(document).unbind("keydown", this.currentHandler);
+      iQ(window).unbind("keypress", this.currentHandler);
     this.currentHandler = function(event) self.inSearchKeyHandler(event);
-    iQ(document).keydown(self.currentHandler);
+    iQ(window).keypress(this.currentHandler);
   }
 };
 
@@ -488,13 +489,13 @@ function hideSearch(event){
     event.stopPropagation();
   }
 
-  let newEvent = document.createEvent("Events");
-  newEvent.initEvent("tabviewsearchdisabled", false, false);
-  dispatchEvent(newEvent);
-
   // Return focus to the tab window
   UI.blurAll();
   gTabViewFrame.contentWindow.focus();
+
+  let newEvent = document.createEvent("Events");
+  newEvent.initEvent("tabviewsearchdisabled", false, false);
+  dispatchEvent(newEvent);
 }
 
 function performSearch() {
@@ -513,13 +514,13 @@ function ensureSearchShown(event){
   var $search = iQ("#search");
   var $searchbox = iQ("#searchbox");
   iQ("#searchbutton").css({ opacity: 1 });
-  
-  
-  if ($search.css("display") == "none") {
+
+
+  if (!isSearchEnabled()) {
     $search.show();
     var mainWindow = gWindow.document.getElementById("main-window");
     mainWindow.setAttribute("activetitlebarcolor", "#717171");       
-        
+
     // Marshal the focusing, otherwise you end up with
     // a race condition where only sometimes would the
     // first keystroke be registered by the search box.
@@ -529,16 +530,18 @@ function ensureSearchShown(event){
       $searchbox[0].focus();
       $searchbox[0].val = '0';
       $searchbox.css({"z-index":"1015"});
-      if (event != null){
-        var keyCode = event.which + (event.shiftKey ? 0 : 32);
-        $searchbox.val(String.fromCharCode(keyCode));        
-      }
-    }, 0);
+      if (event != null)
+        $searchbox.val(String.fromCharCode(event.charCode));        
 
-    let newEvent = document.createEvent("Events");
-    newEvent.initEvent("tabviewsearchenabled", false, false);
-    dispatchEvent(newEvent);
+      let newEvent = document.createEvent("Events");
+      newEvent.initEvent("tabviewsearchenabled", false, false);
+      dispatchEvent(newEvent);
+    }, 0);
   }
+}
+
+function isSearchEnabled() {
+  return iQ("#search").css("display") != "none";
 }
 
 var SearchEventHandler = new SearchEventHandlerClass();

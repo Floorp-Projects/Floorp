@@ -699,6 +699,7 @@ iQClass.prototype = {
 let events = [
   'keyup',
   'keydown',
+  'keypress',
   'mouseup',
   'mousedown',
   'mouseover',
