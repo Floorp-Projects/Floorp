@@ -2682,7 +2682,7 @@ Tab.prototype = {
       let notification = this._notification;
       let browser = this._browser;
       browser.removeProgressListener(this._listener);
-      browser.messageManager.sendAsyncMessage("Browser:Blur", {});
+      browser.active = false;
 
       this._notification = null;
       this._browser = null;
@@ -2788,12 +2788,12 @@ Tab.prototype = {
     if (aActive) {
       browser.setAttribute("type", "content-primary");
       Elements.browsers.selectedPanel = notification;
-      browser.messageManager.sendAsyncMessage("Browser:Focus", {});
+      browser.active = true;
       document.getElementById("tabs").selectedTab = this._chromeTab;
     }
     else {
       browser.setAttribute("type", "content");
-      browser.messageManager.sendAsyncMessage("Browser:Blur", {});
+      browser.active = false;
     }
   },
 

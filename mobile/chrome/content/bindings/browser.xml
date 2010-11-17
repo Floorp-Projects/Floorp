@@ -589,6 +589,17 @@
             return false;
          ]]></body>
       </method>
+
+      <field name="_active">false</field>
+      <property name="active" onget="return this._active;">
+         <setter>
+            this._active = val;
+            this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), {});
+            if (val)
+               this._updateCacheViewport();
+         </setter>
+      </property>
+
     </implementation>
   </binding>
 

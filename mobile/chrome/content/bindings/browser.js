@@ -369,3 +369,28 @@ let ContentScroll =  {
 
 ContentScroll.init();
 
+let ContentActive =  {
+  init: function() {
+    addMessageListener("Content:Activate", this);
+    addMessageListener("Content:Deactivate", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    let json = aMessage.json;
+    switch (aMessage.name) {
+      case "Content:Activate":
+        let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+        focusManager.clearFocus(content);
+        docShell.isActive = false;
+        let utils = Util.getWindowUtils(content);
+        utils.setDisplayPort(0,0,0,0);
+        break;
+
+      case "Content:Deactivate":
+        docShell.isActive = true;
+        break;
+    }
+  }
+};
+
+ContentActive.init();
