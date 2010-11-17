@@ -915,7 +915,7 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
         return JSONParseError(jp, cx);
     }
 
-    return PushPrimitive(cx, jp, DoubleValue(val));
+    return PushPrimitive(cx, jp, NumberValue(val));
 }
 
 static JSBool
