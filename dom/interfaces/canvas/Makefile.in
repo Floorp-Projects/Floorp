@@ -48,7 +48,7 @@ GRE_MODULE	= 1
 
 XPIDLSRCS = \
 	nsIDOMCanvasRenderingContext2D.idl \
-	nsICanvasRenderingContextWebGL.idl \
+	nsIDOMWebGLRenderingContext.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
