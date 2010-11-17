@@ -251,6 +251,7 @@
                            placeholder="&urlbar.emptytext;"/>
                     <textbox id="urlbar-edit"
                              type="url"
+                             mozactionhint="go"
                              class="uri-element"
                              autocompletesearch="history"
                              autocompletepopup="popup_autocomplete"
