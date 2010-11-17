@@ -92,26 +92,14 @@ nsTextEquivUtils::GetTextEquivFromIDRefs(nsAccessible *aAccessible,
   if (!content)
     return NS_OK;
 
-  nsCOMPtr<nsIArray> refElms;
-  nsCoreUtils::GetElementsByIDRefsAttr(content, aIDRefsAttr,
-                                       getter_AddRefs(refElms));
-
-  if (!refElms)
-    return NS_OK;
-
-  PRUint32 count = 0;
-  nsresult rv = refElms->GetLength(&count);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIContent> refContent;
-  for (PRUint32 idx = 0; idx < count; idx++) {
-    refContent = do_QueryElementAt(refElms, idx, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+  nsIContent* refContent = nsnull;
+  IDRefsIterator iter(content, aIDRefsAttr);
+  while ((refContent = iter.NextElem())) {
     if (!aTextEquiv.IsEmpty())
       aTextEquiv += ' ';
 
-    rv = AppendTextEquivFromContent(aAccessible, refContent, &aTextEquiv);
+    nsresult rv = AppendTextEquivFromContent(aAccessible, refContent,
+                                             &aTextEquiv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
