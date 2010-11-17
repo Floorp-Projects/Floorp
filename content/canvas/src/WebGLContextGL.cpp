@@ -2480,29 +2480,30 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     WebGLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
 
     PRUint32 size = 0;
+    bool badFormat = false, badType = false;
     switch (format) {
-      case LOCAL_GL_ALPHA:
-        size = 1;
-        break;
-      case LOCAL_GL_RGB:
-        size = 3;
-        break;
-      case LOCAL_GL_RGBA:
+    case LOCAL_GL_RGBA:
         size = 4;
         break;
-      default:
-        return ErrorInvalidEnumInfo("readPixels: format", format);
+    default:
+        badFormat = true;
+        break;
     }
 
     switch (type) {
-      // XXX we need to support 565 with GL_RGB, but the code
-      // below needs to be taught about unsigned short
-      //case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-      case LOCAL_GL_UNSIGNED_BYTE:
+    case LOCAL_GL_UNSIGNED_BYTE:
         break;
-      default:
-        return ErrorInvalidEnumInfo("ReadPixels: type", type);
+    default:
+        badType = true;
+        break;
     }
+
+    if (badFormat && badType)
+        return ErrorInvalidOperation("readPixels: bad format and type");
+    if (badFormat)
+        return ErrorInvalidEnumInfo("readPixels: format", format);
+    if (badType)
+        return ErrorInvalidEnumInfo("ReadPixels: type", type);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
 
