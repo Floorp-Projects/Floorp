@@ -73,9 +73,7 @@ ConsoleAPI.prototype = {
       },
       error: function CA_error() {
         self.notifyObservers(id, "error", arguments);
-      },
-      // TODO: remove this once bug 612405 is fixed
-      classID: self.classID
+      }
     };
   },
 
