@@ -236,7 +236,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
     desc->attrs = JSPROP_ENUMERATE;
     desc->getter = NULL;
     desc->setter = NULL;
-    desc->shortid = NULL;
+    desc->shortid = 0;
     desc->value = JSVAL_VOID;
 
     jsval fval = JSVAL_VOID;
