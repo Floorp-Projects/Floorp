@@ -16,9 +16,9 @@ static void
 funcTransition(const JSFunction *,
                const JSScript *,
                const JSContext *cx,
-               JSBool entering)
+               int entering)
 {
-    if (entering) {
+    if (entering > 0) {
         ++depth;
         ++enters;
         if (! JS_ON_TRACE(cx))
@@ -32,7 +32,7 @@ funcTransition(const JSFunction *,
 static JSBool called2 = false;
 
 static void
-funcTransition2(const JSFunction *, const JSScript*, const JSContext*, JSBool)
+funcTransition2(const JSFunction *, const JSScript*, const JSContext*, int)
 {
     called2 = true;
 }
@@ -43,7 +43,7 @@ static void
 funcTransitionOverlay(const JSFunction *fun,
                       const JSScript *script,
                       const JSContext *cx,
-                      JSBool entering)
+                      int entering)
 {
     (*innerCallback)(fun, script, cx, entering);
     overlays++;
@@ -66,7 +66,7 @@ BEGIN_TEST(testFuncCallback_bug507012)
 
     // Check whether the basic function tracking works
     EXEC("f(1)");
-    CHECK(enters == 2 && leaves == 2 && depth == 0);
+    CHECK(enters == 1+1 && leaves == 1+1 && depth == 0);
 
     // Can we switch to a different callback?
     enters = 777;
@@ -91,7 +91,7 @@ BEGIN_TEST(testFuncCallback_bug507012)
     EXEC("function g () { ++x; }");
     interpreted = enters = leaves = depth = 0;
     EXEC("for (i = 0; i < 50; ++i) { g(); }");
-    CHECK(enters == 50+1 && leaves == 50+1 && depth == 0);
+    CHECK(enters == 1+50 && leaves == 1+50 && depth == 0);
 
     // If this fails, it means that the code was interpreted rather
     // than trace-JITted, and so is not testing what it's supposed to
@@ -114,7 +114,7 @@ BEGIN_TEST(testFuncCallback_bug507012)
     CHECK(enters == 1);
     CHECK(leaves == 1);
     CHECK(depth == 0);
-    CHECK(overlays == 2); // 1 each for enter and exit
+    CHECK(overlays == enters + leaves);
     interpreted = enters = leaves = depth = overlays = 0;
 #endif
 

@@ -161,25 +161,51 @@ Recompiler::recompile()
         }
     }
 
+    Vector<CallSite> normalSites(cx);
+    Vector<CallSite> ctorSites(cx);
+
+    if (script->jitNormal && !saveTraps(script->jitNormal, &normalSites))
+        return false;
+    if (script->jitCtor && !saveTraps(script->jitCtor, &ctorSites))
+        return false;
+
     ReleaseScriptCode(cx, script);
 
-    if (normalPatches.length() && !recompile(firstNormalFrame, normalPatches))
+    if (normalPatches.length() &&
+        !recompile(firstNormalFrame, normalPatches, normalSites)) {
         return false;
+    }
 
-    if (ctorPatches.length() && !recompile(firstCtorFrame, ctorPatches))
+    if (ctorPatches.length() &&
+        !recompile(firstCtorFrame, ctorPatches, ctorSites)) {
         return false;
+    }
 
     return true;
 }
 
 bool
-Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches)
+Recompiler::saveTraps(JITScript *jit, Vector<CallSite> *sites)
+{
+    for (uint32 i = 0; i < jit->nCallSites; i++) {
+        CallSite &site = jit->callSites[i];
+        if (site.isTrap() && !sites->append(site))
+            return false;
+    }
+    return true;
+}
+
+bool
+Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches,
+                      Vector<CallSite> &sites)
 {
     /* If we get this far, the script is live, and we better be safe to re-jit. */
     JS_ASSERT(cx->compartment->debugMode);
     JS_ASSERT(fp);
 
     Compiler c(cx, fp);
+    if (!c.loadOldTraps(sites))
+        return false;
     if (c.compile() != Compile_Okay)
         return false;
 
