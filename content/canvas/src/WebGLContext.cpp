@@ -51,6 +51,8 @@
 #include "nsIPropertyBag.h"
 #include "nsIVariant.h"
 
+#include "imgIEncoder.h"
+
 #include "gfxContext.h"
 #include "gfxPattern.h"
 #include "gfxUtils.h"
@@ -566,17 +568,20 @@ WebGLContext::GetInputStream(const char* aMimeType,
                              const PRUnichar* aEncoderOptions,
                              nsIInputStream **aStream)
 {
-    return NS_ERROR_FAILURE;
-
-    // XXX fix this
-#if 0
-    if (!mGLPbuffer ||
-        !mGLPbuffer->ThebesSurface())
+    NS_ASSERTION(gl, "GetInputStream on invalid context?");
+    if (!gl)
         return NS_ERROR_FAILURE;
+
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
+                                                         gfxASurface::ImageFormatARGB32);
+    if (surf->CairoStatus() != 0)
+        return NS_ERROR_FAILURE;
+
+    gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
 
     nsresult rv;
     const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
-    nsAutoArrayPtr<char> conid(new (std::nothrow) char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
+    nsAutoArrayPtr<char> conid(new char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
 
     if (!conid)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -588,45 +593,15 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (!encoder)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
-    if (!imageBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(imageBuffer.get(),
-                                                            gfxIntSize(mWidth, mHeight),
-                                                            mWidth * 4,
-                                                            gfxASurface::ImageFormatARGB32);
-
-    if (!imgsurf || imgsurf->CairoStatus())
-        return NS_ERROR_FAILURE;
-
-    nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
-
-    if (!ctx || ctx->HasError())
-        return NS_ERROR_FAILURE;
-
-    nsRefPtr<gfxASurface> surf = mGLPbuffer->ThebesSurface();
-    nsRefPtr<gfxPattern> pat = CanvasGLThebes::CreatePattern(surf);
-    gfxMatrix m;
-    m.Translate(gfxPoint(0.0, mGLPbuffer->Height()));
-    m.Scale(1.0, -1.0);
-    pat->SetMatrix(m);
-
-    // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
-    // pixel alignment for this stuff!
-    ctx->NewPath();
-    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->Fill();
-
-    rv = encoder->InitFromData(imageBuffer.get(),
-                               mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
+    rv = encoder->InitFromData(surf->Data(),
+                               mWidth * mHeight * 4,
+                               mWidth, mHeight,
+                               surf->Stride(),
                                imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                nsDependentString(aEncoderOptions));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return CallQueryInterface(encoder, aStream);
-#endif
 }
 
 NS_IMETHODIMP
