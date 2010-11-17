@@ -843,11 +843,16 @@ let UI = {
     var self = this;
 
     iQ(window).keyup(function(event) {
-      if (!event.metaKey) Keys.meta = false;
+      if (!event.metaKey) 
+        Keys.meta = false;
     });
 
     iQ(window).keydown(function(event) {
-      if (event.metaKey) Keys.meta = true;
+      if (event.metaKey) 
+        Keys.meta = true;
+
+      if (isSearchEnabled())
+        return;
 
       function getClosestTabBy(norm) {
         if (!self.getActiveTab())
