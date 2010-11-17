@@ -71,12 +71,12 @@ using namespace mozilla;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 
-nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
+nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
 
 nsresult
-NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult)
+NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult)
 {
-    nsICanvasRenderingContextWebGL* ctx = new WebGLContext();
+    nsIDOMWebGLRenderingContext* ctx = new WebGLContext();
     if (!ctx)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -699,8 +699,8 @@ WebGLContext::GetContextAttributes(jsval *aResult)
 // XPCOM goop
 //
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(WebGLContext, nsICanvasRenderingContextWebGL)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(WebGLContext, nsIDOMWebGLRenderingContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(WebGLContext, nsIDOMWebGLRenderingContext)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(WebGLContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WebGLContext)
@@ -713,10 +713,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 DOMCI_DATA(CanvasRenderingContextWebGL, WebGLContext)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
-  NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextWebGL)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWebGLRenderingContext)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasRenderingContextWebGL)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWebGLRenderingContext)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasRenderingContextWebGL)
 NS_INTERFACE_MAP_END
 
