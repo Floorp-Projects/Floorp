@@ -2732,12 +2732,21 @@ HUD_SERVICE.prototype =
       }
     }
 
-    // need to detect that the console component has been paved over
-    // TODO: change how we detect our console: bug 612405
-    let consoleObject = aContentWindow.wrappedJSObject.console;
-    if (consoleObject && consoleObject.classID != CONSOLEAPI_CLASS_ID) {
+    // Need to detect that the console component has been paved over. Do this by
+    // checking whether its global object is equal to that of an object
+    // returned by our native ConsoleAPI nsIDOMGlobalPropertyInitializer.
+    let consoleObject = unwrap(aContentWindow).console;
+    let consoleGlobal = Cu.getGlobalForObject(consoleObject);
+
+    let nativeConsoleObj = Cc["@mozilla.org/console-api;1"].
+                           createInstance(Ci.nsIDOMGlobalPropertyInitializer).
+                           init(aContentWindow);
+    let nativeConsoleGlobal = Cu.getGlobalForObject(nativeConsoleObj);
+
+    // Need a "===" comparison because backstagepass objects have strange
+    // behavior with ==
+    if (consoleGlobal !== nativeConsoleGlobal)
       this.logWarningAboutReplacedAPI(hudId);
-    }
 
     // register the controller to handle "select all" properly
     this.createController(xulWindow);
