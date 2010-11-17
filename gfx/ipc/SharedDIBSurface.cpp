@@ -74,11 +74,8 @@ void
 SharedDIBSurface::InitSurface(PRUint32 aWidth, PRUint32 aHeight,
                               bool aTransparent)
 {
-  // Windows DIBs are bottom-to-top by default, so the stride is negative
-  // and the data is the beginning of the last row.
-  long stride = -long(aWidth * kBytesPerPixel);
+  long stride = long(aWidth * kBytesPerPixel);
   unsigned char* data = reinterpret_cast<unsigned char*>(mSharedDIB.GetBits());
-  data -= (aHeight - 1) * stride;
 
   gfxImageFormat format = aTransparent ? ImageFormatARGB32 : ImageFormatRGB24;
 
