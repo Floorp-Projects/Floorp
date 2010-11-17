@@ -1523,8 +1523,8 @@
           // buttons attributes sync with commands doesn not look updated when
           // we dynamically switch the "command" attribute so we need to ensure
           // the disabled state of the buttons is right when switching commands
-          this._previousButton.disabled = document.getElementById(aModel.commands.previous).disabled;
-          this._nextButton.disabled = document.getElementById(aModel.commands.next).disabled;
+          this._previousButton.disabled = document.getElementById(aModel.commands.previous).getAttribute("disabled") == "true";
+          this._nextButton.disabled = document.getElementById(aModel.commands.next).getAttribute("disabled") == "true";
 
           this.model = aModel;
           this.contentHasChanged();
