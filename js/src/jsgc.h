@@ -976,7 +976,7 @@ struct GCMarker : public JSTracer {
 #endif
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    struct ConservativeRoot { void *thing; uint32 traceKind; };
+    struct ConservativeRoot { void *thing; uint32 thingKind; };
     Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
     const char *conservativeDumpFileName;
 
