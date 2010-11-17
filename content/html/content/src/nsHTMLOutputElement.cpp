@@ -41,6 +41,8 @@
 #include "nsDOMSettableTokenList.h"
 #include "nsStubMutationObserver.h"
 #include "nsIConstraintValidation.h"
+#include "nsIEventStateManager.h"
+#include "mozAutoDocUpdate.h"
 
 
 class nsHTMLOutputElement : public nsGenericHTMLFormElement,
@@ -81,6 +83,8 @@ public:
   PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                         const nsAString& aValue, nsAttrValue& aResult);
 
+  nsEventStates IntrinsicState() const;
+
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.
   void DescendantsChanged();
@@ -115,8 +119,6 @@ nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo
   , mValueModeFlag(eModeDefault)
 {
   AddMutationObserver(this);
-  // <output> is always barred from constraint validation.
-  SetBarredFromConstraintValidation(PR_TRUE);
 }
 
 nsHTMLOutputElement::~nsHTMLOutputElement()
@@ -147,7 +149,22 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLOutputElement)
 NS_IMPL_STRING_ATTR(nsHTMLOutputElement, Name, name)
 
 // nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION(nsHTMLOutputElement)
+NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(nsHTMLOutputElement)
+
+NS_IMETHODIMP
+nsHTMLOutputElement::SetCustomValidity(const nsAString& aError)
+{
+  nsIConstraintValidation::SetCustomValidity(aError);
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+    doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
+                                            NS_EVENT_STATE_VALID);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLOutputElement::Reset()
@@ -178,6 +195,18 @@ nsHTMLOutputElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 
   return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
                                                   aValue, aResult);
+}
+
+nsEventStates
+nsHTMLOutputElement::IntrinsicState() const
+{
+  nsEventStates states = nsGenericHTMLFormElement::IntrinsicState();
+
+  // We don't have to call IsCandidateForConstraintValidation()
+  // because <output> can't be barred from constraint validation.
+  states |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
+
+  return states;
 }
 
 NS_IMETHODIMP
