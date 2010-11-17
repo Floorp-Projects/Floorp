@@ -214,19 +214,21 @@ Arena<T>::mark(T *thing, JSTracer *trc)
 {
     JS_ASSERT(sizeof(T) == aheader.thingSize);
 
-    thing = getAlignedThing(thing);
+    T *alignedThing = getAlignedThing(thing);
 
-    if (thing > &t.things[ThingsPerArena-1].t || thing < &t.things[0].t)
+    if (alignedThing > &t.things[ThingsPerArena-1].t || alignedThing < &t.things[0].t)
         return CGCT_NOTARENA;
 
-    if (!aheader.isUsed || inFreeList(thing))
+    if (!aheader.isUsed || inFreeList(alignedThing))
         return CGCT_NOTLIVE;
 
-    JS_ASSERT(assureThingIsAligned(thing));
-
     JS_SET_TRACING_NAME(trc, "machine stack");
-    Mark(trc, thing);
+    Mark(trc, alignedThing);
 
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    if (alignedThing != thing)
+        return CGCT_VALIDWITHOFFSET;
+#endif
     return CGCT_VALID;
 }
 
@@ -551,11 +553,12 @@ MarkCell(Cell *cell, JSTracer *trc)
 }
 
 /*
- * Returns CGCT_VALID and mark it if the w can be a live GC thing and sets traceKind
- * accordingly. Otherwise returns the reason for rejection.
+ * Returns CGCT_VALID or CGCT_VALIDWITHOFFSET and mark it if the w can be a 
+ * live GC thing and sets thingKind accordingly. Otherwise returns the 
+ * reason for rejection.
  */
 inline ConservativeGCTest
-MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
+MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
 {
     JSRuntime *rt = trc->context->runtime;
     /*
@@ -605,9 +608,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
         return CGCT_FREEARENA;
 
     ConservativeGCTest test;
-    traceKind = aheader->thingKind;
+    thingKind = aheader->thingKind;
 
-    switch (traceKind) {
+    switch (thingKind) {
         case FINALIZE_OBJECT0:
             test = MarkCell<JSObject>(cell, trc);
             break;
@@ -654,8 +657,8 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
 inline ConservativeGCTest
 MarkIfGCThingWord(JSTracer *trc, jsuword w)
 {
-    uint32 traceKind;
-    return MarkIfGCThingWord(trc, w, traceKind);
+    uint32 thingKind;
+    return MarkIfGCThingWord(trc, w, thingKind);
 }
 
 static void
@@ -671,16 +674,25 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    uint32 traceKind;
+    uint32 thingKind;
 #if defined JS_DUMP_CONSERVATIVE_GC_ROOTS || defined JS_GCMETER
     ConservativeGCTest test =
 #endif
-    MarkIfGCThingWord(trc, w, traceKind);
+    MarkIfGCThingWord(trc, w, thingKind);
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    if (test == CGCT_VALID) {
+    if (test == CGCT_VALID || test == CGCT_VALIDWITHOFFSET) {
         if (IS_GC_MARKING_TRACER(trc) && static_cast<GCMarker *>(trc)->conservativeDumpFileName) {
-            GCMarker::ConservativeRoot root = {(void *)w, traceKind};
+            const jsuword JSID_PAYLOAD_MASK = ~jsuword(JSID_TYPE_MASK);
+#if JS_BITS_PER_WORD == 32
+            jsuword payload = w & JSID_PAYLOAD_MASK;
+#elif JS_BITS_PER_WORD == 64
+            jsuword payload = w & JSID_PAYLOAD_MASK & JSVAL_PAYLOAD_MASK;
+#endif
+            void *thing = (test == CGCT_VALIDWITHOFFSET) 
+                          ? GetAlignedThing((void *)payload, thingKind) 
+                          : (void *)payload;
+            GCMarker::ConservativeRoot root = {thing, thingKind};
             static_cast<GCMarker *>(trc)->conservativeRoots.append(root);
         }
     }
