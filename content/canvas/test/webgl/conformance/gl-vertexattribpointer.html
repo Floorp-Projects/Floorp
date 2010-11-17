@@ -19,7 +19,7 @@ found in the LICENSE file.
 <div id="console"></div>
 <canvas id="canvas" width="2" height="2"> </canvas>
 <script>
-description("This test ensures WebGL implementations vertexAttribPointer can not be set if no buffer is bound.");
+description("This test checks vertexAttribPointer behaviors in WebGL.");
 
 debug("");
 debug("Canvas.getContext");
@@ -36,6 +36,16 @@ if (!gl) {
   gl.vertexAttribPointer(0, 3, gl.FLOAT, 0, 0, 12);
   glErrorShouldBe(gl, gl.INVALID_OPERATION,
       "vertexAttribPointer should fail if no buffer is bound");
+
+  var vertexObject = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(512), gl.STATIC_DRAW);
+  gl.vertexAttribPointer(0, 1, gl.FLOAT, 0, 256, 0);
+  glErrorShouldBe(gl, gl.INVALID_VALUE,
+      "WebGL API supports vertex attribute data strides up to 255 bytes");
+  gl.vertexAttribPointer(0, 1, gl.FLOAT, 0, 255, 0);
+  glErrorShouldBe(gl, gl.NO_ERROR,
+      "vertexAttribPointer with stride <= 255 should succeed");
 }
 
 debug("");

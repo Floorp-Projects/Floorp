@@ -88,7 +88,7 @@ function runTestIteration(antialias)
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, 0, texCoordOffset);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, texCoordOffset);
 
     gl.colorMask(1, 1, 1, 0);
     gl.disable(gl.BLEND);
