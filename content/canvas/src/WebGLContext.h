@@ -236,8 +236,10 @@ private:
 class WebGLBuffer;
 
 struct WebGLVertexAttribData {
+    // note that these initial values are what GL initializes vertex attribs to
     WebGLVertexAttribData()
-        : buf(0), stride(0), size(0), byteOffset(0), type(0), enabled(PR_FALSE), normalized(PR_FALSE)
+        : buf(0), stride(0), size(4), byteOffset(0),
+          type(LOCAL_GL_FLOAT), enabled(PR_FALSE), normalized(PR_FALSE)
     { }
 
     WebGLObjectRefPtr<WebGLBuffer> buf;
