@@ -3855,6 +3855,8 @@ nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
     return;
   }
 
+  nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
+
   if (ShouldReplaceRootElement()) {
     ResetRootElementAndEventTarget();
   }
@@ -3874,6 +3876,8 @@ nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                              nsIContent* aChild, PRInt32 aIndexInContainer,
                              nsIContent* aPreviousSibling)
 {
+  nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
+
   if (SameCOMIdentity(aChild, mRootElement)) {
     ResetRootElementAndEventTarget();
   }
