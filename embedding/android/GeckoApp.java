@@ -499,6 +499,10 @@ abstract public class GeckoApp
 
         String updateDir = Environment.getExternalStorageDirectory().getPath() + "/downloads/updates/0/";
         File updateFile = new File(updateDir + "update.apk");
+        File statusFile = new File(updateDir + "update.status");
+
+        if (!statusFile.exists() || !readUpdateStatus(statusFile).equals("pending"))
+            return;
 
         if (!updateFile.exists())
             return;
@@ -526,7 +530,6 @@ abstract public class GeckoApp
         // Update the status file
         String status = statusCode == 0 ? "succeeded\n" : "failed: "+ statusCode + "\n";
 
-        File statusFile = new File(updateDir + "update.status");
         OutputStream outStream;
         try {
             byte[] buf = status.getBytes("UTF-8");
@@ -539,6 +542,18 @@ abstract public class GeckoApp
 
         if (statusCode == 0)
             System.exit(0);
+    }
+
+    private String readUpdateStatus(File statusFile) {
+        String status = "";
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(statusFile));
+            status = reader.readLine();
+            reader.close();
+        } catch (Exception e) {
+            Log.i("GeckoAppJava", e.toString());
+        }
+        return status;
     }
 
     static final int FILE_PICKER_REQUEST = 1;
