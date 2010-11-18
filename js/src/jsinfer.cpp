@@ -114,7 +114,7 @@ id_toSource(JSContext *cx)
 namespace js {
 namespace types {
 
-#ifdef JS_TYPES_DEBUG_SPEW
+#ifdef DEBUG
 unsigned TypeSet::typesetCount = 0;
 unsigned TypeConstraint::constraintCount = 0;
 #endif
@@ -127,17 +127,90 @@ static const char *js_CodeNameTwo[] = {
 };
 
 /////////////////////////////////////////////////////////////////////
+// Logging
+/////////////////////////////////////////////////////////////////////
+
+#ifdef DEBUG
+
+static bool InferSpewActive(SpewChannel channel)
+{
+    static bool active[SPEW_COUNT];
+    static bool checked = false;
+    if (!checked) {
+        checked = true;
+        PodArrayZero(active);
+        const char *env = getenv("INFERFLAGS");
+        if (!env)
+            return false;
+        if (strstr(env, "dynamic"))
+            active[ISpewDynamic] = true;
+        if (strstr(env, "ops"))
+            active[ISpewOps] = true;
+        if (strstr(env, "result"))
+            active[ISpewResult] = true;
+        if (strstr(env, "full")) {
+            for (unsigned i = 0; i < SPEW_COUNT; i++)
+                active[i] = true;
+        }
+    }
+    return active[channel];
+}
+
+void InferSpew(SpewChannel channel, const char *fmt, ...)
+{
+    if (!InferSpewActive(channel))
+        return;
+
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stdout, "[infer] ");
+    vfprintf(stdout, fmt, ap);
+    fprintf(stdout, "\n");
+    va_end(ap);
+}
+
+void InferSpewType(SpewChannel channel, JSContext *cx, jstype type, const char *fmt, ...)
+{
+    JS_ASSERT(type);
+
+    if (!InferSpewActive(channel))
+        return;
+
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stdout, "[infer] ");
+    vfprintf(stdout, fmt, ap);
+    va_end(ap);
+
+    TypeSet types(&cx->compartment->types.pool);
+    PodZero(&types);
+
+    if (type == TYPE_UNKNOWN) {
+        types.typeFlags = TYPE_FLAG_UNKNOWN;
+    } else if (TypeIsPrimitive(type)) {
+        types.typeFlags = 1 << type;
+    } else {
+        types.typeFlags = TYPE_FLAG_OBJECT;
+        types.objectSet = (TypeObject**) type;
+        types.objectCount = 1;
+    }
+
+    types.print(cx);
+
+    fprintf(stdout, "\n");
+}
+
+#endif
+
+/////////////////////////////////////////////////////////////////////
 // TypeSet
 /////////////////////////////////////////////////////////////////////
 
 inline void
 TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 {
-#ifdef JS_TYPES_DEBUG_SPEW
-    JS_ASSERT(id);
-    fprintf(cx->typeOut(), "addConstraint: T%u C%u %s\n",
-            id, constraint->id, constraint->kind);
-#endif
+    InferSpew(ISpewOps, "addConstraint: T%u C%u %s\n",
+              id(), constraint->id(), constraint->kind());
 
     JS_ASSERT(constraint->next == NULL);
     constraint->next = constraintList;
@@ -173,68 +246,44 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 }
 
 void
-TypeSet::print(JSContext *cx, FILE *out)
+TypeSet::print(JSContext *cx)
 {
     if (typeFlags == 0) {
-        fputs(" missing", out);
+        printf(" missing");
         return;
     }
 
     if (typeFlags & TYPE_FLAG_UNKNOWN)
-        fputs(" unknown", out);
+        printf(" unknown");
 
     if (typeFlags & TYPE_FLAG_UNDEFINED)
-        fputs(" void", out);
+        printf(" void");
     if (typeFlags & TYPE_FLAG_NULL)
-        fputs(" null", out);
+        printf(" null");
     if (typeFlags & TYPE_FLAG_BOOLEAN)
-        fputs(" bool", out);
+        printf(" bool");
     if (typeFlags & TYPE_FLAG_INT32)
-        fputs(" int", out);
+        printf(" int");
     if (typeFlags & TYPE_FLAG_DOUBLE)
-        fputs(" float", out);
+        printf(" float");
     if (typeFlags & TYPE_FLAG_STRING)
-        fputs(" string", out);
+        printf(" string");
 
     if (typeFlags & TYPE_FLAG_OBJECT) {
-        fprintf(out, " object[%u]", objectCount);
+        printf(" object[%u]", objectCount);
 
         if (objectCount >= 2) {
             unsigned objectCapacity = HashSetCapacity(objectCount);
             for (unsigned i = 0; i < objectCapacity; i++) {
                 TypeObject *object = objectSet[i];
                 if (object)
-                    fprintf(out, " %s", cx->getTypeId(object->name));
+                    printf(" %s", TypeIdString(cx, object->name));
             }
         } else if (objectCount == 1) {
             TypeObject *object = (TypeObject*) objectSet;
-            fprintf(out, " %s", cx->getTypeId(object->name));
+            printf(" %s", TypeIdString(cx, object->name));
         }
     }
-}
-
-void
-PrintType(JSContext *cx, jstype type, bool newline)
-{
-    JS_ASSERT(type);
-
-    TypeSet types(&cx->compartment->types.pool);
-    PodZero(&types);
-
-    if (type == TYPE_UNKNOWN) {
-        types.typeFlags = TYPE_FLAG_UNKNOWN;
-    } else if (TypeIsPrimitive(type)) {
-        types.typeFlags = 1 << type;
-    } else {
-        types.typeFlags = TYPE_FLAG_OBJECT;
-        types.objectSet = (TypeObject**) type;
-        types.objectCount = 1;
-    }
-
-    types.print(cx, cx->typeOut());
-
-    if (newline)
-        fputs("\n", cx->typeOut());
 }
 
 /* Standard subset constraint, propagate all types from one set to another. */
@@ -1267,21 +1316,6 @@ TypeCompartment::init()
 
     JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
 
-    /*
-    char buf[50];
-    char prefix[10];
-    prefix[0] = 0;
-    strcpy(prefix, ".XXXXXX");
-    mktemp(prefix);
-    JS_snprintf(buf, sizeof(buf), "infer%s.txt", prefix);
-    out = fopen(buf, "w");
-    */
-
-    static FILE *file = NULL;
-    if (!file)
-        file = fopen("infer.txt", "w");
-    out = file;
-
     objectNameTable = new ObjectNameTable();
     bool success = objectNameTable->init();
     JS_ASSERT(success);
@@ -1372,17 +1406,9 @@ TypeCompartment::getTypeObject(JSContext *cx, analyze::Script *script, const cha
 }
 
 void
-TypeCompartment::addDynamicType(JSContext *cx, TypeSet *types, jstype type,
-                                const char *format, ...)
+TypeCompartment::addDynamicType(JSContext *cx, TypeSet *types, jstype type)
 {
     JS_ASSERT(!types->hasType(type));
-
-    va_list args;
-    va_start(args, format);
-    vfprintf(out, format, args);
-    va_end(args);
-
-    PrintType(cx, type);
 
     interpreting = false;
     uint64_t startTime = currentTime();
@@ -1404,8 +1430,8 @@ TypeCompartment::addDynamicPush(JSContext *cx, analyze::Bytecode &code,
     js::types::TypeSet *types = code.pushed(index);
     JS_ASSERT(!types->hasType(type));
 
-    fprintf(out, "MonitorResult: #%u:%05u %u:", code.script->id, code.offset, index);
-    PrintType(cx, type);
+    InferSpewType(ISpewDynamic, cx, type, "MonitorResult: #%u:%05u %u:",
+                  code.script->id, code.offset, index);
 
     interpreting = false;
     uint64_t startTime = currentTime();
@@ -1515,8 +1541,9 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
     if (assignTypes->hasType(rvtype))
         return;
 
-    addDynamicType(cx, assignTypes, rvtype, "MonitorAssign: %s %s:",
-                   cx->getTypeId(object->name), cx->getTypeId(id));
+    InferSpewType(ISpewDynamic, cx, rvtype, "MonitorAssign: %s %s:",
+                  TypeIdString(cx, object->name), TypeIdString(cx, id));
+    addDynamicType(cx, assignTypes, rvtype);
 }
 
 void
@@ -1571,13 +1598,11 @@ TypeCompartment::monitorBytecode(JSContext *cx, analyze::Bytecode *code)
         break;
       default:
         warnings = true;
-        fprintf(out, "warning: Monitoring unknown bytecode: %s\n", js_CodeNameTwo[op]);
+        InferSpew(ISpewDynamic, "warning: Monitoring unknown bytecode: %s\n", js_CodeNameTwo[op]);
         break;
     }
 
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(out, "addMonitorNeeded: #%u:%05u\n", code->script->id, code->offset);
-#endif
+    InferSpew(ISpewOps, "addMonitorNeeded: #%u:%05u\n", code->script->id, code->offset);
 
     code->monitorNeeded = true;
 
@@ -1587,11 +1612,24 @@ TypeCompartment::monitorBytecode(JSContext *cx, analyze::Bytecode *code)
 }
 
 void
-TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
+TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
 {
     JS_ASSERT(this == &compartment->types);
 
+    if (ignoreWarnings)
+        warnings = false;
+
+    // for debugging regressions.
+    if (warnings) {
+        printf("Type warnings generated, bailing out...\n");
+        fflush(stdout);
+        *((int*)NULL) = 0;  /* Type warnings */
+    }
+
 #ifdef DEBUG
+    if (!InferSpewActive(ISpewResult))
+        return;
+
     for (JSScript *script = (JSScript *)compartment->scripts.next;
          &script->links != &compartment->scripts;
          script = (JSScript *)script->links.next) {
@@ -1601,35 +1639,24 @@ TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
 
     TypeObject *object = objects;
     while (object) {
-        object->print(cx, out);
+        object->print(cx);
         object = object->next;
     }
-#endif // DEBUG
-
-    if (ignoreWarnings)
-        warnings = false;
 
     double millis = analysisTime / 1000.0;
 
-    fprintf(out, "\nWarnings: %s\n", warnings ? "yes" : "no");
+    printf("\nWarnings: %s\n", warnings ? "yes" : "no");
 
-    fprintf(out, "Counts: ");
+    printf("Counts: ");
     for (unsigned count = 0; count < TYPE_COUNT_LIMIT; count++) {
         if (count)
-            fputs("/", out);
-        fprintf(out, "%u", typeCounts[count]);
+            printf("/");
+        printf("%u", typeCounts[count]);
     }
-    fprintf(out, " (%u over)\n", typeCountOver);
+    printf(" (%u over)\n", typeCountOver);
 
-    fprintf(out, "Time: %.2f ms\n", millis);
-
-    // for debugging regressions.
-    if (warnings) {
-        fclose(out);
-        printf("Type warnings generated, bailing out...\n");
-        fflush(stdout);
-        *((int*)NULL) = 0;  /* Type warnings */
-    }
+    printf("Time: %.2f ms\n", millis);
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1646,10 +1673,6 @@ TypeStack::merge(JSContext *cx, TypeStack *one, TypeStack *two)
 
     one = one->group();
     two = two->group();
-
-#ifdef JS_TYPES_DEBUG_SPEW
-    JS_ASSERT(one->types.id && two->types.id);
-#endif
 
     /* Check if the classes are already the same. */
     if (one == two)
@@ -1673,9 +1696,7 @@ TypeStack::merge(JSContext *cx, TypeStack *one, TypeStack *two)
     JS_ASSERT(one->letVariable == two->letVariable);
     JS_ASSERT(one->scopeVars == two->scopeVars);
 
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(cx->typeOut(), "merge: T%u T%u\n", one->types.id, two->types.id);
-#endif
+    InferSpew(ISpewOps, "merge: T%u T%u\n", one->types.id(), two->types.id());
 
     /* one has now been merged into two, do the actual join. */
     PodZero(one);
@@ -1721,23 +1742,23 @@ VariableSet::addPropagate(JSContext *cx, VariableSet *target,
 }
 
 void
-VariableSet::print(JSContext *cx, FILE *out)
+VariableSet::print(JSContext *cx)
 {
     if (variables == NULL) {
-        fputs(" {}\n", out);
+        printf(" {}\n");
         return;
     }
 
-    fprintf(out, " {");
+    printf(" {");
 
     Variable *var = variables;
     while (var) {
-        fprintf(out, "\n    %s:", cx->getTypeId(var->id));
-        var->types.print(cx, out);
+        printf("\n    %s:", TypeIdString(cx, var->id));
+        var->types.print(cx);
         var = var->next;
     }
 
-    fprintf(out, "\n}\n");
+    printf("\n}\n");
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1750,9 +1771,9 @@ TypeObject::TypeObject(JSContext *cx, JSArenaPool *pool, jsid name, bool isArray
       hasObjectPropagation(false), hasArrayPropagation(false), isInitObject(false),
       isDenseArray(isArray), isPackedArray(isArray)
 {
-#ifdef JS_TYPES_DEBUG_SPEW
-    propertySet.name = name;
-    fprintf(cx->typeOut(), "newObject: %s\n", cx->getTypeId(name));
+#ifdef DEBUG
+    propertySet.name_ = name;
+    InferSpew(ISpewOps, "newObject: %s\n", TypeIdString(cx, name));
 #endif
 }
 
@@ -1800,7 +1821,7 @@ TypeFunction::fillProperties(JSContext *cx)
     TypeObject *funcProto = cx->getFixedTypeObject(TYPE_OBJECT_FUNCTION_PROTOTYPE);
     funcProto->addPropagate(cx, this);
 
-    const char *baseName = cx->getTypeId(name);
+    const char *baseName = js_GetStringBytes(cx, JSID_TO_STRING(name));
     unsigned len = strlen(baseName) + 15;
     char *prototypeName = (char *)alloca(len);
     JS_snprintf(prototypeName, len, "%s:prototype", baseName);
@@ -1815,15 +1836,15 @@ TypeFunction::fillProperties(JSContext *cx)
 }
 
 void
-TypeObject::print(JSContext *cx, FILE *out)
+TypeObject::print(JSContext *cx)
 {
-    fputs(cx->getTypeId(name), out);
+    printf("%s", TypeIdString(cx, name));
 
     if (isFunction && !propertiesFilled)
-        fputs("\n", out);
+        printf("\n");
     else
-        properties(cx).print(cx, out);
-    fputs("\n", out);
+        properties(cx).print(cx);
+    printf("\n");
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1836,11 +1857,7 @@ TypeFunction::TypeFunction(JSContext *cx, JSArenaPool *pool, jsid name)
       isBuiltin(false), isGeneric(false)
 {
     isFunction = true;
-
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(cx->typeOut(), "newFunction: %s return T%u\n",
-            cx->getTypeId(name), returnTypes.id);
-#endif
+    InferSpew(ISpewOps, "newFunction: %s return T%u\n", TypeIdString(cx, name), returnTypes.id());
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1918,21 +1935,6 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
     int useCount = js::analyze::GetUseCount(this, code.offset);
     JSOp op = (JSOp) *pc;
 
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(cx->typeOut(), "Execute: #%u:%05u:  ", analysis->id, code.offset);
-    code.print(cx, cx->typeOut());
-
-    for (int i = 0; i < useCount; i++) {
-        const js::Value &val = sp[-1 - i];
-        js::types::jstype type = js::types::GetValueType(cx, val);
-
-        fprintf(cx->typeOut(), " %u:", i);
-        js::types::PrintType(cx, type, false);
-    }
-
-    fputs("\n", cx->typeOut());
-#endif
-
     if (!useCount || code.missingTypes)
         return;
 
@@ -1950,9 +1952,11 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
             if (object->isDenseArray) {
                 if (!val.toObject().isDenseArray() ||
                     (object->isPackedArray && !val.toObject().isPackedDenseArray())) {
-                    fprintf(cx->typeOut(), "warning: Object not %s array at #%u:%05u popped %u: %s\n",
-                            object->isPackedArray ? "packed" : "dense",
-                            analysis->id, code.offset, i, cx->getTypeId(object->name));
+                    js::types::InferSpew(js::types::ISpewDynamic,
+                        "warning: Object not %s array at #%u:%05u popped %u: %s\n",
+                        object->isPackedArray ? "packed" : "dense",
+                        analysis->id, code.offset, i,
+                        js::types::TypeIdString(cx, object->name));
                     cx->compartment->types.warnings = true;
                     object->isDenseArray = object->isPackedArray = false;
                 }
@@ -1964,9 +1968,9 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
         stack = stack->innerStack ? stack->innerStack->group() : NULL;
 
         if (!matches) {
-            fprintf(cx->typeOut(), "warning: Missing type at #%u:%05u popped %u: ",
-                    analysis->id, code.offset, i);
-            js::types::PrintType(cx, type);
+            js::types::InferSpewType(js::types::ISpewDynamic, cx, type,
+                                     "warning: Missing type at #%u:%05u popped %u: ",
+                                     analysis->id, code.offset, i);
 
             cx->compartment->types.warnings = true;
             code.missingTypes = true;
@@ -2247,9 +2251,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
     jsbytecode *pc = script->code + offset;
     JSOp op = (JSOp)*pc;
 
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(cx->typeOut(), "analyze: #%u:%05u\n", id, offset);
-#endif
+    InferSpew(ISpewOps, "analyze: #%u:%05u\n", id, offset);
 
     /* Add type constraints for the various opcodes. */
     switch (op) {
@@ -3196,7 +3198,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
       default:
         cx->compartment->types.warnings = true;
-        fprintf(cx->typeOut(), "warning: Unknown bytecode: %s\n", js_CodeNameTwo[op]);
+        InferSpew(ISpewDynamic, "warning: Unknown bytecode: %s\n", js_CodeNameTwo[op]);
     }
 }
 
@@ -3205,7 +3207,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 /////////////////////////////////////////////////////////////////////
 
 void
-Bytecode::print(JSContext *cx, FILE *out)
+Bytecode::print(JSContext *cx)
 {
     jsbytecode *pc = script->getScript()->code + offset;
 
@@ -3222,61 +3224,61 @@ Bytecode::print(JSContext *cx, FILE *out)
       case JOF_TABLESWITCHX:
       case JOF_LOOKUPSWITCH:
       case JOF_LOOKUPSWITCHX:
-        fprintf(out, "%s", name);
+        printf("%s", name);
         break;
 
       case JOF_JUMP:
       case JOF_JUMPX: {
         ptrdiff_t off = GetJumpOffset(pc, pc);
-        fprintf(out, "%s %u", name, unsigned(offset + off));
+        printf("%s %u", name, unsigned(offset + off));
         break;
       }
 
       case JOF_ATOM: {
         if (op == JSOP_DOUBLE) {
-            fprintf(out, "%s", name);
+            printf("%s", name);
         } else {
             jsid id = GetAtomId(cx, script, pc, 0);
             if (JSID_IS_STRING(id))
-                fprintf(out, "%s %s", name, cx->getTypeId(id));
+                printf("%s %s", name, TypeIdString(cx, id));
             else
-                fprintf(out, "%s (index)", name);
+                printf("%s (index)", name);
         }
         break;
       }
 
       case JOF_OBJECT:
-        fprintf(out, "%s (object)", name);
+        printf("%s (object)", name);
         break;
 
       case JOF_REGEXP:
-        fprintf(out, "%s (regexp)", name);
+        printf("%s (regexp)", name);
         break;
 
       case JOF_UINT16PAIR:
-        fprintf(out, "%s %d %d", name, GET_UINT16(pc), GET_UINT16(pc + UINT16_LEN));
+        printf("%s %d %d", name, GET_UINT16(pc), GET_UINT16(pc + UINT16_LEN));
         break;
 
       case JOF_UINT16:
-        fprintf(out, "%s %d", name, GET_UINT16(pc));
+        printf("%s %d", name, GET_UINT16(pc));
         break;
 
       case JOF_QARG: {
         jsid id = script->getArgumentId(GET_ARGNO(pc));
-        fprintf(out, "%s %s", name, cx->getTypeId(id));
+        printf("%s %s", name, TypeIdString(cx, id));
         break;
       }
 
       case JOF_GLOBAL:
-        fprintf(out, "%s %s", name, cx->getTypeId(GetGlobalId(cx, script, pc)));
+        printf("%s %s", name, TypeIdString(cx, GetGlobalId(cx, script, pc)));
         break;
 
       case JOF_LOCAL:
         if ((op != JSOP_ARRAYPUSH) && (analyzed || (GET_SLOTNO(pc) < script->getScript()->nfixed))) {
             jsid id = script->getLocalId(GET_SLOTNO(pc), inStack);
-            fprintf(out, "%s %d %s", name, GET_SLOTNO(pc), cx->getTypeId(id));
+            printf("%s %d %s", name, GET_SLOTNO(pc), TypeIdString(cx, id));
         } else {
-            fprintf(out, "%s %d", name, GET_SLOTNO(pc));
+            printf("%s %d", name, GET_SLOTNO(pc));
         }
         break;
 
@@ -3289,29 +3291,29 @@ Bytecode::print(JSContext *cx, FILE *out)
         if (op == JSOP_GETLOCALPROP && (analyzed || (GET_SLOTNO(pc) < script->getScript()->nfixed)))
             slotid = script->getLocalId(GET_SLOTNO(pc), inStack);
 
-        fprintf(out, "%s %u %s %s", name, GET_SLOTNO(pc), cx->getTypeId(slotid), cx->getTypeId(id));
+        printf("%s %u %s %s", name, GET_SLOTNO(pc), TypeIdString(cx, slotid), TypeIdString(cx, id));
         break;
       }
 
       case JOF_SLOTOBJECT:
-        fprintf(out, "%s %u (object)", name, GET_SLOTNO(pc));
+        printf("%s %u (object)", name, GET_SLOTNO(pc));
         break;
 
       case JOF_UINT24:
         JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY);
-        fprintf(out, "%s %d", name, (jsint)GET_UINT24(pc));
+        printf("%s %d", name, (jsint)GET_UINT24(pc));
         break;
 
       case JOF_UINT8:
-        fprintf(out, "%s %d", name, (jsint)pc[1]);
+        printf("%s %d", name, (jsint)pc[1]);
         break;
 
       case JOF_INT8:
-        fprintf(out, "%s %d", name, (jsint)GET_INT8(pc));
+        printf("%s %d", name, (jsint)GET_INT8(pc));
         break;
 
       case JOF_INT32:
-        fprintf(out, "%s %d", name, (jsint)GET_INT32(pc));
+        printf("%s %d", name, (jsint)GET_INT32(pc));
         break;
 
       default:
@@ -3326,7 +3328,6 @@ Script::print(JSContext *cx)
         return;
 
     TypeCompartment *compartment = &script->compartment->types;
-    FILE *out = compartment->out;
 
     /*
      * Check if there are warnings for used values with unknown types, and build
@@ -3377,30 +3378,30 @@ Script::print(JSContext *cx)
 
     if (parent) {
         if (fun)
-            fputs("Function", out);
+            printf("Function");
         else
-            fputs("Eval", out);
+            printf("Eval");
 
-        fprintf(out, " #%u @%u\n", id, parent->analysis->id);
+        printf(" #%u @%u\n", id, parent->analysis->id);
     } else {
-        fprintf(out, "Main #%u:\n", id);
+        printf("Main #%u:\n", id);
     }
 
     if (!codeArray) {
-        fputs("(unused)\n", out);
+        printf("(unused)\n");
         return;
     }
 
     /* Print out points where variables became unconditionally defined. */
-    fputs("defines:", out);
+    printf("defines:");
     for (unsigned i = 0; i < localCount(); i++) {
         if (locals[i] != LOCAL_USE_BEFORE_DEF && locals[i] != LOCAL_CONDITIONALLY_DEFINED)
-            fprintf(out, " %s@%u", cx->getTypeId(getLocalId(i, NULL)), locals[i]);
+            printf(" %s@%u", TypeIdString(cx, getLocalId(i, NULL)), locals[i]);
     }
-    fputs("\n", out);
+    printf("\n");
 
-    fputs("locals:", out);
-    localTypes.print(cx, out);
+    printf("locals:");
+    localTypes.print(cx);
 
     int id_count = 0;
 
@@ -3409,38 +3410,38 @@ Script::print(JSContext *cx)
         if (!code)
             continue;
 
-        fprintf(out, "#%u:%05u:  ", id, offset);
-        code->print(cx, out);
-        fputs("\n", out);
+        printf("#%u:%05u:  ", id, offset);
+        code->print(cx);
+        printf("\n");
 
         if (code->defineCount) {
-            fputs("  defines:", out);
+            printf("  defines:");
             for (unsigned i = 0; i < code->defineCount; i++) {
                 uint32 local = code->defineArray[i];
-                fprintf(out, " %s", cx->getTypeId(getLocalId(local, NULL)));
+                printf(" %s", TypeIdString(cx, getLocalId(local, NULL)));
             }
-            fputs("\n", out);
+            printf("\n");
         }
 
         TypeStack *stack;
         unsigned useCount = GetUseCount(script, offset);
         if (useCount) {
-            fputs("  use:", out);
+            printf("  use:");
             stack = code->inStack->group();
             for (unsigned i = 0; i < useCount; i++) {
                 if (!stack->id)
                     stack->id = ++id_count;
-                fprintf(out, " %d", stack->id);
+                printf(" %d", stack->id);
                 stack = stack->innerStack ? stack->innerStack->group() : NULL;
             }
-            fputs("\n", out);
+            printf("\n");
 
             /* Watch for stack values without any types. */
             stack = code->inStack->group();
             for (unsigned i = 0; i < useCount; i++) {
                 if (!IgnorePopped((JSOp)script->code[offset], i)) {
                     if (stack->types.typeFlags == 0)
-                        fprintf(out, "  missing stack: %d\n", stack->id);
+                        printf("  missing stack: %d\n", stack->id);
                 }
                 stack = stack->innerStack ? stack->innerStack->group() : NULL;
             }
@@ -3448,31 +3449,31 @@ Script::print(JSContext *cx)
 
         unsigned defCount = GetDefCount(script, offset);
         if (defCount) {
-            fputs("  def:", out);
+            printf("  def:");
             for (unsigned i = 0; i < defCount; i++) {
                 stack = code->pushedArray[i].group();
                 if (!stack->id)
                     stack->id = ++id_count;
-                fprintf(out, " %d", stack->id);
+                printf(" %d", stack->id);
             }
-            fputs("\n", out);
+            printf("\n");
             for (unsigned i = 0; i < defCount; i++) {
                 stack = code->pushedArray[i].group();
-                fprintf(out, "  type %d:", stack->id);
-                stack->types.print(cx, out);
-                fputs("\n", out);
+                printf("  type %d:", stack->id);
+                stack->types.print(cx);
+                printf("\n");
             }
         }
 
         if (code->monitorNeeded)
-            fprintf(out, "  monitored\n");
+            printf("  monitored\n");
     }
 
-    fputs("\n", out);
+    printf("\n");
 
     TypeObject *object = objects;
     while (object) {
-        object->print(cx, out);
+        object->print(cx);
         object = object->next;
     }
 }
@@ -3488,6 +3489,13 @@ namespace js {
 static inline void
 TraceVariableSet(JSTracer *trc, const types::VariableSet &vars)
 {
+#ifdef DEBUG
+    /* The name is NULL if we GC'ed while constructing the script/object. */
+    JSString *name = JSID_TO_STRING(vars.name_);
+    if (name)
+        gc::MarkString(trc, name, "type_vars_name");
+#endif
+
     types::Variable *var = vars.variables;
     while (var) {
         if (!JSID_IS_VOID(var->id))

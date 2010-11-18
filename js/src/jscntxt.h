@@ -2332,9 +2332,6 @@ public:
     inline js::types::TypeObject *
     getFixedTypeObject(js::types::FixedTypeObjectName which);
 
-    inline FILE *typeOut();
-    inline const char *getTypeId(jsid id);
-
     /*
      * Get a type object or function with the specified name.  Fetching the same
      * name repeatedly will produce the same value.
