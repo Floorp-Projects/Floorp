@@ -469,10 +469,8 @@ Script::analyze(JSContext *cx)
             code->pushedArray[i].setInnerStack(stack);
             stack = &code->pushedArray[i];
 
-#ifdef JS_TYPES_DEBUG_SPEW
-            fprintf(cx->typeOut(), "pushed #%u:%05u %u T%u\n",
-                    id, offset, i, stack->types.id);
-#endif
+            types::InferSpew(types::ISpewOps, "pushed #%u:%05u %u T%u\n",
+                             id, offset, i, stack->types.id());
         }
 
         /* Track the initializer stack and compute new objects for encountered initializers. */

@@ -1090,15 +1090,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             {
                 /*
                  * Dump remaining type inference results first.  This printing
-                 * depends on atoms still existing.  FIXME note that since the
-                 * inference doesn't mark the atoms it depends on, a GC can
-                 * totally hose it.
+                 * depends on atoms still existing.
                  */
                 AutoLockGC lock(rt);
                 JSCompartment **compartment = rt->compartments.begin();
                 JSCompartment **end = rt->compartments.end();
                 while (compartment < end) {
-                    (*compartment)->types.print(cx, *compartment);
+                    (*compartment)->types.finish(cx, *compartment);
                     compartment++;
                 }
             }

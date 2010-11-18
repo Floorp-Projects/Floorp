@@ -163,7 +163,7 @@ struct Bytecode
      */
     inline types::TypeObject* getInitObject(JSContext *cx, bool isArray);
 
-    void print(JSContext *cx, FILE *out);
+    void print(JSContext *cx);
 
 #endif /* JS_TYPE_INFERENCE */
 

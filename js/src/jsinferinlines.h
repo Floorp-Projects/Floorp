@@ -129,6 +129,19 @@ MakeTypeId(jsid id)
     return JSID_VOID;
 }
 
+/* Convert an id for printing during debug. */
+static inline const char *
+TypeIdString(JSContext *cx, jsid id)
+{
+#ifdef DEBUG
+    if (JSID_IS_VOID(id))
+        return "(index)";
+    return js_GetStringBytes(cx, JSID_TO_STRING(id));
+#else
+    return NULL;
+#endif
+}
+
 } } /* namespace js::types */
 
 #endif /* JS_TYPE_INFERENCE */
@@ -155,65 +168,6 @@ JSContext::getGlobalTypeObject()
         compartment->types.globalObject = getTypeObject("Global", false, false);
     return compartment->types.globalObject;
 #else
-    return NULL;
-#endif
-}
-
-inline FILE *
-JSContext::typeOut()
-{
-#ifdef JS_TYPE_INFERENCE
-    return compartment->types.out;
-#else
-    JS_NOT_REACHED("Inference disabled");
-    return NULL;
-#endif
-}
-
-inline const char *
-JSContext::getTypeId(jsid id)
-{
-#ifdef JS_TYPE_INFERENCE
-    if (JSID_IS_VOID(id))
-        return "(index)";
-
-    JS_ASSERT(JSID_IS_STRING(id));
-    JSString *str = JSID_TO_STRING(id);
-
-    const jschar *chars;
-    size_t length;
-
-    str->getCharsAndLength(chars, length);
-    if (length == 0)
-        return "(blank)";
-
-    unsigned size = js_GetDeflatedStringLength(this, chars, length);
-    JS_ASSERT(size != unsigned(-1));
-
-    char *scratchBuf = compartment->types.scratchBuf[0];
-    size_t scratchLen = compartment->types.scratchLen[0];
-
-    const unsigned GETID_COUNT = js::types::TypeCompartment::GETID_COUNT;
-
-    for (unsigned i = 0; i < GETID_COUNT - 1; i++) {
-        compartment->types.scratchBuf[i] = compartment->types.scratchBuf[i + 1];
-        compartment->types.scratchLen[i] = compartment->types.scratchLen[i + 1];
-    }
-
-    if (size >= scratchLen) {
-        scratchLen = js::Max(unsigned(100), size * 2);
-        scratchBuf = js::ArenaArray<char>(compartment->types.pool, scratchLen);
-    }
-
-    compartment->types.scratchBuf[GETID_COUNT - 1] = scratchBuf;
-    compartment->types.scratchLen[GETID_COUNT - 1] = scratchLen;
-
-    js_DeflateStringToBuffer(this, chars, length, scratchBuf, &scratchLen);
-    scratchBuf[size] = 0;
-
-    return scratchBuf;
-#else
-    JS_NOT_REACHED("Inference disabled");
     return NULL;
 #endif
 }
@@ -385,10 +339,10 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
         return;
 
     if (compartment->types.interpreting) {
-        compartment->types.addDynamicType(this, types, type,
-                                          "AddBuiltin: %s %s:",
-                                          getTypeId(obj->name),
-                                          getTypeId(id));
+        js::types::InferSpewType(js::types::ISpewDynamic, this, type, "AddBuiltin: %s %s:",
+                                 js::types::TypeIdString(this, obj->name),
+                                 js::types::TypeIdString(this, id));
+        compartment->types.addDynamicType(this, types, type);
     } else {
         types->addType(this, type);
     }
@@ -509,8 +463,9 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
         if (!JSID_IS_VOID(id)) {
             js::types::TypeSet *types = script->localTypes.getVariable(this, id);
             if (!types->hasType(type)) {
-                compartment->types.addDynamicType(this, types, type,
-                                                  "AddArg: #%u %u:", script->id, arg);
+                js::types::InferSpewType(js::types::ISpewDynamic, this, type,
+                                         "AddArg: #%u %u:", script->id, arg);
+                compartment->types.addDynamicType(this, types, type);
             }
         } else {
             /*
@@ -528,8 +483,9 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
 
         js::types::TypeSet *types = script->localTypes.getVariable(this, id);
         if (!types->hasType(js::types::TYPE_UNDEFINED)) {
-            compartment->types.addDynamicType(this, types, js::types::TYPE_UNDEFINED,
-                                              "AddArg: #%u %u:", script->id, arg);
+            js::types::InferSpew(js::types::ISpewDynamic,
+                                 "UndefinedArg: #%u %u:", script->id, arg);
+            compartment->types.addDynamicType(this, types, js::types::TYPE_UNDEFINED);
         }
     }
 #endif
@@ -550,8 +506,9 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
         else
             type = js::types::GetValueType(this, thisv);
         if (!analysis->thisTypes.hasType(type)) {
-            compartment->types.addDynamicType(this, &analysis->thisTypes, type,
-                                              "AddThis: #%u:", analysis->id);
+            js::types::InferSpewType(js::types::ISpewDynamic, this, type,
+                                     "AddThis: #%u:", analysis->id);
+            compartment->types.addDynamicType(this, &analysis->thisTypes, type);
         }
     }
 
@@ -662,9 +619,9 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
         js::types::TypeSet *argTypes = analysis->localTypes.getVariable(cx, id);
         js::types::jstype type = js::types::GetValueType(cx, value);
         if (!argTypes->hasType(type)) {
-            cx->compartment->types.addDynamicType(cx, argTypes, type,
-                                                  "SetArgument: #%u %s:",
-                                                  analysis->id, cx->getTypeId(id));
+            js::types::InferSpewType(js::types::ISpewDynamic, cx, type, "SetArgument: #%u %s:",
+                                     analysis->id, js::types::TypeIdString(cx, id));
+            cx->compartment->types.addDynamicType(cx, argTypes, type);
         }
     }
 #endif
@@ -869,10 +826,7 @@ TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *
     JS_ASSERT(this == &cx->compartment->types);
     JS_ASSERT(type);
 
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(out, "pending: C%u", constraint->id);
-    PrintType(cx, type);
-#endif
+    InferSpewType(ISpewOps, cx, type, "pending: C%u", constraint->id());
 
     if (pendingCount == pendingCapacity)
         growPendingArray();
@@ -898,12 +852,7 @@ TypeCompartment::resolvePending(JSContext *cx)
     /* Handle all pending type registrations. */
     while (pendingCount) {
         const PendingWork &pending = pendingArray[--pendingCount];
-
-#ifdef JS_TYPES_DEBUG_SPEW
-        fprintf(out, "resolve: C%u ", pending.constraint->id);
-        PrintType(cx, pending.type);
-#endif
-
+        InferSpewType(ISpewOps, cx, pending.type, "resolve: C%u ", pending.constraint->id());
         pending.constraint->newType(cx, pending.source, pending.type);
     }
 
@@ -1112,12 +1061,7 @@ TypeSet::addType(JSContext *cx, jstype type)
 {
     JS_ASSERT(type);
     JS_ASSERT_IF(typeFlags & TYPE_FLAG_UNKNOWN, typeFlags == TYPE_FLAG_UNKNOWN);
-
-#ifdef JS_TYPES_DEBUG_SPEW
-    JS_ASSERT(id);
-    fprintf(cx->typeOut(), "addType: T%u ", id);
-    PrintType(cx, type);
-#endif
+    InferSpewType(ISpewOps, cx, type, "addType: T%u ", id());
 
     if (typeFlags & TYPE_FLAG_UNKNOWN)
         return;
@@ -1180,10 +1124,7 @@ inline TypeSet *
 TypeSet::make(JSContext *cx, JSArenaPool &pool, const char *name)
 {
     TypeSet *res = ArenaNew<TypeSet>(pool, &pool);
-
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(cx->typeOut(), "intermediate %s T%u\n", name, res->id);
-#endif
+    InferSpew(ISpewOps, "intermediate %s T%u\n", name, res->id());
 
     return res;
 }
@@ -1274,10 +1215,8 @@ VariableSet::getVariable(JSContext *cx, jsid id)
     res->next = variables;
     variables = res;
 
-#ifdef JS_TYPES_DEBUG_SPEW
-    fprintf(cx->typeOut(), "addVariable: %s %s T%u\n",
-            cx->getTypeId(name), cx->getTypeId(id), res->types.id);
-#endif
+    InferSpew(ISpewOps, "addVariable: %s %s T%u\n",
+              TypeIdString(cx, name()), TypeIdString(cx, id), res->types.id());
 
     /* Propagate the variable to any other sets receiving our variables. */
     if (propagateCount >= 2) {
@@ -1313,7 +1252,7 @@ TypeFunction::getNewObject(JSContext *cx)
     if (newObject)
         return newObject;
 
-    const char *baseName = cx->getTypeId(name);
+    const char *baseName = js_GetStringBytes(cx, JSID_TO_STRING(name));
 
     unsigned len = strlen(baseName) + 10;
     char *newName = (char *) alloca(len);

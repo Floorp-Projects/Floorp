@@ -52,8 +52,6 @@
 
 /* Define to get detailed output of inference actions. */
 
-// #define JS_TYPES_DEBUG_SPEW
-
 namespace js { namespace analyze {
     struct Bytecode;
     class Script;
@@ -130,9 +128,6 @@ TypeIsObject(jstype type)
 /* Get the type of a jsval, or zero for an unknown special value. */
 inline jstype GetValueType(JSContext *cx, const Value &val);
 
-/* Print out a particular type. */
-void PrintType(JSContext *cx, jstype type, bool newline = true);
-
 /*
  * A constraint which listens to additions to a type set and propagates those
  * changes to other type sets.
@@ -140,20 +135,26 @@ void PrintType(JSContext *cx, jstype type, bool newline = true);
 class TypeConstraint
 {
 public:
-#ifdef JS_TYPES_DEBUG_SPEW
+#ifdef DEBUG
     static unsigned constraintCount;
-    unsigned id;
-    const char *kind;
+    unsigned id_;
+    const char *kind_;
+
+    unsigned id() const { return id_; }
+    const char *kind() const { return kind_; }
+#else
+    unsigned id() const { return 0; }
+    const char *kind() const { return NULL; }
 #endif
 
     /* Next constraint listening to the same type set. */
     TypeConstraint *next;
 
-    TypeConstraint(const char *_kind) : next(NULL)
+    TypeConstraint(const char *kind) : next(NULL)
     {
-#ifdef JS_TYPES_DEBUG_SPEW
-        id = ++constraintCount;
-        kind = _kind;
+#ifdef DEBUG
+        this->id_ = ++constraintCount;
+        this->kind_ = kind;
 #endif
     }
 
@@ -192,9 +193,16 @@ enum ObjectKind {
 /* Information about the set of types associated with an lvalue. */
 struct TypeSet
 {
-#ifdef JS_TYPES_DEBUG_SPEW
+#ifdef DEBUG
     static unsigned typesetCount;
-    unsigned id;
+    unsigned id_;
+
+    /* Pool containing this type set.  All constraints must also be in this pool. */
+    JSArenaPool *pool;
+
+    unsigned id() const { return id_; }
+#else
+    unsigned id() const { return 0; }
 #endif
 
     /* Flags for the possible coarse types in this set. */
@@ -207,11 +215,6 @@ struct TypeSet
     /* Chain of constraints which propagate changes out from this type set. */
     TypeConstraint *constraintList;
 
-#ifdef DEBUG
-    /* Pool containing this type set.  All constraints must also be in this pool. */
-    JSArenaPool *pool;
-#endif
-
     TypeSet(JSArenaPool *pool)
         : typeFlags(0), objectSet(NULL), objectCount(0), constraintList(NULL)
     {
@@ -221,14 +224,12 @@ struct TypeSet
     void setPool(JSArenaPool *pool)
     {
 #ifdef DEBUG
+        this->id_ = ++typesetCount;
         this->pool = pool;
-#ifdef JS_TYPES_DEBUG_SPEW
-        this->id = ++typesetCount;
-#endif
 #endif
     }
 
-    void print(JSContext *cx, FILE *out);
+    void print(JSContext *cx);
 
     /* Whether this set contains a specific type. */
     inline bool hasType(jstype type);
@@ -398,8 +399,12 @@ struct Variable
 /* Type information about a set of variables or properties. */
 struct VariableSet
 {
-#ifdef JS_TYPES_DEBUG_SPEW
-    jsid name;
+#ifdef DEBUG
+    jsid name_;
+
+    jsid name() const { return name_; }
+#else
+    jsid name() const { return JSID_VOID; }
 #endif
 
     /* List of variables in this set which have been accessed explicitly. */
@@ -431,7 +436,7 @@ struct VariableSet
      */
     bool addPropagate(JSContext *cx, VariableSet *target, bool excludePrototype);
 
-    void print(JSContext *cx, FILE *out);
+    void print(JSContext *cx);
 };
 
 /* Type information about an object accessed by a script. */
@@ -505,7 +510,7 @@ struct TypeObject
     /* Get the type set for all integer index properties of this object. */
     inline TypeSet* indexTypes(JSContext *cx);
 
-    void print(JSContext *cx, FILE *out);
+    void print(JSContext *cx);
 };
 
 /* Type information about an interpreted or native function. */
@@ -681,11 +686,6 @@ struct TypeCompartment
     /* Whether the interpreter is currently active (we are not inferring types). */
     bool interpreting;
 
-    /* Scratch space for cx->getTypeId. */
-    static const unsigned GETID_COUNT = 2;
-    char *scratchBuf[GETID_COUNT];
-    unsigned scratchLen[GETID_COUNT];
-
     /* Object containing all global variables. root of all parent chains. */
     TypeObject *globalObject;
 
@@ -745,9 +745,6 @@ struct TypeCompartment
 
     /* Logging fields */
 
-    /* File to write logging data and other output. */
-    FILE *out;
-
     /*
      * Whether any warnings were emitted.  These are nonfatal but (generally)
      * indicate unhandled constructs leading to analysis unsoundness.
@@ -795,7 +792,8 @@ struct TypeCompartment
     /* Resolve pending type registrations, excluding delayed ones. */
     inline void resolvePending(JSContext *cx);
 
-    void print(JSContext *cx, JSCompartment *compartment);
+    /* Prints results of this compartment if spew is enabled, checks for warnings. */
+    void finish(JSContext *cx, JSCompartment *compartment);
 
     /* Get a function or non-function object associated with an optional script. */
     TypeObject *getTypeObject(JSContext *cx, js::analyze::Script *script,
@@ -805,8 +803,7 @@ struct TypeCompartment
      * Add the specified type to the specified set, do any necessary reanalysis
      * stemming from the change and recompile any affected scripts.
      */
-    void addDynamicType(JSContext *cx, TypeSet *types, jstype type,
-                        const char *format, ...);
+    void addDynamicType(JSContext *cx, TypeSet *types, jstype type);
     void addDynamicPush(JSContext *cx, analyze::Bytecode &code, unsigned index, jstype type);
     void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
 
@@ -819,6 +816,26 @@ struct TypeCompartment
 
     void trace(JSTracer *trc);
 };
+
+enum SpewChannel {
+    ISpewDynamic,  /* dynamic: Dynamic type changes and inference entry points. */
+    ISpewOps,      /* ops: New constraints and types. */
+    ISpewResult,   /* result: Final type sets. */
+    SPEW_COUNT
+};
+
+#ifdef DEBUG
+
+/* Spew with INFERFLAGS = full or base */
+void InferSpew(SpewChannel which, const char *fmt, ...);
+void InferSpewType(SpewChannel which, JSContext *cx, jstype type, const char *fmt, ...);
+
+#else
+
+inline void InferSpew(SpewChannel which, const char *fmt, ...) {}
+inline void InferSpewType(SpewChannel which, JSContext *cx, jstype type, const char *fmt, ...) {}
+
+#endif
 
 } /* namespace types */
 } /* namespace js */
