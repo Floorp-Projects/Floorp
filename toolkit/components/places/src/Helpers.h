@@ -46,6 +46,7 @@
 #include "mozilla/storage.h"
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace places {
@@ -211,23 +212,33 @@ public:
    *
    * @param aStatementCache
    *        The statementCache that should be finalized.
+   * @param aOwner
+   *        The object that owns the statement cache.  This runnable will hold
+   *        a strong reference to it so aStatementCache will not disappear from
+   *        under us.
    */
   FinalizeStatementCacheProxy(
-    mozilla::storage::StatementCache<StatementType>& aStatementCache
+    mozilla::storage::StatementCache<StatementType>& aStatementCache,
+    nsISupports* aOwner
   )
   : mStatementCache(aStatementCache)
+  , mOwner(aOwner)
+  , mCallingThread(do_GetCurrentThread())
   {
   }
 
-  NS_IMETHOD
-  Run()
+  NS_IMETHOD Run()
   {
     mStatementCache.FinalizeStatements();
+    // Release the owner back on the calling thread.
+    (void)NS_ProxyRelease(mCallingThread, mOwner);
     return NS_OK;
   }
 
 protected:
   mozilla::storage::StatementCache<StatementType>& mStatementCache;
+  nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsIThread> mCallingThread;
 };
 
 } // namespace places

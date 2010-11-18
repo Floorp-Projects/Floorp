@@ -863,10 +863,6 @@ History::~History()
                  "Not all Links were removed before we disappear!");
   }
 #endif
-
-  // Places shutdown event may not occur, but we *must* clean up before History
-  // goes away.
-  Shutdown();
 }
 
 void
@@ -984,10 +980,18 @@ History::GetDBConn()
 void
 History::Shutdown()
 {
+  NS_ASSERTION(!mShuttingDown, "Shutdown was called more than once!");
+
   mShuttingDown = true;
 
   // Clean up our statements and connection.
-  syncStatements.FinalizeStatements();
+  nsISupports* obj = static_cast<IHistory*>(this);
+  nsCOMPtr<nsIRunnable> event =
+    new FinalizeStatementCacheProxy<mozIStorageStatement>(syncStatements, obj);
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(mDBConn);
+  if (target) {
+    (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
+  }
 
   if (mReadOnlyDBConn) {
     if (mIsVisitedStatement) {
