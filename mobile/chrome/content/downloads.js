@@ -621,7 +621,7 @@ AlertDownloadProgressListener.prototype = {
   },
 
   onDownloadStateChange: function(aState, aDownload) {
-#ifdef ANDROID 
+#ifdef ANDROID
     let state = aDownload.state;
     switch (state) {
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
