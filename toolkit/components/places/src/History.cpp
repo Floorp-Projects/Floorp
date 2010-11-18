@@ -197,28 +197,11 @@ struct VisitData {
   {
   }
 
-  /**
-   * Copy constructor that is designed to not call AddRef/Release on the URI
-   * objects, so they do not change their refcount on the wrong thread.
-   */
-  VisitData(VisitData& aOther)
-  : placeId(aOther.placeId)
-  , visitId(aOther.visitId)
-  , sessionId(aOther.sessionId)
-  , spec(aOther.spec)
-  , hidden(aOther.hidden)
-  , typed(aOther.typed)
-  , transitionType(aOther.transitionType)
-  , visitTime(aOther.visitTime)
-  {
-    uri.swap(aOther.uri);
-  }
-
   PRInt64 placeId;
   PRInt64 visitId;
   PRInt64 sessionId;
   nsCString spec;
-  nsCOMPtr<nsIURI> uri;
+  nsString revHost;
   bool hidden;
   bool typed;
   PRInt32 transitionType;
@@ -250,12 +233,15 @@ public:
       return NS_OK;
     }
 
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), mPlace.spec);
+
     // Notify nsNavHistory observers of visit, but only for certain types of
     // visits to maintain consistency with nsNavHistory::GetQueryResults.
     if (!mPlace.hidden &&
         mPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED &&
         mPlace.transitionType != nsINavHistoryService::TRANSITION_FRAMED_LINK) {
-      navHistory->NotifyOnVisit(mPlace.uri, mPlace.visitId, mPlace.visitTime,
+      navHistory->NotifyOnVisit(uri, mPlace.visitId, mPlace.visitTime,
                                 mPlace.sessionId, mReferrer.visitId,
                                 mPlace.transitionType);
     }
@@ -263,18 +249,11 @@ public:
     nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
     if (obsService) {
-      nsresult rv = obsService->NotifyObservers(mPlace.uri, URI_VISIT_SAVED,
-                                                nsnull);
+      nsresult rv = obsService->NotifyObservers(uri, URI_VISIT_SAVED, nsnull);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not notify observers");
     }
 
-    History::GetService()->NotifyVisited(mPlace.uri);
-
-    // We have to be careful about when we release our URIs.  The background
-    // thread could still hold a reference to this event, so relying on the
-    // destructor to free us is a bad idea.
-    mPlace.uri = nsnull;
-    mReferrer.uri = nsnull;
+    History::GetService()->NotifyVisited(uri);
 
     return NS_OK;
   }
@@ -335,7 +314,7 @@ public:
 
     // If we had a referrer, we want to know about its last visit to put this
     // new visit into the same session.
-    if (mReferrer.uri) {
+    if (!mReferrer.spec.IsEmpty()) {
       bool recentVisit = FetchVisitInfo(mReferrer, mPlace.visitTime);
       // At this point, we know the referrer's session id, which this new visit
       // should also share.
@@ -378,12 +357,11 @@ public:
           "VALUES (:page_url, :rev_host, :hidden, :typed) "
         );
       NS_ENSURE_STATE(stmt);
-      nsAutoString revHost;
-      nsresult rv = GetReversedHostname(mPlace.uri, revHost);
+
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"),
+                                  mPlace.revHost);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"), revHost);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.uri);
+      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.spec);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), mPlace.typed);
@@ -419,7 +397,9 @@ private:
   , mPlace(aPlace)
   , mHistory(History::GetService())
   {
-    mReferrer.uri = aReferrer;
+    if (aReferrer) {
+      (void)aReferrer->GetSpec(mReferrer.spec);
+    }
   }
 
   /**
@@ -431,8 +411,7 @@ private:
    */
   bool FetchPageInfo(VisitData& _place)
   {
-    NS_PRECONDITION(_place.uri || _place.spec.Length(),
-                    "must have a non-null uri or a non-empty spec!");
+    NS_PRECONDITION(!_place.spec.IsEmpty(), "must have a non-empty spec!");
 
     nsCOMPtr<mozIStorageStatement> stmt =
       mHistory->syncStatements.GetCachedStatement(
@@ -444,7 +423,7 @@ private:
     mozStorageStatementScoper scoper(stmt);
 
     nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
-                                  _place.uri);
+                                  _place.spec);
     NS_ENSURE_SUCCESS(rv, false);
 
     PRBool hasResult;
@@ -492,8 +471,7 @@ private:
   bool FetchVisitInfo(VisitData& _place,
                       PRTime aThresholdStart = 0)
   {
-    NS_PRECONDITION(_place.uri || _place.spec.Length(),
-                    "must have a non-null uri or a non-empty spec!");
+    NS_PRECONDITION(!_place.spec.IsEmpty(), "must have a non-empty spec!");
 
     nsCOMPtr<mozIStorageStatement> stmt =
       mHistory->syncStatements.GetCachedStatement(
@@ -506,7 +484,7 @@ private:
     mozStorageStatementScoper scoper(stmt);
 
     nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
-                                  _place.uri);
+                                  _place.spec);
     NS_ENSURE_SUCCESS(rv, false);
 
     PRBool hasResult;
@@ -560,10 +538,10 @@ private:
       stmt = mHistory->syncStatements.GetCachedStatement(
         "INSERT INTO moz_historyvisits "
           "(from_visit, place_id, visit_date, visit_type, session) "
-        "VALUES (:from_visit, (SELECT id FROM moz_places WHERE url = :page_url), :visit_date, :visit_type, :session) "      
+        "VALUES (:from_visit, (SELECT id FROM moz_places WHERE url = :page_url), :visit_date, :visit_type, :session) "
       );
       NS_ENSURE_STATE(stmt);
-      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.uri);
+      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), _place.spec);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("from_visit"),
@@ -623,8 +601,8 @@ private:
           "WHERE url = :page_url"
         );
         NS_ENSURE_STATE(stmt);
-        rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.uri);
-        NS_ENSURE_SUCCESS(rv, rv);      
+        rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.spec);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
       mozStorageStatementScoper scoper(stmt);
 
@@ -652,8 +630,8 @@ private:
           "WHERE url = :page_url AND frecency <> 0"
         );
         NS_ENSURE_STATE(stmt);
-        rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.uri);
-        NS_ENSURE_SUCCESS(rv, rv);      
+        rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.spec);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       mozStorageStatementScoper scoper(stmt);
@@ -683,29 +661,20 @@ class NotifyTitleObservers : public nsRunnable
 {
 public:
   /**
-   * Notifies observers on the main thread if we need to, and releases the
-   * URI (necessary to do on the main thread).
+   * Notifies observers on the main thread.
    *
-   * @param aNotify
-   *        True if we should notify, false if not.
-   * @param aURI
-   *        Reference to the nsCOMPtr that owns the nsIURI object describing the
-   *        page we set the title on.  This will be null after this object is
-   *        constructed.
+   * @param aSpec
+   *        The spec of the URI to notify about.
    * @param aTitle
    *        The new title to notify about.
    */
-  NotifyTitleObservers(bool aNotify,
-                       nsCOMPtr<nsIURI>& aURI,
+  NotifyTitleObservers(const nsCString& aSpec,
                        const nsString& aTitle)
-  : mNotify(aNotify)
+  : mSpec(aSpec)
   , mTitle(aTitle)
   {
     NS_PRECONDITION(!NS_IsMainThread(),
                     "This should not be called on the main thread");
-
-    // Do not want to AddRef and Release on the background thread!
-    mURI.swap(aURI);
   }
 
   NS_IMETHOD Run()
@@ -713,24 +682,16 @@ public:
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
 
-    if (!mNotify) {
-      return NS_OK;
-    }
-
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
-    navHistory->NotifyTitleChange(mURI, mTitle);
-
-    // We have to be careful about when we release our URI.  The background
-    // thread could still hold a reference to this event, so relying on the
-    // destructor to free us is a bad idea.
-    mURI = nsnull;
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), mSpec);
+    navHistory->NotifyTitleChange(uri, mTitle);
 
     return NS_OK;
   }
 private:
-  const bool mNotify;
-  nsCOMPtr<nsIURI> mURI;
+  const nsCString mSpec;
   const nsString mTitle;
 };
 
@@ -757,13 +718,18 @@ public:
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
+    NS_PRECONDITION(aURI, "Must pass a non-null URI object!");
 
-    nsRefPtr<SetPageTitle> event = new SetPageTitle(aConnection, aURI, aTitle);
+    nsCString spec;
+    nsresult rv = aURI->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsRefPtr<SetPageTitle> event = new SetPageTitle(spec, aTitle);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
     NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
-    nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+    rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -787,7 +753,8 @@ public:
     nsAutoString title;
     {
       mozStorageStatementScoper scoper(stmt);
-      nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mURI);
+      nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                                    mSpec);
       NS_ENSURE_SUCCESS(rv, rv);
 
       PRBool hasResult;
@@ -796,7 +763,7 @@ public:
       if (!hasResult) {
         // We have no record of this page, so there is no need to do any further
         // work.
-        return Finish(false);
+        return NS_OK;
       }
 
       rv = stmt->GetInt64(0, &placeId);
@@ -811,7 +778,7 @@ public:
     // Also, if we have the same title, there is no reason to do another write
     // or notify our observers, so bail early.
     if (mTitle.Equals(title) || (mTitle.IsVoid() && title.IsVoid())) {
-      return Finish(false);
+      return NS_OK;
     }
 
     // Now we can update our database record.
@@ -839,47 +806,23 @@ public:
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsresult rv = Finish(true);
+    nsCOMPtr<nsIRunnable> event = new NotifyTitleObservers(mSpec, mTitle);
+    nsresult rv = NS_DispatchToMainThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
 private:
-  SetPageTitle(mozIStorageConnection* aConnection,
-               nsIURI* aURI,
+  SetPageTitle(const nsCString& aSpec,
                const nsString& aTitle)
-  : mDBConn(aConnection)
-  , mURI(aURI)
+  : mSpec(aSpec)
   , mTitle(aTitle)
   , mHistory(History::GetService())
   {
   }
 
-  /**
-   * Finishes our work by dispatching an event back to the main thread.
-   *
-   * @param aNotify
-   *        True if we should notify observers, false otherwise.
-   */
-  nsresult Finish(bool aNotify)
-  {
-    // We always dispatch this event because we have to release mURI on the
-    // main thread.
-    nsCOMPtr<nsIRunnable> event =
-      new NotifyTitleObservers(aNotify, mURI, mTitle);
-    nsresult rv = NS_DispatchToMainThread(event);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ASSERTION(!mURI,
-                 "We did not let go of our nsIURI reference after notifying!");
-
-    return NS_OK;
-  }
-
-  mozIStorageConnection* mDBConn;
-
-  nsCOMPtr<nsIURI> mURI;
+  const nsCString mSpec;
   const nsString mTitle;
 
   /**
@@ -1101,6 +1044,7 @@ History::VisitURI(nsIURI* aURI,
   VisitData place;
   rv = aURI->GetSpec(place.spec);
   NS_ENSURE_SUCCESS(rv, rv);
+  (void)GetReversedHostname(aURI, place.revHost);
 
   // Assigns a type to the edge in the visit linked list. Each type will be
   // considered differently when weighting the frecency of a location.
@@ -1147,12 +1091,11 @@ History::VisitURI(nsIURI* aURI,
     place.transitionType == nsINavHistoryService::TRANSITION_EMBED ||
     redirected;
   place.visitTime = PR_Now();
-  place.uri = aURI;
 
   // EMBED visits are session-persistent and should not go through the database.
   // They exist only to keep track of isVisited status during the session.
   if (place.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
-    navHistory->registerEmbedVisit(place.uri, place.visitTime);
+    navHistory->registerEmbedVisit(aURI, place.visitTime);
     // Finally, enqueue an event to notify observers.
     VisitData noReferrer;
     nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place, noReferrer);
