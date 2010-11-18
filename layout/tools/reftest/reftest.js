@@ -534,14 +534,15 @@ function ReadManifest(aURL)
         }
 
         var expected_status = EXPECTED_PASS;
+        var allow_silent_fail = false;
         var minAsserts = 0;
         var maxAsserts = 0;
         var slow = false;
-        while (items[0].match(/^(fails|random|skip|asserts|slow)/)) {
+        while (items[0].match(/^(fails|random|skip|asserts|slow|silentfail)/)) {
             var item = items.shift();
             var stat;
             var cond;
-            var m = item.match(/^(fails|random|skip)-if(\(.*\))$/);
+            var m = item.match(/^(fails|random|skip|silentfail)-if(\(.*\))$/);
             if (m) {
                 stat = m[1];
                 // Note: m[2] contains the parentheses, and we want them.
@@ -569,6 +570,9 @@ function ReadManifest(aURL)
                 cond = false;
                 if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox))
                     slow = true;
+            } else if (item == "silentfail") {
+                cond = false;
+                allow_silent_fail = true;
             } else {
                 throw "Error 1 in manifest file " + aURL.spec + " line " + lineNo;
             }
@@ -580,6 +584,8 @@ function ReadManifest(aURL)
                     expected_status = EXPECTED_RANDOM;
                 } else if (stat == "skip") {
                     expected_status = EXPECTED_DEATH;
+                } else if (stat == "silentfail") {
+                    allow_silent_fail = true;
                 }
             }
         }
@@ -637,6 +643,7 @@ function ReadManifest(aURL)
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { type: TYPE_LOAD,
                           expected: expected_status,
+                          allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
@@ -657,6 +664,7 @@ function ReadManifest(aURL)
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { type: TYPE_SCRIPT,
                           expected: expected_status,
+                          allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
@@ -680,6 +688,7 @@ function ReadManifest(aURL)
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { type: items[0],
                           expected: expected_status,
+                          allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
@@ -1223,8 +1232,12 @@ function DocumentLoaded()
         }
         else if (testcases.length == 0) {
             // This failure may be due to a JavaScript Engine bug causing
-            // early termination of the test.
-            missing_msg = "No test results reported. (SCRIPT)\n";
+            // early termination of the test. If we do not allow silent
+            // failure, report an error.
+            if (!gURLs[0].allowSilentFail)
+                missing_msg = "No test results reported. (SCRIPT)\n";
+            else
+                dump("REFTEST INFO | An expected silent failure occurred \n");
         }
 
         if (missing_msg) {
