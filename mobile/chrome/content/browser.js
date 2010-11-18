@@ -175,6 +175,7 @@ var Browser = {
                      .getInterface(Ci.nsIDOMWindowUtils),
   controlsScrollbox: null,
   controlsScrollboxScroller: null,
+  controlsPosition: null,
   pageScrollbox: null,
   pageScrollboxScroller: null,
   styles: {},
@@ -247,6 +248,15 @@ var Browser = {
     // Init the cache used in the resize handler
     window.cachedWidth = window.innerWidth;
 
+    // Saved the scrolls values before the resizing of the window, to restore
+    // the scrollbox position once the resize has finished
+    window.addEventListener("MozBeforeResize", function(aEvent) {
+      let { x: x1, y: y1 } = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller);
+      let { x: x2, y: y2 } = Browser.getScrollboxPosition(Browser.pageScrollboxScroller);
+
+      Browser.controlsPosition = { x: x1, y: y2, hideSidebars: Browser.controlsPosition ? Browser.controlsPosition.hideSidebars : true };
+    }, false);
+
     function resizeHandler(e) {
       if (e.target != window)
         return;
@@ -268,8 +278,15 @@ var Browser = {
       // Tell the UI to resize the browser controls
       BrowserUI.sizeControls(w, h);
 
-      // XXX this should really only happen on browser startup, not every resize
-      Browser.hideSidebars();
+      // Restore the previous scroll position
+      if (Browser.controlsPosition.hideSidebars) {
+        Browser.controlsPosition.hideSidebars = false;
+        Browser.hideSidebars();
+      } else {
+        Browser.controlsScrollboxScroller.scrollTo(Browser.controlsPosition.x, 0);
+        Browser.pageScrollboxScroller.scrollTo(0, Browser.controlsPosition.y);
+        Browser.tryFloatToolbar(0, 0);
+      }
 
       let oldWidth = window.cachedWidth || w;
       window.cachedWidth = w;
@@ -284,10 +301,6 @@ var Browser = {
         if (tab.browser.contentWindowWidth == oldContentWindowWidth)
           tab.restoreViewportPosition(oldWidth, w);
       }
-
-      // XXX page scrollbox jumps to a strange value on resize. Scrolling it will
-      // bound it to a sane place, but not where we were when the resize began :(
-      Browser.hideTitlebar();
 
       // We want to keep the current focused element into view if possible
       let currentElement = document.activeElement;
