@@ -3,9 +3,7 @@
 <!ENTITY sync.connect               "Connect">
 <!ENTITY sync.connected             "Connected">
 <!ENTITY sync.details               "Details">
-<!ENTITY sync.synchronize.label     "Synchronize">
-<!ENTITY sync.synchronize.yes       "On">
-<!ENTITY sync.synchronize.no        "Off">
+<!ENTITY sync.synchronize           "Enable Sync">
 <!ENTITY sync.deviceName            "This device">
 <!ENTITY sync.disconnect            "Disconnect">
 <!ENTITY sync.syncNow               "Sync Now">

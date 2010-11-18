@@ -448,7 +448,7 @@
                   <setting id="sync-connected" title="&sync.connected;" type="control" collapsed="true">
                     <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="true" checked="false" oncommand="WeaveGlue.showDetails();" />
                   </setting>
-                  <setting id="sync-autosync" type="bool" title="&sync.synchronize.label;" onlabel="&sync.synchronize.yes;" offlabel="&sync.synchronize.no;" onchange="WeaveGlue.changeSync();" collapsed="true"/>
+                  <setting id="sync-autosync" type="bool" title="&sync.synchronize;" onchange="WeaveGlue.changeSync();" collapsed="true"/>
                   <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
                   <setting id="sync-disconnect" type="control" collapsed="true">
                     <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
