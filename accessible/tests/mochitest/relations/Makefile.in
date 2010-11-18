@@ -50,6 +50,7 @@ _TEST_FILES =\
 		test_general.xul \
 		test_tabbrowser.xul \
 		test_tree.xul \
+		test_update.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
