@@ -218,9 +218,9 @@ var Browser = {
       },
 
       getPosition: function(aScrollX, aScrollY) {
-        let { x: x, y: y } = getBrowser().getPosition();
-        aScrollX.value = x;
-        aScrollY.value = y;
+        let scroll = getBrowser().getPosition();
+        aScrollX.value = scroll.x;
+        aScrollY.value = scroll.y;
       }
     };
 
@@ -772,8 +772,8 @@ var Browser = {
     tab.lastSelected = Date.now();
 
     if (tab.pageScrollOffset) {
-      let { x: pageScrollX, y: pageScrollY } = tab.pageScrollOffset;
-      Browser.pageScrollboxScroller.scrollTo(pageScrollX, pageScrollY);
+      let pageScroll = tab.pageScrollOffset;
+      Browser.pageScrollboxScroller.scrollTo(pageScroll.x, pageScroll.y);
     }
   },
 
@@ -1166,8 +1166,8 @@ Browser.MainDragger.prototype = {
     if (doffset.x > 0 && rect.left > 0)
       x = Math.min(doffset.x, rect.left);
 
-    let height = document.getElementById("content-viewport").getBoundingClientRect().height;
-    height -= document.getElementById("content-navigator").getBoundingClientRect().height;
+    let height = Elements.contentViewport.getBoundingClientRect().height;
+    height -= Elements.contentNavigator.getBoundingClientRect().height;
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
     if (doffset.y < 0 && rect.bottom < height)
       y = Math.max(doffset.y, rect.bottom - height);
@@ -1180,10 +1180,10 @@ Browser.MainDragger.prototype = {
 
   /** Pan scroller by the given amount. Updates doffset with leftovers. */
   _panScroller: function _panScroller(scroller, doffset) {
-    let { x: x0, y: y0 } = Browser.getScrollboxPosition(scroller);
+    let scroll = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(doffset.x, doffset.y);
-    let { x: x1, y: y1 } = Browser.getScrollboxPosition(scroller);
-    doffset.subtract(x1 - x0, y1 - y0);
+    let scroll1 = Browser.getScrollboxPosition(scroller);
+    doffset.subtract(scroll1.x - scroll.x, scroll1.y - scroll.y);
   }
 };
 
