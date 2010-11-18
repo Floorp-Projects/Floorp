@@ -130,6 +130,13 @@ using namespace mozilla::places;
 // Out of this cache, SQLite will use at most the size of the database file.
 #define DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE 6
 
+// Integer value used to calculate the number of pages in WAL before a
+// automatic checkpoint.  It represents a percentage to apply to the cache size.
+#define DATABASE_CACHE_TO_CHECKPOINT_PERCENTAGE 10
+// Maximum number of pages before a checkpoint.  This is the value suggested
+// by SQLite docs (http://www.sqlite.org/c3ref/wal_autocheckpoint.html).
+#define DATABASE_MAX_CHECKPOINT_PAGES 1000
+
 // This is the schema version, update it at any schema change and add a
 // corresponding migrateVxx method below.
 #define DATABASE_SCHEMA_VERSION 11
@@ -787,6 +794,19 @@ nsNavHistory::InitDB()
     // system.  The default mode (DELETE) will be fine in such a case.
     (void)SetJournalMode(JOURNAL_TRUNCATE);
   }
+
+  // Set the WAL journal limit.  We adapt it to the device we are running on,
+  // since mobile does not have space for the default size.
+  // Since cache_size is calculated based on physical memory (a somewhat good
+  // indicator of the device capabilities), use a percentage of it, with a cap.
+  PRInt32 checkpointPages = NS_MIN(
+    static_cast<PRInt32>(cachePages * DATABASE_CACHE_TO_CHECKPOINT_PERCENTAGE / 100),
+    DATABASE_MAX_CHECKPOINT_PAGES
+  );
+  nsCAutoString checkpointPragma("PRAGMA wal_autocheckpoint = ");
+  checkpointPragma.AppendInt(checkpointPages);
+  rv = mDBConn->ExecuteSimpleSQL(checkpointPragma);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We are going to initialize tables, so everything from now on should be in
   // a transaction for performances.
