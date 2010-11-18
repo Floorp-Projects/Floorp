@@ -371,7 +371,8 @@ pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
 pref("browser.ui.pinch.maxShrink", 200);     // max pinch distance shrinkage
 pref("browser.ui.pinch.scalingFactor", 500); // scaling factor for above pinch limits
 
-// Touch radius (area around the touch location to look for target elements):
+// Touch radius (area around the touch location to look for target elements),
+// in 1/240-inch pixels:
 pref("browser.ui.touch.left", 8);
 pref("browser.ui.touch.right", 8);
 pref("browser.ui.touch.top", 12);
@@ -486,9 +487,8 @@ pref("services.sync.client.type", "mobile");
 pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password");
 pref("services.sync.autoconnectDelay", 5);
 
-// Drag thresholds
-pref("ui.dragThresholdX", 25);
-pref("ui.dragThresholdY", 25);
+// threshold where a tap becomes a drag, in 1/240" reference pixels
+pref("ui.dragThreshold", 24);
 
 // Waiting on bug 598864
 pref("layers.accelerate-all", false);

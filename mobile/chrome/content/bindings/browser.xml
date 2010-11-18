@@ -443,17 +443,19 @@
       <method name="_updateCacheViewport">
         <body>
           <![CDATA[
-            let cacheX = this._pendingThresholdX / this._recacheRatio;
-            let cacheY = this._pendingThresholdY / this._recacheRatio;
+            let scale = this._scale;
             let bcr = this.getBoundingClientRect();
+
+            let cacheX = Math.max(this._pendingThresholdX / this._recacheRatio, bcr.width / 2);
+            let cacheY = Math.max(this._pendingThresholdY / this._recacheRatio, bcr.height / 2);
 
             let frameLoader = this._frameLoader;
             this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              x: (frameLoader.viewportScrollX + bcr.width  / 2 - cacheX) / this._scale,
-              y: (frameLoader.viewportScrollY + bcr.height / 2 - cacheY) / this._scale,
-              w: (cacheX * 2) / this._scale,
-              h: (cacheY * 2) / this._scale,
-              scale: this._scale
+              x: (frameLoader.viewportScrollX - cacheX + bcr.width  / 2) / scale,
+              y: (frameLoader.viewportScrollY - cacheY + bcr.height / 2) / scale,
+              w: cacheX * 2 / scale,
+              h: cacheY * 2 / scale,
+              scale: scale
             });
 
             this._pendingPixelsX = 0;
