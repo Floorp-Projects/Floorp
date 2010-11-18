@@ -355,7 +355,7 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
-    cross_compiling=yes
+    CROSS_COMPILE=1
 
     _SAVE_CC="$CC"
     _SAVE_CFLAGS="$CFLAGS"
@@ -914,12 +914,6 @@ if test -n "$_WIN32_MSVC"; then
 fi
 
 fi # COMPILE_ENVIRONMENT
-
-if test "$cross_compiling"  = "yes"; then
-    CROSS_COMPILE=1
-else
-    CROSS_COMPILE=
-fi
 
 # Check to see if we are running in a broken QEMU scratchbox.
 # We know that anything below 1.0.16 is broken.
