@@ -207,6 +207,13 @@ class MochitestOptions(optparse.OptionParser):
                     help = "copy specified files/dirs to testing profile")
     defaults["extraProfileFiles"] = []
 
+    self.add_option("--install-extension",
+                    action = "append", dest = "extensionsToInstall",
+                    help = "install the specified extension in the testing profile."
+                           "The extension file's name should be <id>.xpi where <id> is"
+                           "the extension's id as indicated in its install.rdf.")
+    defaults["extensionsToInstall"] = []
+
     self.add_option("--profile-path", action = "store",
                     type = "string", dest = "profilePath",
                     help = "Directory where the profile will be stored."
@@ -493,6 +500,7 @@ class Mochitest(object):
         not options.a11y):
       self.installSpecialPowersExtension(options)
 
+    self.installExtensionsToProfile(options)
     return manifest
 
   def buildBrowserEnv(self, options):
@@ -759,6 +767,13 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
         shutil.copytree(abspath, dest)
       else:
         shutil.copy(abspath, dest)
+
+  def installExtensionsToProfile(self, options):
+    "Install the specified extensions on the command line to the testing profile."
+    for f in options.extensionsToInstall:
+      abspath = self.getFullPath(f)
+      extensionID = f[:f.rfind(".")]
+      self.automation.installExtension(abspath, options.profilePath, extensionID)
 
 def main():
   automation = Automation()
