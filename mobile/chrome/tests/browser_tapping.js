@@ -131,15 +131,14 @@ gTests.push({
   },
 
   doubleTapTest: function() {
-    let browser = gCurrentTab.browser;
-    let width = browser.getBoundingClientRect().width;
-    let height = browser.getBoundingClientRect().height;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
 
     // Should fire "TapDouble"
     info("Test good double tap");
     clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 2, height / 2, {});
-    EventUtils.synthesizeMouse(browser, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
     ok(checkEvents(["TapDouble"]), "Fired a good double tap");
     clearEvents();
 

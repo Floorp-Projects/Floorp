@@ -45,14 +45,14 @@
 // Maximum delay in ms between the two taps of a double-tap
 const kDoubleClickInterval = 400;
 
-// Maximum distance in screen pixels between the taps of a double-tap
-const kDoubleClickRadius = 100;
+// Maximum distance in inches between the taps of a double-tap
+const kDoubleClickRadius = 0.4;
 
 // Amount of time to wait before tap becomes long tap
 const kLongTapWait = 500;
 
-// maximum drag distance in pixels while axis locking can still be reverted
-const kAxisLockRevertThreshold = 200;
+// maximum drag distance in inches while axis locking can still be reverted
+const kAxisLockRevertThreshold = 0.8;
 
 // Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
 const kStateActive = 0x00000001;
@@ -101,6 +101,8 @@ function MouseModule() {
 
   this._singleClickTimeout = new Util.Timeout(this._doSingleClick.bind(this));
   this._longClickTimeout = new Util.Timeout(this._doLongClick.bind(this));
+
+  this._doubleClickRadius = Util.getWindowUtils(window).displayDPI * kDoubleClickRadius;
 
   window.addEventListener("mousedown", this, true);
   window.addEventListener("mouseup", this, true);
@@ -431,7 +433,8 @@ MouseModule.prototype = {
     let dx = mouseUp1.clientX - mouseUp2.clientX;
     let dy = mouseUp1.clientY - mouseUp2.clientY;
 
-    if (dx*dx + dy*dy < kDoubleClickRadius*kDoubleClickRadius) {
+    let radius = this._doubleClickRadius;
+    if (dx*dx + dy*dy < radius*radius) {
       this._dispatchTap("TapDouble", mouseUp1);
     } else {
       this._dispatchTap("TapSingle", mouseUp1);
@@ -503,8 +506,10 @@ MouseModule.prototype = {
 var ScrollUtils = {
   // threshold in pixels for sensing a tap as opposed to a pan
   get tapRadius() {
+    let dpi = Util.getWindowUtils(window).displayDPI;
+
     delete this.tapRadius;
-    return this.tapRadius = Services.prefs.getIntPref("ui.dragThresholdX");
+    return this.tapRadius = Services.prefs.getIntPref("ui.dragThreshold") / 240 * dpi;
   },
 
   /**
@@ -544,15 +549,10 @@ var ScrollUtils = {
     return [scrollbox, qinterface, (scrollbox ? (scrollbox.customDragger || this._defaultDragger) : null)];
   },
 
-  /**
-   * Determine is the distance between two points can be considered as a pan
-   * action by using the same drag threshold as the one use in the platform 
-   * ui.dragThresholdX
-   */
+  /** Determine if the distance moved can be considered a pan */
   isPan: function isPan(aPoint, aPoint2) {
-    if (Math.abs(aPoint.x - aPoint2.x) > this.tapRadius ||
-        Math.abs(aPoint.y - aPoint2.y) > this.tapRadius)
-    return true;
+    return (Math.abs(aPoint.x - aPoint2.x) > this.tapRadius ||
+            Math.abs(aPoint.y - aPoint2.y) > this.tapRadius);
   },
 
   /**
@@ -602,6 +602,7 @@ var ScrollUtils = {
  */
 function DragData() {
   this._domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+  this._lockRevertThreshold = Util.getWindowUtils(window).displayDPI * kAxisLockRevertThreshold;
   this.reset();
 };
 
@@ -648,7 +649,7 @@ DragData.prototype = {
       let absX = Math.abs(this._originX - sX);
       let absY = Math.abs(this._originY - sY);
 
-      if (absX > kAxisLockRevertThreshold || absY > kAxisLockRevertThreshold)
+      if (absX > this._lockRevertThreshold || absY > this._lockRevertThreshold)
         this.stayLocked = true;
 
       // After the first lock, see if locking decision should be reverted.

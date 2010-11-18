@@ -74,8 +74,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
 
-const endl = '\n';
-
 function onDebugKeyPress(ev) {
   if (!ev.ctrlKey)
     return;
