@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
+#include "nsTObserverArray.h"
 
 // A native thread
 class nsThread : public nsIThreadInternal2, public nsISupportsPriority
@@ -133,6 +134,9 @@ private:
   PRLock *mLock;
 
   nsCOMPtr<nsIThreadObserver> mObserver;
+
+  // Only accessed on the target thread.
+  nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;
 
   nsChainedEventQueue *mEvents;   // never null
   nsChainedEventQueue  mEventsRoot;
