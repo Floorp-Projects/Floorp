@@ -461,6 +461,10 @@ GLContext::IsExtensionSupported(const char *extension)
 PRBool
 GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
 {
+    // fix bug 612572 - we were crashing as we were calling this function with extensions==null
+    if (extensions == nsnull || extension == nsnull)
+        return PR_FALSE;
+
     const GLubyte *start;
     GLubyte *where, *terminator;
 
