@@ -11514,7 +11514,7 @@ TraceRecorder::record_JSOP_DELNAME()
     return ARECORD_STOP;
 }
 
-JSBool JS_FASTCALL
+static JSBool JS_FASTCALL
 DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
@@ -11536,7 +11536,7 @@ DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 JS_DEFINE_CALLINFO_4(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, BOOL,
                      0, ACCSET_STORE_ANY)
 
-JSBool JS_FASTCALL
+static JSBool JS_FASTCALL
 DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
