@@ -55,6 +55,8 @@
 
 namespace js {
 
+namespace mjit { struct JITScript; }
+
 struct VMFrame
 {
     union Arguments {
@@ -137,6 +139,7 @@ struct VMFrame
 
     JSStackFrame *&fp() { return regs.fp; }
     JSScript *script() { return fp()->script(); }
+    mjit::JITScript *jit() { return script()->getJIT(fp()->isConstructing()); }
 };
 
 #ifdef JS_CPU_ARM
@@ -296,6 +299,13 @@ struct JITScript {
 
     js::mjit::CallSite *callSites;
     uint32          nCallSites;
+
+    /*
+     * Number of on-stack recompilations of this JIT script. Reset to zero if the
+     * JIT script is destroyed if marked for recompilation with no active frame on the stack.
+     */
+    uint32          recompilations;
+
 #ifdef JS_MONOIC
     ic::MICInfo     *mics;      /* MICs in this script. */
     uint32          nMICs;      /* number of MonoICs */
@@ -305,6 +315,8 @@ struct JITScript {
     uint32          nEqualityICs;
     ic::TraceICInfo *traceICs;
     uint32          nTraceICs;
+
+    JSCList          callers;  /* List of inline caches jumping to the fastEntry. */
 
     // Additional ExecutablePools that IC stubs were generated into.
     typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
@@ -380,15 +392,21 @@ struct CallSite
 {
     uint32 codeOffset;
     uint32 pcOffset;
-    uint32 id;
+    size_t id;
 
-    // Normally, callsite ID is the __LINE__ in the program that added the
-    // callsite. Since traps can be removed, we make sure they carry over
+    // The identifier is either the address of the stub function being called,
+    // or one of the below magic identifiers. Each of these can appear at most
+    // once per opcode.
+
+    // Identifier for traps. Since traps can be removed, we make sure they carry over
     // from each compilation, and identify them with a single, canonical
     // ID. Hopefully a SpiderMonkey file won't have two billion source lines.
-    static const uint32 MAGIC_TRAP_ID = 0xFEDCBABC;
+    static const size_t MAGIC_TRAP_ID = 0;
 
-    void initialize(uint32 codeOffset, uint32 pcOffset, uint32 id) {
+    // Identifier for the return site from a scripted call.
+    static const size_t NCODE_RETURN_ID = 1;
+
+    void initialize(uint32 codeOffset, uint32 pcOffset, size_t id) {
         this->codeOffset = codeOffset;
         this->pcOffset = pcOffset;
         this->id = id;

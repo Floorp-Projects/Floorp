@@ -5564,6 +5564,8 @@ BEGIN_CASE(JSOP_DEFFUN)
          : parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs);
     if (!ok)
         goto error;
+
+    script->typeMonitorAssign(cx, regs.pc, parent, id, rval);
 }
 END_CASE(JSOP_DEFFUN)
 
@@ -5596,6 +5598,8 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
         : !parent.defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs)) {
         goto error;
     }
+
+    script->typeMonitorAssign(cx, regs.pc, &parent, id, rval);
 }
 END_CASE(JSOP_DEFFUN_FC)
 

@@ -438,6 +438,9 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
         constraint->arrayNotPacked(this, notDense);
         constraint = constraint->next;
     }
+
+    if (compartment->types.hasPendingRecompiles())
+        compartment->types.processPendingRecompiles(this);
 #endif
 }
 
@@ -519,7 +522,7 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
     }
 
     /* Watch for fewer actuals than formals to the call. */
-    for (; arg < script->argCount; arg++) {
+    for (; arg < script->argCount(); arg++) {
         jsid id = script->getArgumentId(arg);
         JS_ASSERT(!JSID_IS_VOID(id));
 
@@ -543,7 +546,7 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
     if (force) {
         js::types::jstype type;
         if (constructing)
-            type = (js::types::jstype) analysis->function->getNewObject(this);
+            type = (js::types::jstype) analysis->function()->getNewObject(this);
         else
             type = js::types::GetValueType(this, thisv);
         if (!analysis->thisTypes.hasType(type)) {
@@ -561,6 +564,9 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
         uint64_t endTime = compartment->types.currentTime();
         compartment->types.analysisTime += (endTime - startTime);
         compartment->types.interpreting = true;
+
+        if (compartment->types.hasPendingRecompiles())
+            compartment->types.processPendingRecompiles(this);
     }
 #endif
 }
@@ -789,22 +795,22 @@ Script::getLocalId(unsigned index, types::TypeStack *stack)
         return JSID_VOID;
     }
 
-    if (!localNames || !localNames[argCount + index])
+    if (!localNames || !localNames[argCount() + index])
         return JSID_VOID;
 
-    return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[argCount + index]));
+    return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[argCount() + index]));
 }
 
 inline jsid
 Script::getArgumentId(unsigned index)
 {
-    JS_ASSERT(function);
+    JS_ASSERT(fun);
 
     /*
      * If the index is out of bounds of the number of declared arguments, it can
      * only be accessed through the 'arguments' array and will be handled separately.
      */
-    if (index >= argCount || !localNames[index])
+    if (index >= argCount() || !localNames[index])
         return JSID_VOID;
 
     return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[index]));
@@ -824,6 +830,29 @@ Script::getStackTypes(unsigned index, types::TypeStack *stack)
     /* This should not be used for accessing a let variable's stack slot. */
     JS_ASSERT(stack && !JSID_IS_VOID(stack->letVariable));
     return &stack->types;
+}
+
+inline JSValueType
+Script::knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg)
+{
+    jsid id = getArgumentId(arg);
+    if (!JSID_IS_VOID(id) && !argEscapes(arg)) {
+        types::TypeSet *types = localTypes.getVariable(cx, id);
+        return types->getKnownTypeTag(cx, script);
+    }
+    return JSVAL_TYPE_UNKNOWN;
+}
+
+inline JSValueType
+Script::knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local)
+{
+    jsid id = getLocalId(local, NULL);
+    if (!localHasUseBeforeDef(local) && !JSID_IS_VOID(id)) {
+        JS_ASSERT(!localEscapes(local));
+        types::TypeSet *types = localTypes.getVariable(cx, id);
+        return types->getKnownTypeTag(cx, script);
+    }
+    return JSVAL_TYPE_UNKNOWN;
 }
 
 } /* namespace analyze */

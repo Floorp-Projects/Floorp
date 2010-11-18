@@ -548,8 +548,8 @@ Script::analyze(JSContext *cx)
           case JSOP_LOOKUPSWITCHX:
             hadFailure = true;
 #ifdef JS_TYPE_INFERENCE
-            if (function)
-                function->returnTypes.addType(cx, types::TYPE_UNKNOWN);
+            if (fun)
+                function()->returnTypes.addType(cx, types::TYPE_UNKNOWN);
 #endif
             return;
 
@@ -776,6 +776,8 @@ Script::analyze(JSContext *cx)
         analyze::Bytecode *code = maybeCode(offset);
 
         jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
         offset += GetBytecodeLength(pc);
 
         if (code && code->analyzed)

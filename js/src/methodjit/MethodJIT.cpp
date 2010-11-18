@@ -39,6 +39,7 @@
 #include "MethodJIT.h"
 #include "Logging.h"
 #include "assembler/jit/ExecutableAllocator.h"
+#include "assembler/assembler/RepatchBuffer.h"
 #include "jstracer.h"
 #include "BaseAssembler.h"
 #include "Compiler.h"
@@ -829,8 +830,24 @@ mjit::JITScript::~JITScript()
         (*pExecPool)->release();
     }
     
-    for (uint32 i = 0; i < nCallICs; i++)
+    for (uint32 i = 0; i < nCallICs; i++) {
+        if (callICs[i].fastGuardedObject)
+            callICs[i].purgeGuardedObject();
         callICs[i].releasePools();
+    }
+
+    // Fixup any ICs still referring to this JIT.
+    while (!JS_CLIST_IS_EMPTY(&callers)) {
+        JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
+        ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
+
+        uint8 *start = (uint8 *)ic->funGuard.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+
+        repatch.repatch(ic->funGuard, NULL);
+        repatch.relink(ic->funJump, ic->slowPathStart);
+        ic->purgeGuardedObject();
+    }
 #endif
 }
 

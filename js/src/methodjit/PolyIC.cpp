@@ -1735,6 +1735,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     JSFrameRegs &regs = f.regs;
 
     JSScript *script = f.fp()->script();
+    uint32 recompilations = f.jit()->recompilations;
 
     Value lval;
     lval = regs.sp[-1];
@@ -1815,6 +1816,20 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
         }
     }
 
+#if JS_HAS_NO_SUCH_METHOD
+    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
+        regs.sp[-2].setString(ATOM_TO_STRING(pic->atom));
+        if (!js_OnUnknownMethod(cx, regs.sp - 2))
+            THROW();
+    }
+#endif
+
+    if (regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+
+    if (f.jit()->recompilations != recompilations)
+        return;
+
     GetPropCompiler cc(f, script, &objv.toObject(), *pic, pic->atom, DisabledCallPropIC);
     if (lval.isObject()) {
         if (pic->shouldUpdate(cx)) {
@@ -1829,16 +1844,6 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     } else {
         cc.disable("non-string primitive");
     }
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
-        regs.sp[-2].setString(ATOM_TO_STRING(pic->atom));
-        if (!js_OnUnknownMethod(cx, regs.sp - 2))
-            THROW();
-    }
-#endif
-    if (regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
 }
 
 static void JS_FASTCALL

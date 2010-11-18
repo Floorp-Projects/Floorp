@@ -163,12 +163,6 @@ struct Bytecode
      */
     inline types::TypeObject* getInitObject(JSContext *cx, bool isArray);
 
-    /*
-     * Get the type tag which values in this set must have, or JSVAL_TYPE_UNKNOWN
-     * if the type tag is not known.
-     */
-    inline JSValueType getKnownTypeTag();
-
     void print(JSContext *cx, FILE *out);
 
 #endif /* JS_TYPE_INFERENCE */
@@ -226,7 +220,7 @@ class Script
     /* Whether the script has been analyzed. */
     bool hasAnalyzed() const { return !!codeArray; }
 
-    /* Script being analyzed. */
+    /* Script/function being analyzed. */
     JSScript *getScript() const { return script; }
 
     /* Accessors for bytecode information. */
@@ -273,6 +267,26 @@ class Script
         return localDefined(local, pc - script->code);
     }
 
+    bool argEscapes(unsigned arg)
+    {
+        for (unsigned i = 0; i < script->nClosedArgs; i++) {
+            if (arg == script->getClosedArg(i))
+                return true;
+        }
+        return false;
+    }
+
+    bool localEscapes(unsigned local)
+    {
+        if (local >= localCount())
+            return true;
+        for (unsigned i = 0; i < script->nClosedVars; i++) {
+            if (local == script->getClosedVar(i))
+                return true;
+        }
+        return false;
+    }
+
   private:
     void setOOM(JSContext *cx) {
         if (!outOfMemory)
@@ -295,11 +309,7 @@ class Script
     unsigned id;
 
     /* Function this script is the body for, if there is one. */
-    types::TypeFunction *function;
-
-    /* Argument count and name from the function. */
-    unsigned argCount;
-    jsid thisName;
+    JSFunction *fun;
 
     /* List of objects associated with this script. */
     types::TypeObject *objects;
@@ -326,7 +336,9 @@ class Script
 
     void setFunction(JSContext *cx, JSFunction *fun);
 
-    inline bool isEval() { return parent && !function; }
+    bool isEval() { return parent && !fun; }
+    unsigned argCount() { return fun ? fun->nargs : 0; }
+    types::TypeFunction *function() { return fun->getTypeObject()->asFunction(); }
 
     /*
      * Get the non-eval script which this one is nested in, returning this script
@@ -365,6 +377,10 @@ class Script
 
     /* Get the type set to use for a stack slot at a fixed stack depth. */
     inline types::TypeSet *getStackTypes(unsigned index, types::TypeStack *stack);
+
+    /* Get any known type tag for an argument or local variable. */
+    inline JSValueType knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg);
+    inline JSValueType knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local);
 
 #endif /* JS_TYPE_INFERENCE */
 

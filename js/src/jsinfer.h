@@ -266,13 +266,13 @@ struct TypeSet
      * set change in the future so that another type tag is possible, mark script
      * for recompilation.
      */
-    JSValueType getKnownTypeTag(JSContext *cx, JSScript *script, bool isConstructing);
+    JSValueType getKnownTypeTag(JSContext *cx, JSScript *script);
 
     /* Get information about the kinds of objects in this type set. */
-    ObjectKind getKnownObjectKind(JSContext *cx, JSScript *script, bool isConstructing);
+    ObjectKind getKnownObjectKind(JSContext *cx, JSScript *script);
 
     /* Get whether this type set contains any scripted getter or setter. */
-    bool hasGetterSetter(JSContext *cx, JSScript *script, bool isConstructing);
+    bool hasGetterSetter(JSContext *cx, JSScript *script);
 };
 
 /*
@@ -307,8 +307,14 @@ struct TypeStack
     /* Whether the values at this node are bound by a 'with'. */
     bool boundWith;
 
-    /* Whether this node is the iterator for a 'for each' loop. */
+    /* Whether this node is the iterator for a 'for each' or 'for in' loop. */
     bool isForEach;
+
+    /*
+     * Whether to ignore the type tag of this stack entry downstream; it may not
+     * represent the actual values in this slot.
+     */
+    bool ignoreTypeTag;
 
     /* The name of any 'let' variable stored by this node. */
     jsid letVariable;
@@ -578,8 +584,9 @@ enum FixedTypeObjectName
     TYPE_OBJECT_FUNCTION,
     TYPE_OBJECT_ARRAY,
     TYPE_OBJECT_FUNCTION_PROTOTYPE,
+    TYPE_OBJECT_EMPTY_FUNCTION,  /* Propagated from Function.prototype */
 
-    TYPE_OBJECT_FUNCTION_LAST = TYPE_OBJECT_FUNCTION_PROTOTYPE,
+    TYPE_OBJECT_FUNCTION_LAST = TYPE_OBJECT_EMPTY_FUNCTION,
 
     /* Objects which no propagation is performed for. */
     TYPE_OBJECT_OBJECT_PROTOTYPE,
@@ -712,6 +719,9 @@ struct TypeCompartment
     typedef HashMap<jsid, TypeObject*, IdHasher, SystemAllocPolicy> ObjectNameTable;
     ObjectNameTable *objectNameTable;
 
+    /* Pending recompilations to perform before execution of JIT code can resume. */
+    Vector<JSScript*> *pendingRecompiles;
+
     /* Constraint solving worklist structures. */
 
     /* A type that needs to be registered with a constraint. */
@@ -799,6 +809,10 @@ struct TypeCompartment
                         const char *format, ...);
     void addDynamicPush(JSContext *cx, analyze::Bytecode &code, unsigned index, jstype type);
     void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
+
+    inline bool hasPendingRecompiles() { return pendingRecompiles != NULL; }
+    void processPendingRecompiles(JSContext *cx);
+    void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, analyze::Bytecode *code);

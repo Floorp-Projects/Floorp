@@ -157,9 +157,6 @@ static bool enableProfiling = false;
 
 static bool printTiming = false;
 
-/* :FIXME: remove bug 608746 */
-static bool disablePrinting = false;
-
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t);
 
@@ -452,46 +449,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
         JS_SetOptions(cx, oldopts);
         if (script) {
             if (!compileOnly) {
-#ifdef JS_TYPE_INFERENCE
-                if (enableTraceJit || enableMethodJit) {
-                    /*
-                     * Disable the jits and run the script under the interpreter
-                     * first to pick up any dynamic types.  This only works if the
-                     * global script is idempotent.  This is code is temporary
-                     * until recompilation works :FIXME: bug 608746
-                     */
-
-                    if (enableTraceJit)
-                        JS_ToggleOptions(cx, JSOPTION_JIT);
-                    if (enableMethodJit)
-                        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
-
-                    disablePrinting = true;
-
-                    (void)JS_ExecuteScript(cx, obj, script, NULL);
-                    t1 = PRMJ_Now();
-
-                    if (enableTraceJit)
-                        JS_ToggleOptions(cx, JSOPTION_JIT);
-                    if (enableMethodJit)
-                        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
-
-                    disablePrinting = false;
-
-                    if (!last) {
-                        /*
-                         * If multiple files were specified at the command line, only
-                         * run the JIT on the last file.  This is a hack to get benchmark
-                         * and testing harnesses to work.
-                         */
-                        JS_DestroyScript(cx, script);
-                        if (file != stdin)
-                            fclose(file);
-                        return;
-                    }
-                }
-#endif
-
                 (void)JS_ExecuteScript(cx, obj, script, NULL);
                 int64 t2 = PRMJ_Now() - t1;
                 if (printTiming)
@@ -1224,11 +1181,6 @@ Now(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
 {
-    if (disablePrinting) {
-        JS_SET_RVAL(cx, vp, JSVAL_VOID);
-        return JS_TRUE;
-    }
-
     jsval *argv;
     uintN i;
     JSString *str;
