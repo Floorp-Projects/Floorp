@@ -1644,7 +1644,7 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
  * Set the quota on the number of bytes that stack-like data structures can
  * use when the runtime compiles and executes scripts. These structures
  * consume heap space, so JS_SetThreadStackLimit does not bound their size.
- * The default quota is 32MB which is quite generous.
+ * The default quota is 128MB which is very generous.
  *
  * The function must be called before any script compilation or execution API
  * calls, i.e. either immediately after JS_NewContext or from JSCONTEXT_NEW
@@ -1653,7 +1653,7 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
 extern JS_PUBLIC_API(void)
 JS_SetScriptStackQuota(JSContext *cx, size_t quota);
 
-#define JS_DEFAULT_SCRIPT_STACK_QUOTA   ((size_t) 0x2000000)
+#define JS_DEFAULT_SCRIPT_STACK_QUOTA   ((size_t) 0x8000000)
 
 /************************************************************************/
 
