@@ -48,6 +48,13 @@ function test() {
   let pass = 1;
   function observer(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "private-browsing":
+        setTimeout(function () {
+          ok(document.getElementById("Tools:PrivateBrowsing").hasAttribute("disabled"),
+             "The private browsing command should be disabled immediately after the mode switch");
+        }, 0);
+        break;
+
       case "private-browsing-transition-complete":
         if (pass++ == 1) {
           setTimeout(function () {
@@ -62,31 +69,16 @@ function test() {
             ok(!pbCmd.hasAttribute("disabled"),
                "The private browsing command should be re-enabled after exiting the private browsing mode");
 
+            Services.obs.removeObserver(observer, "private-browsing");
+            Services.obs.removeObserver(observer, "private-browsing-transition-complete");
             finish();
           }, 100);
         }
         break;
     }
-    Services.obs.removeObserver(observer, "private-browsing-transition-complete");
   }
-  let originalOnEnter = gPrivateBrowsingUI.onEnterPrivateBrowsing;
-  gPrivateBrowsingUI.onEnterPrivateBrowsing = function() {
-    originalOnEnter.apply(gPrivateBrowsingUI, arguments);
-    ok(pbCmd.hasAttribute("disabled"),
-       "The private browsing command should be disabled right after entering the private browsing mode");
-    Services.obs.addObserver(observer, "private-browsing-transition-complete", false);
-  };
-  let originalOnExit = gPrivateBrowsingUI.onExitPrivateBrowsing;
-  gPrivateBrowsingUI.onExitPrivateBrowsing = function() {
-    originalOnExit.apply(gPrivateBrowsingUI, arguments);
-    ok(pbCmd.hasAttribute("disabled"),
-       "The private browsing command should be disabled right after exiting the private browsing mode");
-    Services.obs.addObserver(observer, "private-browsing-transition-complete", false);
-  };
-  registerCleanupFunction(function() {
-    gPrivateBrowsingUI.onEnterPrivateBrowsing = originalOnEnter;
-    gPrivateBrowsingUI.onExitPrivateBrowsing = originalOnExit;
-  });
+  Services.obs.addObserver(observer, "private-browsing", false);
+  Services.obs.addObserver(observer, "private-browsing-transition-complete", false);
 
   pb.privateBrowsingEnabled = true;
 }
