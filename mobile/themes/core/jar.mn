@@ -72,7 +72,7 @@ chrome.jar:
   skin/images/downloads-default-64.png      (images/downloads-default-64.png)
   skin/images/settings-default-64.png       (images/settings-default-64.png)
   skin/images/preferences-default-64.png    (images/preferences-default-64.png)
-  skin/images/settings-header-bg.png        (images/settings-header-bg.png)
+  skin/images/row-header-bg.png             (images/row-header-bg.png)
   skin/images/console-default-64.png        (images/console-default-64.png)
   skin/images/newtab-default-64.png         (images/newtab-default-64.png)
   skin/images/tab-active-hdpi.png           (images/tab-active-hdpi.png)

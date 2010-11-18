@@ -582,24 +582,29 @@ richlistitem[typeName="showmore"] {
 placelabel {
   -moz-box-align: center;
   -moz-padding-end: 80px;
-  background: rgb(207,207,207) url(images/arrowup-16.png) no-repeat 98% 50%;
+  background-image: url(images/arrowup-16.png), url("images/row-header-bg.png");
+  background-repeat: no-repeat, repeat-x;
+  background-position: 98% 50%, top left;
+  background-size: auto auto, auto 100%;
   color: #000;
   min-height: 70px; /* row size */
 }
 
 placelabel:-moz-locale-dir(rtl) {
-  background: rgb(207,207,207) url(images/arrowup-16.png) no-repeat 2% 50%;
+  background-position: 2% 50%, top left;
 }
 
 /* folder bookmarks row */
 placeitem[type="folder"] {
   -moz-box-pack: center;
   -moz-padding-end: 40px;
-  background: url(images/arrowright-16.png) no-repeat 98% 50%;
+  background-image: url(images/arrowright-16.png);
+  background-repeat: no-repeat;
+  background-position: 98% 50%;
 }
 
 placeitem[type="folder"]:-moz-locale-dir(rtl) {
-  background: url(images/arrowleft-16.png) no-repeat 2% 50%;
+  background-position: 2% 50%;
 }
 
 placelist[ui="manage"] placeitem[type="folder"] {
@@ -781,16 +786,42 @@ autocompleteresult:not([badge]) .autocomplete-item-badge,
 
 /* special "no results", "awesome header row" and "title rows" items */
 autocompleteresult[class="history-item-title"],
-autocompleteresult[class="remotetabs-item-title"] {
-  -moz-box-pack: center;
-  background-color: #E9E9E9;
+autocompleteresult[class="remotetabs-item-title"],
+.settings-title {
   min-height: 0;
+  color: black;
+  font-size: smaller;
+  font-weight: bold;
+  background-color: transparent;
+  margin: 0;
+  padding: 5px 10px;
+  background-image: url(images/row-header-bg.png);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
 }
 
-autocompleteresult[class="history-item-title"] .bookmark-item-url,
+autocompleteresult[class="history-item-title"] .autocomplete-item-label,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-label {
+  font-size: 18px !important;
+  font-weight: bold !important;
+}
+
+autocompleteresult[class="history-item-title"] .autocomplete-item-subtitle,
 autocompleteresult[class="history-item-title"] .autocomplete-item-tags,
-autocompleteresult[class="remotetabs-item-title"] .bookmark-item-url,
-autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-tags {
+autocompleteresult[class="history-item-title"] .autocomplete-item-badge,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-subtitle,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-tags,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-badge {
+  margin: 0;
+  padding: 0;
+}
+
+autocompleteresult[class="history-item-title"] .bookmark-item-subtitle,
+autocompleteresult[class="history-item-title"] .autocomplete-item-tags,
+autocompleteresult[class="history-item-title"] .autocomplete-item-badge,
+autocompleteresult[class="remotetabs-item-title"] .bookmark-item-subtitle,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-tags,
+autocompleteresult[class="remotetabs-item-title"] .autocomplete-item-badge {
   display: none;
 }
 
@@ -1133,18 +1164,6 @@ pageaction:not([image]) > hbox >.pageaction-image {
 .setting {
   padding-left: 10px;
   border-bottom: 1px solid #cacdd5;
-}
-
-.settings-title {
-  color: black;
-  font-size: smaller;
-  font-weight: bold;
-  background-color: transparent;
-  margin: 0;
-  padding: 5px 10px;
-  background-image: url("chrome://browser/skin/images/settings-header-bg.png");
-  background-repeat: repeat-x;
-  background-size: auto 100%;
 }
 
 /* XXX should be a richlistitem */
