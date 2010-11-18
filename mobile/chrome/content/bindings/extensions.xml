@@ -242,10 +242,9 @@
   <binding id="extension-search-showmore" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical" nohighlight="true">
       <xul:hbox align="center">
-        <xul:image class="addon-showmore-image" xbl:inherits="src=image"/>
-        <xul:label class="title" xbl:inherits="value=label"/>
+        <xul:button xbl:inherits="label=sitelabel,hidden=hidesite,oncommand=onsitecommand"/>
         <xul:spacer flex="1"/>
-        <xul:button label="&addonShowPage.label;" oncommand="ExtensionsView.showMoreResults(document.getBindingParent(this));"/>
+        <xul:button xbl:inherits="label=pagelabel,hidden=hidepage,oncommand=onpagecommand"/>
       </xul:hbox>
     </content>
   </binding>
