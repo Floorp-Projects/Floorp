@@ -382,6 +382,8 @@ class Script
     inline JSValueType knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg);
     inline JSValueType knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local);
 
+    void trace(JSTracer *trc);
+
 #endif /* JS_TYPE_INFERENCE */
 
 };

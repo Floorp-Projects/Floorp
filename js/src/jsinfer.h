@@ -816,6 +816,8 @@ struct TypeCompartment
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, analyze::Bytecode *code);
+
+    void trace(JSTracer *trc);
 };
 
 } /* namespace types */

@@ -518,11 +518,9 @@ JSThreadData::allocMathCache(JSContext *cx)
 void
 JSThreadData::finish()
 {
-#ifndef JS_TYPE_INFERENCE /* :FIXME: GC disabled during type inference */
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
         JS_ASSERT(!scriptsToGC[i]);
-#endif
 #endif
 
     if (dtoaState)
