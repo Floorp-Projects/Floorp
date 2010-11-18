@@ -82,9 +82,10 @@ let Elements = {};
   ["tabs",               "tabs-container"],
   ["controls",           "browser-controls"],
   ["panelUI",            "panel-container"],
-  ["viewBuffer",         "view-buffer"],
   ["toolbarContainer",   "toolbar-container"],
-  ["browsers",           "browsers"]
+  ["browsers",           "browsers"],
+  ["contentViewport",    "content-viewport"],
+  ["contentNavigator",   "content-navigator"]
 ].forEach(function (aElementGlobal) {
   let [name, id] = aElementGlobal;
   XPCOMUtils.defineLazyGetter(Elements, name, function() {
