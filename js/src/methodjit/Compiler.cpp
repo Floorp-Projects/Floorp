@@ -114,6 +114,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 #if defined JS_TRACER
     addTraceHints(cx->traceJitEnabled),
 #endif
+    recompiling(false),
 #if defined JS_TYPE_INFERENCE
     hasThisType(false),
     thisType(JSVAL_TYPE_UNKNOWN),
@@ -174,27 +175,13 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     uint32 nargs = fun ? fun->nargs : 0;
     if (!argumentTypes.reserve(nargs))
         return Compile_Error;
-    for (unsigned i = 0; i < nargs; i++) {
-        jsid id = analysis->getArgumentId(i);
-        JSValueType type = JSVAL_TYPE_UNKNOWN;
-        if (!JSID_IS_VOID(id)) {
-            types::TypeSet *types = analysis->localTypes.getVariable(cx, id);
-            type = types->getKnownTypeTag(cx, script, isConstructing);
-        }
-        argumentTypes.append(type);
-    }
+    for (unsigned i = 0; i < nargs; i++)
+        argumentTypes.append(analysis->knownArgumentTypeTag(cx, script, i));
 
     if (!localTypes.reserve(script->nfixed))
         return Compile_Error;
-    for (unsigned i = 0; i < script->nfixed; i++) {
-        jsid id = analysis->getLocalId(i, NULL);
-        JSValueType type = JSVAL_TYPE_UNKNOWN;
-        if (!analysis->localHasUseBeforeDef(i) && !JSID_IS_VOID(id)) {
-            types::TypeSet *types = analysis->localTypes.getVariable(cx, id);
-            type = types->getKnownTypeTag(cx, script, isConstructing);
-        }
-        localTypes.append(type);
-    }
+    for (unsigned i = 0; i < script->nfixed; i++)
+        localTypes.append(analysis->knownLocalTypeTag(cx, script, i));
 
 #else /* JS_TYPE_INFERENCE */
 
@@ -288,6 +275,8 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
 bool
 mjit::Compiler::loadOldTraps(const Vector<CallSite> &sites)
 {
+    recompiling = true;
+
     savedTraps = (bool *)cx->calloc(sizeof(bool) * script->length);
     if (!savedTraps)
         return false;
@@ -525,6 +514,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 
 #if defined JS_MONOIC
+    JS_INIT_CLIST(&jit->callers);
+
     jit->nMICs = mics.length();
     if (mics.length()) {
         jit->mics = (ic::MICInfo *)cursor;
@@ -1157,19 +1148,19 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_URSH)
 
           BEGIN_CASE(JSOP_ADD)
-            jsop_binary(op, stubs::Add);
+            jsop_binary(op, stubs::Add, knownPushedType(0));
           END_CASE(JSOP_ADD)
 
           BEGIN_CASE(JSOP_SUB)
-            jsop_binary(op, stubs::Sub);
+            jsop_binary(op, stubs::Sub, knownPushedType(0));
           END_CASE(JSOP_SUB)
 
           BEGIN_CASE(JSOP_MUL)
-            jsop_binary(op, stubs::Mul);
+            jsop_binary(op, stubs::Mul, knownPushedType(0));
           END_CASE(JSOP_MUL)
 
           BEGIN_CASE(JSOP_DIV)
-            jsop_binary(op, stubs::Div);
+            jsop_binary(op, stubs::Div, knownPushedType(0));
           END_CASE(JSOP_DIV)
 
           BEGIN_CASE(JSOP_MOD)
@@ -2475,9 +2466,9 @@ mjit::Compiler::interruptCheckHelper()
 }
 
 void
-mjit::Compiler::addReturnSite(Label joinPoint, uint32 id)
+mjit::Compiler::addReturnSite(Label joinPoint)
 {
-    InternalCallSite site(masm.distanceOf(joinPoint), PC, id, false, false);
+    InternalCallSite site(masm.distanceOf(joinPoint), PC, CallSite::NCODE_RETURN_ID, false, false);
     addCallSite(site);
 }
 
@@ -2504,7 +2495,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 
     masm.jump(r0);
     callPatch.joinPoint = masm.label();
-    addReturnSite(callPatch.joinPoint, __LINE__);
+    addReturnSite(callPatch.joinPoint);
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
 
     frame.popn(argc + 2);
@@ -2591,8 +2582,6 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
         uncachedCallPatch->slowNcodePatch = stubcc.masm.storePtrWithPatch(ImmPtr(NULL), ncodeAddr);
 
         stubcc.masm.jump(r0);
-        addReturnSite(masm.label(), __LINE__);
-
         notCompiled.linkTo(stubcc.masm.label(), &stubcc.masm);
 
         /* :FIXME: not handling call/apply speculation that results in a double. */
@@ -2884,7 +2873,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 
     callIC.hotJump = masm.jump();
     callIC.joinPoint = callPatch.joinPoint = masm.label();
-    addReturnSite(callPatch.joinPoint, __LINE__);
+    addReturnSite(callPatch.joinPoint);
     if (lowerFunCallOrApply)
         uncachedCallPatch.joinPoint = callIC.joinPoint;
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
@@ -3931,7 +3920,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         // V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
-        jsop_binary(JSOP_SUB, stubs::Sub);
+        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
         // N+1
 
         jsop_bindgname();
@@ -3966,7 +3955,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.push(Int32Value(-amt));
         // N N 1
 
-        jsop_binary(JSOP_ADD, stubs::Add);
+        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
         // N N+1
 
         jsop_bindgname();
@@ -4010,10 +3999,6 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_NAMEINC || op == JSOP_INCNAME) ? -1 : 1;
 
-    bool monitored = analysis->monitored(PC);
-    if (monitored)
-        goto stub;
-
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
         /* These cases are easy, the original value is not observed. */
 
@@ -4024,7 +4009,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         // V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
-        jsop_binary(JSOP_SUB, stubs::Sub);
+        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
         // N+1
 
         jsop_bindname(index, false);
@@ -4060,7 +4045,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.push(Int32Value(-amt));
         // N N 1
 
-        jsop_binary(JSOP_ADD, stubs::Add);
+        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
         // N N+1
 
         jsop_bindname(index, false);
@@ -4085,16 +4070,12 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 
     if (pop)
         PC += JSOP_POP_LENGTH;
-
-  stub:
-    if (monitored)
+#else
+    prepareStubCall(Uses(0));
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    INLINE_STUBCALL(stub);
+    frame.pushSynced(knownPushedType(0));
 #endif
-    {
-        prepareStubCall(Uses(0));
-        masm.move(ImmPtr(atom), Registers::ArgReg1);
-        INLINE_STUBCALL(stub);
-        frame.pushSynced(knownPushedType(0));
-    }
 
     PC += JSOP_NAMEINC_LENGTH;
     return true;
@@ -4106,8 +4087,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
     FrameEntry *objFe = frame.peek(-1);
-    if ((!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) &&
-        !analysis->monitored(PC)) {
+    if (!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) {
         jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
         bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
         int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
@@ -4126,7 +4106,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             // OBJ V 1
 
             /* Use sub since it calls ValueToNumber instead of string concat. */
-            jsop_binary(JSOP_SUB, stubs::Sub);
+            jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
             // OBJ V+1
 
             if (!jsop_setprop(atom, false))
@@ -4154,7 +4134,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             frame.push(Int32Value(-amt));
             // OBJ N N 1
 
-            jsop_binary(JSOP_ADD, stubs::Add);
+            jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
             // OBJ N N+1
 
             frame.dupAt(-3);
@@ -4602,6 +4582,11 @@ mjit::Compiler::jsop_setgname_slow(uint32 index, bool usePropertyCache)
 void
 mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
 {
+    if (analysis->monitored(PC)) {
+        jsop_setgname_slow(index, usePropertyCache);
+        return;
+    }
+
 #if defined JS_MONOIC
     FrameEntry *objFe = frame.peek(-2);
     JS_ASSERT_IF(objFe->isTypeKnown(), objFe->getKnownType() == JSVAL_TYPE_OBJECT);
@@ -5070,7 +5055,7 @@ mjit::Compiler::fixDoubleTypes(Uses uses)
     for (uint32 i = 0; i < opinfo.stackDepth - uses.nuses; i++) {
         types::TypeStack *stack = opinfo.inStack;
         types::TypeSet *types = analysis->getStackTypes(script->nfixed + i, stack);
-        JSValueType type = types->getKnownTypeTag(cx, script, isConstructing);
+        JSValueType type = types->getKnownTypeTag(cx, script);
         if (type == JSVAL_TYPE_DOUBLE) {
             FrameEntry *fe = frame.getLocal(script->nfixed + i);
             if (!fe->isType(JSVAL_TYPE_DOUBLE))
@@ -5101,15 +5086,15 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
             frame.learnType(fe, type, false);
         }
     }
-    for (uint32 i = 0; i < stackDepth; i++) {
-        types::TypeStack *stack = analysis->getCode(PC).inStack;
-        types::TypeSet *types = analysis->getStackTypes(script->nfixed + i, stack);
-        JSValueType type = types->getKnownTypeTag(cx, script, isConstructing);
-        if (type != JSVAL_TYPE_UNKNOWN) {
-            FrameEntry *fe = frame.getLocal(script->nfixed + i);
+    types::TypeStack *stack = analysis->getCode(PC).inStack;
+    for (unsigned depth = stackDepth - 1; depth < stackDepth; depth--) {
+        JSValueType type = stack->types.getKnownTypeTag(cx, script);
+        if (type != JSVAL_TYPE_UNKNOWN && !stack->ignoreTypeTag) {
+            FrameEntry *fe = frame.getLocal(script->nfixed + depth);
             JS_ASSERT(!fe->isTypeKnown());
             frame.learnType(fe, type, type != JSVAL_TYPE_DOUBLE);
         }
+        stack = stack->group()->innerStack;
     }
 #endif
 }
@@ -5121,7 +5106,7 @@ mjit::Compiler::knownThisType()
     if (hasThisType)
         return thisType;
     hasThisType = true;
-    thisType = analysis->thisTypes.getKnownTypeTag(cx, script, isConstructing);
+    thisType = analysis->thisTypes.getKnownTypeTag(cx, script);
     return thisType;
 #endif
     return JSVAL_TYPE_UNKNOWN;
@@ -5153,7 +5138,7 @@ mjit::Compiler::knownPushedType(uint32 pushed)
 {
 #ifdef JS_TYPE_INFERENCE
     types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
-    return types->getKnownTypeTag(cx, script, isConstructing);
+    return types->getKnownTypeTag(cx, script);
 #endif
     return JSVAL_TYPE_UNKNOWN;
 }
@@ -5163,7 +5148,7 @@ mjit::Compiler::knownPoppedObjectKind(uint32 popped)
 {
 #ifdef JS_TYPE_INFERENCE
     types::TypeSet *types = analysis->getCode(PC).popped(popped);
-    return types->getKnownObjectKind(cx, script, isConstructing);
+    return types->getKnownObjectKind(cx, script);
 #endif
     return types::OBJECT_UNKNOWN;
 }
@@ -5176,8 +5161,8 @@ mjit::Compiler::arrayPrototypeHasIndexedSetter()
         cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE)->indexTypes(cx);
     types::TypeSet *objectTypes =
         cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE)->indexTypes(cx);
-    return arrayTypes->hasGetterSetter(cx, script, isConstructing)
-        || objectTypes->hasGetterSetter(cx, script, isConstructing);
+    return arrayTypes->hasGetterSetter(cx, script)
+        || objectTypes->hasGetterSetter(cx, script);
 #endif
     return true;
 }

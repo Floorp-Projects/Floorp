@@ -139,8 +139,8 @@ class StubCompiler
     bool jumpInScript(Jump j, jsbytecode *target);
     void crossJump(Jump j, Label l);
 
-    Call emitStubCall(void *ptr, uint32 id);
-    Call emitStubCall(void *ptr, int32 slots, uint32 id);
+    Call emitStubCall(void *ptr);
+    Call emitStubCall(void *ptr, int32 slots);
 };
 
 } /* namepsace mjit */

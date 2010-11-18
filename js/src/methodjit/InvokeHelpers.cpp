@@ -360,6 +360,9 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     JSFunction *newfun = callee.getFunctionPrivate();
     JSScript *newscript = newfun->script();
 
+    CallArgs args(vp + 2, argc);
+    cx->typeMonitorCall(NULL, NULL, args, flags & JSFRAME_CONSTRUCTING, true);
+
     /* Get pointer to new frame/slots, prepare arguments. */
     StackSpace &stack = cx->stack();
     JSStackFrame *newfp = stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,

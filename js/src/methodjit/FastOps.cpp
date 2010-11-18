@@ -455,13 +455,10 @@ void
 mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 {
     uint32 slot = script->getGlobalSlot(index);
+    JSValueType type = knownPushedType(0); 
 
-    bool popped = false;
-    PC += JSOP_GLOBALINC_LENGTH;
-    if (JSOp(*PC) == JSOP_POP && !analysis->jumpTarget(PC)) {
-        popped = true;
-        PC += JSOP_POP_LENGTH;
-    }
+    jsbytecode *next = PC + JSOP_GLOBALINC_LENGTH;
+    bool popped = (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next));
 
     int amt = (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
     bool post = !!(js_CodeSpec[op].format & JOF_POST);
@@ -471,11 +468,14 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     Address addr = masm.objSlotRef(globalObj, reg, slot);
     uint32 depth = frame.stackDepth();
 
-    if (post && !popped) {
-        frame.push(addr, JSVAL_TYPE_UNKNOWN);
-        FrameEntry *fe = frame.peek(-1);
-        Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
+    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_INT32) {
+        data = frame.allocReg();
+        stubcc.linkExit(masm.jump(), Uses(0));
+    } else if (post && !popped) {
+        Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
         stubcc.linkExit(notInt, Uses(0));
+        frame.push(addr, type);
+        FrameEntry *fe = frame.peek(-1);
         data = frame.copyDataIntoReg(fe);
     } else {
         Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
@@ -509,6 +509,10 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     frame.freeReg(reg);
 
     stubcc.rejoin(Changes((!post && !popped) ? 1 : 0));
+
+    PC += JSOP_GLOBALINC_LENGTH;
+    if (popped)
+        PC += JSOP_POP_LENGTH;
 }
 
 static inline bool
@@ -928,7 +932,8 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
     bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);
     int32 amt = (op == JSOP_INCLOCAL || op == JSOP_LOCALINC) ? 1 : -1;
 
-    frame.pushLocal(slot, knownPushedType(0));
+    JSValueType type = knownLocalType(slot);
+    frame.pushLocal(slot, type);
 
     FrameEntry *fe = frame.peek(-1);
 
@@ -950,6 +955,9 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         return;
     }
 
+    VoidStubUInt32 stub =
+        (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? stubs::IncLocal : stubs::DecLocal;
+
     /*
      * If the local variable is not known to be an int32, or the pre-value
      * is observed, then do the simple thing and decompose x++ into simpler
@@ -969,16 +977,25 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         /* N? N 1 */
 
         if (amt == 1)
-            jsop_binary(JSOP_ADD, stubs::Add);
+            jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
         else
-            jsop_binary(JSOP_SUB, stubs::Sub);
+            jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
         /* N? N+1 */
 
         frame.storeLocal(slot, post || popped);
         /* N? N+1 */
 
+        /* Make a stub call too in case we are recompiling from an overflowing localinc. */
+        if (recompiling) {
+            stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
+            OOL_STUBCALL(stub);
+        }
+
         if (post || popped)
             frame.pop();
+
+        if (recompiling)
+            stubcc.rejoin(Changes(0));
 
         return;
     }
@@ -1002,12 +1019,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
     stubcc.leave();
 
     stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
-    if (op == JSOP_LOCALINC || op == JSOP_INCLOCAL)
-        OOL_STUBCALL(stubs::IncLocal);
-    else
-        OOL_STUBCALL(stubs::DecLocal);
-
-    JSValueType type = knownLocalType(slot);
+    OOL_STUBCALL(stub);
 
     frame.pop();
 
@@ -1031,7 +1043,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: 
         // After:  V
-        frame.pushArg(slot, knownArgumentType(slot));
+        frame.pushArg(slot, JSVAL_TYPE_UNKNOWN);
 
         // Before: V
         // After:  V 1
@@ -1040,7 +1052,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         // Note, SUB will perform integer conversion for us.
         // Before: V 1
         // After:  N+1
-        jsop_binary(JSOP_SUB, stubs::Sub);
+        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
 
         // Before: N+1
         // After:  N+1
@@ -1053,7 +1065,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before:
         // After: V
-        frame.pushArg(slot, knownArgumentType(slot));
+        frame.pushArg(slot, JSVAL_TYPE_UNKNOWN);
 
         // Before: V
         // After:  N
@@ -1069,7 +1081,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: N N 1
         // After:  N N+1
-        jsop_binary(JSOP_ADD, stubs::Add);
+        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
 
         // Before: N N+1
         // After:  N N+1
@@ -1347,6 +1359,11 @@ mjit::Compiler::jsop_setelem()
 #ifdef JS_POLYIC
     if (!setElemICs.append(ic))
         return false;
+
+    if (recompiling) {
+        OOL_STUBCALL(STRICT_VARIANT(stubs::SetElem));
+        stubcc.rejoin(Changes(2));
+    }
 #endif
 
     return true;

@@ -1163,18 +1163,12 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                 fun->u.i.script = empty;
 
 #ifdef JS_TYPE_INFERENCE
-                // set type information for the script and function. if we see
-                // the empty script multiple times it will always have the same
-                // function, and the locals/args from the first place we saw
-                // the empty script. won't affect analysis.
+                /* Set type information for the script and function. */
                 if (!empty->analysis)
                     empty->makeAnalysis(cx);
-                analyze::Script *analysis = empty->analysis;
-                if (!analysis->function) {
-                    cx->setTypeFunctionScript(fun, empty);
-                    analysis->function = fun->getTypeObject()->asFunction();
-                }
-                fun->typeObject = analysis->function;
+                fun->typeObject = cx->getFixedTypeObject(types::TYPE_OBJECT_EMPTY_FUNCTION);
+                if (!fun->typeObject->asFunction()->script)
+                    fun->typeObject->asFunction()->script = empty;
 #endif
             }
 
@@ -1773,8 +1767,13 @@ JSScript::analyze(JSContext *cx)
         makeAnalysis(cx);
     if (!analysis)
         return NULL;
-    if (!analysis->hasAnalyzed())
+    if (!analysis->hasAnalyzed()) {
         analysis->analyze(cx);
+#ifdef JS_TYPE_INFERENCE
+        if (cx->compartment->types.hasPendingRecompiles())
+            cx->compartment->types.processPendingRecompiles(cx);
+#endif
+    }
     return analysis;
 }
 

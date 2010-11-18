@@ -199,7 +199,7 @@ mjit::Compiler::maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry 
 }
 
 void
-mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
+mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
@@ -222,23 +222,24 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
         bool isStringResult = (op == JSOP_ADD) &&
                               (lhs->isType(JSVAL_TYPE_STRING) ||
                                rhs->isType(JSVAL_TYPE_STRING));
+        JS_ASSERT_IF(isStringResult && type != JSVAL_TYPE_UNKNOWN, type == JSVAL_TYPE_STRING);
 
         prepareStubCall(Uses(2));
         INLINE_STUBCALL(stub);
         frame.popn(2);
-        frame.pushSynced(isStringResult ? JSVAL_TYPE_STRING : knownPushedType(0));
+        frame.pushSynced(isStringResult ? JSVAL_TYPE_STRING : type);
         return;
     }
 
     /* Can do int math iff there is no double constant and the op is not division. */
-    bool canDoIntMath = op != JSOP_DIV && knownPushedType(0) != JSVAL_TYPE_DOUBLE &&
+    bool canDoIntMath = op != JSOP_DIV && type != JSVAL_TYPE_DOUBLE &&
                         !((rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_DOUBLE) ||
                           (lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_DOUBLE));
 
     if (canDoIntMath)
-        jsop_binary_full(lhs, rhs, op, stub);
+        jsop_binary_full(lhs, rhs, op, stub, type);
     else
-        jsop_binary_double(lhs, rhs, op, stub);
+        jsop_binary_double(lhs, rhs, op, stub, type);
 }
 
 static void
@@ -306,7 +307,8 @@ mjit::Compiler::loadDouble(FrameEntry *fe, FPRegisterID *fpReg, bool *allocated)
  * Unlike jsop_binary_full(), all integers are converted to doubles.
  */
 void
-mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub)
+mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
+                                   VoidStub stub, JSValueType type)
 {
     FPRegisterID fpLeft, fpRight;
     bool allocateLeft, allocateRight;
@@ -336,7 +338,6 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
     EmitDoubleOp(op, fpRight, fpLeft, masm);
     
     MaybeJump done;
-    JSValueType type = knownPushedType(0);
 
     /*
      * Try to convert result to integer, if the result has unknown or integer type.
@@ -375,10 +376,8 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
     if (done.isSet())
         done.getJump().linkTo(masm.label(), &masm);
 
-    if (lhsNotNumber.isSet() || rhsNotNumber.isSet()) {
-        stubcc.leave();
-        OOL_STUBCALL(stub);
-    }
+    stubcc.leave();
+    OOL_STUBCALL(stub);
 
     if (allocateRight)
         frame.freeFPReg(fpRight);
@@ -396,15 +395,14 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
         frame.pushSynced(type);
     }
 
-    if (lhsNotNumber.isSet() || rhsNotNumber.isSet())
-        stubcc.rejoin(Changes(1));
+    stubcc.rejoin(Changes(1));
 }
 
 /*
  * Simpler version of jsop_binary_full() for when lhs == rhs.
  */
 void
-mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
+mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub, JSValueType type)
 {
     FrameEntry *lhs = frame.peek(-2);
 
@@ -416,7 +414,7 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
         EmitDoubleOp(op, fpreg, fpreg, masm);
         frame.popn(2);
 
-        JS_ASSERT(knownPushedType(0) == JSVAL_TYPE_DOUBLE);
+        JS_ASSERT(type == JSVAL_TYPE_DOUBLE);  /* :XXX: can fail */
         frame.pushDouble(fpreg);
         return;
     }
@@ -469,34 +467,16 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
     JS_ASSERT(overflow.isSet());
 
     /*
-     * Integer overflow path. Separate from the first double path, since we
-     * know never to try and convert back to integer.
+     * Integer overflow path. Restore the original values and make a stub call,
+     * which could trigger recompilation.
      */
-    MaybeJump overflowDone;
     stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
-    {
-        if (regs.lhsNeedsRemat) {
-            Address address = masm.payloadOf(frame.addressForDataRemat(lhs));
-            stubcc.masm.convertInt32ToDouble(address, regs.lhsFP);
-        } else if (!lhs->isConstant()) {
-            stubcc.masm.convertInt32ToDouble(regs.lhsData.reg(), regs.lhsFP);
-        } else {
-            slowLoadConstantDouble(stubcc.masm, lhs, regs.lhsFP);
-        }
-
-        EmitDoubleOp(op, regs.lhsFP, regs.lhsFP, stubcc.masm);
-
-        Address address = frame.addressOf(lhs);
-        stubcc.masm.storeDouble(regs.lhsFP, address);
-        stubcc.masm.loadPayload(address, regs.result);
-
-        overflowDone = stubcc.masm.jump();
-    }
+    frame.rematBinary(fe, NULL, regs, stubcc.masm);
+    stubcc.syncExitAndJump(Uses(2));
 
     /* Slow paths funnel here. */
     if (notNumber.isSet())
         notNumber.get().linkTo(stubcc.masm.label(), &stubcc.masm);
-    overflowDone.get().linkTo(stubcc.masm.label(), &stubcc.masm);
 
     /* Slow call - use frame.sync to avoid erroneous jump repatching in stubcc. */
     frame.sync(stubcc.masm, Uses(2));
@@ -506,7 +486,6 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
     /* Finish up stack operations. */
     frame.popn(2);
 
-    JSValueType type = knownPushedType(0);
     if (type == JSVAL_TYPE_INT32)
         frame.pushTypedPayload(type, regs.result);
     else
@@ -514,10 +493,9 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
 
     frame.freeFPReg(regs.lhsFP);
 
-    /* Merge back OOL double paths. */
+    /* Merge back OOL double path. */
     if (doublePathDone.isSet())
         stubcc.linkRejoin(doublePathDone.get());
-    stubcc.linkRejoin(overflowDone.get());
 
     stubcc.rejoin(Changes(1));
 }
@@ -559,10 +537,11 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
  *  <--------------------------------- Rejoin
  */
 void
-mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub)
+mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
+                                 VoidStub stub, JSValueType type)
 {
     if (frame.haveSameBacking(lhs, rhs)) {
-        jsop_binary_full_simple(lhs, op, stub);
+        jsop_binary_full_simple(lhs, op, stub, type);
         return;
     }
 
@@ -624,7 +603,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     }
 
     /* Okay - good to emit the integer fast-path. */
-    MaybeJump overflow, negZeroDone;
+    MaybeJump overflow;
     switch (op) {
       case JSOP_ADD:
         if (reg.isSet())
@@ -663,10 +642,12 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
         overflow = masm.branchMul32(Assembler::Overflow, reg.reg(), regs.result);
 
         if (maybeNegZero) {
-            if (!hasConstant) {
+            if (hasConstant) {
+                stubcc.linkExit(storeNegZero.get(), Uses(2));
+            } else {
                 Jump isZero = masm.branchTest32(Assembler::Zero, regs.result);
                 stubcc.linkExitDirect(isZero, stubcc.masm.label());
-                
+
                 /* Restore original value. */
                 if (regs.resultHasRhs) {
                     if (regs.rhsNeedsRemat)
@@ -683,13 +664,9 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
                 stubcc.masm.xor32(regs.result, regs.result);
                 stubcc.crossJump(stubcc.masm.jump(), masm.label());
                 storeNegZero.getJump().linkTo(stubcc.masm.label(), &stubcc.masm);
-            } else {
-                JS_ASSERT(storeNegZero.isSet());
-                stubcc.linkExitDirect(storeNegZero.get(), stubcc.masm.label());
+                frame.rematBinary(lhs, rhs, regs, stubcc.masm);
             }
-            stubcc.masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
-            stubcc.masm.loadPayload(frame.addressOf(lhs), regs.result);
-            negZeroDone = stubcc.masm.jump();
+            stubcc.syncExitAndJump(Uses(2));
         }
         break;
       }
@@ -703,38 +680,12 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     JS_ASSERT(overflow.isSet());
 
     /*
-     * Integer overflow path. Separate from the first double path, since we
-     * know never to try and convert back to integer.
+     * Integer overflow path. Restore the original values and make a stub call,
+     * which could trigger recompilation.
      */
-    MaybeJump overflowDone;
     stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
-    {
-        if (regs.lhsNeedsRemat) {
-            Address address = masm.payloadOf(frame.addressForDataRemat(lhs));
-            stubcc.masm.convertInt32ToDouble(address, regs.lhsFP);
-        } else if (!lhs->isConstant()) {
-            stubcc.masm.convertInt32ToDouble(regs.lhsData.reg(), regs.lhsFP);
-        } else {
-            slowLoadConstantDouble(stubcc.masm, lhs, regs.lhsFP);
-        }
-
-        if (regs.rhsNeedsRemat) {
-            Address address = masm.payloadOf(frame.addressForDataRemat(rhs));
-            stubcc.masm.convertInt32ToDouble(address, regs.rhsFP);
-        } else if (!rhs->isConstant()) {
-            stubcc.masm.convertInt32ToDouble(regs.rhsData.reg(), regs.rhsFP);
-        } else {
-            slowLoadConstantDouble(stubcc.masm, rhs, regs.rhsFP);
-        }
-
-        EmitDoubleOp(op, regs.rhsFP, regs.lhsFP, stubcc.masm);
-
-        Address address = frame.addressOf(lhs);
-        stubcc.masm.storeDouble(regs.lhsFP, address);
-        stubcc.masm.loadPayload(address, regs.result);
-
-        overflowDone = stubcc.masm.jump();
-    }
+    frame.rematBinary(lhs, rhs, regs, stubcc.masm);
+    stubcc.syncExitAndJump(Uses(2));
 
     /* The register allocator creates at most one temporary. */
     if (regs.extraFree.isSet())
@@ -757,7 +708,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     /* Finish up stack operations. */
     frame.popn(2);
 
-    JSValueType type = knownPushedType(0);
     if (type == JSVAL_TYPE_INT32)
         frame.pushTypedPayload(type, regs.result);
     else
@@ -766,12 +716,9 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     frame.freeFPReg(regs.lhsFP);
     frame.freeFPReg(regs.rhsFP);
 
-    /* Merge back OOL double paths. */
+    /* Merge back OOL double path. */
     if (doublePathDone.isSet())
         stubcc.linkRejoin(doublePathDone.get());
-    if (negZeroDone.isSet())
-        stubcc.linkRejoin(negZeroDone.get());
-    stubcc.linkRejoin(overflowDone.get());
 
     stubcc.rejoin(Changes(1));
 }
@@ -799,6 +746,12 @@ mjit::Compiler::jsop_neg()
 
         frame.pop();
         frame.pushDouble(res);
+
+        if (recompiling) {
+            OOL_STUBCALL(stubs::Neg);
+            stubcc.rejoin(Changes(1));
+        }
+
         return;
     }
 
@@ -882,16 +835,24 @@ void
 mjit::Compiler::jsop_mod()
 {
 #if defined(JS_CPU_X86)
+    JSValueType type = knownPushedType(0);
+
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
     if ((lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32) ||
-        (rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32))
+        (rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32) ||
+        (type != JSVAL_TYPE_INT32 && type != JSVAL_TYPE_UNKNOWN))
 #endif
     {
         prepareStubCall(Uses(2));
         INLINE_STUBCALL(stubs::Mod);
         frame.popn(2);
         frame.pushSynced(knownPushedType(0));
+
+        if (recompiling) {
+            OOL_STUBCALL(stubs::NegZeroHelper);
+            stubcc.rejoin(Changes(1));
+        }
         return;
     }
 
@@ -964,6 +925,7 @@ mjit::Compiler::jsop_mod()
         lhsMaybeNeg = lhsIsNeg = (lhs->getValue().toInt32() < 0);
     }
 
+    MaybeJump gotNegZero;
     MaybeJump done;
     if (lhsMaybeNeg) {
         MaybeRegisterID lhsData;
@@ -973,8 +935,11 @@ mjit::Compiler::jsop_mod()
         MaybeJump negZero2;
         if (!lhsIsNeg)
             negZero2 = masm.branchTest32(Assembler::Zero, lhsData.reg(), Imm32(0x80000000));
-        /* Darn, negative 0. */
-        masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
+        /*
+         * Darn, negative 0. This goes to a stub call (after our in progress call)
+         * which triggers recompilation if necessary.
+         */
+        gotNegZero = masm.jump();
 
         /* :TODO: This is wrong, must load into EDX as well. */
 
@@ -997,7 +962,6 @@ mjit::Compiler::jsop_mod()
 
     frame.popn(2);
 
-    JSValueType type = knownPushedType(0);
     if (type == JSVAL_TYPE_INT32)
         frame.pushTypedPayload(type, X86Registers::edx);
     else
@@ -1005,6 +969,12 @@ mjit::Compiler::jsop_mod()
 
     if (slowPath)
         stubcc.rejoin(Changes(1));
+
+    if (gotNegZero.isSet()) {
+        stubcc.linkExitDirect(gotNegZero.getJump(), stubcc.masm.label());
+        OOL_STUBCALL(stubs::NegZeroHelper);
+        stubcc.rejoin(Changes(1));
+    }
 #endif
 }
 

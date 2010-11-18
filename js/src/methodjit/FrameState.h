@@ -478,6 +478,12 @@ class FrameState
     void allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc,
                         bool resultNeeded = true);
 
+    /*
+     * After the result register in a BinaryAlloc has been clobbered, rematerialize
+     * the left or right side if necessary to restore the original values.
+     */
+    void rematBinary(FrameEntry *lhs, FrameEntry *rhs, const BinaryAlloc &alloc, Assembler &masm);
+
     /* Ensures that an FE has both type and data remat'd in registers. */
     void ensureFullRegs(FrameEntry *fe, MaybeRegisterID *typeReg, MaybeRegisterID *dataReg);
 
