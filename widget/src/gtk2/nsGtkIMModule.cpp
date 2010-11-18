@@ -599,7 +599,7 @@ nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
         gdk_window_get_size(aCaller->GetGdkWindow(), &w, &h);
         rectBuf.Assign(NS_LITERAL_STRING("{\"left\": "));
         rectBuf.AppendInt(x);
-        rectBuf.Append(NS_LITERAL_STRING(" \"top\": "));
+        rectBuf.Append(NS_LITERAL_STRING(", \"top\": "));
         rectBuf.AppendInt(y);
         rectBuf.Append(NS_LITERAL_STRING(", \"right\": "));
         rectBuf.AppendInt(w);
