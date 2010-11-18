@@ -435,6 +435,14 @@ IsFunctionObject(const js::Value &v, JSFunction **fun)
     return b;
 }
 
+extern JS_ALWAYS_INLINE bool
+SameTraceType(const Value &lhs, const Value &rhs)
+{
+    return SameType(lhs, rhs) &&
+           (lhs.isPrimitive() ||
+            lhs.toObject().isFunction() == rhs.toObject().isFunction());
+}
+
 /*
  * Macro to access the private slot of the function object after the slot is
  * initialized.
