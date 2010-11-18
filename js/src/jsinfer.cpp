@@ -43,6 +43,7 @@
 #include "jsbool.h"
 #include "jsdate.h"
 #include "jsexn.h"
+#include "jsgc.h"
 #include "jsinfer.h"
 #include "jsmath.h"
 #include "jsnum.h"
@@ -3477,3 +3478,59 @@ Script::print(JSContext *cx)
 }
 
 } } /* namespace js::analyze */
+
+/////////////////////////////////////////////////////////////////////
+// Tracing
+/////////////////////////////////////////////////////////////////////
+
+namespace js {
+
+static inline void
+TraceVariableSet(JSTracer *trc, const types::VariableSet &vars)
+{
+    types::Variable *var = vars.variables;
+    while (var) {
+        if (!JSID_IS_VOID(var->id))
+            gc::MarkString(trc, JSID_TO_STRING(var->id), "type_property");
+        var = var->next;
+    }
+}
+
+static inline void
+TraceObjectList(JSTracer *trc, types::TypeObject *objects)
+{
+    types::TypeObject *object = objects;
+    while (object) {
+        gc::MarkString(trc, JSID_TO_STRING(object->name), "type_object_name");
+        TraceVariableSet(trc, object->propertySet);
+        object = object->next;
+    }
+}
+
+void
+analyze::Script::trace(JSTracer *trc)
+{
+    if (fun) {
+        JS_SET_TRACING_NAME(trc, "type_script");
+        gc::Mark(trc, fun);
+    }
+
+    TraceObjectList(trc, objects);
+    TraceVariableSet(trc, localTypes);
+
+    unsigned nameCount = script->nfixed + argCount();
+    for (unsigned i = 0; i < nameCount; i++) {
+        if (localNames[i]) {
+            JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[i]);
+            gc::MarkString(trc, ATOM_TO_STRING(atom), "type_script_local");
+        }
+    }
+}
+
+void
+types::TypeCompartment::trace(JSTracer *trc)
+{
+    TraceObjectList(trc, objects);
+}
+
+} /* namespace js */
