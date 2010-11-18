@@ -137,7 +137,8 @@ UpdatePrompt.prototype = {
   _updateDownloadProgress: function UP__updateDownloadProgress(aProgress, aTotal) {
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
-    progressListener.onProgress(UPDATE_NOTIFICATION_NAME, aProgress, aTotal);
+    if (progressListener)
+      progressListener.onProgress(UPDATE_NOTIFICATION_NAME, aProgress, aTotal);
   },
 
   // -------------------------
@@ -207,6 +208,12 @@ UpdatePrompt.prototype = {
 
   // When the data transfer ends
   onStopRequest: function(request, context, status) {
+    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+    if (progressListener)
+      progressListener.onCancel(UPDATE_NOTIFICATION_NAME);
+
+
     let aus = Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService);
     aus.removeDownloadListener(this);
   },
