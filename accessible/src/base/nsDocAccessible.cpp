@@ -167,8 +167,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
     // However at some point we may push <body> to implement the interfaces and
     // return nsDocAccessible to inherit from nsAccessibleWrap.
 
-    nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDocument));
-    if (xulDoc)
+    if (mDocument && mDocument->IsXUL())
       status = nsAccessible::QueryInterface(aIID, (void**)&foundInterface);
     else
       status = nsHyperTextAccessible::QueryInterface(aIID,
