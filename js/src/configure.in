@@ -353,6 +353,15 @@ AR_FLAGS='cr $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
+# Note:
+#   In Mozilla, we use the names $target, $host and $build incorrectly, but are
+#   too far gone to back out now. See Bug 475488:
+#     - When we say $target, we mean $host, that is, the system on which
+#       Mozilla will be run.
+#     - When we say $host, we mean $build, that is, the system on which Mozilla
+#       is built.
+#     - $target (in its correct usage) is for compilers who generate code for a
+#       different platform than $host, so it would not be used by Mozilla.
 if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     CROSS_COMPILE=1
