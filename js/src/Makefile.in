@@ -238,6 +238,7 @@ INSTALLED_HEADERS = \
 		jsstdint.h \
 		jsstr.h \
 		jstracer.h \
+		jshotloop.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \

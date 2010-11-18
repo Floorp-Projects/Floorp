@@ -616,7 +616,7 @@ struct TreeFragment : public LinkableFragment
     uintN                   execs;
     /* Gives the total number of iterations executed by the trace (up to a limit). */
     uintN                   iters;
-
+    
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
     }
@@ -666,6 +666,7 @@ public:
         OP_FWDJUMP, // Jumps with positive delta
         OP_NEW, // JSOP_NEW instructions
         OP_RECURSIVE, // Recursive calls
+        OP_ARRAY_READ, // Reads from dense arrays
         OP_TYPED_ARRAY, // Accesses to typed arrays
         OP_LIMIT
     };
@@ -684,6 +685,9 @@ public:
 
     /* Whether we have run a complete profile of the loop. */
     bool profiled;
+
+    /* Sometimes we can't decide in one profile run whether to trace, so we set undecided. */
+    bool undecided;
 
     /* If we have profiled the loop, this saves the decision of whether to trace it. */
     bool traceOK;
@@ -725,6 +729,10 @@ public:
 
     /* Set to true if the loop may be short (has few iterations at profiling time). */
     bool maybeShortLoop;
+
+    /* These are memoized versions of isCompilationExpensive/Unprofitable. */
+    bool expensive;
+    bool unprofitable;
 
     /*
      * When we hit a nested loop while profiling, we record where it occurs
@@ -790,6 +798,8 @@ public:
     
     LoopProfile(JSStackFrame *entryfp, jsbytecode *top, jsbytecode *bottom);
 
+    void reset();
+    
     enum ProfileAction {
         ProfContinue,
         ProfComplete
@@ -812,8 +822,8 @@ public:
     ProfileAction profileOperation(JSContext *cx, JSOp op);
 
     /* Once a loop's profile is done, these decide whether it should be traced. */
-    bool isCompilationExpensive(JSContext *cx, uintN depth);
-    bool isCompilationUnprofitable(JSContext *cx, uintN depth);
+    bool isCompilationExpensive(JSContext *cx);
+    bool isCompilationUnprofitable(JSContext *cx, uintN goodOps);
     void decide(JSContext *cx);
 };
 
@@ -1661,7 +1671,7 @@ RecordTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist);
 
 extern JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
-                  void** traceData, uintN *traceEpoch);
+                  void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits);
 
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
