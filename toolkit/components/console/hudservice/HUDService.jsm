@@ -1847,9 +1847,7 @@ HUD_SERVICE.prototype =
     this.filterPrefs[aHUDId] = this.defaultFilterPrefs;
     this.displayRegistry[aHUDId] = URISpec;
 
-    // get the window Id
-    var windowId = this.getWindowId(aContentWindow);
-    this._headsUpDisplays[aHUDId] = { id: aHUDId, windowId: windowId };
+    this._headsUpDisplays[aHUDId] = { id: aHUDId };
 
     this.registerActiveContext(aHUDId);
     // init storage objects:
@@ -1994,9 +1992,6 @@ HUD_SERVICE.prototype =
     // Cache it!
     let hudId = hudBox.id;
     this.windowRegistry[hudId].push(aContentWindow);
-
-    let wu = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
 
     let uri = aContentWindow.document.location.href;
     if (!this.uriRegistry[uri]) {
@@ -3512,26 +3507,17 @@ let ConsoleAPIObserver = {
     if (aTopic == "console-api-log-event") {
       aMessage = aMessage.wrappedJSObject;
       let windowId = parseInt(aData);
-      try {
-        let win = HUDService.getWindowByWindowId(windowId).top;
-      }
-      catch (ex) {
-        // noop
+      let win = HUDService.getWindowByWindowId(windowId);
+      if (!win)
         return;
-      }
 
-      let hudId;
-      let displays = HUDService._headsUpDisplays;
-      let foundConsoleId = false;
-      for (let idx in displays) {
-        if (parseInt(displays[idx].windowId) == parseInt(windowId)) {
-          hudId = displays[idx].id;
-          foundConsoleId = true;
-          let webConsole = HUDService.hudReferences[hudId];
+      // Find the HUD ID for the topmost window
+      let hudId = HUDService.getHudIdByWindow(win.top);
+      if (!hudId)
+        return;
 
-          this.sendToWebConsole(webConsole, aMessage.level, aMessage.arguments);
-        }
-      }
+      let hud = HUDService.hudReferences[hudId];
+      this.sendToWebConsole(hud, aMessage.level, aMessage.arguments);
     }
     else if (aTopic == "quit-application-granted") {
       this.shutdown();
@@ -3562,7 +3548,7 @@ let ConsoleAPIObserver = {
       hudId: aWebConsole.hudId,
       message: message,
       timestamp: ts,
-      origin: "WebConsole",
+      origin: "WebConsole"
     };
 
     HUDService.logMessage(messageObject, aWebConsole.outputNode, messageNode);
@@ -5451,31 +5437,32 @@ HUDConsoleObserver = {
   {
     if (aTopic == "xpcom-shutdown") {
       Services.console.unregisterListener(this);
+      return;
     }
 
-    if (aSubject instanceof Ci.nsIScriptError) {
-      let hudIds = ConsoleUtils.getHUDIdsForScriptError(aSubject);
+    if (!(aSubject instanceof Ci.nsIScriptError))
+      return;
 
-      switch (aSubject.category) {
-        // We ignore chrome-originating errors as we only
-        // care about content.
-        case "XPConnect JavaScript":
-        case "component javascript":
-        case "chrome javascript":
-        case "chrome registration":
-        case "XBL":
-        case "XBL Prototype Handler":
-        case "XBL Content Sink":
-        case "xbl javascript":
-        case "FrameConstructor":
-          return;
+    switch (aSubject.category) {
+      // We ignore chrome-originating errors as we only
+      // care about content.
+      case "XPConnect JavaScript":
+      case "component javascript":
+      case "chrome javascript":
+      case "chrome registration":
+      case "XBL":
+      case "XBL Prototype Handler":
+      case "XBL Content Sink":
+      case "xbl javascript":
+      case "FrameConstructor":
+        return;
 
-        default:
-          for (let i = 0; i < hudIds.length; i++) {
-            HUDService.logActivity("console-listener", hudIds[i], aSubject);
-          }
-          return;
-      }
+      default:
+        let hudIds = ConsoleUtils.getHUDIdsForScriptError(aSubject);
+        for (let i = 0; i < hudIds.length; i++) {
+          HUDService.logActivity("console-listener", hudIds[i], aSubject);
+        }
+        return;
     }
   }
 };
