@@ -604,11 +604,16 @@ nsHtml5TreeBuilder::Flush()
 {
   flushCharacters();
   FlushLoads();
-  PRBool hasOps = !mOpQueue.IsEmpty();
-  if (hasOps) {
-    mOpSink->MoveOpsFrom(mOpQueue);
+  if (mOpSink) {
+    PRBool hasOps = !mOpQueue.IsEmpty();
+    if (hasOps) {
+      mOpSink->MoveOpsFrom(mOpQueue);
+    }
+    return hasOps;
   }
-  return hasOps;
+  // no op sink: throw away ops
+  mOpQueue.Clear();
+  return PR_FALSE;
 }
 
 void

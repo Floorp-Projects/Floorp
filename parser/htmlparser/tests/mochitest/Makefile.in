@@ -63,6 +63,8 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug460437.xhtml \
 		test_bug502091.html \
 		bug_502091_iframe.html \
+		test_bug543062.html \
+		file_bug543062.sjs \
 		test_bug552938.html \
 		test_bug552938-2.html \
 		test_bug566879.html \
