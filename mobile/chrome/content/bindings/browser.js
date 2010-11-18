@@ -231,6 +231,10 @@ let DOMEvents =  {
           persisted: aEvent.persisted
         };
 
+        // Clear onload focus to prevent the VKB to be shown unexpectingly
+        let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+        focusManager.clearFocus(content);
+
         sendAsyncMessage(aEvent.type, json);
         break;
       }
