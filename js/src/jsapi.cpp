@@ -4292,9 +4292,8 @@ JS_TypeHandlerMissing(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssi
 
     /* Don't mark the return type as anything, and add a warning. */
     cx->compartment->types.warnings = true;
-    fprintf(cx->typeOut(), "warning: Call to unimplemented handler at #%u:%05u: %s\n",
-            site->code->script->id, site->code->offset,
-            cx->getTypeId(fun->name));
+    InferSpew(ISpewDynamic, "warning: Call to unimplemented handler at #%u:%05u: %s\n",
+              site->code->script->id, site->code->offset, TypeIdString(cx, fun->name));
 #endif
 }
 

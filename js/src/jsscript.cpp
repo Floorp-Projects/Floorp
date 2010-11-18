@@ -1797,11 +1797,11 @@ JSScript::makeAnalysis(JSContext *cx)
     analysis->localTypes.pool = &analysis->pool;
     analysis->thisTypes.setPool(&analysis->pool);
 
-#ifdef JS_TYPES_DEBUG_SPEW
+#ifdef DEBUG
     char name[40];
     JS_snprintf(name, sizeof(name), "#%u:locals", analysis->id);
-    analysis->localTypes.name = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), 0));
-    fprintf(cx->typeOut(), "newScript: %s\n", name);
+    analysis->localTypes.name_ = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), 0));
+    types::InferSpew(types::ISpewOps, "newScript: %s\n", name);
 #endif
 #endif /* JS_TYPE_INFERENCE */
 
