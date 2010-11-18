@@ -40,6 +40,8 @@ const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
 
 const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 
+const kAddonPageSize = 5;
+
 #ifdef ANDROID
 const URI_GENERIC_ICON_XPINSTALL = "drawable://alertaddons";
 #else
@@ -490,7 +492,7 @@ var ExtensionsView = {
     }
   },
 
-  appendSearchResults: function(aAddons, aShowRating) {
+  appendSearchResults: function(aAddons, aShowRating, aShowCount) {
     let urlproperties = [ "iconURL", "homepageURL" ];
     let foundItem = false;
     for (let i = 0; i < aAddons.length; i++) {
@@ -509,6 +511,7 @@ var ExtensionsView = {
         if (addon.screenshots.some(function (aScreenshot) !this._isSafeURI(aScreenshot), this))
           continue;
       }
+
       // Convert the numeric type to a string
       let types = {"2":"extension", "4":"theme", "8":"locale"};
       addon.type = types[addon.type];
@@ -523,7 +526,34 @@ var ExtensionsView = {
         listitem.setAttribute("rating", addon.averageRating);
 
       let item = this._list.appendChild(listitem);
+
+      // Hide any overflow add-ons. The user can see them later by pressing the
+      // "See More" button
+      aShowCount--;
+      if (aShowCount < 0)
+        item.hidden = true;
     }
+  },
+
+  showMoreSearchResults: function showMoreSearchResults() {
+    // Show more add-ons, if we have them
+    let showCount = kAddonPageSize;
+
+    // Find the first hidden add-on
+    let item = this._repoItem.nextSibling;
+    while (item && !item.hidden)
+      item = item.nextSibling;
+
+    // Start showing the hidden add-ons
+    while (showCount > 0 && item && item.hidden) {
+      showCount--;
+      item.hidden = false;
+      item = item.nextSibling;
+    }
+
+    // Hide the "See More" button if there are no more to show
+    if (item == this._list.lastChild)
+      item.setAttribute("hidepage", "true");
   },
 
   displayRecommendedResults: function ev_displaySearchResults(aRecommendedAddons, aBrowseAddons) {
@@ -569,14 +599,17 @@ var ExtensionsView = {
     }
     aBrowseAddons.sort(ratingCompare);
 
-    this.appendSearchResults(aRecommendedAddons, false);
-    this.appendSearchResults(aBrowseAddons, true);
+    // We only show extra browse add-ons if the recommended count is small. Otherwise, the user
+    // can see more by pressing the "See More" button
+    this.appendSearchResults(aRecommendedAddons, false, aRecommendedAddons.length);
+    this.appendSearchResults(aBrowseAddons, true, (aRecommendedAddons.length >= kAddonPageSize ? 0 : kAddonPageSize));
 
     let showmore = document.createElement("richlistitem");
     showmore.setAttribute("typeName", "showmore");
-    showmore.setAttribute("label", strings.getString("addonsBrowseAll.label"));
-
-    showmore.setAttribute("url", browseURL);
+    showmore.setAttribute("pagelabel", strings.getString("addonsBrowseAll.seeMore"));
+    showmore.setAttribute("onpagecommand", "ExtensionsView.showMoreSearchResults();");
+    showmore.setAttribute("sitelabel", strings.getString("addonsBrowseAll.browseSite"));
+    showmore.setAttribute("onsitecommand", "ExtensionsView.showMoreResults('" + browseURL + "');");
     this._list.appendChild(showmore);
 
     let evt = document.createEvent("Events");
@@ -609,15 +642,17 @@ var ExtensionsView = {
     if (aTotalResults > aAddons.length) {
       let showmore = document.createElement("richlistitem");
       showmore.setAttribute("typeName", "showmore");
+      showmore.setAttribute("hidepage", "true");
 
       let labelBase = strings.getString("addonsSearchMore.label");
       let label = PluralForm.get(aTotalResults, labelBase).replace("#1", aTotalResults);
-      showmore.setAttribute("label", label);
+
+      showmore.setAttribute("sitelabel", label);
 
       let url = Services.prefs.getCharPref("extensions.getAddons.search.browseURL");
       url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
       url = formatter.formatURL(url);
-      showmore.setAttribute("url", url);
+      showmore.setAttribute("onsitecommand", "ExtensionsView.showMoreResults('" + url + "');");
       this._list.appendChild(showmore);
     }
 
@@ -645,10 +680,9 @@ var ExtensionsView = {
     this.getAddonsFromRepo("");
   },
 
-  showMoreResults: function ev_showMoreResults(aItem) {
-    let uri = aItem.getAttribute("url");
-    if (uri)
-      BrowserUI.newTab(uri);
+  showMoreResults: function ev_showMoreResults(aURL) {
+    if (aURL)
+      BrowserUI.newTab(aURL);
   },
 
   updateAll: function ev_updateAll() {
