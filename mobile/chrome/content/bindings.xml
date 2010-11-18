@@ -691,7 +691,8 @@
               this.setAttribute("selected", "true");
               let self = this;
               setTimeout(function() {
-                self.control.scrollBoxObject.ensureElementIsVisible(self); 
+                if (self.control)
+                  self.control.scrollBoxObject.ensureElementIsVisible(self); 
               }, 0);
               this.control.activeItem = this;
             }

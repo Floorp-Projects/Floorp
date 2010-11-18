@@ -136,7 +136,10 @@
                 let oldThumbnail = aTab.thumbnail.toDataURL("image/png");
                 this._tabsUndo.appendChild(aTab);
                 let thumbnailImg = new Image();
-                thumbnailImg.onload = function() aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
+                thumbnailImg.onload = function() {
+                  if (aTab.thumbnail)
+                    aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
+                };
                 thumbnailImg.src = oldThumbnail;
               }
               else

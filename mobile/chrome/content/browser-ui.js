@@ -2315,6 +2315,9 @@ var SelectHelperUI = {
   },
 
   unselectAll: function() {
+    if (!this._list)
+      return;
+
     let choices = this._list.choices;
     this._forEachOption(function(aItem, aIndex) {
       aItem.selected = false;
@@ -2323,6 +2326,9 @@ var SelectHelperUI = {
   },
 
   selectByIndex: function(aIndex) {
+    if (!this._list)
+      return;
+
     let choices = this._list.choices;
     for (let i = 0; i < this._container.childNodes.length; i++) {
       let option = this._container.childNodes[i];
@@ -2337,6 +2343,9 @@ var SelectHelperUI = {
 
   _getSelectedIndexes: function() {
     let indexes = [];
+    if (!this._list)
+      return indexes;
+
     let choices = this._list.choices;
     let choiceLength = choices.length;
     for (let i = 0; i < choiceLength; i++) {
