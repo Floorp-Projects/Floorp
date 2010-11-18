@@ -180,6 +180,9 @@ struct Address
 
     Address(Address addr, int32 offset)
       : base(addr.base), offset(addr.offset + offset), accSet(addr.accSet) {}
+
+  public:
+    Address() {}
 };
 
 

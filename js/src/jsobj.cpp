@@ -4616,8 +4616,10 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     }
 
     /* Store value before calling addProperty, in case the latter GC's. */
-    if (obj->containsSlot(shape->slot))
+    if (obj->containsSlot(shape->slot)) {
+        AbortRecordingIfUnexpectedGlobalWrite(cx, obj, shape->slot);
         obj->nativeSetSlot(shape->slot, value);
+    }
 
     /* XXXbe called with lock held */
     valueCopy = value;
@@ -5091,6 +5093,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
         if (shape->hasDefaultSetter()) {
             if (!added && !obj->methodWriteBarrier(cx, *shape, *vp))
                 return false;
+            AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
             obj->nativeSetSlot(slot, *vp);
             return true;
         }
@@ -5117,6 +5120,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
          obj->nativeContains(*shape))) {
         if (!added && !obj->methodWriteBarrier(cx, *shape, *vp))
             return false;
+        AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
         obj->setSlot(slot, *vp);
     }
 

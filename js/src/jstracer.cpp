@@ -2237,6 +2237,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     pendingSpecializedNative(NULL),
     pendingUnboxSlot(NULL),
     pendingGuardCondition(NULL),
+    pendingGlobalSlotToSet(-1),
     pendingLoop(true),
     generatedSpecializedNative(),
     tempTypeMap(cx),
@@ -3675,9 +3676,15 @@ TraceRecorder::writeBack(LIns* ins, LIns* base, ptrdiff_t offset, bool shouldDem
     JS_ASSERT(base == lirbuf->sp || base == eos_ins);
     if (shouldDemote && IsPromoteInt(ins))
         ins = w.demote(ins);
-    Address addr = (base == lirbuf->sp)
-                 ? (Address)StackAddress(base, offset)
-                 : (Address)EosAddress(base, offset);
+
+    Address addr;
+    if (base == lirbuf->sp) {
+        addr = StackAddress(base, offset);
+    } else {
+        addr = EosAddress(base, offset);
+        JS_ASSERT(pendingGlobalSlotToSet == -1);
+        pendingGlobalSlotToSet = offset / sizeof(double);
+    }
     return w.st(ins, addr);
 }
 
@@ -7171,6 +7178,7 @@ TraceRecorder::monitorRecording(JSOp op)
      */
     pendingSpecializedNative = NULL;
     newobj_ins = NULL;
+    pendingGlobalSlotToSet = -1;
 
     /* Handle one-shot request from finishGetProp or INSTANCEOF to snapshot post-op state and guard. */
     if (pendingGuardCondition) {
@@ -11516,7 +11524,7 @@ TraceRecorder::record_JSOP_DELNAME()
     return ARECORD_STOP;
 }
 
-JSBool JS_FASTCALL
+static JSBool JS_FASTCALL
 DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
@@ -11538,7 +11546,7 @@ DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 JS_DEFINE_CALLINFO_4(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, BOOL,
                      0, ACCSET_STORE_ANY)
 
-JSBool JS_FASTCALL
+static JSBool JS_FASTCALL
 DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);

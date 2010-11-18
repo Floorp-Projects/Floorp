@@ -1106,6 +1106,9 @@ class TraceRecorder
     /* Carry a guard condition to the beginning of the next monitorRecording. */
     nanojit::LIns*                  pendingGuardCondition;
 
+    /* See AbortRecordingIfUnexpectedGlobalWrite. */
+    int                             pendingGlobalSlotToSet;
+
     /* Carry whether we have an always-exit from emitIf to checkTraceEnd. */
     bool                            pendingLoop;
 
@@ -1595,6 +1598,13 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus record_NativeCallComplete();
     void forgetGuardedShapesForObject(JSObject* obj);
 
+    bool globalSetExpected(unsigned slot) {
+        if (pendingGlobalSlotToSet != (int)slot)
+            return !tracker.has(&globalObj->getSlotRef(slot));
+        pendingGlobalSlotToSet = -1;
+        return true;
+    }
+
 #ifdef DEBUG
     /* Debug printing functionality to emit printf() on trace. */
     JS_REQUIRES_STACK void tprint(const char *format, int count, nanojit::LIns *insa[]);
@@ -1827,5 +1837,30 @@ struct TraceVisStateObj {
 #define TRACE_2(x,a,b)          ((void)0)
 
 #endif /* !JS_TRACER */
+
+namespace js {
+
+/*
+ * While recording, the slots of the global object may change payload or type.
+ * This is fine as long as the recorder expects this change (and therefore has
+ * generated the corresponding LIR, snapshots, etc). The recorder indicates
+ * that it expects a write to a global slot by setting pendingGlobalSlotToSet
+ * in the recorder, before the write is made by the interpreter, and clearing
+ * pendingGlobalSlotToSet before recording the next op. Any global slot write
+ * that has not been whitelisted in this manner is therefore unexpected and, if
+ * the global slot is actually being tracked, recording must be aborted.
+ */
+static JS_INLINE void
+AbortRecordingIfUnexpectedGlobalWrite(JSContext *cx, JSObject *obj, unsigned slot)
+{
+#ifdef JS_TRACER
+    if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
+        if (!obj->parent && !tr->globalSetExpected(slot))
+            AbortRecording(cx, "Global slot written outside tracer supervision");
+    }
+#endif
+}
+
+}  /* namespace js */
 
 #endif /* jstracer_h___ */
