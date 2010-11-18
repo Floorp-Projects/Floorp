@@ -667,6 +667,13 @@ nsHtml5TreeBuilder::IsDiscretionaryFlushSafe()
            stack[currentPtr]->fosterParenting);
 }
 
+void
+nsHtml5TreeBuilder::DropHandles()
+{
+  mOldHandles.Clear();
+  mHandlesUsed = 0;
+}
+
 // DocumentModeHandler
 void
 nsHtml5TreeBuilder::documentMode(nsHtml5DocumentMode m)
