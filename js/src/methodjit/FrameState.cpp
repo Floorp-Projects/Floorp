@@ -686,6 +686,18 @@ FrameState::sync(Assembler &masm, Uses uses) const
             ensureTypeSynced(fe, masm);
 #endif
     }
+
+    /*
+     * Additionally make sure any known integers on the stack have synced types.
+     * During recompilation we may need to convert these into doubles, and need
+     * to know whether we currently think this slot is an integer.
+     */
+    for (FrameEntry *fe = bottom - 1; fe >= spBase; fe--) {
+        if (!fe->isTracked())
+            continue;
+        if (fe->isType(JSVAL_TYPE_INT32) && !fe->isConstant())
+            ensureTypeSynced(fe, masm);
+    }
 }
 
 void
@@ -815,6 +827,7 @@ FrameState::merge(Assembler &masm, Changes changes) const
      * For any changed values we are merging back which we consider to be doubles,
      * ensure they actually are doubles.  They must be doubles or ints, but we
      * do not require stub paths to always generate a double when needed.
+     * :FIXME: we check this on OOL stub calls, but not inline stub calls.
      */
     for (unsigned i = 0; i < changes.nchanges; i++) {
         FrameEntry *fe = sp - 1 - i;
@@ -1148,17 +1161,18 @@ FrameState::ensureDouble(FrameEntry *fe)
         return;
     }
 
-    if (backing->data.inMemory()) {
-        FPRegisterID fpreg = allocFPReg();
-        masm.moveInt32OrDouble(addressOf(backing), fpreg);
+    syncFe(backing);
 
-        setFPRegister(fe, fpreg);
-        fe->data.unsync();
-        fe->type.unsync();
-        return;
-    }
+    if (fe == backing)
+        forgetAllRegs(backing);
 
-    JS_NOT_REACHED("FIXME");
+    FPRegisterID fpreg = allocFPReg();
+    masm.moveInt32OrDouble(addressOf(backing), fpreg);
+
+    setFPRegister(fe, fpreg);
+    fe->data.unsync();
+    fe->type.unsync();
+    return;
 }
 
 void
@@ -1705,6 +1719,8 @@ AllocHelper(RematInfo &info, MaybeRegisterID &maybe)
 void
 FrameState::allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc)
 {
+    alloc.rhsNeedsRemat = false;
+
     if (!fe->isTypeKnown()) {
         alloc.lhsType = tempRegForType(fe);
         pinReg(alloc.lhsType.reg());
@@ -1938,6 +1954,15 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
         unpinReg(backingLeft->data.reg());
     if (backingRight->data.inRegister())
         unpinReg(backingRight->data.reg());
+}
+
+void
+FrameState::rematBinary(FrameEntry *lhs, FrameEntry *rhs, const BinaryAlloc &alloc, Assembler &masm)
+{
+    if (alloc.rhsNeedsRemat)
+        masm.loadPayload(addressForDataRemat(rhs), alloc.rhsData.reg());
+    if (alloc.lhsNeedsRemat)
+        masm.loadPayload(addressForDataRemat(lhs), alloc.lhsData.reg());
 }
 
 MaybeRegisterID

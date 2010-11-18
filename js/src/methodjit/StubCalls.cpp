@@ -305,6 +305,9 @@ stubs::SetGlobalNameNoCache(VMFrame &f, JSAtom *atom)
     if (!obj)
         THROW();
     jsid id = ATOM_TO_JSID(atom);
+
+    f.script()->typeMonitorAssign(cx, f.regs.pc, obj, id, rval);
+
     if (!obj->setProperty(cx, id, &rval, strict))
         THROW();
 
@@ -934,6 +937,8 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
          : parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs);
     if (!ok)
         THROW();
+
+    f.script()->typeMonitorAssign(cx, f.regs.pc, parent, id, rval);
 }
 
 template void JS_FASTCALL stubs::DefFun<true>(VMFrame &f, JSFunction *fun);
@@ -2209,6 +2214,8 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
     JSObject *obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isNative());
 
+    f.script()->typeMonitorAssign(cx, regs.pc, obj, ATOM_TO_JSID(atom), rval);
+
     /*
      * Probe the property cache.
      *
@@ -2789,4 +2796,12 @@ void JS_FASTCALL
 stubs::UndefinedHelper(VMFrame &f)
 {
     f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
+    f.regs.sp[-1].setUndefined();
+}
+
+void JS_FASTCALL
+stubs::NegZeroHelper(VMFrame &f)
+{
+    f.script()->typeMonitorOverflow(f.cx, f.regs.pc, 0);
+    f.regs.sp[-1].setDouble(-0.0);
 }

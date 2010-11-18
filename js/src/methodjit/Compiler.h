@@ -249,11 +249,11 @@ class Compiler : public BaseCompiler
     struct InternalCallSite {
         uint32 returnOffset;
         jsbytecode *pc;
-        uint32 id;
+        size_t id;
         bool call;
         bool ool;
 
-        InternalCallSite(uint32 returnOffset, jsbytecode *pc, uint32 id,
+        InternalCallSite(uint32 returnOffset, jsbytecode *pc, size_t id,
                          bool call, bool ool)
           : returnOffset(returnOffset), pc(pc), id(id), call(call), ool(ool)
         { }
@@ -297,6 +297,7 @@ class Compiler : public BaseCompiler
     Label arityLabel;
     bool debugMode_;
     bool addTraceHints;
+    bool recompiling;
 #ifdef JS_TYPE_INFERENCE
     bool hasThisType;
     JSValueType thisType;
@@ -325,7 +326,7 @@ class Compiler : public BaseCompiler
     Label labelOf(jsbytecode *target);
     void *findCallSite(const CallSite &callSite);
     void addCallSite(const InternalCallSite &callSite);
-    void addReturnSite(Label joinPoint, uint32 id);
+    void addReturnSite(Label joinPoint);
     bool loadOldTraps(const Vector<CallSite> &site);
 
     bool debugMode() { return debugMode_; }
@@ -433,10 +434,13 @@ class Compiler : public BaseCompiler
     void jsop_arguments();
 
     /* Fast arithmetic. */
-    void jsop_binary(JSOp op, VoidStub stub);
-    void jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub);
-    void jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub);
-    void jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub);
+    void jsop_binary(JSOp op, VoidStub stub, JSValueType type);
+    void jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub,
+                          JSValueType type);
+    void jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub,
+                                 JSValueType type);
+    void jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub,
+                            JSValueType type);
     void slowLoadConstantDouble(Assembler &masm, FrameEntry *fe,
                                 FPRegisterID fpreg);
     void maybeJumpIfNotInt32(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
@@ -498,8 +502,9 @@ class Compiler : public BaseCompiler
 // debug mode is on, adds the appropriate instrumentation for recompilation.
 #define INLINE_STUBCALL(stub)                                               \
     do {                                                                    \
-        Call cl = emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)));        \
-        InternalCallSite site(masm.callReturnOffset(cl), PC, __LINE__,      \
+        void *nstub = JS_FUNC_TO_DATA_PTR(void *, (stub));                  \
+        Call cl = emitStubCall(nstub);                                      \
+        InternalCallSite site(masm.callReturnOffset(cl), PC, (size_t)nstub, \
                               true, false);                                 \
         addCallSite(site);                                                  \
     } while (0)                                                             \
@@ -507,12 +512,12 @@ class Compiler : public BaseCompiler
 // Given a stub call, emits the call into the out-of-line assembly path. If
 // debug mode is on, adds the appropriate instrumentation for recompilation.
 // Unlike the INLINE_STUBCALL variant, this returns the Call offset.
-#define OOL_STUBCALL(stub)                                                      \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), __LINE__)          \
+#define OOL_STUBCALL(stub)                                                  \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)))
 
 // Same as OOL_STUBCALL, but specifies a slot depth.
-#define OOL_STUBCALL_LOCAL_SLOTS(stub, slots)                                   \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), (slots), __LINE__) \
+#define OOL_STUBCALL_LOCAL_SLOTS(stub, slots)                               \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), (slots))       \
 
 } /* namespace js */
 } /* namespace mjit */

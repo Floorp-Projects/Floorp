@@ -85,6 +85,7 @@ js::JMCheckLogging()
             "  vmframe       VMFrame contents\n"
             "  pics          PIC patching activity\n"
             "  slowcalls     Calls to slow path functions\n"
+            "  recompile     Dynamic recompilations\n"
             "  full          everything\n"
             "  notrace       disable trace hints\n"
             "\n"
@@ -110,6 +111,8 @@ js::JMCheckLogging()
         LoggingBits |= (1 << uint32(JSpew_PICs));
     if (strstr(env, "slowcalls"))
         LoggingBits |= (1 << uint32(JSpew_SlowCalls));
+    if (strstr(env, "recompile"))
+        LoggingBits |= (1 << uint32(JSpew_Recompile));
     if (strstr(env, "full"))
         LoggingBits |= 0xFFFFFFFF;
 }

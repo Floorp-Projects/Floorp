@@ -185,6 +185,9 @@ JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
 struct CallICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
+    /* Linked list entry for all ICs guarding on the same JIT entry point in fastGuardedObject. */
+    JSCList links;
+
     enum PoolIndex {
         Pool_ScriptStub,
         Pool_ClosureStub,
@@ -211,6 +214,11 @@ struct CallICInfo {
 
     /* Inline to OOL jump, redirected by stubs. */
     JSC::CodeLocationJump funJump;
+
+    /* Native stub info patched up when stealing during recompilation. */
+    JSC::CodeLocationLabel nativeStart;
+    JSC::CodeLocationJump nativeFunGuard;
+    JSC::CodeLocationJump nativeJump;
 
     /* Offset to inline scripted call, from funGuard. */
     uint32 hotJumpOffset   : 16;
@@ -252,6 +260,14 @@ struct CallICInfo {
             pools[index]->release();
             pools[index] = NULL;
         }
+    }
+
+    inline void purgeGuardedObject() {
+        JS_ASSERT(fastGuardedObject);
+        releasePool(CallICInfo::Pool_ClosureStub);
+        hasJsFunCheck = false;
+        fastGuardedObject = NULL;
+        JS_REMOVE_LINK(&links);
     }
 };
 

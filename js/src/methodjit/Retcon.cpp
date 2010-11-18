@@ -45,6 +45,8 @@
 #include "Compiler.h"
 #include "jsdbgapi.h"
 #include "jsnum.h"
+#include "assembler/assembler/LinkBuffer.h"
+#include "assembler/assembler/RepatchBuffer.h"
 
 #include "jscntxtinlines.h"
 
@@ -97,30 +99,157 @@ Recompiler::applyPatch(Compiler& c, PatchableAddress& toPatch)
     *toPatch.location = result;
 }
 
+Recompiler::PatchableNative
+Recompiler::stealNative(JITScript *jit, jsbytecode *pc)
+{
+    /*
+     * There is a native IC at pc which triggered a recompilation. The recompilation
+     * could have been triggered either by the native call itself, or by a SplatApplyArgs
+     * preparing for the native call. Either way, we don't want to patch up the call,
+     * but will instead steal the pool for the native IC so it doesn't get freed
+     * with the old script, and patch up the jump at the end to point to the slow join
+     * point in the new script.
+     */
+    unsigned i;
+    for (i = 0; i < jit->nCallICs; i++) {
+        if (jit->callICs[i].pc == pc)
+            break;
+    }
+    JS_ASSERT(i < jit->nCallICs);
+    ic::CallICInfo &ic = jit->callICs[i];
+    JS_ASSERT(ic.fastGuardedNative);
+
+    JSC::ExecutablePool *&pool = ic.pools[ic::CallICInfo::Pool_NativeStub];
+
+    if (!pool) {
+        /* Already stole this stub. */
+        PatchableNative native;
+        native.pc = NULL;
+        return native;
+    }
+
+    PatchableNative native;
+    native.pc = pc;
+    native.guardedNative = ic.fastGuardedNative;
+    native.pool = pool;
+    native.nativeStart = ic.nativeStart;
+    native.nativeFunGuard = ic.nativeFunGuard;
+    native.nativeJump = ic.nativeJump;
+
+    /*
+     * Mark as stolen in case there are multiple calls on the stack. Note that if
+     * recompilation fails due to low memory then this pool will leak.
+     */
+    pool = NULL;
+
+    return native;
+}
+
+void
+Recompiler::patchNative(JITScript *jit, PatchableNative &native)
+{
+    if (!native.pc)
+        return;
+
+    unsigned i;
+    for (i = 0; i < jit->nCallICs; i++) {
+        if (jit->callICs[i].pc == native.pc)
+            break;
+    }
+    JS_ASSERT(i < jit->nCallICs);
+    ic::CallICInfo &ic = jit->callICs[i];
+
+    ic.fastGuardedNative = native.guardedNative;
+    ic.pools[ic::CallICInfo::Pool_NativeStub] = native.pool;
+    ic.nativeStart = native.nativeStart;
+    ic.nativeFunGuard = native.nativeFunGuard;
+    ic.nativeJump = native.nativeJump;
+
+    /* Patch the jump on object identity to go to the native stub. */
+    {
+        uint8 *start = (uint8 *)ic.funJump.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+        repatch.relink(ic.funJump, ic.nativeStart);
+    }
+
+    /* Patch the native function guard to go to the slow path. */
+    {
+        uint8 *start = (uint8 *)native.nativeFunGuard.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+        repatch.relink(native.nativeFunGuard, ic.slowPathStart);
+    }
+
+    /* Patch the native fallthrough to go to the slow join point. */
+    {
+        JSC::CodeLocationLabel joinPoint = ic.slowPathStart.labelAtOffset(ic.slowJoinOffset);
+        uint8 *start = (uint8 *)native.nativeJump.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+        repatch.relink(native.nativeJump, joinPoint);
+    }
+}
+
 Recompiler::Recompiler(JSContext *cx, JSScript *script)
   : cx(cx), script(script)
 {    
 }
 
 /*
- * The strategy for this goes as follows:
- * 
- * 1) Scan the stack, looking at all return addresses that could go into JIT
- *    code.
- * 2) If an address corresponds to a call site registered by |callSite| during
- *    the last compilation, remember it.
- * 3) Purge the old compiled state and return if there were no active frames of 
- *    this script on the stack.
- * 4) Fix up the stack by replacing all saved addresses with the addresses the
- *    new compiler gives us for the call sites.
+ * Recompilation can be triggered either by the debugger (turning debug mode on for
+ * a script or setting/clearing a trap), or by dynamic changes in type information
+ * from type inference. When recompiling we also need to change any references to
+ * the old version of the script to refer to the new version of the script, including
+ * references on the JS stack. Things to do:
+ *
+ * - Purge scripted call inline caches calling into the old script.
+ *
+ * - For arg/local/stack slots in frames on the stack that are now inferred
+ *   as (int | double), make sure they are actually doubles. Before recompilation
+ *   they may have been inferred as integers and stored to the stack as integers,
+ *   but slots inferred as (int | double) are required to be definitely double.
+ *
+ * - For frames with an ncode return address in the original script, update
+ *   to point to the corresponding return address in the new script.
+ *
+ * - For VMFrames with a stub call return address in the original script,
+ *   update to point to the corresponding return address in the new script.
+ *   This requires that the recompiled script has a superset of the stub calls
+ *   in the original script. Stub calls are keyed to the function being called,
+ *   so with less precise type information the call to a stub can move around
+ *   (e.g. from inline to OOL path or vice versa) but can't disappear, and
+ *   further operation after the stub should be consistent across compilations.
+ *
+ * - For VMFrames with a native call return address in a call IC in the original
+ *   script (the only place where IC code makes calls), make a new stub to throw
+ *   an exception or jump to the call's slow path join point.
  */
 bool
 Recompiler::recompile()
 {
     JS_ASSERT(script->hasJITCode());
 
+    JaegerSpew(JSpew_Recompile, "recompiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
+               script->filename, script->lineno, script->length);
+
+    /*
+     * The strategy for this goes as follows:
+     * 
+     * 1) Scan the stack, looking at all return addresses that could go into JIT
+     *    code.
+     * 2) If an address corresponds to a call site registered by |callSite| during
+     *    the last compilation, remember it.
+     * 3) Purge the old compiled state and return if there were no active frames of 
+     *    this script on the stack.
+     * 4) Fix up the stack by replacing all saved addresses with the addresses the
+     *    new compiler gives us for the call sites.
+     */
     Vector<PatchableAddress> normalPatches(cx);
     Vector<PatchableAddress> ctorPatches(cx);
+    Vector<PatchableNative> normalNatives(cx);
+    Vector<PatchableNative> ctorNatives(cx);
+
+    /* Integers which need to be patched to doubles. */
+    Vector<Value*> normalDoubles(cx);
+    Vector<Value*> ctorDoubles(cx);
 
     JSStackFrame *firstCtorFrame = NULL;
     JSStackFrame *firstNormalFrame = NULL;
@@ -133,14 +262,64 @@ Recompiler::recompile()
 
         // Scan all frames owned by this VMFrame.
         JSStackFrame *end = f->entryfp->prev();
+        JSStackFrame *next = NULL;
         for (JSStackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
-            // Remember the latest frame for each type of JIT'd code, so the
-            // compiler will have a frame to re-JIT from.
-            if (!firstCtorFrame && fp->script() == script && fp->isConstructing())
-                firstCtorFrame = fp;
-            else if (!firstNormalFrame && fp->script() == script && !fp->isConstructing())
-                firstNormalFrame = fp;
+            if (fp->script() == script) {
+                // Remember the latest frame for each type of JIT'd code, so the
+                // compiler will have a frame to re-JIT from.
+                if (!firstCtorFrame && fp->isConstructing())
+                    firstCtorFrame = fp;
+                else if (!firstNormalFrame && !fp->isConstructing())
+                    firstNormalFrame = fp;
 
+#ifdef JS_TYPE_INFERENCE
+                // Patch up floating point arguments, locals and stack entries.
+                // These values might be torn if the compiler determined they were
+                // a constant or copy, but in that case their value is dead anyhow.
+                Vector<Value*> &doublePatches =
+                    fp->isConstructing() ? ctorDoubles : normalDoubles;
+
+                // arguments are not assumed to be floats at function entry,
+                // but they could have been reassigned. :TODO: 'this' value too?
+                Value *vp = fp->hasArgs() ? fp->formalArgs() : NULL;
+                for (unsigned i = 0; i < script->analysis->argCount(); i++, vp++) {
+                    JSValueType type = script->analysis->knownArgumentTypeTag(cx, NULL, i);
+                    if (type == JSVAL_TYPE_DOUBLE && vp->isInt32()) {
+                        if (!doublePatches.append(vp))
+                            return false;
+                    }
+                }
+
+                vp = fp->slots();
+                for (unsigned i = 0; i < script->nfixed; i++, vp++) {
+                    JSValueType type = script->analysis->knownLocalTypeTag(cx, NULL, i);
+                    if (type == JSVAL_TYPE_DOUBLE && vp->isInt32()) {
+                        if (!doublePatches.append(vp))
+                            return false;
+                    }
+                }
+
+                // We might be going past the actual count of active stack values if
+                // the opcode is fused and popped stuff or pushed other stuff before
+                // making the stub call. Not sure if this is actually a problem,
+                // so it probably is.
+
+                jsbytecode *pc = fp->pc(cx, next);
+                analyze::Bytecode &code = script->analysis->getCode(pc);
+                types::TypeStack *stack = code.inStack;
+                vp = fp->base() + code.stackDepth - 1;
+                for (unsigned depth = code.stackDepth - 1; depth < code.stackDepth; depth--, vp--) {
+                    JSValueType type = stack->group()->types.getKnownTypeTag(cx, NULL);
+                    if (type == JSVAL_TYPE_DOUBLE && vp->isInt32()) {
+                        if (!doublePatches.append(vp))
+                            return false;
+                    }
+                    stack = stack->group()->innerStack;
+                }
+#endif
+            }
+
+            // check for a scripted call returning into the recompiled script.
             void **addr = fp->addressOfNativeReturnAddress();
             if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
                 if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
@@ -149,8 +328,16 @@ Recompiler::recompile()
                 if (!normalPatches.append(findPatch(script->jitNormal, addr)))
                     return false;
             }
+
+            next = fp;
         }
 
+        // These return address checks will not pass when we were called from a native.
+        // Native calls are not through the FASTCALL ABI, and use a different return
+        // address from f->returnAddressLocation(). We make sure when calling a native that
+        // the FASTCALL return address is overwritten with NULL, and that it won't
+        // be used by the native itself. Otherwise we will read an uninitialized
+        // value here (probably the return address for a previous FASTCALL).
         void **addr = f->returnAddressLocation();
         if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
             if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
@@ -158,26 +345,39 @@ Recompiler::recompile()
         } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
             if (!normalPatches.append(findPatch(script->jitNormal, addr)))
                 return false;
+        } else if (f->fp()->script() == script) {
+            // Native call.
+            if (f->fp()->isConstructing()) {
+                if (!ctorNatives.append(stealNative(script->jitCtor, f->fp()->pc(cx, NULL))))
+                    return false;
+            } else {
+                if (!normalNatives.append(stealNative(script->jitNormal, f->fp()->pc(cx, NULL))))
+                    return false;
+            }
         }
     }
 
     Vector<CallSite> normalSites(cx);
     Vector<CallSite> ctorSites(cx);
+    uint32 normalRecompilations;
+    uint32 ctorRecompilations;
 
-    if (script->jitNormal && !saveTraps(script->jitNormal, &normalSites))
+    if (script->jitNormal && !cleanup(script->jitNormal, &normalSites, &normalRecompilations))
         return false;
-    if (script->jitCtor && !saveTraps(script->jitCtor, &ctorSites))
+    if (script->jitCtor && !cleanup(script->jitCtor, &ctorSites, &ctorRecompilations))
         return false;
 
     ReleaseScriptCode(cx, script);
 
-    if (normalPatches.length() &&
-        !recompile(firstNormalFrame, normalPatches, normalSites)) {
+    if ((normalPatches.length() || normalNatives.length()) &&
+        !recompile(firstNormalFrame, normalPatches, normalSites, normalNatives, normalDoubles,
+                   normalRecompilations)) {
         return false;
     }
 
-    if (ctorPatches.length() &&
-        !recompile(firstCtorFrame, ctorPatches, ctorSites)) {
+    if ((ctorPatches.length() || ctorNatives.length()) &&
+        !recompile(firstCtorFrame, ctorPatches, ctorSites, ctorNatives, ctorDoubles,
+                   ctorRecompilations)) {
         return false;
     }
 
@@ -185,23 +385,42 @@ Recompiler::recompile()
 }
 
 bool
-Recompiler::saveTraps(JITScript *jit, Vector<CallSite> *sites)
+Recompiler::cleanup(JITScript *jit, Vector<CallSite> *sites, uint32 *recompilations)
 {
+    while (!JS_CLIST_IS_EMPTY(&jit->callers)) {
+        JaegerSpew(JSpew_Recompile, "Purging IC caller\n");
+
+        JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
+        ic::CallICInfo *ic = (ic::CallICInfo *) jit->callers.next;
+
+        uint8 *start = (uint8 *)ic->funGuard.executableAddress();
+        JSC::RepatchBuffer repatch(start - 32, 64);
+
+        repatch.repatch(ic->funGuard, NULL);
+        repatch.relink(ic->funJump, ic->slowPathStart);
+        ic->purgeGuardedObject();
+    }
+
     for (uint32 i = 0; i < jit->nCallSites; i++) {
         CallSite &site = jit->callSites[i];
         if (site.isTrap() && !sites->append(site))
             return false;
     }
+
+    *recompilations = jit->recompilations;
+
     return true;
 }
 
 bool
-Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches,
-                      Vector<CallSite> &sites)
+Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
+                      Vector<PatchableNative> &natives, Vector<Value*> &doublePatches,
+                      uint32 recompilations)
 {
-    /* If we get this far, the script is live, and we better be safe to re-jit. */
-    JS_ASSERT(cx->compartment->debugMode);
     JS_ASSERT(fp);
+
+    JaegerSpew(JSpew_Recompile, "On stack recompilation, %u patches, %u natives, %u doubles\n",
+               patches.length(), natives.length(), doublePatches.length());
 
     Compiler c(cx, fp);
     if (!c.loadOldTraps(sites))
@@ -209,9 +428,17 @@ Recompiler::recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches,
     if (c.compile() != Compile_Okay)
         return false;
 
+    script->getJIT(fp->isConstructing())->recompilations = recompilations + 1;
+
     /* Perform the earlier scanned patches */
     for (uint32 i = 0; i < patches.length(); i++)
         applyPatch(c, patches[i]);
+    for (uint32 i = 0; i < natives.length(); i++)
+        patchNative(script->getJIT(fp->isConstructing()), natives[i]);
+    for (uint32 i = 0; i < doublePatches.length(); i++) {
+        double v = doublePatches[i]->toInt32();
+        doublePatches[i]->setDouble(v);
+    }
 
     return true;
 }
