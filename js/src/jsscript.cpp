@@ -1367,7 +1367,7 @@ DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
             PurgeScriptFragments(&i.threadData()->traceMonitor, script);
     }
 # else
-    PurgeScriptFragments(JS_TRACE_MONITOR(cx), script);
+    PurgeScriptFragments(&JS_TRACE_MONITOR(cx), script);
 # endif
 #endif
 
