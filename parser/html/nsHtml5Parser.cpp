@@ -498,6 +498,7 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
   mTokenizer->end();
   mExecutor->DropParserAndPerfHint();
   mExecutor->DropHeldElements();
+  mTreeBuilder->DropHandles();
   mAtomTable.Clear();
   return NS_OK;
 }
