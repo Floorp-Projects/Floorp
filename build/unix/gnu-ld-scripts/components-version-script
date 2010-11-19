@@ -1,5 +1,6 @@
 EXPORTED {
    global:
 		NSModule;
+		NSGetModule;
    local: *;
 };
