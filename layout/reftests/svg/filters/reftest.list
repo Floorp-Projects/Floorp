@@ -86,5 +86,5 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 
 == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
-random-if(gtk2Widget) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg # bug 610945
+== feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
 

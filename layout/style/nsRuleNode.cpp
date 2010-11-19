@@ -1358,7 +1358,6 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   // and 'narrower' values of 'font-stretch' depend on the parent.
   const nsCSSValue& size = fontData.mSize;
   const nsCSSValue& weight = fontData.mWeight;
-  const nsCSSValue& stretch = fontData.mStretch;
   if (size.IsRelativeLengthUnit() ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&

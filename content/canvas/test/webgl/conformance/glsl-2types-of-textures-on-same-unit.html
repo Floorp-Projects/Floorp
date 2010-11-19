@@ -60,6 +60,7 @@ function init()
 
   gl = initWebGL("example", "vshader", "fshader", [ "vPosition", "texCoord0"],
                  [ 0, 0, 0, 1 ], 1);
+  gl = WebGLDebugUtils.makeDebugContext(gl);
 
   gl.disable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);
@@ -124,7 +125,7 @@ function init()
     var y = Math.floor(ii / 2);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     glErrorShouldBe(gl, gl.INVALID_OPERATION,
-                    "drawing with 2 different targets on the same texture unit should generate error");
+              "drawing with 2 different targets on the same texture unit should generate INVALID_VALUE");
   }
 }
 

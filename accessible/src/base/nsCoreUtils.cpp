@@ -47,7 +47,6 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
-#include "nsIDOMDocumentXBL.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNodeList.h"
@@ -806,67 +805,6 @@ nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
 }
 
 void
-nsCoreUtils::GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
-                                     nsIArray **aRefElements)
-{
-  *aRefElements = nsnull;
-
-  nsAutoString ids;
-  if (!aContent->GetAttr(kNameSpaceID_None, aAttr, ids))
-    return;
-
-  ids.CompressWhitespace(PR_TRUE, PR_TRUE);
-
-  nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(aContent->GetOwnerDoc());
-  NS_ASSERTION(document, "The given node is not in document!");
-  if (!document)
-    return;
-
-  nsCOMPtr<nsIDOMDocumentXBL> xblDocument;
-  if (aContent->IsInAnonymousSubtree())
-    xblDocument = do_QueryInterface(document);
-
-  nsCOMPtr<nsIMutableArray> refElms = do_CreateInstance(NS_ARRAY_CONTRACTID);
-
-  while (!ids.IsEmpty()) {
-    nsAutoString id;
-    PRInt32 idLength = ids.FindChar(' ');
-    NS_ASSERTION(idLength != 0,
-                 "Should not be 0 because of CompressWhitespace() call above");
-
-    if (idLength == kNotFound) {
-      id = ids;
-      ids.Truncate();
-    } else {
-      id = Substring(ids, 0, idLength);
-      ids.Cut(0, idLength + 1);
-    }
-
-    // If content is anonymous subtree then use "anonid" attribute to get
-    // elements, otherwise search elements in DOM by ID attribute.
-    nsCOMPtr<nsIDOMElement> refElement;
-    if (xblDocument) {
-      nsCOMPtr<nsIDOMElement> elm =
-        do_QueryInterface(aContent->GetBindingParent());
-      xblDocument->GetAnonymousElementByAttribute(elm,
-                                                  NS_LITERAL_STRING("anonid"),
-                                                  id,
-                                                  getter_AddRefs(refElement));
-    } else {
-      document->GetElementById(id, getter_AddRefs(refElement));
-    }
-
-    if (!refElement)
-      continue;
-
-    refElms->AppendElement(refElement, PR_FALSE);
-  }
-
-  NS_ADDREF(*aRefElements = refElms);
-  return;
-}
-
-void
 nsCoreUtils::GetElementsHavingIDRefsAttr(nsIContent *aRootContent,
                                          nsIContent *aContent,
                                          nsIAtom *aIDRefsAttr,
@@ -1164,4 +1102,79 @@ nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
   *aResult = mNames.Contains(aString);
 
   return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// IDRefsIterator
+////////////////////////////////////////////////////////////////////////////////
+
+IDRefsIterator::IDRefsIterator(nsIContent* aContent, nsIAtom* aIDRefsAttr) :
+  mCurrIdx(0)
+{
+  if (!aContent->IsInDoc() ||
+      !aContent->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs))
+    return;
+
+  if (aContent->IsInAnonymousSubtree()) {
+    mXBLDocument = do_QueryInterface(aContent->GetOwnerDoc());
+    mBindingParent = do_QueryInterface(aContent->GetBindingParent());
+  } else {
+    mDocument = aContent->GetOwnerDoc();
+  }
+}
+
+const nsDependentSubstring
+IDRefsIterator::NextID()
+{
+  for (; mCurrIdx < mIDs.Length(); mCurrIdx++) {
+    if (!NS_IsAsciiWhitespace(mIDs[mCurrIdx]))
+      break;
+  }
+
+  if (mCurrIdx >= mIDs.Length())
+    return nsDependentSubstring();
+
+  nsAString::index_type idStartIdx = mCurrIdx;
+  while (++mCurrIdx < mIDs.Length()) {
+    if (NS_IsAsciiWhitespace(mIDs[mCurrIdx]))
+      break;
+  }
+
+  return Substring(mIDs, idStartIdx, mCurrIdx++ - idStartIdx);
+}
+
+nsIContent*
+IDRefsIterator::NextElem()
+{
+  while (true) {
+    const nsDependentSubstring id = NextID();
+    if (id.IsEmpty())
+      break;
+
+    nsIContent* refContent = GetElem(id);
+    if (refContent)
+      return refContent;
+  }
+
+  return nsnull;
+}
+
+nsIContent*
+IDRefsIterator::GetElem(const nsDependentSubstring& aID)
+{
+  if (mXBLDocument) {
+    // If content is anonymous subtree then use "anonid" attribute to get
+    // elements, otherwise search elements in DOM by ID attribute.
+
+    nsCOMPtr<nsIDOMElement> refElm;
+    mXBLDocument->GetAnonymousElementByAttribute(mBindingParent,
+                                                 NS_LITERAL_STRING("anonid"),
+                                                 aID,
+                                                 getter_AddRefs(refElm));
+    nsCOMPtr<nsIContent> refContent = do_QueryInterface(refElm);
+    return refContent;
+  }
+
+  return mDocument->GetElementById(aID);
 }

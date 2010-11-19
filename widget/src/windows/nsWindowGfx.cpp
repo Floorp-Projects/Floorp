@@ -732,7 +732,6 @@ DDRAW_FAILED:
           gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
           LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
           if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
-            mLayerManager = nsnull;
             Invalidate(PR_FALSE);
           } else {
             result = DispatchWindowEvent(&event, eventStatus);

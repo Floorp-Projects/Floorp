@@ -1,3 +1,17 @@
+2010-10-12  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #31310.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackedpoints): Protect against
+	invalid `runcnt' values.
+
+2010-10-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve error handling of `SHZ' bytecode instruction.
+	Problem reported by Chris Evans <scarybeasts@gmail.com>.
+
+	* src/truetype/ttinterp.c (Ins_SHZ): Check `last_point'.
+
 2010-10-03  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.3 released.

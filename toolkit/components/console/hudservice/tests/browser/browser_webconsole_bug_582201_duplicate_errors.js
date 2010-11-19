@@ -75,7 +75,7 @@ var consoleObserver = {
     Services.console.unregisterListener(this);
 
     hudId = HUDService.displaysIndex()[0];
-    hud = HUDService.hudWeakReferences[hudId].get();
+    hud = HUDService.hudReferences[hudId];
     outputNode = hud.outputNode;
 
     executeSoon(function () {

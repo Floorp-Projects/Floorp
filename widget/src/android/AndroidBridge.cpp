@@ -522,7 +522,7 @@ AndroidBridge::ShowFilePicker(nsAString& aFilePath, nsAString& aFilters)
 void
 AndroidBridge::SetFullScreen(PRBool aFullScreen)
 {
-    mJNIEnv->CallStaticIntMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jSetFullScreen, aFullScreen);
 }
 
 void

@@ -1,8 +1,10 @@
 #data
-Placeholder
+<input type="hidden"><frameset>
 #errors
+21: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
+31: “frameset” start tag seen.
+31: End of file seen and there were open elements.
 #document
 | <html>
 |   <head>
-|   <body>
-|     "Placeholder"
+|   <frameset>

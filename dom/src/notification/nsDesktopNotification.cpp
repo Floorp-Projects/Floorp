@@ -181,6 +181,9 @@ nsDOMDesktopNotification::HandleAlertServiceNotification(const char *aTopic)
 NS_IMETHODIMP
 nsDOMDesktopNotification::Show()
 {
+  if (nsContentUtils::GetBoolPref("notification.disabled", PR_FALSE))
+    return NS_OK;
+
   // If we are in testing mode (running mochitests, for example)
   // and we are suppose to allow requests, then just post an allow event.
   if (nsContentUtils::GetBoolPref("notification.prompt.testing", PR_FALSE) &&

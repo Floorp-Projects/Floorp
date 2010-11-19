@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Tests that the HUD can be accessed via the HUD weak references in the HUD
+// Tests that the HUD can be accessed via the HUD references in the HUD
 // service.
 
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
@@ -55,7 +55,7 @@ function testHUDGetters() {
 
   hudId = HUDService.displaysIndex()[0];
 
-  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var HUD = HUDService.hudReferences[hudId];
   var jsterm = HUD.jsterm;
   var klass = jsterm.inputNode.getAttribute("class");
   ok(klass == "jsterm-input-node", "We have the input node.");

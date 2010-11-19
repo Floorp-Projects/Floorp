@@ -438,6 +438,15 @@ function testConstructionWithUnalignedOffset(type, name, elementSizeInBytes) {
     }
 }
 
+function testConstructionWithUnalignedLength(type, name, elementSizeInBytes) {
+    if (elementSizeInBytes > 1) {
+        shouldThrowIndexSizeErr(function() {
+            var buffer = new ArrayBuffer(elementSizeInBytes + 1);
+            var array = new type(buffer, 0);
+        }, "Construction of " + name + " with unaligned length");
+    }
+}
+
 function testConstructionOfHugeArray(type, name, sz) {
     if (sz == 1)
         return;
@@ -671,6 +680,7 @@ function runTests() {
     testConstructionWithOutOfRangeValues(type, name);
     testConstructionWithNegativeOutOfRangeValues(type, name);
     testConstructionWithUnalignedOffset(type, name, testCase.elementSizeInBytes);
+    testConstructionWithUnalignedLength(type, name, testCase.elementSizeInBytes);
     testConstructionOfHugeArray(type, name, testCase.elementSizeInBytes);
     testConstructionWithBothArrayBufferAndLength(type, name, testCase.elementSizeInBytes);
     testSlicingWithOutOfRangeValues(type, name, testCase.elementSizeInBytes);
