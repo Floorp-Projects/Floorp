@@ -46,6 +46,7 @@
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/RepatchBuffer.h"
 #include "assembler/jit/ExecutableAllocator.h"
+#include <limits.h>
 
 namespace js {
 namespace mjit {
@@ -109,13 +110,44 @@ class BaseCompiler : public MacroAssemblerTypedefs
 class LinkerHelper : public JSC::LinkBuffer
 {
   protected:
-    JSContext *cx;
+    Assembler &masm;
+#ifdef DEBUG
+    bool verifiedRange;
+#endif
 
   public:
-    LinkerHelper(JSContext *cx) : cx(cx)
+    LinkerHelper(Assembler &masm) : masm(masm)
+#ifdef DEBUG
+        , verifiedRange(false)
+#endif
     { }
 
-    JSC::ExecutablePool *init(Assembler &masm) {
+    ~LinkerHelper() {
+        JS_ASSERT(verifiedRange);
+    }
+
+    bool verifyRange(const JSC::JITCode &other) {
+#ifdef DEBUG
+        verifiedRange = true;
+#endif
+#ifdef JS_CPU_X64
+        uintptr_t lowest = JS_MIN(uintptr_t(m_code), uintptr_t(other.start()));
+
+        uintptr_t myEnd = uintptr_t(m_code) + m_size;
+        uintptr_t otherEnd = uintptr_t(other.start()) + other.size();
+        uintptr_t highest = JS_MAX(myEnd, otherEnd);
+
+        return (highest - lowest < INT_MAX);
+#else
+        return true;
+#endif
+    }
+
+    bool verifyRange(JITScript *jit) {
+        return verifyRange(JSC::JITCode(jit->code.m_code.executableAddress(), jit->code.m_size));
+    }
+
+    JSC::ExecutablePool *init(JSContext *cx) {
         // The pool is incref'd after this call, so it's necessary to release()
         // on any failure.
         JSC::ExecutablePool *ep = BaseCompiler::GetExecPool(cx, masm.size());
@@ -130,6 +162,11 @@ class LinkerHelper : public JSC::LinkBuffer
             return NULL;
         }
         return ep;
+    }
+
+    JSC::CodeLocationLabel finalize() {
+        masm.finalize(*this);
+        return finalizeCodeAddendum();
     }
 
     void maybeLink(MaybeJump jump, JSC::CodeLocationLabel label) {
