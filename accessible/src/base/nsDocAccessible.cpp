@@ -103,7 +103,8 @@ nsDocAccessible::
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
                   nsIWeakReference *aShell) :
   nsHyperTextAccessibleWrap(aRootContent, aShell),
-  mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE)
+  mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE),
+  mCacheRoot(nsnull), mIsPostCacheProcessing(PR_FALSE)
 {
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
@@ -1588,6 +1589,39 @@ nsDocAccessible::RecreateAccessible(nsINode* aNode)
   }
 }
 
+void
+nsDocAccessible::NotifyOfCachingStart(nsAccessible* aAccessible)
+{
+  if (!mCacheRoot)
+    mCacheRoot = aAccessible;
+}
+
+void
+nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
+{
+  if (mCacheRoot == aAccessible && !mIsPostCacheProcessing) {
+    // Allow invalidation list insertions while container children are recached.
+    mIsPostCacheProcessing = PR_TRUE;
+
+    // Invalidate children of container accessible for each element in
+    // invalidation list.
+    for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
+      nsIContent* content = mInvalidationList[idx];
+      nsAccessible* container =
+        GetAccService()->GetCachedContainerAccessible(content);
+      container->InvalidateChildren();
+
+      // Make sure we keep children updated. While we're inside of caching loop
+      // then we must exist it with cached children.
+      container->EnsureChildren();
+    }
+    mInvalidationList.Clear();
+
+    mCacheRoot = nsnull;
+    mIsPostCacheProcessing = PR_FALSE;
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Protected members
 
@@ -1620,8 +1654,18 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
       if (providers) {
         AttrRelProvider* provider =
           new AttrRelProvider(relAttr, aRelProvider->GetContent());
-        if (provider)
+        if (provider) {
           providers->AppendElement(provider);
+
+          // We've got here during the children caching. If the referenced
+          // content is not accessible then store it to pend its container
+          // children invalidation (this happens immediately after the caching
+          // is finished).
+          nsIContent* dependentContent = iter.GetElem(id);
+          if (dependentContent && !GetCachedAccessible(dependentContent)) {
+            mInvalidationList.AppendElement(dependentContent);
+          }
+        }
       }
     }
 

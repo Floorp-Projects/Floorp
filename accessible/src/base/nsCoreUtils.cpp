@@ -1152,25 +1152,29 @@ IDRefsIterator::NextElem()
     if (id.IsEmpty())
       break;
 
-    if (mXBLDocument) {
-      // If content is anonymous subtree then use "anonid" attribute to get
-      // elements, otherwise search elements in DOM by ID attribute.
-
-      nsCOMPtr<nsIDOMElement> refElm;
-      mXBLDocument->GetAnonymousElementByAttribute(mBindingParent,
-                                                   NS_LITERAL_STRING("anonid"),
-                                                   id,
-                                                   getter_AddRefs(refElm));
-      nsCOMPtr<nsIContent> refContent = do_QueryInterface(refElm);
-      if (refContent)
-        return refContent;
-
-    } else {
-      nsIContent* refContent = mDocument->GetElementById(id);
-      if (refContent)
-        return refContent;
-    }
+    nsIContent* refContent = GetElem(id);
+    if (refContent)
+      return refContent;
   }
 
   return nsnull;
+}
+
+nsIContent*
+IDRefsIterator::GetElem(const nsDependentSubstring& aID)
+{
+  if (mXBLDocument) {
+    // If content is anonymous subtree then use "anonid" attribute to get
+    // elements, otherwise search elements in DOM by ID attribute.
+
+    nsCOMPtr<nsIDOMElement> refElm;
+    mXBLDocument->GetAnonymousElementByAttribute(mBindingParent,
+                                                 NS_LITERAL_STRING("anonid"),
+                                                 aID,
+                                                 getter_AddRefs(refElm));
+    nsCOMPtr<nsIContent> refContent = do_QueryInterface(refElm);
+    return refContent;
+  }
+
+  return mDocument->GetElementById(aID);
 }
