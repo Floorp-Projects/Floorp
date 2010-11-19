@@ -711,8 +711,16 @@ LoginManager.prototype = {
         // username. We might not find a username field if the user is
         // already logged in to the site. 
         for (var i = pwFields[0].index - 1; i >= 0; i--) {
-            if (form.elements[i].type == "text") {
-                usernameField = form.elements[i];
+            var element = form.elements[i];
+            var fieldType = (element.hasAttribute("type") ?
+                             element.getAttribute("type").toLowerCase() :
+                             element.type);
+            if (fieldType == "text"  ||
+                fieldType == "email" ||
+                fieldType == "url"   ||
+                fieldType == "tel"   ||
+                fieldType == "number") {
+                usernameField = element;
                 break;
             }
         }
