@@ -1,44 +1,10 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK *****
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* General Complete MAR File Patch Apply Test */
+/* Application in use complete MAR file patch apply success test */
 
-const TEST_ID = "0110";
+const TEST_ID = "0160";
 // All we care about is that the last modified time has changed so that Mac OS
 // X Launch Services invalidates its cache so the test allows up to one minute
 // difference in the last modified time.
@@ -93,9 +59,12 @@ const TEST_FILES = [
   comparePerms     : 0644
 }];
 
+let gCallbackAppProcess;
+
 function run_test() {
-  if (IS_ANDROID) {
-    logTestInfo("this test is not applicable to Android... returning early");
+  if (!IS_UNIX || IS_ANDROID) {
+    logTestInfo("this test is only applicable to XP_UNIX platforms except " +
+                "for Android... returning early");
     return;
   }
 
@@ -104,9 +73,20 @@ function run_test() {
 
   setupUpdaterTest(TEST_ID, MAR_COMPLETE_FILE, TEST_FILES);
 
-  // The testUpdate function is used for consistency with the tests that require
-  // a timeout before continuing the test.
-  testUpdate();
+  // Launch the callback helper application so it is in use during the update
+  let callbackApp = do_get_file(TEST_ID + APPLY_TO_DIR_SUFFIX);
+  callbackApp.append(AFTER_APPLY_DIR);
+  callbackApp.append(CALLBACK_BIN_FILE);
+  callbackApp.permissions = PERMS_DIRECTORY;
+  let args = ["-s", "20"];
+  gCallbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                        createInstance(AUS_Ci.nsIProcess);
+  gCallbackAppProcess.init(callbackApp);
+  gCallbackAppProcess.run(false, args, args.length);
+
+  // Give the lock file process time to lock the file before updating otherwise
+  // this test can fail intermittently on Windows debug builds.
+  do_timeout(100, testUpdate);
 }
 
 function end_test() {
@@ -132,6 +112,8 @@ function testUpdate() {
               "applying a complete mar");
   do_check_eq(exitValue, 0);
 
+  gCallbackAppProcess.kill();
+
   logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
   do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
 
@@ -146,11 +128,6 @@ function testUpdate() {
   }
 
   checkFilesAfterUpdateSuccess(TEST_ID, TEST_FILES);
-
-  logTestInfo("testing tobedeleted directory doesn't exist");
-  let toBeDeletedDir = applyToDir.clone();
-  toBeDeletedDir.append("tobedeleted");
-  do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog(TEST_ID);
 }
