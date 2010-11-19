@@ -755,6 +755,12 @@ nsDocShell::~nsDocShell()
 {
     Destroy();
 
+    nsCOMPtr<nsISHistoryInternal>
+        shPrivate(do_QueryInterface(mSessionHistory));
+    if (shPrivate) {
+        shPrivate->SetRootDocShell(nsnull);
+    }
+
     if (--gDocShellCount == 0) {
         NS_IF_RELEASE(sURIFixup);
     }
