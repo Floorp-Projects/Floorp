@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var input = document.createElement("input");
+  document.body.appendChild(input);
+  input.focus();
+  document.body.appendChild(input);
+  input.focus();
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 0);"></body>
+</html>

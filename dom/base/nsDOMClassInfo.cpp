@@ -446,7 +446,7 @@
 #endif // MOZ_SVG
 
 #include "nsIDOMCanvasRenderingContext2D.h"
-#include "nsICanvasRenderingContextWebGL.h"
+#include "nsIDOMWebGLRenderingContext.h"
 
 #include "nsIImageDocument.h"
 
@@ -2718,6 +2718,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLSelectElement, nsIDOMHTMLSelectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement_Mozilla_2_0_Branch)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3959,8 +3960,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL)
-    DOM_CLASSINFO_MAP_ENTRY(nsICanvasRenderingContextWebGL)
+  DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContextWebGL, nsIDOMWebGLRenderingContext)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWebGLRenderingContext)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLBuffer, nsIWebGLBuffer)

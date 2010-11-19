@@ -3171,6 +3171,22 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
   }
 
 #ifndef WINCE
+#ifdef MOZ_ENABLE_D3D10_LAYER
+  if (mLayerManager) {
+    if (mLayerManager->GetBackendType() ==
+        mozilla::layers::LayerManager::LAYERS_D3D10)
+    {
+      mozilla::layers::LayerManagerD3D10 *layerManagerD3D10 =
+        static_cast<mozilla::layers::LayerManagerD3D10*>(mLayerManager.get());
+      if (layerManagerD3D10->device() !=
+          gfxWindowsPlatform::GetPlatform()->GetD3D10Device())
+      {
+        mLayerManager = nsnull;
+      }
+    }
+  }
+#endif
+
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
@@ -5299,6 +5315,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #ifndef WINCE
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   case WM_DWMCOMPOSITIONCHANGED:
+    // First, update the compositor state to latest one. All other methods
+    // should use same state as here for consistency painting.
+    nsUXThemeData::CheckForCompositor(PR_TRUE);
+
     UpdateNonClientMargins();
     RemovePropW(mWnd, kManageWindowInfoProperty);
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);

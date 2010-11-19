@@ -52,6 +52,9 @@
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
 #include "nsTransferable.h"
+#include "nsPrintOptionsAndroid.h"
+#include "nsPrintSession.h"
+#include "nsDeviceContextAndroid.h"
 #include "nsFilePicker.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsIMEPicker.h"
@@ -68,6 +71,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsAndroid, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMEPicker)
 
@@ -101,6 +107,9 @@ NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
+NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
+NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_IMEPICKER_CID);
@@ -116,6 +125,9 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
   { &kNS_CLIPBOARD_CID, false, NULL, nsClipboardConstructor },
   { &kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor },
+  { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsAndroidConstructor },
+  { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
+  { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecAndroidConstructor },
   { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
   { &kNS_IMEPICKER_CID, false, NULL, nsIMEPickerConstructor },
@@ -133,6 +145,9 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
   { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID },
   { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },
+  { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
+  { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
+  { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
   { "@mozilla.org/imepicker;1", &kNS_IMEPICKER_CID },

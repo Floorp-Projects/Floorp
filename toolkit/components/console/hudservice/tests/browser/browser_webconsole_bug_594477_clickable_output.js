@@ -9,6 +9,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const TEST_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-console.html";
+let HUD;
 
 let outputItem;
 
@@ -17,8 +18,8 @@ function tabLoad1(aEvent) {
 
   openConsole();
 
-  let hudId = HUDService.getHudIdByWindow(content);
-  HUD = HUDService.hudWeakReferences[hudId].get();
+  let hudId = HUDService.getHudIdByWindow(browser.contentWindow);
+  HUD = HUDService.hudReferences[hudId];
 
   let display = HUDService.getOutputNodeById(hudId);
   outputNode = display.querySelector(".hud-output-node");
@@ -26,7 +27,8 @@ function tabLoad1(aEvent) {
   browser.addEventListener("load", tabLoad2, true);
 
   // Reload so we get some output in the console.
-  content.location.reload();
+  browser.contentWindow.location.reload();
+  log(document);
 }
 
 function tabLoad2(aEvent) {
@@ -34,7 +36,6 @@ function tabLoad2(aEvent) {
 
   outputItem = outputNode.querySelector(".hud-network");
   ok(outputItem, "found a network message");
-
   document.addEventListener("popupshown", networkPanelShown, false);
 
   // Send the mousedown and click events such that the network panel opens.

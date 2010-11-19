@@ -176,6 +176,8 @@ random == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
 
+== anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
+
 == api-sanity-1.svg lime.svg
 
 == freeze-applied-late-1.svg anim-standard-ref.svg

@@ -37,10 +37,12 @@
 
 #include "AccIterator.h"
 
+#include "nsAccessibilityService.h"
 #include "nsAccessible.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccIterator
+// AccIterator
+////////////////////////////////////////////////////////////////////////////////
 
 AccIterator::AccIterator(nsAccessible *aAccessible,
                          filters::FilterFuncPtr aFilterFunc,
@@ -92,4 +94,46 @@ AccIterator::IteratorState::IteratorState(nsAccessible *aParent,
                                           IteratorState *mParentState) :
   mParent(aParent), mIndex(0), mParentState(mParentState)
 {
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// RelatedAccIterator
+////////////////////////////////////////////////////////////////////////////////
+
+RelatedAccIterator::
+  RelatedAccIterator(nsDocAccessible* aDocument, nsIContent* aDependentContent,
+                     nsIAtom* aRelAttr) :
+  mRelAttr(aRelAttr), mProviders(nsnull), mBindingParent(nsnull), mIndex(0)
+{
+  mBindingParent = aDependentContent->GetBindingParent();
+  nsIAtom* IDAttr = mBindingParent ?
+    nsAccessibilityAtoms::anonid : aDependentContent->GetIDAttributeName();
+
+  nsAutoString id;
+  if (aDependentContent->GetAttr(kNameSpaceID_None, IDAttr, id))
+    mProviders = aDocument->mDependentIDsHash.Get(id);
+}
+
+nsAccessible*
+RelatedAccIterator::Next()
+{
+  if (!mProviders)
+    return nsnull;
+
+  while (mIndex < mProviders->Length()) {
+    nsDocAccessible::AttrRelProvider* provider = (*mProviders)[mIndex++];
+
+    // Return related accessible for the given attribute and if the provider
+    // content is in the same binding in the case of XBL usage.
+    if (provider->mRelAttr == mRelAttr &&
+        (!mBindingParent ||
+         mBindingParent == provider->mContent->GetBindingParent())) {
+      nsAccessible* related = GetAccService()->GetAccessible(provider->mContent);
+      if (related)
+        return related;
+    }
+  }
+
+  return nsnull;
 }

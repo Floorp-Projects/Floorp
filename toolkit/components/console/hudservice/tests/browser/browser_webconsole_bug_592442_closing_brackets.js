@@ -23,7 +23,7 @@ function testExtraneousClosingBrackets(aEvent) {
 
   openConsole();
   let hudId = HUDService.displaysIndex()[0];
-  let jsterm = HUDService.hudWeakReferences[hudId].get().jsterm;
+  let jsterm = HUDService.hudReferences[hudId].jsterm;
 
   jsterm.setInputValue("document.getElementById)");
 

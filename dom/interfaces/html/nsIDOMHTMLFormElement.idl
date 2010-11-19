@@ -43,8 +43,11 @@
  * The nsIDOMHTMLFormElement interface is the interface to a [X]HTML
  * form element.
  *
- * For more information on this interface please see
+ * This interface is trying to follow the DOM Level 2 HTML specification:
  * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * with changes from the work-in-progress WHATWG HTML specification:
+ * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
 [scriptable, uuid(0884ce23-e069-499e-a13c-a91c8ae0fc98)]

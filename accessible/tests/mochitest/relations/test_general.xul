@@ -66,6 +66,9 @@
       testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
 
       // aria-controls
+      getAccessible("tab");
+      todo(false,
+           "Getting an accessible tab, otherwise relations for tabpanel aren't cached. Bug 606924 will fix that.");
       testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
       testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
 

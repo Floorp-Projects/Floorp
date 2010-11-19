@@ -2364,6 +2364,16 @@ struct JSContext
     void assertValidStackDepth(uintN /*depth*/) {}
 #endif
 
+    enum DollarPath {
+        DOLLAR_LITERAL = 1,
+        DOLLAR_AMP,
+        DOLLAR_PLUS,
+        DOLLAR_TICK,
+        DOLLAR_QUOT
+    };
+    volatile DollarPath *dollarPath;
+    volatile jschar *blackBox;
+
 private:
 
     /*
@@ -2376,7 +2386,7 @@ private:
 
     /* To silence MSVC warning about using 'this' in a member initializer. */
     JSContext *thisInInitializer() { return this; }
-};
+}; /* struct JSContext */
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)

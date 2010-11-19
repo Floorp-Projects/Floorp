@@ -50,6 +50,12 @@
 #pragma warning(disable:4345)
 #endif
 
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JSVECTOR_UNDEFD_MOZALLOC_WRAPPERS
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 namespace js {
 
 /*
@@ -741,6 +747,10 @@ Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
 
 #ifdef _MSC_VER
 #pragma warning(pop)
+#endif
+
+#ifdef JSVECTOR_UNDEFD_MOZALLOC_WRAPPERS
+#  include "mozilla/mozalloc_macro_wrappers.h"
 #endif
 
 #endif /* jsvector_h_ */

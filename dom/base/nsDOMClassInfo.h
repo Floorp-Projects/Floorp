@@ -48,6 +48,7 @@
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
+#include "xpcpublic.h"
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
@@ -140,8 +141,8 @@ public:
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull)
   {
-    return nsContentUtils::WrapNative(cx, scope, native, aIID, vp, aHolder,
-                                      aAllowWrapping);
+    return WrapNative(cx, scope, native, nsnull, aIID, vp, aHolder,
+                      aAllowWrapping);
   }
 
   // Used for cases where PreCreate needs to wrap the native parent, and the
@@ -161,8 +162,8 @@ public:
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull)
   {
-    return nsContentUtils::WrapNative(cx, scope, native, vp, aHolder,
-                                      aAllowWrapping);
+    return WrapNative(cx, scope, native, nsnull, nsnull, vp, aHolder,
+                      aAllowWrapping);
   }
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, nsWrapperCache *cache,
@@ -171,8 +172,8 @@ public:
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull)
   {
-    return nsContentUtils::WrapNative(cx, scope, native, cache, vp, aHolder,
-                                      aAllowWrapping);
+    return WrapNative(cx, scope, native, cache, nsnull, vp, aHolder,
+                      aAllowWrapping);
   }
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
@@ -245,6 +246,29 @@ protected:
             id == sScreenY_id      ||
             id == sStatus_id       ||
             id == sName_id);
+  }
+
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native, nsWrapperCache *cache,
+                             const nsIID* aIID, jsval *vp,
+                             nsIXPConnectJSObjectHolder** aHolder,
+                             PRBool aAllowWrapping)
+  {
+    if (!native) {
+      NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
+
+      *vp = JSVAL_NULL;
+
+      return NS_OK;
+    }
+
+    JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+    if (wrapper) {
+      return NS_OK;
+    }
+
+    return sXPConnect->WrapNativeToJSVal(cx, scope, native, cache, aIID,
+                                         aAllowWrapping, vp, aHolder);
   }
 
   static nsIXPConnect *sXPConnect;

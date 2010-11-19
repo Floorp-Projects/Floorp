@@ -344,6 +344,12 @@ class nsHtml5Parser : public nsAHtml5FragmentParser, // inherits nsIParser
     PRBool                        mLastWasCR;
 
     /**
+     * Whether the last character tokenized was a carriage return (for CRLF)
+     * when preparsing document.write.
+     */
+    PRBool                        mDocWriteSpeculativeLastWasCR;
+
+    /**
      * The parser is in the fragment mode
      */
     PRBool                        mFragmentMode;
@@ -352,6 +358,11 @@ class nsHtml5Parser : public nsAHtml5FragmentParser, // inherits nsIParser
      * The parser is blocking on a script
      */
     PRBool                        mBlocked;
+
+    /**
+     * Whether the document.write() speculator is already active.
+     */
+    PRBool                        mDocWriteSpeculatorActive;
     
     /**
      * The number of parser-inserted script currently being evaluated.
@@ -392,6 +403,16 @@ class nsHtml5Parser : public nsAHtml5FragmentParser, // inherits nsIParser
      * The HTML5 tokenizer
      */
     const nsAutoPtr<nsHtml5Tokenizer>   mTokenizer;
+
+    /**
+     * Another HTML5 tree builder for preloading document.written content.
+     */
+    nsAutoPtr<nsHtml5TreeBuilder> mDocWriteSpeculativeTreeBuilder;
+
+    /**
+     * Another HTML5 tokenizer for preloading document.written content.
+     */
+    nsAutoPtr<nsHtml5Tokenizer>   mDocWriteSpeculativeTokenizer;
 
     /**
      * The stream parser.

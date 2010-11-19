@@ -55,14 +55,13 @@ function testExecutionScope() {
 
   let hudId = HUDService.displaysIndex()[0];
 
-  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let HUD = HUDService.hudReferences[hudId];
   let jsterm = HUD.jsterm;
 
   jsterm.clearOutput();
   jsterm.execute("location;");
 
   let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
-  log(nodes[0].textContent);
   is(nodes.length, 1, "Three children in output");
 
   is(/location;/.test(nodes[0].textContent), true,

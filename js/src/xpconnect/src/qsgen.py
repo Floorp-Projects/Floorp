@@ -707,17 +707,8 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
             return
         else:
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
-                    "    if (cache) {\n"
-                    "      JSObject* wrapper = cache->GetWrapper();\n"
-                    "      NS_ASSERTION(cx->compartment == obj->compartment(),\n"
-                    "                   \"wrong compartment in object or context!\");\n"
-                    "      if (wrapper &&\n"
-                    # FIXME: Bug 585786, this check should go away
-                    "          IS_SLIM_WRAPPER_OBJECT(wrapper) &&\n"
-                    "          cx->compartment == wrapper->compartment()) {\n"
-                    "        *%s = OBJECT_TO_JSVAL(wrapper);\n"
-                    "        return JS_TRUE;\n"
-                    "      }\n"
+                    "    if (xpc_GetCachedSlimWrapper(cache, obj, %s)) {\n"
+                    "      return JS_TRUE;\n"
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
                     "    qsObjectHelper helper(result, cache);\n"
@@ -1259,17 +1250,10 @@ def writeTraceableResultConv(f, type):
                     "&vp.array[0]);\n")
         else:
             f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
-                    "    if (cache) {\n"
-                    "      JSObject* wrapper = cache->GetWrapper();\n"
-                    "      NS_ASSERTION(cx->compartment == obj->compartment(),\n"
-                    "                   \"wrong compartment in object or context!\");\n"
-                    "      if (wrapper &&\n"
-                    # FIXME: Bug 585786, this check should go away
-                    "          IS_SLIM_WRAPPER_OBJECT(wrapper) &&\n"
-                    "          cx->compartment == wrapper->compartment()) {\n"
-                    "        vp.array[0] = OBJECT_TO_JSVAL(wrapper);\n"
-                    "        return wrapper;\n"
-                    "      }\n"
+                    "    JSObject* wrapper =\n"
+                    "      xpc_GetCachedSlimWrapper(cache, obj, &vp.array[0]);\n"
+                    "    if (wrapper) {\n"
+                    "      return wrapper;\n"
                     "    }\n"
                     "    // After this point do not use 'result'!\n"
                     "    qsObjectHelper helper(result, cache);\n"

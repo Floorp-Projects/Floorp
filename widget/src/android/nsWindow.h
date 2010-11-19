@@ -186,6 +186,10 @@ protected:
     double mLastDist;
     nsAutoPtr<nsIntPoint> mStartPoint;
 
+    // Multitouch swipe thresholds in screen pixels
+    double mSwipeMaxPinchDelta;
+    double mSwipeMinDistance;
+
     nsCOMPtr<nsIdleService> mIdleService;
 
     PRUint32 mIMEEnabled;

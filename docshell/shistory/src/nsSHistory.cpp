@@ -1209,7 +1209,9 @@ nsSHistory::RemoveDuplicate(PRInt32 aIndex, PRBool aKeepNext)
       // We're removing the very first session history transaction!
       mListRoot = txToKeep;
     }
-    static_cast<nsDocShell*>(mRootDocShell)->HistoryTransactionRemoved(aIndex);
+    if (mRootDocShell) {
+      static_cast<nsDocShell*>(mRootDocShell)->HistoryTransactionRemoved(aIndex);
+    }
     if (mIndex > aIndex) {
       mIndex = mIndex - 1;
     }
@@ -1589,6 +1591,8 @@ nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsID
 nsresult 
 nsSHistory::InitiateLoad(nsISHEntry * aFrameEntry, nsIDocShell * aFrameDS, long aLoadType)
 {
+  NS_ENSURE_STATE(aFrameDS && aFrameEntry);
+
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
 
   /* Set the loadType in the SHEntry too to  what was passed on.

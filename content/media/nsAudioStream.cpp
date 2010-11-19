@@ -35,6 +35,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PAudioChild.h"
+#include "mozilla/dom/AudioChild.h"
+#include "nsXULAppAPI.h"
+using namespace mozilla::dom;
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include "prlog.h"
@@ -46,6 +55,7 @@ extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
 #include "mozilla/TimeStamp.h"
+#include "nsThreadUtils.h"
 
 #if defined(XP_MACOSX)
 #define SA_PER_STREAM_VOLUME 1
@@ -57,21 +67,282 @@ using mozilla::TimeStamp;
 PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
+#ifdef MOZ_IPC
+static nsIThread *gAudioPlaybackThread = nsnull;
+#endif
+
 #define FAKE_BUFFER_SIZE 176400
 #define MILLISECONDS_PER_SECOND 1000
+
+class nsAudioStreamLocal : public nsAudioStream
+{
+ public:
+  NS_DECL_ISUPPORTS
+
+  ~nsAudioStreamLocal();
+  nsAudioStreamLocal();
+  
+  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
+  void Shutdown();
+  nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
+  PRUint32 Available();
+  void SetVolume(float aVolume);
+  void Drain();
+  void Pause();
+  void Resume();
+  PRInt64 GetPosition();
+  PRInt64 GetSampleOffset();
+  PRBool IsPaused();
+
+ private:
+
+  double mVolume;
+  void* mAudioHandle;
+  int mRate;
+  int mChannels;
+
+  SampleFormat mFormat;
+
+  // When a Write() request is made, and the number of samples
+  // requested to be written exceeds the buffer size of the audio
+  // backend, the remaining samples are stored in this variable. They
+  // will be written on the next Write() request.
+  nsTArray<short> mBufferOverflow;
+
+  // PR_TRUE if this audio stream is paused.
+  PRPackedBool mPaused;
+
+  // PR_TRUE if this stream has encountered an error.
+  PRPackedBool mInError;
+
+};
+
+#ifdef MOZ_IPC
+class nsAudioStreamRemote : public nsAudioStream
+{
+ public:
+  NS_DECL_ISUPPORTS
+
+  nsAudioStreamRemote();
+  ~nsAudioStreamRemote();
+  
+  nsresult Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat);
+  void Shutdown();
+  nsresult Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking);
+  PRUint32 Available();
+  void SetVolume(float aVolume);
+  void Drain();
+  void Pause();
+  void Resume();
+  PRInt64 GetPosition();
+  PRInt64 GetSampleOffset();
+  PRBool IsPaused();
+
+  AudioChild* mAudioChild;
+
+  SampleFormat mFormat;
+  int mRate;
+  int mChannels;
+  // PR_TRUE if this audio stream is paused.
+  PRPackedBool mPaused;
+
+  PRInt32 mBytesPerSample;
+
+  friend class AudioInitEvent;
+  friend class AudioShutdownEvent;
+  friend class AudioWriteEvent;
+  friend class AudioSetVolumeEvent;
+  friend class AudioPauseEvent;
+  friend class AudioDrainEvent;
+  friend class AudioGetSampleEvent;
+};
+
+class AudioInitEvent : public nsRunnable
+{
+ public:
+  AudioInitEvent(nsAudioStreamRemote* owner)
+  {
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    ContentChild * cpc = ContentChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    mOwner->mAudioChild =  static_cast<AudioChild*> (cpc->SendPAudioConstructor(mOwner->mChannels,
+                                                                                mOwner->mRate,
+                                                                                mOwner->mFormat));
+    return NS_OK;
+  }
+  
+  nsRefPtr<nsAudioStreamRemote> mOwner;
+};
+
+class AudioShutdownEvent : public nsRunnable
+{
+ public:
+  AudioShutdownEvent(nsAudioStreamRemote* owner)
+  {
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (mOwner->mAudioChild) {
+      PAudioChild::Send__delete__(mOwner->mAudioChild);
+      mOwner->mAudioChild = nsnull;
+    }
+    mOwner = nsnull;
+    return NS_OK;
+  }
+  nsRefPtr<nsAudioStreamRemote> mOwner;
+};
+
+class AudioWriteEvent : public nsRunnable
+{
+ public:
+  AudioWriteEvent(nsAudioStreamRemote* owner,
+                  const void* aBuf,
+                  PRUint32 aNumberOfSamples,
+                  PRUint32 aBytesPerSample)
+  {    
+    mOwner = owner;
+    mBytesPerSample = aBytesPerSample;
+    mBuffer.Assign((const char*)aBuf, aNumberOfSamples*aBytesPerSample);
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (!mOwner->mAudioChild)
+      return NS_OK;
+
+    mOwner->mAudioChild->SendWrite(mBuffer,
+                                   mBuffer.Length() / mBytesPerSample);
+    return NS_OK;
+  }
+
+  nsRefPtr<nsAudioStreamRemote> mOwner;
+  nsCString mBuffer;
+  PRUint32 mBytesPerSample;
+};
+
+class AudioSetVolumeEvent : public nsRunnable
+{
+ public:
+  AudioSetVolumeEvent(nsAudioStreamRemote* owner, float volume)
+  {
+    mOwner = owner;
+    mVolume = volume;
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (!mOwner->mAudioChild)
+      return NS_OK;
+
+    mOwner->mAudioChild->SendSetVolume(mVolume);
+    return NS_OK;
+  }
+  
+  nsRefPtr<nsAudioStreamRemote> mOwner;
+  float mVolume;
+};
+
+class AudioDrainEvent : public nsRunnable
+{
+ public:
+  AudioDrainEvent(nsAudioStreamRemote* owner)
+  {
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (!mOwner->mAudioChild)
+      return NS_OK;
+
+    mOwner->mAudioChild->SendDrain();
+    return NS_OK;
+  }
+  
+  nsRefPtr<nsAudioStreamRemote> mOwner;
+};
+
+
+class AudioPauseEvent : public nsRunnable
+{
+ public:
+  AudioPauseEvent(nsAudioStreamRemote* owner, PRBool pause)
+  {
+    mOwner = owner;
+    mPause = pause;
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (!mOwner->mAudioChild)
+      return NS_OK;
+
+    if (mPause)
+      mOwner->mAudioChild->SendPause();
+    else
+      mOwner->mAudioChild->SendResume();
+
+    return NS_OK;
+  }
+  
+  nsRefPtr<nsAudioStreamRemote> mOwner;
+  PRBool mPause;
+};
+
+
+#endif // MOZ_IPC
+
 
 void nsAudioStream::InitLibrary()
 {
 #ifdef PR_LOGGING
   gAudioStreamLog = PR_NewLogModule("nsAudioStream");
 #endif
+
+#ifdef MOZ_IPC
+  // We only need this thread in the main process.
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      NS_NewThread(&gAudioPlaybackThread);
+  }
+#endif
 }
 
 void nsAudioStream::ShutdownLibrary()
 {
+#ifdef MOZ_IPC
+  NS_IF_RELEASE(gAudioPlaybackThread);
+#endif
 }
 
-nsAudioStream::nsAudioStream() :
+
+nsIThread *
+nsAudioStream::GetGlobalThread()
+{
+#ifdef MOZ_IPC
+  NS_IF_ADDREF(gAudioPlaybackThread);
+  return gAudioPlaybackThread;
+#else
+  return nsnull;
+#endif
+}
+
+nsAudioStream* nsAudioStream::AllocateStream()
+{
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return new nsAudioStreamRemote();
+  }
+#endif
+  return new nsAudioStreamLocal();
+}
+
+nsAudioStreamLocal::nsAudioStreamLocal() :
   mVolume(1.0),
   mAudioHandle(0),
   mRate(0),
@@ -82,16 +353,16 @@ nsAudioStream::nsAudioStream() :
 {
 }
 
-nsAudioStream::~nsAudioStream()
-{
-  Shutdown();
-}
+nsAudioStreamLocal::~nsAudioStreamLocal(){}
 
-nsresult nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsAudioStreamLocal)
+
+nsresult nsAudioStreamLocal::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aFormat)
 {
   mRate = aRate;
   mChannels = aNumChannels;
   mFormat = aFormat;
+
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
                            NULL, 
                            SA_MODE_WRONLY, 
@@ -100,7 +371,7 @@ nsresult nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat a
                            aNumChannels) != SA_SUCCESS) {
     mAudioHandle = nsnull;
     mInError = PR_TRUE;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_create_pcm error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_create_pcm error"));
     return NS_ERROR_FAILURE;
   }
   
@@ -108,16 +379,17 @@ nsresult nsAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat a
     sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
     mAudioHandle = nsnull;
     mInError = PR_TRUE;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_open error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_open error"));
     return NS_ERROR_FAILURE;
   }
   mInError = PR_FALSE;
+
   return NS_OK;
 }
 
-void nsAudioStream::Shutdown()
+void nsAudioStreamLocal::Shutdown()
 {
-  if (!mAudioHandle) 
+  if (!mAudioHandle)
     return;
 
   sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
@@ -125,7 +397,7 @@ void nsAudioStream::Shutdown()
   mInError = PR_TRUE;
 }
 
-nsresult nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
+nsresult nsAudioStreamLocal::Write(const void* aBuf, PRUint32 aCount, PRBool aBlocking)
 {
   NS_ABORT_IF_FALSE(aCount % mChannels == 0,
                     "Buffer size must be divisible by channel count");
@@ -199,7 +471,7 @@ nsresult nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlockin
                         s_data.get(),
                         count * sizeof(short)) != SA_SUCCESS)
     {
-      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
+      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_write error"));
       mInError = PR_TRUE;
       return NS_ERROR_FAILURE;
     }
@@ -207,7 +479,7 @@ nsresult nsAudioStream::Write(const void* aBuf, PRUint32 aCount, PRBool aBlockin
   return NS_OK;
 }
 
-PRUint32 nsAudioStream::Available()
+PRUint32 nsAudioStreamLocal::Available()
 {
   // If the audio backend failed to open, lie and say we'll accept some
   // data.
@@ -221,12 +493,12 @@ PRUint32 nsAudioStream::Available()
   return s / sizeof(short);
 }
 
-void nsAudioStream::SetVolume(float aVolume)
+void nsAudioStreamLocal::SetVolume(float aVolume)
 {
   NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 #if defined(SA_PER_STREAM_VOLUME)
   if (sa_stream_set_volume_abs(static_cast<sa_stream_t*>(mAudioHandle), aVolume) != SA_SUCCESS) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_set_volume_abs error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_set_volume_abs error"));
     mInError = PR_TRUE;
   }
 #else
@@ -234,7 +506,7 @@ void nsAudioStream::SetVolume(float aVolume)
 #endif
 }
 
-void nsAudioStream::Drain()
+void nsAudioStreamLocal::Drain()
 {
   if (mInError)
     return;
@@ -244,19 +516,19 @@ void nsAudioStream::Drain()
     if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
                         mBufferOverflow.Elements(),
                         mBufferOverflow.Length() * sizeof(short)) != SA_SUCCESS)
-      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_write error"));
+      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_write error"));
       mInError = PR_TRUE;
       return;
   }
 
   int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
   if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStream: sa_stream_drain error"));
+    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("nsAudioStreamLocal: sa_stream_drain error"));
     mInError = PR_TRUE;
   }
 }
 
-void nsAudioStream::Pause()
+void nsAudioStreamLocal::Pause()
 {
   if (mInError)
     return;
@@ -264,7 +536,7 @@ void nsAudioStream::Pause()
   sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
 }
 
-void nsAudioStream::Resume()
+void nsAudioStreamLocal::Resume()
 {
   if (mInError)
     return;
@@ -272,17 +544,16 @@ void nsAudioStream::Resume()
   sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
 }
 
-PRInt64 nsAudioStream::GetPosition()
+PRInt64 nsAudioStreamLocal::GetPosition()
 {
   PRInt64 sampleOffset = GetSampleOffset();
   if (sampleOffset >= 0) {
     return ((MILLISECONDS_PER_SECOND * sampleOffset) / mRate / mChannels);
   }
-
   return -1;
 }
 
-PRInt64 nsAudioStream::GetSampleOffset()
+PRInt64 nsAudioStreamLocal::GetSampleOffset()
 {
   if (mInError) {
     return -1;
@@ -300,3 +571,141 @@ PRInt64 nsAudioStream::GetSampleOffset()
 
   return -1;
 }
+
+PRBool nsAudioStreamLocal::IsPaused()
+{
+  return mPaused;
+}
+
+#ifdef MOZ_IPC
+
+nsAudioStreamRemote::nsAudioStreamRemote()
+ : mAudioChild(NULL),
+   mFormat(FORMAT_S16_LE),
+   mRate(0),
+   mChannels(0),
+   mPaused(PR_FALSE),
+   mBytesPerSample(1)
+{}
+
+nsAudioStreamRemote::~nsAudioStreamRemote()
+{}
+
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsAudioStreamRemote)
+
+nsresult 
+nsAudioStreamRemote::Init(PRInt32 aNumChannels,
+                          PRInt32 aRate,
+                          SampleFormat aFormat)
+{
+  mRate = aRate;
+  mChannels = aNumChannels;
+  mFormat = aFormat;
+
+  switch (mFormat) {
+    case FORMAT_U8: {
+      mBytesPerSample = sizeof(PRUint8);
+      break;
+    }
+    case FORMAT_S16_LE: {
+      mBytesPerSample = sizeof(short);
+      break;
+    }
+    case FORMAT_FLOAT32: {
+      mBytesPerSample = sizeof(float);
+    }
+  }
+
+  nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
+  NS_DispatchToMainThread(event);
+  return NS_OK;
+}
+
+void
+nsAudioStreamRemote::Shutdown()
+{
+  nsCOMPtr<nsIRunnable> event = new AudioShutdownEvent(this);
+  NS_DispatchToMainThread(event);
+}
+
+nsresult
+nsAudioStreamRemote::Write(const void* aBuf,
+                           PRUint32 aCount,
+                           PRBool aBlocking)
+{
+  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(this,
+                                                    aBuf,
+                                                    aCount,
+                                                    mBytesPerSample);
+  NS_DispatchToMainThread(event);
+  return NS_OK;
+}
+
+PRUint32
+nsAudioStreamRemote::Available()
+{
+  return FAKE_BUFFER_SIZE;
+}
+
+void
+nsAudioStreamRemote::SetVolume(float aVolume)
+{
+  nsCOMPtr<nsIRunnable> event = new AudioSetVolumeEvent(this, aVolume);
+  NS_DispatchToMainThread(event);
+}
+
+void
+nsAudioStreamRemote::Drain()
+{
+  nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(this);
+  NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+}
+ 
+void
+nsAudioStreamRemote::Pause()
+{
+  mPaused = PR_TRUE;
+  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(this, PR_TRUE);
+  NS_DispatchToMainThread(event);
+}
+
+void
+nsAudioStreamRemote::Resume()
+{
+  mPaused = PR_FALSE;
+  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(this, PR_FALSE);
+  NS_DispatchToMainThread(event);
+}
+
+PRInt64 nsAudioStreamRemote::GetPosition()
+{
+  PRInt64 sampleOffset = GetSampleOffset();
+  if (sampleOffset >= 0) {
+    return ((MILLISECONDS_PER_SECOND * sampleOffset) / mRate / mChannels);
+  }
+  return 0;
+}
+
+PRInt64
+nsAudioStreamRemote::GetSampleOffset()
+{
+  if(!mAudioChild)
+    return 0;
+
+  PRInt64 offset = mAudioChild->GetLastKnownSampleOffset();
+  if (offset == -1)
+    return 0;
+
+  PRInt64 time   = mAudioChild->GetLastKnownSampleOffsetTime();
+  PRInt64 result = offset + (mRate * mChannels * (PR_IntervalNow() - time) / MILLISECONDS_PER_SECOND);
+
+  return result;
+}
+
+PRBool
+nsAudioStreamRemote::IsPaused()
+{
+  return mPaused;
+}
+
+#endif // MOZ_IPC

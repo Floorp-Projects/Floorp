@@ -325,7 +325,7 @@
   -moz-appearance: -moz-window-button-box;
 }
 
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
+#main-window[sizemode="maximized"] #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box-maximized;
 }
 
@@ -339,7 +339,7 @@
   -moz-appearance: -moz-window-button-maximize;
 }
 
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox > #titlebar-max {
+#main-window[sizemode="maximized"] #titlebar-max {
   -moz-appearance: -moz-window-button-restore;
 }
 
@@ -1412,10 +1412,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding-bottom: 1px;
 }
 
-.tabbrowser-tabs:-moz-system-metric(touch-enabled) {
-  min-height: 7.3mozmm;
-}
-
 /* Tabs */
 .tabbrowser-tab,
 .tabs-newtab-button {
@@ -1557,6 +1553,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
   .tabs-newtab-button {
     min-width: 10mozmm;
+  }
+
+  .tab-content {
+    min-height: -moz-calc(6.8mozmm - 7px); /* subtract borders from the desired height */
   }
 }
 

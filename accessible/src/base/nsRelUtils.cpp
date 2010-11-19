@@ -134,27 +134,16 @@ nsRelUtils::AddTargetFromIDRefsAttr(PRUint32 aRelationType,
                                     nsIAccessibleRelation **aRelation,
                                     nsIContent *aContent, nsIAtom *aAttr)
 {
-  nsCOMPtr<nsIArray> refElms;
-  nsCoreUtils::GetElementsByIDRefsAttr(aContent, aAttr, getter_AddRefs(refElms));
+  nsresult rv = NS_OK_NO_RELATION_TARGET;
 
-  if (!refElms)
-    return NS_OK_NO_RELATION_TARGET;
-
-  PRUint32 count = 0;
-  nsresult rv = refElms->GetLength(&count);
-  if (NS_FAILED(rv) || count == 0)
-    return NS_OK_NO_RELATION_TARGET;
-
-  nsCOMPtr<nsIContent> content;
-  for (PRUint32 idx = 0; idx < count; idx++) {
-    content = do_QueryElementAt(refElms, idx, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = AddTargetFromContent(aRelationType, aRelation, content);
+  nsIContent* refElm = nsnull;
+  IDRefsIterator iter(aContent, aAttr);
+  while ((refElm = iter.NextElem())) {
+    rv = AddTargetFromContent(aRelationType, aRelation, refElm);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult

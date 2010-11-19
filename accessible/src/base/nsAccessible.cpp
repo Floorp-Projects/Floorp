@@ -2037,25 +2037,28 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
 
   // Relationships are defined on the same content node that the role would be
   // defined on.
-  nsresult rv;
+  nsresult rv = NS_OK_NO_RELATION_TARGET;
   switch (aRelationType)
   {
   case nsIAccessibleRelation::RELATION_LABEL_FOR:
     {
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_labelledby);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
       if (mContent->Tag() == nsAccessibilityAtoms::label) {
         nsIAtom *IDAttr = mContent->IsHTML() ?
           nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
         rv = nsRelUtils::
           AddTargetFromIDRefAttr(aRelationType, aRelation, mContent, IDAttr);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        if (rv != NS_OK_NO_RELATION_TARGET)
-          return NS_OK; // XXX bug 381599, avoid performance problems
       }
-
-      return nsRelUtils::
-        AddTargetFromNeighbour(aRelationType, aRelation, mContent,
-                               nsAccessibilityAtoms::aria_labelledby);
+      return rv;
     }
 
   case nsIAccessibleRelation::RELATION_LABELLED_BY:
@@ -2091,13 +2094,14 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
 
   case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
     {
-      rv = nsRelUtils::
-        AddTargetFromNeighbour(aRelationType, aRelation, mContent,
-                               nsAccessibilityAtoms::aria_describedby);
-      NS_ENSURE_SUCCESS(rv, rv);
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_describedby);
 
-      if (rv != NS_OK_NO_RELATION_TARGET)
-        return NS_OK; // XXX bug 381599, avoid performance problems
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       if (mContent->Tag() == nsAccessibilityAtoms::description &&
           mContent->IsXUL()) {
@@ -2109,18 +2113,23 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
                                  nsAccessibilityAtoms::control);
       }
 
-      return NS_OK;
+      return rv;
     }
 
   case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
     {
-      rv = nsRelUtils::
-        AddTargetFromNeighbour(aRelationType, aRelation, mContent,
-                               nsAccessibilityAtoms::aria_owns);
-      NS_ENSURE_SUCCESS(rv, rv);
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_owns);
 
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Got relation from aria-owns, don't calculate it from native markup.
       if (rv != NS_OK_NO_RELATION_TARGET)
-        return NS_OK; // XXX bug 381599, avoid performance problems
+        return NS_OK;
 
       // This is an ARIA tree or treegrid that doesn't use owns, so we need to
       // get the parent the hard way.
@@ -2153,14 +2162,20 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
         }
       }
 
-      return NS_OK;
+      return rv;
     }
 
   case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
     {
-      return nsRelUtils::
-        AddTargetFromNeighbour(aRelationType, aRelation, mContent,
-                               nsAccessibilityAtoms::aria_controls);
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_controls);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return rv;
     }
 
   case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
@@ -2188,9 +2203,15 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
 
   case nsIAccessibleRelation::RELATION_FLOWS_FROM:
     {
-      return nsRelUtils::
-        AddTargetFromNeighbour(aRelationType, aRelation, mContent,
-                               nsAccessibilityAtoms::aria_flowto);
+      RelatedAccIterator iter(GetDocAccessible(), mContent,
+                              nsAccessibilityAtoms::aria_flowto);
+
+      nsAccessible* related = nsnull;
+      while ((related = iter.Next())) {
+        rv = nsRelUtils::AddTarget(aRelationType, aRelation, related);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      return rv;
     }
 
   case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
@@ -3169,7 +3190,16 @@ nsAccessible::EnsureChildren()
 
   // State is embedded children until text leaf accessible is appended.
   mChildrenFlags = eEmbeddedChildren; // Prevent reentry
+
+  // Notify the document about caching status.
+  nsDocAccessible* document = GetDocAccessible();
+  if (document)
+    document->NotifyOfCachingStart(this);
+
   CacheChildren();
+
+  if (document)
+    document->NotifyOfCachingEnd(this);
 
   return PR_FALSE;
 }

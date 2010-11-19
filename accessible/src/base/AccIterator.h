@@ -40,6 +40,7 @@
 
 #include "filters.h"
 #include "nscore.h"
+#include "nsDocAccessible.h"
 
 /**
  * Allows to iterate through accessible children or subtree complying with
@@ -91,6 +92,43 @@ private:
   filters::FilterFuncPtr mFilterFunc;
   PRBool mIsDeep;
   IteratorState *mState;
+};
+
+
+/**
+ * Allows to traverse through related accessibles that are pointing to the given
+ * dependent accessible by relation attribute.
+ */
+class RelatedAccIterator
+{
+public:
+  /**
+   * Constructor.
+   *
+   * @param aDocument         [in] the document accessible the related
+   * &                         accessibles belong to.
+   * @param aDependentContent [in] the content of dependent accessible that
+   *                           relations were requested for
+   * @param aRelAttr          [in] relation attribute that relations are
+   *                           pointed by
+   */
+  RelatedAccIterator(nsDocAccessible* aDocument, nsIContent* aDependentContent,
+                     nsIAtom* aRelAttr);
+
+  /**
+   * Return next related accessible for the given dependent accessible.
+   */
+  nsAccessible* Next();
+
+private:
+  RelatedAccIterator();
+  RelatedAccIterator(const RelatedAccIterator&);
+  RelatedAccIterator& operator = (const RelatedAccIterator&);
+
+  nsIAtom* mRelAttr;
+  nsDocAccessible::AttrRelProviderArray* mProviders;
+  nsIContent* mBindingParent;
+  PRUint32 mIndex;
 };
 
 #endif

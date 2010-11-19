@@ -105,7 +105,7 @@
     margin-top: -1px;
   }
 
-  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox:-moz-lwtheme {
+  #main-window[sizemode="normal"] #titlebar-buttonbox:-moz-lwtheme {
     margin-top: -2px;
   }
 
