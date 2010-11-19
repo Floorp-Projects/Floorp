@@ -3070,8 +3070,6 @@ BEGIN_CASE(JSOP_MOREITER)
     if (!IteratorMore(cx, &regs.sp[-2].toObject(), &cond, &regs.sp[-1]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
-    TRY_BRANCH_AFTER_COND(cond, 1);
-    JS_ASSERT(regs.pc[1] == JSOP_IFNEX);
     regs.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_MOREITER)
