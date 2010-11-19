@@ -2659,20 +2659,18 @@ nsWindow::contextMenuEvent(QGraphicsSceneContextMenuEvent *)
 }
 
 nsEventStatus
-nsWindow::imStartEvent(QEvent *)
+nsWindow::imComposeEvent(QInputMethodEvent *event, PRBool &handled)
 {
-    return nsEventStatus_eIgnore;
-}
+    nsCompositionEvent start(PR_TRUE, NS_COMPOSITION_START, this);
+    DispatchEvent(&start);
 
-nsEventStatus
-nsWindow::imComposeEvent(QEvent *)
-{
-    return nsEventStatus_eIgnore;
-}
+    nsTextEvent text(PR_TRUE, NS_TEXT_TEXT, this);
+    text.theText.Assign(event->commitString().utf16());
+    DispatchEvent(&text);
 
-nsEventStatus
-nsWindow::imEndEvent(QEvent * )
-{
+    nsCompositionEvent end(PR_TRUE, NS_COMPOSITION_END, this);
+    DispatchEvent(&end);
+
     return nsEventStatus_eIgnore;
 }
 
