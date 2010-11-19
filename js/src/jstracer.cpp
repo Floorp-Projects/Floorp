@@ -6661,7 +6661,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
          * the interpreter stack, in pre-call state, with pc pointing to the
          * CALL/APPLY op, for correctness. Then we continued in native code.
          */
-        if (!(bs & (BUILTIN_ERROR | BUILTIN_NO_FIXUP_NEEDED))) {
+        if (!(bs & BUILTIN_ERROR)) {
             /*
              * The builtin or native deep-bailed but finished successfully
              * (no exception or error).
@@ -9610,7 +9610,7 @@ TraceRecorder::is_boxed_true(Address addr)
     LIns *tag_ins = w.ldiValueTag(addr);
     LIns *bool_ins = w.eqi(tag_ins, w.nameImmui(JSVAL_TAG_BOOLEAN));
     LIns *payload_ins = w.ldiValuePayload(addr);
-    return w.andi(bool_ins, payload_ins);
+    return w.gtiN(w.andi(bool_ins, payload_ins), 0);
 }
 
 LIns*
@@ -14313,13 +14313,10 @@ static JSBool FASTCALL
 IteratorMore(JSContext *cx, JSObject *iterobj, Value *vp)
 {
     if (!js_IteratorMore(cx, iterobj, vp)) {
-        SetBuiltinError(cx, BUILTIN_ERROR_NO_FIXUP_NEEDED);
-        return false;
-    } else if (cx->tracerState->builtinStatus) {
-        SetBuiltinError(cx, BUILTIN_NO_FIXUP_NEEDED);
+        SetBuiltinError(cx);
         return false;
     }
-    return true;
+    return cx->tracerState->builtinStatus == 0;
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, IteratorMore, CONTEXT, OBJECT, VALUEPTR,
                      0, ACCSET_STORE_ANY)
@@ -14335,22 +14332,16 @@ TraceRecorder::record_JSOP_MOREITER()
 
     JSObject* iterobj = &iterobj_val.toObject();
     LIns* iterobj_ins = get(&iterobj_val);
-    bool cond;
     LIns* cond_ins;
 
     /* JSOP_FOR* already guards on this, but in certain rare cases we might record misformed loop traces. */
     if (iterobj->hasClass(&js_IteratorClass)) {
         guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
-        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
-        void *cursor = ni->props_cursor;
-        void *end = ni->props_end;
 
         LIns *ni_ins = w.ldpObjPrivate(iterobj_ins);
         LIns *cursor_ins = w.ldpIterCursor(ni_ins);
         LIns *end_ins = w.ldpIterEnd(ni_ins);
 
-        /* Figure out whether the native iterator contains more values. */
-        cond = cursor < end;
         cond_ins = w.ltp(cursor_ins, end_ins);
     } else {
         guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
@@ -14361,38 +14352,10 @@ TraceRecorder::record_JSOP_MOREITER()
         LIns* args[] = { vp_ins, iterobj_ins, cx_ins };
         LIns* ok_ins = w.call(&IteratorMore_ci, args);
 
-        /*
-         * We cannot use pendingGuardCondition since monitorRecording may not be
-         * triggered if we close the loop below with endLoop. Instead, we guard
-         * here with STATUS_EXIT. By default, STATUS_EXIT means "advance the pc
-         * and fixup the stack", so IteratorMore sets BUILTIN_NO_FIXUP_NEEDED.
-         * If IteratorMore fails, we will reexecute this op in the interpreter,
-         * but js_IteratoreMore is idempotent so this is ok.
-         */
-        guard(false, w.eqi0(ok_ins), STATUS_EXIT);
-
+        pendingGuardCondition = w.eqi0(ok_ins);
         leaveDeepBailCall();
 
-        /*
-         * The interpreter will call js_IteratorMore again, but that's legal. We have to
-         * carefully protect ourselves against reentrancy.
-         */
-        JSContext *localCx = cx;
-        AutoValueRooter rooter(cx);
-        if (!js_IteratorMore(cx, iterobj, rooter.addr()))
-            RETURN_ERROR_A("error in js_IteratorMore");
-        if (!TRACE_RECORDER(localCx))
-            return ARECORD_ABORTED;
-
-        cond = (rooter.value().isTrue());
         cond_ins = w.eqi0(w.eqi0(is_boxed_true(AllocSlotsAddress(vp_ins))));
-    }
-
-    jsbytecode* pc = cx->regs->pc;
-
-    if (pc[1] == JSOP_IFNE) {
-        fuseIf(pc + 1, cond, cond_ins);
-        return checkTraceEnd(pc + 1);
     }
 
     stack(0, cond_ins);

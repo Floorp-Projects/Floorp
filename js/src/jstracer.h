@@ -819,16 +819,13 @@ public:
  */
 typedef enum BuiltinStatus {
     BUILTIN_BAILED = 1,
-    BUILTIN_ERROR = 2,
-    BUILTIN_NO_FIXUP_NEEDED = 4,
-
-    BUILTIN_ERROR_NO_FIXUP_NEEDED = BUILTIN_ERROR | BUILTIN_NO_FIXUP_NEEDED
+    BUILTIN_ERROR = 2
 } BuiltinStatus;
 
 static JS_INLINE void
-SetBuiltinError(JSContext *cx, BuiltinStatus status = BUILTIN_ERROR)
+SetBuiltinError(JSContext *cx)
 {
-    cx->tracerState->builtinStatus |= status;
+    cx->tracerState->builtinStatus |= BUILTIN_ERROR;
 }
 
 #ifdef DEBUG_RECORDING_STATUS_NOT_BOOL
