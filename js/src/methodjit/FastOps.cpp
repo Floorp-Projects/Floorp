@@ -1785,7 +1785,9 @@ mjit::Compiler::jsop_pos()
 void
 mjit::Compiler::jsop_initmethod()
 {
+#ifdef DEBUG
     FrameEntry *obj = frame.peek(-2);
+#endif
     JSAtom *atom = script->getAtom(fullAtomIndex(PC));
 
     /* Initializers with INITMETHOD are not fast yet. */
