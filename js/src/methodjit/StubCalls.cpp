@@ -1268,15 +1268,6 @@ stubs::Mod(VMFrame &f)
     }
 }
 
-JSObject *JS_FASTCALL
-stubs::NewArray(VMFrame &f, uint32 len)
-{
-    JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len);
-    if (!obj)
-        THROWV(NULL);
-    return obj;
-}
-
 void JS_FASTCALL
 stubs::Debugger(VMFrame &f, jsbytecode *pc)
 {
@@ -1378,19 +1369,28 @@ stubs::NewInitArray(VMFrame &f, uint32 count)
     JSObject *obj = NewArrayWithKind(cx, kind);
     if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
+
+    obj->setArrayLength(count);
     return obj;
 }
 
 JSObject * JS_FASTCALL
-stubs::NewInitObject(VMFrame &f, uint32 count)
+stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 {
     JSContext *cx = f.cx;
-    gc::FinalizeKind kind = GuessObjectGCKind(count, false);
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
-    if (!obj || !obj->ensureSlots(cx, count))
+    if (!baseobj) {
+        gc::FinalizeKind kind = GuessObjectGCKind(0, false);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        if (!obj)
+            THROWV(NULL);
+        return obj;
+    }
+
+    JSObject *obj = CopyInitializerObject(cx, baseobj);
+
+    if (!obj)
         THROWV(NULL);
-
     return obj;
 }
 

@@ -453,6 +453,10 @@ class Compiler : public BaseCompiler
     bool jsop_andor(JSOp op, jsbytecode *target);
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
+    void jsop_newinit();
+    void jsop_initmethod();
+    void jsop_initprop();
+    void jsop_initelem();
     bool jsop_setelem();
     bool jsop_getelem(bool isCall);
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);

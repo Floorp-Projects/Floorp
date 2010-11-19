@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "jsbool.h"
+#include "jscntxt.h"
+#include "jsemit.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsscope.h"
@@ -1780,3 +1782,88 @@ mjit::Compiler::jsop_pos()
     stubcc.rejoin(Changes(1));
 }
 
+void
+mjit::Compiler::jsop_initmethod()
+{
+    FrameEntry *obj = frame.peek(-2);
+    JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+
+    /* Initializers with INITMETHOD are not fast yet. */
+    JS_ASSERT(!obj->initializerObject());
+
+    prepareStubCall(Uses(2));
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    INLINE_STUBCALL(stubs::InitMethod);
+}
+
+void
+mjit::Compiler::jsop_initprop()
+{
+    FrameEntry *obj = frame.peek(-2);
+    FrameEntry *fe = frame.peek(-1);
+    JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+
+    JSObject *baseobj = obj->initializerObject();
+
+    if (!baseobj) {
+        prepareStubCall(Uses(2));
+        masm.move(ImmPtr(atom), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::InitProp);
+        return;
+    }
+
+    JSObject *holder;
+    JSProperty *prop = NULL;
+#ifdef DEBUG
+    int res =
+#endif
+    js_LookupPropertyWithFlags(cx, baseobj, ATOM_TO_JSID(atom),
+                               JSRESOLVE_QUALIFIED, &holder, &prop);
+    JS_ASSERT(res >= 0 && prop && holder == baseobj);
+
+    RegisterID objReg = frame.copyDataIntoReg(obj);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+
+    /* Perform the store. */
+    Shape *shape = (Shape *) prop;
+    frame.storeTo(fe, Address(objReg, shape->slot * sizeof(Value)));
+    frame.freeReg(objReg);
+}
+
+void
+mjit::Compiler::jsop_initelem()
+{
+    FrameEntry *obj = frame.peek(-3);
+    FrameEntry *id = frame.peek(-2);
+    FrameEntry *fe = frame.peek(-1);
+
+    /*
+     * The initialized index is always a constant, but we won't remember which
+     * constant if there are branches inside the code computing the initializer
+     * expression (e.g. the expression uses the '?' operator).  Slow path those
+     * cases, as well as those where INITELEM is used on an object initializer
+     * or a non-fast array initializer.
+     */
+    if (!id->isConstant() || !obj->initializerArray()) {
+        JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
+
+        prepareStubCall(Uses(3));
+        masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::InitElem);
+        return;
+    }
+
+    JS_ASSERT(id->getValue().isInt32());
+
+    if (fe->isConstant() && fe->getValue().isMagic(JS_ARRAY_HOLE)) {
+        /* The array already has the correct length, nothing to do. */
+        return;
+    }
+
+    RegisterID objReg = frame.copyDataIntoReg(obj);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+
+    /* Perform the store. */
+    frame.storeTo(fe, Address(objReg, id->getValue().toInt32() * sizeof(Value)));
+    frame.freeReg(objReg);
+}

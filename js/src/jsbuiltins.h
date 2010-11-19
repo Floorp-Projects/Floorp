@@ -577,7 +577,6 @@ js_dmod(jsdouble a, jsdouble b);
 /* Defined in jsarray.cpp. */
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
 JS_DECLARE_CALLINFO(js_NewPreallocatedArray)
-JS_DECLARE_CALLINFO(js_InitializerArray)
 JS_DECLARE_CALLINFO(js_ArrayCompPush_tn)
 JS_DECLARE_CALLINFO(js_EnsureDenseArrayCapacity)
 
