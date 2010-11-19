@@ -1510,10 +1510,6 @@ int NS_main(int argc, NS_tchar **argv)
         if (result != WAIT_OBJECT_0)
           return 1;
       }
-
-      // The process may be signaled before it releases the executable image.
-      // This is a terrible hack, but it'll have to do for now :-(
-      Sleep(50);
 #else
       waitpid(pid, NULL, 0);
 #endif
@@ -1655,17 +1651,28 @@ int NS_main(int argc, NS_tchar **argv)
     NS_tremove(callbackBackupPath);
     CopyFileW(argv[callbackIndex], callbackBackupPath, FALSE);
 
-    // By opening a file handle to the callback executable, the OS will prevent
-    // launching the process while it is being updated. 
-    callbackFile = CreateFileW(argv[callbackIndex],
+    // Since the process may be signaled as exited by WaitForSingleObject before
+    // the release of the executable image try to lock the main executable file
+    // multiple times before giving up.
+    int retries = 5;
+    do {
+      // By opening a file handle to the callback executable, the OS will prevent
+      // launching the process while it is being updated. 
+      callbackFile = CreateFileW(argv[callbackIndex],
 #ifdef WINCE
-                               GENERIC_WRITE,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
 #else
-                               DELETE | GENERIC_WRITE,
-                               0, // no sharing!
+                                 DELETE | GENERIC_WRITE,
+                                 0, // no sharing!
 #endif
-                               NULL, OPEN_EXISTING, 0, NULL);
+                                 NULL, OPEN_EXISTING, 0, NULL);
+      if (callbackFile != INVALID_HANDLE_VALUE)
+        break;
+
+      Sleep(50);
+    } while (--retries);
+
     // CreateFileW will fail if the callback executable is already in use. Since
     // it isn't possible to update write the status file and return.
     if (callbackFile == INVALID_HANDLE_VALUE) {
