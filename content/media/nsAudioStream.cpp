@@ -334,8 +334,6 @@ nsAudioStream::GetGlobalThread()
 
 nsAudioStream* nsAudioStream::AllocateStream()
 {
-  nsAudioStream* result = nsnull;
-
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     return new nsAudioStreamRemote();
