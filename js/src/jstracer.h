@@ -1839,18 +1839,4 @@ struct TraceVisStateObj {
 
 #endif /* !JS_TRACER */
 
-namespace js {
-
-static JS_INLINE void
-AbortRecordingIfChangingGlobalSlotType(JSContext *cx, JSObject *obj,
-                                       const Value &v, unsigned slot)
-{
-#ifdef JS_TRACER
-    if (TRACE_RECORDER(cx) && !obj->parent && !SameTraceType(v, obj->nativeGetSlot(slot)))
-        AbortRecording(cx, "Global slot type changed outside tracer supervision");
-#endif
-}
-
-}  /* namespace js */
-
 #endif /* jstracer_h___ */
