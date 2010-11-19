@@ -2129,15 +2129,16 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsPresContext* presContext = mOuter->PresContext();
   nsIFrame* parent = mOuter->GetParent();
 
-  // Don't create scrollbars if we're printing/print previewing
-  // Get rid of this code when printing moves to its own presentation
-  if (!presContext->IsDynamic()) {
-    // allow scrollbars if this is the child of the viewport, because
-    // we must be the scrollbars for the print preview window
-    if (!(mIsRoot && presContext->HasPaginatedScrolling())) {
-      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
-      return NS_OK;
-    }
+  // Don't create scrollbars if we're an SVG document being used as an image,
+  // or if we're printing/print previewing.
+  // (In the printing case, we allow scrollbars if this is the child of the
+  // viewport & paginated scrolling is enabled, because then we must be the
+  // scroll frame for the print preview window, & that does need scrollbars.)
+  if (presContext->Document()->IsBeingUsedAsImage() ||
+      (!presContext->IsDynamic() &&
+       !(mIsRoot && presContext->HasPaginatedScrolling()))) {
+    mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
+    return NS_OK;
   }
 
   // Check if the frame is resizable.

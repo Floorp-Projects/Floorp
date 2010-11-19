@@ -119,6 +119,7 @@ private:
 
   PRPackedBool   mIsInitialized:1;        // Have we been initalized?
   PRPackedBool   mIsFullyLoaded:1;        // Has OnStopRequest been called?
+  PRPackedBool   mIsDrawing:1;            // Are we currently drawing?
   PRPackedBool   mHaveAnimations:1;       // Is our SVG content SMIL-animated?
                                           // (Only set after mIsFullyLoaded.)
   PRPackedBool   mHaveRestrictedRegion:1; // Are we a restricted-region clone
