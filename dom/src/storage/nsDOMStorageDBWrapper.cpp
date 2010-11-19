@@ -108,7 +108,7 @@ nsDOMStorageDBWrapper::Init()
 }
 
 nsresult
-nsDOMStorageDBWrapper::EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStorage)
+nsDOMStorageDBWrapper::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage)
 {
   if (aStorage->CanUseChromePersist())
     return mChromePersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
@@ -121,7 +121,7 @@ nsDOMStorageDBWrapper::EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStorage
 }
 
 nsresult
-nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* aStorage)
+nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage)
 {
   if (aStorage->CanUseChromePersist())
     return mChromePersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
@@ -134,7 +134,7 @@ nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* aSto
 }
 
 nsresult
-nsDOMStorageDBWrapper::GetAllKeys(nsDOMStorage* aStorage,
+nsDOMStorageDBWrapper::GetAllKeys(DOMStorageImpl* aStorage,
                                   nsTHashtable<nsSessionStorageEntry>* aKeys)
 {
   if (aStorage->CanUseChromePersist())
@@ -148,7 +148,7 @@ nsDOMStorageDBWrapper::GetAllKeys(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDBWrapper::GetKeyValue(nsDOMStorage* aStorage,
+nsDOMStorageDBWrapper::GetKeyValue(DOMStorageImpl* aStorage,
                                    const nsAString& aKey,
                                    nsAString& aValue,
                                    PRBool* aSecure)
@@ -164,7 +164,7 @@ nsDOMStorageDBWrapper::GetKeyValue(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDBWrapper::SetKey(nsDOMStorage* aStorage,
+nsDOMStorageDBWrapper::SetKey(DOMStorageImpl* aStorage,
                               const nsAString& aKey,
                               const nsAString& aValue,
                               PRBool aSecure,
@@ -187,7 +187,7 @@ nsDOMStorageDBWrapper::SetKey(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDBWrapper::SetSecure(nsDOMStorage* aStorage,
+nsDOMStorageDBWrapper::SetSecure(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  const PRBool aSecure)
 {
@@ -202,7 +202,7 @@ nsDOMStorageDBWrapper::SetSecure(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDBWrapper::RemoveKey(nsDOMStorage* aStorage,
+nsDOMStorageDBWrapper::RemoveKey(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  PRBool aExcludeOfflineFromUsage,
                                  PRInt32 aKeyUsage)
@@ -218,7 +218,7 @@ nsDOMStorageDBWrapper::RemoveKey(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStorageDBWrapper::ClearStorage(nsDOMStorage* aStorage)
+nsDOMStorageDBWrapper::ClearStorage(DOMStorageImpl* aStorage)
 {
   if (aStorage->CanUseChromePersist())
     return mChromePersistentDB.ClearStorage(aStorage);
@@ -306,7 +306,7 @@ nsDOMStorageDBWrapper::RemoveAll()
 }
 
 nsresult
-nsDOMStorageDBWrapper::GetUsage(nsDOMStorage* aStorage,
+nsDOMStorageDBWrapper::GetUsage(DOMStorageImpl* aStorage,
                                 PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage)
 {
   if (aStorage->CanUseChromePersist())

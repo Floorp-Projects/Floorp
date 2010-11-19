@@ -54,6 +54,7 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
+#include "mozilla/dom/StorageChild.h"
 
 #include "nsAudioStream.h"
 
@@ -337,6 +338,21 @@ ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
 {
     ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
     child->Release();
+    return true;
+}
+
+PStorageChild*
+ContentChild::AllocPStorage(const StorageConstructData& aData)
+{
+    NS_NOTREACHED("We should never be manually allocating PStorageChild actors");
+    return nsnull;
+}
+
+bool
+ContentChild::DeallocPStorage(PStorageChild* aActor)
+{
+    StorageChild* child = static_cast<StorageChild*>(aActor);
+    child->ReleaseIPDLReference();
     return true;
 }
 

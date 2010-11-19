@@ -62,6 +62,7 @@ class TestShellParent;
 namespace dom {
 
 class TabParent;
+class PStorageParent;
 
 class ContentParent : public PContentParent
                     , public nsIObserver
@@ -133,6 +134,9 @@ private:
             const PRInt64& aContentLength,
             const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
+
+    virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
+    virtual bool DeallocPStorage(PStorageParent* aActor);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefTuple> *retValue);
 
