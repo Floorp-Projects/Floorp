@@ -213,6 +213,16 @@ public:
   nsAccessible* GetCachedAccessibleByUniqueIDInSubtree(void* aUniqueID);
 
   /**
+   * Return true if the given ID is referred by relation attribute.
+   *
+   * @note Different elements may share the same ID if they are hosted inside
+   *       XBL bindings. Be careful the result of this method may be  senseless
+   *       while it's called for XUL elements (where XBL is used widely).
+   */
+  PRBool IsDependentID(const nsAString& aID) const
+    { return mDependentIDsHash.Get(aID, nsnull); }
+
+  /**
    * Initialize the newly created accessible and put it into document caches.
    *
    * @param  aAccessible    [in] created accessible
@@ -242,6 +252,17 @@ public:
    * Recreate an accessible, results in hide/show events pair.
    */
   void RecreateAccessible(nsINode* aNode);
+
+  /**
+   * Used to notify the document that the accessible caching is started or
+   * finished.
+   *
+   * While children are cached we may encounter the case there's no accessible
+   * for referred content by related accessible. Keep the caching root and
+   * these related nodes to invalidate their containers after root caching.
+   */
+  void NotifyOfCachingStart(nsAccessible* aAccessible);
+  void NotifyOfCachingEnd(nsAccessible* aAccessible);
 
 protected:
 
@@ -409,6 +430,17 @@ protected:
   nsClassHashtable<nsStringHashKey, AttrRelProviderArray> mDependentIDsHash;
 
   friend class RelatedAccIterator;
+
+  /**
+   * Used for our caching algorithm. We store the root of the tree that needs
+   * caching, the list of nodes that should be invalidated, and whether we are
+   * processing the invalidation list.
+   *
+   * @see NotifyOfCachingStart/NotifyOfCachingEnd
+   */
+  nsAccessible* mCacheRoot;
+  nsTArray<nsIContent*> mInvalidationList;
+  PRBool mIsPostCacheProcessing;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,
