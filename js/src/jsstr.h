@@ -68,8 +68,6 @@ enum {
     NUM_HUNDRED_STRINGS      = 156U
 };
 
-extern JSStringFinalizeOp str_finalizers[8];
-
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
@@ -160,6 +158,7 @@ struct JSString {
                 JSString            *mRight; /* in rope interior and top nodes */
             };
         } e;
+        uintN                       externalStringType; /* for external strings. */
     };
 
     /*
@@ -527,8 +526,29 @@ struct JSString {
 
     static JSString *lookupStaticString(const jschar *chars, size_t length);
     
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 };
+
+struct JSExternalString : JSString {
+    static const uintN TYPE_LIMIT = 8;
+    static JSStringFinalizeOp str_finalizers[TYPE_LIMIT];
+
+    static intN changeFinalizer(JSStringFinalizeOp oldop,
+                                JSStringFinalizeOp newop) {
+        for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+            if (str_finalizers[i] == oldop) {
+                str_finalizers[i] = newop;
+                return intN(i);
+            }
+        }
+        return -1;
+    }
+
+    void finalize(JSContext *cx);
+    void finalize();
+};
+
+JS_STATIC_ASSERT(sizeof(JSString) == sizeof(JSExternalString));
 
 /*
  * Short strings should be created in cases where it's worthwhile to avoid
@@ -574,7 +594,7 @@ struct JSShortString : js::gc::Cell {
         return length <= MAX_SHORT_STRING_LENGTH;
     }
 
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 };
 
 /*
@@ -944,16 +964,9 @@ js_NewStringCopyZ(JSContext *cx, const char *s);
 /*
  * Convert a value to a printable C string.
  */
-typedef JSString *(*JSValueToStringFun)(JSContext *cx, const js::Value &v);
-
-extern JS_FRIEND_API(const char *)
-js_ValueToPrintable(JSContext *cx, const js::Value &, JSValueToStringFun v2sfun);
-
-#define js_ValueToPrintableString(cx,v) \
-    js_ValueToPrintable(cx, v, js_ValueToString)
-
-#define js_ValueToPrintableSource(cx,v) \
-    js_ValueToPrintable(cx, v, js_ValueToSource)
+extern const char *
+js_ValueToPrintable(JSContext *cx, const js::Value &,
+                    JSAutoByteString *bytes, bool asSource = false);
 
 /*
  * Convert a value to a string, returning null after reporting an error,
@@ -1138,7 +1151,7 @@ js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
  * characters chopped from Unicode code points into bytes.
  */
 extern const char *
-js_GetStringBytes(JSContext *cx, JSString *str);
+js_GetStringBytes(JSAtom *atom);
 
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool
@@ -1219,8 +1232,6 @@ class DeflatedStringCache {
     ~DeflatedStringCache();
 
     void sweep(JSContext *cx);
-    void remove(JSString *str);
-    bool setBytes(JSContext *cx, JSString *str, char *bytes);
 
   private:
     struct StringPtrHasher
@@ -1249,11 +1260,10 @@ class DeflatedStringCache {
 
     typedef HashMap<JSString *, char *, StringPtrHasher, SystemAllocPolicy> Map;
 
-    /* cx is NULL when the caller is JS_GetStringBytes(JSString *). */
-    char *getBytes(JSContext *cx, JSString *str);
+    char *getBytes(JSString *str);
 
     friend const char *
-    ::js_GetStringBytes(JSContext *cx, JSString *str);
+    ::js_GetStringBytes(JSAtom *atom);
 
     Map                 map;
 #ifdef JS_THREADSAFE

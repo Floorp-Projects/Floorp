@@ -259,8 +259,7 @@ nsHTMLLIAccessible::
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
   if (blockFrame && !blockFrame->BulletIsEmptyExternal()) {
     mBulletAccessible = new nsHTMLListBulletAccessible(mContent, mWeakShell);
-    if (mBulletAccessible)
-      mBulletAccessible->Init();
+    GetDocAccessible()->BindToDocument(mBulletAccessible, nsnull);
   }
 }
 

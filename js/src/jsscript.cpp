@@ -90,7 +90,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
     false,      /* debugMode */
 #endif
     const_cast<jsbytecode*>(emptyScriptCode),
-    {0, NULL}, NULL, NULL, 0, 0, 0,
+    {0, jsatomid(0)}, NULL, NULL, 0, 0, 0,
     0,          /* nClosedArgs */
     0,          /* nClosedVars */
     NULL, {NULL},
@@ -491,7 +491,7 @@ script_finalize(JSContext *cx, JSObject *obj)
 {
     JSScript *script = (JSScript *) obj->getPrivate();
     if (script)
-        js_DestroyScript(cx, script);
+        js_DestroyScriptFromGC(cx, script, NULL);
 }
 
 static void
@@ -1130,8 +1130,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
              */
             JSScript *empty = JSScript::emptyScript();
 
-            if (cg->flags & TCF_IN_FUNCTION) {
-                fun = cg->fun;
+            if (cg->inFunction()) {
+                fun = cg->fun();
                 JS_ASSERT(fun->isInterpreted() && !FUN_SCRIPT(fun));
                 if (cg->flags & TCF_STRICT_MODE_CODE) {
                     /*
@@ -1193,8 +1193,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script->main += prologLength;
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
-    nfixed = (cg->flags & TCF_IN_FUNCTION)
-             ? cg->fun->u.i.nvars
+    nfixed = cg->inFunction()
+             ? cg->fun()->u.i.nvars
              : cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
@@ -1271,8 +1271,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
      * so that the debugger has a valid FUN_SCRIPT(fun).
      */
     fun = NULL;
-    if (cg->flags & TCF_IN_FUNCTION) {
-        fun = cg->fun;
+    if (cg->inFunction()) {
+        fun = cg->fun();
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         if (script->upvarsOffset != 0)
             JS_ASSERT(script->upvars()->length == fun->u.i.nupvars);
@@ -1329,8 +1329,8 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
 }
 
-void
-js_DestroyScript(JSContext *cx, JSScript *script)
+static void
+DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
 {
     if (script == JSScript::emptyScript()) {
         JS_RUNTIME_UNMETER(cx->runtime, liveEmptyScripts);
@@ -1387,7 +1387,16 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     }
 
 #ifdef JS_TRACER
-    PurgeScriptFragments(cx, script);
+# ifdef JS_THREADSAFE
+    if (data) {
+        PurgeScriptFragments(&data->traceMonitor, script);
+    } else {
+        for (ThreadDataIter i(cx->runtime); !i.empty(); i.popFront())
+            PurgeScriptFragments(&i.threadData()->traceMonitor, script);
+    }
+# else
+    PurgeScriptFragments(&JS_TRACE_MONITOR(cx), script);
+# endif
 #endif
 
 #if defined(JS_METHODJIT)
@@ -1398,6 +1407,20 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     cx->free(script);
 
     JS_RUNTIME_UNMETER(cx->runtime, liveScripts);
+}
+
+void
+js_DestroyScript(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(!cx->runtime->gcRunning);
+    DestroyScript(cx, script, JS_THREAD_DATA(cx));
+}
+
+void
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSThreadData *data)
+{
+    JS_ASSERT(cx->runtime->gcRunning);
+    DestroyScript(cx, script, data);
 }
 
 void

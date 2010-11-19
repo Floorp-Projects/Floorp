@@ -136,7 +136,7 @@ TypeIdString(JSContext *cx, jsid id)
 #ifdef DEBUG
     if (JSID_IS_VOID(id))
         return "(index)";
-    return js_GetStringBytes(cx, JSID_TO_STRING(id));
+    return js_GetStringBytes(JSID_TO_ATOM(id));
 #else
     return NULL;
 #endif
@@ -1252,7 +1252,7 @@ TypeFunction::getNewObject(JSContext *cx)
     if (newObject)
         return newObject;
 
-    const char *baseName = js_GetStringBytes(cx, JSID_TO_STRING(name));
+    const char *baseName = js_GetStringBytes(JSID_TO_ATOM(name));
 
     unsigned len = strlen(baseName) + 10;
     char *newName = (char *) alloca(len);

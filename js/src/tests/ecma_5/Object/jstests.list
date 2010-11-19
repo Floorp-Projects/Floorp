@@ -41,3 +41,4 @@ script object-toString-01.js
 script vacuous-accessor-unqualified-name.js
 script add-property-non-extensible.js
 skip-if(!xulRuntime.shell) script freeze-global-eval-const.js # uses evalcx
+script preventExtensions-idempotent.js

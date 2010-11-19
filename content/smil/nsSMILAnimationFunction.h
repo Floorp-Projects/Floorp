@@ -201,7 +201,7 @@ public:
    * @return  True if the animation will replace, false if it will add or
    *          otherwise build on the passed in value.
    */
-  PRBool WillReplace() const;
+  virtual PRBool WillReplace() const;
 
   /**
    * Indicates if the parameters for this animation have changed since the last

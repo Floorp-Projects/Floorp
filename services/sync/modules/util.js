@@ -54,6 +54,36 @@ Cu.import("resource://services-sync/log4moz.js");
 
 let Utils = {
   /**
+   * Execute an arbitrary number of asynchronous functions one after the
+   * other, passing the callback arguments on to the next one.  All functions
+   * must take a callback function as their last argument.  The 'this' object
+   * will be whatever asyncChain's is.
+   * 
+   * @usage this._chain = Utils.asyncChain;
+   *        this._chain(this.foo, this.bar, this.baz)(args, for, foo)
+   * 
+   * This is equivalent to:
+   *
+   *   let self = this;
+   *   self.foo(args, for, foo, function (bars, args) {
+   *     self.bar(bars, args, function (baz, params) {
+   *       self.baz(baz, params);
+   *     });
+   *   });
+   */
+  asyncChain: function asyncChain() {
+    let funcs = Array.slice(arguments);
+    let thisObj = this;
+    return function callback() {
+      if (funcs.length) {
+        let args = Array.slice(arguments).concat(callback);
+        let f = funcs.shift();
+        f.apply(thisObj, args);
+      }
+    };
+  },
+
+  /**
    * Wrap a function to catch all exceptions and log them
    *
    * @usage MyObj._catch = Utils.catch;

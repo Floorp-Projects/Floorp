@@ -217,7 +217,7 @@ function populateGraphicsSection() {
       {
         var d2dSuggestedDriverVersion = null;
         try {
-          gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
+          d2dSuggestedDriverVersion = gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
         } catch(e) {
           window.dump(e + '\n');
         }

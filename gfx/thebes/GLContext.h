@@ -51,6 +51,7 @@
 
 #include "GLDefs.h"
 #include "gfxASurface.h"
+#include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
 #include "nsISupportsImpl.h"
@@ -211,6 +212,7 @@ public:
     const nsIntSize& GetSize() const { return mSize; }
     ContentType GetContentType() const { return mContentType; }
     virtual PRBool InUpdate() const = 0;
+    GLenum GetWrapMode() const { return mWrapMode; }
 
     PRBool IsRGB() const { return mIsRGBFormat; }
 
@@ -223,15 +225,19 @@ protected:
      * TextureImage from GLContext::CreateTextureImage().  That is,
      * clients must not be given partially-constructed TextureImages.
      */
-    TextureImage(GLuint aTexture, const nsIntSize& aSize, ContentType aContentType, PRBool aIsRGB = PR_FALSE)
+    TextureImage(GLuint aTexture, const nsIntSize& aSize,
+                 GLenum aWrapMode, ContentType aContentType,
+                 PRBool aIsRGB = PR_FALSE)
         : mTexture(aTexture)
         , mSize(aSize)
+        , mWrapMode(aWrapMode)
         , mContentType(aContentType)
         , mIsRGBFormat(aIsRGB)
     {}
 
     GLuint mTexture;
     nsIntSize mSize;
+    GLenum mWrapMode;
     ContentType mContentType;
     PRPackedBool mIsRGBFormat;
 };
@@ -262,11 +268,13 @@ protected:
 
     BasicTextureImage(GLuint aTexture,
                       const nsIntSize& aSize,
+                      GLenum aWrapMode,
                       ContentType aContentType,
                       GLContext* aContext)
-        : TextureImage(aTexture, aSize, aContentType)
+        : TextureImage(aTexture, aSize, aWrapMode, aContentType)
         , mTextureInited(PR_FALSE)
         , mGLContext(aContext)
+        , mUpdateOffset(0, 0)
     {}
 
     virtual already_AddRefed<gfxASurface>
@@ -277,8 +285,12 @@ protected:
 
     PRBool mTextureInited;
     GLContext* mGLContext;
+    nsRefPtr<gfxImageSurface> mBackingSurface;
     nsRefPtr<gfxContext> mUpdateContext;
     nsIntRect mUpdateRect;
+
+    // The offset into the update surface at which the update rect is located.
+    nsIntPoint mUpdateOffset;
 };
 
 struct THEBES_API ContextFormat
@@ -463,9 +475,15 @@ public:
         return mIsGLES2;
     }
 
-    enum { VendorIntel, VendorNVIDIA, VendorATI, VendorOther };
+    enum {
+        VendorIntel,
+        VendorNVIDIA,
+        VendorATI,
+        VendorQualcomm,
+        VendorOther
+    };
 
-    PRBool Vendor() const {
+    int Vendor() const {
         return mVendor;
     }
 
@@ -631,7 +649,7 @@ public:
     virtual already_AddRefed<TextureImage>
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
-                       GLint aWrapMode,
+                       GLenum aWrapMode,
                        PRBool aUseNearestFilter=PR_FALSE);
 
     /**
@@ -685,6 +703,37 @@ public:
     void BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
                           TextureImage *aDst, const nsIntRect& aDstRect);
 
+    /** Helper for DecomposeIntoNoRepeatTriangles
+     */
+    struct RectTriangles {
+        RectTriangles() : numRects(0) { }
+
+        void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
+                     GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1);
+
+        int numRects;
+        /* max is 4 rectangles, each made up of 2 triangles (3 2-coord vertices each) */
+        GLfloat vertexCoords[4*3*2*2];
+        GLfloat texCoords[4*3*2*2];
+    };
+
+    /**
+     * Decompose drawing the possibly-wrapped aTexCoordRect rectangle
+     * of a texture of aTexSize into one or more rectangles (represented
+     * as 2 triangles) and associated tex coordinates, such that
+     * we don't have to use the REPEAT wrap mode.
+     *
+     * The resulting triangle vertex coordinates will be in the space of
+     * (0.0, 0.0) to (1.0, 1.0) -- transform the coordinates appropriately
+     * if you need a different space.
+     *
+     * The resulting vertex coordinates should be drawn using GL_TRIANGLES,
+     * and rects.numRects * 3 * 6
+     */
+    static void DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
+                                               const nsIntSize& aTexSize,
+                                               RectTriangles& aRects);
+
     /**
      * Known GL extensions that can be queried by
      * IsExtensionSupported.  The results of this are cached, and as
@@ -706,12 +755,18 @@ public:
         OES_packed_depth_stencil,
         IMG_read_format,
         EXT_read_format_bgra,
+        APPLE_client_storage,
+        ARB_texture_non_power_of_two,
         Extensions_Max
     };
 
     PRBool IsExtensionSupported(GLExtensions aKnownExtension) {
         return mAvailableExtensions[aKnownExtension];
     }
+
+    // Shared code for GL extensions and GLX extensions.
+    static PRBool ListHasExtension(const GLubyte *extensions,
+                                   const char *extension);
 
 protected:
     PRPackedBool mInitialized;
@@ -720,7 +775,7 @@ protected:
     PRPackedBool mIsGlobalSharedContext;
     PRPackedBool mWindowOriginBottomLeft;
 
-    int mVendor;
+    PRInt32 mVendor;
 
     enum {
         DebugEnabled = 1 << 0,
@@ -801,6 +856,7 @@ protected:
     virtual already_AddRefed<TextureImage>
     CreateBasicTextureImage(GLuint aTexture,
                             const nsIntSize& aSize,
+                            GLenum aWrapMode,
                             TextureImage::ContentType aContentType,
                             GLContext* aContext)
     { return NULL; }

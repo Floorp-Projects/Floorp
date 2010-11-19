@@ -243,7 +243,7 @@
       is(keyIndex, -1, "Saw all the expected keys");
 
       keyIndex = 1;
-      let keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron");
+      let keyRange = IDBKeyRange.bound("Bob", "Ron");
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -267,7 +267,7 @@
       is(keyIndex, 5, "Saw all the expected keys");
 
       keyIndex = 2;
-      let keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", true);
+      let keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -291,7 +291,7 @@
       is(keyIndex, 5, "Saw all the expected keys");
 
       keyIndex = 1;
-      let keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", false, true);
+      let keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -315,7 +315,7 @@
       is(keyIndex, 4, "Saw all the expected keys");
 
       keyIndex = 2;
-      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", true, true);
+      keyRange = IDBKeyRange.bound("Bob", "Ron", true, true);
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -339,7 +339,7 @@
       is(keyIndex, 4, "Saw all the expected keys");
 
       keyIndex = 1;
-      keyRange = moz_indexedDB.makeLeftBoundKeyRange("Bob");
+      keyRange = IDBKeyRange.lowerBound("Bob");
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -363,7 +363,7 @@
       is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
       keyIndex = 2;
-      keyRange = moz_indexedDB.makeLeftBoundKeyRange("Bob", true);
+      keyRange = IDBKeyRange.lowerBound("Bob", true);
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -387,7 +387,7 @@
       is(keyIndex, objectStoreDataNameSort.length, "Saw all the expected keys");
 
       keyIndex = 0;
-      keyRange = moz_indexedDB.makeRightBoundKeyRange("Joe");
+      keyRange = IDBKeyRange.upperBound("Joe");
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -411,7 +411,7 @@
       is(keyIndex, 3, "Saw all the expected keys");
 
       keyIndex = 0;
-      keyRange = moz_indexedDB.makeRightBoundKeyRange("Joe", true);
+      keyRange = IDBKeyRange.upperBound("Joe", true);
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -435,7 +435,7 @@
       is(keyIndex, 2, "Saw all the expected keys");
 
       keyIndex = 3;
-      keyRange = moz_indexedDB.makeSingleKeyRange("Pat");
+      keyRange = IDBKeyRange.only("Pat");
 
       request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
@@ -551,7 +551,7 @@
       is(keyIndex, -1, "Saw all the expected keys");
 
       keyIndex = 1;
-      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron");
+      keyRange = IDBKeyRange.bound("Bob", "Ron");
 
       request = objectStore.index("name").openObjectCursor(keyRange);
       request.onerror = errorHandler;
@@ -598,7 +598,7 @@
       is(keyIndex, 5, "Saw all the expected keys");
 
       keyIndex = 2;
-      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", true);
+      keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
       request = objectStore.index("name").openObjectCursor(keyRange);
       request.onerror = errorHandler;
@@ -645,7 +645,7 @@
       is(keyIndex, 5, "Saw all the expected keys");
 
       keyIndex = 1;
-      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", false, true);
+      keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
       request = objectStore.index("name").openObjectCursor(keyRange);
       request.onerror = errorHandler;
@@ -692,7 +692,7 @@
       is(keyIndex, 4, "Saw all the expected keys");
 
       keyIndex = 2;
-      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron", true, true);
+      keyRange = IDBKeyRange.bound("Bob", "Ron", true, true);
 
       request = objectStore.index("name").openObjectCursor(keyRange);
       request.onerror = errorHandler;
@@ -739,7 +739,7 @@
       is(keyIndex, 4, "Saw all the expected keys");
 
       keyIndex = 4;
-      keyRange = moz_indexedDB.makeBoundKeyRange("Bob", "Ron");
+      keyRange = IDBKeyRange.bound("Bob", "Ron");
 
       request = objectStore.index("name").openObjectCursor(keyRange, PREV);
       request.onerror = errorHandler;
@@ -787,7 +787,7 @@
 
       // Test NEXT_NO_DUPLICATE
       keyIndex = 3;
-      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+      keyRange = IDBKeyRange.only(65);
 
       request = objectStore.index("height").openCursor(keyRange, NEXT);
       request.onerror = errorHandler;
@@ -811,7 +811,7 @@
       is(keyIndex, 5, "Saw all the expected keys");
 
       keyIndex = 4;
-      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+      keyRange = IDBKeyRange.only(65);
 
       request = objectStore.index("height").openCursor(keyRange,
                                                        NEXT_NO_DUPLICATE);
@@ -864,7 +864,7 @@
 
       // Test NEXT_NO_DUPLICATE
       keyIndex = 3;
-      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+      keyRange = IDBKeyRange.only(65);
 
       request = objectStore.index("height").openObjectCursor(keyRange, NEXT);
       request.onerror = errorHandler;
@@ -896,7 +896,7 @@
       is(keyIndex, 5, "Saw all the expected keys");
 
       keyIndex = 4;
-      keyRange = moz_indexedDB.makeSingleKeyRange(65);
+      keyRange = IDBKeyRange.only(65);
 
       request = objectStore.index("height").openObjectCursor(keyRange,
                                                              NEXT_NO_DUPLICATE);

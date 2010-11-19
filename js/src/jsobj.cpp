@@ -915,18 +915,17 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
 {
     JSSecurityCallbacks *callbacks;
     JSPrincipals *scopePrincipals;
-    const char *callerstr;
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (callbacks && callbacks->findObjectPrincipals) {
         scopePrincipals = callbacks->findObjectPrincipals(cx, scopeobj);
         if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
-            callerstr = js_AtomToPrintableString(cx, caller);
-            if (!callerstr)
+            JSAutoByteString callerstr;
+            if (!js_AtomToPrintableString(cx, caller, &callerstr))
                 return JS_FALSE;
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_INDIRECT_CALL, callerstr);
+                                 JSMSG_BAD_INDIRECT_CALL, callerstr.ptr());
             return JS_FALSE;
         }
     }
@@ -1967,8 +1966,10 @@ Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
         jsid idstr;
         if (!js_ValueToStringId(cx, IdToValue(id), &idstr))
            return JS_FALSE;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
-                             JS_GetStringBytes(JSID_TO_STRING(idstr)));
+        JSAutoByteString bytes(cx, JSID_TO_STRING(idstr));
+        if (!bytes)
+            return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber, bytes.ptr());
         return JS_FALSE;
     }
 
@@ -2573,15 +2574,18 @@ obj_preventExtensions(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     vp->setObject(*obj);
+    if (!obj->isExtensible())
+        return true;
 
     AutoIdVector props(cx);
     return obj->preventExtensions(cx, &props);
 }
 
 bool
-JSObject::sealOrFreeze(JSContext *cx, bool freeze)
+JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 {
     assertSameCompartment(cx, this);
+    JS_ASSERT(it == SEAL || it == FREEZE);
 
     AutoIdVector props(cx);
     if (isExtensible()) {
@@ -2604,7 +2608,7 @@ JSObject::sealOrFreeze(JSContext *cx, bool freeze)
 
         /* Make all attributes permanent; if freezing, make data attributes read-only. */
         uintN new_attrs;
-        if (freeze && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
+        if (it == FREEZE && !(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
             new_attrs = JSPROP_PERMANENT | JSPROP_READONLY;
         else
             new_attrs = JSPROP_PERMANENT;
@@ -2805,7 +2809,10 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     JSObject *parent = callee->getParent();
     TypeObject *type = callee->isFunction() ? callee->getTypeFunctionNewObject(cx) : callee->getTypeObject();
     gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
-    return NewObject<WithProto::Class>(cx, newclasp, proto, parent, type, kind);
+    JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, type, kind);
+    if (obj)
+        obj->syncSpecialEquality();
+    return obj;
 }
 
 JSObject *
@@ -2860,15 +2867,19 @@ JS_DEFINE_TRCINFO_1(js_Object,
          nanojit::ACCSET_STORE_ANY)))
 
 JSObject* FASTCALL
-js_InitializerObject(JSContext* cx, int32 count)
+js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
 {
+    if (!baseobj) {
+        gc::FinalizeKind kind = GuessObjectGCKind(0, false);
+        return NewObjectWithClassProto(cx, &js_ObjectClass, proto, kind);
+    }
+
     TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
-    gc::FinalizeKind kind = GuessObjectGCKind(count, false);
-    return NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
+    return CopyInitializerObject(cx, baseobj, type);
 }
 
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_InitializerObject, CONTEXT, INT32, 0,
-                     nanojit::ACCSET_STORE_ANY)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_InitializerObject, CONTEXT, OBJECT, OBJECT,
+                     0, nanojit::ACCSET_STORE_ANY)
 
 JSObject* FASTCALL
 js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
@@ -3666,6 +3677,8 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!proto)
         return NULL;
 
+    proto->syncSpecialEquality();
+    
     /* After this point, control must exit via label bad or out. */
     AutoObjectRooter tvr(cx, proto);
 
@@ -3897,16 +3910,9 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     if (!hasSlotsArray())
         return allocSlots(cx, actualCapacity);
 
-    Value *oldslots = slots;
     Value *tmpslots = (Value*) cx->realloc(slots, actualCapacity * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
-    // If slots has changed, that means some other thread changed it while we
-    // were realloc'ing, which is very bad.
-#define JS_CRASH(addr) *(int *) addr = 0;
-    if (oldslots != slots)
-        JS_CRASH(0xf0);
-#undef JS_CRASH
     slots = tmpslots;
     capacity = actualCapacity;
 
@@ -3932,6 +3938,8 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     uint32 fill = newcap;
     if (newcap < SLOT_CAPACITY_MIN)
         newcap = SLOT_CAPACITY_MIN;
+    if (newcap < numFixedSlots())
+        newcap = numFixedSlots();
 
     Value *tmpslots = (Value*) cx->realloc(slots, newcap * sizeof(Value));
     if (!tmpslots)
@@ -4183,6 +4191,8 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
     JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent, type);
     if (!obj)
         return NULL;
+
+    obj->syncSpecialEquality();
 
     Value rval;
     if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))
@@ -5267,13 +5277,13 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
         return true;
     }
 
-    const char *bytes = js_GetStringBytes(cx, propname);
-    return bytes &&
+    JSAutoByteString bytes(cx, propname);
+    return !!bytes &&
            JS_ReportErrorFlagsAndNumber(cx,
                                         (JSREPORT_WARNING | JSREPORT_STRICT
                                          | JSREPORT_STRICT_MODE_ERROR),
                                         js_GetErrorMessage, NULL,
-                                        JSMSG_UNDECLARED_VAR, bytes);
+                                        JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
 bool

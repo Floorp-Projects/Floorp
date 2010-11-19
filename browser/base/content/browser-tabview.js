@@ -40,7 +40,7 @@ let TabView = {
   _window: null,
   _sessionstore: null,
   _visibilityID: "tabview-visibility",
-  
+
   // ----------
   get windowTitle() {
     delete this.windowTitle;
@@ -51,7 +51,7 @@ let TabView = {
   },
 
   // ----------
-  init: function TabView_init() {    
+  init: function TabView_init() {
     // ___ keys    
     this._setBrowserKeyHandlers();
 
@@ -61,8 +61,21 @@ let TabView = {
         getService(Ci.nsISessionStore);
 
     let data = this._sessionstore.getWindowValue(window, this._visibilityID);
-    if (data && data == "true")
+    if (data && data == "true") {
       this.show();
+    } else {
+      let self = this;
+      // if a tab is changed from hidden to unhidden and the iframe is not 
+      // initialized, load the iframe and setup the tab.
+      this._tabShowEventListener = function (event) {
+        if (!self._window)
+          self._initFrame(function() {
+            self._window.UI.onTabSelect(gBrowser.selectedTab);
+          });
+      };
+      gBrowser.tabContainer.addEventListener(
+        "TabShow", this._tabShowEventListener, true);
+    }
   },
 
   // ----------
@@ -75,16 +88,16 @@ let TabView = {
     } else {
       // ___ find the deck
       this._deck = document.getElementById("tab-view-deck");
-      
+
       // ___ create the frame
       let iframe = document.createElement("iframe");
       iframe.id = "tab-view";
       iframe.setAttribute("transparent", "true");
       iframe.flex = 1;
-              
+
       if (typeof callback == "function")
         iframe.addEventListener("DOMContentLoaded", callback, false);
-      
+
       iframe.setAttribute("src", "chrome://browser/content/tabview.html");
       this._deck.appendChild(iframe);
       this._window = iframe.contentWindow;
@@ -97,11 +110,15 @@ let TabView = {
           self._sessionstore.setWindowValue(window, self._visibilityID, data);
         }
       }
-      
       Services.obs.addObserver(observer, "quit-application-requested", false);
+
+      if (this._tabShowEventListener) {
+        gBrowser.tabContainer.removeEventListener(
+          "TabShow", this._tabShowEventListener, true);
+      }
     }
   },
-  
+
   // ----------
   getContentWindow: function TabView_getContentWindow() {
     return this._window;

@@ -40,6 +40,7 @@
 #include "nsHTMLImageMapAccessible.h"
 
 #include "nsAccUtils.h"
+#include "nsDocAccessible.h"
 
 #include "nsIDOMHTMLCollection.h"
 #include "nsIServiceManager.h"
@@ -114,6 +115,8 @@ nsHTMLImageMapAccessible::CacheChildren()
   if (!mapAreas)
     return;
 
+  nsDocAccessible* document = GetDocAccessible();
+
   PRUint32 areaCount = 0;
   mapAreas->GetLength(&areaCount);
 
@@ -124,21 +127,13 @@ nsHTMLImageMapAccessible::CacheChildren()
       return;
 
     nsCOMPtr<nsIContent> areaContent(do_QueryInterface(areaNode));
-    nsRefPtr<nsAccessible> areaAcc =
+    nsRefPtr<nsAccessible> area =
       new nsHTMLAreaAccessible(areaContent, mWeakShell);
-    if (!areaAcc)
-      return;
 
-    if (!areaAcc->Init()) {
-      areaAcc->Shutdown();
+    if (!document->BindToDocument(area, nsAccUtils::GetRoleMapEntry(areaContent)) ||
+        !AppendChild(area)) {
       return;
     }
-
-    // We must respect ARIA on area elements (for the canvas map technique)
-    areaAcc->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(areaContent));
-
-    if (!AppendChild(areaAcc))
-      return;
   }
 }
 

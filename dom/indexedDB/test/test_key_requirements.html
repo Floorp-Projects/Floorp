@@ -22,6 +22,9 @@
       let event = yield;
 
       let db = event.result;
+      db.addEventListener("error", function(event) {
+        event.preventDefault();
+      }, false);
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
@@ -79,7 +82,7 @@
       }
 
       try {
-        objectStore.remove();
+        objectStore.delete();
         ok(false, "remove with no key should throw!");
       }
       catch (e) {
@@ -113,7 +116,7 @@
       }
 
       try {
-        objectStore.remove();
+        objectStore.delete();
         ok(false, "remove with no key should throw!");
       }
       catch (e) {
@@ -147,7 +150,7 @@
       }
 
       try {
-        objectStore.remove();
+        objectStore.delete();
         ok(false, "remove with no key should throw!");
       }
       catch (e) {
@@ -206,7 +209,7 @@
       }
 
       try {
-        objectStore.remove({}, null);
+        objectStore.delete({}, null);
         ok(false, "remove with null key should throw!");
       }
       catch (e) {
@@ -255,14 +258,14 @@
       }
 
       try {
-        objectStore.remove();
+        objectStore.delete();
         ok(false, "remove with no key should throw!");
       }
       catch (e) {
         ok(true, "remove with no key threw");
       }
 
-      request = objectStore.remove(key2);
+      request = objectStore.delete(key2);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

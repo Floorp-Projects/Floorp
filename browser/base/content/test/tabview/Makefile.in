@@ -44,10 +44,12 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
+                 browser_tabview_alltabs.js \
                  browser_tabview_apptabs.js \
                  browser_tabview_bug580412.js \
                  browser_tabview_bug587043.js \
                  browser_tabview_bug587990.js \
+                 browser_tabview_bug589324.js \
                  browser_tabview_bug590606.js \
                  browser_tabview_bug591706.js \
                  browser_tabview_bug594176.js \
@@ -64,11 +66,13 @@ _BROWSER_FILES = \
                  browser_tabview_launch.js \
                  browser_tabview_orphaned_tabs.js \
                  browser_tabview_privatebrowsing.js \
+                 browser_tabview_rtl.js \
                  browser_tabview_search.js \
                  browser_tabview_snapping.js \
                  browser_tabview_startup_transitions.js \
                  browser_tabview_undo_group.js \
                  browser_tabview_firstrun_pref.js \
+                 dummy_page.html \
                  head.js \
                  search1.html \
                  search2.html \

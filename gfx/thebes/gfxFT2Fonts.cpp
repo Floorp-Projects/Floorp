@@ -722,7 +722,7 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
 
 void gfxFT2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun)
 {
-    ComputeRanges(mRanges, mString.get(), 0, mString.Length());
+    ComputeRanges(mRanges, mString.get(), 0, mString.Length(), 0);
 
     PRUint32 offset = 0;
     for (PRUint32 i = 0; i < mRanges.Length(); ++i) {
@@ -804,8 +804,10 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
                 }
             }
 
-            // now apply unit conversion and scaling
-            advance = MOZ_FT_TRUNC(advance) * appUnitsPerDevUnit;
+            // convert 26.6 fixed point to app units
+            // round rather than truncate to nearest pixel
+            // because these advances are often scaled
+            advance = ((advance * appUnitsPerDevUnit + 32) >> 6);
         }
 #ifdef DEBUG_thebes_2
         printf(" gid=%d, advance=%d (%s)\n", gid, advance,

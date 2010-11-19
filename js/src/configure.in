@@ -355,7 +355,7 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
-    cross_compiling=yes
+    CROSS_COMPILE=1
 
     _SAVE_CC="$CC"
     _SAVE_CFLAGS="$CFLAGS"

@@ -114,6 +114,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
 #include "nsWebSocket.h"
+#include "nsDOMWorker.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -333,6 +334,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWorkerFactory)
 
 //-----------------------------------------------------------------------------
 
@@ -886,6 +888,7 @@ NS_DEFINE_NAMED_CID(NS_SYSTEMPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
+NS_DEFINE_NAMED_CID(NS_WORKERFACTORY_CID);
 
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
@@ -1043,6 +1046,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
+  { &kNS_WORKERFACTORY_CID, false, NULL, nsWorkerFactoryConstructor },
   { NULL }
 };
 
@@ -1189,6 +1193,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
+  { NS_WORKERFACTORY_CONTRACTID, &kNS_WORKERFACTORY_CID },
   { NULL }
 };
 

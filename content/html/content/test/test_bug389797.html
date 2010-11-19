@@ -24,6 +24,10 @@ var classInfos = {};
 var interfaces = {};
 var interfacesNonClassinfo = {};
 
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Components.interfaces.nsIPrefBranch);
+
 function getClassName(tag) {
   return "HTML" + classInfos[tag] + "Element";
 }
@@ -175,7 +179,14 @@ HTML_TAG("input", "Input", [], [ "imgIDecoderObserver",
                                  "nsIImageLoadingContent",
                                  "nsIDOMNSEditableElement" ]);
 HTML_TAG("ins", "Ins", [ "nsIDOMHTMLModElement" ]);
-HTML_TAG("isindex", "IsIndex");
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+if (prefs.getBoolPref("html5.enable")) {
+  HTML_TAG("isindex", ""); // HTMLElement
+} else {
+  HTML_TAG("isindex", "IsIndex");
+}
+
 HTML_TAG("kbd", ""); // HTMLElement
 HTML_TAG("keygen", "Span");
 HTML_TAG("label", "Label");

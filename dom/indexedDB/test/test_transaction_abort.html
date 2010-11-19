@@ -108,7 +108,7 @@
       }
 
       try {
-        objectStore.remove(1);
+        objectStore.delete(1);
         ok(false, "Should have thrown");
       }
       catch (e) {
@@ -156,7 +156,7 @@
       }
 
       try {
-        objectStore.removeIndex("bar");
+        objectStore.deleteIndex("bar");
         ok(false, "Should have thrown");
       }
       catch (e) {

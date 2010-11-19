@@ -71,26 +71,29 @@
     <li>&about.relnotes.beforeTheLink;<a id="releaseNotesURL" href="">&about.relnotes.linkTitle;</a>&about.relnotes.afterTheLink;</li>
     <li>&about.buildconfig.beforeTheLink;<a href="about:buildconfig">&about.buildconfig.linkTitle;</a>&about.buildconfig.afterTheLink;</li>
     <script type="application/javascript">
-      // get release notes URL from prefs
-      try {
-        var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                                  .getService(Components.interfaces.nsIURLFormatter);
-        var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
+      // get release notes and vendor URL from prefs
+      var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                .getService(Components.interfaces.nsIURLFormatter);
+      var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
+      if (releaseNotesURL != "about:blank") {
         var relnotes = document.getElementById("releaseNotesURL");
         relnotes.setAttribute("href", releaseNotesURL);
+      }
 
-        var vendorURL = formatter.formatURLPref("app.vendorURL");
+      var vendorURL = formatter.formatURLPref("app.vendorURL");
+      if (vendorURL != "about:blank") {
         var vendor = document.getElementById("vendorURL");
         vendor.setAttribute("href", vendorURL);
-
-        var versionNum = Components.classes["@mozilla.org/xre/app-info;1"]
-                                   .getService(Components.interfaces.nsIXULAppInfo)
-                                   .version;
-        var version = document.getElementById("version");
-        version.appendChild(document.createTextNode("&about.version; " + versionNum));
       }
-      catch (ex) { /* no release notes and vendor URL for you without bug 349985 being fixed */ }
 
+      // insert the version of the XUL application (!= XULRunner platform version)
+      var versionNum = Components.classes["@mozilla.org/xre/app-info;1"]
+                                 .getService(Components.interfaces.nsIXULAppInfo)
+                                 .version;
+      var version = document.getElementById("version");
+      version.appendChild(document.createTextNode("&about.version; " + versionNum));
+
+      // append user agent
       var ua = navigator.userAgent;
       if (ua) {
         var list = document.getElementById("aboutPageList");

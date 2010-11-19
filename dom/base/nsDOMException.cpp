@@ -48,6 +48,7 @@
 #include "nsIDOMSVGException.h"
 #endif
 #include "nsIDOMXPathException.h"
+#include "nsIIDBDatabaseException.h"
 #include "nsString.h"
 #include "prprf.h"
 
@@ -130,6 +131,23 @@ NSResultToNameAndMessage(nsresult aNSResult,
   NS_WARNING("Huh, someone is throwing non-DOM errors using the DOM module!");
 
   return;
+}
+
+nsresult
+NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, const char** aName,
+                                   const char** aMessage)
+{
+  const char* name = nsnull;
+  const char* message = nsnull;
+  NSResultToNameAndMessage(aNSResult, &name, &message);
+
+  if (name && message) {
+    *aName = name;
+    *aMessage = message;
+    return NS_OK;
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsDOMException, nsIDOMDOMException)
@@ -216,6 +234,25 @@ nsDOMFileException::GetCode(PRUint16* aCode)
   GetResult(&result);
   *aCode = NS_ERROR_GET_CODE(result);
 
+  return NS_OK;
+}
+
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsIDBDatabaseException,
+                                 nsIIDBDatabaseException)
+  NS_DECL_NSIIDBDATABASEEXCEPTION
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsIDBDatabaseException,
+                                 nsIIDBDatabaseException,
+                                 IDBDatabaseException,
+                                 NS_ERROR_MODULE_DOM_INDEXEDDB,
+                                 NSResultToNameAndMessage)
+
+NS_IMETHODIMP
+nsIDBDatabaseException::GetCode(PRUint16* aCode)
+{
+  NS_ASSERTION(aCode, "Null pointer!");
+  nsresult result;
+  GetResult(&result);
+  *aCode = NS_ERROR_GET_CODE(result);
   return NS_OK;
 }
 

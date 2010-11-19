@@ -899,6 +899,10 @@ typedef HashMap<jsbytecode*,
 
 class Oracle;
 
+typedef HashSet<JSScript *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> TracedScriptSet;
+
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -998,6 +1002,9 @@ struct TraceMonitor {
     // This must be used in only one place at a given time. It must be cleared
     // before use.
     TypeMap*                cachedTempTypeMap;
+
+    /* Scripts with recorded fragments. */
+    TracedScriptSet         tracedScripts;
 
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
@@ -1804,9 +1811,18 @@ OptionsSameVersionFlags(uint32 self, uint32 other)
     return !((self & mask) ^ (other & mask));
 }
 
+/*
+ * Flags accompany script version data so that a) dynamically created scripts
+ * can inherit their caller's compile-time properties and b) scripts can be
+ * appropriately compared in the eval cache across global option changes. An
+ * example of the latter is enabling the top-level-anonymous-function-is-error
+ * option: subsequent evals of the same, previously-valid script text may have
+ * become invalid.
+ */
 namespace VersionFlags {
-static const uint32 MASK =        0x0FFF; /* see JSVersion in jspubtd.h */
-static const uint32 HAS_XML =     0x1000; /* flag induced by XML option */
+static const uint32 MASK        = 0x0FFF; /* see JSVersion in jspubtd.h */
+static const uint32 HAS_XML     = 0x1000; /* flag induced by XML option */
+static const uint32 ANONFUNFIX  = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
 }
 
 static inline JSVersion
@@ -1828,6 +1844,12 @@ VersionShouldParseXML(JSVersion version)
     return VersionHasXML(version) || VersionNumber(version) >= JSVERSION_1_6;
 }
 
+static inline bool
+VersionHasAnonFunFix(JSVersion version)
+{
+    return !!(version & VersionFlags::ANONFUNFIX);
+}
+
 static inline void
 VersionSetXML(JSVersion *version, bool enable)
 {
@@ -1835,6 +1857,15 @@ VersionSetXML(JSVersion *version, bool enable)
         *version = JSVersion(uint32(*version) | VersionFlags::HAS_XML);
     else
         *version = JSVersion(uint32(*version) & ~VersionFlags::HAS_XML);
+}
+
+static inline void
+VersionSetAnonFunFix(JSVersion *version, bool enable)
+{
+    if (enable)
+        *version = JSVersion(uint32(*version) | VersionFlags::ANONFUNFIX);
+    else
+        *version = JSVersion(uint32(*version) & ~VersionFlags::ANONFUNFIX);
 }
 
 static inline JSVersion
@@ -1853,12 +1884,6 @@ static inline bool
 VersionIsKnown(JSVersion version)
 {
     return VersionNumber(version) != JSVERSION_UNKNOWN;
-}
-
-static inline void
-VersionCloneFlags(JSVersion src, JSVersion *dst)
-{
-    *dst = JSVersion(uint32(VersionNumber(*dst)) | uint32(VersionExtractFlags(src)));
 }
 
 } /* namespace js */
@@ -2059,7 +2084,9 @@ struct JSContext
      * The default script compilation version can be set iff there is no code running.
      * This typically occurs via the JSAPI right after a context is constructed.
      */
-    bool canSetDefaultVersion() const { return !regs && !hasVersionOverride; }
+    bool canSetDefaultVersion() const {
+        return !regs && !hasVersionOverride;
+    }
 
     /* Force a version for future script compilation. */
     void overrideVersion(JSVersion newVersion) {
@@ -2069,11 +2096,18 @@ struct JSContext
     }
 
   public:
-    void clearVersionOverride() { hasVersionOverride = false; }
-    bool isVersionOverridden() const { return hasVersionOverride; }
+    void clearVersionOverride() {
+        hasVersionOverride = false;
+    }
+    
+    bool isVersionOverridden() const {
+        return hasVersionOverride;
+    }
 
     /* Set the default script compilation version. */
-    void setDefaultVersion(JSVersion version) { defaultVersion = version; }
+    void setDefaultVersion(JSVersion version) {
+        defaultVersion = version;
+    }
 
     /*
      * Set the default version if possible; otherwise, force the version.
@@ -2110,6 +2144,30 @@ struct JSContext
         }
 
         return defaultVersion;
+    }
+
+    void optionFlagsToVersion(JSVersion *version) const {
+        js::VersionSetXML(version, js::OptionsHasXML(options));
+        js::VersionSetAnonFunFix(version, js::OptionsHasAnonFunFix(options));
+    }
+
+    void checkOptionVersionSync() const {
+#ifdef DEBUG
+        JSVersion version = findVersion();
+        JS_ASSERT(js::VersionHasXML(version) == js::OptionsHasXML(options));
+        JS_ASSERT(js::VersionHasAnonFunFix(version) == js::OptionsHasAnonFunFix(options));
+#endif
+    }
+
+    /* Note: may override the version. */
+    void syncOptionsToVersion() {
+        JSVersion version = findVersion();
+        if (js::OptionsHasXML(options) == js::VersionHasXML(version) &&
+            js::OptionsHasAnonFunFix(options) == js::VersionHasAnonFunFix(version))
+            return;
+        js::VersionSetXML(&version, js::OptionsHasXML(options));
+        js::VersionSetAnonFunFix(&version, js::OptionsHasAnonFunFix(options));
+        maybeOverrideVersion(version);
     }
 
 #ifdef JS_THREADSAFE
@@ -3050,14 +3108,6 @@ class ThreadDataIter
 };
 
 #endif  /* !JS_THREADSAFE */
-
-/*
- * If necessary, push the option flags that affect script compilation to the current version.
- * Note this may cause a version override -- see JSContext::overrideVersion.
- * Return whether a version change occurred.
- */
-extern bool
-SyncOptionsToVersion(JSContext *cx);
 
 } /* namespace js */
 
