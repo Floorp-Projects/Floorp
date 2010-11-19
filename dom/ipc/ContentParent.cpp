@@ -73,6 +73,7 @@
 #endif
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
+#include "mozilla/dom/StorageParent.h"
 #include "nsAccelerometer.h"
 
 using namespace mozilla::ipc;
@@ -413,6 +414,19 @@ ContentParent::DeallocPExternalHelperApp(PExternalHelperAppParent* aService)
 {
     ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
     parent->Release();
+    return true;
+}
+
+PStorageParent*
+ContentParent::AllocPStorage(const StorageConstructData& aData)
+{
+    return new StorageParent(aData);
+}
+
+bool
+ContentParent::DeallocPStorage(PStorageParent* aActor)
+{
+    delete aActor;
     return true;
 }
 
