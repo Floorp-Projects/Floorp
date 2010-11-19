@@ -844,15 +844,11 @@ static PRBool HasRelatedContent(nsIContent *aContent)
     return PR_FALSE;
   }
 
-  nsIAtom *relationAttrs[] = {nsAccessibilityAtoms::aria_labelledby,
-                              nsAccessibilityAtoms::aria_describedby,
-                              nsAccessibilityAtoms::aria_owns,
-                              nsAccessibilityAtoms::aria_controls,
-                              nsAccessibilityAtoms::aria_flowto};
-  if (nsCoreUtils::FindNeighbourPointingToNode(aContent, relationAttrs,
-                                               NS_ARRAY_LENGTH(relationAttrs))) {
+  // If the given ID is referred by relation attribute then create an accessible
+  // for it. Take care of HTML elements only for now.
+  if (aContent->IsHTML() &&
+      nsAccUtils::GetDocAccessibleFor(aContent)->IsDependentID(id))
     return PR_TRUE;
-  }
 
   nsIContent *ancestorContent = aContent;
   while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {

@@ -525,6 +525,11 @@ public:
    */
   nsIContent* NextElem();
 
+  /**
+   * Return the element with the given ID.
+   */
+  nsIContent* GetElem(const nsDependentSubstring& aID);
+
 private:
   nsString mIDs;
   nsAString::index_type mCurrIdx;
