@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Modal Prompts Test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Prompter tests: modal prompts
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+               getService(Ci.nsIPromptService2);
+let ioService = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+let pollTimer;
+
+function pollDialog(dialog) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    if (dialog.getButton("accept").disabled)
+        return;
+
+    ok(true, "dialog button is enabled now");
+    pollTimer.cancel();
+    pollTimer = null;
+    dialog.acceptDialog();
+    didDialog = true;
+}
+
+function checkExpectedSelectState(doc, state) {
+    let msg = doc.getElementById("info.txt").value;
+    // XXX check title? OS X has title in content
+    let listbox = doc.getElementById("list");
+
+    is(msg, state.msg, "Checking expected message");
+    // XXX check title? OS X has title in content
+    // Compare listbox contents
+    let count = listbox.itemCount;
+    is(count, state.items.length, "Checking listbox length");
+    if (count)
+        is(listbox.selectedIndex, 0, "Checking selected index");
+
+    for (let i = 0; i < count; i++) {
+        let item = listbox.getItemAtIndex(i).label;
+        is(item, items[i], "Checking item #" + i + " label");
+    }
+}
+
+/*
+ * handleDialog
+ *
+ * Invoked a short period of time after calling startCallbackTimer(), and
+ * allows testing the actual prompt dialog while it's being displayed. Tests
+ * should call startCallbackTimer() each time the auth dialog is expected (the
+ * timer is a one-shot).
+ */
+function handleDialog(doc, testNum) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    ok(true, "--- handleDialog for test " + testNum + " ---");
+
+    let dialog    = doc.getElementsByTagName("dialog")[0];
+    let listbox   = doc.getElementById("list");
+    let clickOK   = true;
+    let state;
+
+    // XXX check focused element
+    // XXX check text/passbox labels?
+    // XXX check button labels?
+
+    switch(testNum) {
+      case 1:
+        // Select (0 items)
+        state = {
+            msg   : "This is the select text.",
+            title : "TestTitle",
+            items : [],
+        };
+        checkExpectedSelectState(doc, state);
+        break;
+
+      case 2:
+        // Select (3 items, default ok)
+        state = {
+            msg   : "This is the select text.",
+            title : "TestTitle",
+            items : ["one", "two", "three"],
+        };
+        checkExpectedSelectState(doc, state);
+        break;
+
+      case 3:
+        // Select (3 items, change selection, ok)
+        state = {
+            msg   : "This is the select text.",
+            title : "TestTitle",
+            items : ["one", "two", "three"],
+        };
+        checkExpectedSelectState(doc, state);
+        // XXX need to trigger old code's click listener
+        listbox.selectedIndex = 1;
+        //listbox.getItemAtIndex(1).click();
+        break;
+
+      case 4:
+        // Select (3 items, cancel)
+        state = {
+            msg   : "This is the select text.",
+            title : "TestTitle",
+            items : ["one", "two", "three"],
+        };
+        checkExpectedSelectState(doc, state);
+        clickOK = false;
+        break;
+
+      default:
+        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+        break;
+    }
+
+
+    if (clickOK)
+        dialog.acceptDialog();
+    else
+        dialog.cancelDialog();
+
+    ok(true, "handleDialog done");
+    didDialog = true;
+}
+
+let testNum   = 0;
+let selectVal = {};
+let isOK;
+
+isSelectDialog = true;
+isTabModal = false;
+usePromptService = true;
+
+// ===== test 1 =====
+// Select (0 items, ok)
+testNum++;
+startCallbackTimer();
+items = [];
+selectVal.value = null; // outparam, just making sure.
+isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+is(isOK, true, "checked expected retval");
+is(selectVal.value, -1, "checking selected index");
+ok(didDialog, "handleDialog was invoked");
+
+// ===== test 2 =====
+// Select (3 items, ok)
+testNum++;
+startCallbackTimer();
+items = ["one", "two", "three"];
+selectVal.value = null; // outparam, just making sure.
+isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+is(isOK, true, "checked expected retval");
+is(selectVal.value, 0, "checking selected index");
+ok(didDialog, "handleDialog was invoked");
+
+// ===== test 3 =====
+// Select (3 items, selection changed, ok)
+testNum++;
+startCallbackTimer();
+items = ["one", "two", "three"];
+selectVal.value = null; // outparam, just making sure.
+isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+is(isOK, true, "checked expected retval");
+is(selectVal.value, 1, "checking selected index");
+ok(didDialog, "handleDialog was invoked");
+
+// ===== test 4 =====
+// Select (3 items, cancel)
+testNum++;
+startCallbackTimer();
+items = ["one", "two", "three"];
+selectVal.value = null; // outparam, just making sure.
+isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
+is(isOK, false, "checked expected retval");
+is(selectVal.value, 0, "checking selected index");
+ok(didDialog, "handleDialog was invoked");
+
+
+</script>
+</pre>
+</body>
+</html>
