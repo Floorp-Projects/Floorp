@@ -43,7 +43,6 @@
 #include "StubCalls.h"
 #include "StubCalls-inl.h"
 #include "assembler/assembler/LinkBuffer.h"
-#include "assembler/assembler/RepatchBuffer.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
 #include "CodeGenIncludes.h"
@@ -72,7 +71,7 @@ typedef JSC::MacroAssembler::Call Call;
 static void
 PatchGetFallback(VMFrame &f, ic::MICInfo *ic)
 {
-    JSC::RepatchBuffer repatch(ic->stubEntry.executableAddress(), 64);
+    Repatcher repatch(f.jit());
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::GetGlobalName));
     repatch.relink(ic->stubCall, fptr);
 }
@@ -101,21 +100,20 @@ ic::GetGlobalName(VMFrame &f, ic::MICInfo *ic)
     ic->u.name.touched = true;
 
     /* Patch shape guard. */
-    JSC::RepatchBuffer repatch(ic->entry.executableAddress(), 50);
-    repatch.repatch(ic->shape, obj->shape());
+    Repatcher repatcher(f.jit());
+    repatcher.repatch(ic->shape, obj->shape());
 
     /* Patch loads. */
     slot *= sizeof(Value);
-    JSC::RepatchBuffer loads(ic->load.executableAddress(), 32, false);
 #if defined JS_CPU_X86
-    loads.repatch(ic->load.dataLabel32AtOffset(MICInfo::GET_DATA_OFFSET), slot);
-    loads.repatch(ic->load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(MICInfo::GET_DATA_OFFSET), slot);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
 #elif defined JS_CPU_ARM
     // ic->load actually points to the LDR instruction which fetches the offset, but 'repatch'
     // knows how to dereference it to find the integer value.
-    loads.repatch(ic->load.dataLabel32AtOffset(0), slot);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(0), slot);
 #elif defined JS_PUNBOX64
-    loads.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
 #endif
 
     /* Do load anyway... this time. */
@@ -151,7 +149,7 @@ PatchSetFallback(VMFrame &f, ic::MICInfo *ic)
 {
     JSScript *script = f.fp()->script();
 
-    JSC::RepatchBuffer repatch(ic->stubEntry.executableAddress(), 64);
+    Repatcher repatch(f.jit());
     VoidStubMIC stub = ic->u.name.usePropertyCache
                        ? STRICT_VARIANT(DisabledSetGlobal)
                        : STRICT_VARIANT(DisabledSetGlobalNoCache);
@@ -188,28 +186,27 @@ ic::SetGlobalName(VMFrame &f, ic::MICInfo *ic)
     ic->u.name.touched = true;
 
     /* Patch shape guard. */
-    JSC::RepatchBuffer repatch(ic->entry.executableAddress(), 50);
-    repatch.repatch(ic->shape, obj->shape());
+    Repatcher repatcher(f.jit());
+    repatcher.repatch(ic->shape, obj->shape());
 
     /* Patch loads. */
     slot *= sizeof(Value);
 
-    JSC::RepatchBuffer stores(ic->load.executableAddress(), 32, false);
 #if defined JS_CPU_X86
-    stores.repatch(ic->load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
 
     uint32 dataOffset;
     if (ic->u.name.typeConst)
         dataOffset = MICInfo::SET_DATA_CONST_TYPE_OFFSET;
     else
         dataOffset = MICInfo::SET_DATA_TYPE_OFFSET;
-    stores.repatch(ic->load.dataLabel32AtOffset(dataOffset), slot);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(dataOffset), slot);
 #elif defined JS_CPU_ARM
     // ic->load actually points to the LDR instruction which fetches the offset, but 'repatch'
     // knows how to dereference it to find the integer value.
-    stores.repatch(ic->load.dataLabel32AtOffset(0), slot);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(0), slot);
 #elif defined JS_PUNBOX64
-    stores.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
+    repatcher.repatch(ic->load.dataLabel32AtOffset(ic->patchValueOffset), slot);
 #endif
 
     if (ic->u.name.usePropertyCache)
@@ -372,14 +369,14 @@ class EqualityCompiler : public BaseCompiler
 
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
 
+        Repatcher repatcher(f.jit());
+
         /* Jump to the newly generated code instead of to the IC. */
-        JSC::RepatchBuffer jumpRepatcher(ic.jumpToStub.executableAddress(), INLINE_PATH_LENGTH);
-        jumpRepatcher.relink(ic.jumpToStub, cs);
+        repatcher.relink(ic.jumpToStub, cs);
 
         /* Overwrite the call to the IC with a call to the stub. */
-        JSC::RepatchBuffer stubRepatcher(ic.stubCall.executableAddress(), INLINE_PATH_LENGTH);
         JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, ic.stub));
-        stubRepatcher.relink(ic.stubCall, fptr);
+        repatcher.relink(ic.stubCall, fptr);
         
         return true;
     }
@@ -492,7 +489,7 @@ class CallCompiler : public BaseCompiler
         return ep;
     }
 
-    bool generateFullCallStub(JSScript *script, uint32 flags)
+    bool generateFullCallStub(JITScript *from, JSScript *script, uint32 flags)
     {
         /*
          * Create a stub that works with arity mismatches. Like the fast-path,
@@ -562,20 +559,18 @@ class CallCompiler : public BaseCompiler
                    masm.size());
 
         JSC::CodeLocationJump oolJump = ic.slowPathStart.jumpAtOffset(ic.oolJumpOffset);
-        uint8 *start = (uint8 *)oolJump.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(from);
         repatch.relink(oolJump, cs);
 
         return true;
     }
 
-    void patchInlinePath(JSScript *script, JSObject *obj)
+    void patchInlinePath(JITScript *from, JSScript *script, JSObject *obj)
     {
         JS_ASSERT(ic.frameSize.isStatic());
 
         /* Very fast path. */
-        uint8 *start = (uint8 *)ic.funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(from);
 
         ic.fastGuardedObject = obj;
 
@@ -585,10 +580,11 @@ class CallCompiler : public BaseCompiler
         repatch.relink(ic.funGuard.jumpAtOffset(ic.hotJumpOffset),
                        JSC::CodeLocationLabel(jit->fastEntry));
 
-        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n", start, ic.fastGuardedObject);
+        JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n",
+                   ic.funGuard.executableAddress(), ic.fastGuardedObject);
     }
 
-    bool generateStubForClosures(JSObject *obj)
+    bool generateStubForClosures(JITScript *from, JSObject *obj)
     {
         JS_ASSERT(ic.frameSize.isStatic());
 
@@ -622,8 +618,7 @@ class CallCompiler : public BaseCompiler
         JaegerSpew(JSpew_PICs, "generated CALL closure stub %p (%d bytes)\n",
                    cs.executableAddress(), masm.size());
 
-        uint8 *start = (uint8 *)ic.funJump.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(from);
         repatch.relink(ic.funJump, cs);
 
         ic.hasJsFunCheck = true;
@@ -633,6 +628,8 @@ class CallCompiler : public BaseCompiler
 
     bool generateNativeStub()
     {
+        JITScript *jit = f.jit();
+
         /* Snapshot the frameDepth before SplatApplyArgs modifies it. */
         uintN initialFrameDepth = f.regs.sp - f.regs.fp->slots();
 
@@ -783,8 +780,7 @@ class CallCompiler : public BaseCompiler
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%d bytes)\n",
                    cs.executableAddress(), masm.size());
 
-        uint8 *start = (uint8 *)ic.funJump.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(jit);
         repatch.relink(ic.funJump, cs);
 
         ic.fastGuardedNative = obj;
@@ -794,6 +790,8 @@ class CallCompiler : public BaseCompiler
 
     void *update()
     {
+        JITScript *jit = f.jit();
+
         stubs::UncachedCallResult ucr;
         if (callingNew)
             stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), &ucr);
@@ -804,8 +802,7 @@ class CallCompiler : public BaseCompiler
         // patch this site to go to a slow path always.
         if (!ucr.codeAddr) {
             JSC::CodeLocationCall oolCall = ic.slowPathStart.callAtOffset(ic.oolCallOffset);
-            uint8 *start = (uint8 *)oolCall.executableAddress();
-            JSC::RepatchBuffer repatch(start - 32, 64);
+            Repatcher repatch(jit);
             JSC::FunctionPtr fptr = callingNew
                                     ? JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, SlowNewFromIC))
                                     : JSC::FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, SlowCallFromIC));
@@ -828,11 +825,11 @@ class CallCompiler : public BaseCompiler
         }
 
         if (!ic.frameSize.isStatic() || ic.frameSize.staticArgc() != fun->nargs) {
-            if (!generateFullCallStub(script, flags))
+            if (!generateFullCallStub(jit, script, flags))
                 THROWV(NULL);
         } else {
             if (!ic.fastGuardedObject) {
-                patchInlinePath(script, callee);
+                patchInlinePath(jit, script, callee);
             } else if (!ic.hasJsFunCheck &&
                        !ic.fastGuardedNative &&
                        ic.fastGuardedObject->getFunctionPrivate() == fun) {
@@ -840,10 +837,10 @@ class CallCompiler : public BaseCompiler
                  * Note: Multiple "function guard" stubs are not yet
                  * supported, thus the fastGuardedNative check.
                  */
-                if (!generateStubForClosures(callee))
+                if (!generateStubForClosures(jit, callee))
                     THROWV(NULL);
             } else {
-                if (!generateFullCallStub(script, flags))
+                if (!generateFullCallStub(jit, script, flags))
                     THROWV(NULL);
             }
         }
@@ -1033,6 +1030,11 @@ ic::SplatApplyArgs(VMFrame &f)
 void
 JITScript::purgeMICs()
 {
+    if (!nMICs)
+        return;
+
+    Repatcher repatch(this);
+
     for (uint32 i = 0; i < nMICs; i++) {
         ic::MICInfo &mic = mics[i];
         switch (mic.kind) {
@@ -1040,7 +1042,6 @@ JITScript::purgeMICs()
           case ic::MICInfo::GET:
           {
             /* Patch shape guard. */
-            JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
             repatch.repatch(mic.shape, int(JSObjectMap::INVALID_SHAPE));
 
             /* 
@@ -1071,6 +1072,11 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
 void
 JITScript::sweepCallICs()
 {
+    if (!nCallICs)
+        return;
+
+    Repatcher repatcher(this);
+
     for (uint32 i = 0; i < nCallICs; i++) {
         ic::CallICInfo &ic = callICs[i];
 
@@ -1085,11 +1091,8 @@ JITScript::sweepCallICs()
         if (!fastFunDead && !nativeDead)
             continue;
 
-        uint8 *start = (uint8 *)ic.funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
-
         if (fastFunDead) {
-            repatch.repatch(ic.funGuard, NULL);
+            repatcher.repatch(ic.funGuard, NULL);
             ic.releasePool(CallICInfo::Pool_ClosureStub);
             ic.hasJsFunCheck = false;
             ic.fastGuardedObject = NULL;
@@ -1100,7 +1103,7 @@ JITScript::sweepCallICs()
             ic.fastGuardedNative = NULL;
         }
 
-        repatch.relink(ic.funJump, ic.slowPathStart);
+        repatcher.relink(ic.funJump, ic.slowPathStart);
 
         ic.hit = false;
     }

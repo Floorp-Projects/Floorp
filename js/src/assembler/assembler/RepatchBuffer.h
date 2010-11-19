@@ -49,15 +49,18 @@ class RepatchBuffer {
     typedef MacroAssemblerCodePtr CodePtr;
 
 public:
-    RepatchBuffer(void *start, size_t size, bool mprot = true)
-    : m_start(start), m_size(size), mprot(mprot)
+    RepatchBuffer(const MacroAssemblerCodeRef &ref)
     {
-        ExecutableAllocator::makeWritable(m_start, m_size);
+        m_start = ref.m_code.executableAddress();
+        m_size = ref.m_size;
+        mprot = true;
+
+        if (mprot)
+            ExecutableAllocator::makeWritable(m_start, m_size);
     }
 
-    RepatchBuffer(CodeBlock* codeBlock)
+    RepatchBuffer(const JITCode &code)
     {
-        JITCode& code = codeBlock->getJITCode();
         m_start = code.start();
         m_size = code.size();
         mprot = true;

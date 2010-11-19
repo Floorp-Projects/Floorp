@@ -55,6 +55,8 @@
 
 namespace js {
 
+namespace mjit { struct JITScript; }
+
 struct VMFrame
 {
     union Arguments {
@@ -136,6 +138,7 @@ struct VMFrame
     JSRuntime *runtime() { return cx->runtime; }
 
     JSStackFrame *&fp() { return regs.fp; }
+    mjit::JITScript *jit() { return fp()->jit(); }
 };
 
 #ifdef JS_CPU_ARM

@@ -44,6 +44,8 @@
 #include "jstl.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/LinkBuffer.h"
+#include "assembler/assembler/RepatchBuffer.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
 namespace js {
 namespace mjit {
@@ -69,6 +71,7 @@ struct MacroAssemblerTypedefs {
     typedef JSC::CodeLocationCall CodeLocationCall;
     typedef JSC::ReturnAddressPtr ReturnAddressPtr;
     typedef JSC::MacroAssemblerCodePtr MacroAssemblerCodePtr;
+    typedef JSC::JITCode JITCode;
 };
 
 class BaseCompiler : public MacroAssemblerTypedefs
@@ -134,6 +137,20 @@ class LinkerHelper : public JSC::LinkBuffer
             return;
         link(jump.get(), label);
     }
+
+    size_t size() const {
+        return m_size;
+    }
+};
+
+class Repatcher : public JSC::RepatchBuffer
+{
+  public:
+    Repatcher(JITScript *jit) : JSC::RepatchBuffer(jit->code)
+    { }
+
+    Repatcher(const JSC::JITCode &code) : JSC::RepatchBuffer(code)
+    { }
 };
 
 } /* namespace js */
