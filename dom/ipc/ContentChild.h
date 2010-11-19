@@ -56,6 +56,7 @@ namespace dom {
 class AlertObserver;
 class PrefObserver;
 class ConsoleListener;
+class PStorageChild;
 
 class ContentChild : public PContentChild
 {
@@ -99,6 +100,9 @@ public:
             const PRInt64& aContentLength,
             const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
+
+    virtual PStorageChild* AllocPStorage(const StorageConstructData& aData);
+    virtual bool DeallocPStorage(PStorageChild* aActor);
 
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
