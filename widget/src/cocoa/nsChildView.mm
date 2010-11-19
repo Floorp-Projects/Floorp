@@ -2647,6 +2647,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext
 {
+  if (!mGeckoChild)
+    return;
+
   // Title bar drawing only works if we really draw into aContext, which only
   // the basic layer manager will do.
   nsBaseWidget::AutoUseBasicLayerManager setupLayerManager(mGeckoChild);
