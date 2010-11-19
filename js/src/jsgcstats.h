@@ -63,6 +63,7 @@ namespace gc {
  */
 enum ConservativeGCTest {
     CGCT_VALID,
+    CGCT_VALIDWITHOFFSET, /* points within an object */
     CGCT_LOWBITSET, /* excluded because one of the low bits was set */
     CGCT_NOTARENA,  /* not within arena range in a chunk */
     CGCT_NOTCHUNK,  /* not within a valid chunk */
@@ -127,6 +128,10 @@ extern void
 UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearenas,
                        uint32 nkilledArenas, uint32 nthings);
 #endif /* JS_GCMETER */
+
+#if defined JS_DUMP_CONSERVATIVE_GC_ROOTS
+void *GetAlignedThing(void *thing, int thingKind);
+#endif
 
 } //gc
 

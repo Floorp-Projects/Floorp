@@ -5545,8 +5545,10 @@ nsDocument::GetAnimationController()
     }
   }
 
-  // If we're hidden (or being hidden), notify the animation controller.
-  if (!mIsShowing) {
+  // If we're hidden (or being hidden), notify the newly-created animation
+  // controller. (Skip this check for SVG-as-an-image documents, though,
+  // because they don't get OnPageShow / OnPageHide calls).
+  if (!mIsShowing && !mIsBeingUsedAsImage) {
     mAnimationController->OnPageHide();
   }
 

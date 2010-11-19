@@ -176,6 +176,7 @@ struct JSFunction : public JSObject_Slots2
     bool isNative()          const { return !FUN_INTERPRETED(this); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+    bool isFlatClosure()     const { return FUN_KIND(this) == JSFUN_FLAT_CLOSURE; }
 
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 
@@ -487,6 +488,14 @@ IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
     if (isCtor)
         *ctorThis = vp[1].getMagicObjectOrNullPayload();
     return isCtor;
+}
+
+inline const char *
+GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
+{
+    if (fun->atom)
+        return bytes->encode(cx, ATOM_TO_STRING(fun->atom));
+    return js_anonymous_str;
 }
 
 } /* namespace js */

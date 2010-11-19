@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "permissions",
                                    "@mozilla.org/permissionmanager;1",
                                    "nsIPermissionManager");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "pb",
+                                   "@mozilla.org/privatebrowsing;1",
+                                   "nsIPrivateBrowsingService");
+
 function do_check_throws(f, result, stack)
 {
   if (!stack)
@@ -60,10 +64,9 @@ function do_finish_generator_test(generator)
   });
 }
 
-function _observer(generator, service, topic) {
+function _observer(generator, topic) {
   Services.obs.addObserver(this, topic, false);
 
-  this.service = service;
   this.generator = generator;
   this.topic = topic;
 }
@@ -79,7 +82,6 @@ _observer.prototype = {
       do_run_generator(this.generator);
 
     this.generator = null;
-    this.service = null;
     this.topic = null;
   }
 }
@@ -88,10 +90,10 @@ _observer.prototype = {
 // once the close is complete.
 function do_close_profile(generator, cleanse) {
   // Register an observer for db close.
-  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
-  let obs = new _observer(generator, service, "cookie-db-closed");
+  let obs = new _observer(generator, "cookie-db-closed");
 
   // Close the db.
+  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
   service.observe(null, "profile-before-change", cleanse ? cleanse : "");
 }
 
@@ -99,10 +101,10 @@ function do_close_profile(generator, cleanse) {
 // once the load is complete.
 function do_load_profile(generator) {
   // Register an observer for read completion.
-  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
-  let obs = new _observer(generator, service, "cookie-db-read");
+  let obs = new _observer(generator, "cookie-db-read");
 
   // Load the profile.
+  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
   service.observe(null, "profile-do-change", "");
 }
 
@@ -174,12 +176,10 @@ function Cookie(name,
 
 // Object representing a database connection and associated statements. The
 // implementation varies depending on schema version.
-function CookieDatabaseConnection(profile, schema)
+function CookieDatabaseConnection(file, schema)
 {
   // Manually generate a cookies.sqlite file with appropriate rows, columns,
   // and schema version. If it already exists, just set up our statements.
-  let file = profile.clone();
-  file.append("cookies.sqlite");
   let exists = file.exists();
 
   this.db = Services.storage.openDatabase(file);
@@ -187,11 +187,48 @@ function CookieDatabaseConnection(profile, schema)
   if (!exists)
     this.db.schemaVersion = schema;
 
-  // Open an exclusive connection, so we error out if the database is open
-  // by another reader.
-  this.db.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
-
   switch (schema) {
+  case 1:
+    {
+      if (!exists) {
+        this.db.executeSimpleSQL(
+          "CREATE TABLE moz_cookies (       \
+             id INTEGER PRIMARY KEY,        \
+             name TEXT,                     \
+             value TEXT,                    \
+             host TEXT,                     \
+             path TEXT,                     \
+             expiry INTEGER,                \
+             isSecure INTEGER,              \
+             isHttpOnly INTEGER)");
+      }
+
+      this.stmtInsert = this.db.createStatement(
+        "INSERT INTO moz_cookies (        \
+           id,                            \
+           name,                          \
+           value,                         \
+           host,                          \
+           path,                          \
+           expiry,                        \
+           isSecure,                      \
+           isHttpOnly)                    \
+           VALUES (                       \
+           :id,                           \
+           :name,                         \
+           :value,                        \
+           :host,                         \
+           :path,                         \
+           :expiry,                       \
+           :isSecure,                     \
+           :isHttpOnly)");
+
+      this.stmtDelete = this.db.createStatement(
+        "DELETE FROM moz_cookies WHERE id = :id");
+
+      break;
+    }
+
   case 2:
     {
       if (!exists) {
@@ -366,6 +403,17 @@ CookieDatabaseConnection.prototype =
 
     switch (this.schema)
     {
+    case 1:
+      this.stmtInsert.bindByName("id", cookie.creationTime);
+      this.stmtInsert.bindByName("name", cookie.name);
+      this.stmtInsert.bindByName("value", cookie.value);
+      this.stmtInsert.bindByName("host", cookie.host);
+      this.stmtInsert.bindByName("path", cookie.path);
+      this.stmtInsert.bindByName("expiry", cookie.expiry);
+      this.stmtInsert.bindByName("isSecure", cookie.isSecure);
+      this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
+      break;
+
     case 2:
       this.stmtInsert.bindByName("id", cookie.creationTime);
       this.stmtInsert.bindByName("name", cookie.name);
@@ -391,7 +439,7 @@ CookieDatabaseConnection.prototype =
       this.stmtInsert.bindByName("isHttpOnly", cookie.isHttpOnly);
       break;
 
-    case 3:
+    case 4:
       this.stmtInsert.bindByName("baseDomain", cookie.baseDomain);
       this.stmtInsert.bindByName("name", cookie.name);
       this.stmtInsert.bindByName("value", cookie.value);
@@ -418,6 +466,7 @@ CookieDatabaseConnection.prototype =
 
     switch (this.db.schemaVersion)
     {
+    case 1:
     case 2:
     case 3:
       this.stmtDelete.bindByName("id", cookie.creationTime);
@@ -443,6 +492,9 @@ CookieDatabaseConnection.prototype =
 
     switch (this.db.schemaVersion)
     {
+    case 1:
+      do_throw("can't update a schema 1 cookie!");
+
     case 2:
     case 3:
       this.stmtUpdate.bindByName("id", cookie.creationTime);
@@ -467,7 +519,8 @@ CookieDatabaseConnection.prototype =
   {
     this.stmtInsert.finalize();
     this.stmtDelete.finalize();
-    this.stmtUpdate.finalize();
+    if (this.stmtUpdate)
+      this.stmtUpdate.finalize();
     this.db.close();
 
     this.stmtInsert = null;
@@ -477,14 +530,17 @@ CookieDatabaseConnection.prototype =
   }
 }
 
-// Count the cookies from 'host' in a database. If 'host' is null, count all
-// cookies.
-function do_count_cookies_in_db(profile, host)
+function do_get_cookie_file(profile)
 {
   let file = profile.clone();
   file.append("cookies.sqlite");
-  let connection = Services.storage.openDatabase(file);
+  return file;
+}
 
+// Count the cookies from 'host' in a database. If 'host' is null, count all
+// cookies.
+function do_count_cookies_in_db(connection, host)
+{
   let select = null;
   if (host) {
     select = connection.createStatement(
@@ -499,7 +555,6 @@ function do_count_cookies_in_db(profile, host)
   let result = select.getInt32(0);
   select.reset();
   select.finalize();
-  connection.close();
   return result;
 }
 

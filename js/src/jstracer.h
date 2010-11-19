@@ -1082,6 +1082,10 @@ class TraceRecorder
     /* The set of objects whose shapes already have been guarded. */
     GuardedShapeTable               guardedShapeTable;
 
+    /* Current initializer depth, and whether any of the initializers are unoptimized NEWINIT. */
+    int                             initDepth;
+    bool                            hadNewInit;
+
     /***************************************** Temporal state hoisted into the recording session */
 
     /* Carry the return value from a STOP/RETURN to the subsequent record_LeaveFrame. */
@@ -1201,6 +1205,7 @@ class TraceRecorder
 #ifdef DEBUG
     bool isValidFrameObjPtr(void *obj);
 #endif
+    void assertInsideLoop();
 
     JS_REQUIRES_STACK void setImpl(void* p, nanojit::LIns* l, bool demote = true);
     JS_REQUIRES_STACK void set(Value* p, nanojit::LIns* l, bool demote = true);
@@ -1505,8 +1510,6 @@ class TraceRecorder
 
     JS_REQUIRES_STACK AbortableRecordingStatus compile();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop();
-    JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(VMSideExit* exit);
-    JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(SlotMap& slotMap, VMSideExit* exit);
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop(VMSideExit* exit);
     JS_REQUIRES_STACK void joinEdgesToEntry(TreeFragment* peer_root);
@@ -1662,14 +1665,14 @@ MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
 
-extern void
+extern bool
 InitJIT(TraceMonitor *tm);
 
 extern void
 FinishJIT(TraceMonitor *tm);
 
 extern void
-PurgeScriptFragments(JSContext* cx, JSScript* script);
+PurgeScriptFragments(TraceMonitor* tm, JSScript* script);
 
 extern bool
 OverfullJITCache(TraceMonitor* tm);

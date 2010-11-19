@@ -456,27 +456,28 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  nsDocAccessible *docAcc = isRootDoc ?
+  nsRefPtr<nsDocAccessible> docAcc = isRootDoc ?
     new nsRootAccessibleWrap(aDocument, rootElm, weakShell) :
     new nsDocAccessibleWrap(aDocument, rootElm, weakShell);
 
-  if (!docAcc)
+  // Cache the document accessible into document cache.
+  if (!docAcc || !mDocAccessibleCache.Put(aDocument, docAcc))
     return nsnull;
 
-  // Cache and addref document accessible.
-  if (!mDocAccessibleCache.Put(aDocument, docAcc)) {
-    delete docAcc;
-    return nsnull;
-  }
-
-  // XXX: ideally we should initialize an accessible and then put it into tree,
-  // we can't since document accessible fires reorder event on its container
-  // while initialized.
-  if (!outerDocAcc->AppendChild(docAcc) ||
-      !GetAccService()->InitAccessible(docAcc, nsAccUtils::GetRoleMapEntry(aDocument))) {
+  // Bind the document accessible into tree.
+  if (!outerDocAcc->AppendChild(docAcc)) {
     mDocAccessibleCache.Remove(aDocument);
     return nsnull;
   }
+
+  // Initialize the document accessible. Note, Init() should be called after
+  // the document accessible is bound to the tree.
+  if (!docAcc->Init()) {
+    docAcc->Shutdown();
+    mDocAccessibleCache.Remove(aDocument);
+    return nsnull;
+  }
+  docAcc->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aDocument));
 
   NS_LOG_ACCDOCCREATE("document creation finished", aDocument)
 

@@ -379,7 +379,7 @@ js_GetVariableBytecodeLength(jsbytecode *pc);
 
 /*
  * Find the number of stack slots used by a variadic opcode such as JSOP_CALL
- * or JSOP_NEWARRAY (for such ops, JSCodeSpec.nuses is -1).
+ * (for such ops, JSCodeSpec.nuses is -1).
  */
 extern uintN
 js_GetVariableStackUses(JSOp op, jsbytecode *pc);

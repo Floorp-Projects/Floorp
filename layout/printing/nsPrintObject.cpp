@@ -43,7 +43,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 
 //---------------------------------------------------
@@ -66,10 +65,11 @@ nsPrintObject::~nsPrintObject()
   }
 
   DestroyPresentation();
+  mDocShell = nsnull;
+  mTreeOwner = nsnull; // mTreeOwner must be released after mDocShell; 
 }
 
 //------------------------------------------------------------------
-// Resets PO by destroying the presentation
 nsresult 
 nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
                     PRBool aPrintPreview)
@@ -79,7 +79,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
   if (mPrintPreview || mParent) {
     mDocShell = aDocShell;
   } else {
-    nsCOMPtr<nsIDocShellTreeOwner> owner = do_GetInterface(aDocShell);
+    mTreeOwner = do_GetInterface(aDocShell);
     nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(aDocShell);
     PRInt32 itemType = 0;
     item->GetItemType(&itemType);
@@ -88,7 +88,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_OUT_OF_MEMORY);
     nsCOMPtr<nsIDocShellTreeItem> newItem = do_QueryInterface(mDocShell);
     newItem->SetItemType(itemType);
-    newItem->SetTreeOwner(owner);
+    newItem->SetTreeOwner(mTreeOwner);
   }
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 

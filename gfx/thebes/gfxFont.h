@@ -137,11 +137,7 @@ struct THEBES_API gfxFontStyle {
     // "Wingdings", etc.) should be applied.
     PRPackedBool familyNameQuirks : 1;
 
-    // The weight of the font.  100, 200, ... 900 are the weights, and
-    // single integer offsets request the next bolder/lighter font
-    // available.  For example, for a font available in weights 200,
-    // 400, 700, and 900, a weight of 898 should lead to the weight 400
-    // font being used, since it is two weights lighter than 900.
+    // The weight of the font: 100, 200, ... 900.
     PRUint16 weight;
 
     // The stretch of the font (the sum of various NS_FONT_STRETCH_*
@@ -160,7 +156,7 @@ struct THEBES_API gfxFontStyle {
     // the language (may be an internal langGroup code rather than an actual
     // language code) specified in the document or element's lang property,
     // or inferred from the charset
-    nsIAtom *language;
+    nsRefPtr<nsIAtom> language;
 
     // Language system tag, to override document language;
     // an OpenType "language system" tag represented as a 32-bit integer
@@ -191,8 +187,7 @@ struct THEBES_API gfxFontStyle {
             nsISupportsHashKey::HashKey(language);
     }
 
-    void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
-                                PRInt8 *outOffset) const;
+    PRInt8 ComputeWeight() const;
 
     PRBool Equals(const gfxFontStyle& other) const {
         return (size == other.size) &&
@@ -1141,7 +1136,8 @@ public:
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
-                               PRInt32 aRunScript);
+                               PRInt32 aRunScript,
+                               PRBool aPreferPlatformShaping = PR_FALSE);
 
 protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
@@ -2122,14 +2118,18 @@ public:
         return mUnderlineOffset;
     }
 
-    already_AddRefed<gfxFont> FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, gfxFont *aPrevMatchedFont);
+    virtual already_AddRefed<gfxFont>
+        FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRInt32 aRunScript,
+                        gfxFont *aPrevMatchedFont);
 
     // search through pref fonts for a character, return nsnull if no matching pref font
     virtual already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
 
     virtual already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
 
-    void ComputeRanges(nsTArray<gfxTextRange>& mRanges, const PRUnichar *aString, PRUint32 begin, PRUint32 end);
+    void ComputeRanges(nsTArray<gfxTextRange>& mRanges,
+                       const PRUnichar *aString, PRUint32 begin, PRUint32 end,
+                       PRInt32 aRunScript);
 
     gfxUserFontSet* GetUserFontSet();
 
@@ -2207,16 +2207,6 @@ protected:
     static PRBool FindPlatformFont(const nsAString& aName,
                                    const nsACString& aGenericName,
                                    void *closure);
-
-    inline gfxFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, PRUint32 aCh) {
-        PRUint32 len = aFontList.Length();
-        for (PRUint32 i = 0; i < len; i++) {
-            gfxFont* font = aFontList.ElementAt(i);
-            if (font && font->HasCharacter(aCh))
-                return font;
-        }
-        return nsnull;
-    }
 
     static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 };

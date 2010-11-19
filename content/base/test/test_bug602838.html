@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602838
+-->
+<head>
+  <title>Test for Bug 602838</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602838">Mozilla Bug 602838</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script id=withasync async></script>
+<script id=withoutasync></script>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 602838 **/
+SimpleTest.waitForExplicitFinish();
+var firstRan = false;
+var asyncRan = false;
+
+var withoutasync = document.getElementById("withoutasync");
+ok(withoutasync.async, "When a script loses parser-insertedness, it should become async.");
+
+var withasync = document.getElementById("withasync");
+ok(withasync.async, "A script with the async content attribute should have the DOM attribute reporting true.");
+withasync.removeAttribute("async");
+ok(!withasync.async, "Should be able to remove asyncness from a script that had the async content attribute when losing parser-insertedness by removing the content attribute.");
+
+var s = document.createElement("script");
+ok(s.async, "Script-created scripts should default to .async=true");
+ok(!s.hasAttribute("async"), "Script-created scripts should not have the async content attribute by default.");
+s.removeAttribute("async");
+ok(s.async, "Removing a non-existing content-attribute should not have an effect on the forced async DOM property.");
+s.setAttribute("async", "");
+ok(s.async, "The async DOM property should still be true.");
+s.removeAttribute("async");
+ok(!s.async, "When a previously present async content attribute is removed, the DOM property should become false.");
+s.src = "script_bug602838.sjs";
+document.body.appendChild(s);
+
+s = document.createElement("script");
+s.src = "data:text/javascript,ok(firstRan, 'The first script should have run'); SimpleTest.finish();";
+s.async = false;
+ok(!s.async, "Setting the async DOM property to false should turned of forcing async to true.");
+document.body.appendChild(s);
+
+s = document.createElement("script");
+s.src = "data:text/javascript,ok(!firstRan, 'Non-async should not have run yet.'); asyncRan = true;";
+document.body.appendChild(s);
+
+</script>
+</pre>
+</body>
+</html>
+

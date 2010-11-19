@@ -212,6 +212,7 @@ public:
   NS_DECL_NSICLASSINFO_GETINTERFACES
 
   nsDOMWorkerMessageEvent() : mData(nsnull) { }
+  ~nsDOMWorkerMessageEvent();
 
   nsresult SetJSData(JSContext* aCx,
                      JSAutoStructuredCloneBuffer& aBuffer);

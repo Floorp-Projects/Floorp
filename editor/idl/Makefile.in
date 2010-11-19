@@ -57,6 +57,7 @@ XPIDLSRCS	= \
 		nsIEditorSpellCheck.idl \
 		nsIEditorStyleSheets.idl \
 		nsIHTMLEditor.idl \
+		nsIHTMLEditor_MOZILLA_2_0_BRANCH.idl \
 		nsIHTMLObjectResizer.idl \
 		nsIHTMLAbsPosEditor.idl \
 		nsIHTMLObjectResizeListener.idl \

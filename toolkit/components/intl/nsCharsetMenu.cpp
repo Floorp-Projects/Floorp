@@ -1270,27 +1270,27 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsTArray<nsCString>& aDecs)
   res = NewRDFContainer(mInner, kNC_BrowserMore1CharsetMenuRoot, 
     getter_AddRefs(container1));
   if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(NULL, container1, key1, aDecs, NULL);
+  AddFromNolocPrefsToMenu(NULL, container1, key1, aDecs, NULL);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore2CharsetMenuRoot, 
     getter_AddRefs(container2));
   if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(NULL, container2, key2, aDecs, NULL);
+  AddFromNolocPrefsToMenu(NULL, container2, key2, aDecs, NULL);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore3CharsetMenuRoot, 
     getter_AddRefs(container3));
   if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(NULL, container3, key3, aDecs, NULL);
+  AddFromNolocPrefsToMenu(NULL, container3, key3, aDecs, NULL);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore4CharsetMenuRoot, 
     getter_AddRefs(container4));
   if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(NULL, container4, key4, aDecs, NULL);
+  AddFromNolocPrefsToMenu(NULL, container4, key4, aDecs, NULL);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore5CharsetMenuRoot, 
     getter_AddRefs(container5));
   if (NS_FAILED(res)) return res;
-  AddFromPrefsToMenu(NULL, container5, key5, aDecs, NULL);
+  AddFromNolocPrefsToMenu(NULL, container5, key5, aDecs, NULL);
 
   res = NewRDFContainer(mInner, kNC_BrowserUnicodeCharsetMenuRoot, 
     getter_AddRefs(containerU));

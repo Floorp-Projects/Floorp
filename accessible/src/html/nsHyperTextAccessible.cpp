@@ -155,6 +155,9 @@ nsHyperTextAccessible::NativeRole()
   if (tag == nsAccessibilityAtoms::footer)
     return nsIAccessibleRole::ROLE_FOOTER;
 
+  if (tag == nsAccessibilityAtoms::aside)
+    return nsIAccessibleRole::ROLE_NOTE;
+
   // Treat block frames as paragraphs
   nsIFrame *frame = GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame &&
@@ -1221,6 +1224,9 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   else if (mContent->Tag() == nsAccessibilityAtoms::article) 
     nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::xmlroles,
                            NS_LITERAL_STRING("main"));
+  else if (mContent->Tag() == nsAccessibilityAtoms::aside) 
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::xmlroles,
+                           NS_LITERAL_STRING("note"));
 
   return  NS_OK;
 }

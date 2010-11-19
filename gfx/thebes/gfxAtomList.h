@@ -81,11 +81,11 @@ GFX_ATOM(x_geor, "x-geor")
 GFX_ATOM(x_gujr, "x-gujr")
 GFX_ATOM(x_guru, "x-guru")
 GFX_ATOM(x_khmr, "x-khmr")
+GFX_ATOM(x_knda, "x-knda")
 GFX_ATOM(x_mlym, "x-mlym")
 GFX_ATOM(x_orya, "x-orya")
-GFX_ATOM(x_telu, "x-telu")
-GFX_ATOM(x_knda, "x-knda")
 GFX_ATOM(x_sinh, "x-sinh")
+GFX_ATOM(x_telu, "x-telu")
 GFX_ATOM(x_tibt, "x-tibt")
 
 // used in gfxGDIFontList.h

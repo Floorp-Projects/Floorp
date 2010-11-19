@@ -1,0 +1,64 @@
+From: Robert O'Callahan <robert@ocallahan.org>
+Bug 593270. Part 2: Treat EXTEND_PAD like EXTEND_NONE when painting. r=jrmuizel,a=joe
+
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -1464,35 +1464,35 @@ static void
+ _cairo_quartz_setup_surface_source (cairo_quartz_surface_t *surface,
+ 				    const cairo_surface_pattern_t *spat,
+ 				    cairo_rectangle_int_t *extents,
+ 				    cairo_quartz_drawing_state_t *state)
+ {
+     const cairo_pattern_t *source = &spat->base;
+     CGContextRef context = state->context;
+ 
+-    if (source->extend == CAIRO_EXTEND_NONE ||
++    if (source->extend == CAIRO_EXTEND_NONE || source->extend == CAIRO_EXTEND_PAD ||
+         (CGContextDrawTiledImagePtr && source->extend == CAIRO_EXTEND_REPEAT))
+     {
+ 	cairo_surface_t *pat_surf = spat->surface;
+ 	CGImageRef img;
+ 	cairo_matrix_t m = spat->base.matrix;
+ 	cairo_rectangle_int_t extents;
+ 	CGAffineTransform xform;
+ 	CGRect srcRect;
+ 	cairo_fixed_t fw, fh;
+ 	cairo_bool_t is_bounded;
++	cairo_bool_t repeat = source->extend == CAIRO_EXTEND_REPEAT;
+         cairo_status_t status;
+ 
+         cairo_matrix_invert(&m);
+         _cairo_quartz_cairo_matrix_to_quartz (&m, &state->transform);
+ 
+         /* Draw nonrepeating CGLayer surface using DO_LAYER */
+-        if (source->extend == CAIRO_EXTEND_NONE ||
+-            (CGContextDrawTiledImagePtr && source->extend == CAIRO_EXTEND_REPEAT))
++        if (!repeat && cairo_surface_get_type (pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
+             cairo_quartz_surface_t *quartz_surf = (cairo_quartz_surface_t *) pat_surf;
+             if (quartz_surf->cgLayer) {
+          	state->imageRect = CGRectMake (0, 0, quartz_surf->extents.width, quartz_surf->extents.height);
+                 state->layer = quartz_surf->cgLayer;
+                 state->action = DO_LAYER;
+                 return;
+             }
+         }
+@@ -1510,17 +1510,17 @@ _cairo_quartz_setup_surface_source (cair
+         /* XXXroc what is this for? */
+ 	CGContextSetRGBFillColor (surface->cgContext, 0, 0, 0, 1);
+ 
+ 	state->image = img;
+ 
+ 	is_bounded = _cairo_surface_get_extents (pat_surf, &extents);
+ 	assert (is_bounded);
+ 
+-	if (source->extend == CAIRO_EXTEND_NONE) {
++	if (!repeat) {
+ 	    state->imageRect = CGRectMake (0, 0, extents.width, extents.height);
+ 	    state->action = DO_IMAGE;
+ 	    return;
+ 	}
+ 
+ 	/* Quartz seems to tile images at pixel-aligned regions only -- this
+ 	 * leads to seams if the image doesn't end up scaling to fill the
+ 	 * space exactly.  The CGPattern tiling approach doesn't have this

@@ -53,4 +53,6 @@ interface nsIIDBDatabaseException : nsISupports
   const unsigned short TRANSIENT_ERR = 31;
   const unsigned short TIMEOUT_ERR = 32;
   const unsigned short DEADLOCK_ERR = 33;
+
+  readonly attribute unsigned short code;
 };

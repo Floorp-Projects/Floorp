@@ -81,14 +81,17 @@ Print(JSContext *cx, uintN argc, jsval *vp)
     for (i = n = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
-        fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
+            return false;
+        JSAutoByteString bytes(cx, str);
+        if (!bytes)
+            return false;
+        fprintf(gOutFile, "%s%s", i ? " " : "", bytes.ptr());
     }
     n++;
     if (n)
         fputc('\n', gOutFile);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -96,7 +99,6 @@ Load(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN i;
     JSString *str;
-    const char *filename;
     JSScript *script;
     JSBool ok;
     jsval result;
@@ -111,8 +113,10 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
-        filename = JS_GetStringBytes(str);
-        script = JS_CompileFile(cx, obj, filename);
+        JSAutoByteString filename(cx, str);
+        if (!filename)
+            return false;
+        script = JS_CompileFile(cx, obj, filename.ptr());
         if (!script)
             ok = JS_FALSE;
         else {

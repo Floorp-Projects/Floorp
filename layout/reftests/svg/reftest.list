@@ -111,6 +111,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 # Bug 456323
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
+== nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
 random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
@@ -154,6 +155,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundin
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
 random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == switch-01.svg pass.svg
+asserts(3) == symbol-01.svg symbol-01-ref.svg # see bug 563481
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 == text-in-link-01.svg text-in-link-01-ref.svg

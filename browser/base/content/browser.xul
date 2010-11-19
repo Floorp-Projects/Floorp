@@ -36,6 +36,7 @@
 #   Rob Campbell <rcampbell@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
 #   David Dahl <ddahl@mozilla.com>
+#   Frank Yan <fyan@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,7 @@
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/webConsole.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -113,9 +115,6 @@
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
       <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
-                tbattr="tabbrowser-multiple"
-                oncommand="gBrowser.reloadAllTabs();"/>
       <menuseparator/>
       <menuitem id="context_pinTab" label="&pinAppTab.label;"
                 accesskey="&pinAppTab.accesskey;"
@@ -137,13 +136,16 @@
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
       <menuseparator/>
+      <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.reloadAllTabs();"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
                 command="Browser:BookmarkAllTabs"/>
-      <menuseparator/>
       <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+      <menuseparator/>
       <menuitem id="context_undoCloseTab"
                 label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
@@ -331,7 +333,8 @@
 
     <menupopup id="placesContext"/>
 
-    <panel id="notification-popup" type="arrow" position="after_start" noautofocus="true" hidden="true"/>
+    <panel id="notification-popup" type="arrow" position="after_start"
+           noautofocus="true" hidden="true" orient="vertical"/>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
@@ -432,7 +435,7 @@
 #ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
   <hbox id="titlebar-content">
-    <hbox id="appmenu-button-container" align="start">
+    <hbox id="appmenu-button-container">
       <button id="appmenu-button"
               type="menu"
               label="&brandShortName;"
@@ -441,7 +444,7 @@
       </button>
     </hbox>
     <spacer id="titlebar-spacer" flex="1"/>
-    <hbox id="titlebar-buttonbox">
+    <hbox id="titlebar-buttonbox" align="start">
       <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
       <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
       <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>

@@ -142,7 +142,8 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
                         const PRUnichar *aString,
                         PRUint32 aRunStart,
                         PRUint32 aRunLength,
-                        PRInt32 aRunScript)
+                        PRInt32 aRunScript,
+                        PRBool aPreferPlatformShaping)
 {
     if (!mMetrics) {
         Initialize();

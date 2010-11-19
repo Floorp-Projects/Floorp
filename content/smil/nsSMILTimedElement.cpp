@@ -1104,6 +1104,10 @@ nsSMILTimedElement::IsTimeDependent(const nsSMILTimedElement& aOther) const
 void
 nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
 {
+  // Reset previously registered milestone since we may be registering with
+  // a different time container now.
+  mPrevRegisteredMilestone = sMaxMilestone;
+
   // If we were already active then clear all our timing information and start
   // afresh
   if (mElementState != STATE_STARTUP) {
@@ -1122,8 +1126,6 @@ nsSMILTimedElement::BindToTree(nsIContent* aContextNode)
     mEndSpecs[j]->ResolveReferences(aContextNode);
   }
 
-  // Register new milestone
-  mPrevRegisteredMilestone = sMaxMilestone;
   RegisterMilestone();
 }
 

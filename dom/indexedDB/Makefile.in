@@ -82,6 +82,7 @@ EXPORTS_mozilla/dom/indexedDB = \
   IndexedDatabase.h \
   IndexedDatabaseManager.h \
   IDBFactory.h \
+  Key.h \
   LazyIdleThread.h \
   $(NULL)
 

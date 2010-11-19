@@ -319,7 +319,7 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
   mDidExplicitlySetInterline = PR_FALSE;
 
-  if (!mActionNesting)
+  if (!mActionNesting++)
   {
     // clear our flag about if just deleted a range
     mDidRangedDelete = PR_FALSE;
@@ -383,7 +383,6 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     // let rules remember the top level action
     mTheAction = action;
   }
-  mActionNesting++;
   return NS_OK;
 }
 
@@ -485,22 +484,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
       res = mHTMLEditor->CollapseAdjacentTextNodes(mDocChangeRange);
       NS_ENSURE_SUCCESS(res, res);
     }
-    
-    // replace newlines with breaks.
-    // MOOSE:  This is buttUgly.  A better way to 
-    // organize the action enum is in order.
-    if (// (action == nsEditor::kOpInsertText) || 
-        // (action == nsEditor::kOpInsertIMEText) ||
-        (action == nsHTMLEditor::kOpInsertElement) ||
-        (action == nsHTMLEditor::kOpInsertQuotation) ||
-        (action == nsEditor::kOpInsertNode) ||
-        (action == nsHTMLEditor::kOpHTMLPaste ||
-        (action == nsHTMLEditor::kOpLoadHTML)))
-    {
-      res = ReplaceNewlines(mDocChangeRange);
-      NS_ENSURE_SUCCESS(res, res);
-    }
-    
+
     // clean up any empty nodes in the selection
     res = RemoveEmptyNodes();
     NS_ENSURE_SUCCESS(res, res);
@@ -9175,4 +9159,29 @@ nsHTMLEditRules::WillRelativeChangeZIndex(nsISelection *aSelection,
   nsCOMPtr<nsIHTMLAbsPosEditor> absPosHTMLEditor = mHTMLEditor;
   PRInt32 zIndex;
   return absPosHTMLEditor->RelativeChangeElementZIndex(elt, aChange, &zIndex);
+}
+
+NS_IMETHODIMP
+nsHTMLEditRules::DocumentModified()
+{
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, &nsHTMLEditRules::DocumentModifiedWorker));
+  return NS_OK;
+}
+
+void
+nsHTMLEditRules::DocumentModifiedWorker()
+{
+  nsCOMPtr<nsISelection> selection;
+  nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(res, );
+
+  // Delete our bogus node, if we have one, since the document might not be
+  // empty any more.
+  if (mBogusNode) {
+    mEditor->DeleteNode(mBogusNode);
+    mBogusNode = nsnull;
+  }
+
+  // Try to recreate the bogus node if needed.
+  CreateBogusNodeIfNeeded(selection);
 }
