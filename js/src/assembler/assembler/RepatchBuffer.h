@@ -80,6 +80,11 @@ public:
         MacroAssembler::repatchJump(jump, destination);
     }
 
+    bool canRelink(CodeLocationJump jump, CodeLocationLabel destination)
+    {
+        return MacroAssembler::canRepatchJump(jump, destination);
+    }
+
     void relink(CodeLocationCall call, CodeLocationLabel destination)
     {
         MacroAssembler::repatchCall(call, destination);
