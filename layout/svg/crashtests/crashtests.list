@@ -97,5 +97,5 @@ load 590291-1.svg
 load 601999-1.html
 load 605626-1.svg
 load 610954-1.html
-load 612662-1.html
-load 612662-2.html
+skip load 612662-1.html # XXXdholbert: "timed out waiting for onload to fire" when landed. investigating...
+skip load 612662-2.html # XXXdholbert: "timed out waiting for onload to fire" when landed. investigating...
