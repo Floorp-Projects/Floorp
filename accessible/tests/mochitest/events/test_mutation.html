@@ -293,12 +293,25 @@
       gQueue.push(new changeStyle(id, "display", "none", kHideEvents));
       gQueue.push(new changeStyle(id, "display", "inline", kShowEvents));
 
+      // Show/hide events by changing of visibility style of accessible DOM node
+      // from 'visible' to 'hidden', 'hidden' to 'visible'.
+      var id = "link2";
+      getAccessible(id);
+      gQueue.push(new changeStyle(id, "visibility", "hidden", kHideEvents));
+      gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
+
       // Show/hide events by changing of display style of accessible DOM node
       // from 'inline' to 'block', 'block' to 'inline'.
       var id = "link3";
       getAccessible(id); // ensure accessible is created
       gQueue.push(new changeStyle(id, "display", "block", kHideAndShowEvents));
       gQueue.push(new changeStyle(id, "display", "inline", kHideAndShowEvents));
+
+      // Show/hide events by changing of visibility style of accessible DOM node
+      // from 'collapse' to 'visible', 'visible' to 'collapse'.
+      var id = "link4";
+      gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
+      gQueue.push(new changeStyle(id, "visibility", "collapse", kHideEvents));
 
       // Show/hide events by adding new accessible DOM node and removing old one.
       var id = "link5";
@@ -343,6 +356,10 @@
       gQueue.push(new changeClass("container2", "link7", "displayNone",
                                   kHideEvents));
 
+      gQueue.push(new changeClass("container3", "link8", "", kShowEvents));
+      gQueue.push(new changeClass("container3", "link8", "visibilityHidden",
+                                  kHideEvents));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -367,6 +384,11 @@
      title="Rework accessible tree update code"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
     Mozilla Bug 570275
+  </a><br>
+  <a target="_blank"
+     title="Develop a way to handle visibility style"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606125">
+    Mozilla Bug 606125
   </a>
 
   <p id="display"></p>

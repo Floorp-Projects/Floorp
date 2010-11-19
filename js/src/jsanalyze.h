@@ -358,8 +358,11 @@ class Script
         /* Last opcode was JSOP_GETTER or JSOP_SETTER. */
         bool hasGetSet;
 
+        /* Last opcode was JSOP_HOLE. */
+        bool hasHole;
+
         TypeState()
-            : hasGetSet(false)
+            : hasGetSet(false), hasHole(false)
         {}
     };
 

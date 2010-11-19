@@ -494,7 +494,10 @@ JSThreadData::init()
     if (!stackSpace.init())
         return false;
 #ifdef JS_TRACER
-    InitJIT(&traceMonitor);
+    if (!InitJIT(&traceMonitor)) {
+        finish();
+        return false;
+    }
 #endif
     dtoaState = js_NewDtoaState();
     if (!dtoaState) {
@@ -735,20 +738,6 @@ js_PurgeThreads(JSContext *cx)
 #else
     cx->runtime->threadData.purge(cx);
 #endif
-}
-
-bool
-js::SyncOptionsToVersion(JSContext* cx)
-{
-    JSVersion version = cx->findVersion();
-    uint32 options = cx->options;
-    if (OptionsHasXML(options) == VersionHasXML(version)) {
-        /* No need to override. */
-        return false;
-    }
-    VersionSetXML(&version, OptionsHasXML(options));
-    cx->maybeOverrideVersion(version);
-    return true;
 }
 
 JSContext *

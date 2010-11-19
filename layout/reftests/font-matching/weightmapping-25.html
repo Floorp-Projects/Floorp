@@ -13,6 +13,10 @@ body {
 
 h3, h4 { font-weight: normal; }
 
+/* make all the spans blocks to avoid influence of what's outside them
+   on line-height calculations */
+span { display: block; }
+
 @font-face {
   font-family: test;
   src: url(../fonts/mplus/mplus-1p-light.ttf);

@@ -658,18 +658,20 @@ public:
 
     virtual PRBool TextureImageSupportsGetBackingSurface()
     {
-#ifdef MOZ_WIDGET_QT
+#if defined(MOZ_WIDGET_QT)
         return (gfxASurface::SurfaceTypeXlib ==
             gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType());
-#else
+#elif defined(MOZ_X11)
         return PR_TRUE;
+#else
+        return PR_FALSE;
 #endif
     }
 
     virtual already_AddRefed<TextureImage>
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
-                       GLint aWrapMode,
+                       GLenum aWrapMode,
                        PRBool aUseNearestFilter=PR_FALSE);
 
     // hold a reference to the given surface
@@ -853,11 +855,12 @@ class TextureImageEGL : public TextureImage
 public:
     TextureImageEGL(GLuint aTexture,
                     const nsIntSize& aSize,
+                    GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext,
                     GLContextEGL* aImpl,
                     PRBool aIsRGB)
-        : TextureImage(aTexture, aSize, aContentType, aIsRGB)
+        : TextureImage(aTexture, aSize, aWrapMode, aContentType, aIsRGB)
         , mGLContext(aContext)
         , mImpl(aImpl)
     { }
@@ -962,7 +965,7 @@ private:
 already_AddRefed<TextureImage>
 GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
-                                 GLint aWrapMode,
+                                 GLenum aWrapMode,
                                  PRBool aUseNearestFilter)
 {
   nsRefPtr<GLContext> impl;
@@ -998,7 +1001,7 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
       impl->BindTexImage();
 
   nsRefPtr<TextureImageEGL> teximage =
-      new TextureImageEGL(texture, aSize, aContentType, this,
+      new TextureImageEGL(texture, aSize, aWrapMode, aContentType, this,
                           static_cast<GLContextEGL*>(impl.get()),
                           isRGB);
   return teximage.forget();

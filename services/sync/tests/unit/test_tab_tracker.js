@@ -43,11 +43,12 @@ function fakeSvcSession() {
 
 function run_test() {
   let engine = new TabEngine();
-  engine._store.wipe();
 
-  _("Verify we have an empty tracker to work with");
+  _("We assume that tabs have changed at startup.");
   let tracker = engine._tracker;
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  do_check_true(tracker.modified);
+  do_check_true(Utils.deepEquals([id for (id in engine.getChangedIDs())],
+                                 [Clients.localID]));
 
   let logs;
 
@@ -83,15 +84,28 @@ function run_test() {
   logs = fakeSvcSession();
   let idx = 0;
   for each (let evttype in ["TabOpen", "TabClose", "TabSelect"]) {
+    // Pretend we just synced.
+    tracker.clearChangedIDs();
+    do_check_false(tracker.modified);
+
+    // Send a fake tab event
     tracker.onTab({type: evttype , originalTarget: evttype});
-    do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+    do_check_true(tracker.modified);
+    do_check_true(Utils.deepEquals([id for (id in engine.getChangedIDs())],
+                                   [Clients.localID]));
     do_check_eq(logs.length, idx+1);
     do_check_eq(logs[idx].target, evttype);
     do_check_eq(logs[idx].prop, "weaveLastUsed");
     do_check_true(typeof logs[idx].value == "number");
     idx++;
   }
+
+  // Pretend we just synced.
+  tracker.clearChangedIDs();
+  do_check_false(tracker.modified);
+
   tracker.onTab({type: "pageshow", originalTarget: "pageshow"});
-  do_check_eq([id for (id in tracker.changedIDs)].length, 1);
+  do_check_true(Utils.deepEquals([id for (id in engine.getChangedIDs())],
+                                 [Clients.localID]));
   do_check_eq(logs.length, idx); // test that setTabValue isn't called
 }

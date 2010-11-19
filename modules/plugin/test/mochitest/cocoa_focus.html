@@ -2,9 +2,9 @@
 <head>
   <title>NPCocoaEventFocusChanged Tests</title>
 </head>
-<body onload="runTests()">
-  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
-  <embed id="plugin2" type="application/x-test" width="400" height="400"></embed>
+<body>
+  <embed id="plugin1" type="application/x-test" width="100" height="100"></embed>
+  <embed id="plugin2" type="application/x-test" width="100" height="100"></embed>
   <script type="application/javascript">
     function is(aLeft, aRight, aMessage) {
       window.opener.SimpleTest.is(aLeft, aRight, aMessage);
@@ -15,8 +15,23 @@
     }
 
     function runTests() {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                        getInterface(Components.interfaces.nsIDOMWindowUtils);
+
       var plugin1 = document.getElementById("plugin1"); // What we're testing.
       var plugin2 = document.getElementById("plugin2"); // Dummy.
+
+      var plugin1Bounds = plugin1.getBoundingClientRect();
+      var plugin2Bounds = plugin2.getBoundingClientRect();
+
+      var plugin1X = (window.mozInnerScreenX + plugin1Bounds.left + 10) * utils.screenPixelsPerCSSPixel;
+      var plugin1Y = (window.mozInnerScreenY + plugin1Bounds.top + 10) * utils.screenPixelsPerCSSPixel;
+      var plugin2X = (window.mozInnerScreenX + plugin2Bounds.left + 10) * utils.screenPixelsPerCSSPixel;
+      var plugin2Y = (window.mozInnerScreenY + plugin2Bounds.top + 10) * utils.screenPixelsPerCSSPixel;
+
+      const NSLeftMouseDown          = 1,
+            NSLeftMouseUp            = 2;
 
       // Don't run any tests if we're not testing the Cocoa event model.
       if (plugin1.getEventModel() != 1) {
@@ -24,7 +39,6 @@
         return;
       }
 
-      // The expected event count which applies to all instances.
       // Initialize to 0 since there is no initial state event,
       // plugins should assume they do not initially have focus.
       var expectedEventCount = 0;
@@ -32,7 +46,7 @@
       // Make sure initial event count is correct.
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
-      // Make sure initial focus state is unkown (assumed false).
+      // Make sure initial focus state is unknown (assumed false).
       var initialStateUnknown = false;
       try {
         plugin1.getFocusState();
@@ -41,35 +55,67 @@
       }
       is(initialStateUnknown, true, "Initial state should be unknown, assumed false.");
 
-      // Give the plugin focus.
-      plugin1.focus();
+      // Give the plugin focus (the window is already focused).
+      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseDown, 0, plugin1);
+      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseUp, 0, plugin1);
       expectedEventCount++;
 
       is(plugin1.getFocusState(), true, "Plugin should have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
-      // Make sure window activation state changes don't affect plugin focus.
-      // Past this point we can't really count events because of how Gecko's focus works.
-      // Only the end result matters anyway.
+      // Make sure window activation state changes don't spontaneously
+      // change plugin focus.
 
       // Blur the window.
-      window.focus(); // start in an active state
       window.blur();
 
-      is(plugin1.getFocusState(), true, "Plugin should have focus.");
+      is(plugin1.getFocusState(), true, "Plugin should still have focus.");
+      is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Focus the window.
       window.focus();
 
-      is(plugin1.getFocusState(), true, "Plugin should have focus.");
+      is(plugin1.getFocusState(), true, "Plugin should still have focus.");
+      is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Take focus from the plugin.
-      plugin2.focus();
+      utils.sendNativeMouseEvent(plugin2X, plugin2Y, NSLeftMouseDown, 0, plugin2);
+      utils.sendNativeMouseEvent(plugin2X, plugin2Y, NSLeftMouseUp, 0, plugin2);
+      expectedEventCount++;
 
       is(plugin1.getFocusState(), false, "Plugin should not have focus.");
+      is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
+
+      // Make sure window activation causes the plugin to be informed of focus
+      // changes that took place while the window was inactive.
+
+      // Give the plugin focus (the window is already focused).
+      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseDown, 0, plugin1);
+      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseUp, 0, plugin1);
+      expectedEventCount++;
+
+      // Blur the window.
+      window.blur();
+
+      // Take focus from the plugin while the window is blurred.
+      plugin2.focus();
+
+      is(plugin1.getFocusState(), true, "Plugin should still have focus.");
+      is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
+
+      // Focus the window.
+      window.focus();
+      expectedEventCount++;
+
+      is(plugin1.getFocusState(), false, "Plugin should not have focus.");
+      is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       window.opener.testsFinished();
     }
+
+    // Onload hander doesn't work for these tests -- no events arrive at the plugin.
+    window.opener.SimpleTest.waitForFocus(runTests, window);
+
   </script>
 </body>
 </html>

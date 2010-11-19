@@ -57,6 +57,7 @@ struct nsDelayedBlurOrFocusEvent;
  */
 
 class nsFocusManager : public nsIFocusManager,
+                       public nsIFocusManager_MOZILLA_2_0_BRANCH,
                        public nsIObserver,
                        public nsSupportsWeakReference
 {
@@ -66,6 +67,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIFOCUSMANAGER
+  NS_DECL_NSIFOCUSMANAGER_MOZILLA_2_0_BRANCH
 
   // called to initialize and stop the focus manager at startup and shutdown
   static nsresult Init();
@@ -142,11 +144,13 @@ protected:
    * true, then the focus has actually shifted and the caret position will be
    * updated to the new focus, aNewContent will be scrolled into view (unless
    * a flag disables this) and the focus method for the window will be updated.
+   * If aAdjustWidget is false, don't change the widget focus state.
    *
    * All actual focus changes must use this method to do so. (as opposed
    * to those that update the focus in an inactive window for instance).
    */
-  void SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags, PRBool aFocusChanged);
+  void SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
+                     PRBool aFocusChanged, PRBool aAdjustWidget);
 
   /**
    * Returns true if aPossibleAncestor is the same as aWindow or an
@@ -216,10 +220,13 @@ protected:
    * aIsLeavingDocument should be set to true if the document/window is being
    * blurred as well. Document/window blur events will be fired. It should be
    * false if an element is the same document is about to be focused.
+   *
+   * If aAdjustWidget is false, don't change the widget focus state.
    */
   PRBool Blur(nsPIDOMWindow* aWindowToClear,
               nsPIDOMWindow* aAncestorWindowToFocus,
-              PRBool aIsLeavingDocument);
+              PRBool aIsLeavingDocument,
+              PRBool aAdjustWidget);
 
   /**
    * Focus an element in the active window and child frame.
@@ -244,13 +251,16 @@ protected:
    *
    * aWindowRaised should be true if the window is being raised. In this case,
    * command updaters will not be called.
+   *
+   * If aAdjustWidget is false, don't change the widget focus state.
    */
   void Focus(nsPIDOMWindow* aWindow,
              nsIContent* aContent,
              PRUint32 aFlags,
              PRBool aIsNewDocument,
              PRBool aFocusChanged,
-             PRBool aWindowRaised);
+             PRBool aWindowRaised,
+             PRBool aAdjustWidget);
 
   /**
    * Fires a focus or blur event at aTarget.

@@ -1072,20 +1072,6 @@ XPCWrappedNative::GatherScriptableCreateInfo(
     return sciProto;
 }
 
-void
-XPCWrappedNative::TraceOtherWrapper(JSTracer* trc)
-{
-    // Note: This isn't wrapped by a MapLock, however, this is normally called
-    // during GC, where nobody should be playing with the wrapper map anyway,
-    // so this should be OK.
-    JSObject *otherWrapper = GetScope()->GetWrapperMap()->Find(mFlatJSObject);
-    if(otherWrapper)
-    {
-        JS_CALL_OBJECT_TRACER(trc, otherWrapper,
-                              "XPCWrappedNative::mOtherWrapper");
-    }
-}
-
 #ifdef DEBUG_slimwrappers
 static PRUint32 sMorphedSlimWrappers;
 #endif
@@ -1342,8 +1328,6 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
             to->SetInterface(nsnull);
         }
     }
-
-    GetScope()->GetWrapperMap()->Remove(mFlatJSObject);
 
     if(IsWrapperExpired())
     {
@@ -2809,7 +2793,10 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     dp->SetValIsAllocated();
                     useAllocator = JS_TRUE;
                     break;
-
+                case nsXPTType::T_CHAR_STR:
+                    dp->SetValIsAllocated();
+                    useAllocator = JS_TRUE;
+                    break;
                 case nsXPTType::T_ASTRING:
                     // Fall through to the T_DOMSTRING case
 
@@ -2979,8 +2966,10 @@ CallMethodHelper::ConvertDependentParams()
                          "Expected either enough arguments or an optional argument");
             src = i < mArgc ? mArgv[i] : JSVAL_NULL;
 
-            if(datum_type.IsPointer() &&
-               datum_type.TagPart() == nsXPTType::T_IID)
+            if((datum_type.IsPointer() &&
+                (datum_type.TagPart() == nsXPTType::T_IID ||
+                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS)) ||
+               (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
                 useAllocator = JS_TRUE;
                 dp->SetValIsAllocated();

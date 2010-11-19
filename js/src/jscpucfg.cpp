@@ -44,10 +44,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(CROSS_COMPILE) && !defined(FORCE_BIG_ENDIAN) && !defined(FORCE_LITTLE_ENDIAN)
-#include <prtypes.h>
-#endif
-
 /************************************************************************/
 
 int main(int argc, char **argv)

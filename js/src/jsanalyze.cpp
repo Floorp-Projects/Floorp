@@ -474,10 +474,8 @@ Script::analyze(JSContext *cx)
         }
 
         /* Track the initializer stack and compute new objects for encountered initializers. */
-        if (op == JSOP_NEWINIT) {
-            int i = GET_UINT16(pc);
-            JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
-            bool newArray = (i == JSProto_Array);
+        if (op == JSOP_NEWINIT || op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT) {
+            bool newArray = (op == JSOP_NEWARRAY) || (op == JSOP_NEWINIT && pc[1] == JSProto_Array);
 
             types::TypeObject *object;
             if (initializerStack && initializerStack->initObject &&
@@ -500,13 +498,6 @@ Script::analyze(JSContext *cx)
         } else if (op == JSOP_INITELEM || op == JSOP_INITPROP || op == JSOP_INITMETHOD) {
             JS_ASSERT(initializerStack);
             code->initObject = initializerStack->object;
-        } else if (op == JSOP_NEWARRAY) {
-            if (initializerStack && initializerStack->initObject &&
-                initializerStack->initArray) {
-                code->initObject = initializerStack->initObject;
-            } else {
-                code->getInitObject(cx, true);
-            }
         } else if (op == JSOP_ENDINIT) {
             JS_ASSERT(initializerStack);
             InitializerInfo *info = initializerStack;

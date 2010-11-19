@@ -124,7 +124,7 @@ jsprobes_jsvaltovoid(JSContext *cx, const js::Value &argval)
 #endif
 
 const char *
-Probes::FunctionName(JSContext *cx, const JSFunction *fun)
+Probes::FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString *bytes)
 {
     if (!fun)
         return nullName;
@@ -139,8 +139,7 @@ Probes::FunctionName(JSContext *cx, const JSFunction *fun)
         return nullName;
     }
 
-    char *name = (char *)js_GetStringBytes(cx, ATOM_TO_STRING(atom));
-    return name ? name : nullName;
+    return bytes->encode(cx, ATOM_TO_STRING(atom)) ? bytes->ptr() : nullName;
 }
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -154,15 +153,17 @@ Probes::FunctionName(JSContext *cx, const JSFunction *fun)
 void
 Probes::enterJSFunImpl(JSContext *cx, JSFunction *fun, JSScript *script)
 {
+    JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), FunctionClassname(fun),
-                              FunctionName(cx, fun));
+                              FunctionName(cx, fun, &funNameBytes));
 }
 
 void
 Probes::handleFunctionReturn(JSContext *cx, JSFunction *fun, JSScript *script)
 {
+    JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), FunctionClassname(fun),
-                               FunctionName(cx, fun));
+                               FunctionName(cx, fun, &funNameBytes));
 }
 
 #endif

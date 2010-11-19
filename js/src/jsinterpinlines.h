@@ -69,6 +69,7 @@ JSStackFrame::initPrev(JSContext *cx)
 inline void
 JSStackFrame::resetGeneratorPrev(JSContext *cx)
 {
+    flags_ |= JSFRAME_HAS_PREVPC;
     initPrev(cx);
 }
 
@@ -594,6 +595,9 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         AutoPreserveEnumerators preserve(cx);
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
+        if (code_ != script_->getJIT(fp->isConstructing())->invokeEntry)
+            *(volatile int *)0x101 = 0;
+
         AutoInterpPreparer prepareInterp(cx, script_);
         ok = mjit::EnterMethodJIT(cx, fp, code_, stackLimit_);
         cx->regs->pc = stop_;
@@ -710,8 +714,10 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
         Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
     JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (hook && fp->hasHookData() && !fp->isExecuteFrame())
-        hook(cx, fp, JS_FALSE, &ok, fp->hookData());
+    void* hookData;
+
+    if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame())
+        hook(cx, fp, JS_FALSE, &ok, hookData);
 
     /*
      * An eval frame's parent owns its activation objects. A yielding frame's

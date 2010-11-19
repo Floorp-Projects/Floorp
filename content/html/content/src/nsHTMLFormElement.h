@@ -189,11 +189,10 @@ public:
    *
    * @param aElement the element to remove
    * @param aUpdateValidity If true, updates the form validity.
-   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    * @return NS_OK if the element was successfully removed.
    */
   nsresult RemoveElement(nsGenericHTMLFormElement* aElement,
-                         bool aUpdateValidity, PRBool aNotify);
+                         bool aUpdateValidity);
 
   /**
    * Remove an element from the lookup table maintained by the form.
@@ -303,18 +302,17 @@ protected:
 
   class RemoveElementRunnable : public nsRunnable {
   public:
-    RemoveElementRunnable(nsHTMLFormElement* aForm, PRBool aNotify):
-      mForm(aForm), mNotify(aNotify)
+    RemoveElementRunnable(nsHTMLFormElement* aForm)
+      : mForm(aForm)
     {}
 
     NS_IMETHOD Run() {
-      mForm->HandleDefaultSubmitRemoval(mNotify);
+      mForm->HandleDefaultSubmitRemoval();
       return NS_OK;
     }
 
   private:
     nsRefPtr<nsHTMLFormElement> mForm;
-    PRBool mNotify;
   };
 
   nsresult DoSubmitOrReset(nsEvent* aEvent,
@@ -322,7 +320,7 @@ protected:
   nsresult DoReset();
 
   // Async callback to handle removal of our default submit
-  void HandleDefaultSubmitRemoval(PRBool aNotify);
+  void HandleDefaultSubmitRemoval();
 
   //
   // Submit Helpers

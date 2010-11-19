@@ -702,7 +702,7 @@ Parser::parse(JSObject *chain)
      *   protected from the GC by a root or a stack frame reference.
      */
     JSTreeContext globaltc(this);
-    globaltc.scopeChain = chain;
+    globaltc.setScopeChain(chain);
     if (!GenerateBlockId(&globaltc, globaltc.bodyid))
         return NULL;
 
@@ -805,7 +805,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
     globalScope.cg = &cg;
     cg.flags |= tcflags;
-    cg.scopeChain = scopeChain;
+    cg.setScopeChain(scopeChain);
     compiler.globalScope = &globalScope;
     if (!SetStaticLevel(&cg, staticLevel))
         goto out;
@@ -1242,16 +1242,14 @@ static JSBool
 ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
-    const char *name;
-
-    JS_ASSERT(tc->inFunction());
-    if (tc->fun->atom) {
-        name = js_AtomToPrintableString(cx, tc->fun->atom);
+    JSAutoByteString name;
+    if (tc->fun()->atom) {
+        if (!js_AtomToPrintableString(cx, tc->fun()->atom, &name))
+            return false;
     } else {
         errnum = anonerrnum;
-        name = NULL;
     }
-    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name);
+    return ReportCompileErrorNumber(cx, TS(tc->parser), NULL, flags, errnum, name.ptr());
 }
 
 static JSBool
@@ -1274,10 +1272,10 @@ CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
         JSAtom *atom = lhs->pn_atom;
         JSAtomState *atomState = &cx->runtime->atomState;
         if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
-            const char *name = js_AtomToPrintableString(cx, atom);
-            if (!name ||
+            JSAutoByteString name;
+            if (!js_AtomToPrintableString(cx, atom, &name) ||
                 !ReportStrictModeError(cx, TS(tc->parser), tc, lhs, JSMSG_DEPRECATED_ASSIGN,
-                                       name)) {
+                                       name.ptr())) {
                 return false;
             }
         }
@@ -1299,10 +1297,10 @@ CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, JSParseNode *
 
     JSAtomState *atomState = &cx->runtime->atomState;
     if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (!name)
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name))
             return false;
-        return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, name);
+        return ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_BAD_BINDING, name.ptr());
     }
     return true;
 }
@@ -1339,9 +1337,10 @@ CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
         JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
         if (dn->pn_op == JSOP_GETARG)
             pn = dn;
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_DUPLICATE_FORMAL, name)) {
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name) ||
+            !ReportStrictModeError(cx, TS(tc->parser), tc, pn, JSMSG_DUPLICATE_FORMAL,
+                                   name.ptr())) {
             return false;
         }
     }
@@ -1353,9 +1352,9 @@ CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
         /* The definition's source position will be more precise. */
         JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
         JS_ASSERT(dn->pn_atom == atom);
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (!name ||
-            !ReportStrictModeError(cx, TS(tc->parser), tc, dn, JSMSG_BAD_BINDING, name)) {
+        JSAutoByteString name;
+        if (!js_AtomToPrintableString(cx, atom, &name) ||
+            !ReportStrictModeError(cx, TS(tc->parser), tc, dn, JSMSG_BAD_BINDING, name.ptr())) {
             return false;
         }
     }
@@ -1674,7 +1673,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
         return NULL;
 
     funcg.flags |= TCF_IN_FUNCTION;
-    funcg.fun = fun;
+    funcg.setFunction(fun);
     if (!GenerateBlockId(&funcg, funcg.bodyid))
         return NULL;
 
@@ -1806,7 +1805,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
 
     JS_ASSERT(tc->inFunction());
 
-    JSLocalKind localKind = tc->fun->lookupLocal(cx, atom, NULL);
+    JSLocalKind localKind = tc->fun()->lookupLocal(cx, atom, NULL);
     if (localKind != JSLOCAL_NONE) {
         ReportCompileErrorNumber(cx, TS(tc->parser), NULL, JSREPORT_ERROR,
                                  JSMSG_DESTRUCT_DUP_ARG);
@@ -1818,8 +1817,8 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     if (!Define(pn, atom, tc))
         return JS_FALSE;
 
-    uintN index = tc->fun->u.i.nvars;
-    if (!BindLocalVariable(cx, tc->fun, atom, JSLOCAL_VAR, true))
+    uintN index = tc->fun()->u.i.nvars;
+    if (!BindLocalVariable(cx, tc->fun(), atom, JSLOCAL_VAR, true))
         return JS_FALSE;
     pn->pn_op = JSOP_SETLOCAL;
     pn->pn_cookie.set(tc->staticLevel, index);
@@ -1844,11 +1843,9 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
      */
     while (tc->parent)
         tc = tc->parent;
-    parent = tc->inFunction() ? NULL : tc->scopeChain;
+    parent = tc->inFunction() ? NULL : tc->scopeChain();
 
-    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
-                         parent, atom, NULL, NULL);
-
+    fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom, NULL, NULL);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
@@ -2538,7 +2535,7 @@ EnterFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
     funtc->blockidGen = tc->blockidGen;
     if (!GenerateBlockId(funtc, funtc->bodyid))
         return NULL;
-    funtc->fun = fun;
+    funtc->setFunction(fun);
     funtc->funbox = funbox;
     if (!SetStaticLevel(funtc, tc->staticLevel + 1))
         return NULL;
@@ -2898,15 +2895,15 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
             JS_ASSERT(dn->pn_defn);
 
             if (JS_HAS_STRICT_OPTION(context) || dn_kind == JSDefinition::CONST) {
-                const char *name = js_AtomToPrintableString(context, funAtom);
-                if (!name ||
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(context, funAtom, &name) ||
                     !reportErrorNumber(NULL,
                                        (dn_kind != JSDefinition::CONST)
                                        ? JSREPORT_WARNING | JSREPORT_STRICT
                                        : JSREPORT_ERROR,
                                        JSMSG_REDECLARED_VAR,
                                        JSDefinition::kindString(dn_kind),
-                                       name)) {
+                                       name.ptr())) {
                     return NULL;
                 }
             }
@@ -2969,12 +2966,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                  * we add a variable even if a parameter with the given name
                  * already exists.
                  */
-                localKind = tc->fun->lookupLocal(context, funAtom, &index);
+                localKind = tc->fun()->lookupLocal(context, funAtom, &index);
                 switch (localKind) {
                   case JSLOCAL_NONE:
                   case JSLOCAL_ARG:
-                    index = tc->fun->u.i.nvars;
-                    if (!tc->fun->addLocal(context, funAtom, JSLOCAL_VAR))
+                    index = tc->fun()->u.i.nvars;
+                    if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
                         return NULL;
                     /* FALL THROUGH */
 
@@ -3388,14 +3385,14 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     blockObj = tc->blockChain();
     ale = tc->decls.lookup(atom);
     if (ale && ALE_DEFN(ale)->pn_blockid == tc->blockid()) {
-        const char *name = js_AtomToPrintableString(cx, atom);
-        if (name) {
+        JSAutoByteString name;
+        if (js_AtomToPrintableString(cx, atom, &name)) {
             ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                      JSREPORT_ERROR, JSMSG_REDECLARED_VAR,
                                      (ale && ALE_DEFN(ale)->isConst())
                                      ? js_const_str
                                      : js_variable_str,
-                                     name);
+                                     name.ptr());
         }
         return false;
     }
@@ -3630,22 +3627,21 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (stmt || ale) {
         JSDefinition *dn = ale ? ALE_DEFN(ale) : NULL;
         JSDefinition::Kind dn_kind = dn ? dn->kind() : JSDefinition::VAR;
-        const char *name;
 
         if (dn_kind == JSDefinition::ARG) {
-            name = js_AtomToPrintableString(cx, atom);
-            if (!name)
+            JSAutoByteString name;
+            if (!js_AtomToPrintableString(cx, atom, &name))
                 return JS_FALSE;
 
             if (op == JSOP_DEFCONST) {
                 ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                          JSREPORT_ERROR, JSMSG_REDECLARED_PARAM,
-                                         name);
+                                         name.ptr());
                 return JS_FALSE;
             }
             if (!ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                           JSREPORT_WARNING | JSREPORT_STRICT,
-                                          JSMSG_VAR_HIDES_ARG, name)) {
+                                          JSMSG_VAR_HIDES_ARG, name.ptr())) {
                 return JS_FALSE;
             }
         } else {
@@ -3657,15 +3653,15 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
             if (JS_HAS_STRICT_OPTION(cx)
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
                 : error) {
-                name = js_AtomToPrintableString(cx, atom);
-                if (!name ||
+                JSAutoByteString name;
+                if (!js_AtomToPrintableString(cx, atom, &name) ||
                     !ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                               !error
                                               ? JSREPORT_WARNING | JSREPORT_STRICT
                                               : JSREPORT_ERROR,
                                               JSMSG_REDECLARED_VAR,
                                               JSDefinition::kindString(dn_kind),
-                                              name)) {
+                                              name.ptr())) {
                     return JS_FALSE;
                 }
             }
@@ -3765,7 +3761,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_TRUE;
     }
 
-    JSLocalKind localKind = tc->fun->lookupLocal(cx, atom, NULL);
+    JSLocalKind localKind = tc->fun()->lookupLocal(cx, atom, NULL);
     if (localKind == JSLOCAL_NONE) {
         /*
          * Property not found in current variable scope: we have not seen this
@@ -3777,8 +3773,8 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
          */
         localKind = (data->op == JSOP_DEFCONST) ? JSLOCAL_CONST : JSLOCAL_VAR;
 
-        uintN index = tc->fun->u.i.nvars;
-        if (!BindLocalVariable(cx, tc->fun, atom, localKind, false))
+        uintN index = tc->fun()->u.i.nvars;
+        if (!BindLocalVariable(cx, tc->fun(), atom, localKind, false))
             return JS_FALSE;
         pn->pn_op = JSOP_GETLOCAL;
         pn->pn_cookie.set(tc->staticLevel, index);
@@ -8083,7 +8079,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * the one passed to us.
      */
     JSTreeContext xmltc(this);
-    xmltc.scopeChain = chain;
+    xmltc.setScopeChain(chain);
 
     /* Set XML-only mode to turn off special treatment of {expr} in XML. */
     tokenStream.setXMLOnlyMode();
@@ -8439,10 +8435,10 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 JSAtomListElement *ale = seen.lookup(atom);
                 if (ale) {
                     if (ALE_INDEX(ale) & attributesMask) {
-                        const char *name = js_AtomToPrintableString(context, atom);
-                        if (!name ||
+                        JSAutoByteString name;
+                        if (!js_AtomToPrintableString(context, atom, &name) ||
                             !ReportStrictModeError(context, &tokenStream, tc, NULL,
-                                                   JSMSG_DUPLICATE_PROPERTY, name)) {
+                                                   JSMSG_DUPLICATE_PROPERTY, name.ptr())) {
                             return NULL;
                         }
                     }

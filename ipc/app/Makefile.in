@@ -63,6 +63,7 @@ LIBS += \
 endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG

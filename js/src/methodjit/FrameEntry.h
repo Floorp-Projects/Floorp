@@ -42,6 +42,7 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
+#include "jstypes.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
 #include "assembler/assembler/MacroAssembler.h"
@@ -132,6 +133,14 @@ class FrameEntry
 
         Value newValue = Int32Value(value);
         setConstant(Jsvalify(newValue));
+    }
+
+    inline bool initializerArray() {
+        return initArray;
+    }
+
+    inline JSObject *initializerObject() {
+        return initObject;
     }
 
   private:
@@ -253,7 +262,12 @@ class FrameEntry
     FrameEntry *copy;
     bool       copied;
     bool       tracked;
-    char       padding[2];
+    bool       initArray;
+    JSObject   *initObject;
+
+#if (JS_BITS_PER_WORD == 32)
+    void       *padding;
+#endif
 };
 
 } /* namespace mjit */

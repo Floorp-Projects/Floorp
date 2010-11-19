@@ -1821,7 +1821,7 @@ TypeFunction::fillProperties(JSContext *cx)
     TypeObject *funcProto = cx->getFixedTypeObject(TYPE_OBJECT_FUNCTION_PROTOTYPE);
     funcProto->addPropagate(cx, this);
 
-    const char *baseName = js_GetStringBytes(cx, JSID_TO_STRING(name));
+    const char *baseName = js_GetStringBytes(JSID_TO_ATOM(name));
     unsigned len = strlen(baseName) + 15;
     char *prototypeName = (char *)alloca(len);
     JS_snprintf(prototypeName, len, "%s:prototype", baseName);
@@ -2355,9 +2355,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
       case JSOP_NULL:
         code->setFixed(cx, 0, TYPE_NULL);
-        break;
-      case JSOP_HOLE:
-        code->setFixed(cx, 0, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_MAGIC));
         break;
       case JSOP_REGEXP:
         code->setFixed(cx, 0, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP));
@@ -2896,22 +2893,9 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
       }
 
-      case JSOP_NEWARRAY: {
-        TypeObject *object = code->initObject;
-        JS_ASSERT(object);
-        code->pushed(0)->addType(cx, (jstype) object);
-
-        TypeSet *types = object->indexTypes(cx);
-
-        /* Propagate types of the initializer elements to the element type set. */
-        unsigned useCount = GetUseCount(script, offset);
-        for (unsigned i = 0; i < useCount; i++)
-            code->popped(i)->addSubset(cx, pool, types);
-
-        break;
-      }
-
-      case JSOP_NEWINIT: {
+      case JSOP_NEWINIT:
+      case JSOP_NEWARRAY:
+      case JSOP_NEWOBJECT: {
         TypeObject *object = code->initObject;
         JS_ASSERT(object);
         code->pushed(0)->addType(cx, (jstype) object);
@@ -2919,7 +2903,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       }
 
       case JSOP_ENDINIT:
-        JS_ASSERT(!state.hasGetSet);
         break;
 
       case JSOP_INITELEM: {
@@ -2933,16 +2916,22 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
         if (state.hasGetSet)
             types->addType(cx, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_GETSET));
+        else if (state.hasHole)
+            cx->markTypeArrayNotPacked(object, false);
         else
             code->popped(0)->addSubset(cx, pool, types);
         state.hasGetSet = false;
+        state.hasHole = false;
         break;
       }
 
       case JSOP_GETTER:
       case JSOP_SETTER:
-        JS_ASSERT(!state.hasGetSet);
         state.hasGetSet = true;
+        break;
+
+      case JSOP_HOLE:
+        state.hasHole = true;
         break;
 
       case JSOP_INITPROP:
@@ -2962,6 +2951,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         else
             code->popped(0)->addSubset(cx, pool, types);
         state.hasGetSet = false;
+        JS_ASSERT(!state.hasHole);
         break;
       }
 
