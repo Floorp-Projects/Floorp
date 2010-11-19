@@ -109,7 +109,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
     progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
     var progressListener = new EditorContentListener(newEditorElement);
     progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-    newEditorElement.setAttribute("src", "about:blank");
+    newEditorElement.setAttribute("src", "data:text/html,");
   }
 ]]>
 </script>
