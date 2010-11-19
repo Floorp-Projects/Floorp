@@ -2104,23 +2104,35 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * logs a message to the Heads Up Display that originates
-   * in the nsIConsoleService
+   * Logs a message to the Heads Up Display that originates
+   * from the window.console API
    *
-   * @param nsIConsoleMessage aMessage
-   * @param nsIDOMNode aConsoleNode
-   * @param nsIDOMNode aMessageNode
-   * @returns void
+   * @param aHudId
+   * @param string aLevel one of log/info/warn/error
+   * @param string aArguments
    */
-  logConsoleMessage: function HS_logConsoleMessage(aMessage,
-                                                   aConsoleNode,
-                                                   aMessageNode)
+  logConsoleAPIMessage: function HS_logConsoleAPIMessage(aHudId,
+                                                         aLevel,
+                                                         aArguments)
   {
-    aConsoleNode.appendChild(aMessageNode);
-    ConsoleUtils.scrollToVisible(aMessageNode);
+    let hud = this.hudReferences[aHudId];
+    let messageNode = hud.makeXULNode("label");
+    let klass = "hud-msg-node hud-" + aLevel;
+    messageNode.setAttribute("class", klass);
 
-    // store this message in the storage module:
-    this.storage.recordEntry(aMessage.hudId, aMessage);
+    let message = Array.join(aArguments, " ") + "\n";
+    let ts = ConsoleUtils.timestamp();
+    let timestampedMessage = ConsoleUtils.timestampString(ts) + ": " + message;
+    messageNode.appendChild(hud.chromeDocument.createTextNode(timestampedMessage));
+
+    let messageObject = {
+      logLevel: aLevel,
+      hudId: aHudId,
+      message: message,
+      timestamp: ts,
+      origin: "WebConsole"
+    };
+    this.logMessage(messageObject, hud.outputNode, messageNode);
   },
 
   /**
@@ -3516,8 +3528,7 @@ let ConsoleAPIObserver = {
       if (!hudId)
         return;
 
-      let hud = HUDService.hudReferences[hudId];
-      this.sendToWebConsole(hud, aMessage.level, aMessage.arguments);
+      HUDService.logConsoleAPIMessage(hudId, aMessage.level, aMessage.arguments);
     }
     else if (aTopic == "quit-application-granted") {
       this.shutdown();
@@ -3527,32 +3538,7 @@ let ConsoleAPIObserver = {
   shutdown: function CAO_shutdown()
   {
     Services.obs.removeObserver(this, "console-api-log-event");
-  },
-
-  sendToWebConsole:
-  function CAO_sendToWebConsole(aWebConsole, aLevel, aArguments)
-  {
-    let ts = ConsoleUtils.timestamp();
-    let messageNode = aWebConsole.makeXULNode("label");
-    let klass = "hud-msg-node hud-" + aLevel;
-
-    messageNode.setAttribute("class", klass);
-
-    let message = Array.join(aArguments, " ") + "\n";
-    let timestampedMessage = ConsoleUtils.timestampString(ts) + ": " + message;
-
-    messageNode.appendChild(aWebConsole.chromeDocument.createTextNode(timestampedMessage));
-    // need a constructor here to properly set all attrs
-    let messageObject = {
-      logLevel: aLevel,
-      hudId: aWebConsole.hudId,
-      message: message,
-      timestamp: ts,
-      origin: "WebConsole"
-    };
-
-    HUDService.logMessage(messageObject, aWebConsole.outputNode, messageNode);
-  },
+  }
 };
 
 /**
