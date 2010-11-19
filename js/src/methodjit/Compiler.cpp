@@ -1506,44 +1506,33 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UINT16)
 
           BEGIN_CASE(JSOP_NEWINIT)
-          {
-            jsint i = GET_UINT16(PC);
-            uint32 count = GET_UINT16(PC + UINT16_LEN);
-
-            JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
-
-            prepareStubCall(Uses(0));
-            masm.move(Imm32(count), Registers::ArgReg1);
-            if (i == JSProto_Array)
-                INLINE_STUBCALL(stubs::NewInitArray);
-            else
-                INLINE_STUBCALL(stubs::NewInitObject);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
+            jsop_newinit();
           END_CASE(JSOP_NEWINIT)
+
+          BEGIN_CASE(JSOP_NEWARRAY)
+            jsop_newinit();
+          END_CASE(JSOP_NEWARRAY)
+
+          BEGIN_CASE(JSOP_NEWOBJECT)
+            jsop_newinit();
+          END_CASE(JSOP_NEWOBJECT)
 
           BEGIN_CASE(JSOP_ENDINIT)
           END_CASE(JSOP_ENDINIT)
 
-          BEGIN_CASE(JSOP_INITPROP)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall(Uses(2));
-            masm.move(ImmPtr(atom), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::InitProp);
+          BEGIN_CASE(JSOP_INITMETHOD)
+            jsop_initmethod();
             frame.pop();
-          }
+          END_CASE(JSOP_INITMETHOD)
+
+          BEGIN_CASE(JSOP_INITPROP)
+            jsop_initprop();
+            frame.pop();
           END_CASE(JSOP_INITPROP)
 
           BEGIN_CASE(JSOP_INITELEM)
-          {
-            JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
-            prepareStubCall(Uses(3));
-            masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::InitElem);
+            jsop_initelem();
             frame.popn(2);
-          }
           END_CASE(JSOP_INITELEM)
 
           BEGIN_CASE(JSOP_INCARG)
@@ -1941,18 +1930,6 @@ mjit::Compiler::generateMethod()
             frame.push(Value(Int32Value(GET_INT32(PC))));
           END_CASE(JSOP_INT32)
 
-          BEGIN_CASE(JSOP_NEWARRAY)
-          {
-            uint32 len = GET_UINT16(PC);
-            prepareStubCall(Uses(len));
-            masm.move(Imm32(len), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::NewArray);
-            frame.popn(len);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
-          END_CASE(JSOP_NEWARRAY)
-
           BEGIN_CASE(JSOP_HOLE)
             frame.push(MagicValue(JS_ARRAY_HOLE));
           END_CASE(JSOP_HOLE)
@@ -1981,16 +1958,6 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::Debugger);
           END_CASE(JSOP_DEBUGGER)
-
-          BEGIN_CASE(JSOP_INITMETHOD)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall(Uses(2));
-            masm.move(ImmPtr(atom), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::InitMethod);
-            frame.pop();
-          }
-          END_CASE(JSOP_INITMETHOD)
 
           BEGIN_CASE(JSOP_UNBRAND)
             jsop_unbrand();
@@ -4708,6 +4675,41 @@ mjit::Compiler::jsop_arguments()
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::Arguments);
+}
+
+void
+mjit::Compiler::jsop_newinit()
+{
+    bool isArray;
+    unsigned count = 0;
+    JSObject *baseobj = NULL;
+    switch (*PC) {
+      case JSOP_NEWINIT:
+        isArray = (PC[1] == JSProto_Array);
+        break;
+      case JSOP_NEWARRAY:
+        isArray = true;
+        count = GET_UINT24(PC);
+        break;
+      case JSOP_NEWOBJECT:
+        isArray = false;
+        baseobj = script->getObject(fullAtomIndex(PC));
+        break;
+      default:
+        JS_NOT_REACHED("Bad op");
+        return;
+    }
+
+    prepareStubCall(Uses(0));
+    if (isArray) {
+        masm.move(Imm32(count), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::NewInitArray);
+    } else {
+        masm.move(ImmPtr(baseobj), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::NewInitObject);
+    }
+    frame.takeReg(Registers::ReturnReg);
+    frame.pushInitializerObject(Registers::ReturnReg, *PC == JSOP_NEWARRAY, baseobj);
 }
 
 /*

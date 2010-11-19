@@ -2227,6 +2227,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     trashSelf(false),
     whichTreesToTrash(&tempAlloc()),
     guardedShapeTable(cx),
+    initDepth(0),
+    hadNewInit(false),
     rval_ins(NULL),
     native_rval_ins(NULL),
     newobj_ins(NULL),
@@ -14070,18 +14072,20 @@ TraceRecorder::record_JSOP_UINT16()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_NEWINIT()
 {
-    JSProtoKey key = JSProtoKey(GET_UINT16(cx->regs->pc));
-    uint32 count = GET_UINT16(cx->regs->pc + UINT16_LEN);
+    initDepth++;
+    hadNewInit = true;
+
+    JSProtoKey key = JSProtoKey(cx->regs->pc[1]);
 
     LIns* proto_ins;
     CHECK_STATUS_A(getClassPrototype(key, proto_ins));
 
     LIns *v_ins;
     if (key == JSProto_Array) {
-        LIns *args[] = { w.immi(count), cx_ins };
-        v_ins = w.call(&js_InitializerArray_ci, args);
+        LIns *args[] = { w.immi(0), proto_ins, cx_ins };
+        v_ins = w.call(&js_NewPreallocatedArray_ci, args);
     } else {
-        LIns *args[] = { w.immi(count), cx_ins };
+        LIns *args[] = { w.immpNull(), proto_ins, cx_ins };
         v_ins = w.call(&js_InitializerObject_ci, args);
     }
     guard(false, w.eqp0(v_ins), OOM_EXIT);
@@ -14090,8 +14094,47 @@ TraceRecorder::record_JSOP_NEWINIT()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NEWARRAY()
+{
+    initDepth++;
+
+    LIns* proto_ins;
+    CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
+
+    unsigned count = GET_UINT24(cx->regs->pc);
+    LIns *args[] = { w.immi(count), proto_ins, cx_ins };
+    LIns *v_ins = w.call(&js_NewPreallocatedArray_ci, args);
+
+    guard(false, w.eqp0(v_ins), OOM_EXIT);
+    stack(0, v_ins);
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NEWOBJECT()
+{
+    initDepth++;
+
+    LIns* proto_ins;
+    CHECK_STATUS_A(getClassPrototype(JSProto_Object, proto_ins));
+
+    JSObject* baseobj = cx->fp()->script()->getObject(getFullIndex(0));
+
+    LIns *args[] = { w.immpObjGC(baseobj), proto_ins, cx_ins };
+    LIns *v_ins = w.call(&js_InitializerObject_ci, args);
+
+    guard(false, w.eqp0(v_ins), OOM_EXIT);
+    stack(0, v_ins);
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENDINIT()
 {
+    initDepth--;
+    if (initDepth == 0)
+        hadNewInit = false;
+
 #ifdef DEBUG
     Value& v = stackval(-1);
     JS_ASSERT(!v.isPrimitive());
@@ -14109,7 +14152,30 @@ TraceRecorder::record_JSOP_INITPROP()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITELEM()
 {
-    return setElem(-3, -2, -1);
+    Value& v = stackval(-1);
+    Value& idx = stackval(-2);
+    Value& lval = stackval(-3);
+
+    // The object is either a dense Array or an Object.  Only handle the dense case here.
+    // Also skip array initializers which might be unoptimized NEWINIT initializers.
+    if (!lval.toObject().isDenseArray() || hadNewInit)
+        return setElem(-3, -2, -1);
+
+    // The index is always the same constant integer.
+    JS_ASSERT(idx.isInt32());
+
+    // Nothing to do for holes, the array's length has already been set.
+    if (v.isMagic(JS_ARRAY_HOLE))
+        return ARECORD_CONTINUE;
+
+    LIns* obj_ins = get(&lval);
+    LIns* v_ins = get(&v);
+
+    // Set the element.
+    LIns *slots_ins = w.ldpObjSlots(obj_ins);
+    box_value_into(v, v_ins, DSlotsAddress(slots_ins, idx.toInt32()));
+
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -15830,32 +15896,6 @@ TraceRecorder::record_JSOP_LENGTH()
         return getProp(obj, obj_ins);
     }
     set(&l, v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_NEWARRAY()
-{
-    LIns *proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
-
-    uint32 len = GET_UINT16(cx->regs->pc);
-    cx->assertValidStackDepth(len);
-
-    LIns* args[] = { w.immi(len), proto_ins, cx_ins };
-    LIns* v_ins = w.call(&js_NewPreallocatedArray_ci, args);
-    guard(false, w.eqp0(v_ins), OOM_EXIT);
-
-    LIns* slots_ins = NULL;
-    uint32 count = 0;
-    for (uint32 i = 0; i < len; i++) {
-        Value& v = stackval(int(i) - int(len));
-        if (!v.isMagic())
-            count++;
-        stobj_set_dslot(v_ins, i, slots_ins, v, get(&v));
-    }
-
-    stack(-int(len), v_ins);
     return ARECORD_CONTINUE;
 }
 

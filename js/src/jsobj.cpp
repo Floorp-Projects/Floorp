@@ -2831,14 +2831,18 @@ JS_DEFINE_TRCINFO_1(js_Object,
          nanojit::ACCSET_STORE_ANY)))
 
 JSObject* FASTCALL
-js_InitializerObject(JSContext* cx, int32 count)
+js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
 {
-    gc::FinalizeKind kind = GuessObjectGCKind(count, false);
-    return NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+    if (!baseobj) {
+        gc::FinalizeKind kind = GuessObjectGCKind(0, false);
+        return NewObjectWithClassProto(cx, &js_ObjectClass, proto, kind);
+    }
+
+    return CopyInitializerObject(cx, baseobj);
 }
 
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_InitializerObject, CONTEXT, INT32, 0,
-                     nanojit::ACCSET_STORE_ANY)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_InitializerObject, CONTEXT, OBJECT, OBJECT,
+                     0, nanojit::ACCSET_STORE_ANY)
 
 JSObject* FASTCALL
 js_String_tn(JSContext* cx, JSObject* proto, JSString* str)

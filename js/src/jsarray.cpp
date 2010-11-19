@@ -115,9 +115,6 @@ using namespace js::gc;
 #define MAXINDEX 4294967295u
 #define MAXSTR   "4294967295"
 
-/* Small arrays are dense, no matter what. */
-#define MIN_SPARSE_INDEX 256
-
 /*
  * Use the limit on number of object slots for sanity and consistency (see the
  * assertion in JSObject::makeDenseArraySlow).
@@ -2985,17 +2982,6 @@ js_NewPreallocatedArray(JSContext* cx, JSObject* proto, int32 len)
 #ifdef JS_TRACER
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewPreallocatedArray, CONTEXT, OBJECT, INT32,
                      0, nanojit::ACCSET_STORE_ANY)
-#endif
-
-JSObject* JS_FASTCALL
-js_InitializerArray(JSContext* cx, int32 count)
-{
-    gc::FinalizeKind kind = GuessObjectGCKind(count, true);
-    return NewArrayWithKind(cx, kind);
-}
-#ifdef JS_TRACER
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_InitializerArray, CONTEXT, INT32, 0,
-                     nanojit::ACCSET_STORE_ANY)
 #endif
 
 JSObject *

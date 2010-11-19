@@ -221,8 +221,6 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc)
         return GET_UINT16(pc);
       case JSOP_LEAVEBLOCKEXPR:
         return GET_UINT16(pc) + 1;
-      case JSOP_NEWARRAY:
-        return GET_UINT16(pc);
       default:
         /* stack: fun, this, [argc arguments] */
         JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
@@ -1012,8 +1010,7 @@ GetStr(SprintStack *ss, uintN i)
 
 /*
  * Gap between stacked strings to allow for insertion of parens and commas
- * when auto-parenthesizing expressions and decompiling array initialisers
- * (see the JSOP_NEWARRAY case in Decompile).
+ * when auto-parenthesizing expressions and decompiling array initialisers.
  */
 #define PAREN_SLOP      (2 + 1)
 
@@ -1103,6 +1100,12 @@ static const char *
 PopStr(SprintStack *ss, JSOp op)
 {
     return PopStrPrec(ss, js_CodeSpec[op].prec);
+}
+
+static inline bool
+IsInitializerOp(unsigned char op)
+{
+    return op == JSOP_NEWINIT || op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT;
 }
 
 typedef struct TableEntry {
@@ -4450,53 +4453,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = SprintPut(&ss->sprinter, "", 0);
                 break;
 
-              case JSOP_NEWARRAY:
-                argc = GET_UINT16(pc);
-                LOCAL_ASSERT(ss->top >= (uintN) argc);
-                if (argc == 0) {
-                    todo = SprintCString(&ss->sprinter, "[]");
-                    break;
-                }
-
-                argv = (char **) cx->malloc(size_t(argc) * sizeof *argv);
-                if (!argv)
-                    return NULL;
-
-                op = JSOP_SETNAME;
-                ok = JS_TRUE;
-                i = argc;
-                while (i > 0)
-                    argv[--i] = JS_strdup(cx, POP_STR());
-
-                todo = SprintCString(&ss->sprinter, "[");
-                if (todo < 0)
-                    break;
-
-                for (i = 0; i < argc; i++) {
-                    if (!argv[i] ||
-                        Sprint(&ss->sprinter, ss_format,
-                               argv[i], (i < argc - 1) ? ", " : "") < 0) {
-                        ok = JS_FALSE;
-                        break;
-                    }
-                }
-
-                for (i = 0; i < argc; i++)
-                    cx->free(argv[i]);
-                cx->free(argv);
-                if (!ok)
-                    return NULL;
-
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_CONTINUE && SprintCString(&ss->sprinter, ", ") < 0)
-                    return NULL;
-                if (SprintCString(&ss->sprinter, "]") < 0)
-                    return NULL;
-                break;
-
               case JSOP_NEWINIT:
               {
-                i = GET_UINT16(pc);
+                i = pc[1];
                 LOCAL_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
                 todo = ss->sprinter.offset;
@@ -4526,6 +4485,23 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
               }
 
+              case JSOP_NEWARRAY:
+              {
+                todo = ss->sprinter.offset;
+                ++ss->inArrayInit;
+                if (SprintCString(&ss->sprinter, "[") < 0)
+                    return NULL;
+                break;
+              }
+
+              case JSOP_NEWOBJECT:
+              {
+                todo = ss->sprinter.offset;
+                if (SprintCString(&ss->sprinter, "{") < 0)
+                    return NULL;
+                break;
+              }
+
               case JSOP_ENDINIT:
               {
                 JSBool inArray;
@@ -4552,7 +4528,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 const char *maybeComma;
 
               case JSOP_INITELEM:
-                isFirst = (ss->opcodes[ss->top - 3] == JSOP_NEWINIT);
+                isFirst = IsInitializerOp(ss->opcodes[ss->top - 3]);
 
                 /* Turn off most parens. */
                 op = JSOP_SETNAME;
@@ -4582,7 +4558,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                    jschar(ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
                 if (!xval)
                     return NULL;
-                isFirst = (ss->opcodes[ss->top - 2] == JSOP_NEWINIT);
+                isFirst = IsInitializerOp(ss->opcodes[ss->top - 2]);
                 rval = POP_STR();
                 lval = POP_STR();
                 /* fall through */
