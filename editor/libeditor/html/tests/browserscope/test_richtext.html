@@ -9,13 +9,13 @@ BrowserScope richtext category tests
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
-  <script type="text/javascript" src="lib/browserscope/currentStatus.js"></script>
+  <script type="text/javascript" src="lib/richtext/currentStatus.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=550569">Mozilla Bug 550569</a>
 <p id="display"></p>
 <div id="content">
-  <iframe src="lib/browserscope/richtext/richtext.html"></iframe>
+  <iframe src="lib/richtext/richtext/richtext.html"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -33,7 +33,7 @@ function sendScore(results, continueParams) {
     if (isKnownFailure(type, command, param)) {
       comp = todo_is;
     }
-    comp(success, "1", "Browserscope category=" + type +
+    comp(success, "1", "Browserscope richtext category=" + type +
          " test=" + command +
          " param=" + param);
   }

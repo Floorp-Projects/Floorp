@@ -51,7 +51,7 @@ function init()
     var canvas = document.getElementById("example");
     gl = wtu.create3DContext(canvas);
     var program = wtu.setupTexturedQuad(gl);
-    gl.clearColor(0,0,0,1);
+    gl.clearColor(0.5,0.5,0.5,1);
     gl.clearDepth(1);
 
     textureLoc = gl.getUniformLocation(program, "tex");
@@ -70,7 +70,7 @@ function init()
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, 0, 0);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
 
     texture = wtu.loadTexture(gl, "resources/bug-32888-texture.png", runTest);
 }
@@ -82,16 +82,18 @@ var idx = 0;
 function runTest()
 {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     // Bind the texture to texture unit 0
     gl.bindTexture(gl.TEXTURE_2D, texture);
     // Point the uniform sampler to texture unit 0
     gl.uniform1i(textureLoc, 0);
     // Draw the triangles
-    wtu.drawQuad(gl, [100, 100, 100, 255]);
+    wtu.drawQuad(gl, [0, 0, 0, 255]);
 
     // Spot check a couple of 2x2 regions in the upper and lower left
     // corners; they should be the rgb values in the texture.
-    color = [255, 255, 255]
+    color = [0, 0, 0];
     debug("Checking lower left corner");
     wtu.checkCanvasRect(gl, 1, gl.canvas.height - 3, 2, 2, color,
                         "shouldBe " + color);

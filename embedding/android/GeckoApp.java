@@ -497,7 +497,7 @@ abstract public class GeckoApp
 
         int statusCode = 8; // UNEXPECTED_ERROR
 
-        String updateDir = "/data/data/org.mozilla." + getAppName() + "/updates/0/";
+        String updateDir = Environment.getExternalStorageDirectory().getPath() + "/downloads/updates/0/";
         File updateFile = new File(updateDir + "update.apk");
 
         if (!updateFile.exists())

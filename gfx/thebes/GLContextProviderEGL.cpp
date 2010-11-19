@@ -863,6 +863,7 @@ public:
         : TextureImage(aTexture, aSize, aWrapMode, aContentType, aIsRGB)
         , mGLContext(aContext)
         , mImpl(aImpl)
+        , mTextureSized(PR_FALSE)
     { }
 
     virtual ~TextureImageEGL()
@@ -882,7 +883,16 @@ public:
             // TextureImageEGL can handle updates to disparate regions
             // aRegion = aRegion;
         } else {
-            mUpdateRect = aRegion.GetBounds();
+            if (mTextureSized) {
+                mUpdateRect = aRegion.GetBounds();
+            } else {
+                // force a TexImage2D instead of TexSubImage2D
+                mUpdateRect.x = 0;
+                mUpdateRect.y = 0;
+                mUpdateRect.width = mSize.width;
+                mUpdateRect.height = mSize.height;
+            }
+
             if (!mUpdateSurface) {
                 NS_ASSERTION(mUpdateRect.x == 0 && mUpdateRect.y == 0,
                              "Initial update has to be full surface!");
@@ -898,10 +908,11 @@ public:
                 }
             }
 
+            // we can only draw a rectangle, not subregions
             aRegion = nsIntRegion(mUpdateRect);
+
             //mUpdateSurface->SetDeviceOffset(gfxPoint(-mUpdateRect.x, -mUpdateRect.y));
             mUpdateContext = new gfxContext(mUpdateSurface);
-            printf_stderr("UpdateRect: %d %d %d %d\n", mUpdateRect.x, mUpdateRect.y, mUpdateRect.width, mUpdateRect.height);
             mUpdateContext->Rectangle(gfxRect(mUpdateRect.x, mUpdateRect.y, mUpdateRect.width, mUpdateRect.height));
             mUpdateContext->Clip();
         }
@@ -927,15 +938,31 @@ public:
 
         mGLContext->MakeCurrent();
         mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-        mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                                0,
-                                LOCAL_GL_RGBA,
-                                mUpdateSurface->Width(),
-                                mUpdateSurface->Height(),
-                                0,
-                                LOCAL_GL_RGBA,
-                                LOCAL_GL_UNSIGNED_BYTE,
-                                mUpdateSurface->Data());
+
+        if (mTextureSized) {
+            mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                                       0,
+                                       mUpdateRect.x,
+                                       mUpdateRect.y,
+                                       mUpdateRect.width,
+                                       mUpdateRect.height,
+                                       LOCAL_GL_RGBA,
+                                       LOCAL_GL_UNSIGNED_BYTE,
+                                       mUpdateSurface->Data());
+        } else {
+            NS_ASSERTION(mUpdateRect.x == 0 && mUpdateRect.y == 0 &&
+                         mUpdateRect.width == mSize.width && mUpdateRect.height == mSize.height,
+                         "Initial update region doesn't cover entire surface!");
+            mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                                    0,
+                                    LOCAL_GL_RGBA,
+                                    mUpdateSurface->Width(),
+                                    mUpdateSurface->Height(),
+                                    0,
+                                    LOCAL_GL_RGBA,
+                                    LOCAL_GL_UNSIGNED_BYTE,
+                                    mUpdateSurface->Data());
+        }
 
         return PR_TRUE; // texture bound
     }
@@ -960,6 +987,7 @@ private:
     nsRefPtr<gfxImageSurface> mUpdateSurface;
 
     nsIntRect mUpdateRect;
+    PRPackedBool mTextureSized;
 };
 
 already_AddRefed<TextureImage>

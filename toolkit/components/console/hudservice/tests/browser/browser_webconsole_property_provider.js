@@ -56,7 +56,7 @@ function testPropertyProvider() {
 
   hudId = HUDService.displaysIndex()[0];
 
-  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var HUD = HUDService.hudReferences[hudId];
   var jsterm = HUD.jsterm;
   var context = jsterm.sandbox.window;
   var completion;

@@ -100,11 +100,10 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_595934_message_categories.js \
 	browser_webconsole_bug_601352_scroll.js \
 	browser_webconsole_bug_592442_closing_brackets.js \
+	browser_webconsole_bug_593003_iframe_wrong_hud.js \
+	browser_webconsole_bug_613013_console_api_iframe.js \
 	head.js \
 	$(NULL)
-
-# compartment-disabled
-#	browser_webconsole_bug_593003_iframe_wrong_hud.js \
 
 _BROWSER_TEST_PAGES = \
 	test-console.html \
@@ -135,6 +134,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-595934-svg.xhtml \
 	test-bug-597136-external-script-errors.html \
 	test-bug-597136-external-script-errors.js \
+	test-bug-613013-console-api-iframe.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

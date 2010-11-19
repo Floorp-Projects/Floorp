@@ -4627,11 +4627,15 @@ nsNavHistoryResult::requestRefresh(nsNavHistoryContainerResultNode* aContainer)
 NS_IMETHODIMP
 nsNavHistoryResult::OnBeginUpdateBatch()
 {
-  mBatchInProgress = PR_TRUE;
-  ENUMERATE_HISTORY_OBSERVERS(OnBeginUpdateBatch());
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnBeginUpdateBatch());
+  // Since we could be observing both history and bookmarks, it's possible both
+  // notify the batch.  We can safely ignore nested calls.
+  if (!mBatchInProgress) {
+    mBatchInProgress = PR_TRUE;
+    ENUMERATE_HISTORY_OBSERVERS(OnBeginUpdateBatch());
+    ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnBeginUpdateBatch());
 
-  NOTIFY_RESULT_OBSERVERS(this, Batching(PR_TRUE));
+    NOTIFY_RESULT_OBSERVERS(this, Batching(PR_TRUE));
+  }
 
   return NS_OK;
 }
@@ -4640,6 +4644,11 @@ nsNavHistoryResult::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavHistoryResult::OnEndUpdateBatch()
 {
+  // Since we could be observing both history and bookmarks, it's possible both
+  // notify the batch.  We can safely ignore nested calls.
+  // Notice it's possible we are notified OnEndUpdateBatch more times than
+  // onBeginUpdateBatch, since the result could be created in the middle of
+  // nested batches.
   if (mBatchInProgress) {
     ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
     ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
@@ -4651,9 +4660,7 @@ nsNavHistoryResult::OnEndUpdateBatch()
     NOTIFY_REFRESH_PARTICIPANTS();
     NOTIFY_RESULT_OBSERVERS(this, Batching(PR_FALSE));
   }
-  else {
-    NS_WARNING("EndUpdateBatch without a begin");
-  }
+
   return NS_OK;
 }
 

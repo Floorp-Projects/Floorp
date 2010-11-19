@@ -210,9 +210,9 @@ VectorImage::VectorImage(imgStatusTracker* aStatusTracker) :
   Image(aStatusTracker), // invoke superclass's constructor
   mRestrictedRegion(0, 0, 0, 0),
   mLastRenderedSize(0, 0),
-  mAnimationMode(kNormalAnimMode),
   mIsInitialized(PR_FALSE),
   mIsFullyLoaded(PR_FALSE),
+  mIsDrawing(PR_FALSE),
   mHaveAnimations(PR_FALSE),
   mHaveRestrictedRegion(PR_FALSE)
 {
@@ -275,14 +275,9 @@ VectorImage::StartAnimation()
   if (mError)
     return NS_ERROR_FAILURE;
 
-  if (mAnimationMode == kDontAnimMode ||
-      !mIsFullyLoaded || !mHaveAnimations) {
-    // Animation disabled, or helper-document not finished or lacks animations.
-    return NS_OK;
-  }
+  NS_ABORT_IF_FALSE(ShouldAnimate(), "Should not animate!");
 
   mSVGDocumentWrapper->StartAnimation();
-
   return NS_OK;
 }
 
@@ -292,13 +287,17 @@ VectorImage::StopAnimation()
   if (mError)
     return NS_ERROR_FAILURE;
 
-  if (!mIsFullyLoaded || !mHaveAnimations) {
-    return NS_OK;
-  }
+  NS_ABORT_IF_FALSE(mIsFullyLoaded && mHaveAnimations,
+                    "Should not have been animating!");
 
   mSVGDocumentWrapper->StopAnimation();
-
   return NS_OK;
+}
+
+PRBool
+VectorImage::ShouldAnimate()
+{
+  return Image::ShouldAnimate() && mIsFullyLoaded && mHaveAnimations;
 }
 
 //------------------------------------------------------------------------------
@@ -516,10 +515,15 @@ VectorImage::Draw(gfxContext* aContext,
                   const nsIntSize& aViewportSize,
                   PRUint32 aFlags)
 {
+  NS_ENSURE_ARG_POINTER(aContext);
   if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
 
-  NS_ENSURE_ARG_POINTER(aContext);
+  if (mIsDrawing) {
+    NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
+    return NS_ERROR_FAILURE;
+  }
+  mIsDrawing = PR_TRUE;
 
   if (aViewportSize != mLastRenderedSize) {
     mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
@@ -554,6 +558,7 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter);
 
+  mIsDrawing = PR_FALSE;
   return NS_OK;
 }
 
@@ -589,46 +594,6 @@ NS_IMETHODIMP
 VectorImage::UnlockImage()
 {
   // This method is for image-discarding, which only applies to RasterImages.
-  return NS_OK;
-}
-
-//******************************************************************************
-/* attribute unsigned short animationMode; */
-NS_IMETHODIMP
-VectorImage::GetAnimationMode(PRUint16* aAnimationMode)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(aAnimationMode);
-  
-  *aAnimationMode = mAnimationMode;
-  return NS_OK;
-}
-
-//******************************************************************************
-/* attribute unsigned short animationMode; */
-NS_IMETHODIMP
-VectorImage::SetAnimationMode(PRUint16 aAnimationMode)
-{
-  // NOTE: This is just a simpler form of RasterImage::SetAnimationMode.
-  // (Simpler because SVG animations don't have a concept of "loop once" mode)
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ASSERTION(aAnimationMode == kNormalAnimMode ||
-               aAnimationMode == kDontAnimMode ||
-               aAnimationMode == kLoopOnceAnimMode,
-               "An unrecognized Animation Mode is being set!");
-
-  mAnimationMode = aAnimationMode;
-
-  if (mAnimationMode == kDontAnimMode) {
-    StopAnimation();
-  } else { // kNormalAnimMode or kLoopOnceAnimMode (treated the same here)
-    StartAnimation();
-  }
-
   return NS_OK;
 }
 
@@ -695,12 +660,6 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
 
   mIsFullyLoaded = PR_TRUE;
   mHaveAnimations = mSVGDocumentWrapper->IsAnimated();
-
-  if (mHaveAnimations && mAnimationMode == kDontAnimMode) {
-    // We're not supposed to be animating -- stop any animation before our
-    // SVG document's timeline gets a chance to progress.
-    mSVGDocumentWrapper->StopAnimation();
-  }
 
 #ifdef MOZ_ENABLE_LIBXUL
   // Start listening to our image for rendering updates

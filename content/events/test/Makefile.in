@@ -110,6 +110,8 @@ _CHROME_FILES = \
 		test_bug415498.xul \
 		bug415498-doc1.html \
 		bug415498-doc2.html \
+		bug602962.xul \
+		test_bug602962.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

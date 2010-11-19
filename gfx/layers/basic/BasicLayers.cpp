@@ -126,6 +126,18 @@ public:
    * LayerManager ceases to exist.
    */
   virtual void ClearCachedResources() {}
+
+  /**
+   * This variable is used by layer manager in order to
+   * MarkLeafLayersCoveredByOpaque() before painting.
+   * We keep it here for now. Once we need to cull completely covered
+   * non-Basic layers, mCoveredByOpaque should be moved to Layer.
+   */
+  void SetCoveredByOpaque(PRBool aCovered) { mCoveredByOpaque = aCovered; }
+  PRBool IsCoveredByOpaque() const { return mCoveredByOpaque; }
+
+protected:
+  PRPackedBool mCoveredByOpaque;
 };
 
 static BasicImplData*
@@ -226,6 +238,9 @@ ContainerInsertAfter(Layer* aChild, Layer* aAfter, Container* aContainer)
   NS_ADDREF(aChild);
 
   aChild->SetParent(aContainer);
+  if (aAfter == aContainer->mLastChild) {
+    aContainer->mLastChild = aChild;
+  }
   if (!aAfter) {
     aChild->SetNextSibling(aContainer->mFirstChild);
     if (aContainer->mFirstChild) {
@@ -262,6 +277,8 @@ ContainerRemoveChild(Layer* aChild, Container* aContainer)
   }
   if (next) {
     next->SetPrevSibling(prev);
+  } else {
+    aContainer->mLastChild = prev;
   }
 
   aChild->SetNextSibling(nsnull);
@@ -924,6 +941,14 @@ ToOutsideIntRect(const gfxRect &aRect)
   return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
 }
 
+static nsIntRect
+ToInsideIntRect(const gfxRect& aRect)
+{
+  gfxRect r = aRect;
+  r.RoundIn();
+  return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
+}
+
 /**
  * Returns false if there is at most one leaf layer overlapping aBounds
  * and that layer is opaque.
@@ -1085,6 +1110,81 @@ BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   mTarget = aTarget;
 }
 
+static void
+TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
+                 nsIntRect (*aRoundMethod)(const gfxRect&))
+{
+  gfxRect gr = gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  gr = aMatrix.TransformBounds(gr);
+  aRect = (*aRoundMethod)(gr);
+}
+
+// This implementation assumes that GetEffectiveTransform transforms
+// all layers to the same coordinate system. It can't be used as is
+// by accelerated layers because of intermediate surfaces.
+static void
+MarkLeafLayersCoveredByOpaque(Layer* aLayer, const nsIntRect& aClipRect,
+                              nsIntRegion& aRegion)
+{
+  Layer* child = aLayer->GetLastChild();
+  BasicImplData* data = ToData(aLayer);
+  data->SetCoveredByOpaque(PR_FALSE);
+
+  const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
+  nsIntRect newClipRect(aClipRect);
+
+  // Allow aLayer or aLayer's descendants to cover underlying layers
+  // only if it's opaque. GetEffectiveOpacity() could be used instead,
+  // but it does extra passes from descendant to ancestor.
+  if (aLayer->GetOpacity() != 1.0f) {
+    newClipRect.SetRect(0, 0, 0, 0);
+  }
+
+  if (clipRect) {
+    nsIntRect cr = *clipRect;
+    gfxMatrix tr;
+    if (aLayer->GetEffectiveTransform().Is2D(&tr)) {
+      TransformIntRect(cr, tr, ToInsideIntRect);
+      newClipRect.IntersectRect(newClipRect, cr);
+    } else {
+      newClipRect.SetRect(0, 0, 0, 0);
+    }
+  }
+
+  if (!child) {
+    gfxMatrix transform;
+    if (!aLayer->GetEffectiveTransform().Is2D(&transform)) {
+      return;
+    }
+
+    nsIntRegion region = aLayer->GetEffectiveVisibleRegion();
+    nsIntRect r = region.GetBounds();
+    TransformIntRect(r, transform, ToOutsideIntRect);
+    data->SetCoveredByOpaque(aRegion.Contains(r));
+
+    // Allow aLayer to cover underlying layers only if aLayer's
+    // content is opaque
+    if (!(aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
+      return;
+    }
+
+    nsIntRegionRectIterator it(region);
+    while (const nsIntRect* sr = it.Next()) {
+      r = *sr;
+      TransformIntRect(r, transform, ToInsideIntRect);
+
+      r.IntersectRect(r, newClipRect);
+      if (!r.IsEmpty()) {
+        aRegion.Or(aRegion, r);
+      }
+    }
+  } else {
+    for (; child; child = child->GetPrevSibling()) {
+      MarkLeafLayersCoveredByOpaque(child, newClipRect, aRegion);
+    }
+  }
+}
+
 void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
@@ -1120,6 +1220,11 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     mSnapEffectiveTransforms =
       !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING);
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix::From2D(mTarget->CurrentMatrix()));
+
+    nsIntRegion region;
+    MarkLeafLayersCoveredByOpaque(mRoot,
+                                  mRoot->GetEffectiveVisibleRegion().GetBounds(),
+                                  region);
     PaintLayer(mRoot, aCallback, aCallbackData);
 
     if (useDoubleBuffering) {
@@ -1197,7 +1302,14 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
   /* Only paint ourself, or our children - This optimization relies on this! */
   Layer* child = aLayer->GetFirstChild();
   if (!child) {
-    ToData(aLayer)->Paint(mTarget, aCallback, aCallbackData);
+    BasicImplData* data = ToData(aLayer);
+#ifdef MOZ_LAYERS_HAVE_LOG
+    MOZ_LAYERS_LOG(("%s (0x%p) is covered: %i\n", __FUNCTION__,
+                   (void*)aLayer, data->IsCoveredByOpaque()));
+#endif
+    if (!data->IsCoveredByOpaque()) {
+      data->Paint(mTarget, aCallback, aCallbackData);
+    }
   } else {
     for (; child; child = child->GetNextSibling()) {
       PaintLayer(child, aCallback, aCallbackData);

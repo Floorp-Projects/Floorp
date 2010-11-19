@@ -1802,7 +1802,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case XMP:
                         case IFRAME:
                         case SELECT:
-                            if (mode == FRAMESET_OK) {
+                            if (mode == FRAMESET_OK
+                                    && !(group == INPUT && Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+                                            "hidden",
+                                            attributes.getValue(AttributeName.TYPE)))) {
                                 framesetOk = false;
                                 mode = IN_BODY;
                             }

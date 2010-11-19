@@ -166,33 +166,44 @@ html|*.urlbar-input {
 
 /* over-link in location bar */
 
-.urlbar-over-link-layer[overlinkstate="fade-in"],
-.urlbar-textbox-container:not([overlinkstate]) {
-  -moz-transition-property: color;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
-}
-
 .urlbar-textbox-container[overlinkstate="fade-in"],
-.urlbar-over-link-layer:not([overlinkstate]) {
+.urlbar-over-link-layer[overlinkstate="fade-out"] {
   -moz-transition-property: color;
   -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: linear;
   color: transparent;
 }
 
-.urlbar-over-link-box[overlinkstate="fade-in"],
-.urlbar-textbox-container-children:not([overlinkstate]) {
+.urlbar-over-link-layer[overlinkstate="fade-in"],
+.urlbar-textbox-container[overlinkstate="fade-out"] {
+  -moz-transition-property: color;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
+}
+
+.urlbar-over-link-box[overlinkstate="fade-in"] {
   -moz-transition-property: opacity;
   -moz-transition-duration: 150ms;
   opacity: 1;
 }
 
-.urlbar-textbox-container-children[overlinkstate="fade-in"],
-.urlbar-over-link-box:not([overlinkstate]) {
+.urlbar-over-link-box[overlinkstate="fade-out"] {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
+  opacity: 0;
+}
+
+.urlbar-textbox-container-children[overlinkstate="fade-in"] {
   -moz-transition-property: opacity;
   -moz-transition-duration: 150ms;
   opacity: 0;
+}
+
+.urlbar-textbox-container-children[overlinkstate="fade-out"] {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
+  opacity: 1;
 }
 
 .urlbar-textbox-container[overlinkstate="showing"] {
@@ -204,6 +215,14 @@ html|*.urlbar-input {
 }
 
 .urlbar-textbox-container-children[overlinkstate="showing"] {
+  opacity: 0;
+}
+
+.urlbar-over-link-layer:not([overlinkstate]) {
+  color: transparent;
+}
+
+.urlbar-over-link-box:not([overlinkstate]) {
   opacity: 0;
 }
 

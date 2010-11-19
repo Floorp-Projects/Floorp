@@ -190,10 +190,10 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
     return;
   }
 
-  /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
+  /* If either the 'rx' or the 'ry' attribute isn't set, then we
      have to set it to the value of the other. */
-  PRBool hasRx = HasAttr(kNameSpaceID_None, nsGkAtoms::rx);
-  PRBool hasRy = HasAttr(kNameSpaceID_None, nsGkAtoms::ry);
+  PRBool hasRx = mLengthAttributes[RX].IsAnimValSet();
+  PRBool hasRy = mLengthAttributes[RY].IsAnimValSet();
   if (hasRx && !hasRy)
     ry = rx;
   else if (hasRy && !hasRx)

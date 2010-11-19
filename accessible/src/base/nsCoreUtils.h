@@ -41,6 +41,7 @@
 
 #include "nsAccessibilityAtoms.h"
 
+#include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsIBoxObject.h"
@@ -305,17 +306,6 @@ public:
                              nsAString& aLanguage);
 
   /**
-   * Return the array of elements the given node is referred to by its
-   * IDRefs attribute.
-   *
-   * @param aContent     [in] the given node
-   * @param aAttr        [in] IDRefs attribute on the given node
-   * @param aRefElements [out] result array of elements
-   */
-  static void GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
-                                      nsIArray **aRefElements);
-
-  /**
    * Return the array of elements having IDRefs that points to the given node.
    *
    * @param  aRootContent  [in] root element to search inside
@@ -513,6 +503,40 @@ public:
 
 private:
   nsTArray<nsString> mNames;
+};
+
+/**
+ * Used to iterate through IDs or elements pointed by IDRefs attribute. Note,
+ * any method used to iterate through IDs or elements moves iterator to next
+ * position.
+ */
+class IDRefsIterator
+{
+public:
+  IDRefsIterator(nsIContent* aContent, nsIAtom* aIDRefsAttr);
+
+  /**
+   * Return next ID.
+   */
+  const nsDependentSubstring NextID();
+
+  /**
+   * Return next element.
+   */
+  nsIContent* NextElem();
+
+  /**
+   * Return the element with the given ID.
+   */
+  nsIContent* GetElem(const nsDependentSubstring& aID);
+
+private:
+  nsString mIDs;
+  nsAString::index_type mCurrIdx;
+
+  nsIDocument* mDocument;
+  nsCOMPtr<nsIDOMDocumentXBL> mXBLDocument;
+  nsCOMPtr<nsIDOMElement> mBindingParent;
 };
 
 #endif
