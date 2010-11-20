@@ -36,8 +36,9 @@
 
 #include <limits.h>
 #include <mach-o/loader.h>
-#include <openssl/md5.h>
 #include <openssl/sha.h>
+
+#include "common/md5.h"
 
 namespace MacFileUtilities {
 
@@ -110,7 +111,7 @@ class MachoID {
   uint32_t crc_;
 
   // The MD5 context
-  MD5_CTX md5_context_;
+  MD5Context md5_context_;
 
   // The SHA1 context
   SHA_CTX sha1_context_;
