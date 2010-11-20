@@ -145,6 +145,8 @@
 #include "nsISelection.h"
 #include "nsIPrompt.h"
 #include "nsIPromptService.h"
+#include "nsIPromptFactory.h"
+#include "nsIWritablePropertyBag2.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -4477,9 +4479,18 @@ nsGlobalWindow::Alert(const nsAString& aString)
   nsContentUtils::StripNullChars(*str, final);
 
   nsresult rv;
-  nsCOMPtr<nsIPromptService> promptSvc =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  nsCOMPtr<nsIPromptFactory> promptFac =
+    do_GetService("@mozilla.org/prompter;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrompt> prompt;
+  rv = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
+                            reinterpret_cast<void**>(&prompt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
+  if (promptBag)
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), PR_TRUE);
 
   if (shouldEnableDisableDialog) {
     PRBool disallowDialog = PR_FALSE;
@@ -4487,12 +4498,12 @@ nsGlobalWindow::Alert(const nsAString& aString)
     nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                        "ScriptDialogLabel", label);
 
-    rv = promptSvc->AlertCheck(this, title.get(), final.get(), label.get(),
-                               &disallowDialog);
+    rv = prompt->AlertCheck(title.get(), final.get(), label.get(),
+                            &disallowDialog);
     if (disallowDialog)
       PreventFurtherDialogs();
   } else {
-    rv = promptSvc->Alert(this, title.get(), final.get());
+    rv = prompt->Alert(title.get(), final.get());
   }
 
   return rv;
@@ -4530,9 +4541,18 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   nsContentUtils::StripNullChars(aString, final);
 
   nsresult rv;
-  nsCOMPtr<nsIPromptService> promptSvc =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  nsCOMPtr<nsIPromptFactory> promptFac =
+    do_GetService("@mozilla.org/prompter;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrompt> prompt;
+  rv = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
+                            reinterpret_cast<void**>(&prompt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
+  if (promptBag)
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), PR_TRUE);
 
   if (shouldEnableDisableDialog) {
     PRBool disallowDialog = PR_FALSE;
@@ -4540,12 +4560,12 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
     nsContentUtils::GetLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                        "ScriptDialogLabel", label);
 
-    rv = promptSvc->ConfirmCheck(this, title.get(), final.get(), label.get(),
-                                 &disallowDialog, aReturn);
+    rv = prompt->ConfirmCheck(title.get(), final.get(), label.get(),
+                              &disallowDialog, aReturn);
     if (disallowDialog)
       PreventFurtherDialogs();
   } else {
-    rv = promptSvc->Confirm(this, title.get(), final.get(), aReturn);
+    rv = prompt->Confirm(title.get(), final.get(), aReturn);
   }
 
   return rv;
@@ -4583,9 +4603,18 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   nsContentUtils::StripNullChars(aInitial, fixedInitial);
 
   nsresult rv;
-  nsCOMPtr<nsIPromptService> promptSvc =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  nsCOMPtr<nsIPromptFactory> promptFac =
+    do_GetService("@mozilla.org/prompter;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrompt> prompt;
+  rv = promptFac->GetPrompt(this, NS_GET_IID(nsIPrompt),
+                            reinterpret_cast<void**>(&prompt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
+  if (promptBag)
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), PR_TRUE);
 
   // Pass in the default value, if any.
   PRUnichar *inoutValue = ToNewUnicode(fixedInitial);
@@ -4598,8 +4627,8 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   }
 
   PRBool ok;
-  rv = promptSvc->Prompt(this, title.get(), fixedMessage.get(),
-                         &inoutValue, label.get(), &disallowDialog, &ok);
+  rv = prompt->Prompt(title.get(), fixedMessage.get(),
+                      &inoutValue, label.get(), &disallowDialog, &ok);
 
   if (disallowDialog) {
     PreventFurtherDialogs();
