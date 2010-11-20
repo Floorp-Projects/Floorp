@@ -463,8 +463,8 @@ function check_JSON_backup() {
 /**
  * Waits for a frecency update then calls back.
  *
- * @param aUrl
- *        Address of the page we are waiting frecency for.
+ * @param aURI
+ *        URI or spec of the page we are waiting frecency for.
  * @param aValidator
  *        Validator function for the current frecency. If it returns true we
  *        have the expected frecency, otherwise we wait for next update.
@@ -478,10 +478,11 @@ function check_JSON_backup() {
  * @note since frecency is something that can be changed by a bunch of stuff
  *       like adding and removing visits, bookmarks we use a polling strategy.
  */
-function waitForFrecency(aUrl, aValidator, aCallback, aCbScope, aCbArguments) {
+function waitForFrecency(aURI, aValidator, aCallback, aCbScope, aCbArguments) {
   Services.obs.addObserver(function (aSubject, aTopic, aData) {
-    let frecency = frecencyForUrl(aUrl);
+    let frecency = frecencyForUrl(aURI);
     if (!aValidator(frecency)) {
+      print("Has to wait for frecency...");
       return;
     }
     Services.obs.removeObserver(arguments.callee, aTopic);
@@ -492,16 +493,17 @@ function waitForFrecency(aUrl, aValidator, aCallback, aCbScope, aCbArguments) {
 /**
  * Returns the frecency of a url.
  *
- * @param  aURL
- *         the URL to get frecency for.
+ * @param  aURI
+ *         The URI or spec to get frecency for.
  * @return the frecency value.
  */
-function frecencyForUrl(aUrl)
+function frecencyForUrl(aURI)
 {
+  let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
     "SELECT frecency FROM moz_places WHERE url = ?1"
   );
-  stmt.bindUTF8StringParameter(0, aUrl);
+  stmt.bindUTF8StringParameter(0, url);
   if (!stmt.executeStep())
     throw "No result for frecency.";
   let frecency = stmt.getInt32(0);
@@ -530,3 +532,35 @@ function is_time_ordered(before, after) {
   return after - before > -skew;
 }
 
+/**
+ * Waits for all pending async statements on the default connection, before
+ * proceeding with aCallback.
+ *
+ * @param aCallback
+ *        Function to be called when done.
+ * @param aScope
+ *        Scope for the callback.
+ * @param aArguments
+ *        Arguments array for the callback.
+ *
+ * @note The result is achieved by asynchronously executing a query requiring
+ *       a write lock.  Since all statements on the same connection are
+ *       serialized, the end of this write operation means that all writes are
+ *       complete.  Note that WAL makes so that writers don't block readers, but
+ *       this is a problem only across different connections.
+ */
+function waitForAsyncUpdates(aCallback, aScope, aArguments)
+{
+  let scope = aScope || this;
+  let argument = aArguments || [];
+  let db = DBConn();
+  db.createAsyncStatement("BEGIN EXCLUSIVE").executeAsync();
+  db.createAsyncStatement("COMMIT").executeAsync({
+    handleResult: function() {},
+    handleError: function() {},
+    handleCompletion: function(aReason)
+    {
+      aCallback.apply(scope, arguments);
+    }
+  });
+}

@@ -158,6 +158,8 @@
   ")" \
 )
 
+// Note: this should be kept up-to-date with the definition in
+//       nsPlacesAutoComplete.js.
 #define CREATE_MOZ_OPENPAGES_TEMP NS_LITERAL_CSTRING( \
   "CREATE TEMP TABLE moz_openpages_temp (" \
     "  url TEXT PRIMARY KEY" \

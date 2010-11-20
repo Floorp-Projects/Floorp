@@ -45,7 +45,8 @@ const TEST_URL_BASES = [
 
 var gPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
                          getService(Ci.nsIPrivateBrowsingService);
-
+var gController = Cc["@mozilla.org/autocomplete/controller;1"].
+                  getService(Ci.nsIAutoCompleteController);
 
 var gTabWaitCount = 0;
 var gTabCounter = 0;
@@ -81,8 +82,7 @@ var gTestSteps = [
     gPrivateBrowsing.privateBrowsingEnabled = true;
 
     executeSoon(function() {
-      ensure_opentabs_match_db();
-      nextStep();
+      ensure_opentabs_match_db(nextStep);
     });
   },
   function() {
@@ -98,8 +98,7 @@ var gTestSteps = [
         ps.clearUserPref("browser.tabs.warnOnClose");
       } catch (ex) {}
 
-      ensure_opentabs_match_db();
-      nextStep()
+      ensure_opentabs_match_db(nextStep);
     });
   },
   function() {
@@ -111,8 +110,7 @@ var gTestSteps = [
       executeSoon(function () {
         tab.linkedBrowser.addEventListener("load", function (e) {
           tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-            ensure_opentabs_match_db();
-            nextStep()
+            ensure_opentabs_match_db(nextStep);
         }, true);
         tab.linkedBrowser.contentDocument.querySelector("iframe").src = "http://test2.example.org/";
       });
@@ -123,8 +121,7 @@ var gTestSteps = [
     info("Running step 7 - remove tab immediately");
     let tab = gBrowser.addTab("about:logo");
     gBrowser.removeTab(tab);
-    ensure_opentabs_match_db();
-    nextStep();
+    ensure_opentabs_match_db(nextStep);
   },
   function() {
     info("Running step 8 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
@@ -133,10 +130,10 @@ var gTestSteps = [
     tab.linkedBrowser.addEventListener("load", function () {
       tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
       gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
-      ensure_opentabs_match_db();
-      gBrowser.removeTab(tabToKeep);
-      ensure_opentabs_match_db();
-      nextStep();
+      ensure_opentabs_match_db(function () {
+        gBrowser.removeTab(tabToKeep);
+        ensure_opentabs_match_db(nextStep);
+      });
     }, true);
     tab.linkedBrowser.loadURI('about:robots');
   },
@@ -152,24 +149,27 @@ function test() {
 function loadTab(tab, url) {
   // Because adding visits is async, we will not be notified immediately.
   let visited = false;
+  let loaded = false;
+
+  function maybeCheckResults() {
+    if (visited && loaded && --gTabWaitCount == 0) {
+      ensure_opentabs_match_db(nextStep);
+    }
+  }
+
+  tab.linkedBrowser.addEventListener("load", function () {
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+    loaded = true;
+    maybeCheckResults();
+  }, true);
 
   Services.obs.addObserver(
     function (aSubject, aTopic, aData) {
       if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
         return;
       Services.obs.removeObserver(arguments.callee, aTopic);
-      if (--gTabWaitCount > 0)
-        return;
-      is(gTabWaitCount, 0,
-         "sanity check, gTabWaitCount should not be decremented below 0");
-
-      try {
-        ensure_opentabs_match_db();
-      } catch (e) {
-        ok(false, "exception from ensure_openpages_match_db: " + e);
-      }
-
-      executeSoon(nextStep);
+      visited = true;
+      maybeCheckResults();
     },
     "uri-visit-saved",
     false
@@ -195,7 +195,7 @@ function nextStep() {
   stepFunc();
 }
 
-function ensure_opentabs_match_db() {
+function ensure_opentabs_match_db(aCallback) {
   var tabs = {};
 
   var winEnum = Services.wm.getEnumerator("navigator:browser");
@@ -217,42 +217,7 @@ function ensure_opentabs_match_db() {
     }
   }
 
-  var db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-
-  try {
-    var stmt = db.createStatement(
-                          "SELECT t.url, open_count, p.id " +
-                          "FROM moz_openpages_temp t " +
-                          "LEFT JOIN moz_places p ON p.url = t.url ");
-  } catch (e) {
-    ok(false, "error creating db statement: " + e);
-    return;
-  }
-
-  var dbtabs = [];
-  try {
-    while (stmt.executeStep()) {
-      ok(stmt.row.url in tabs,
-         "url is in db, should be in tab: " + stmt.row.url);
-      is(tabs[stmt.row.url], stmt.row.open_count,
-         "db count (" + stmt.row.open_count + ") " +
-         "should match actual open tab count " +
-         "(" + tabs[stmt.row.url] + "): " + stmt.row.url);
-      dbtabs.push(stmt.row.url);
-    }
-  } finally {
-    stmt.finalize();
-  }
-
-  for (let url in tabs) {
-    ok(dbtabs.indexOf(url) > -1,
-       "tab is open (" + tabs[url] + " times) and should recorded in db: " + url);
-  }
-  dbtabs.forEach(function (url) {
-    ok(url in tabs,
-       "db-recorded tab should actually exist: " + url);
-  });
+  checkAutocompleteResults(tabs, aCallback);
 }
 
 /**
@@ -268,7 +233,52 @@ function waitForClearHistory(aCallback) {
   };
   Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
 
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
-  hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+  PlacesUtils.bhistory.removeAllPages();
+}
+
+function checkAutocompleteResults(aExpected, aCallback)
+{
+  gController.input = {
+    timeout: 10,
+    textValue: "",
+    searches: ["history"],
+    searchParam: "enable-actions",
+    popupOpen: false,
+    minResultsForPopup: 0,
+    invalidate: function() {},
+    disableAutoComplete: false,
+    completeDefaultIndex: false,
+    get popup() { return this; },
+    onSearchBegin: function() {},
+    onSearchComplete:  function ()
+    {
+      info("Found " + gController.matchCount + " matches.");
+      // Check to see the expected uris and titles match up (in any order)
+      for (let i = 0; i < gController.matchCount; i++) {
+        let uri = gController.getValueAt(i).replace(/^moz-action:[^,]+,/i, "");
+
+        info("Search for '" + uri + "' in open tabs.");
+        ok(uri in aExpected, "Registered open page found in autocomplete.");
+        // Remove the found entry from expected results.
+        delete aExpected[uri];
+      }
+
+      // Make sure there is no reported open page that is not open.
+      for (let entry in aExpected) {
+        ok(false, "'" + entry + "' not found in autocomplete.");
+      }
+
+      executeSoon(aCallback);
+    },
+    setSelectedIndex: function() {},
+    get searchCount() { return this.searches.length; },
+    getSearchAt: function(aIndex) this.searches[aIndex],
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIAutoCompleteInput,
+      Ci.nsIAutoCompletePopup,
+    ])
+  };
+
+  info("Searching open pages.");
+  gController.startSearch(Services.prefs.getCharPref("browser.urlbar.restrict.openpage"));
 }
