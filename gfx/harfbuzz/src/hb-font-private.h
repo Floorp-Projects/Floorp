@@ -24,31 +24,74 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_OT_TAG_H
-#define HB_OT_TAG_H
+#ifndef HB_FONT_PRIVATE_H
+#define HB_FONT_PRIVATE_H
 
-#include "hb-common.h"
-#include "hb-language.h"
+#include "hb-private.h"
+
+#include "hb-font.h"
 
 HB_BEGIN_DECLS
 
 
-#define HB_OT_TAG_DEFAULT_SCRIPT	HB_TAG ('D', 'F', 'L', 'T')
-#define HB_OT_TAG_DEFAULT_LANGUAGE	HB_TAG ('d', 'f', 'l', 't')
+/*
+ * hb_font_funcs_t
+ */
 
-const hb_tag_t *
-hb_ot_tags_from_script (hb_script_t script);
+struct _hb_font_funcs_t {
+  hb_reference_count_t ref_count;
 
-hb_script_t
-hb_ot_tag_to_script (hb_tag_t tag);
+  hb_bool_t immutable;
 
-hb_tag_t
-hb_ot_tag_from_language (hb_language_t language);
+  struct {
+    hb_font_get_glyph_func_t		get_glyph;
+    hb_font_get_glyph_advance_func_t	get_glyph_advance;
+    hb_font_get_glyph_extents_func_t	get_glyph_extents;
+    hb_font_get_contour_point_func_t	get_contour_point;
+    hb_font_get_kerning_func_t		get_kerning;
+  } v;
+};
 
-hb_language_t
-hb_ot_tag_to_language (hb_tag_t tag);
+extern HB_INTERNAL hb_font_funcs_t _hb_font_funcs_nil;
+
+
+/*
+ * hb_face_t
+ */
+
+struct _hb_face_t {
+  hb_reference_count_t ref_count;
+
+  hb_get_table_func_t  get_table;
+  hb_destroy_func_t    destroy;
+  void                *user_data;
+
+  hb_blob_t *head_blob;
+  const struct head *head_table;
+
+  struct hb_ot_layout_t *ot_layout;
+};
+
+
+/*
+ * hb_font_t
+ */
+
+struct _hb_font_t {
+  hb_reference_count_t ref_count;
+
+  unsigned int x_scale;
+  unsigned int y_scale;
+
+  unsigned int x_ppem;
+  unsigned int y_ppem;
+
+  hb_font_funcs_t   *klass;
+  hb_destroy_func_t  destroy;
+  void              *user_data;
+};
 
 
 HB_END_DECLS
 
-#endif /* HB_OT_TAG_H */
+#endif /* HB_FONT_PRIVATE_H */

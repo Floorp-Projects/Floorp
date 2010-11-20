@@ -33,6 +33,7 @@
 
 HB_BEGIN_DECLS
 
+
 struct _hb_blob_t {
   hb_reference_count_t ref_count;
 
@@ -51,6 +52,7 @@ struct _hb_blob_t {
 };
 
 extern HB_INTERNAL hb_blob_t _hb_blob_nil;
+
 
 HB_END_DECLS
 

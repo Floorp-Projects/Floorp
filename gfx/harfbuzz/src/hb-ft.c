@@ -29,9 +29,12 @@
 
 #include "hb-ft.h"
 
-#include "hb-font-private.hh"
+#include "hb-font-private.h"
 
 #include FT_TRUETYPE_TABLES_H
+
+HB_BEGIN_DECLS
+
 
 static hb_codepoint_t
 hb_ft_get_glyph (hb_font_t *font HB_UNUSED,
@@ -51,6 +54,48 @@ hb_ft_get_glyph (hb_font_t *font HB_UNUSED,
 #endif
 
   return FT_Get_Char_Index (ft_face, unicode);
+}
+
+static void
+hb_ft_get_glyph_advance (hb_font_t *font HB_UNUSED,
+			 hb_face_t *face HB_UNUSED,
+			 const void *user_data,
+			 hb_codepoint_t glyph,
+			 hb_position_t *x_advance,
+			 hb_position_t *y_advance)
+{
+  FT_Face ft_face = (FT_Face) user_data;
+  int load_flags = FT_LOAD_DEFAULT;
+
+  /* TODO: load_flags, embolden, etc */
+
+  if (likely (!FT_Load_Glyph (ft_face, glyph, load_flags)))
+  {
+    *x_advance = ft_face->glyph->advance.x;
+    *y_advance = ft_face->glyph->advance.y;
+  }
+}
+
+static void
+hb_ft_get_glyph_extents (hb_font_t *font HB_UNUSED,
+			 hb_face_t *face HB_UNUSED,
+			 const void *user_data,
+			 hb_codepoint_t glyph,
+			 hb_glyph_extents_t *extents)
+{
+  FT_Face ft_face = (FT_Face) user_data;
+  int load_flags = FT_LOAD_DEFAULT;
+
+  /* TODO: load_flags, embolden, etc */
+
+  if (likely (!FT_Load_Glyph (ft_face, glyph, load_flags)))
+  {
+    /* XXX: A few negations should be in order here, not sure. */
+    extents->x_bearing = ft_face->glyph->metrics.horiBearingX;
+    extents->y_bearing = ft_face->glyph->metrics.horiBearingY;
+    extents->width = ft_face->glyph->metrics.width;
+    extents->height = ft_face->glyph->metrics.height;
+  }
 }
 
 static hb_bool_t
@@ -82,33 +127,6 @@ hb_ft_get_contour_point (hb_font_t *font HB_UNUSED,
   return TRUE;
 }
 
-static void
-hb_ft_get_glyph_metrics (hb_font_t *font HB_UNUSED,
-			 hb_face_t *face HB_UNUSED,
-			 const void *user_data,
-			 hb_codepoint_t glyph,
-			 hb_glyph_metrics_t *metrics)
-{
-  FT_Face ft_face = (FT_Face) user_data;
-  int load_flags = FT_LOAD_DEFAULT;
-
-  /* TODO: load_flags, embolden, etc */
-
-  metrics->x_advance = metrics->y_advance = 0;
-  metrics->x_offset = metrics->y_offset = 0;
-  metrics->width = metrics->height = 0;
-  if (likely (!FT_Load_Glyph (ft_face, glyph, load_flags)))
-  {
-    /* TODO: A few negations should be in order here, not sure. */
-    metrics->x_advance = ft_face->glyph->advance.x;
-    metrics->y_advance = ft_face->glyph->advance.y;
-    metrics->x_offset = ft_face->glyph->metrics.horiBearingX;
-    metrics->y_offset = ft_face->glyph->metrics.horiBearingY;
-    metrics->width = ft_face->glyph->metrics.width;
-    metrics->height = ft_face->glyph->metrics.height;
-  }
-}
-
 static hb_position_t
 hb_ft_get_kerning (hb_font_t *font HB_UNUSED,
 		   hb_face_t *face HB_UNUSED,
@@ -131,8 +149,9 @@ static hb_font_funcs_t ft_ffuncs = {
   TRUE, /* immutable */
   {
     hb_ft_get_glyph,
+    hb_ft_get_glyph_advance,
+    hb_ft_get_glyph_extents,
     hb_ft_get_contour_point,
-    hb_ft_get_glyph_metrics,
     hb_ft_get_kerning
   }
 };
@@ -145,7 +164,7 @@ hb_ft_get_font_funcs (void)
 
 
 static hb_blob_t *
-_get_table  (hb_tag_t tag, void *user_data)
+get_table  (hb_tag_t tag, void *user_data)
 {
   FT_Face ft_face = (FT_Face) user_data;
   FT_Byte *buffer;
@@ -191,7 +210,7 @@ hb_ft_face_create (FT_Face           ft_face,
     face = hb_face_create_for_data (blob, ft_face->face_index);
     hb_blob_destroy (blob);
   } else {
-    face = hb_face_create_for_tables (_get_table, destroy, ft_face);
+    face = hb_face_create_for_tables (get_table, destroy, ft_face);
   }
 
   return face;
@@ -238,3 +257,6 @@ hb_ft_font_create (FT_Face           ft_face,
 
   return font;
 }
+
+
+HB_END_DECLS
