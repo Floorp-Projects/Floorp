@@ -128,6 +128,16 @@ const HISTORY_FORWARD = 1;
 // The maximum number of bytes a Network ResponseListener can hold.
 const RESPONSE_BODY_LIMIT = 1048576; // 1 MB
 
+// Minimum console height, in pixels.
+const MINIMUM_CONSOLE_HEIGHT = 150;
+
+// Minimum page height, in pixels. This prevents the Web Console from
+// remembering a height that covers the whole page.
+const MINIMUM_PAGE_HEIGHT = 50;
+
+// The default console height, as a ratio from the content window inner height.
+const DEFAULT_CONSOLE_HEIGHT = 0.33;
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -1355,6 +1365,9 @@ function HUD_SERVICE()
   // event listeners. So we hammer in the "this" binding.
   this.onTabClose = this.onTabClose.bind(this);
   this.onWindowUnload = this.onWindowUnload.bind(this);
+
+  // Remembers the last console height, in pixels.
+  this.lastConsoleHeight = Services.prefs.getIntPref("devtools.hud.height");
 };
 
 HUD_SERVICE.prototype =
@@ -1515,9 +1528,10 @@ HUD_SERVICE.prototype =
    * Activate a HeadsUpDisplay for the given tab context.
    *
    * @param Element aContext the tab element.
+   * @param boolean aAnimated animate opening the Web Console?
    * @returns void
    */
-  activateHUDForContext: function HS_activateHUDForContext(aContext)
+  activateHUDForContext: function HS_activateHUDForContext(aContext, aAnimated)
   {
     this.wakeup();
 
@@ -1525,15 +1539,21 @@ HUD_SERVICE.prototype =
     var id = aContext.linkedBrowser.parentNode.parentNode.getAttribute("id");
     this.registerActiveContext(id);
     HUDService.windowInitializer(window);
+    this.windowInitializer(window);
+
+    if (!aAnimated) {
+      this.disableAnimation("hud_" + id);
+    }
   },
 
   /**
    * Deactivate a HeadsUpDisplay for the given tab context.
    *
    * @param nsIDOMWindow aContext
+   * @param aAnimated animate closing the web console?
    * @returns void
    */
-  deactivateHUDForContext: function HS_deactivateHUDForContext(aContext)
+  deactivateHUDForContext: function HS_deactivateHUDForContext(aContext, aAnimated)
   {
     let window = aContext.linkedBrowser.contentWindow;
     let nBox = aContext.ownerDocument.defaultView.
@@ -1542,9 +1562,13 @@ HUD_SERVICE.prototype =
     let displayNode = nBox.querySelector("#" + hudId);
 
     if (hudId in this.displayRegistry && displayNode) {
-    this.unregisterActiveContext(hudId);
+      if (!aAnimated) {
+        this.storeHeight(hudId);
+      }
+
+      this.unregisterActiveContext(hudId);
       this.unregisterDisplay(displayNode);
-    window.focus();
+      window.focus();
     }
   },
 
@@ -3003,8 +3027,10 @@ HUD_SERVICE.prototype =
   animate: function HS_animate(aHUDId, aDirection, aCallback)
   {
     let hudBox = this.getOutputNodeById(aHUDId);
-    if (!hudBox.classList.contains("animated") && aCallback) {
-      aCallback();
+    if (!hudBox.classList.contains("animated")) {
+      if (aCallback) {
+        aCallback();
+      }
       return;
     }
 
@@ -3013,8 +3039,7 @@ HUD_SERVICE.prototype =
         hudBox.style.height = 0;
         break;
       case ANIMATE_IN:
-        var contentWindow = hudBox.ownerDocument.defaultView;
-        hudBox.style.height = Math.ceil(contentWindow.innerHeight / 3) + "px";
+        this.resetHeight(aHUDId);
         break;
     }
 
@@ -3032,10 +3057,70 @@ HUD_SERVICE.prototype =
    */
   disableAnimation: function HS_disableAnimation(aHUDId)
   {
-    let hudBox = this.getOutputNodeById(aHUDId);
-    hudBox.classList.remove("animated");
-    hudBox.style.height = "300px";
-  }
+    let hudBox = HUDService.hudReferences[aHUDId].HUDBox;
+    if (hudBox.classList.contains("animated")) {
+      hudBox.classList.remove("animated");
+      this.resetHeight(aHUDId);
+    }
+  },
+
+  /**
+   * Reset the height of the Web Console.
+   *
+   * @param string aHUDId The ID of the Web Console.
+   */
+  resetHeight: function HS_resetHeight(aHUDId)
+  {
+    let HUD = this.hudReferences[aHUDId];
+
+    let innerHeight = HUD.contentWindow.innerHeight;
+    let splitter = HUD.HUDBox.parentNode.querySelector(".hud-splitter");
+    let chromeWindow = splitter.ownerDocument.defaultView;
+
+    let splitterStyle = chromeWindow.getComputedStyle(splitter, null);
+    innerHeight += parseInt(splitterStyle.height) +
+                   parseInt(splitterStyle.borderTopWidth) +
+                   parseInt(splitterStyle.borderBottomWidth);
+
+    let boxStyle = chromeWindow.getComputedStyle(HUD.HUDBox, null);
+    innerHeight += parseInt(boxStyle.height) +
+                   parseInt(boxStyle.borderTopWidth) +
+                   parseInt(boxStyle.borderBottomWidth);
+
+    let height = this.lastConsoleHeight > 0 ? this.lastConsoleHeight :
+      Math.ceil(innerHeight * DEFAULT_CONSOLE_HEIGHT);
+
+    if ((innerHeight - height) < MINIMUM_PAGE_HEIGHT) {
+      height = innerHeight - MINIMUM_PAGE_HEIGHT;
+    }
+    else if (height < MINIMUM_CONSOLE_HEIGHT) {
+      height = MINIMUM_CONSOLE_HEIGHT;
+    }
+
+    HUD.HUDBox.style.height = height + "px";
+  },
+
+  /**
+   * Remember the height of the given Web Console, such that it can later be
+   * reused when other Web Consoles are open.
+   *
+   * @param string aHUDId The ID of the Web Console.
+   */
+  storeHeight: function HS_storeHeight(aHUDId)
+  {
+    let hudBox = this.hudReferences[aHUDId].HUDBox;
+    let window = hudBox.ownerDocument.defaultView;
+    let style = window.getComputedStyle(hudBox, null);
+    let height = parseInt(style.height);
+    height += parseInt(style.borderTopWidth);
+    height += parseInt(style.borderBottomWidth);
+    this.lastConsoleHeight = height;
+
+    let pref = Services.prefs.getIntPref("devtools.hud.height");
+    if (pref > -1) {
+      Services.prefs.setIntPref("devtools.hud.height", height);
+    }
+  },
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -5049,18 +5134,20 @@ HeadsUpDisplayUICommands = {
     var ownerDocument = gBrowser.selectedTab.ownerDocument;
     var hud = ownerDocument.getElementById(hudId);
     if (hud) {
+      HUDService.storeHeight(hudId);
+
       HUDService.animate(hudId, ANIMATE_OUT, function() {
         // If the user closes the console while the console is animating away,
         // then these callbacks will queue up, but all the callbacks after the
         // first will have no console to operate on. This test handles this
         // case gracefully.
         if (ownerDocument.getElementById(hudId)) {
-          HUDService.deactivateHUDForContext(gBrowser.selectedTab);
+          HUDService.deactivateHUDForContext(gBrowser.selectedTab, true);
         }
       });
     }
     else {
-      HUDService.activateHUDForContext(gBrowser.selectedTab);
+      HUDService.activateHUDForContext(gBrowser.selectedTab, true);
       HUDService.animate(hudId, ANIMATE_IN);
     }
   },

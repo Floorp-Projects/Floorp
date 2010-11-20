@@ -131,6 +131,11 @@ function openConsole()
   HUDService.activateHUDForContext(tab);
 }
 
+function closeConsole()
+{
+  HUDService.deactivateHUDForContext(tab);
+}
+
 function finishTest()
 {
   finish();
