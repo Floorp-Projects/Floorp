@@ -2469,6 +2469,12 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(1));
     callPatches.append(callPatch);
+
+    if (recompiling) {
+        /* In case we recompiled this call to an uncached call. */
+        OOL_STUBCALL(JS_FUNC_TO_DATA_PTR(void *, callingNew ? ic::New : ic::Call));
+        stubcc.rejoin(Changes(1));
+    }
 }
 
 static bool
@@ -5068,8 +5074,7 @@ mjit::Compiler::fixDoubleTypes(Uses uses)
     }
     analyze::Bytecode &opinfo = analysis->getCode(PC);
     for (uint32 i = 0; i < opinfo.stackDepth - uses.nuses; i++) {
-        types::TypeStack *stack = opinfo.inStack;
-        types::TypeSet *types = analysis->getStackTypes(script->nfixed + i, stack);
+        types::TypeSet *types = analysis->getStackTypes(script->nfixed + i, &opinfo);
         JSValueType type = types->getKnownTypeTag(cx, script);
         if (type == JSVAL_TYPE_DOUBLE) {
             FrameEntry *fe = frame.getLocal(script->nfixed + i);

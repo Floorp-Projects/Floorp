@@ -139,12 +139,6 @@ struct Bytecode
      */
     bool hasIncDecOverflow : 1;
 
-    /*
-     * For logging, whether we've generated warnings due to a mismatch between the
-     * actual and inferred types at this bytecode.
-     */
-    bool missingTypes : 1;
-
     /* Pool which constraints on this instruction should use. */
     inline JSArenaPool &pool();
 
@@ -163,7 +157,9 @@ struct Bytecode
      */
     inline types::TypeObject* getInitObject(JSContext *cx, bool isArray);
 
+#ifdef DEBUG
     void print(JSContext *cx);
+#endif
 
 #endif /* JS_TYPE_INFERENCE */
 
@@ -349,37 +345,115 @@ class Script
     /* Bytecode where this script is nested. */
     inline Bytecode *parentCode();
 
-    void print(JSContext *cx);
+    /* Gather statistics off this script and print it if necessary. */
+    void finish(JSContext *cx);
 
     /* Helpers */
 
-    /* Temporary state for handling opcodes with fused behavior. */
-    struct TypeState {
+    /* Inference state destroyed after the initial pass through the function. */
+
+    struct AnalyzeStateStack {
+        /* Whether this node is the iterator for a 'for each' loop. */
+        bool isForEach;
+
+        /* Variable set for any scope name binding pushed on this stack node. */
+        types::VariableSet *scopeVars;
+
+        /* Any value pushed by a JSOP_DOUBLE. */
+        bool hasDouble;
+        double doubleValue;
+
+        /* Whether this is or could be the constant zero. */
+        bool isZero;
+
+        /* Whether this is another constant. */
+        bool isConstant;
+    };
+
+    struct AnalyzeState {
+        AnalyzeStateStack *stack;
+
+        /* Current stack depth. */
+        unsigned stackDepth;
+
         /* Last opcode was JSOP_GETTER or JSOP_SETTER. */
         bool hasGetSet;
 
         /* Last opcode was JSOP_HOLE. */
         bool hasHole;
 
-        TypeState()
-            : hasGetSet(false), hasHole(false)
+        /* Locals thought to be zero/constants. */
+        bool zeroLocals[4];
+        uint32 constLocals[4];
+        unsigned numConstLocals;
+
+        AnalyzeState()
+            : stack(NULL), stackDepth(0), hasGetSet(false), hasHole(false), numConstLocals(0)
         {}
+
+        bool init(JSContext *cx, JSScript *script)
+        {
+            if (script->nslots) {
+                stack = (AnalyzeStateStack *)
+                    cx->calloc(script->nslots * sizeof(AnalyzeStateStack));
+                return (stack != NULL);
+            }
+            return true;
+        }
+
+        void destroy(JSContext *cx)
+        {
+            cx->free(stack);
+        }
+
+        AnalyzeStateStack &popped(unsigned i) {
+            JS_ASSERT(i < stackDepth);
+            return stack[stackDepth - 1 - i];
+        }
+
+        const AnalyzeStateStack &popped(unsigned i) const {
+            JS_ASSERT(i < stackDepth);
+            return stack[stackDepth - 1 - i];
+        }
+
+        void addConstLocal(uint32 local, bool zero) {
+            if (numConstLocals == JS_ARRAY_LENGTH(constLocals))
+                return;
+            if (maybeLocalConst(local, false))
+                return;
+            zeroLocals[numConstLocals] = zero;
+            constLocals[numConstLocals++] = local;
+        }
+
+        bool maybeLocalConst(uint32 local, bool zero) {
+            for (unsigned i = 0; i < numConstLocals; i++) {
+                if (constLocals[i] == local)
+                    return !zero || zeroLocals[i];
+            }
+            return false;
+        }
+
+        void clearLocal(uint32 local) {
+            for (unsigned i = 0; i < numConstLocals; i++) {
+                if (constLocals[i] == local) {
+                    constLocals[i] = constLocals[--numConstLocals];
+                    return;
+                }
+            }
+        }
     };
 
     /* Analyzes a bytecode, generating type constraints describing its behavior. */
-    void analyzeTypes(JSContext *cx, Bytecode *codeType, TypeState &state);
+    void analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state);
 
-    /*
-     * Get the name to use for the local with specified index.  Stack indicates the
-     * point of the access, for looking up let variables.
-     */
-    inline jsid getLocalId(unsigned index, types::TypeStack *stack);
+    /* Get the name to use for the local with specified index. */
+    inline jsid getLocalId(unsigned index, Bytecode *code);
 
     /* Get the name to use for the argument with the specified index. */
     inline jsid getArgumentId(unsigned index);
 
     /* Get the type set to use for a stack slot at a fixed stack depth. */
-    inline types::TypeSet *getStackTypes(unsigned index, types::TypeStack *stack);
+    inline types::TypeSet *getStackTypes(unsigned index, Bytecode *code);
 
     /* Get any known type tag for an argument or local variable. */
     inline JSValueType knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg);

@@ -4208,13 +4208,6 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-static void type_Bailout(JSContext *cx, JSTypeFunction *fun, JSTypeCallsite *site)
-{
-#ifdef JS_TYPE_INFERENCE
-    cx->compartment->types.ignoreWarnings = true;
-#endif
-}
-
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("version",        Version,        0,0, JS_TypeHandlerInt),
@@ -4267,12 +4260,12 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("build",          BuildDate,      0,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("clear",          Clear,          0,0, JS_TypeHandlerVoid),
     JS_FN_TYPE("intern",         Intern,         1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE("clone",          Clone,          1,0, type_Bailout),
-    JS_FN_TYPE("getpda",         GetPDA,         1,0, JS_TypeHandlerMissing),
+    JS_FN_TYPE("clone",          Clone,          1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("getpda",         GetPDA,         1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("getslx",         GetSLX,         1,0, JS_TypeHandlerInt),
     JS_FN_TYPE("toint32",        ToInt32,        1,0, JS_TypeHandlerInt),
-    JS_FN_TYPE("evalcx",         EvalInContext,  1,0, type_Bailout),
-    JS_FN_TYPE("evalInFrame",    EvalInFrame,    2,0, type_Bailout),
+    JS_FN_TYPE("evalcx",         EvalInContext,  1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("evalInFrame",    EvalInFrame,    2,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("shapeOf",        ShapeOf,        1,0, JS_TypeHandlerInt),
 #ifdef MOZ_SHARK
     JS_FN_TYPE("startShark",     js_StartShark,      0,0, JS_TypeHandlerVoid),
@@ -4661,7 +4654,7 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec its_methods[] = {
-    {"bindMethod",      its_bindMethod, 2,0, type_Bailout},
+    {"bindMethod",      its_bindMethod, 2,0, JS_TypeHandlerMissing},
     {NULL,NULL,0,0}
 };
 

@@ -4303,9 +4303,8 @@ JS_TypeHandlerMissing(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssi
     TypeCallsite *site = Valueify(jssite);
 
     /* Don't mark the return type as anything, and add a warning. */
-    cx->compartment->types.warnings = true;
-    InferSpew(ISpewDynamic, "warning: Call to unimplemented handler at #%u:%05u: %s\n",
-              site->code->script->id, site->code->offset, TypeIdString(cx, fun->name));
+    TypeFailure(cx, "Call to unimplemented handler at #%u:%05u: %s",
+                site->code->script->id, site->code->offset, TypeIdString(fun->name));
 #endif
 }
 
@@ -4876,7 +4875,7 @@ JS_MakeTypeObject(JSContext *cx, const char *name, JSBool monitorNeeded, JSBool 
         proto->addPropagate(cx, type);
 
     if (monitorNeeded)
-        cx->monitorTypeObject(type);
+        cx->markTypeObjectUnknownProperties(type);
 
     return (JSTypeObject*) type;
 #endif

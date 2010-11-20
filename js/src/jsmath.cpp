@@ -482,6 +482,7 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
 
     if (argc <= 1) {
         vp->setDouble(js_NaN);
+        cx->markTypeCallerOverflow();
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))
@@ -522,6 +523,9 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
         z = pow(x, y);
 
     vp->setNumber(z);
+    if (vp->isDouble() && vp[2].isInt32() && vp[3].isInt32())
+        cx->markTypeCallerOverflow();
+
     return JS_TRUE;
 }
 
@@ -875,7 +879,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_TN("log",            math_log,             1, 0, &math_log_trcinfo, JS_TypeHandlerFloat),
     JS_TN("max",            js_math_max,          2, 0, &js_math_max_trcinfo, math_TypeArith),
     JS_TN("min",            js_math_min,          2, 0, &js_math_min_trcinfo, math_TypeArith),
-    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo, JS_TypeHandlerFloat),
+    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo, math_TypeArith),
     JS_TN("random",         math_random,          0, 0, &math_random_trcinfo, JS_TypeHandlerFloat),
     JS_TN("round",          js_math_round,        1, 0, &js_math_round_trcinfo, JS_TypeHandlerInt),
     JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo, JS_TypeHandlerFloat),
