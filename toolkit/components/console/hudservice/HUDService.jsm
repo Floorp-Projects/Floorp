@@ -1350,17 +1350,11 @@ function HUD_SERVICE()
   }
 
   this.mixins = mixins;
-  this.storage = new ConsoleStorage();
-  this.defaultFilterPrefs = this.storage.defaultDisplayPrefs;
-  this.defaultGlobalConsolePrefs = this.storage.defaultGlobalConsolePrefs;
 
   // These methods access the "this" object, but they're registered as
   // event listeners. So we hammer in the "this" binding.
   this.onTabClose = this.onTabClose.bind(this);
   this.onWindowUnload = this.onWindowUnload.bind(this);
-
-  // begin observing HTTP traffic
-  this.startHTTPObservation();
 };
 
 HUD_SERVICE.prototype =
@@ -1525,6 +1519,8 @@ HUD_SERVICE.prototype =
    */
   activateHUDForContext: function HS_activateHUDForContext(aContext)
   {
+    this.wakeup();
+
     var window = aContext.linkedBrowser.contentWindow;
     var id = aContext.linkedBrowser.parentNode.parentNode.getAttribute("id");
     this.registerActiveContext(id);
@@ -1932,16 +1928,63 @@ HUD_SERVICE.prototype =
     let displays = this.displays();
 
     var uri  = this.displayRegistry[id];
-    var specHudArr = this.uriRegistry[uri];
 
-    for (var i = 0; i < specHudArr.length; i++) {
-      if (specHudArr[i] == id) {
-        specHudArr.splice(i, 1);
-      }
+    if (this.uriRegistry[uri]) {
+      this.uriRegistry[uri] = this.uriRegistry[uri].filter(function(e) e != id);
     }
+
     delete displays[id];
     delete this.displayRegistry[id];
     delete this.uriRegistry[uri];
+
+    if (Object.keys(this._headsUpDisplays).length == 0) {
+      this.suspend();
+    }
+  },
+
+  /**
+   * "Wake up" the Web Console activity. This is called when the first Web
+   * Console is open. This method initializes the various observers we have.
+   *
+   * @returns void
+   */
+  wakeup: function HS_wakeup()
+  {
+    if (Object.keys(this._headsUpDisplays).length > 0) {
+      return;
+    }
+
+    this.storage = new ConsoleStorage();
+    this.defaultFilterPrefs = this.storage.defaultDisplayPrefs;
+    this.defaultGlobalConsolePrefs = this.storage.defaultGlobalConsolePrefs;
+
+    // begin observing HTTP traffic
+    this.startHTTPObservation();
+
+    HUDWindowObserver.init();
+    HUDConsoleObserver.init();
+    ConsoleAPIObserver.init();
+  },
+
+  /**
+   * Suspend Web Console activity. This is called when all Web Consoles are
+   * closed.
+   *
+   * @returns void
+   */
+  suspend: function HS_suspend()
+  {
+    activityDistributor.removeObserver(this.httpObserver);
+    delete this.httpObserver;
+
+    // delete the storage as it holds onto channels
+    delete this.storage;
+    delete this.defaultFilterPrefs;
+    delete this.defaultGlobalConsolePrefs;
+
+    HUDWindowObserver.uninit();
+    HUDConsoleObserver.uninit();
+    ConsoleAPIObserver.shutdown();
   },
 
   /**
@@ -1954,8 +1997,6 @@ HUD_SERVICE.prototype =
     for (var displayId in this._headsUpDisplays) {
       this.unregisterDisplay(displayId);
     }
-    // delete the storage as it holds onto channels
-    delete this.storage;
   },
 
   /**
@@ -2526,6 +2567,8 @@ HUD_SERVICE.prototype =
         0x804b0006: "STATUS_RECEIVING_FROM"
       }
     };
+
+    this.httpObserver = httpObserver;
 
     activityDistributor.addObserver(httpObserver);
   },
@@ -3537,6 +3580,7 @@ let ConsoleAPIObserver = {
 
   shutdown: function CAO_shutdown()
   {
+    Services.obs.removeObserver(this, "quit-application-granted");
     Services.obs.removeObserver(this, "console-api-log-event");
   }
 };
@@ -5347,6 +5391,7 @@ HUDWindowObserver = {
   {
     Services.obs.removeObserver(this, "content-document-global-created");
     HUDService.shutdown();
+    this.initialConsoleCreated = false;
   },
 
 };
@@ -5433,10 +5478,16 @@ HUDConsoleObserver = {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
+  uninit: function HCO_uninit()
+  {
+    Services.console.unregisterListener(this);
+    Services.obs.removeObserver(this, "xpcom-shutdown");
+  },
+
   observe: function HCO_observe(aSubject, aTopic, aData)
   {
     if (aTopic == "xpcom-shutdown") {
-      Services.console.unregisterListener(this);
+      this.uninit();
       return;
     }
 
@@ -5504,9 +5555,6 @@ try {
   // This is in a try block because we want to kill everything if
   // *any* of this fails
   var HUDService = new HUD_SERVICE();
-  HUDWindowObserver.init();
-  HUDConsoleObserver.init();
-  ConsoleAPIObserver.init();
 }
 catch (ex) {
   Cu.reportError("HUDService failed initialization.\n" + ex);
