@@ -49,6 +49,7 @@ toolkit.jar:
         skin/classic/global/spinbuttons.css
         skin/classic/global/splitter.css
         skin/classic/global/tabbox.css
+        skin/classic/global/tabprompts.css
         skin/classic/global/textbox.css
 *       skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
@@ -221,6 +222,7 @@ toolkit.jar:
         skin/classic/aero/global/spinbuttons.css
         skin/classic/aero/global/splitter.css
         skin/classic/aero/global/tabbox.css
+        skin/classic/aero/global/tabprompts.css
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
 *       skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
