@@ -1403,20 +1403,22 @@ nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
 void
 nsDocAccessible::UnbindFromDocument(nsAccessible* aAccessible)
 {
+  NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
+               "Unbinding the unbound accessible!");
+
   // Remove an accessible from node-to-accessible map if it exists there.
   if (aAccessible->IsPrimaryForNode() &&
       mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
     mNodeToAccessibleMap.Remove(aAccessible->GetNode());
 
-  RemoveDependentIDsFor(aAccessible);
-
-#ifdef DEBUG
-  NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
-               "Unbinding the unbound accessible!");
-#endif
+  if (!aAccessible->IsDefunct())
+    RemoveDependentIDsFor(aAccessible);
 
   void* uniqueID = aAccessible->UniqueID();
+
+  NS_ASSERTION(!aAccessible->IsDefunct(), "Shutdown the shutdown accessible!");
   aAccessible->Shutdown();
+
   mAccessibleCache.Remove(uniqueID);
 }
 
