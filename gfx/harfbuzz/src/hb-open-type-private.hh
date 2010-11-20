@@ -705,6 +705,11 @@ struct HeadlessArrayOf
   DEFINE_SIZE_ARRAY (sizeof (USHORT), array);
 };
 
+#if __GNUC__ && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 4))
+// work around GCC 4.3 bug where the search() function gets improperly
+// optimized away from some instantiations of this template
+#pragma GCC visibility push(default)
+#endif
 
 /* An array with sorted elements.  Supports binary searching. */
 template <typename Type>
@@ -720,6 +725,9 @@ struct SortedArrayOf : ArrayOf<Type> {
   }
 };
 
+#if __GNUC__ && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 4))
+#pragma GCC visibility pop
+#endif
 
 HB_BEGIN_DECLS
 HB_END_DECLS
