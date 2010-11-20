@@ -102,6 +102,9 @@
 
 /**
  * This trigger removes a row from moz_openpages_temp when open_count reaches 0.
+ *
+ * @note this should be kept up-to-date with the definition in
+ *       nsPlacesAutoComplete.js
  */
 #define CREATE_REMOVEOPENPAGE_CLEANUP_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_openpages_temp_afterupdate_trigger " \

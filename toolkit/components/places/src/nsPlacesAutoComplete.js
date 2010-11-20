@@ -16,7 +16,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
@@ -105,6 +105,55 @@ const kQueryTypeFiltered = 1;
 const kTitleTagsSeparator = " \u2013 ";
 
 const kBrowserUrlbarBranch = "browser.urlbar.";
+
+////////////////////////////////////////////////////////////////////////////////
+//// Globals and Lazy Getters
+
+XPCOMUtils.defineLazyServiceGetter(this, "pb",
+                                   "@mozilla.org/privatebrowsing;1",
+                                   "nsIPrivateBrowsingService");
+
+////////////////////////////////////////////////////////////////////////////////
+//// Helpers
+
+/**
+ * Initializes our temporary table on a given database.
+ *
+ * @param aDatabase
+ *        The mozIStorageConnection to set up the temp table on.
+ */
+function initTempTable(aDatabase)
+{
+  // Keep our temporary table in memory.
+  aDatabase.executeSimpleSQL("PRAGMA temp_store = MEMORY");
+
+  // Note: this should be kept up-to-date with the definition in
+  //       nsPlacesTables.h.
+  let sql = "CREATE TEMP TABLE moz_openpages_temp ("
+          + "  url TEXT PRIMARY KEY"
+          + ", open_count INTEGER"
+          + ")";
+  aDatabase.executeSimpleSQL(sql);
+
+  // Note: this should be kept up-to-date with the definition in
+  //       nsPlacesTriggers.h.
+  sql = "CREATE TEMPORARY TRIGGER moz_openpages_temp_afterupdate_trigger "
+      + "AFTER UPDATE OF open_count ON moz_openpages_temp FOR EACH ROW "
+      + "WHEN NEW.open_count = 0 "
+      + "BEGIN "
+      +   "DELETE FROM moz_openpages_temp "
+      +   "WHERE url = NEW.url;"
+      + "END";
+  aDatabase.executeSimpleSQL(sql);
+}
+
+/**
+ * @return true if private browsing is active, false otherwise.
+ */
+function inPrivateBrowsingMode()
+{
+  return pb.privateBrowsingEnabled;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// AutoCompleteStatementCallbackWrapper class
@@ -205,9 +254,19 @@ function nsPlacesAutoComplete()
   //// Smart Getters
 
   XPCOMUtils.defineLazyGetter(this, "_db", function() {
-    return Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsPIPlacesDatabase).
-           DBConnection;
+    // Get a cloned, read-only version of the database.  We'll only ever write
+    // to our own in-memory temp table, and having a cloned copy means we do not
+    // run the risk of our queries taking longer due to the main database
+    // connection performing a long-running task.
+    let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+             getService(Ci.nsPIPlacesDatabase).
+             DBConnection.
+             clone(true);
+
+    // Create our in-memory tables for tab tracking.
+    initTempTable(db);
+
+    return db;
   });
 
   XPCOMUtils.defineLazyServiceGetter(this, "_bh",
@@ -309,7 +368,7 @@ function nsPlacesAutoComplete()
     + "JOIN moz_places h ON h.id = i.place_id "
     + "LEFT JOIN moz_favicons f ON f.id = h.favicon_id "
     + "LEFT JOIN moz_openpages_temp t ON t.url = h.url "
-    + "WHERE AUTOCOMPLETE_MATCH(:searchString, h.url, "
+    + "WHERE AUTOCOMPLETE_MATCH(NULL, h.url, "
     +                          "IFNULL(bookmark, h.title), tags, "
     +                          "h.visit_count, h.typed, parent, "
     +                          "t.open_count, "
@@ -339,6 +398,30 @@ function nsPlacesAutoComplete()
     +  "LEFT JOIN moz_openpages_temp t ON t.url = search_url "
     +  "WHERE LOWER(k.keyword) = LOWER(:keyword) "
     +  "ORDER BY h.frecency DESC "
+    );
+  });
+
+  XPCOMUtils.defineLazyGetter(this, "_registerOpenPageQuery", function() {
+    return this._db.createAsyncStatement(
+      "INSERT OR REPLACE INTO moz_openpages_temp (url, open_count) "
+    + "VALUES (:page_url, "
+    +   "IFNULL("
+    +     "("
+    +        "SELECT open_count + 1 "
+    +        "FROM moz_openpages_temp "
+    +        "WHERE url = :page_url "
+    +      "), "
+    +     "1"
+    +   ")"
+    + ")"
+    );
+  });
+
+  XPCOMUtils.defineLazyGetter(this, "_unregisterOpenPageQuery", function() {
+    return this._db.createAsyncStatement(
+      "UPDATE moz_openpages_temp "
+    + "SET open_count = open_count - 1 "
+    + "WHERE url = :page_url"
     );
   });
 
@@ -413,15 +496,15 @@ nsPlacesAutoComplete.prototype = {
     let {query, tokens} =
       this._getSearch(this._getUnfilteredSearchTokens(this._currentSearchString));
     let queries = tokens.length ?
-      [this._getBoundKeywordQuery(tokens), this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(), query] :
-      [this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(), query];
+      [this._getBoundKeywordQuery(tokens), this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query] :
+      [this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query];
 
     // Start executing our queries.
     this._executeQueries(queries);
 
     // Set up our persistent state for the duration of the search.
     this._searchTokens = tokens;
-    this._usedPlaceIds = {};
+    this._usedPlaces = {};
   },
 
   stopSearch: function PAC_stopSearch()
@@ -442,6 +525,39 @@ nsPlacesAutoComplete.prototype = {
   {
     if (aRemoveFromDB)
       this._bh.removePage(this._ioService.newURI(aURISpec, null, null));
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIPlacesAutoComplete
+
+  registerOpenPage: function PAC_registerOpenPage(aURI)
+  {
+    // Don't add any pages while in Private Browsing mode, so as to avoid
+    // leaking information about other windows that might otherwise stay hidden
+    // and private.
+    if (inPrivateBrowsingMode()) {
+      return;
+    }
+
+    let stmt = this._registerOpenPageQuery;
+    stmt.params.page_url = aURI.spec;
+
+    stmt.executeAsync();
+  },
+
+  unregisterOpenPage: function PAC_unregisterOpenPage(aURI)
+  {
+    // Entering Private Browsing mode will unregister all open pages, therefore
+    // there should not be anything in the moz_openpages_temp table.  As a
+    // result, we can stop now without doing any unnecessary work.
+    if (inPrivateBrowsingMode()) {
+      return;
+    }
+
+    let stmt = this._unregisterOpenPageQuery;
+    stmt.params.page_url = aURI.spec;
+
+    stmt.executeAsync();
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -521,6 +637,8 @@ nsPlacesAutoComplete.prototype = {
         "_typedQuery",
         "_adaptiveQuery",
         "_keywordQuery",
+        "_registerOpenPageQuery",
+        "_unregisterOpenPageQuery",
       ];
       for (let i = 0; i < stmts.length; i++) {
         // We do not want to create any query we haven't already created, so
@@ -597,7 +715,7 @@ nsPlacesAutoComplete.prototype = {
     delete this._searchTokens;
     delete this._listener;
     delete this._result;
-    delete this._usedPlaceIds;
+    delete this._usedPlaces;
     delete this._pendingQuery;
     this._secondPass = false;
     this._enableActions = false;
@@ -813,7 +931,7 @@ nsPlacesAutoComplete.prototype = {
     return query;
   },
 
-  _getBoundOpenPagesQuery: function PAC_getBoundOpenPagesQuery()
+  _getBoundOpenPagesQuery: function PAC_getBoundOpenPagesQuery(aTokens)
   {
     let query = this._openPagesQuery;
 
@@ -823,7 +941,9 @@ nsPlacesAutoComplete.prototype = {
       params.query_type = kQueryTypeFiltered;
       params.matchBehavior = this._matchBehavior;
       params.searchBehavior = this._behavior;
-      params.searchString = this._currentSearchString;
+      // We only want to search the tokens that we are left with - not the
+      // original search string.
+      params.searchString = aTokens.join(" ");
       params.maxResults = this._maxRichResults;
     }
 
@@ -899,17 +1019,25 @@ nsPlacesAutoComplete.prototype = {
   {
     // Before we do any work, make sure this entry isn't already in our results.
     let entryId = aRow.getResultByIndex(kQueryIndexPlaceId);
-    if (this._inResults(entryId))
-      return false;
-
     let escapedEntryURL = aRow.getResultByIndex(kQueryIndexURL);
+    let openPageCount = aRow.getResultByIndex(kQueryIndexOpenPageCount) || 0;
+
+    // If actions are enabled and the page is open, add only the switch-to-tab
+    // result.  Otherwise, add the normal result.
+    let [url, action] = this._enableActions && openPageCount > 0 ?
+                        ["moz-action:switchtab," + escapedEntryURL, "action "] :
+                        [escapedEntryURL, ""];
+
+    if (this._inResults(entryId || url)) {
+      return false;
+    }
+
     let entryTitle = aRow.getResultByIndex(kQueryIndexTitle) || "";
     let entryFavicon = aRow.getResultByIndex(kQueryIndexFaviconURL) || "";
     let entryParentId = aRow.getResultByIndex(kQueryIndexParentId);
     let entryBookmarkTitle = entryParentId ?
       aRow.getResultByIndex(kQueryIndexBookmarkTitle) : null;
     let entryTags = aRow.getResultByIndex(kQueryIndexTags) || "";
-    let openPageCount = aRow.getResultByIndex(kQueryIndexOpenPageCount) || 0;
 
     // Always prefer the bookmark title unless it is empty
     let title = entryBookmarkTitle || entryTitle;
@@ -956,11 +1084,6 @@ nsPlacesAutoComplete.prototype = {
         style = "favicon";
     }
 
-    // If actions are enabled and the page is open, add only the switch-to-tab
-    // result.  Otherwise, add the normal result.
-    let [url, action] = this._enableActions && openPageCount > 0 ?
-                        ["moz-action:switchtab," + escapedEntryURL, "action "] :
-                        [escapedEntryURL, ""];
     this._addToResults(entryId, url, title, entryFavicon, action + style);
     return true;
   },
@@ -968,13 +1091,13 @@ nsPlacesAutoComplete.prototype = {
   /**
    * Checks to see if the given place has already been added to the results.
    *
-   * @param aPlaceId
-   *        The place_id to check for.
+   * @param aPlaceIdOrUrl
+   *        The place id or url (if the entry does not have a id) to check for.
    * @return true if the place has been added, false otherwise.
    */
-  _inResults: function PAC_inResults(aPlaceId)
+  _inResults: function PAC_inResults(aPlaceIdOrUrl)
   {
-    return (aPlaceId in this._usedPlaceIds);
+    return aPlaceIdOrUrl in this._usedPlaces;
   },
 
   /**
@@ -997,8 +1120,12 @@ nsPlacesAutoComplete.prototype = {
                                            aFaviconSpec, aStyle)
   {
     // Add this to our internal tracker to ensure duplicates do not end up in
-    // the result.  _usedPlaceIds is an Object that is being used as a set.
-    this._usedPlaceIds[aPlaceId] = true;
+    // the result.  _usedPlaces is an Object that is being used as a set.
+    // Not all entries have a place id, thus we fallback to the url for them.
+    // We cannot use only the url since keywords entries are modified to
+    // include the search string, and would be returned multiple times.  Ids
+    // are faster too.
+    this._usedPlaces[aPlaceId || aURISpec] = true;
 
     // Obtain the favicon for this URI.
     let favicon;
@@ -1070,6 +1197,7 @@ nsPlacesAutoComplete.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIAutoCompleteSearch,
     Ci.nsIAutoCompleteSimpleResultListener,
+    Ci.mozIPlacesAutoComplete,
     Ci.mozIStorageStatementCallback,
     Ci.nsIObserver,
   ])

@@ -80,7 +80,7 @@ namespace places {
  *        Indicates if aURL is a bookmark or not.  Treated as a boolean.
  * @param aOpenPageCount
  *        The number of times aURL has been registered as being open.  (See
- *        nsIBrowserHistory.registerOpenPage.)
+ *        mozIPlacesAutoComplete::registerOpenPage.)
  * @param aMatchBehavior
  *        The match behavior to use for this search.
  * @param aSearchBehavior

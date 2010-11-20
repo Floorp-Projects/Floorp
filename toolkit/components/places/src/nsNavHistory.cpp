@@ -66,6 +66,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"
 #include "mozIStorageAsyncStatement.h"
+#include "mozIPlacesAutoComplete.h"
 
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
@@ -989,9 +990,7 @@ nsNavHistory::InitDB()
 nsresult
 nsNavHistory::InitAdditionalDBItems()
 {
-  nsresult rv = InitTempTables();
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = InitFunctions();
+  nsresult rv = InitFunctions();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // These statements are used by frecency calculation.  Since frecency runs in
@@ -1085,17 +1084,6 @@ mozStorageFunctionGetUnreversedHost::OnFunctionCall(
     result->SetAsAString(EmptyString());
   }
   NS_ADDREF(*_retval = result);
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::InitTempTables()
-{
-  nsresult rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_OPENPAGES_TEMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(CREATE_REMOVEOPENPAGE_CLEANUP_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -1211,22 +1199,6 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "UPDATE moz_places "
     "SET title = :page_title "
     "WHERE url = :page_url "
-  ));
-
-  RETURN_IF_STMT(mDBRegisterOpenPage, NS_LITERAL_CSTRING(
-      "INSERT OR REPLACE INTO moz_openpages_temp (url, open_count) "
-      "VALUES (:page_url, "
-        "IFNULL("
-          "(SELECT open_count + 1 FROM moz_openpages_temp WHERE url = :page_url), "
-          "1"
-        ")"
-      ")"
-  ));
-
-  RETURN_IF_STMT(mDBUnregisterOpenPage, NS_LITERAL_CSTRING(
-      "UPDATE moz_openpages_temp "
-      "SET open_count = open_count - 1 "
-      "WHERE url = :page_url"
   ));
 
   // NOTE: This is not limited to visits with "visit_type NOT IN (0,4,7,8)"
@@ -4800,16 +4772,11 @@ nsNavHistory::RegisterOpenPage(nsIURI* aURI)
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
-  // Don't add any pages while in Private Browsing mode, so as to avoid leaking
-  // information about other windows that might otherwise stay hidden
-  // and private.
-  if (InPrivateBrowsingMode())
-    return NS_OK;
+  nsCOMPtr<mozIPlacesAutoComplete> ac =
+    do_GetService("@mozilla.org/autocomplete/search;1?name=history");
+  NS_ENSURE_STATE(ac);
 
-  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBRegisterOpenPage);
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->Execute();
+  nsresult rv = ac->RegisterOpenPage(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -4822,16 +4789,11 @@ nsNavHistory::UnregisterOpenPage(nsIURI* aURI)
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
-  // Entering Private Browsing mode will unregister all open pages, therefore
-  // there shouldn't be anything in the moz_openpages_temp table. So we can stop
-  // now without doing any unnecessary work.
-  if (InPrivateBrowsingMode())
-    return NS_OK;
+  nsCOMPtr<mozIPlacesAutoComplete> ac =
+    do_GetService("@mozilla.org/autocomplete/search;1?name=history");
+  NS_ENSURE_STATE(ac);
 
-  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBUnregisterOpenPage);
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->Execute();
+  nsresult rv = ac->UnregisterOpenPage(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -7369,8 +7331,6 @@ nsNavHistory::FinalizeStatements() {
     mDBUpdateHiddenOnFrecency,
     mDBGetPlaceVisitStats,
     mDBPageInfoForFrecency,
-    mDBRegisterOpenPage,
-    mDBUnregisterOpenPage,
     mDBAsyncThreadPageInfoForFrecency,
     mDBAsyncThreadVisitsForFrecency,
   };

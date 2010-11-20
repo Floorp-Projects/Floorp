@@ -16,7 +16,7 @@
  * The Original Code is Places code
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -39,11 +39,14 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
+
 /**
  * This interface provides some constants used by the Places AutoComplete
- * search provider.
+ * search provider as well as methods to track opened pages for AutoComplete
+ * purposes.
  */
-[scriptable, uuid(a5ae8332-333c-412a-bb02-a35df8247714)]
+[scriptable, uuid(3bf895a0-d6d9-4ba7-b8db-f2f0e0f32d23)]
 interface mozIPlacesAutoComplete : nsISupports
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -110,10 +113,32 @@ interface mozIPlacesAutoComplete : nsISupports
 
   /**
    * Search for pages that have been marked as being opened, such as a tab
-   * in a tabbrowser, via:
-   *   nsIBrowserHistory.registerOpenPage(url)
-   *
-   * @see nsIBrowserHistory.idl
+   * in a tabbrowser.
    */
   const long BEHAVIOR_OPENPAGE = 1 << 7;
+
+  /**
+   * Mark a page as being currently open.
+   *
+   * @note Pages will not be automatically unregistered when Private Browsing
+   *       mode is entered or exited.  Therefore, consumers MUST unregister or
+   *       register themselves.
+   *
+   * @param aURI
+   *        The URI to register as an open page.
+   */
+  void registerOpenPage(in nsIURI aURI);
+
+  /**
+   * Mark a page as no longer being open (either by closing the window or tab,
+   * or by navigating away from that page).
+   *
+   * @note Pages will not be automatically unregistered when Private Browsing
+   *       mode is entered or exited.  Therefore, consumers MUST unregister or
+   *       register themselves.
+   *
+   * @param aURI
+   *        The URI to unregister as an open page.
+   */
+  void unregisterOpenPage(in nsIURI aURI);
 };
