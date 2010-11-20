@@ -178,7 +178,10 @@ public:
 
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
-            AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
+            // Make sure there is enough space to store a local ref to the
+            // exception.  I am not completely sure this is needed, but does
+            // not hurt.
+            AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries + 1);
         }
         // Note! Calling Purge makes all previous local refs created in
         // the AutoLocalJNIFrame's scope INVALID; be sure that you locked down
@@ -188,6 +191,12 @@ public:
             AndroidBridge::Bridge()->JNI()->PushLocalFrame(mEntries);
         }
         ~AutoLocalJNIFrame() {
+            jthrowable exception =
+                AndroidBridge::Bridge()->JNI()->ExceptionOccurred();
+            if (exception) {
+                AndroidBridge::Bridge()->JNI()->ExceptionDescribe();
+                AndroidBridge::Bridge()->JNI()->ExceptionClear();
+            }
             AndroidBridge::Bridge()->JNI()->PopLocalFrame(NULL);
         }
         int mEntries;
