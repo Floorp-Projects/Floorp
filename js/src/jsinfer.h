@@ -290,26 +290,19 @@ struct TypeStack
      */
     TypeStack *mergedGroup;
 
-    /* Identifier for this class within the script. filled in during printing. */
-    int id;
-
-    /* Number of nodes beneath this one in the stack. */
-    unsigned stackDepth;
-
     /* Equivalence class for the node beneath this one in the stack. */
     TypeStack *innerStack;
 
     /* Possible types for values at this stack node. */
     TypeSet types;
 
-    /* Whether any other stack nodes have been merged into this one. */
-    bool hasMerged;
-
-    /* Whether the values at this node are bound by a 'with'. */
+    /*
+     * Any let variable associated with this stack node, and whether the values
+     * at this node are bound by a 'with'.  For resolving ambiguous cross-script
+     * local variable lookups. :TODO: remove.
+     */
+    jsid letVariable;
     bool boundWith;
-
-    /* Whether this node is the iterator for a 'for each' or 'for in' loop. */
-    bool isForEach;
 
     /*
      * Whether to ignore the type tag of this stack entry downstream; it may not
@@ -317,11 +310,10 @@ struct TypeStack
      */
     bool ignoreTypeTag;
 
-    /* The name of any 'let' variable stored by this node. */
-    jsid letVariable;
-
-    /* Variable set for any scope name binding pushed on this stack node. */
-    VariableSet *scopeVars;
+#ifdef DEBUG
+    /* Identifier for this class within the script. filled in during printing. */
+    int id;
+#endif
 
     /* Get the representative node for the equivalence class of this node. */
     inline TypeStack* group();
@@ -419,8 +411,11 @@ struct VariableSet
 
     JSArenaPool *pool;
 
+    /* Whether the variables in this set are unknown. */
+    bool unknown;
+
     VariableSet(JSArenaPool *pool)
-        : variables(NULL), propagateSet(NULL), propagateCount(NULL), pool(pool)
+        : variables(NULL), propagateSet(NULL), propagateCount(NULL), pool(pool), unknown(false)
     {
         JS_ASSERT(pool);
     }
@@ -435,6 +430,9 @@ struct VariableSet
      * propagation.  Returns whether there was already a propagation to target.
      */
     bool addPropagate(JSContext *cx, VariableSet *target, bool excludePrototype);
+
+    /* Mark all existing and future properties of this set as unknown. */
+    void markUnknown(JSContext *cx);
 
     void print(JSContext *cx);
 };
@@ -451,12 +449,6 @@ struct TypeObject
 
     /* Whether this is a function object, and may be cast into TypeFunction. */
     bool isFunction;
-
-    /*
-     * Whether all reads from this object need to be monitored.  This includes
-     * all property and element accesses, and for functions all calls to the function.
-     */
-    bool monitored;
 
     /*
      * Properties of this object.  This is filled in lazily for function objects
@@ -489,6 +481,13 @@ struct TypeObject
     /* Whether all objects this represents are packed arrays (implies isDenseArray). */
     bool isPackedArray;
 
+    /*
+     * Whether this object is thought to be a possible packed array: either it came
+     * from a [a,b,c] initializer, an Array(a,b,c) call, or is another array for
+     * which we've seen what looks like initialization code. This is pure heuristic.
+     */
+    bool possiblePackedArray;
+
     /* Make an object with the specified name. */
     TypeObject(JSContext *cx, JSArenaPool *pool, jsid id, bool isArray);
 
@@ -506,6 +505,9 @@ struct TypeObject
 
     /* Get the properties of this object, filled in lazily. */
     inline VariableSet& properties(JSContext *cx);
+
+    /* Whether the properties of this object are unknown. */
+    bool unknownProperties() { return propertySet.unknown; }
 
     /* Get the type set for all integer index properties of this object. */
     inline TypeSet* indexTypes(JSContext *cx);
@@ -746,18 +748,6 @@ struct TypeCompartment
     /* Logging fields */
 
     /*
-     * Whether any warnings were emitted.  These are nonfatal but (generally)
-     * indicate unhandled constructs leading to analysis unsoundness.
-     */
-    bool warnings;
-
-    /*
-     * Whether to ignore generated warnings.  For handling regressions with
-     * shell functions we don't model.
-     */
-    bool ignoreWarnings;
-
-    /*
      * The total time (in microseconds) spent generating inference structures
      * and performing analysis.
      */
@@ -767,6 +757,9 @@ struct TypeCompartment
     static const unsigned TYPE_COUNT_LIMIT = 4;
     unsigned typeCounts[TYPE_COUNT_LIMIT];
     unsigned typeCountOver;
+
+    /* Number of recompilations triggered. */
+    unsigned recompilations;
 
     void init();
     ~TypeCompartment();
@@ -826,16 +819,18 @@ enum SpewChannel {
 
 #ifdef DEBUG
 
-/* Spew with INFERFLAGS = full or base */
 void InferSpew(SpewChannel which, const char *fmt, ...);
-void InferSpewType(SpewChannel which, JSContext *cx, jstype type, const char *fmt, ...);
+const char * TypeString(jstype type);
 
 #else
 
 inline void InferSpew(SpewChannel which, const char *fmt, ...) {}
-inline void InferSpewType(SpewChannel which, JSContext *cx, jstype type, const char *fmt, ...) {}
+inline const char * TypeString(jstype type) { return NULL; }
 
 #endif
+
+/* Print a warning, dump state and abort the program. */
+void TypeFailure(JSContext *cx, const char *fmt, ...);
 
 } /* namespace types */
 } /* namespace js */

@@ -1824,7 +1824,7 @@ JSScript::makeAnalysis(JSContext *cx)
     char name[40];
     JS_snprintf(name, sizeof(name), "#%u:locals", analysis->id);
     analysis->localTypes.name_ = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), 0));
-    types::InferSpew(types::ISpewOps, "newScript: %s\n", name);
+    types::InferSpew(types::ISpewOps, "newScript: %s", name);
 #endif
 #endif /* JS_TYPE_INFERENCE */
 

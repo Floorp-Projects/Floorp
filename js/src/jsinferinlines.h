@@ -131,7 +131,7 @@ MakeTypeId(jsid id)
 
 /* Convert an id for printing during debug. */
 static inline const char *
-TypeIdString(JSContext *cx, jsid id)
+TypeIdString(jsid id)
 {
 #ifdef DEBUG
     if (JSID_IS_VOID(id))
@@ -339,9 +339,10 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
         return;
 
     if (compartment->types.interpreting) {
-        js::types::InferSpewType(js::types::ISpewDynamic, this, type, "AddBuiltin: %s %s:",
-                                 js::types::TypeIdString(this, obj->name),
-                                 js::types::TypeIdString(this, id));
+        js::types::InferSpew(js::types::ISpewDynamic, "AddBuiltin: %s %s: %s",
+                             js::types::TypeIdString(obj->name),
+                             js::types::TypeIdString(id),
+                             js::types::TypeString(type));
         compartment->types.addDynamicType(this, types, type);
     } else {
         types->addType(this, type);
@@ -373,7 +374,7 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
 }
 
 inline void
-JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
+JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense, bool dynamic)
 {
 #ifdef JS_TYPE_INFERENCE
     if (notDense) {
@@ -385,6 +386,12 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
     }
     obj->isPackedArray = false;
 
+    if (dynamic) {
+        js::types::InferSpew(js::types::ISpewDynamic, "%s: %s",
+                             notDense ? "NonDenseArray" : "NonPackedArray",
+                             js::types::TypeIdString(obj->name));
+    }
+
     /* All constraints listening to changes in packed/dense status are on the element types. */
     js::types::TypeSet *elementTypes = obj->properties(this).getVariable(this, JSID_VOID);
     js::types::TypeConstraint *constraint = elementTypes->constraintList;
@@ -393,34 +400,19 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
         constraint = constraint->next;
     }
 
-    if (compartment->types.hasPendingRecompiles())
+    if (dynamic && compartment->types.hasPendingRecompiles())
         compartment->types.processPendingRecompiles(this);
 #endif
 }
 
 void
-JSContext::monitorTypeObject(js::types::TypeObject *obj)
+JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (obj->monitored)
+    if (obj->unknownProperties())
         return;
 
-    /*
-     * Existing property constraints may have already been added to this object,
-     * which we need to do the right thing for.  We can't ensure that we will
-     * mark all monitored objects before they have been accessed, as the __proto__
-     * of a non-monitored object could be dynamically set to a monitored object.
-     * Adding unknown for any properties accessed already accounts for possible
-     * values read from them.
-     */
-
-    js::types::Variable *var = obj->properties(this).variables;
-    while (var) {
-        var->types.addType(this, js::types::TYPE_UNKNOWN);
-        var = var->next;
-    }
-
-    obj->monitored = true;
+    obj->properties(this).markUnknown(this);
 #endif
 }
 
@@ -463,8 +455,8 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
         if (!JSID_IS_VOID(id)) {
             js::types::TypeSet *types = script->localTypes.getVariable(this, id);
             if (!types->hasType(type)) {
-                js::types::InferSpewType(js::types::ISpewDynamic, this, type,
-                                         "AddArg: #%u %u:", script->id, arg);
+                js::types::InferSpew(js::types::ISpewDynamic, "AddArg: #%u %u: %s",
+                                     script->id, arg, js::types::TypeString(type));
                 compartment->types.addDynamicType(this, types, type);
             }
         } else {
@@ -506,8 +498,8 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
         else
             type = js::types::GetValueType(this, thisv);
         if (!analysis->thisTypes.hasType(type)) {
-            js::types::InferSpewType(js::types::ISpewDynamic, this, type,
-                                     "AddThis: #%u:", analysis->id);
+            js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
+                                 analysis->id, js::types::TypeString(type));
             compartment->types.addDynamicType(this, &analysis->thisTypes, type);
         }
     }
@@ -515,6 +507,8 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
     if (!analysis->hasAnalyzed()) {
         compartment->types.interpreting = false;
         uint64_t startTime = compartment->types.currentTime();
+
+        js::types::InferSpew(js::types::ISpewDynamic, "EntryPoint: #%lu", analysis->id);
 
         analysis->analyze(this);
 
@@ -606,7 +600,10 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
             return;
     }
 
-    cx->compartment->types.dynamicAssign(cx, obj, id, rval);
+    if (!obj->getTypeObject()->unknownProperties() ||
+        id == ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom)) {
+        cx->compartment->types.dynamicAssign(cx, obj, id, rval);
+    }
 #endif
 }
 
@@ -619,8 +616,9 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
         js::types::TypeSet *argTypes = analysis->localTypes.getVariable(cx, id);
         js::types::jstype type = js::types::GetValueType(cx, value);
         if (!argTypes->hasType(type)) {
-            js::types::InferSpewType(js::types::ISpewDynamic, cx, type, "SetArgument: #%u %s:",
-                                     analysis->id, js::types::TypeIdString(cx, id));
+            js::types::InferSpew(js::types::ISpewDynamic, "SetArgument: #%u %s: %s",
+                                 analysis->id, js::types::TypeIdString(id),
+                                 js::types::TypeString(type));
             cx->compartment->types.addDynamicType(cx, argTypes, type);
         }
     }
@@ -727,19 +725,18 @@ Bytecode::getInitObject(JSContext *cx, bool isArray)
 /////////////////////////////////////////////////////////////////////
 
 inline jsid
-Script::getLocalId(unsigned index, types::TypeStack *stack)
+Script::getLocalId(unsigned index, Bytecode *code)
 {
     if (index >= script->nfixed) {
-        /*
-         * This is an access on a let variable, we need the stack to figure out
-         * the name of the accessed variable.  If multiple let variables have
-         * the same name, we flatten their types together.
-         */
-        stack = stack ? stack->group() : NULL;
-        while (stack && (stack->stackDepth != index - script->nfixed)) {
-            stack = stack->innerStack;
-            stack = stack ? stack->group() : NULL;
-        }
+        if (!code)
+            return JSID_VOID;
+
+        JS_ASSERT(index - script->nfixed < code->stackDepth);
+        unsigned diff = code->stackDepth - (index - script->nfixed);
+        types::TypeStack *stack = code->inStack;
+        for (unsigned i = 1; i < diff; i++)
+            stack = stack->group()->innerStack;
+        JS_ASSERT(stack);
 
         if (stack && JSID_TO_STRING(stack->letVariable) != NULL)
             return stack->letVariable;
@@ -774,19 +771,16 @@ Script::getArgumentId(unsigned index)
 }
 
 inline types::TypeSet*
-Script::getStackTypes(unsigned index, types::TypeStack *stack)
+Script::getStackTypes(unsigned index, Bytecode *code)
 {
     JS_ASSERT(index >= script->nfixed);
+    JS_ASSERT(index - script->nfixed < code->stackDepth);
 
-    stack = stack->group();
-    while (stack && (stack->stackDepth != index - script->nfixed)) {
-        stack = stack->innerStack;
-        stack = stack ? stack->group() : NULL;
-    }
-
-    /* This should not be used for accessing a let variable's stack slot. */
-    JS_ASSERT(stack && !JSID_IS_VOID(stack->letVariable));
-    return &stack->types;
+    types::TypeStack *stack = code->inStack;
+    unsigned diff = code->stackDepth - (index - script->nfixed) - 1;
+    for (unsigned i = 0; i < diff; i++)
+        stack = stack->group()->innerStack;
+    return &stack->group()->types;
 }
 
 inline JSValueType
@@ -826,7 +820,7 @@ TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *
     JS_ASSERT(this == &cx->compartment->types);
     JS_ASSERT(type);
 
-    InferSpewType(ISpewOps, cx, type, "pending: C%u", constraint->id());
+    InferSpew(ISpewOps, "pending: C%u %s", constraint->id(), TypeString(type));
 
     if (pendingCount == pendingCapacity)
         growPendingArray();
@@ -852,7 +846,8 @@ TypeCompartment::resolvePending(JSContext *cx)
     /* Handle all pending type registrations. */
     while (pendingCount) {
         const PendingWork &pending = pendingArray[--pendingCount];
-        InferSpewType(ISpewOps, cx, pending.type, "resolve: C%u ", pending.constraint->id());
+        InferSpew(ISpewOps, "resolve: C%u %s",
+                  pending.constraint->id(), TypeString(pending.type));
         pending.constraint->newType(cx, pending.source, pending.type);
     }
 
@@ -1061,7 +1056,7 @@ TypeSet::addType(JSContext *cx, jstype type)
 {
     JS_ASSERT(type);
     JS_ASSERT_IF(typeFlags & TYPE_FLAG_UNKNOWN, typeFlags == TYPE_FLAG_UNKNOWN);
-    InferSpewType(ISpewOps, cx, type, "addType: T%u ", id());
+    InferSpew(ISpewOps, "addType: T%u %s", id(), TypeString(type));
 
     if (typeFlags & TYPE_FLAG_UNKNOWN)
         return;
@@ -1124,7 +1119,7 @@ inline TypeSet *
 TypeSet::make(JSContext *cx, JSArenaPool &pool, const char *name)
 {
     TypeSet *res = ArenaNew<TypeSet>(pool, &pool);
-    InferSpew(ISpewOps, "intermediate %s T%u\n", name, res->id());
+    InferSpew(ISpewOps, "intermediate %s T%u", name, res->id());
 
     return res;
 }
@@ -1149,7 +1144,6 @@ TypeStack::setInnerStack(TypeStack *inner)
 {
     JS_ASSERT(!mergedGroup);
     innerStack = inner;
-    stackDepth = inner ? (inner->group()->stackDepth + 1) : 0;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1215,8 +1209,17 @@ VariableSet::getVariable(JSContext *cx, jsid id)
     res->next = variables;
     variables = res;
 
-    InferSpew(ISpewOps, "addVariable: %s %s T%u\n",
-              TypeIdString(cx, name()), TypeIdString(cx, id), res->types.id());
+    InferSpew(ISpewOps, "addVariable: %s %s T%u",
+              TypeIdString(name()), TypeIdString(id), res->types.id());
+
+    if (unknown) {
+        /*
+         * Immediately mark the variable as unknown. Ideally we won't be doing this
+         * too often, but we don't assert !unknown to avoid extra complexity in
+         * other code accessing variable sets.
+         */
+        res->types.addType(cx, TYPE_UNKNOWN);
+    }
 
     /* Propagate the variable to any other sets receiving our variables. */
     if (propagateCount >= 2) {

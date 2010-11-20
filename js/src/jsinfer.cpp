@@ -59,6 +59,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 
+#include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -130,8 +131,6 @@ static const char *js_CodeNameTwo[] = {
 // Logging
 /////////////////////////////////////////////////////////////////////
 
-#ifdef DEBUG
-
 static bool InferSpewActive(SpewChannel channel)
 {
     static bool active[SPEW_COUNT];
@@ -156,6 +155,34 @@ static bool InferSpewActive(SpewChannel channel)
     return active[channel];
 }
 
+#ifdef DEBUG
+
+const char *
+TypeString(jstype type)
+{
+    switch (type) {
+      case TYPE_UNDEFINED:
+        return "void";
+      case TYPE_NULL:
+        return "null";
+      case TYPE_BOOLEAN:
+        return "bool";
+      case TYPE_INT32:
+        return "int";
+      case TYPE_DOUBLE:
+        return "float";
+      case TYPE_STRING:
+        return "string";
+      case TYPE_UNKNOWN:
+        return "unknown";
+      default: {
+        JS_ASSERT(TypeIsObject(type));
+        TypeObject *object = (TypeObject *) type;
+        return TypeIdString(object->name);
+      }
+    }
+}
+
 void InferSpew(SpewChannel channel, const char *fmt, ...)
 {
     if (!InferSpewActive(channel))
@@ -169,38 +196,22 @@ void InferSpew(SpewChannel channel, const char *fmt, ...)
     va_end(ap);
 }
 
-void InferSpewType(SpewChannel channel, JSContext *cx, jstype type, const char *fmt, ...)
+#endif
+
+void TypeFailure(JSContext *cx, const char *fmt, ...)
 {
-    JS_ASSERT(type);
-
-    if (!InferSpewActive(channel))
-        return;
-
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stdout, "[infer] ");
+    fprintf(stdout, "[infer failure] ");
     vfprintf(stdout, fmt, ap);
+    fprintf(stdout, "\n");
     va_end(ap);
 
-    TypeSet types(&cx->compartment->types.pool);
-    PodZero(&types);
+    cx->compartment->types.finish(cx, cx->compartment);
 
-    if (type == TYPE_UNKNOWN) {
-        types.typeFlags = TYPE_FLAG_UNKNOWN;
-    } else if (TypeIsPrimitive(type)) {
-        types.typeFlags = 1 << type;
-    } else {
-        types.typeFlags = TYPE_FLAG_OBJECT;
-        types.objectSet = (TypeObject**) type;
-        types.objectCount = 1;
-    }
-
-    types.print(cx);
-
-    fprintf(stdout, "\n");
+    fflush(stdout);
+    *((int*)NULL) = 0;  /* Type warnings */
 }
-
-#endif
 
 /////////////////////////////////////////////////////////////////////
 // TypeSet
@@ -209,7 +220,7 @@ void InferSpewType(SpewChannel channel, JSContext *cx, jstype type, const char *
 inline void
 TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 {
-    InferSpew(ISpewOps, "addConstraint: T%u C%u %s\n",
+    InferSpew(ISpewOps, "addConstraint: T%u C%u %s",
               id(), constraint->id(), constraint->kind());
 
     JS_ASSERT(constraint->next == NULL);
@@ -277,11 +288,11 @@ TypeSet::print(JSContext *cx)
             for (unsigned i = 0; i < objectCapacity; i++) {
                 TypeObject *object = objectSet[i];
                 if (object)
-                    printf(" %s", TypeIdString(cx, object->name));
+                    printf(" %s", TypeIdString(object->name));
             }
         } else if (objectCount == 1) {
             TypeObject *object = (TypeObject*) objectSet;
-            printf(" %s", TypeIdString(cx, object->name));
+            printf(" %s", TypeIdString(object->name));
         }
     }
 }
@@ -533,9 +544,11 @@ public:
 
 /* Update types with the possible values bound by the for loop in code. */
 static inline void
-SetForTypes(JSContext *cx, analyze::Bytecode *code, TypeSet *types)
+SetForTypes(JSContext *cx, const analyze::Script::AnalyzeState &state,
+            analyze::Bytecode *code, TypeSet *types)
 {
-    if (code->pushedArray[0].group()->isForEach)
+    JS_ASSERT(code->stackDepth == state.stackDepth);
+    if (state.popped(0).isForEach)
         types->addType(cx, TYPE_UNKNOWN);
     else
         types->addType(cx, TYPE_STRING);
@@ -599,8 +612,8 @@ PropertyAccess(JSContext *cx, analyze::Bytecode *code, TypeObject *object,
 {
     JS_ASSERT_IF(!target, assign);
 
-    /* Reads from monitored objects are unknown, writes to monitored objects are ignored. */
-    if (object->monitored) {
+    /* Reads from objects with unknown properties are unknown, writes to such objects are ignored. */
+    if (object->unknownProperties()) {
         if (!assign)
             target->addType(cx, TYPE_UNKNOWN);
         return;
@@ -623,7 +636,7 @@ PropertyAccess(JSContext *cx, analyze::Bytecode *code, TypeObject *object,
 
     /* Mark arrays with possible non-integer properties as not dense. */
     if (assign && !JSID_IS_VOID(id))
-        cx->markTypeArrayNotPacked(object, true);
+        cx->markTypeArrayNotPacked(object, true, false);
 
     TypeSet *types = object->properties(cx).getVariable(cx, id);
 
@@ -666,12 +679,14 @@ void
 TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
 {
     switch (type) {
+      case TYPE_UNDEFINED:
       case TYPE_INT32:
       case TYPE_DOUBLE:
         /*
          * Integer index access, these are all covered by the JSID_VOID property.
-         * We are optimistically treat double accesses as getting an integer property,
-         * This needs to be checked at runtime.
+         * We are optimistically treat undefined accesses as not actually occurring,
+         * and double accesses as getting an integer property. These need to be checked
+         * at runtime.
          */
         if (assign)
             object->addSetProperty(cx, code, target, JSID_VOID);
@@ -681,10 +696,7 @@ TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
       default:
         /*
          * Access to a potentially arbitrary element.  Monitor assignments to unknown
-         * elements, and treat reads of unknown elements as unknown.  TODO: we need to
-         * identify hashmap uses either ahead of time or on the fly, as currently we
-         * will make separate entries in the variable set of the properties for every
-         * element added.
+         * elements, and treat reads of unknown elements as unknown.
          */
         if (assign)
             cx->compartment->types.monitorBytecode(cx, code);
@@ -953,6 +965,21 @@ TypeConstraintGenerator::newType(JSContext *cx, TypeSet *source, jstype type)
         target->addType(cx, TYPE_UNKNOWN);
 }
 
+/* Constraint marking incoming arrays as possibly packed. */
+class TypeConstraintPossiblyPacked : public TypeConstraint
+{
+public:
+    TypeConstraintPossiblyPacked() : TypeConstraint("possiblyPacked") {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type)
+    {
+        if (type != TYPE_UNKNOWN && TypeIsObject(type)) {
+            TypeObject *object = (TypeObject *) type;
+            object->possiblePackedArray = true;
+        }
+    }
+};
+
 /////////////////////////////////////////////////////////////////////
 // Freeze constraints
 /////////////////////////////////////////////////////////////////////
@@ -1035,6 +1062,18 @@ TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script)
 static inline ObjectKind
 CombineObjectKind(TypeObject *object, ObjectKind kind)
 {
+    /*
+     * Our initial guess is that all arrays are packed, but if the array is
+     * created through [], Array() or Array(N) and we don't see later code
+     * which looks to be filling it in starting at zero, consider it not packed.
+     * All requests for the kind of an object go through here, so there are
+     * no FreezeObjectKind constraints to update if we unset isPackedArray here.
+     */
+    if (object->isPackedArray && !object->possiblePackedArray) {
+        InferSpew(ISpewDynamic, "Possible unpacked array: %s", TypeIdString(object->name));
+        object->isPackedArray = false;
+    }
+
     ObjectKind nkind;
     if (object->isFunction)
         nkind = object->asFunction()->script ? OBJECT_SCRIPTED_FUNCTION : OBJECT_NATIVE_FUNCTION;
@@ -1317,7 +1356,10 @@ TypeCompartment::init()
     JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
 
     objectNameTable = new ObjectNameTable();
-    bool success = objectNameTable->init();
+#ifdef DEBUG
+    bool success =
+#endif
+        objectNameTable->init();
     JS_ASSERT(success);
 }
 
@@ -1354,8 +1396,12 @@ TypeCompartment::makeFixedTypeObject(JSContext *cx, FixedTypeObjectName which)
     if (which <= TYPE_OBJECT_BASE_LAST) {
         if (which == TYPE_OBJECT_EMPTY_FUNCTION)
             cx->addTypePrototype(type, cx->getFixedTypeObject(TYPE_OBJECT_FUNCTION_PROTOTYPE));
+        else if (which == TYPE_OBJECT_OBJECT_PROTOTYPE)
+            type->hasObjectPropagation = true;
+        else if (which == TYPE_OBJECT_ARRAY_PROTOTYPE)
+            type->hasArrayPropagation = true;
     } else if (which <= TYPE_OBJECT_MONITOR_LAST) {
-        cx->monitorTypeObject(type);
+        cx->markTypeObjectUnknownProperties(type);
     } else if (which <= TYPE_OBJECT_ARRAY_LAST) {
         cx->addTypePrototype(type, cx->getFixedTypeObject(TYPE_OBJECT_ARRAY_PROTOTYPE));
     } else {
@@ -1430,8 +1476,8 @@ TypeCompartment::addDynamicPush(JSContext *cx, analyze::Bytecode &code,
     js::types::TypeSet *types = code.pushed(index);
     JS_ASSERT(!types->hasType(type));
 
-    InferSpewType(ISpewDynamic, cx, type, "MonitorResult: #%u:%05u %u:",
-                  code.script->id, code.offset, index);
+    InferSpew(ISpewDynamic, "MonitorResult: #%u:%05u %u: %s",
+              code.script->id, code.offset, index, TypeString(type));
 
     interpreting = false;
     uint64_t startTime = currentTime();
@@ -1451,7 +1497,7 @@ TypeCompartment::addDynamicPush(JSContext *cx, analyze::Bytecode &code,
         code.hasIncDecOverflow = true;
 
         /* Inc/dec ops do not use the temporary analysis state. */
-        analyze::Script::TypeState state;
+        analyze::Script::AnalyzeState state;
         code.script->analyzeTypes(cx, &code, state);
     }
 
@@ -1501,6 +1547,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
             return;
     }
 
+    recompilations++;
     pendingRecompiles->append(script);
 }
 
@@ -1509,6 +1556,18 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
 {
     jstype rvtype = GetValueType(cx, rval);
     TypeObject *object = obj->getTypeObject();
+
+    /*
+     * Extra propagation for writes of the prototype property. Do this even if the
+     * object has unknown properties, because the 'new' object for the function may
+     * have known properties. :TODO: might be simpler for unknown function to imply
+     * unknown new object.
+     */
+    if (id == id_prototype(cx) && TypeIsObject(rvtype) && object->isFunction)
+        cx->addTypePrototype(object->asFunction()->getNewObject(cx), (TypeObject *) rvtype);
+
+    if (object->unknownProperties())
+        return;
 
     TypeSet *assignTypes;
 
@@ -1527,11 +1586,20 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
         assignTypes = script->localTypes.getVariable(cx, id);
     } else {
         id = MakeTypeId(id);
-        assignTypes = object->properties(cx).getVariable(cx, id);
 
-        /* Extra propagation for writes of the prototype property. */
-        if (id == id_prototype(cx) && TypeIsObject(rvtype) && object->isFunction)
-            cx->addTypePrototype(object->asFunction()->getNewObject(cx), (TypeObject *) rvtype);
+        if (!JSID_IS_VOID(id) && id != id_prototype(cx) && id != id___proto__(cx)) {
+            /*
+             * Monitor any object which has had dynamic assignments to string properties,
+             * to avoid making large numbers of type properties for hashmap-style objects.
+             * :FIXME: this is too aggressive for things like prototype library initialization.
+             */
+            cx->markTypeObjectUnknownProperties(object);
+            if (hasPendingRecompiles())
+                processPendingRecompiles(cx);
+            return;
+        }
+
+        assignTypes = object->properties(cx).getVariable(cx, id);
 
         /* Extra propagation for writes of the __proto__ property. */
         if (id == id___proto__(cx) && TypeIsObject(rvtype))
@@ -1541,8 +1609,8 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
     if (assignTypes->hasType(rvtype))
         return;
 
-    InferSpewType(ISpewDynamic, cx, rvtype, "MonitorAssign: %s %s:",
-                  TypeIdString(cx, object->name), TypeIdString(cx, id));
+    InferSpew(ISpewDynamic, "MonitorAssign: %s %s: %s",
+              TypeIdString(object->name), TypeIdString(id), TypeString(rvtype));
     addDynamicType(cx, assignTypes, rvtype);
 }
 
@@ -1597,12 +1665,10 @@ TypeCompartment::monitorBytecode(JSContext *cx, analyze::Bytecode *code)
         code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
       default:
-        warnings = true;
-        InferSpew(ISpewDynamic, "warning: Monitoring unknown bytecode: %s\n", js_CodeNameTwo[op]);
-        break;
+        TypeFailure(cx, "Monitoring unknown bytecode: %s", js_CodeNameTwo[op]);
     }
 
-    InferSpew(ISpewOps, "addMonitorNeeded: #%u:%05u\n", code->script->id, code->offset);
+    InferSpew(ISpewOps, "addMonitorNeeded: #%u:%05u", code->script->id, code->offset);
 
     code->monitorNeeded = true;
 
@@ -1616,36 +1682,25 @@ TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
 {
     JS_ASSERT(this == &compartment->types);
 
-    if (ignoreWarnings)
-        warnings = false;
-
-    // for debugging regressions.
-    if (warnings) {
-        printf("Type warnings generated, bailing out...\n");
-        fflush(stdout);
-        *((int*)NULL) = 0;  /* Type warnings */
-    }
-
-#ifdef DEBUG
-    if (!InferSpewActive(ISpewResult))
+    if (!InferSpewActive(ISpewResult) || JS_CLIST_IS_EMPTY(&compartment->scripts))
         return;
 
     for (JSScript *script = (JSScript *)compartment->scripts.next;
          &script->links != &compartment->scripts;
          script = (JSScript *)script->links.next) {
         if (script->analysis)
-            script->analysis->print(cx);
+            script->analysis->finish(cx);
     }
 
+#ifdef DEBUG
     TypeObject *object = objects;
     while (object) {
         object->print(cx);
         object = object->next;
     }
+#endif
 
     double millis = analysisTime / 1000.0;
-
-    printf("\nWarnings: %s\n", warnings ? "yes" : "no");
 
     printf("Counts: ");
     for (unsigned count = 0; count < TYPE_COUNT_LIMIT; count++) {
@@ -1655,8 +1710,8 @@ TypeCompartment::finish(JSContext *cx, JSCompartment *compartment)
     }
     printf(" (%u over)\n", typeCountOver);
 
+    printf("Recompilations: %u\n", recompilations);
     printf("Time: %.2f ms\n", millis);
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1682,26 +1737,15 @@ TypeStack::merge(JSContext *cx, TypeStack *one, TypeStack *two)
     JS_ASSERT(one->types.typeFlags == 0 && one->types.constraintList == NULL);
     JS_ASSERT(two->types.typeFlags == 0 && two->types.constraintList == NULL);
 
-    /* The nodes in a class must have consistent depth. */
-    JS_ASSERT(one->stackDepth == two->stackDepth);
-
     /* Merge any inner portions of the stack for the two nodes. */
     if (one->innerStack)
         merge(cx, one->innerStack, two->innerStack);
 
-    /* Check that additional information is consistent between the nodes. */
-    JS_ASSERT(one->boundWith == two->boundWith);
-    JS_ASSERT(one->isForEach == two->isForEach);
-    JS_ASSERT(one->ignoreTypeTag == two->ignoreTypeTag);
-    JS_ASSERT(one->letVariable == two->letVariable);
-    JS_ASSERT(one->scopeVars == two->scopeVars);
-
-    InferSpew(ISpewOps, "merge: T%u T%u\n", one->types.id(), two->types.id());
+    InferSpew(ISpewOps, "merge: T%u T%u", one->types.id(), two->types.id());
 
     /* one has now been merged into two, do the actual join. */
     PodZero(one);
     one->mergedGroup = two;
-    two->hasMerged = true;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1714,6 +1758,13 @@ VariableSet::addPropagate(JSContext *cx, VariableSet *target,
 {
     if (!HashSetInsert(cx, propagateSet, propagateCount, target))
         return false;
+
+    if (unknown) {
+        /* Just mark the target as unknown. */
+        if (!target->unknown)
+            target->markUnknown(cx);
+        return true;
+    }
 
     /* Push all existing variables into the target, except (optionally) 'prototype'. */
     Variable *var = variables;
@@ -1742,6 +1793,43 @@ VariableSet::addPropagate(JSContext *cx, VariableSet *target,
 }
 
 void
+VariableSet::markUnknown(JSContext *cx)
+{
+    JS_ASSERT(!unknown);
+    unknown = true;
+
+    /*
+     * Existing constraints may have already been added to this set, which we need
+     * to do the right thing for.  We can't ensure that we will mark all unknown
+     * objects before they have been accessed, as the __proto__ of a known object
+     * could be dynamically set to an unknown object, and we can decide to ignore
+     * properties of an object during analysis (i.e. hashmaps). Adding unknown for
+     * any properties accessed already accounts for possible values read from them.
+     */
+
+    js::types::Variable *var = variables;
+    while (var) {
+        var->types.addType(cx, js::types::TYPE_UNKNOWN);
+        var = var->next;
+    }
+
+    /* Mark existing sets being propagated into as unknown. */
+
+    if (propagateCount >= 2) {
+        unsigned capacity = HashSetCapacity(propagateCount);
+        for (unsigned i = 0; i < capacity; i++) {
+            VariableSet *target = propagateSet[i];
+            if (target && !target->unknown)
+                target->markUnknown(cx);
+        }
+    } else if (propagateCount == 1) {
+        VariableSet *target = (VariableSet *) propagateSet;
+        if (!target->unknown)
+            target->markUnknown(cx);
+    }
+}
+
+void
 VariableSet::print(JSContext *cx)
 {
     if (variables == NULL) {
@@ -1753,7 +1841,7 @@ VariableSet::print(JSContext *cx)
 
     Variable *var = variables;
     while (var) {
-        printf("\n    %s:", TypeIdString(cx, var->id));
+        printf("\n    %s:", TypeIdString(var->id));
         var->types.print(cx);
         var = var->next;
     }
@@ -1766,14 +1854,14 @@ VariableSet::print(JSContext *cx)
 /////////////////////////////////////////////////////////////////////
 
 TypeObject::TypeObject(JSContext *cx, JSArenaPool *pool, jsid name, bool isArray)
-    : name(name), isFunction(false), monitored(false),
+    : name(name), isFunction(false),
       propertySet(pool), propertiesFilled(false), next(NULL),
       hasObjectPropagation(false), hasArrayPropagation(false), isInitObject(false),
       isDenseArray(isArray), isPackedArray(isArray)
 {
 #ifdef DEBUG
     propertySet.name_ = name;
-    InferSpew(ISpewOps, "newObject: %s\n", TypeIdString(cx, name));
+    InferSpew(ISpewOps, "newObject: %s", TypeIdString(name));
 #endif
 }
 
@@ -1838,7 +1926,7 @@ TypeFunction::fillProperties(JSContext *cx)
 void
 TypeObject::print(JSContext *cx)
 {
-    printf("%s", TypeIdString(cx, name));
+    printf("%s", TypeIdString(name));
 
     if (isFunction && !propertiesFilled)
         printf("\n");
@@ -1857,7 +1945,7 @@ TypeFunction::TypeFunction(JSContext *cx, JSArenaPool *pool, jsid name)
       isBuiltin(false), isGeneric(false)
 {
     isFunction = true;
-    InferSpew(ISpewOps, "newFunction: %s return T%u\n", TypeIdString(cx, name), returnTypes.id());
+    InferSpew(ISpewOps, "newFunction: %s return T%u", TypeIdString(name), returnTypes.id());
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1935,7 +2023,7 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
     int useCount = js::analyze::GetUseCount(this, code.offset);
     JSOp op = (JSOp) *pc;
 
-    if (!useCount || code.missingTypes)
+    if (!useCount)
         return;
 
     js::types::TypeStack *stack = code.inStack->group();
@@ -1952,13 +2040,10 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
             if (object->isDenseArray) {
                 if (!val.toObject().isDenseArray() ||
                     (object->isPackedArray && !val.toObject().isPackedDenseArray())) {
-                    js::types::InferSpew(js::types::ISpewDynamic,
-                        "warning: Object not %s array at #%u:%05u popped %u: %s\n",
+                    js::types::TypeFailure(cx, "Object not %s array at #%u:%05u popped %u: %s",
                         object->isPackedArray ? "packed" : "dense",
                         analysis->id, code.offset, i,
-                        js::types::TypeIdString(cx, object->name));
-                    cx->compartment->types.warnings = true;
-                    object->isDenseArray = object->isPackedArray = false;
+                        js::types::TypeIdString(object->name));
                 }
             }
         }
@@ -1968,12 +2053,8 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
         stack = stack->innerStack ? stack->innerStack->group() : NULL;
 
         if (!matches) {
-            js::types::InferSpewType(js::types::ISpewDynamic, cx, type,
-                                     "warning: Missing type at #%u:%05u popped %u: ",
-                                     analysis->id, code.offset, i);
-
-            cx->compartment->types.warnings = true;
-            code.missingTypes = true;
+            js::types::TypeFailure(cx, "Missing type at #%u:%05u popped %u: %s",
+                                   analysis->id, code.offset, i, js::types::TypeString(type));
             return;
         }
     }
@@ -2154,10 +2235,17 @@ GetGlobalId(JSContext *cx, Script *script, const jsbytecode *pc)
 }
 
 static inline JSObject *
-GetScriptObject(JSContext *cx, Script *script, const jsbytecode *pc, unsigned offset)
+GetScriptObject(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset)
 {
-    unsigned index = js_GetIndexFromBytecode(cx, script->getScript(), (jsbytecode*) pc, offset);
-    return script->getScript()->getObject(index);
+    unsigned index = js_GetIndexFromBytecode(cx, script, (jsbytecode*) pc, offset);
+    return script->getObject(index);
+}
+
+static inline const Value &
+GetScriptConst(JSContext *cx, JSScript *script, const jsbytecode *pc)
+{
+    unsigned index = js_GetIndexFromBytecode(cx, script, (jsbytecode*) pc, 0);
+    return script->getConst(index);
 }
 
 /* Get the script and id of a variable referred to by an UPVAR opcode. */
@@ -2183,13 +2271,13 @@ GetUpvarVariable(JSContext *cx, Bytecode *code, unsigned index, jsid *id)
      * a local or the function itself.
      */
     if (!newScript->fun)
-        *id = newScript->getLocalId(newScript->getScript()->nfixed + slot, newCode->inStack);
+        *id = newScript->getLocalId(newScript->getScript()->nfixed + slot, newCode);
     else if (slot < newScript->argCount())
         *id = newScript->getArgumentId(slot);
     else if (slot == UpvarCookie::CALLEE_SLOT)
         *id = ATOM_TO_JSID(newScript->fun->atom);
     else
-        *id = newScript->getLocalId(slot - newScript->argCount(), newCode->inStack);
+        *id = newScript->getLocalId(slot - newScript->argCount(), newCode);
 
     JS_ASSERT(!JSID_IS_VOID(*id));
     return newScript->evalParent();
@@ -2243,7 +2331,7 @@ MergePushed(JSContext *cx, JSArenaPool &pool, Bytecode *code, unsigned num, Type
 }
 
 void
-Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
+Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 {
     unsigned offset = code->offset;
 
@@ -2251,7 +2339,24 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
     jsbytecode *pc = script->code + offset;
     JSOp op = (JSOp)*pc;
 
-    InferSpew(ISpewOps, "analyze: #%u:%05u\n", id, offset);
+    InferSpew(ISpewOps, "analyze: #%u:%05u", id, offset);
+
+    if (code->stackDepth > state.stackDepth && state.stack) {
+#ifdef DEBUG
+        /*
+         * Check that we aren't destroying any useful information. This should only
+         * occur around exception handling bytecode.
+         */
+        for (unsigned i = state.stackDepth; i < code->stackDepth; i++) {
+            JS_ASSERT(!state.stack[i].isForEach);
+            JS_ASSERT(!state.stack[i].scopeVars);
+            JS_ASSERT(!state.stack[i].hasDouble);
+        }
+#endif
+        unsigned ndefs = code->stackDepth - state.stackDepth;
+        memset(&state.stack[state.stackDepth], 0, ndefs * sizeof(AnalyzeStateStack));
+    }
+    state.stackDepth = code->stackDepth;
 
     /* Add type constraints for the various opcodes. */
     switch (op) {
@@ -2374,18 +2479,10 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         code->popped(0)->addSubset(cx, pool, code->pushed(0));
         break;
 
-      case JSOP_DUP: {
+      case JSOP_DUP:
         MergePushed(cx, pool, code, 0, code->popped(0));
         MergePushed(cx, pool, code, 1, code->popped(0));
-
-        /* Propagate any scope information on the stack value.  blech. */
-        TypeStack *stack = code->inStack->group();
-        if (stack->scopeVars) {
-            code->pushedArray[0].group()->scopeVars = stack->scopeVars;
-            code->pushedArray[1].group()->scopeVars = stack->scopeVars;
-        }
         break;
-      }
 
       case JSOP_DUP2:
         MergePushed(cx, pool, code, 0, code->popped(1));
@@ -2424,12 +2521,15 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         if (vars == GetGlobalProperties(cx)) {
             /*
              * This might be a lazily loaded property of the global object.
-             * Resolve it now.
+             * Resolve it now. Subtract this from the total analysis time.
              */
+            uint64_t startTime = cx->compartment->types.currentTime();
             JSObject *obj;
             JSProperty *prop;
             js_LookupPropertyWithFlags(cx, cx->globalObject, id,
                                        JSRESOLVE_QUALIFIED, &obj, &prop);
+            uint64_t endTime = cx->compartment->types.currentTime();
+            cx->compartment->types.analysisTime -= (endTime - startTime);
 
             /* Handle as a property access. */
             PropertyAccess(cx, code, cx->getGlobalTypeObject(), false, code->pushed(0), id);
@@ -2448,29 +2548,20 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
       }
 
-      case JSOP_BINDGNAME: {
-        jsid id = GetAtomId(cx, this, pc, 0);
-        TypeStack *stack = code->pushedArray[0].group();
-        stack->scopeVars = GetGlobalProperties(cx);
+      case JSOP_BINDGNAME:
+      case JSOP_BINDNAME:
+        /* Handled below. */
         break;
-      }
-
-      case JSOP_BINDNAME: {
-        jsid id = GetAtomId(cx, this, pc, 0);
-        TypeStack *stack = code->pushedArray[0].group();
-        stack->scopeVars = SearchScope(cx, this, code->inStack, id);
-        break;
-      }
 
       case JSOP_SETGNAME:
       case JSOP_SETNAME: {
         jsid id = GetAtomId(cx, this, pc, 0);
 
-        TypeStack *stack = code->inStack->group()->innerStack->group();
-        if (stack->scopeVars && stack->scopeVars == GetGlobalProperties(cx)) {
+        const AnalyzeStateStack &stack = state.popped(1);
+        if (stack.scopeVars && stack.scopeVars == GetGlobalProperties(cx)) {
             PropertyAccess(cx, code, cx->getGlobalTypeObject(), true, code->popped(0), id);
-        } else if (stack->scopeVars) {
-            TypeSet *types = stack->scopeVars->getVariable(cx, id);
+        } else if (stack.scopeVars) {
+            TypeSet *types = stack.scopeVars->getVariable(cx, id);
             code->popped(0)->addSubset(cx, pool, types);
         } else {
             cx->compartment->types.monitorBytecode(cx, code);
@@ -2483,12 +2574,12 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_GETXPROP: {
         jsid id = GetAtomId(cx, this, pc, 0);
 
-        VariableSet *vars = code->inStack->group()->scopeVars;
-        if (vars && vars == GetGlobalProperties(cx)) {
+        const AnalyzeStateStack &stack = state.popped(0);
+        if (stack.scopeVars && stack.scopeVars == GetGlobalProperties(cx)) {
             PropertyAccess(cx, code, cx->getGlobalTypeObject(), false, code->pushed(0), id);
-        } else if (vars) {
-            TypeSet *types = vars->getVariable(cx, id);
-            types->addSubset(cx, *vars->pool, code->pushed(0));
+        } else if (stack.scopeVars) {
+            TypeSet *types = stack.scopeVars->getVariable(cx, id);
+            types->addSubset(cx, *stack.scopeVars->pool, code->pushed(0));
         } else {
             code->setFixed(cx, 0, TYPE_UNKNOWN);
         }
@@ -2617,7 +2708,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_SETLOCALPOP:
       case JSOP_CALLLOCAL: {
         uint32 local = GET_SLOTNO(pc);
-        jsid id = getLocalId(local, code->inStack);
+        jsid id = getLocalId(local, code);
 
         TypeSet *types;
         JSArenaPool *pool;
@@ -2625,7 +2716,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
             types = evalParent()->localTypes.getVariable(cx, id);
             pool = &evalParent()->pool;
         } else {
-            types = getStackTypes(GET_SLOTNO(pc), code->inStack);
+            types = getStackTypes(GET_SLOTNO(pc), code);
             pool = &this->pool;
         }
 
@@ -2636,6 +2727,10 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         }
 
         if (op == JSOP_SETLOCAL || op == JSOP_SETLOCALPOP) {
+            state.clearLocal(local);
+            if (state.popped(0).isConstant)
+                state.addConstLocal(local, state.popped(0).isZero);
+
             code->popped(0)->addSubset(cx, this->pool, types);
         } else {
             /*
@@ -2656,9 +2751,11 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC: {
         uint32 local = GET_SLOTNO(pc);
-        jsid id = getLocalId(local, code->inStack);
-        TypeSet *types = evalParent()->localTypes.getVariable(cx, id);
+        jsid id = getLocalId(local, code);
 
+        state.clearLocal(local);
+
+        TypeSet *types = evalParent()->localTypes.getVariable(cx, id);
         types->addArith(cx, evalParent()->pool, code, types);
         MergePushed(cx, evalParent()->pool, code, 0, types);
 
@@ -2742,7 +2839,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       }
 
       case JSOP_GETLOCALPROP: {
-        jsid id = getLocalId(GET_SLOTNO(pc), code->inStack);
+        jsid id = getLocalId(GET_SLOTNO(pc), code);
         TypeSet *types = evalParent()->localTypes.getVariable(cx, id);
 
         jsid propid = GetAtomId(cx, this, pc, SLOTNO_LEN);
@@ -2763,6 +2860,18 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
 
       case JSOP_SETELEM:
+        if (state.popped(1).isZero) {
+            /*
+             * Initializing the array with what looks like it could be zero.
+             * This is sensitive to the order in which bytecodes are emitted
+             * for common loop forms: '(for i = 0;; i++) a[i] = ...' and
+             * 'i = 0; while () { a[i] = ...; i++ }. In the bytecode the increment
+             * will appear after the initialization, and we are looking for arrays
+             * initialized between the two statements.
+             */
+            code->popped(2)->add(cx, ArenaNew<TypeConstraintPossiblyPacked>(pool));
+        }
+
         code->popped(1)->addSetElem(cx, code, code->popped(2), code->popped(0));
         MergePushed(cx, pool, code, 0, code->popped(0));
         break;
@@ -2803,9 +2912,13 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_MUL:
       case JSOP_MOD:
       case JSOP_DIV:
-        /* :TODO: Add heuristics for guessing when dividing two ints produces a double. */
         code->popped(0)->addArith(cx, pool, code, code->pushed(0));
         code->popped(1)->addArith(cx, pool, code, code->pushed(0));
+        if (op == JSOP_DIV) {
+            /* Guess that divisions other than x/n produce doubles. */
+            if (!state.popped(0).isConstant)
+                code->setFixed(cx, 0, TYPE_DOUBLE);
+        }
         break;
 
       case JSOP_NEG:
@@ -2824,7 +2937,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
             funOffset = SLOTNO_LEN;
 
         unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
-        JSObject *obj = GetScriptObject(cx, this, pc, off);
+        JSObject *obj = GetScriptObject(cx, script, pc, off);
         TypeFunction *function = obj->getTypeObject()->asFunction();
 
         /* Remember where this script was defined. */
@@ -2836,7 +2949,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         if (op == JSOP_LAMBDA || op == JSOP_LAMBDA_FC) {
             res = code->pushed(0);
         } else if (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) {
-            jsid id = getLocalId(GET_SLOTNO(pc), code->inStack);
+            jsid id = getLocalId(GET_SLOTNO(pc), code);
             res = evalParent()->localTypes.getVariable(cx, id);
         } else {
             /* Watch for functions defined at the top level of an eval, see DEFVAR below. */
@@ -2898,6 +3011,13 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
       case JSOP_NEWOBJECT: {
         TypeObject *object = code->initObject;
         JS_ASSERT(object);
+
+        if (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array)) {
+            jsbytecode *next = pc + GetBytecodeLength(pc);
+            if (JSOp(*next) != JSOP_ENDINIT)
+                object->possiblePackedArray = true;
+        }
+
         code->pushed(0)->addType(cx, (jstype) object);
         break;
       }
@@ -2911,8 +3031,16 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
         code->pushed(0)->addType(cx, (jstype) object);
 
-        /* TODO: broken for float indexes? */
-        TypeSet *types = object->indexTypes(cx);
+        TypeSet *types;
+        if (state.popped(1).hasDouble) {
+            Value val = DoubleValue(state.popped(1).doubleValue);
+            jsid id;
+            if (!js_InternNonIntElementId(cx, NULL, val, &id))
+                JS_NOT_REACHED("Bad");
+            types = object->properties(cx).getVariable(cx, id);
+        } else {
+            types = object->indexTypes(cx);
+        }
 
         if (state.hasGetSet)
             types->addType(cx, (jstype) cx->getFixedTypeObject(TYPE_OBJECT_GETSET));
@@ -2965,7 +3093,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
 
       case JSOP_ENTERBLOCK: {
-        JSObject *obj = GetScriptObject(cx, this, pc, 0);
+        JSObject *obj = GetScriptObject(cx, script, pc, 0);
         unsigned defCount = GetDefCount(script, offset);
 
         const Shape *shape = obj->lastProperty();
@@ -2976,13 +3104,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
       }
 
-      case JSOP_ITER: {
-        uintN flags = pc[1];
-        TypeStack *stack = code->pushedArray[0].group();
-        if (flags & JSITER_FOREACH)
-            stack->isForEach = true;
-        stack->ignoreTypeTag = true;
-
+      case JSOP_ITER:
         /*
          * The actual pushed value is an iterator object, which we don't care about.
          * Propagate the target of the iteration itself so that we'll be able to detect
@@ -2990,9 +3112,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
          * be a generator that produces arbitrary values with 'for in' syntax.
          */
         MergePushed(cx, pool, code, 0, code->popped(0));
-
+        code->pushedArray[0].group()->ignoreTypeTag = true;
         break;
-      }
 
       case JSOP_MOREITER:
         code->pushedArray[0].group()->ignoreTypeTag = true;
@@ -3005,7 +3126,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         VariableSet *vars = SearchScope(cx, this, code->inStack, id);
 
         if (vars)
-            SetForTypes(cx, code, vars->getVariable(cx, id));
+            SetForTypes(cx, state, code, vars->getVariable(cx, id));
         else
             cx->compartment->types.monitorBytecode(cx, code);
         break;
@@ -3013,15 +3134,15 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
 
       case JSOP_FORGLOBAL: {
         jsid id = GetGlobalId(cx, this, pc);
-        SetForTypes(cx, code, GetGlobalProperties(cx)->getVariable(cx, id));
+        SetForTypes(cx, state, code, GetGlobalProperties(cx)->getVariable(cx, id));
         break;
       }
 
       case JSOP_FORLOCAL: {
-        jsid id = getLocalId(GET_SLOTNO(pc), code->inStack);
+        jsid id = getLocalId(GET_SLOTNO(pc), code);
         JS_ASSERT(!JSID_IS_VOID(id));
 
-        SetForTypes(cx, code, evalParent()->localTypes.getVariable(cx, id));
+        SetForTypes(cx, state, code, evalParent()->localTypes.getVariable(cx, id));
         break;
       }
 
@@ -3029,7 +3150,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         jsid id = getArgumentId(GET_ARGNO(pc));
         JS_ASSERT(!JSID_IS_VOID(id));
 
-        SetForTypes(cx, code, localTypes.getVariable(cx, id));
+        SetForTypes(cx, state, code, localTypes.getVariable(cx, id));
         break;
       }
 
@@ -3039,7 +3160,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
 
       case JSOP_ARRAYPUSH: {
-        TypeSet *types = getStackTypes(GET_SLOTNO(pc), code->inStack);
+        TypeSet *types = getStackTypes(GET_SLOTNO(pc), code);
         types->addSetProperty(cx, code, code->popped(0), JSID_VOID);
         break;
       }
@@ -3143,7 +3264,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         code->pushedArray[0].group()->boundWith = true;
 
         /* Name binding inside filters is currently broken :FIXME: bug 605200. */
-        cx->compartment->types.ignoreWarnings = true;
         break;
 
       case JSOP_ENDFILTER:
@@ -3187,14 +3307,84 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, TypeState &state)
         break;
 
       default:
-        cx->compartment->types.warnings = true;
-        InferSpew(ISpewDynamic, "warning: Unknown bytecode: %s\n", js_CodeNameTwo[op]);
+        TypeFailure(cx, "Unknown bytecode: %s", js_CodeNameTwo[op]);
+    }
+
+    /* Compute temporary analysis state after the bytecode. */
+
+    if (!state.stack)
+        return;
+
+    if (op == JSOP_DUP) {
+        state.stack[code->stackDepth] = state.stack[code->stackDepth - 1];
+        state.stackDepth = code->stackDepth + 1;
+    } else if (op == JSOP_DUP2) {
+        state.stack[code->stackDepth]     = state.stack[code->stackDepth - 2];
+        state.stack[code->stackDepth + 1] = state.stack[code->stackDepth - 1];
+        state.stackDepth = code->stackDepth + 2;
+    } else {
+        unsigned nuses = GetUseCount(script, offset);
+        unsigned ndefs = GetDefCount(script, offset);
+        memset(&state.stack[code->stackDepth - nuses], 0, ndefs * sizeof(AnalyzeStateStack));
+        state.stackDepth = code->stackDepth - nuses + ndefs;
+    }
+
+    switch (op) {
+      case JSOP_BINDGNAME: {
+        AnalyzeStateStack &stack = state.popped(0);
+        stack.scopeVars = GetGlobalProperties(cx);
+        break;
+      }
+
+      case JSOP_BINDNAME: {
+        jsid id = GetAtomId(cx, this, pc, 0);
+        AnalyzeStateStack &stack = state.popped(0);
+        stack.scopeVars = SearchScope(cx, this, code->inStack, id);
+        break;
+      }
+
+      case JSOP_ITER: {
+        uintN flags = pc[1];
+        if (flags & JSITER_FOREACH)
+            state.popped(0).isForEach = true;
+        break;
+      }
+
+      case JSOP_DOUBLE: {
+        AnalyzeStateStack &stack = state.popped(0);
+        stack.hasDouble = true;
+        stack.doubleValue = GetScriptConst(cx, script, pc).toDouble();
+        break;
+      }
+
+      case JSOP_ZERO:
+        state.popped(0).isZero = true;
+        /* FALLTHROUGH */
+      case JSOP_ONE:
+      case JSOP_INT8:
+      case JSOP_INT32:
+      case JSOP_UINT16:
+      case JSOP_UINT24:
+        state.popped(0).isConstant = true;
+        break;
+
+      case JSOP_GETLOCAL:
+        if (state.maybeLocalConst(GET_SLOTNO(pc), false)) {
+            state.popped(0).isConstant = true;
+            if (state.maybeLocalConst(GET_SLOTNO(pc), true))
+                state.popped(0).isZero = true;
+        }
+        break;
+
+      default:;
     }
 }
 
 /////////////////////////////////////////////////////////////////////
 // Printing
 /////////////////////////////////////////////////////////////////////
+
+#ifdef DEBUG
 
 void
 Bytecode::print(JSContext *cx)
@@ -3230,7 +3420,7 @@ Bytecode::print(JSContext *cx)
         } else {
             jsid id = GetAtomId(cx, script, pc, 0);
             if (JSID_IS_STRING(id))
-                printf("%s %s", name, TypeIdString(cx, id));
+                printf("%s %s", name, TypeIdString(id));
             else
                 printf("%s (index)", name);
         }
@@ -3255,18 +3445,18 @@ Bytecode::print(JSContext *cx)
 
       case JOF_QARG: {
         jsid id = script->getArgumentId(GET_ARGNO(pc));
-        printf("%s %s", name, TypeIdString(cx, id));
+        printf("%s %s", name, TypeIdString(id));
         break;
       }
 
       case JOF_GLOBAL:
-        printf("%s %s", name, TypeIdString(cx, GetGlobalId(cx, script, pc)));
+        printf("%s %s", name, TypeIdString(GetGlobalId(cx, script, pc)));
         break;
 
       case JOF_LOCAL:
         if ((op != JSOP_ARRAYPUSH) && (analyzed || (GET_SLOTNO(pc) < script->getScript()->nfixed))) {
-            jsid id = script->getLocalId(GET_SLOTNO(pc), inStack);
-            printf("%s %d %s", name, GET_SLOTNO(pc), TypeIdString(cx, id));
+            jsid id = script->getLocalId(GET_SLOTNO(pc), this);
+            printf("%s %d %s", name, GET_SLOTNO(pc), TypeIdString(id));
         } else {
             printf("%s %d", name, GET_SLOTNO(pc));
         }
@@ -3279,9 +3469,9 @@ Bytecode::print(JSContext *cx)
         if (op == JSOP_GETARGPROP)
             slotid = script->getArgumentId(GET_ARGNO(pc));
         if (op == JSOP_GETLOCALPROP && (analyzed || (GET_SLOTNO(pc) < script->getScript()->nfixed)))
-            slotid = script->getLocalId(GET_SLOTNO(pc), inStack);
+            slotid = script->getLocalId(GET_SLOTNO(pc), this);
 
-        printf("%s %u %s %s", name, GET_SLOTNO(pc), TypeIdString(cx, slotid), TypeIdString(cx, id));
+        printf("%s %u %s %s", name, GET_SLOTNO(pc), TypeIdString(slotid), TypeIdString(id));
         break;
       }
 
@@ -3311,8 +3501,10 @@ Bytecode::print(JSContext *cx)
     }
 }
 
+#endif
+
 void
-Script::print(JSContext *cx)
+Script::finish(JSContext *cx)
 {
     if (failed() || !codeArray)
         return;
@@ -3366,6 +3558,8 @@ Script::print(JSContext *cx)
         }
     }
 
+#ifdef DEBUG
+
     if (parent) {
         if (fun)
             printf("Function");
@@ -3386,7 +3580,7 @@ Script::print(JSContext *cx)
     printf("defines:");
     for (unsigned i = 0; i < localCount(); i++) {
         if (locals[i] != LOCAL_USE_BEFORE_DEF && locals[i] != LOCAL_CONDITIONALLY_DEFINED)
-            printf(" %s@%u", TypeIdString(cx, getLocalId(i, NULL)), locals[i]);
+            printf(" %s@%u", TypeIdString(getLocalId(i, NULL)), locals[i]);
     }
     printf("\n");
 
@@ -3408,7 +3602,7 @@ Script::print(JSContext *cx)
             printf("  defines:");
             for (unsigned i = 0; i < code->defineCount; i++) {
                 uint32 local = code->defineArray[i];
-                printf(" %s", TypeIdString(cx, getLocalId(local, NULL)));
+                printf(" %s", TypeIdString(getLocalId(local, NULL)));
             }
             printf("\n");
         }
@@ -3466,6 +3660,9 @@ Script::print(JSContext *cx)
         object->print(cx);
         object = object->next;
     }
+
+#endif /* DEBUG */
+
 }
 
 } } /* namespace js::analyze */
