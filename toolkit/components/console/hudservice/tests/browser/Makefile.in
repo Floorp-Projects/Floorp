@@ -105,6 +105,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_613013_console_api_iframe.js \
 	browser_webconsole_bug_597756_reopen_closed_tab.js \
 	browser_webconsole_bug_600183_charset.js \
+	browser_webconsole_bug_601177_log_levels.js \
 	head.js \
 	$(NULL)
 
@@ -141,6 +142,8 @@ _BROWSER_TEST_PAGES = \
 	test-bug-597756-reopen-closed-tab.html \
 	test-bug-600183-charset.html \
 	test-bug-600183-charset.html^headers^ \
+	test-bug-601177-log-levels.html \
+	test-bug-601177-log-levels.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
