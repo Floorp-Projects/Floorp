@@ -77,3 +77,5 @@ random HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 random-if(winWidget) HTTP(..) != kerning-01.html kerning-01-notref.html
 # Test for bug 577380, support for AAT layout (on OS X only)
 random-if(!cocoaWidget) == 577380.html 577380-ref.html
+# Test for OpenType Arabic shaping support
+HTTP(..) == arabic-shaping-1.html arabic-shaping-1-ref.html
