@@ -199,7 +199,7 @@ pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
 pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
 #endif
 
-pref("gfx.font_rendering.harfbuzz.level", 1);
+pref("gfx.font_rendering.harfbuzz.level", 2);
 
 #ifdef XP_WIN
 #ifndef WINCE
