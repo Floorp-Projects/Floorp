@@ -517,7 +517,7 @@ class XPCShellTests(object):
           for log in leakLogs:
             dumpLeakLog(log, True)
 
-          if True and stdout:
+          if self.logfiles and stdout:
             self.createLogFile(test, stdout, leakLogs)
         finally:
           # We don't want to delete the profile when running check-interactive
