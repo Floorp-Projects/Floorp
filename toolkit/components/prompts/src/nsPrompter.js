@@ -457,16 +457,28 @@ function ModalPrompter(domWin) {
 }
 ModalPrompter.prototype = {
     domWin : null,
-    allowTabModal : true,
+    /*
+     * Default to not using a tab-modal prompt, unless the caller opts in by
+     * QIing to nsIWritablePropertyBag and setting the value of this property
+     * to true.
+     */
+    allowTabModal : false,
 
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt,
+Ci.nsIAuthPrompt2, Ci.nsIWritablePropertyBag2]),
 
 
     /* ---------- internal methods ---------- */
 
 
     openPrompt : function (args) {
-        let allowTabModal = this.allowTabModal;
+        // Check pref, if false/missing do not ever allow tab-modal prompts.
+        const prefName = "prompts.tab_modal.enabled";
+        let prefValue = false;
+        if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL)
+            prefValue = Services.prefs.getBoolPref(prefName);
+
+        let allowTabModal = this.allowTabModal && prefValue;
 
         if (allowTabModal && this.domWin) {
             let tabPrompt = PromptUtils.getTabModalPrompt(this.domWin);
@@ -791,6 +803,17 @@ ModalPrompter.prototype = {
         //
         // Bug 565582 will change this.
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    /* ----------  nsIWritablePropertyBag2 ---------- */
+
+    // Only a partial implementation, for one specific use case...
+
+    setPropertyAsBool : function(name, value) {
+        if (name == "allowTabModal")
+            this.allowTabModal = value;
+        else
+            throw Cr.NS_ERROR_ILLEGAL_VALUE;
     },
 };
 
