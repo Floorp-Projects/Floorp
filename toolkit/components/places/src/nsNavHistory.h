@@ -646,8 +646,6 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetTags; // used by GetTags
   nsCOMPtr<mozIStorageStatement> mDBGetItemsWithAnno; // used by AutoComplete::StartSearch and FilterResultSet
   nsCOMPtr<mozIStorageStatement> mDBSetPlaceTitle; // used by SetPageTitleInternal
-  nsCOMPtr<mozIStorageStatement> mDBRegisterOpenPage; // used by RegisterOpenPage
-  nsCOMPtr<mozIStorageStatement> mDBUnregisterOpenPage; // used by UnregisterOpenPage
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
@@ -714,11 +712,10 @@ protected:
   nsresult InitDB();
 
   /**
-   * Initializes additional database items like: views, temp tables, functions
-   * and statements.
+   * Initializes additional database items like functions, triggers, and
+   * statements.
    */
   nsresult InitAdditionalDBItems();
-  nsresult InitTempTables();
   nsresult InitFunctions();
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
