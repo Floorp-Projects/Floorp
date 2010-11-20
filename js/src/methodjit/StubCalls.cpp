@@ -487,9 +487,14 @@ stubs::GetElem(VMFrame &f)
             goto intern_big_int;
 
     } else {
-      intern_big_int:
-        if (!js_InternNonIntElementId(cx, obj, rref, &id))
-            THROW();
+        int32_t i;
+        if (ValueFitsInInt32(rref, &i) && INT_FITS_IN_JSID(i)) {
+            id = INT_TO_JSID(i);
+        } else {
+          intern_big_int:
+            if (!js_InternNonIntElementId(cx, obj, rref, &id))
+                THROW();
+        }
     }
 
     if (!obj->getProperty(cx, id, &rval))
