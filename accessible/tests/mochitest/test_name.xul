@@ -106,6 +106,9 @@
       // The label and button are siblings.
       testName("btn_label_3", "label3");
 
+      // Multiple labels for single button: XUL button takes the last one.
+      testName("btn_label_4", "label5");
+
 
       //////////////////////////////////////////////////////////////////////////
       // Name from the label element in anonymous content (see bug 362365).
@@ -296,6 +299,10 @@
     </box>
     <label control="btn_label_3">label3</label>
     <button id="btn_label_3"/>
+
+    <label control="btn_label_4">label4</label>
+    <label control="btn_label_4">label5</label>
+    <button id="btn_label_4"/>
   </hbox>
 
   <!-- label element, anonymous content -->
