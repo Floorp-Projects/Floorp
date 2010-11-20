@@ -646,8 +646,9 @@
           this._cancelOverLinkDelayTimer();
 
           // Hide the over-link immediately if necessary.
-          if (!aURL && (XULBrowserWindow.hideOverLinkImmediately ||
-                        this._hideOverLinkImmediately)) {
+          if ((!aURL && (XULBrowserWindow.hideOverLinkImmediately ||
+                         this._hideOverLinkImmediately)) ||
+              this.focused) {
             this._setOverLinkState(null);
             return;
           }
