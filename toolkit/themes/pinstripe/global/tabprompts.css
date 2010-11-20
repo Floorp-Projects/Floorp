@@ -1,27 +1,33 @@
 /* Tab Modal Prompt boxes */
 tabmodalprompt {
-    width: 100%;
-    height: 100%;
-    color: white;
-    background-image: -moz-repeating-linear-gradient(-45deg,
-                                                     rgba(65, 65, 65, 0.8),
-                                                     rgba(65, 65, 65, 0.8) 20px,
-                                                     rgba(69, 69, 69, 0.8) 20px,
-                                                     rgba(69, 69, 69, 0.8) 40px);
-    -moz-box-pack: center;
-    -moz-box-orient: vertical;
+  background-color: hsla(0,0%,97%,.15);
+  background-image: -moz-radial-gradient(center 40%, circle closest-side, hsla(0,0%,90%,.5), hsla(0,0%,90%,0));
 }
 
 .mainContainer {
-    min-width: 20em;
-    padding: 10px;
-    background: rgb(80,80,80);
-    border: 1px solid rgb(20,20,20);
-    border-radius: 12px;
-    box-shadow: inset 0 1px 3.5px rgba(0,0,0,0.8),
-                      0 1px 0 rgba(255,255,255,0.2);
+  padding: 20px;
+  color: black;
+  background-image: -moz-linear-gradient(hsla(0,0%,97%,.9), hsla(0,0%,87%,.9));
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px hsla(0,0%,0%,.25) inset,
+              0 1px 1px hsla(0,0%,0%,.2) inset,
+              0 1px 2px hsla(0,0%,0%,.1) inset,
+              0 1px 0 hsla(0,0%,100%,.4);
 }
 
-.topContainer {
-    min-height: 64px;
+.buttonContainer {
+  margin-top: 10px;
+}
+
+.info\.icon {
+  width: 64px !important;
+  height: 64px !important;
+}
+
+.alert-icon {
+  list-style-image: url("chrome://global/skin/icons/information-tabmodal-64.png") !important;
+}
+
+.question-icon {
+  list-style-image: url("chrome://global/skin/icons/question-tabmodal-64.png") !important;
 }
