@@ -500,7 +500,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool strict)
             jsuint idx = jsuint(index);
             if (idx < obj->getDenseArrayCapacity()) {
                 obj->setDenseArrayElement(idx, MagicValue(JS_ARRAY_HOLE));
-                return JS_TRUE;
+                return js_SuppressDeletedIndexProperties(cx, obj, idx, idx+1);
             }
         }
         return JS_TRUE;
