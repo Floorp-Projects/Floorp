@@ -14,6 +14,7 @@
   <binding id="tabmodalprompt">
 
     <resources>
+        <stylesheet src="chrome://global/content/tabprompts.css"/>
         <stylesheet src="chrome://global/skin/tabprompts.css"/>
     </resources>
 
