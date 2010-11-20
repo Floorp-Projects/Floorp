@@ -1,0 +1,88 @@
+<html>
+
+<head>
+  <title>ARIA menu events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function showMenu(aID, aViaDisplayStyle)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function showMenu_invoke()
+      {
+        if (aViaDisplayStyle)
+          this.DOMNode.style.display = "block";
+        else
+          this.DOMNode.style.visibility = "visible";
+      };
+
+      this.getID = function showMenu_getID()
+      {
+        return "Show ARIA menu " + aID + " by " +
+          (aViaDisplayStyle ? "display" : "visibility") + " style tricks";
+      };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    //gA11yEventDumpID = "eventdump";
+
+    function doTests()
+    {
+      gQueue = new eventQueue(EVENT_MENUPOPUP_START);
+
+      gQueue.push(new showMenu("menu1", true));
+      gQueue.push(new showMenu("menu2", false));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=606207"
+     title="Dojo dropdown buttons are broken">
+    Mozilla Bug 606207
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="menu1" role="menu" style="display: none;">
+    <div role="menuitem">menuitem1.1</div>
+    <div role="menuitem">menuitem1.2</div>
+  </div>
+  <div id="menu2" role="menu" style="visibility: hidden;">
+    <div role="menuitem">menuitem2.1</div>
+    <div role="menuitem">menuitem2.2</div>
+  </div>
+
+  <div id="eventdump"></div>
+
+</body>
+</html>
