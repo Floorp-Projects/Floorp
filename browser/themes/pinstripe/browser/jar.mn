@@ -11,6 +11,7 @@ browser.jar:
 #endif
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css                          (browser.css)
+* skin/classic/browser/effects.svg                          (effects.svg)
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/fullscreen-video.css
   skin/classic/browser/Geolocation-16.png
