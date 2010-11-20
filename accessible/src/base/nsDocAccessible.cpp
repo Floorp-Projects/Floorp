@@ -91,7 +91,9 @@ static nsIAtom** kRelationAttrs[] =
   &nsAccessibilityAtoms::aria_describedby,
   &nsAccessibilityAtoms::aria_owns,
   &nsAccessibilityAtoms::aria_controls,
-  &nsAccessibilityAtoms::aria_flowto
+  &nsAccessibilityAtoms::aria_flowto,
+  &nsAccessibilityAtoms::_for,
+  &nsAccessibilityAtoms::control
 };
 
 static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
@@ -942,7 +944,7 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, PRInt32 aModType)
 {
-  // XXX TODO: bugs 381599 (partially fixed by 573469), 467143, 472142, 472143.
+  // XXX TODO: bugs 467143, 472142, 472143.
   // Here we will want to cache whatever state we are potentially interested in,
   // such as the existence of aria-pressed for button (so we know if we need to
   // newly expose it as a toggle button) etc.
@@ -1633,6 +1635,19 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
     nsIAtom* relAttr = *kRelationAttrs[idx];
     if (aRelAttr && aRelAttr != relAttr)
       continue;
+
+    if (relAttr == nsAccessibilityAtoms::_for) {
+      if (!aRelProvider->GetContent()->IsHTML() ||
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::label &&
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::output)
+        continue;
+
+    } else if (relAttr == nsAccessibilityAtoms::control) {
+      if (!aRelProvider->GetContent()->IsXUL() ||
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::label &&
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::description)
+        continue;
+    }
 
     IDRefsIterator iter(aRelProvider->GetContent(), relAttr);
     while (true) {
