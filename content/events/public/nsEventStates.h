@@ -38,6 +38,8 @@
 #ifndef nsEventStates_h__
 #define nsEventStates_h__
 
+#include "nsDebug.h"
+
 /**
  * nsEventStates is the class used to represent the event states of nsIContent
  * instances. These states are calculated by IntrinsicState() and
