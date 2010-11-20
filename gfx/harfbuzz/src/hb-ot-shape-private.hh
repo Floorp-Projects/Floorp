@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Red Hat, Inc.
+ * Copyright (C) 2010  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,76 +21,56 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Red Hat Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_FONT_PRIVATE_H
-#define HB_FONT_PRIVATE_H
+#ifndef HB_OT_SHAPE_PRIVATE_HH
+#define HB_OT_SHAPE_PRIVATE_HH
 
 #include "hb-private.h"
 
-#include "hb-font.h"
+#include "hb-ot-shape.h"
 
-#include "hb-ot-head-private.hh"
+#include "hb-ot-map-private.hh"
 
 HB_BEGIN_DECLS
 
-/*
- * hb_font_funcs_t
- */
 
-struct _hb_font_funcs_t {
-  hb_reference_count_t ref_count;
-
-  hb_bool_t immutable;
-
-  struct {
-    hb_font_get_glyph_func_t		get_glyph;
-    hb_font_get_contour_point_func_t	get_contour_point;
-    hb_font_get_glyph_metrics_func_t	get_glyph_metrics;
-    hb_font_get_kerning_func_t		get_kerning;
-  } v;
-};
-
-extern HB_INTERNAL hb_font_funcs_t _hb_font_funcs_nil;
+/* buffer var allocations */
+#define general_category() var1.u8[0] /* unicode general_category (hb_category_t) */
+#define combining_class() var1.u8[1] /* unicode combining_class (uint8_t) */
 
 
-/*
- * hb_face_t
- */
-
-struct _hb_face_t {
-  hb_reference_count_t ref_count;
-
-  hb_get_table_func_t  get_table;
-  hb_destroy_func_t    destroy;
-  void                *user_data;
-
-  unsigned int         units_per_em;
-
-  struct hb_ot_layout_t *ot_layout;
+enum hb_ot_complex_shaper_t {
+  hb_ot_complex_shaper_none,
+  hb_ot_complex_shaper_arabic
 };
 
 
-/*
- * hb_font_t
- */
+struct hb_ot_shape_plan_t
+{
+  hb_ot_map_t map;
+  hb_ot_complex_shaper_t shaper;
+};
 
-struct _hb_font_t {
-  hb_reference_count_t ref_count;
 
-  unsigned int x_scale;
-  unsigned int y_scale;
+struct hb_ot_shape_context_t
+{
+  /* Input to hb_ot_shape_execute() */
+  hb_ot_shape_plan_t *plan;
+  hb_font_t *font;
+  hb_face_t *face;
+  hb_buffer_t  *buffer;
+  const hb_feature_t *user_features;
+  unsigned int        num_user_features;
 
-  unsigned int x_ppem;
-  unsigned int y_ppem;
-
-  hb_font_funcs_t   *klass;
-  hb_destroy_func_t  destroy;
-  void              *user_data;
+  /* Transient stuff */
+  hb_direction_t original_direction;
+  hb_bool_t applied_substitute_complex;
+  hb_bool_t applied_position_complex;
 };
 
 
 HB_END_DECLS
 
-#endif /* HB_FONT_PRIVATE_H */
+#endif /* HB_OT_SHAPE_PRIVATE_HH */
