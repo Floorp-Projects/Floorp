@@ -4504,9 +4504,14 @@ BEGIN_CASE(JSOP_GETELEM)
         else
             goto intern_big_int;
     } else {
-      intern_big_int:
-        if (!js_InternNonIntElementId(cx, obj, rref, &id))
-            goto error;
+        int32_t i;
+        if (ValueFitsInInt32(rref, &i) && INT_FITS_IN_JSID(i)) {
+            id = INT_TO_JSID(i);
+        } else {
+          intern_big_int:
+            if (!js_InternNonIntElementId(cx, obj, rref, &id))
+                goto error;
+        }
     }
 
     if (!obj->getProperty(cx, id, &rval))
