@@ -2550,6 +2550,15 @@ HUD_SERVICE.prototype =
                     msgObject.prefix +
                     self.getFormatStr("networkUrlWithStatus", data) + "\n"));
 
+                let status = parseInt(httpActivity.response.status.
+                  replace(/^HTTP\/\d\.\d (\d+).+$/, "$1"));
+
+                if (status) {
+                  msgObject.messageNode.classList.
+                    add((status >= 400 && status < 600) ?
+                      "hud-error" : "hud-info");
+                }
+
                 break;
 
               case activityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
@@ -2864,7 +2873,8 @@ HUD_SERVICE.prototype =
     0: "error",
     1: "warn",
     2: "exception",
-    4: "strict"
+    4: "error", // strict error
+    5: "warn", // strict warning
   },
 
   /**
@@ -2874,7 +2884,8 @@ HUD_SERVICE.prototype =
     0: "typeError",
     1: "typeWarning",
     2: "typeException",
-    4: "typeStrict",
+    4: "typeError", // strict error
+    5: "typeStrict", // strict warning
   },
 
   /**
