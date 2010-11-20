@@ -2455,13 +2455,10 @@ public:
     inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
 
     /* Mark an array type as being not packed and, possibly, not dense. */
-    inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
+    inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense, bool dynamic = true);
 
-    /*
-     * Monitor future reads from the a type object.  Instances may have properties
-     * the inference does not know about.
-     */
-    inline void monitorTypeObject(js::types::TypeObject *obj);
+    /* Monitor all properties of a type object as unknown. */
+    inline void markTypeObjectUnknownProperties(js::types::TypeObject *obj);
 
   private:
     /* To silence MSVC warning about using 'this' in a member initializer. */

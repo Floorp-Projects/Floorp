@@ -469,7 +469,7 @@ Script::analyze(JSContext *cx)
             code->pushedArray[i].setInnerStack(stack);
             stack = &code->pushedArray[i];
 
-            types::InferSpew(types::ISpewOps, "pushed #%u:%05u %u T%u\n",
+            types::InferSpew(types::ISpewOps, "pushed #%u:%05u %u T%u",
                              id, offset, i, stack->types.id());
         }
 
@@ -759,10 +759,13 @@ Script::analyze(JSContext *cx)
 
 #ifdef JS_TYPE_INFERENCE
     /* Generate type constraints for the script. */
+
+    AnalyzeState state;
+    state.init(cx, script);
+
     offset = 0;
-    TypeState state;
     while (offset < script->length) {
-        analyze::Bytecode *code = maybeCode(offset);
+        Bytecode *code = maybeCode(offset);
 
         jsbytecode *pc = script->code + offset;
         UntrapOpcode untrap(cx, script, pc);
@@ -772,6 +775,8 @@ Script::analyze(JSContext *cx)
         if (code && code->analyzed)
             analyzeTypes(cx, code, state);
     }
+
+    state.destroy(cx);
 #endif
 }
 

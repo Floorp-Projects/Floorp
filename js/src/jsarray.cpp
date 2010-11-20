@@ -2135,7 +2135,7 @@ array_push(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     if (cx->isTypeCallerMonitored())
-        cx->monitorTypeObject(obj->getTypeObject());
+        cx->markTypeObjectUnknownProperties(obj->getTypeObject());
 
     if (argc != 1 || !obj->isDenseArray())
         return array_push_slowly(cx, obj, argc, vp + 2, vp);
@@ -2263,7 +2263,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     if (cx->isTypeCallerMonitored())
-        cx->monitorTypeObject(obj->getTypeObject());
+        cx->markTypeObjectUnknownProperties(obj->getTypeObject());
 
     newlen = length;
     if (argc > 0) {
@@ -2325,13 +2325,13 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         objType = cx->getTypeCallerInitObject(true);
-        cx->monitorTypeObject(objType);
+        cx->markTypeObjectUnknownProperties(objType);
         cx->markTypeCallerUnexpected((jstype) objType);
     }
 #endif
 
     if (cx->isTypeCallerMonitored())
-        cx->monitorTypeObject(objType);
+        cx->markTypeObjectUnknownProperties(objType);
 
     /*
      * Create a new array value to return.  Our ECMA v2 proposal specs
@@ -2487,7 +2487,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
     TypeObject *ntype = cx->getTypeCallerInitObject(true);
 
     if (cx->isTypeCallerMonitored())
-        cx->monitorTypeObject(ntype);
+        cx->markTypeObjectUnknownProperties(ntype);
 
     /* Create a new Array object and root it using *vp. */
     JSObject *aobj = ComputeThisFromVp(cx, vp);
@@ -2623,13 +2623,13 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         objType = cx->getTypeCallerInitObject(true);
-        cx->monitorTypeObject(objType);
+        cx->markTypeObjectUnknownProperties(objType);
         cx->markTypeCallerUnexpected((jstype) objType);
     }
 #endif
 
     if (cx->isTypeCallerMonitored())
-        cx->monitorTypeObject(objType);
+        cx->markTypeObjectUnknownProperties(objType);
 
     if (obj->isDenseArray() && end <= obj->getDenseArrayCapacity() &&
         !js_PrototypeHasIndexedProperties(cx, obj)) {
@@ -2848,7 +2848,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
      * the output array, monitor any reads on the array in the future.
      */
     if (cx->isTypeCallerMonitored() && (mode == MAP || mode == FILTER))
-        cx->monitorTypeObject(newtype);
+        cx->markTypeObjectUnknownProperties(newtype);
 
     /*
      * For all but REDUCE, we call with 3 args (value, index, array). REDUCE
@@ -3307,7 +3307,7 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (cx->isTypeCallerMonitored() && vector)
-        cx->monitorTypeObject(type);
+        cx->markTypeObjectUnknownProperties(type);
 
     /* Whether called with 'new' or not, use a new Array object. */
     JSObject *obj = NewDenseArrayObject(cx, type, length);
@@ -3381,6 +3381,7 @@ static void array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *
     if (site->argumentCount > 1) {
         for (size_t ind = 0; ind < site->argumentCount; ind++)
             site->argumentTypes[ind]->addSubset(cx, site->pool(), indexTypes);
+        object->possiblePackedArray = true;
     }
 #endif
 }

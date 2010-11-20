@@ -125,6 +125,8 @@ Recompiler::stealNative(JITScript *jit, jsbytecode *pc)
         /* Already stole this stub. */
         PatchableNative native;
         native.pc = NULL;
+        native.guardedNative = NULL;
+        native.pool = NULL;
         return native;
     }
 
