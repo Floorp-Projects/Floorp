@@ -270,7 +270,7 @@ class nsProgressNotificationProxy : public nsIProgressEventSink
   public:
     nsProgressNotificationProxy(nsIChannel* channel,
                                 imgIRequest* proxy)
-        : mChannel(channel), mImageRequest(proxy) {
+        : mImageRequest(proxy) {
       channel->GetNotificationCallbacks(getter_AddRefs(mOriginalCallbacks));
     }
 
@@ -281,7 +281,6 @@ class nsProgressNotificationProxy : public nsIProgressEventSink
   private:
     ~nsProgressNotificationProxy() {}
 
-    nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsIInterfaceRequestor> mOriginalCallbacks;
     nsCOMPtr<nsIRequest> mImageRequest;
 };
@@ -297,7 +296,7 @@ nsProgressNotificationProxy::OnProgress(nsIRequest* request,
                                         PRUint64 progress,
                                         PRUint64 progressMax) {
   nsCOMPtr<nsILoadGroup> loadGroup;
-  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  request->GetLoadGroup(getter_AddRefs(loadGroup));
 
   nsCOMPtr<nsIProgressEventSink> target;
   NS_QueryNotificationCallbacks(mOriginalCallbacks,
@@ -315,7 +314,7 @@ nsProgressNotificationProxy::OnStatus(nsIRequest* request,
                                       nsresult status,
                                       const PRUnichar* statusArg) {
   nsCOMPtr<nsILoadGroup> loadGroup;
-  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  request->GetLoadGroup(getter_AddRefs(loadGroup));
 
   nsCOMPtr<nsIProgressEventSink> target;
   NS_QueryNotificationCallbacks(mOriginalCallbacks,
@@ -332,16 +331,9 @@ nsProgressNotificationProxy::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                                                     nsIChannel *newChannel,
                                                     PRUint32 flags,
                                                     nsIAsyncVerifyRedirectCallback *cb) {
-  // The 'old' channel should match the current one
-  NS_ABORT_IF_FALSE(oldChannel == mChannel,
-                    "old channel doesn't match current!");
-
-  // Save the new channel
-  mChannel = newChannel;
-
   // Tell the original original callbacks about it too
   nsCOMPtr<nsILoadGroup> loadGroup;
-  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  newChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   nsCOMPtr<nsIChannelEventSink> target;
   NS_QueryNotificationCallbacks(mOriginalCallbacks,
                                 loadGroup,
