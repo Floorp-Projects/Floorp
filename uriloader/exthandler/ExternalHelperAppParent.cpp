@@ -72,7 +72,8 @@ void
 ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
                               const nsCString& aContentDisposition,
-                              const PRBool& aForceSave)
+                              const PRBool& aForceSave,
+                              const IPC::URI& aReferrer)
 {
   nsHashPropertyBag::Init();
 
@@ -81,6 +82,8 @@ ExternalHelperAppParent::Init(ContentParent *parent,
   NS_ASSERTION(helperAppService, "No Helper App Service!");
 
   SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, mContentLength);
+  if (aReferrer)
+    SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"), aReferrer);
   SetContentDisposition(aContentDisposition);
   helperAppService->DoContent(aMimeContentType, this, nsnull,
                               aForceSave, getter_AddRefs(mListener));

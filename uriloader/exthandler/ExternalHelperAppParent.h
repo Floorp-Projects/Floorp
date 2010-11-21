@@ -72,7 +72,8 @@ public:
     void Init(ContentParent *parent,
               const nsCString& aMimeContentType,
               const nsCString& aContentDisposition,
-              const PRBool& aForceSave);
+              const PRBool& aForceSave,
+              const IPC::URI& aReferrer);
     virtual ~ExternalHelperAppParent();
 
 private:

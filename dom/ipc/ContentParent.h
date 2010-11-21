@@ -130,7 +130,8 @@ private:
             const nsCString& aMimeContentType,
             const nsCString& aContentDisposition,
             const bool& aForceSave,
-            const PRInt64& aContentLength);
+            const PRInt64& aContentLength,
+            const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefTuple> *retValue);
