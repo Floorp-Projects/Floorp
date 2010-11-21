@@ -159,25 +159,70 @@ FindFunctionSymbol(const char *name)
     return result;
 }
 
-static cairo_user_data_key_t sFontEntryKey;
+/**
+ * gfxFcFontEntry:
+ *
+ * An abstract base class of for gfxFontEntry implementations used by
+ * gfxFcFont and gfxUserFontSet.
+ */
+
+class gfxFcFontEntry : public gfxFontEntry {
+public:
+    // For all FontEntrys attached to gfxFcFonts, there will be only one
+    // pattern in this array.  This is always a font pattern, not a fully
+    // resolved pattern.  gfxFcFont only uses this to construct a PangoFont.
+    //
+    // FontEntrys for src:local() fonts in gfxUserFontSet may return more than
+    // one pattern.  (See comment in gfxUserFcFontEntry.)
+    const nsTArray< nsCountedRef<FcPattern> >& GetPatterns()
+    {
+        return mPatterns;
+    }
+
+    static gfxFcFontEntry *LookupFontEntry(cairo_font_face_t *aFace)
+    {
+        return static_cast<gfxFcFontEntry*>
+            (cairo_font_face_get_user_data(aFace, &sFontEntryKey));
+    }
+
+protected:
+    gfxFcFontEntry(const nsAString& aName)
+        : gfxFontEntry(aName) { }
+
+    // One pattern is the common case and some subclasses rely on successful
+    // addition of the first element to the array.
+    nsAutoTArray<nsCountedRef<FcPattern>,1> mPatterns;
+
+    static cairo_user_data_key_t sFontEntryKey;
+};
+
+cairo_user_data_key_t gfxFcFontEntry::sFontEntryKey;
 
 /**
  * gfxSystemFcFontEntry:
  *
- * An implementation of gfxFontEntry used by gfxFcFonts for system fonts,
+ * An implementation of gfxFcFontEntry used by gfxFcFonts for system fonts,
  * including those from regular family-name based font selection as well as
  * those from src:local().
  *
  * All gfxFcFonts using the same cairo_font_face_t share the same FontEntry. 
  */
 
-class gfxSystemFcFontEntry : public gfxFontEntry {
+class gfxSystemFcFontEntry : public gfxFcFontEntry {
 public:
-    gfxSystemFcFontEntry(cairo_font_face_t *aFontFace, const nsAString& aName)
-        : gfxFontEntry(aName), mFontFace(aFontFace)
+    // For memory efficiency, aFontPattern should be a font pattern,
+    // not a fully resolved pattern.
+    gfxSystemFcFontEntry(cairo_font_face_t *aFontFace,
+                         FcPattern *aFontPattern,
+                         const nsAString& aName)
+        : gfxFcFontEntry(aName), mFontFace(aFontFace)
     {
         cairo_font_face_reference(mFontFace);
         cairo_font_face_set_user_data(mFontFace, &sFontEntryKey, this, NULL);
+        mPatterns.AppendElement();
+        // mPatterns is an nsAutoTArray with 1 space always available, so the
+        // AppendElement always succeeds.
+        mPatterns[0] = aFontPattern;
     }
 
     ~gfxSystemFcFontEntry()
@@ -196,7 +241,7 @@ private:
 #define FONT_FACE_FAMILY_PREFIX "@font-face:"
 
 /**
- * gfxFcFontEntry:
+ * gfxUserFcFontEntry:
  *
  * An abstract class for objects in a gfxUserFontSet that can provide
  * FcPattern* handles to fonts.
@@ -205,7 +250,7 @@ private:
  * and web fonts from src:url().
  */
 
-// There is a one-to-one correspondence between gfxFcFontEntry objects and
+// There is a one-to-one correspondence between gfxUserFcFontEntry objects and
 // @font-face rules, but sometimes a one-to-many correspondence between font
 // entries and font patterns.
 //
@@ -226,17 +271,11 @@ private:
 // several files because of the limit on the number of glyphs in a Type 1 font
 // file.  (e.g. Computer Modern.)
 
-class gfxFcFontEntry : public gfxFontEntry {
-public:
-    const nsTArray< nsCountedRef<FcPattern> >& GetPatterns()
-    {
-        return mPatterns;
-    }
-
+class gfxUserFcFontEntry : public gfxFcFontEntry {
 protected:
-    gfxFcFontEntry(const gfxProxyFontEntry &aProxyEntry)
+    gfxUserFcFontEntry(const gfxProxyFontEntry &aProxyEntry)
         // store the family name
-        : gfxFontEntry(aProxyEntry.mFamily->Name())
+        : gfxFcFontEntry(aProxyEntry.mFamily->Name())
     {
         mItalic = aProxyEntry.mItalic;
         mWeight = aProxyEntry.mWeight;
@@ -250,12 +289,10 @@ protected:
     // style of the font itself does not match the descriptor provided by the
     // author.
     void AdjustPatternToCSS(FcPattern *aPattern);
-
-    nsAutoTArray<nsCountedRef<FcPattern>,1> mPatterns;
 };
 
 void
-gfxFcFontEntry::AdjustPatternToCSS(FcPattern *aPattern)
+gfxUserFcFontEntry::AdjustPatternToCSS(FcPattern *aPattern)
 {
     int fontWeight = -1;
     FcPatternGetInteger(aPattern, FC_WEIGHT, 0, &fontWeight);
@@ -303,7 +340,7 @@ gfxFcFontEntry::AdjustPatternToCSS(FcPattern *aPattern)
 /**
  * gfxLocalFcFontEntry:
  *
- * An implementation of gfxFcFontEntry for local fonts from src:local().
+ * An implementation of gfxUserFcFontEntry for local fonts from src:local().
  *
  * This class is used only in gfxUserFontSet and for providing FcPattern*
  * handles to system fonts for font selection.  gfxFcFonts created from these
@@ -311,11 +348,11 @@ gfxFcFontEntry::AdjustPatternToCSS(FcPattern *aPattern)
  * gfxFcFonts from regular family-name based font selection.
  */
 
-class gfxLocalFcFontEntry : public gfxFcFontEntry {
+class gfxLocalFcFontEntry : public gfxUserFcFontEntry {
 public:
     gfxLocalFcFontEntry(const gfxProxyFontEntry &aProxyEntry,
                         const nsTArray< nsCountedRef<FcPattern> >& aPatterns)
-        : gfxFcFontEntry(aProxyEntry)
+        : gfxUserFcFontEntry(aProxyEntry)
     {
         if (!mPatterns.SetCapacity(aPatterns.Length()))
             return; // OOM
@@ -343,12 +380,12 @@ public:
  * keeps a reference to the FontEntry to keep the font data alive.
  */
 
-class gfxDownloadedFcFontEntry : public gfxFcFontEntry {
+class gfxDownloadedFcFontEntry : public gfxUserFcFontEntry {
 public:
     // This takes ownership of the face and its underlying data
     gfxDownloadedFcFontEntry(const gfxProxyFontEntry &aProxyEntry,
                              const PRUint8 *aData, FT_Face aFace)
-        : gfxFcFontEntry(aProxyEntry), mFontData(aData), mFace(aFace)
+        : gfxUserFcFontEntry(aProxyEntry), mFontData(aData), mFace(aFace)
     {
         NS_PRECONDITION(aFace != NULL, "aFace is NULL!");
         InitPattern();
@@ -356,13 +393,16 @@ public:
 
     virtual ~gfxDownloadedFcFontEntry();
 
+    // Returns true on success
+    PRBool SetCairoFace(cairo_font_face_t *aFace);
+
     // Returns a PangoCoverage owned by the FontEntry.  The caller must add a
     // reference if it wishes to keep the PangoCoverage longer than the
     // lifetime of the FontEntry.
     PangoCoverage *GetPangoCoverage();
 
 protected:
-    virtual void InitPattern();
+    void InitPattern();
 
     // mFontData holds the data used to instantiate the FT_Face;
     // this has to persist until we are finished with the face,
@@ -515,6 +555,25 @@ gfxDownloadedFcFontEntry::InitPattern()
     mPatterns[0].own(pattern);
 }
 
+static void ReleaseDownloadedFontEntry(void *data)
+{
+    gfxDownloadedFcFontEntry *downloadedFontEntry =
+        static_cast<gfxDownloadedFcFontEntry*>(data);
+    NS_RELEASE(downloadedFontEntry);
+}
+
+PRBool gfxDownloadedFcFontEntry::SetCairoFace(cairo_font_face_t *aFace)
+{
+    if (CAIRO_STATUS_SUCCESS !=
+        cairo_font_face_set_user_data(aFace, &sFontEntryKey, this,
+                                      ReleaseDownloadedFontEntry))
+        return PR_FALSE;
+
+    // Hold a reference to this font entry to keep the font face data.
+    NS_ADDREF(this);
+    return PR_TRUE;
+}
+
 static PangoCoverage *NewPangoCoverage(FcPattern *aFont)
 {
     // This uses g_slice_alloc which will abort on OOM rather than return NULL.
@@ -597,14 +656,11 @@ public:
 
 private:
     static already_AddRefed<gfxFcFont> GetOrMakeFont(FcPattern *aPattern);
-    gfxFcFont(cairo_scaled_font_t *aCairoFont, FcPattern *aFontPattern,
-              gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle);
+    gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
+              const gfxFontStyle *aFontStyle);
 
     void MakePangoFont();
 
-    // For memory efficiency, this is a font pattern, not a fully resolved
-    // pattern.  Only needed for constructing mPangoFont.
-    nsCountedRef<FcPattern> mFontPattern;
     PangoFont *mPangoFont;
 
     // key for locating a gfxFcFont corresponding to a cairo_scaled_font
@@ -1065,13 +1121,13 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
     style.style = aStyle;
     style.weight = aWeight;
 
-    gfxFcFontEntry *fontEntry = static_cast<gfxFcFontEntry*>
+    gfxUserFcFontEntry *fontEntry = static_cast<gfxUserFcFontEntry*>
         (mUserFontSet->FindFontEntry(utf16Family, style, needsBold));
 
     // Accept synthetic oblique for italic and oblique.
     if (!fontEntry && aStyle != FONT_STYLE_NORMAL) {
         style.style = FONT_STYLE_NORMAL;
-        fontEntry = static_cast<gfxFcFontEntry*>
+        fontEntry = static_cast<gfxUserFcFontEntry*>
             (mUserFontSet->FindFontEntry(utf16Family, style, needsBold));
     }
 
@@ -1906,11 +1962,9 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
 cairo_user_data_key_t gfxFcFont::sGfxFontKey;
 
 gfxFcFont::gfxFcFont(cairo_scaled_font_t *aCairoFont,
-                     FcPattern *aFontPattern,
-                     gfxFontEntry *aFontEntry,
+                     gfxFcFontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
     : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle),
-      mFontPattern(aFontPattern),
       mPangoFont()
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, this, NULL);
@@ -1935,7 +1989,9 @@ void
 gfxFcFont::MakePangoFont()
 {
     // Switch from a normal reference to a toggle_ref.
-    nsAutoRef<PangoFont> pangoFont(gfxPangoFcFont::NewFont(this, mFontPattern));
+    gfxFcFontEntry *fe = static_cast<gfxFcFontEntry*>(mFontEntry.get());
+    nsAutoRef<PangoFont> pangoFont
+        (gfxPangoFcFont::NewFont(this, fe->GetPatterns()[0]));
     mPangoFont = pangoFont;
     g_object_add_toggle_ref(G_OBJECT(mPangoFont), PangoFontToggleNotify, this);
     // This self-reference gets removed when the normal reference to the
@@ -2111,13 +2167,6 @@ GetPixelSize(FcPattern *aPattern)
     return 0.0;
 }
 
-static void ReleaseDownloadedFontEntry(void *data)
-{
-    gfxDownloadedFcFontEntry *downloadedFontEntry =
-        static_cast<gfxDownloadedFcFontEntry*>(data);
-    NS_RELEASE(downloadedFontEntry);
-}
-
 /**
  * The following gfxFcFonts are accessed from the cairo_scaled_font or created
  * from the FcPattern, not from the gfxFontCache hash table.  The gfxFontCache
@@ -2141,24 +2190,23 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
         cairo_ft_font_face_create_for_pattern(renderPattern);
 
     // Reuse an existing font entry if available.
-    nsRefPtr<gfxFontEntry> fe = static_cast<gfxFontEntry*>
-        (cairo_font_face_get_user_data(face, &sFontEntryKey));
+    nsRefPtr<gfxFcFontEntry> fe = gfxFcFontEntry::LookupFontEntry(face);
     if (!fe) {
-        fe = GetDownloadedFontEntry(aFontPattern);
-        if (fe && cairo_font_face_status(face) == CAIRO_STATUS_SUCCESS) {
-            // Web font with cairo_font_face_t using the web font data.
-            if (CAIRO_STATUS_SUCCESS ==
-                cairo_font_face_set_user_data(face, &sFontEntryKey, fe,
-                                              ReleaseDownloadedFontEntry)) {
+        gfxDownloadedFcFontEntry *downloadedFontEntry =
+            GetDownloadedFontEntry(aFontPattern);
+        if (downloadedFontEntry) {
+            // Web font
+            fe = downloadedFontEntry;
+            if (cairo_font_face_status(face) == CAIRO_STATUS_SUCCESS) {
+                // cairo_font_face_t is using the web font data.
                 // Hold a reference to the font entry to keep the font face
                 // data.
-                NS_ADDREF(fe);
-            } else {
-                // OOM.  Let cairo pick a fallback font
-                cairo_font_face_destroy(face);
-                face = cairo_ft_font_face_create_for_pattern(aRequestedPattern);
-                fe = static_cast<gfxFontEntry*>
-                    (cairo_font_face_get_user_data(face, &sFontEntryKey));
+                if (!downloadedFontEntry->SetCairoFace(face)) {
+                    // OOM.  Let cairo pick a fallback font
+                    cairo_font_face_destroy(face);
+                    face = cairo_ft_font_face_create_for_pattern(aRequestedPattern);
+                    fe = gfxFcFontEntry::LookupFontEntry(face);
+                }
             }
         }
         if (!fe) {
@@ -2181,7 +2229,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
                 }
             }
 
-            fe = new gfxSystemFcFontEntry(face, name);
+            fe = new gfxSystemFcFontEntry(face, aFontPattern, name);
         }
     }
 
@@ -2216,7 +2264,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
         // FcFontRenderPrepare takes the requested pattern and the face
         // pattern as input and can modify elements of the resulting pattern
         // that affect rendering but are not included in the gfxFontStyle.
-        font = new gfxFcFont(cairoFont, aFontPattern, fe, &fontStyle);
+        font = new gfxFcFont(cairoFont, fe, &fontStyle);
     }
 
     cairo_scaled_font_destroy(cairoFont);
