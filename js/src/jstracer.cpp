@@ -14455,13 +14455,20 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
 
             if (JSID_IS_STRING(id)) {
                 v_ins = unbox_string_id(id_ins);
-            } else {
+            } else if (JSID_IS_INT(id)) {
                 /* id is an integer, convert to a string. */
-                JS_ASSERT(JSID_IS_INT(id));
                 LIns *id_to_int_ins = unbox_int_id(id_ins);
                 LIns* args[] = { id_to_int_ins, cx_ins };
                 v_ins = w.call(&js_IntToString_ci, args);
                 guard(false, w.eqp0(v_ins), OOM_EXIT);
+            } else {
+#if JS_HAS_XML_SUPPORT
+                JS_ASSERT(JSID_IS_OBJECT(id));
+                JS_ASSERT(JSID_TO_OBJECT(id)->isXMLId());
+                RETURN_STOP_A("iterated over a property with an XML id");
+#else
+                JS_NEVER_REACHED("unboxNextValue");
+#endif
             }
 
             /* Increment the cursor by one jsid and store it back. */
