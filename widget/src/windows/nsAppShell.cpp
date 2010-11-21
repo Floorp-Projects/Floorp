@@ -75,14 +75,6 @@ UINT nsAppShell::GetTaskbarButtonCreatedMessage() {
 }
 #endif
 
-namespace mozilla {
-namespace crashreporter {
-void LSPAnnotate();
-} // namespace crashreporter
-} // namespace mozilla
-
-using mozilla::crashreporter::LSPAnnotate;
-
 //-------------------------------------------------------------------------
 
 static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
@@ -135,10 +127,6 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
-#ifdef MOZ_CRASHREPORTER
-  LSPAnnotate();
-#endif
-
   if (!sMsgId)
     sMsgId = RegisterWindowMessageW(L"nsAppShell:EventID");
 
