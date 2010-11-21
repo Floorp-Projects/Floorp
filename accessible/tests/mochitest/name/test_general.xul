@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<?xml-stylesheet href="name.css"
+<?xml-stylesheet href="general.css"
                  type="text/css"?>
 
 
@@ -15,11 +15,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="role.js"></script>
+          src="../role.js"></script>
   <script type="application/javascript"
-          src="name.js"></script>
+          src="../name.js"></script>
 
   <script type="application/javascript">
   <![CDATA[

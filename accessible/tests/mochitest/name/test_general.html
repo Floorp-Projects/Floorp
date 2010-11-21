@@ -11,9 +11,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="name.js"></script>
+          src="../name.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -131,6 +131,9 @@
       // visible children (bug 443081).
       testName("lb_opt1_children_hidden", "i am visible");
 
+      // Get the name from subtree of menuitem crossing role nothing to get
+      // the name from its children.
+      testName("tablemenuitem", "menuitem 1");
 
       //////////////////////////////////////////////////////////////////////////
       // title attribute
@@ -378,6 +381,15 @@
       <span style="display:none">i am hidden</span>
     </div>
   </div>
+
+  <table role="menu">
+    <tr role="menuitem" id="tablemenuitem">
+      <td>menuitem 1</td>
+    </tr>
+    <tr role="menuitem">
+      <td>menuitem 2</td>
+    </tr>
+  </table>
 
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>
