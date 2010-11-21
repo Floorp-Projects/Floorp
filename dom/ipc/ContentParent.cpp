@@ -399,11 +399,12 @@ ContentParent::AllocPExternalHelperApp(const IPC::URI& uri,
                                        const nsCString& aMimeContentType,
                                        const nsCString& aContentDisposition,
                                        const bool& aForceSave,
-                                       const PRInt64& aContentLength)
+                                       const PRInt64& aContentLength,
+                                       const IPC::URI& aReferrer)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
-    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave);
+    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave, aReferrer);
     return parent;
 }
 
