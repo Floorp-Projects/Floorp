@@ -125,7 +125,7 @@ parent:
 
     PExternalHelperApp(URI uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
-                       PRInt64 aContentLength);
+                       PRInt64 aContentLength, URI aReferrer);
     
     AddGeolocationListener();
     RemoveGeolocationListener();
