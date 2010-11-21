@@ -1551,7 +1551,6 @@ HUD_SERVICE.prototype =
     var window = aContext.linkedBrowser.contentWindow;
     var id = aContext.linkedBrowser.parentNode.parentNode.getAttribute("id");
     this.registerActiveContext(id);
-    HUDService.windowInitializer(window);
     this.windowInitializer(window);
 
     if (!aAnimated) {
