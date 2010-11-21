@@ -1453,16 +1453,14 @@ nsDocAccessible::UpdateTree(nsIContent* aContainerNode,
 
     // The document children were changed; the root content might be affected.
     if (container == this) {
+      // If new root content has been inserted then update it.
       nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
-
-      // No root content (for example HTML document element was inserted but no
-      // body). Nothing to update.
-      if (!rootContent)
-        return;
-
-      // New root content has been inserted, update it and update the tree.
-      if (rootContent != mContent)
+      if (rootContent && rootContent != mContent)
         mContent = rootContent;
+
+      // Continue to update the tree even if we don't have root content.
+      // For example, elements may be inserted under the document element while
+      // there is no HTML body element.
     }
 
     // XXX: Invalidate parent-child relations for container accessible and its
@@ -1624,6 +1622,21 @@ nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
     mCacheRoot = nsnull;
     mIsPostCacheProcessing = PR_FALSE;
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible protected
+
+void
+nsDocAccessible::CacheChildren()
+{
+  // Search for accessible children starting from the document element since
+  // some web pages tend to insert elements under it rather than document body.
+  nsAccTreeWalker walker(mWeakShell, mDocument->GetRootElement(),
+                         GetAllowsAnonChildAccessibles());
+
+  nsRefPtr<nsAccessible> child;
+  while ((child = walker.GetNextChild()) && AppendChild(child));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
