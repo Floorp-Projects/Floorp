@@ -314,10 +314,13 @@ Content.prototype = {
     switch (aEvent.type) {
       case "DOMActivate": {
         // In a local tab, open remote links in new tabs.
-        let href = Util.getHrefForElement(aEvent.originalTarget);
+        let target = aEvent.originalTarget;
+        let href = Util.getHrefForElement(target);
         if (/^http(s?):/.test(href)) {
           aEvent.preventDefault();
-          sendAsyncMessage("Browser:OpenURI", { uri: href, bringFront: true });
+          sendAsyncMessage("Browser:OpenURI", { uri: href,
+                                                referrer: target.ownerDocument.documentURIObject.spec,
+                                                bringFront: true });
         }
         break;
       }
@@ -415,7 +418,8 @@ Content.prototype = {
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
           let uri = Util.getHrefForElement(element);
           if (uri)
-            sendAsyncMessage("Browser:OpenURI", { uri: uri });
+            sendAsyncMessage("Browser:OpenURI", { uri: uri,
+                                                  referrer: target.ownerDocument.documentURIObject.spec });
         } else if (!this._formAssistant.open(element)) {
           sendAsyncMessage("FindAssist:Hide", { });
           this._sendMouseEvent("mousemove", element, x, y);
