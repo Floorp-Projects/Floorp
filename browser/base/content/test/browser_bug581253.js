@@ -21,19 +21,33 @@ function test() {
     PlacesUtils.transactionManager.doTransaction(bmTxn);
 
     ok(PlacesUtils.bookmarks.isBookmarked(uri), "the test url is bookmarked");
-    ok(starButton.getAttribute("starred") == "true",
-       "star button indicates that the page is bookmarked");
-    
-    let tagTxn = new PlacesTagURITransaction(uri, [testTag]);
-    PlacesUtils.transactionManager.doTransaction(tagTxn);
-    
-    StarUI.panel.addEventListener("popupshown", onPanelShown, false);
-    starButton.click();
+    waitForStarChange(true, onStarred);
   }), true);
 
   content.location = testURL;
 }
 
+function waitForStarChange(aValue, aCallback) {
+  let starButton = document.getElementById("star-button");
+  if (starButton.hidden || starButton.hasAttribute("starred") != aValue) {
+    info("Waiting for star button change.");
+    setTimeout(arguments.callee, 50, aValue, aCallback);
+    return;
+  }
+  aCallback();
+}
+
+function onStarred() {
+  ok(starButton.getAttribute("starred") == "true",
+     "star button indicates that the page is bookmarked");
+
+  let uri = makeURI(testURL);
+  let tagTxn = new PlacesTagURITransaction(uri, [testTag]);
+  PlacesUtils.transactionManager.doTransaction(tagTxn);
+
+  StarUI.panel.addEventListener("popupshown", onPanelShown, false);
+  starButton.click();
+}
 
 function onPanelShown(aEvent) {
   if (aEvent.target == StarUI.panel) {
