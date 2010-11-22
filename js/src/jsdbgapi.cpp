@@ -1413,7 +1413,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     JS_ASSERT_NOT_ON_TRACE(cx);
 
     if (!CheckDebugMode(cx))
-        return JS_FALSE;
+        return false;
 
     JSObject *scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
@@ -1421,7 +1421,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 
     js::AutoCompartment ac(cx, scobj);
     if (!ac.enter())
-        return NULL;
+        return false;
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
