@@ -208,7 +208,7 @@
                     let button = this.ui["button" + bnum];
                     if (!button.hasAttribute("default"))
                         return;
-                    this.onButtonClick(button);
+                    this.onButtonClick(bnum);
                 } else { // action == "cancel"
                     this.onButtonClick(1); // Cancel button
                 }
