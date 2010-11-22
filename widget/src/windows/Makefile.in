@@ -74,6 +74,10 @@ CPPSRCS		= \
 	GfxInfo.cpp \
 	$(NULL)
 
+ifdef MOZ_CRASHREPORTER
+CPPSRCS += LSPAnnotator.cpp
+endif
+
 ifdef NS_PRINTING
 CPPSRCS		+= \
 	nsPrintOptionsWin.cpp \
