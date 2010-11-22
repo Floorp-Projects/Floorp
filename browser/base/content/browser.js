@@ -7432,7 +7432,7 @@ function getNotificationBox(aWindow) {
 function getTabModalPromptBox(aWindow) {
   var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
   if (foundBrowser)
-    return gBrowser.getTabModalPromptBox(foundBrowser)
+    return gBrowser.getTabModalPromptBox(foundBrowser);
   return null;
 };
 
