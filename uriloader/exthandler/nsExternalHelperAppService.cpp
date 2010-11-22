@@ -482,7 +482,7 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
   else {
     return NS_ERROR_FAILURE;
   }
-#elif defined(MAEMO)
+#elif defined(MOZ_PLATFORM_MAEMO)
   nsresult rv = dirService->Get(NS_UNIX_XDG_DOCUMENTS_DIR,
                        NS_GET_IID(nsILocalFile),
                        getter_AddRefs(downloadDir));
