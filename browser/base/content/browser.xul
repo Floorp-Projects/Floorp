@@ -572,6 +572,7 @@
           <hbox id="urlbar-icons">
             <image id="star-button"
                    class="urlbar-icon"
+                   hidden="true"
                    onclick="PlacesStarButton.onClick(event);"/>
             <image id="go-button"
                    class="urlbar-icon"
