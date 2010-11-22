@@ -7022,7 +7022,7 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
          * it will walk the peer list and find us a free slot or allocate a new
          * tree if needed.
          */
-        bool rv = RecordTree(cx, f->first, NULL, 0, NULL, globalSlots);
+        bool rv = RecordTree(cx, f->first, NULL, NULL, 0, globalSlots);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_RECORD_TREE;
@@ -7074,7 +7074,7 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
     bool rv;
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
-        rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL);
+        rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, NULL, 0);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_STABILIZE;
@@ -16308,7 +16308,7 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
 
             switch (lr->exitType) {
               case UNSTABLE_LOOP_EXIT:
-                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL))
+                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, NULL, 0))
                     return TPA_RanStuff;
                 break;
 
@@ -16352,7 +16352,7 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
         return TPA_Nothing;
     if (!ScopeChainCheck(cx, tree))
         return TPA_Nothing;
-    if (!RecordTree(cx, tree->first, NULL, 0, NULL, globalSlots))
+    if (!RecordTree(cx, tree->first, NULL, NULL, 0, globalSlots))
         return TPA_Nothing;
 
   interpret:
