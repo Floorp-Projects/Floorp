@@ -614,6 +614,13 @@ class GeckoAppShell
             showFilePicker(getMimeTypeFromExtensions(aFilters));
     }
 
+    public static void performHapticFeedback(boolean aIsLongPress) {
+        GeckoApp.surfaceView.
+            performHapticFeedback(aIsLongPress ?
+                                  HapticFeedbackConstants.LONG_PRESS :
+                                  HapticFeedbackConstants.VIRTUAL_KEY);
+    }
+
     public static void showInputMethodPicker() {
         InputMethodManager imm = (InputMethodManager) GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showInputMethodPicker();       

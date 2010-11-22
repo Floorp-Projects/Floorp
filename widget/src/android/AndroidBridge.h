@@ -170,6 +170,8 @@ public:
 
     void ShowFilePicker(nsAString& aFilePath, nsAString& aFilters);
 
+    void PerformHapticFeedback(PRBool aIsLongPress);
+
     void SetFullScreen(PRBool aFullScreen);
 
     void ShowInputMethodPicker();
@@ -253,6 +255,7 @@ protected:
     jmethodID jSetFullScreen;
     jmethodID jShowInputMethodPicker;
     jmethodID jHideProgressDialog;
+    jmethodID jPerformHapticFeedback;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
