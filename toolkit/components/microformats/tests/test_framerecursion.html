@@ -10,6 +10,31 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
 </head>
 <body id="contentbody">
+  <pre id="test">
+  <script class="testbody" type="text/javascript">
+
+  // Start the test once the iFrame loads
+  function onLoad() {
+    test_MicroformatsAPI();
+  }
+
+  function test_MicroformatsAPI() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    Components.utils.import("resource://gre/modules/Microformats.js");
+
+    count = Microformats.count("geo",
+                              document.getElementById("contentbody"),
+                              {recurseExternalFrames: false},
+                              0);
+    is(count, 1, "Only one geo - we don't count external frames");
+
+    count = Microformats.count("geo",
+                              document.getElementById("contentbody"),
+                              {recurseExternalFrames: true});
+    is(count, 2, "Two Geo's - one in frame and one in iframe");
+  }
+  </script>
+  </pre>
 
   <frameset>
     <frame id="frame1">
@@ -36,31 +61,5 @@
   <!-- Geo -->
   <iframe id="iframe" src="geo.html" onload="onLoad();">
   </iframe>
-
-  <!-- Ok, the test, here we go -->
-  <pre id="test">
-  <script class="testbody" type="text/javascript">
-
-  // Start the test once the iFrame loads
-  function onLoad() {
-    test_MicroformatsAPI();
-  }
-
-  function test_MicroformatsAPI() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    Components.utils.import("resource://gre/modules/Microformats.js");
-
-    count = Microformats.count("geo",
-                              document.getElementById("contentbody"),
-                              {recurseExternalFrames: false},
-                              0);
-    is(count, 1, "Only one geo - we don't count external frames");
-
-    count = Microformats.count("geo",
-                              document.getElementById("contentbody"),
-                              {recurseExternalFrames: true});
-    is(count, 2, "Two Geo's - one in frame and one in iframe");
-  }
-  </script>
 </body>
 </html>
