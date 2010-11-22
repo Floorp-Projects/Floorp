@@ -138,11 +138,14 @@ public:
   }
 
   /**
-   * Marks as loaded, used for error pages as workaround since they do not
+   * Marks this document as loaded or loading, used to expose busy state.
+   * The loaded flag has special meaning for error pages and used as workaround
+   * to make IsContentLoaded() return correct result since these pages do not
    * receive pageshow event and as consequence nsIDocument::IsShowing() returns
    * false.
    */
   void MarkAsLoaded() { mIsLoaded = PR_TRUE; }
+  void MarkAsLoading() { mIsLoaded = PR_FALSE; }
 
   /**
    * Return a native window handler or pointer depending on platform.
