@@ -15892,7 +15892,13 @@ TraceRecorder::record_JSOP_LENGTH()
             JS_ASSERT(obj->isSlowArray());
             guardClass(obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         }
-        v_ins = w.i2d(w.lduiObjPrivate(obj_ins));
+        v_ins = w.lduiObjPrivate(obj_ins);
+        if (obj->getArrayLength() <= JSVAL_INT_MAX) {
+            guard(true, w.leui(v_ins, w.immi(JSVAL_INT_MAX)), BRANCH_EXIT);
+            v_ins = w.i2d(v_ins);
+        } else {
+            v_ins = w.ui2d(v_ins);
+        }
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), LOAD_NORMAL);
