@@ -159,7 +159,7 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
 #include "nsINodeInfo.h"
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsHapticFeedback.h"
 #endif
 
@@ -342,7 +342,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWorkerFactory)
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 
@@ -908,7 +908,7 @@ NS_DEFINE_NAMED_CID(NS_WORKERFACTORY_CID);
     defined(android)
 NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 
@@ -1061,7 +1061,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
     defined(android)
   { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
@@ -1212,7 +1212,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
     defined(android)
   { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
   { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
