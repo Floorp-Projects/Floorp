@@ -16,7 +16,7 @@ tabbrowser {
 #tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
-#navigator-toolbox[customizing="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+#TabsToolbar[customizing="true"] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
 }
 
