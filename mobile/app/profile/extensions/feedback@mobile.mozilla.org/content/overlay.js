@@ -72,9 +72,14 @@ var Feedback = {
     }, false);
   },
 
-  openFeedback: function(aURL) {
+  openFeedback: function(aName) {
+    let pref = "extensions.feedback.url." + aName;
+    let url = Services.prefs.getPrefType(pref) == Ci.nsIPrefBranch.PREF_INVALID ? "" : Services.prefs.getCharPref(pref);
+    if (!url)
+      return;
+
     let currentURL = Browser.selectedBrowser.currentURI.spec;
-    let newTab = BrowserUI.newTab(aURL);
+    let newTab = BrowserUI.newTab(url);
 
     // Tell the feedback page to fill in the referrer URL
     newTab.browser.messageManager.addMessageListener("DOMContentLoaded", function() {
