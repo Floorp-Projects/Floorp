@@ -194,6 +194,10 @@
   opacity: .3;
 }
 
+#appmenuPrimaryPane {
+  -moz-border-end: 1px solid ThreeDShadow;
+}
+
 @media all and (-moz-windows-default-theme) {
   #appmenu-popup {
     -moz-appearance: none;
