@@ -1256,12 +1256,6 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
             break;
 
         JS_ASSERT(v.isObject());
-        if (!v.isObject()) {
-            if (v.isMagic(JS_ARRAY_HOLE))
-                *(int *) 0x88 = 0;
-            else
-                *(int *) 0x99 = 0;
-        }
         if (!DefaultValue(cx, &v.toObject(), JSTYPE_NUMBER, &v))
             return false;
         if (v.isObject())
