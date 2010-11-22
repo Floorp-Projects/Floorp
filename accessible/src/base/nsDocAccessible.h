@@ -422,7 +422,7 @@ protected:
       mRelAttr(aRelAttr), mContent(aContent) { }
 
     nsIAtom* mRelAttr;
-    nsIContent* mContent;
+    nsCOMPtr<nsIContent> mContent;
 
   private:
     AttrRelProvider();
