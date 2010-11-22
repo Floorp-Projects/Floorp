@@ -98,8 +98,8 @@ LSPAnnotationGatherer::Run()
   }
 
   nsAutoPtr<char> byteArray = new char[size];
-  WSAPROTOCOL_INFO* providers =
-    reinterpret_cast<WSAPROTOCOL_INFO*>(byteArray.get());
+  WSAPROTOCOL_INFOW* providers =
+    reinterpret_cast<WSAPROTOCOL_INFOW*>(byteArray.get());
 
   int n = WSCEnumProtocols(NULL, providers, &size, &err);
   if (n == SOCKET_ERROR) {
