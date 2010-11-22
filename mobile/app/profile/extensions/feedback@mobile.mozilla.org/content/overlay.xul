@@ -58,8 +58,8 @@
           <label id="feedback-list-header" class="panel-header" value="&feedbackHeader.label;"/>
           <settings id="feedback-communicate" label="&feedback.communicate.title;">
             <setting title="&feedback.feedback.title;" type="control">
-              <button id="feedback-feedback-happy" oncommand="Feedback.openFeedback('http://m.input.mozilla.com/happy');"/>
-              <button id="feedback-feedback-sad" oncommand="Feedback.openFeedback('http://m.input.mozilla.com/sad');"/>
+              <button id="feedback-feedback-happy" oncommand="Feedback.openFeedback('happy');"/>
+              <button id="feedback-feedback-sad" oncommand="Feedback.openFeedback('sad');"/>
             </setting>
           </settings>
           <settings id="feedback-information" label="&feedback.information.title;">
