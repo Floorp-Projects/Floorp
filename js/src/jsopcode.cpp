@@ -2114,14 +2114,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
             saveop = op;
             if (op >= JSOP_LIMIT) {
-                if (op == JSOP_GETPROP2) {
+                if (op == JSOP_GETPROP2)
                     saveop = JSOP_GETPROP;
-                    break;
-                }
-                if (op == JSOP_GETELEM2) {
+                else if (op == JSOP_GETELEM2)
                     saveop = JSOP_GETELEM;
-                    break;
-                }
             }
             LOCAL_ASSERT(js_CodeSpec[saveop].length == oplen ||
                          JOF_TYPE(format) == JOF_SLOTATOM);
