@@ -8,11 +8,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346485
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    frameLoaded = function() {
+      is(frames['submit_frame'].location.href, "about:blank",
+         "Blank frame loaded");
+    }
+  </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=346485">Mozilla Bug 346485</a>
 <p id="display"></p>
-<iframe name="submit_frame" onload="checkFormSubmission();" style="visibility: hidden;"></iframe>
+<iframe name="submit_frame" onload="frameLoaded()" style="visibility: hidden;"></iframe>
 <div id="content" style="display: none">
   <form id='f' method='get' target='submit_frame' action='foo'>
     <input name='a' id='a'>
@@ -126,6 +132,8 @@ function submitForm()
   document.getElementById('a').value = 'afield';
   document.getElementById('b').value = 'bfield';
 
+  frameLoaded = checkFormSubmission;
+
   // This will call checkFormSubmission() which is going to call ST.finish().
   document.getElementById('f').submit();
 }
@@ -145,33 +153,34 @@ function checkFormSubmission()
 }
 
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var o = document.getElementsByTagName('output');
+  is(o.length, 1, "There should be one output element");
 
-var o = document.getElementsByTagName('output');
-is(o.length, 1, "There should be one output element");
+  o = o[0];
+  ok(o instanceof HTMLOutputElement,
+    "The output should be instance of HTMLOutputElement");
 
-o = o[0];
-ok(o instanceof HTMLOutputElement,
-  "The output should be instance of HTMLOutputElement");
+  o = document.getElementById('o');
+  ok(o instanceof HTMLOutputElement,
+    "The output should be instance of HTMLOutputElement");
 
-o = document.getElementById('o');
-ok(o instanceof HTMLOutputElement,
-  "The output should be instance of HTMLOutputElement");
+  is(o.type, "output", "Output type IDL attribute should be 'output'");
 
-is(o.type, "output", "Output type IDL attribute should be 'output'");
+  checkNameAttribute(o);
 
-checkNameAttribute(o);
+  checkValueAndDefaultValueIDLAttribute(o);
 
-checkValueAndDefaultValueIDLAttribute(o);
+  checkValueModeFlag(o);
 
-checkValueModeFlag(o);
+  checkDescendantChanged(o);
 
-checkDescendantChanged(o);
+  checkFormIDLAttribute(o);
 
-checkFormIDLAttribute(o);
+  checkHtmlForIDLAttribute(o);
 
-checkHtmlForIDLAttribute(o);
-
-submitForm();
+  submitForm();
+});
 
 </script>
 </pre>
