@@ -319,7 +319,7 @@ nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
       *aState |= nsIAccessibleStates::STATE_FOCUSED;
   }
 
-  if (nsCoreUtils::IsDocumentBusy(mDocument)) {
+  if (!mIsLoaded) {
     *aState |= nsIAccessibleStates::STATE_BUSY;
     if (aExtraState) {
       *aExtraState |= nsIAccessibleStates::EXT_STATE_STALE;

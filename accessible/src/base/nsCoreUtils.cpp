@@ -461,19 +461,6 @@ nsCoreUtils::GetDocShellTreeItemFor(nsINode *aNode)
 }
 
 PRBool
-nsCoreUtils::IsDocumentBusy(nsIDocument *aDocument)
-{
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-  if (!docShell)
-    return PR_TRUE;
-
-  PRUint32 busyFlags = 0;
-  docShell->GetBusyFlags(&busyFlags);
-  return (busyFlags != nsIDocShell::BUSY_FLAGS_NONE);
-}
-
-PRBool
 nsCoreUtils::IsRootDocument(nsIDocument *aDocument)
 {
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();

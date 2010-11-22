@@ -224,11 +224,6 @@ public:
     GetDocShellTreeItemFor(nsINode *aNode);
 
   /**
-   * Return true if document is loading.
-   */
-  static PRBool IsDocumentBusy(nsIDocument *aDocument);
-
-  /**
    * Return true if the given document is root document.
    */
   static PRBool IsRootDocument(nsIDocument *aDocument);
