@@ -953,7 +953,10 @@ var BrowserUI = {
         break;
 
       case "Browser:OpenURI":
-        Browser.addTab(json.uri, json.bringFront, Browser.selectedTab);
+        let referrerURI = null;
+        if (json.referrer)
+          referrerURI = Services.io.newURI(json.referrer, null, null);
+        Browser.addTab(json.uri, json.bringFront, Browser.selectedTab, { referrerURI: referrerURI });
         break;
     }
   },
