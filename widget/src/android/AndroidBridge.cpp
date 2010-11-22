@@ -120,6 +120,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
     jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
     jHideProgressDialog = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideProgressDialog", "()V");
+    jPerformHapticFeedback = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "performHapticFeedback", "(Z)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -533,6 +534,13 @@ AndroidBridge::HideProgressDialogOnce()
         mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
         once = true;
     }
+}
+
+void
+AndroidBridge::PerformHapticFeedback(PRBool aIsLongPress)
+{
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass,
+                                    jPerformHapticFeedback, aIsLongPress);
 }
 
 void
