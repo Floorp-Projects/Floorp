@@ -178,26 +178,6 @@ class AudioInitEvent : public nsRunnable
   nsRefPtr<nsAudioStreamRemote> mOwner;
 };
 
-class AudioShutdownEvent : public nsRunnable
-{
- public:
-  AudioShutdownEvent(nsAudioStreamRemote* owner)
-  {
-    mOwner = owner;
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mOwner->mAudioChild) {
-      PAudioChild::Send__delete__(mOwner->mAudioChild);
-      mOwner->mAudioChild = nsnull;
-    }
-    mOwner = nsnull;
-    return NS_OK;
-  }
-  nsRefPtr<nsAudioStreamRemote> mOwner;
-};
-
 class AudioWriteEvent : public nsRunnable
 {
  public:
@@ -353,7 +333,10 @@ nsAudioStreamLocal::nsAudioStreamLocal() :
 {
 }
 
-nsAudioStreamLocal::~nsAudioStreamLocal(){}
+nsAudioStreamLocal::~nsAudioStreamLocal()
+{
+  Shutdown();
+}
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsAudioStreamLocal)
 
@@ -589,7 +572,9 @@ nsAudioStreamRemote::nsAudioStreamRemote()
 {}
 
 nsAudioStreamRemote::~nsAudioStreamRemote()
-{}
+{
+  Shutdown();
+}
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsAudioStreamRemote)
 
@@ -624,8 +609,8 @@ nsAudioStreamRemote::Init(PRInt32 aNumChannels,
 void
 nsAudioStreamRemote::Shutdown()
 {
-  nsCOMPtr<nsIRunnable> event = new AudioShutdownEvent(this);
-  NS_DispatchToMainThread(event);
+  PAudioChild::Send__delete__(mAudioChild);
+  mAudioChild = nsnull;
 }
 
 nsresult
