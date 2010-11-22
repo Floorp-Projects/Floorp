@@ -456,8 +456,10 @@ class SetPropCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         buffer.link(shapeGuard, pic.slowPathStart);
         if (slowExit.isSet())
@@ -828,8 +830,10 @@ class GetPropCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         buffer.link(notArgs, pic.slowPathStart);
         buffer.link(overridden, pic.slowPathStart);
@@ -864,8 +868,10 @@ class GetPropCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         buffer.link(notArray, pic.slowPathStart);
         buffer.link(oob, pic.slowPathStart);
@@ -934,7 +940,7 @@ class GetPropCompiler : public PICStubCompiler
             return error();
 
         if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
-            (pic.hasTypeCheck() && !buffer.verifyRange(f.jit()))) {
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
         }
 
@@ -976,7 +982,7 @@ class GetPropCompiler : public PICStubCompiler
             return error();
 
         if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
-            (pic.hasTypeCheck() && !buffer.verifyRange(f.jit()))) {
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
         }
 
@@ -1100,8 +1106,10 @@ class GetPropCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         // The guard exit jumps to the original slow case.
         for (Jump *pj = shapeMismatches.begin(); pj != shapeMismatches.end(); ++pj)
@@ -1278,8 +1286,10 @@ class ScopeNameCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
@@ -1385,8 +1395,10 @@ class ScopeNameCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
@@ -1560,8 +1572,10 @@ class BindNameCompiler : public PICStubCompiler
         if (!buffer.init(cx))
             return error();
 
-        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())))
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
             return disable("code memory is out of range");
+        }
 
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
