@@ -106,6 +106,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_597756_reopen_closed_tab.js \
 	browser_webconsole_bug_600183_charset.js \
 	browser_webconsole_bug_601177_log_levels.js \
+	browser_webconsole_bug_587615_lastTimestamp.js \
 	head.js \
 	$(NULL)
 
