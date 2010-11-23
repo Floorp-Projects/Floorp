@@ -84,6 +84,7 @@ class GeckoSurfaceView
         mSurfaceLock = new ReentrantLock();
 
         mIMEState = IME_STATE_DISABLED;
+        mIMEHint = "";
     }
 
     protected void finalize() throws Throwable {
@@ -286,14 +287,32 @@ class GeckoSurfaceView
 
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if (!mIMEFocus)
-            return null;
-
-        outAttrs.inputType = InputType.TYPE_CLASS_TEXT |
-                             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+        outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
+        outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
+        else if (mIMEHint.equalsIgnoreCase("url"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
+        else if (mIMEHint.equalsIgnoreCase("email"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+        else if (mIMEHint.equalsIgnoreCase("search"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
+        else if (mIMEHint.equalsIgnoreCase("tel"))
+            outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
+        else if (mIMEHint.equalsIgnoreCase("number") ||
+                 mIMEHint.equalsIgnoreCase("range"))
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
+        else if (mIMEHint.equalsIgnoreCase("datetime") ||
+                 mIMEHint.equalsIgnoreCase("datetime-local"))
+            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
+                                 InputType.TYPE_DATETIME_VARIATION_NORMAL;
+        else if (mIMEHint.equalsIgnoreCase("date"))
+            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
+                                 InputType.TYPE_DATETIME_VARIATION_DATE;
+        else if (mIMEHint.equalsIgnoreCase("time"))
+            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
+                                 InputType.TYPE_DATETIME_VARIATION_TIME;
 
         inputConnection.reset();
         return inputConnection;
@@ -371,6 +390,7 @@ class GeckoSurfaceView
     GeckoInputConnection inputConnection;
     boolean mIMEFocus;
     int mIMEState;
+    String mIMEHint;
 
     // Software rendering
     ByteBuffer mSoftwareBuffer;
