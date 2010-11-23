@@ -140,7 +140,8 @@ let UI = {
       iQ(gTabViewFrame.contentDocument).mousedown(function(e) {
         if (iQ(":focus").length > 0) {
           iQ(":focus").each(function(element) {
-            if (element.nodeName == "INPUT")
+            // don't fire blur event if the same input element is clicked.
+            if (e.target != element && element.nodeName == "INPUT")
               element.blur();
           });
         }
@@ -843,7 +844,8 @@ let UI = {
       if (event.metaKey) 
         Keys.meta = true;
 
-      if (isSearchEnabled())
+      if ((iQ(":focus").length > 0 && iQ(":focus")[0].nodeName == "INPUT") || 
+          isSearchEnabled())
         return;
 
       function getClosestTabBy(norm) {
