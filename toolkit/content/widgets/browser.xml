@@ -929,7 +929,7 @@
            // |maxTimeDelta| ms
            const maxTimeDelta = 100;
            var timeDelta = Math.min(maxTimeDelta, timestamp - this._lastFrame);
-           // we used to scroll |_accelerate()| pixels every 20ms
+           // we used to scroll |_accelerate()| pixels every 20ms (50fps)
            var timeCompensation = timeDelta / 20;
            this._lastFrame = timestamp;
 
