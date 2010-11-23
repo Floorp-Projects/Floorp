@@ -157,7 +157,7 @@ function GroupItem(listOfEls, options) {
     .html(html)
     .appendTo($container);
 
-  var $close = iQ('<div>')
+  this.$closeButton = iQ('<div>')
     .addClass('close')
     .click(function() {
       self.closeAll();
@@ -276,7 +276,7 @@ function GroupItem(listOfEls, options) {
     $container.css({cursor: 'default'});
 
   if (this.locked.close)
-    $close.hide();
+    this.$closeButton.hide();
 
   // ___ Undo Close
   this.$undoContainer = null;
@@ -314,6 +314,8 @@ function GroupItem(listOfEls, options) {
 
   this._inited = true;
   this.save();
+
+  GroupItems.updateGroupCloseButtons();
 };
 
 // ----------
@@ -567,6 +569,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     GroupItems.unregister(this);
     this._sendToSubscribers("close");
     this.removeTrenches();
+    GroupItems.updateGroupCloseButtons();
 
     if (this.hidden) {
       iQ(this.container).remove();
@@ -642,6 +645,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     });
 
+    GroupItems.updateGroupCloseButtons();
     self._sendToSubscribers("groupShown", { groupItemId: self.id });
   },
 
@@ -774,6 +778,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer.mouseout(function() {
       self.setupFadeAwayUndoButtonTimer();
     });
+
+    GroupItems.updateGroupCloseButtons();
   },
 
   // ----------
@@ -963,14 +969,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
 
-      if (!this._children.length && !this.locked.close && !this.getTitle() && !options.dontClose) {
+      if (!this._children.length && !this.locked.close && !this.getTitle() && 
+          !options.dontClose && !GroupItems.getUnclosableGroupItem()) {
         this.close();
       } else if (!options.dontArrange) {
         this.arrange({animate: !options.immediately});
       }
 
       this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
-
     } catch(e) {
       Utils.log(e);
     }
@@ -1637,6 +1643,7 @@ let GroupItems = {
     this.groupItems.forEach(function(groupItem) {
       groupItem.addAppTab(xulTab);
     });
+    this.updateGroupCloseButtons();
   },
 
   // ----------
@@ -1646,6 +1653,7 @@ let GroupItems = {
     this.groupItems.forEach(function(groupItem) {
       groupItem.removeAppTab(xulTab);
     });
+    this.updateGroupCloseButtons();
   },
 
   // ----------
@@ -2207,5 +2215,38 @@ let GroupItems = {
      });
 
     this._removingHiddenGroups = false;
+  },
+
+  // ----------
+  // Function: getUnclosableGroupItem
+  // If there's only one (non-hidden) group, and there are app tabs present, 
+  // returns that group.
+  // Return the <GroupItem>
+  getUnclosableGroupItem: function GroupItems_getUnclosableGroupItem() {
+    let unclosableGroupItem = null;
+
+    if (gBrowser._numPinnedTabs > 0) {
+      let groupItems = this.groupItems.filter(function(groupItem) {
+        return !groupItem.hidden;
+      });
+      if (groupItems.length == 1)
+        unclosableGroupItem = groupItems[0];
+    }
+    return unclosableGroupItem;
+  },
+
+  // ----------
+  // Function: updateGroupCloseButtons
+  // Updates group close buttons.
+  updateGroupCloseButtons: function GroupItems_updateGroupCloseButtons() {
+    let unclosableGroupItem = this.getUnclosableGroupItem();
+
+    if (unclosableGroupItem) {
+      unclosableGroupItem.$closeButton.hide();
+    } else {
+      this.groupItems.forEach(function(groupItem) {
+        groupItem.$closeButton.show();
+      });
+    }
   }
 };
