@@ -66,6 +66,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug597399.js \
                  browser_tabview_bug598600.js \
                  browser_tabview_bug599626.js \
+                 browser_tabview_bug600645.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_group.js \
@@ -83,6 +84,7 @@ _BROWSER_FILES = \
                  search1.html \
                  search2.html \
                  test_bug599626.html \
+                 test_bug600645.html \
                  $(NULL)
 
 # compartments: test disabled
