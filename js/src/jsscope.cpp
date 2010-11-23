@@ -1385,6 +1385,18 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
         }
     }
 
+    if (branded()) {
+        uintN thrashCount = getMethodThrashCount();
+        if (thrashCount < JSObject::METHOD_THRASH_COUNT_MAX) {
+            ++thrashCount;
+            setMethodThrashCount(thrashCount);
+            if (thrashCount == JSObject::METHOD_THRASH_COUNT_MAX) {
+                unbrand(cx);
+                return true;
+            }
+        }
+    }
+
     generateOwnShape(cx);
     return true;
 }

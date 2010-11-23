@@ -105,8 +105,13 @@ inline bool
 JSObject::unbrand(JSContext *cx)
 {
     JS_ASSERT(isNative());
-    if (!branded())
-        setGeneric();
+    if (branded()) {
+        generateOwnShape(cx);
+        if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
+            return false;
+        flags &= ~BRANDED;
+    }
+    setGeneric();
     return true;
 }
 
@@ -189,14 +194,12 @@ ChangesMethodValue(const js::Value &prev, const js::Value &v)
 inline bool
 JSObject::methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v)
 {
-    if (flags & (BRANDED | METHOD_BARRIER)) {
-        if (shape.slot != SHAPE_INVALID_SLOT) {
-            const js::Value &prev = nativeGetSlot(shape.slot);
+    if (brandedOrHasMethodBarrier() && shape.slot != SHAPE_INVALID_SLOT) {
+        const js::Value &prev = nativeGetSlot(shape.slot);
 
-            if (ChangesMethodValue(prev, v)) {
-                JS_FUNCTION_METER(cx, mwritebarrier);
-                return methodShapeChange(cx, shape);
-            }
+        if (ChangesMethodValue(prev, v)) {
+            JS_FUNCTION_METER(cx, mwritebarrier);
+            return methodShapeChange(cx, shape);
         }
     }
     return true;
@@ -205,7 +208,7 @@ JSObject::methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Va
 inline bool
 JSObject::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
 {
-    if (flags & (BRANDED | METHOD_BARRIER)) {
+    if (brandedOrHasMethodBarrier()) {
         const js::Value &prev = nativeGetSlot(slot);
 
         if (ChangesMethodValue(prev, v)) {
