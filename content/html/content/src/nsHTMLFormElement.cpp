@@ -1706,20 +1706,9 @@ nsHTMLFormElement::CheckValidFormSubmission()
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!CheckFormValidity(invalidElements.get())) {
-      nsCOMPtr<nsISupports> inst;
-      nsCOMPtr<nsIFormSubmitObserver> observer;
-      PRBool more = PR_TRUE;
-      while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
-        theEnum->GetNext(getter_AddRefs(inst));
-        observer = do_QueryInterface(inst);
-
-        if (observer) {
-          observer->NotifyInvalidSubmit(this,
-                                        static_cast<nsIArray*>(invalidElements));
-        }
-      }
-
       // For the first invalid submission, we should update element states.
+      // We have to do that _before_ calling the observers so we are sure they
+      // will not interfere (like focusing the element).
       if (!mEverTriedInvalidSubmit) {
         mEverTriedInvalidSubmit = true;
 
@@ -1747,6 +1736,19 @@ nsHTMLFormElement::CheckValidFormSubmission()
             doc->ContentStatesChanged(mControls->mNotInElements[i], nsnull,
                                       NS_EVENT_STATE_MOZ_UI_INVALID);
           }
+        }
+      }
+
+      nsCOMPtr<nsISupports> inst;
+      nsCOMPtr<nsIFormSubmitObserver> observer;
+      PRBool more = PR_TRUE;
+      while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
+        theEnum->GetNext(getter_AddRefs(inst));
+        observer = do_QueryInterface(inst);
+
+        if (observer) {
+          observer->NotifyInvalidSubmit(this,
+                                        static_cast<nsIArray*>(invalidElements));
         }
       }
 
