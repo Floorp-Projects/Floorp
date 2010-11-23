@@ -264,6 +264,7 @@ nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
 PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
+PRBool nsContentUtils::sAllowXULXBL_for_file = PR_FALSE;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
@@ -505,6 +506,9 @@ nsContentUtils::Init()
 
   sBlockedScriptRunners = new nsCOMArray<nsIRunnable>;
   NS_ENSURE_TRUE(sBlockedScriptRunners, NS_ERROR_OUT_OF_MEMORY);
+
+  nsContentUtils::AddBoolPrefVarCache("dom.allow_XUL_XBL_for_file",
+                                      &sAllowXULXBL_for_file);
 
   sInitialized = PR_TRUE;
 
@@ -6416,6 +6420,20 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
   return manager.forget();
 }
 
+bool
+nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal)
+{
+  if (IsSystemPrincipal(aPrincipal)) {
+    return true;
+  }
+  
+  nsCOMPtr<nsIURI> princURI;
+  aPrincipal->GetURI(getter_AddRefs(princURI));
+  
+  return princURI &&
+         ((sAllowXULXBL_for_file && SchemeIs(princURI, "file")) ||
+          IsSitePermAllow(princURI, "allowXULXBL"));
+}
 
 NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
 
