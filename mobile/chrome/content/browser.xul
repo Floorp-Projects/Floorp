@@ -380,7 +380,7 @@
         <toolbarbutton id="tool-console" class="panel-row-button" type="radio" group="1" hidden="true" linkedpanel="console-container"/>
 #ifndef ANDROID
         <spacer flex="1"/>
-        <toolbarbutton id="tool-panel-close" command="cmd_panel"/>
+        <toolbarbutton id="tool-panel-close" class="panel-close" command="cmd_panel"/>
 #endif
       </hbox>
       <vbox flex="1">
@@ -442,19 +442,19 @@
                 </setting>
 #ifdef MOZ_SERVICES_SYNC
                 <settings id="prefs-sync" label="&sync.title;">
-                  <setting id="sync-connect" title="&sync.notconnected;" type="control">
-                    <button label="&sync.connect;" oncommand="WeaveGlue.show();" />
+                  <setting id="sync-autosync" pref="browser.sync.enabled" type="bool" title="&sync.synchronize;" oncommand="WeaveGlue.toggleSyncEnabled();"/>
+                  <setting id="sync-connect" title="&sync.notconnected;" type="control" collapsed="true">
+                    <button label="&sync.connect;" oncommand="WeaveGlue.open();" />
                   </setting>
-                  <setting id="sync-connected" title="&sync.connected;" type="control" collapsed="true">
+                  <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
                     <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="true" checked="false" oncommand="WeaveGlue.showDetails();" />
                   </setting>
-                  <setting id="sync-autosync" type="bool" title="&sync.synchronize;" onchange="WeaveGlue.changeSync();" collapsed="true"/>
-                  <setting id="sync-device" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
-                  <setting id="sync-disconnect" type="control" collapsed="true">
-                    <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
-                  </setting>
-                  <setting id="sync-sync" type="control" collapsed="true">
+                  <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
                     <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>
+                  </setting>
+                  <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
+                  <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
+                    <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
                   </setting>
                 </settings>
 #endif
@@ -520,47 +520,46 @@
 
 #ifdef MOZ_SERVICES_SYNC
     <vbox id="syncsetup-container" class="panel-dark window-width window-height" hidden="true">
-      <scrollbox align="center" orient="vertical" flex="1">
-        <vbox id="syncsetup-jpake" align="center" style="padding: 8px" flex="1">
-          <description>&sync.setup.title;</description>
+      <hbox class="syncsetup-title">
+        <description>&sync.setup.title;</description>
+#ifndef ANDROID
+        <spacer flex="1"/>
+        <toolbarbutton id="tool-syncsetup-close" class="panel-close" oncommand="WeaveGlue.close();"/>
+#endif
+      </hbox>
+      <scrollbox id="syncsetup-scrollbox" orient="vertical" flex="1">
+        <vbox id="syncsetup-jpake" class="syncsetup-page" flex="1">
+          <description class="syncsetup-center" flex="1">&sync.setup.jpake;</description>
           <separator/>
-          <hbox align="start">
-            <description flex="1">&sync.setup.jpake;</description>
-          </hbox>
-          <separator/>
-          <vbox align="center">
-            <textbox readonly="true">code</textbox>
-            <textbox readonly="true">goes</textbox>
-            <textbox readonly="true">here</textbox>
+          <vbox align="center" flex="1">
+            <description class="syncsetup-code">code</description>
+            <description class="syncsetup-code">goes</description>
+            <description class="syncsetup-code">here</description>
           </vbox>
           <separator/>
-          <description style="font-size: 18px; text-decoration: underline" onclick="document.getElementById('syncsetup-jpake').hidden = true; document.getElementById('syncsetup-manual').hidden = false;">&sync.fallback;</description>
+          <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
           <separator/>
           <hbox pack="center">
-            <button oncommand="WeaveGlue.close();">Cancel</button>
+            <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
-        <vbox id="syncsetup-manual" style="padding: 8px" flex="1" hidden="true">
-          <hbox pack="center">
-            <description>&sync.setup.title;</description>
-          </hbox>
-          <separator/>
-          <description>&sync.setup.manual;</description>
+        <vbox id="syncsetup-manual" class="syncsetup-page" flex="1" hidden="true">
+          <description class="syncsetup-center">&sync.setup.manual;</description>
           <separator/>
           <textbox id="syncsetup-account" placeholder="&sync.account;"/>
           <textbox id="syncsetup-password" placeholder="&sync.password;" type="password"/>
           <textbox id="syncsetup-synckey" placeholder="&sync.syncKey;"/>
           <separator/>
-          <button id="syncsetup-customserver-checkbox" type="checkbox" class="button-checkbox" pack="start">
+          <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
             <image class="button-image-icon"/>
-            <description class="prompt-checkbox-label" flex="1">&sync.customServer;</description>
+            <description class="syncsetup-label" flex="1">&sync.customServer;</description>
           </button>
           <textbox id="syncsetup-customserver" placeholder="&sync.serverURL;"/>
           <separator/>
           <hbox pack="center">
-            <button oncommand="WeaveGlue.close();">Cancel</button>
+            <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
-            <button oncommand="WeaveGlue.close(); WeaveGlue.connect();">Connect</button>
+            <button oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
           </hbox>
         </vbox>
       </scrollbox>
