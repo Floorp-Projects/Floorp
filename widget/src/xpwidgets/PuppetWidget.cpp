@@ -388,10 +388,10 @@ PuppetWidget::GetIMEOpenState(PRBool *aState)
 }
 
 NS_IMETHODIMP
-PuppetWidget::GetIMEEnabled(PRUint32 *aState)
+PuppetWidget::GetInputMode(IMEContext& aContext)
 {
   if (mTabChild &&
-      mTabChild->SendGetIMEEnabled(aState))
+      mTabChild->SendGetIMEEnabled(&aContext.mStatus))
     return NS_OK;
   return NS_ERROR_FAILURE;
 }

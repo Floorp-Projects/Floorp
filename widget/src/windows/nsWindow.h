@@ -183,7 +183,7 @@ public:
   NS_IMETHOD              SetIMEOpenState(PRBool aState);
   NS_IMETHOD              GetIMEOpenState(PRBool* aState);
   NS_IMETHOD              SetInputMode(const IMEContext& aContext);
-  NS_IMETHOD              GetIMEEnabled(PRUint32* aState);
+  NS_IMETHOD              GetInputMode(IMEContext& aContext);
   NS_IMETHOD              CancelIMEComposition();
   NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
   NS_IMETHOD              RegisterTouchWindow();
@@ -253,9 +253,8 @@ public:
    */
   virtual PRBool          AutoErase(HDC dc);
   nsIntPoint*             GetLastPoint() { return &mLastPoint; }
-  PRBool                  GetIMEEnabled() { return mIMEEnabled; }
   // needed in nsIMM32Handler.cpp
-  PRBool                  PluginHasFocus() { return mIMEEnabled == nsIWidget::IME_STATUS_PLUGIN; }
+  PRBool                  PluginHasFocus() { return mIMEContext.mStatus == nsIWidget::IME_STATUS_PLUGIN; }
   PRBool                  IsTopLevelWidget() { return mIsTopWidgetWindow; }
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
@@ -483,7 +482,7 @@ protected:
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
   HIMC                  mOldIMC;
-  PRUint32              mIMEEnabled;
+  IMEContext            mIMEContext;
   nsNativeDragTarget*   mNativeDragTarget;
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;

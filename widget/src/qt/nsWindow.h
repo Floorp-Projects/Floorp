@@ -200,7 +200,7 @@ public:
     NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 
     NS_IMETHODIMP      SetInputMode(const IMEContext& aContext);
-    NS_IMETHODIMP      GetIMEEnabled(PRUint32* aState);
+    NS_IMETHODIMP      GetInputMode(IMEContext& aContext);
 
     //
     // utility methods
@@ -251,6 +251,8 @@ protected:
     // Remember the last sizemode so that we can restore it when
     // leaving fullscreen
     nsSizeMode         mLastSizeMode;
+
+    IMEContext          mIMEContext;
 
     /**
      * Event handlers (proxied from the actual qwidget).

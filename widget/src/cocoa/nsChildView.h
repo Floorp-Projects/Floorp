@@ -353,7 +353,7 @@ public:
   NS_IMETHOD        SetIMEOpenState(PRBool aState);
   NS_IMETHOD        GetIMEOpenState(PRBool* aState);
   NS_IMETHOD        SetInputMode(const IMEContext& aContext);
-  NS_IMETHOD        GetIMEEnabled(PRUint32* aState);
+  NS_IMETHOD        GetInputMode(IMEContext& aContext);
   NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
                                        PRBool* aLEDState);
@@ -439,6 +439,7 @@ protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
   nsCocoaTextInputHandler mTextInputHandler;
+  IMEContext            mIMEContext;
 
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;
