@@ -2,7 +2,7 @@ function f() {
     var n;
     var k;
     for (var i = 0; i < 2*RUNLOOP; ++i) {
-	n = undefined;
+	n = null;
 	k = n++;
 	if (k) { }
     }
@@ -10,9 +10,8 @@ function f() {
 }
 
 var [a, b] = f();
-
-assertEq(isNaN(a), true);
-assertEq(isNaN(b), true);
+assertEq(a, 0);
+assertEq(b, 1);
 
 checkStats({
     recorderStarted: 1,
