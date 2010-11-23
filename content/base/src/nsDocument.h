@@ -978,7 +978,9 @@ public:
   virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue);
 
   already_AddRefed<nsContentList>
-    GetElementsByTagName(const nsAString& aTagName);
+  GetElementsByTagName(const nsAString& aTagName) {
+    return NS_GetContentList(this, kNameSpaceID_Unknown, aTagName);
+  }
   already_AddRefed<nsContentList>
     GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                            const nsAString& aLocalName);

@@ -4579,17 +4579,6 @@ nsDocument::CreateEntityReference(const nsAString& aName,
   return NS_OK;
 }
 
-already_AddRefed<nsContentList>
-nsDocument::GetElementsByTagName(const nsAString& aTagname)
-{
-  nsAutoString lowercaseName;
-  nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
-  nsCOMPtr<nsIAtom> xmlAtom = do_GetAtom(aTagname);
-  nsCOMPtr<nsIAtom> htmlAtom = do_GetAtom(lowercaseName);
-
-  return NS_GetContentList(this, kNameSpaceID_Unknown, htmlAtom, xmlAtom);
-}
-
 NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
@@ -4615,9 +4604,9 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+  NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
 
-  return NS_GetContentList(this, nameSpaceId, nameAtom);
+  return NS_GetContentList(this, nameSpaceId, aLocalName);
 }
 
 NS_IMETHODIMP
@@ -5184,7 +5173,7 @@ nsDocument::GetTitleContent(PRUint32 aNamespace)
     return nsnull;
 
   nsRefPtr<nsContentList> list =
-    NS_GetContentList(this, aNamespace, nsGkAtoms::title);
+    NS_GetContentList(this, aNamespace, NS_LITERAL_STRING("title"));
 
   return list->Item(0, PR_FALSE);
 }
@@ -7473,7 +7462,7 @@ nsDocument::OnPageShow(PRBool aPersisted,
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       kNameSpaceID_Unknown,
-                                                      nsGkAtoms::link);
+                                                      NS_LITERAL_STRING("link"));
 
     PRUint32 linkCount = links->Length(PR_TRUE);
     for (PRUint32 i = 0; i < linkCount; ++i) {
@@ -7525,7 +7514,7 @@ nsDocument::OnPageHide(PRBool aPersisted,
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       kNameSpaceID_Unknown,
-                                                      nsGkAtoms::link);
+                                                      NS_LITERAL_STRING("link"));
 
     PRUint32 linkCount = links->Length(PR_TRUE);
     for (PRUint32 i = 0; i < linkCount; ++i) {
