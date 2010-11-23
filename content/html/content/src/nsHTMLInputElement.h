@@ -67,6 +67,7 @@
 #define BF_INDETERMINATE 10
 #define BF_INHIBIT_RESTORATION 11
 #define BF_CAN_SHOW_INVALID_UI 12
+#define BF_CAN_SHOW_VALID_UI 13
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -565,6 +566,31 @@ protected:
      */
     if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
         GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
+      return true;
+    }
+
+    switch (GetValueMode()) {
+      case VALUE_MODE_DEFAULT:
+        return true;
+      case VALUE_MODE_DEFAULT_ON:
+        return GetCheckedChanged();
+      case VALUE_MODE_VALUE:
+      case VALUE_MODE_FILENAME:
+        return GetValueChanged();
+      default:
+        NS_NOTREACHED("We should not be there: there are no other modes.");
+        return false;
+    }
+  }
+
+  /**
+   * Return whether an element should show the valid UI.
+   *
+   * @return Whether the valid UI should be shown.
+   * @note This doesn't take into account the validity of the element.
+   */
+  bool ShouldShowValidUI() const {
+    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
       return true;
     }
 

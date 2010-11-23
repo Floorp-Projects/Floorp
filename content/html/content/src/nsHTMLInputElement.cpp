@@ -626,6 +626,7 @@ nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   SET_BOOLBIT(mBitField, BF_INHIBIT_RESTORATION,
       aFromParser & mozilla::dom::FROM_PARSER_FRAGMENT);
   SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI, PR_TRUE);
+  SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, PR_TRUE);
   mInputData.mState = new nsTextEditorState(this);
   NS_ADDREF(mInputData.mState);
   
@@ -2118,11 +2119,17 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // update). Otherwise, we should not.
       SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI,
                   !IsValid() && ShouldShowInvalidUI());
-      // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID given that
-      // the state should not change.
+
+      // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
+      // UI while typing.
+      SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, ShouldShowValidUI());
+
+      // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
+      // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
     } else { // NS_BLUR_CONTENT
       SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI, PR_TRUE);
-      states |= NS_EVENT_STATE_MOZ_UI_INVALID;
+      SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, PR_TRUE);
+      states |= NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
     if (PlaceholderApplies() &&
@@ -3321,17 +3328,6 @@ nsHTMLInputElement::IntrinsicState() const
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
-
-      // NS_EVENT_STATE_MOZ_UI_VALID applies if the value has been changed.
-      // This doesn't apply to elements with value mode default.
-      ValueModeType valueMode = GetValueMode();
-      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
-          valueMode == VALUE_MODE_DEFAULT ||
-          (valueMode == VALUE_MODE_DEFAULT_ON && GetCheckedChanged()) ||
-          ((valueMode == VALUE_MODE_VALUE ||
-            valueMode == VALUE_MODE_FILENAME) && GetValueChanged())) {
-        state |= NS_EVENT_STATE_MOZ_UI_VALID;
-      }
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
@@ -3339,6 +3335,19 @@ nsHTMLInputElement::IntrinsicState() const
           ShouldShowInvalidUI()) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
+    }
+
+    // :-moz-ui-valid applies if all of the following conditions are true:
+    // 1. The element is not focused, or had either :-moz-ui-valid or
+    //    :-moz-ui-invalid applying before it was focused ;
+    // 2. The element is either valid or isn't allowed to have
+    //    :-moz-ui-invalid applying ;
+    // 3. The rules to have :-moz-ui-valid applying are fulfilled
+    //    (see ShouldShowValidUI()).
+    if (GET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI) &&
+        (IsValid() || !GET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI)) &&
+        ShouldShowValidUI()) {
+      state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }
 
