@@ -184,6 +184,8 @@ CSS_STATE_PSEUDO_CLASS(mozSubmitInvalid, ":-moz-submit-invalid",
                        NS_EVENT_STATE_MOZ_SUBMITINVALID)
 CSS_STATE_PSEUDO_CLASS(mozUIInvalid, ":-moz-ui-invalid",
                        NS_EVENT_STATE_MOZ_UI_INVALID)
+CSS_STATE_PSEUDO_CLASS(mozUIValid, ":-moz-ui-valid",
+                       NS_EVENT_STATE_MOZ_UI_VALID)
 
 #ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
 #undef DEFINED_CSS_STATE_PSEUDO_CLASS
