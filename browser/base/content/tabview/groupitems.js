@@ -978,17 +978,31 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.remove(child, {dontArrange: true});
     });
   },
+  
+  // ----------
+  // Handles error event for loading app tab's fav icon.
+  _onAppTabError : function(event) {
+    iQ(".appTabIcon", this.$appTabTray).each(function(icon) {
+      let $icon = iQ(icon);
+      if ($icon.data("xulTab") == event.target) {
+        $icon.attr("src", Utils.defaultFaviconURL);
+        return true;
+      }
+    });
+  },
 
   // ----------
   // Adds the given xul:tab as an app tab in this group's apptab tray
   addAppTab: function GroupItem_addAppTab(xulTab) {
     let self = this;
 
+    xulTab.addEventListener("error", this._onAppTabError, false);
+
     // add the icon
-    let icon = xulTab.image || Utils.defaultFaviconURL;
+    let iconUrl = xulTab.image || Utils.defaultFaviconURL;
     let $appTab = iQ("<img>")
       .addClass("appTabIcon")
-      .attr("src", icon)
+      .attr("src", iconUrl)
       .data("xulTab", xulTab)
       .appendTo(this.$appTabTray)
       .click(function(event) {
@@ -1024,6 +1038,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.$appTabTray.css({width: 0});
       this.arrange();
     }
+
+    xulTab.removeEventListener("error", this._onAppTabError, false);
   },
 
   // ----------
