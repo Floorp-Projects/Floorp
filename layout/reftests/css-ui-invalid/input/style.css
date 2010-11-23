@@ -16,3 +16,8 @@ input.invalid {
 input.invalid:-moz-ui-invalid {
   background-color: green;
 }
+
+input[type=checkbox],
+input[type=radio] {
+  display: none;
+}
