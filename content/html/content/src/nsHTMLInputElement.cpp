@@ -441,7 +441,7 @@ AsyncClickHandler::Run()
     // The text control frame (if there is one) isn't going to send a change
     // event because it will think this is done by a script.
     // So, we can safely send one by ourself.
-    mInput->SetFiles(newFiles);
+    mInput->SetFiles(newFiles, true);
     nsContentUtils::DispatchTrustedEvent(mInput->GetOwnerDoc(),
                                          static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
                                          NS_LITERAL_STRING("change"), PR_FALSE,
@@ -1076,7 +1076,7 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
       return MozSetFileNameArray(&name, 1);
     }
     else {
-      ClearFiles();
+      ClearFiles(true);
     }
   }
   else {
@@ -1170,7 +1170,7 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
 
   }
 
-  SetFiles(files);
+  SetFiles(files, true);
 
   return NS_OK;
 }
@@ -1330,7 +1330,8 @@ nsHTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 }
 
 void
-nsHTMLInputElement::SetFiles(const nsCOMArray<nsIDOMFile>& aFiles)
+nsHTMLInputElement::SetFiles(const nsCOMArray<nsIDOMFile>& aFiles,
+                             bool aSetValueChanged)
 {
   mFiles.Clear();
   mFiles.AppendObjects(aFiles);
@@ -1347,7 +1348,10 @@ nsHTMLInputElement::SetFiles(const nsCOMArray<nsIDOMFile>& aFiles)
 
   UpdateFileList();
 
-  SetValueChanged(PR_TRUE);
+  if (aSetValueChanged) {
+    SetValueChanged(PR_TRUE);
+  }
+
   UpdateAllValidityStates(PR_TRUE);
 }
 
@@ -2654,7 +2658,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
           // This call isn't strictly needed any more since we'll never
           // confuse values and filenames. However it's there for backwards
           // compat.
-          ClearFiles();
+          ClearFiles(false);
         }
 
         HandleTypeChange(newType);
@@ -2984,7 +2988,7 @@ nsHTMLInputElement::Reset()
       GetDefaultChecked(&resetVal);
       return DoSetChecked(resetVal, PR_TRUE, PR_FALSE);
     case VALUE_MODE_FILENAME:
-      ClearFiles();
+      ClearFiles(false);
       return NS_OK;
     case VALUE_MODE_DEFAULT:
     default:
@@ -3334,7 +3338,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       case NS_FORM_INPUT_FILE:
         {
           const nsCOMArray<nsIDOMFile>& files = inputState->GetFiles();
-          SetFiles(files);
+          SetFiles(files, true);
           break;
         }
     }
