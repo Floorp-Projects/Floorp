@@ -1604,7 +1604,7 @@ HUD_SERVICE.prototype =
       outputNode.removeChild(outputNode.firstChild);
     }
 
-    outputNode.lastTimestamp = 0;
+    aHUD.lastTimestamp = 0;
   },
 
   /**
@@ -4430,7 +4430,11 @@ JSTerm.prototype = {
       outputNode.removeChild(outputNode.firstChild);
     }
 
-    outputNode.lastTimestamp = 0;
+    let hudBox = outputNode;
+    while (!hudBox.classList.contains("hud-box")) {
+      hudBox = hudBox.parentNode;
+    }
+    hudBox.lastTimestamp = 0;
   },
 
   /**
