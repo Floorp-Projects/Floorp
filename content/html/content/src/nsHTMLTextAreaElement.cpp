@@ -597,7 +597,8 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
   }
 
   if (mValueChanged != previousValue) {
-    nsEventStates states = NS_EVENT_STATE_MOZ_UI_INVALID;
+    nsEventStates states = NS_EVENT_STATE_MOZ_UI_VALID |
+                           NS_EVENT_STATE_MOZ_UI_INVALID;
 
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
       states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
@@ -1057,7 +1058,10 @@ nsHTMLTextAreaElement::IntrinsicState() const
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
-      state |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
+      state |= NS_EVENT_STATE_VALID;
+      if (mValueChanged) {
+        state |= NS_EVENT_STATE_MOZ_UI_VALID;
+      }
     } else {
       state |= NS_EVENT_STATE_INVALID;
       // NS_EVENT_STATE_MOZ_UI_INVALID always apply if the element suffers from
