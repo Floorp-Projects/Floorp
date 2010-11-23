@@ -1559,6 +1559,7 @@ let GroupItems = {
   _arrangePaused: false,
   _arrangesPending: [],
   _removingHiddenGroups: false,
+  _updatingTabBarPaused: false,
 
   // ----------
   // Function: init
@@ -1992,12 +1993,34 @@ let GroupItems = {
   },
 
   // ----------
+  // Function: pauseUpdatingTabBar
+  // Don't update the tab bar until resume is called.
+  pauseUpdatingTabBar: function GroupItems_pauseUdatingTabBar() {
+    Utils.assertThrow(!this._updatingTabBarPaused, "shouldn't already be paused");
+
+    this._updatingTabBarPaused = true;
+  },
+  
+  // ----------
+  // Function: resumeUpdatingTabBar
+  // Allows updating the tab bar, and does an update.
+  resumeUpdatingTabBar: function GroupItems_resumeUpdatingTabBar() {
+    Utils.assertThrow(this._updatingTabBarPaused, "should already be paused");
+
+    this._updatingTabBarPaused = false;
+    this._updateTabBar();
+  },
+  
+  // ----------
   // Function: _updateTabBar
   // Hides and shows tabs in the tab bar based on the active groupItem or
   // currently active orphan tabItem
   _updateTabBar: function GroupItems__updateTabBar() {
     if (!window.UI)
       return; // called too soon
+      
+    if (this._updatingTabBarPaused)
+      return;
 
     if (!this._activeGroupItem && !this._activeOrphanTab) {
       Utils.assert(false, "There must be something to show in the tab bar!");
