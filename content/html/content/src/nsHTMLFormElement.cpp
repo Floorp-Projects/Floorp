@@ -500,9 +500,10 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
         node->ClearForm(PR_TRUE);
 
-        // When a form control loses its form owner,
-        // NS_EVENT_STATE_MOZ_UI_INVALID might not apply any more.
-        nsEventStates states = NS_EVENT_STATE_MOZ_UI_INVALID;
+        // When a form control loses its form owner, :-moz-ui-invalid and
+        // :-moz-ui-valid might not apply any more.
+        nsEventStates states = NS_EVENT_STATE_MOZ_UI_VALID |
+                               NS_EVENT_STATE_MOZ_UI_INVALID;
 
         // In addition, submit controls shouldn't have
         // NS_EVENT_STATE_MOZ_SUBMITINVALID applying if they do not have a form.
@@ -1725,6 +1726,7 @@ nsHTMLFormElement::CheckValidFormSubmission()
           for (PRUint32 i = 0, length = mControls->mElements.Length();
                i < length; ++i) {
             doc->ContentStatesChanged(mControls->mElements[i], nsnull,
+                                      NS_EVENT_STATE_MOZ_UI_VALID |
                                       NS_EVENT_STATE_MOZ_UI_INVALID);
           }
 
@@ -1734,6 +1736,7 @@ nsHTMLFormElement::CheckValidFormSubmission()
           for (PRUint32 i = 0, length = mControls->mNotInElements.Length();
                i < length; ++i) {
             doc->ContentStatesChanged(mControls->mNotInElements[i], nsnull,
+                                      NS_EVENT_STATE_MOZ_UI_VALID |
                                       NS_EVENT_STATE_MOZ_UI_INVALID);
           }
         }

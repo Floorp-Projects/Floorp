@@ -3325,7 +3325,8 @@ nsHTMLInputElement::IntrinsicState() const
       // NS_EVENT_STATE_MOZ_UI_VALID applies if the value has been changed.
       // This doesn't apply to elements with value mode default.
       ValueModeType valueMode = GetValueMode();
-      if (valueMode == VALUE_MODE_DEFAULT ||
+      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
+          valueMode == VALUE_MODE_DEFAULT ||
           (valueMode == VALUE_MODE_DEFAULT_ON && GetCheckedChanged()) ||
           ((valueMode == VALUE_MODE_VALUE ||
             valueMode == VALUE_MODE_FILENAME) && GetValueChanged())) {
