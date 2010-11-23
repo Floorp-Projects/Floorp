@@ -1059,7 +1059,7 @@ nsHTMLTextAreaElement::IntrinsicState() const
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
-      if (mValueChanged) {
+      if ((mForm && mForm->HasEverTriedInvalidSubmit()) || mValueChanged) {
         state |= NS_EVENT_STATE_MOZ_UI_VALID;
       }
     } else {
