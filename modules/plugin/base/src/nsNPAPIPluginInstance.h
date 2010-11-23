@@ -177,6 +177,8 @@ public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
 
+  nsXPIDLCString mFakeURL;
+
 private:
   nsNPAPIPlugin* mPlugin;
 

@@ -24,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td>Empty name, with value</td>
       <td>No name, with value</td>
       <td>No name or value</td>
+      <td>Strange name/value</td>
     </tr>
     <tr>
       <td>Default input</td>
@@ -33,6 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input name="" value="v1_4"></td>
       <td><input value="v1_5"></td>
       <td><input></td>
+      <td><input name="n1_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v1_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Text input</td>
@@ -42,6 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=text name="" value="v2_4"></td>
       <td><input type=text value="v2_5"></td>
       <td><input type=text></td>
+      <td><input type=text name="n2_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v2_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Checkbox unchecked</td>
@@ -51,6 +56,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=checkbox name="" value="v3_4"></td>
       <td><input type=checkbox value="v3_5"></td>
       <td><input type=checkbox></td>
+      <td><input type=checkbox name="n3_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v3_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Checkbox checked</td>
@@ -60,6 +67,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input checked type=checkbox name="" value="v4_4"></td>
       <td><input checked type=checkbox value="v4_5"></td>
       <td><input checked type=checkbox></td>
+      <td><input checked type=checkbox
+                 name="n4_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v4_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Radio unchecked</td>
@@ -69,6 +79,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=radio name="" value="v5_4"></td>
       <td><input type=radio value="v5_5"></td>
       <td><input type=radio></td>
+      <td><input type=radio name="n5_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v5_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Radio checked</td>
@@ -78,6 +90,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input checked type=radio name="" value="v6_4"></td>
       <td><input checked type=radio value="v6_5"></td>
       <td><input checked type=radio></td>
+      <td><input checked type=radio
+                 name="n6_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v6_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Hidden input</td>
@@ -87,6 +102,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=hidden nane="" value="v7_4"></td>
       <td><input type=hidden value="v7_5"></td>
       <td><input type=hidden></td>
+      <td><input type=hidden name="n7_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v7_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Password input</td>
@@ -96,6 +113,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=password name="" value="v8_4"></td>
       <td><input type=password value="v8_5"></td>
       <td><input type=password></td>
+      <td><input type=password name="n8_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v8_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Submit input</td>
@@ -105,6 +124,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=submit name="" value="v9_4"></td>
       <td><input type=submit value="v9_5"></td>
       <td><input type=submit></td>
+      <td><input type=submit name="n9_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v9_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Button input</td>
@@ -114,6 +135,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=button name="" value="v10_4"></td>
       <td><input type=button value="v10_5"></td>
       <td><input type=button></td>
+      <td><input type=button name="n10_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v10_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Image input</td>
@@ -123,6 +146,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=image src="file_formSubmission_img.jpg" name="" value="v11_4"></td>
       <td><input type=image src="file_formSubmission_img.jpg" value="v11_5"></td>
       <td><input type=image src="file_formSubmission_img.jpg"></td>
+      <td><input type=image src="file_formSubmission_img.jpg"
+                 name="n11_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v11_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Reset input</td>
@@ -132,6 +158,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=reset name="" value="v12_4"></td>
       <td><input type=reset value="v12_5"></td>
       <td><input type=reset></td>
+      <td><input type=reset name="n12_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v12_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Unknown input</td>
@@ -141,6 +169,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><input type=foobar name="" value="v13_4"></td>
       <td><input type=foobar value="v13_5"></td>
       <td><input type=foobar></td>
+      <td><input type=foobar name="n13_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                 value="v13_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></td>
     </tr>
     <tr>
       <td>Default button</td>
@@ -150,6 +180,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><button name="" value="v14_4"></button></td>
       <td><button value="v14_5"></button></td>
       <td><button></button></td>
+      <td><button name="n14_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v14_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
     </tr>
     <tr>
       <td>Submit button</td>
@@ -159,6 +191,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><button type=submit name="" value="v15_4"></button></td>
       <td><button type=submit value="v15_5"></button></td>
       <td><button type=submit></button></td>
+      <td><button type=submit name="n15_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v15_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
     </tr>
     <tr>
       <td>Button button</td>
@@ -168,6 +202,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><button type=button name="" value="v16_4"></button></td>
       <td><button type=button value="v16_5"></button></td>
       <td><button type=button></button></td>
+      <td><button type=button name="n16_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v16_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
     </tr>
     <tr>
       <td>Reset button</td>
@@ -177,6 +213,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><button type=reset name="" value="v17_4"></button></td>
       <td><button type=reset value="v17_5"></button></td>
       <td><button type=reset></button></td>
+      <td><button type=reset name="n17_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v17_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
     </tr>
     <tr>
       <td>Unknown button</td>
@@ -186,6 +224,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><button type=foobar name="" value="v18_4"></button></td>
       <td><button type=foobar value="v18_5"></button></td>
       <td><button type=foobar ></button></td>
+      <td><button type=foobar name="n18_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
+                  value="v18_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
     </tr>
   </table>
   
@@ -209,6 +249,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
     <input multiple type=file class="setfile">
     <input multiple type=file class="setfile multi">
     <input multiple type=file>
+  </p>
+
+  <p>
+    Textarea:
+    <textarea name="t1">t_1_v</textarea>
+    <textarea name="t2"></textarea>
+    <textarea name="">t_3_v</textarea>
+    <textarea>t_4_v</textarea>
+    <textarea></textarea>
+    <textarea name="t6">
+t_6_v</textarea>
+    <textarea name="t7">t_7_v
+</textarea>
+    <textarea name="t8">
+
+ t_8_v 
+</textarea>
+    <textarea name="t9_&#13;_&#10;_&#13;&#10;_ _&quot;">t_9_&#13;_&#10;_&#13;&#10;_ _&quot;_v</textarea>
+    <textarea name="t10" value="t_10_bogus">t_10_v</textarea>
   </p>
 
   <p>
@@ -357,28 +416,34 @@ var expectedSub = [
   { name: "n1_1", value: "v1_1" },
   { name: "n1_2", value: "" },
   { name: "n1_3", value: "" },
+  { name: "n1_7_\r\n_\r\n_\r\n_ _\"", value: "v1_7____ _\"" },
   // Text input
   { name: "n2_1", value: "v2_1" },
   { name: "n2_2", value: "" },
   { name: "n2_3", value: "" },
+  { name: "n2_7_\r\n_\r\n_\r\n_ _\"", value: "v2_7____ _\"" },
   // Checkbox unchecked
   // Checkbox checked
   { name: "n4_1", value: "v4_1" },
   { name: "n4_2", value: "" },
   { name: "n4_3", value: "on" },
+  { name: "n4_7_\r\n_\r\n_\r\n_ _\"", value: "v4_7_\r\n_\r\n_\r\n_ _\"" },
   // Radio unchecked
   // Radio checked
   { name: "n6_1", value: "v6_1" },
   { name: "n6_2", value: "" },
   { name: "n6_3", value: "on" },
+  { name: "n6_7_\r\n_\r\n_\r\n_ _\"", value: "v6_7_\r\n_\r\n_\r\n_ _\"" },
   // Hidden input
   { name: "n7_1", value: "v7_1" },
   { name: "n7_2", value: "" },
   { name: "n7_3", value: "" },
+  { name: "n7_7_\r\n_\r\n_\r\n_ _\"", value: "v7_7_\r\n_\r\n_\r\n_ _\"" },
   // Password input
   { name: "n8_1", value: "v8_1" },
   { name: "n8_2", value: "" },
   { name: "n8_3", value: "" },
+  { name: "n8_7_\r\n_\r\n_\r\n_ _\"", value: "v8_7____ _\"" },
   // Submit input
   // Button input
   // Image input
@@ -387,6 +452,7 @@ var expectedSub = [
   { name: "n13_1", value: "v13_1" },
   { name: "n13_2", value: "" },
   { name: "n13_3", value: "" },
+  { name: "n13_7_\r\n_\r\n_\r\n_ _\"", value: "v13_7____ _\"" },
   // Default button
   // Submit button
   // Button button
@@ -400,6 +466,15 @@ var expectedSub = [
   { name: "file_4", value: myFile1 },
   { name: "file_4", value: myFile2 },
   { name: "file_5", value: emptyFile },
+  // Textarea
+  { name: "t1", value: "t_1_v" },
+  { name: "t2", value: "" },
+  { name: "t6", value: "t_6_v" },
+  { name: "t7", value: "t_7_v\r\n" },
+  { name: "t8", value: "\r\n t_8_v \r\n" },
+  { name: "t9_\r\n_\r\n_\r\n_ _\"", value: "t_9_\r\n_\r\n_\r\n_ _\"_v" },
+  { name: "t10", value: "t_10_v" },
+
   // Select one
   { name: "sel_1b", value: "" },
   { name: "sel_1c", value: "" },
@@ -462,54 +537,80 @@ expectedAugment = [
   //{ name: "aNameUndef", value: "undefined" },
 ];
 
-function checkMPSubmission(sub, expected) {
+function checkMPSubmission(sub, expected, test) {
   function getPropCount(o) {
     var x, l = 0;
     for (x in o) ++l;
     return l;
   }
+  function mpquote(s) {
+    return s.replace("\r\n", " ", "g")
+            .replace("\r", " ", "g")
+            .replace("\n", " ", "g")
+            .replace("\"", "\\\"", "g");
+  }
 
   is(sub.length, expected.length,
-     "Correct number of items");
+     "Correct number of multipart items in " + test);
+  
+  if (sub.length != expected.length) {
+    alert(JSON.stringify(sub));
+  }
+  
   var i;
   for (i = 0; i < expected.length; ++i) {
     if (!("fileName" in expected[i])) {
       is(sub[i].headers["Content-Disposition"],
-         "form-data; name=\"" + expected[i].name + "\"",
-         "Correct name");
+         "form-data; name=\"" + mpquote(expected[i].name) + "\"",
+         "Correct name in " + test);
       is (getPropCount(sub[i].headers), 1,
-          "Wrong number of headers");
+          "Wrong number of headers in " + test);
+      is(sub[i].body,
+         expected[i].value.replace(/\r\n|\r|\n/, "\r\n"),
+         "Correct value in " + test);
     }
     else {
       is(sub[i].headers["Content-Disposition"],
-         "form-data; name=\"" + expected[i].name + "\"; filename=\"" +
-           expected[i].fileName + "\"",
-         "Correct name");
+         "form-data; name=\"" + mpquote(expected[i].name) + "\"; filename=\"" +
+           mpquote(expected[i].fileName) + "\"",
+         "Correct name in " + test);
       is(sub[i].headers["Content-Type"],
          expected[i].contentType,
-         "Correct content type");
+         "Correct content type in " + test);
       is (getPropCount(sub[i].headers), 2,
-          "Wrong number of headers");
+          "Wrong number of headers in " + test);
+      is(sub[i].body,
+         expected[i].value,
+         "Correct value in " + test);
     }
-    is(sub[i].body,
-       expected[i].value,
-       "Correct value");
+  }
+}
+
+function checkURLSubmission(sub, expected) {
+  function urlEscape(s) {
+    return escape(s).replace("%20", "+", "g");
+  }
+
+  subItems = sub.split("&");
+  is(subItems.length, expected.length,
+     "Correct number of url items");
+  var i;
+  for (i = 0; i < expected.length; ++i) {
+    let expect = urlEscape(expected[i].name) + "=" +
+        urlEscape(("fileName" in expected[i]) ? expected[i].fileName : expected[i].value);
+    is (subItems[i], expect, "expected URL part");
   }
 }
 
 function checkPlainSubmission(sub, expected) {
-  is(sub.length, expected.length,
-     "Correct number of items");
-  var i;
-  for (i = 0; i < expected.length; ++i) {
-    is(sub[i].name, expected[i].name, "Correct name");
-    if (!("fileName" in expected[i])) {
-      is(sub[i].value, expected[i].value, "Correct value");
-    }
-    else {
-      is(sub[i].value, expected[i].fileName, "Correct value");
-    }
-  }
+  
+  is(sub,
+     expected.map(function(v) {
+       return v.name + "=" +
+              (("fileName" in v) ? v.fileName : v.value) +
+              "\r\n";
+     }).join(""),
+     "Correct submission");
 }
 
 function setDisabled(list, state) {
@@ -552,32 +653,31 @@ function runTest() {
   expectedSub.forEach(fileFixup);
   expectedAugment.forEach(fileFixup);
 
+  var form = $("form");
+
   // multipart/form-data
 
   // Make normal submission
-  var form = $("form");
   var iframe = $("target_iframe");
   iframe.onload = function() { gen.next(); };
   form.submit();
   yield; // Wait for iframe to load as a result of the submission
   var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
-  checkMPSubmission(submission, expectedSub);
+  checkMPSubmission(submission, expectedSub, "normal submission");
 
   // Disabled controls
-  setDisabled(document.getElementsByTagName("input"), true);
-  setDisabled(document.getElementsByTagName("select"), true);
+  setDisabled(document.querySelectorAll("input, select, textarea"), true);
   form.submit();
   yield;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
-  checkMPSubmission(submission, []);
+  checkMPSubmission(submission, [], "disabled controls");
 
   // Reenabled controls
-  setDisabled(document.getElementsByTagName("input"), false);
-  setDisabled(document.getElementsByTagName("select"), false);
+  setDisabled(document.querySelectorAll("input, select, textarea"), false);
   form.submit();
   yield;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
-  checkMPSubmission(submission, expectedSub);
+  checkMPSubmission(submission, expectedSub, "reenabled controls");
 
   // text/plain
   form.action = "form_submit_server.sjs?plain";
@@ -593,7 +693,16 @@ function runTest() {
   form.submit();
   yield;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
-  checkPlainSubmission(submission, expectedSub);
+  checkURLSubmission(submission, expectedSub);
+
+  // application/x-www-form-urlencoded
+  form.action = "form_submit_server.sjs?xxyy";
+  form.method = "GET";
+  form.enctype = "";
+  form.submit();
+  yield;
+  submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
+  checkURLSubmission(submission, expectedSub);
 
   // application/x-www-form-urlencoded
   form.action = "form_submit_server.sjs";
@@ -602,7 +711,7 @@ function runTest() {
   form.submit();
   yield;
   submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
-  checkPlainSubmission(submission, expectedSub);
+  checkURLSubmission(submission, expectedSub);
 
   // Send form using XHR and FormData
   xhr = new XMLHttpRequest();
@@ -610,17 +719,15 @@ function runTest() {
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(new FormData(form));
   yield; // Wait for XHR load
-  checkMPSubmission(JSON.parse(xhr.responseText), expectedSub);
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData");
   
   // Send disabled form using XHR and FormData
-  setDisabled(document.getElementsByTagName("input"), true);
-  setDisabled(document.getElementsByTagName("select"), true);
+  setDisabled(document.querySelectorAll("input, select, textarea"), true);
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(new FormData(form));
   yield;
-  checkMPSubmission(JSON.parse(xhr.responseText), []);
-  setDisabled(document.getElementsByTagName("input"), false);
-  setDisabled(document.getElementsByTagName("select"), false);
+  checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData");
+  setDisabled(document.querySelectorAll("input, select, textarea"), false);
   
   // Send FormData
   function addToFormData(fd) {
@@ -634,7 +741,7 @@ function runTest() {
   xhr.open("POST", "form_submit_server.sjs");
   xhr.send(fd);
   yield;
-  checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment);
+  checkMPSubmission(JSON.parse(xhr.responseText), expectedAugment, "send FormData");
 
   // Augment <form> using FormData
   fd = new FormData(form);
@@ -643,7 +750,7 @@ function runTest() {
   xhr.send(fd);
   yield;
   checkMPSubmission(JSON.parse(xhr.responseText),
-                    expectedSub.concat(expectedAugment));
+                    expectedSub.concat(expectedAugment), "send augmented FormData");
 
   SimpleTest.finish();
   yield;

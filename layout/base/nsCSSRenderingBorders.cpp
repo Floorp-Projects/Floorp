@@ -420,9 +420,13 @@ typedef enum {
   SIDE_CLIP_RECTANGLE
 } SideClipType;
 
-// Given three points, p0, p1, and midPoint, move p1 to the point
-// nearest the midpoint, while maintaing the slope of the line.  p0 and
-// p1 must be distinct.
+// Given three points, p0, p1, and midPoint, move p1 further in to the
+// rectangle (of which aMidPoint is the center) so that it reaches the
+// closer of the horizontal or vertical lines intersecting the midpoint,
+// while maintaing the slope of the line.  If p0 and p1 are the same,
+// just move p1 to midPoint (since there's no slope to maintain).
+// FIXME: Extending only to the midpoint isn't actually sufficient for
+// boxes with asymmetric radii.
 static void
 MaybeMoveToMidPoint(gfxPoint& aP0, gfxPoint& aP1, const gfxPoint& aMidPoint)
 {
@@ -430,7 +434,7 @@ MaybeMoveToMidPoint(gfxPoint& aP0, gfxPoint& aP1, const gfxPoint& aMidPoint)
 
   if (ps.x == 0.0) {
     if (ps.y == 0.0) {
-      NS_NOTREACHED("points should be different");
+      aP1 = aMidPoint;
     } else {
       aP1.y = aMidPoint.y;
     }
@@ -439,7 +443,7 @@ MaybeMoveToMidPoint(gfxPoint& aP0, gfxPoint& aP1, const gfxPoint& aMidPoint)
       aP1.x = aMidPoint.x;
     } else {
       gfxFloat k = NS_MIN((aMidPoint.x - aP0.x) / ps.x,
-                          (aMidPoint.y - aP1.y) / ps.y);
+                          (aMidPoint.y - aP0.y) / ps.y);
       aP1 = aP0 + ps * k;
     }
   }
@@ -1014,15 +1018,19 @@ nsCSSBorderRenderer::DrawBorders()
   PRBool brBordersSame = AreBorderSideFinalStylesSame(SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT);
   PRBool allBordersSame = AreBorderSideFinalStylesSame(SIDE_BITS_ALL);
   if (allBordersSame &&
-      mCompositeColors[0] == NULL &&
-      (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
-       mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
-       mBorderColors[0] == NS_RGBA(0,0,0,0)))
+      ((mCompositeColors[0] == NULL &&
+       (mBorderStyles[0] == NS_STYLE_BORDER_STYLE_NONE ||
+        mBorderStyles[0] == NS_STYLE_BORDER_STYLE_HIDDEN ||
+        mBorderColors[0] == NS_RGBA(0,0,0,0))) ||
+       (mCompositeColors[0] &&
+        (mCompositeColors[0]->mColor == NS_RGBA(0,0,0,0) &&
+         !mCompositeColors[0]->mNext))))
   {
     // All borders are the same style, and the style is either none or hidden, or the color
     // is transparent.
-    // This doesn't check if the composite colors happen to be all transparent, but that should
-    // happen very rarely in practice.
+    // This also checks if the first composite color is transparent, and there are
+    // no others. It doesn't check if there are subsequent transparent ones, because
+    // that would be very silly.
     return;
   }
 

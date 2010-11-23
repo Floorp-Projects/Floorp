@@ -94,6 +94,7 @@ protected:
   bool RecvOnDataAvailable(const nsCString& data,
                            const PRUint32& offset);
   bool RecvOnStopRequest(const nsresult& statusCode);
+  bool RecvCancelEarly(const nsresult& statusCode);
 
   void OnStartRequest(const nsresult& statusCode,
                       const PRInt32& contentLength,
@@ -103,10 +104,12 @@ protected:
   void OnDataAvailable(const nsCString& data,
                        const PRUint32& offset);
   void OnStopRequest(const nsresult& statusCode);
+  void CancelEarly(const nsresult& statusCode);
 
 private:
   nsresult                          mStatus;
   PRBool                            mIsPending;
+  bool                              mCanceled;
   PRUint32                          mLoadFlags;
   PRInt32                           mContentLength;
   PRInt32                           mCharsetSource;
@@ -129,6 +132,7 @@ private:
   friend class WyciwygStartRequestEvent;
   friend class WyciwygDataAvailableEvent;
   friend class WyciwygStopRequestEvent;
+  friend class WyciwygCancelEvent;
 };
 
 inline bool

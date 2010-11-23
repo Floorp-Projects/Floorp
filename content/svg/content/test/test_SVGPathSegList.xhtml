@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=611138
+-->
+<head>
+  <title>Generic tests for SVG animated length lists</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=611138">Mozilla Bug 611138</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <path id="path"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of SVGPathSegList specific tests. Generic SVGXxxList
+tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
+to other list types belongs there.
+*/
+
+function run_tests()
+{
+  document.getElementById('svg').pauseAnimations();
+
+  var path = document.getElementById("path");
+  var d = path.pathSegList;
+  var arc = path.createSVGPathSegArcAbs(400, 0, 200, 200, 0, 1, 1);
+
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=611138
+  // Here we are doing a replace with a segment (arc) that has more arguments
+  // than the total number of arguments in the entire path + 2 (for the two
+  // segment types).
+  path.setAttribute('d', 'M0,0 L100,100');
+  d.replaceItem(arc, 1);
+
+  ok(d.numberOfItems == 2, 'The number of items should be 2');
+  ok(d.getItem(1) == arc, 'The second item is the wrong object');
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run_tests, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

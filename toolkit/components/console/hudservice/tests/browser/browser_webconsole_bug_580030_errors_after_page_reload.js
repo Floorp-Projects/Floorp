@@ -95,13 +95,13 @@ var consoleObserver = {
     const successMsg = "Found the error message after page reload";
     const errMsg = "Could not get the error message after page reload";
 
-    var display = HUDService.getDisplayByURISpec(content.location.href);
-    var outputNode = display.querySelector(".hud-output-node");
+    hudId = HUDService.displaysIndex()[0];
+    hud = HUDService.hudReferences[hudId];
+    outputNode = hud.outputNode;
 
     executeSoon(function() {
       testLogEntry(outputNode, "fooBazBaz",
                    { success: successMsg, err: errMsg });
-
       finishTest();
     });
   }

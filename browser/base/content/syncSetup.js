@@ -762,55 +762,68 @@ var gSyncSetup = {
         if (this._case1Setup)
           break;
 
-        // history
-        let db = Weave.Svc.History.DBConnection;
+        let places_db = Weave.Svc.History.DBConnection;
+        if (Weave.Engines.get("history").enabled) {
+          let daysOfHistory = 0;
+          let stm = places_db.createStatement(
+            "SELECT ROUND(( " +
+              "strftime('%s','now','localtime','utc') - " +
+              "( " +
+                "SELECT visit_date FROM moz_historyvisits " +
+                "UNION ALL " +
+                "SELECT visit_date FROM moz_historyvisits_temp " +
+                "ORDER BY visit_date ASC LIMIT 1 " +
+                ")/1000000 " +
+              ")/86400) AS daysOfHistory ");
 
-        let daysOfHistory = 0;
-        let stm = db.createStatement(
-          "SELECT ROUND(( " +
-            "strftime('%s','now','localtime','utc') - " +
-            "( " +
-              "SELECT visit_date FROM moz_historyvisits " +
-              "UNION ALL " +
-              "SELECT visit_date FROM moz_historyvisits_temp " +
-              "ORDER BY visit_date ASC LIMIT 1 " +
-              ")/1000000 " +
-            ")/86400) AS daysOfHistory ");
+          if (stm.step())
+            daysOfHistory = stm.getInt32(0);
+          // Support %S for historical reasons (see bug 600141)
+          document.getElementById("historyCount").value =
+            PluralForm.get(daysOfHistory,
+                           this._stringBundle.GetStringFromName("historyDaysCount.label"))
+                      .replace("%S", daysOfHistory)
+                      .replace("#1", daysOfHistory);
+        } else {
+          document.getElementById("historyCount").hidden = true;
+        }
 
-        if (stm.step())
-          daysOfHistory = stm.getInt32(0);
-        // Support %S for historical reasons (see bug 600141)
-        document.getElementById("historyCount").value =
-          PluralForm.get(daysOfHistory,
-                         this._stringBundle.GetStringFromName("historyDaysCount.label"))
-                    .replace("%S", daysOfHistory)
-                    .replace("#1", daysOfHistory);
+        if (Weave.Engines.get("bookmarks").enabled) {
+          let bookmarks = 0;
+          let stm = places_db.createStatement(
+            "SELECT count(*) AS bookmarks " +
+            "FROM moz_bookmarks b " +
+            "LEFT JOIN moz_bookmarks t ON " +
+            "b.parent = t.id WHERE b.type = 1 AND t.parent <> :tag");
+          stm.params.tag = Weave.Svc.Bookmark.tagsFolder;
+          if (stm.executeStep())
+            bookmarks = stm.row.bookmarks;
+          // Support %S for historical reasons (see bug 600141)
+          document.getElementById("bookmarkCount").value =
+            PluralForm.get(bookmarks,
+                           this._stringBundle.GetStringFromName("bookmarksCount.label"))
+                      .replace("%S", bookmarks)
+                      .replace("#1", bookmarks);
+        } else {
+          document.getElementById("bookmarkCount").hidden = true;
+        }
 
-        // bookmarks
-        let bookmarks = 0;
-        stm = db.createStatement(
-          "SELECT count(*) AS bookmarks " +
-          "FROM moz_bookmarks b " +
-          "LEFT JOIN moz_bookmarks t ON " +
-          "b.parent = t.id WHERE b.type = 1 AND t.parent <> :tag");
-        stm.params.tag = Weave.Svc.Bookmark.tagsFolder;
-        if (stm.executeStep())
-          bookmarks = stm.row.bookmarks;
-        // Support %S for historical reasons (see bug 600141)
-        document.getElementById("bookmarkCount").value =
-          PluralForm.get(bookmarks,
-                         this._stringBundle.GetStringFromName("bookmarksCount.label"))
-                    .replace("%S", bookmarks)
-                    .replace("#1", bookmarks);
+        if (Weave.Engines.get("passwords").enabled) {
+          let logins = Weave.Svc.Login.getAllLogins({});
+          // Support %S for historical reasons (see bug 600141)
+          document.getElementById("passwordCount").value =
+            PluralForm.get(logins.length,
+                           this._stringBundle.GetStringFromName("passwordsCount.label"))
+                      .replace("%S", logins.length)
+                      .replace("#1", logins.length);
+        } else {
+          document.getElementById("passwordCount").hidden = true;
+        }
 
-        // passwords
-        let logins = Weave.Svc.Login.getAllLogins({});
-        // Support %S for historical reasons (see bug 600141)
-        document.getElementById("passwordCount").value =
-          PluralForm.get(logins.length,
-                         this._stringBundle.GetStringFromName("passwordsCount.label"))
-                    .replace("%S", logins.length)
-                    .replace("#1", logins.length);
+        if (!Weave.Engines.get("prefs").enabled) {
+          document.getElementById("prefsWipe").hidden = true;
+        }
+
         this._case1Setup = true;
         break;
       case 2:

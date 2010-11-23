@@ -196,7 +196,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     {
         DEBUG_CheckWrapperThreadSafety(mWrapper);
 
-        mFlattenedJSObject = mWrapper->GetFlatJSObject();
+        mFlattenedJSObject = mWrapper->GetFlatJSObjectAndMark();
 
         if(mTearOff)
         {

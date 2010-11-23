@@ -103,11 +103,14 @@ public:
 
   static already_AddRefed<nsIDOMEvent>
   Create(IDBRequest* aRequest,
-         PRUint16 aCode);
+         nsresult aResult);
 
   static already_AddRefed<nsIRunnable>
   CreateRunnable(IDBRequest* aRequest,
-                 PRUint16 aCode);
+                 nsresult aResult);
+
+  static already_AddRefed<nsIDOMEvent>
+  MaybeDuplicate(nsIDOMEvent* aOther);
 
 protected:
   IDBErrorEvent() { }

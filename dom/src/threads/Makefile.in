@@ -64,10 +64,11 @@ CPPSRCS = \
   $(NULL)
 
 LOCAL_INCLUDES = \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/src/json \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/src/json \
+  -I$(topsrcdir)/js/src/xpconnect/src \
   $(NULL)
 
 ifdef ENABLE_TESTS

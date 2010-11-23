@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <text id="myText">Used Text Element
+      <set attributeName="display" to="none"/>
+    </text>
+  </defs>
+  <use xlink:href="#myText" x="20" y="40"/>
+  <text x="20" y="60">Normal Text Element
+    <set attributeName="display" to="none"/>
+  </text>
+</svg>

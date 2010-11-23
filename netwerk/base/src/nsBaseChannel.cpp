@@ -87,11 +87,11 @@ private:
 
 nsBaseChannel::nsBaseChannel()
   : mLoadFlags(LOAD_NORMAL)
-  , mStatus(NS_OK)
   , mQueriedProgressSink(PR_TRUE)
   , mSynthProgressEvents(PR_FALSE)
   , mWasOpened(PR_FALSE)
   , mWaitingOnAsyncRedirect(PR_FALSE)
+  , mStatus(NS_OK)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }

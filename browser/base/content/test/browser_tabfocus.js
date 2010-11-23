@@ -44,11 +44,8 @@ function test() {
                      browser2.contentWindow, null, true,
                      "focusedElement after tab change, focus in new tab");
 
-    // switching tabs when the urlbar is focused and nothing in the new tab is focused
+    // switching tabs when nothing in the new tab is focused
     // should focus the browser
-    expectFocusShift(function () gURLBar.focus(),
-                     window, gURLBar.inputField, true,
-                     "url field focused");
     expectFocusShift(function () gBrowser.selectedTab = tab1,
                      browser1.contentWindow, null, true,
                      "focusedElement after tab change, focus in new tab");
@@ -89,6 +86,9 @@ function test() {
                      window, gURLBar.inputField, true,
                      "focusedWindow after url field focused");
     is(fm.getFocusedElementForWindow(browser2.contentWindow, false, {}), button2, "url field focused, button in tab");
+    expectFocusShift(function () gURLBar.blur(),
+                     window, null, true,
+                     "focusedWindow after browser focused");
 
     // when a chrome element is focused, switching tabs to a tab with a button
     // with the current focus should focus the button

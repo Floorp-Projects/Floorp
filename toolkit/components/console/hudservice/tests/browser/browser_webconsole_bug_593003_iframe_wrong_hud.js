@@ -60,65 +60,37 @@ function test() {
  * @param {boolean} [aFailIfFound=false] fail the test if the string is found in
  * the output node.
  */
-function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj, aOnlyVisible, aFailIfFound)
-{
-  let found = true;
-  let notfound = false;
-  let foundMsg = aSuccessErrObj.success;
-  let notfoundMsg = aSuccessErrObj.err;
-
-  if (aFailIfFound) {
-    found = false;
-    notfound = true;
-    foundMsg = aSuccessErrObj.err;
-    notfoundMsg = aSuccessErrObj.success;
-  }
-
-  let selector = ".hud-group > *";
-
-  // Skip entries that are hidden by the filter.
-  if (aOnlyVisible) {
-    selector += ":not(.hud-filtered-by-type)";
-  }
-
-  let msgs = aOutputNode.querySelectorAll(selector);
-  for (let i = 0, n = msgs.length; i < n; i++) {
-    let message = msgs[i].textContent.indexOf(aMatchString);
-    if (message > -1) {
-      ok(found, foundMsg);
-      return;
-    }
-  }
-
-  ok(notfound, notfoundMsg);
-}
 
 function tab1Loaded(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);
-
-  waitForFocus(function () {
+  browser.contentWindow.wrappedJSObject.console.log("FOO");
+  try {
     openConsole();
-    tab2 = gBrowser.addTab(TEST_DUMMY_URI);
-    gBrowser.selectedTab = tab2;
-    gBrowser.selectedBrowser.addEventListener("load", tab2Loaded, true);
-  }, content);
+  }
+  catch (ex) {
+    log(ex);
+    log(ex.stack);
+  }
+
+  tab2 = gBrowser.addTab(TEST_DUMMY_URI);
+  gBrowser.selectedTab = tab2;
+  gBrowser.selectedBrowser.addEventListener("load", tab2Loaded, true);
 }
 
 function tab2Loaded(aEvent) {
   tab2.linkedBrowser.removeEventListener(aEvent.type, arguments.callee, true);
 
-  waitForFocus(function () {
-    HUDService.activateHUDForContext(gBrowser.selectedTab);
+  HUDService.activateHUDForContext(gBrowser.selectedTab);
 
-    tab1.linkedBrowser.addEventListener("load", tab1Reloaded, true);
-    tab1.linkedBrowser.contentWindow.location.reload();
-  }, content);
+  tab1.linkedBrowser.addEventListener("load", tab1Reloaded, true);
+  tab1.linkedBrowser.contentWindow.location.reload();
 }
 
 function tab1Reloaded(aEvent) {
   tab1.linkedBrowser.removeEventListener(aEvent.type, arguments.callee, true);
 
   let hudId1 = HUDService.getHudIdByWindow(tab1.linkedBrowser.contentWindow);
+
   let display1 = HUDService.getOutputNodeById(hudId1);
   let outputNode1 = display1.querySelector(".hud-output-node");
 
@@ -126,7 +98,7 @@ function tab1Reloaded(aEvent) {
   const errorMsg1 = "Failed to find the iframe network request in tab1";
 
   testLogEntry(outputNode1, TEST_IFRAME_URI,
-    { success: successMsg1, err: errorMsg1}, true);
+               { success: successMsg1, err: errorMsg1}, true);
 
   let hudId2 = HUDService.getHudIdByWindow(tab2.linkedBrowser.contentWindow);
   let display2 = HUDService.getOutputNodeById(hudId2);
@@ -134,7 +106,7 @@ function tab1Reloaded(aEvent) {
 
   isnot(display1, display2, "the two HUD displays must be different");
   isnot(outputNode1, outputNode2,
-    "the two HUD outputNodes must be different");
+        "the two HUD outputNodes must be different");
 
   const successMsg2 = "The iframe network request is not in tab2";
   const errorMsg2 = "Found the iframe network request in tab2";

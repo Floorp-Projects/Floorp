@@ -80,7 +80,7 @@ function tabLoad(aEvent) {
   openConsole();
 
   let hudId = HUDService.getHudIdByWindow(content);
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.hudReferences[hudId];
 
   Services.console.registerListener(TestObserver);
 

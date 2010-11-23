@@ -142,17 +142,8 @@ js_SweepWatchPoints(JSContext *cx);
 
 #ifdef __cplusplus
 
-extern const js::Shape *
-js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id);
-
 extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
-extern JSBool
-js_watch_set_wrapper(JSContext *cx, uintN argc, js::Value *vp);
-
-extern js::PropertyOp
-js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, js::PropertyOp setter);
 
 #endif
 
@@ -401,20 +392,6 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda);
 
 extern JS_PUBLIC_API(void)
 JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
-
-/************************************************************************/
-
-extern JS_FRIEND_API(JSBool)
-js_GetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
-                                jsval *vp);
-
-extern JS_FRIEND_API(JSBool)
-js_SetPropertyByIdWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsid id,
-                                jsval *vp);
-
-extern JS_FRIEND_API(JSBool)
-js_CallFunctionValueWithFakeFrame(JSContext *cx, JSObject *obj, JSObject *scopeobj, jsval funval,
-                                  uintN argc, jsval *argv, jsval *rval);
 
 /************************************************************************/
 

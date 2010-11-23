@@ -239,6 +239,8 @@ pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "chrome://branding/locale/browserconfig.properties");
 
+pref("browser.aboutHomeSnippets.updateUrl", "http://snippets.mozilla.com/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
+
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
@@ -472,21 +474,6 @@ pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
-
-// l12n and i18n
-pref("intl.accept_languages", "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more3",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more4",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.unicode",  "UTF-8, UTF-16LE, UTF-16BE, UTF-32, UTF-32LE, UTF-32BE");
-pref("intl.charset.detector", "chrome://global/locale/intl.properties");
-pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
-pref("font.language.group", "chrome://global/locale/intl.properties");
-pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
-pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 
 // simple gestures support
 pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
@@ -1050,9 +1037,16 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", false);
 
+// The last Web Console height. This is initially 0 which means that the Web
+// Console will use the default height next time it shows.
+// Change to -1 if you do not want the Web Console to remember its last height.
+pref("devtools.hud.height", 0);
+
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
 
+// Allow using tab-modal prompts when possible.
+pref("prompts.tab_modal.enabled", true);
 // Whether the Panorama should animate going in/out of tabs
 pref("browser.panorama.animate_zoom", true);

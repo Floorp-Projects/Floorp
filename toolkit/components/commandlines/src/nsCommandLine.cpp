@@ -574,11 +574,11 @@ nsCommandLine::Init(PRInt32 argc, char** argv, nsIFile* aWorkingDir,
 }
 
 static void
-LogConsoleMessage(const nsString& fmt, ...)
+LogConsoleMessage(const PRUnichar* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  PRUnichar* msg = nsTextFormatter::vsmprintf(fmt.get(), args);
+  PRUnichar* msg = nsTextFormatter::vsmprintf(fmt, args);
   va_end(args);
 
   nsCOMPtr<nsIConsoleService> cs = do_GetService("@mozilla.org/consoleservice;1");
@@ -619,7 +619,7 @@ nsCommandLine::EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClo
 
     nsCOMPtr<nsICommandLineHandler> clh(do_GetService(contractID.get()));
     if (!clh) {
-      LogConsoleMessage(NS_LITERAL_STRING("Contract ID '%s' was registered as a command line handler for entry '%s', but could not be created."),
+      LogConsoleMessage(NS_LITERAL_STRING("Contract ID '%s' was registered as a command line handler for entry '%s', but could not be created.").get(),
                         contractID.get(), entry.get());
       continue;
     }

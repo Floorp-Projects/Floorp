@@ -151,6 +151,7 @@ struct JSFunction : public JSObject_Slots2
             JSNativeTraceInfo *trcinfo;
         } n;
         struct Scripted {
+            JSScript    *script;  /* interpreted bytecode descriptor or null */
             uint16      nvars;    /* number of local variables */
             uint16      nupvars;  /* number of upvars (computable from script
                                      but here for faster access) */
@@ -163,9 +164,9 @@ struct JSFunction : public JSObject_Slots2
                                      then escaped via the debugger or a rogue
                                      indirect eval; if true, then this function
                                      object's proto is the wrapped object */
-            JSScript    *script;  /* interpreted bytecode descriptor or null */
             js::Shape   *names;   /* argument and variable names */
         } i;
+        void            *nativeOrScript;
     } u;
     JSAtom          *atom;        /* name for diagnostics and decompiling */
 
@@ -175,6 +176,7 @@ struct JSFunction : public JSObject_Slots2
     bool isNative()          const { return !FUN_INTERPRETED(this); }
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
+    bool isFlatClosure()     const { return FUN_KIND(this) == JSFUN_FLAT_CLOSURE; }
 
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 
@@ -306,6 +308,12 @@ struct JSFunction : public JSObject_Slots2
     JSScript *script() const {
         JS_ASSERT(isInterpreted());
         return u.i.script;
+    }
+
+    static uintN offsetOfNativeOrScript() {
+        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.script));
+        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
+        return offsetof(JSFunction, u.nativeOrScript);
     }
 
     /* Number of extra fixed function object slots. */
@@ -482,6 +490,14 @@ IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
     return isCtor;
 }
 
+inline const char *
+GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
+{
+    if (fun->atom)
+        return bytes->encode(cx, ATOM_TO_STRING(fun->atom));
+    return js_anonymous_str;
+}
+
 } /* namespace js */
 
 extern JSString *
@@ -527,7 +543,7 @@ extern JS_REQUIRES_STACK JSObject *
 js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);
 
 extern JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, js::Native native,
+js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
                   uintN nargs, uintN flags);
 
 /*

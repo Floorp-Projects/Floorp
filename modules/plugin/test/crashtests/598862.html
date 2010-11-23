@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+  <head>
+    <script>
+var unusedScreenX;
+function XSync() {
+  unusedScreenX = window.screenX;
+}
+
+function finish() {
+  document.documentElement.removeAttribute("class");
+}
+
+function cleanup() {
+  try {
+    document.getElementById("plugin").crash();
+  } catch (dontcare) {
+  }
+  window.setTimeout(finish, 100);
+}
+
+function scrollOfDeath() {
+  // Add a listener for the MozAfterPaint after the scrollTo below.
+  // If we don't crash during the scroll, we'll get the
+  // MozAfterPaint.
+  window.addEventListener("MozAfterPaint", cleanup, false);
+  window.scrollTo(0, 50);
+}
+
+//
+// The sequence of events we expect is
+//
+//   load (including initial paints of plugin that are cached)
+//   destroy X resources
+//   [X server has time to observe resource destruction]
+//   scrollTo
+//   [repaint using cached plugin surface: BOOM if buggy]
+//   MozAfterPaint
+//   cleanup
+//
+// However, this test is fundamentally nondeterministic.  There are
+// two main "failure" modes
+//   (1) X server doesn't have time to observer resource destruction
+//       before paint-after-scroll
+//   (2) plugin's crash notification arrives before
+//       paint-after-scroll
+// Both result in spurious passes.
+//
+// This test is anal about cleanup because it must be pretty sure that
+// the plugin subprocess is gone before starting the next test.  We
+// double-check that the plugin is gone by the time we're done by 
+// trying to crash it again, after we expect it to have crashed already.
+//
+function runTest() {
+  // Have the plugin throw away its X resources, one of which is
+  // probably a drawable to which we hold a reference
+  document.getElementById("plugin").destroySharedGfxStuff();
+
+  // Do something that's (hopefully) equivalent to an XSync() to allow
+  // the resource destruction to propagate to the server
+  XSync();
+
+  // Set up a scroll to happen soon
+  window.setTimeout(scrollOfDeath, 100);
+}
+
+window.addEventListener("MozReftestInvalidate", runTest, false);
+    </script>
+  </head>
+
+  <body style="width: 400px; height: 10000px;">
+    <embed id="plugin" type="application/x-test"
+           style="position:absolute;
+                  top:100px; left:50px; width:200px; height:200px;">
+    </embed>
+  </body>
+</html>

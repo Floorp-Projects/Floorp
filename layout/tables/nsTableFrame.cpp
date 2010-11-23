@@ -1473,7 +1473,17 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
 /* virtual */ void
 nsTableFrame::MarkIntrinsicWidthsDirty()
 {
-  LayoutStrategy()->MarkIntrinsicWidthsDirty();
+  nsITableLayoutStrategy* tls = LayoutStrategy();
+  if (NS_UNLIKELY(!tls)) {
+    // This is a FrameNeedsReflow() from nsBlockFrame::RemoveFrame()
+    // walking up the ancestor chain in a table next-in-flow.  In this case
+    // our original first-in-flow (which owns the TableLayoutStrategy) has
+    // already been destroyed and unhooked from the flow chain and thusly
+    // LayoutStrategy() returns null.  All the frames in the flow will be
+    // destroyed so no need to mark anything dirty here.  See bug 595758.
+    return;
+  }
+  tls->MarkIntrinsicWidthsDirty();
 
   // XXXldb Call SetBCDamageArea?
 
@@ -1949,10 +1959,13 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
     }
   }
 
-  if (nsnull != GetNextInFlow()) {
-    nsTableFrame* nextInFlow = (nsTableFrame*)GetNextInFlow();
+  if (frames.IsEmpty()) {
+    return;
+  }
 
-    // Insert the frames after any repeated header and footer frames
+  nsTableFrame* nextInFlow = static_cast<nsTableFrame*>(GetNextInFlow());
+  if (nextInFlow) {
+    // Insert the frames after any repeated header and footer frames.
     nsIFrame* firstBodyFrame = nextInFlow->GetFirstBodyRowGroupFrame();
     nsIFrame* prevSibling = nsnull;
     if (firstBodyFrame) {
@@ -1964,8 +1977,8 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
     nextInFlow->mFrames.InsertFrames(nextInFlow, prevSibling,
                                      frames);
   }
-  else if (frames.NotEmpty()) {
-    // Add the frames to our overflow list
+  else {
+    // Add the frames to our overflow list.
     SetOverflowFrames(PresContext(), frames);
   }
 }

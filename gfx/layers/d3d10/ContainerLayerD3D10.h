@@ -63,13 +63,15 @@ public:
 
   virtual LayerD3D10* GetFirstChildD3D10();
 
-  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
+  virtual void RenderLayer();
   virtual void Validate();
 
   virtual void LayerManagerDestroyed();
 
-private:
-  bool ShouldUseIntermediate(float aOpacity, const gfx3DMatrix &aTransform);
+  virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface)
+  {
+    DefaultComputeEffectiveTransforms(aTransformToSurface);
+  }
 };
 
 } /* layers */

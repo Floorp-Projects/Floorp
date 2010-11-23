@@ -117,6 +117,11 @@ private:
     virtual PTestShellParent* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellParent* shell);
 
+    virtual PAudioParent* AllocPAudio(const PRInt32&,
+                                     const PRInt32&,
+                                     const PRInt32&);
+    virtual bool DeallocPAudio(PAudioParent*);
+
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
 
@@ -125,14 +130,15 @@ private:
             const nsCString& aMimeContentType,
             const nsCString& aContentDisposition,
             const bool& aForceSave,
-            const PRInt64& aContentLength);
+            const PRInt64& aContentLength,
+            const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
 
-    virtual bool RecvReadPrefsArray(nsTArray<PrefTuple> *retValue);
+    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefTuple> *retValue);
 
     void EnsurePrefService();
 
-    virtual bool RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions);
+    virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions);
 
     virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
@@ -148,9 +154,9 @@ private:
                                     const nsString& title,
                                     const nsString& defaultFile,
                                     const nsString& defaultExtension,
-                                    const nsTArray<nsString>& filters,
-                                    const nsTArray<nsString>& filterNames,
-                                    nsTArray<nsString>* files,
+                                    const InfallibleTArray<nsString>& filters,
+                                    const InfallibleTArray<nsString>& filterNames,
+                                    InfallibleTArray<nsString>* files,
                                     PRInt16* retValue,
                                     nsresult* result);
  
@@ -161,7 +167,7 @@ private:
     virtual bool RecvLoadURIExternal(const IPC::URI& uri);
 
     virtual bool RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
-                                 nsTArray<nsString>* aRetvals);
+                                 InfallibleTArray<nsString>* aRetvals);
     virtual bool RecvAsyncMessage(const nsString& aMsg, const nsString& aJSON);
 
     virtual bool RecvAddGeolocationListener();

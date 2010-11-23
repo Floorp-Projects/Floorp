@@ -49,6 +49,7 @@ toolkit.jar:
         skin/classic/global/spinbuttons.css
         skin/classic/global/splitter.css
         skin/classic/global/tabbox.css
+        skin/classic/global/tabprompts.css
         skin/classic/global/textbox.css
 *       skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
@@ -115,6 +116,7 @@ toolkit.jar:
         skin/classic/global/icons/information-32.png             (icons/information-32.png)
         skin/classic/global/icons/information-48.png             (icons/information-48.png)
         skin/classic/global/icons/information-64.png             (icons/information-64.png)
+        skin/classic/global/icons/information-tabmodal-64.png    (icons/information-tabmodal-64.png)
         skin/classic/global/icons/loading_16.png                 (icons/loading_16.png)
         skin/classic/global/icons/notloading_16.png              (icons/notloading_16.png)
         skin/classic/global/icons/Minimize.gif                   (icons/Minimize.gif)
@@ -127,6 +129,7 @@ toolkit.jar:
         skin/classic/global/icons/question-24.png                (icons/question-24.png)
         skin/classic/global/icons/question-48.png                (icons/question-48.png)
         skin/classic/global/icons/question-64.png                (icons/question-64.png)
+        skin/classic/global/icons/question-tabmodal-64.png       (icons/question-tabmodal-64.png)
         skin/classic/global/icons/resizer.png                    (icons/resizer.png)
         skin/classic/global/icons/resizer-rtl.png                (icons/resizer-rtl.png)
         skin/classic/global/icons/Restore.gif                    (icons/Restore.gif)
@@ -222,6 +225,7 @@ toolkit.jar:
         skin/classic/aero/global/spinbuttons.css
         skin/classic/aero/global/splitter.css
         skin/classic/aero/global/tabbox.css
+        skin/classic/aero/global/tabprompts.css
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
 *       skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
@@ -288,6 +292,7 @@ toolkit.jar:
         skin/classic/aero/global/icons/information-32.png                (icons/information-32-aero.png)
         skin/classic/aero/global/icons/information-48.png                (icons/information-48-aero.png)
         skin/classic/aero/global/icons/information-64.png                (icons/information-64-aero.png)
+        skin/classic/aero/global/icons/information-tabmodal-64.png       (icons/information-tabmodal-64.png)
         skin/classic/aero/global/icons/loading_16.png                    (icons/loading_16-aero.png)
         skin/classic/aero/global/icons/notloading_16.png                 (icons/notloading_16-aero.png)
         skin/classic/aero/global/icons/Minimize.gif                      (icons/Minimize.gif)
@@ -300,6 +305,7 @@ toolkit.jar:
         skin/classic/aero/global/icons/question-24.png                   (icons/question-24-aero.png)
         skin/classic/aero/global/icons/question-48.png                   (icons/question-48-aero.png)
         skin/classic/aero/global/icons/question-64.png                   (icons/question-64-aero.png)
+        skin/classic/aero/global/icons/question-tabmodal-64.png          (icons/question-tabmodal-64.png)
         skin/classic/aero/global/icons/resizer.png                       (icons/resizer.png)
         skin/classic/aero/global/icons/resizer-rtl.png                   (icons/resizer-rtl.png)
         skin/classic/aero/global/icons/Restore.gif                       (icons/Restore.gif)

@@ -355,8 +355,16 @@ toolbar:not([mode="icons"]) #restore-button {
   opacity: .4;
 }
 
+.toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   list-style-image: url(chrome://browser/skin/toolbarbutton-dropmarker.png);
+}
+
+.toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
+  -moz-margin-end: 1px;
+}
+
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   width: 14px;
   padding-top: 2px;
   -moz-border-start: none !important;
@@ -2222,4 +2230,8 @@ panel[dimmed="true"] {
 #status-bar > statusbarpanel {
   border-width: 0;
   -moz-appearance: none;
+}
+
+browser[tabmodalPromptShowing] {
+  filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
 }

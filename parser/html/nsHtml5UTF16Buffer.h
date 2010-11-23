@@ -80,9 +80,6 @@ class nsHtml5UTF16Buffer
 #include "nsHtml5UTF16BufferHSupplement.h"
 };
 
-#ifdef nsHtml5UTF16Buffer_cpp__
-#endif
-
 
 
 #endif

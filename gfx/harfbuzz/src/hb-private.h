@@ -44,6 +44,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+HB_BEGIN_DECLS
+
 
 /* Essentials */
 
@@ -184,6 +186,10 @@ _hb_ctz (unsigned int number)
 #endif
 }
 
+/* Type of bsearch() / qsort() compare function */
+typedef int (*hb_compare_func_t) (const void *, const void *);
+
+
 /* We need external help for these */
 
 #ifdef HAVE_GLIB
@@ -251,12 +257,14 @@ _hb_trace (const char *what,
 	   unsigned int depth,
 	   unsigned int max_depth)
 {
-  if (depth < max_depth)
-    fprintf (stderr, "%s(%p) %-*d-> %s\n", what, obj, depth, depth, function);
+  (void) ((depth < max_depth) && fprintf (stderr, "%s(%p) %-*d-> %s\n", what, obj, depth, depth, function));
   return TRUE;
 }
 
 
 #include "hb-object-private.h"
+
+
+HB_END_DECLS
 
 #endif /* HB_PRIVATE_H */

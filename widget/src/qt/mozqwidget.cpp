@@ -238,6 +238,12 @@ bool MozQWidget::event ( QEvent * event )
         mReceiver->OnGestureEvent(static_cast<QGestureEvent*>(event),handled);
         return handled;
     }
+    case QEvent::InputMethod:
+    {
+        PRBool handled = PR_FALSE;
+        mReceiver->imComposeEvent(static_cast<QInputMethodEvent*>(event),handled);
+        return handled;
+    }
 
     default:
         break;

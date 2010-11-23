@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*  Copyright 2003 Huw D M Davies for Codeweavers                          */
 /*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
@@ -944,7 +944,7 @@
                   FT_Int32      load_flags )
   {
     FNT_Face    face   = (FNT_Face)FT_SIZE_FACE( size );
-    FNT_Font    font   = face->font;
+    FNT_Font    font;
     FT_Error    error  = FNT_Err_Ok;
     FT_Byte*    p;
     FT_Int      len;
@@ -955,7 +955,15 @@
     FT_UNUSED( load_flags );
 
 
-    if ( !face || !font ||
+    if ( !face )
+    {
+      error = FNT_Err_Invalid_Argument;
+      goto Exit;
+    }
+
+    font = face->font;
+
+    if ( !font ||
          glyph_index >= (FT_UInt)( FT_FACE( face )->num_glyphs ) )
     {
       error = FNT_Err_Invalid_Argument;

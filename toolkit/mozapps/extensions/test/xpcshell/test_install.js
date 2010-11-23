@@ -39,6 +39,11 @@ function run_test() {
   testserver = new nsHttpServer();
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
+  testserver.registerPathHandler("/redirect", function(aRequest, aResponse) {
+    aResponse.setStatusLine(null, 301, "Moved Permanently");
+    let url = aRequest.host + ":" + aRequest.port + aRequest.queryString;
+    aResponse.setHeader("Location", "http://" + url);
+  });
   testserver.start(4444);
 
   do_test_pending();
@@ -1287,7 +1292,225 @@ function check_test_21(aInstall) {
     AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
       do_check_eq(a2, null);
 
-      end_test();
+      run_test_22();
     });
   });
+}
+
+// Tests that an install can be restarted after being cancelled
+function run_test_22() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install3.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    ensure_test_completed();
+
+    do_check_neq(aInstall, null);
+    do_check_eq(aInstall.state, AddonManager.STATE_AVAILABLE);
+
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+    ], check_test_22);
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_22(aInstall) {
+  prepare_test({}, [
+    "onDownloadCancelled"
+  ]);
+
+  aInstall.cancel();
+
+  ensure_test_completed();
+
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onDownloadStarted",
+    "onDownloadEnded",
+    "onInstallStarted",
+    "onInstallEnded"
+  ], finish_test_22);
+
+  aInstall.install();
+}
+
+function finish_test_22(aInstall) {
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onOperationCancelled"
+    ]
+  }, [
+    "onInstallCancelled"
+  ]);
+
+  aInstall.cancel();
+
+  ensure_test_completed();
+
+  run_test_23();
+}
+
+// Tests that an install can be restarted after being cancelled when a hash
+// was provided
+function run_test_23() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install3.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    ensure_test_completed();
+
+    do_check_neq(aInstall, null);
+    do_check_eq(aInstall.state, AddonManager.STATE_AVAILABLE);
+
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+    ], check_test_23);
+    aInstall.install();
+  }, "application/x-xpinstall", do_get_addon_hash("test_install3"));
+}
+
+function check_test_23(aInstall) {
+  prepare_test({}, [
+    "onDownloadCancelled"
+  ]);
+
+  aInstall.cancel();
+
+  ensure_test_completed();
+
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onDownloadStarted",
+    "onDownloadEnded",
+    "onInstallStarted",
+    "onInstallEnded"
+  ], finish_test_23);
+
+  aInstall.install();
+}
+
+function finish_test_23(aInstall) {
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onOperationCancelled"
+    ]
+  }, [
+    "onInstallCancelled"
+  ]);
+
+  aInstall.cancel();
+
+  ensure_test_completed();
+
+  run_test_24();
+}
+
+// Tests that an install with a bad hash can be restarted after it fails, though
+// it will only fail again
+function run_test_24() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install3.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    ensure_test_completed();
+
+    do_check_neq(aInstall, null);
+    do_check_eq(aInstall.state, AddonManager.STATE_AVAILABLE);
+
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadFailed",
+    ], check_test_24);
+    aInstall.install();
+  }, "application/x-xpinstall", "sha1:foo");
+}
+
+function check_test_24(aInstall) {
+  prepare_test({ }, [
+    "onDownloadStarted",
+    "onDownloadFailed"
+  ], run_test_25);
+
+  aInstall.install();
+}
+
+// Tests that installs with a hash for a local file work
+function run_test_25() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = Services.io.newFileURI(do_get_addon("test_install3")).spec;
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    ensure_test_completed();
+
+    do_check_neq(aInstall, null);
+    do_check_eq(aInstall.state, AddonManager.STATE_DOWNLOADED);
+    do_check_eq(aInstall.error, 0);
+
+    prepare_test({ }, [
+      "onDownloadCancelled"
+    ]);
+
+    aInstall.cancel();
+
+    ensure_test_completed();
+
+    run_test_26();
+  }, "application/x-xpinstall", do_get_addon_hash("test_install3"));
+}
+
+function run_test_26() {
+  prepare_test({ }, [
+    "onNewInstall",
+    "onDownloadStarted",
+    "onDownloadCancelled"
+  ]);
+
+  let observerService = AM_Cc["@mozilla.org/network/http-activity-distributor;1"].
+                        getService(AM_Ci.nsIHttpActivityDistributor);
+  observerService.addObserver({
+    observeActivity: function(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+                              aStringData) {
+      aChannel.QueryInterface(AM_Ci.nsIChannel);
+      // Wait for the final event for the redirected URL
+      if (aChannel.URI.spec != "http://localhost:4444/addons/test_install1.xpi" ||
+          aType != AM_Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
+          aSubtype != AM_Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
+        return;
+
+      // Request should have been cancelled
+      do_check_eq(aChannel.status, Components.results.NS_BINDING_ABORTED);
+
+      observerService.removeObserver(this);
+
+      do_test_finished();
+    }
+  });
+
+  let url = "http://localhost:4444/redirect?/addons/test_install1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onDownloadProgress: function(aInstall) {
+        aInstall.cancel();
+      }
+    });
+
+    aInstall.install();
+  }, "application/x-xpinstall");
 }

@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+<!DOCTYPE bindings [
+<!ENTITY % commonDialogDTD  SYSTEM "chrome://global/locale/commonDialog.dtd">
+<!ENTITY % dialogOverlayDTD SYSTEM "chrome://global/locale/dialogOverlay.dtd">
+%commonDialogDTD;
+%dialogOverlayDTD;
+]>
+
+<bindings id="tabPrompts"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="tabmodalprompt">
+
+    <resources>
+        <stylesheet src="chrome://global/content/tabprompts.css"/>
+        <stylesheet src="chrome://global/skin/tabprompts.css"/>
+    </resources>
+
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+        <!-- This is based on the guts of commonDialog.xul -->
+        <spacer flex="1"/>
+        <hbox>
+            <spacer flex="1"/>
+            <vbox class="mainContainer">
+                <grid class="topContainer">
+                    <columns>
+                        <column/>
+                        <column flex="1"/>
+                    </columns>
+
+                    <rows>
+                        <row>
+                            <hbox align="start">
+                                <image anonid="info.icon" class="info.icon"/>
+                            </hbox>
+                            <vbox class="infoContainer">
+                                <description anonid="info.title" hidden="true"/>
+                                <description anonid="info.body" class="info.body"/>
+                            </vbox>
+                        </row>
+
+                        <row anonid="loginContainer" hidden="true" align="center">
+                            <label anonid="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
+                            <textbox anonid="loginTextbox"/>
+                        </row>
+
+                        <row anonid="password1Container" hidden="true" align="center">
+                            <label anonid="password1Label" value="&editfield1.label;" control="password1Textbox"/>
+                            <textbox anonid="password1Textbox" type="password"/>
+                        </row>
+
+                        <row anonid="checkboxContainer" hidden="true">
+                            <spacer/>
+                            <checkbox anonid="checkbox"/>
+                        </row>
+                    </rows>
+                </grid>
+                <xbl:children/>
+                <hbox class="buttonContainer">
+#ifdef XP_UNIX
+                    <button anonid="button3" hidden="true"/>
+                    <button anonid="button2" hidden="true"/>
+                    <spacer anonid="buttonSpacer" flex="1"/>
+                    <button anonid="button1" label="&cancelButton.label;"/>
+                    <button anonid="button0" label="&okButton.label;"/>
+#else
+                    <button anonid="button3" hidden="true"/>
+                    <spacer anonid="buttonSpacer" flex="1" hidden="true"/>
+                    <button anonid="button0" label="&okButton.label;"/>
+                    <button anonid="button2" hidden="true"/>
+                    <button anonid="button1" label="&cancelButton.label;"/>
+#endif
+                </hbox>
+            </vbox>
+            <spacer flex="1"/>
+        </hbox>
+        <spacer flex="2"/>
+    </xbl:content>
+
+    <implementation implements="nsIDOMEventListener">
+        <constructor>
+        <![CDATA[
+            let self = this;
+            function getElement(anonid) {
+                return document.getAnonymousElementByAttribute(self, "anonid", anonid);
+            }
+
+            this.ui = {
+                prompt             : this,
+                loginContainer     : getElement("loginContainer"),
+                loginTextbox       : getElement("loginTextbox"),
+                loginLabel         : getElement("loginLabel"),
+                password1Container : getElement("password1Container"),
+                password1Textbox   : getElement("password1Textbox"),
+                password1Label     : getElement("password1Label"),
+                infoBody           : getElement("info.body"),
+                infoTitle          : getElement("info.title"),
+                infoIcon           : getElement("info.icon"),
+                checkbox           : getElement("checkbox"),
+                checkboxContainer  : getElement("checkboxContainer"),
+                button3            : getElement("button3"),
+                button2            : getElement("button2"),
+                button1            : getElement("button1"),
+                button0            : getElement("button0"),
+                // focusTarget (for BUTTON_DELAY_ENABLE) not yet supported
+            };
+
+            this.ui.button0.addEventListener("command", this.onButtonClick.bind(this, 0), false);
+            this.ui.button1.addEventListener("command", this.onButtonClick.bind(this, 1), false);
+            this.ui.button2.addEventListener("command", this.onButtonClick.bind(this, 2), false);
+            this.ui.button3.addEventListener("command", this.onButtonClick.bind(this, 3), false);
+            // Anonymous wrapper used here because |Dialog| doesn't exist until init() is called!
+            this.ui.checkbox.addEventListener("command", function() { self.Dialog.onCheckbox(); } , false);
+        ]]>
+        </constructor>
+
+        <field name="ui"/>
+        <field name="args"/>
+        <field name="linkedTab"/>
+        <field name="onCloseCallback"/>
+        <field name="Dialog"/>
+
+        <method name="init">
+            <parameter name="args"/>
+            <parameter name="linkedTab"/>
+            <parameter name="onCloseCallback"/>
+            <body>
+            <![CDATA[
+                this.args = args;
+                this.linkedTab = linkedTab;
+                this.onCloseCallback = onCloseCallback;
+
+                if (args.enableDelay)
+                    throw "BUTTON_DELAY_ENABLE not yet supported for tab-modal prompts";
+
+                // We need to remove the prompt when the tab or browser window is closed or
+                // the page navigates, else we never unwind the event loop and that's sad times.
+                // Remember to cleanup in shutdownPrompt()!
+                linkedTab.addEventListener("TabClose", this, false);
+                window.addEventListener("unload", this, false);
+                this.args.domWindow.addEventListener("pagehide", this, false);
+
+                let tmp = {};
+                Components.utils.import("resource://gre/modules/CommonDialog.jsm", tmp);
+                this.Dialog = new tmp.CommonDialog(args, this.ui);
+                this.Dialog.onLoad(null);
+
+                // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
+                //       Better yet, just drop support for 4-button dialogs. (bug 609510)
+            ]]>
+            </body>
+        </method>
+
+        <method name="shutdownPrompt">
+            <body>
+            <![CDATA[
+                // remove our event listeners
+                try {
+                    this.linkedTab.removeEventListener("TabClose", this, false);
+                    window.removeEventListener("unload", this, false);
+                    this.args.domWindow.removeEventListener("pagehide", this, false);
+                } catch(e) { }
+                // invoke callback
+                this.onCloseCallback();
+            ]]>
+            </body>
+        </method>
+
+        <method name="handleEvent">
+            <parameter name="aEvent"/>
+            <body>
+            <![CDATA[
+                switch (aEvent.type) {
+                  case "TabClose":
+                  case "unload":
+                  case "pagehide":
+                    this.Dialog.abortPrompt();
+                    this.shutdownPrompt();
+                    break;
+                }
+            ]]>
+            </body>
+        </method>
+
+        <method name="onButtonClick">
+            <parameter name="buttonNum"/>
+            <body>
+            <![CDATA[
+                this.Dialog["onButton" + buttonNum]();
+                this.shutdownPrompt();
+            ]]>
+            </body>
+        </method>
+
+        <method name="onKeyAction">
+            <parameter name="action"/>
+            <parameter name="event"/>
+            <body>
+            <![CDATA[
+                if (event.getPreventDefault())
+                    return;
+
+                if (action == "default") {
+                    let bnum = this.args.defaultButtonNum || 0;
+                    let button = this.ui["button" + bnum];
+                    if (!button.hasAttribute("default"))
+                        return;
+                    this.onButtonClick(bnum);
+                } else { // action == "cancel"
+                    this.onButtonClick(1); // Cancel button
+                }
+            ]]>
+            </body>
+        </method>
+    </implementation>
+
+    <handlers>
+        <!-- Based on dialog.xml handlers -->
+        <handler event="keypress" keycode="VK_ENTER"
+                 group="system" action="this.onKeyAction('default', event);"/>
+        <handler event="keypress" keycode="VK_RETURN"
+                 group="system" action="this.onKeyAction('default', event);"/>
+        <handler event="keypress" keycode="VK_ESCAPE"
+                 group="system" action="this.onKeyAction('cancel', event);"/>
+#ifndef XP_MACOSX
+        <handler event="focus" phase="capturing">
+            // Focus shift clears the default button.
+            let bnum = this.args.defaultButtonNum || 0;
+            let button = this.ui["button" + bnum];
+            button.setAttribute("default", event.originalTarget == button);
+        </handler>
+#endif
+    </handlers>
+
+  </binding>
+</bindings>

@@ -64,12 +64,20 @@ gfxImageSurface::InitFromSurface(cairo_surface_t *csurf)
 
 gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
                                  long aStride, gfxImageFormat aFormat)
-  : mSize(aSize)
-  , mOwnsData(PR_FALSE)
-  , mData(aData)
-  , mFormat(aFormat)
-  , mStride(aStride)
 {
+    InitWithData(aData, aSize, aStride, aFormat);
+}
+
+void
+gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
+                              long aStride, gfxImageFormat aFormat)
+{
+    mSize = aSize;
+    mOwnsData = PR_FALSE;
+    mData = aData;
+    mFormat = aFormat;
+    mStride = aStride;
+
     if (!CheckSurfaceSize(aSize))
         return;
 
@@ -117,7 +125,10 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
 
     Init(surface);
 
-    RecordMemoryUsed(mSize.height * ComputeStride() + sizeof(gfxImageSurface));
+    if (mSurfaceValid) {
+        RecordMemoryUsed(mSize.height * ComputeStride() +
+                         sizeof(gfxImageSurface));
+    }
 }
 
 gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
@@ -215,4 +226,11 @@ gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
   : gfxImageSurface(aData, aSize, aParent->Stride(), aParent->Format())
   , mParent(aParent)
 {
+}
+
+already_AddRefed<gfxImageSurface>
+gfxImageSurface::GetAsImageSurface()
+{
+  nsRefPtr<gfxImageSurface> surface = this;
+  return surface.forget();
 }

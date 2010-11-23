@@ -1,8 +1,19 @@
+- Rename get_table to reference_table
+
+- Avoid allocating blob objects internally for for_data() faces
+
+- head table access cleanup (div by zero now!)
+- cache various expensive scale computation
+
+- SFNT api?  get_num_faces?
+
+- GNOME Bug 612402 - (hb-arm) HarfBuzz compilation fix for arm
+
+- Make sure LangSys default feature is only applied once...
 
 - kern/GPOS interaction
 
 - Use size_t in sanitize?
-- Buffer error handling?
 - Better define HB_INTERNAL
 - Future-proof metrics struct
 

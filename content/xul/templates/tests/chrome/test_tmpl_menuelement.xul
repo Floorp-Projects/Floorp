@@ -78,7 +78,7 @@ var changes = [
 ]]>
 </script>
 
-<button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" type="menu" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/birds">
+<button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" type="menu" id="root" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/birds">
 <template>
 <menupopup>
 <menuitem uri="rdf:*" label="rdf:http://www.some-fictitious-zoo.com/rdf#name"/>

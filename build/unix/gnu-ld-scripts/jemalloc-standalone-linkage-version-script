@@ -1,0 +1,19 @@
+{
+   global:
+		_malloc_postfork;
+		_malloc_prefork;
+		jemalloc_stats;
+		malloc_usable_size;
+		posix_memalign;
+		free;
+		realloc;
+		calloc;
+		malloc;
+		memalign;
+		valloc;
+		__free_hook;
+		__malloc_hook;
+		__realloc_hook;
+		__memalign_hook;
+   local: *;
+};

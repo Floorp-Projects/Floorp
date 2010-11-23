@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css" ?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css" ?>
+
+<window title="Jetpack Crash Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <description id="remoteScript">
+  <![CDATA[
+  registerReceiver("testCTypes", function(name, libfile) {
+    var library = ctypes.open(libfile);
+    var zero = new ctypes.intptr_t(8);
+    _noteIntentionalCrash();
+    var badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
+    sendMessage("testCTypes:response", badptr.contents); // should crash here!
+  });
+  ]]>
+  </description>
+
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+    Components.utils.import("resource://gre/modules/ctypes.jsm");
+    const libURL = "chrome://mochitests/content/chrome/libraries/" +
+      ctypes.libraryName("jsctypes-test");
+
+    SimpleTest.waitForExplicitFinish();
+
+    var jp = Components.classes["@mozilla.org/jetpack/service;1"].
+      getService(Components.interfaces.nsIJetpackService).
+      createJetpack();
+
+    jp.registerReceiver("core:exception", function(msgName, e) {
+      ok(false, "Received exception from remote code: " + uneval(e));
+    });
+
+    jp.registerReceiver("testCTypes:response", function(msgName, v) {
+      ok(false, "Should not have received testCTypes response!");
+      jp.destroy();
+      jp = null;
+      SimpleTest.finish();
+    });
+
+    jp.registerReceiver("core:process-error", function(msgName, e) {
+      ok(true, "Received process-error notification.");
+
+      if ('nsICrashReporter' in Components.interfaces)
+        ok(e.dumpID, "Process error has a dumpID");
+
+      jp.destroy();
+      jp = null;
+
+      SimpleTest.executeSoon(SimpleTest.finish);
+    });
+
+    var remoteScript = document.getElementById('remoteScript').textContent;
+    jp.evalScript(remoteScript);
+
+    var downloadObserver = {
+      onDownloadComplete: function(downloader, request, cx, status, file) {
+        Components.utils.reportError("download status: " + status);
+        try {
+          file.permission = 0700;
+        }
+        catch (e) {
+          Components.utils.reportError(e);
+        }
+        jp.sendMessage('testCTypes', file.path);
+      }
+    };
+    var downloader = Components.classes["@mozilla.org/network/downloader;1"].
+      createInstance(Components.interfaces.nsIDownloader);
+    downloader.init(downloadObserver, null);
+    var channel = Components.classes["@mozilla.org/network/io-service;1"].
+      getService(Components.interfaces.nsIIOService).
+      newChannel(libURL, null, null);
+    channel.asyncOpen(downloader, null);
+  ]]>
+  </script>
+</window>

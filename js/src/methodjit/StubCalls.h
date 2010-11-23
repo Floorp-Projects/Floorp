@@ -120,7 +120,7 @@ JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetPropNoCache(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
-template<JSBool strict> void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL SetGlobalNameNoCache(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetPropNoCache(VMFrame &f, JSAtom *atom);
@@ -154,7 +154,8 @@ template <JSBool strict> void JS_FASTCALL DelElem(VMFrame &f);
 void JS_FASTCALL DelName(VMFrame &f, JSAtom *atom);
 JSBool JS_FASTCALL In(VMFrame &f);
 
-void JS_FASTCALL DefVar(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL DefVarOrConst(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL SetConst(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun_FC(VMFrame &f, JSFunction *fun);

@@ -56,9 +56,8 @@ interface nsIDOMWindow2 : nsIDOMWindow
   readonly attribute nsIDOMOfflineResourceList applicationCache;
 
   /**
-   * Create and revoke blob urls. createBlobURL will always return a new URL
-   * with the lifetime of the current Document.
+   * Deprecated, but can't remove yet since we don't want to change interfaces.
    */
-  DOMString createBlobURL(in nsIDOMBlob blob);
-  void revokeBlobURL(in DOMString URL);
+  [noscript] DOMString createBlobURL(in nsIDOMBlob blob);
+  [noscript] void revokeBlobURL(in DOMString URL);
 };

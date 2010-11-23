@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
+ *   Vivien Nicolas <vnicolas@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,9 +88,9 @@ static nsWindow* gFocusedWindow = nsnull;
 static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
 
-// Multitouch swipe thresholds (in screen pixels)
-static const double SWIPE_MAX_PINCH_DELTA = 100;
-static const double SWIPE_MIN_DISTANCE = 150;
+// Multitouch swipe thresholds in inches
+static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
+static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
 static nsWindow*
 TopWindow()
@@ -196,6 +198,10 @@ nsWindow::Create(nsIWidget *aParent,
         parent->mChildren.AppendElement(this);
         mParent = parent;
     }
+
+    float dpi = GetDPI();
+    mSwipeMaxPinchDelta = SWIPE_MAX_PINCH_DELTA_INCHES * dpi;
+    mSwipeMinDistance = SWIPE_MIN_DISTANCE_INCHES * dpi;
 
     return NS_OK;
 }
@@ -435,6 +441,9 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         case nsSizeMode_Minimized:
             AndroidBridge::Bridge()->MoveTaskToBack();
             break;
+        case nsSizeMode_Fullscreen:
+            MakeFullScreen(PR_TRUE);
+            break;
     }
     return NS_OK;
 }
@@ -517,7 +526,7 @@ nsWindow::BringToFront()
     gTopLevelWindows.InsertElementAt(0, this);
 
     if (oldTop) {
-        nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, gTopLevelWindows[0]);
+        nsGUIEvent event(PR_TRUE, NS_DEACTIVATE, oldTop);
         DispatchEvent(&event);
     }
 
@@ -584,6 +593,13 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
         return status;
     }
     return nsEventStatus_eIgnore;
+}
+
+NS_IMETHODIMP
+nsWindow::MakeFullScreen(PRBool aFullScreen)
+{
+    AndroidBridge::Bridge()->SetFullScreen(aFullScreen);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -853,13 +869,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 void
 nsWindow::OnDraw(AndroidGeckoEvent *ae)
 {
-    AndroidBridge::AutoLocalJNIFrame jniFrame;
-
     ALOG(">> OnDraw");
-
-    AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
-
-    NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
 
     if (!IsTopLevel()) {
         ALOG("##### redraw for window %p, which is not a toplevel window -- sending to toplevel!", (void*) this);
@@ -873,6 +883,14 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
+    AndroidBridge::AutoLocalJNIFrame jniFrame;
+
+    AndroidGeckoSurfaceView& sview(AndroidBridge::Bridge()->SurfaceView());
+
+    NS_ASSERTION(!sview.isNull(), "SurfaceView is null!");
+
+    AndroidBridge::Bridge()->HideProgressDialogOnce();
+
     if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
         jobject bytebuf = sview.GetSoftwareDrawBuffer();
         if (!bytebuf) {
@@ -882,8 +900,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
         int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
-        if (!buf || cap < (mBounds.width * mBounds.height * 2)) {
-            ALOG("### Software drawing, but too small a buffer %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
+        if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
+            ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
             return;
         }
 
@@ -894,7 +912,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                                 gfxASurface::ImageFormatRGB16_565);
 
         DrawTo(targetSurface);
-        sview.Draw2D(bytebuf);
+        sview.Draw2D(bytebuf, mBounds.width * 2);
     } else {
         int drawType = sview.BeginDrawing();
 
@@ -1089,14 +1107,14 @@ void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 
         // If the cumulative pinch delta goes past the threshold, treat this
         // as a pinch only, and not a swipe.
-        if (fabs(pinchDist - mStartDist) > SWIPE_MAX_PINCH_DELTA)
+        if (fabs(pinchDist - mStartDist) > mSwipeMaxPinchDelta)
             mStartPoint = nsnull;
 
         // If we have traveled more than SWIPE_MIN_DISTANCE from the start
         // point, stop the pinch gesture and fire a swipe event.
         if (mStartPoint) {
             double swipeDistance = getDistance(midPoint, *mStartPoint);
-            if (swipeDistance > SWIPE_MIN_DISTANCE) {
+            if (swipeDistance > mSwipeMinDistance) {
                 PRUint32 direction = 0;
                 nsIntPoint motion = midPoint - *mStartPoint;
 
@@ -1310,11 +1328,18 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 {
     nsCOMPtr<nsIAtom> command;
     PRBool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
+    PRBool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
     PRBool doCommand = PR_FALSE;
     PRUint32 keyCode = ae->KeyCode();
 
     if (isDown) {
         switch (keyCode) {
+            case AndroidKeyEvent::KEYCODE_BACK:
+                if (isLongPress) {
+                    command = nsWidgetAtoms::Clear;
+                    doCommand = PR_TRUE;
+                }
+                break;
             case AndroidKeyEvent::KEYCODE_VOLUME_UP:
                 command = nsWidgetAtoms::VolumeUp;
                 doCommand = PR_TRUE;
@@ -1325,7 +1350,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
                 break;
             case AndroidKeyEvent::KEYCODE_MENU:
                 gMenu = PR_TRUE;
-                gMenuConsumed = PR_FALSE;
+                gMenuConsumed = isLongPress;
                 break;
         }
     } else {
@@ -1621,19 +1646,19 @@ nsWindow::ResetInputState()
 }
 
 NS_IMETHODIMP
-nsWindow::SetIMEEnabled(PRUint32 aState)
+nsWindow::SetInputMode(const IMEContext& aContext)
 {
-    ALOGIME("IME: SetIMEEnabled: s=%d", aState);
+    ALOGIME("IME: SetInputMode: s=%d", aContext.mStatus);
 
-    mIMEEnabled = aState;
-    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_SETENABLED, int(aState));
+    mIMEContext = aContext;
+    AndroidBridge::NotifyIMEEnabled(int(aContext.mStatus), aContext.mHTMLInputType);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::GetIMEEnabled(PRUint32* aState)
+nsWindow::GetInputMode(IMEContext& aContext)
 {
-    *aState = mIMEEnabled;
+    aContext = mIMEContext;
     return NS_OK;
 }
 

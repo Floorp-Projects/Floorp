@@ -1002,6 +1002,29 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 void
 nsHTMLDocument::StopDocumentLoad()
 {
+  if (nsHtml5Module::sEnabled) {
+    BlockOnload();
+    if (mWriteState == eDocumentOpened) {
+      NS_ASSERTION(IsHTML(), "document.open()ed doc is not HTML?");
+
+      // Marking the document as closed, since pending scripts will be
+      // stopped by nsDocument::StopDocumentLoad() below
+      mWriteState = eDocumentClosed;
+
+      // Remove the wyciwyg channel request from the document load group
+      // that we added in OpenCommon().
+      NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
+                   "Trying to remove nonexistent wyciwyg channel!");
+      RemoveWyciwygChannel();
+      NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
+                   "nsIWyciwygChannel could not be removed!");
+    }
+    nsDocument::StopDocumentLoad();
+    UnblockOnload(PR_FALSE);
+    return;
+  }
+  // Code for the old parser:
+
   // If we're writing (i.e., there's been a document.open call), then
   // nsDocument::StopDocumentLoad will do the wrong thing and simply terminate
   // our parser.
@@ -2890,7 +2913,7 @@ nsHTMLDocument::GenerateParserKey(void)
   // The script loader provides us with the currently executing script element,
   // which is guaranteed to be unique per script.
   if (nsHtml5Module::sEnabled) {
-    nsIScriptElement* script = mScriptLoader->GetCurrentScript();
+    nsIScriptElement* script = mScriptLoader->GetCurrentParserInsertedScript();
     if (script && mParser && mParser->IsScriptCreated()) {
       nsCOMPtr<nsIParser> creatorParser = script->GetCreatorParser();
       if (creatorParser != mParser) {
@@ -3277,6 +3300,13 @@ nsHTMLDocument::EditingStateChanged()
 
     nsCOMPtr<nsIPresShell> presShell = GetShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+    // If we're entering the design mode, put the selection at the beginning of
+    // the document for compatibility reasons.
+    if (designMode) {
+      rv = editor->BeginningOfDocument();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMArray<nsIStyleSheet> agentSheets;
     rv = presShell->GetAgentStyleSheets(agentSheets);

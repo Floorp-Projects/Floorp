@@ -504,8 +504,8 @@ public:
 #define PNX_XMLROOT     0x20            /* top-most node in XML literal tree */
 #define PNX_GROUPINIT   0x40            /* var [a, b] = [c, d]; unit list */
 #define PNX_NEEDBRACES  0x80            /* braces necessary due to closure */
-#define PNX_FUNCDEFS   0x100            /* contains top-level function
-                                           statements */
+#define PNX_FUNCDEFS   0x100            /* contains top-level function statements */
+#define PNX_SETCALL    0x100            /* call expression in lvalue context */
 #define PNX_DESTRUCT   0x200            /* destructuring special cases:
                                            1. shorthand syntax used, at present
                                               object destructuring ({x,y}) only;
@@ -1088,6 +1088,14 @@ private:
     JSParseNode *functionExpr();
     JSParseNode *statements();
     JSParseNode *statement();
+    JSParseNode *switchStatement();
+    JSParseNode *forStatement();
+    JSParseNode *tryStatement();
+    JSParseNode *withStatement();
+#if JS_HAS_BLOCK_SCOPE
+    JSParseNode *letStatement();
+#endif
+    JSParseNode *expressionStatement();
     JSParseNode *variables(bool inLetHead);
     JSParseNode *expr();
     JSParseNode *assignExpr();

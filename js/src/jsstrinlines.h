@@ -69,6 +69,13 @@ JSString::length2String(jschar c1, jschar c2)
 }
 
 inline JSString *
+JSString::length2String(uint32 i)
+{
+    JS_ASSERT(i < 100);
+    return length2String('0' + i / 10, '0' + i % 10);
+}
+
+inline JSString *
 JSString::intString(jsint i)
 {
     jsuint u = jsuint(i);
@@ -114,46 +121,60 @@ JSString::lookupStaticString(const jschar *chars, size_t length)
 }
 
 inline void
-JSString::finalize(JSContext *cx, unsigned thingKind) {
-    if (JS_LIKELY(thingKind == js::gc::FINALIZE_STRING)) {
-        JS_ASSERT(!JSString::isStatic(this));
-        JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
-        if (isDependent()) {
-            JS_ASSERT(dependentBase());
-            JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
-        } else if (isFlat()) {
-            /*
-             * flatChars for stillborn string is null, but cx->free checks
-             * for a null pointer on its own.
-             */
-            cx->free(flatChars());
-        } else if (isTopNode()) {
-            cx->free(topNodeBuffer());
-        }
-    } else {
-        unsigned type = thingKind - js::gc::FINALIZE_EXTERNAL_STRING0;
-        JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
-        JS_ASSERT(!isStatic(this));
-        JS_ASSERT(isFlat());
-        JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
-
-        /* A stillborn string has null chars. */
-        jschar *chars = flatChars();
-        if (!chars)
-            return;
-        JSStringFinalizeOp finalizer = str_finalizers[type];
-        if (finalizer)
-            finalizer(cx, this);
+JSString::finalize(JSContext *cx) {
+    JS_ASSERT(!JSString::isStatic(this));
+    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+    if (isDependent()) {
+        JS_ASSERT(dependentBase());
+        JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
+    } else if (isFlat()) {
+        /*
+         * flatChars for stillborn string is null, but cx->free checks
+         * for a null pointer on its own.
+         */
+        cx->free(flatChars());
+    } else if (isTopNode()) {
+        cx->free(topNodeBuffer());
     }
 }
 
 inline void
-JSShortString::finalize(JSContext *cx, unsigned thingKind)
+JSShortString::finalize(JSContext *cx)
 {
-    JS_ASSERT(js::gc::FINALIZE_SHORT_STRING == thingKind);
     JS_ASSERT(!JSString::isStatic(header()));
     JS_ASSERT(header()->isFlat());
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+}
+
+inline void
+JSExternalString::finalize(JSContext *cx)
+{
+    JS_ASSERT(unsigned(externalStringType) < JS_ARRAY_LENGTH(str_finalizers));
+    JS_ASSERT(!isStatic(this));
+    JS_ASSERT(isFlat());
+    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+
+    /* A stillborn string has null chars. */
+    jschar *chars = flatChars();
+    if (!chars)
+        return;
+    JSStringFinalizeOp finalizer = str_finalizers[externalStringType];
+    if (finalizer)
+        finalizer(cx, this);
+}
+
+inline void
+JSExternalString::finalize()
+{
+    JS_ASSERT(unsigned(externalStringType) < JS_ARRAY_LENGTH(str_finalizers));
+    JSStringFinalizeOp finalizer = str_finalizers[externalStringType];
+    if (finalizer) {
+        /*
+         * Assume that the finalizer for the permanently interned
+         * string knows how to deal with null context.
+         */
+        finalizer(NULL, this);
+    }
 }
 
 inline

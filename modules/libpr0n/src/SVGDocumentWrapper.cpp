@@ -60,6 +60,7 @@
 #include "gfxRect.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGLength2.h"
+#include "nsSVGEffects.h"
 
 using namespace mozilla::dom;
 
@@ -68,13 +69,15 @@ namespace imagelib {
 
 nsIAtom* SVGDocumentWrapper::kSVGAtom = nsnull; // lazily initialized
 
-NS_IMPL_ISUPPORTS3(SVGDocumentWrapper,
+NS_IMPL_ISUPPORTS4(SVGDocumentWrapper,
                    nsIStreamListener,
                    nsIRequestObserver,
-                   nsIObserver)
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 SVGDocumentWrapper::SVGDocumentWrapper()
- : mIgnoreInvalidation(PR_FALSE)
+  : mIgnoreInvalidation(PR_FALSE),
+    mRegisteredForXPCOMShutdown(PR_FALSE)
 {
   // Lazy-initialize our "svg" atom.  (It'd be nicer to just use nsGkAtoms::svg
   // directly, but we can't access it from here in non-libxul builds.)
@@ -87,6 +90,9 @@ SVGDocumentWrapper::SVGDocumentWrapper()
 SVGDocumentWrapper::~SVGDocumentWrapper()
 {
   DestroyViewer();
+  if (mRegisteredForXPCOMShutdown) {
+    UnregisterForXPCOMShutdown();
+  }
 }
 
 void
@@ -175,15 +181,13 @@ SVGDocumentWrapper::IsAnimated()
 void
 SVGDocumentWrapper::StartAnimation()
 {
-  nsSVGSVGElement* svgElem = GetRootSVGElem();
-  if (!svgElem)
-    return;
-
-#ifdef DEBUG
-  nsresult rv = 
-#endif
-    svgElem->UnpauseAnimations();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "UnpauseAnimations failed");
+  nsIDocument* doc = mViewer->GetDocument();
+  if (doc) {
+#ifdef MOZ_SMIL
+    doc->GetAnimationController()->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
+#endif // MOZ_SMIL
+    doc->SetImagesNeedAnimating(PR_TRUE);
+  }
 }
 
 void
@@ -191,20 +195,18 @@ SVGDocumentWrapper::StopAnimation()
 {
   // This method gets called for animated images during shutdown, after we've
   // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
-  // When that happens, we need to bail out early, or else GetRootSVGElem will
-  // try to deref mViewer (= null) and crash as a result.
+  // When that happens, we need to bail out early, or else the
+  // mViewer->GetDocument() call below will crash on a null pointer.
   if (!mViewer)
     return;
 
-  nsSVGSVGElement* svgElem = GetRootSVGElem();
-  if (!svgElem)
-    return;
-
-#ifdef DEBUG
-  nsresult rv = 
-#endif
-    svgElem->PauseAnimations();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "PauseAnimations failed");
+  nsIDocument* doc = mViewer->GetDocument();
+  if (doc) {
+#ifdef MOZ_SMIL
+    doc->GetAnimationController()->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
+#endif // MOZ_SMIL
+    doc->SetImagesNeedAnimating(PR_FALSE);
+  }
 }
 
 void
@@ -250,6 +252,8 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   if (NS_SUCCEEDED(rv) &&
       NS_SUCCEEDED(mListener->OnStartRequest(aRequest, nsnull))) {
     mViewer->GetDocument()->SetIsBeingUsedAsImage();
+    StopAnimation(); // otherwise animations start automatically in helper doc
+
     rv = mViewer->Init(nsnull, nsIntRect(0, 0, 0, 0));
     if (NS_SUCCEEDED(rv)) {
       rv = mViewer->Open(nsnull, nsnull);
@@ -295,12 +299,29 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
                             const PRUnichar *aData)
 {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    // Sever ties from rendering observers to helper-doc's root SVG node
+    nsSVGSVGElement* svgElem = GetRootSVGElem();
+    if (svgElem) {
+#ifdef MOZ_ENABLE_LIBXUL
+      nsSVGEffects::RemoveAllRenderingObservers(svgElem);
+#else
+      // XXXdholbert Can't call static nsSVGEffects functions from imagelib in
+      // non-libxul builds -- so, this is a hack using a virtual function to
+      // have the SVG element call the method on our behalf.
+      svgElem->RemoveAllRenderingObservers();
+#endif // MOZ_ENABLE_LIBXUL
+    }
+
     // Clean up at XPCOM shutdown time.
     DestroyViewer();
     if (mListener)
       mListener = nsnull;
     if (mLoadGroup)
       mLoadGroup = nsnull;
+
+    // Turn off "registered" flag, or else we'll try to unregister when we die.
+    // (No need for that now, and the try would fail anyway -- it's too late.)
+    mRegisteredForXPCOMShutdown = PR_FALSE;
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
@@ -380,6 +401,8 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
 void
 SVGDocumentWrapper::RegisterForXPCOMShutdown()
 {
+  NS_ABORT_IF_FALSE(!mRegisteredForXPCOMShutdown,
+                    "re-registering for XPCOM shutdown");
   // Listen for xpcom-shutdown so that we can drop references to our
   // helper-document at that point. (Otherwise, we won't get cleaned up
   // until imgLoader::Shutdown, which can happen after the JAR service
@@ -388,8 +411,26 @@ SVGDocumentWrapper::RegisterForXPCOMShutdown()
   nsCOMPtr<nsIObserverService> obsSvc = do_GetService(OBSERVER_SVC_CID, &rv);
   if (NS_FAILED(rv) ||
       NS_FAILED(obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                    PR_FALSE))) {
+                                    PR_TRUE))) {
     NS_WARNING("Failed to register as observer of XPCOM shutdown");
+  } else {
+    mRegisteredForXPCOMShutdown = PR_TRUE;
+  }
+}
+
+void
+SVGDocumentWrapper::UnregisterForXPCOMShutdown()
+{
+  NS_ABORT_IF_FALSE(mRegisteredForXPCOMShutdown,
+                    "unregistering for XPCOM shutdown w/out being registered");
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> obsSvc = do_GetService(OBSERVER_SVC_CID, &rv);
+  if (NS_FAILED(rv) ||
+      NS_FAILED(obsSvc->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+    NS_WARNING("Failed to unregister as observer of XPCOM shutdown");
+  } else {
+    mRegisteredForXPCOMShutdown = PR_FALSE;
   }
 }
 

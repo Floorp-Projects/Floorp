@@ -41,7 +41,6 @@
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
 #include "nsSVGPathDataParser.h"
-#include "nsSVGPathSeg.h"
 #include "nsSVGPathElement.h" // for nsSVGPathList
 #include "nsSVGMpathElement.h"
 
@@ -253,13 +252,15 @@ SVGMotionSMILAnimationFunction::
   // Use the path that's the target of our chosen <mpath> child.
   nsSVGPathElement* pathElem = aMpathElem->GetReferencedPath();
   if (pathElem) {
-    const nsAttrValue* value = pathElem->GetParsedAttr(nsGkAtoms::d);
-    if (value) {
-      const nsAString& pathSpec = value->GetStringValue();
-      nsresult rv = SetPathVerticesFromPathString(pathSpec);
-      if (NS_SUCCEEDED(rv)) {
+    const SVGPathData &path = pathElem->GetAnimPathSegList()->GetAnimValue();
+    // Path data must contain of at least one path segment (if the path data
+    // doesn't begin with a valid "M", then it's invalid).
+    if (path.Length()) {
+      PRBool ok =
+        path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
+      if (ok && mPathVertices.Length()) {
         mPath = pathElem->GetFlattenedPath(
-          pathElem->PrependLocalTransformTo(gfxMatrix()));
+                  pathElem->PrependLocalTransformTo(gfxMatrix()));
       }
     }
   }
@@ -272,63 +273,23 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
   mPathSourceType = ePathSourceType_PathAttr;
 
   // Generate gfxFlattenedPath from |path| attr
-  nsresult rv;
-  nsSVGPathList pathData;
-  nsSVGPathDataParserToInternal pathParser(&pathData);
-  rv = pathParser.Parse(pathSpec);
-  if (NS_FAILED(rv)) {
-    // Parse error.
+  SVGPathData path;
+  nsSVGPathDataParserToInternal pathParser(&path);
+
+  // We ignore any failure returned from Parse() since the SVG spec says to
+  // accept all segments up to the first invalid token. Instead we must
+  // explicitly check that the parse produces at least one path segment (if
+  // the path data doesn't begin with a valid "M", then it's invalid).
+  pathParser.Parse(pathSpec);
+  if (!path.Length()) {
     return;
   }
-  mPath = pathData.GetFlattenedPath(gfxMatrix());
 
-  // Generate list of vertices from |path| attr
-  rv = SetPathVerticesFromPathString(pathSpec);
-
-  if (NS_FAILED(rv)) {
-    // The first parser liked our string, but the second did not. (unexpected,
-    // but possible depending on parser implementations.) Clear path so we
-    // completely (instead of partially) fail.
+  mPath = path.ToFlattenedPath(gfxMatrix());
+  PRBool ok = path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
+  if (!ok || !mPathVertices.Length()) {
     mPath = nsnull;
-    NS_WARNING("nsSVGPathDataParserToInternal successfully parsed path string, but "
-               "nsSVGPathDataParserToDOM did not");
   }
-}
-
-nsresult
-SVGMotionSMILAnimationFunction::SetPathVerticesFromPathString(const nsAString& aPathSpec)
-{
-  // Parse the string to an array of path segments.
-  nsCOMArray<nsIDOMSVGPathSeg> pathSegments;
-  nsSVGPathDataParserToDOM segmentParser(&pathSegments);
-  nsresult rv = segmentParser.Parse(aPathSpec);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Iterate across the parsed segments to populate our mPathVertices array.
-  PRUint32 numSegments = pathSegments.Count();
-  nsSVGPathSegTraversalState ts;
-  double runningDistTotal = 0.0;
-  for (PRUint32 i = 0; i < numSegments; ++i) {
-    nsSVGPathSeg* segment = static_cast<nsSVGPathSeg*>(pathSegments[i]);
-
-    PRUint16 type = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
-    segment->GetPathSegType(&type);
-    if (i == 0 ||
-        (type != nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS &&
-         type != nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL)) {
-
-      // Increment running length total (note that MoveTo's have 0 length)
-      runningDistTotal += segment->GetLength(&ts);
-
-      // Add an entry for the current point.
-      if (!mPathVertices.AppendElement(runningDistTotal)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-  }
-  return NS_OK;
 }
 
 // Helper to regenerate our path representation & its list of vertices

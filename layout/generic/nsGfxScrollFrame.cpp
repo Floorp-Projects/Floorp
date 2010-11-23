@@ -490,13 +490,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
 
   nsPresContext* presContext = PresContext();
 
-  // We're forcing the padding on our scrolled frame, so let it know what that
-  // padding is.
-  presContext->PropertyTable()->
-    Set(mInner.mScrolledFrame, UsedPaddingProperty(),
-        new nsMargin(aState->mReflowState.mComputedPadding));
-
-  // Pass PR_FALSE for aInit so we can pass in the correct padding
+  // Pass PR_FALSE for aInit so we can pass in the correct padding.
   nsHTMLReflowState kidReflowState(presContext, aState->mReflowState,
                                    mInner.mScrolledFrame,
                                    nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
@@ -1553,7 +1547,7 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
                "The root frame shouldn't be the one that's moving, that makes no sense");
 
   // Build the 'after' display list over the whole area of interest.
-  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
+  nsDisplayListBuilder builder(aRootFrame, nsDisplayListBuilder::OTHER, PR_TRUE);
   builder.EnterPresShell(aRootFrame, aUpdateRect);
   nsDisplayList list;
   nsresult rv =
@@ -2135,15 +2129,16 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsPresContext* presContext = mOuter->PresContext();
   nsIFrame* parent = mOuter->GetParent();
 
-  // Don't create scrollbars if we're printing/print previewing
-  // Get rid of this code when printing moves to its own presentation
-  if (!presContext->IsDynamic()) {
-    // allow scrollbars if this is the child of the viewport, because
-    // we must be the scrollbars for the print preview window
-    if (!(mIsRoot && presContext->HasPaginatedScrolling())) {
-      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
-      return NS_OK;
-    }
+  // Don't create scrollbars if we're an SVG document being used as an image,
+  // or if we're printing/print previewing.
+  // (In the printing case, we allow scrollbars if this is the child of the
+  // viewport & paginated scrolling is enabled, because then we must be the
+  // scroll frame for the print preview window, & that does need scrollbars.)
+  if (presContext->Document()->IsBeingUsedAsImage() ||
+      (!presContext->IsDynamic() &&
+       !(mIsRoot && presContext->HasPaginatedScrolling()))) {
+    mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
+    return NS_OK;
   }
 
   // Check if the frame is resizable.

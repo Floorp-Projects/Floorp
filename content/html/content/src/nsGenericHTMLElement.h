@@ -654,6 +654,29 @@ protected:
   NS_HIDDEN_(nsresult) SetIntAttr(nsIAtom* aAttr, PRInt32 aValue);
 
   /**
+   * Helper method for NS_IMPL_UINT_ATTR macro.
+   * Gets the unsigned integer-value of an attribute, returns specified default
+   * value if the attribute isn't set or isn't set to an integer. Only works for
+   * attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   * @param aResult  result value [out]
+   */
+  NS_HIDDEN_(nsresult) GetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aDefault,
+                                          PRUint32* aValue);
+
+  /**
+   * Helper method for NS_IMPL_UINT_ATTR macro.
+   * Sets value of attribute to specified unsigned integer. Only works for
+   * attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aValue   Integer value of attribute.
+   */
+  NS_HIDDEN_(nsresult) SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue);
+
+  /**
    * Helper method for NS_IMPL_FLOAT_ATTR macro.
    * Gets the float-value of an attribute, returns specified default value
    * if the attribute isn't set or isn't set to a float. Only works for
@@ -811,7 +834,7 @@ public:
   // nsIFormControl
   virtual mozilla::dom::Element* GetFormElement();
   virtual void SetForm(nsIDOMHTMLFormElement* aForm);
-  virtual void ClearForm(PRBool aRemoveFromForm, PRBool aNotify);
+  virtual void ClearForm(PRBool aRemoveFromForm);
 
   nsresult GetForm(nsIDOMHTMLFormElement** aForm);
 
@@ -1127,6 +1150,50 @@ protected:
   _class::Set##_method(PRInt32 aValue)                                    \
   {                                                                       \
     return SetIntAttr(nsGkAtoms::_atom, aValue);                        \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given unsigned integer
+ * valued content property. The method uses GetUnsignedIntAttr and
+ * SetUnsignedIntAttr methods.
+ */
+#define NS_IMPL_UINT_ATTR(_class, _method, _atom)                         \
+  NS_IMPL_UINT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0)
+
+#define NS_IMPL_UINT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(PRUint32* aValue)                                  \
+  {                                                                       \
+    return GetUnsignedIntAttr(nsGkAtoms::_atom, _default, aValue);        \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(PRUint32 aValue)                                   \
+  {                                                                       \
+    return SetUnsignedIntAttr(nsGkAtoms::_atom, aValue);                  \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given unsigned integer
+ * valued content property. The method uses GetUnsignedIntAttr and
+ * SetUnsignedIntAttr methods. This macro is similar to NS_IMPL_UINT_ATTR except
+ * that it throws an exception if the set value is null.
+ */
+#define NS_IMPL_UINT_ATTR_NON_ZERO(_class, _method, _atom)                \
+  NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(_class, _method, _atom, 1)
+
+#define NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(_class, _method, _atom, _default) \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(PRUint32* aValue)                                  \
+  {                                                                       \
+    return GetUnsignedIntAttr(nsGkAtoms::_atom, _default, aValue);        \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(PRUint32 aValue)                                   \
+  {                                                                       \
+    if (aValue == 0) {                                                    \
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
+    }                                                                     \
+    return SetUnsignedIntAttr(nsGkAtoms::_atom, aValue);                  \
   }
 
 /**
@@ -1493,6 +1560,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(Html)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(IFrame)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Image)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Input)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(IsIndex)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(LI)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Label)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Legend)

@@ -42,7 +42,7 @@ ExecutablePool::Allocation ExecutablePool::systemAlloc(size_t n)
 {
     void* allocation = mmap(NULL, n, INITIAL_PROTECTION_FLAGS, MAP_PRIVATE | MAP_ANON, VM_TAG_FOR_EXECUTABLEALLOCATOR_MEMORY, 0);
     if (allocation == MAP_FAILED)
-        CRASH();
+        allocation = NULL;
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }

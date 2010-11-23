@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Mozilla Foundation
+ * Copyright (c) 2008-2010 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,69 +20,92 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef jArray_h__
-#define jArray_h__
+#ifndef jArray_h_
+#define jArray_h_
 
-#define J_ARRAY_STATIC(T, L, arr) \
-  jArray<T,L>( ((T*)arr), (sizeof(arr)/sizeof(arr[0])) )
+#include "nsDebug.h"
 
 template<class T, class L>
-class jArray {
+struct staticJArray {
+  const T* arr;
+  const L length;
+  operator T*() { return arr; }
+  T& operator[] (L const index) { return ((T*)arr)[index]; }
+  L binarySearch(T const elem) {
+    L lo = 0;
+    L hi = length - 1;
+    while (lo <= hi) {
+      L mid = (lo + hi) / 2;
+      if (arr[mid] > elem) {
+        hi = mid - 1;
+      } else if (arr[mid] < elem) {
+        lo = mid + 1;
+      } else {
+        return mid;
+      }
+    }
+    return -1;
+  }
+};
+
+template<class T, class L>
+struct jArray {
+  T* arr;
+  L length;
+  static jArray<T,L> newJArray(L const len) {
+    NS_ASSERTION(len >= 0, "Bad length.");
+    jArray<T,L> newArray = { new T[len], len };
+    return newArray;
+  }
+  operator T*() { return arr; }
+  T& operator[] (L const index) { return arr[index]; }
+  void operator=(staticJArray<T,L>& other) {
+    arr = (T*)other.arr;
+    length = other.length;
+  }
+};
+
+template<class T, class L>
+class autoJArray {
   private:
     T* arr;
   public:
     L length;
-    jArray(T* const a, L const len);
-    jArray(L const len);
-    jArray(const jArray<T,L>& other);
-    jArray();
+    autoJArray()
+     : arr(0)
+     , length(0)
+    {
+    }
+    autoJArray(const jArray<T,L>& other)
+     : arr(other.arr)
+     , length(other.length)
+    {
+    }
+    ~autoJArray()
+    {
+      delete[] arr;
+    }
     operator T*() { return arr; }
     T& operator[] (L const index) { return arr[index]; }
-    void release() { delete[] arr; arr = 0; length = 0; }
-    L binarySearch(T const elem);
+    operator jArray<T,L>() {
+      // WARNING! This makes it possible to goof with buffer ownership!
+      // This is needed for the getStack and getListOfActiveFormattingElements
+      // methods to work sensibly.
+      jArray<T,L> newArray = { arr, length };
+      return newArray;
+    }
+    void operator=(const jArray<T,L>& other) {
+      delete[] arr;
+      arr = other.arr;
+      length = other.length;
+    }
+    void operator=(L zero) {
+      // Make assigning null to an array in Java delete the buffer in C++
+      NS_ASSERTION(!zero, "Non-zero integer assigned to jArray.");
+      delete[] arr;
+      arr = 0;
+      length = 0;
+    }
 };
 
-template<class T, class L>
-jArray<T,L>::jArray(T* const a, L const len)
-       : arr(a), length(len)
-{
-}
-
-template<class T, class L>
-jArray<T,L>::jArray(L const len)
-       : arr(len ? new T[len] : 0), length(len)
-{
-}
-
-template<class T, class L>
-jArray<T,L>::jArray(const jArray<T,L>& other)
-       : arr(other.arr), length(other.length)
-{
-}
-
-template<class T, class L>
-jArray<T,L>::jArray()
-       : arr(0), length(0)
-{
-}
-
-template<class T, class L>
-L
-jArray<T,L>::binarySearch(T const elem)
-{
-  L lo = 0;
-  L hi = length - 1;
-  while (lo <= hi) {
-    L mid = (lo + hi) / 2;
-    if (arr[mid] > elem) {
-      hi = mid - 1;
-    } else if (arr[mid] < elem) {
-      lo = mid + 1;
-    } else {
-      return mid;
-    }
-  }
-  return -1;
-}
-
-#endif // jArray_h__
+#endif // jArray_h_

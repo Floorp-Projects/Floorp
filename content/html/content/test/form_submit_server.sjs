@@ -14,13 +14,12 @@ function utf8encode(s) {
 function handleRequest(request, response)
 {
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
-  var bodyBytes = [];
   var result = [];
+  var requestBody = "";
   while ((bodyAvail = bodyStream.available()) > 0)
-    Array.prototype.push.apply(bodyBytes, bodyStream.readByteArray(bodyAvail));
+    requestBody += bodyStream.readBytes(bodyAvail);
 
   if (request.method == "POST") {
-    var requestBody = String.fromCharCode.apply(null, bodyBytes);
 
     var contentTypeParams = {};
     request.getHeader("Content-Type").split(/\s*\;\s*/).forEach(function(s) {
@@ -54,27 +53,15 @@ function handleRequest(request, response)
     }
     if (contentTypeParams[''] == "text/plain" &&
         request.queryString == "plain") {
-      requestBody.split("\r\n").slice(0, -1).forEach(function (s) {
-        let index = s.indexOf("=");
-        result.push({ name: s.substr(0, index),
-                      value: s.substr(index + 1) });
-      });
+      result = requestBody;
     }
     if (contentTypeParams[''] == "application/x-www-form-urlencoded" &&
         request.queryString == "url") {
-      requestBody.split("&").forEach(function (s) {
-        let index = s.indexOf("=");
-        result.push({ name: unescape(s.substr(0, index)),
-                      value: unescape(s.substr(index + 1)) });
-      });
+      result = requestBody;
     }
   }
   else if (request.method == "GET") {
-    request.queryString.split("&").forEach(function (s) {
-      let index = s.indexOf("=");
-      result.push({ name: unescape(s.substr(0, index)),
-                    value: unescape(s.substr(index + 1)) });
-    });
+    result = request.queryString;
   }
 
   // Send response body

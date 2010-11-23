@@ -137,9 +137,8 @@ public:
    *
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
-   * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    */
-  virtual void ClearForm(PRBool aRemoveFromForm, PRBool aNotify) = 0;
+  virtual void ClearForm(PRBool aRemoveFromForm) = 0;
 
   /**
    * Get the type of this control as an int (see NS_FORM_* above)

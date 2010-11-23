@@ -152,23 +152,45 @@ gfxUnicodeProperties::GetScriptCode(PRUint32 aCh)
 // function, is compared to the gfx.font_rendering.harfbuzz.level
 // preference to decide whether to use the harfbuzz shaper.
 //
-// Currently, we only distinguish "simple" (level 1) scripts
-// and "the rest" (level 2), but may subdivide this further in
-// the future.
+// Currently, we only distinguish "simple" (level 1) scripts,
+// Arabic-style cursive scripts (level 2),
+// and "Indic or other complex scripts" (level 3),
+// but may subdivide this further in the future.
 PRInt32
 gfxUnicodeProperties::ScriptShapingLevel(PRInt32 aScriptCode)
 {
     switch (aScriptCode) {
-    case HB_SCRIPT_LATIN:
-    case HB_SCRIPT_CYRILLIC:
-    case HB_SCRIPT_HAN:
-    case HB_SCRIPT_HIRAGANA:
-    case HB_SCRIPT_KATAKANA:
-    case HB_SCRIPT_COMMON:
-    case HB_SCRIPT_INHERITED:
-    case HB_SCRIPT_UNKNOWN:
-        return 1; // level 1: common scripts that can use "generic" shaping
-    }
+    default:
+        return 1; // scripts not explicitly listed here are considered
+                  // level 1: default shaping behavior is adequate
 
-    return 2; // all others are considered level 2
+    case HB_SCRIPT_ARABIC:
+    case HB_SCRIPT_SYRIAC:
+    case HB_SCRIPT_NKO:
+        return 2; // level 2: bidi scripts with Arabic-style shaping
+
+    case HB_SCRIPT_HEBREW:
+    case HB_SCRIPT_HANGUL:
+    case HB_SCRIPT_BENGALI:
+    case HB_SCRIPT_DEVANAGARI:
+    case HB_SCRIPT_GUJARATI:
+    case HB_SCRIPT_GURMUKHI:
+    case HB_SCRIPT_KANNADA:
+    case HB_SCRIPT_MALAYALAM:
+    case HB_SCRIPT_ORIYA:
+    case HB_SCRIPT_TAMIL:
+    case HB_SCRIPT_TELUGU:
+    case HB_SCRIPT_KHMER:
+    case HB_SCRIPT_THAI:
+    case HB_SCRIPT_LAO:
+    case HB_SCRIPT_TIBETAN:
+    case HB_SCRIPT_NEW_TAI_LUE:
+    case HB_SCRIPT_TAI_LE:
+    case HB_SCRIPT_MONGOLIAN:
+    case HB_SCRIPT_MYANMAR:
+    case HB_SCRIPT_PHAGS_PA:
+    case HB_SCRIPT_BATAK:
+    case HB_SCRIPT_BRAHMI:
+        return 3; // scripts that require Indic or other "special" shaping
+    }
 }

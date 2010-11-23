@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef ANDROID
+# include <android/log.h>
 # include <fstream>
 # include <string>
 #endif  // ANDROID
@@ -397,7 +398,7 @@ StackSpace::pushGeneratorFrame(JSContext *cx, JSFrameRegs *regs, GeneratorFrameG
 bool
 StackSpace::bumpCommitAndLimit(JSStackFrame *base, Value *sp, uintN nvals, Value **limit) const
 {
-    JS_ASSERT(sp == firstUnused());
+    JS_ASSERT(sp >= firstUnused());
     JS_ASSERT(sp + nvals >= *limit);
 #ifdef XP_WIN
     if (commitEnd <= *limit) {
@@ -735,22 +736,6 @@ js_PurgeThreads(JSContext *cx)
 #else
     cx->runtime->threadData.purge(cx);
 #endif
-}
-
-bool
-js::SyncOptionsToVersion(JSContext* cx)
-{
-    JSVersion version = cx->findVersion();
-    uint32 options = cx->options;
-    if (OptionsHasXML(options) == VersionHasXML(version) &&
-        OptionsHasAnonFunFix(options) == VersionHasAnonFunFix(version)) {
-        /* No need to override. */
-        return false;
-    }
-    VersionSetXML(&version, OptionsHasXML(options));
-    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
-    cx->maybeOverrideVersion(version);
-    return true;
 }
 
 JSContext *
@@ -2232,8 +2217,23 @@ ComputeIsJITBroken()
         return false;
     }
 
-    bool broken = false;
     std::string line;
+
+    // Check for the known-bad kernel version (2.6.29).
+    std::ifstream osrelease("/proc/sys/kernel/osrelease");
+    std::getline(osrelease, line);
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Detected osrelease `%s'",
+                        line.c_str());
+
+    if (line.npos == line.find("2.6.29")) {
+        // We're using something other than 2.6.29, so the JITs should work.
+        __android_log_print(ANDROID_LOG_INFO, "Gecko", "JITs are not broken");
+        return false;
+    }
+
+    // We're using 2.6.29, and this causes trouble with the JITs on i9000.
+    line = "";
+    bool broken = false;
     std::ifstream cpuinfo("/proc/cpuinfo");
     do {
         if (0 == line.find("Hardware")) {
@@ -2247,6 +2247,8 @@ ComputeIsJITBroken()
             };
             for (const char** hw = &blacklist[0]; *hw; ++hw) {
                 if (line.npos != line.find(*hw)) {
+                    __android_log_print(ANDROID_LOG_INFO, "Gecko",
+                                        "Blacklisted device `%s'", *hw);
                     broken = true;
                     break;
                 }
@@ -2255,6 +2257,10 @@ ComputeIsJITBroken()
         }
         std::getline(cpuinfo, line);
     } while(!cpuinfo.fail() && !cpuinfo.eof());
+
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "JITs are %sbroken",
+                        broken ? "" : "not ");
+
     return broken;
 #endif  // ifndef ANDROID
 }

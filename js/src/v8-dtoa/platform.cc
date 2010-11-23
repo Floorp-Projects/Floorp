@@ -128,7 +128,7 @@ int fpclassify(double x) {
     case FP_PDENORM: return FP_SUBNORMAL;
     case FP_NZERO:
     case FP_PZERO: return FP_ZERO;
-
+    default:
     ASSERT(rv == FP_NNORM || rv == FP_PNORM);
     return FP_NORMAL;
   }

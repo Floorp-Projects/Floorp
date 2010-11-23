@@ -61,6 +61,7 @@ parent:
   CloseCacheEntry(nsresult reason);
   SetCharsetAndSource(PRInt32 source, nsCString charset);
   SetSecurityInfo(nsCString securityInfo);
+  Cancel(nsresult status);
 
 child:
   OnStartRequest(nsresult  statusCode,
@@ -73,6 +74,8 @@ child:
                   PRUint32  offset);
 
   OnStopRequest(nsresult statusCode);
+
+  CancelEarly(nsresult statusCode);
 };
 
 

@@ -1358,7 +1358,6 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   // and 'narrower' values of 'font-stretch' depend on the parent.
   const nsCSSValue& size = fontData.mSize;
   const nsCSSValue& weight = fontData.mWeight;
-  const nsCSSValue& stretch = fontData.mStretch;
   if (size.IsRelativeLengthUnit() ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
@@ -1367,9 +1366,6 @@ CheckFontCallback(const nsRuleDataStruct& aData,
 #ifdef MOZ_MATHML
       fontData.mScriptLevel.GetUnit() == eCSSUnit_Integer ||
 #endif
-      (stretch.GetUnit() == eCSSUnit_Enumerated &&
-       (stretch.GetIntValue() == NS_FONT_STRETCH_NARROWER ||
-        stretch.GetIntValue() == NS_FONT_STRETCH_WIDER)) ||
       (weight.GetUnit() == eCSSUnit_Enumerated &&
        (weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_BOLDER ||
         weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_LIGHTER))) {
@@ -3008,11 +3004,30 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       case NS_STYLE_FONT_WEIGHT_BOLD:
         aFont->mFont.weight = value;
         break;
-      case NS_STYLE_FONT_WEIGHT_BOLDER:
-      case NS_STYLE_FONT_WEIGHT_LIGHTER:
+      case NS_STYLE_FONT_WEIGHT_BOLDER: {
         aCanStoreInRuleTree = PR_FALSE;
-        aFont->mFont.weight = nsStyleUtil::ConstrainFontWeight(aParentFont->mFont.weight + value);
+        PRInt32 inheritedValue = aParentFont->mFont.weight;
+        if (inheritedValue <= 300) {
+          aFont->mFont.weight = 400;
+        } else if (inheritedValue <= 500) {
+          aFont->mFont.weight = 700;
+        } else {
+          aFont->mFont.weight = 900;
+        }
         break;
+      }
+      case NS_STYLE_FONT_WEIGHT_LIGHTER: {
+        aCanStoreInRuleTree = PR_FALSE;
+        PRInt32 inheritedValue = aParentFont->mFont.weight;
+        if (inheritedValue < 600) {
+          aFont->mFont.weight = 100;
+        } else if (inheritedValue < 800) {
+          aFont->mFont.weight = 400;
+        } else {
+          aFont->mFont.weight = 700;
+        }
+        break;
+      }
     }
   } else
     SetDiscrete(aFontData.mWeight, aFont->mFont.weight, aCanStoreInRuleTree,
@@ -3021,25 +3036,12 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                 defaultVariableFont->weight,
                 0, 0, 0, systemFont.weight);
 
-  // font-stretch: enum, inherit
-  if (eCSSUnit_Enumerated == aFontData.mStretch.GetUnit()) {
-    PRInt32 value = aFontData.mStretch.GetIntValue();
-    switch (value) {
-      case NS_FONT_STRETCH_WIDER:
-      case NS_FONT_STRETCH_NARROWER:
-        aCanStoreInRuleTree = PR_FALSE;
-        aFont->mFont.stretch = aParentFont->mFont.stretch + value;
-        break;
-      default:
-        aFont->mFont.stretch = value;
-        break;
-    }
-  } else
-    SetDiscrete(aFontData.mStretch, aFont->mFont.stretch, aCanStoreInRuleTree,
-                SETDSC_SYSTEM_FONT,
-                aParentFont->mFont.stretch,
-                defaultVariableFont->stretch,
-                0, 0, 0, systemFont.stretch);
+  // font-stretch: enum, inherit, initial, -moz-system-font
+  SetDiscrete(aFontData.mStretch, aFont->mFont.stretch, aCanStoreInRuleTree,
+              SETDSC_SYSTEM_FONT | SETDSC_ENUMERATED,
+              aParentFont->mFont.stretch,
+              defaultVariableFont->stretch,
+              0, 0, 0, systemFont.stretch);
 
 #ifdef MOZ_MATHML
   // Compute scriptlevel, scriptminsize and scriptsizemultiplier now so

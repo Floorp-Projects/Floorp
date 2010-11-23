@@ -56,7 +56,7 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
    * write to the color buffer.  This saves a needless
    * multiply in the fragment shader.
    */
-  float opacity = aLayer->GetOpacity();
+  float opacity = aLayer->GetEffectiveOpacity();
   gfxRGBA color(aLayer->GetColor());
   color.r *= opacity;
   color.g *= opacity;

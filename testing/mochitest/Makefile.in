@@ -133,12 +133,6 @@ libs:: $(_MOD_PYWEBSOCKET_FILES)
 libs:: $(_HANDSHAKE_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket/mod_pywebsocket/handshake
 
-runtests.py: runtests.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(DEFINES) $(ACDEFINES) $^ > $@
-
-GARBAGE += runtests.py
-
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
 

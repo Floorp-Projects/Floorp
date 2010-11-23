@@ -6,6 +6,7 @@ include button/reftest.list
 include input/reftest.list
 include select/reftest.list
 include textarea/reftest.list
+include output/reftest.list
 
 # default :invalid style
 include default-style/reftest.list

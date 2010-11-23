@@ -85,6 +85,18 @@ namespace dom = mozilla::dom;
 
 PRUint32 nsDocAccessible::gLastFocusedAccessiblesState = 0;
 
+static nsIAtom** kRelationAttrs[] =
+{
+  &nsAccessibilityAtoms::aria_labelledby,
+  &nsAccessibilityAtoms::aria_describedby,
+  &nsAccessibilityAtoms::aria_owns,
+  &nsAccessibilityAtoms::aria_controls,
+  &nsAccessibilityAtoms::aria_flowto,
+  &nsAccessibilityAtoms::_for,
+  &nsAccessibilityAtoms::control
+};
+
+static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/desctructor
@@ -93,8 +105,10 @@ nsDocAccessible::
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
                   nsIWeakReference *aShell) :
   nsHyperTextAccessibleWrap(aRootContent, aShell),
-  mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE)
+  mDocument(aDocument), mScrollPositionChangedTicks(0), mIsLoaded(PR_FALSE),
+  mCacheRoot(nsnull), mIsPostCacheProcessing(PR_FALSE)
 {
+  mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessibleCache.Init(kDefaultCacheSize);
   mNodeToAccessibleMap.Init(kDefaultCacheSize);
@@ -134,6 +148,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEventQueue)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mChildDocuments)
+  tmp->mDependentIDsHash.Clear();
   tmp->mNodeToAccessibleMap.Clear();
   ClearCache(tmp->mAccessibleCache);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -155,8 +170,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
     // However at some point we may push <body> to implement the interfaces and
     // return nsDocAccessible to inherit from nsAccessibleWrap.
 
-    nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDocument));
-    if (xulDoc)
+    if (mDocument && mDocument->IsXUL())
       status = nsAccessible::QueryInterface(aIID, (void**)&foundInterface);
     else
       status = nsHyperTextAccessible::QueryInterface(aIID,
@@ -285,8 +299,12 @@ nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     return NS_OK_DEFUNCT_OBJECT;
   }
 
-  if (aExtraState)
-    *aExtraState = 0;
+  if (aExtraState) {
+    // The root content of the document might be removed so that mContent is
+    // out of date.
+    *aExtraState = (mContent->GetCurrentDoc() == mDocument) ?
+      0 : nsIAccessibleStates::EXT_STATE_STALE;
+  }
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
@@ -301,7 +319,7 @@ nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
       *aState |= nsIAccessibleStates::STATE_FOCUSED;
   }
 
-  if (nsCoreUtils::IsDocumentBusy(mDocument)) {
+  if (!mIsLoaded) {
     *aState |= nsIAccessibleStates::STATE_BUSY;
     if (aExtraState) {
       *aExtraState |= nsIAccessibleStates::EXT_STATE_STALE;
@@ -595,31 +613,6 @@ nsDocAccessible::GetCachedAccessible(nsINode *aNode)
   return accessible;
 }
 
-// nsDocAccessible public method
-PRBool
-nsDocAccessible::CacheAccessible(nsAccessible* aAccessible)
-{
-  if (aAccessible->IsPrimaryForNode() &&
-      !mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible))
-    return PR_FALSE;
-
-  return mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible);
-}
-
-// nsDocAccessible public method
-void
-nsDocAccessible::ShutdownAccessible(nsAccessible *aAccessible)
-{
-  // Remove an accessible from node to accessible map if it is presented there.
-  if (aAccessible->IsPrimaryForNode() &&
-      mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
-    mNodeToAccessibleMap.Remove(aAccessible->GetNode());
-
-  void* uniqueID = aAccessible->UniqueID();
-  aAccessible->Shutdown();
-  mAccessibleCache.Remove(uniqueID);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNode
 
@@ -675,14 +668,17 @@ nsDocAccessible::Shutdown()
     mParent->RemoveChild(this);
   }
 
-  PRUint32 childDocCount = mChildDocuments.Length();
-  for (PRUint32 idx = 0; idx < childDocCount; idx++)
+  // Walk the array backwards because child documents remove themselves from the
+  // array as they are shutdown.
+  PRInt32 childDocCount = mChildDocuments.Length();
+  for (PRInt32 idx = childDocCount - 1; idx >= 0; idx--)
     mChildDocuments[idx]->Shutdown();
 
   mChildDocuments.Clear();
 
   mWeakShell = nsnull;  // Avoid reentrancy
 
+  mDependentIDsHash.Clear();
   mNodeToAccessibleMap.Clear();
   ClearCache(mAccessibleCache);
 
@@ -948,10 +944,19 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, PRInt32 aModType)
 {
-  // XXX TODO: bugs 381599 467143 472142 472143
+  // XXX TODO: bugs 467143, 472142, 472143.
   // Here we will want to cache whatever state we are potentially interested in,
   // such as the existence of aria-pressed for button (so we know if we need to
   // newly expose it as a toggle button) etc.
+
+  // Update dependent IDs cache.
+  if (aModType == nsIDOMMutationEvent::MODIFICATION ||
+      aModType == nsIDOMMutationEvent::REMOVAL) {
+    nsAccessible* accessible =
+      GetAccService()->GetAccessibleInWeakShell(aElement, mWeakShell);
+    if (accessible)
+      RemoveDependentIDsFor(accessible, aAttribute);
+  }
 }
 
 void
@@ -961,6 +966,16 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
                                   PRInt32 aModType)
 {
   AttributeChangedImpl(aElement, aNameSpaceID, aAttribute);
+
+  // Update dependent IDs cache.
+  if (aModType == nsIDOMMutationEvent::MODIFICATION ||
+      aModType == nsIDOMMutationEvent::ADDITION) {
+    nsAccessible* accessible =
+      GetAccService()->GetAccessibleInWeakShell(aElement, mWeakShell);
+
+    if (accessible)
+      AddDependentIDsFor(accessible, aAttribute);
+  }
 
   // If it was the focused node, cache the new state
   if (aElement == gLastFocusedNode) {
@@ -1043,8 +1058,21 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     }
   }
 
-  if (aAttribute == nsAccessibilityAtoms::role ||
-      aAttribute == nsAccessibilityAtoms::href ||
+  if (aAttribute == nsAccessibilityAtoms::role) {
+    if (mContent == aContent) {
+      // It is common for js libraries to set the role of the body element after
+      // the doc has loaded. In this case we just update the role map entry. 
+      SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aContent));
+    }
+    else {
+      // Recreate the accessible when role is changed because we might require a
+      // different accessible class for the new role or the accessible may
+      // expose a different sets of interfaces (COM restriction).
+      RecreateAccessible(aContent);
+    }
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::href ||
       aAttribute == nsAccessibilityAtoms::onclick) {
     // Not worth the expense to ensure which namespace these are in
     // It doesn't kill use to recreate the accessible even if the attribute was used
@@ -1239,12 +1267,17 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent2,
                                            nsEventStates aStateMask)
 {
-  if (!aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
-    return;
+  if (aStateMask.HasState(NS_EVENT_STATE_CHECKED)) {
+    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
+    nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
   }
 
-  nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
-  nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
+  if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent1, nsIAccessibleStates::STATE_INVALID,
+                              PR_FALSE, PR_TRUE);
+    FireDelayedAccessibleEvent(event);
+   }
 }
 
 void nsDocAccessible::DocumentStatesChanged(nsIDocument* aDocument,
@@ -1334,6 +1367,61 @@ nsDocAccessible::GetCachedAccessibleByUniqueIDInSubtree(void* aUniqueID)
   return nsnull;
 }
 
+bool
+nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
+                                nsRoleMapEntry* aRoleMapEntry)
+{
+  if (!aAccessible)
+    return false;
+
+  // Put into DOM node cache.
+  if (aAccessible->IsPrimaryForNode() &&
+      !mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible))
+    return false;
+
+  // Put into unique ID cache.
+  if (!mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible)) {
+    if (aAccessible->IsPrimaryForNode())
+      mNodeToAccessibleMap.Remove(aAccessible->GetNode());
+
+    return false;
+  }
+
+  // Initialize the accessible.
+  if (!aAccessible->Init()) {
+    NS_ERROR("Failed to initialize an accessible!");
+
+    UnbindFromDocument(aAccessible);
+    return false;
+  }
+
+  aAccessible->SetRoleMapEntry(aRoleMapEntry);
+  AddDependentIDsFor(aAccessible);
+  return true;
+}
+
+void
+nsDocAccessible::UnbindFromDocument(nsAccessible* aAccessible)
+{
+  NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
+               "Unbinding the unbound accessible!");
+
+  // Remove an accessible from node-to-accessible map if it exists there.
+  if (aAccessible->IsPrimaryForNode() &&
+      mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
+    mNodeToAccessibleMap.Remove(aAccessible->GetNode());
+
+  if (!aAccessible->IsDefunct())
+    RemoveDependentIDsFor(aAccessible);
+
+  void* uniqueID = aAccessible->UniqueID();
+
+  NS_ASSERTION(!aAccessible->IsDefunct(), "Shutdown the shutdown accessible!");
+  aAccessible->Shutdown();
+
+  mAccessibleCache.Remove(uniqueID);
+}
+
 void
 nsDocAccessible::UpdateTree(nsIContent* aContainerNode,
                             nsIContent* aStartNode,
@@ -1346,22 +1434,47 @@ nsDocAccessible::UpdateTree(nsIContent* aContainerNode,
   // Since this information may be not correct then we need to fire some events
   // regardless the document loading state.
 
+  // Update the whole tree of this document accessible when the container is
+  // null (document element is inserted or removed).
+
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   nsIEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
   PRBool fireAllEvents = PR_TRUE;//IsContentLoaded() || esm->IsHandlingUserInputExternal();
 
-  // We don't create new accessibles on content removal.
-  nsAccessible* container = aIsInsert ?
-    GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
-    GetAccService()->GetCachedAccessibleOrContainer(aContainerNode);
-
+  // XXX: bug 608887 reconsider accessible tree update logic because
+  // 1) elements appended outside the HTML body don't get accessibles;
+  // 2) the document having elements that should be accessible may function
+  // without body.
+  nsAccessible* container = nsnull;
   if (aIsInsert) {
+    container = aContainerNode ?
+      GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
+      this;
+
+    // The document children were changed; the root content might be affected.
+    if (container == this) {
+      // If new root content has been inserted then update it.
+      nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
+      if (rootContent && rootContent != mContent)
+        mContent = rootContent;
+
+      // Continue to update the tree even if we don't have root content.
+      // For example, elements may be inserted under the document element while
+      // there is no HTML body element.
+    }
+
     // XXX: Invalidate parent-child relations for container accessible and its
     // children because there's no good way to find insertion point of new child
     // accessibles into accessible tree. We need to invalidate children even
     // there's no inserted accessibles in the end because accessible children
     // are created while parent recaches child accessibles.
     container->InvalidateChildren();
+
+  } else {
+    // Don't create new accessibles on content removal.
+    container = aContainerNode ?
+      GetAccService()->GetCachedAccessibleOrContainer(aContainerNode) :
+      this;
   }
 
   EIsFromUserInput fromUserInput = esm->IsHandlingUserInputExternal() ?
@@ -1478,8 +1591,157 @@ nsDocAccessible::RecreateAccessible(nsINode* aNode)
   }
 }
 
+void
+nsDocAccessible::NotifyOfCachingStart(nsAccessible* aAccessible)
+{
+  if (!mCacheRoot)
+    mCacheRoot = aAccessible;
+}
+
+void
+nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
+{
+  if (mCacheRoot == aAccessible && !mIsPostCacheProcessing) {
+    // Allow invalidation list insertions while container children are recached.
+    mIsPostCacheProcessing = PR_TRUE;
+
+    // Invalidate children of container accessible for each element in
+    // invalidation list.
+    for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
+      nsIContent* content = mInvalidationList[idx];
+      nsAccessible* container =
+        GetAccService()->GetCachedContainerAccessible(content);
+      container->InvalidateChildren();
+
+      // Make sure we keep children updated. While we're inside of caching loop
+      // then we must exist it with cached children.
+      container->EnsureChildren();
+    }
+    mInvalidationList.Clear();
+
+    mCacheRoot = nsnull;
+    mIsPostCacheProcessing = PR_FALSE;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible protected
+
+void
+nsDocAccessible::CacheChildren()
+{
+  // Search for accessible children starting from the document element since
+  // some web pages tend to insert elements under it rather than document body.
+  nsAccTreeWalker walker(mWeakShell, mDocument->GetRootElement(),
+                         GetAllowsAnonChildAccessibles());
+
+  nsRefPtr<nsAccessible> child;
+  while ((child = walker.GetNextChild()) && AppendChild(child));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Protected members
+
+void
+nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
+                                    nsIAtom* aRelAttr)
+{
+  for (PRUint32 idx = 0; idx < kRelationAttrsLen; idx++) {
+    nsIAtom* relAttr = *kRelationAttrs[idx];
+    if (aRelAttr && aRelAttr != relAttr)
+      continue;
+
+    if (relAttr == nsAccessibilityAtoms::_for) {
+      if (!aRelProvider->GetContent()->IsHTML() ||
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::label &&
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::output)
+        continue;
+
+    } else if (relAttr == nsAccessibilityAtoms::control) {
+      if (!aRelProvider->GetContent()->IsXUL() ||
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::label &&
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::description)
+        continue;
+    }
+
+    IDRefsIterator iter(aRelProvider->GetContent(), relAttr);
+    while (true) {
+      const nsDependentSubstring id = iter.NextID();
+      if (id.IsEmpty())
+        break;
+
+      AttrRelProviderArray* providers = mDependentIDsHash.Get(id);
+      if (!providers) {
+        providers = new AttrRelProviderArray();
+        if (providers) {
+          if (!mDependentIDsHash.Put(id, providers)) {
+            delete providers;
+            providers = nsnull;
+          }
+        }
+      }
+
+      if (providers) {
+        AttrRelProvider* provider =
+          new AttrRelProvider(relAttr, aRelProvider->GetContent());
+        if (provider) {
+          providers->AppendElement(provider);
+
+          // We've got here during the children caching. If the referenced
+          // content is not accessible then store it to pend its container
+          // children invalidation (this happens immediately after the caching
+          // is finished).
+          nsIContent* dependentContent = iter.GetElem(id);
+          if (dependentContent && !GetCachedAccessible(dependentContent)) {
+            mInvalidationList.AppendElement(dependentContent);
+          }
+        }
+      }
+    }
+
+    // If the relation attribute is given then we don't have anything else to
+    // check.
+    if (aRelAttr)
+      break;
+  }
+}
+
+void
+nsDocAccessible::RemoveDependentIDsFor(nsAccessible* aRelProvider,
+                                       nsIAtom* aRelAttr)
+{
+  for (PRUint32 idx = 0; idx < kRelationAttrsLen; idx++) {
+    nsIAtom* relAttr = *kRelationAttrs[idx];
+    if (aRelAttr && aRelAttr != *kRelationAttrs[idx])
+      continue;
+
+    IDRefsIterator iter(aRelProvider->GetContent(), relAttr);
+    while (true) {
+      const nsDependentSubstring id = iter.NextID();
+      if (id.IsEmpty())
+        break;
+
+      AttrRelProviderArray* providers = mDependentIDsHash.Get(id);
+      if (providers) {
+        for (PRUint32 jdx = 0; jdx < providers->Length(); ) {
+          AttrRelProvider* provider = (*providers)[jdx];
+          if (provider->mRelAttr == relAttr &&
+              provider->mContent == aRelProvider->GetContent())
+            providers->RemoveElement(provider);
+          else
+            jdx++;
+        }
+        if (providers->Length() == 0)
+          mDependentIDsHash.Remove(id);
+      }
+    }
+
+    // If the relation attribute is given then we don't have anything else to
+    // check.
+    if (aRelAttr)
+      break;
+  }
+}
 
 void
 nsDocAccessible::FireValueChangeForTextFields(nsAccessible *aAccessible)
@@ -1723,10 +1985,6 @@ nsDocAccessible::UncacheChildrenInSubtree(nsAccessible* aRoot)
 void
 nsDocAccessible::ShutdownChildrenInSubtree(nsAccessible* aAccessible)
 {
-#ifdef DEBUG
-  nsAccessible* incache = mAccessibleCache.GetWeak(aAccessible->UniqueID());
-#endif
-
   // Traverse through children and shutdown them before this accessible. When
   // child gets shutdown then it removes itself from children array of its
   //parent. Use jdx index to process the cases if child is not attached to the
@@ -1742,6 +2000,6 @@ nsDocAccessible::ShutdownChildrenInSubtree(nsAccessible* aAccessible)
     ShutdownChildrenInSubtree(child);
   }
 
-  ShutdownAccessible(aAccessible);
+  UnbindFromDocument(aAccessible);
 }
 

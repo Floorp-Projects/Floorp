@@ -47,12 +47,15 @@
 
 #include "ContentChild.h"
 #include "TabChild.h"
+#include "AudioChild.h"
 
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
+
+#include "nsAudioStream.h"
 
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
@@ -287,6 +290,22 @@ ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
     return true;
 }
 
+PAudioChild*
+ContentChild::AllocPAudio(const PRInt32& numChannels,
+                          const PRInt32& rate,
+                          const PRInt32& format)
+{
+    PAudioChild *child = new AudioChild();
+    return child;
+}
+
+bool
+ContentChild::DeallocPAudio(PAudioChild* doomed)
+{
+    delete doomed;
+    return true;
+}
+
 PNeckoChild* 
 ContentChild::AllocPNecko()
 {
@@ -305,7 +324,8 @@ ContentChild::AllocPExternalHelperApp(const IPC::URI& uri,
                                       const nsCString& aMimeContentType,
                                       const nsCString& aContentDisposition,
                                       const bool& aForceSave,
-                                      const PRInt64& aContentLength)
+                                      const PRInt64& aContentLength,
+                                      const IPC::URI& aReferrer)
 {
     ExternalHelperAppChild *child = new ExternalHelperAppChild();
     child->AddRef();
@@ -321,9 +341,9 @@ ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
 }
 
 bool
-ContentChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
-                                 const nsTArray<ResourceMapping>& resources,
-                                 const nsTArray<OverrideMapping>& overrides)
+ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
+                                 const InfallibleTArray<ResourceMapping>& resources,
+                                 const InfallibleTArray<OverrideMapping>& overrides)
 {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryContent* chromeRegistry =

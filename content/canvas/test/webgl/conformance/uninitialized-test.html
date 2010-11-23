@@ -6,13 +6,12 @@
 	<link rel="stylesheet" href="../resources/js-test-style.css"/>
 	<script src="../resources/js-test-pre.js"></script>
 	<script src="resources/webgl-test.js"></script>
-	<script src="resources/testrunner.js"></script>
 </head>
 <body>
 <div id="description"></div>
 <div id="console"></div>
 <canvas id="canvas" width="2" height="2"> </canvas>
-<script><!--
+<script>
 description("Tests to check user code cannot access uninitialized data from GL resources.");
 
 var canvas = document.getElementById("canvas");
@@ -23,66 +22,71 @@ else
   testPassed("Context created.");
 
 
-/* object containing all tests in this testsuite */
-var uninitializedTests = {
-	"Reading an uninitialized texture should succeed with all bytes set to 0." : function () {
-		this._width = 512;
-		this._height = 512;
-		this._bpp = 4;
-		this._expectedDataLength = this._width*this._height*this._bpp;
+debug("Reading an uninitialized texture should succeed with all bytes set to 0.");
 
-		this.setup = function () {
-			var tex = gl.createTexture();
-			gl.bindTexture(gl.TEXTURE_2D, tex);
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._width, this._height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+var width = 512;
+var height = 512;
+var bpp = 4;
+var expectedDataLength = width*height*bpp;
 
-			// this can be quite undeterministic so to improve odds of seeing uninitialized data write bits
-			// into tex then delete texture then re-create one with same characteristics (driver will likely reuse mem)
-			// with this trick on r59046 WebKit/OSX I get FAIL 100% of the time instead of ~15% of the time.
-			var badData = new Uint8Array(this._expectedDataLength);
-			for (var i = 0; i < badData.length; ++i) badData[i] = i % 255;
-			gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this._width, this._height, gl.RGBA, gl.UNSIGNED_BYTE, badData);
-			gl.finish(); // make sure it has been uploaded
-			gl.deleteTexture(tex);
-			gl.finish(); // make sure it has been deleted
+var tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
-			var tex = gl.createTexture();
-			gl.bindTexture(gl.TEXTURE_2D, tex);
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._width, this._height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+// this can be quite undeterministic so to improve odds of seeing uninitialized data write bits
+// into tex then delete texture then re-create one with same characteristics (driver will likely reuse mem)
+// with this trick on r59046 WebKit/OSX I get FAIL 100% of the time instead of ~15% of the time.
 
-			var fb = gl.createFramebuffer();
-			gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+var badData = new Uint8Array(expectedDataLength);
+for (var i = 0; i < badData.length; ++i)
+    badData[i] = i % 255;
 
-      this.data = new Uint8Array(this._width * this._height * 4);
-			gl.readPixels(0, 0, this._width, this._height, gl.RGBA, gl.UNSIGNED_BYTE, this.data);
-		};
+gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, badData);
+gl.finish(); // make sure it has been uploaded
 
-		this.expects = function () {
-			if (this.data.length !== this._expectedDataLength) {
-				debug("expected data length " + this._expectedDataLength + " but got " + this.data.length + " instead.");
-				return false;
-			}
-			for (var i = 0; i < this.data.length; ++i)
-				if (0 !== this.data[i]) {
-					debug("byte at offset " + i + " has value " + this.data[i]);
-					return false;
-				}
-			return true;
-		};
+gl.deleteTexture(tex);
+gl.finish(); // make sure it has been deleted
+
+var tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+var fb = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+
+data = new Uint8Array(width * height * 4);
+gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+if (data.length != expectedDataLength) {
+    testFailed("expected data length " + expectedDataLength + " but got " + data.length + " instead.");
+} else {
+    var k = 0;
+    for (var i = 0; i < data.length; ++i) {
+	if (data[i] != 0) {
+	    k++;
 	}
-	//TODO: uninitialized vertex array buffer
-	//TODO: uninitialized vertex elements buffer
-	//TODO: uninitialized framebuffer? (implementations would need to do a GL clear at first binding?)
-	//TODO: uninitialized renderbuffer? (implementations would need to do a GL clear at first binding?)
-	//TODO: uninitialized uniform arrays?
+    }
+
+    if (k) {
+	testFailed("Found " + k + " non-zero bytes");
+    } else {
+	testPassed("All data initialized");
+    }
 }
 
-runTestsuite(uninitializedTests);
+glErrorShouldBe(gl, gl.NO_ERROR);
+
+//TODO: uninitialized vertex array buffer
+//TODO: uninitialized vertex elements buffer
+//TODO: uninitialized framebuffer? (implementations would need to do a GL clear at first binding?)
+//TODO: uninitialized renderbuffer? (implementations would need to do a GL clear at first binding?)
+//TODO: uninitialized uniform arrays?
+
 
 debug("");
 successfullyParsed = true;
---></script>
+</script>
 <script src="../resources/js-test-post.js"></script>
 <script>
 </script>

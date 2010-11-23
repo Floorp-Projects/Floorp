@@ -160,7 +160,11 @@
            !CHECK_CHAR( slot->bitmap_top  ) ||
            !CHECK_CHAR( xadvance )          ||
            !CHECK_CHAR( yadvance )          )
+      {
+        FT_TRACE2(( "ftc_snode_load:"
+                    " glyph too large for small bitmap cache\n"));
         goto BadGlyph;
+      }
 
       sbit->width     = (FT_Byte)bitmap->width;
       sbit->height    = (FT_Byte)bitmap->rows;

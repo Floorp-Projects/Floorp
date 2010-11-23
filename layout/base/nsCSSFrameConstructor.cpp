@@ -4821,38 +4821,31 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sOuterSVGData;
   }
 
-  // Special cases for text/tspan/textpath, because the kind of frame
-  // they get depends on the parent frame.
-  if (aTag == nsGkAtoms::text) {
-    NS_ASSERTION(aParentFrame, "Should have aParentFrame here");
-    nsIFrame *ancestorFrame =
-      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-    if (ancestorFrame) {
-      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-      // Text cannot be nested
-      if (metrics) {
-        return &sGenericContainerData;
-      }
-    }
-  }
-  else if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
-    NS_ASSERTION(aParentFrame, "Should have aParentFrame here");
-    nsIFrame *ancestorFrame =
-      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-    if (ancestorFrame) {
+  // Special cases for text/tspan/textPath, because the kind of frame
+  // they get depends on the parent frame.  We ignore 'a' elements when
+  // determining the parent, however.
+  nsIFrame *ancestorFrame =
+    nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
+  if (ancestorFrame) {
+    if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
+      // tspan and altGlyph must be children of another text content element.
       nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
       if (!metrics) {
-        return &sGenericContainerData;
+        return &sSuppressData;
       }
-    }
-  }
-  else if (aTag == nsGkAtoms::textPath) {
-    NS_ASSERTION(aParentFrame, "Should have aParentFrame here");
-    nsIFrame *ancestorFrame =
-      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-    if (!ancestorFrame ||
-        ancestorFrame->GetType() != nsGkAtoms::svgTextFrame) {
-      return &sGenericContainerData;
+    } else if (aTag == nsGkAtoms::textPath) {
+      // textPath must be a child of text.
+      nsIAtom* ancestorFrameType = ancestorFrame->GetType();
+      if (ancestorFrameType != nsGkAtoms::svgTextFrame) {
+        return &sSuppressData;
+      }
+    } else if (aTag != nsGkAtoms::a) {
+      // Every other element except 'a' must not be a child of a text content
+      // element.
+      nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
+      if (metrics) {
+        return &sSuppressData;
+      }
     }
   }
 
@@ -4895,7 +4888,9 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     SIMPLE_SVG_CREATE(feFuncB, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feFuncA, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feComposite, NS_NewSVGLeafFrame),
+    SIMPLE_SVG_CREATE(feComponentTransfer, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feConvolveMatrix, NS_NewSVGLeafFrame),
+    SIMPLE_SVG_CREATE(feDiffuseLighting, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feDisplacementMap, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feFlood, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feGaussianBlur, NS_NewSVGLeafFrame),
@@ -4903,6 +4898,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     SIMPLE_SVG_CREATE(feMergeNode, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feMorphology, NS_NewSVGLeafFrame), 
     SIMPLE_SVG_CREATE(feOffset, NS_NewSVGLeafFrame), 
+    SIMPLE_SVG_CREATE(feSpecularLighting, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feTile, NS_NewSVGLeafFrame), 
     SIMPLE_SVG_CREATE(feTurbulence, NS_NewSVGLeafFrame) 
   };
@@ -4912,7 +4908,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
                   NS_ARRAY_LENGTH(sSVGData));
 
   if (!data) {
-    data = &sGenericContainerData;
+    data = &sSuppressData;
   }
 
   return data;
@@ -5564,10 +5560,9 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
         }
       }
 
-#ifdef DEBUG
-      if (!containingBlock)
-        NS_WARNING("Positioned frame that does not handle positioned kids; looking further up the parent chain");
-#endif
+      // We sometimes have a null containing block here because we
+      // haven't yet fixed bug 455338.  Once we fix that we shouldn't
+      // have to loop here.
     }
   }
 
@@ -6897,6 +6892,17 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
       }
 #endif
     }
+
+#ifdef ACCESSIBILITY
+    if (mPresShell->IsAccessibilityActive()) {
+      nsCOMPtr<nsIAccessibilityService> accService =
+          do_GetService("@mozilla.org/accessibilityService;1");
+      if (accService) {
+        accService->ContentRangeInserted(mPresShell, aContainer,
+                                         aStartChild, aEndChild);
+      }
+    }
+#endif
 
     return NS_OK;
   }

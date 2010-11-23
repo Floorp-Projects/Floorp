@@ -147,7 +147,7 @@ gfxWindowsSurface::GetDCWithClip(gfxContext *ctx)
 }
 
 already_AddRefed<gfxImageSurface>
-gfxWindowsSurface::GetImageSurface()
+gfxWindowsSurface::GetAsImageSurface()
 {
     if (!mSurfaceValid) {
         NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
@@ -202,7 +202,7 @@ gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName)
 {
 #ifdef NS_PRINTING
-#define DOC_TITLE_LENGTH 30
+#define DOC_TITLE_LENGTH (MAX_PATH-1)
     DOCINFOW docinfo;
 
     nsString titleStr(aTitle);

@@ -1924,18 +1924,19 @@ namespace nanojit
             // We divide instruction kinds into groups.  LIns0 isn't present
             // because we don't need to record any 0-ary instructions.  Loads
             // aren't here, they're handled separately.
-            LInsImmI = 0,
-            LInsImmQ = 1,   // only occurs on 64-bit platforms
-            LInsImmD = 2,
-            LIns1    = 3,
-            LIns2    = 4,
-            LIns3    = 5,
-            LInsCall = 6,
+            NLImmISmall = 0,
+            NLImmILarge = 1,
+            NLImmQ      = 2,   // only occurs on 64-bit platforms
+            NLImmD      = 3,
+            NL1         = 4,
+            NL2         = 5,
+            NL3         = 6,
+            NLCall      = 7,
 
-            LInsFirst = 0,
-            LInsLast = 6,
+            NLFirst = 0,
+            NLLast = 7,
             // Need a value after "last" to outsmart compilers that insist last+1 is impossible.
-            LInsInvalid = 7
+            NLInvalid = 8
         };
         #define nextNLKind(kind)  NLKind(kind+1)
 
@@ -1948,11 +1949,11 @@ namespace nanojit
         //     Don't start m_capNL too small, or we'll waste time growing and rehashing.
         //     Don't start m_capNL too large, will waste memory.
         //
-        LIns**      m_listNL[LInsLast + 1];
-        uint32_t    m_capNL[ LInsLast + 1];
-        uint32_t    m_usedNL[LInsLast + 1];
+        LIns**      m_listNL[NLLast + 1];
+        uint32_t    m_capNL[ NLLast + 1];
+        uint32_t    m_usedNL[NLLast + 1];
         typedef uint32_t (CseFilter::*find_t)(LIns*);
-        find_t      m_findNL[LInsLast + 1];
+        find_t      m_findNL[NLLast + 1];
 
         // Similarly, for loads, there is one table for each CseAcc.  A CseAcc
         // is like a normal access region, but there are two extra possible
@@ -2021,7 +2022,8 @@ namespace nanojit
         static uint32_t hashCall(const CallInfo *call, uint32_t argc, LIns* args[]);
 
         // These versions are used before an LIns has been created.
-        LIns* findImmI(int32_t a, uint32_t &k);
+        LIns* findImmISmall(int32_t a, uint32_t &k);
+        LIns* findImmILarge(int32_t a, uint32_t &k);
 #ifdef NANOJIT_64BIT
         LIns* findImmQ(uint64_t a, uint32_t &k);
 #endif
@@ -2036,7 +2038,8 @@ namespace nanojit
         // These versions are used after an LIns has been created; they are
         // used for rehashing after growing.  They just call onto the
         // multi-arg versions above.
-        uint32_t findImmI(LIns* ins);
+        uint32_t findImmISmall(LIns* ins);
+        uint32_t findImmILarge(LIns* ins);
 #ifdef NANOJIT_64BIT
         uint32_t findImmQ(LIns* ins);
 #endif
@@ -2050,6 +2053,7 @@ namespace nanojit
         void growNL(NLKind kind);
         void growL(CseAcc cseAcc);
 
+        void addNLImmISmall(LIns* ins, uint32_t k);
         // 'k' is the index found by findXYZ().
         void addNL(NLKind kind, LIns* ins, uint32_t k);
         void addL(LIns* ins, uint32_t k);
@@ -2096,7 +2100,6 @@ namespace nanojit
             verbose_only(LInsPrinter* printer;)
 
             int32_t insCount();
-            size_t  byteCount();
 
             // stats
             struct
@@ -2123,7 +2126,6 @@ namespace nanojit
             Allocator&  _allocator;
             uintptr_t   _unused;   // next unused instruction slot in the current LIR chunk
             uintptr_t   _limit;    // one past the last usable byte of the current LIR chunk
-            size_t      _bytesAllocated;
     };
 
     class LirBufWriter : public LirWriter

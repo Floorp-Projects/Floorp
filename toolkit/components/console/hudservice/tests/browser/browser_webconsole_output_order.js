@@ -55,7 +55,7 @@ function testOutputOrder() {
 
   hudId = HUDService.displaysIndex()[0];
 
-  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let HUD = HUDService.hudReferences[hudId];
   let jsterm = HUD.jsterm;
   outputNode = jsterm.outputNode;
 

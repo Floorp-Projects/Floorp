@@ -55,7 +55,6 @@ function testInputFocus() {
   let hudBox = HUDService.getHeadsUpDisplay(hudId);
 
   let inputNode = hudBox.querySelector(".jsterm-input-node");
-  log("focused: " + inputNode.getAttribute("focused"));
   ok(inputNode.getAttribute("focused"), "input node is focused");
 
   finishTest();

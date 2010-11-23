@@ -323,8 +323,8 @@ public:
                                             PRBool *aIsCancelled);
 
     NS_IMETHOD ResetInputState();
-    NS_IMETHOD SetIMEEnabled(PRUint32 aState);
-    NS_IMETHOD GetIMEEnabled(PRUint32* aState);
+    NS_IMETHOD SetInputMode(const IMEContext& aContext);
+    NS_IMETHOD GetInputMode(IMEContext& aContext);
     NS_IMETHOD CancelIMEComposition();
     NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
     NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);

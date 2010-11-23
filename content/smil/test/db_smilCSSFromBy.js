@@ -52,7 +52,26 @@ var _fromByTestLists =
                              midComp:  "rgb(65, 60, 55)",
                              toComp:   "rgb(80, 70, 60)"}),
   ],
+  lengthNoUnits: [
+    new AnimTestcaseFromBy("0", "50",  { fromComp: "0px", // 0 acts like 0px
+                                         midComp:  "25px",
+                                         toComp:   "50px"}),
+    new AnimTestcaseFromBy("30", "10", { fromComp: "30px",
+                                         midComp:  "35px",
+                                         toComp:   "40px"}),
+  ],
+  lengthNoUnitsSVG: [
+    new AnimTestcaseFromBy("0", "50",  { fromComp: "0px", // 0 acts like 0px
+                                         midComp:  "25",
+                                         toComp:   "50"}),
+    new AnimTestcaseFromBy("30", "10", { fromComp: "30",
+                                         midComp:  "35",
+                                         toComp:   "40"}),
+  ],
   lengthPx: [
+    new AnimTestcaseFromBy("0", "8px", { fromComp: "0px", // 0 acts like 0px
+                                         midComp: "4px",
+                                         toComp: "8px"}),
     new AnimTestcaseFromBy("1px", "10px", { midComp: "6px", toComp: "11px"}),
   ],
   opacity: [
@@ -120,7 +139,9 @@ var gFromByBundles =
     new AnimTestcaseFromBy("10px serif",
                            "normal normal 400 100px / 10px monospace"),
   ]),
-  new TestcaseBundle(gPropList.font_size,      _fromByTestLists.lengthPx),
+  new TestcaseBundle(gPropList.font_size,
+                     [].concat(_fromByTestLists.lengthNoUnits,
+                               _fromByTestLists.lengthPx)),
   new TestcaseBundle(gPropList.font_size_adjust, [
     // These testcases implicitly have no effect, because font-size-adjust is
     // non-additive (and is declared as such in db_smilCSSPropertyList.js)
@@ -149,5 +170,7 @@ var gFromByBundles =
     new AnimTestcaseFromBy("10", "5"),
     new AnimTestcaseFromBy("1", "2, 3"),
   ]),
-  new TestcaseBundle(gPropList.stroke_width,   _fromByTestLists.lengthPx),
+  new TestcaseBundle(gPropList.stroke_width,
+                     [].concat(_fromByTestLists.lengthNoUnitsSVG,
+                               _fromByTestLists.lengthPx))
 ];

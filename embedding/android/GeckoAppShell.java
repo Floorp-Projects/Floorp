@@ -49,15 +49,14 @@ import android.text.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
+import android.content.res.*;
+import android.content.pm.*;
 import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
 
 import android.util.*;
-import android.content.DialogInterface; 
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 
 class GeckoAppShell
@@ -80,9 +79,8 @@ class GeckoAppShell
 
     static private final int NOTIFY_IME_RESETINPUTSTATE = 0;
     static private final int NOTIFY_IME_SETOPENSTATE = 1;
-    static private final int NOTIFY_IME_SETENABLED = 2;
-    static private final int NOTIFY_IME_CANCELCOMPOSITION = 3;
-    static private final int NOTIFY_IME_FOCUSCHANGE = 4;
+    static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
+    static private final int NOTIFY_IME_FOCUSCHANGE = 3;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -125,6 +123,8 @@ class GeckoAppShell
 
         f = Environment.getDownloadCacheDirectory();
         GeckoAppShell.putenv("EXTERNAL_STORAGE" + f.getPath());
+
+        GeckoAppShell.putenv("LANG=" + Locale.getDefault().toString());
 
         loadLibs(apkName);
     }
@@ -245,13 +245,6 @@ class GeckoAppShell
             IMEStateUpdater.enableIME();
             break;
 
-        case NOTIFY_IME_SETENABLED:
-            /* When IME is 'disabled', IME processing is disabled.
-                In addition, the IME UI is hidden */
-            GeckoApp.surfaceView.mIMEState = state;
-            IMEStateUpdater.enableIME();
-            break;
-
         case NOTIFY_IME_CANCELCOMPOSITION:
             IMEStateUpdater.resetIME();
             break;
@@ -260,8 +253,18 @@ class GeckoAppShell
             GeckoApp.surfaceView.mIMEFocus = state != 0;
             IMEStateUpdater.resetIME();
             break;
-
         }
+    }
+
+    public static void notifyIMEEnabled(int state, String hint) {
+        if (GeckoApp.surfaceView == null)
+            return;
+
+        /* When IME is 'disabled', IME processing is disabled.
+            In addition, the IME UI is hidden */
+        GeckoApp.surfaceView.mIMEState = state;
+        GeckoApp.surfaceView.mIMEHint = hint;
+        IMEStateUpdater.enableIME();
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
@@ -348,6 +351,7 @@ class GeckoAppShell
         } else {
             Log.i("GeckoAppJava", "we're done, good bye");
             GeckoApp.mAppContext.finish();
+            System.exit(0);
         }
 
     }
@@ -593,12 +597,41 @@ class GeckoAppShell
     }
 
     public static int getDpi() {
-         DisplayMetrics metrics = new DisplayMetrics();
-         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-         return metrics.densityDpi;
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return metrics.densityDpi;
     }
+
+    public static void setFullScreen(boolean fullscreen) {
+        GeckoApp.mFullscreen = fullscreen;
+
+        // force a reconfiguration to hide/show the system bar
+        GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+    }
+
     public static String showFilePicker(String aFilters) {
         return GeckoApp.mAppContext.
             showFilePicker(getMimeTypeFromExtensions(aFilters));
+    }
+
+    public static void performHapticFeedback(boolean aIsLongPress) {
+        GeckoApp.surfaceView.
+            performHapticFeedback(aIsLongPress ?
+                                  HapticFeedbackConstants.LONG_PRESS :
+                                  HapticFeedbackConstants.VIRTUAL_KEY);
+    }
+
+    public static void showInputMethodPicker() {
+        InputMethodManager imm = (InputMethodManager) GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showInputMethodPicker();       
+    }
+
+    public static void hideProgressDialog() {
+        if (GeckoApp.mAppContext.mProgressDialog != null) {
+            GeckoApp.mAppContext.mProgressDialog.dismiss();
+            GeckoApp.mAppContext.mProgressDialog = null;
+        }
     }
 }

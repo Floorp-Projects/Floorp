@@ -37,6 +37,7 @@
 
 #include "mozilla/jetpack/JetpackParent.h"
 #include "mozilla/jetpack/Handle.h"
+#include "base/process_util.h"
 
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -44,12 +45,17 @@
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 namespace mozilla {
 namespace jetpack {
 
 JetpackParent::JetpackParent(JSContext* cx)
   : mSubprocess(new JetpackProcessParent())
   , mContext(cx)
+  , mTaskFactory(this)
 {
   mSubprocess->Launch();
   Open(mSubprocess->GetChannel(),
@@ -60,6 +66,9 @@ JetpackParent::~JetpackParent()
 {
   if (mSubprocess)
     Destroy();
+
+  if (OtherProcess())
+    base::CloseProcessHandle(OtherProcess());
 }
 
 NS_IMPL_ISUPPORTS1(JetpackParent, nsIJetpack)
@@ -100,7 +109,9 @@ JetpackParent::SendMessage(const nsAString& aMessageName)
     if (!jsval_to_Variant(cx, argv[i], data.AppendElement()))
       return NS_ERROR_INVALID_ARG;
 
-  if (!SendSendMessage(nsString(aMessageName), data))
+  InfallibleTArray<Variant> dataForSend;
+  dataForSend.SwapElements(data);
+  if (!SendSendMessage(nsString(aMessageName), dataForSend))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -146,6 +157,7 @@ public:
   AutoCXPusher(JSContext* cx)
     : mCXStack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"))
   {
+    NS_ASSERTION(mCXStack, "No JS context stack?");
     if (mCXStack)
       mCXStack->Push(cx);
   }
@@ -160,9 +172,51 @@ private:
   JSContext* mCX;
 };
 
+// We have to delete the JetpackProcessParent on the I/O thread after event
+// loop iteration in which JetpackParent::ActorDestroy runs is finished.
+static void
+DelayedDestroyProcess(JetpackProcessParent* o)
+{
+  XRE_GetIOMessageLoop()
+    ->PostTask(FROM_HERE, new DeleteTask<JetpackProcessParent>(o));
+}
+
+void
+JetpackParent::ActorDestroy(ActorDestroyReason why)
+{
+  switch (why) {
+    case AbnormalShutdown: {
+      nsAutoString dumpID;
+
+#ifdef MOZ_CRASHREPORTER
+      nsCOMPtr<nsILocalFile> crashDump;
+      TakeMinidump(getter_AddRefs(crashDump)) &&
+        CrashReporter::GetIDFromMinidump(crashDump, dumpID);
+#endif
+
+      MessageLoop::current()->
+        PostTask(FROM_HERE,
+                 mTaskFactory.NewRunnableMethod(
+                   &JetpackParent::DispatchFailureMessage,
+                   dumpID));
+      break;
+    }
+
+    case NormalShutdown:
+      break;
+
+    default:
+      NS_ERROR("Unexpected actordestroy reason for toplevel actor.");
+  }  
+
+  MessageLoop::current()->
+    PostTask(FROM_HERE, NewRunnableFunction(DelayedDestroyProcess, mSubprocess));
+  mSubprocess = NULL;
+}
+
 bool
 JetpackParent::RecvSendMessage(const nsString& messageName,
-                               const nsTArray<Variant>& data)
+                               const InfallibleTArray<Variant>& data)
 {
   AutoCXPusher cxp(mContext);
   JSAutoRequest request(mContext);
@@ -176,8 +230,8 @@ JetpackParent::RecvSendMessage(const nsString& messageName,
 
 bool
 JetpackParent::AnswerCallMessage(const nsString& messageName,
-                                 const nsTArray<Variant>& data,
-                                 nsTArray<Variant>* results)
+                                 const InfallibleTArray<Variant>& data,
+                                 InfallibleTArray<Variant>* results)
 {
   AutoCXPusher cxp(mContext);
   JSAutoRequest request(mContext);
@@ -216,13 +270,12 @@ JetpackParent::CreateHandle(nsIVariant** aResult)
 NS_IMETHODIMP
 JetpackParent::Destroy()
 {
-  if (!mSubprocess)
-    return NS_ERROR_NOT_INITIALIZED;
+  if (mSubprocess)
+    Close();
 
-  Close();
-  XRE_GetIOMessageLoop()
-    ->PostTask(FROM_HERE, new DeleteTask<JetpackProcessParent>(mSubprocess));
-  mSubprocess = NULL;
+  NS_ASSERTION(!mSubprocess, "ActorDestroy should have been called.");
+
+  ClearReceivers();
 
   return NS_OK;
 }
@@ -238,6 +291,31 @@ JetpackParent::DeallocPHandle(PHandleParent* actor)
 {
   delete actor;
   return true;
+}
+
+void
+JetpackParent::OnChannelConnected(int32 pid) 
+{
+  ProcessHandle handle;
+  if (!base::OpenPrivilegedProcessHandle(pid, &handle))
+    NS_RUNTIMEABORT("can't open handle to child process");
+
+  SetOtherProcess(handle);
+}
+
+void
+JetpackParent::DispatchFailureMessage(const nsString& aDumpID)
+{
+  KeyValue kv(NS_LITERAL_STRING("dumpID"), PrimVariant(aDumpID));
+  InfallibleTArray<KeyValue> keyvalues;
+  keyvalues.AppendElement(kv);
+
+  CompVariant object(keyvalues);
+
+  InfallibleTArray<Variant> arguments;
+  arguments.AppendElement(object);
+
+  RecvSendMessage(NS_LITERAL_STRING("core:process-error"), arguments);
 }
 
 } // namespace jetpack

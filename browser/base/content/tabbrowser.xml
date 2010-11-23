@@ -290,6 +290,58 @@
         </body>
       </method>
 
+      <method name="getTabModalPromptBox">
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            let browser = (aBrowser || this.mCurrentBrowser);
+            let stack = browser.parentNode;
+            let self = this;
+
+            let promptBox = {
+              appendPrompt : function(args, onCloseCallback) {
+                let count = browser.getAttribute("tabmodalPromptShowing");
+                if (count)
+                    count = parseInt(count) + 1;
+                else
+                    count = 1;
+                browser.setAttribute("tabmodalPromptShowing", count);
+
+                let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
+                stack.appendChild(newPrompt);
+                newPrompt.clientTop; // style flush to assure binding is attached
+
+                let tab = self._getTabForContentWindow(browser.contentWindow);
+                newPrompt.init(args, tab, onCloseCallback);
+                return newPrompt;
+              },
+
+              removePrompt : function(aPrompt) {
+                let count = parseInt(browser.getAttribute("tabmodalPromptShowing"));
+                count--;
+                if (count)
+                    browser.setAttribute("tabmodalPromptShowing", count);
+                else
+                    browser.removeAttribute("tabmodalPromptShowing");
+                stack.removeChild(aPrompt);
+              },
+
+              listPrompts : function(aPrompt) {
+                let prompts = [];
+                let els = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
+                // NodeList --> real JS array
+                for (let i = 0; i < els.length; i++)
+                  prompts.push(els[i]);
+                return prompts;
+              },
+            };
+
+            return promptBox;
+          ]]>
+        </body>
+      </method>
+
       <method name="_callProgressListeners">
         <parameter name="aBrowser"/>
         <parameter name="aMethod"/>
@@ -524,8 +576,10 @@
                   browserHistory.unregisterOpenPage(this.mBrowser.registeredOpenURI);
                   delete this.mBrowser.registeredOpenURI;
                 }
-                browserHistory.registerOpenPage(aLocation);
-                this.mBrowser.registeredOpenURI = aLocation;
+                if (aLocation.spec != "about:blank") {
+                  browserHistory.registerOpenPage(aLocation);
+                  this.mBrowser.registeredOpenURI = aLocation;
+                }
               }
 
               if (!this.mBlank) {
@@ -830,31 +884,48 @@
             // Focus is suppressed in the event that the main browser window is minimized - focusing a tab would restore the window
             if (!this._previewMode) {
               // We've selected the new tab, so go ahead and notify listeners.
-              var event = document.createEvent("Events");
+              let event = document.createEvent("Events");
               event.initEvent("TabSelect", true, false);
               this.mCurrentTab.dispatchEvent(event);
 
               this._tabAttrModified(oldTab);
               this._tabAttrModified(this.mCurrentTab);
 
-              // Change focus to the new browser unless the findbar is focused.
-              if (!gFindBarInitialized ||
-                  gFindBar.hidden ||
-                  gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true") {
+              // Adjust focus
+              do {
+                // Focus the location bar if it was previously focused for that tab.
+                // In full screen mode, only bother making the location bar visible
+                // if the tab is a blank one.
+                oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
+                if (newBrowser._urlbarFocused && gURLBar) {
+                  if (!window.fullScreen) {
+                    gURLBar.focus();
+                    break;
+                  } else if (isTabEmpty(this.mCurrentTab)) {
+                    focusAndSelectUrlBar();
+                    break;
+                  }
+                }
 
-                var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                           getService(Components.interfaces.nsIFocusManager);
-                var newFocusedElement = fm.getFocusedElementForWindow(window.content, true, {});
+                // If the find bar is focused, keep it focused.
+                if (gFindBarInitialized &&
+                    !gFindBar.hidden &&
+                    gFindBar.getElement("findbar-textbox").getAttribute("focused") == "true")
+                  break;
+
+                // Otherwise, focus the content area.
+                let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+                let newFocusedElement = fm.getFocusedElementForWindow(window.content, true, {});
 
                 // for anchors, use FLAG_SHOWRING so that it is clear what link was
                 // last clicked when switching back to that tab
-                var focusFlags = fm.FLAG_NOSCROLL;
+                let focusFlags = fm.FLAG_NOSCROLL;
                 if (newFocusedElement &&
                     (newFocusedElement instanceof HTMLAnchorElement ||
                      newFocusedElement.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple"))
                   focusFlags |= fm.FLAG_SHOWRING;
                 fm.setFocus(newBrowser, focusFlags);
-              }
+              } while (false);
             }
           ]]>
         </body>
@@ -1900,15 +1971,11 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (this.visibleTabs.length == 1)
+            if (this.tabs.length == 1)
               return null;
 
             // tell a new window to take the "dropped" tab
-            return Services.ww.openWindow(window,
-                                          getBrowserURL(),
-                                          null,
-                                          "chrome,dialog=no,all",
-                                          aTab);
+            return window.openDialog(getBrowserURL(), "_blank", "dialog=no,all", aTab);
           ]]>
         </body>
       </method>
@@ -2706,11 +2773,18 @@
       <method name="_positionPinnedTabs">
         <body><![CDATA[
           var width = 0;
-          var scrollButtonWidth = this.getAttribute("overflow") != "true" ? 0 :
+          var pinnedOnly = (this.tabbrowser._numPinnedTabs == this.tabbrowser.visibleTabs.length);
+
+          if (pinnedOnly)
+            this.tabbrowser.tabContainer.setAttribute("pinnedonly", "true");
+          else
+            this.tabbrowser.tabContainer.removeAttribute("pinnedonly");
+
+          var scrollButtonWidth = (this.getAttribute("overflow") != "true" || pinnedOnly) ? 0 :
                                   this.mTabstrip._scrollButtonDown.scrollWidth;
           for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
             let tab = this.childNodes[i];
-            width += tab.scrollWidth;
+            width += pinnedOnly ? 0 : tab.scrollWidth;
             tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
           }
           this.style.MozMarginStart = width + "px";
@@ -2723,6 +2797,8 @@
         <body><![CDATA[
           switch (aEvent.type) {
             case "resize":
+              if (aEvent.target != window)
+                break;
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();

@@ -160,7 +160,7 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
 
 #ifdef XP_WIN
       if (sourceSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-        sourceSurface = static_cast<gfxWindowsSurface*>(sourceSurface.get())->GetImageSurface();
+        sourceSurface = sourceSurface->GetAsImageSurface();
         if (!sourceSurface)
           sourceSurface = mCanvasSurface;
       }
@@ -267,7 +267,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   program->Activate();
   program->SetLayerQuadRect(mBounds);
   program->SetLayerTransform(GetEffectiveTransform());
-  program->SetLayerOpacity(GetOpacity());
+  program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 
@@ -366,8 +366,8 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
-  program->SetLayerTransform(mTransform);
-  program->SetLayerOpacity(GetOpacity());
+  program->SetLayerTransform(GetEffectiveTransform());
+  program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 
