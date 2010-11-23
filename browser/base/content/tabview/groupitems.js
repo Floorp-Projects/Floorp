@@ -557,8 +557,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   close: function GroupItem_close() {
     this.removeAll();
     GroupItems.unregister(this);
-    this._sendToSubscribers("close");
-    this.removeTrenches();
 
     if (this.hidden) {
       iQ(this.container).remove();
@@ -566,8 +564,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this.$undoContainer.remove();
         this.$undoContainer = null;
        }
+      this.removeTrenches();
       Items.unsquish();
+      this._sendToSubscribers("close");
     } else {
+      let self = this;
       iQ(this.container).animate({
         opacity: 0,
         "-moz-transform": "scale(.3)",
@@ -575,7 +576,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         duration: 170,
         complete: function() {
           iQ(this).remove();
+          self.removeTrenches();
           Items.unsquish();
+          self._sendToSubscribers("close");
         }
       });
     }
