@@ -537,6 +537,7 @@ let UI = {
         self._privateBrowsing.transitionStage = 0;
         self._privateBrowsing.transitionMode = "";
         TabItems.resumeReconnecting();
+        GroupItems.resumeUpdatingTabBar();
       }
     }
 
@@ -571,6 +572,7 @@ let UI = {
         if (aData == "enter" || aData == "exit") {
           self._privateBrowsing.transitionStage = 1;
           self._privateBrowsing.transitionMode = aData;
+          GroupItems.pauseUpdatingTabBar();
           TabItems.pauseReconnecting();
         }
       }
