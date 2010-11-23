@@ -3835,10 +3835,10 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * Pre-brand the prototype and constructor if they have built-in methods.
      * This avoids extra shape guard branch exits in the tracejitted code.
      */
-    if (fs && !proto->brand(cx))
-        goto bad;
-    if (ctor != proto && static_fs && !ctor->brand(cx))
-        goto bad;
+    if (fs)
+        proto->brand(cx);
+    if (ctor != proto && static_fs)
+        ctor->brand(cx);
 
     /*
      * Make sure proto's emptyShape is available to be shared by objects of
