@@ -107,7 +107,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyAppShellReady = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onAppShellReady", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
     jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
-    jGetHandlersForProtocol = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForProtocol", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jGetHandlersForURL = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtensions = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
@@ -352,20 +352,20 @@ AndroidBridge::GetHandlersForMimeType(const char *aMimeType,
 }
 
 PRBool
-AndroidBridge::GetHandlersForProtocol(const char *aScheme,
+AndroidBridge::GetHandlersForURL(const char *aURL,
                                       nsIMutableArray* aHandlersArray,
                                       nsIHandlerApp **aDefaultApp,
                                       const nsAString& aAction)
 {
     AutoLocalJNIFrame jniFrame;
-    NS_ConvertUTF8toUTF16 wScheme(aScheme);
+    NS_ConvertUTF8toUTF16 wScheme(aURL);
     jstring jstrScheme = mJNIEnv->NewString(wScheme.get(), wScheme.Length());
     const PRUnichar* wAction;
     PRUint32 actionLen = NS_StringGetData(aAction, &wAction);
     jstring jstrAction = mJNIEnv->NewString(wAction, actionLen);
 
     jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
-                                                  jGetHandlersForProtocol,
+                                                  jGetHandlersForURL,
                                                   jstrScheme, jstrAction);
     jobjectArray arr = static_cast<jobjectArray>(obj);
     if (!arr)

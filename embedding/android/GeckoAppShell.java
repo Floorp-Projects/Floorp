@@ -386,9 +386,10 @@ class GeckoAppShell
         return getHandlersForIntent(intent);
     }
 
-    static String[] getHandlersForProtocol(String aScheme, String aAction) {
+    static String[] getHandlersForURL(String aURL, String aAction) {
+        // aURL may contain the whole URL or just the protocol
+        Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
         Intent intent = getIntentForActionString(aAction);
-        Uri uri = new Uri.Builder().scheme(aScheme).build();
         intent.setData(uri);
         return getHandlersForIntent(intent);
     }
