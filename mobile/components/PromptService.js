@@ -88,7 +88,7 @@ function PromptService() {
 
 PromptService.prototype = {
   classID: Components.ID("{9a61149b-2276-4a0a-b79c-be994ad106cf}"),
-  
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
 
   /* ----------  nsIPromptFactory  ---------- */
@@ -142,7 +142,9 @@ PromptService.prototype = {
         this.messageManager.sendSyncMessage("Prompt:Call", json)[0];
       // Args copying - for methods that have out values
       const ARGS_COPY_MAP = {
-        'prompt': [3,5],
+        prompt: [3,5],
+        confirmCheck: [4],
+        alertCheck: [4]
       };
       if (ARGS_COPY_MAP[aMethod]) {
         ARGS_COPY_MAP[aMethod].forEach(function(i) { aArguments[i].value = response[i].value; });
@@ -205,19 +207,19 @@ function Prompt(aDomWin, aDocument) {
   this._doc = aDocument;
 }
 
-Prompt.prototype = { 
+Prompt.prototype = {
   _domWin: null,
   _doc: null,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
 
   /* ---------- internal methods ---------- */
- 
+
   openDialog: function openDialog(aSrc, aParams) {
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     return browser.importDialog(this._domWin, aSrc, aParams);
   },
-  
+
   commonPrompt: function commonPrompt(aTitle, aText, aValue, aCheckMsg, aCheckState, isPassword) {
     var params = new Object();
     params.result = false;
@@ -252,10 +254,10 @@ Prompt.prototype = {
     // remove the access key placeholder + leading spaces from the label.
     // Otherwise a character preceded by one but not two &s is the access key.
     // Store it and remove the &.
-  
+
     // Note that if you change the following code, see the comment of
     // nsTextBoxFrame::UpdateAccessTitle.
- 
+
     if (!aLabel)
       return;
 
@@ -267,7 +269,7 @@ Prompt.prototype = {
       aLabel = RegExp.$1 + RegExp.$2;
       accessKey = RegExp.$3;
     }
-  
+
     // && is the magic sequence to embed an & in your label.
     aLabel = aLabel.replace(/\&\&/g, "&");
     if (aNode instanceof Ci.nsIDOMXULLabelElement) {
@@ -278,13 +280,13 @@ Prompt.prototype = {
     } else {    // Set text for other xul elements
       aNode.setAttribute("label", aLabel);
     }
-    
+
     // XXXjag bug 325251
     // Need to set this after aNode.setAttribute("value", aLabel);
     if (accessKey)
       aNode.setAttribute("accesskey", accessKey);
   },
-  
+
   /*
    * ---------- interface disambiguation ----------
    *
@@ -296,6 +298,9 @@ Prompt.prototype = {
    * called. :-(
    */
   prompt: function prompt() {
+    if (gPromptService.inContentProcess)
+      return gPromptService.callProxy("prompt", [null].concat(Array.prototype.slice.call(arguments)));
+
     // also, the nsIPrompt flavor has 5 args instead of 6.
     if (typeof arguments[2] == "object")
       return this.nsIPrompt_prompt.apply(this, arguments);
@@ -320,38 +325,43 @@ Prompt.prototype = {
   },
 
   /* ----------  nsIPrompt  ---------- */
-  
+
   alert: function alert(aTitle, aText) {
     // In addition to the remoting above, C++ can directly request this
     // kind of prompt, so we remote that as well. This can happen, for
     // example, if an invalid scheme is entered (e.g. garbage://something).
     // That shows an alert() through this code here.
-    if (gPromptService.inContentProcess) {
+    if (gPromptService.inContentProcess)
       return gPromptService.callProxy("alert", ['Alert'].concat(Array.prototype.slice.call(arguments, 0)));
-    }
 
     let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", null);
     let doc = this._doc;
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
-    
+
     dialog.waitForClose();
   },
-  
+
   alertCheck: function alertCheck(aTitle, aText, aCheckMsg, aCheckState) {
+    if (gPromptService.inContentProcess)
+      return gPromptService.callProxy("alertCheck", [null].concat(Array.prototype.slice.call(arguments)));
+
     let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", aCheckState);
     let doc = this._doc;
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
-    
+
     doc.getElementById("prompt-alert-checkbox").checked = aCheckState.value;
     this.setLabelForNode(doc.getElementById("prompt-alert-checkbox-label"), aCheckMsg);
     doc.getElementById("prompt-alert-checkbox").removeAttribute("collapsed");
-    
+
     dialog.waitForClose();
   },
-  
+
   confirm: function confirm(aTitle, aText) {
+    if (gPromptService.inContentProcess)
+      return gPromptService.callProxy("confirm", [null].concat(Array.prototype.slice.call(arguments)));
+
     var params = new Object();
     params.result = false;
 
@@ -359,12 +369,15 @@ Prompt.prototype = {
     let doc = this._doc;
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
-    
+
     dialog.waitForClose();
     return params.result;
   },
-  
+
   confirmCheck: function confirmCheck(aTitle, aText, aCheckMsg, aCheckState) {
+    if (gPromptService.inContentProcess)
+      return gPromptService.callProxy("confirmCheck", [null].concat(Array.prototype.slice.call(arguments)));
+
     var params = new Object();
     params.result = false;
     params.checkbox = aCheckState;
@@ -377,7 +390,7 @@ Prompt.prototype = {
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
     this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
     doc.getElementById("prompt-confirm-checkbox").removeAttribute("collapsed");
-    
+
     dialog.waitForClose();
     return params.result;
   },
@@ -385,9 +398,8 @@ Prompt.prototype = {
   confirmEx: function confirmEx(aTitle, aText, aButtonFlags, aButton0,
                       aButton1, aButton2, aCheckMsg, aCheckState) {
 
-    if (gPromptService.inContentProcess) {
+    if (gPromptService.inContentProcess)
       return gPromptService.callProxy("confirmEx", ['ConfirmEx'].concat(Array.prototype.slice.call(arguments, 0)));
-    }
 
     let numButtons = 0;
     let titles = [aButton0, aButton1, aButton2];
@@ -397,7 +409,7 @@ Prompt.prototype = {
       defaultButton = 1;
     if (aButtonFlags & Ci.nsIPromptService.BUTTON_POS_2_DEFAULT)
       defaultButton = 2;
-    
+
     var params = {
       result: false,
       checkbox: aCheckState,
@@ -447,13 +459,13 @@ Prompt.prototype = {
           bTitle = titles[i];
         break;
       }
-      
+
       if (bTitle) {
         let button = doc.createElement("button");
         button.className = "prompt-button";
         this.setLabelForNode(button, bTitle);
         if (i == defaultButton) {
-          button.setAttribute("command", "cmd_ok"); 
+          button.setAttribute("command", "cmd_ok");
         }
         else {
           button.setAttribute("oncommand",
@@ -461,23 +473,23 @@ Prompt.prototype = {
         }
         bbox.appendChild(button);
       }
-      
+
       aButtonFlags >>= 8;
     }
-    
+
     dialog.waitForClose();
     return params.result;
   },
-  
+
   nsIPrompt_prompt: function nsIPrompt_prompt(aTitle, aText, aValue, aCheckMsg, aCheckState) {
     return this.commonPrompt(aTitle, aText, aValue, aCheckMsg, aCheckState, false);
   },
-  
+
   nsIPrompt_promptPassword: function nsIPrompt_promptPassword(
       aTitle, aText, aPassword, aCheckMsg, aCheckState) {
     return this.commonPrompt(aTitle, aText, aPassword, aCheckMsg, aCheckState, true);
   },
-  
+
   nsIPrompt_promptUsernameAndPassword: function nsIPrompt_promptUsernameAndPassword(
       aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
     var params = new Object();
@@ -491,18 +503,18 @@ Prompt.prototype = {
     doc.getElementById("prompt-password-title").value = aTitle;
     doc.getElementById("prompt-password-message").appendChild(doc.createTextNode(aText));
     doc.getElementById("prompt-password-checkbox").checked = aCheckState.value;
-    
+
     doc.getElementById("prompt-password-user").value = aUsername.value;
     doc.getElementById("prompt-password-password").value = aPassword.value;
     if (aCheckMsg) {
       doc.getElementById("prompt-password-checkbox").removeAttribute("collapsed");
       this.setLabelForNode(doc.getElementById("prompt-password-checkbox-label"), aCheckMsg);
     }
-    
+
     dialog.waitForClose();
     return params.result;
   },
-  
+
   select: function select(aTitle, aText, aCount, aSelectList, aOutSelection) {
     var params = new Object();
     params.result = false;
@@ -512,14 +524,14 @@ Prompt.prototype = {
     let doc = this._doc;
     doc.getElementById("prompt-select-title").value = aTitle;
     doc.getElementById("prompt-select-message").appendChild(doc.createTextNode(aText));
-    
+
     let list = doc.getElementById("prompt-select-list");
     for (let i = 0; i < aCount; i++)
       list.appendItem(aSelectList[i], null, null);
-      
+
     // select the first one
     list.selectedIndex = 0;
-    
+
     dialog.waitForClose();
     return params.result;
   },
@@ -565,7 +577,7 @@ Prompt.prototype = {
     return ok;  },
 
   /* ----------  nsIAuthPrompt2  ---------- */
-  
+
   promptAuth: function promptAuth(aChannel, aLevel, aAuthInfo) {
     let checkMsg = null;
     let check = { value: false };
@@ -582,7 +594,7 @@ Prompt.prototype = {
       PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
       return true;
     }
-    
+
     let ok;
     if (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD)
       ok = this.nsIPrompt_promptPassword(null, message, password, checkMsg, check);
@@ -597,7 +609,7 @@ Prompt.prototype = {
 
     return ok;
   },
-  
+
   asyncPromptAuth: function asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo) {
     // bug 514196
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
@@ -611,7 +623,7 @@ let PromptUtils = {
 
     return this.bundle.GetStringFromName(aKey);
   },
-  
+
   get pwmgr() {
     delete this.pwmgr;
     return this.pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -709,7 +721,7 @@ let PromptUtils = {
 
     this.pwmgr.modifyLogin(aLogin, propBag);
   },
-  
+
   // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/src/nsPrompt.cpp#388
   makeDialogText: function pu_makeDialogText(aChannel, aAuthInfo) {
     let isProxy    = (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY);
@@ -741,7 +753,7 @@ let PromptUtils = {
 
     return text;
   },
-  
+
   // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/public/nsPromptUtils.h#89
   getAuthHostPort: function pu_getAuthHostPort(aChannel, aAuthInfo) {
     let uri = aChannel.URI;
@@ -764,11 +776,11 @@ let PromptUtils = {
     if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
         if (!(aChannel instanceof Ci.nsIProxiedChannel))
           throw "proxy auth needs nsIProxiedChannel";
-  
+
       let info = aChannel.proxyInfo;
       if (!info)
         throw "proxy auth needs nsIProxyInfo";
-  
+
       // Proxies don't have a scheme, but we'll use "moz-proxy://"
       // so that it's more obvious what the login is for.
       let idnService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
@@ -776,7 +788,7 @@ let PromptUtils = {
       realm = aAuthInfo.realm;
       if (!realm)
         realm = hostname;
-  
+
       return [hostname, realm];
     }
     hostname = this.getFormattedHostname(aChannel.URI);
