@@ -512,15 +512,15 @@ nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
 }
 
 nsresult
-nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
+nsGtkIMModule::SetInputMode(nsWindow* aCaller, const IMEContext* aContext)
 {
-    if (aState == mEnabled || NS_UNLIKELY(IsDestroyed())) {
+    if (aContext->mStatus == mEnabled || NS_UNLIKELY(IsDestroyed())) {
         return NS_OK;
     }
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): SetIMEEnabled, aCaller=%p, aState=%s",
-         this, aCaller, GetEnabledStateName(aState)));
+        ("GtkIMModule(%p): SetInputMode, aCaller=%p, aState=%s mHTMLInputType=%s",
+         this, aCaller, GetEnabledStateName(aContext->mStatus), aContext->mHTMLInputType.get()));
 
     if (aCaller != mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -537,7 +537,7 @@ nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
 
 
     if (sLastFocusedModule != this) {
-        mEnabled = aState;
+        mEnabled = aContext->mStatus;
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    SUCCEEDED, but we're not active"));
         return NS_OK;
@@ -549,7 +549,7 @@ nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
         Blur();
     }
 
-    mEnabled = aState;
+    mEnabled = aContext->mStatus;
 
     // Even when aState is not enabled state, we need to set IME focus.
     // Because some IMs are updating the status bar of them at this time.

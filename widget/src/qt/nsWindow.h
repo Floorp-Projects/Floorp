@@ -199,7 +199,7 @@ public:
     NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
     NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 
-    NS_IMETHODIMP      SetIMEEnabled(PRUint32 aState);
+    NS_IMETHODIMP      SetInputMode(const IMEContext& aContext);
     NS_IMETHODIMP      GetIMEEnabled(PRUint32* aState);
 
     //

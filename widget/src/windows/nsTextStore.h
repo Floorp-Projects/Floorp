@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
+#include "nsIWidget.h"
 
 #include <msctf.h>
 #include <textstor.h>
@@ -121,10 +122,10 @@ public:
     sTsfTextStore->CommitCompositionInternal(aDiscard);
   }
 
-  static void     SetIMEEnabled(PRUint32 aState)
+  static void     SetInputMode(const IMEContext& aContext)
   {
     if (!sTsfTextStore) return;
-    sTsfTextStore->SetIMEEnabledInternal(aState);
+    sTsfTextStore->SetInputModeInternal(aContext.mStatus);
   }
 
   static nsresult OnFocusChange(PRBool, nsWindow*, PRUint32);
@@ -190,7 +191,7 @@ protected:
                                 PRBool aDispatchTextEvent = PR_FALSE);
   HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, PRBool);
   void     CommitCompositionInternal(PRBool);
-  void     SetIMEEnabledInternal(PRUint32 aState);
+  void     SetInputModeInternal(PRUint32 aState);
   nsresult OnTextChangeInternal(PRUint32, PRUint32, PRUint32);
   void     OnTextChangeMsgInternal(void);
   nsresult OnSelectionChangeInternal(void);

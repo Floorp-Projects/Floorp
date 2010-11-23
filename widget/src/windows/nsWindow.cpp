@@ -7532,25 +7532,26 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
+NS_IMETHODIMP nsWindow::SetInputMode(const IMEContext& aContext)
 {
+  PRUint32 status = aContext.mStatus;
 #ifdef NS_ENABLE_TSF
-  nsTextStore::SetIMEEnabled(aState);
+  nsTextStore::SetInputMode(aContext);
 #endif //NS_ENABLE_TSF
 #ifdef DEBUG_KBSTATE
-  printf("SetIMEEnabled: %s\n", (aState == nsIWidget::IME_STATUS_ENABLED ||
-                                 aState == nsIWidget::IME_STATUS_PLUGIN)? 
-                                "Enabled": "Disabled");
+  printf("SetInputMode: %s\n", (status == nsIWidget::IME_STATUS_ENABLED ||
+                                status == nsIWidget::IME_STATUS_PLUGIN) ? 
+                               "Enabled" : "Disabled");
 #endif 
   if (nsIMM32Handler::IsComposing()) {
     ResetInputState();
   }
-  mIMEEnabled = aState;
-  PRBool enable = (aState == nsIWidget::IME_STATUS_ENABLED ||
-                   aState == nsIWidget::IME_STATUS_PLUGIN);
+  mIMEEnabled = status;
+  PRBool enable = (status == nsIWidget::IME_STATUS_ENABLED ||
+                   status == nsIWidget::IME_STATUS_PLUGIN);
 
 #if defined(WINCE_HAVE_SOFTKB)
-  sSoftKeyboardState = (aState != nsIWidget::IME_STATUS_DISABLED);
+  sSoftKeyboardState = (status != nsIWidget::IME_STATUS_DISABLED);
   nsWindowCE::ToggleSoftKB(mWnd, sSoftKeyboardState);
 #endif
 
