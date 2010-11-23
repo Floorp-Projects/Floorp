@@ -721,7 +721,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
-      if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+      if (GetValueChanged()) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
         // XXX GetValue should be const
@@ -822,8 +822,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // we have to re-set it. This is only the case when GetValueMode() returns
     // VALUE_MODE_VALUE.
     if (aName == nsGkAtoms::value &&
-        !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
-        GetValueMode() == VALUE_MODE_VALUE) {
+        !GetValueChanged() && GetValueMode() == VALUE_MODE_VALUE) {
       SetDefaultValueAsValue();
     }
 
@@ -1438,7 +1437,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
 {
-  PRBool valueChangedBefore = GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
+  PRBool valueChangedBefore = GetValueChanged();
 
   SET_BOOLBIT(mBitField, BF_VALUE_CHANGED, aValueChanged);
 
@@ -1504,13 +1503,6 @@ nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged,
                                      NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
-}
-
-
-PRBool
-nsHTMLInputElement::GetCheckedChanged() const
-{
-  return GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
 }
 
 NS_IMETHODIMP
@@ -3199,7 +3191,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_HIDDEN:
       {
-        if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+        if (GetValueChanged()) {
           inputState = new nsHTMLInputElementState();
           if (!inputState) {
             return NS_ERROR_OUT_OF_MEMORY;
@@ -3761,7 +3753,7 @@ nsHTMLInputElement::IsTooLong()
 {
   if (!MaxLengthApplies() ||
       !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength) ||
-      !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
+      !GetValueChanged()) {
     return PR_FALSE;
   }
 
@@ -4405,7 +4397,7 @@ nsHTMLInputElement::GetDefaultValueFromContent(nsAString& aValue)
 NS_IMETHODIMP_(PRBool)
 nsHTMLInputElement::ValueChanged() const
 {
-  return GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
+  return GetValueChanged();
 }
 
 NS_IMETHODIMP_(void)

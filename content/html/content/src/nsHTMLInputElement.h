@@ -220,7 +220,9 @@ public:
   void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
 
   void SetCheckedChangedInternal(PRBool aCheckedChanged, PRBool aNotify);
-  PRBool GetCheckedChanged() const;
+  PRBool GetCheckedChanged() const {
+    return GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
+  }
   void AddedToRadioGroup(PRBool aNotify = PR_TRUE);
   void WillRemoveFromRadioGroup();
   /**
@@ -535,6 +537,14 @@ protected:
   nsresult SetDefaultValueAsValue();
 
   /**
+   * Returns whether the value has been changed since the element has been created.
+   * @return Whether the value has been changed since the element has been created.
+   */
+  PRBool GetValueChanged() const {
+    return GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
+  }
+
+  /**
    * Return if an invalid element should have a specific UI for being invalid
    * (with :-moz-ui-invalid pseudo-class.
    *
@@ -565,7 +575,7 @@ protected:
         return GetCheckedChanged();
       case VALUE_MODE_VALUE:
       case VALUE_MODE_FILENAME:
-        return GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
+        return GetValueChanged();
       default:
         NS_NOTREACHED("We should not be there: there are no other modes.");
         return false;
