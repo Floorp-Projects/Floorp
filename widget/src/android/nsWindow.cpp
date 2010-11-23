@@ -1651,7 +1651,7 @@ nsWindow::SetInputMode(const IMEContext& aContext)
     ALOGIME("IME: SetInputMode: s=%d", aContext.mStatus);
 
     mIMEEnabled = aContext.mStatus;
-    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_SETENABLED, int(mIMEEnabled));
+    AndroidBridge::NotifyIMEEnabled(int(mIMEEnabled), aContext.mHTMLInputType);
     return NS_OK;
 }
 
