@@ -372,13 +372,6 @@ protected:
     SetFiles(files);
   }
 
-  void SetSingleFile(nsIDOMFile* aFile) {
-    nsCOMArray<nsIDOMFile> files;
-    nsCOMPtr<nsIDOMFile> file = aFile;
-    files.AppendObject(file);
-    SetFiles(files);
-  }
-
   nsresult SetIndeterminateInternal(PRBool aValue,
                                     PRBool aShouldInvalidate);
 
