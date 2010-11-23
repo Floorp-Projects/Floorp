@@ -615,56 +615,77 @@
                                                 "textbox-container");
       ]]></field>
 
-      <field name="_overLinkInDelay" readonly="true"><![CDATA[
+      <field name="_overLinkIntervalDelay" readonly="true"><![CDATA[
         100
       ]]></field>
 
-      <field name="_overLinkOutDelay" readonly="true"><![CDATA[
-        100
-      ]]></field>
-
-      <field name="_overLinkDelayTimer"><![CDATA[
+      <field name="_overLinkInterval"><![CDATA[
         null
       ]]></field>
 
       <method name="setOverLink">
         <parameter name="aURL"/>
         <body><![CDATA[
-          this._cancelOverLinkDelayTimer();
+          // NOTE: This method is called many times in a row very quickly when
+          // the user mouses over a bookmarks menu, tabs menu, or long list of
+          // links in a page, or leaves the cursor over a page with many links
+          // while scrolling.  Therefore it's important that it be fast.  Don't
+          // regress performance when you modify it!
 
           // Hide the over-link immediately if necessary.
           if ((!aURL && (XULBrowserWindow.hideOverLinkImmediately ||
                          this._hideOverLinkImmediately)) ||
               this.focused) {
+            this._clearOverLinkInterval();
             this._setOverLinkState(null);
             return;
           }
 
-          // If aURL is falsey, fade it out after a delay.  This happens on
-          // mouseout for example.
-          if (!aURL) {
-            this._overLinkDelayTimer = setTimeout(function overLinkOut(self) {
-              self._overLinkDelayTimer = null;
-              self._setOverLinkState("fade-out");
-            }, this._overLinkOutDelay, this);
-            return;
-          }
-
-          // If it's in transition, update and show it immediately.
-          if (this._overLinkTransitioning) {
+          // Update and show it immediately if it's in transition.
+          if (aURL && this._overLinkTransitioning) {
+            this._clearOverLinkInterval();
             this._updateOverLink(aURL);
             this._setOverLinkState("showing");
             return;
           }
 
-          // Delay the update if it's hidden or shown.  We delay when shown in
-          // part for performance reasons: otherwise mousing over the bookmarks
-          // menu for example is very laggy.
-          this._overLinkDelayTimer = setTimeout(function overLinkIn(self) {
-            self._overLinkDelayTimer = null;
-            self._updateOverLink(aURL);
+          this._overLinkURL = aURL;
+          this._seenNewOverLink = true;
+
+          // If the user is continually mousing over links, make this method
+          // basically a no-op.
+          if (this._overLinkInterval)
+            return;
+
+          // Otherwise, the user has just moused over or focused a single link.
+          // Start the interval and signal that we should potentially show the
+          // over-link the first time it fires by unsetting _seenNewOverLink.
+          this._seenNewOverLink = false;
+          this._overLinkInterval = setInterval(this._overLinkIntervalCallback,
+                                               this._overLinkIntervalDelay,
+                                               this);
+        ]]></body>
+      </method>
+
+      <method name="_overLinkIntervalCallback">
+        <parameter name="self"/>
+        <body><![CDATA[
+          // If the user is still mousing over links, bail out early.
+          if (self._seenNewOverLink) {
+            self._seenNewOverLink = false;
+            return;
+          }
+
+          // Otherwise, the user has stopped over a link.  Clear the interval
+          // and update the over-link.
+          self._clearOverLinkInterval();
+          if (self._overLinkURL) {
+            self._updateOverLink(self._overLinkURL);
             self._setOverLinkState("fade-in");
-          }, this._overLinkInDelay, this);
+          }
+          else {
+            self._setOverLinkState("fade-out");
+          }
         ]]></body>
       </method>
 
@@ -676,11 +697,11 @@
         ]]></body>
       </method>
 
-      <method name="_cancelOverLinkDelayTimer">
+      <method name="_clearOverLinkInterval">
         <body><![CDATA[
-          if (this._overLinkDelayTimer) {
-            clearTimeout(this._overLinkDelayTimer);
-            this._overLinkDelayTimer = null;
+          if (this._overLinkInterval) {
+            clearInterval(this._overLinkInterval);
+            this._overLinkInterval = null;
           }
         ]]></body>
       </method>
