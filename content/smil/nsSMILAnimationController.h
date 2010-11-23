@@ -203,6 +203,25 @@ protected:
   TimeContainerHashtable     mChildContainerTable;
   mozilla::TimeStamp         mCurrentSampleTime;
   mozilla::TimeStamp         mStartTime;
+
+  // Average time between samples from the refresh driver. This is used to
+  // detect large unexpected gaps between samples such as can occur when the
+  // computer sleeps. The nature of the SMIL model means that catching up these
+  // large gaps can be expensive as, for example, many events may need to be
+  // dispatched for the intervening time when no samples were received.
+  //
+  // In such cases, we ignore the intervening gap and continue sampling from
+  // when we were expecting the next sample to arrive.
+  //
+  // Note that we only do this for SMIL and not CSS transitions (which doesn't
+  // have so much work to do to catch up) nor scripted animations (which expect
+  // animation time to follow real time).
+  //
+  // This behaviour does not affect pausing (since we're not *expecting* any
+  // samples then) nor seeking (where the SMIL model behaves somewhat
+  // differently such as not dispatching events).
+  nsSMILTime                 mAvgTimeBetweenSamples;
+
   PRPackedBool               mResampleNeeded;
   // If we're told to start sampling but there are no animation elements we just
   // record the time, set the following flag, and then wait until we have an
