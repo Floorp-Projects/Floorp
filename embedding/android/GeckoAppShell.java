@@ -79,9 +79,8 @@ class GeckoAppShell
 
     static private final int NOTIFY_IME_RESETINPUTSTATE = 0;
     static private final int NOTIFY_IME_SETOPENSTATE = 1;
-    static private final int NOTIFY_IME_SETENABLED = 2;
-    static private final int NOTIFY_IME_CANCELCOMPOSITION = 3;
-    static private final int NOTIFY_IME_FOCUSCHANGE = 4;
+    static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
+    static private final int NOTIFY_IME_FOCUSCHANGE = 3;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -246,13 +245,6 @@ class GeckoAppShell
             IMEStateUpdater.enableIME();
             break;
 
-        case NOTIFY_IME_SETENABLED:
-            /* When IME is 'disabled', IME processing is disabled.
-                In addition, the IME UI is hidden */
-            GeckoApp.surfaceView.mIMEState = state;
-            IMEStateUpdater.enableIME();
-            break;
-
         case NOTIFY_IME_CANCELCOMPOSITION:
             IMEStateUpdater.resetIME();
             break;
@@ -261,8 +253,18 @@ class GeckoAppShell
             GeckoApp.surfaceView.mIMEFocus = state != 0;
             IMEStateUpdater.resetIME();
             break;
-
         }
+    }
+
+    public static void notifyIMEEnabled(int state, String hint) {
+        if (GeckoApp.surfaceView == null)
+            return;
+
+        /* When IME is 'disabled', IME processing is disabled.
+            In addition, the IME UI is hidden */
+        GeckoApp.surfaceView.mIMEState = state;
+        GeckoApp.surfaceView.mIMEHint = hint;
+        IMEStateUpdater.enableIME();
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
