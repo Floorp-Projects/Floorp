@@ -561,12 +561,15 @@ nsHTMLTextAreaElement::SetUserInput(const nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 {
+  PRBool previousValue = mValueChanged;
+
   mValueChanged = aValueChanged;
   if (!aValueChanged && !mState->IsEmpty()) {
     mState->EmptyValue();
   }
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+  if (mValueChanged != previousValue &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
