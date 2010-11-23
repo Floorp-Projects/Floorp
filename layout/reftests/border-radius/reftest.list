@@ -69,3 +69,7 @@ fails-if(cocoaWidget) == intersecting-clipping-1-refc.html intersecting-clipping
 # test that border-radius is reduced for scrollbars
 == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
 == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
+
+# Test for bad corner joins.
+== corner-joins-1.xhtml corner-joins-1-ref.xhtml
+random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml

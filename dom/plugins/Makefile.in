@@ -94,7 +94,6 @@ LIBRARY_NAME     = domplugins_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
-ENABLE_CXX_EXCEPTIONS = 1
 
 ifeq ($(MOZ_ENABLE_QT),1)
 MOCSRCS = \
@@ -140,6 +139,7 @@ endif
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/modules/plugin/base/public/ \
   -I$(topsrcdir)/modules/plugin/base/src/ \
+  -I$(topsrcdir)/xpcom/base/ \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

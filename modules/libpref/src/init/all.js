@@ -199,7 +199,7 @@ pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
 pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
 #endif
 
-pref("gfx.font_rendering.harfbuzz.level", 1);
+pref("gfx.font_rendering.harfbuzz.level", 2);
 
 #ifdef XP_WIN
 #ifndef WINCE
@@ -650,9 +650,6 @@ pref("network.protocol-handler.expose-all", true);
 // Example: make IMAP an exposed protocol
 // pref("network.protocol-handler.expose.imap", true);
 
-pref("network.hosts.smtp_server",           "mail");
-pref("network.hosts.pop_server",            "mail");
-
 // <http>
 pref("network.http.version", "1.1");	  // default
 // pref("network.http.version", "1.0");   // uncomment this out in case of problems
@@ -739,6 +736,11 @@ pref("network.http.prompt-temp-redirect", true);
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class"
 pref("network.http.qos", 0);
+
+// The number of milliseconds after sending a SYN for an HTTP connection,
+// to wait before trying a different connection. 0 means do not use a second
+// connection.
+pref("network.http.connection-retry-timeout", 250);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -991,11 +993,11 @@ pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.static",     "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more1",      "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more2",      "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more3",      "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more4",      "chrome://global/locale/intl.properties");
-pref("intl.charsetmenu.browser.more5",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more1",      "ISO-8859-1, ISO-8859-15, IBM850, x-mac-roman, windows-1252, ISO-8859-14, ISO-8859-7, x-mac-greek, windows-1253, x-mac-icelandic, ISO-8859-10, ISO-8859-3");
+pref("intl.charsetmenu.browser.more2",      "ISO-8859-4, ISO-8859-13, windows-1257, IBM852, ISO-8859-2, x-mac-ce, windows-1250, x-mac-croatian, IBM855, ISO-8859-5, ISO-IR-111, KOI8-R, x-mac-cyrillic, windows-1251, IBM866, KOI8-U, x-mac-ukrainian, ISO-8859-16, x-mac-romanian");
+pref("intl.charsetmenu.browser.more3",      "GB2312, x-gbk, gb18030, HZ-GB-2312, ISO-2022-CN, Big5, Big5-HKSCS, x-euc-tw, EUC-JP, ISO-2022-JP, Shift_JIS, EUC-KR, x-windows-949, x-johab, ISO-2022-KR");
+pref("intl.charsetmenu.browser.more4",      "armscii-8, GEOSTD8, TIS-620, ISO-8859-11, windows-874, IBM857, ISO-8859-9, x-mac-turkish, windows-1254, x-viet-tcvn5712, VISCII, x-viet-vps, windows-1258, x-mac-devanagari, x-mac-gujarati, x-mac-gurmukhi");
+pref("intl.charsetmenu.browser.more5",      "ISO-8859-6, windows-1256, IBM864, ISO-8859-8-I, windows-1255, ISO-8859-8, IBM862");
 pref("intl.charsetmenu.browser.unicode",    "UTF-8, UTF-16LE, UTF-16BE, UTF-32, UTF-32LE, UTF-32BE");
 pref("intl.charsetmenu.mailedit",           "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache",      "");
@@ -1794,10 +1796,15 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
 // set this to true.  Then, gecko processes them as mouse wheel messages.
 pref("mousewheel.emulate_at_wm_scroll", false);
 
-// Bug 514927
 // Enables or disabled the TrackPoint hack, -1 is autodetect, 0 is off,
 // and 1 is on.  Set this to 1 if TrackPoint scrolling is not working.
 pref("ui.trackpoint_hack.enabled", -1);
+
+// Setting this to a non-empty string overrides the Win32 "window class" used
+// for "normal" windows. Setting this to MozillaUIWindowClass might make
+// some trackpad drivers behave better.
+pref("ui.window_class_override", "");
+
 # WINNT
 #endif
 
@@ -2527,8 +2534,6 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
 #ifdef ANDROID
 // Handled differently under Mac/Windows
-pref("network.hosts.smtp_server", "localhost");
-pref("network.hosts.pop_server", "pop");
 pref("network.protocol-handler.warn-external.file", false);
 pref("browser.drag_out_of_frame_style", 1);
 
@@ -2803,8 +2808,6 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 #ifndef XP_MACOSX
 #ifdef XP_UNIX
 // Handled differently under Mac/Windows
-pref("network.hosts.smtp_server", "localhost");
-pref("network.hosts.pop_server", "pop");
 pref("network.protocol-handler.warn-external.file", false);
 pref("browser.drag_out_of_frame_style", 1);
 

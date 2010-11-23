@@ -62,4 +62,8 @@ ifdef MOZ_MAEMO_LIBLOCATION
                            $(NULL)
 endif
 
+ifdef MOZ_PLATFORM_MAEMO
+CPPSRCS += nsHapticFeedback.cpp
+endif
+
 include $(topsrcdir)/config/rules.mk

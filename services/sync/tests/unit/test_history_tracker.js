@@ -1,10 +1,13 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
+  Engines.register(HistoryEngine);
+  let tracker = Engines.get("history")._tracker;
+
   _("Verify we've got an empty tracker to work with.");
-  let tracker = new HistoryEngine()._tracker;
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
 
   let _counter = 0;

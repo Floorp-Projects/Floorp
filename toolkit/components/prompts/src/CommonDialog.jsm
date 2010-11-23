@@ -193,10 +193,11 @@ CommonDialog.prototype = {
                 let isOSX = ("nsILocalFileMac" in Components.interfaces);
                 if (!isOSX)
                     button.focus();
+            } else {
+                button.setAttribute("default", "true");
+                button.focus();
             }
-            // TODO:
-            // else
-            //     (tabmodal prompts need to set a default button for Enter to act upon)
+
         } else {
             if (this.args.promptType == "promptPassword")
                 this.ui.password1Textbox.select();
@@ -223,11 +224,10 @@ CommonDialog.prototype = {
             }
         } catch (e) { }
 
-        if (xulDialog)
-            Services.obs.notifyObservers(xulDialog.ownerDocument.defaultView, "common-dialog-loaded", null);
-        // TODO:
-        // else
-        //    (notify using what as the subject?)
+        let topic = "common-dialog-loaded";
+        if (!xulDialog)
+            topic = "tabmodal-dialog-loaded";
+        Services.obs.notifyObservers(this.ui.prompt, topic, null);
     },
 
     setLabelForNode: function(aNode, aLabel) {
@@ -315,6 +315,7 @@ CommonDialog.prototype = {
     },
 
     onButton0 : function() {
+        this.args.promptActive = false;
         this.args.ok = true;
         this.args.buttonNumClicked = 0;
 
@@ -337,14 +338,23 @@ CommonDialog.prototype = {
     },
 
     onButton1 : function() {
+        this.args.promptActive = false;
         this.args.buttonNumClicked = 1;
     },
 
     onButton2 : function() {
+        this.args.promptActive = false;
         this.args.buttonNumClicked = 2;
     },
 
     onButton3 : function() {
+        this.args.promptActive = false;
         this.args.buttonNumClicked = 3;
     },
+
+    abortPrompt : function() {
+        this.args.promptActive = false;
+        this.args.promptAborted = true;
+    },
+
 };

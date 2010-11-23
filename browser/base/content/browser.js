@@ -1378,6 +1378,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   OfflineApps.init();
   IndexedDBPromptHelper.init();
   gFormSubmitObserver.init();
+  AddonManager.addAddonListener(AddonsMgrListener);
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
@@ -1641,6 +1642,7 @@ function BrowserShutdown()
   OfflineApps.uninit();
   gPrivateBrowsingUI.uninit();
   IndexedDBPromptHelper.uninit();
+  AddonManager.removeAddonListener(AddonsMgrListener);
 
   var enumerator = Services.wm.getEnumerator(null);
   enumerator.getNext();
@@ -1913,12 +1915,7 @@ function BrowserReloadSkipCache() {
   BrowserReloadWithFlags(reloadFlags);
 }
 
-function BrowserHome()
-{
-  var homePage = gHomeButton.getHomePage();
-  loadOneOrMoreURIs(homePage);
-}
-
+var BrowserHome = BrowserGoHome;
 function BrowserGoHome(aEvent) {
   if (aEvent && "button" in aEvent &&
       aEvent.button == 2) // right-click: do nothing
@@ -2811,12 +2808,13 @@ function FillInHTMLTooltip(tipElement)
 #endif // MOZ_SVG
   var direction = tipElement.ownerDocument.dir;
 
-  // If the element is invalid per HTML5 Forms specifications,
-  // show the constraint validation error message instead of @tooltip.
-  if (tipElement instanceof HTMLInputElement ||
-      tipElement instanceof HTMLTextAreaElement ||
-      tipElement instanceof HTMLSelectElement ||
-      tipElement instanceof HTMLButtonElement) {
+  // If the element is invalid per HTML5 Forms specifications and has no title,
+  // show the constraint validation error message.
+  if ((tipElement instanceof HTMLInputElement ||
+       tipElement instanceof HTMLTextAreaElement ||
+       tipElement instanceof HTMLSelectElement ||
+       tipElement instanceof HTMLButtonElement) &&
+      !tipElement.hasAttribute('title')) {
     // If the element is barred from constraint validation or valid,
     // the validation message will be the empty string.
     titleText = tipElement.validationMessage;
@@ -3984,14 +3982,16 @@ var XULBrowserWindow = {
     this.defaultStatus = status;
   },
 
-  setOverLink: function (link) {
-    // Encode bidirectional formatting characters.
-    // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-    link = link.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+  setOverLink: function (url, anchorElt) {
+    if (gURLBar) {
+      // Encode bidirectional formatting characters.
+      // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
+      url = url.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
                         encodeURIComponent);
-    gURLBar.setOverLink(link);
+      gURLBar.setOverLink(url);
+    }
   },
-  
+
   // Called before links are navigated to to allow us to retarget them if needed.
   onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
     // Don't modify non-default targets or targets that aren't in top-level app
@@ -4188,7 +4188,9 @@ var XULBrowserWindow = {
     else
       this.isImage.setAttribute('disabled', 'true');
 
+    this.hideOverLinkImmediately = true;
     this.setOverLink("", null);
+    this.hideOverLinkImmediately = false;
 
     // We should probably not do this if the value has changed since the user
     // searched
@@ -4736,6 +4738,9 @@ function updateAppButtonDisplay() {
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
+#else
+  document.getElementById("appmenu-toolbar-button").hidden =
+    !displayAppButton;
 #endif
 }
 #endif
@@ -4993,134 +4998,159 @@ function asyncOpenWebPanel(event)
  *    - gatherTextUnder
  */
 
- // Called whenever the user clicks in the content area,
- // except when left-clicking on links (special case)
- // should always return true for click to go through
- function contentAreaClick(event, fieldNormalClicks)
- {
-   if (!event.isTrusted || event.getPreventDefault()) {
-     return true;
-   }
+/**
+ * Extracts linkNode and href for the current click target.
+ *
+ * @param event
+ *        The click event.
+ * @return [href, linkNode].
+ *
+ * @note linkNode will be null if the click wasn't on an anchor
+ *       element (or XLink).
+ */
+function hrefAndLinkNodeForClickEvent(event)
+{
+  function isHTMLLink(aNode)
+  {
+    return aNode instanceof HTMLAnchorElement ||
+           aNode instanceof HTMLAreaElement ||
+           aNode instanceof HTMLLinkElement;
+  }
 
-   var target = event.target;
-   var linkNode;
+  let linkNode;
+  if (isHTMLLink(event.target)) {
+    // This is a hack to work around Gecko bug 266932.
+    // Walk up the DOM looking for a parent link node, to match the existing
+    // behaviour for left click.
+    // TODO: this is no more needed and should be removed in bug 325652.
+    let node = event.target;
+    while (node) {
+      if (isHTMLLink(node) && node.hasAttribute("href"))
+        linkNode = node;
+      node = node.parentNode;
+    }
+  }
+  else {
+    let node = event.originalTarget;
+    while (node && !(node instanceof HTMLAnchorElement)) {
+      node = node.parentNode;
+    }
+    // <a> cannot be nested.  So if we find an anchor without an
+    // href, there is no useful <a> around the target.
+    if (node && node.hasAttribute("href"))
+      linkNode = node;
+  }
 
-   if (target instanceof HTMLAnchorElement ||
-       target instanceof HTMLAreaElement ||
-       target instanceof HTMLLinkElement) {
-     if (target.hasAttribute("href"))
-       linkNode = target;
+  if (linkNode)
+    return [linkNode.href, linkNode];
 
-     // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
-     // we're going to walk up the DOM looking for a parent link node,
-     // this shouldn't be necessary, but we're matching the existing behaviour for left click
-     var parent = target.parentNode;
-     while (parent) {
-       if (parent instanceof HTMLAnchorElement ||
-           parent instanceof HTMLAreaElement ||
-           parent instanceof HTMLLinkElement) {
-           if (parent.hasAttribute("href"))
-             linkNode = parent;
-       }
-       parent = parent.parentNode;
-     }
-   }
-   else {
-     linkNode = event.originalTarget;
-     while (linkNode && !(linkNode instanceof HTMLAnchorElement))
-       linkNode = linkNode.parentNode;
-     // <a> cannot be nested.  So if we find an anchor without an
-     // href, there is no useful <a> around the target
-     if (linkNode && !linkNode.hasAttribute("href"))
-       linkNode = null;
-   }
-   var wrapper = null;
-   if (linkNode) {
-     wrapper = linkNode;
-     if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
-         !event.altKey && !event.metaKey) {
-       // A Web panel's links should target the main content area.  Do this
-       // if no modifier keys are down and if there's no target or the target equals
-       // _main (the IE convention) or _content (the Mozilla convention).
-       // XXX Now that markLinkVisited is gone, we may not need to field _main and
-       // _content here.
-       target = wrapper.getAttribute("target");
-       if (fieldNormalClicks &&
-           (!target || target == "_content" || target  == "_main"))
-         // IE uses _main, SeaMonkey uses _content, we support both
-       {
-         if (!wrapper.href)
-           return true;
-         if (wrapper.getAttribute("onclick"))
-           return true;
-         // javascript links should be executed in the current browser
-         if (wrapper.href.substr(0, 11) === "javascript:")
-           return true;
-         // data links should be executed in the current browser
-         if (wrapper.href.substr(0, 5) === "data:")
-           return true;
+  // If there is no linkNode, try simple XLink.
+  let href, baseURI;
+  let node = event.target;
+  while (node) {
+    if (node.nodeType == Node.ELEMENT_NODE) {
+      href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+      if (href)
+        baseURI = node.baseURI;
+    }
+    node = node.parentNode;
+  }
 
-         try {
-           urlSecurityCheck(wrapper.href, wrapper.ownerDocument.nodePrincipal);
-         }
-         catch(ex) {
-           return false;
-         }
+  // In case of XLink, we don't return the node we got href from since
+  // callers expect <a>-like elements.
+  return [href ? makeURLAbsolute(baseURI, href) : null, null];
+}
 
-         var postData = { };
-         var url = getShortcutOrURI(wrapper.href, postData);
-         if (!url)
-           return true;
-         loadURI(url, null, postData.value, false);
-         event.preventDefault();
-         return false;
-       }
-       else if (linkNode.getAttribute("rel") == "sidebar") {
-         // This is the Opera convention for a special link that - when clicked - allows
-         // you to add a sidebar panel.  We support the Opera convention here.  The link's
-         // title attribute contains the title that should be used for the sidebar panel.
-         PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
-                                                wrapper.getAttribute("title"),
-                                                null, null, true, true);
-         event.preventDefault();
-         return false;
-       }
-     }
-     else {
-       handleLinkClick(event, wrapper.href, linkNode);
-     }
+/**
+ * Called whenever the user clicks in the content area.
+ *
+ * @param event
+ *        The click event.
+ * @param isPanelClick
+ *        Whether the event comes from a web panel.
+ * @note default event is prevented if the click is handled.
+ */
+function contentAreaClick(event, isPanelClick)
+{
+  if (!event.isTrusted || event.getPreventDefault() || event.button == 2)
+    return true;
 
-     return true;
-   } else {
-     // Try simple XLink
-     var href, realHref, baseURI;
-     linkNode = target;
-     while (linkNode) {
-       if (linkNode.nodeType == Node.ELEMENT_NODE) {
-         wrapper = linkNode;
+  let [href, linkNode] = hrefAndLinkNodeForClickEvent(event);
+  if (!href) {
+    // Not a link, handle middle mouse navigation.
+    if (event.button == 1 &&
+        gPrefService.getBoolPref("middlemouse.contentLoadURL") &&
+        !gPrefService.getBoolPref("general.autoScroll")) {
+      middleMousePaste(event);
+      event.preventDefault();
+    }
+    return true;
+  }
 
-         realHref = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-         if (realHref) {
-           href = realHref;
-           baseURI = wrapper.baseURI
-         }
-       }
-       linkNode = linkNode.parentNode;
-     }
-     if (href) {
-       href = makeURLAbsolute(baseURI, href);
-       handleLinkClick(event, href, null);
-       return true;
-     }
-   }
-   if (event.button == 1 &&
-       gPrefService.getBoolPref("middlemouse.contentLoadURL") &&
-       !gPrefService.getBoolPref("general.autoScroll")) {
-     middleMousePaste(event);
-   }
-   return true;
- }
+  // This code only applies if we have a linkNode (i.e. clicks on real anchor
+  // elements, as opposed to XLink).
+  if (linkNode && event.button == 0 &&
+      !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
+    // A Web panel's links should target the main content area.  Do this
+    // if no modifier keys are down and if there's no target or the target
+    // equals _main (the IE convention) or _content (the Mozilla convention).
+    let target = linkNode.target;
+    let mainTarget = !target || target == "_content" || target  == "_main";
+    if (isPanelClick && mainTarget) {
+      // javascript and data links should be executed in the current browser.
+      if (linkNode.getAttribute("onclick") ||
+          href.substr(0, 11) === "javascript:" ||
+          href.substr(0, 5) === "data:")
+        return true;
 
+      try {
+        urlSecurityCheck(href, linkNode.ownerDocument.nodePrincipal);
+      }
+      catch(ex) {
+        // Prevent loading unsecure destinations.
+        event.preventDefault();
+        return true;
+      }
+
+      let postData = {};
+      let url = getShortcutOrURI(href, postData);
+      if (!url)
+        return true;
+      loadURI(url, null, postData.value, false);
+      event.preventDefault();
+      return true;
+    }
+
+    if (linkNode.getAttribute("rel") == "sidebar") {
+      // This is the Opera convention for a special link that, when clicked,
+      // allows to add a sidebar panel.  The link's title attribute contains
+      // the title that should be used for the sidebar panel.
+      PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(href),
+                                             linkNode.getAttribute("title"),
+                                             null, null, true, true);
+      event.preventDefault();
+      return true;
+    }
+  }
+
+  handleLinkClick(event, href, linkNode);
+
+  // Mark the page as a user followed link.  This is done so that history can
+  // distinguish automatic embed visits from user activated ones.  For example
+  // pages loaded in frames are embed visits and lost with the session, while
+  // visits across frames should be preserved.
+  try {
+    PlacesUIUtils.markPageAsFollowedLink(href);
+  } catch (ex) { /* Skip invalid URIs. */ }
+
+  return true;
+}
+
+/**
+ * Handles clicks on links.
+ *
+ * @return true if the click event was handled, false otherwise.
+ */
 function handleLinkClick(event, href, linkNode) {
   if (event.button == 2) // right click
     return false;
@@ -5134,6 +5164,7 @@ function handleLinkClick(event, href, linkNode) {
   if (where == "save") {
     saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true,
             true, doc.documentURIObject);
+    event.preventDefault();
     return true;
   }
 
@@ -5141,12 +5172,20 @@ function handleLinkClick(event, href, linkNode) {
   openLinkIn(href, where, { fromContent: true,
                             referrerURI: doc.documentURIObject,
                             charset: doc.characterSet });
-  event.stopPropagation();
+  event.preventDefault();
   return true;
 }
 
 function middleMousePaste(event) {
-  var url = getShortcutOrURI(readFromClipboard());
+  let clipboard = readFromClipboard();
+  if (!clipboard)
+    return;
+
+  // Strip embedded newlines and surrounding whitespace, to match the URL
+  // bar's behavior (stripsurroundingwhitespace)
+  clipboard.replace(/\s*\n\s*/g, "");
+
+  let url = getShortcutOrURI(clipboard);
   try {
     makeURI(url);
   } catch (ex) {
@@ -6573,10 +6612,15 @@ var FeedHandler = {
   onFeedButtonClick: function(event) {
     event.stopPropagation();
 
-    if (event.target.hasAttribute("feed") &&
-        event.eventPhase == Event.AT_TARGET &&
+    let feeds = gBrowser.selectedBrowser.feeds || [];
+    // If there are multiple feeds, the menu will open, so no need to do
+    // anything. If there are no feeds, nothing to do either.
+    if (feeds.length != 1)
+      return;
+
+    if (event.eventPhase == Event.AT_TARGET &&
         (event.button == 0 || event.button == 1)) {
-        this.subscribeToFeed(null, event);
+      this.subscribeToFeed(feeds[0].href, event);
     }
   },
 
@@ -6605,12 +6649,8 @@ var FeedHandler = {
     while (menuPopup.firstChild)
       menuPopup.removeChild(menuPopup.firstChild);
 
-    if (feeds.length == 1) {
-      var feedButton = document.getElementById("feed-button");
-      if (feedButton)
-        feedButton.setAttribute("feed", feeds[0].href);
+    if (feeds.length <= 1)
       return false;
-    }
 
     // Build the menu showing the available feed choices for viewing.
     for (var i = 0; i < feeds.length; ++i) {
@@ -6683,35 +6723,30 @@ var FeedHandler = {
    * a page is loaded or the user switches tabs to a page that has feeds.
    */
   updateFeeds: function() {
-    var feedButton = document.getElementById("feed-button");
+    clearTimeout(this._updateFeedTimeout);
 
     var feeds = gBrowser.selectedBrowser.feeds;
-    if (!feeds || feeds.length == 0) {
-      if (feedButton) {
-        feedButton.disabled = true;
-        feedButton.removeAttribute("feed");
-      }
+    var haveFeeds = feeds && feeds.length > 0;
+
+    var feedButton = document.getElementById("feed-button");
+    if (feedButton)
+      feedButton.disabled = !haveFeeds;
+
+    if (!haveFeeds) {
       this._feedMenuitem.setAttribute("disabled", "true");
-      this._feedMenupopup.setAttribute("hidden", "true");
       this._feedMenuitem.removeAttribute("hidden");
+      this._feedMenupopup.setAttribute("hidden", "true");
+      return;
+    }
+
+    if (feeds.length > 1) {
+      this._feedMenuitem.setAttribute("hidden", "true");
+      this._feedMenupopup.removeAttribute("hidden");
     } else {
-      if (feedButton)
-        feedButton.disabled = false;
-
-      if (feeds.length > 1) {
-        this._feedMenuitem.setAttribute("hidden", "true");
-        this._feedMenupopup.removeAttribute("hidden");
-        if (feedButton)
-          feedButton.removeAttribute("feed");
-      } else {
-        if (feedButton)
-          feedButton.setAttribute("feed", feeds[0].href);
-
-        this._feedMenuitem.setAttribute("feed", feeds[0].href);
-        this._feedMenuitem.removeAttribute("disabled");
-        this._feedMenuitem.removeAttribute("hidden");
-        this._feedMenupopup.setAttribute("hidden", "true");
-      }
+      this._feedMenuitem.setAttribute("feed", feeds[0].href);
+      this._feedMenuitem.removeAttribute("disabled");
+      this._feedMenuitem.removeAttribute("hidden");
+      this._feedMenupopup.setAttribute("hidden", "true");
     }
   },
 
@@ -6728,10 +6763,13 @@ var FeedHandler = {
 
     browserForLink.feeds.push({ href: link.href, title: link.title });
 
+    // If this addition was for the current browser, update the UI. For
+    // background browsers, we'll update on tab switch.
     if (browserForLink == gBrowser.selectedBrowser) {
-      var feedButton = document.getElementById("feed-button");
-      if (feedButton)
-        feedButton.collapsed = false;
+      // Batch updates to avoid updating the UI for multiple onLinkAdded events
+      // fired within 100ms of each other.
+      clearTimeout(this._updateFeedTimeout);
+      this._updateFeedTimeout = setTimeout(this.updateFeeds.bind(this), 100);
     }
   }
 };
@@ -7391,6 +7429,13 @@ function getNotificationBox(aWindow) {
   return null;
 };
 
+function getTabModalPromptBox(aWindow) {
+  var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
+  if (foundBrowser)
+    return gBrowser.getTabModalPromptBox(foundBrowser);
+  return null;
+};
+
 /* DEPRECATED */
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
@@ -7845,17 +7890,11 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
     for (let i = 0; i < browsers.length; i++) {
       let browser = browsers[i];
       if (browser.currentURI.equals(aURI)) {
-        gURLBar.handleRevert();
-        // We need the current tab so we can check if we should close it
-        let prevTab = gBrowser.selectedTab;
         // Focus the matching window & tab
         aWindow.focus();
         aWindow.gBrowser.tabContainer.selectedIndex = i;
         if (aCallback)
           aCallback(browser);
-        // Close the previously selected tab if it was empty
-        if (isTabEmpty(prevTab))
-          gBrowser.removeTab(prevTab);
         return true;
       }
     }
@@ -8015,3 +8054,33 @@ function duplicateTabIn(aTab, where, historyIndex) {
       break;
   }
 }
+
+/*
+ * When addons are installed/uninstalled, check and see if the number of items
+ * on the add-on bar changed:
+ * - If an add-on was installed, incrementing the count, show the bar.
+ * - If an add-on was uninstalled, and no more items are left, hide the bar.
+ */
+let AddonsMgrListener = {
+  get addonBar() document.getElementById("addon-bar"),
+  get statusBar() document.getElementById("status-bar"),
+  getAddonBarItemCount: function() {
+    // Take into account the contents of the status bar shim for the count.
+    return this.addonBar.childNodes.length - 1 +
+           this.statusBar.childNodes.length;
+  },
+  onInstalling: function(aAddon) {
+    this.lastAddonBarCount = this.getAddonBarItemCount();
+  },
+  onInstalled: function(aAddon) {
+    if (this.getAddonBarItemCount() > this.lastAddonBarCount)
+      setToolbarVisibility(this.addonBar, true);
+  },
+  onUninstalling: function(aAddon) {
+    this.lastAddonBarCount = this.getAddonBarItemCount();
+  },
+  onUninstalled: function(aAddon) {
+    if (this.lastAddonBarCount > 0 && this.getAddonBarItemCount() == 0)
+      setToolbarVisibility(this.addonBar, false);
+  }
+};

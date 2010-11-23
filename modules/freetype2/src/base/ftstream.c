@@ -287,7 +287,7 @@
     {
       /* check current and new position */
       if ( stream->pos >= stream->size        ||
-           stream->pos + count > stream->size )
+           stream->size - stream->pos < count )
       {
         FT_ERROR(( "FT_Stream_EnterFrame:"
                    " invalid i/o; pos = 0x%lx, count = %lu, size = 0x%lx\n",

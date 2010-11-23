@@ -44,6 +44,7 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsRegion.h"
+#include "nsString.h"
 
 #include "prthread.h"
 #include "nsEvent.h"
@@ -121,6 +122,11 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_IWIDGET_IID \
   { 0xcc443f0b, 0xaf39, 0x415d, \
     { 0x9c, 0x4b, 0x7e, 0x06, 0xea, 0xa8, 0xb1, 0x3b } }
+
+// d64532e0-03d6-421c-8e63-da2cff624825
+#define NS_IWIDGET_MOZILLA_2_0_BRANCH_IID \
+  { 0xd64532e0, 0x03d6, 0x421c, \
+    { 0x8e, 0x63, 0xda, 0x2c, 0xff, 0x62, 0x48, 0x25 } }
 
 /*
  * Window shadow styles
@@ -225,6 +231,18 @@ struct nsIMEUpdatePreference {
   }
   PRPackedBool mWantUpdates;
   PRPackedBool mWantHints;
+};
+
+
+/* 
+ * Contains IMEStatus plus information about the current 
+ * input context that the IME can use as hints if desired.
+ */
+struct IMEContext {
+  PRUint32 mStatus;
+
+  /* The type of the input if the input is a html input field */
+  nsString mHTMLInputType;
 };
 
 
@@ -1343,5 +1361,25 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget, NS_IWIDGET_IID)
+
+class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
+  public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)
+
+    /*
+     * Notifies the IME if the input context changes.
+     *
+     * aContext cannot be null.
+     * Set mStatus to 'Enabled' or 'Disabled' or 'Password'.
+     */
+    NS_IMETHOD SetInputMode(const IMEContext& aContext) = 0;
+
+    /*
+     * Get IME is 'Enabled' or 'Disabled' or 'Password' and other input context
+     */
+    NS_IMETHOD GetInputMode(IMEContext& aContext) = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget_MOZILLA_2_0_BRANCH, NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)
 
 #endif // nsIWidget_h__

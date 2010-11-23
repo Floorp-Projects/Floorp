@@ -1,0 +1,98 @@
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css" ?>
+<root>
+  <script type="text/javascript" src="/MochiKit/packed.js" xmlns="http://www.w3.org/1999/xhtml"/>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js" xmlns="http://www.w3.org/1999/xhtml"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none;"></div>
+    <textarea id="test" style="height: 300px; max-width: 800px; overflow: scroll;"
+              rows="10" cols="160" readonly="readonly"/>
+  </body>
+
+<pre id="test" xmlns="http://www.w3.org/1999/xhtml">
+<script class="testbody" type="text/javascript" xmlns="http://www.w3.org/1999/xhtml">
+<![CDATA[
+function setPass(aNode) {
+  aNode.setUserData("pass", true, null);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("load", function() {
+  const nsIDOMNodeFilter = Components.interfaces.nsIDOMNodeFilter;
+  var walker = document.createTreeWalker(
+    document,
+    nsIDOMNodeFilter.SHOW_TEXT | nsIDOMNodeFilter.SHOW_DOCUMENT,
+    null,
+    true
+  );
+  setPass(walker.firstChild());
+  while (walker.nextSibling()) {
+    setPass(walker.currentNode);
+  }
+
+/*
+From http://www.w3.org/TR/2000/REC-DOM-Level-2-Traversal-Range-20001113/traversal.html#Traversal-TreeWalker
+Omitting nodes from the logical view of a subtree can result in a structure that
+is substantially different from the same subtree in the complete, unfiltered
+document. Nodes that are siblings in the TreeWalker view may be children of
+different, widely separated nodes in the original view. For instance, consider a
+NodeFilter that skips all nodes except for Text nodes and the root node of a
+document. In the logical view that results, all text nodes will be siblings and
+appear as direct children of the root node, no matter how deeply nested the
+structure of the original document.
+*/
+
+  walker2 = document.createTreeWalker(document, nsIDOMNodeFilter.SHOW_TEXT, null, true);
+  while (walker2.nextNode()) {
+    var cNode = walker2.currentNode;
+    ok(cNode.getUserData("pass"), "Every text node should appear: " + walker2.currentNode.nodeValue);
+    walker.currentNode = cNode;
+    var parent = walker.parentNode();
+    is(parent, document, "parent of text node should be document");
+
+    // Check nextSibling's previousSibling.
+    walker.currentNode = cNode;
+    if (walker.nextSibling()) {
+      is(cNode, walker.previousSibling(), "nextSibling.previousSibling should be consistent");
+    }
+
+    // Check previousSibling's nextSibling.
+    walker.currentNode = cNode;
+    if (walker.previousSibling()) {
+      is(cNode, walker.nextSibling(), "previousSibling.nextSibling should be consistent");
+    }
+  }
+  SimpleTest.finish();
+}, true);
+]]>
+</script>
+</pre>
+
+  <test>
+    zero
+    <one>
+      one-A
+      <two>
+        two-A
+      </two>
+      <two>
+        two-B
+      </two>
+      one-B
+    </one>
+    <one>
+      one-C
+      <two>
+        two-D
+      </two>
+      <two>
+        two-E
+      </two>
+      one-F
+    </one>
+    zero
+  </test>
+</root>
+

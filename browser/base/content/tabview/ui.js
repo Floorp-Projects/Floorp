@@ -88,6 +88,12 @@ let UI = {
   // An array of functions to be called at uninit time
   _cleanupFunctions: [],
   
+  // Constant: _maxInteractiveWait
+  // If the UI is in the middle of an operation, this is the max amount of
+  // milliseconds to wait between input events before we no longer consider
+  // the operation interactive.
+  _maxInteractiveWait: 250,
+
   // Variable: _privateBrowsing
   // Keeps track of info related to private browsing, including: 
   //   transitionStage - what step we're on in entering/exiting PB
@@ -105,6 +111,9 @@ let UI = {
   init: function UI_init() {
     try {
       let self = this;
+
+      // initialize the direction of the page
+      this._initPageDirection();
 
       // ___ storage
       Storage.init();
@@ -168,6 +177,7 @@ let UI = {
 
       // ___ Storage
 
+      GroupItems.pauseArrange();
       GroupItems.init();
 
       let firstTime = true;
@@ -218,9 +228,11 @@ let UI = {
       // initialized.
       let event = document.createEvent("Events");
       event.initEvent("tabviewframeinitialized", true, false);
-      dispatchEvent(event);
+      dispatchEvent(event);      
     } catch(e) {
       Utils.log(e);
+    } finally {
+      GroupItems.resumeArrange();
     }
   },
 
@@ -244,7 +256,11 @@ let UI = {
     this._reorderTabsOnHide = null;
     this._frameInitialized = false;
   },
-  
+
+  // Property: rtl
+  // Returns true if we are in RTL mode, false otherwise
+  rtl: false,
+
   // Function: reset
   // Resets the Panorama view to have just one group with all tabs
   // and, if firstTime == true, add the welcome video/tab
@@ -255,14 +271,20 @@ let UI = {
     pageBounds.inset(padding, padding);
 
     let $actions = iQ("#actions");
-    if ($actions)
+    if ($actions) {
       pageBounds.width -= $actions.width();
+      if (UI.rtl)
+        pageBounds.left += $actions.width() - padding;
+    }
 
     // ___ make a fresh groupItem
     let box = new Rect(pageBounds);
     box.width = Math.min(box.width * 0.667,
                          pageBounds.width - (welcomeWidth + padding));
     box.height = box.height * 0.667;
+    if (UI.rtl) {
+      box.left = pageBounds.left + welcomeWidth + 2 * padding;
+    }
 
     GroupItems.groupItems.forEach(function(group) {
       group.close();
@@ -291,7 +313,7 @@ let UI = {
 
       newTabItem.parent.remove(newTabItem);
       let aspect = TabItems.tabHeight / TabItems.tabWidth;
-      let welcomeBounds = new Rect(box.right + padding, box.top,
+      let welcomeBounds = new Rect(UI.rtl ? pageBounds.left : box.right, box.top,
                                    welcomeWidth, welcomeWidth * aspect);
       newTabItem.setBounds(welcomeBounds, true);
       GroupItems.setActiveGroupItem(groupItem);
@@ -305,6 +327,18 @@ let UI = {
     iQ(":focus").each(function(element) {
       element.blur();
     });
+  },
+
+  // ----------
+  // Function: isIdle
+  // Returns true if the last interaction was long enough ago to consider the
+  // UI idle. Used to determine whether interactivity would be sacrificed if 
+  // the CPU was to become busy.
+  //
+  isIdle: function UI_isIdle() {
+    let time = Date.now();
+    let maxEvent = Math.max(drag.lastMoveTime, resize.lastMoveTime);
+    return (time - maxEvent) > this._maxInteractiveWait;
   },
 
   // ----------
@@ -351,6 +385,17 @@ let UI = {
     return gTabViewDeck.selectedIndex == 1;
   },
 
+  // ---------
+  // Function: _initPageDirection
+  // Initializes the page base direction
+  _initPageDirection: function UI__initPageDirection() {
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                    getService(Ci.nsIXULChromeRegistry);
+    let dir = chromeReg.isLocaleRTL("global");
+    document.documentElement.setAttribute("dir", dir ? "rtl" : "ltr");
+    this.rtl = dir;
+  },
+
   // ----------
   // Function: showTabView
   // Shows TabView and hides the main browser UI.
@@ -359,6 +404,9 @@ let UI = {
   showTabView: function UI_showTabView(zoomOut) {
     if (this._isTabViewVisible())
       return;
+
+    // initialize the direction of the page
+    this._initPageDirection();
 
     var self = this;
     var currentTab = this._currentTab;
@@ -423,6 +471,8 @@ let UI = {
     if (!this._isTabViewVisible())
       return;
 
+    // another tab might be select if user decides to stay on a page when
+    // a onclose confirmation prompts.
     GroupItems.removeHiddenGroups();
     TabItems.pausePainting();
 
@@ -619,31 +669,27 @@ let UI = {
       self.onTabSelect(tab);
     };
 
+    // TabPinned
+    this._eventListeners.pinned = function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
+        return;
+
+      TabItems.handleTabPin(tab);
+      GroupItems.addAppTab(tab);
+    };
+
+    // TabUnpinned
+    this._eventListeners.unpinned = function(tab) {
+      if (tab.ownerDocument.defaultView != gWindow)
+        return;
+
+      TabItems.handleTabUnpin(tab);
+      GroupItems.removeAppTab(tab);
+    };
+
     // Actually register the above handlers
     for (let name in this._eventListeners)
       AllTabs.register(name, this._eventListeners[name]);
-
-    // Start watching for tab pin events, and set up our uninit for same.
-    function handleTabPin(event) {
-      TabItems.handleTabPin(event.originalTarget);
-      GroupItems.addAppTab(event.originalTarget);
-    }
-
-    gBrowser.tabContainer.addEventListener("TabPinned", handleTabPin, false);
-    this._cleanupFunctions.push(function() {
-      gBrowser.tabContainer.removeEventListener("TabPinned", handleTabPin, false);
-    });
-
-    // Start watching for tab unpin events, and set up our uninit for same.
-    function handleTabUnpin(event) {
-      TabItems.handleTabUnpin(event.originalTarget);
-      GroupItems.removeAppTab(event.originalTarget);
-    }
-
-    gBrowser.tabContainer.addEventListener("TabUnpinned", handleTabUnpin, false);
-    this._cleanupFunctions.push(function() {
-      gBrowser.tabContainer.removeEventListener("TabUnpinned", handleTabUnpin, false);
-    });
   },
 
   // ----------
@@ -655,6 +701,7 @@ let UI = {
   },
 
   // ----------
+  // Function: goToTab
   // Selects the given xul:tab in the browser.
   goToTab: function UI_goToTab(xulTab) {
     // If it's not focused, the onFocus listener would handle it.
@@ -686,6 +733,11 @@ let UI = {
     // selected tab, show chrome.
     if (this._isTabViewVisible())
       this.hideTabView();
+
+    // another tab might be selected when hideTabView() is invoked so a
+    // validation is needed.
+    if (this._currentTab != tab)
+      return;
 
     let oldItem = null;
     let newItem = null;
@@ -791,11 +843,16 @@ let UI = {
     var self = this;
 
     iQ(window).keyup(function(event) {
-      if (!event.metaKey) Keys.meta = false;
+      if (!event.metaKey) 
+        Keys.meta = false;
     });
 
     iQ(window).keydown(function(event) {
-      if (event.metaKey) Keys.meta = true;
+      if (event.metaKey) 
+        Keys.meta = true;
+
+      if (isSearchEnabled())
+        return;
 
       function getClosestTabBy(norm) {
         if (!self.getActiveTab())
@@ -852,7 +909,7 @@ let UI = {
                  event.keyCode == KeyEvent.DOM_VK_ENTER) {
         let activeTab = self.getActiveTab();
         if (activeTab)
-            activeTab.zoomIn();
+          activeTab.zoomIn();
 
         event.stopPropagation();
         event.preventDefault();
@@ -966,11 +1023,12 @@ let UI = {
     }
 
     function collapse() {
+      let center = phantom.bounds().center();
       phantom.animate({
         width: 0,
         height: 0,
-        top: phantom.position().x + phantom.height()/2,
-        left: phantom.position().y + phantom.width()/2
+        top: center.y,
+        left: center.x
       }, {
         duration: 300,
         complete: function() {
@@ -1076,7 +1134,7 @@ let UI = {
         return;
 
       var bounds = item.getBounds();
-      bounds.left += newPageBounds.left - self._pageBounds.left;
+      bounds.left += (UI.rtl ? -1 : 1) * (newPageBounds.left - self._pageBounds.left);
       bounds.left *= scale;
       bounds.width *= scale;
 

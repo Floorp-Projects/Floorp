@@ -61,7 +61,7 @@ load 369150-2.html
 load 369227-1.xhtml
 load 369547-1.html
 load 370699-1.html
-asserts(1) load 370794-1.html # Bug 550325
+load 370794-1.html
 load 370866-1.xhtml
 load 370884-1.xhtml
 load 371348-1.xhtml
@@ -340,6 +340,7 @@ load 590404.html
 load 591141.html
 asserts(0-1) load 592118.html
 load 594808-1.html
+asserts(4) load 595435-1.xhtml # bug 610331
 load 603490-1.html
 load 603510-1.html
 load 604314-1.html

@@ -66,6 +66,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
+#include "AudioParent.h"
 
 #ifdef MOZ_PERMISSIONS
 #include "nsPermissionManager.h"
@@ -199,7 +200,7 @@ ContentParent::IsAlive()
 }
 
 bool
-ContentParent::RecvReadPrefsArray(nsTArray<PrefTuple> *prefs)
+ContentParent::RecvReadPrefsArray(InfallibleTArray<PrefTuple> *prefs)
 {
     EnsurePrefService();
     mPrefService->MirrorPreferences(prefs);
@@ -218,7 +219,7 @@ ContentParent::EnsurePrefService()
 }
 
 bool
-ContentParent::RecvReadPermissions(nsTArray<IPC::Permission>* aPermissions)
+ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions)
 {
 #ifdef MOZ_PERMISSIONS
     nsRefPtr<nsPermissionManager> permissionManager =
@@ -361,6 +362,24 @@ ContentParent::DeallocPTestShell(PTestShellParent* shell)
   delete shell;
   return true;
 }
+ 
+PAudioParent*
+ContentParent::AllocPAudio(const PRInt32& numChannels,
+                           const PRInt32& rate,
+                           const PRInt32& format)
+{
+    AudioParent *parent = new AudioParent(numChannels, rate, format);
+    parent->AddRef();
+    return parent;
+}
+
+bool
+ContentParent::DeallocPAudio(PAudioParent* doomed)
+{
+    AudioParent *parent = static_cast<AudioParent*>(doomed);
+    NS_RELEASE(parent);
+    return true;
+}
 
 PNeckoParent* 
 ContentParent::AllocPNecko()
@@ -380,11 +399,12 @@ ContentParent::AllocPExternalHelperApp(const IPC::URI& uri,
                                        const nsCString& aMimeContentType,
                                        const nsCString& aContentDisposition,
                                        const bool& aForceSave,
-                                       const PRInt64& aContentLength)
+                                       const PRInt64& aContentLength,
+                                       const IPC::URI& aReferrer)
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
-    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave);
+    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave, aReferrer);
     return parent;
 }
 
@@ -461,9 +481,9 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
                                   const nsString& title,
                                   const nsString& defaultFile,
                                   const nsString& defaultExtension,
-                                  const nsTArray<nsString>& filters,
-                                  const nsTArray<nsString>& filterNames,
-                                  nsTArray<nsString>* files,
+                                  const InfallibleTArray<nsString>& filters,
+                                  const InfallibleTArray<nsString>& filterNames,
+                                  InfallibleTArray<nsString>* files,
                                   PRInt16* retValue,
                                   nsresult* result)
 {
@@ -601,7 +621,7 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
 
 bool
 ContentParent::RecvSyncMessage(const nsString& aMsg, const nsString& aJSON,
-                               nsTArray<nsString>* aRetvals)
+                               InfallibleTArray<nsString>* aRetvals)
 {
   nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sParentProcessManager;
   if (ppm) {

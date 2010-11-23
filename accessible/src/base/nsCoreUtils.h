@@ -41,6 +41,7 @@
 
 #include "nsAccessibilityAtoms.h"
 
+#include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsIBoxObject.h"
@@ -223,11 +224,6 @@ public:
     GetDocShellTreeItemFor(nsINode *aNode);
 
   /**
-   * Return true if document is loading.
-   */
-  static PRBool IsDocumentBusy(nsIDocument *aDocument);
-
-  /**
    * Return true if the given document is root document.
    */
   static PRBool IsRootDocument(nsIDocument *aDocument);
@@ -305,122 +301,11 @@ public:
                              nsAString& aLanguage);
 
   /**
-   * Return the array of elements the given node is referred to by its
-   * IDRefs attribute.
-   *
-   * @param aContent     [in] the given node
-   * @param aAttr        [in] IDRefs attribute on the given node
-   * @param aRefElements [out] result array of elements
-   */
-  static void GetElementsByIDRefsAttr(nsIContent *aContent, nsIAtom *aAttr,
-                                      nsIArray **aRefElements);
-
-  /**
-   * Return the array of elements having IDRefs that points to the given node.
-   *
-   * @param  aRootContent  [in] root element to search inside
-   * @param  aContent      [in] an element having ID attribute
-   * @param  aIDRefsAttr   [in] IDRefs attribute
-   * @param  aElements     [out] result array of elements
-   */
-  static void GetElementsHavingIDRefsAttr(nsIContent *aRootContent,
-                                          nsIContent *aContent,
-                                          nsIAtom *aIDRefsAttr,
-                                          nsIArray **aElements);
-
-  /**
-   * Helper method for GetElementsHavingIDRefsAttr.
-   */
-  static void GetElementsHavingIDRefsAttrImpl(nsIContent *aRootContent,
-                                              nsCString& aIdWithSpaces,
-                                              nsIAtom *aIDRefsAttr,
-                                              nsIMutableArray *aElements);
-
-  /**
    * Return computed styles declaration for the given node.
    */
   static already_AddRefed<nsIDOMCSSStyleDeclaration>
     GetComputedStyleDeclaration(const nsAString& aPseudoElt,
                                 nsIContent *aContent);
-
-  /**
-   * Search element in neighborhood of the given element by tag name and
-   * attribute value that equals to ID attribute of the given element.
-   * ID attribute can be either 'id' attribute or 'anonid' if the element is
-   * anonymous.
-   * The first matched content will be returned.
-   *
-   * @param aForNode - the given element the search is performed for
-   * @param aRelationAttrs - an array of attributes, element is attribute name of searched element, ignored if aAriaProperty passed in
-   * @param aAttrNum - how many attributes in aRelationAttrs
-   * @param aTagName - tag name of searched element, or nsnull for any -- ignored if aAriaProperty passed in
-   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
-   *                                  given element big.
-   */
-  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
-                                                 nsIAtom **aRelationAttrs, 
-                                                 PRUint32 aAttrNum,
-                                                 nsIAtom *aTagName = nsnull,
-                                                 PRUint32 aAncestorLevelsToSearch = 5);
-
-  /**
-   * Overloaded version of FindNeighbourPointingToNode to accept only one
-   * relation attribute.
-   */
-  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
-                                                 nsIAtom *aRelationAttr, 
-                                                 nsIAtom *aTagName = nsnull,
-                                                 PRUint32 aAncestorLevelsToSearch = 5);
-
-  /**
-   * Search for element that satisfies the requirements in subtree of the given
-   * element. The requirements are tag name, attribute name and value of
-   * attribute.
-   * The first matched content will be returned.
-   *
-   * @param aId - value of searched attribute
-   * @param aLookContent - element that search is performed inside
-   * @param aRelationAttrs - an array of searched attributes
-   * @param aAttrNum - how many attributes in aRelationAttrs
-   * @param                 if both aAriaProperty and aRelationAttrs are null, then any element with aTagType will do
-   * @param aExcludeContent - element that is skiped for search
-   * @param aTagType - tag name of searched element, by default it is 'label' --
-   *                   ignored if aAriaProperty passed in
-   */
-  static nsIContent *FindDescendantPointingToID(const nsString *aId,
-                                                nsIContent *aLookContent,
-                                                nsIAtom **aRelationAttrs,
-                                                PRUint32 aAttrNum = 1,
-                                                nsIContent *aExcludeContent = nsnull,
-                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
-
-  /**
-   * Overloaded version of FindDescendantPointingToID to accept only one
-   * relation attribute.
-   */
-  static nsIContent *FindDescendantPointingToID(const nsString *aId,
-                                                nsIContent *aLookContent,
-                                                nsIAtom *aRelationAttr,
-                                                nsIContent *aExcludeContent = nsnull,
-                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
-
-  // Helper for FindDescendantPointingToID(), same args
-  static nsIContent *FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
-                                                    nsIContent *aLookContent,
-                                                    nsIAtom **aRelationAttrs,
-                                                    PRUint32 aAttrNum = 1,
-                                                    nsIContent *aExcludeContent = nsnull,
-                                                    nsIAtom *aTagType = nsAccessibilityAtoms::label);
-
-  /**
-   * Return the label element for the given DOM element.
-   */
-  static nsIContent *GetLabelContent(nsIContent *aForNode);
-
-  /**
-   * Return the HTML label element for the given HTML element.
-   */
-  static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
 
   /**
    * Return box object for XUL treechildren element by tree box object.
@@ -513,6 +398,40 @@ public:
 
 private:
   nsTArray<nsString> mNames;
+};
+
+/**
+ * Used to iterate through IDs or elements pointed by IDRefs attribute. Note,
+ * any method used to iterate through IDs or elements moves iterator to next
+ * position.
+ */
+class IDRefsIterator
+{
+public:
+  IDRefsIterator(nsIContent* aContent, nsIAtom* aIDRefsAttr);
+
+  /**
+   * Return next ID.
+   */
+  const nsDependentSubstring NextID();
+
+  /**
+   * Return next element.
+   */
+  nsIContent* NextElem();
+
+  /**
+   * Return the element with the given ID.
+   */
+  nsIContent* GetElem(const nsDependentSubstring& aID);
+
+private:
+  nsString mIDs;
+  nsAString::index_type mCurrIdx;
+
+  nsIDocument* mDocument;
+  nsCOMPtr<nsIDOMDocumentXBL> mXBLDocument;
+  nsCOMPtr<nsIDOMElement> mBindingParent;
 };
 
 #endif

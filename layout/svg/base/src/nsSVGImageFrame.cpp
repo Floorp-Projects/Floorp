@@ -115,7 +115,7 @@ public:
 #endif
 
 private:
-  gfxMatrix GetImageTransform();
+  gfxMatrix GetImageTransform(PRInt32 aNativeWidth, PRInt32 aNativeHeight);
 
   nsCOMPtr<imgIDecoderObserver> mListener;
 
@@ -193,20 +193,16 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 gfxMatrix
-nsSVGImageFrame::GetImageTransform()
+nsSVGImageFrame::GetImageTransform(PRInt32 aNativeWidth, PRInt32 aNativeHeight)
 {
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
-  PRInt32 nativeWidth, nativeHeight;
-  mImageContainer->GetWidth(&nativeWidth);
-  mImageContainer->GetHeight(&nativeHeight);
-
   gfxMatrix viewBoxTM =
     nsSVGUtils::GetViewBoxTransform(element,
                                     width, height,
-                                    0, 0, nativeWidth, nativeHeight,
+                                    0, 0, aNativeWidth, aNativeHeight,
                                     element->mPreserveAspectRatio);
 
   return viewBoxTM * gfxMatrix().Translate(gfxPoint(x, y)) * GetCanvasTM();
@@ -241,6 +237,14 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
   }
 
   if (mImageContainer) {
+    PRInt32 nativeWidth, nativeHeight;
+    mImageContainer->GetWidth(&nativeWidth);
+    mImageContainer->GetHeight(&nativeHeight);
+
+    if (nativeWidth == 0 || nativeHeight == 0) {
+      return NS_ERROR_FAILURE;
+    }
+
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // <svg:image> not supported for SVG images yet.
       return NS_ERROR_FAILURE;
@@ -261,7 +265,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
 
     // NOTE: We need to cancel out the effects of Full-Page-Zoom, or else
     // it'll get applied an extra time by DrawSingleUnscaledImage.
-    ctx->Multiply(GetImageTransform().Scale(pageZoomFactor, pageZoomFactor));
+    ctx->Multiply(GetImageTransform(nativeWidth, nativeHeight).
+      Scale(pageZoomFactor, pageZoomFactor));
 
     // fill-opacity doesn't affect <image>, so if we're allowed to
     // optimize group opacity, the opacity used for compositing the
@@ -313,7 +318,11 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
     mImageContainer->GetWidth(&nativeWidth);
     mImageContainer->GetHeight(&nativeHeight);
 
-    if (!nsSVGUtils::HitTestRect(GetImageTransform(),
+    if (nativeWidth == 0 || nativeHeight == 0) {
+      return nsnull;
+    }
+
+    if (!nsSVGUtils::HitTestRect(GetImageTransform(nativeWidth, nativeHeight),
                                  0, 0, nativeWidth, nativeHeight,
                                  PresContext()->AppUnitsToDevPixels(aPoint.x),
                                  PresContext()->AppUnitsToDevPixels(aPoint.y))) {

@@ -50,6 +50,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
+#include "xpcpublic.h"
 #include "jsapi.h"
 #include "jsdhash.h"
 #include "jsprf.h"
@@ -149,10 +150,17 @@ static FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName);
 
 #include <atlbase.h>
 #include "oaidl.h"
+#endif
+
+#ifdef XP_WIN
 // Nasty MS defines
+#ifdef GetClassInfo
 #undef GetClassInfo
+#endif
+#ifdef GetClassName
 #undef GetClassName
 #endif
+#endif /* XP_WIN */
 
 #include "nsINode.h"
 
@@ -232,7 +240,6 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 #define XPC_NATIVE_JSCLASS_MAP_SIZE         32
 #define XPC_THIS_TRANSLATOR_MAP_SIZE         8
 #define XPC_NATIVE_WRAPPER_MAP_SIZE         16
-#define XPC_WRAPPER_MAP_SIZE                 8
 
 /***************************************************************************/
 // data declarations...
@@ -556,6 +563,18 @@ public:
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
+    static nsresult Base64Encode(const nsACString &aString,
+                                 nsACString &aBinary);
+
+    static nsresult Base64Encode(const nsAString &aString,
+                                 nsAString &aBinaryData);
+
+    static nsresult Base64Decode(const nsACString &aBinaryData,
+                                 nsACString &aString);
+
+    static nsresult Base64Decode(const nsAString &aBinaryData,
+                                 nsAString &aString);
+
     // nsCycleCollectionParticipant
     NS_IMETHOD RootAndUnlinkJSObjects(void *p);
     NS_IMETHOD Unlink(void *p);
@@ -566,6 +585,7 @@ public:
     // nsCycleCollectionLanguageRuntime
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
                                           bool explainExpectedLiveGarbage);
+    virtual nsresult FinishTraverse();
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual void Collect();
@@ -654,8 +674,8 @@ public:
     }
 
     inline XPCRootSetElem* GetNextRoot() { return mNext; }
-    void AddToRootSet(JSRuntime* rt, XPCRootSetElem** listHead);
-    void RemoveFromRootSet(JSRuntime* rt);
+    void AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead);
+    void RemoveFromRootSet(XPCLock *lock);
 
 private:
     XPCRootSetElem *mNext;
@@ -1435,46 +1455,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
      (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||                 \
      (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
 
-// NOTE!!!
-//
-// If this ever changes,
-// nsScriptSecurityManager::doGetObjectPrincipal() *must* be updated
-// also!
-//
-// NOTE!!!
-#define IS_WRAPPER_CLASS(clazz)                                               \
-    (clazz->ext.equality == js::Valueify(XPC_WN_Equality))
-
-inline JSBool
-DebugCheckWrapperClass(JSObject* obj)
-{
-    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()),
-                 "Forgot to check if this is a wrapper?");
-    return JS_TRUE;
-}
-
-// If IS_WRAPPER_CLASS for the JSClass of an object is true, the object can be
-// a slim wrapper, holding a native in its private slot, or a wrappednative
-// wrapper, holding the XPCWrappedNative in its private slot. A slim wrapper
-// also holds a pointer to its XPCWrappedNativeProto in a reserved slot, we can
-// check that slot for a non-void value to distinguish between the two.
-
-// Only use these macros if IS_WRAPPER_CLASS(obj->getClass()) is true.
-#define IS_WN_WRAPPER_OBJECT(obj)                                             \
-    (DebugCheckWrapperClass(obj) &&                                           \
-     obj->getSlot(0).isUndefined())
-#define IS_SLIM_WRAPPER_OBJECT(obj)                                           \
-    (DebugCheckWrapperClass(obj) &&                                           \
-     !obj->getSlot(0).isUndefined())
-
-// Use these macros if IS_WRAPPER_CLASS(obj->getClass()) might be false.
-// Avoid calling them if IS_WRAPPER_CLASS(obj->getClass()) can only be
-// true, as we'd do a redundant call to IS_WRAPPER_CLASS.
-#define IS_WN_WRAPPER(obj)                                                    \
-    (IS_WRAPPER_CLASS(obj->getClass()) && IS_WN_WRAPPER_OBJECT(obj))
-#define IS_SLIM_WRAPPER(obj)                                                  \
-    (IS_WRAPPER_CLASS(obj->getClass()) && IS_SLIM_WRAPPER_OBJECT(obj))
-
 // Comes from xpcwrappednativeops.cpp
 extern void
 xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
@@ -1514,9 +1494,6 @@ public:
 
     Native2WrappedNativeMap*
     GetWrappedNativeMap() const {return mWrappedNativeMap;}
-
-    WrappedNative2WrapperMap*
-    GetWrapperMap() const {return mWrapperMap;}
 
     ClassInfo2WrappedNativeProtoMap*
     GetWrappedNativeProtoMap(JSBool aMainThreadOnly) const
@@ -1629,7 +1606,6 @@ private:
     Native2WrappedNativeMap*         mWrappedNativeMap;
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
     ClassInfo2WrappedNativeProtoMap* mMainThreadWrappedNativeProtoMap;
-    WrappedNative2WrapperMap*        mWrapperMap;
     nsXPCComponents*                 mComponents;
     XPCWrappedNativeScope*           mNext;
     // The JS global object for this scope.  If non-null, this will be the
@@ -1764,9 +1740,6 @@ public:
     inline XPCNativeMember* FindMember(jsid name) const;
 
     inline JSBool HasAncestor(const nsIID* iid) const;
-
-    const char* GetMemberName(XPCCallContext& ccx,
-                              const XPCNativeMember* member) const;
 
     PRUint16 GetMemberCount() const
         {NS_ASSERTION(!IsMarked(), "bad"); return mMemberCount;}
@@ -2451,7 +2424,6 @@ private:
 };
 
 void *xpc_GetJSPrivate(JSObject *obj);
-inline JSObject *xpc_GetGlobalForObject(JSObject *obj);
 
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
@@ -2536,7 +2508,13 @@ public:
     GetIdentityObject() const {return mIdentity;}
 
     JSObject*
-    GetFlatJSObject() const {return mFlatJSObject;}
+    GetFlatJSObjectAndMark() const
+        {if(mFlatJSObject && mFlatJSObject != INVALID_OBJECT)
+             mFlatJSObject->markIfUnmarked();
+         return mFlatJSObject;}
+
+    JSObject*
+    GetFlatJSObjectNoMark() const {return mFlatJSObject;}
 
     XPCLock*
     GetLock() const {return IsValid() && HasProto() ?
@@ -2677,7 +2655,6 @@ public:
         JSObject* wrapper = GetWrapper();
         if(wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
-        TraceOtherWrapper(trc);
     }
 
     inline void AutoTrace(JSTracer* trc)
@@ -2788,7 +2765,6 @@ protected:
 
 private:
 
-    void TraceOtherWrapper(JSTracer* trc);
     JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                 const XPCNativeScriptableCreateInfo* sci);
     JSBool Init(XPCCallContext &ccx, JSObject *existingJSObject);
@@ -4440,13 +4416,6 @@ inline void *
 xpc_GetJSPrivate(JSObject *obj)
 {
     return obj->getPrivate();
-}
-inline JSObject *
-xpc_GetGlobalForObject(JSObject *obj)
-{
-    while(JSObject *parent = obj->getParent())
-        obj = parent;
-    return obj;
 }
 
 

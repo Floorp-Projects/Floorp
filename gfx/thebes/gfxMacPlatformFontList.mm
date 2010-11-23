@@ -193,7 +193,7 @@ struct ScriptRange {
 };
 
 const ScriptRange gScriptsThatRequireShaping[] = {
-    { eComplexScriptArabic, 0x0600, 0x077F },   // Basic Arabic and Arabic Supplement
+    { eComplexScriptArabic, 0x0600, 0x077F },   // Basic Arabic, Syriac, Arabic Supplement
     { eComplexScriptIndic, 0x0900, 0x0D7F },     // Indic scripts - Devanagari, Bengali, ..., Malayalam
     { eComplexScriptTibetan, 0x0F00, 0x0FFF }     // Tibetan
     // Thai seems to be "renderable" without AAT morphing tables
@@ -261,8 +261,10 @@ MacOSFontEntry::ReadCMAP()
             } else if (whichScript == eComplexScriptArabic) {
                 // special-case for Arabic:
                 // even if there's no morph table, CoreText can shape Arabic
-                // using OpenType layout
-                if (hasOTLayout) {
+                // using OpenType layout; or if it's a downloaded font,
+                // assume the site knows what it's doing (as harfbuzz will
+                // be able to shape even though the font itself lacks tables)
+                if (hasOTLayout || (mIsUserFont && !mIsLocalUserFont)) {
                     // TODO: to be really thorough, we could check that the
                     // GSUB table actually supports the 'arab' script tag.
                     omitRange = PR_FALSE;
@@ -443,7 +445,12 @@ gfxMacFontFamily::FindStyleVariations()
         } else if (macTraits & NSExpandedFontMask) {
             fontEntry->mStretch = NS_FONT_STRETCH_EXPANDED;
         }
-        if (macTraits & NSItalicFontMask) {
+        // Cocoa fails to set the Italic traits bit for HelveticaLightItalic,
+        // at least (see bug 611855), so check for style name endings as well
+        if ((macTraits & NSItalicFontMask) ||
+            [facename hasSuffix:@"Italic"] ||
+            [facename hasSuffix:@"Oblique"])
+        {
             fontEntry->mItalic = PR_TRUE;
         }
         if (macTraits & NSFixedPitchFontMask) {
@@ -608,7 +615,7 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
     sFontManager = [NSFontManager sharedFontManager];
 }
 
-void
+nsresult
 gfxMacPlatformFontList::InitFontList()
 {
     nsAutoreleasePool localPool;
@@ -617,7 +624,7 @@ gfxMacPlatformFontList::InitFontList()
 
     // need to ignore notifications after adding each font
     if (mATSGeneration == currentGeneration)
-        return;
+        return NS_OK;
 
     mATSGeneration = currentGeneration;
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) updating to generation: %d", mATSGeneration));
@@ -672,6 +679,8 @@ gfxMacPlatformFontList::InitFontList()
 
     // start the delayed cmap loader
     StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps);
+
+	return NS_OK;
 }
 
 void

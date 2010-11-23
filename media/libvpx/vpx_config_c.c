@@ -35,6 +35,15 @@
 #error VPX_X86_ASM is defined, but assembly not supported on this platform!
 #endif
 
+#elif defined(VPX_ARM_ASM)
+
+#if defined(__linux__) && defined(__GNUC__)
+#include "vpx_config_arm-linux-gcc.c"
+
+#else
+#error VPX_ARM_ASM is defined, but assembly not supported on this platform!
+#endif
+
 #else
 /* Assume generic GNU/GCC configuration. */
 #include "vpx_config_generic-gnu.c"

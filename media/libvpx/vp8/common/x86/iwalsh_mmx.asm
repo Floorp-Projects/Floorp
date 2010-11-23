@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -69,7 +69,7 @@ sym(vp8_short_inv_walsh4x4_mmx):
     movq    mm2, [rsi + 16]       ;ip[8]
     movq    mm3, [rsi + 24]       ;ip[12]
 
-    movd    mm7, rax
+    movq    mm7, rax
     movq    mm4, mm0
 
     punpcklwd mm7, mm7          ;0003000300030003h

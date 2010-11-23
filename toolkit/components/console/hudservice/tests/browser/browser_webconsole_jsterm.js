@@ -62,7 +62,7 @@ function testJSTerm()
 
   hudId = HUDService.displaysIndex()[0];
   let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.hudReferences[hudId];
   jsterm = hud.jsterm;
   let outputNode = hudBox.querySelector(".hud-output-node");
 
@@ -93,6 +93,18 @@ function testJSTerm()
   checkResult("valuesResult=true", "values() worked", 1);
 
   jsterm.clearOutput();
+  jsterm.execute("help()");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("help");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("?");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
   // Doesn't conform to checkResult format
   let label = jsterm.outputNode.querySelector(".jsterm-output-line");
@@ -113,6 +125,17 @@ function testJSTerm()
   let label = jsterm.outputNode.querySelector(".jsterm-output-line");
   is(label.textContent.trim().search(/\[object XrayWrapper/), -1,
     "check for non-existence of [object XrayWrapper ");
+
+  // check that pprint(window) and keys(window) don't throw, bug 608358
+  jsterm.clearOutput();
+  jsterm.execute("pprint(window)");
+  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  ok(labels.length > 1, "more than one line of output for pprint(window)");
+
+  jsterm.clearOutput();
+  jsterm.execute("keys(window)");
+  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  ok(labels.length, "more than 0 lines of output for keys(window)");
 
   finishTest();
 }

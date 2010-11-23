@@ -121,39 +121,4 @@
     </implementation>
   </binding>
 
-  <binding id="progressmeter-periodic-redraw"
-           extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
-    <content>
-      <xul:spacer anonid="visibility-detector" flex="1"/>
-    </content>
-    <implementation>
-      <field name="_alive">true</field>
-      <method name="_init">
-        <body><![CDATA[
-          var step = 0;
-          var self = this;
-          var spacer = document.getAnonymousElementByAttribute(this, "anonid", "visibility-detector");
-          var interval = setInterval(function nextStep() {
-            try {
-              // Only bother redrawing when we're visible
-              var width = spacer.boxObject.width;
-              if (!width) {
-                // Maybe we've been removed from the document.
-                if (!self._alive)
-                  clearInterval(interval);
-                return;
-              }
-              // Trigger redraw by changing the step attribute
-              step = 1 - step;
-              self.setAttribute('step', step);
-            } catch (e) {
-              clearInterval(interval);
-            }
-          }, 1000/30);
-        ]]></body>
-      </method>
-      <constructor>this._init();</constructor>
-    </implementation>
-  </binding>
-
 </bindings>

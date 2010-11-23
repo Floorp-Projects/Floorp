@@ -44,7 +44,7 @@ var changes = [];
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/mammals" sortDirection="descending" sort="?specimens ?name">
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/mammals" sortDirection="descending" sort="?specimens ?name">
 <template id="template">
 <query id="query">
 <content uri="?uri"/>

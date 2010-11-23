@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+<script>
+
+function boom()
+{
+  var origSVG = document.documentElement;
+
+  var a = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+  var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  var s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  document.removeChild(document.documentElement);
+  document.appendChild(g);
+  s.appendChild(a);
+  g.appendChild(s);
+
+  origSVG.removeAttribute("class");
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</svg>

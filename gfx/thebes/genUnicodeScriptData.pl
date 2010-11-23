@@ -162,10 +162,15 @@ while (<FH>) {
 close FH;
 
 # read Scripts.txt
+my %scriptAliases = (
+    'MEETEI_MAYEK' => 'MEITEI_MAYEK'
+);
+
 open FH, "< $ARGV[1]/Scripts.txt" or die "can't open UCD file Scripts.txt\n";
 while (<FH>) {
     if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s+;\s+([^ ]+)/) {
         my $script = uc($3);
+        $script = $scriptAliases{$script} if exists $scriptAliases{$script};
         warn "unknown script $script" unless exists $scriptCode{$script};
         $script = $scriptCode{$script};
         my $start = hex "0x$1";

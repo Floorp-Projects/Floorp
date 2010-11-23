@@ -94,7 +94,7 @@ gfxQPainterSurface::GetQImage()
 }
 
 already_AddRefed<gfxImageSurface>
-gfxQPainterSurface::GetImageSurface()
+gfxQPainterSurface::GetAsImageSurface()
 {
     if (!mSurfaceValid)
         return nsnull;

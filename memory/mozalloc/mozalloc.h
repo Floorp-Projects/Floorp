@@ -52,6 +52,8 @@
 #endif
 
 
+#define MOZALLOC_HAVE_XMALLOC
+
 #if defined(MOZALLOC_EXPORT)
 /* do nothing: it's been defined to __declspec(dllexport) by
  * mozalloc*.cpp on platforms where that's required. */
@@ -204,10 +206,11 @@ MOZALLOC_EXPORT void* moz_valloc(size_t size)
 #  define MOZALLOC_EXPORT_NEW
 #endif
 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(_MSC_VER)
 /*
  * Android doesn't fully support exceptions, so its <new> header
- * has operators that don't specify throw() at all.
+ * has operators that don't specify throw() at all. Also include MSVC
+ * to suppress build warning spam (bug 578546).
  */
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS /**/
 #else

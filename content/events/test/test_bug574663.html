@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=574663
+-->
+<head>
+  <title>Test for Bug 574663</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=574663">Mozilla Bug 574663</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 574663 **/
+
+// This test depends on general.smoothScroll being off.
+
+function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum) {
+  var win = scrollbox.ownerDocument.defaultView;
+  let event = {
+    'type': "DOMMouseScroll",
+    'axis': "vertical",
+    'delta': direction,
+    'hasPixels': true,
+    'ctrlKey': ctrl,
+    'isMomentum': momentum,
+  };
+  // first a line scroll
+  synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+  // then 5 pixel scrolls
+  event.delta *= 3;
+  event.type = "MozMousePixelScroll";
+  event.hasPixels = false;
+  for (let i = 0; i < 5; ++i) {
+    synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+  }
+}
+
+function runTest() {
+  var win = open('data:text/html,<!DOCTYPE html>\n' +
+    '<div id="scrollbox" style="height: 100px; overflow: auto;">' +
+    '  <div style="height: 1000px;"></div>' +
+    '</div>', '_blank', 'width=300,height=300');
+  SimpleTest.waitForFocus(function () {
+    var scrollbox = win.document.getElementById("scrollbox");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    let winUtils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    let outstandingTests = [
+      [false, false],
+      [false, true],
+      [true, false],
+      [true, true],
+    ];
+    function nextTest() {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      if (!outstandingTests.length) {
+        win.close();
+        clearPrefs();
+        SimpleTest.finish();
+        return;
+      }
+
+      let [ctrlKey, isMomentum] = outstandingTests.shift();
+      let scrollTopBefore = scrollbox.scrollTop;
+      let zoomFactorBefore = winUtils.screenPixelsPerCSSPixel;
+      sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum);
+
+      setTimeout(function () {
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        if (!ctrlKey) {
+          let postfix = isMomentum ? ", even after releasing the touchpad" : "";
+          // Normal scroll: scroll
+          is(winUtils.screenPixelsPerCSSPixel, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
+          isnot(scrollbox.scrollTop, scrollTopBefore, "Normal scrolling should scroll" + postfix);
+        } else {
+          if (!isMomentum) {
+            isnot(winUtils.screenPixelsPerCSSPixel, zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
+            is(scrollbox.scrollTop, scrollTopBefore, "Ctrl-scrolling shouldn't scroll while the user is touching the touchpad");
+          } else {
+            is(winUtils.screenPixelsPerCSSPixel, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
+            isnot(scrollbox.scrollTop, scrollTopBefore, "Momentum scrolling should scroll, even when pressing Ctrl");
+          }
+        }
+        // Revert the effect.
+        sendTouchpadScrollMotion(scrollbox, -1, ctrlKey, isMomentum);
+        setTimeout(nextTest, 0);
+      }, 0);
+    }
+    nextTest();
+  }, win);
+}
+
+function initPrefs()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+  // Disables the app level scroll acceleration
+  prefSvc.setIntPref("mousewheel.acceleration.start", -1);
+  prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+}
+
+function clearPrefs()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+
+  if (prefSvc.prefHasUserValue("mousewheel.acceleration.start"))
+    prefSvc.clearUserPref("mousewheel.acceleration.start");
+  if (prefSvc.prefHasUserValue("mousewheel.system_scroll_override_on_root_content.enabled"))
+    prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+}
+
+window.onload = function () {
+  initPrefs();
+  SimpleTest.executeSoon(runTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+</body>
+</html>

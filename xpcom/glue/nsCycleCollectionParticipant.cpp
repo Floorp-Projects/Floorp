@@ -96,8 +96,8 @@ nsXPCOMCycleCollectionParticipant::Trace(void *p, TraceCallback cb,
 PRBool
 nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
 {
-    nsCOMPtr<nsISupports> foo;
+    nsISupports* foo;
     s->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                      getter_AddRefs(foo));
+                      reinterpret_cast<void**>(&foo));
     return s == foo;
 }

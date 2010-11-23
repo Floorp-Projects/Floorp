@@ -214,6 +214,10 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
     nsEventShell::FireEvent(reloadEvent);
   }
 
+  // Mark the document accessible as loading, if it stays alive then we'll mark
+  // it as loaded when we receive proper notification.
+  docAcc->MarkAsLoading();
+
   // Fire state busy change event. Use delayed event since we don't care
   // actually if event isn't delivered when the document goes away like a shot.
   nsRefPtr<AccEvent> stateEvent =
@@ -310,8 +314,7 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
       nsCoreUtils::IsErrorPage(document)) {
     NS_LOG_ACCDOCLOAD2("handled 'DOMContentLoaded' event", document)
     HandleDOMDocumentLoad(document,
-                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE,
-                          PR_TRUE);
+                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
   }
 
   return NS_OK;
@@ -322,8 +325,7 @@ nsAccDocManager::HandleEvent(nsIDOMEvent *aEvent)
 
 void
 nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
-                                       PRUint32 aLoadEventType,
-                                       PRBool aMarkAsLoaded)
+                                       PRUint32 aLoadEventType)
 {
   // Document accessible can be created before we were notified the DOM document
   // was loaded completely. However if it's not created yet then create it.
@@ -335,8 +337,8 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
       return;
   }
 
-  if (aMarkAsLoaded)
-    docAcc->MarkAsLoaded();
+  // Mark the document as loaded to drop off the busy state flag on it.
+  docAcc->MarkAsLoaded();
 
   // Do not fire document complete/stop events for root chrome document
   // accessibles and for frame/iframe documents because
@@ -456,27 +458,28 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  nsDocAccessible *docAcc = isRootDoc ?
+  nsRefPtr<nsDocAccessible> docAcc = isRootDoc ?
     new nsRootAccessibleWrap(aDocument, rootElm, weakShell) :
     new nsDocAccessibleWrap(aDocument, rootElm, weakShell);
 
-  if (!docAcc)
+  // Cache the document accessible into document cache.
+  if (!docAcc || !mDocAccessibleCache.Put(aDocument, docAcc))
     return nsnull;
 
-  // Cache and addref document accessible.
-  if (!mDocAccessibleCache.Put(aDocument, docAcc)) {
-    delete docAcc;
-    return nsnull;
-  }
-
-  // XXX: ideally we should initialize an accessible and then put it into tree,
-  // we can't since document accessible fires reorder event on its container
-  // while initialized.
-  if (!outerDocAcc->AppendChild(docAcc) ||
-      !GetAccService()->InitAccessible(docAcc, nsAccUtils::GetRoleMapEntry(aDocument))) {
+  // Bind the document accessible into tree.
+  if (!outerDocAcc->AppendChild(docAcc)) {
     mDocAccessibleCache.Remove(aDocument);
     return nsnull;
   }
+
+  // Initialize the document accessible. Note, Init() should be called after
+  // the document accessible is bound to the tree.
+  if (!docAcc->Init()) {
+    docAcc->Shutdown();
+    mDocAccessibleCache.Remove(aDocument);
+    return nsnull;
+  }
+  docAcc->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aDocument));
 
   NS_LOG_ACCDOCCREATE("document creation finished", aDocument)
 

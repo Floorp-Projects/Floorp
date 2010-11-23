@@ -46,6 +46,7 @@
 #include "nsWeakPtr.h"
 #include "nsIParser.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsIDOMHTMLScriptElement.h"
 
 #define NS_ISCRIPTELEMENT_IID \
 { 0x6d625b30, 0xfac4, 0x11de, \
@@ -62,10 +63,14 @@ public:
     : mLineNumber(0),
       mAlreadyStarted(PR_FALSE),
       mMalformed(PR_FALSE),
-      mDoneAddingChildren(PR_TRUE),
+      mDoneAddingChildren(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
+                          aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT),
+      mForceAsync(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
+                  aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT),
       mFrozen(PR_FALSE),
       mDefer(PR_FALSE),
       mAsync(PR_FALSE),
+      mExternal(PR_FALSE),
       mParserCreated(aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT ?
                      mozilla::dom::NOT_FROM_PARSER : aFromParser),
                      // Fragment parser-created scripts (if executable)
@@ -123,6 +128,15 @@ public:
   }
 
   /**
+   * Is the script an external script?
+   */
+  PRBool GetScriptExternal()
+  {
+    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    return mExternal;
+  }
+
+  /**
    * Returns how the element was created.
    */
   mozilla::dom::FromParser GetParserCreated()
@@ -159,6 +173,12 @@ public:
     mUri = nsnull;
     mCreatorParser = nsnull;
     mParserCreated = mozilla::dom::NOT_FROM_PARSER;
+    PRBool async = PR_FALSE;
+    nsCOMPtr<nsIDOMHTMLScriptElement> htmlScript = do_QueryInterface(this);
+    if (htmlScript) {
+      htmlScript->GetAsync(&async);
+    }
+    mForceAsync = !async;
   }
 
   void SetCreatorParser(nsIParser* aParser)
@@ -219,6 +239,12 @@ protected:
   PRPackedBool mDoneAddingChildren;
 
   /**
+   * If true, the .async property returns true instead of reflecting the
+   * content attribute.
+   */
+  PRPackedBool mForceAsync;
+
+  /**
    * Whether src, defer and async are frozen.
    */
   PRPackedBool mFrozen;
@@ -233,6 +259,12 @@ protected:
    */
   PRPackedBool mAsync;
   
+  /**
+   * The effective externalness. A script can be external with mUri being null
+   * if the src attribute contained an invalid URL string.
+   */
+  PRPackedBool mExternal;
+
   /**
    * Whether this element was parser-created.
    */

@@ -77,8 +77,8 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
   
   nsresult Init(const nsACString& type, mozilla::dom::ContentPermissionRequestParent* parent);
   
-  NS_DECL_ISUPPORTS;
-  NS_DECL_NSICONTENTPERMISSIONREQUEST;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
 
  private:
   // Non-owning pointer to the ContentPermissionRequestParent object which owns this proxy.

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -303,7 +303,7 @@ const vpx_codec_cx_pkt_t *vpx_codec_pkt_list_get(struct vpx_codec_pkt_list *list
 
     pkt = (const void *) * iter;
 
-    if (pkt - list->pkts < list->cnt)
+    if ((size_t)(pkt - list->pkts) < list->cnt)
         *iter = pkt + 1;
     else
         pkt = NULL;

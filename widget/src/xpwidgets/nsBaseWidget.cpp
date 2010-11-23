@@ -1169,6 +1169,26 @@ nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+// For backwards compatibility only
+NS_IMETHODIMP
+nsBaseWidget::SetIMEEnabled(PRUint32 aState)
+{
+  IMEContext context;
+  context.mStatus = aState;
+  return SetInputMode(context);
+}
+ 
+NS_IMETHODIMP
+nsBaseWidget::GetIMEEnabled(PRUint32* aState)
+{
+  IMEContext context;
+  nsresult rv = GetInputMode(context);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState = context.mStatus;
+  return NS_OK;
+}
  
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////

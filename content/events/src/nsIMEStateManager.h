@@ -86,10 +86,11 @@ public:
   // widget.  So, the caller must have focus.
   // aNewIMEState must have an enabled state of nsIContent::IME_STATUS_*.
   // And optionally, it can have an open state of nsIContent::IME_STATUS_*.
-  static void UpdateIMEState(PRUint32 aNewIMEState);
+  static void UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent);
 
 protected:
-  static void SetIMEState(PRUint32 aState, nsIWidget* aWidget);
+  static void SetIMEState(PRUint32 aState, nsIContent* aContent,
+                          nsIWidget* aWidget);
   static PRUint32 GetNewIMEState(nsPresContext* aPresContext,
                                  nsIContent* aContent);
 

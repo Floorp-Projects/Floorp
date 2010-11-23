@@ -159,7 +159,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
 
     // printf("looking for clipboard data of type %s\n", flavorStr.get());
 
-    const NSString *pboardType;
+    NSString *pboardType = nil;
     if (nsClipboard::IsStringType(flavorStr, &pboardType)) {
       NSString* pString = [cocoaPasteboard stringForType:pboardType];
       if (!pString)
@@ -359,7 +359,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
 
   for (PRUint32 i = 0; i < aLength; i++) {
     nsDependentCString mimeType(aFlavorList[i]);
-    const NSString *pboardType;
+    NSString *pboardType = nil;
 
     if (nsClipboard::IsStringType(mimeType, &pboardType)) {
       NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
@@ -416,7 +416,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
     PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("writing out clipboard data of type %s (%d)\n", flavorStr.get(), i));
 
-    const NSString *pboardType;
+    NSString *pboardType = nil;
 
     if (nsClipboard::IsStringType(flavorStr, &pboardType)) {
       void* data = nsnull;
@@ -537,7 +537,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-PRBool nsClipboard::IsStringType(const nsCString& aMIMEType, const NSString** aPasteboardType)
+PRBool nsClipboard::IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType)
 {
   if (aMIMEType.EqualsLiteral(kUnicodeMime) ||
       aMIMEType.EqualsLiteral(kHTMLMime)) {

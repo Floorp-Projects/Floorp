@@ -48,6 +48,7 @@ LIBXUL_LIBRARY	= 1
 
 EXPORTS		= \
 		nsHtml5Module.h \
+		nsAHtml5FragmentParser.h \
 		$(NULL)
 
 ifdef MOZ_SVG

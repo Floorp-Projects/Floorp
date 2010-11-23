@@ -28,6 +28,9 @@
 
 #include "hb-unicode-private.h"
 
+HB_BEGIN_DECLS
+
+
 /*
  * hb_unicode_funcs_t
  */
@@ -105,6 +108,12 @@ hb_unicode_funcs_make_immutable (hb_unicode_funcs_t *ufuncs)
   ufuncs->immutable = TRUE;
 }
 
+hb_bool_t
+hb_unicode_funcs_is_immutable (hb_unicode_funcs_t *ufuncs)
+{
+  return ufuncs->immutable;
+}
+
 
 void
 hb_unicode_funcs_set_mirroring_func (hb_unicode_funcs_t *ufuncs,
@@ -155,6 +164,38 @@ hb_unicode_funcs_set_eastasian_width_func (hb_unicode_funcs_t *ufuncs,
 
   ufuncs->v.get_eastasian_width = eastasian_width_func ? eastasian_width_func : hb_unicode_get_eastasian_width_nil;
 }
+
+
+hb_unicode_get_mirroring_func_t
+hb_unicode_funcs_get_mirroring_func (hb_unicode_funcs_t *ufuncs)
+{
+  return ufuncs->v.get_mirroring;
+}
+
+hb_unicode_get_general_category_func_t
+hb_unicode_funcs_get_general_category_func (hb_unicode_funcs_t *ufuncs)
+{
+  return ufuncs->v.get_general_category;
+}
+
+hb_unicode_get_script_func_t
+hb_unicode_funcs_get_script_func (hb_unicode_funcs_t *ufuncs)
+{
+  return ufuncs->v.get_script;
+}
+
+hb_unicode_get_combining_class_func_t
+hb_unicode_funcs_get_combining_class_func (hb_unicode_funcs_t *ufuncs)
+{
+  return ufuncs->v.get_combining_class;
+}
+
+hb_unicode_get_eastasian_width_func_t
+hb_unicode_funcs_get_eastasian_width_func (hb_unicode_funcs_t *ufuncs)
+{
+  return ufuncs->v.get_eastasian_width;
+}
+
 
 
 hb_codepoint_t
@@ -300,7 +341,12 @@ const hb_direction_t horiz_dir[] =
   RTL,	/* Orkh */
   RTL,	/* Samr */
   LTR,	/* Lana */
-  LTR 	/* Tavt */
+  LTR,	/* Tavt */
+
+  /* Unicode-6.0 additions */
+  LTR,	/* Batk */
+  LTR,	/* Brah */
+  RTL 	/* Mand */
 };
 #undef LTR
 #undef RTL
@@ -313,3 +359,6 @@ _hb_script_get_horizontal_direction (hb_script_t script)
 
   return horiz_dir[script];
 }
+
+
+HB_END_DECLS

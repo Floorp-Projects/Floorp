@@ -361,8 +361,8 @@ PluginModuleParent::DeallocPPluginIdentifier(PPluginIdentifierParent* aActor)
 PPluginInstanceParent*
 PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
                                          const uint16_t& aMode,
-                                         const nsTArray<nsCString>& aNames,
-                                         const nsTArray<nsCString>& aValues,
+                                         const InfallibleTArray<nsCString>& aNames,
+                                         const InfallibleTArray<nsCString>& aValues,
                                          NPError* rv)
 {
     NS_ERROR("Not reachable!");
@@ -546,6 +546,19 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
 }
 
 bool
+PluginModuleParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
+{
+#ifndef MOZ_X11
+    NS_RUNTIMEABORT("This message only makes sense on X11 platforms");
+#else
+    NS_ABORT_IF_FALSE(0 > mPluginXSocketFdDup.mFd,
+                      "Already backed up X resources??");
+    mPluginXSocketFdDup.mFd = aXSocketFd.fd;
+#endif
+    return true;
+}
+
+bool
 PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
 {
     *userAgent = NullableString(mNPNIface->uagent(nsnull));
@@ -630,16 +643,6 @@ PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
 }
 
 nsresult
-PluginModuleParent::NotifyPainted(NPP instance)
-{
-    PluginInstanceParent* i = InstCast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->NotifyPainted();
-}
-
-nsresult
 PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
 {
     PluginInstanceParent* i = InstCast(instance);
@@ -648,17 +651,6 @@ PluginModuleParent::GetSurface(NPP instance, gfxASurface** aSurface)
 
     return i->GetSurface(aSurface);
 }
-
-nsresult
-PluginModuleParent::UseAsyncPainting(NPP instance, PRBool* aIsAsync)
-{
-    PluginInstanceParent* i = InstCast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->UseAsyncPainting(aIsAsync);
-}
-
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
@@ -771,8 +763,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     // create the instance on the other side
-    nsTArray<nsCString> names;
-    nsTArray<nsCString> values;
+    InfallibleTArray<nsCString> names;
+    InfallibleTArray<nsCString> values;
 
     for (int i = 0; i < argc; ++i) {
         names.AppendElement(NullableString(argn[i]));

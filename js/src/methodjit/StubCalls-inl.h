@@ -65,9 +65,9 @@ ValueToObject(JSContext *cx, Value *vp)
 static inline void
 ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 {
-    const char *printable = js_AtomToPrintableString(cx, atom);
-    if (printable)
-        js_ReportIsNotDefined(cx, printable);
+    JSAutoByteString printable;
+    if (js_AtomToPrintableString(cx, atom, &printable))
+        js_ReportIsNotDefined(cx, printable.ptr());
 }
 
 #define NATIVE_SET(cx,obj,shape,entry,vp)                                     \

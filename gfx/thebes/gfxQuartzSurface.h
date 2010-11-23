@@ -56,10 +56,6 @@ public:
 
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
                                                                const gfxIntSize& aSize);
-    virtual PRBool AreSimilarSurfacesSensitiveToContentType()
-    {
-      return PR_FALSE;
-    }
     virtual TextQuality GetTextQualityInTransparentSurfaces()
     {
       return TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS;
@@ -72,6 +68,8 @@ public:
     CGContextRef GetCGContextWithClip(gfxContext *ctx);
 
     virtual PRInt32 GetDefaultContextFlags() const;
+
+    already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
 protected:
     CGContextRef mCGContext;

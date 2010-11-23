@@ -46,15 +46,17 @@
 #include "nsString.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
+#include "nsTObserverArray.h"
 
 // A native thread
-class nsThread : public nsIThreadInternal, public nsISupportsPriority
+class nsThread : public nsIThreadInternal2, public nsISupportsPriority
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
   NS_DECL_NSITHREAD
   NS_DECL_NSITHREADINTERNAL
+  NS_DECL_NSITHREADINTERNAL2
   NS_DECL_NSISUPPORTSPRIORITY
 
   nsThread();
@@ -133,6 +135,9 @@ private:
 
   nsCOMPtr<nsIThreadObserver> mObserver;
 
+  // Only accessed on the target thread.
+  nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;
+
   nsChainedEventQueue *mEvents;   // never null
   nsChainedEventQueue  mEventsRoot;
 
@@ -153,11 +158,15 @@ private:
 class nsThreadSyncDispatch : public nsRunnable {
 public:
   nsThreadSyncDispatch(nsIThread *origin, nsIRunnable *task)
-    : mOrigin(origin), mSyncTask(task) {
+    : mOrigin(origin), mSyncTask(task), mResult(NS_ERROR_NOT_INITIALIZED) {
   }
 
   PRBool IsPending() {
     return mSyncTask != nsnull;
+  }
+
+  nsresult Result() {
+    return mResult;
   }
 
 private:
@@ -165,6 +174,7 @@ private:
 
   nsCOMPtr<nsIThread> mOrigin;
   nsCOMPtr<nsIRunnable> mSyncTask;
+  nsresult mResult;
 };
 
 #endif  // nsThread_h__

@@ -124,12 +124,6 @@ button {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button");
 }
 
-%ifdef XP_MACOSX
-button[default="true"] {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#button-periodic-redraw");
-}
-%endif
-
 button[type="repeat"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button-repeat");
 }
@@ -263,13 +257,13 @@ toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
 }
 
-toolbox[customizing="true"] > toolbar[customizable="true"][collapsed="true"] {
+toolbar[customizing="true"][collapsed="true"] {
   /* Some apps, e.g. Firefox, use 'collapsed' to hide toolbars.
      Override it while customizing. */
   visibility: visible;
 }
 
-toolbox[customizing="true"] > toolbar[customizable="true"][hidden="true"] {
+toolbar[customizing="true"][hidden="true"] {
   /* Some apps, e.g. SeaMonkey, use 'hidden' to hide toolbars.
      Override it while customizing. */
   display: -moz-box;
@@ -280,16 +274,13 @@ toolbar[type="menubar"] {
   min-height: 0 !important;
   border: 0 !important;
 }
-%endif
-
-%ifdef XP_WIN
+%else
 toolbar[type="menubar"][autohide="true"] {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-menubar-autohide");
   overflow: hidden;
 }
 
-toolbar[type="menubar"][autohide="true"][inactive="true"]:not([customizable="true"]),
-toolbox:not([customizing="true"]) > toolbar[type="menubar"][autohide="true"][inactive="true"][customizable="true"] {
+toolbar[type="menubar"][autohide="true"][inactive="true"]:not([customizing="true"]) {
   min-height: 0 !important;
   height: 0 !important;
   -moz-appearance: none !important;
@@ -1184,4 +1175,9 @@ findbar {
 /*********** filefield ************/
 filefield {
   -moz-binding: url("chrome://global/content/bindings/filefield.xml#filefield");
+}
+
+/*********** tabmodalprompt ************/
+tabmodalprompt {
+  -moz-binding: url("chrome://global/content/tabprompts.xml#tabmodalprompt");
 }

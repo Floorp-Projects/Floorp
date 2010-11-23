@@ -3,6 +3,10 @@
 == select-disabled.html select-disabled-ref.html
 == select-dyn-disabled.html select-disabled-ref.html
 == select-dyn-not-disabled.html select-ref.html
+== select-required-invalid.html select-required-ref.html
+== select-required-valid.html select-required-ref.html
+== select-required-multiple-invalid.html select-required-multiple-ref.html
+== select-required-multiple-valid.html select-required-multiple-ref.html
 == select-disabled-fieldset-1.html select-fieldset-ref.html
 == select-disabled-fieldset-2.html select-fieldset-ref.html
 == select-fieldset-legend.html select-fieldset-legend-ref.html

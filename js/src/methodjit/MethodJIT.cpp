@@ -41,6 +41,7 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #include "jstracer.h"
 #include "BaseAssembler.h"
+#include "Compiler.h"
 #include "MonoIC.h"
 #include "PolyIC.h"
 #include "TrampolineCompiler.h"
@@ -54,6 +55,11 @@ using namespace js;
 using namespace js::mjit;
 
 
+js::mjit::CompilerAllocPolicy::CompilerAllocPolicy(JSContext *cx, Compiler &compiler)
+: ContextAllocPolicy(cx),
+  oomFlag(&compiler.oomInVector)
+{
+}
 void
 JSStackFrame::methodjitStaticAsserts()
 {
@@ -116,14 +122,14 @@ extern "C" void JaegerTrampolineReturn();
 extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
-    f.cx->jaegerCompartment()->pushActiveFrame(&f);
+    f.entryfp->script()->compartment->jaegerCompartment->pushActiveFrame(&f);
     f.regs.fp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
 }
 
 extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
-    f.cx->jaegerCompartment()->popActiveFrame();
+    f.entryfp->script()->compartment->jaegerCompartment->popActiveFrame();
 }
 
 extern "C" void JS_FASTCALL
@@ -206,7 +212,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
      * rcx = inlineCallCount
      * fp must go into rbx
      */
-    "pushq %rsi"                         "\n" /* entryFp */
+    "pushq %rsi"                         "\n" /* entryfp */
     "pushq %rcx"                         "\n" /* inlineCallCount */
     "pushq %rdi"                         "\n" /* cx */
     "pushq %rsi"                         "\n" /* fp */
@@ -317,7 +323,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Build the JIT frame. Push fields in order, 
      * then align the stack to form esp == VMFrame. */
     "movl  12(%ebp), %ebx"               "\n"   /* load fp */
-    "pushl %ebx"                         "\n"   /* entryFp */
+    "pushl %ebx"                         "\n"   /* entryfp */
     "pushl 20(%ebp)"                     "\n"   /* stackLimit */
     "pushl 8(%ebp)"                      "\n"   /* cx */
     "pushl %ebx"                         "\n"   /* fp */
@@ -396,7 +402,7 @@ SYMBOL_STRING(InjectJaegerReturn) ":"         "\n"
 
 JS_STATIC_ASSERT(sizeof(VMFrame) == 80);
 JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) ==          (4*19));
-JS_STATIC_ASSERT(offsetof(VMFrame, entryFp) ==          (4*10));
+JS_STATIC_ASSERT(offsetof(VMFrame, entryfp) ==          (4*10));
 JS_STATIC_ASSERT(offsetof(VMFrame, stackLimit) ==       (4*9));
 JS_STATIC_ASSERT(offsetof(VMFrame, cx) ==               (4*8));
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) ==          (4*7));
@@ -451,7 +457,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
      *  [ r6        ]   | considering that we might not use them anyway.
      *  [ r5        ]   |
      *  [ r4        ]   /
-     *  [ entryFp   ]
+     *  [ entryfp   ]
      *  [ stkLimit  ]
      *  [ cx        ]
      *  [ regs.fp   ]
@@ -467,7 +473,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
     /* Push callee-saved registers. */
 "   push    {r4-r11,lr}"                        "\n"
     /* Push interesting VMFrame content. */
-"   push    {r1}"                               "\n"    /* entryFp */
+"   push    {r1}"                               "\n"    /* entryfp */
 "   push    {r3}"                               "\n"    /* stackLimit */
 "   push    {r0}"                               "\n"    /* cx */
 "   push    {r1}"                               "\n"    /* regs.fp */
@@ -682,7 +688,7 @@ JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 bool
 JaegerCompartment::Initialize()
 {
-    execAlloc = new JSC::ExecutableAllocator();
+    execAlloc = JSC::ExecutableAllocator::create();
     if (!execAlloc)
         return false;
     
@@ -797,8 +803,7 @@ static inline void Destroy(T &t)
     t.~T();
 }
 
-void
-mjit::JITScript::release()
+mjit::JITScript::~JITScript()
 {
 #if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
     void *addr = code.m_code.executableAddress();
@@ -809,9 +814,11 @@ mjit::JITScript::release()
 
 #if defined JS_POLYIC
     for (uint32 i = 0; i < nPICs; i++)
-        pics[i].finish();
+        Destroy(pics[i]);
     for (uint32 i = 0; i < nGetElems; i++)
-        getElems[i].finish();
+        Destroy(getElems[i]);
+    for (uint32 i = 0; i < nSetElems; i++)
+        Destroy(setElems[i]);
 #endif
 
 #if defined JS_MONOIC
@@ -835,17 +842,17 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     // must protect against calling ReleaseScriptCode twice.
 
     if (script->jitNormal) {
-        script->jitNormal->release();
-        script->jitArityCheckNormal = NULL;
+        script->jitNormal->~JITScript();
         cx->free(script->jitNormal);
         script->jitNormal = NULL;
+        script->jitArityCheckNormal = NULL;
     }
 
     if (script->jitCtor) {
-        script->jitCtor->release();
-        script->jitArityCheckCtor = NULL;
+        script->jitCtor->~JITScript();
         cx->free(script->jitCtor);
         script->jitCtor = NULL;
+        script->jitArityCheckCtor = NULL;
     }
 }
 

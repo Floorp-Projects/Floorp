@@ -32,6 +32,7 @@
 
 HB_BEGIN_DECLS
 
+
 typedef struct _hb_face_t hb_face_t;
 typedef struct _hb_font_t hb_font_t;
 
@@ -60,10 +61,25 @@ hb_face_get_reference_count (hb_face_t *face);
 void
 hb_face_destroy (hb_face_t *face);
 
-/* Returns NULL if not found */
+/* XXX
+ *
+ * I have two major concerns about this API as it is right now:
+ *
+ *   - Jonathan Kew convinced me to make it return NULL if table not found (280af1bd),
+ *     however, that is WRONG IMO.  The API should not differentiate between a non-existing
+ *     table vs a zero-length table vs a very short table.  It only leads to implementations
+ *     that check for non-NULL and assume that they've got a usable table going on...  This
+ *     actually happened with Firefox.
+ *
+ *   - It has to be renamed to reference_table() since unlike any other _get_ API, a reference
+ *     ownership transfer happens and the user is responsible to destroy the result.
+ */
 hb_blob_t *
 hb_face_get_table (hb_face_t *face,
 		   hb_tag_t   tag);
+
+unsigned int
+hb_face_get_upem (hb_face_t *face);
 
 
 /*
@@ -90,26 +106,30 @@ hb_font_funcs_copy (hb_font_funcs_t *ffuncs);
 void
 hb_font_funcs_make_immutable (hb_font_funcs_t *ffuncs);
 
+hb_bool_t
+hb_font_funcs_is_immutable (hb_font_funcs_t *ffuncs);
 
 /* funcs */
 
-typedef struct _hb_glyph_metrics_t
+typedef struct _hb_glyph_extents_t
 {
-    hb_position_t x_advance;
-    hb_position_t y_advance;
-    hb_position_t x_offset;
-    hb_position_t y_offset;
+    hb_position_t x_bearing;
+    hb_position_t y_bearing;
     hb_position_t width;
     hb_position_t height;
-} hb_glyph_metrics_t;
+} hb_glyph_extents_t;
 
 typedef hb_codepoint_t (*hb_font_get_glyph_func_t) (hb_font_t *font, hb_face_t *face, const void *user_data,
 						    hb_codepoint_t unicode, hb_codepoint_t variation_selector);
+typedef void (*hb_font_get_glyph_advance_func_t) (hb_font_t *font, hb_face_t *face, const void *user_data,
+						  hb_codepoint_t glyph,
+						  hb_position_t *x_advance, hb_position_t *y_advance);
+typedef void (*hb_font_get_glyph_extents_func_t) (hb_font_t *font, hb_face_t *face, const void *user_data,
+						  hb_codepoint_t glyph,
+						  hb_glyph_extents_t *metrics);
 typedef hb_bool_t (*hb_font_get_contour_point_func_t) (hb_font_t *font, hb_face_t *face, const void *user_data,
-						       unsigned int point_index,
-						       hb_codepoint_t glyph, hb_position_t *x, hb_position_t *y);
-typedef void (*hb_font_get_glyph_metrics_func_t) (hb_font_t *font, hb_face_t *face, const void *user_data,
-						  hb_codepoint_t glyph, hb_glyph_metrics_t *metrics);
+						       unsigned int point_index, hb_codepoint_t glyph,
+						       hb_position_t *x, hb_position_t *y);
 typedef hb_position_t (*hb_font_get_kerning_func_t) (hb_font_t *font, hb_face_t *face, const void *user_data,
 						     hb_codepoint_t first_glyph, hb_codepoint_t second_glyph);
 
@@ -119,30 +139,58 @@ hb_font_funcs_set_glyph_func (hb_font_funcs_t *ffuncs,
 			      hb_font_get_glyph_func_t glyph_func);
 
 void
-hb_font_funcs_set_contour_point_func (hb_font_funcs_t *ffuncs,
-				      hb_font_get_contour_point_func_t contour_point_func);
+hb_font_funcs_set_glyph_advance_func (hb_font_funcs_t *ffuncs,
+				      hb_font_get_glyph_advance_func_t glyph_advance_func);
 
 void
-hb_font_funcs_set_glyph_metrics_func (hb_font_funcs_t *ffuncs,
-				      hb_font_get_glyph_metrics_func_t glyph_metrics_func);
+hb_font_funcs_set_glyph_extents_func (hb_font_funcs_t *ffuncs,
+				      hb_font_get_glyph_extents_func_t glyph_extents_func);
+
+void
+hb_font_funcs_set_contour_point_func (hb_font_funcs_t *ffuncs,
+				      hb_font_get_contour_point_func_t contour_point_func);
 
 void
 hb_font_funcs_set_kerning_func (hb_font_funcs_t *ffuncs,
 				hb_font_get_kerning_func_t kerning_func);
 
 
+/* These never return NULL.  Return fallback defaults instead. */
+
+hb_font_get_glyph_func_t
+hb_font_funcs_get_glyph_func (hb_font_funcs_t *ffuncs);
+
+hb_font_get_glyph_advance_func_t
+hb_font_funcs_get_glyph_advance_func (hb_font_funcs_t *ffuncs);
+
+hb_font_get_glyph_extents_func_t
+hb_font_funcs_get_glyph_extents_func (hb_font_funcs_t *ffuncs);
+
+hb_font_get_contour_point_func_t
+hb_font_funcs_get_contour_point_func (hb_font_funcs_t *ffuncs);
+
+hb_font_get_kerning_func_t
+hb_font_funcs_get_kerning_func (hb_font_funcs_t *ffuncs);
+
+
 hb_codepoint_t
 hb_font_get_glyph (hb_font_t *font, hb_face_t *face,
 		   hb_codepoint_t unicode, hb_codepoint_t variation_selector);
 
-hb_bool_t
-hb_font_get_contour_point (hb_font_t *font, hb_face_t *face,
-			   unsigned int point_index,
-			   hb_codepoint_t glyph, hb_position_t *x, hb_position_t *y);
+void
+hb_font_get_glyph_advance (hb_font_t *font, hb_face_t *face,
+			   hb_codepoint_t glyph,
+			   hb_position_t *x_advance, hb_position_t *y_advance);
 
 void
-hb_font_get_glyph_metrics (hb_font_t *font, hb_face_t *face,
-			   hb_codepoint_t glyph, hb_glyph_metrics_t *metrics);
+hb_font_get_glyph_extents (hb_font_t *font, hb_face_t *face,
+			   hb_codepoint_t glyph,
+			   hb_glyph_extents_t *metrics);
+
+hb_bool_t
+hb_font_get_contour_point (hb_font_t *font, hb_face_t *face,
+			   unsigned int point_index, hb_codepoint_t glyph,
+			   hb_position_t *x, hb_position_t *y);
 
 hb_position_t
 hb_font_get_kerning (hb_font_t *font, hb_face_t *face,
@@ -173,8 +221,21 @@ hb_font_set_funcs (hb_font_t         *font,
 		   hb_destroy_func_t  destroy,
 		   void              *user_data);
 
-hb_font_funcs_t *
-hb_font_get_funcs (hb_font_t       *font);
+/* Returns what was set and unsets it, but doesn't destroy(user_data).
+ * This is useful for wrapping / chaining font_funcs_t's.
+ *
+ * The client is responsible for:
+ *
+ *   - Take ownership of the reference on the returned klass,
+ *
+ *   - Calling "destroy(user_data)" exactly once if returned destroy func
+ *     is not NULL and the returned info is not needed anymore.
+ */
+void
+hb_font_unset_funcs (hb_font_t          *font,
+		     hb_font_funcs_t   **klass,
+		     hb_destroy_func_t  *destroy,
+		     void              **user_data);
 
 
 /*
@@ -185,6 +246,11 @@ hb_font_set_scale (hb_font_t *font,
 		   unsigned int x_scale,
 		   unsigned int y_scale);
 
+void
+hb_font_get_scale (hb_font_t *font,
+		   unsigned int *x_scale,
+		   unsigned int *y_scale);
+
 /*
  * A zero value means "no hinting in that direction"
  */
@@ -192,6 +258,11 @@ void
 hb_font_set_ppem (hb_font_t *font,
 		  unsigned int x_ppem,
 		  unsigned int y_ppem);
+
+void
+hb_font_get_ppem (hb_font_t *font,
+		  unsigned int *x_ppem,
+		  unsigned int *y_ppem);
 
 
 HB_END_DECLS

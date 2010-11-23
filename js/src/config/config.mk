@@ -162,8 +162,26 @@ MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFF
 ifdef MOZ_MEMORY
 ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 JEMALLOC_LIBS = $(MKSHLIB_FORCE_ALL) $(call EXPAND_MOZLIBNAME,jemalloc) $(MKSHLIB_UNFORCE_ALL)
+# If we are linking jemalloc into a program, we want the jemalloc symbols
+# to be exported
+ifneq (,$(SIMPLE_PROGRAMS)$(PROGRAM))
+JEMALLOC_LIBS += $(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
 endif
 endif
+endif
+
+ifndef NO_CXX_WRAPPER
+ifdef _MSC_VER
+ifndef .PYMAKE
+CC_WRAPPER = $(PYTHON) -O $(topsrcdir)/build/cl.py
+CXX_WRAPPER = $(PYTHON) -O $(topsrcdir)/build/cl.py
+else
+PYCOMMANDPATH += $(topsrcdir)/build
+CC_WRAPPER = %cl InvokeClWithDependencyGeneration
+CXX_WRAPPER = %cl InvokeClWithDependencyGeneration
+endif # .PYMAKE
+endif # _MSC_VER
+endif # NO_CXX_WRAPPER
 
 CC := $(CC_WRAPPER) $(CC)
 CXX := $(CXX_WRAPPER) $(CXX)
@@ -234,7 +252,7 @@ endif
 #
 ifdef NS_TRACE_MALLOC
 MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
-OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF -OPT:nowin98
+OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF
 endif # NS_TRACE_MALLOC
 
 endif # MOZ_DEBUG

@@ -288,7 +288,7 @@ E.g., |Foo[]| --> |ArrayOfFoo|."""
 
 def _hasVisibleActor(ipdltype):
     """Return true iff a C++ decl of |ipdltype| would have an Actor* type.
-For example: |Actor[]| would turn into |nsTArray<ActorParent*>|, so this
+For example: |Actor[]| would turn into |Array<ActorParent*>|, so this
 function would return true for |Actor[]|."""
     return (ipdltype.isIPDL()
             and (ipdltype.isActor()
@@ -314,7 +314,7 @@ def _autoptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
-    return Type('nsTArray', T=basetype, const=const, ref=ref)
+    return Type('InfallibleTArray', T=basetype, const=const, ref=ref)
 
 def _callCxxArrayLength(arr):
     return ExprCall(ExprSelect(arr, '.', 'Length'))
@@ -336,7 +336,7 @@ def _callCxxArrayClear(arr):
 
 def _cxxArrayHasElementSorted(arr, elt):
     return ExprBinary(
-        ExprVar('nsTArray_base::NoIndex'), '!=',
+        ExprSelect(arr, '.', 'NoIndex'), '!=',
         ExprCall(ExprSelect(arr, '.', 'BinaryIndexOf'), args=[ elt ]))
 
 def _otherSide(side):
@@ -1701,7 +1701,7 @@ def _generateCxxStruct(sd):
     usingTypedefs = gettypedeps.usingTypedefs
     forwarddeclstmts = gettypedeps.forwardDeclStmts
 
-    struct = Class(sd.name, struct=1, final=1)
+    struct = Class(sd.name, final=1)
     struct.addstmts([ Label.PRIVATE ]
                     + usingTypedefs
                     + [ Whitespace.NL, Label.PUBLIC ])
@@ -2816,6 +2816,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _runtimeAbort("`OnError' called on non-toplevel actor"))
         self.cls.addstmts([ onerror, Whitespace.NL ])
 
+        # OnChannelConnected()
+        onconnected = MethodDefn(MethodDecl('OnChannelConnected'))
+        if not ptype.isToplevel():
+            onconnected.addstmt(
+                _runtimeAbort("'OnConnected' called on non-toplevel actor"))
+
+        self.cls.addstmts([ onconnected, Whitespace.NL ])
         # FIXME/bug 535053: only manager protocols and non-manager
         # protocols with union types need Lookup().  we'll give it to
         # all for the time being (simpler)
@@ -2844,6 +2851,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ processnative, Whitespace.NL ])
 
         if ptype.isToplevel() and self.side is 'parent':
+            ## void SetOtherProcess(ProcessHandle pid)
+            otherprocessvar = ExprVar('aOtherProcess')
+            setotherprocess = MethodDefn(MethodDecl(
+                    'SetOtherProcess',
+                    params=[ Decl(Type('ProcessHandle'), otherprocessvar.name)]))
+            setotherprocess.addstmt(StmtExpr(ExprAssn(p.otherProcessVar(), otherprocessvar)))
+            self.cls.addstmts([
+                    setotherprocess,
+                    Whitespace.NL])
+
             ## bool GetMinidump(nsIFile** dump)
             self.cls.addstmt(Label.PROTECTED)
 

@@ -24,20 +24,33 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_OT_LAYOUT_PRIVATE_H
-#define HB_OT_LAYOUT_PRIVATE_H
+#ifndef HB_OT_LAYOUT_PRIVATE_HH
+#define HB_OT_LAYOUT_PRIVATE_HH
 
 #include "hb-private.h"
 
 #include "hb-ot-layout.h"
+#include "hb-ot-head-private.hh"
 
-#include "hb-font-private.hh"
+#include "hb-font-private.h"
 #include "hb-buffer-private.hh"
-
 
 HB_BEGIN_DECLS
 
-typedef unsigned int hb_ot_layout_class_t;
+
+/* buffer var allocations */
+#define props_cache() var1.u16[1] /* glyph_props cache */
+
+
+/* XXX cleanup */
+typedef enum {
+  HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED	= 0x0001,
+  HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH	= 0x0002,
+  HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE	= 0x0004,
+  HB_OT_LAYOUT_GLYPH_CLASS_MARK		= 0x0008,
+  HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT	= 0x0010
+} hb_ot_layout_glyph_class_t;
+
 
 /*
  * hb_ot_layout_t
@@ -52,12 +65,6 @@ struct hb_ot_layout_t
   const struct GDEF *gdef;
   const struct GSUB *gsub;
   const struct GPOS *gpos;
-
-  struct
-  {
-    unsigned char *klasses;
-    unsigned int len;
-  } new_gdef;
 };
 
 struct hb_ot_layout_context_t
@@ -65,20 +72,12 @@ struct hb_ot_layout_context_t
   hb_face_t *face;
   hb_font_t *font;
 
-  union info_t
-  {
-    struct gpos_t
-    {
-      unsigned int last;        /* the last valid glyph--used with cursive positioning */
-      hb_position_t anchor_x;   /* the coordinates of the anchor point */
-      hb_position_t anchor_y;   /* of the last valid glyph */
-    } gpos;
-  } info;
-
   /* Convert from font-space to user-space */
-  /* XXX speed up */
-  inline hb_position_t scale_x (int16_t v) { return (int64_t) this->font->x_scale * v / this->face->units_per_em; }
-  inline hb_position_t scale_y (int16_t v) { return (int64_t) this->font->y_scale * v / this->face->units_per_em; }
+  inline hb_position_t scale_x (int16_t v) { return scale (v, this->font->x_scale); }
+  inline hb_position_t scale_y (int16_t v) { return scale (v, this->font->y_scale); }
+
+  private:
+  inline hb_position_t scale (int16_t v, unsigned int scale) { return v * (int64_t) scale / this->face->head_table->get_upem (); }
 };
 
 
@@ -93,31 +92,23 @@ _hb_ot_layout_free (hb_ot_layout_t *layout);
  * GDEF
  */
 
-HB_INTERNAL hb_bool_t
-_hb_ot_layout_has_new_glyph_classes (hb_face_t *face);
-
-HB_INTERNAL void
-_hb_ot_layout_set_glyph_property (hb_face_t      *face,
-				  hb_codepoint_t  glyph,
-				  unsigned int    property);
-
-HB_INTERNAL void
-_hb_ot_layout_set_glyph_class (hb_face_t                  *face,
-			       hb_codepoint_t              glyph,
-			       hb_ot_layout_glyph_class_t  klass);
+HB_INTERNAL unsigned int
+_hb_ot_layout_get_glyph_property (hb_face_t       *face,
+				  hb_glyph_info_t *info);
 
 HB_INTERNAL hb_bool_t
 _hb_ot_layout_check_glyph_property (hb_face_t    *face,
-				    hb_internal_glyph_info_t *ginfo,
-				    unsigned int  lookup_flags,
-				    unsigned int *property);
+				    hb_glyph_info_t *ginfo,
+				    unsigned int  lookup_props,
+				    unsigned int *property_out);
 
 HB_INTERNAL hb_bool_t
 _hb_ot_layout_skip_mark (hb_face_t    *face,
-			 hb_internal_glyph_info_t *ginfo,
-			 unsigned int  lookup_flags,
-			 unsigned int *property);
+			 hb_glyph_info_t *ginfo,
+			 unsigned int  lookup_props,
+			 unsigned int *property_out);
+
 
 HB_END_DECLS
 
-#endif /* HB_OT_LAYOUT_PRIVATE_H */
+#endif /* HB_OT_LAYOUT_PRIVATE_HH */

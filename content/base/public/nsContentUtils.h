@@ -1700,6 +1700,20 @@ public:
    */
   static bool IsSubDocumentTabbable(nsIContent* aContent);
 
+  /**
+   * Flushes the layout tree (recursively)
+   *
+   * @param aWindow the window the flush should start at
+   *
+   */
+  static void FlushLayoutForTree(nsIDOMWindow* aWindow);
+
+  /**
+   * Returns true if content with the given principal is allowed to use XUL
+   * and XBL and false otherwise.
+   */
+  static bool AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal);
+
 private:
 
   static PRBool InitializeEventTable();
@@ -1789,6 +1803,7 @@ private:
   static nsIInterfaceRequestor* sSameOriginChecker;
 
   static PRBool sIsHandlingKeyBoardEvent;
+  static PRBool sAllowXULXBL_for_file;
 };
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \

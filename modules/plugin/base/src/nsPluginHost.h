@@ -181,6 +181,9 @@ public:
                                        nsIPluginInstanceOwner* aOwner,
                                        PRBool aAllowOpeningStreams);
 
+  // Does not accept NULL and should never fail.
+  nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
+
 private:
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -205,9 +208,6 @@ private:
 
   nsPluginTag*
   FindPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
-
-  // Does not accept NULL and should never fail.
-  nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
 
   nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);

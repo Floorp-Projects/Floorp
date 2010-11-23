@@ -183,6 +183,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsTextEditorState.h"
 #include "nsIPluginHost.h"
 #include "nsICategoryManager.h"
+#include "nsAHtml5FragmentParser.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -263,6 +264,7 @@ nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
 PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
+PRBool nsContentUtils::sAllowXULXBL_for_file = PR_FALSE;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
@@ -505,6 +507,9 @@ nsContentUtils::Init()
   sBlockedScriptRunners = new nsCOMArray<nsIRunnable>;
   NS_ENSURE_TRUE(sBlockedScriptRunners, NS_ERROR_OUT_OF_MEMORY);
 
+  nsContentUtils::AddBoolPrefVarCache("dom.allow_XUL_XBL_for_file",
+                                      &sAllowXULXBL_for_file);
+
   sInitialized = PR_TRUE;
 
   return NS_OK;
@@ -591,6 +596,7 @@ nsContentUtils::InitializeEventTable() {
                                                 
     { nsGkAtoms::onpageshow,                    NS_PAGE_SHOW, EventNameType_HTML, NS_EVENT },
     { nsGkAtoms::onpagehide,                    NS_PAGE_HIDE, EventNameType_HTML, NS_EVENT },
+    { nsGkAtoms::onMozBeforeResize,             NS_BEFORERESIZE_EVENT, EventNameType_None, NS_EVENT },
     { nsGkAtoms::onresize,                      NS_RESIZE_EVENT,
                                                 (EventNameType_HTMLXUL | EventNameType_SVGSVG), NS_EVENT },
     { nsGkAtoms::onscroll,                      NS_SCROLL_EVENT,
@@ -3898,21 +3904,27 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
+    nsAHtml5FragmentParser* asFragmentParser =
+        static_cast<nsAHtml5FragmentParser*> (parser.get());
     nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
     if (contextAsContent &&
         !(nsGkAtoms::html == contextAsContent->Tag() &&
           contextAsContent->IsHTML())) {
-      parser->ParseFragment(aFragment, 
-                            fragment, 
-                            contextAsContent->Tag(), 
-                            contextAsContent->GetNameSpaceID(), 
-                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks));    
+      asFragmentParser->ParseHtml5Fragment(aFragment,
+                                           fragment,
+                                           contextAsContent->Tag(),
+                                           contextAsContent->GetNameSpaceID(),
+                                           (document->GetCompatibilityMode() ==
+                                               eCompatibility_NavQuirks),
+                                           PR_FALSE);
     } else {
-      parser->ParseFragment(aFragment, 
-                            fragment,
-                            nsGkAtoms::body, 
-                            kNameSpaceID_XHTML, 
-                            (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
+      asFragmentParser->ParseHtml5Fragment(aFragment,
+                                           fragment,
+                                           nsGkAtoms::body,
+                                           kNameSpaceID_XHTML,
+                                           (document->GetCompatibilityMode() ==
+                                               eCompatibility_NavQuirks),
+                                           PR_FALSE);
     }
   
     frag.swap(*aReturn);
@@ -5529,6 +5541,11 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
     return NS_OK;
   }
 
+  JSObject *wrapper = xpc_GetCachedSlimWrapper(cache, scope, vp);
+  if (wrapper) {
+    return NS_OK;
+  }
+
   NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
 
   // Keep sXPConnect and sThreadJSContextStack alive. If we're on the main
@@ -6303,6 +6320,40 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
   return !zombieViewer;
 }
 
+void
+nsContentUtils::FlushLayoutForTree(nsIDOMWindow* aWindow)
+{
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
+    if (!piWin)
+        return;
+
+    // Note that because FlushPendingNotifications flushes parents, this
+    // is O(N^2) in docshell tree depth.  However, the docshell tree is
+    // usually pretty shallow.
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aWindow->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    if (doc) {
+        doc->FlushPendingNotifications(Flush_Layout);
+    }
+
+    nsCOMPtr<nsIDocShellTreeNode> node =
+        do_QueryInterface(piWin->GetDocShell());
+    if (node) {
+        PRInt32 i = 0, i_end;
+        node->GetChildCount(&i_end);
+        for (; i < i_end; ++i) {
+            nsCOMPtr<nsIDocShellTreeItem> item;
+            node->GetChildAt(i, getter_AddRefs(item));
+            nsCOMPtr<nsIDOMWindow> win = do_GetInterface(item);
+            if (win) {
+                FlushLayoutForTree(win);
+            }
+        }
+    }
+}
+
 void nsContentUtils::RemoveNewlines(nsString &aString)
 {
   // strip CR/LF and null
@@ -6369,6 +6420,20 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
   return manager.forget();
 }
 
+bool
+nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal)
+{
+  if (IsSystemPrincipal(aPrincipal)) {
+    return true;
+  }
+  
+  nsCOMPtr<nsIURI> princURI;
+  aPrincipal->GetURI(getter_AddRefs(princURI));
+  
+  return princURI &&
+         ((sAllowXULXBL_for_file && SchemeIs(princURI, "file")) ||
+          IsSitePermAllow(princURI, "allowXULXBL"));
+}
 
 NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
 
@@ -6447,4 +6512,12 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
 #endif // MOZ_MEDIA
 
   return NULL;
+}
+
+NS_IMPL_ISUPPORTS1(nsIContentUtils2, nsIContentUtils2)
+
+nsIInterfaceRequestor*
+nsIContentUtils2::GetSameOriginChecker()
+{
+  return nsContentUtils::GetSameOriginChecker();
 }

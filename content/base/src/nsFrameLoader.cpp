@@ -87,6 +87,8 @@
 #include "nsIDocShellHistory.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIXULWindow.h"
+#include "nsIEditor.h"
+#include "nsIEditorDocShell.h"
 
 #include "nsLayoutUtils.h"
 #include "nsIView.h"
@@ -686,6 +688,13 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
       doc->GetDesignMode(designMode);
 
       if (designMode.EqualsLiteral("on")) {
+        // Hold on to the editor object to let the document reattach to the
+        // same editor object, instead of creating a new one.
+        nsCOMPtr<nsIEditorDocShell> editorDocshell = do_QueryInterface(mDocShell);
+        nsCOMPtr<nsIEditor> editor;
+        nsresult rv = editorDocshell->GetEditor(getter_AddRefs(editor));
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
         doc->SetDesignMode(NS_LITERAL_STRING("off"));
         doc->SetDesignMode(NS_LITERAL_STRING("on"));
       }
@@ -723,8 +732,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
     mRemoteBrowser->Show(size);
     mRemoteBrowserShown = PR_TRUE;
 
-    nsCOMPtr<nsIChromeFrameMessageManager> dummy;
-    GetMessageManager(getter_AddRefs(dummy)); // Initialize message manager.
+    EnsureMessageManager();
   } else {
     mRemoteBrowser->Move(size);
   }

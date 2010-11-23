@@ -50,7 +50,7 @@ interface nsIDOMDOMStringList;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
  * for more information.
  */
-[scriptable, uuid(99bb825e-56aa-4cb9-b640-4fadb00b874d)]
+[scriptable, uuid(13e551a1-1a58-42ec-b0bd-7102ec0f64d6)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;
@@ -73,6 +73,8 @@ interface nsIIDBTransaction : nsISupports
 
   // Don't commit the transaction.
   void abort();
+
+  attribute nsIDOMEventListener onerror;
 
   // Event listener that fires when the transaction is completed
   // successfully. Receives an Event.

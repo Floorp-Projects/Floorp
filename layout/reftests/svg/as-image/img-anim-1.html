@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+<head>
+<script>
+  function snapshot() {
+    document.documentElement.removeAttribute("class");
+  }
+  function snapshotAfterOnePaint() {
+    window.addEventListener("MozBeforePaint", snapshot, false);
+    window.mozRequestAnimationFrame();
+  }
+  /* After the first paint completes (MozReftestInvalidate), then at that
+     point we wait for *one* more paint, and *then* we take our reftest snapshot. */
+  window.addEventListener("MozReftestInvalidate", snapshotAfterOnePaint, false);
+</script>
+</head>
+<body>
+  <img src="lime-anim-100x100.svg">
+</body>
+</html>

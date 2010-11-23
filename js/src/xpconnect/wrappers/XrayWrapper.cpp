@@ -215,34 +215,6 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
     // This will do verification and the method lookup for us.
     XPCCallContext ccx(JS_CALLER, cx, wnObject, nsnull, id);
 
-    // Run the resolve hook of the wrapped native.
-    if (NATIVE_HAS_FLAG(wn, WantNewResolve)) {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, holder))
-            return false;
-
-        JSBool retval = true;
-        JSObject *pobj = NULL;
-        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
-                                                                         flags, &pobj, &retval);
-        if (NS_FAILED(rv)) {
-            if (retval) {
-                XPCThrower::Throw(rv, cx);
-            }
-            return false;
-        }
-
-        if (pobj) {
-#ifdef DEBUG
-            JSBool hasProp;
-            NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
-                         hasProp, "id got defined somewhere else?");
-#endif
-            return JS_GetPropertyDescriptorById(cx, holder, id, flags, desc);
-        }
-    }
-
     // There are no native numeric properties, so we can shortcut here. We will not
     // find the property.
     if (!JSID_IS_ATOM(id)) {
@@ -264,7 +236,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
     desc->attrs = JSPROP_ENUMERATE;
     desc->getter = NULL;
     desc->setter = NULL;
-    desc->shortid = NULL;
+    desc->shortid = 0;
     desc->value = JSVAL_VOID;
 
     jsval fval = JSVAL_VOID;
@@ -430,9 +402,8 @@ IsTransparent(JSContext *cx, JSObject *wrapper)
 
 template <typename Base, typename Policy>
 bool
-XrayWrapper<Base, Policy>::resolveWrappedJSObject(JSContext *cx, JSObject *wrapper,
-                                                  jsid id, bool set,
-                                                  PropertyDescriptor *desc_in)
+XrayWrapper<Base, Policy>::resolveOwnProperty(JSContext *cx, JSObject *wrapper, jsid id, bool set,
+                                              PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
 
@@ -451,7 +422,50 @@ XrayWrapper<Base, Policy>::resolveWrappedJSObject(JSContext *cx, JSObject *wrapp
         return true;
     }
 
-    desc->obj = NULL;
+    JSObject *holder = GetHolder(wrapper);
+    JSObject *expando = GetExpandoObject(cx, holder);
+    if (!expando)
+        return false;
+
+    if (!JS_GetPropertyDescriptorById(cx, expando, id,
+                                      (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                      desc)) {
+        return false;
+    }
+
+    if (desc->obj)
+        return true;
+
+    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+    XPCWrappedNative *wn = GetWrappedNative(wnObject);
+
+    // Run the resolve hook of the wrapped native.
+    if (NATIVE_HAS_FLAG(wn, WantNewResolve)) {
+        JSBool retval = true;
+        JSObject *pobj = NULL;
+        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+        nsresult rv = wn->GetScriptableInfo()->GetCallback()->NewResolve(wn, cx, wrapper, id,
+                                                                         flags, &pobj, &retval);
+        if (NS_FAILED(rv)) {
+            if (retval)
+                XPCThrower::Throw(rv, cx);
+            return false;
+        }
+
+        if (pobj) {
+#ifdef DEBUG
+            JSBool hasProp;
+            NS_ASSERTION(JS_HasPropertyById(cx, holder, id, &hasProp) &&
+                         hasProp, "id got defined somewhere else?");
+#endif
+            if (!JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
+                return false;
+            desc->obj = wrapper;
+            return true;
+        }
+    }
+
+    desc->obj = nsnull;
     return true;
 }
 
@@ -461,13 +475,6 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
                                                  bool set, PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
-
-    if (!resolveWrappedJSObject(cx, wrapper, id, set, desc_in))
-        return false;
-
-    if (desc->obj)
-        return true;
-
     JSObject *holder = GetHolder(wrapper);
     if (IsResolving(holder, id)) {
         desc->obj = NULL;
@@ -481,14 +488,8 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
 
     ResolvingId resolving(holder, id);
 
-    void *priv;
-    if (!Policy::enter(cx, wrapper, &id, set ? JSWrapper::SET : JSWrapper::GET, &priv))
-        return false;
-
     // Redirect access straight to the wrapper if we should be transparent.
     if (Transparent(cx, wrapper)) {
-        Policy::leave(cx, wrapper, priv);
-
         JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
 
         {
@@ -506,7 +507,17 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return cx->compartment->wrap(cx, desc_in);
     }
 
-    bool ok = ResolveNativeProperty(cx, wrapper, holder, id, false, desc);
+    if (!this->resolveOwnProperty(cx, wrapper, id, set, desc_in))
+        return false;
+
+    if (desc->obj)
+        return true;
+
+    void *priv;
+    if (!Policy::enter(cx, wrapper, &id, set ? JSWrapper::SET : JSWrapper::GET, &priv))
+        return false;
+
+    bool ok = ResolveNativeProperty(cx, wrapper, holder, id, set, desc);
     Policy::leave(cx, wrapper, priv);
     if (!ok || desc->obj)
         return ok;
@@ -525,8 +536,7 @@ XrayWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
-    return getOwnPropertyDescriptor(cx, wrapper, id, set, desc_in);
-
+    return true;
 }
 
 template <typename Base, typename Policy>
@@ -535,21 +545,42 @@ XrayWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
                                                     bool set, PropertyDescriptor *desc_in)
 {
     JSPropertyDescriptor *desc = Jsvalify(desc_in);
-
-    if (!resolveWrappedJSObject(cx, wrapper, id, false, desc_in))
-        return false;
-
-    if (desc->obj)
-        return true;
-
     JSObject *holder = GetHolder(wrapper);
-    JSObject *expando = GetExpandoObject(cx, holder);
-    if (!expando)
+    if (IsResolving(holder, id)) {
+        desc->obj = NULL;
+        return true;
+    }
+
+    if (!this->enter(cx, wrapper, id, set ? JSWrapper::SET : JSWrapper::GET))
         return false;
 
-    return JS_GetPropertyDescriptorById(cx, expando, id,
-                                        (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
-                                        desc);
+    AutoLeaveHelper<Base, Policy> helper(*this, cx, wrapper);
+
+    ResolvingId resolving(holder, id);
+
+    // NB: Nothing we do here acts on the wrapped native itself, so we don't
+    // enter our policy.
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (Transparent(cx, wrapper)) {
+        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+        {
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, wnObject))
+                return false;
+
+            if (!JS_GetPropertyDescriptorById(cx, wnObject, id,
+                                              (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED,
+                                              desc)) {
+                return false;
+            }
+        }
+
+        desc->obj = (desc->obj == wnObject) ? wrapper : nsnull;
+        return cx->compartment->wrap(cx, desc_in);
+    }
+
+    return this->resolveOwnProperty(cx, wrapper, id, set, desc_in);
 }
 
 template <typename Base, typename Policy>
@@ -602,29 +633,58 @@ XrayWrapper<Base, Policy>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
                                  jsdesc->attrs);
 }
 
+static bool
+EnumerateNames(JSContext *cx, JSObject *wrapper, uintN flags, js::AutoIdVector &props)
+{
+    JSObject *holder = GetHolder(wrapper);
+
+    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
+
+    // Redirect access straight to the wrapper if we should be transparent.
+    if (Transparent(cx, wrapper)) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+
+        return js::GetPropertyNames(cx, wnObject, flags, &props);
+    }
+
+    // Enumerate expando properties first.
+    JSObject *expando = GetExpandoObject(cx, holder);
+    if (!expando)
+        return false;
+
+    if (!js::GetPropertyNames(cx, expando, flags, &props))
+        return false;
+
+    // Force all native properties to be materialized onto the wrapped native.
+    js::AutoIdVector wnProps(cx);
+    {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wnObject))
+            return false;
+        if (!js::GetPropertyNames(cx, wnObject, flags, &wnProps))
+            return false;
+    }
+
+    // Go through the properties we got and enumerate all native ones.
+    for (size_t n = 0; n < wnProps.length(); ++n) {
+        jsid id = wnProps[n];
+        JSBool hasProp;
+        if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
+            return false;
+        if (hasProp)
+            props.append(id);
+    }
+    return true;
+}
+
 template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                                js::AutoIdVector &props)
 {
-    JSObject *holder = GetHolder(wrapper);
-
-    // Redirect access straight to the wrapper if we should be transparent.
-    if (Transparent(cx, wrapper)) {
-        JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
-
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wnObject))
-            return false;
-
-        return js::GetPropertyNames(cx, wnObject, JSITER_OWNONLY | JSITER_HIDDEN, &props);
-    }
-
-    JSObject *expando = GetExpandoObject(cx, holder);
-    if (!expando)
-        return false;
-
-    return js::GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props);
+    return EnumerateNames(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
 template <typename Base, typename Policy>
@@ -663,47 +723,7 @@ template <typename Base, typename Policy>
 bool
 XrayWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props)
 {
-    JSObject *holder = GetHolder(wrapper);
-
-    JSObject *wnObject = GetWrappedNativeObjectFromHolder(cx, holder);
-
-    // Redirect access straight to the wrapper if we should be transparent.
-    if (Transparent(cx, wrapper)) {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wnObject))
-            return false;
-
-        return js::GetPropertyNames(cx, wnObject, 0, &props);
-    }
-
-    // Enumerate expando properties first.
-    JSObject *expando = GetExpandoObject(cx, holder);
-    if (!expando)
-        return false;
-
-    if (!js::GetPropertyNames(cx, expando, JSITER_OWNONLY, &props))
-        return false;
-
-    // Force all native properties to be materialized onto the wrapped native.
-    js::AutoIdVector wnProps(cx);
-    {
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wnObject))
-            return false;
-        if (!js::GetPropertyNames(cx, wnObject, 0, &wnProps))
-            return false;
-    }
-
-    // Go through the properties we got and enumerate all native ones.
-    for (size_t n = 0; n < wnProps.length(); ++n) {
-        jsid id = wnProps[n];
-        JSBool hasProp;
-        if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
-            return false;
-        if (hasProp)
-            props.append(id);
-    }
-    return true;
+    return EnumerateNames(cx, wrapper, 0, props);
 }
 
 template <typename Base, typename Policy>

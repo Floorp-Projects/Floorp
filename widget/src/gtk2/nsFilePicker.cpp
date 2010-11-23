@@ -194,6 +194,7 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
   : mMode(nsIFilePicker::modeOpen),
+    mAllowURLs(PR_FALSE),
     mSelectedType(0)
 {
 }
@@ -538,7 +539,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
   }
 
   gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser), PR_TRUE);
-  gint response = gtk_dialog_run(GTK_DIALOG(file_chooser));
+  gint response = RunDialog(GTK_DIALOG(file_chooser));
 
   switch (response) {
     case GTK_RESPONSE_OK:

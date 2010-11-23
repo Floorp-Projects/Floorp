@@ -185,6 +185,20 @@ private:
   CFTypeRef mObject;
 };
 
+static Boolean MimeTypeEnabled(CFDictionaryRef mimeDict) {
+  if (!mimeDict) {
+    return true;
+  }
+  
+  CFTypeRef value;
+  if (::CFDictionaryGetValueIfPresent(mimeDict, CFSTR("WebPluginTypeEnabled"), &value)) {
+    if (value && ::CFGetTypeID(value) == ::CFBooleanGetTypeID()) {
+      return ::CFBooleanGetValue(static_cast<CFBooleanRef>(value));
+    }
+  }
+  return true;
+}
+
 static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
 {
   CFTypeRef mimeFileName = ::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("WebPluginMIMETypesFilename"));
@@ -296,22 +310,24 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   nsAutoArrayPtr<CFTypeRef> values(new CFTypeRef[mimeDictKeyCount]);
   if (!values)
     return;
-
-  // Set the variant count now that we have safely allocated memory
-  info.fVariantCount = mimeDictKeyCount;
+  
+  info.fVariantCount = 0;
 
   ::CFDictionaryGetKeysAndValues(mimeDict, keys, values);
   for (int i = 0; i < mimeDictKeyCount; i++) {
     CFTypeRef mimeString = keys[i];
-    if (mimeString && ::CFGetTypeID(mimeString) == ::CFStringGetTypeID()) {
-      info.fMimeTypeArray[i] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(mimeString));
-    }
-    else {
-      info.fVariantCount -= 1;
+    if (!mimeString || ::CFGetTypeID(mimeString) != ::CFStringGetTypeID()) {
       continue;
     }
     CFTypeRef mimeDict = values[i];
     if (mimeDict && ::CFGetTypeID(mimeDict) == ::CFDictionaryGetTypeID()) {
+      if (!MimeTypeEnabled(static_cast<CFDictionaryRef>(mimeDict))) {
+        continue;
+      }
+      info.fMimeTypeArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(mimeString));
+      if (!info.fMimeTypeArray[info.fVariantCount]) {
+        continue;
+      }
       CFTypeRef extensions = ::CFDictionaryGetValue(static_cast<CFDictionaryRef>(mimeDict), CFSTR("WebPluginExtensions"));
       if (extensions && ::CFGetTypeID(extensions) == ::CFArrayGetTypeID()) {
         int extensionCount = ::CFArrayGetCount(static_cast<CFArrayRef>(extensions));
@@ -324,13 +340,14 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
             ::CFStringAppend(static_cast<CFMutableStringRef>(extensionList), static_cast<CFStringRef>(extension));
           }
         }
-        info.fExtensionArray[i] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(extensionList));
+        info.fExtensionArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(extensionList));
         ::CFRelease(extensionList);
       }
       CFTypeRef description = ::CFDictionaryGetValue(static_cast<CFDictionaryRef>(mimeDict), CFSTR("WebPluginTypeDescription"));
       if (description && ::CFGetTypeID(description) == ::CFStringGetTypeID())
-        info.fMimeDescriptionArray[i] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(description));
+        info.fMimeDescriptionArray[info.fVariantCount] = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(description));
     }
+    info.fVariantCount++;
   }
 }
 

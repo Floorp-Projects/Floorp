@@ -165,8 +165,8 @@ menupopup > menuitem {
   max-width: 42em;
 }
 
-menupopup > menu[_moz-menuactive="true"],
-menupopup > menuitem[_moz-menuactive="true"] {
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
   color: -moz-mac-menutextselect;
   background-color: Highlight;
 }

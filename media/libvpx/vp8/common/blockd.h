@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -24,7 +24,7 @@ void vpx_log(const char *format, ...);
 #define TRUE    1
 #define FALSE   0
 
-//#define DCPRED 1
+/*#define DCPRED 1*/
 #define DCPREDSIMTHRESH 0
 #define DCPREDCNTTHRESH 3
 
@@ -39,7 +39,7 @@ void vpx_log(const char *format, ...);
 #define MAX_REF_LF_DELTAS       4
 #define MAX_MODE_LF_DELTAS      4
 
-// Segment Feature Masks
+/* Segment Feature Masks */
 #define SEGMENT_DELTADATA   0
 #define SEGMENT_ABSDATA     1
 
@@ -75,11 +75,11 @@ typedef enum
 
 typedef enum
 {
-    DC_PRED,            // average of above and left pixels
-    V_PRED,             // vertical prediction
-    H_PRED,             // horizontal prediction
-    TM_PRED,            // Truemotion prediction
-    B_PRED,             // block based prediction, each block has its own prediction mode
+    DC_PRED,            /* average of above and left pixels */
+    V_PRED,             /* vertical prediction */
+    H_PRED,             /* horizontal prediction */
+    TM_PRED,            /* Truemotion prediction */
+    B_PRED,             /* block based prediction, each block has its own prediction mode */
 
     NEARESTMV,
     NEARMV,
@@ -90,16 +90,16 @@ typedef enum
     MB_MODE_COUNT
 } MB_PREDICTION_MODE;
 
-// Macroblock level features
+/* Macroblock level features */
 typedef enum
 {
-    MB_LVL_ALT_Q = 0,               // Use alternate Quantizer ....
-    MB_LVL_ALT_LF = 1,              // Use alternate loop filter value...
-    MB_LVL_MAX = 2                 // Number of MB level features supported
+    MB_LVL_ALT_Q = 0,               /* Use alternate Quantizer .... */
+    MB_LVL_ALT_LF = 1,              /* Use alternate loop filter value... */
+    MB_LVL_MAX = 2                  /* Number of MB level features supported */
 
 } MB_LVL_FEATURES;
 
-// Segment Feature Masks
+/* Segment Feature Masks */
 #define SEGMENT_ALTQ    0x01
 #define SEGMENT_ALT_LF  0x02
 
@@ -110,11 +110,11 @@ typedef enum
 
 typedef enum
 {
-    B_DC_PRED,          // average of above and left pixels
+    B_DC_PRED,          /* average of above and left pixels */
     B_TM_PRED,
 
-    B_VE_PRED,           // vertical prediction
-    B_HE_PRED,           // horizontal prediction
+    B_VE_PRED,           /* vertical prediction */
+    B_HE_PRED,           /* horizontal prediction */
 
     B_LD_PRED,
     B_RD_PRED,
@@ -168,14 +168,15 @@ typedef struct
         int as_int;
         MV  as_mv;
     } mv;
-    int partitioning;
-    int partition_count;
-    int mb_skip_coeff;                                //does this mb has coefficients at all, 1=no coefficients, 0=need decode tokens
-    int dc_diff;
-    unsigned char   segment_id;                  // Which set of segmentation parameters should be used for this MB
-    int force_no_skip;
-    int need_to_clamp_mvs;
-    B_MODE_INFO partition_bmi[16];
+
+    unsigned char partitioning;
+    unsigned char mb_skip_coeff;                                /* does this mb has coefficients at all, 1=no coefficients, 0=need decode tokens */
+    unsigned char dc_diff;
+    unsigned char need_to_clamp_mvs;
+
+    unsigned char segment_id;                  /* Which set of segmentation parameters should be used for this MB */
+
+    unsigned char force_no_skip; /* encoder only */
 } MB_MODE_INFO;
 
 
@@ -194,9 +195,9 @@ typedef struct
     short *diff;
     short *reference;
 
-    short(*dequant)[4];
+    short *dequant;
 
-    // 16 Y blocks, 4 U blocks, 4 V blocks each with 16 entries
+    /* 16 Y blocks, 4 U blocks, 4 V blocks each with 16 entries */
     unsigned char **base_pre;
     int pre;
     int pre_stride;
@@ -213,22 +214,20 @@ typedef struct
 
 typedef struct
 {
-    DECLARE_ALIGNED(16, short, diff[400]);      // from idct diff
+    DECLARE_ALIGNED(16, short, diff[400]);      /* from idct diff */
     DECLARE_ALIGNED(16, unsigned char,  predictor[384]);
-//not used    DECLARE_ALIGNED(16, short, reference[384]);
+/* not used    DECLARE_ALIGNED(16, short, reference[384]); */
     DECLARE_ALIGNED(16, short, qcoeff[400]);
     DECLARE_ALIGNED(16, short, dqcoeff[400]);
     DECLARE_ALIGNED(16, char,  eobs[25]);
 
-    // 16 Y blocks, 4 U, 4 V, 1 DC 2nd order block, each with 16 entries.
+    /* 16 Y blocks, 4 U, 4 V, 1 DC 2nd order block, each with 16 entries. */
     BLOCKD block[25];
 
-    YV12_BUFFER_CONFIG pre; // Filtered copy of previous frame reconstruction
+    YV12_BUFFER_CONFIG pre; /* Filtered copy of previous frame reconstruction */
     YV12_BUFFER_CONFIG dst;
 
     MODE_INFO *mode_info_context;
-    MODE_INFO *mode_info;
-
     int mode_info_stride;
 
     FRAME_TYPE frame_type;
@@ -236,39 +235,39 @@ typedef struct
     int up_available;
     int left_available;
 
-    // Y,U,V,Y2
+    /* Y,U,V,Y2 */
     ENTROPY_CONTEXT_PLANES *above_context;
     ENTROPY_CONTEXT_PLANES *left_context;
 
-    // 0 indicates segmentation at MB level is not enabled. Otherwise the individual bits indicate which features are active.
+    /* 0 indicates segmentation at MB level is not enabled. Otherwise the individual bits indicate which features are active. */
     unsigned char segmentation_enabled;
 
-    // 0 (do not update) 1 (update) the macroblock segmentation map.
+    /* 0 (do not update) 1 (update) the macroblock segmentation map. */
     unsigned char update_mb_segmentation_map;
 
-    // 0 (do not update) 1 (update) the macroblock segmentation feature data.
+    /* 0 (do not update) 1 (update) the macroblock segmentation feature data. */
     unsigned char update_mb_segmentation_data;
 
-    // 0 (do not update) 1 (update) the macroblock segmentation feature data.
+    /* 0 (do not update) 1 (update) the macroblock segmentation feature data. */
     unsigned char mb_segement_abs_delta;
 
-    // Per frame flags that define which MB level features (such as quantizer or loop filter level)
-    // are enabled and when enabled the proabilities used to decode the per MB flags in MB_MODE_INFO
-    vp8_prob mb_segment_tree_probs[MB_FEATURE_TREE_PROBS];         // Probability Tree used to code Segment number
+    /* Per frame flags that define which MB level features (such as quantizer or loop filter level) */
+    /* are enabled and when enabled the proabilities used to decode the per MB flags in MB_MODE_INFO */
+    vp8_prob mb_segment_tree_probs[MB_FEATURE_TREE_PROBS];         /* Probability Tree used to code Segment number */
 
-    signed char segment_feature_data[MB_LVL_MAX][MAX_MB_SEGMENTS];            // Segment parameters
+    signed char segment_feature_data[MB_LVL_MAX][MAX_MB_SEGMENTS];            /* Segment parameters */
 
-    // mode_based Loop filter adjustment
+    /* mode_based Loop filter adjustment */
     unsigned char mode_ref_lf_delta_enabled;
     unsigned char mode_ref_lf_delta_update;
 
-    // Delta values have the range +/- MAX_LOOP_FILTER
-    //char ref_lf_deltas[MAX_REF_LF_DELTAS];                      // 0 = Intra, Last, GF, ARF
-    //char mode_lf_deltas[MAX_MODE_LF_DELTAS];                            // 0 = BPRED, ZERO_MV, MV, SPLIT
-    signed char ref_lf_deltas[MAX_REF_LF_DELTAS];                     // 0 = Intra, Last, GF, ARF
-    signed char mode_lf_deltas[MAX_MODE_LF_DELTAS];                           // 0 = BPRED, ZERO_MV, MV, SPLIT
+    /* Delta values have the range +/- MAX_LOOP_FILTER */
+    signed char last_ref_lf_deltas[MAX_REF_LF_DELTAS];                /* 0 = Intra, Last, GF, ARF */
+    signed char ref_lf_deltas[MAX_REF_LF_DELTAS];                     /* 0 = Intra, Last, GF, ARF */
+    signed char last_mode_lf_deltas[MAX_MODE_LF_DELTAS];                      /* 0 = BPRED, ZERO_MV, MV, SPLIT */
+    signed char mode_lf_deltas[MAX_MODE_LF_DELTAS];                           /* 0 = BPRED, ZERO_MV, MV, SPLIT */
 
-    // Distance of MB away from frame edges
+    /* Distance of MB away from frame edges */
     int mb_to_left_edge;
     int mb_to_right_edge;
     int mb_to_top_edge;

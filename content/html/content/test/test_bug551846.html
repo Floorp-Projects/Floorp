@@ -122,36 +122,36 @@ function checkSetSizeException(element)
   element.removeAttribute('size');
 }
 
-function checkSizeWhenChangeMultiple(element)
+function checkSizeWhenChangeMultiple(element, aDefaultNonMultiple, aDefaultMultiple)
 {
   s.setAttribute('size', -1)
-  is(s.size, 1, "Size IDL attribute should be 1");
+  is(s.size, aDefaultNonMultiple, "Size IDL attribute should be 1");
 
   s.multiple = true;
-  is(s.size, 4, "Size IDL attribute should be 4");
+  is(s.size, aDefaultMultiple, "Size IDL attribute should be 4");
 
   is(s.getAttribute('size'), -1, "Size content attribute should be -1");
 
   s.setAttribute('size', -2);
-  is(s.size, 4, "Size IDL attribute should be 4");
+  is(s.size, aDefaultMultiple, "Size IDL attribute should be 4");
 
   s.multiple = false;
-  is(s.size, 1, "Size IDL attribute should be 1");
+  is(s.size, aDefaultNonMultiple, "Size IDL attribute should be 1");
 
   is(s.getAttribute('size'), -2, "Size content attribute should be -2");
 }
 
 var s = document.getElementById('s');
 
-checkSizeReflection(s, 1);
+checkSizeReflection(s, 0);
 checkSetSizeException(s);
 
 s.setAttribute('multiple', 'true');
-checkSizeReflection(s, 4);
+checkSizeReflection(s, 0);
 checkSetSizeException(s);
 s.removeAttribute('multiple');
 
-checkSizeWhenChangeMultiple(s);
+checkSizeWhenChangeMultiple(s, 0, 0);
 
 </script>
 </pre>

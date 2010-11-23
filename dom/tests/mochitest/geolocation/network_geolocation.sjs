@@ -19,7 +19,7 @@ function parseQueryString(str)
 
 function getPosition()
 {  
-    // this isnt' the w3c data structure, it is the network location provider structure.
+    // this isn't the w3c data structure, it is the network location provider structure.
 
   var address = {
       street_number: "street_number",

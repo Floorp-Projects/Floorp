@@ -118,6 +118,10 @@ class FrameEntry
         return isNumber;
     }
 
+    bool hasSameBacking(const FrameEntry *other) const {
+        return backing() == other->backing();
+    }
+
   private:
     void setType(JSValueType type_) {
         type.setConstant();
@@ -203,6 +207,10 @@ class FrameEntry
         JS_ASSERT(isCopy());
         JS_ASSERT(copy < this);
         return copy;
+    }
+
+    const FrameEntry *backing() const {
+        return isCopy() ? copyOf() : this;
     }
 
     void setNotCopied() {

@@ -112,10 +112,10 @@ protected:
     bool AnswerConvert(const JSType& type,
                        OperationStatus* status, JSVariant* vp);
 
-    bool AnswerCall(PObjectWrapperChild* receiver, const nsTArray<JSVariant>& argv,
+    bool AnswerCall(PObjectWrapperChild* receiver, const InfallibleTArray<JSVariant>& argv,
                     OperationStatus* status, JSVariant* rval);
 
-    bool AnswerConstruct(const nsTArray<JSVariant>& argv,
+    bool AnswerConstruct(const InfallibleTArray<JSVariant>& argv,
                          OperationStatus* status, PObjectWrapperChild** rval);
 
     bool AnswerHasInstance(const JSVariant& v,

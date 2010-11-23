@@ -36,6 +36,7 @@
 #   Rob Campbell <rcampbell@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
 #   David Dahl <ddahl@mozilla.com>
+#   Frank Yan <fyan@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,7 @@
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/webConsole.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -113,9 +115,6 @@
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
       <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
-      <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
-                tbattr="tabbrowser-multiple"
-                oncommand="gBrowser.reloadAllTabs();"/>
       <menuseparator/>
       <menuitem id="context_pinTab" label="&pinAppTab.label;"
                 accesskey="&pinAppTab.accesskey;"
@@ -137,13 +136,16 @@
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
       <menuseparator/>
+      <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
+                tbattr="tabbrowser-multiple"
+                oncommand="gBrowser.reloadAllTabs();"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
                 command="Browser:BookmarkAllTabs"/>
-      <menuseparator/>
       <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+      <menuseparator/>
       <menuitem id="context_undoCloseTab"
                 label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
@@ -331,7 +333,8 @@
 
     <menupopup id="placesContext"/>
 
-    <panel id="notification-popup" type="arrow" position="after_start" noautofocus="true" hidden="true"/>
+    <panel id="notification-popup" type="arrow" position="after_start"
+           noautofocus="true" hidden="true" orient="vertical"/>
 
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
@@ -430,28 +433,26 @@
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
-  <vbox id="titlebar">
+<vbox id="titlebar">
   <hbox id="titlebar-content">
-  <hbox id="appmenu-button-container" align="start">
-  <button id="appmenu-button"
-          type="menu"
-#ifdef XP_WIN
-          label="&brandShortName;"
-#else
-          label="&appMenuButton.label;"
-#endif
-          style="-moz-user-focus: ignore;">
+    <hbox id="appmenu-button-container">
+      <button id="appmenu-button"
+              type="menu"
+              label="&brandShortName;"
+              style="-moz-user-focus: ignore;">
 #include browser-appmenu.inc
-  </button>
+      </button>
+    </hbox>
+    <spacer id="titlebar-spacer" flex="1"/>
+    <hbox id="titlebar-buttonbox-container" align="start">
+      <hbox id="titlebar-buttonbox">
+        <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
+        <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
+        <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
+      </hbox>
+    </hbox>
   </hbox>
-  <spacer id="titlebar-spacer" flex="1"/>
-  <hbox id="titlebar-buttonbox">
-    <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
-    <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
-    <toolbarbutton class="titlebar-button" id="titlebar-close" command="cmd_closeWindow"/>
-  </hbox>
-  </hbox>
-  </vbox>
+</vbox>
 #endif
 
 <deck flex="1" id="tab-view-deck">
@@ -763,6 +764,13 @@
       </toolbaritem>
     </toolbar>
 
+#ifdef MENUBAR_CAN_AUTOHIDE
+#ifndef CAN_DRAW_IN_TITLEBAR
+#define APPMENU_ON_TABBAR
+#endif
+#endif
+
+
     <toolbar id="TabsToolbar"
              fullscreentoolbar="true"
              customizable="true"
@@ -770,8 +778,22 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
+#ifdef APPMENU_ON_TABBAR
+             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+#else
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+#endif
              collapsed="true">
+
+#ifdef APPMENU_ON_TABBAR
+      <toolbarbutton id="appmenu-toolbar-button"
+                     class="chromeclass-toolbar-additional"
+                     type="menu"
+                     label="&brandShortName;"
+                     tooltiptext="&appMenuButton.tooltip;">
+#include browser-appmenu.inc
+      </toolbarbutton>
+#endif
 
       <tabs id="tabbrowser-tabs"
             class="tabbrowser-tabs"

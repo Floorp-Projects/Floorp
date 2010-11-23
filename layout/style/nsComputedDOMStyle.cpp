@@ -1276,24 +1276,8 @@ nsComputedDOMStyle::DoGetFontStretch(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleFont* font = GetStyleFont();
-
-  // The computed value space isn't actually representable in string
-  // form, so just represent anything with widers or narrowers in it as
-  // 'wider' or 'narrower'.
-  PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER % 2 == 0);
-  PR_STATIC_ASSERT(NS_FONT_STRETCH_WIDER % 2 == 0);
-  PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER + NS_FONT_STRETCH_WIDER == 0);
-  PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER < 0);
-  PRInt16 stretch = font->mFont.stretch;
-  if (stretch <= NS_FONT_STRETCH_NARROWER / 2) {
-    val->SetIdent(eCSSKeyword_narrower);
-  } else if (stretch >= NS_FONT_STRETCH_WIDER / 2) {
-    val->SetIdent(eCSSKeyword_wider);
-  } else {
-    val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(stretch, nsCSSProps::kFontStretchKTable));
-  }
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(GetStyleFont()->mFont.stretch,
+                                               nsCSSProps::kFontStretchKTable));
 
   NS_ADDREF(*aValue = val);
   return NS_OK;

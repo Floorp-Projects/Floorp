@@ -35,10 +35,24 @@
  */
 
 #include <stdlib.h>
+#include <time.h>
 #include <jni.h>
 #include "sydney_audio.h"
 
+#include "android/log.h"
+
+#ifndef ALOG
+#if defined(DEBUG) || defined(FORCE_ALOG)
+#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - SYDNEY_AUDIO" , ## args)
+#else
+#define ALOG(args...)
+#endif
+#endif 
+
 /* Android implementation based on sydney_audio_mac.c */
+
+#define NANOSECONDS_IN_MILLISECOND 1000000
+#define MILLISECONDS_PER_SECOND    1000
 
 /* android.media.AudioTrack */
 struct AudioTrack {
@@ -85,6 +99,13 @@ struct sa_stream {
 
   unsigned int rate;
   unsigned int channels;
+  unsigned int isPaused;
+
+  int64_t lastStartTime;
+  int64_t timePlaying;
+  int64_t amountWritten;
+  unsigned int bufferSize;
+
   jclass at_class;
 };
 
@@ -107,7 +128,7 @@ init_jni_bindings(JNIEnv *jenv) {
   at.getpos      = (*jenv)->GetMethodID(jenv, class, "getPlaybackHeadPosition", "()I");
 
   return class;
-};
+}
 
 /*
  * -----------------------------------------------------------------------------
@@ -154,6 +175,13 @@ sa_stream_create_pcm(
   s->output_unit = NULL;
   s->rate        = rate;
   s->channels    = channels;
+  s->isPaused    = 0;
+
+  s->lastStartTime = 0;
+  s->timePlaying = 0;
+  s->amountWritten = 0;
+
+  s->bufferSize = rate * channels;
 
   *_s = s;
   return SA_SUCCESS;
@@ -180,14 +208,16 @@ sa_stream_open(sa_stream_t *s) {
 
   s->at_class = init_jni_bindings(jenv);
 
+  int32_t chanConfig = s->channels == 1 ?
+    CHANNEL_OUT_MONO : CHANNEL_OUT_STEREO;
+
   jobject obj =
     (*jenv)->NewObject(jenv, s->at_class, at.constructor,
                        STREAM_MUSIC,
                        s->rate,
-                       s->channels == 1 ?
-                         CHANNEL_OUT_MONO : CHANNEL_OUT_STEREO,
+                       chanConfig,
                        ENCODING_PCM_16BIT,
-                       (s->channels * s->rate) / 2,
+                       s->bufferSize,
                        MODE_STREAM);
 
   if (!obj) {
@@ -199,6 +229,7 @@ sa_stream_open(sa_stream_t *s) {
   s->output_unit = (*jenv)->NewGlobalRef(jenv, obj);
   (*jenv)->PopLocalFrame(jenv, NULL);
 
+  ALOG("%x - New stream %d %d", s,  s->rate, s->channels);
   return SA_SUCCESS;
 }
 
@@ -218,9 +249,9 @@ sa_stream_destroy(sa_stream_t *s) {
   (*jenv)->DeleteGlobalRef(jenv, s->at_class);
   free(s);
 
+  ALOG("%x - Stream destroyed", s);
   return SA_SUCCESS;
 }
-
 
 
 /*
@@ -257,9 +288,38 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
   }
 
   memcpy(byte, data, nbytes);
+
+  size_t wroteSoFar = 0;
+  jint retval;
+
+  do {
+    retval = (*jenv)->CallIntMethod(jenv,
+                                    s->output_unit,
+                                    at.write,
+                                    bytearray,
+                                    wroteSoFar,
+                                    nbytes - wroteSoFar);
+    if (retval < 0) {
+      ALOG("%x - Write failed %d", s, retval);
+      break;
+    }
+
+    wroteSoFar += retval;
+
+    if (wroteSoFar != nbytes) {
+
+      /* android doesn't start playing until we explictly call play. */
+      if (!s->isPaused)
+	sa_stream_resume(s);
+
+      struct timespec ts = {0, 100000000}; /* .10s */
+      nanosleep(&ts, NULL);
+    }
+  } while(wroteSoFar < nbytes);
+
+  s->amountWritten += nbytes;
+
   (*jenv)->ReleaseByteArrayElements(jenv, bytearray, byte, 0);
-  jint retval = (*jenv)->CallIntMethod(jenv, s->output_unit, at.write,
-                                       bytearray, 0, nbytes);
 
   (*jenv)->PopLocalFrame(jenv, NULL);
 
@@ -280,9 +340,13 @@ sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
     return SA_ERROR_NO_INIT;
   }
 
-  // XXX AudioTrack doesn't block on writes but it might not write everything.
-  //     Needs investigation.
-  *size = (s->rate * s->channels) / 2;
+  /* No android API for this, so estimate based on how much we have played and
+   * how much we have written.
+   */
+  *size = s->bufferSize - ((s->timePlaying * s->channels * s->rate /
+			    MILLISECONDS_PER_SECOND) - s->amountWritten);
+  ALOG("%x - Write Size %d", s, *size);
+
   return SA_SUCCESS;
 }
 
@@ -294,9 +358,15 @@ sa_stream_get_position(sa_stream_t *s, sa_position_t position, int64_t *pos) {
     return SA_ERROR_NO_INIT;
   }
 
+  ALOG("%x - get position", s);
+
   JNIEnv *jenv = GetJNIForThread();
   *pos  = (*jenv)->CallIntMethod(jenv, s->output_unit, at.getpos);
-  *pos *= s->channels * 2;
+
+  /* android returns number of frames, so:
+     position = frames * (PCM_16_BIT == 2 bytes) * channels
+  */
+  *pos *= s->channels * sizeof(int16_t);
   return SA_SUCCESS;
 }
 
@@ -309,6 +379,18 @@ sa_stream_pause(sa_stream_t *s) {
   }
 
   JNIEnv *jenv = GetJNIForThread();
+  s->isPaused = 1;
+
+  /* Update stats */
+  if (s->lastStartTime != 0) {
+    /* if lastStartTime is not zero, so playback has started */
+    struct timespec current_time;
+    clock_gettime(CLOCK_REALTIME, &current_time);
+    int64_t ticker = current_time.tv_sec * 1000 + current_time.tv_nsec / 1000000;
+    s->timePlaying += ticker - s->lastStartTime;
+  }
+  ALOG("%x - Pause total time playing: %lld total written: %lld", s,  s->timePlaying, s->amountWritten);
+
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.pause);
   return SA_SUCCESS;
 }
@@ -321,7 +403,17 @@ sa_stream_resume(sa_stream_t *s) {
     return SA_ERROR_NO_INIT;
   }
 
+  ALOG("%x - resume", s);
+
   JNIEnv *jenv = GetJNIForThread();
+  s->isPaused = 0;
+
+  /* Update stats */
+  struct timespec current_time;
+  clock_gettime(CLOCK_REALTIME, &current_time);
+  int64_t ticker = current_time.tv_sec * 1000 + current_time.tv_nsec / 1000000;
+  s->lastStartTime = ticker;
+
   (*jenv)->CallVoidMethod(jenv, s->output_unit, at.play);
   return SA_SUCCESS;
 }
@@ -334,11 +426,21 @@ sa_stream_drain(sa_stream_t *s)
     return SA_ERROR_NO_INIT;
   }
 
-  JNIEnv *jenv = GetJNIForThread();
-  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.flush);
+  /* There is no way with the Android SDK to determine exactly how
+     long to playback.  So estimate and sleep for the long.
+  */
+
+  size_t available;
+  sa_stream_get_write_size(s, &available);
+
+  long x = (s->bufferSize - available) * 1000 / s->channels / s->rate / sizeof(int16_t) * NANOSECONDS_IN_MILLISECOND;
+  ALOG("%x - Drain - sleep for %f ns", s, x);
+
+  struct timespec ts = {0, x};
+  nanosleep(&ts, NULL);
+
   return SA_SUCCESS;
 }
-
 
 
 /*

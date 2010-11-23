@@ -1201,6 +1201,7 @@ class TraceRecorder
 #ifdef DEBUG
     bool isValidFrameObjPtr(void *obj);
 #endif
+    void assertInsideLoop();
 
     JS_REQUIRES_STACK void setImpl(void* p, nanojit::LIns* l, bool demote = true);
     JS_REQUIRES_STACK void set(Value* p, nanojit::LIns* l, bool demote = true);
@@ -1505,8 +1506,6 @@ class TraceRecorder
 
     JS_REQUIRES_STACK AbortableRecordingStatus compile();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop();
-    JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(VMSideExit* exit);
-    JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(SlotMap& slotMap, VMSideExit* exit);
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus endLoop(VMSideExit* exit);
     JS_REQUIRES_STACK void joinEdgesToEntry(TreeFragment* peer_root);

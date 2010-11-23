@@ -584,6 +584,54 @@ ToCStringBuf::~ToCStringBuf()
         js_free(dbuf);
 }
 
+JSString * JS_FASTCALL
+js_IntToString(JSContext *cx, int32 si)
+{
+    uint32 ui;
+    if (si >= 0) {
+        if (si < INT_STRING_LIMIT)
+            return JSString::intString(si);
+        if (si < 100)
+            return JSString::length2String(si);
+        ui = si;
+    } else {
+        ui = uint32(-si);
+        JS_ASSERT_IF(si == INT32_MIN, ui == uint32(INT32_MAX) + 1);
+    }
+
+    JSThreadData *data = JS_THREAD_DATA(cx);
+    if (data->dtoaCache.s && data->dtoaCache.base == 10 && data->dtoaCache.d == si)
+        return data->dtoaCache.s;
+
+    JSShortString *str = js_NewGCShortString(cx);
+    if (!str)
+        return NULL;
+
+    /* +1, since MAX_SHORT_STRING_LENGTH does not count the null char. */
+    JS_STATIC_ASSERT(JSShortString::MAX_SHORT_STRING_LENGTH + 1 >= sizeof("-2147483648"));
+
+    jschar *end = str->getInlineStorageBeforeInit() + JSShortString::MAX_SHORT_STRING_LENGTH;
+    jschar *cp = end;
+    *cp = 0;
+
+    do {
+        jsuint newui = ui / 10, digit = ui % 10;  /* optimizers are our friends */
+        *--cp = '0' + digit;
+        ui = newui;
+    } while (ui != 0);
+
+    if (si < 0)
+        *--cp = '-';
+
+    str->initAtOffsetInBuffer(cp, end - cp);
+
+    JSString *ret = str->header();
+    data->dtoaCache.base = 10;
+    data->dtoaCache.d = si;
+    data->dtoaCache.s = ret;
+    return ret;
+}
+
 /* Returns a non-NULL pointer to inside cbuf.  */
 static char *
 IntToCString(ToCStringBuf *cbuf, jsint i, jsint base = 10)
@@ -683,7 +731,10 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     if (!num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(vp->isString());
-    num = js_GetStringBytes(cx, vp->toString());
+    JSAutoByteString numBytes(cx, vp->toString());
+    if (!numBytes)
+        return JS_FALSE;
+    num = numBytes.ptr();
     if (!num)
         return JS_FALSE;
 
@@ -1069,16 +1120,6 @@ NumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base/* = 10
            : FracNumberToCString(cx, cbuf, d, base);
 }
 
-}
-
-JSString * JS_FASTCALL
-js_IntToString(JSContext *cx, jsint i)
-{
-    if (jsuint(i) < INT_STRING_LIMIT)
-        return JSString::intString(i);
-
-    ToCStringBuf cbuf;
-    return js_NewStringCopyZ(cx, IntToCString(&cbuf, i));
 }
 
 static JSString * JS_FASTCALL

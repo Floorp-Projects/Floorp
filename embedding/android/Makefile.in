@@ -110,6 +110,7 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
+MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
 include $(topsrcdir)/config/rules.mk
 
