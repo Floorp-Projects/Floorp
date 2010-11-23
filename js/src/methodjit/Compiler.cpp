@@ -395,7 +395,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                        stubcc.size() +
                        doubleList.length() * sizeof(double);
 
-    JSC::ExecutablePool *execPool = getExecPool(totalSize);
+    JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
     if (!execPool)
         return Compile_Abort;
 
