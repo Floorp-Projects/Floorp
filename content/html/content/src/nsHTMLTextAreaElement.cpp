@@ -568,12 +568,17 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
     mState->EmptyValue();
   }
 
-  if (mValueChanged != previousValue &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+  if (mValueChanged != previousValue) {
+    nsEventStates states = NS_EVENT_STATE_MOZ_UI_INVALID;
+
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
+    }
+
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
+      doc->ContentStatesChanged(this, nsnull, states);
     }
   }
 
@@ -1007,8 +1012,17 @@ nsHTMLTextAreaElement::IntrinsicState() const
   }
 
   if (IsCandidateForConstraintValidation()) {
-    state |= IsValid() ? NS_EVENT_STATE_VALID
-                       : NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+    if (IsValid()) {
+      state |= NS_EVENT_STATE_VALID;
+    } else {
+      state |= NS_EVENT_STATE_INVALID;
+      // NS_EVENT_STATE_MOZ_UI_INVALID always apply if the element suffers from
+      // VALIDITY_STATE_CUSTOM_ERROR.
+      // Otherwise, it applies if the value has been modified.
+      if (mValueChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
+        state |= NS_EVENT_STATE_MOZ_UI_INVALID;
+      }
+    }
   }
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&

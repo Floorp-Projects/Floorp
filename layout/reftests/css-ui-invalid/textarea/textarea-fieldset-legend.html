@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
-  <!-- Test: if textarea has a disabled fieldset ancestor, but is in the first
-             legend, it is not barred from constraint validation and should be
+  <!-- Test: if textarea has a disabled fieldset ancestor, is in the first
+             legend but has its value not changed, it should not be
              affected by :-moz-ui-invalid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
     <fieldset disabled>
       <legend>
-        <textarea class='invalid' required></textarea>
+        <textarea class='notinvalid' required></textarea>
       </legend>
     </fieldset>
   </body>
