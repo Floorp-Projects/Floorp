@@ -515,7 +515,6 @@ function ensureSearchShown(event){
   var $searchbox = iQ("#searchbox");
   iQ("#searchbutton").css({ opacity: 1 });
 
-
   if (!isSearchEnabled()) {
     $search.show();
     var mainWindow = gWindow.document.getElementById("main-window");
