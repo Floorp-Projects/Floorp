@@ -249,3 +249,10 @@ ifndef DEB_PKG_NAME
 	$(error DEB_PKG_NAME not defined)
 endif
 	@$(MAKE) repackage-deb AB_CD=$(AB_CD) DEB_PKG_NAME=$(DEB_PKG_NAME)
+
+merge-%:
+ifdef LOCALE_MERGEDIR
+	$(RM) -rf $(LOCALE_MERGEDIR)
+	MACOSX_DEPLOYMENT_TARGET= compare-locales -m $(LOCALE_MERGEDIR) $(srcdir)/l10n.ini $(L10NBASEDIR) $*
+endif
+	@echo
