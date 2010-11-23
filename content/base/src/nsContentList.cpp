@@ -203,23 +203,19 @@ ContentListHashtableMatchEntry(PLDHashTable *table,
 {
   const ContentListHashEntry *e =
     static_cast<const ContentListHashEntry *>(entry);
-  const nsContentListKey* list1 = e->mContentList->GetKey();
-  const nsContentListKey* list2 = static_cast<const nsContentListKey *>(key);
+  const nsContentList* list = e->mContentList;
+  const nsContentListKey* ourKey = static_cast<const nsContentListKey *>(key);
 
-  return list1->Equals(*list2);
+  return list->MatchesKey(*ourKey);
 }
 
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode, 
                   PRInt32  aMatchNameSpaceId,
-                  nsIAtom* aHTMLMatchAtom,
-                  nsIAtom* aXMLMatchAtom)
+                  const nsAString& aTagname)
                   
 {
   NS_ASSERTION(aRootNode, "content list has to have a root");
-
-  if(!aXMLMatchAtom)
-    aXMLMatchAtom = aHTMLMatchAtom;
 
   nsContentList* list = nsnull;
 
@@ -249,15 +245,14 @@ NS_GetContentList(nsINode* aRootNode,
   ContentListHashEntry *entry = nsnull;
   // First we look in our hashtable.  Then we create a content list if needed
   if (gContentListHashTable.ops) {
-    nsContentListKey hashKey(aRootNode, aHTMLMatchAtom,
-                             aXMLMatchAtom, aMatchNameSpaceId);
+    nsContentListKey hashKey(aRootNode, aMatchNameSpaceId, aTagname);
     
     // A PL_DHASH_ADD is equivalent to a PL_DHASH_LOOKUP for cases
     // when the entry is already in the hashtable.
     entry = static_cast<ContentListHashEntry *>
                        (PL_DHashTableOperate(&gContentListHashTable,
-                                                &hashKey,
-                                                PL_DHASH_ADD));
+                                             &hashKey,
+                                             PL_DHASH_ADD));
     if (entry)
       list = entry->mContentList;
   }
@@ -265,8 +260,17 @@ NS_GetContentList(nsINode* aRootNode,
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
     // we have an entry
+    nsCOMPtr<nsIAtom> xmlAtom = do_GetAtom(aTagname);
+    nsCOMPtr<nsIAtom> htmlAtom;
+    if (aMatchNameSpaceId == kNameSpaceID_Unknown) {
+      nsAutoString lowercaseName;
+      nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
+      htmlAtom = do_GetAtom(lowercaseName);
+    } else {
+      htmlAtom = xmlAtom;
+    }
     list = new nsContentList(aRootNode, aMatchNameSpaceId,
-                             aHTMLMatchAtom, aXMLMatchAtom);
+                             htmlAtom, xmlAtom);
     if (entry) {
       entry->mContentList = list;
     }
@@ -391,7 +395,10 @@ nsContentList::nsContentList(nsINode* aRootNode,
                              nsIAtom* aXMLMatchAtom,
                              PRBool aDeep)
   : nsBaseContentList(),
-    nsContentListKey(aRootNode, aHTMLMatchAtom, aXMLMatchAtom, aMatchNameSpaceId),
+    mRootNode(aRootNode),
+    mMatchNameSpaceId(aMatchNameSpaceId),
+    mHTMLMatchAtom(aHTMLMatchAtom),
+    mXMLMatchAtom(aXMLMatchAtom),
     mFunc(nsnull),
     mDestroyFunc(nsnull),
     mData(nsnull),
@@ -419,12 +426,15 @@ nsContentList::nsContentList(nsINode* aRootNode,
                              PRInt32 aMatchNameSpaceId,
                              PRBool aFuncMayDependOnAttr)
   : nsBaseContentList(),
-    nsContentListKey(aRootNode, aMatchAtom, aMatchAtom, aMatchNameSpaceId),
+    mRootNode(aRootNode),
+    mMatchNameSpaceId(aMatchNameSpaceId),
+    mHTMLMatchAtom(aMatchAtom),
+    mXMLMatchAtom(aMatchAtom),
     mFunc(aFunc),
     mDestroyFunc(aDestroyFunc),
     mData(aData),
-    mMatchAll(PR_FALSE),
     mState(LIST_DIRTY),
+    mMatchAll(PR_FALSE),
     mDeep(aDeep),
     mFuncMayDependOnAttr(aFuncMayDependOnAttr)
 {
@@ -907,8 +917,10 @@ nsContentList::RemoveFromHashtable()
   if (!gContentListHashTable.ops)
     return;
 
+  nsDependentAtomString str(mXMLMatchAtom);
+  nsContentListKey key(mRootNode, mMatchNameSpaceId, str);
   PL_DHashTableOperate(&gContentListHashTable,
-                       GetKey(),
+                       &key,
                        PL_DHASH_REMOVE);
 
   if (gContentListHashTable.entryCount == 0) {
