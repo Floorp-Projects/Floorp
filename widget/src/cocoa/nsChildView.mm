@@ -1970,6 +1970,7 @@ NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
   NSLog(@"**** SetInputMode mStatus = %d", aContext.mStatus);
 #endif
 
+  mIMEContext = aContext;
   switch (aContext.mStatus) {
     case nsIWidget::IME_STATUS_ENABLED:
     case nsIWidget::IME_STATUS_PLUGIN:
@@ -1990,19 +1991,13 @@ NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
+NS_IMETHODIMP nsChildView::GetInputMode(IMEContext& aContext)
 {
 #ifdef DEBUG_IME
-  NSLog(@"**** GetIMEEnabled");
+  NSLog(@"**** GetInputMode");
 #endif
 
-  if (mTextInputHandler.IsIMEEnabled()) {
-    *aState = nsIWidget::IME_STATUS_ENABLED;
-  } else if (mTextInputHandler.IsASCIICapableOnly()) {
-    *aState = nsIWidget::IME_STATUS_PASSWORD;
-  } else {
-    *aState = nsIWidget::IME_STATUS_DISABLED;
-  }
+  aContext = mIMEContext;
   return NS_OK;
 }
 

@@ -2962,6 +2962,7 @@ nsWindow::SetInputMode(const IMEContext& aContext)
 {
     NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
 
+    mIMEContext = aContext;
     switch (aContext.mStatus) {
         case nsIWidget::IME_STATUS_ENABLED:
         case nsIWidget::IME_STATUS_PASSWORD:
@@ -2983,12 +2984,9 @@ nsWindow::SetInputMode(const IMEContext& aContext)
 }
 
 NS_IMETHODIMP
-nsWindow::GetIMEEnabled(PRUint32* aState)
+nsWindow::GetInputMode(IMEContext& aContext)
 {
-    NS_ENSURE_ARG_POINTER(aState);
-    NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
-
-    *aState = mWidget->isVKBOpen() ? IME_STATUS_ENABLED : IME_STATUS_DISABLED;
+    aContext = mIMEContext;
     return NS_OK;
 }
 

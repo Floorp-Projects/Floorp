@@ -1179,6 +1179,17 @@ nsBaseWidget::SetIMEEnabled(PRUint32 aState)
   return SetInputMode(context);
 }
  
+NS_IMETHODIMP
+nsBaseWidget::GetIMEEnabled(PRUint32* aState)
+{
+  IMEContext context;
+  nsresult rv = GetInputMode(context);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState = context.mStatus;
+  return NS_OK;
+}
+ 
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //

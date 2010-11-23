@@ -6447,14 +6447,13 @@ nsWindow::SetInputMode(const IMEContext& aContext)
 }
 
 NS_IMETHODIMP
-nsWindow::GetIMEEnabled(PRUint32* aState)
+nsWindow::GetInputMode(IMEContext& aContext)
 {
-  NS_ENSURE_ARG_POINTER(aState);
   if (!mIMModule) {
-      *aState = nsIWidget::IME_STATUS_DISABLED;
+      aContext.mStatus = nsIWidget::IME_STATUS_DISABLED;
       return NS_OK;
   }
-  return mIMModule->GetIMEEnabled(aState);
+  return mIMModule->GetInputMode(&aContext);
 }
 
 NS_IMETHODIMP

@@ -1373,6 +1373,11 @@ class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
      * Set mStatus to 'Enabled' or 'Disabled' or 'Password'.
      */
     NS_IMETHOD SetInputMode(const IMEContext& aContext) = 0;
+
+    /*
+     * Get IME is 'Enabled' or 'Disabled' or 'Password' and other input context
+     */
+    NS_IMETHOD GetInputMode(IMEContext& aContext) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget_MOZILLA_2_0_BRANCH, NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)
