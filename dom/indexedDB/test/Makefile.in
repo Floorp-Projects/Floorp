@@ -45,10 +45,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 TEST_FILES = \
+  bfcache_iframe1.html \
+  bfcache_iframe2.html \
   event_propagation_iframe.html \
   helpers.js \
   test_add_twice_failure.html \
   test_bad_keypath.html \
+  test_bfcache.html \
   test_clear.html \
   test_create_index.html \
   test_create_objectStore.html \
