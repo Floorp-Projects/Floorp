@@ -3824,7 +3824,10 @@ nsHTMLInputElement::HasPatternMismatch()
 void
 nsHTMLInputElement::UpdateTooLongValidityState()
 {
+  // TODO: this code will be re-enabled with bug 613016 and bug 613019.
+#if 0
   SetValidityState(VALIDITY_STATE_TOO_LONG, IsTooLong());
+#endif
 }
 
 void
