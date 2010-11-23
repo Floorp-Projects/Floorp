@@ -1452,7 +1452,8 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_UI_INVALID);
+      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_UI_VALID |
+                                              NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
 
@@ -1502,6 +1503,7 @@ nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged)
     if (document) {
       mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
       document->ContentStatesChanged(this, nsnull,
+                                     NS_EVENT_STATE_MOZ_UI_VALID |
                                      NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
@@ -3318,7 +3320,17 @@ nsHTMLInputElement::IntrinsicState() const
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
-      state |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
+      state |= NS_EVENT_STATE_VALID;
+
+      // NS_EVENT_STATE_MOZ_UI_VALID applies if the value has been changed.
+      // This doesn't apply to elements with value mode default.
+      ValueModeType valueMode = GetValueMode();
+      if (valueMode == VALUE_MODE_DEFAULT ||
+          (valueMode == VALUE_MODE_DEFAULT_ON && GetCheckedChanged()) ||
+          ((valueMode == VALUE_MODE_VALUE ||
+            valueMode == VALUE_MODE_FILENAME) && GetValueChanged())) {
+        state |= NS_EVENT_STATE_MOZ_UI_VALID;
+      }
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
