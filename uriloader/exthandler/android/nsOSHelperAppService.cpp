@@ -75,7 +75,7 @@ nsresult
 nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
                                               PRBool* aExists)
 {
-    *aExists = mozilla::AndroidBridge::Bridge()->GetHandlersForProtocol(aScheme);    
+    *aExists = mozilla::AndroidBridge::Bridge()->GetHandlersForURL(aScheme);    
     return NS_OK;
 }
 
@@ -83,7 +83,7 @@ nsresult nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aS
                                       PRBool *found,
                                       nsIHandlerInfo **info)
 {
-    return nsMIMEInfoAndroid::GetMimeInfoForProtocol(aScheme, found, info);
+    return nsMIMEInfoAndroid::GetMimeInfoForURL(aScheme, found, info);
 }
 
 nsIHandlerApp*

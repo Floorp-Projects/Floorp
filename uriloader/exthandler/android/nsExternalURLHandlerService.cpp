@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,53 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMIMEInfoAndroid_h
-#define nsMIMEInfoAndroid_h
+#include "nsExternalURLHandlerService.h"
+#include "nsMIMEInfoAndroid.h"
 
-#include "nsMIMEInfoImpl.h"
-#include "nsIMutableArray.h"
-#include "nsAndroidHandlerApp.h"
-class nsMIMEInfoAndroid : public nsIMIMEInfo
+NS_IMPL_ISUPPORTS1(nsExternalURLHandlerService, nsIExternalURLHandlerService)
+
+nsExternalURLHandlerService::nsExternalURLHandlerService()
 {
-public:
-  static PRBool
-  GetMimeInfoForMimeType(const nsACString& aMimeType, 
-                         nsMIMEInfoAndroid** aMimeInfo);
-  static PRBool
-  GetMimeInfoForFileExt(const nsACString& aFileExt, 
-                        nsMIMEInfoAndroid** aMimeInfo);
+}
 
-  static nsresult 
-  GetMimeInfoForURL(const nsACString &aURL, PRBool *found,
-                    nsIHandlerInfo **info);
+nsExternalURLHandlerService::~nsExternalURLHandlerService()
+{
+}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMIMEINFO
-  NS_DECL_NSIHANDLERINFO
-
-  nsMIMEInfoAndroid(const nsACString& aMIMEType);
-
-protected:
-  virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile);
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
-  nsCOMPtr<nsIMutableArray> mHandlerApps;
-  nsCString mMimeType;
-  nsTArray<nsCString> mExtensions;
-  PRBool mAlwaysAsk;
-  nsHandlerInfoAction mPrefAction;
-  nsString mDescription;
-  nsCOMPtr<nsIHandlerApp> mPrefApp;
-  
-  class SystemChooser : public nsIHandlerApp {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIHANDLERAPP
-    SystemChooser(nsMIMEInfoAndroid* aOuter): mOuter(aOuter) {};
-    
-  private:
-    nsMIMEInfoAndroid* mOuter;
-    
-  };
-};
-
-#endif /* nsMIMEInfoAndroid_h */
+NS_IMETHODIMP
+nsExternalURLHandlerService::GetURLHandlerInfoFromOS(nsIURI *aURL,
+                                                     PRBool *found,
+                                                     nsIHandlerInfo **info)
+{
+  nsCString uriSpec;
+  aURL->GetSpec(uriSpec);
+  return nsMIMEInfoAndroid::GetMimeInfoForURL(uriSpec, found, info);
+}
