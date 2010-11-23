@@ -63,7 +63,8 @@
 
 class nsSHEntry : public nsISHEntry,
                   public nsISHContainer,
-                  public nsIMutationObserver
+                  public nsIMutationObserver,
+                  public nsISHEntryInternal
 {
 public: 
   nsSHEntry();
@@ -72,6 +73,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHISTORYENTRY
   NS_DECL_NSISHENTRY
+  NS_DECL_NSISHENTRYINTERNAL
   NS_DECL_NSISHCONTAINER
   NS_DECL_NSIMUTATIONOBSERVER
 
@@ -86,7 +88,6 @@ public:
   
 private:
   ~nsSHEntry();
-  void DocumentMutated();
 
   nsCOMPtr<nsIURI>                mURI;
   nsCOMPtr<nsIURI>                mReferrerURI;
