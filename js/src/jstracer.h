@@ -1294,7 +1294,7 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus inc(Value& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK RecordingStatus inc(const Value &v, nanojit::LIns*& v_ins, jsint incr,
                                             bool pre = true);
-    JS_REQUIRES_STACK RecordingStatus incHelper(const Value &v, nanojit::LIns* v_ins,
+    JS_REQUIRES_STACK RecordingStatus incHelper(const Value &v, nanojit::LIns*& v_ins,
                                                   nanojit::LIns*& v_after, jsint incr);
     JS_REQUIRES_STACK AbortableRecordingStatus incProp(jsint incr, bool pre = true);
     JS_REQUIRES_STACK RecordingStatus incElem(jsint incr, bool pre = true);

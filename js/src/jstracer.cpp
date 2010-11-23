@@ -8681,16 +8681,20 @@ TraceRecorder::inc(const Value &v, LIns*& v_ins, jsint incr, bool pre)
  * Do an increment operation without storing anything to the stack.
  */
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::incHelper(const Value &v, LIns* v_ins, LIns*& v_after, jsint incr)
+TraceRecorder::incHelper(const Value &v, LIns*& v_ins, LIns*& v_after, jsint incr)
 {
     // FIXME: Bug 606071 on making this work for objects.
     if (!v.isPrimitive())
         RETURN_STOP("can inc primitives only");
 
+    // We need to modify |v_ins| the same way relational() modifies
+    // its RHS and LHS.
     if (v.isUndefined()) {
         v_after = w.immd(js_NaN);
+        v_ins = w.immd(js_NaN);
     } else if (v.isNull()) {
         v_after = w.immd(incr);
+        v_ins = w.immd(0.0);
     } else {
         if (v.isBoolean()) {
             v_ins = w.i2d(v_ins);
