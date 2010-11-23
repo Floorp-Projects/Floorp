@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg">
+<head>
+<title>border</title>
+<style type="text/css">
+@namespace url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
+
+div.wrapper {
+  float: left;
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+div.cover, div.cover2 {
+	position: absolute;
+	border: 4px solid white; /* cover areas that may differ */
+	width: 140px;
+	height: 118px;
+	border-radius: 63px;
+	margin-left: -2px;
+	margin-top: -2px;
+}
+div.cover2 {
+	height: 82px;
+	margin-top: 16px;
+	border-radius: 63px / 45px;
+}
+
+svg|svg {
+	display: block;
+	width: 146px;
+	height: 122px;
+	margin-right: -2px;
+	margin-bottom: 20px;
+}
+
+</style>
+</head>
+<body>
+<div class="wrapper">
+<div class="cover"></div>
+<div class="cover2"></div>
+<svg:svg>
+  <svg:rect x="0" y="0" width="144px" height="122px" rx="61px" ry="61px"
+            fill="blue"/>
+  <svg:rect x="0" y="18px" width="144px" height="86px" rx="61px" ry="43px"
+            fill="red"/>
+</svg:svg>
+<div class="cover"></div>
+<div class="cover2"></div>
+<svg:svg>
+  <svg:clipPath id="topclip">
+    <svg:rect x="0" y="0" width="144px" height="61px"/>
+  </svg:clipPath>
+  <svg:clipPath id="botclip">
+    <svg:rect x="0" y="61px" width="144px" height="61px"/>
+  </svg:clipPath>
+  <svg:rect x="0" y="0" width="144px" height="122px" rx="61px" ry="61px"
+            fill="black" clip-path="url(#topclip)"/>
+  <svg:rect x="0" y="0" width="144px" height="122px" rx="61px" ry="61px"
+            fill="blue" clip-path="url(#botclip)"/>
+  <svg:rect x="0" y="18px" width="144px" height="86px" rx="61px" ry="43px"
+            fill="red"/>
+</svg:svg>
+</div>
+<div class="wrapper">
+<div class="cover" style="width: 142px"></div>
+<div class="cover2" style="margin-left: -1px; border-radius: 61px / 45px"></div>
+<svg:svg>
+  <svg:rect x="0" y="0" width="146px" height="122px" rx="61px" ry="61px"
+            fill="blue"/>
+  <svg:rect x="0" y="18px" width="146px" height="86px" rx="61px" ry="43px"
+            fill="red"/>
+</svg:svg>
+<div class="cover"></div>
+<div class="cover2"></div>
+<svg:svg>
+  <svg:rect x="0" y="0" width="144px" height="122px" rx="61px" ry="61px"
+            fill="black" clip-path="url(#topclip)"/>
+  <svg:rect x="0" y="0" width="144px" height="122px" rx="61px" ry="61px"
+            fill="blue" clip-path="url(#botclip)"/>
+  <svg:rect x="0" y="18px" width="144px" height="86px" rx="61px" ry="43px"
+            fill="red"/>
+</svg:svg>
+</div>
+</body>
+</html>

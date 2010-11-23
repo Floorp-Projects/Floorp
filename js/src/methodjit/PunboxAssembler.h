@@ -208,6 +208,12 @@ class PunboxAssembler : public JSC::MacroAssembler
             storeValueFromComponents(vr.typeReg(), vr.dataReg(), address);
     }
 
+    template <typename T>
+    Jump guardNotHole(T address) {
+        loadTypeTag(address, Registers::ValueReg);
+        return branchPtr(Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
+    }
+
     void loadPrivate(Address privAddr, RegisterID to) {
         loadPtr(privAddr, to);
         lshiftPtr(Imm32(1), to);

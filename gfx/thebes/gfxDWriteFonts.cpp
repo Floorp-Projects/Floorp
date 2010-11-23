@@ -90,8 +90,6 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
             // DWrite simulation.
             mNeedsOblique = PR_TRUE;
     }
-    PRInt8 baseWeight, weightDistance;
-    GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
     if (aNeedsBold) {
         sims |= DWRITE_FONT_SIMULATIONS_BOLD;
     }
@@ -199,11 +197,7 @@ gfxDWriteFont::ComputeMetrics()
         mFontFace->ReleaseFontTable(tableContext);
     }
 
-    mMetrics.internalLeading = 
-        ceil(((gfxFloat)(fontMetrics.ascent + 
-                    fontMetrics.descent - 
-                    fontMetrics.designUnitsPerEm) / 
-                    fontMetrics.designUnitsPerEm) * mAdjustedSize);
+    mMetrics.internalLeading = NS_MAX(mMetrics.maxHeight - mMetrics.emHeight, 0.0);
     mMetrics.externalLeading = 
         ceil(((gfxFloat)fontMetrics.lineGap /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize);

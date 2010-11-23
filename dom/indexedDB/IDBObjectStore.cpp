@@ -39,7 +39,6 @@
 
 #include "IDBObjectStore.h"
 
-#include "nsIIDBDatabaseException.h"
 #include "nsIJSContextStack.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIVariant.h"
@@ -48,6 +47,7 @@
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsEventDispatcher.h"
 #include "nsJSON.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -81,8 +81,8 @@ public:
     mIndexUpdateInfo.SwapElements(aIndexUpdateInfo);
   }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(nsIWritableVariant* aResult);
 
   void ReleaseMainThreadObjects()
   {
@@ -116,8 +116,8 @@ public:
     mKey(aKey)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
 
   void ReleaseMainThreadObjects()
   {
@@ -135,19 +135,19 @@ private:
   nsString mValue;
 };
 
-class RemoveHelper : public GetHelper
+class DeleteHelper : public GetHelper
 {
 public:
-  RemoveHelper(IDBTransaction* aTransaction,
+  DeleteHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                IDBObjectStore* aObjectStore,
                const Key& aKey)
   : GetHelper(aTransaction, aRequest, aObjectStore, aKey)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
-  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
+  nsresult GetSuccessResult(nsIWritableVariant* aResult);
 };
 
 class ClearHelper : public AsyncConnectionHelper
@@ -159,7 +159,7 @@ public:
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
 
   void ReleaseMainThreadObjects()
   {
@@ -178,18 +178,18 @@ public:
   OpenCursorHelper(IDBTransaction* aTransaction,
                    IDBRequest* aRequest,
                    IDBObjectStore* aObjectStore,
-                   const Key& aLeftKey,
-                   const Key& aRightKey,
-                   PRUint16 aKeyRangeFlags,
-                   PRUint16 aDirection,
-                   PRBool aPreload)
+                   const Key& aLowerKey,
+                   const Key& aUpperKey,
+                   PRBool aLowerOpen,
+                   PRBool aUpperOpen,
+                   PRUint16 aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
-    mDirection(aDirection), mPreload(aPreload)
+    mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
+    mUpperOpen(aUpperOpen), mDirection(aDirection)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(nsIWritableVariant* aResult);
 
   void ReleaseMainThreadObjects()
   {
@@ -200,11 +200,11 @@ public:
 private:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
-  const Key mLeftKey;
-  const Key mRightKey;
-  const PRUint16 mKeyRangeFlags;
+  const Key mLowerKey;
+  const Key mUpperKey;
+  const PRPackedBool mLowerOpen;
+  const PRPackedBool mUpperOpen;
   const PRUint16 mDirection;
-  const PRBool mPreload;
 
   // Out-params.
   nsTArray<KeyValuePair> mData;
@@ -218,9 +218,9 @@ public:
   : AsyncConnectionHelper(aTransaction, nsnull), mIndex(aIndex)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
-  void OnError(nsIDOMEventTarget* aTarget, PRUint16 aErrorCode);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
+  void OnError(nsIDOMEventTarget* aTarget, nsresult aErrorCode);
 
   void ReleaseMainThreadObjects()
   {
@@ -229,7 +229,7 @@ public:
   }
 
 private:
-  PRUint16 InsertDataFromObjectStore(mozIStorageConnection* aConnection);
+  nsresult InsertDataFromObjectStore(mozIStorageConnection* aConnection);
 
   // In-params.
   nsRefPtr<IDBIndex> mIndex;
@@ -238,19 +238,19 @@ private:
   PRInt64 mId;
 };
 
-class RemoveIndexHelper : public AsyncConnectionHelper
+class DeleteIndexHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveIndexHelper(IDBTransaction* aTransaction,
+  DeleteIndexHelper(IDBTransaction* aTransaction,
                     const nsAString& aName,
                     IDBObjectStore* aObjectStore)
   : AsyncConnectionHelper(aTransaction, nsnull), mName(aName),
     mObjectStore(aObjectStore)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
-  void OnError(nsIDOMEventTarget* aTarget, PRUint16 aErrorCode);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
+  void OnError(nsIDOMEventTarget* aTarget, nsresult aErrorCode);
 
   void ReleaseMainThreadObjects()
   {
@@ -270,17 +270,18 @@ public:
   GetAllHelper(IDBTransaction* aTransaction,
                IDBRequest* aRequest,
                IDBObjectStore* aObjectStore,
-               const Key& aLeftKey,
-               const Key& aRightKey,
-               const PRUint16 aKeyRangeFlags,
+               const Key& aLowerKey,
+               const Key& aUpperKey,
+               const PRBool aLowerOpen,
+               const PRBool aUpperOpen,
                const PRUint32 aLimit)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mLeftKey(aLeftKey), mRightKey(aRightKey), mKeyRangeFlags(aKeyRangeFlags),
-    mLimit(aLimit)
+    mLowerKey(aLowerKey), mUpperKey(aUpperKey), mLowerOpen(aLowerOpen),
+    mUpperOpen(aUpperOpen), mLimit(aLimit)
   { }
 
-  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
-  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
 
   void ReleaseMainThreadObjects()
   {
@@ -291,9 +292,10 @@ public:
 protected:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
-  const Key mLeftKey;
-  const Key mRightKey;
-  const PRUint16 mKeyRangeFlags;
+  const Key mLowerKey;
+  const Key mUpperKey;
+  const PRPackedBool mLowerOpen;
+  const PRPackedBool mUpperOpen;
   const PRUint32 mLimit;
 
 private:
@@ -367,8 +369,8 @@ GenerateRequest(IDBObjectStore* aObjectStore)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   IDBDatabase* database = aObjectStore->Transaction()->Database();
-  return IDBRequest::Create(static_cast<nsPIDOMEventTarget*>(aObjectStore),
-                            database->ScriptContext(), database->Owner());
+  return IDBRequest::Create(aObjectStore, database->ScriptContext(),
+                            database->Owner(), aObjectStore->Transaction());
 }
 
 } // anonymous namespace
@@ -767,19 +769,6 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
   return NS_OK;
 }
 
-ObjectStoreInfo*
-IDBObjectStore::GetObjectStoreInfo()
-{
-  NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-
-  ObjectStoreInfo* info;
-  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
-    NS_ERROR("This should never fail!");
-    return nsnull;
-  }
-  return info;
-}
-
 IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
   mAutoIncrement(PR_FALSE)
@@ -790,10 +779,6 @@ IDBObjectStore::IDBObjectStore()
 IDBObjectStore::~IDBObjectStore()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-  }
 }
 
 nsresult
@@ -810,16 +795,16 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   if (mKeyPath.IsEmpty()) {
     rv = GetKeyFromJSVal(aKeyVal, aKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR);
   }
   else {
     // Inline keys live on the object. Make sure it is an object.
     if (JSVAL_IS_PRIMITIVE(aValue)) {
-      return NS_ERROR_INVALID_ARG;
+      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
     }
 
     rv = GetKeyFromObject(aCx, JSVAL_TO_OBJECT(aValue), mKeyPath, aKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
 
     // Except if null was passed, in which case we're supposed to generate the
     // key.
@@ -829,45 +814,55 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   }
 
   if (aKey.IsUnset() && !mAutoIncrement) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   // Figure out indexes and the index values to update here.
-  ObjectStoreInfo* objectStoreInfo = GetObjectStoreInfo();
-  NS_ENSURE_TRUE(objectStoreInfo, NS_ERROR_FAILURE);
+  ObjectStoreInfo* info;
+  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+    NS_ERROR("This should never fail!");
+  }
 
-  rv = GetIndexUpdateInfo(objectStoreInfo, aCx, aValue, aUpdateInfoArray);
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = GetIndexUpdateInfo(info, aCx, aValue, aUpdateInfoArray);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
   rv = json->EncodeFromJSVal(&aValue, aCx, aJSON);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_SERIAL_ERR);
 
   return NS_OK;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBObjectStore,
-                                                  nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBObjectStore)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsPIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
+
+  for (PRUint32 i = 0; i < tmp->mCreatedIndexes.Length(); i++) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedIndexes[i]");
+    cb.NoteXPCOMChild(static_cast<nsIIDBIndex*>(tmp->mCreatedIndexes[i].get()));
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBObjectStore,
-                                                nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBObjectStore)
   // Don't unlink mTransaction!
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
+
+  tmp->mCreatedIndexes.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBObjectStore)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBObjectStore)
   NS_INTERFACE_MAP_ENTRY(nsIIDBObjectStore)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBObjectStore)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(IDBObjectStore, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(IDBObjectStore, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBObjectStore)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBObjectStore)
 
 DOMCI_DATA(IDBObjectStore, IDBObjectStore)
 
@@ -894,15 +889,17 @@ IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+  ObjectStoreInfo* info;
+  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+    NS_ERROR("This should never fail!");
+  }
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
 
   PRUint32 count = info->indexes.Length();
   for (PRUint32 index = 0; index < count; index++) {
     NS_ENSURE_TRUE(list->Add(info->indexes[index].name),
-                   NS_ERROR_OUT_OF_MEMORY);
+                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   list.forget(aIndexNames);
@@ -916,23 +913,24 @@ IDBObjectStore::Get(nsIVariant* aKey,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   Key key;
   nsresult rv = GetKeyFromVariant(aKey, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (key.IsUnset()) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<GetHelper> helper(new GetHelper(mTransaction, request, this, key));
+
   rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -947,43 +945,47 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   if (aOptionalArgCount < 2) {
     aLimit = PR_UINT32_MAX;
   }
 
-  Key leftKey, rightKey;
-  PRUint16 keyRangeFlags = 0;
-
   nsresult rv;
+  Key lowerKey, upperKey;
+  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
+
   if (aKeyRange) {
-    rv = aKeyRange->GetFlags(&keyRangeFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIVariant> variant;
-    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aKeyRange->GetLower(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, leftKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, lowerKey);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = aKeyRange->GetRight(getter_AddRefs(variant));
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aKeyRange->GetUpper(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, rightKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, upperKey);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetLowerOpen(&lowerOpen);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetUpperOpen(&upperOpen);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<GetAllHelper> helper =
-    new GetAllHelper(mTransaction, request, this, leftKey, rightKey,
-                     keyRangeFlags, aLimit);
+    new GetAllHelper(mTransaction, request, this, lowerKey, upperKey, lowerOpen,
+                     upperOpen, aLimit);
+
   rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -998,19 +1000,15 @@ IDBObjectStore::Add(const jsval &aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!IsWriteAllowed()) {
-    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   jsval keyval;
   if (aOptionalArgCount >= 1) {
     keyval = aKey;
     if (mAutoIncrement && JSVAL_IS_NULL(keyval)) {
-      return NS_ERROR_ILLEGAL_VALUE;
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
   }
   else {
@@ -1027,17 +1025,18 @@ IDBObjectStore::Add(const jsval &aValue,
   }
 
   if (key.IsUnset() && !mAutoIncrement) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, this, jsonValue, key, false,
                   updateInfo);
+
   rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -1052,12 +1051,8 @@ IDBObjectStore::Put(const jsval &aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!IsWriteAllowed()) {
-    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
@@ -1072,34 +1067,31 @@ IDBObjectStore::Put(const jsval &aValue,
   }
 
   if (key.IsUnset() || key.IsNull()) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, this, jsonValue, key, true,
                   updateInfo);
+
   rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Remove(nsIVariant* aKey,
+IDBObjectStore::Delete(nsIVariant* aKey,
                        nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!IsWriteAllowed()) {
-    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   Key key;
@@ -1109,16 +1101,17 @@ IDBObjectStore::Remove(nsIVariant* aKey,
   }
 
   if (key.IsUnset() || key.IsNull()) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<RemoveHelper> helper =
-    new RemoveHelper(mTransaction, request, this, key);
+  nsRefPtr<DeleteHelper> helper =
+    new DeleteHelper(mTransaction, request, this, key);
+
   rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -1129,20 +1122,17 @@ IDBObjectStore::Clear(nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!IsWriteAllowed()) {
-    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<ClearHelper> helper(new ClearHelper(mTransaction, request, this));
+
   nsresult rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -1151,37 +1141,38 @@ IDBObjectStore::Clear(nsIIDBRequest** _retval)
 NS_IMETHODIMP
 IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
                            PRUint16 aDirection,
-                           PRBool aPreload,
                            PRUint8 aOptionalArgCount,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   nsresult rv;
-
-  Key leftKey, rightKey;
-  PRUint16 keyRangeFlags = 0;
+  Key lowerKey, upperKey;
+  PRBool lowerOpen = PR_FALSE, upperOpen = PR_FALSE;
 
   if (aKeyRange) {
-    rv = aKeyRange->GetFlags(&keyRangeFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIVariant> variant;
-    rv = aKeyRange->GetLeft(getter_AddRefs(variant));
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aKeyRange->GetLower(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, leftKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, lowerKey);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = aKeyRange->GetRight(getter_AddRefs(variant));
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aKeyRange->GetUpper(getter_AddRefs(variant));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    rv = GetKeyFromVariant(variant, rightKey);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = IDBObjectStore::GetKeyFromVariant(variant, upperKey);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetLowerOpen(&lowerOpen);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rv = aKeyRange->GetUpperOpen(&upperOpen);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   if (aOptionalArgCount >= 2) {
@@ -1189,27 +1180,22 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
         aDirection != nsIIDBCursor::NEXT_NO_DUPLICATE &&
         aDirection != nsIIDBCursor::PREV &&
         aDirection != nsIIDBCursor::PREV_NO_DUPLICATE) {
-      return NS_ERROR_INVALID_ARG;
+      return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
     }
   }
   else {
     aDirection = nsIIDBCursor::NEXT;
   }
 
-  if (aPreload) {
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenCursorHelper> helper =
-    new OpenCursorHelper(mTransaction, request, this, leftKey, rightKey,
-                         keyRangeFlags, aDirection, aPreload);
+    new OpenCursorHelper(mTransaction, request, this, lowerKey, upperKey,
+                         lowerOpen, upperOpen, aDirection);
 
   rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   request.forget(_retval);
   return NS_OK;
@@ -1224,11 +1210,21 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   if (aName.IsEmpty() || aKeyPath.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+  IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
+
+  if (!transaction ||
+      transaction != mTransaction ||
+      mTransaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  }
+
+  ObjectStoreInfo* info;
+  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+    NS_ERROR("This should never fail!");
+  }
 
   bool found = false;
   PRUint32 indexCount = info->indexes.Length();
@@ -1240,17 +1236,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   }
 
   if (found) {
-    // XXX Should be nsIIDBTransaction::CONSTRAINT_ERR.
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
-
-  if (!transaction ||
-      transaction != mTransaction ||
-      mTransaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
-    // XXX Should be nsIIDBTransaction::NOT_ALLOWED_ERR.
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
   NS_ASSERTION(mTransaction->TransactionIsOpen(), "Impossible!");
@@ -1263,7 +1249,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   IndexInfo* indexInfo = info->indexes.AppendElement();
   if (!indexInfo) {
     NS_WARNING("Out of memory!");
-    return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   indexInfo->id = databaseInfo->nextIndexId++;
@@ -1275,13 +1261,26 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   // Don't leave this in the list if we fail below!
   AutoRemoveIndex autoRemove(databaseInfo->id, mName, aName);
 
+#ifdef DEBUG
+  for (PRUint32 index = 0; index < mCreatedIndexes.Length(); index++) {
+    if (mCreatedIndexes[index]->Name() == aName) {
+      NS_ERROR("Already created this one!");
+    }
+  }
+#endif
+
   nsRefPtr<IDBIndex> index(IDBIndex::Create(this, indexInfo));
+
+  if (!mCreatedIndexes.AppendElement(index)) {
+    NS_WARNING("Out of memory!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
 
   nsRefPtr<CreateIndexHelper> helper =
     new CreateIndexHelper(mTransaction, index);
 
   nsresult rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   autoRemove.forget();
 
@@ -1296,15 +1295,17 @@ IDBObjectStore::Index(const nsAString& aName,
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+  ObjectStoreInfo* info;
+  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+    NS_ERROR("This should never fail!");
+  }
 
   IndexInfo* indexInfo = nsnull;
   PRUint32 indexCount = info->indexes.Length();
@@ -1316,23 +1317,39 @@ IDBObjectStore::Index(const nsAString& aName,
   }
 
   if (!indexInfo) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
-  nsRefPtr<IDBIndex> index = IDBIndex::Create(this, indexInfo);
-  NS_ENSURE_TRUE(index, NS_ERROR_FAILURE);
+  nsRefPtr<IDBIndex> retval;
+  for (PRUint32 i = 0; i < mCreatedIndexes.Length(); i++) {
+    nsRefPtr<IDBIndex>& index = mCreatedIndexes[i];
+    if (index->Name() == aName) {
+      retval = index;
+      break;
+    }
+  }
 
-  index.forget(_retval);
+  if (!retval) {
+    retval = IDBIndex::Create(this, indexInfo);
+    NS_ENSURE_TRUE(retval, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (!mCreatedIndexes.AppendElement(retval)) {
+      NS_WARNING("Out of memory!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+  }
+
+  retval.forget(_retval);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBObjectStore::RemoveIndex(const nsAString& aName)
+IDBObjectStore::DeleteIndex(const nsAString& aName)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
@@ -1340,14 +1357,15 @@ IDBObjectStore::RemoveIndex(const nsAString& aName)
   if (!transaction ||
       transaction != mTransaction ||
       mTransaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
-    // XXX Should be nsIIDBTransaction::NOT_ALLOWED_ERR.
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
   NS_ASSERTION(mTransaction->TransactionIsOpen(), "Impossible!");
 
-  ObjectStoreInfo* info = GetObjectStoreInfo();
-  NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+  ObjectStoreInfo* info;
+  if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {
+    NS_ERROR("This should never fail!");
+  }
 
   PRUint32 index = 0;
   for (; index < info->indexes.Length(); index++) {
@@ -1357,20 +1375,20 @@ IDBObjectStore::RemoveIndex(const nsAString& aName)
   }
 
   if (index == info->indexes.Length()) {
-    // XXX Should be nsIIDBTransaction::NOT_FOUND_ERR.
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
-  nsRefPtr<RemoveIndexHelper> helper =
-    new RemoveIndexHelper(mTransaction, aName, this);
+  nsRefPtr<DeleteIndexHelper> helper =
+    new DeleteIndexHelper(mTransaction, aName, this);
+
   nsresult rv = helper->DispatchToTransactionPool();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   info->indexes.RemoveElementAt(index);
   return NS_OK;
 }
 
-PRUint16
+nsresult
 AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
@@ -1381,11 +1399,11 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
     nsCOMPtr<nsIUUIDGenerator> uuidGen =
       do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     nsID id;
     rv = uuidGen->GenerateUUIDInPlace(&id);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     char idString[NSID_LENGTH] = { 0 };
     id.ToProvidedString(idString);
@@ -1415,12 +1433,12 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (!mOverwrite && !unsetKey) {
     // Make sure the key doesn't exist already
     stmt = mTransaction->GetStatement(autoIncrement);
-    NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     mozStorageStatementScoper scoper(stmt);
 
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_NAMED_LITERAL_CSTRING(id, "id");
 
@@ -1433,27 +1451,27 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     else {
       NS_NOTREACHED("Unknown key type!");
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     PRBool hasResult;
     rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (hasResult) {
-      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
     }
   }
 
   // Now we add it to the database (or update, depending on our variables).
   stmt = mTransaction->AddStatement(true, mayOverwrite, autoIncrement);
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (!autoIncrement || mayOverwrite) {
     NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
@@ -1467,11 +1485,11 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     else {
       NS_NOTREACHED("Unknown key type!");
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->Execute();
   if (NS_FAILED(rv)) {
@@ -1479,12 +1497,12 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       scoper.Abandon();
 
       stmt = mTransaction->AddStatement(false, true, autoIncrement);
-      NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       mozStorageStatementScoper scoper2(stmt);
 
       rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       if (!autoIncrement) {
         NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
@@ -1498,17 +1516,17 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
         else {
           NS_NOTREACHED("Unknown key type!");
         }
-        NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       }
 
       rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = stmt->Execute();
     }
 
     if (NS_FAILED(rv)) {
-      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
     }
   }
 
@@ -1519,7 +1537,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 #endif
 
     rv = aConnection->GetLastInsertRowID(mKey.ToIntPtr());
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
 #ifdef DEBUG
     NS_ASSERTION(mKey.IsInt(), "Bad key value!");
@@ -1533,28 +1551,28 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
       rv = ModifyValueForNewKey();
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       scoper.Abandon();
       rv = stmt->Reset();
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       stmt = mTransaction->AddStatement(false, true, true);
-      NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       mozStorageStatementScoper scoper2(stmt);
 
       rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
   }
 
@@ -1565,15 +1583,15 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                                        autoIncrement, mOverwrite,
                                        objectDataId, mIndexUpdateInfo);
     if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
-      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 AddHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
@@ -1587,7 +1605,7 @@ AddHelper::GetSuccessResult(nsIWritableVariant* aResult)
   else {
     NS_NOTREACHED("Unknown key type!");
   }
-  return OK;
+  return NS_OK;
 }
 
 nsresult
@@ -1637,20 +1655,20 @@ AddHelper::ModifyValueForNewKey()
   return NS_OK;
 }
 
-PRUint16
+nsresult
 GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetStatement(mObjectStore->IsAutoIncrement());
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
                                       mObjectStore->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Must have a key here!");
 
@@ -1665,49 +1683,49 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   else {
     NS_NOTREACHED("Unknown key type!");
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   // Search for it!
   PRBool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (!hasResult) {
-    return nsIIDBDatabaseException::NOT_FOUND_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
   // Set the value based on results.
   (void)stmt->GetString(0, mValue);
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mValue));
   nsresult rv = event->Init(mRequest, mTransaction);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   PRBool dummy;
   aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
-RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+nsresult
+DeleteHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mTransaction->RemoveStatement(mObjectStore->IsAutoIncrement());
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+    mTransaction->DeleteStatement(mObjectStore->IsAutoIncrement());
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
                                       mObjectStore->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Must have a key here!");
 
@@ -1722,23 +1740,23 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   else {
     NS_NOTREACHED("Unknown key type!");
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   // Search for it!
   rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
-RemoveHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+nsresult
+DeleteHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   return AsyncConnectionHelper::OnSuccess(aTarget);
 }
 
-PRUint16
-RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
+nsresult
+DeleteHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
 
@@ -1751,10 +1769,10 @@ RemoveHelper::GetSuccessResult(nsIWritableVariant* aResult)
   else {
     NS_NOTREACHED("Unknown key type!");
   }
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 ClearHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
@@ -1771,21 +1789,21 @@ ClearHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                     NS_LITERAL_CSTRING(" WHERE object_store_id = :osid");
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
                                       mObjectStore->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   nsCString table;
@@ -1805,25 +1823,23 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
 
   nsCAutoString keyRangeClause;
-  if (!mLeftKey.IsUnset()) {
+  if (!mLowerKey.IsUnset()) {
     keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+    if (mLowerOpen) {
       keyRangeClause.AppendLiteral(" > :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" >= :");
     }
     keyRangeClause.Append(leftKeyName);
   }
 
-  if (!mRightKey.IsUnset()) {
+  if (!mUpperKey.IsUnset()) {
     keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+    if (mUpperOpen) {
       keyRangeClause.AppendLiteral(" < :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" <= :");
     }
     keyRangeClause.Append(rightKeyName);
@@ -1853,41 +1869,41 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   if (!mData.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!mLeftKey.IsUnset()) {
-    if (mLeftKey.IsString()) {
-      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+  if (!mLowerKey.IsUnset()) {
+    if (mLowerKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLowerKey.StringValue());
     }
-    else if (mLeftKey.IsInt()) {
-      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    else if (mLowerKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLowerKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  if (!mRightKey.IsUnset()) {
-    if (mRightKey.IsString()) {
-      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+  if (!mUpperKey.IsUnset()) {
+    if (mUpperKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mUpperKey.StringValue());
     }
-    else if (mRightKey.IsInt()) {
-      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    else if (mUpperKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mUpperKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   NS_WARNING("Copying all results for cursor snapshot, do something smarter!");
@@ -1897,7 +1913,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     if (mData.Capacity() == mData.Length()) {
       if (!mData.SetCapacity(mData.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
-        return nsIIDBDatabaseException::UNKNOWN_ERR;
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
 
@@ -1906,7 +1922,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
     PRInt32 keyType;
     rv = stmt->GetTypeOfIndex(0, &keyType);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
                  keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
@@ -1917,7 +1933,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
     else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
       rv = stmt->GetString(0, pair->key.ToString());
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
     else {
       NS_NOTREACHED("Bad SQLite type!");
@@ -1933,30 +1949,30 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 #endif
 
     rv = stmt->GetString(1, pair->value);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   if (mData.IsEmpty()) {
     aResult->SetAsEmpty();
-    return OK;
+    return NS_OK;
   }
 
   nsRefPtr<IDBCursor> cursor =
     IDBCursor::Create(mRequest, mTransaction, mObjectStore, mDirection, mData);
-  NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(cursor));
-  return OK;
+  aResult->SetAsISupports(cursor);
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   // Insert the data into the database.
@@ -1966,48 +1982,48 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       "object_store_id, object_store_autoincrement) "
     "VALUES (:id, :name, :key_path, :unique, :osid, :os_auto_increment)"
   );
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
                                       mIndex->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mIndex->Name());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
                               mIndex->KeyPath());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("unique"),
                              mIndex->IsUnique() ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
                              mIndex->ObjectStore()->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("os_auto_increment"),
                              mIndex->IsAutoIncrement() ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
-    return nsIIDBDatabaseException::CONSTRAINT_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
   // Get the id of this object store, and store it for future use.
   (void)aConnection->GetLastInsertRowID(&mId);
 
   // Now we need to populate the index with data from the object store.
-  PRUint16 rc = InsertDataFromObjectStore(aConnection);
-  NS_ENSURE_TRUE(rc == OK, rc);
+  rv = InsertDataFromObjectStore(aConnection);
+  NS_ENSURE_TRUE(rv, rv);
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 {
   bool autoIncrement = mIndex->IsAutoIncrement();
@@ -2028,51 +2044,51 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
                     NS_LITERAL_CSTRING(" WHERE object_store_id = :osid");
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
                                       mIndex->ObjectStore()->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   PRBool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     nsCOMPtr<mozIStorageStatement> insertStmt =
       mTransaction->IndexUpdateStatement(autoIncrement, mIndex->IsUnique(),
                                          false);
-    NS_ENSURE_TRUE(insertStmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_TRUE(insertStmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     mozStorageStatementScoper scoper2(insertStmt);
 
     rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"), mId);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = insertStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_data_id"),
                                      stmt->AsInt64(0));
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (!autoIncrement) {
       // XXX does this cause problems with the affinity?
       nsString key;
       rv = stmt->GetString(2, key);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       rv = insertStmt->BindStringByName(NS_LITERAL_CSTRING("object_data_key"),
                                         key);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
 
     nsString json;
     rv = stmt->GetString(1, json);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     Key key;
     JSContext* cx = nsnull;
     rv = IDBObjectStore::GetKeyPathValueFromJSON(json, mIndex->KeyPath(), &cx,
                                                  key);
     // XXX this should be a constraint error maybe?
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_NAMED_LITERAL_CSTRING(value, "value");
 
@@ -2087,33 +2103,33 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
       rv = insertStmt->BindStringByName(value, key.StringValue());
     }
     else {
-      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = insertStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 CreateIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   NS_ASSERTION(!aTarget, "Huh?!");
-  return OK;
+  return NS_OK;
 }
 
 void
 CreateIndexHelper::OnError(nsIDOMEventTarget* aTarget,
-                           PRUint16 aErrorCode)
+                           nsresult aErrorCode)
 {
   NS_ASSERTION(!aTarget, "Huh?!");
 }
 
-PRUint16
-RemoveIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+nsresult
+DeleteIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
 
@@ -2122,36 +2138,36 @@ RemoveIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       "DELETE FROM object_store_index "
       "WHERE name = :name "
     );
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
-    return nsIIDBDatabaseException::NOT_FOUND_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
-RemoveIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+nsresult
+DeleteIndexHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   NS_ASSERTION(!aTarget, "Huh?!");
 
-  return OK;
+  return NS_OK;
 }
 
 void
-RemoveIndexHelper::OnError(nsIDOMEventTarget* aTarget,
-                           PRUint16 aErrorCode)
+DeleteIndexHelper::OnError(nsIDOMEventTarget* aTarget,
+                           nsresult aErrorCode)
 {
   NS_NOTREACHED("Removing an index should never fail here!");
 }
 
-PRUint16
+nsresult
 GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   nsCString table;
@@ -2171,25 +2187,23 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(rightKeyName, "right_key");
 
   nsCAutoString keyRangeClause;
-  if (!mLeftKey.IsUnset()) {
+  if (!mLowerKey.IsUnset()) {
     keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::LEFT_OPEN) {
+    if (mLowerOpen) {
       keyRangeClause.AppendLiteral(" > :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::LEFT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" >= :");
     }
     keyRangeClause.Append(leftKeyName);
   }
 
-  if (!mRightKey.IsUnset()) {
+  if (!mUpperKey.IsUnset()) {
     keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
-    if (mKeyRangeFlags & nsIIDBKeyRange::RIGHT_OPEN) {
+    if (mUpperOpen) {
       keyRangeClause.AppendLiteral(" < :");
     }
     else {
-      NS_ASSERTION(mKeyRangeFlags & nsIIDBKeyRange::RIGHT_BOUND, "Bad flags!");
       keyRangeClause.AppendLiteral(" <= :");
     }
     keyRangeClause.Append(rightKeyName);
@@ -2208,41 +2222,41 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   if (!mValues.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
-    return nsIIDBDatabaseException::UNKNOWN_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!mLeftKey.IsUnset()) {
-    if (mLeftKey.IsString()) {
-      rv = stmt->BindStringByName(leftKeyName, mLeftKey.StringValue());
+  if (!mLowerKey.IsUnset()) {
+    if (mLowerKey.IsString()) {
+      rv = stmt->BindStringByName(leftKeyName, mLowerKey.StringValue());
     }
-    else if (mLeftKey.IsInt()) {
-      rv = stmt->BindInt64ByName(leftKeyName, mLeftKey.IntValue());
+    else if (mLowerKey.IsInt()) {
+      rv = stmt->BindInt64ByName(leftKeyName, mLowerKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  if (!mRightKey.IsUnset()) {
-    if (mRightKey.IsString()) {
-      rv = stmt->BindStringByName(rightKeyName, mRightKey.StringValue());
+  if (!mUpperKey.IsUnset()) {
+    if (mUpperKey.IsString()) {
+      rv = stmt->BindStringByName(rightKeyName, mUpperKey.StringValue());
     }
-    else if (mRightKey.IsInt()) {
-      rv = stmt->BindInt64ByName(rightKeyName, mRightKey.IntValue());
+    else if (mUpperKey.IsInt()) {
+      rv = stmt->BindInt64ByName(rightKeyName, mUpperKey.IntValue());
     }
     else {
       NS_NOTREACHED("Bad key!");
     }
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   PRBool hasResult;
@@ -2250,7 +2264,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     if (mValues.Capacity() == mValues.Length()) {
       if (!mValues.SetCapacity(mValues.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
-        return nsIIDBDatabaseException::UNKNOWN_ERR;
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
 
@@ -2258,14 +2272,14 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_ASSERTION(value, "Shouldn't fail if SetCapacity succeeded!");
 
     rv = stmt->GetString(0, *value);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return OK;
+  return NS_OK;
 }
 
-PRUint16
+nsresult
 GetAllHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   NS_ASSERTION(mValues.Length() <= mLimit, "Too many results!");
@@ -2275,9 +2289,9 @@ GetAllHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   NS_ASSERTION(mValues.IsEmpty(), "Should have swapped!");
 
   nsresult rv = event->Init(mRequest, mTransaction);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   PRBool dummy;
   aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
-  return OK;
+  return NS_OK;
 }

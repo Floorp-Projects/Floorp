@@ -107,8 +107,8 @@ public:
 
     // IME related nsIWidget methods.
     nsresult ResetInputState(nsWindow* aCaller);
-    nsresult SetIMEEnabled(nsWindow* aCaller, PRUint32 aState);
-    nsresult GetIMEEnabled(PRUint32* aState);
+    nsresult SetInputMode(nsWindow* aCaller, const IMEContext* aContext);
+    nsresult GetInputMode(IMEContext* aContext);
     nsresult CancelIMEComposition(nsWindow* aCaller);
 
     // If a software keyboard has been opened, this returns TRUE.
@@ -143,9 +143,9 @@ protected:
     // always "closed", so it closes IME forcedly.
     GtkIMContext       *mDummyContext;
 
-    // IME enabled state in this window.  The values is nsIWidget::IME_STATUS_*.
+    // IME enabled state and other things defined in IMEContext.
     // Use following helper methods if you don't need the detail of the status.
-    PRUint32           mEnabled;
+    IMEContext mIMEContext;
 
     // mCompositionStart is the start offset of the composition string in the
     // current content.  When <textarea> or <input> have focus, it means offset

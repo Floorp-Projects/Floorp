@@ -16,7 +16,7 @@ tabbrowser {
 #tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
-#navigator-toolbox[customizing="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+#TabsToolbar[customizing="true"] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
 }
 
@@ -51,7 +51,7 @@ tabbrowser {
   -moz-transition: opacity .25s;
 }
 
-.tabbrowser-tab[pinned] {
+.tabbrowser-tabs:not([pinnedonly]) > .tabbrowser-tab[pinned] {
   position: fixed;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
 }
@@ -145,9 +145,17 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+%ifndef CAN_DRAW_IN_TITLEBAR
+#appmenu-toolbar-button > .toolbarbutton-text {
+  display: -moz-box;
+}
+%endif
+
 #appmenu_offlineModeRecovery:not([checked=true]) {
   display: none;
 }
+%endif
 
 /* ::::: location bar ::::: */
 #urlbar {
@@ -166,33 +174,44 @@ html|*.urlbar-input {
 
 /* over-link in location bar */
 
-.urlbar-over-link-layer[overlinkstate="fade-in"],
-.urlbar-textbox-container:not([overlinkstate]) {
-  -moz-transition-property: color;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: cubic-bezier(0.0, 0.6, 1.0, 1.0);
-}
-
 .urlbar-textbox-container[overlinkstate="fade-in"],
-.urlbar-over-link-layer:not([overlinkstate]) {
+.urlbar-over-link-layer[overlinkstate="fade-out"] {
   -moz-transition-property: color;
   -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: linear;
   color: transparent;
 }
 
-.urlbar-over-link-box[overlinkstate="fade-in"],
-.urlbar-textbox-container-children:not([overlinkstate]) {
+.urlbar-over-link-layer[overlinkstate="fade-in"],
+.urlbar-textbox-container[overlinkstate="fade-out"] {
+  -moz-transition-property: color;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
+}
+
+.urlbar-over-link-box[overlinkstate="fade-in"] {
   -moz-transition-property: opacity;
   -moz-transition-duration: 150ms;
   opacity: 1;
 }
 
-.urlbar-textbox-container-children[overlinkstate="fade-in"],
-.urlbar-over-link-box:not([overlinkstate]) {
+.urlbar-over-link-box[overlinkstate="fade-out"] {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
+  opacity: 0;
+}
+
+.urlbar-textbox-container-children[overlinkstate="fade-in"] {
   -moz-transition-property: opacity;
   -moz-transition-duration: 150ms;
   opacity: 0;
+}
+
+.urlbar-textbox-container-children[overlinkstate="fade-out"] {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 150ms;
+  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
+  opacity: 1;
 }
 
 .urlbar-textbox-container[overlinkstate="showing"] {
@@ -204,6 +223,14 @@ html|*.urlbar-input {
 }
 
 .urlbar-textbox-container-children[overlinkstate="showing"] {
+  opacity: 0;
+}
+
+.urlbar-over-link-layer:not([overlinkstate]) {
+  color: transparent;
+}
+
+.urlbar-over-link-box:not([overlinkstate]) {
   opacity: 0;
 }
 

@@ -87,7 +87,7 @@ public:
   // LayerD3D9 Implementation
   virtual Layer* GetLayer();
 
-  virtual void RenderLayer(float aOpacity, const gfx3DMatrix &aTransform);
+  virtual void RenderLayer();
 };
 
 class THEBES_API ImageD3D9
@@ -148,8 +148,17 @@ public:
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
-  nsRefPtr<IDirect3DTexture9> mTexture;
+  /**
+   * Uploading a texture may fail if the screen is locked. If this happens,
+   * we need to save the backing surface and retry when we are asked to paint.
+   */
+  virtual IDirect3DTexture9* GetOrCreateTexture();
+  const gfxIntSize& GetSize() { return mSize; }
+
+private:
   gfxIntSize mSize;
+  nsRefPtr<gfxASurface> mCachedSurface;
+  nsRefPtr<IDirect3DTexture9> mTexture;
   LayerManagerD3D9 *mManager;
 };
 

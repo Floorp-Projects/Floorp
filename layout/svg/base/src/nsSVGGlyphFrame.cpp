@@ -131,6 +131,13 @@ public:
   PRBool SetupForDirectTextRunMetrics(gfxContext *aContext) {
     return SetupForDirectTextRun(aContext, mMetricsScale);
   }
+  /**
+   * We are scaling the glyphs up/down to the size we want so we need to
+   * inverse scale the outline widths of those glyphs so they are invariant
+   */
+  void SetLineWidthForDrawing(gfxContext *aContext) {
+    aContext->SetLineWidth(aContext->CurrentLineWidth() / mDrawScale);
+  }
 
   /**
    * Returns the index of the next char in the string that should be
@@ -553,6 +560,7 @@ void
 nsSVGGlyphFrame::AddCharactersToPath(CharacterIterator *aIter,
                                      gfxContext *aContext)
 {
+  aIter->SetLineWidthForDrawing(aContext);
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
     mTextRun->DrawToPath(aContext, gfxPoint(0, 0), 0,
                          mTextRun->GetLength(), nsnull, nsnull);
@@ -1626,9 +1634,6 @@ CharacterIterator::SetupForDirectTextRun(gfxContext *aContext, float aScale)
   aContext->SetMatrix(mInitialMatrix);
   aContext->Translate(mSource->mPosition);
   aContext->Scale(aScale, aScale);
-  // We are scaling the glyphs up/down to the size we want so we need to
-  // inverse scale the outline widths of those glyphs so they are invariant
-  aContext->SetLineWidth(aContext->CurrentLineWidth() / aScale);
   return PR_TRUE;
 }
 
@@ -1688,9 +1693,6 @@ CharacterIterator::SetupFor(gfxContext *aContext, float aScale)
     aContext->Rotate(mPositions[mCurrentChar].angle);
     aContext->Scale(aScale, aScale);
   }
-  // We are scaling the glyphs up/down to the size we want so we need to
-  // inverse scale the outline widths of those glyphs so they are invariant
-  aContext->SetLineWidth(aContext->CurrentLineWidth() / aScale);
 }
 
 CharacterPosition

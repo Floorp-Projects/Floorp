@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -51,7 +51,7 @@ sym(idct_dequant_0_2x_sse2):
         pshufhw     xmm4,           xmm4,       00000000b
 
         mov         rax,            arg(2) ; pre
-        paddw       xmm4,           [fours GLOBAL]
+        paddw       xmm4,           [GLOBAL(fours)]
 
         movsxd      rcx,            dword ptr arg(5) ; blk_stride
         psraw       xmm4,           3
@@ -160,11 +160,11 @@ sym(idct_dequant_full_2x_sse2):
         movdqa      xmm5,           xmm1
         paddw       xmm2,           xmm0        ; a1 = 0+2
 
-        pmulhw      xmm5,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_s1sqr2)]
         paddw       xmm5,           xmm1        ; ip1 * sin(pi/8) * sqrt(2)
 
         movdqa      xmm7,           xmm3
-        pmulhw      xmm7,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm7,           [GLOBAL(x_c1sqr2less1)]
 
         paddw       xmm7,           xmm3        ; ip3 * cos(pi/8) * sqrt(2)
         psubw       xmm7,           xmm5        ; c1
@@ -172,10 +172,10 @@ sym(idct_dequant_full_2x_sse2):
         movdqa      xmm5,           xmm1
         movdqa      xmm4,           xmm3
 
-        pmulhw      xmm5,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_c1sqr2less1)]
         paddw       xmm5,           xmm1
 
-        pmulhw      xmm3,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm3,           [GLOBAL(x_s1sqr2)]
         paddw       xmm3,           xmm4
 
         paddw       xmm3,           xmm5        ; d1
@@ -229,11 +229,11 @@ sym(idct_dequant_full_2x_sse2):
         movdqa      xmm5,           xmm1
         paddw       xmm2,           xmm0            ; a1 = 0+2
 
-        pmulhw      xmm5,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_s1sqr2)]
         paddw       xmm5,           xmm1            ; ip1 * sin(pi/8) * sqrt(2)
 
         movdqa      xmm7,           xmm3
-        pmulhw      xmm7,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm7,           [GLOBAL(x_c1sqr2less1)]
 
         paddw       xmm7,           xmm3            ; ip3 * cos(pi/8) * sqrt(2)
         psubw       xmm7,           xmm5            ; c1
@@ -241,16 +241,16 @@ sym(idct_dequant_full_2x_sse2):
         movdqa      xmm5,           xmm1
         movdqa      xmm4,           xmm3
 
-        pmulhw      xmm5,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_c1sqr2less1)]
         paddw       xmm5,           xmm1
 
-        pmulhw      xmm3,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm3,           [GLOBAL(x_s1sqr2)]
         paddw       xmm3,           xmm4
 
         paddw       xmm3,           xmm5            ; d1
-        paddw       xmm0,           [fours GLOBAL]
+        paddw       xmm0,           [GLOBAL(fours)]
 
-        paddw       xmm2,           [fours GLOBAL]
+        paddw       xmm2,           [GLOBAL(fours)]
         movdqa      xmm6,           xmm2            ; a1
 
         movdqa      xmm4,           xmm0            ; b1
@@ -394,7 +394,7 @@ sym(idct_dequant_dc_0_2x_sse2):
         punpckldq   xmm4,           xmm4
 
     ; Rounding to dequant and downshift
-        paddw       xmm4,           [fours GLOBAL]
+        paddw       xmm4,           [GLOBAL(fours)]
         psraw       xmm4,           3
 
     ; Predict buffer needs to be expanded from bytes to words
@@ -505,11 +505,11 @@ sym(idct_dequant_dc_full_2x_sse2):
         movdqa      xmm5,           xmm1
         paddw       xmm2,           xmm0        ; a1 = 0+2
 
-        pmulhw      xmm5,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_s1sqr2)]
         paddw       xmm5,           xmm1        ; ip1 * sin(pi/8) * sqrt(2)
 
         movdqa      xmm7,           xmm3
-        pmulhw      xmm7,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm7,           [GLOBAL(x_c1sqr2less1)]
 
         paddw       xmm7,           xmm3        ; ip3 * cos(pi/8) * sqrt(2)
         psubw       xmm7,           xmm5        ; c1
@@ -517,10 +517,10 @@ sym(idct_dequant_dc_full_2x_sse2):
         movdqa      xmm5,           xmm1
         movdqa      xmm4,           xmm3
 
-        pmulhw      xmm5,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_c1sqr2less1)]
         paddw       xmm5,           xmm1
 
-        pmulhw      xmm3,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm3,           [GLOBAL(x_s1sqr2)]
         paddw       xmm3,           xmm4
 
         paddw       xmm3,           xmm5        ; d1
@@ -574,11 +574,11 @@ sym(idct_dequant_dc_full_2x_sse2):
         movdqa      xmm5,           xmm1
         paddw       xmm2,           xmm0            ; a1 = 0+2
 
-        pmulhw      xmm5,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_s1sqr2)]
         paddw       xmm5,           xmm1            ; ip1 * sin(pi/8) * sqrt(2)
 
         movdqa      xmm7,           xmm3
-        pmulhw      xmm7,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm7,           [GLOBAL(x_c1sqr2less1)]
 
         paddw       xmm7,           xmm3            ; ip3 * cos(pi/8) * sqrt(2)
         psubw       xmm7,           xmm5            ; c1
@@ -586,16 +586,16 @@ sym(idct_dequant_dc_full_2x_sse2):
         movdqa      xmm5,           xmm1
         movdqa      xmm4,           xmm3
 
-        pmulhw      xmm5,           [x_c1sqr2less1 GLOBAL]
+        pmulhw      xmm5,           [GLOBAL(x_c1sqr2less1)]
         paddw       xmm5,           xmm1
 
-        pmulhw      xmm3,           [x_s1sqr2 GLOBAL]
+        pmulhw      xmm3,           [GLOBAL(x_s1sqr2)]
         paddw       xmm3,           xmm4
 
         paddw       xmm3,           xmm5            ; d1
-        paddw       xmm0,           [fours GLOBAL]
+        paddw       xmm0,           [GLOBAL(fours)]
 
-        paddw       xmm2,           [fours GLOBAL]
+        paddw       xmm2,           [GLOBAL(fours)]
         movdqa      xmm6,           xmm2            ; a1
 
         movdqa      xmm4,           xmm0            ; b1

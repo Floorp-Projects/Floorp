@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // test third party persistence across sessions, for the cases:
 // 1) network.cookie.thirdparty.sessionOnly = false

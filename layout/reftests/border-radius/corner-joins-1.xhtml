@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>border</title>
+<style type="text/css">
+
+div.wrapper {
+  float: left;
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+div.test {
+	width: 144px;
+	height: 86px;
+	border-radius: 72px;
+	border-top: 18px solid;
+	border-bottom: 18px solid;
+	background: red;
+	margin-bottom: 20px;
+}
+
+div.cover, div.cover2 {
+	position: absolute;
+	border: 4px solid white; /* cover areas that may differ */
+	width: 140px;
+	height: 118px;
+	border-radius: 63px;
+	margin-left: -2px;
+	margin-top: -2px;
+}
+div.cover2 {
+	height: 82px;
+	margin-top: 16px;
+	border-radius: 63px / 45px;
+}
+
+#one {
+	border-color: blue;
+}
+
+#two {
+	border-bottom-color: blue;
+}
+
+#three {
+	border-color: blue;
+	border-left: 0.01px solid red;
+	border-right: 0.01px solid red;
+}
+
+#four {
+	border-bottom-color: blue;
+	border-left: 0.001px solid red;
+	border-right: 0.001px solid red;
+}
+
+</style>
+</head>
+<body>
+<div class="wrapper">
+<div class="cover"></div>
+<div class="cover2"></div>
+<div class="test" id="one"></div>
+<div class="cover"></div>
+<div class="cover2"></div>
+<div class="test" id="two"></div>
+</div>
+<div class="wrapper">
+<div class="cover" style="width: 142px"></div>
+<div class="cover2" style="margin-left: -1px; border-radius: 61px / 45px"></div>
+<div class="test" id="three"></div>
+<div class="cover"></div>
+<div class="cover2"></div>
+<div class="test" id="four"></div>
+</div>
+</body>
+</html>

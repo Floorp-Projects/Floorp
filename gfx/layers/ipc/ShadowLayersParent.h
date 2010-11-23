@@ -57,8 +57,8 @@ class ShadowLayerManager;
 class ShadowLayersParent : public PLayersParent
 {
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
-  typedef nsTArray<Edit> EditArray;
-  typedef nsTArray<EditReply> EditReplyArray;
+  typedef InfallibleTArray<Edit> EditArray;
+  typedef InfallibleTArray<EditReply> EditReplyArray;
 
 public:
   ShadowLayersParent(ShadowLayerManager* aManager);

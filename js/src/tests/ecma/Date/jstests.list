@@ -64,7 +64,7 @@ script 15.9.5.13-5.js
 script 15.9.5.13-6.js
 script 15.9.5.13-7.js
 script 15.9.5.13-8.js
-random-if(xulRuntime.OS=="Linux") script 15.9.5.14.js
+random script 15.9.5.14.js
 script 15.9.5.15.js
 skip-if(!xulRuntime.shell&&xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script 15.9.5.16.js # bug xxx crash
 script 15.9.5.17.js

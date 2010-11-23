@@ -1,0 +1,162 @@
+<html>
+
+<head>
+  <title>Test updating of accessible relations</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function testRelated(aRelAttr, aHostRelation, aDependentRelation)
+    {
+      // no attribute
+      testRelation("dependent1", aDependentRelation, null);
+      testRelation("dependent2", aDependentRelation, null);
+      if (aHostRelation)
+        testRelation("host", aHostRelation, null);
+
+      // set attribute
+      getNode("host").setAttribute(aRelAttr, "dependent1");
+      testRelation("dependent1", aDependentRelation, "host");
+      testRelation("dependent2", aDependentRelation, null);
+      if (aHostRelation)
+        testRelation("host", aHostRelation, "dependent1");
+
+      // change attribute
+      getNode("host").setAttribute(aRelAttr, "dependent2");
+      testRelation("dependent1", aDependentRelation, null);
+      testRelation("dependent2", aDependentRelation, "host");
+      if (aHostRelation)
+        testRelation("host", aHostRelation, "dependent2");
+
+      // remove attribute
+      getNode("host").removeAttribute(aRelAttr);
+      testRelation("dependent1", aDependentRelation, null);
+      testRelation("dependent2", aDependentRelation, null);
+      if (aHostRelation)
+        testRelation("host", aHostRelation, null);
+    }
+
+    function insertRelated(aHostRelAttr, aDependentID, aInsertHostFirst,
+                           aHostRelation, aDependentRelation)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, document)
+      ];
+
+      this.invoke = function insertRelated_invoke()
+      {
+        this.hostNode = document.createElement("div");
+        this.hostNode.setAttribute(aHostRelAttr, aDependentID);
+
+        this.dependentNode = document.createElement("div");
+        this.dependentNode.setAttribute("id", aDependentID);
+
+        if (aInsertHostFirst) {
+          document.body.appendChild(this.hostNode);
+          document.body.appendChild(this.dependentNode);
+        } else {
+          document.body.appendChild(this.dependentNode);
+          document.body.appendChild(this.hostNode);
+        }
+      }
+
+      this.finalCheck = function insertRelated_finalCheck()
+      {
+        testRelation(this.dependentNode, aDependentRelation, this.hostNode);
+        if (aHostRelation)
+          testRelation(this.hostNode, aHostRelation, this.dependentNode);
+      }
+
+      this.getID = function insertRelated_getID()
+      {
+        return "Insert " + aHostRelAttr + "='" + aDependentID + "' node" +
+          (aInsertHostFirst ? " before" : "after") + " dependent node";
+      }
+    }
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      // Relation updates on ARIA attribute changes.
+      testRelated("aria-labelledby", RELATION_LABELLED_BY, RELATION_LABEL_FOR);
+      testRelated("aria-describedby",
+                  RELATION_DESCRIBED_BY, RELATION_DESCRIPTION_FOR);
+      testRelated("aria-owns", null, RELATION_NODE_CHILD_OF);
+      testRelated("aria-controls",
+                  RELATION_CONTROLLER_FOR, RELATION_CONTROLLED_BY);
+      testRelated("aria-flowto", RELATION_FLOWS_TO, RELATION_FLOWS_FROM);
+
+      // Insert related accessibles into tree.
+      gQueue = new eventQueue();
+      gQueue.push(new insertRelated("aria-labelledby", "dependent3", true,
+                                    RELATION_LABELLED_BY, RELATION_LABEL_FOR));
+      gQueue.push(new insertRelated("aria-labelledby", "dependent4", false,
+                                    RELATION_LABELLED_BY, RELATION_LABEL_FOR));
+
+      gQueue.push(new insertRelated("aria-describedby", "dependent5", true,
+                                    RELATION_DESCRIBED_BY,
+                                    RELATION_DESCRIPTION_FOR));
+      gQueue.push(new insertRelated("aria-describedby", "dependent6", false,
+                                    RELATION_DESCRIBED_BY,
+                                    RELATION_DESCRIPTION_FOR));
+
+      gQueue.push(new insertRelated("aria-owns", "dependent7", true,
+                                    null, RELATION_NODE_CHILD_OF));
+      gQueue.push(new insertRelated("aria-owns", "dependent8", false,
+                                    null, RELATION_NODE_CHILD_OF));
+
+      gQueue.push(new insertRelated("aria-controls", "dependent9", true,
+                                    RELATION_CONTROLLER_FOR,
+                                    RELATION_CONTROLLED_BY));
+      gQueue.push(new insertRelated("aria-controls", "dependent10", false,
+                                    RELATION_CONTROLLER_FOR,
+                                    RELATION_CONTROLLED_BY));
+
+      gQueue.push(new insertRelated("aria-flowto", "dependent11", true,
+                                    RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
+      gQueue.push(new insertRelated("aria-flowto", "dependent12", false,
+                                    RELATION_FLOWS_TO, RELATION_FLOWS_FROM));
+
+      gQueue.invoke(); // will call SimpleTest.finish()
+
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=573469"
+     title="Cache relations defined by ARIA attributes">
+    Mozilla Bug 573469
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="dependent1">label</div>
+  <div id="dependent2">label2</div>
+  <div role="checkbox" id="host"></div>
+
+</body>
+</html>

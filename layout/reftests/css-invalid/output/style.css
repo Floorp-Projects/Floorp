@@ -1,0 +1,22 @@
+/* Override default style */
+output {
+  color: black;
+}
+
+output.notinvalid {
+  color: green;
+}
+output.notinvalid:invalid {
+  color: red;
+}
+
+output.invalid {
+  color: red;
+}
+output.invalid:invalid {
+  color: green;
+}
+
+output.ref {
+  color: green;
+}

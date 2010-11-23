@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,19 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jscntxt.h"
-
 #include "nsDOMWorker.h"
-#include "nsAtomicRefcnt.h"
 
 #include "nsIDOMEvent.h"
 #include "nsIEventTarget.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIXPConnect.h"
 
+#include "jscntxt.h"
 #ifdef MOZ_SHARK
 #include "jsdbgapi.h"
 #endif
+#include "nsAtomicRefcnt.h"
 #include "nsAutoLock.h"
 #include "nsAXPCNativeCallContext.h"
 #include "nsContentUtils.h"
@@ -59,6 +58,7 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsNativeCharsetUtils.h"
+#include "xpcprivate.h"
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
@@ -104,6 +104,12 @@ public:
   NewWorker(JSContext* aCx, uintN aArgc, jsval* aVp) {
     return MakeNewWorker(aCx, aArgc, aVp, nsDOMWorker::CONTENT);
   }
+
+  static JSBool
+  AtoB(JSContext* aCx, uintN aArgc, jsval* aVp);
+
+  static JSBool
+  BtoA(JSContext* aCx, uintN aArgc, jsval* aVp);
 
   // Chrome-only functions
   static JSBool
@@ -345,6 +351,110 @@ nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
 }
 
 JSBool
+nsDOMWorkerFunctions::AtoB(JSContext* aCx,
+                           uintN aArgc,
+                           jsval* aVp)
+{
+  nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  if (worker->IsCanceled()) {
+    return JS_FALSE;
+  }
+
+  if (!aArgc) {
+    JS_ReportError(aCx, "Function requires at least 1 parameter");
+    return JS_FALSE;
+  }
+
+  JSString* str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+  if (!str) {
+    NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
+    return JS_FALSE;
+  }
+
+  size_t len = JS_GetStringEncodingLength(aCx, str);
+  if (len == size_t(-1))
+      return JS_FALSE;
+
+  JSUint32 alloc_len = (len + 1) * sizeof(char);
+  char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+  if (!buffer)
+      return JS_FALSE;
+
+  JS_EncodeStringToBuffer(str, buffer, len);
+  buffer[len] = '\0';
+
+  nsDependentCString string(buffer, len);
+  nsCAutoString result;
+
+  if (NS_FAILED(nsXPConnect::Base64Decode(string, result))) {
+    JS_ReportError(aCx, "Failed to decode base64 string!");
+    return JS_FALSE;
+  }
+
+  str = JS_NewStringCopyN(aCx, result.get(), result.Length());
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(aCx, aVp, STRING_TO_JSVAL(str));
+  return JS_TRUE;
+}
+
+JSBool
+nsDOMWorkerFunctions::BtoA(JSContext* aCx,
+                           uintN aArgc,
+                           jsval* aVp)
+{
+  nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  if (worker->IsCanceled()) {
+    return JS_FALSE;
+  }
+
+  if (!aArgc) {
+    JS_ReportError(aCx, "Function requires at least 1 parameter");
+    return JS_FALSE;
+  }
+
+  JSString* str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+  if (!str) {
+    NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
+    return JS_FALSE;
+  }
+
+  size_t len = JS_GetStringEncodingLength(aCx, str);
+  if (len == size_t(-1))
+      return JS_FALSE;
+
+  JSUint32 alloc_len = (len + 1) * sizeof(char);
+  char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+  if (!buffer)
+      return JS_FALSE;
+
+  JS_EncodeStringToBuffer(str, buffer, len);
+  buffer[len] = '\0';
+
+  nsDependentCString string(buffer, len);
+  nsCAutoString result;
+
+  if (NS_FAILED(nsXPConnect::Base64Encode(string, result))) {
+    JS_ReportError(aCx, "Failed to encode base64 data!");
+    return JS_FALSE;
+  }
+
+  str = JS_NewStringCopyN(aCx, result.get(), result.Length());
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(aCx, aVp, STRING_TO_JSVAL(str));
+  return JS_TRUE;
+}
+
+JSBool
 nsDOMWorkerFunctions::NewChromeWorker(JSContext* aCx,
                                       uintN aArgc,
                                       jsval* aVp)
@@ -489,6 +599,8 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "importScripts",       nsDOMWorkerFunctions::LoadScripts,         1, 0 },
   { "XMLHttpRequest",      nsDOMWorkerFunctions::NewXMLHttpRequest,   0, 0 },
   { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, 0 },
+  { "atob",                nsDOMWorkerFunctions::AtoB,                1, 0 },
+  { "btoa",                nsDOMWorkerFunctions::BtoA,                1, 0 },
 #ifdef MOZ_SHARK
   { "startShark",          js_StartShark,                             0, 0 },
   { "stopShark",           js_StopShark,                              0, 0 },
@@ -624,14 +736,14 @@ nsDOMWorkerScope::AddProperty(nsIXPConnectWrappedNative* aWrapper,
     return NS_OK;
   }
 
-  const char* name = JS_GetStringBytes(JSID_TO_STRING(aId));
+  JSString *str = JSID_TO_STRING(aId);
 
   // Figure out which listener we're setting.
   SetListenerFunc func;
-  if (!strcmp(name, "onmessage")) {
+  if (JS_MatchStringAndAscii(str, "onmessage")) {
     func = &nsDOMWorkerScope::SetOnmessage;
   }
-  else if (!strcmp(name, "onerror")) {
+  else if (JS_MatchStringAndAscii(str, "onerror")) {
     func = &nsDOMWorkerScope::SetOnerror;
   }
   else {
@@ -1066,7 +1178,7 @@ nsDOMWorker::NewWorker(nsISupports** aNewObject)
 
 // static
 nsresult
-nsDOMWorker::NewChromeWorker(nsISupports** aNewObject)
+nsDOMWorker::NewChromeDOMWorker(nsDOMWorker** aNewObject)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -1077,16 +1189,24 @@ nsDOMWorker::NewChromeWorker(nsISupports** aNewObject)
   PRBool enabled;
   nsresult rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &enabled);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(enabled, NS_ERROR_DOM_SECURITY_ERR);
 
-  if(!enabled) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsISupports> newWorker =
-    NS_ISUPPORTS_CAST(nsIWorker*, new nsDOMWorker(nsnull, nsnull, CHROME));
+  nsRefPtr<nsDOMWorker> newWorker = new nsDOMWorker(nsnull, nsnull, CHROME);
   NS_ENSURE_TRUE(newWorker, NS_ERROR_OUT_OF_MEMORY);
 
   newWorker.forget(aNewObject);
+  return NS_OK;
+}
+
+// static
+nsresult
+nsDOMWorker::NewChromeWorker(nsISupports** aNewObject)
+{
+  nsDOMWorker* newWorker;
+  nsresult rv = NewChromeDOMWorker(&newWorker);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aNewObject = NS_ISUPPORTS_CAST(nsIWorker*, newWorker);
   return NS_OK;
 }
 
@@ -1104,7 +1224,6 @@ NS_INTERFACE_MAP_BEGIN(nsDOMWorker)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventTarget, nsDOMWorkerMessageHandler)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChromeWorker, IsPrivileged())
 NS_INTERFACE_MAP_END
 
 // Use the xpc_map_end.h macros to generate the nsIXPCScriptable methods we want
@@ -1133,8 +1252,11 @@ nsDOMWorker::PreCreate(nsISupports* aObject,
                        JSObject* /* aPlannedParent */,
                        JSObject** /* aParent */)
 {
-  nsCOMPtr<nsIChromeWorker> privilegedWorker(do_QueryInterface(aObject));
-  return privilegedWorker ? NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
+  nsCOMPtr<nsIWorker> iworker(do_QueryInterface(aObject));
+  if (iworker && static_cast<nsDOMWorker *>(iworker.get())->IsPrivileged()) {
+    return NS_SUCCESS_CHROME_ACCESS_ONLY;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1193,7 +1315,6 @@ nsDOMWorker::Finalize(nsIXPConnectWrappedNative* /* aWrapper */,
   return NS_OK;
 }
 
-// Keep this list in sync with the list in nsDOMClassInfo.cpp!
 NS_IMPL_CI_INTERFACE_GETTER4(nsDOMWorker, nsIWorker,
                                           nsIAbstractWorker,
                                           nsIDOMNSEventTarget,
@@ -2200,3 +2321,52 @@ nsDOMWorker::Notify(nsITimer* aTimer)
   Kill();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWorkerFactory::NewChromeWorker(nsIWorker** _retval)
+{
+  nsresult rv;
+
+  // Get the arguments from XPConnect.
+  nsCOMPtr<nsIXPConnect> xpc;
+  xpc = do_GetService(nsIXPConnect::GetCID());
+  NS_ASSERTION(xpc, "Could not get XPConnect");
+
+  nsAXPCNativeCallContext* cc;
+  rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Determine the current script global. We need it to register the worker.
+  // NewChromeDOMWorker will check that we are chrome, so no access check.
+  JSObject* globalobj = JS_GetGlobalForScopeChain(cx);
+  NS_ENSURE_TRUE(globalobj, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIScriptGlobalObject> global =
+    nsJSUtils::GetStaticScriptGlobal(cx, globalobj);
+  NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+
+  // Create, initialize, and return the worker.
+  nsRefPtr<nsDOMWorker> chromeWorker;
+  rv = nsDOMWorker::NewChromeDOMWorker(getter_AddRefs(chromeWorker));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = chromeWorker->InitializeInternal(global, cx, globalobj, argc, argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  chromeWorker.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsWorkerFactory, nsIWorkerFactory)

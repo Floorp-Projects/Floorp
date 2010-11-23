@@ -74,6 +74,8 @@ quartz-cglayers.patch: add support for cairo surfaces backed by CGLayers
 
 quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in previous patch
 
+quartz-get-image.patch: Bug 575521; add a way to get the image surface associated with a surface
+
 premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
 
 xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
@@ -139,6 +141,18 @@ disable-previous-scaled-font-cache.patch: Disable the previous-scaled-font-cache
 copyarea-with-alpha.patch: support simple overlapping self copies in (some) color_alpha xlib surfaces. https://bugs.freedesktop.org/show_bug.cgi?id=29250
 
 fix-clip-test.patch: Use y 498c10032ea3f8631a928cd7df96766f2c8ddca4
+
+quartz-refactor-surface-setup.patch: Extract the surface-source setup chunk of _cairo_quartz_setup_state into its own function
+
+quartz-fix-PAD.patch: Treat PAD like NONE instead of REPEAT
+
+quartz-mask-non-OVER.patch: Don't use CGContextSetAlpha to optimize alpha masking for non-OVER operators
+
+quartz-layers-content.patch: Store cairo content type in CGLayer surfaces
+
+quartz-optimize-OVER.patch: Optimize OVER to SOURCE for opaque patterns
+
+quartz-check-imageSurfaceEquiv.patch: Drop cairo_quartz_surface_t's "imageSurfaceEquiv" member variable if we have problems creating it
 
 ==== pixman patches ====
 

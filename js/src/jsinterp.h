@@ -197,8 +197,8 @@ struct JSStackFrame
     inline void resetInvokeCallFrame();
 
     /* Called by method-jit stubs and serve as a specification for jit-code. */
-    inline void initCallFrameCallerHalf(JSContext *cx, uint32 nactual, uint32 flags);
-    inline void initCallFrameEarlyPrologue(JSFunction *fun, void *ncode);
+    inline void initCallFrameCallerHalf(JSContext *cx, uint32 flags, void *ncode);
+    inline void initCallFrameEarlyPrologue(JSFunction *fun, uint32 nactual);
     inline void initCallFrameLatePrologue();
 
     /* Used for eval. */
@@ -972,6 +972,20 @@ InvokeConstructor(JSContext *cx, const CallArgs &args);
 extern JS_REQUIRES_STACK bool
 InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
                                uintN argc, Value *argv, Value *rval);
+
+extern bool
+ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
+                          Value *rval);
+
+/*
+ * Performs a direct eval for the given arguments, which must correspond to the
+ * currently-executing stack frame, which must be a script frame.  evalfun must
+ * be the built-in eval function and must correspond to the callee in vp[0].
+ * When this function succeeds it returns the result in *vp, adjusts the JS
+ * stack pointer, and returns true.
+ */
+extern JS_REQUIRES_STACK bool
+DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp);
 
 /*
  * Performs a direct eval for the given arguments, which must correspond to the

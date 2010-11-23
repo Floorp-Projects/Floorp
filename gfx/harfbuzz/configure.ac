@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(harfbuzz, 0.1, [http://bugs.freedesktop.org/enter_bug.cgi?product=harfbuzz])
+AC_INIT(harfbuzz, 0.2, [http://bugs.freedesktop.org/enter_bug.cgi?product=harfbuzz])
 AC_CONFIG_SRCDIR([harfbuzz.pc.in])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.9.6 gnu dist-bzip2 no-dist-gzip -Wall no-define])
@@ -9,9 +9,8 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL dnl ([1.4]) Don't remove!
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_CXX
-
-AC_C_FLEXIBLE_ARRAY_MEMBER
 
 AC_CHECK_FUNCS(mprotect sysconf getpagesize)
 AC_CHECK_HEADERS(unistd.h sys/mman.h)
@@ -34,6 +33,12 @@ if $have_icu; then
 	AC_DEFINE(HAVE_ICU, 1, [Have ICU library])
 fi
 AM_CONDITIONAL(HAVE_ICU, $have_icu)
+
+PKG_CHECK_MODULES(GRAPHITE, silgraphite, have_graphite=true, have_graphite=false)
+if $have_graphite; then
+    AC_DEFINE(HAVE_GRAPHITE, 1, [Have Graphite library])
+fi
+AM_CONDITIONAL(HAVE_GRAPHITE, $have_graphite)
 
 PKG_CHECK_MODULES(FREETYPE, freetype2, have_freetype=true, have_freetype=false)
 if $have_freetype; then

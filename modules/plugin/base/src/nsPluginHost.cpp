@@ -188,8 +188,9 @@ using mozilla::TimeStamp;
 // 0.09 the file encoding is changed to UTF-8, bug 420285
 // 0.10 added plugin versions on appropriate platforms, bug 427743
 // 0.11 file name and full path fields now store expected values on all platforms, bug 488181
+// 0.12 force refresh due to quicktime pdf claim fix, bug 611197
 // The current plugin registry version (and the maximum version we know how to read)
-static const char *kPluginRegistryVersion = "0.11";
+static const char *kPluginRegistryVersion = "0.12";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 
@@ -2142,8 +2143,10 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
 
     // do it if we still want it
     if (bAddIt) {
-      // We have a valid new plugin so report that plugins have changed.
-      *aPluginsChanged = PR_TRUE;
+      if (!seenBefore) {
+        // We have a valid new plugin so report that plugins have changed.
+        *aPluginsChanged = PR_TRUE;
+      }
 
       // If we're not creating a plugin list, simply looking for changes,
       // then we're done.
@@ -2890,24 +2893,12 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  if (doc) {
-    // Get the script global object owner and use that as the
-    // notification callback.
-    nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
-    if (global) {
-      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(global);
-      callbacks = do_QueryInterface(webNav);
-    }
-  }
-
   nsCOMPtr<nsIChannel> channel;
-
   rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull,
     nsnull, /* do not add this internal plugin's channel
             on the load group otherwise this channel could be canceled
             form |nsDocShell::OnLinkClickSync| bug 166613 */
-    callbacks);
+    listenerPeer);
   if (NS_FAILED(rv))
     return rv;
 

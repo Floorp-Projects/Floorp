@@ -44,8 +44,11 @@
  * The nsIDOMHTMLSelectElement interface is the interface to a [X]HTML
  * select element.
  *
- * For more information on this interface please see
+ * This interface is trying to follow the DOM Level 2 HTML specification:
  * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * with changes from the work-in-progress WHATWG HTML specification:
+ * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
 interface nsIDOMValidityState;
@@ -79,10 +82,16 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
   void                      focus();
 
   // The following lines are parte of the constraint validation API, see:
-  // http://dev.w3.org/html5/spec/forms.html#the-constraint-validation-api
+  // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
   readonly attribute boolean             willValidate;
   readonly attribute nsIDOMValidityState validity;
   readonly attribute DOMString           validationMessage;
   boolean checkValidity();
   void setCustomValidity(in DOMString error);
+};
+
+[scriptable, uuid(9b63d2d3-ccb0-4eed-a9e5-d1c142a805b7)]
+interface nsIDOMHTMLSelectElement_Mozilla_2_0_Branch : nsIDOMHTMLSelectElement
+{
+           attribute boolean                     required;
 };

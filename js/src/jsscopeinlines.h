@@ -231,7 +231,7 @@ Shape::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint
 }
 
 inline bool
-Shape::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp) const
+Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js::Value* vp) const
 {
     JS_ASSERT(!JSID_IS_VOID(this->id));
     JS_ASSERT(!hasDefaultGetter());
@@ -239,7 +239,7 @@ Shape::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp) const
     if (hasGetterValue()) {
         JS_ASSERT(!isMethod());
         js::Value fval = getterValue();
-        return js::ExternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
+        return js::ExternalGetOrSet(cx, receiver, id, fval, JSACC_READ, 0, 0, vp);
     }
 
     if (isMethod()) {

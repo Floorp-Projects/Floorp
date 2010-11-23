@@ -101,7 +101,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 25
+#define NP_VERSION_MINOR 26
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -377,7 +377,7 @@ typedef enum {
   , NPPVpluginCoreAnimationLayer = 1003
 #endif
 
-#if defined(MOZ_PLATFORM_MAEMO) && (MOZ_PLATFORM_MAEMO == 5)
+#if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
   , NPPVpluginWindowlessLocalBool = 2002
 #endif
 } NPPVariable;
@@ -755,6 +755,7 @@ enum NPEventType {
 #define NPVERS_HAS_PRIVATE_MODE             22
 #define NPVERS_MACOSX_HAS_COCOA_EVENTS      23
 #define NPVERS_HAS_ADVANCED_KEY_HANDLING    25
+#define NPVERS_HAS_URL_REDIRECT_HANDLING    26
 
 /*----------------------------------------------------------------------*/
 /*                        Function Prototypes                           */
@@ -801,6 +802,7 @@ NPError NP_LOADDS NPP_GetValue(NPP instance, NPPVariable variable, void *value);
 NPError NP_LOADDS NPP_SetValue(NPP instance, NPNVariable variable, void *value);
 NPBool  NP_LOADDS NPP_GotFocus(NPP instance, NPFocusDirection direction);
 void    NP_LOADDS NPP_LostFocus(NPP instance);
+void    NP_LOADDS NPP_URLRedirectNotify(NPP instance, const char* url, int32_t status, void* notifyData);
 
 /* NPN_* functions are provided by the navigator and called by the plugin. */
 void        NP_LOADDS NPN_Version(int* plugin_major, int* plugin_minor,
@@ -862,6 +864,7 @@ NPError     NP_LOADDS NPN_PopUpContextMenu(NPP instance, NPMenu* menu);
 NPBool      NP_LOADDS NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
 NPBool      NP_LOADDS NPN_HandleEvent(NPP instance, void *event, NPBool handled);
 NPBool      NP_LOADDS NPN_UnfocusInstance(NPP instance, NPFocusDirection direction);
+void        NP_LOADDS NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

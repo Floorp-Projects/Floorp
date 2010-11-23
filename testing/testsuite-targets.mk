@@ -108,17 +108,17 @@ endif
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
-reftest: TEST_PATH=layout/reftests/reftest.list
+reftest: TEST_PATH?=layout/reftests/reftest.list
 reftest:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
 
-crashtest: TEST_PATH=testing/crashtest/crashtests.list
+crashtest: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
 
-jstestbrowser: TEST_PATH=js/src/tests/jstests.list
+jstestbrowser: TEST_PATH?=js/src/tests/jstests.list
 jstestbrowser:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) --extra-profile-file=$(topsrcdir)/js/src/tests/user.js)
 	$(CHECK_TEST_ERROR)

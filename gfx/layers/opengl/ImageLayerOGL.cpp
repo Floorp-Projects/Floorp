@@ -411,7 +411,7 @@ ImageLayerOGL::RenderLayer(int,
                                         yuvImage->mSize.width,
                                         yuvImage->mSize.height));
     program->SetLayerTransform(GetEffectiveTransform());
-    program->SetLayerOpacity(GetOpacity());
+    program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
 
@@ -440,7 +440,7 @@ ImageLayerOGL::RenderLayer(int,
                                         cairoImage->mSize.width,
                                         cairoImage->mSize.height));
     program->SetLayerTransform(GetEffectiveTransform());
-    program->SetLayerOpacity(GetOpacity());
+    program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
 
@@ -801,8 +801,8 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   program->Activate();
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mTexImage->GetSize()));
-  program->SetLayerTransform(mTransform);
-  program->SetLayerOpacity(GetOpacity());
+  program->SetLayerTransform(GetEffectiveTransform());
+  program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 

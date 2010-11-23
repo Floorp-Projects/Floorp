@@ -175,16 +175,17 @@ function GroupItem(listOfEls, options) {
     if (!self.getTitle()) {
       self.$title
         .addClass("defaultName")
-        .val(self.defaultName);
+        .val(self.defaultName)
+        .css({"background-image":null, "-moz-padding-start":null});
     } else {
-      self.$title.css({"background":"none"});
+      self.$title.css({"background-image":"none"});
       if (immediately) {
         self.$title.css({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           });
       } else {
         self.$title.animate({
-            "padding-left": "1px"
+            "-moz-padding-start": "1px"
           }, {
             duration: 200,
             easing: "tabviewBounce"
@@ -408,7 +409,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   adjustTitleSize: function GroupItem_adjustTitleSize() {
     Utils.assert(this.bounds, 'bounds needs to have been set');
     let closeButton = iQ('.close', this.container);
-    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css('right')),
+    var dimension = UI.rtl ? 'left' : 'right';
+    var w = Math.min(this.bounds.width - parseInt(closeButton.width()) - parseInt(closeButton.css(dimension)),
                      Math.max(150, this.getTitle().length * 6));
     // The * 6 multiplier calculation is assuming that characters in the title
     // are approximately 6 pixels wide. Bug 586545
@@ -426,7 +428,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     box.top += titleHeight;
     box.height -= titleHeight;
 
-    box.width -= this.$appTabTray.width();
+    var appTabTrayWidth = this.$appTabTray.width();
+    box.width -= appTabTrayWidth;
+    if (UI.rtl) {
+      box.left += appTabTrayWidth;
+    }
 
     // Make the computed bounds' "padding" and new tab button margin actually be
     // themeable --OR-- compute this from actual bounds. Bug 586546
@@ -562,17 +568,25 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this._sendToSubscribers("close");
     this.removeTrenches();
 
-    iQ(this.container).animate({
-      opacity: 0,
-      "-moz-transform": "scale(.3)",
-    }, {
-      duration: 170,
-      complete: function() {
-        iQ(this).remove();
-        Items.unsquish();
-      }
-    });
-
+    if (this.hidden) {
+      iQ(this.container).remove();
+      if (this.$undoContainer) {
+        this.$undoContainer.remove();
+        this.$undoContainer = null;
+       }
+      Items.unsquish();
+    } else {
+      iQ(this.container).animate({
+        opacity: 0,
+        "-moz-transform": "scale(.3)",
+      }, {
+        duration: 170,
+        complete: function() {
+          iQ(this).remove();
+          Items.unsquish();
+        }
+      });
+    }
     this.deleteData();
   },
 
@@ -606,9 +620,106 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: _unhide
+  // Shows the hidden group.
+  _unhide: function GroupItem__unhide() {
+    let self = this;
+
+    this._cancelFadeAwayUndoButtonTimer();
+    this.hidden = false;
+    this.$undoContainer.remove();
+    this.$undoContainer = null;
+
+    iQ(this.container).show().animate({
+      "-moz-transform": "scale(1)",
+      "opacity": 1
+    }, {
+      duration: 170,
+      complete: function() {
+        self._children.forEach(function(child) {
+          iQ(child.container).show();
+        });
+      }
+    });
+
+    self._sendToSubscribers("groupShown", { groupItemId: self.id });
+  },
+
+  // ----------
+  // Function: closeHidden
+  // Removes the group item, its children and its container.
+  closeHidden: function GroupItem_closeHidden() {
+    let self = this;
+
+    this._cancelFadeAwayUndoButtonTimer();
+
+    // when "TabClose" event is fired, the browser tab is about to close and our 
+    // item "close" event is fired.  And then, the browser tab gets closed. 
+    // In other words, the group "close" event is fired before all browser
+    // tabs in the group are closed.  The below code would fire the group "close"
+    // event only after all browser tabs in that group are closed.
+    let shouldRemoveTabItems = [];
+    let toClose = this._children.concat();
+    toClose.forEach(function(child) {
+      child.removeSubscriber(self, "close");
+
+      let removed = child.close();
+      if (removed) {
+        shouldRemoveTabItems.push(child);
+      } else {
+        // child.removeSubscriber() must be called before child.close(), 
+        // therefore we call child.addSubscriber() if the tab is not removed.
+        child.addSubscriber(self, "close", function() {
+          self.remove(child);
+        });
+      }
+    });
+
+    if (shouldRemoveTabItems.length != toClose.length) {
+      // remove children without the assiciated tab and show the group item
+      shouldRemoveTabItems.forEach(function(child) {
+        self.remove(child, { dontArrange: true });
+      });
+
+      this.$undoContainer.fadeOut(function() { self._unhide() });
+    } else {
+      this.close();
+    }
+  },
+
+  // ----------
+  // Function: _fadeAwayUndoButton
+  // Fades away the undo button
+  _fadeAwayUndoButton: function GroupItem__fadeAwayUdoButton() {
+    let self = this;
+
+    if (this.$undoContainer) {
+      // if there is one or more orphan tabs or there is more than one group 
+      // and other groupS are not empty, fade away the undo button.
+      let shouldFadeAway = GroupItems.getOrphanedTabs().length > 0;
+      
+      if (!shouldFadeAway && GroupItems.groupItems.length > 1) {
+        shouldFadeAway = 
+          GroupItems.groupItems.some(function(groupItem) {
+            return (groupItem != self && groupItem.getChildren().length > 0);
+          });
+      }
+      if (shouldFadeAway) {
+        self.$undoContainer.animate({
+          color: "transparent",
+          opacity: 0
+        }, {
+          duration: this._fadeAwayUndoButtonDuration,
+          complete: function() { self.closeHidden(); }
+        });
+      }
+    }
+  },
+
+  // ----------
   // Function: _createUndoButton
   // Makes the affordance for undo a close group action
-  _createUndoButton: function() {
+  _createUndoButton: function GroupItem__createUndoButton() {
     let self = this;
     this.$undoContainer = iQ("<div/>")
       .addClass("undo")
@@ -627,6 +738,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
     this.hidden = true;
 
+    // hide group item and show undo container.
     setTimeout(function() {
       self.$undoContainer.animate({
         "-moz-transform": "scale(1)",
@@ -640,36 +752,17 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
     }, 50);
 
+    // add click handlers
     this.$undoContainer.click(function(e) {
       // Only do this for clicks on this actual element.
       if (e.target.nodeName != self.$undoContainer[0].nodeName)
         return;
 
-      self.$undoContainer.fadeOut(function() {
-        iQ(this).remove();
-        self.hidden = false;
-        self._cancelFadeAwayUndoButtonTimer();
-        self.$undoContainer = null;
-
-        iQ(self.container).show().animate({
-          "-moz-transform": "scale(1)",
-          "opacity": 1
-        }, {
-          duration: 170,
-          complete: function() {
-            self._children.forEach(function(child) {
-              iQ(child.container).show();
-            });
-          }
-        });
-
-        self._sendToSubscribers("groupShown", { groupItemId: self.id });
-      });
+      self.$undoContainer.fadeOut(function() { self._unhide(); });
     });
 
     undoClose.click(function() {
-      self._cancelFadeAwayUndoButtonTimer();
-      self.$undoContainer.fadeOut(function() { self._removeHiddenGroupItem(); });
+      self.$undoContainer.fadeOut(function() { self.closeHidden(); });
     });
 
     this.setupFadeAwayUndoButtonTimer();
@@ -701,60 +794,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     clearTimeout(this._undoButtonTimeoutId);
     this._undoButtonTimeoutId = null;
   }, 
-
-  // ----------
-  // Fades away the undo button
-  _fadeAwayUndoButton: function() {
-    let self = this;
-
-    if (this.$undoContainer) {
-      // if there is one or more orphan tabs or there is more than one group 
-      // and other groupS are not empty, fade away the undo button.
-      let shouldFadeAway = GroupItems.getOrphanedTabs().length > 0;
-      
-      if (!shouldFadeAway && GroupItems.groupItems.length > 1) {
-        shouldFadeAway = 
-          GroupItems.groupItems.some(function(groupItem) {
-            return (groupItem != self && groupItem.getChildren().length > 0);
-          });
-      }
-      if (shouldFadeAway) {
-        self.$undoContainer.animate({
-          color: "transparent",
-          opacity: 0
-        }, {
-          duration: this.fadeAwayUndoButtonDuration,
-          complete: function() { self._removeHiddenGroupItem(); }
-        });
-      }
-    }
-  },
-
-  // ----------
-  // Removes the group item, its children and its container.
-  _removeHiddenGroupItem: function() {
-    let self = this;
-
-    // close all children
-    let toClose = this._children.concat();
-    toClose.forEach(function(child) {
-      child.removeSubscriber(self, "close");
-      child.close();
-    });
- 
-    // remove all children
-    this.removeAll();
-    GroupItems.unregister(this);
-    this._sendToSubscribers("close");
-    this.removeTrenches();
-
-    iQ(this.container).remove();
-    this.$undoContainer.remove();
-    this.$undoContainer = null;
-    Items.unsquish();
-
-    this.deleteData();
-  },
 
   // ----------
   // Function: add
@@ -1020,19 +1059,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: shouldStack
-  // Returns true if the groupItem, given "count", should stack (instead of grid).
+  // Returns true if the groupItem should stack (instead of grid).
   shouldStack: function GroupItem_shouldStack(count) {
     if (count <= 1)
       return false;
 
     var bb = this.getContentBounds();
     var options = {
-      pretend: true,
-      count: count
+      return: 'widthAndColumns',
+      count: count || this._children.length
     };
+    let {childWidth, columns} = Items.arrange(null, bb, options);
 
-    var rects = Items.arrange(null, bb, options);
-    return (rects[0].width < 55);
+    let shouldStack = childWidth < TabItems.minTabWidth * 1.35;
+    this._columns = shouldStack ? null : columns;
+
+    return shouldStack;
   },
 
   // ----------
@@ -1042,6 +1084,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //   options - passed to <Items.arrange> or <_stackArrange>
   arrange: function GroupItem_arrange(options) {
+    if (GroupItems._arrangePaused) {
+      GroupItems.pushArrange(this, options);
+      return;
+    }
     if (this.expanded) {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
@@ -1049,16 +1095,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
     } else {
       var bb = this.getContentBounds();
-      var count = this._children.length;
-      if (!this.shouldStack(count)) {
+      if (!this.shouldStack()) {
         if (!options)
           options = {};
-
-        var animate;
-        if (typeof options.animate == 'undefined')
-          animate = true;
-        else
-          animate = options.animate;
 
         this._children.forEach(function(child) {
             child.removeClass("stacked")
@@ -1066,17 +1105,19 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         this.topChild = null;
 
-        var arrangeOptions = Utils.copy(options);
-        Utils.extend(arrangeOptions, {
-          pretend: true,
-          count: count
-        });
-
-        if (!count) {
+        if (!this._children.length) {
           this.xDensity = 0;
           this.yDensity = 0;
           return;
         }
+
+        var arrangeOptions = Utils.copy(options);
+        Utils.extend(arrangeOptions, {
+          columns: this._columns
+        });
+
+        // Items.arrange will rearrange the children, but also return an array
+        // of the Rect's used.
 
         var rects = Items.arrange(this._children, bb, arrangeOptions);
 
@@ -1088,24 +1129,18 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         // tab) / (the total available content width)
 
         // first, find the right of the rightmost tab! luckily, they're in order.
-        // TODO: does this change for rtl?
         var rightMostRight = 0;
-        for each (var rect in rects) {
-          if (rect.right > rightMostRight)
-            rightMostRight = rect.right;
-          else
-            break;
+        if (UI.rtl) {
+          rightMostRight = rects[0].right;
+        } else {
+          for each (var rect in rects) {
+            if (rect.right > rightMostRight)
+              rightMostRight = rect.right;
+            else
+              break;
+          }
         }
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
-
-        this._children.forEach(function(child, index) {
-          if (!child.locked.bounds) {
-            child.setBounds(rects[index], !animate);
-            child.setRotation(0);
-            if (options.z)
-              child.setZ(options.z);
-          }
-        });
 
         this._isStacked = false;
       } else
@@ -1188,7 +1223,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         child.addClass("stacked");
         child.setBounds(box, !animate);
-        child.setRotation(self._randRotate(maxRotation, index));
+        child.setRotation((UI.rtl ? -1 : 1) * self._randRotate(maxRotation, index));
       }
     });
 
@@ -1382,8 +1417,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
   setResizable: function GroupItem_setResizable(value, immediately) {
-    this.resizeOptions.minWidth = 90;
-    this.resizeOptions.minHeight = 90;
+    this.resizeOptions.minWidth = 110;
+    this.resizeOptions.minHeight = 125;
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();
@@ -1496,6 +1531,9 @@ let GroupItems = {
   _activeGroupItem: null,
   _activeOrphanTab: null,
   _cleanupFunctions: [],
+  _arrangePaused: false,
+  _arrangesPending: [],
+  _removingHiddenGroups: false,
 
   // ----------
   // Function: init
@@ -1525,6 +1563,51 @@ let GroupItems = {
 
     // additional clean up
     this.groupItems = null;
+  },
+
+  // ----------
+  // Function: pauseArrange
+  // Bypass arrange() calls and collect for resolution in
+  // resumeArrange()
+  pauseArrange: function GroupItems_pauseArrange() {
+    Utils.assert(this._arrangePaused == false, 
+      "pauseArrange has been called while already paused");
+    Utils.assert(this._arrangesPending.length == 0, 
+      "There are bypassed arrange() calls that haven't been resolved");
+    this._arrangePaused = true;
+  },
+
+  // ----------
+  // Function: pushArrange
+  // Push an arrange() call and its arguments onto an array
+  // to be resolved in resumeArrange()
+  pushArrange: function GroupItems_pushArrange(groupItem, options) {
+    Utils.assert(this._arrangePaused, 
+      "Ensure pushArrange() called while arrange()s aren't paused"); 
+    let i;
+    for (i = 0; i < this._arrangesPending.length; i++)
+      if (this._arrangesPending[i].groupItem === groupItem)
+        break;
+    let arrangeInfo = {
+      groupItem: groupItem,
+      options: options
+    };
+    if (i < this._arrangesPending.length)
+      this._arrangesPending[i] = arrangeInfo;
+    else
+      this._arrangesPending.push(arrangeInfo);
+  },
+
+  // ----------
+  // Function: resumeArrange
+  // Resolve bypassed and collected arrange() calls
+  resumeArrange: function GroupItems_resumeArrange() {
+    for (let i = 0; i < this._arrangesPending.length; i++) {
+      let g = this._arrangesPending[i];
+      g.groupItem.arrange(g.options);
+    }
+    this._arrangesPending = [];
+    this._arrangePaused = false;
   },
 
   // ----------
@@ -2113,19 +2196,16 @@ let GroupItems = {
   // Function: removeHiddenGroups
   // Removes all hidden groups' data and its browser tabs.
   removeHiddenGroups: function GroupItems_removeHiddenGroups() {
-    iQ(".undo").remove();
-    
-    // ToDo: encapsulate this in the group item. bug 594863
-    this.groupItems.forEach(function(groupItem) {
-      if (groupItem.hidden) {
-        let toClose = groupItem._children.concat();
-        toClose.forEach(function(child) {
-          child.removeSubscriber(groupItem, "close");
-          child.close();
-        });
+    if (this._removingHiddenGroups)
+      return;
+    this._removingHiddenGroups = true;
 
-        groupItem.deleteData();
-      }
-    });
+    let groupItems = this.groupItems.concat();
+    groupItems.forEach(function(groupItem) {
+      if (groupItem.hidden)
+        groupItem.closeHidden();
+     });
+
+    this._removingHiddenGroups = false;
   }
 };

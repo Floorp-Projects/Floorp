@@ -1,5 +1,5 @@
 ;
-;  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+;  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
 ;
 ;  Use of this source code is governed by a BSD-style license
 ;  that can be found in the LICENSE file in the root of the source
@@ -36,12 +36,12 @@ sym(vp8_post_proc_down_and_across_xmm):
     ALIGN_STACK 16, rax
     ; move the global rd onto the stack, since we don't have enough registers
     ; to do PIC addressing
-    movdqa      xmm0, [rd42 GLOBAL]
+    movdqa      xmm0, [GLOBAL(rd42)]
     sub         rsp, 16
     movdqa      [rsp], xmm0
 %define RD42 [rsp]
 %else
-%define RD42 [rd42 GLOBAL]
+%define RD42 [GLOBAL(rd42)]
 %endif
 
 
@@ -275,7 +275,7 @@ sym(vp8_mbpost_proc_down_xmm):
 %define flimit4 [rsp+128]
 
 %if ABI_IS_32BIT=0
-    lea         r8,       [sym(vp8_rv) GLOBAL]
+    lea         r8,       [GLOBAL(sym(vp8_rv))]
 %endif
 
     ;rows +=8;
@@ -393,7 +393,7 @@ loop_row:
             and         rcx,        127
 %if ABI_IS_32BIT=1 && CONFIG_PIC=1
             push        rax
-            lea         rax,        [sym(vp8_rv) GLOBAL]
+            lea         rax,        [GLOBAL(sym(vp8_rv))]
             movdqu      xmm4,       [rax + rcx*2] ;vp8_rv[rcx*2]
             pop         rax
 %elif ABI_IS_32BIT=0
@@ -579,7 +579,7 @@ nextcol4:
             punpcklwd   xmm1,   xmm0
 
             paddd       xmm1,   xmm6
-            paddd       xmm1,   [four8s GLOBAL]
+            paddd       xmm1,   [GLOBAL(four8s)]
 
             psrad       xmm1,   4
             packssdw    xmm1,   xmm0

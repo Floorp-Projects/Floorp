@@ -207,11 +207,21 @@ body {
   z-index: 1000;  
 }
 
+html[dir=rtl] #search {
+  left: auto;
+  right: 0;
+}
+
 #searchbox{
   position: absolute;
   right: 20px;
   top: 20px;
   z-index: 1050;
+}
+
+html[dir=rtl] #searchbox {
+  right: auto;
+  left: 20px;
 }
 
 #actions{
@@ -221,10 +231,20 @@ body {
   z-index:10;
 }
 
+html[dir=rtl] #actions {
+  right: auto;
+  left: 0;
+}
+
 #actions #searchbutton{
   position: relative;
   top: 0;
   left: 0;
+}
+
+html[dir=rtl] #actions #searchbutton {
+  left: auto;
+  right: 0;
 }
 
 #otherresults{

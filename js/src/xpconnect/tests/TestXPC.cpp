@@ -81,14 +81,17 @@ Print(JSContext *cx, uintN argc, jsval *vp)
     for (i = n = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
-        fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
+            return false;
+        JSAutoByteString bytes(cx, str);
+        if (!bytes)
+            return false;
+        fprintf(gOutFile, "%s%s", i ? " " : "", bytes.ptr());
     }
     n++;
     if (n)
         fputc('\n', gOutFile);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -96,7 +99,6 @@ Load(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN i;
     JSString *str;
-    const char *filename;
     JSScript *script;
     JSBool ok;
     jsval result;
@@ -111,8 +113,10 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
-        filename = JS_GetStringBytes(str);
-        script = JS_CompileFile(cx, obj, filename);
+        JSAutoByteString filename(cx, str);
+        if (!filename)
+            return false;
+        script = JS_CompileFile(cx, obj, filename.ptr());
         if (!script)
             ok = JS_FALSE;
         else {
@@ -548,11 +552,11 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     const char*                  e_in = "another meaningless chunck of text";
     
 
-    char*                   a_out;
+    JSString*               a_out;
     nsCOMPtr<nsISupports>   b_out;
     nsCOMPtr<nsIVariant>    c_out;
     nsAutoString            d_out;
-    char*                   e_out;
+    JSString*               e_out;
 
     nsCOMPtr<nsITestXPCFoo> specified;
     PRInt32                 val;
@@ -584,7 +588,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
             return;
         }
 
-        ok = JS_ConvertArguments(jscontext, 5, argv, "s %ip %iv %is s",
+        ok = JS_ConvertArguments(jscontext, 5, argv, "S %ip %iv %is S",
                                 &a_out, 
                                 static_cast<nsISupports**>(getter_AddRefs(b_out)), 
                                 static_cast<nsIVariant**>(getter_AddRefs(c_out)),
@@ -604,7 +608,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     if (!ok)
         return;
 
-    if(!strcmp(a_in, a_out) && !strcmp(e_in, e_out))
+    if(JS_MatchStringAndAscii(a_out, a_in) && JS_MatchStringAndAscii(e_out, e_in))
         printf("passed\n");
     else
         printf(" conversion OK, but surrounding was mangled -- FAILED!\n");

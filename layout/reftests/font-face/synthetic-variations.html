@@ -64,35 +64,35 @@ th, td {
 
 em { font-style: italic; }
 
-#test1 .w1 td { font-weight: bolder; }
-#test1 .w2 td { font-weight: bolder; }
-#test1 .w3 td { font-weight: bolder; }
+#test1 .w1 td, #test1 .w1 td span { font-weight: bolder; }
+#test1 .w2 td, #test1 .w2 td span { font-weight: bolder; }
+#test1 .w3 td, #test1 .w3 td span { font-weight: bolder; }
 #test1 .w4 td { font-weight: bolder; }
 #test1 .w5 td { font-weight: bolder; }
 #test1 .w6 th { font-weight: lighter; }
 #test1 .w7 th { font-weight: lighter; }
-#test1 .w8 th { font-weight: lighter; }
-#test1 .w9 th { font-weight: lighter; }
+#test1 .w8 th, #test1 .w8 th span { font-weight: lighter; }
+#test1 .w9 th, #test1 .w9 th span { font-weight: lighter; }
 
-#test2 .w1 td { font-weight: bolder; }
-#test2 .w2 td { font-weight: bolder; }
-#test2 .w3 td { font-weight: bolder; }
+#test2 .w1 td, #test2 .w1 td span { font-weight: bolder; }
+#test2 .w2 td, #test2 .w2 td span { font-weight: bolder; }
+#test2 .w3 td, #test2 .w3 td span { font-weight: bolder; }
 #test2 .w4 td { font-weight: bolder; }
 #test2 .w5 td { font-weight: bolder; }
 #test2 .w6 th { font-weight: lighter; }
 #test2 .w7 th { font-weight: lighter; }
-#test2 .w8 th { font-weight: lighter; }
-#test2 .w9 th { font-weight: lighter; }
+#test2 .w8 th, #test2 .w8 th span { font-weight: lighter; }
+#test2 .w9 th, #test2 .w9 th span { font-weight: lighter; }
 
 #test3 .w1 th, #test3 .w1 td, #test3 .w1 td span { font-weight: bolder; }
 #test3 .w2 th, #test3 .w2 td, #test3 .w2 td span { font-weight: bolder; }
-#test3 .w3 td { font-weight: bolder; }
+#test3 .w3 th, #test3 .w3 td, #test3 .w3 td span { font-weight: bolder; }
 #test3 .w4 td { font-weight: bolder; }
 #test3 .w5 td { font-weight: bolder; }
 #test3 .w6 th { font-weight: lighter; }
 #test3 .w7 th { font-weight: lighter; }
-#test3 .w8 th { font-weight: lighter; }
-#test3 .w9 th { font-weight: lighter; }
+#test3 .w8 td, #test3 .w8 th, #test3 .w8 th span { font-weight: lighter; }
+#test3 .w9 td, #test3 .w9 th, #test3 .w9 th span { font-weight: lighter; }
 
 </style>
 
@@ -102,27 +102,27 @@ em { font-style: italic; }
 <p>All lines should appear in a sans-serif face with proper bolding</p>
 
 <table id="test1">
-<tr class="w1"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w2"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w3"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w4"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w5"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w6"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w7"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w8"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w9"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w1"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w2"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w3"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w4"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w5"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w6"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w7"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w8"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w9"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
 </table>
 
 <table id="test2">
-<tr class="w9"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w8"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w7"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w6"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w5"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w4"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w3"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w2"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
-<tr class="w1"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w9"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w8"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w7"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w6"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w5"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w4"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w3"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w2"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
+<tr class="w1"><th><span>normal</span></th><th><em><span>italic</span></em></th><td><span>bold</span></td><td><em><span>bolditalic</span></em></td></tr>
 </table>
 
 <table id="test3">

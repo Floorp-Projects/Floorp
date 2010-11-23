@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010 The VP8 project authors. All Rights Reserved.
+ *  Copyright (c) 2010 The WebM project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -15,24 +15,24 @@
 
 #ifndef CONFIG_MEM_MANAGER
 # if defined(VXWORKS)
-#  define CONFIG_MEM_MANAGER  1 //include heap manager functionality,
-//default: enabled on vxworks
+#  define CONFIG_MEM_MANAGER  1 /*include heap manager functionality,*/
+/*default: enabled on vxworks*/
 # else
-#  define CONFIG_MEM_MANAGER  0 //include heap manager functionality
+#  define CONFIG_MEM_MANAGER  0 /*include heap manager functionality*/
 # endif
 #endif /*CONFIG_MEM_MANAGER*/
 
 #ifndef CONFIG_MEM_TRACKER
-# define CONFIG_MEM_TRACKER     1 //include xvpx_* calls in the lib
+# define CONFIG_MEM_TRACKER     1 /*include xvpx_* calls in the lib*/
 #endif
 
 #ifndef CONFIG_MEM_CHECKS
-# define CONFIG_MEM_CHECKS      0 //include some basic safety checks in
-//vpx_memcpy, _memset, and _memmove
+# define CONFIG_MEM_CHECKS      0 /*include some basic safety checks in
+vpx_memcpy, _memset, and _memmove*/
 #endif
 
 #ifndef USE_GLOBAL_FUNCTION_POINTERS
-# define USE_GLOBAL_FUNCTION_POINTERS   0  //use function pointers instead of compiled functions.
+# define USE_GLOBAL_FUNCTION_POINTERS   0  /*use function pointers instead of compiled functions.*/
 #endif
 
 #if CONFIG_MEM_TRACKER
@@ -46,9 +46,9 @@
 
 #ifndef DEFAULT_ALIGNMENT
 # if defined(VXWORKS)
-#  define DEFAULT_ALIGNMENT        32        //default addr alignment to use in
-//calls to vpx_* functions other
-//than vpx_memalign
+#  define DEFAULT_ALIGNMENT        32        /*default addr alignment to use in
+                                               calls to vpx_* functions other
+                                               than vpx_memalign*/
 # else
 #  define DEFAULT_ALIGNMENT        1
 # endif
@@ -59,24 +59,24 @@
 #endif
 
 #if CONFIG_MEM_TRACKER
-# define TRY_BOUNDS_CHECK         1         //when set to 1 pads each allocation,
-//integrity can be checked using
-//vpx_memory_tracker_check_integrity
-//or on free by defining
-//TRY_BOUNDS_CHECK_ON_FREE
+# define TRY_BOUNDS_CHECK         1        /*when set to 1 pads each allocation,
+                                             integrity can be checked using
+                                             vpx_memory_tracker_check_integrity
+                                             or on free by defining*/
+/*TRY_BOUNDS_CHECK_ON_FREE*/
 #else
 # define TRY_BOUNDS_CHECK         0
 #endif /*CONFIG_MEM_TRACKER*/
 
 #if TRY_BOUNDS_CHECK
-# define TRY_BOUNDS_CHECK_ON_FREE 0          //checks mem integrity on every
-//free, very expensive
-# define BOUNDS_CHECK_VALUE       0xdeadbeef //value stored before/after ea.
-//mem addr for bounds checking
-# define BOUNDS_CHECK_PAD_SIZE    32         //size of the padding before and
-//after ea allocation to be filled
-//with BOUNDS_CHECK_VALUE.
-//this should be a multiple of 4
+# define TRY_BOUNDS_CHECK_ON_FREE 0          /*checks mem integrity on every
+                                               free, very expensive*/
+# define BOUNDS_CHECK_VALUE       0xdeadbeef /*value stored before/after ea.
+                                               mem addr for bounds checking*/
+# define BOUNDS_CHECK_PAD_SIZE    32         /*size of the padding before and
+                                               after ea allocation to be filled
+                                               with BOUNDS_CHECK_VALUE.
+                                               this should be a multiple of 4*/
 #else
 # define BOUNDS_CHECK_VALUE       0
 # define BOUNDS_CHECK_PAD_SIZE    0

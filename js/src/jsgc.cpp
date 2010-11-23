@@ -118,30 +118,25 @@ JS_STATIC_ASSERT(JSTRACE_XML    == 2);
 JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
 
 /*
- * Check consistency of external string constants from JSFinalizeGCThingKind.
- */
-JS_STATIC_ASSERT(FINALIZE_EXTERNAL_STRING_LAST - FINALIZE_EXTERNAL_STRING0 ==
-                 JS_EXTERNAL_STRING_LIMIT - 1);
-
-/*
  * Everything we store in the heap must be a multiple of the cell size.
  */
-JS_STATIC_ASSERT(sizeof(JSString)       % sizeof(FreeCell) == 0);
-JS_STATIC_ASSERT(sizeof(JSShortString)  % sizeof(FreeCell) == 0);
-JS_STATIC_ASSERT(sizeof(JSObject)       % sizeof(FreeCell) == 0);
-JS_STATIC_ASSERT(sizeof(JSFunction)     % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSString)         % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSShortString)    % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSObject)         % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSFunction)       % sizeof(FreeCell) == 0);
 #ifdef JSXML
-JS_STATIC_ASSERT(sizeof(JSXML)          % sizeof(FreeCell) == 0);
+JS_STATIC_ASSERT(sizeof(JSXML)            % sizeof(FreeCell) == 0);
 #endif
 
 /*
  * All arenas must be exactly 4k.
  */
-JS_STATIC_ASSERT(sizeof(Arena<JSString>)        == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSShortString>)   == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSObject>)        == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSFunction>)      == 4096);
-JS_STATIC_ASSERT(sizeof(Arena<JSXML>)           == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSString>)         == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSExternalString>) == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSShortString>)    == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSObject>)         == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSFunction>)       == 4096);
+JS_STATIC_ASSERT(sizeof(Arena<JSXML>)            == 4096);
 
 #ifdef JS_GCMETER
 # define METER(x)               ((void) (x))
@@ -219,19 +214,21 @@ Arena<T>::mark(T *thing, JSTracer *trc)
 {
     JS_ASSERT(sizeof(T) == aheader.thingSize);
 
-    thing = getAlignedThing(thing);
+    T *alignedThing = getAlignedThing(thing);
 
-    if (thing > &t.things[ThingsPerArena-1].t || thing < &t.things[0].t)
+    if (alignedThing > &t.things[ThingsPerArena-1].t || alignedThing < &t.things[0].t)
         return CGCT_NOTARENA;
 
-    if (!aheader.isUsed || inFreeList(thing))
+    if (!aheader.isUsed || inFreeList(alignedThing))
         return CGCT_NOTLIVE;
 
-    JS_ASSERT(assureThingIsAligned(thing));
-
     JS_SET_TRACING_NAME(trc, "machine stack");
-    Mark(trc, thing);
+    Mark(trc, alignedThing);
 
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    if (alignedThing != thing)
+        return CGCT_VALIDWITHOFFSET;
+#endif
     return CGCT_VALID;
 }
 
@@ -248,13 +245,12 @@ checkArenaListsForThing(JSCompartment *comp, void *thing) {
 #if JS_HAS_XML_SUPPORT
         comp->arenas[FINALIZE_XML].arenasContainThing<JSXML>(thing) ||
 #endif
+        comp->arenas[FINALIZE_STRING].arenasContainThing<JSString>(thing) ||
+        comp->arenas[FINALIZE_EXTERNAL_STRING].arenasContainThing<JSExternalString>(thing) ||
         comp->arenas[FINALIZE_SHORT_STRING].arenasContainThing<JSShortString>(thing)) {
             return true;
     }
-    for (unsigned i = FINALIZE_STRING; i <= FINALIZE_EXTERNAL_STRING_LAST; i++) {
-        if (comp->arenas[i].arenasContainThing<JSString>(thing))
-            return true;
-    }
+
     return false;
 }
 #endif
@@ -557,11 +553,12 @@ MarkCell(Cell *cell, JSTracer *trc)
 }
 
 /*
- * Returns CGCT_VALID and mark it if the w can be a live GC thing and sets traceKind
- * accordingly. Otherwise returns the reason for rejection.
+ * Returns CGCT_VALID or CGCT_VALIDWITHOFFSET and mark it if the w can be a 
+ * live GC thing and sets thingKind accordingly. Otherwise returns the 
+ * reason for rejection.
  */
 inline ConservativeGCTest
-MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
+MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
 {
     JSRuntime *rt = trc->context->runtime;
     /*
@@ -611,9 +608,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
         return CGCT_FREEARENA;
 
     ConservativeGCTest test;
-    traceKind = aheader->thingKind;
+    thingKind = aheader->thingKind;
 
-    switch (traceKind) {
+    switch (thingKind) {
         case FINALIZE_OBJECT0:
             test = MarkCell<JSObject>(cell, trc);
             break;
@@ -633,15 +630,10 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
             test = MarkCell<JSObject_Slots16>(cell, trc);
             break;
         case FINALIZE_STRING:
-        case FINALIZE_EXTERNAL_STRING0:
-        case FINALIZE_EXTERNAL_STRING1:
-        case FINALIZE_EXTERNAL_STRING2:
-        case FINALIZE_EXTERNAL_STRING3:
-        case FINALIZE_EXTERNAL_STRING4:
-        case FINALIZE_EXTERNAL_STRING5:
-        case FINALIZE_EXTERNAL_STRING6:
-        case FINALIZE_EXTERNAL_STRING7:
             test = MarkCell<JSString>(cell, trc);
+            break;
+        case FINALIZE_EXTERNAL_STRING:
+            test = MarkCell<JSExternalString>(cell, trc);
             break;
         case FINALIZE_SHORT_STRING:
             test = MarkCell<JSShortString>(cell, trc);
@@ -665,8 +657,8 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &traceKind)
 inline ConservativeGCTest
 MarkIfGCThingWord(JSTracer *trc, jsuword w)
 {
-    uint32 traceKind;
-    return MarkIfGCThingWord(trc, w, traceKind);
+    uint32 thingKind;
+    return MarkIfGCThingWord(trc, w, thingKind);
 }
 
 static void
@@ -682,16 +674,25 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
     VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
 #endif
 
-    uint32 traceKind;
+    uint32 thingKind;
 #if defined JS_DUMP_CONSERVATIVE_GC_ROOTS || defined JS_GCMETER
     ConservativeGCTest test =
 #endif
-    MarkIfGCThingWord(trc, w, traceKind);
+    MarkIfGCThingWord(trc, w, thingKind);
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    if (test == CGCT_VALID) {
+    if (test == CGCT_VALID || test == CGCT_VALIDWITHOFFSET) {
         if (IS_GC_MARKING_TRACER(trc) && static_cast<GCMarker *>(trc)->conservativeDumpFileName) {
-            GCMarker::ConservativeRoot root = {(void *)w, traceKind};
+            const jsuword JSID_PAYLOAD_MASK = ~jsuword(JSID_TYPE_MASK);
+#if JS_BITS_PER_WORD == 32
+            jsuword payload = w & JSID_PAYLOAD_MASK;
+#elif JS_BITS_PER_WORD == 64
+            jsuword payload = w & JSID_PAYLOAD_MASK & JSVAL_PAYLOAD_MASK;
+#endif
+            void *thing = (test == CGCT_VALIDWITHOFFSET) 
+                          ? GetAlignedThing((void *)payload, thingKind) 
+                          : (void *)payload;
+            GCMarker::ConservativeRoot root = {thing, thingKind};
             static_cast<GCMarker *>(trc)->conservativeRoots.append(root);
         }
     }
@@ -704,10 +705,10 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
 }
 
 static void
-MarkRangeConservatively(JSTracer *trc, jsuword *begin, jsuword *end)
+MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
 {
     JS_ASSERT(begin <= end);
-    for (jsuword *i = begin; i != end; ++i)
+    for (const jsuword *i = begin; i != end; ++i)
         MarkWordConservatively(trc, *i);
 }
 
@@ -734,15 +735,15 @@ MarkThreadDataConservatively(JSTracer *trc, JSThreadData *td)
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
 {
-    jsuword *begin = (jsuword *) beginv;
-    jsuword *end = (jsuword *) endv;
+    const jsuword *begin = beginv->payloadWord();
+    const jsuword *end = endv->payloadWord();;
 #ifdef JS_NUNBOX32
     /*
      * With 64-bit jsvals on 32-bit systems, we can optimize a bit by
      * scanning only the payloads.
      */
     JS_ASSERT(begin <= end);
-    for (jsuword *i = begin; i != end; i += 2)
+    for (const jsuword *i = begin; i != end; i += sizeof(Value)/sizeof(jsuword))
         MarkWordConservatively(trc, *i);
 #else
     MarkRangeConservatively(trc, begin, end);
@@ -1139,15 +1140,9 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
       case FINALIZE_OBJECT16:
         return RefillTypedFreeList<JSObject_Slots16>(cx, thingKind);
       case FINALIZE_STRING:
-      case FINALIZE_EXTERNAL_STRING0:
-      case FINALIZE_EXTERNAL_STRING1:
-      case FINALIZE_EXTERNAL_STRING2:
-      case FINALIZE_EXTERNAL_STRING3:
-      case FINALIZE_EXTERNAL_STRING4:
-      case FINALIZE_EXTERNAL_STRING5:
-      case FINALIZE_EXTERNAL_STRING6:
-      case FINALIZE_EXTERNAL_STRING7:
         return RefillTypedFreeList<JSString>(cx, thingKind);
+      case FINALIZE_EXTERNAL_STRING:
+        return RefillTypedFreeList<JSExternalString>(cx, thingKind);
       case FINALIZE_SHORT_STRING:
         return RefillTypedFreeList<JSShortString>(cx, thingKind);
       case FINALIZE_FUNCTION:
@@ -1164,7 +1159,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 
 intN
 js_GetExternalStringGCType(JSString *str) {
-    return GetExternalStringGCType(str);
+    return GetExternalStringGCType((JSExternalString *)str);
 }
 
 uint32
@@ -1355,15 +1350,10 @@ GCMarker::markDelayedChildren()
                 reinterpret_cast<Arena<JSObject_Slots16> *>(a)->markDelayedChildren(this);
                 break;
             case FINALIZE_STRING:
-            case FINALIZE_EXTERNAL_STRING0:
-            case FINALIZE_EXTERNAL_STRING1:
-            case FINALIZE_EXTERNAL_STRING2:
-            case FINALIZE_EXTERNAL_STRING3:
-            case FINALIZE_EXTERNAL_STRING4:
-            case FINALIZE_EXTERNAL_STRING5:
-            case FINALIZE_EXTERNAL_STRING6:
-            case FINALIZE_EXTERNAL_STRING7:
                 reinterpret_cast<Arena<JSString> *>(a)->markDelayedChildren(this);
+                break;
+            case FINALIZE_EXTERNAL_STRING:
+                reinterpret_cast<Arena<JSExternalString> *>(a)->markDelayedChildren(this);
                 break;
             case FINALIZE_SHORT_STRING:
                 JS_ASSERT(false);
@@ -1766,19 +1756,6 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
     }
 }
 
-intN
-js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
-                                 JSStringFinalizeOp newop)
-{
-    for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
-        if (str_finalizers[i] == oldop) {
-            str_finalizers[i] = newop;
-            return intN(i);
-        }
-    }
-    return -1;
-}
-
 /*
  * This function is called from js_FinishAtomState to force the finalization
  * of the permanently interned strings when cx is not available.
@@ -1805,17 +1782,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
             return;
         if (thingKind == FINALIZE_STRING) {
             rt->free(chars);
-        } else if (thingKind != FINALIZE_SHORT_STRING) {
-            unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
-            JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
-            JSStringFinalizeOp finalizer = str_finalizers[type];
-            if (finalizer) {
-                /*
-                 * Assume that the finalizer for the permanently interned
-                 * string knows how to deal with null context.
-                 */
-                finalizer(NULL, str);
-            }
+        } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
+            ((JSExternalString *)str)->finalize();
         }
     }
 }
@@ -1875,7 +1843,7 @@ FinalizeArenaList(JSCompartment *comp, JSContext *cx, unsigned thingKind)
                 METER(nthings++);
                 continue;
             } else {
-                thing->finalize(cx, thingKind);
+                thing->finalize(cx);
 #ifdef DEBUG
                 memset(thing, JS_FREE_PATTERN, sizeof(T));
 #endif
@@ -2254,8 +2222,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     for (JSCompartment **comp = rt->compartments.begin(); comp != rt->compartments.end(); comp++) {
         FinalizeArenaList<JSShortString>(*comp, cx, FINALIZE_SHORT_STRING);
         FinalizeArenaList<JSString>(*comp, cx, FINALIZE_STRING);
-        for (unsigned i = FINALIZE_EXTERNAL_STRING0; i <= FINALIZE_EXTERNAL_STRING_LAST; ++i)
-            FinalizeArenaList<JSString>(*comp, cx, i);
+        FinalizeArenaList<JSExternalString>(*comp, cx, FINALIZE_EXTERNAL_STRING);
     }
 
     TIMESTAMP(sweepStringEnd);

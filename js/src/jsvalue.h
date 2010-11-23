@@ -566,10 +566,10 @@ class Value
         return data.asBits != rhs.data.asBits;
     }
 
-    JS_ALWAYS_INLINE
-    friend bool SameType(const Value &lhs, const Value &rhs) {
-        return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
-    }
+    /* This function used to be inlined here, but this triggered a gcc bug
+       due to SameType being used in a template method.
+       See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38850 */
+    friend bool SameType(const Value &lhs, const Value &rhs);
 
     /*** Extract the value's typed payload ***/
 
@@ -728,6 +728,10 @@ class Value
         return data.asPtr;
     }
 
+    const jsuword *payloadWord() const {
+        return &data.s.payload.word;
+    }
+
   private:
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -739,6 +743,12 @@ class Value
 
     jsval_layout data;
 } JSVAL_ALIGNMENT;
+
+JS_ALWAYS_INLINE bool
+SameType(const Value &lhs, const Value &rhs)
+{
+    return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
+}
 
 static JS_ALWAYS_INLINE Value
 NullValue()

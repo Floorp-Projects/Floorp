@@ -93,6 +93,9 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg
 
+# animate path data:
+== anim-path-d-01.svg anim-path-d-01-ref.svg
+
 # animate some enumeration attributes:
 == anim-feComposite-operator-01.svg lime.svg
 == anim-filter-filterUnits-01.svg lime.svg
@@ -114,6 +117,10 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-image-href-01.svg lime.svg
 == anim-pattern-href-01.svg lime.svg
 asserts(6) == anim-use-href-01.svg lime.svg  # the asserts here are bug 563481
+
+# animate where the base value is non-interpolatable but will be replaced anyway
+== anim-fill-overpaintserver-1.svg lime.svg
+== anim-fill-overpaintserver-2.svg lime.svg
 
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
@@ -168,6 +175,8 @@ random == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 == anim-y-interp-4.svg anim-y-interp-4-ref.svg
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
+
+== anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
 
 == api-sanity-1.svg lime.svg
 

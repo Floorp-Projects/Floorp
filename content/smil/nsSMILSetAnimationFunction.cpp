@@ -124,3 +124,9 @@ nsSMILSetAnimationFunction::GetAttr(nsIAtom* aAttName,
 
   return nsSMILAnimationFunction::GetAttr(aAttName, aResult);
 }
+
+PRBool
+nsSMILSetAnimationFunction::WillReplace() const
+{
+  return PR_TRUE;
+}

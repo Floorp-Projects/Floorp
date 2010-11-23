@@ -80,9 +80,8 @@ public:
                            NPError* error) = 0;
 
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
-  virtual nsresult NotifyPainted(NPP instance) = 0;
   virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface) = 0;
-  virtual nsresult UseAsyncPainting(NPP instance, PRBool* aIsAsync) = 0;
+  virtual bool UseAsyncPainting() = 0;
 };
 
 

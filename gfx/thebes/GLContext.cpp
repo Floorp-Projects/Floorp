@@ -330,22 +330,42 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         mViewportStack.AppendElement(nsIntRect(v[0], v[1], v[2], v[3]));
 
         const char *glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
-        mVendor = DoesVendorStringMatch(glVendorString, "Intel")  ? VendorIntel
-                : DoesVendorStringMatch(glVendorString, "NVIDIA") ? VendorNVIDIA
-                : DoesVendorStringMatch(glVendorString, "ATI")    ? VendorATI
-                : VendorOther;
+        const char *vendorMatchStrings[VendorOther] = {
+                "Intel",
+                "NVIDIA",
+                "ATI",
+                "Qualcomm"
+        };
+
+        mVendor = VendorOther;
+        for (int i = 0; i < VendorOther; ++i) {
+            if (DoesVendorStringMatch(glVendorString, vendorMatchStrings[i])) {
+                mVendor = i;
+                break;
+            }
+        }
 
 #ifdef DEBUG
         static bool once = false;
         if (!once) {
+            const char *vendors[VendorOther] = {
+                "Intel",
+                "NVIDIA",
+                "ATI",
+                "Qualcomm"
+            };
+
             once = true;
-            printf_stderr("OpenGL vendor recognized as: %s\n", mVendor == VendorIntel ? "Intel"
-                                                             : mVendor == VendorNVIDIA ? "NVIDIA"
-                                                             : mVendor == VendorATI ? "ATI"
-                                                             : mVendor == VendorOther ? "<other>"
-                                                             : "!!! bad mVendor value !!!");
+            if (mVendor < VendorOther) {
+                printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
+                              glVendorString, vendors[mVendor]);
+            } else {
+                printf_stderr("OpenGL vendor ('%s') unrecognized\n", glVendorString);
+            }
         }
 #endif
+
+        UpdateActualFormat();
     }
 
 #ifdef DEBUG
@@ -380,6 +400,8 @@ static const char *sExtensionNames[] = {
     "GL_OES_packed_depth_stencil",
     "GL_IMG_read_format",
     "GL_EXT_read_format_bgra",
+    "GL_APPLE_client_storage",
+    "GL_ARB_texture_non_power_of_two",
     NULL
 };
 
@@ -432,7 +454,17 @@ GLContext::InitExtensions()
 PRBool
 GLContext::IsExtensionSupported(const char *extension)
 {
-    const GLubyte *extensions = NULL;
+    return ListHasExtension(fGetString(LOCAL_GL_EXTENSIONS), extension);
+}
+
+// Common code for checking for both GL extensions and GLX extensions.
+PRBool
+GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
+{
+    // fix bug 612572 - we were crashing as we were calling this function with extensions==null
+    if (extensions == nsnull || extension == nsnull)
+        return PR_FALSE;
+
     const GLubyte *start;
     GLubyte *where, *terminator;
 
@@ -441,7 +473,6 @@ GLContext::IsExtensionSupported(const char *extension)
     if (where || *extension == '\0')
         return PR_FALSE;
 
-    extensions = fGetString(LOCAL_GL_EXTENSIONS);
     /* 
      * It takes a bit of care to be fool-proof about parsing the
      * OpenGL extensions string. Don't be fooled by sub-strings,
@@ -467,7 +498,7 @@ GLContext::IsExtensionSupported(const char *extension)
 already_AddRefed<TextureImage>
 GLContext::CreateTextureImage(const nsIntSize& aSize,
                               TextureImage::ContentType aContentType,
-                              GLint aWrapMode,
+                              GLenum aWrapMode,
                               PRBool aUseNearestFilter)
 {
   MakeCurrent();
@@ -485,7 +516,7 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
   fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
   DEBUG_GL_ERROR_CHECK(this);
 
-  return CreateBasicTextureImage(texture, aSize, aContentType, this);
+  return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
 }
 
 BasicTextureImage::~BasicTextureImage()
@@ -503,6 +534,8 @@ BasicTextureImage::~BasicTextureImage()
         mGLContext->MakeCurrent();
         mGLContext->fDeleteTextures(1, &mTexture);
     }
+
+    mBackingSurface = nsnull;
 }
 
 gfxContext*
@@ -511,25 +544,36 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     NS_ASSERTION(!mUpdateContext, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
-    if (!mTextureInited)
-        // if the texture hasn't been initialized yet, force the
+    ImageFormat format =
+        (GetContentType() == gfxASurface::CONTENT_COLOR) ?
+        gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32;
+    PRBool repaintEverything = PR_FALSE;
+    if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
+        repaintEverything =
+            !(mBackingSurface &&
+              mBackingSurface->GetSize() == gfxIntSize(mSize.width, mSize.height) &&
+              mBackingSurface->Format() == format);
+    }
+    if (!mTextureInited || repaintEverything)
+    {
+        // if the texture hasn't been initialized yet, or something important
+        // changed, we need to recreate our backing surface and force the
         // client to paint everything
         mUpdateRect = nsIntRect(nsIntPoint(0, 0), mSize);
-    else
+        mTextureInited = PR_FALSE;
+    } else {
         mUpdateRect = aRegion.GetBounds();
-    // the basic impl can't upload updates to disparate regions,
-    // only rects
+    }
+
+    // the basic impl can only upload updates to rectangles
     aRegion = nsIntRegion(mUpdateRect);
-        
+
     nsIntSize rgnSize = mUpdateRect.Size();
     if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
         NS_ERROR("update outside of image");
         return NULL;
     }
 
-    ImageFormat format =
-        (GetContentType() == gfxASurface::CONTENT_COLOR) ?
-        gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32;
     nsRefPtr<gfxASurface> updateSurface =
         CreateUpdateSurface(gfxIntSize(rgnSize.width, rgnSize.height),
                             format);
@@ -559,8 +603,24 @@ BasicTextureImage::EndUpdate()
         return PR_FALSE;
 
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+
+    // The images that come out of the cairo quartz surface are 16-byte aligned
+    // for performance. We know this is an RGBA surface, so we divide the
+    // stride by 4 to represent the number of elements long the row is.
+    mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH,
+                             uploadImage->Stride() / 4);
+
+    DEBUG_GL_ERROR_CHECK(mGLContext);
+
     if (!mTextureInited)
     {
+        // If we can use the client storage extension, we should.
+        if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
+            mGLContext->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE,
+                                     LOCAL_GL_TRUE);
+            DEBUG_GL_ERROR_CHECK(mGLContext);
+        }
+
         mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                                 0,
                                 LOCAL_GL_RGBA,
@@ -570,8 +630,26 @@ BasicTextureImage::EndUpdate()
                                 LOCAL_GL_RGBA,
                                 LOCAL_GL_UNSIGNED_BYTE,
                                 uploadImage->Data());
+
+        DEBUG_GL_ERROR_CHECK(mGLContext);
+
         mTextureInited = PR_TRUE;
+
+        // Reset the pixel store attribute, and hold on to the update surface
+        // because we're using the client storage extension.
+        if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
+            mBackingSurface = uploadImage;
+            mGLContext->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE,
+                                     LOCAL_GL_FALSE);
+          DEBUG_GL_ERROR_CHECK(mGLContext);
+        }
     } else {
+        // By default, mUpdateOffset is initialized to (0, 0), so we will
+        // upload from the origin of the update surface. Subclasses can set
+        // mUpdateOffset in an overridden BeginUpdate or EndUpdate to change
+        // this.
+        unsigned char* data = uploadImage->Data() + mUpdateOffset.x * 4 +
+                                                    mUpdateOffset.y * uploadImage->Stride();
         mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                                    0,
                                    mUpdateRect.x,
@@ -580,9 +658,13 @@ BasicTextureImage::EndUpdate()
                                    mUpdateRect.height,
                                    LOCAL_GL_RGBA,
                                    LOCAL_GL_UNSIGNED_BYTE,
-                                   uploadImage->Data());
+                                   data);
     }
     mUpdateContext = NULL;
+
+    // Reset pixel store attributes to use the defaults.
+    mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+
     return PR_TRUE;         // mTexture is bound
 }
 
@@ -633,6 +715,10 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, (GLint*) &curBoundRenderbuffer);
     fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
 
+    // the context format of what we're defining;
+    // for some reason, UpdateActualFormat isn't working with a bound FBO.
+    ContextFormat cf;
+
     // If this is the first time we're going through this, we need
     // to create the objects we'll use.  Otherwise, just bind them.
     if (firstTime) {
@@ -670,6 +756,8 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                     LOCAL_GL_RGBA,
                     LOCAL_GL_UNSIGNED_BYTE,
                     NULL);
+
+        cf.red = cf.green = cf.blue = cf.alpha = 8;
     } else {
         fTexImage2D(LOCAL_GL_TEXTURE_2D,
                     0,
@@ -684,6 +772,15 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                              : LOCAL_GL_UNSIGNED_BYTE,
 #endif
                     NULL);
+
+#ifdef XP_WIN
+        cf.red = cf.green = cf.blue = 8;
+#else
+        cf.red = 5;
+        cf.green = 6;
+        cf.blue = 5;
+#endif
+        cf.alpha = 0;
     }
 
     if (depth && stencil && useDepthStencil) {
@@ -691,6 +788,8 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
         fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
                              LOCAL_GL_DEPTH24_STENCIL8,
                              aSize.width, aSize.height);
+        cf.depth = 24;
+        cf.stencil = 8;
     } else {
         if (depth) {
             GLenum depthType;
@@ -711,6 +810,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                                  mIsGLES2 ? LOCAL_GL_DEPTH_COMPONENT16
                                           : LOCAL_GL_DEPTH_COMPONENT24,
                                  aSize.width, aSize.height);
+            cf.depth = mIsGLES2 ? 16 : 24;
         }
 
         if (stencil) {
@@ -718,6 +818,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
             fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
                                  LOCAL_GL_STENCIL_INDEX8,
                                  aSize.width, aSize.height);
+            cf.stencil = 8;
         }
     }
 
@@ -767,7 +868,10 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     mOffscreenActualSize = aSize;
 
     if (firstTime) {
-        UpdateActualFormat();
+        // UpdateActualFormat() doesn't work for some reason, with a
+        // FBO bound, even though it should.
+        //UpdateActualFormat();
+        mActualFormat = cf;
 
 #ifdef DEBUG
         printf_stderr("Created offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d\n",
@@ -1065,6 +1169,13 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
     NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
 
+    // only save/restore this stuff on Qualcomm Adreno, to work
+    // around an apparent bug
+    int savedFb = 0;
+    if (mVendor == VendorQualcomm) {
+        fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
+    }
+
     fDisable(LOCAL_GL_SCISSOR_TEST);
     fDisable(LOCAL_GL_BLEND);
 
@@ -1081,44 +1192,47 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
 
     PushViewportRect(nsIntRect(0, 0, dstSize.width, dstSize.height));
 
-    float sx0 = float(aSrcRect.x) / float(srcSize.width);
-    float sy0 = float(aSrcRect.y) / float(srcSize.height);
-    float sx1 = float(aSrcRect.x + aSrcRect.width) / float(srcSize.width);
-    float sy1 = float(aSrcRect.y + aSrcRect.height) / float(srcSize.height);
-
     float dx0 = 2.0 * float(aDstRect.x) / float(dstSize.width) - 1.0;
     float dy0 = 2.0 * float(aDstRect.y) / float(dstSize.height) - 1.0;
     float dx1 = 2.0 * float(aDstRect.x + aDstRect.width) / float(dstSize.width) - 1.0;
     float dy1 = 2.0 * float(aDstRect.y + aDstRect.height) / float(dstSize.height) - 1.0;
 
-    float quadTriangleCoords[] = {
-        dx0, dy1,
-        dx0, dy0,
-        dx1, dy1,
-        dx1, dy0
-    };
+    RectTriangles rects;
+    if (aSrc->GetWrapMode() == LOCAL_GL_REPEAT) {
+        rects.addRect(/* dest rectangle */
+                      dx0, dy0, dx1, dy1,
+                      /* tex coords */
+                      aSrcRect.x / float(srcSize.width),
+                      aSrcRect.y / float(srcSize.height),
+                      aSrcRect.XMost() / float(srcSize.width),
+                      aSrcRect.YMost() / float(srcSize.height));
+    } else {
+        DecomposeIntoNoRepeatTriangles(aSrcRect, srcSize, rects);
 
-    float texCoords[] = {
-        sx0, sy1,
-        sx0, sy0,
-        sx1, sy1,
-        sx1, sy0
-    };
+        // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
+        // from the 0..1 that it comes out of decompose
+        GLfloat *v = rects.vertexCoords;
+        for (int i = 0; i < rects.numRects * 6; ++i) {
+            v[i*2] = (v[i*2] * (dx1 - dx0)) + dx0;
+            v[i*2+1] = (v[i*2+1] * (dy1 - dy0)) + dy0;
+        }
+    }
+
 
     fActiveTexture(LOCAL_GL_TEXTURE0);
     fBindTexture(LOCAL_GL_TEXTURE_2D, aSrc->Texture());
 
     fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 
-    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, quadTriangleCoords);
-    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, texCoords);
+    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertexCoords);
+    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoords);
 
     fEnableVertexAttribArray(0);
     fEnableVertexAttribArray(1);
 
     DEBUG_GL_ERROR_CHECK(this);
 
-    fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.numRects * 6);
 
     DEBUG_GL_ERROR_CHECK(this);
 
@@ -1128,12 +1242,178 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, NULL);
     fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, NULL);
 
+    // unbind the previous texture from the framebuffer
     SetBlitFramebufferForDestTexture(0);
+
+    // then put back the previous framebuffer, and don't
+    // enable stencil if it wasn't enabled on entry to work
+    // around Adreno 200 bug that causes us to crash if
+    // we enable scissor test while the current FBO is invalid
+    // (which it will be, once we assign texture 0 to the color
+    // attachment)
+    if (mVendor == VendorQualcomm) {
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
+    }
 
     fEnable(LOCAL_GL_SCISSOR_TEST);
     fEnable(LOCAL_GL_BLEND);
 
     PopViewportRect();
+}
+
+void
+GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
+                                  GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1)
+{
+    NS_ASSERTION(numRects < 4, "Overflow in number of rectangles, max 4!");
+
+    GLfloat *v = &vertexCoords[numRects*6*2];
+    GLfloat *t = &texCoords[numRects*6*2];
+
+    *v++ = x0; *v++ = y0;
+    *v++ = x1; *v++ = y0;
+    *v++ = x0; *v++ = y1;
+
+    *v++ = x0; *v++ = y1;
+    *v++ = x1; *v++ = y0;
+    *v++ = x1; *v++ = y1;
+
+    *t++ = tx0; *t++ = ty0;
+    *t++ = tx1; *t++ = ty0;
+    *t++ = tx0; *t++ = ty1;
+
+    *t++ = tx0; *t++ = ty1;
+    *t++ = tx1; *t++ = ty0;
+    *t++ = tx1; *t++ = ty1;
+
+    numRects++;
+}
+
+static GLfloat
+WrapTexCoord(GLfloat v)
+{
+    // fmodf gives negative results for negative numbers;
+    // that is, fmodf(0.75, 1.0) == 0.75, but
+    // fmodf(-0.75, 1.0) == -0.75.  For the negative case,
+    // the result we need is 0.25, so we add 1.0f.
+    if (v < 0.0f) {
+        return 1.0f + fmodf(v, 1.0f);
+    }
+
+    return fmodf(v, 1.0f);
+}
+
+void
+GLContext::DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
+                                          const nsIntSize& aTexSize,
+                                          RectTriangles& aRects)
+{
+    // normalize this
+    nsIntRect tcr(aTexCoordRect);
+    while (tcr.x > aTexSize.width)
+        tcr.x -= aTexSize.width;
+    while (tcr.y > aTexSize.height)
+        tcr.y -= aTexSize.height;
+
+    // Compute top left and bottom right tex coordinates
+    GLfloat tl[2] =
+        { GLfloat(tcr.x) / GLfloat(aTexSize.width),
+          GLfloat(tcr.y) / GLfloat(aTexSize.height) };
+    GLfloat br[2] =
+        { GLfloat(tcr.XMost()) / GLfloat(aTexSize.width),
+          GLfloat(tcr.YMost()) / GLfloat(aTexSize.height) };
+
+    // then check if we wrap in either the x or y axis; if we do,
+    // then also use fmod to figure out the "true" non-wrapping
+    // texture coordinates.
+
+    bool xwrap = false, ywrap = false;
+    if (tcr.x < 0 || tcr.x > aTexSize.width ||
+        tcr.XMost() < 0 || tcr.XMost() > aTexSize.width)
+    {
+        xwrap = true;
+        tl[0] = WrapTexCoord(tl[0]);
+        br[0] = WrapTexCoord(br[0]);
+    }
+
+    if (tcr.y < 0 || tcr.y > aTexSize.height ||
+        tcr.YMost() < 0 || tcr.YMost() > aTexSize.height)
+    {
+        ywrap = true;
+        tl[1] = WrapTexCoord(tl[1]);
+        br[1] = WrapTexCoord(br[1]);
+    }
+
+    NS_ASSERTION(tl[0] >= 0.0f && tl[0] <= 1.0f &&
+                 tl[1] >= 0.0f && tl[1] <= 1.0f &&
+                 br[0] >= 0.0f && br[0] <= 1.0f &&
+                 br[1] >= 0.0f && br[1] <= 1.0f,
+                 "Somehow generated invalid texture coordinates");
+
+    // If xwrap is false, the texture will be sampled from tl[0]
+    // .. br[0].  If xwrap is true, then it will be split into tl[0]
+    // .. 1.0, and 0.0 .. br[0].  Same for the Y axis.  The
+    // destination rectangle is also split appropriately, according
+    // to the calculated xmid/ymid values.
+
+    // There isn't a 1:1 mapping between tex coords and destination coords;
+    // when computing midpoints, we have to take that into account.  We
+    // need to map the texture coords, which are (in the wrap case):
+    // |tl->1| and |0->br| to the |0->1| range of the vertex coords.  So
+    // we have the length (1-tl)+(br) that needs to map into 0->1.
+    // These are only valid if there is wrap involved, they won't be used
+    // otherwise.
+    GLfloat xlen = (1.0f - tl[0]) + br[0];
+    GLfloat ylen = (1.0f - tl[1]) + br[1];
+
+    NS_ASSERTION(!xwrap || xlen > 0.0f, "xlen isn't > 0, what's going on?");
+    NS_ASSERTION(!ywrap || ylen > 0.0f, "ylen isn't > 0, what's going on?");
+    NS_ASSERTION(aTexCoordRect.width <= aTexSize.width &&
+                 aTexCoordRect.height <= aTexSize.height, "tex coord rect would cause tiling!");
+
+    if (!xwrap && !ywrap) {
+        aRects.addRect(0.0f, 0.0f, 1.0f, 1.0f,
+                       tl[0], tl[1], br[0], br[1]);
+    } else if (!xwrap && ywrap) {
+        GLfloat ymid = (1.0f - tl[1]) / ylen;
+        aRects.addRect(0.0f, 0.0f,
+                       1.0f, ymid,
+                       tl[0], tl[1],
+                       br[0], 1.0f);
+        aRects.addRect(0.0f, ymid,
+                       1.0f, 1.0f,
+                       tl[0], 0.0f,
+                       br[0], br[1]);
+    } else if (xwrap && !ywrap) {
+        GLfloat xmid = (1.0f - tl[0]) / xlen;
+        aRects.addRect(0.0f, 0.0f,
+                       xmid, 1.0f,
+                       tl[0], tl[1],
+                       1.0f, br[1]);
+        aRects.addRect(xmid, 0.0f,
+                       1.0f, 1.0f,
+                       0.0f, tl[1],
+                       br[0], br[1]);
+    } else {
+        GLfloat xmid = (1.0f - tl[0]) / xlen;
+        GLfloat ymid = (1.0f - tl[1]) / ylen;
+        aRects.addRect(0.0f, 0.0f,
+                       xmid, ymid,
+                       tl[0], tl[1],
+                       1.0f, 1.0f);
+        aRects.addRect(xmid, 0.0f,
+                       1.0f, ymid,
+                       0.0f, tl[1],
+                       br[0], 1.0f);
+        aRects.addRect(0.0f, ymid,
+                       xmid, 1.0f,
+                       tl[0], 0.0f,
+                       1.0f, br[1]);
+        aRects.addRect(xmid, ymid,
+                       1.0f, 1.0f,
+                       0.0f, 0.0f,
+                       br[0], br[1]);
+    }
 }
 
 void

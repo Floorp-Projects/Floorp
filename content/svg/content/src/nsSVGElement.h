@@ -74,6 +74,7 @@ struct gfxMatrix;
 namespace mozilla {
 class SVGAnimatedLengthList;
 class SVGUserUnitList;
+class SVGAnimatedPathSegList;
 }
 
 typedef nsStyledElement nsSVGElementBase;
@@ -87,6 +88,10 @@ protected:
   virtual ~nsSVGElement();
 
 public:
+  typedef mozilla::SVGUserUnitList SVGUserUnitList;
+  typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
+  typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -167,6 +172,7 @@ public:
   virtual void DidChangeViewBox(PRBool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
   virtual void DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangePathSegList(PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
 
   virtual void DidAnimateLength(PRUint8 aAttrEnum);
@@ -178,25 +184,40 @@ public:
   virtual void DidAnimateViewBox();
   virtual void DidAnimatePreserveAspectRatio();
   virtual void DidAnimateLengthList(PRUint8 aAttrEnum);
+  virtual void DidAnimatePathSegList();
   virtual void DidAnimateTransform();
   virtual void DidAnimateString(PRUint8 aAttrEnum);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
-  void GetAnimatedLengthListValues(mozilla::SVGUserUnitList *aFirst, ...);
-  mozilla::SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
+  void GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...);
+  SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
+  virtual SVGAnimatedPathSegList* GetAnimPathSegList() {
+    // DOM interface 'SVGAnimatedPathData' (*inherited* by nsSVGPathElement)
+    // has a member called 'animatedPathSegList' member, so we have a shorter
+    // name so we don't get hidden by the GetAnimatedPathSegList declared by
+    // NS_DECL_NSIDOMSVGANIMATEDPATHDATA.
+    return nsnull;
+  }
 
 #ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName);
   void AnimationNeedsResample();
   void FlushAnimations();
+#else
+  void AnimationNeedsResample() { /* do nothing */ }
+  void FlushAnimations() { /* do nothing */ }
 #endif
 
   virtual void RecompileScriptEventListeners();
 
   void GetStringBaseValue(PRUint8 aAttrEnum, nsAString& aResult) const;
   void SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue);
+
+  virtual nsIAtom* GetPathDataAttrName() const {
+    return nsnull;
+  }
 
 protected:
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
@@ -357,11 +378,11 @@ protected:
   };
 
   struct LengthListAttributesInfo {
-    mozilla::SVGAnimatedLengthList* mLengthLists;
+    SVGAnimatedLengthList* mLengthLists;
     LengthListInfo*        mLengthListInfo;
     PRUint32               mLengthListCount;
 
-    LengthListAttributesInfo(mozilla::SVGAnimatedLengthList *aLengthLists,
+    LengthListAttributesInfo(SVGAnimatedLengthList *aLengthLists,
                              LengthListInfo *aLengthListInfo,
                              PRUint32 aLengthListCount)
       : mLengthLists(aLengthLists)

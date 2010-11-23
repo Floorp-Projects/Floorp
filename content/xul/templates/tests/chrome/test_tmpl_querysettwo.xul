@@ -89,7 +89,7 @@ var changes = [
 </script>
 
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" flags="logging"
-      datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/birds">
+      datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/birds">
 <template>
 <queryset>
 <query>

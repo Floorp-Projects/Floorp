@@ -44,7 +44,6 @@
 #include "nsSVGAngle.h"
 #include "nsIDOMSVGAngle.h"
 #include "nsSVGPathElement.h"
-#include "nsSVGPathSeg.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsIDOMSVGPathSegList.h"
 #include "nsMathUtils.h"

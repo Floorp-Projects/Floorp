@@ -26,13 +26,12 @@ function testOpenWebConsole()
   is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.hudReferences[hudId];
 
   testOwnConsole();
 }
 
 function testConsoleOnPage(console) {
-  // let console = browser.contentWindow.wrappedJSObject.console;
   isnot(console, undefined, "Console object defined on page");
   is(console.foo, "bar", "Custom console is not overwritten");
 }
@@ -47,41 +46,5 @@ function testOwnConsole()
   // Check that the console object is set on the jsterm object although there
   // is no console object added to the page.
   ok(hud.jsterm.console, "JSTerm console is defined");
-  ok(hud.jsterm.console === hud._console, "JSTerm console is same as HUD console");
-
-  let iframe =
-    browser.contentWindow.document.querySelector("iframe");
-
-  function consoleTester()
-  {
-    testIFrameConsole(iframe);
-  }
-
-  iframe.contentWindow.
-    addEventListener("load", consoleTester ,false);
-
-  iframe.contentWindow.document.location = "http://example.com/";
-
-  function testIFrameConsole(iFrame)
-  {
-    iFrame.contentWindow.removeEventListener("load", consoleTester, true);
-
-    // Test the console in the iFrame.
-    let consoleIFrame = iFrame.wrappedJSObject.contentWindow.console;
-    // TODO: Fix this test. Not sure what it is intending, and this will
-    // change drastically once the lazy console lands
-    // ok(browser.contentWindow.wrappedJSObject.console === hud._console, "Console on the page is hud console");
-
-    // Close the hud and see which console is still around.
-    HUDService.deactivateHUDForContext(tab);
-
-    executeSoon(function () {
-      consoleIFrame = iFrame.contentWindow.console;
-      is(consoleIFrame, undefined, "Console object was removed from iFrame");
-      testConsoleOnPage(browser.contentWindow.wrappedJSObject.console);
-      finishTest();
-  });
-}
-
-  browser.contentWindow.wrappedJSObject.loadIFrame();
+  finishTest();
 }

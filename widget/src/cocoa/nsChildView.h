@@ -110,6 +110,12 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   - (CGFloat)deviceDeltaY;
 @end
 
+// Undocumented scrollPhase flag that lets us discern between real scrolls and
+// automatically firing momentum scroll events.
+@interface NSEvent (ScrollPhase)
+- (long long)_scrollPhase;
+@end
+
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY
                               mozAccessible,
@@ -228,6 +234,10 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 - (BOOL)isPluginView;
 
+// Are we processing an NSLeftMouseDown event that will fail to click through?
+// If so, we shouldn't focus or unfocus a plugin.
+- (BOOL)isInFailingLeftClickThrough;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
@@ -342,8 +352,8 @@ public:
   NS_IMETHOD        ResetInputState();
   NS_IMETHOD        SetIMEOpenState(PRBool aState);
   NS_IMETHOD        GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD        SetIMEEnabled(PRUint32 aState);
-  NS_IMETHOD        GetIMEEnabled(PRUint32* aState);
+  NS_IMETHOD        SetInputMode(const IMEContext& aContext);
+  NS_IMETHOD        GetInputMode(IMEContext& aContext);
   NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
                                        PRBool* aLEDState);
@@ -403,6 +413,8 @@ public:
 
   void PaintQD();
 
+  nsCocoaWindow*    GetXULWindowWidget();
+
   NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
 
@@ -414,7 +426,6 @@ protected:
   // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
-  nsCocoaWindow*    GetXULWindowWidget();
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
@@ -428,6 +439,7 @@ protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
   nsCocoaTextInputHandler mTextInputHandler;
+  IMEContext            mIMEContext;
 
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;

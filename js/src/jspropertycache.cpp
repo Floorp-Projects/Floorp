@@ -179,14 +179,16 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                     if (!pobj->branded()) {
                         PCMETER(brandfills++);
 #ifdef DEBUG_notme
-                        fprintf(stderr,
-                                "branding %p (%s) for funobj %p (%s), shape %lu\n",
-                                pobj, pobj->getClass()->name,
-                                JSVAL_TO_OBJECT(v),
-                                JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
-                                obj->shape());
+                        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+                        JSAutoByteString funNameBytes;
+                        if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
+                            fprintf(stderr,
+                                    "branding %p (%s) for funobj %p (%s), shape %lu\n",
+                                    pobj, pobj->getClass()->name, JSVAL_TO_OBJECT(v), funName,
+                                    obj->shape());
+                        }
 #endif
-                        if (!pobj->brand(cx, shape->slot, v))
+                        if (!pobj->brand(cx))
                             return JS_NO_PROP_CACHE_FILL;
                     }
                     vword.setFunObj(*funobj);
@@ -340,10 +342,11 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
         JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
 #ifdef DEBUG_notme
         JSScript *script = cx->fp()->getScript();
+        JSAutoByteString printable;
         fprintf(stderr,
                 "id miss for %s from %s:%u"
                 " (pc %u, kpc %u, kshape %u, shape %u)\n",
-                js_AtomToPrintableString(cx, atom),
+                js_AtomToPrintableString(cx, atom, &printable),
                 script->filename,
                 js_PCToLineNumber(cx, script, pc),
                 pc - script->code,

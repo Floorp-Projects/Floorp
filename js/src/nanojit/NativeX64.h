@@ -67,7 +67,7 @@ namespace nanojit
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
 #define NJ_F2I_SUPPORTED                1
 #define NJ_SOFTFLOAT_SUPPORTED          0
-#define NJ_DIVI_SUPPORTED               1    
+#define NJ_DIVI_SUPPORTED               1
 
     static const Register RAX = { 0 };      // 1st int return, # of sse varargs
     static const Register RCX = { 1 };      // 4th int arg
@@ -201,7 +201,8 @@ namespace nanojit
         X64_cvtsq2sd= 0xC02A0F48F2000005LL, // convert int64 to double r = (double) b
         X64_cvtss2sd= 0xC05A0F40F3000005LL, // convert float to double r = (double) b
         X64_cvtsd2ss= 0xC05A0F40F2000005LL, // convert double to float r = (float) b
-        X64_cvtsd2si= 0xC02D0F40F2000005LL, // convert double to int32 r = (int32) b
+        X64_cvtsd2si= 0xC02D0F40F2000005LL, // convert double to int32 with rounding r = (int32) b
+        X64_cvttsd2si=0xC02C0F40F2000005LL, // convert double to int32 r = (int32) b
         X64_divsd   = 0xC05E0F40F2000005LL, // divide scalar double r /= b
         X64_mulsd   = 0xC0590F40F2000005LL, // multiply scalar double r *= b
         X64_addsd   = 0xC0580F40F2000005LL, // add scalar double r += b
@@ -321,7 +322,7 @@ namespace nanojit
         X64_jmpx    = 0xC524ff4000000004LL, // jmp [d32+x*8]
         X64_jmpxb   = 0xC024ff4000000004LL, // jmp [b+x*8]
 
-        X64_movqmi  = 0x80C7480000000003LL, // 32bit signed extended to 64-bit store imm -> qword ptr[b+disp32]  
+        X64_movqmi  = 0x80C7480000000003LL, // 32bit signed extended to 64-bit store imm -> qword ptr[b+disp32]
         X64_movlmi  = 0x80C7400000000003LL, // 32bit store imm -> dword ptr[b+disp32]
         X64_movsmi  = 0x80C7406600000004LL, // 16bit store imm -> word ptr[b+disp32]
         X64_movbmi  = 0x80C6400000000003LL, // 8bit store imm -> byte ptr[b+disp32]
@@ -373,6 +374,7 @@ namespace nanojit
         void underrunProtect(ptrdiff_t bytes);                              \
         void nativePageReset();                                             \
         void nativePageSetup();                                             \
+        bool hardenNopInsertion(const Config& /*c*/) { return false; }      \
         void asm_qbinop(LIns*);                                             \
         void MR(Register, Register);\
         void JMP(NIns*);\
@@ -503,6 +505,7 @@ namespace nanojit
         void CVTSS2SD(Register l, Register r);\
         void CVTSD2SS(Register l, Register r);\
         void CVTSD2SI(Register l, Register r);\
+        void CVTTSD2SI(Register l, Register r);\
         void UCOMISD(Register l, Register r);\
         void MOVQRX(Register l, Register r);\
         void MOVQXR(Register l, Register r);\

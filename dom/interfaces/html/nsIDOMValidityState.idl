@@ -42,7 +42,7 @@
  * object which represents the validity states of an element.
  *
  * For more information on this interface please see
- * http://dev.w3.org/html5/spec/forms.html#validitystate
+ * http://www.whatwg.org/specs/web-apps/current-work/#validitystate
  */
 
 [scriptable, uuid(5e62197a-9b74-4812-b5a2-ca102e886f7a)]

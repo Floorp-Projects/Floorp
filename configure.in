@@ -301,8 +301,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CXXFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -992,7 +992,7 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.6 python2.5 python2.4 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1846,8 +1846,6 @@ case "$host" in
     ;;
 
 *cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
-    # we need Python 2.5 on Windows
-    PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -1921,8 +1919,7 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.4 or newer of Python to build,
-dnl and 2.5 or newer on Windows.
+dnl We require version 2.5 or newer of Python to build.
 AC_MSG_CHECKING([for minimum required Python version >= $PYTHON_VERSION])
 changequote(,)
 $PYTHON -c "import sys; sys.exit(sys.version[:3] < sys.argv[1])" $PYTHON_VERSION
@@ -2418,7 +2415,7 @@ ia64*-hpux*)
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         if test $_MSC_VER -ge 1400; then
-            LDFLAGS="$LDFLAGS -NXCOMPAT"
+            LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
             dnl For profile-guided optimization
             PROFILE_GEN_CFLAGS="-GL"
             PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
@@ -2645,7 +2642,7 @@ ia64*-hpux*)
     DSO_LDOPTS='-Zdll'
     BIN_FLAGS='-Zlinker /ST:0x100000'
     IMPLIB='emximp -o'
-    FILTER='emxexp -o'
+    FILTER='true'
     LDFLAGS='-Zmap'
     WARNINGS_AS_ERRORS='-Werror'
     MOZ_DEBUG_FLAGS="-g -fno-inline"
@@ -2681,9 +2678,8 @@ ia64*-hpux*)
                         [return 0;],
                         ac_os2_declspec="yes",
                         ac_os2_declspec="no")])
-    if test "$ac_os2_declspec" = "yes"; then
-        FILTER='true'
-        MOZ_OS2_USE_DECLSPEC='1'
+    if test "$ac_os2_declspec" != "yes"; then
+        AC_MSG_ERROR([Compiler does not support __declspec(dllexport), install GCC-4.3.2 or newer])
     fi
     ;;
 
@@ -2897,11 +2893,13 @@ esac
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
 dnl ========================================================
-dnl = Flags to strip unused symbols from .so components
+dnl = Flags to strip unused symbols from .so components and
+dnl = to export jemalloc symbols when linking a program
 dnl ========================================================
 case "$target" in
     *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
+        MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS='-rdynamic -Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/jemalloc-standalone-linkage-version-script'
         ;;
     *-solaris*)
         if test -z "$GNU_CC"; then
@@ -4961,7 +4959,11 @@ MOZ_MEDIA=
 MOZ_WEBM=1
 VPX_AS=
 VPX_ASFLAGS=
+VPX_AS_DASH_C_FLAG=
+VPX_AS_CONVERSION=
+VPX_ASM_SUFFIX=
 VPX_X86_ASM=
+VPX_ARM_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -4992,6 +4994,7 @@ MOZ_XTF=1
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
+MOZ_PDF_PRINTING=
 MOZ_DISABLE_DOMCRYPTO=
 NSS_DISABLE_DBM=
 NECKO_WIFI=1
@@ -5031,7 +5034,6 @@ case "${target}" in
         NSS_DISABLE_DBM=1
         USE_ARM_KUSER=1
         MOZ_INSTALLER=
-        NS_PRINTING=
         NECKO_WIFI=
         MOZ_THUMB2=1
         MOZ_THEME_FASTSTRIPE=1
@@ -5187,6 +5189,7 @@ cairo-windows)
         NS_PRINTING=
         ;;
     esac
+    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
@@ -5203,6 +5206,7 @@ cairo-gtk2|cairo-gtk2-x11)
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
+    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-gtk2-dfb)
@@ -5220,6 +5224,7 @@ cairo-gtk2-dfb)
         AC_MSG_WARN([Disabling X when DirectFB is specified.])
         no_x=yes
     fi
+    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-qt)
@@ -5237,6 +5242,7 @@ cairo-qt)
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
     AC_DEFINE(MOZ_WIDGET_QT)
+    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-beos)
@@ -5251,6 +5257,7 @@ cairo-os2)
     USE_FC_FREETYPE=1
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
+    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-cocoa)
@@ -5271,10 +5278,19 @@ cairo-cocoa)
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
     MOZ_WIDGET_TOOLKIT=android
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
+    MOZ_PDF_PRINTING=1
     ;;
 
 esac
+
+AC_SUBST(MOZ_PDF_PRINTING)
+if test "$MOZ_PDF_PRINTING"; then
+   PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
+   AC_DEFINE(MOZ_PDF_PRINTING)
+fi
 
 if test "$MOZ_ENABLE_XREMOTE"; then
     AC_DEFINE(MOZ_ENABLE_XREMOTE)
@@ -5494,7 +5510,7 @@ then
 
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
+    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
     AC_SUBST(MOZ_PANGO_CFLAGS)
     AC_SUBST(MOZ_PANGO_LIBS)
     if test "$MOZ_PANGO"
@@ -5511,7 +5527,7 @@ if test "$MOZ_ENABLE_QT"
 then
     if test "$MOZ_PANGO"
     then
-        PKG_CHECK_MODULES(MOZ_PANGO, [pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION],
+        PKG_CHECK_MODULES(MOZ_PANGO, [pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION],
         [
             AC_SUBST(MOZ_PANGO_CFLAGS)
             AC_SUBST(MOZ_PANGO_LIBS)
@@ -6048,8 +6064,10 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
-    dnl We currently require yasm on all platforms and require yasm 1.1.0 on Win32.
+    dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
+    dnl We currently require gcc on all arm platforms.
     VPX_AS=$YASM
+    VPX_ASM_SUFFIX=asm
 
     dnl See if we have assembly on this platform.  
     case "$OS_ARCH:$CPU_ARCH" in
@@ -6096,6 +6114,17 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
         fi
       fi
     ;;
+    *:arm*)
+      if test -n "$GNU_AS" ; then
+        VPX_AS=$AS
+        dnl These flags are a lie; they're just used to enable the requisite
+        dnl opcodes; actual arch detection is done at runtime.
+        VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
+        VPX_DASH_C_FLAG="-c"
+        VPX_AS_CONVERSION='$(PERL) $(topsrcdir)/media/libvpx/build/make/ads2gas.pl'
+        VPX_ASM_SUFFIX="$ASM_SUFFIX"
+        VPX_ARM_ASM=1
+      fi
     esac
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
@@ -6104,6 +6133,8 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     if test -n "$VPX_X86_ASM"; then
       AC_DEFINE(VPX_X86_ASM)
+    elif test -n "$VPX_ARM_ASM"; then
+      AC_DEFINE(VPX_ARM_ASM)
     else
       AC_MSG_WARN([No assembler or assembly support for libvpx. Using unoptimized C routines.])
     fi
@@ -6406,13 +6437,9 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
 fi
 
-dnl xforms requires xtf and schema-validation
+dnl xforms requires xtf
 if test -z "$MOZ_XTF" -a `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
-fi
-if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTENSIONS" | grep -c schema-validation` -eq 0; then
-    AC_MSG_WARN([Cannot build XForms without schema validation.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 
@@ -6503,14 +6530,17 @@ MOZ_ARG_ENABLE_BOOL(tree-freetype,
     MOZ_TREE_FREETYPE=1,
     MOZ_TREE_FREETYPE= )
 if test -n "$MOZ_TREE_FREETYPE"; then
+   if test -n "$_WIN32_MSVC"; then
+      AC_ERROR("building with in-tree freetype is not supported on MSVC")
+   fi
    AC_DEFINE(MOZ_TREE_FREETYPE)
    AC_SUBST(MOZ_TREE_FREETYPE)
    MOZ_ENABLE_CAIRO_FT=1       
    FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
    FT2_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
    CAIRO_FT_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
-   FT2_LIBS='$(call EXPAND_LIBNAME_PATH,freetype2,$(LIBXUL_DIST)/lib)'
-   CAIRO_FT_LIBS='$(call EXPAND_LIBNAME_PATH,freetype2,$(LIBXUL_DIST)/lib)'
+   FT2_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
+   CAIRO_FT_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
    AC_DEFINE(HAVE_FT_BITMAP_SIZE_Y_PPEM)
    AC_DEFINE(HAVE_FT_GLYPHSLOT_EMBOLDEN)
    AC_DEFINE(HAVE_FT_LOAD_SFNT_TABLE)
@@ -7084,6 +7114,16 @@ if test -n "$MOZ_THUMB2"; then
       AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
     ;;
   esac
+else
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+       CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
+      fi
+      ;;
+  esac
 fi
 
 AC_SUBST(MOZ_THUMB2)
@@ -7449,6 +7489,7 @@ if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
     WRAP_MALLOC_CFLAGS="${LDFLAGS} ${WRAP_MALLOC_CFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup -Wl,--wrap -Wl,posix_memalign"
     MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
+    MKCSHLIB='$(CC) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
 
@@ -8132,10 +8173,7 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
-    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
     dnl cl.py provides dependency generation for MSVC
-    CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
-    CXX_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
     COMPILER_DEPEND=1
   fi
 fi
@@ -8144,9 +8182,6 @@ MDDEPDIR='.deps'
 AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
-AC_SUBST(CC_WRAPPER)
-AC_SUBST(CXX_WRAPPER)
-
 
 dnl ========================================================
 dnl =
@@ -8485,7 +8520,6 @@ if test "$MOZ_TREE_CAIRO"; then
         XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
         XLIB_XRENDER_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_XRENDER_SURFACE 1"
         PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
-        PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
@@ -8524,12 +8558,10 @@ if test "$MOZ_TREE_CAIRO"; then
           AC_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
 
-        PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
         OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
         CAIRO_FT_LIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
@@ -8585,7 +8617,7 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_TREE_PIXMAN"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
     else
-        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.17.3)
+        PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
         MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $PIXMAN_CFLAGS"
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $PIXMAN_LIBS"
     fi
@@ -8910,6 +8942,7 @@ AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
+AC_SUBST(MOZ_JEMALLOC_STANDALONE_GLUE_LDOPTS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
@@ -8922,7 +8955,6 @@ AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)
 AC_SUBST(MOZ_OS2_TOOLS)
-AC_SUBST(MOZ_OS2_USE_DECLSPEC)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
@@ -9089,7 +9121,11 @@ AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
+AC_SUBST(VPX_DASH_C_FLAG)
+AC_SUBST(VPX_AS_CONVERSION)
+AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
+AC_SUBST(VPX_ARM_ASM)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
@@ -9352,6 +9388,18 @@ if test "$CAIRO_FEATURES_H"; then
   else
     rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
   fi
+fi
+
+# Run freetype configure script
+
+if test "$MOZ_TREE_FREETYPE"; then
+   export CFLAGS="$CFLAGS -std=c99"
+   export CPPFLAGS="$CPPFLAGS"
+   export CXXFLAGS="$CXXFLAGS"
+   export LDFLAGS="$LDFLAGS"
+   export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
+   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes"
+   AC_OUTPUT_SUBDIRS(modules/freetype2)
 fi
 
 dnl ========================================================

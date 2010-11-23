@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.1 API Reference</title>
+<title>FreeType-2.4.3 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,41 +35,41 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.1 API Reference</h1></center>
+<center><h1>FreeType-2.4.3 API Reference</h1></center>
 
 <center><h1>
 Base Interface
 </h1></center>
 <h2>Synopsis</h2>
 <table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#FT_Library">FT_Library</a></td><td></td><td><a href="#FT_IS_TRICKY">FT_IS_TRICKY</a></td><td></td><td><a href="#FT_LOAD_XXX">FT_LOAD_XXX</a></td></tr>
-<tr><td></td><td><a href="#FT_Face">FT_Face</a></td><td></td><td><a href="#FT_STYLE_FLAG_XXX">FT_STYLE_FLAG_XXX</a></td><td></td><td><a href="#FT_LOAD_TARGET_XXX">FT_LOAD_TARGET_XXX</a></td></tr>
-<tr><td></td><td><a href="#FT_Size">FT_Size</a></td><td></td><td><a href="#FT_Size_Internal">FT_Size_Internal</a></td><td></td><td><a href="#FT_LOAD_TARGET_MODE">FT_LOAD_TARGET_MODE</a></td></tr>
-<tr><td></td><td><a href="#FT_GlyphSlot">FT_GlyphSlot</a></td><td></td><td><a href="#FT_Size_Metrics">FT_Size_Metrics</a></td><td></td><td><a href="#FT_Set_Transform">FT_Set_Transform</a></td></tr>
-<tr><td></td><td><a href="#FT_CharMap">FT_CharMap</a></td><td></td><td><a href="#FT_SizeRec">FT_SizeRec</a></td><td></td><td><a href="#FT_Render_Mode">FT_Render_Mode</a></td></tr>
-<tr><td></td><td><a href="#FT_Encoding">FT_Encoding</a></td><td></td><td><a href="#FT_SubGlyph">FT_SubGlyph</a></td><td></td><td><a href="#ft_render_mode_xxx">ft_render_mode_xxx</a></td></tr>
-<tr><td></td><td><a href="#FT_Glyph_Metrics">FT_Glyph_Metrics</a></td><td></td><td><a href="#FT_Slot_Internal">FT_Slot_Internal</a></td><td></td><td><a href="#FT_Render_Glyph">FT_Render_Glyph</a></td></tr>
-<tr><td></td><td><a href="#FT_Bitmap_Size">FT_Bitmap_Size</a></td><td></td><td><a href="#FT_GlyphSlotRec">FT_GlyphSlotRec</a></td><td></td><td><a href="#FT_Kerning_Mode">FT_Kerning_Mode</a></td></tr>
-<tr><td></td><td><a href="#FT_Module">FT_Module</a></td><td></td><td><a href="#FT_Init_FreeType">FT_Init_FreeType</a></td><td></td><td><a href="#ft_kerning_default">ft_kerning_default</a></td></tr>
-<tr><td></td><td><a href="#FT_Driver">FT_Driver</a></td><td></td><td><a href="#FT_Done_FreeType">FT_Done_FreeType</a></td><td></td><td><a href="#ft_kerning_unfitted">ft_kerning_unfitted</a></td></tr>
-<tr><td></td><td><a href="#FT_Renderer">FT_Renderer</a></td><td></td><td><a href="#FT_OPEN_XXX">FT_OPEN_XXX</a></td><td></td><td><a href="#ft_kerning_unscaled">ft_kerning_unscaled</a></td></tr>
-<tr><td></td><td><a href="#FT_ENC_TAG">FT_ENC_TAG</a></td><td></td><td><a href="#FT_Parameter">FT_Parameter</a></td><td></td><td><a href="#FT_Get_Kerning">FT_Get_Kerning</a></td></tr>
-<tr><td></td><td><a href="#ft_encoding_xxx">ft_encoding_xxx</a></td><td></td><td><a href="#FT_Open_Args">FT_Open_Args</a></td><td></td><td><a href="#FT_Get_Track_Kerning">FT_Get_Track_Kerning</a></td></tr>
-<tr><td></td><td><a href="#FT_CharMapRec">FT_CharMapRec</a></td><td></td><td><a href="#FT_New_Face">FT_New_Face</a></td><td></td><td><a href="#FT_Get_Glyph_Name">FT_Get_Glyph_Name</a></td></tr>
-<tr><td></td><td><a href="#FT_Face_Internal">FT_Face_Internal</a></td><td></td><td><a href="#FT_New_Memory_Face">FT_New_Memory_Face</a></td><td></td><td><a href="#FT_Get_Postscript_Name">FT_Get_Postscript_Name</a></td></tr>
-<tr><td></td><td><a href="#FT_FaceRec">FT_FaceRec</a></td><td></td><td><a href="#FT_Open_Face">FT_Open_Face</a></td><td></td><td><a href="#FT_Select_Charmap">FT_Select_Charmap</a></td></tr>
-<tr><td></td><td><a href="#FT_FACE_FLAG_XXX">FT_FACE_FLAG_XXX</a></td><td></td><td><a href="#FT_Attach_File">FT_Attach_File</a></td><td></td><td><a href="#FT_Set_Charmap">FT_Set_Charmap</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_HORIZONTAL">FT_HAS_HORIZONTAL</a></td><td></td><td><a href="#FT_Attach_Stream">FT_Attach_Stream</a></td><td></td><td><a href="#FT_Get_Charmap_Index">FT_Get_Charmap_Index</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_VERTICAL">FT_HAS_VERTICAL</a></td><td></td><td><a href="#FT_Done_Face">FT_Done_Face</a></td><td></td><td><a href="#FT_Get_Char_Index">FT_Get_Char_Index</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_KERNING">FT_HAS_KERNING</a></td><td></td><td><a href="#FT_Select_Size">FT_Select_Size</a></td><td></td><td><a href="#FT_Get_First_Char">FT_Get_First_Char</a></td></tr>
-<tr><td></td><td><a href="#FT_IS_SCALABLE">FT_IS_SCALABLE</a></td><td></td><td><a href="#FT_Size_Request_Type">FT_Size_Request_Type</a></td><td></td><td><a href="#FT_Get_Next_Char">FT_Get_Next_Char</a></td></tr>
-<tr><td></td><td><a href="#FT_IS_SFNT">FT_IS_SFNT</a></td><td></td><td><a href="#FT_Size_RequestRec">FT_Size_RequestRec</a></td><td></td><td><a href="#FT_Get_Name_Index">FT_Get_Name_Index</a></td></tr>
-<tr><td></td><td><a href="#FT_IS_FIXED_WIDTH">FT_IS_FIXED_WIDTH</a></td><td></td><td><a href="#FT_Size_Request">FT_Size_Request</a></td><td></td><td><a href="#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_XXX</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_FIXED_SIZES">FT_HAS_FIXED_SIZES</a></td><td></td><td><a href="#FT_Request_Size">FT_Request_Size</a></td><td></td><td><a href="#FT_Get_SubGlyph_Info">FT_Get_SubGlyph_Info</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_FAST_GLYPHS">FT_HAS_FAST_GLYPHS</a></td><td></td><td><a href="#FT_Set_Char_Size">FT_Set_Char_Size</a></td><td></td><td><a href="#FT_FSTYPE_XXX">FT_FSTYPE_XXX</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_GLYPH_NAMES">FT_HAS_GLYPH_NAMES</a></td><td></td><td><a href="#FT_Set_Pixel_Sizes">FT_Set_Pixel_Sizes</a></td><td></td><td><a href="#FT_Get_FSType_Flags">FT_Get_FSType_Flags</a></td></tr>
-<tr><td></td><td><a href="#FT_HAS_MULTIPLE_MASTERS">FT_HAS_MULTIPLE_MASTERS</a></td><td></td><td><a href="#FT_Load_Glyph">FT_Load_Glyph</a></td><td></td><td></td></tr>
-<tr><td></td><td><a href="#FT_IS_CID_KEYED">FT_IS_CID_KEYED</a></td><td></td><td><a href="#FT_Load_Char">FT_Load_Char</a></td><td></td><td></td></tr>
+<tr><td></td><td><a href="#FT_Library">FT_Library</a></td><td></td><td><a href="#FT_IS_TRICKY">FT_IS_TRICKY</a></td><td></td><td><a href="#FT_Load_Char">FT_Load_Char</a></td></tr>
+<tr><td></td><td><a href="#FT_Face">FT_Face</a></td><td></td><td><a href="#FT_STYLE_FLAG_XXX">FT_STYLE_FLAG_XXX</a></td><td></td><td><a href="#FT_LOAD_XXX">FT_LOAD_XXX</a></td></tr>
+<tr><td></td><td><a href="#FT_Size">FT_Size</a></td><td></td><td><a href="#FT_Size_Internal">FT_Size_Internal</a></td><td></td><td><a href="#FT_LOAD_TARGET_XXX">FT_LOAD_TARGET_XXX</a></td></tr>
+<tr><td></td><td><a href="#FT_GlyphSlot">FT_GlyphSlot</a></td><td></td><td><a href="#FT_Size_Metrics">FT_Size_Metrics</a></td><td></td><td><a href="#FT_LOAD_TARGET_MODE">FT_LOAD_TARGET_MODE</a></td></tr>
+<tr><td></td><td><a href="#FT_CharMap">FT_CharMap</a></td><td></td><td><a href="#FT_SizeRec">FT_SizeRec</a></td><td></td><td><a href="#FT_Set_Transform">FT_Set_Transform</a></td></tr>
+<tr><td></td><td><a href="#FT_Encoding">FT_Encoding</a></td><td></td><td><a href="#FT_SubGlyph">FT_SubGlyph</a></td><td></td><td><a href="#FT_Render_Mode">FT_Render_Mode</a></td></tr>
+<tr><td></td><td><a href="#FT_Glyph_Metrics">FT_Glyph_Metrics</a></td><td></td><td><a href="#FT_Slot_Internal">FT_Slot_Internal</a></td><td></td><td><a href="#ft_render_mode_xxx">ft_render_mode_xxx</a></td></tr>
+<tr><td></td><td><a href="#FT_Bitmap_Size">FT_Bitmap_Size</a></td><td></td><td><a href="#FT_GlyphSlotRec">FT_GlyphSlotRec</a></td><td></td><td><a href="#FT_Render_Glyph">FT_Render_Glyph</a></td></tr>
+<tr><td></td><td><a href="#FT_Module">FT_Module</a></td><td></td><td><a href="#FT_Init_FreeType">FT_Init_FreeType</a></td><td></td><td><a href="#FT_Kerning_Mode">FT_Kerning_Mode</a></td></tr>
+<tr><td></td><td><a href="#FT_Driver">FT_Driver</a></td><td></td><td><a href="#FT_Done_FreeType">FT_Done_FreeType</a></td><td></td><td><a href="#ft_kerning_default">ft_kerning_default</a></td></tr>
+<tr><td></td><td><a href="#FT_Renderer">FT_Renderer</a></td><td></td><td><a href="#FT_OPEN_XXX">FT_OPEN_XXX</a></td><td></td><td><a href="#ft_kerning_unfitted">ft_kerning_unfitted</a></td></tr>
+<tr><td></td><td><a href="#FT_ENC_TAG">FT_ENC_TAG</a></td><td></td><td><a href="#FT_Parameter">FT_Parameter</a></td><td></td><td><a href="#ft_kerning_unscaled">ft_kerning_unscaled</a></td></tr>
+<tr><td></td><td><a href="#ft_encoding_xxx">ft_encoding_xxx</a></td><td></td><td><a href="#FT_Open_Args">FT_Open_Args</a></td><td></td><td><a href="#FT_Get_Kerning">FT_Get_Kerning</a></td></tr>
+<tr><td></td><td><a href="#FT_CharMapRec">FT_CharMapRec</a></td><td></td><td><a href="#FT_New_Face">FT_New_Face</a></td><td></td><td><a href="#FT_Get_Track_Kerning">FT_Get_Track_Kerning</a></td></tr>
+<tr><td></td><td><a href="#FT_Face_Internal">FT_Face_Internal</a></td><td></td><td><a href="#FT_New_Memory_Face">FT_New_Memory_Face</a></td><td></td><td><a href="#FT_Get_Glyph_Name">FT_Get_Glyph_Name</a></td></tr>
+<tr><td></td><td><a href="#FT_FaceRec">FT_FaceRec</a></td><td></td><td><a href="#FT_Open_Face">FT_Open_Face</a></td><td></td><td><a href="#FT_Get_Postscript_Name">FT_Get_Postscript_Name</a></td></tr>
+<tr><td></td><td><a href="#FT_FACE_FLAG_XXX">FT_FACE_FLAG_XXX</a></td><td></td><td><a href="#FT_Attach_File">FT_Attach_File</a></td><td></td><td><a href="#FT_Select_Charmap">FT_Select_Charmap</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_HORIZONTAL">FT_HAS_HORIZONTAL</a></td><td></td><td><a href="#FT_Attach_Stream">FT_Attach_Stream</a></td><td></td><td><a href="#FT_Set_Charmap">FT_Set_Charmap</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_VERTICAL">FT_HAS_VERTICAL</a></td><td></td><td><a href="#FT_Reference_Face">FT_Reference_Face</a></td><td></td><td><a href="#FT_Get_Charmap_Index">FT_Get_Charmap_Index</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_KERNING">FT_HAS_KERNING</a></td><td></td><td><a href="#FT_Done_Face">FT_Done_Face</a></td><td></td><td><a href="#FT_Get_Char_Index">FT_Get_Char_Index</a></td></tr>
+<tr><td></td><td><a href="#FT_IS_SCALABLE">FT_IS_SCALABLE</a></td><td></td><td><a href="#FT_Select_Size">FT_Select_Size</a></td><td></td><td><a href="#FT_Get_First_Char">FT_Get_First_Char</a></td></tr>
+<tr><td></td><td><a href="#FT_IS_SFNT">FT_IS_SFNT</a></td><td></td><td><a href="#FT_Size_Request_Type">FT_Size_Request_Type</a></td><td></td><td><a href="#FT_Get_Next_Char">FT_Get_Next_Char</a></td></tr>
+<tr><td></td><td><a href="#FT_IS_FIXED_WIDTH">FT_IS_FIXED_WIDTH</a></td><td></td><td><a href="#FT_Size_RequestRec">FT_Size_RequestRec</a></td><td></td><td><a href="#FT_Get_Name_Index">FT_Get_Name_Index</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_FIXED_SIZES">FT_HAS_FIXED_SIZES</a></td><td></td><td><a href="#FT_Size_Request">FT_Size_Request</a></td><td></td><td><a href="#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_XXX</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_FAST_GLYPHS">FT_HAS_FAST_GLYPHS</a></td><td></td><td><a href="#FT_Request_Size">FT_Request_Size</a></td><td></td><td><a href="#FT_Get_SubGlyph_Info">FT_Get_SubGlyph_Info</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_GLYPH_NAMES">FT_HAS_GLYPH_NAMES</a></td><td></td><td><a href="#FT_Set_Char_Size">FT_Set_Char_Size</a></td><td></td><td><a href="#FT_FSTYPE_XXX">FT_FSTYPE_XXX</a></td></tr>
+<tr><td></td><td><a href="#FT_HAS_MULTIPLE_MASTERS">FT_HAS_MULTIPLE_MASTERS</a></td><td></td><td><a href="#FT_Set_Pixel_Sizes">FT_Set_Pixel_Sizes</a></td><td></td><td><a href="#FT_Get_FSType_Flags">FT_Get_FSType_Flags</a></td></tr>
+<tr><td></td><td><a href="#FT_IS_CID_KEYED">FT_IS_CID_KEYED</a></td><td></td><td><a href="#FT_Load_Glyph">FT_Load_Glyph</a></td><td></td><td></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -1882,6 +1882,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <p>Unlike FreeType 1.x, this function automatically creates a glyph slot for the face object which can be accessed directly through &lsquo;face-&gt;glyph&rsquo;.</p>
 <p>FT_Open_Face can be used to quickly check whether the font format of a given font resource is supported by FreeType. If the &lsquo;face_index&rsquo; field is negative, the function's return value is&nbsp;0 if the font format is recognized, or non-zero otherwise; the function returns a more or less empty face handle in &lsquo;*aface&rsquo; (if &lsquo;aface&rsquo; isn't NULL). The only useful field in this special case is &lsquo;face-&gt;num_faces&rsquo; which gives the number of faces within the font file. After examination, the returned <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure should be deallocated with a call to <a href="ft2-base_interface.html#FT_Done_Face">FT_Done_Face</a>.</p>
 <p>Each new face object created with this function also owns a default <a href="ft2-base_interface.html#FT_Size">FT_Size</a> object, accessible as &lsquo;face-&gt;size&rsquo;.</p>
+<p>See the discussion of reference counters in the description of <a href="ft2-base_interface.html#FT_Reference_Face">FT_Reference_Face</a>.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -1974,6 +1975,41 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
 <table align=center width="75%"><tr><td>
+<h4><a name="FT_Reference_Face">FT_Reference_Face</a></h4>
+<table align=center width="87%"><tr><td>
+Defined in FT_FREETYPE_H (freetype/freetype.h).
+</td></tr></table><br>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Reference_Face</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face );
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>A counter gets initialized to&nbsp;1 at the time an <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure is created. This function increments the counter. <a href="ft2-base_interface.html#FT_Done_Face">FT_Done_Face</a> then only destroys a face if the counter is&nbsp;1, otherwise it simply decrements the counter.</p>
+<p>This function helps in managing life-cycles of structures which reference <a href="ft2-base_interface.html#FT_Face">FT_Face</a> objects.</p>
+</td></tr></table><br>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
+<p></p>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>face</b></td><td>
+<p>A handle to a target face object.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
+<p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>since</b></em></td></tr><tr><td>
+<p>2.4.2</p>
+</td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
 <h4><a name="FT_Done_Face">FT_Done_Face</a></h4>
 <table align=center width="87%"><tr><td>
 Defined in FT_FREETYPE_H (freetype/freetype.h).
@@ -1997,6 +2033,9 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>See the discussion of reference counters in the description of <a href="ft2-base_interface.html#FT_Reference_Face">FT_Reference_Face</a>.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

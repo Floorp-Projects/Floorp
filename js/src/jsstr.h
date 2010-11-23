@@ -68,8 +68,6 @@ enum {
     NUM_HUNDRED_STRINGS      = 156U
 };
 
-extern JSStringFinalizeOp str_finalizers[8];
-
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
@@ -100,9 +98,14 @@ namespace js { namespace mjit {
  * A flat string with the ATOMIZED flag means that the string is hashed as
  * an atom. This flag is used to avoid re-hashing the already-atomized string.
  *
- * A flat string with the MUTABLE flag means that the string may change into a
- * dependent string as part of an optimization with js_ConcatStrings. Flat
- * strings without the MUTABLE flag can be safely accessed by multiple threads.
+ * A flat string with the EXTENSIBLE flag means that the string may change into
+ * a dependent string as part of an optimization with js_ConcatStrings:
+ * extending |str1 = "abc"| with the character |str2 = str1 + "d"| will place
+ * "d" in the extra capacity from |str1|, make that the buffer for |str2|, and
+ * turn |str1| into a dependent string of |str2|.
+ *
+ * Flat strings without the EXTENSIBLE flag can be safely accessed by multiple
+ * threads.
  *
  * When the string is DEPENDENT, the string depends on characters of another
  * string strongly referenced by the mBase field. The base member may point to
@@ -146,7 +149,7 @@ struct JSString {
         jschar                      mInlineStorage[4]; /* In short strings. */
         struct {
             union {
-                size_t              mCapacity; /* in mutable flat strings (optional) */
+                size_t              mCapacity; /* in extensible flat strings (optional) */
                 JSString            *mParent; /* in rope interior nodes */
                 JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
             };
@@ -155,6 +158,7 @@ struct JSString {
                 JSString            *mRight; /* in rope interior and top nodes */
             };
         } e;
+        uintN                       externalStringType; /* for external strings. */
     };
 
     /*
@@ -166,7 +170,9 @@ struct JSString {
      * The length is packed in mLengthAndFlags, even in string types that don't
      * need 3 other fields, to make the length check simpler.
      *
-     * When the string type is FLAT, the flags can contain ATOMIZED or MUTABLE.
+     * When the string type is FLAT, the flags can contain ATOMIZED or
+     * EXTENSIBLE.
+     *
      * When the string type is INTERIOR_NODE or TOP_NODE, the flags area is
      * used to store the rope traversal count.
      */
@@ -179,15 +185,9 @@ struct JSString {
     static const size_t ROPE_BIT = JSSTRING_BIT(1);
 
     static const size_t ATOMIZED = JSSTRING_BIT(2);
-    static const size_t MUTABLE = JSSTRING_BIT(3);
+    static const size_t EXTENSIBLE = JSSTRING_BIT(3);
 
     static const size_t FLAGS_LENGTH_SHIFT = 4;
-
-    static const size_t ROPE_TRAVERSAL_COUNT_SHIFT = 2;
-    static const size_t ROPE_TRAVERSAL_COUNT_MASK = JSSTRING_BITMASK(4) -
-                                                    JSSTRING_BITMASK(2);
-    static const size_t ROPE_TRAVERSAL_COUNT_UNIT =
-                                (1 << ROPE_TRAVERSAL_COUNT_SHIFT);
 
     static const size_t TYPE_MASK = JSSTRING_BITMASK(2);
     static const size_t TYPE_FLAGS_MASK = JSSTRING_BITMASK(4);
@@ -222,8 +222,8 @@ struct JSString {
         return type() == FLAT;
     }
 
-    inline bool isMutable() const {
-        return isFlat() && hasFlag(MUTABLE);
+    inline bool isExtensible() const {
+        return isFlat() && hasFlag(EXTENSIBLE);
     }
 
     inline bool isRope() const {
@@ -280,12 +280,19 @@ struct JSString {
         mChars = chars;
     }
 
-    JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
+    JS_ALWAYS_INLINE void initShortString(jschar *chars, size_t length) {
+        JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(!isStatic(this));
+        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
+        mChars = chars;
+    }
+
+    JS_ALWAYS_INLINE void initFlatExtensible(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = cap;
-        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
+        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | EXTENSIBLE;
         mChars = chars;
     }
 
@@ -305,23 +312,23 @@ struct JSString {
     }
 
     /*
-     * Methods to manipulate atomized and mutable flags of flat strings. It is
+     * Methods to manipulate ATOMIZED and EXTENSIBLE flags of flat strings. It is
      * safe to use these without extra locking due to the following properties:
      *
      *   * We do not have a flatClearAtomized method, as a string remains
      *     atomized until the GC collects it.
      *
-     *   * A thread may call flatSetMutable only when it is the only
+     *   * A thread may call flatSetExtensible only when it is the only
      *     thread accessing the string until a later call to
-     *     flatClearMutable.
+     *     flatClearExtensible.
      *
-     *   * Multiple threads can call flatClearMutable but the function actually
-     *     clears the mutable flag only when the flag is set -- in which case
+     *   * Multiple threads can call flatClearExtensible but the function actually
+     *     clears the EXTENSIBLE flag only when the flag is set -- in which case
      *     only one thread can access the string (see previous property).
      *
      * Thus, when multiple threads access the string, JSString::flatSetAtomized
      * is the only function that can update the mLengthAndFlags field of the
-     * string by changing the mutable bit from 0 to 1. We call the method only
+     * string by changing the EXTENSIBLE bit from 0 to 1. We call the method only
      * after the string has been hashed. When some threads in js_ValueToStringId
      * see that the flag is set, it knows that the string was atomized.
      *
@@ -337,21 +344,21 @@ struct JSString {
         JS_ATOMIC_SET_MASK((jsword *)&mLengthAndFlags, ATOMIZED);
     }
 
-    inline void flatSetMutable() {
+    inline void flatSetExtensible() {
         JS_ASSERT(isFlat());
         JS_ASSERT(!isAtomized());
-        mLengthAndFlags |= MUTABLE;
+        mLengthAndFlags |= EXTENSIBLE;
     }
 
-    inline void flatClearMutable() {
+    inline void flatClearExtensible() {
         JS_ASSERT(isFlat());
 
         /*
          * We cannot eliminate the flag check before writing to mLengthAndFlags as
          * static strings may reside in write-protected memory. See bug 599481.
          */
-        if (mLengthAndFlags & MUTABLE)
-            mLengthAndFlags &= ~MUTABLE;
+        if (mLengthAndFlags & EXTENSIBLE)
+            mLengthAndFlags &= ~EXTENSIBLE;
     }
 
     /*
@@ -428,38 +435,10 @@ struct JSString {
         e.mBufferWithInfo = NULL;
     }
 
-    /*
-     * When flattening a rope, we need to convert a rope node to a dependent
-     * string in two separate parts instead of calling initDependent.
-     */
-    inline void startTraversalConversion(jschar *chars, size_t offset) {
-        JS_ASSERT(isInteriorNode());
-        mChars = chars + offset;
-    }    
-
-    inline void finishTraversalConversion(JSString *base, jschar *chars,
-                                          size_t end) {
-        JS_ASSERT(isInteriorNode());
-        /* Note that setting flags also clears the traversal count. */
+    inline void finishTraversalConversion(JSString *base, jschar *end) {
         mLengthAndFlags = JSString::DEPENDENT |
-            ((chars + end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
+                          ((end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
         e.mBase = base;
-    }
-
-    inline void ropeClearTraversalCount() {
-        JS_ASSERT(isRope());
-        mLengthAndFlags &= ~ROPE_TRAVERSAL_COUNT_MASK;
-    }
-
-    inline size_t ropeTraversalCount() const {
-        JS_ASSERT(isRope());
-        return (mLengthAndFlags & ROPE_TRAVERSAL_COUNT_MASK) >>
-                ROPE_TRAVERSAL_COUNT_SHIFT;
-    }
-
-    inline void ropeIncrementTraversalCount() {
-        JS_ASSERT(isRope());
-        mLengthAndFlags += ROPE_TRAVERSAL_COUNT_UNIT;
     }
 
     inline bool ensureNotDependent(JSContext *cx) {
@@ -542,12 +521,34 @@ struct JSString {
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *length2String(jschar c1, jschar c2);
+    static JSString *length2String(uint32 i);
     static JSString *intString(jsint i);
 
     static JSString *lookupStaticString(const jschar *chars, size_t length);
     
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 };
+
+struct JSExternalString : JSString {
+    static const uintN TYPE_LIMIT = 8;
+    static JSStringFinalizeOp str_finalizers[TYPE_LIMIT];
+
+    static intN changeFinalizer(JSStringFinalizeOp oldop,
+                                JSStringFinalizeOp newop) {
+        for (uintN i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+            if (str_finalizers[i] == oldop) {
+                str_finalizers[i] = newop;
+                return intN(i);
+            }
+        }
+        return -1;
+    }
+
+    void finalize(JSContext *cx);
+    void finalize();
+};
+
+JS_STATIC_ASSERT(sizeof(JSString) == sizeof(JSExternalString));
 
 /*
  * Short strings should be created in cases where it's worthwhile to avoid
@@ -565,12 +566,21 @@ struct JSShortString : js::gc::Cell {
      */
     inline jschar *init(size_t length) {
         JS_ASSERT(length <= MAX_SHORT_STRING_LENGTH);
-        mHeader.initFlat(mHeader.inlineStorage(), length);
+        mHeader.initShortString(mHeader.inlineStorage(), length);
         return mHeader.inlineStorage();
     }
 
+    inline jschar *getInlineStorageBeforeInit() {
+        return mHeader.mInlineStorage;
+    }
+
+    inline void initAtOffsetInBuffer(jschar *p, size_t length) {
+        JS_ASSERT(p >= mHeader.mInlineStorage && p < mHeader.mInlineStorage + MAX_SHORT_STRING_LENGTH);
+        mHeader.initShortString(p, length);
+    }
+
     inline void resetLength(size_t length) {
-        mHeader.initFlat(mHeader.flatChars(), length);
+        mHeader.initShortString(mHeader.flatChars(), length);
     }
 
     inline JSString *header() {
@@ -583,8 +593,8 @@ struct JSShortString : js::gc::Cell {
     static inline bool fitsIntoShortString(size_t length) {
         return length <= MAX_SHORT_STRING_LENGTH;
     }
-    
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, unsigned thingKind);
+
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
 };
 
 /*
@@ -954,16 +964,9 @@ js_NewStringCopyZ(JSContext *cx, const char *s);
 /*
  * Convert a value to a printable C string.
  */
-typedef JSString *(*JSValueToStringFun)(JSContext *cx, const js::Value &v);
-
-extern JS_FRIEND_API(const char *)
-js_ValueToPrintable(JSContext *cx, const js::Value &, JSValueToStringFun v2sfun);
-
-#define js_ValueToPrintableString(cx,v) \
-    js_ValueToPrintable(cx, v, js_ValueToString)
-
-#define js_ValueToPrintableSource(cx,v) \
-    js_ValueToPrintable(cx, v, js_ValueToSource)
+extern const char *
+js_ValueToPrintable(JSContext *cx, const js::Value &,
+                    JSAutoByteString *bytes, bool asSource = false);
 
 /*
  * Convert a value to a string, returning null after reporting an error,
@@ -1024,6 +1027,15 @@ js_EqualStrings(JSString *str1, JSString *str2);
  */
 extern int32 JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2);
+
+namespace js {
+/*
+ * Return true if the string matches the given sequence of ASCII bytes.
+ */
+extern JSBool
+MatchStringAndAscii(JSString *str, const char *asciiBytes);
+
+} /* namespacejs */
 
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.
@@ -1139,7 +1151,7 @@ js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
  * characters chopped from Unicode code points into bytes.
  */
 extern const char *
-js_GetStringBytes(JSContext *cx, JSString *str);
+js_GetStringBytes(JSAtom *atom);
 
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool
@@ -1171,31 +1183,42 @@ js_str_charCodeAt(JSContext *cx, uintN argc, js::Value *vp);
 extern int
 js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char);
 
+namespace js {
+
+extern size_t
+PutEscapedStringImpl(char *buffer, size_t size, FILE *fp, JSString *str, uint32 quote);
+
 /*
- * Write str into buffer escaping any non-printable or non-ASCII character.
- * Guarantees that a NUL is at the end of the buffer. Returns the length of
- * the written output, NOT including the NUL. If buffer is null, just returns
- * the length of the output. If quote is not 0, it must be a single or double
- * quote character that will quote the output.
- *
- * The function is only defined for debug builds.
+ * Write str into buffer escaping any non-printable or non-ASCII character
+ * using \escapes for JS string literals.
+ * Guarantees that a NUL is at the end of the buffer unless size is 0. Returns
+ * the length of the written output, NOT including the NUL. Thus, a return
+ * value of size or more means that the output was truncated. If buffer
+ * is null, just returns the length of the output. If quote is not 0, it must
+ * be a single or double quote character that will quote the output.
 */
-#define js_PutEscapedString(buffer, bufferSize, str, quote)                   \
-    js_PutEscapedStringImpl(buffer, bufferSize, NULL, str, quote)
+inline size_t
+PutEscapedString(char *buffer, size_t size, JSString *str, uint32 quote)
+{
+    size_t n = PutEscapedStringImpl(buffer, size, NULL, str, quote);
+
+    /* PutEscapedStringImpl can only fail with a file. */
+    JS_ASSERT(n != size_t(-1));
+    return n;
+}
 
 /*
  * Write str into file escaping any non-printable or non-ASCII character.
- * Returns the number of bytes written to file. If quote is not 0, it must
- * be a single or double quote character that will quote the output.
- *
- * The function is only defined for debug builds.
+ * If quote is not 0, it must be a single or double quote character that
+ * will quote the output.
 */
-#define js_FileEscapedString(file, str, quote)                                \
-    (JS_ASSERT(file), js_PutEscapedStringImpl(NULL, 0, file, str, quote))
+inline bool
+FileEscapedString(FILE *fp, JSString *str, uint32 quote)
+{
+    return PutEscapedStringImpl(NULL, 0, fp, str, quote) != size_t(-1);
+}
 
-extern JS_FRIEND_API(size_t)
-js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
-                        JSString *str, uint32 quote);
+} /* namespace js */
 
 extern JSBool
 js_String(JSContext *cx, uintN argc, js::Value *vp);
@@ -1209,8 +1232,6 @@ class DeflatedStringCache {
     ~DeflatedStringCache();
 
     void sweep(JSContext *cx);
-    void remove(JSString *str);
-    bool setBytes(JSContext *cx, JSString *str, char *bytes);
 
   private:
     struct StringPtrHasher
@@ -1239,11 +1260,10 @@ class DeflatedStringCache {
 
     typedef HashMap<JSString *, char *, StringPtrHasher, SystemAllocPolicy> Map;
 
-    /* cx is NULL when the caller is JS_GetStringBytes(JSString *). */
-    char *getBytes(JSContext *cx, JSString *str);
+    char *getBytes(JSString *str);
 
     friend const char *
-    ::js_GetStringBytes(JSContext *cx, JSString *str);
+    ::js_GetStringBytes(JSAtom *atom);
 
     Map                 map;
 #ifdef JS_THREADSAFE

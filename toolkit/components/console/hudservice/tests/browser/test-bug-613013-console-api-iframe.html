@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>test for bug 613013</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+  </head>
+  <body>
+    <p>test for bug 613013</p>
+    <script type="text/javascript"><!--
+      (function () {
+        var iframe = document.createElement('iframe');
+        iframe.src = 'data:text/html,little iframe';
+        document.body.appendChild(iframe);
+
+        console.log("foobarBug613013");
+      })();
+    // --></script>
+  </body>
+</html>

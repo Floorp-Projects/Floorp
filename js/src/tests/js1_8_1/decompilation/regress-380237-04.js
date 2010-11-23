@@ -134,42 +134,42 @@ doesNotNeedParens(58, "new a(xx);");
 // Generator expressions cannot be used as LHS, even though they're syntactic 
 // sugar for something that looks a lot like an "lvalue return": (f() = 3).
 
-rejectLHS(59, "++ (xx);");
+rejectLHS(59, "++ (xx);", "ReferenceError");
 rejectLHS(60, "delete xx;");
-rejectLHS(61, "delete (xx);");
+rejectLHS(61, "delete (xx);", "ReferenceError");
 rejectLHS(62, "for (xx in []) { }");
-rejectLHS(63, "for ((xx) in []) { }");
+rejectLHS(63, "for ((xx) in []) { }", "ReferenceError");
 rejectLHS(64, "try { } catch(xx) { }");
 rejectLHS(65, "try { } catch([(xx)]) { }");
 rejectLHS(66, "xx += 3;");
-rejectLHS(67, "(xx) += 3;");
+rejectLHS(67, "(xx) += 3;", "ReferenceError");
 rejectLHS(68, "xx = 3;");
 
 // Assignment
-rejectLHS(69, "        (xx) = 3;");
+rejectLHS(69, "        (xx) = 3;", "ReferenceError");
 rejectLHS(70, "var     (xx) = 3;");
 rejectLHS(71, "const   (xx) = 3;");
 rejectLHS(72, "let     (xx) = 3;");
 
 // Destructuring assignment
-rejectLHS(73, "        [(xx)] = 3;");
+rejectLHS(73, "        [(xx)] = 3;", "ReferenceError");
 rejectLHS(74, "var     [(xx)] = 3;");
 rejectLHS(75, "const   [(xx)] = 3;");
 rejectLHS(76, "let     [(xx)] = 3;");
 
 // Group assignment (Spidermonkey optimization for certain
 // destructuring assignments)
-rejectLHS(77, "        [(xx)] = [3];");
+rejectLHS(77, "        [(xx)] = [3];", "ReferenceError");
 rejectLHS(78, "var     [(xx)] = [3];");
 rejectLHS(79, "const   [(xx)] = [3];");
 rejectLHS(80, "let     [(xx)] = [3];");
 
 // Destructuring & group assignment for array comprehensions, just for kicks.
-rejectLHS(81, "        [xx] = [3];");
+rejectLHS(81, "        [xx] = [3];", "ReferenceError");
 rejectLHS(82, "var     [xx] = [3];");
 rejectLHS(83, "const   [xx] = [3];");
 rejectLHS(84, "let     [xx] = 3;");
-rejectLHS(85, "        [xx] = 3;");
+rejectLHS(85, "        [xx] = 3;", "ReferenceError");
 rejectLHS(86, "var     [xx] = 3;");
 rejectLHS(87, "const   [xx] = 3;");
 rejectLHS(88, "let     [xx] = 3;");
@@ -244,7 +244,7 @@ function needParens(section, pat, exp)
   overParenTest(section, f, exp);
 }
 
-function rejectLHS(section, pat)
+function rejectLHS(section, pat, expect)
 {
   print("Testing section " + section + " pattern " + pat);
 
@@ -252,7 +252,7 @@ function rejectLHS(section, pat)
     
   var ft;
     
-  expect = 'SyntaxError';
+  expect = expect || 'SyntaxError';
   actual = '';
   ft = pat.replace(/xx/, genexp)
     try {

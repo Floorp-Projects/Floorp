@@ -567,9 +567,8 @@ nsHtml5TreeBuilder::accumulateCharacters(const PRUnichar* aBuf, PRInt32 aStart, 
   PRInt32 newFillLen = charBufferLen + aLength;
   if (newFillLen > charBuffer.length) {
     PRInt32 newAllocLength = newFillLen + (newFillLen >> 1);
-    jArray<PRUnichar,PRInt32> newBuf(newAllocLength);
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(newAllocLength);
     memcpy(newBuf, charBuffer, sizeof(PRUnichar) * charBufferLen);
-    charBuffer.release();
     charBuffer = newBuf;
   }
   memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(PRUnichar) * aLength);
@@ -605,11 +604,16 @@ nsHtml5TreeBuilder::Flush()
 {
   flushCharacters();
   FlushLoads();
-  PRBool hasOps = !mOpQueue.IsEmpty();
-  if (hasOps) {
-    mOpSink->MoveOpsFrom(mOpQueue);
+  if (mOpSink) {
+    PRBool hasOps = !mOpQueue.IsEmpty();
+    if (hasOps) {
+      mOpSink->MoveOpsFrom(mOpQueue);
+    }
+    return hasOps;
   }
-  return hasOps;
+  // no op sink: throw away ops
+  mOpQueue.Clear();
+  return PR_FALSE;
 }
 
 void
@@ -666,6 +670,13 @@ nsHtml5TreeBuilder::IsDiscretionaryFlushSafe()
   return !(charBufferLen && 
            currentPtr >= 0 && 
            stack[currentPtr]->fosterParenting);
+}
+
+void
+nsHtml5TreeBuilder::DropHandles()
+{
+  mOldHandles.Clear();
+  mHandlesUsed = 0;
 }
 
 // DocumentModeHandler

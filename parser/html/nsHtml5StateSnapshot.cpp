@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Mozilla Foundation
+ * Copyright (c) 2009-2010 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -160,13 +160,11 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
   for (PRInt32 i = 0; i < stack.length; i++) {
     stack[i]->release();
   }
-  stack.release();
   for (PRInt32 i = 0; i < listOfActiveFormattingElements.length; i++) {
     if (listOfActiveFormattingElements[i]) {
       listOfActiveFormattingElements[i]->release();
     }
   }
-  listOfActiveFormattingElements.release();
   ;
 }
 

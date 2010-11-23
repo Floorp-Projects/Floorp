@@ -82,7 +82,8 @@ public:
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
-                               PRInt32 aRunScript);
+                               PRInt32 aRunScript,
+                               PRBool aPreferPlatformShaping = PR_FALSE);
 
     virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
 

@@ -208,6 +208,11 @@ CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
 EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
+EXPORTS_cairo += $(PDF_EXPORTS)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += cairo-qt-surface.cpp
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) 

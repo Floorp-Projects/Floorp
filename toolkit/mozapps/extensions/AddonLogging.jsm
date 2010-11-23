@@ -54,8 +54,43 @@ var EXPORTED_SYMBOLS = [ "LogManager" ];
 
 var gDebugLogEnabled = false;
 
-function formatLogMessage(aType, aName, aStr) {
-  return aType.toUpperCase() + " " + aName + ": " + aStr;
+function formatLogMessage(aType, aName, aStr, aException) {
+  let message = aType.toUpperCase() + " " + aName + ": " + aStr;
+  if (aException)
+    return message + ": " + aException;
+  return message;
+}
+
+function getStackDetails(aException) {
+  // Defensively wrap all this to ensure that failing to get the message source
+  // doesn't stop the message from being logged
+  try {
+    if (aException) {
+      if (aException instanceof Ci.nsIException) {
+        return {
+          sourceName: aException.filename,
+          lineNumber: aException.lineNumber
+        };
+      }
+
+      return {
+        sourceName: aException.fileName,
+        lineNumber: aException.lineNumber
+      };
+    }
+
+    let stackFrame = Components.stack.caller.caller.caller;
+    return {
+      sourceName: stackFrame.filename,
+      lineNumber: stackFrame.lineNumber
+    };
+  }
+  catch (e) {
+    return {
+      sourceName: null,
+      lineNumber: 0
+    };
+  }
 }
 
 function AddonLogger(aName) {
@@ -65,13 +100,15 @@ function AddonLogger(aName) {
 AddonLogger.prototype = {
   name: null,
 
-  error: function(aStr) {
-    let message = formatLogMessage("error", this.name, aStr);
+  error: function(aStr, aException) {
+    let message = formatLogMessage("error", this.name, aStr, aException);
+
+    let stack = getStackDetails(aException);
 
     let consoleMessage = Cc["@mozilla.org/scripterror;1"].
                          createInstance(Ci.nsIScriptError);
-    consoleMessage.init(message, null, null, 0, 0, Ci.nsIScriptError.errorFlag,
-                        "component javascript");
+    consoleMessage.init(message, stack.sourceName, null, stack.lineNumber, 0,
+                        Ci.nsIScriptError.errorFlag, "component javascript");
     Services.console.logMessage(consoleMessage);
 
     if (gDebugLogEnabled)
@@ -87,28 +124,31 @@ AddonLogger.prototype = {
                    createInstance(Ci.nsIConverterOutputStream);
       writer.init(stream, "UTF-8", 0, 0x0000);
       writer.writeString(tstamp.toLocaleFormat("%Y-%m-%d %H:%M:%S ") +
-                         message + "\n");
+                         message + " at " + stack.sourceName + ":" +
+                         stack.lineNumber + "\n");
       writer.close();
     }
     catch (e) { }
   },
 
-  warn: function(aStr) {
-    let message = formatLogMessage("warn", this.name, aStr);
+  warn: function(aStr, aException) {
+    let message = formatLogMessage("warn", this.name, aStr, aException);
+
+    let stack = getStackDetails(aException);
 
     let consoleMessage = Cc["@mozilla.org/scripterror;1"].
                          createInstance(Ci.nsIScriptError);
-    consoleMessage.init(message, null, null, 0, 0, Ci.nsIScriptError.warningFlag,
-                        "component javascript");
+    consoleMessage.init(message, stack.sourceName, null, stack.lineNumber, 0,
+                        Ci.nsIScriptError.warningFlag, "component javascript");
     Services.console.logMessage(consoleMessage);
 
     if (gDebugLogEnabled)
       dump("*** " + message + "\n");
   },
 
-  log: function(aStr) {
+  log: function(aStr, aException) {
     if (gDebugLogEnabled) {
-      let message = formatLogMessage("log", this.name, aStr);
+      let message = formatLogMessage("log", this.name, aStr, aException);
       dump("*** " + message + "\n");
       Services.console.logStringMessage(message);
     }
@@ -123,8 +163,8 @@ var LogManager = {
       ["error", "warn", "log"].forEach(function(name) {
         let fname = name.toUpperCase();
         delete aTarget[fname];
-        aTarget[fname] = function(aStr) {
-          logger[name](aStr);
+        aTarget[fname] = function(aStr, aException) {
+          logger[name](aStr, aException);
         };
       });
     }

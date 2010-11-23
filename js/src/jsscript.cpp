@@ -1119,8 +1119,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
              */
             JSScript *empty = JSScript::emptyScript();
 
-            if (cg->flags & TCF_IN_FUNCTION) {
-                fun = cg->fun;
+            if (cg->inFunction()) {
+                fun = cg->fun();
                 JS_ASSERT(fun->isInterpreted() && !FUN_SCRIPT(fun));
                 if (cg->flags & TCF_STRICT_MODE_CODE) {
                     /*
@@ -1173,8 +1173,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script->main += prologLength;
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
-    nfixed = (cg->flags & TCF_IN_FUNCTION)
-             ? cg->fun->u.i.nvars
+    nfixed = cg->inFunction()
+             ? cg->fun()->u.i.nvars
              : cg->sharpSlots();
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
@@ -1246,8 +1246,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
      * so that the debugger has a valid FUN_SCRIPT(fun).
      */
     fun = NULL;
-    if (cg->flags & TCF_IN_FUNCTION) {
-        fun = cg->fun;
+    if (cg->inFunction()) {
+        fun = cg->fun();
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         if (script->upvarsOffset != 0)
             JS_ASSERT(script->upvars()->length == fun->u.i.nupvars);

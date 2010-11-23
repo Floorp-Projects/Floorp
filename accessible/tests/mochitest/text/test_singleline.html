@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleText getText related function tests for html:input,html:div and html:textarea</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript">
+    
+    function doTest()
+    {
+      var IDs = ["input", "div", "textarea"];
+  
+      // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+
+      ////////////////////////////////////////////////////////////////////////
+      // getText
+
+      testText(IDs, 0, 1, "h");
+      testText(IDs, 1, 3, "el");
+      testText(IDs, 14, 15, "d");
+      testText(IDs, 0, 15, "hello my friend");
+
+      ////////////////////////////////////////////////////////////////////////
+      // getTextAfterOffset
+
+      // BOUNDARY_CHAR
+      testTextAfterOffset(0, BOUNDARY_CHAR, "e", 1, 2,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(1, BOUNDARY_CHAR, "l", 2, 3,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(14, BOUNDARY_CHAR, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(15, BOUNDARY_CHAR, "", 15, 15,
+			  "input", kOk, kTodo, kTodo,
+			  "div", kOk, kTodo, kTodo,
+			  "editable", kOk, kTodo, kTodo,
+			  "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_WORD_START
+      testTextAfterOffset(0, BOUNDARY_WORD_START, "my ", 6, 9,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(1, BOUNDARY_WORD_START, "my ", 6, 9,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(5, BOUNDARY_WORD_START, "my ", 6, 9,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(6, BOUNDARY_WORD_START, "friend", 9, 15,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(7, BOUNDARY_WORD_START, "friend", 9, 15,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(8, BOUNDARY_WORD_START, "friend", 9, 15,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(9, BOUNDARY_WORD_START, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(11, BOUNDARY_WORD_START, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(14, BOUNDARY_WORD_START, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(15, BOUNDARY_WORD_START, "", 15, 15,
+                          "input", kOk, kTodo, kTodo,
+                          "div", kOk, kTodo, kTodo,
+                          "editable", kOk, kTodo, kTodo,
+                          "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_WORD_END
+      testTextAfterOffset(0, BOUNDARY_WORD_END, " my", 5, 8,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(1, BOUNDARY_WORD_END, " my", 5, 8,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(5, BOUNDARY_WORD_END, " my", 5, 8,
+                          "input", kOk, kOk, kOk,
+                          "div", kOk, kOk, kOk,
+                          "editable", kOk, kOk, kOk,
+                          "textarea", kOk, kOk, kOk);
+      testTextAfterOffset(6, BOUNDARY_WORD_END, " friend", 8, 15,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(7, BOUNDARY_WORD_END, " friend", 8, 15,
+                          "input", kTodo, kTodo, kTodo,
+                          "div", kTodo, kTodo, kTodo,
+                          "editable", kTodo, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(8, BOUNDARY_WORD_END, " friend", 8, 15,
+                          "input", kOk, kOk, kOk,
+                          "div", kOk, kOk, kOk,
+                          "editable", kOk, kOk, kOk,
+                          "textarea", kOk, kOk, kOk);
+      testTextAfterOffset(9, BOUNDARY_WORD_END, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(11, BOUNDARY_WORD_END, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(14, BOUNDARY_WORD_END, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(15, BOUNDARY_WORD_END, "", 15, 15,
+                          "input", kOk, kTodo, kTodo,
+                          "div", kOk, kTodo, kTodo,
+                          "editable", kOk, kTodo, kTodo,
+                          "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_LINE_START
+      testTextAfterOffset(0, BOUNDARY_LINE_START, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(1, BOUNDARY_LINE_START, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(14, BOUNDARY_LINE_START, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kTodo);
+      testTextAfterOffset(15, BOUNDARY_LINE_START, "", 15, 15,
+                          "input", undefined, undefined, undefined,
+                          "div", undefined, undefined, undefined,
+                          "editable", undefined, undefined, undefined,
+                          "textarea", kTodo, undefined, kTodo);
+
+      // BOUNDARY_LINE_END
+      testTextAfterOffset(0, BOUNDARY_LINE_END, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(1, BOUNDARY_LINE_END, "", 15, 15,
+                          "input", kTodo, kTodo, kOk,
+                          "div", kTodo, kTodo, kOk,
+                          "editable", kTodo, kTodo, kOk,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(14, BOUNDARY_LINE_END, "", 15, 15,
+                          "input", kOk, kTodo, kTodo,
+                          "div", kOk, kTodo, kTodo,
+                          "editable", kOk, kTodo, kTodo,
+                          "textarea", kTodo, kTodo, kOk);
+      testTextAfterOffset(15, BOUNDARY_LINE_END, "", 15, 15,
+                          "input", kOk, kTodo, kTodo,
+                          "div", kOk, kTodo, kTodo,
+                          "editable", kOk, kTodo, kTodo,
+                          "textarea", kOk, kTodo, kTodo);
+
+      ////////////////////////////////////////////////////////////////////////
+      // getTextBeforeOffset
+
+      // BOUNDARY_CHAR
+      testTextBeforeOffset(0, BOUNDARY_CHAR, "", 0, 0, 
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(1, BOUNDARY_CHAR, "h", 0, 1,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(14, BOUNDARY_CHAR, "n", 13, 14,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(15, BOUNDARY_CHAR, "d", 14, 15,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_WORD_START
+      testTextBeforeOffset(0, BOUNDARY_WORD_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(1, BOUNDARY_WORD_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(5, BOUNDARY_WORD_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(6, BOUNDARY_WORD_START, "hello ", 0, 6,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(7, BOUNDARY_WORD_START, "hello ", 0, 6,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(8, BOUNDARY_WORD_START, "hello ", 0, 6,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(9, BOUNDARY_WORD_START, "my ", 6, 9,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(10, BOUNDARY_WORD_START, "my ", 6, 9,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(14, BOUNDARY_WORD_START, "my ", 6, 9,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(15, BOUNDARY_WORD_START, "my ", 6, 9,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+
+      // BOUNDARY_WORD_END
+      testTextBeforeOffset(0, BOUNDARY_WORD_END, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(1, BOUNDARY_WORD_END, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(5, BOUNDARY_WORD_END, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(6, BOUNDARY_WORD_END, "hello ", 0, 6,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(7, BOUNDARY_WORD_END, "hello ", 0, 6,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(8, BOUNDARY_WORD_END, "hello ", 0, 6,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(9, BOUNDARY_WORD_END, " my", 5, 8,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(10, BOUNDARY_WORD_END, " my", 5, 8,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(14, BOUNDARY_WORD_END, " my", 5, 8,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+      testTextBeforeOffset(15, BOUNDARY_WORD_END, " my", 5, 8,
+                           "input", kTodo, kTodo, kTodo,
+                           "div", kTodo, kTodo, kTodo,
+                           "editable", kTodo, kTodo, kTodo,
+                           "textarea", kTodo, kTodo, kTodo);
+
+      // BOUNDARY_LINE_START
+      testTextBeforeOffset(0, BOUNDARY_LINE_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(1, BOUNDARY_LINE_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(14, BOUNDARY_LINE_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(15, BOUNDARY_LINE_START, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_LINE_END
+      testTextBeforeOffset(0, BOUNDARY_LINE_END, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(1, BOUNDARY_LINE_END, "", 0, 0,
+                           "input", kTodo, kOk, kTodo,
+                           "div", kTodo, kOk, kTodo,
+                           "editable", kTodo, kOk, kTodo,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(14, BOUNDARY_LINE_END, "", 0, 0,
+                           "input", kOk, kOk, kOk,
+                           "div", kOk, kOk, kOk,
+                           "editable", kOk, kOk, kOk,
+                           "textarea", kTodo, kOk, kTodo);
+      testTextBeforeOffset(15, BOUNDARY_LINE_END, "", 0, 0,
+                           "input", kOk, kOk, kOk,
+                           "div", kOk, kOk, kOk,
+                           "editable", kOk, kOk, kOk,
+                           "textarea", kOk, kOk, kOk);
+
+      ////////////////////////////////////////////////////////////////////////
+      // getTextAtOffset
+
+      // BOUNDARY_CHAR
+      testTextAtOffset(0, BOUNDARY_CHAR, "h", 0, 1,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(1, BOUNDARY_CHAR, "e", 1, 2,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(14, BOUNDARY_CHAR, "d", 14, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(15, BOUNDARY_CHAR, "", 15, 15,
+                        "input", kOk, kTodo, kTodo,
+                        "div", kOk, kTodo, kTodo,
+                        "editable", kOk, kTodo, kTodo,
+                        "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_WORD_START
+      testTextAtOffset(0, BOUNDARY_WORD_START, "hello ", 0, 6,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(1, BOUNDARY_WORD_START, "hello ", 0, 6,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(5, BOUNDARY_WORD_START, "hello ", 0, 6,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(6, BOUNDARY_WORD_START, "my ", 6, 9,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(7, BOUNDARY_WORD_START, "my ", 6, 9,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(8, BOUNDARY_WORD_START, "my ", 6, 9,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(9, BOUNDARY_WORD_START, "friend", 9, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(10, BOUNDARY_WORD_START, "friend", 9, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(14, BOUNDARY_WORD_START, "friend", 9, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(15, BOUNDARY_WORD_START, "friend", 9, 15,
+                       "input", kTodo, kTodo, kTodo,
+                       "div", kTodo, kTodo, kTodo,
+                       "editable", kTodo, kTodo, kTodo,
+                       "textarea", kTodo, kTodo, kTodo);
+
+      // BOUNDARY_WORD_END
+      testTextAtOffset(0, BOUNDARY_WORD_END, "hello", 0, 5,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(1, BOUNDARY_WORD_END, "hello", 0, 5,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(5, BOUNDARY_WORD_END, "hello", 0, 5,
+                       "input", kTodo, kTodo, kTodo,
+                       "div", kTodo, kTodo, kTodo,
+                       "editable", kTodo, kTodo, kTodo,
+                       "textarea", kTodo, kTodo, kTodo);
+      testTextAtOffset(6, BOUNDARY_WORD_END, " my", 5, 8,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(7, BOUNDARY_WORD_END, " my", 5, 8,
+                        "input", kOk, kOk, kOk,
+                        "div", kOk, kOk, kOk,
+                        "editable", kOk, kOk, kOk,
+                        "textarea", kOk, kOk, kOk);
+      testTextAtOffset(8, BOUNDARY_WORD_END, " my", 5, 8,
+                       "input", kTodo, kTodo, kTodo,
+                       "div", kTodo, kTodo, kTodo,
+                       "editable", kTodo, kTodo, kTodo,
+                       "textarea", kTodo, kTodo, kTodo);
+      testTextAtOffset(9, BOUNDARY_WORD_END, " friend", 8, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(10, BOUNDARY_WORD_END, " friend", 8, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(14, BOUNDARY_WORD_END, " friend", 8, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(15, BOUNDARY_WORD_END, " friend", 8, 15,
+                        "input", kTodo, kTodo, kTodo,
+                        "div", kTodo, kTodo, kTodo,
+                        "editable", kTodo, kTodo, kTodo,
+                        "textarea", kTodo, kTodo, kTodo);
+
+      // BOUNDARY_LINE_START
+      testTextAtOffset(0, BOUNDARY_LINE_START, "hello my friend", 0, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kTodo, kOk, kTodo);
+      testTextAtOffset(1, BOUNDARY_LINE_START, "hello my friend", 0, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+                       "textarea", kTodo, kOk, kTodo);
+      testTextAtOffset(14, BOUNDARY_LINE_START, "hello my friend", 0, 15,
+                       "input", kOk, kOk, kOk,
+                       "div", kOk, kOk, kOk,
+                       "editable", kOk, kOk, kOk,
+			       "textarea", kTodo, kOk, kTodo);
+      testTextAtOffset(15, BOUNDARY_LINE_START, "hello my friend", 0, 15,
+		       "input", kOk, kOk, kOk,
+		       "div", kOk, kOk, kOk,
+		       "editable", kOk, kOk, kOk,
+		       "textarea", kTodo, kOk, kTodo);
+
+      // BOUNDARY_LINE_END
+      testTextAtOffset(0, BOUNDARY_LINE_END, "hello my friend", 0, 15,
+		       "input", kOk, kOk, kOk,
+		       "div", kOk, kOk, kOk,
+		       "editable", kOk, kOk, kOk,
+		       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(1, BOUNDARY_LINE_END, "hello my friend", 0, 15,
+		       "input", kOk, kOk, kOk,
+		       "div", kOk, kOk, kOk,
+		       "editable", kOk, kOk, kOk,
+		       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(14, BOUNDARY_LINE_END, "hello my friend", 0, 15,
+		       "input", kTodo, kOk, kTodo,
+		       "div", kTodo, kOk, kTodo,
+		       "editable", kTodo, kOk, kTodo,
+		       "textarea", kOk, kOk, kOk);
+      testTextAtOffset(15, BOUNDARY_LINE_END, "hello my friend", 0, 15,
+		       "input", kTodo, kOk, kTodo,
+		       "div", kTodo, kOk, kTodo,
+		       "editable", kTodo, kOk, kTodo,
+		       "textarea", kTodo, kOk, kTodo);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="nsIAccessibleText getText related function tests for html:input,html:div and html:textarea"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452769">Mozilla Bug 452769</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input" value="hello my friend"/>
+  <div id="div">hello my friend</div>
+  <div id="editable" contenteditable="true">hello my friend</div>
+  <textarea id="textarea">hello my friend</textarea>
+
+</body>
+</html>

@@ -193,6 +193,7 @@ namespace nanojit
         void nativePageReset();\
         void nativePageSetup();\
         void underrunProtect(int);\
+        bool hardenNopInsertion(const Config& c) { return c.harden_nop_insertion; } \
         void asm_immi(Register r, int32_t val, bool canClobberCCs);\
         void asm_stkarg(LIns* p, int32_t& stkd);\
         void asm_farg(LIns*, int32_t& stkd);\
@@ -400,6 +401,7 @@ namespace nanojit
         void SSE_STQsib(int32_t d, Register rb, Register ri, int32_t scale, Register rv); \
         void SSE_CVTSI2SD(Register xr, Register gr); \
         void SSE_CVTSD2SI(Register gr, Register xr); \
+        void SSE_CVTTSD2SI(Register gr, Register xr); \
         void SSE_CVTSD2SS(Register xr, Register gr); \
         void SSE_CVTSS2SD(Register xr, Register gr); \
         void SSE_CVTDQ2PD(Register d, Register r); \

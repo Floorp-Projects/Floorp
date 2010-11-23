@@ -68,7 +68,7 @@ protected:
   NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
 
   NS_OVERRIDE virtual bool RecvSendMessage(const nsString& messageName,
-                                           const nsTArray<Variant>& data);
+                                           const InfallibleTArray<Variant>& data);
   NS_OVERRIDE virtual bool RecvEvalScript(const nsString& script);
 
   NS_OVERRIDE virtual PHandleChild* AllocPHandle();
@@ -93,6 +93,7 @@ private:
 #ifdef JS_GC_ZEAL
   static JSBool GCZeal(JSContext* cx, uintN argc, jsval *vp);
 #endif
+  static JSBool NoteIntentionalCrash(JSContext* cx, uintN argc, jsval *vp);
 
   static void ReportError(JSContext* cx, const char* message,
                           JSErrorReport* report);

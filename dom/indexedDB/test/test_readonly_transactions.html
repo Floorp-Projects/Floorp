@@ -99,7 +99,7 @@
 
       request = db.transaction([osName], READ_WRITE)
                   .objectStore(osName)
-                  .remove(key1);
+                  .delete(key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -109,7 +109,7 @@
 
       request = db.transaction(osName, READ_WRITE)
                   .objectStore(osName)
-                  .remove(key2);
+                  .delete(key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         is(event.transaction.mode, READ_WRITE, "Correct mode");
@@ -166,7 +166,7 @@
       }
 
       try {
-        request = db.transaction([osName]).objectStore(osName).remove(key1);
+        request = db.transaction([osName]).objectStore(osName).delete(key1);
         ok(false, "Removing from a readonly transaction should fail!");
       }
       catch (e) {
@@ -174,7 +174,7 @@
       }
 
       try {
-        request = db.transaction(osName).objectStore(osName).remove(key2);
+        request = db.transaction(osName).objectStore(osName).delete(key2);
         ok(false, "Removing from a readonly transaction should fail!");
       }
       catch (e) {

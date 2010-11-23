@@ -48,6 +48,8 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
   test_404.html \
+  test_atob.html \
+  atob_worker.js \
   test_close.html \
   close_worker.js \
   test_closeOnGC.html \
@@ -118,6 +120,7 @@ _SUBDIR_TEST_FILES = \
 
 _CHROME_TEST_FILES = \
   test_chromeWorker.xul \
+  test_chromeWorkerComponent.xul \
   chromeWorker_worker.js \
   chromeWorker_subworker.js \
   $(NULL)

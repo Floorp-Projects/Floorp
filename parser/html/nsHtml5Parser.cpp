@@ -60,6 +60,7 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
+#include "nsIDOMDocumentFragment.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
@@ -99,6 +100,9 @@ nsHtml5Parser::nsHtml5Parser()
 nsHtml5Parser::~nsHtml5Parser()
 {
   mTokenizer->end();
+  if (mDocWriteSpeculativeTokenizer) {
+    mDocWriteSpeculativeTokenizer->end();
+  }
 }
 
 NS_IMETHODIMP_(void)
@@ -377,10 +381,49 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   }
 
   if (!mBlocked) { // buffer was tokenized to completion
-    NS_ASSERTION(!buffer->hasMore(), "Buffer wasn't tokenized to completion?");  
+    NS_ASSERTION(!buffer->hasMore(), "Buffer wasn't tokenized to completion?");
     // Scripting semantics require a forced tree builder flush here
     mTreeBuilder->Flush(); // Move ops to the executor
-    mExecutor->FlushDocumentWrite(); // run the ops    
+    mExecutor->FlushDocumentWrite(); // run the ops
+  } else if (buffer->hasMore()) {
+    // The buffer wasn't tokenized to completion. Tokenize the untokenized
+    // content in order to preload stuff. This content will be retokenized
+    // later for normal parsing.
+    if (!mDocWriteSpeculatorActive) {
+      mDocWriteSpeculatorActive = PR_TRUE;
+      if (!mDocWriteSpeculativeTreeBuilder) {
+        // Lazily initialize if uninitialized
+        mDocWriteSpeculativeTreeBuilder =
+            new nsHtml5TreeBuilder(nsnull, mExecutor->GetStage());
+        mDocWriteSpeculativeTokenizer =
+            new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder);
+        mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);
+        mDocWriteSpeculativeTokenizer->start();
+      }
+      mDocWriteSpeculativeTokenizer->resetToDataState();
+      mDocWriteSpeculativeTreeBuilder->loadState(mTreeBuilder, &mAtomTable);
+      mDocWriteSpeculativeLastWasCR = PR_FALSE;
+    }
+
+    // Note that with multilevel document.write if we didn't just activate the
+    // speculator, it's possible that the speculator is now in the wrong state.
+    // That's OK for the sake of simplicity. The worst that can happen is
+    // that the speculative loads aren't exactly right. The content will be
+    // reparsed anyway for non-preload purposes.
+
+    PRInt32 originalStart = buffer->getStart();
+    while (buffer->hasMore()) {
+      buffer->adjust(mDocWriteSpeculativeLastWasCR);
+      if (buffer->hasMore()) {
+        mDocWriteSpeculativeLastWasCR =
+            mDocWriteSpeculativeTokenizer->tokenizeBuffer(buffer);
+      }
+    }
+    buffer->setStart(originalStart);
+
+    mDocWriteSpeculativeTreeBuilder->Flush();
+    mDocWriteSpeculativeTreeBuilder->DropHandles();
+    mExecutor->FlushSpeculativeLoads();
   }
 
   return NS_OK;
@@ -427,10 +470,21 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
-                             nsIContent* aTargetNode,
-                             nsIAtom* aContextLocalName,
-                             PRInt32 aContextNamespace,
-                             PRBool aQuirks)
+                        nsIContent* aTargetNode,
+                        nsIAtom* aContextLocalName,
+                        PRInt32 aContextNamespace,
+                        PRBool aQuirks)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
+                                  nsIContent* aTargetNode,
+                                  nsIAtom* aContextLocalName,
+                                  PRInt32 aContextNamespace,
+                                  PRBool aQuirks,
+                                  PRBool aPreventScriptExecution)
 {
   nsIDocument* doc = aTargetNode->GetOwnerDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
@@ -448,7 +502,16 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
                                    aContextNamespace,
                                    &target,
                                    aQuirks);
-  mExecutor->EnableFragmentMode();
+
+#ifdef DEBUG
+  if (!aPreventScriptExecution) {
+    nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);
+    NS_ASSERTION(domFrag,
+        "If script execution isn't prevented, must parse to DOM fragment.");
+  }
+#endif
+
+  mExecutor->EnableFragmentMode(aPreventScriptExecution);
   
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Tried to start parse without initializing the parser.");
@@ -477,6 +540,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   mTokenizer->end();
   mExecutor->DropParserAndPerfHint();
   mExecutor->DropHeldElements();
+  mTreeBuilder->DropHandles();
   mAtomTable.Clear();
   return NS_OK;
 }
@@ -498,6 +562,8 @@ nsHtml5Parser::CancelParsingEvents()
 void
 nsHtml5Parser::Reset()
 {
+  NS_PRECONDITION(mExecutor->IsFragmentMode(),
+                  "Reset called on a non-fragment parser.");
   mExecutor->Reset();
   mLastWasCR = PR_FALSE;
   UnblockParser();
@@ -572,6 +638,8 @@ nsHtml5Parser::ParseUntilBlocked()
   }
   NS_ASSERTION(mExecutor->HasStarted(), "Bad life cycle.");
 
+  mDocWriteSpeculatorActive = PR_FALSE;
+
   for (;;) {
     if (!mFirstBuffer->hasMore()) {
       if (mFirstBuffer == mLastBuffer) {
@@ -592,13 +660,22 @@ nsHtml5Parser::ParseUntilBlocked()
         // never release the last buffer.
         NS_ASSERTION(!mLastBuffer->getStart() && !mLastBuffer->getEnd(),
                      "Sentinel buffer had its indeces changed.");
-        if (mStreamParser && mReturnToStreamParserPermitted
-            && !mExecutor->IsScriptExecuting()) {
+        if (mStreamParser) {
+          if (mReturnToStreamParserPermitted &&
+              !mExecutor->IsScriptExecuting()) {
+            mTreeBuilder->Flush();
+            mReturnToStreamParserPermitted = PR_FALSE;
+            mStreamParser->ContinueAfterScripts(mTokenizer,
+                                                mTreeBuilder,
+                                                mLastWasCR);
+          }
+        } else {
+          // Script-created parser
           mTreeBuilder->Flush();
-          mReturnToStreamParserPermitted = PR_FALSE;
-          mStreamParser->ContinueAfterScripts(mTokenizer,
-                                              mTreeBuilder,
-                                              mLastWasCR);
+          // No need to flush the executor, because the executor is already
+          // in a flush
+          NS_ASSERTION(mExecutor->IsInFlushLoop(),
+              "How did we come here without being in the flush loop?");
         }
         return; // no more data for now but expecting more
       }

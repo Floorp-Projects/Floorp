@@ -25,6 +25,7 @@ package nu.validator.htmlparser.impl;
 
 import java.io.IOException;
 
+import nu.validator.htmlparser.annotation.Auto;
 import nu.validator.htmlparser.annotation.NoLength;
 import nu.validator.htmlparser.common.ByteReadable;
 
@@ -125,7 +126,7 @@ public abstract class MetaScanner {
     /**
      * Accumulation buffer for attribute values.
      */
-    private char[] strBuf;
+    private @Auto char[] strBuf;
     
     // [NOCPP[
     
@@ -698,7 +699,6 @@ public abstract class MetaScanner {
         if (strBufLen == strBuf.length) {
             char[] newBuf = new char[strBuf.length + (strBuf.length << 1)];
             System.arraycopy(strBuf, 0, newBuf, 0, strBuf.length);
-            Portability.releaseArray(strBuf);
             strBuf = newBuf;
         }
         strBuf[strBufLen++] = (char)c;

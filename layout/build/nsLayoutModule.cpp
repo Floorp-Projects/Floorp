@@ -114,6 +114,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
 #include "nsWebSocket.h"
+#include "nsDOMWorker.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -158,9 +159,16 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
 #include "nsINodeInfo.h"
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#include "nsHapticFeedback.h"
+#endif
 
 #define NS_EDITORCOMMANDTABLE_CID \
 { 0x4f5e62b8, 0xd659, 0x4156, { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 }}
+
+#define NS_HAPTICFEEDBACK_CID \
+{ 0x1f15dbc8, 0xbfaa, 0x45de, \
+{ 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
 
 static NS_DEFINE_CID(kEditorCommandTableCID, NS_EDITORCOMMANDTABLE_CID);
 
@@ -225,7 +233,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 #include "nsHTMLCanvasFrame.h"
 
 #include "nsIDOMCanvasRenderingContext2D.h"
-#include "nsICanvasRenderingContextWebGL.h"
+#include "nsIDOMWebGLRenderingContext.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -333,6 +341,10 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWorkerFactory)
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -446,7 +458,7 @@ nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
 nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
-nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
+nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
@@ -582,9 +594,10 @@ MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVid
 MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIContentUtils)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIContentUtils2)
 
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
-MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL, NS_NewCanvasRenderingContextWebGL)
+MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsIDOMWebGLRenderingContext, NS_NewCanvasRenderingContextWebGL)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
@@ -874,6 +887,7 @@ NS_DEFINE_NAMED_CID(NS_GEOLOCATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_ICONTENTUTILS_CID);
+NS_DEFINE_NAMED_CID(NS_ICONTENTUTILS2_CID);
 NS_DEFINE_NAMED_CID(CSPSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_EVENTLISTENERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GLOBALMESSAGEMANAGER_CID);
@@ -886,12 +900,16 @@ NS_DEFINE_NAMED_CID(NS_SYSTEMPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
 NS_DEFINE_NAMED_CID(THIRDPARTYUTIL_CID);
+NS_DEFINE_NAMED_CID(NS_WORKERFACTORY_CID);
 
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
     defined(android)
 NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
+#endif
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
@@ -1025,6 +1043,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_GEOLOCATION_CID, false, NULL, nsGeolocationConstructor },
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
   { &kNS_ICONTENTUTILS_CID, false, NULL, nsIContentUtilsConstructor },
+  { &kNS_ICONTENTUTILS2_CID, false, NULL, nsIContentUtils2Constructor },
   { &kCSPSERVICE_CID, false, NULL, CSPServiceConstructor },
   { &kNS_EVENTLISTENERSERVICE_CID, false, NULL, CreateEventListenerService },
   { &kNS_GLOBALMESSAGEMANAGER_CID, false, NULL, CreateGlobalMessageManager },
@@ -1042,7 +1061,11 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
     defined(android)
   { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
 #endif
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+  { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
+#endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
+  { &kNS_WORKERFACTORY_CID, false, NULL, nsWorkerFactoryConstructor },
   { NULL }
 };
 
@@ -1170,6 +1193,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
   { "@mozilla.org/content/contentutils;1", &kNS_ICONTENTUTILS_CID },
+  { "@mozilla.org/content/contentutils2;1", &kNS_ICONTENTUTILS2_CID },
   { CSPSERVICE_CONTRACTID, &kCSPSERVICE_CID },
   { NS_EVENTLISTENERSERVICE_CONTRACTID, &kNS_EVENTLISTENERSERVICE_CID },
   { NS_GLOBALMESSAGEMANAGER_CONTRACTID, &kNS_GLOBALMESSAGEMANAGER_CID },
@@ -1188,7 +1212,11 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
     defined(android)
   { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
 #endif
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+  { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },
+#endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
+  { NS_WORKERFACTORY_CONTRACTID, &kNS_WORKERFACTORY_CID },
   { NULL }
 };
 

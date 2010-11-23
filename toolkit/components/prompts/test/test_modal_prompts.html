@@ -20,67 +20,33 @@ Prompter tests: modal prompts
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-               getService(Ci.nsIPromptService2);
-let ioService = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-let pollTimer;
-
-function pollDialog(dialog) {
+function pollDialog(okButton) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-    if (dialog.getButton("accept").disabled)
+    if (okButton.disabled)
         return;
 
     ok(true, "dialog button is enabled now");
     pollTimer.cancel();
     pollTimer = null;
-    dialog.acceptDialog();
+    okButton.click();
     didDialog = true;
 }
 
-function checkExpectedState(doc, state) {
-    let msg        = doc.getElementById("info.body").textContent;
-    let icon       = doc.getElementById("info.icon");
-    let textOuter  = doc.getElementById("loginContainer");
-    let passOuter  = doc.getElementById("password1Container");
-    let checkOuter = doc.getElementById("checkboxContainer");
-    let textField  = doc.getElementById("loginTextbox");
-    let passField  = doc.getElementById("password1Textbox");
-    let checkbox   = doc.getElementById("checkbox");
-    let textValue  = textField.getAttribute("value");
-    let passValue  = passField.getAttribute("value");
-
-    is(msg, state.msg, "Checking expected message");
+function checkExpectedState(ui, state) {
     // XXX check title? OS X has title in content
-    is(icon.className,    "spaced " + state.iconClass, "Checking expected icon CSS class");
-    is(textOuter.hidden,  state.textHidden,  "Checking textbox visibility");
-    is(passOuter.hidden,  state.passHidden,  "Checking passbox visibility");
-    is(checkOuter.hidden, state.checkHidden, "Checking checkbox visibility");
-    is(textValue,         state.textValue,   "Checking textbox value");
-    is(passValue,         state.passValue,   "Checking passbox value");
-    is(checkbox.label,    state.checkMsg,    "Checking checkbox label");
-    is(checkbox.checked,  state.checked,     "Checking checkbox checked");
+    var iconClassPrefix = (isTabModal ? "info.icon " : "spaced ");
+    is(ui.infoBody.textContent,       state.msg,         "Checking expected message");
+    is(ui.loginContainer.hidden,      state.textHidden,  "Checking textbox visibility");
+    is(ui.password1Container.hidden,  state.passHidden,  "Checking passbox visibility");
+    is(ui.checkboxContainer.hidden,   state.checkHidden, "Checking checkbox visibility");
+    is(ui.checkbox.label,             state.checkMsg,    "Checking checkbox label");
+    is(ui.checkbox.checked,           state.checked,     "Checking checkbox checked");
+    is(ui.infoIcon.className,         iconClassPrefix + state.iconClass, "Checking expected icon CSS class");
+    is(ui.loginTextbox.getAttribute("value"),     state.textValue, "Checking textbox value");
+    is(ui.password1Textbox.getAttribute("value"), state.passValue, "Checking passbox value");
 }
 
-function checkExpectedSelectState(doc, state) {
-    let msg = doc.getElementById("info.txt").value;
-    // XXX check title? OS X has title in content
-    let listbox = doc.getElementById("list");
-
-    is(msg, state.msg, "Checking expected message");
-    // XXX check title? OS X has title in content
-    // Compare listbox contents
-    let count = listbox.itemCount;
-    is(count, state.items.length, "Checking listbox length");
-    if (count)
-        is(listbox.selectedIndex, 0, "Checking selected index");
-
-    for (let i = 0; i < count; i++) {
-        let item = listbox.getItemAtIndex(i).label;
-        is(item, items[i], "Checking item #" + i + " label");
-    }
-}
 
 /*
  * handleDialog
@@ -90,15 +56,14 @@ function checkExpectedSelectState(doc, state) {
  * should call startCallbackTimer() each time the auth dialog is expected (the
  * timer is a one-shot).
  */
-function handleDialog(doc, testNum) {
+function handleDialog(ui, testNum) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    ok(true, "--- handleDialog for test " + testNum + " ---");
+    ok(true, "--- handleDialog for test " + testNum + 
+             " --- (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
-    let textField = doc.getElementById("loginTextbox");
-    let passField = doc.getElementById("password1Textbox");
-    let checkbox  = doc.getElementById("checkbox");
-    let dialog    = doc.getElementsByTagName("dialog")[0];
-    let listbox   = doc.getElementById("list"); // only relevant for selectDialog
+    let textField = ui.loginTextbox;
+    let passField = ui.password1Textbox;
+    let checkbox  = ui.checkbox;
     let clickOK   = true;
     let state;
 
@@ -121,7 +86,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         //is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
         //doc.commandDispatcher.rewindFocus();
@@ -142,7 +107,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         break;
 
       case 3:
@@ -159,7 +124,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         // XXX dumb. old code driven by oncommand.
         checkbox.setChecked(true);
@@ -180,7 +145,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         break;
 
       case 5:
@@ -197,7 +162,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         clickOK = false;
         break;
 
@@ -215,7 +180,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         break;
 
       case 7:
@@ -232,7 +197,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         clickOK = false;
         break;
 
@@ -250,7 +215,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         // XXX dumb. old code driven by oncommand.
         checkbox.setChecked(true);
@@ -271,7 +236,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         clickOK = false;
         // XXX dumb. old code driven by oncommand.
@@ -293,7 +258,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         textField.setAttribute("value", "bacon");
         break;
 
@@ -311,7 +276,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         break;
 
       case 12:
@@ -328,7 +293,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         clickOK = false;
         break;
 
@@ -346,7 +311,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         textField.setAttribute("value", "bacon");
         clickOK = false;
         break;
@@ -365,7 +330,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         // XXX dumb. old code driven by oncommand.
         checkbox.setChecked(true);
@@ -386,7 +351,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         clickOK = false;
         // XXX dumb. old code driven by oncommand.
@@ -408,7 +373,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         textField.setAttribute("value", "newusr");
         passField.setAttribute("value", "newssh");
@@ -431,7 +396,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         textField.setAttribute("value", "newusr");
         passField.setAttribute("value", "newssh");
@@ -456,7 +421,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         passField.setAttribute("value", "newssh");
         // XXX dumb. old code driven by oncommand.
@@ -478,7 +443,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         passField.setAttribute("value", "newssh");
         // XXX dumb. old code driven by oncommand.
@@ -489,51 +454,6 @@ function handleDialog(doc, testNum) {
         break;
 
       case 20:
-        // Select (0 items)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : [],
-        };
-        checkExpectedSelectState(doc, state);
-        break;
-
-      case 21:
-        // Select (3 items, default ok)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : ["one", "two", "three"],
-        };
-        checkExpectedSelectState(doc, state);
-        break;
-
-      case 22:
-        // Select (3 items, change selection, ok)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : ["one", "two", "three"],
-        };
-        checkExpectedSelectState(doc, state);
-        // XXX need to trigger old code's click listener
-        listbox.selectedIndex = 1;
-        //listbox.getItemAtIndex(1).click();
-        break;
-
-      case 23:
-        // Select (3 items, cancel)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : ["one", "two", "three"],
-        };
-        checkExpectedSelectState(doc, state);
-        clickOK = false;
-        break;
-
-
-      case 24:
         // ConfirmEx (ok/cancel, ok)
         state = {
             msg   : "This is the confirmEx text.",
@@ -547,12 +467,12 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        is(dialog.getButton("accept").label, "OK",     "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "Cancel", "Checking cancel-button label");
-        checkExpectedState(doc, state);
+        is(ui.button0.label, "OK",     "Checking accept-button label");
+        is(ui.button1.label, "Cancel", "Checking cancel-button label");
+        checkExpectedState(ui, state);
         break;
 
-      case 25:
+      case 21:
         // ConfirmEx (yes/no, cancel)
         state = {
             msg   : "This is the confirmEx text.",
@@ -566,13 +486,13 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        is(dialog.getButton("accept").label, "Yes", "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "No",  "Checking cancel-button label");
-        checkExpectedState(doc, state);
+        is(ui.button0.label, "Yes", "Checking accept-button label");
+        is(ui.button1.label, "No",  "Checking cancel-button label");
+        checkExpectedState(ui, state);
         clickOK = false;
         break;
 
-      case 26:
+      case 22:
         // ConfirmEx (buttons from args, checkbox, ok)
         state = {
             msg   : "This is the confirmEx text.",
@@ -586,17 +506,17 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        is(dialog.getButton("accept").label, "butt0", "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "butt1", "Checking cancel-button label");
-        is(dialog.getButton("extra1").label, "butt2", "Checking extra1-button label");
-        checkExpectedState(doc, state);
+        is(ui.button0.label, "butt0", "Checking accept-button label");
+        is(ui.button1.label, "butt1", "Checking cancel-button label");
+        is(ui.button2.label, "butt2", "Checking extra1-button label");
+        checkExpectedState(ui, state);
 
         // XXX dumb. old code driven by oncommand.
         checkbox.setChecked(true);
         checkbox.doCommand();
         break;
 
-      case 27:
+      case 23:
         // ConfirmEx (buttons from args, checkbox, cancel)
         state = {
             msg   : "This is the confirmEx text.",
@@ -611,10 +531,10 @@ function handleDialog(doc, testNum) {
             checked     : false,
         };
         // XXX check button1 is default
-        is(dialog.getButton("accept").label, "butt0", "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "butt1", "Checking cancel-button label");
-        is(dialog.getButton("extra1").label, "butt2", "Checking extra1-button label");
-        checkExpectedState(doc, state);
+        is(ui.button0.label, "butt0", "Checking accept-button label");
+        is(ui.button1.label, "butt1", "Checking cancel-button label");
+        is(ui.button2.label, "butt2", "Checking extra1-button label");
+        checkExpectedState(ui, state);
 
         // XXX dumb. old code driven by oncommand.
         checkbox.setChecked(true);
@@ -623,7 +543,7 @@ function handleDialog(doc, testNum) {
         clickOK = false;
         break;
 
-      case 28:
+      case 24:
         // ConfirmEx (buttons from args, checkbox, button3)
         state = {
             msg   : "This is the confirmEx text.",
@@ -638,10 +558,10 @@ function handleDialog(doc, testNum) {
             checked     : false,
         };
         // XXX check button2 is default
-        is(dialog.getButton("accept").label, "butt0", "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "butt1", "Checking cancel-button label");
-        is(dialog.getButton("extra1").label, "butt2", "Checking extra1-button label");
-        checkExpectedState(doc, state);
+        is(ui.button0.label, "butt0", "Checking accept-button label");
+        is(ui.button1.label, "butt1", "Checking cancel-button label");
+        is(ui.button2.label, "butt2", "Checking extra1-button label");
+        checkExpectedState(ui, state);
 
         // XXX dumb. old code driven by oncommand.
         checkbox.setChecked(true);
@@ -651,7 +571,7 @@ function handleDialog(doc, testNum) {
         clickOK = false;
         break;
 
-      case 29:
+      case 25:
         // Alert, null window
         state = {
             msg   : "This is the alert text.",
@@ -665,10 +585,10 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
         break;
 
-      case 30:
+      case 26:
         // ConfirmEx (with delay, ok)
         state = {
             msg   : "This is the confirmEx delay text.",
@@ -682,11 +602,11 @@ function handleDialog(doc, testNum) {
             checkMsg    : "",
             checked     : false,
         };
-        is(dialog.getButton("accept").label, "OK",     "Checking accept-button label");
-        is(dialog.getButton("cancel").label, "Cancel", "Checking cancel-button label");
-        is(dialog.getButton("accept").disabled, true,  "Checking accept-button is disabled");
-        is(dialog.getButton("cancel").disabled, false, "Checking cancel-button isn't disabled ");
-        checkExpectedState(doc, state);
+        is(ui.button0.label, "OK",     "Checking accept-button label");
+        is(ui.button1.label, "Cancel", "Checking cancel-button label");
+        is(ui.button0.disabled, true,  "Checking accept-button is disabled");
+        is(ui.button1.disabled, false, "Checking cancel-button isn't disabled ");
+        checkExpectedState(ui, state);
         break;
 
 
@@ -704,7 +624,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         textField.setAttribute("value", "username");
         passField.setAttribute("value", "password");
@@ -730,7 +650,7 @@ function handleDialog(doc, testNum) {
             checkMsg    : "Check me out!",
             checked     : false,
         };
-        checkExpectedState(doc, state);
+        checkExpectedState(ui, state);
 
         textField.setAttribute("value", "username");
         passField.setAttribute("value", "password");
@@ -744,407 +664,497 @@ function handleDialog(doc, testNum) {
         break;
     }
 
-    if (testNum == 28) {
-        dialog._doButtonCommand("extra1");
-    } else if (testNum == 30) {
+    if (testNum == 24) {
+        ui.button2.click();
+    } else if (testNum == 26) {
         // Buttons are disabled at the moment, poll until they're reenabled.
         // Can't use setInterval here, because the window's in a modal state
         // and thus DOM events are suppressed.
         pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        pollTimer.initWithCallback(function() { pollDialog(dialog); },
+        pollTimer.initWithCallback(function() { pollDialog(ui.button0); },
                                    100, Ci.nsITimer.TYPE_REPEATING_SLACK);
         return;
     } else {
         if (clickOK)
-            dialog.acceptDialog();
+            ui.button0.click();
         else
-            dialog.cancelDialog();
+            ui.button1.click();
     }
 
     ok(true, "handleDialog done");
     didDialog = true;
 }
 
-let testNum   = 0;
-let checkVal  = {};
-let textVal   = {};
-let passVal   = {};
-let selectVal = {};
-let flags;
-let isOK, clickedButton;
 
-// ===== test 1 =====
-// Alert
-testNum++;
-startCallbackTimer();
-prompter.alert(window, "TestTitle", "This is the alert text.");
+function runTests() {
+    let ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
-ok(didDialog, "handleDialog was invoked");
+    let prompter, promptArgs;
+    if (usePromptService) {
+        prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                   getService(Ci.nsIPromptService2);
+    } else {
+        prompter = Cc["@mozilla.org/prompter;1"].
+                   getService(Ci.nsIPromptFactory).
+                   getPrompt(window, Ci.nsIPrompt);
+        if (isTabModal) {
+            let bag = prompter.QueryInterface(Ci.nsIWritablePropertyBag2);
+            bag.setPropertyAsBool("allowTabModal", true);
+        }
+    }
 
+    let checkVal  = {};
+    let textVal   = {};
+    let passVal   = {};
+    let flags;
+    let isOK, clickedButton;
 
-// ===== test 2 =====
-// AlertCheck (null checkbox label)
-testNum++;
-startCallbackTimer();
-prompter.alertCheck(window, "TestTitle", "This is the alertCheck text.", null, {});
-ok(didDialog, "handleDialog was invoked");
+    testNum = 0;
 
+    // ===== test 1 =====
+    // Alert
+    testNum++;
+    startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the alert text."];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    prompter.alert.apply(null, promptArgs);
 
-// ===== test 3 =====
-// AlertCheck
-testNum++;
-startCallbackTimer();
-checkVal.value = false;
-prompter.alertCheck(window, "TestTitle", "This is the alertCheck text.", "Check me out!", checkVal);
-ok(didDialog, "handleDialog was invoked");
-is(checkVal.value, true, "checkbox was checked");
+    ok(didDialog, "handleDialog was invoked");
 
-
-// ===== test 4 =====
-// Confirm (ok)
-testNum++;
-startCallbackTimer();
-isOK = prompter.confirm(window, "TestTitle", "This is the confirm text.");
-is(isOK, true, "checked expected retval");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 5 =====
-// Confirm (cancel)
-testNum++;
-startCallbackTimer();
-isOK = prompter.confirm(window, "TestTitle", "This is the confirm text.");
-is(isOK, false, "checked expected retval");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 2 =====
+    // AlertCheck (null checkbox label)
+    testNum++;
+    startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the alertCheck text.", null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    prompter.alertCheck.apply(null, promptArgs);
+    ok(didDialog, "handleDialog was invoked");
 
 
-// ===== test 6 =====
-// ConfirmCheck (ok, null checkbox label)
-testNum++;
-startCallbackTimer();
-isOK = prompter.confirmCheck(window, "TestTitle", "This is the confirmCheck text.", null, {});
-is(isOK, true, "checked expected retval");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 7 =====
-// ConfirmCheck (cancel, null checkbox label)
-testNum++;
-startCallbackTimer();
-isOK = prompter.confirmCheck(window, "TestTitle", "This is the confirmCheck text.", null, {});
-is(isOK, false, "checked expected retval");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 8 =====
-// ConfirmCheck (ok)
-testNum++;
-startCallbackTimer();
-checkVal.value = false;
-isOK = prompter.confirmCheck(window, "TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal);
-is(isOK, true, "checked expected retval");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 9 =====
-// ConfirmCheck (cancel)
-testNum++;
-startCallbackTimer();
-checkVal.value = false;
-isOK = prompter.confirmCheck(window, "TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal);
-is(isOK, false, "checked expected retval");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 3 =====
+    // AlertCheck
+    testNum++;
+    startCallbackTimer();
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the alertCheck text.", "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    prompter.alertCheck.apply(null, promptArgs);
+    ok(didDialog, "handleDialog was invoked");
+    is(checkVal.value, true, "checkbox was checked");
 
 
-// ===== test 10 =====
-// Prompt (ok, no default text)
-testNum++;
-startCallbackTimer();
-textVal.value = "";
-isOK = prompter.prompt(window, "TestTitle", "This is the prompt text.", textVal, null, {});
-is(isOK, true, "checked expected retval");
-is(textVal.value, "bacon", "checking expected text value");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 4 =====
+    // Confirm (ok)
+    testNum++;
+    startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the confirm text."];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.confirm.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 11 =====
-// Prompt (ok, default text)
-testNum++;
-startCallbackTimer();
-textVal.value = "kittens";
-isOK = prompter.prompt(window, "TestTitle", "This is the prompt text.", textVal, null, {});
-is(isOK, true, "checked expected retval");
-is(textVal.value, "kittens", "checking expected text value");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 12 =====
-// Prompt (cancel, default text)
-testNum++;
-startCallbackTimer();
-textVal.value = "puppies";
-isOK = prompter.prompt(window, "TestTitle", "This is the prompt text.", textVal, null, {});
-is(isOK, false, "checked expected retval");
-is(textVal.value, "puppies", "checking expected text value");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 13 =====
-// Prompt (cancel, default text modified)
-testNum++;
-startCallbackTimer();
-textVal.value = "puppies";
-isOK = prompter.prompt(window, "TestTitle", "This is the prompt text.", textVal, null, {});
-is(isOK, false, "checked expected retval");
-is(textVal.value, "puppies", "checking expected text value");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 14 =====
-// Prompt (ok, with checkbox)
-testNum++;
-startCallbackTimer();
-textVal.value  = "tribbles";
-checkVal.value = false;
-isOK = prompter.prompt(window, "TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal);
-is(isOK, true, "checked expected retval");
-is(textVal.value, "tribbles", "checking expected text value");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 15 =====
-// Prompt (cancel, with checkbox)
-testNum++;
-startCallbackTimer();
-textVal.value  = "tribbles";
-checkVal.value = false;
-isOK = prompter.prompt(window, "TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal);
-is(isOK, false, "checked expected retval");
-is(textVal.value, "tribbles", "checking expected text value");
-is(checkVal.value, false, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 5 =====
+    // Confirm (cancel)
+    testNum++;
+    startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the confirm text."];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.confirm.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    ok(didDialog, "handleDialog was invoked");
 
 
-// ===== test 16 =====
-// PromptUsernameAndPassword (ok)
-// Just two tests for this, since password manager already tests this extensively.
-testNum++;
-startCallbackTimer();
-textVal.value  = "usr";
-passVal.value  = "ssh";
-checkVal.value = false;
-isOK = prompter.promptUsernameAndPassword(window, "TestTitle", "This is the pUAP text.", textVal, passVal, "Check me out!", checkVal);
-is(isOK, true, "checked expected retval");
-is(textVal.value, "newusr", "checking expected text value");
-is(passVal.value, "newssh", "checking expected pass value");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 6 =====
+    // ConfirmCheck (ok, null checkbox label)
+    testNum++;
+    startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.confirmCheck.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 17 =====
-// PromptUsernameAndPassword (cancel)
-testNum++;
-startCallbackTimer();
-textVal.value  = "usr";
-passVal.value  = "ssh";
-checkVal.value = false;
-isOK = prompter.promptUsernameAndPassword(window, "TestTitle", "This is the pUAP text.", textVal, passVal, "Check me out!", checkVal);
-is(isOK, false, "checked expected retval");
-is(textVal.value, "usr", "checking expected text value");
-is(passVal.value, "ssh", "checking expected pass value");
-is(checkVal.value, false, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 7 =====
+    // ConfirmCheck (cancel, null checkbox label)
+    testNum++;
+    startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.confirmCheck.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    ok(didDialog, "handleDialog was invoked");
 
+    // ===== test 8 =====
+    // ConfirmCheck (ok)
+    testNum++;
+    startCallbackTimer();
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.confirmCheck.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 18 =====
-// PromptPassword (ok)
-testNum++;
-startCallbackTimer();
-passVal.value  = "ssh";
-checkVal.value = false;
-isOK = prompter.promptPassword(window, "TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal);
-is(isOK, true, "checked expected retval");
-is(passVal.value, "newssh", "checking expected pass value");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 19 =====
-// PromptPassword (cancel)
-testNum++;
-startCallbackTimer();
-passVal.value  = "ssh";
-checkVal.value = false;
-isOK = prompter.promptPassword(window, "TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal);
-is(isOK, false, "checked expected retval");
-is(passVal.value, "ssh", "checking expected pass value");
-is(checkVal.value, false, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 9 =====
+    // ConfirmCheck (cancel)
+    testNum++;
+    startCallbackTimer();
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.confirmCheck.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
 
-// ===== test 20 =====
-// Select (0 items, ok)
-testNum++;
-startCallbackTimer();
-items = [];
-selectVal.value = null; // outparam, just making sure.
-isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
-is(isOK, true, "checked expected retval");
-is(selectVal.value, -1, "checking selected index");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 10 =====
+    // Prompt (ok, no default text)
+    testNum++;
+    startCallbackTimer();
+    textVal.value = "";
+    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.prompt.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(textVal.value, "bacon", "checking expected text value");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 21 =====
-// Select (3 items, ok)
-testNum++;
-startCallbackTimer();
-items = ["one", "two", "three"];
-selectVal.value = null; // outparam, just making sure.
-isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
-is(isOK, true, "checked expected retval");
-is(selectVal.value, 0, "checking selected index");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 11 =====
+    // Prompt (ok, default text)
+    testNum++;
+    startCallbackTimer();
+    textVal.value = "kittens";
+    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.prompt.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(textVal.value, "kittens", "checking expected text value");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 22 =====
-// Select (3 items, selection changed, ok)
-testNum++;
-startCallbackTimer();
-items = ["one", "two", "three"];
-selectVal.value = null; // outparam, just making sure.
-isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
-is(isOK, true, "checked expected retval");
-is(selectVal.value, 1, "checking selected index");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 12 =====
+    // Prompt (cancel, default text)
+    testNum++;
+    startCallbackTimer();
+    textVal.value = "puppies";
+    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.prompt.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    is(textVal.value, "puppies", "checking expected text value");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 23 =====
-// Select (3 items, cancel)
-testNum++;
-startCallbackTimer();
-items = ["one", "two", "three"];
-selectVal.value = null; // outparam, just making sure.
-isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
-is(isOK, false, "checked expected retval");
-is(selectVal.value, 0, "checking selected index");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 13 =====
+    // Prompt (cancel, default text modified)
+    testNum++;
+    startCallbackTimer();
+    textVal.value = "puppies";
+    promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.prompt.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    is(textVal.value, "puppies", "checking expected text value");
+    ok(didDialog, "handleDialog was invoked");
 
+    // ===== test 14 =====
+    // Prompt (ok, with checkbox)
+    testNum++;
+    startCallbackTimer();
+    textVal.value  = "tribbles";
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.prompt.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(textVal.value, "tribbles", "checking expected text value");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 24 =====
-// ConfirmEx (ok/cancel, ok)
-testNum++;
-startCallbackTimer();
-flags = Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS;
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {});
-is(clickedButton, 0, "checked expected button num click");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 25 =====
-// ConfirmEx (yes/no, cancel)
-testNum++;
-startCallbackTimer();
-flags = Ci.nsIPromptService.STD_YES_NO_BUTTONS;
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {});
-is(clickedButton, 1, "checked expected button num click");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 26 =====
-// ConfirmEx (buttons from args, checkbox, ok)
-testNum++;
-startCallbackTimer();
-let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
-flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
-        b * Ci.nsIPromptService.BUTTON_POS_1 +
-        b * Ci.nsIPromptService.BUTTON_POS_0;
-checkVal.value = false;
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx text.", flags,
-                                   "butt0", "butt1", "butt2", "Check me out!", checkVal);
-is(clickedButton, 0, "checked expected button num click");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 27 =====
-// ConfirmEx (buttons from args, checkbox, cancel)
-testNum++;
-startCallbackTimer();
-let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
-flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
-        b * Ci.nsIPromptService.BUTTON_POS_1 +
-        b * Ci.nsIPromptService.BUTTON_POS_0;
-flags ^= Ci.nsIPromptService.BUTTON_POS_1_DEFAULT;
-checkVal.value = false;
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx text.", flags,
-                                   "butt0", "butt1", "butt2", "Check me out!", checkVal);
-is(clickedButton, 1, "checked expected button num click");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 28 =====
-// ConfirmEx (buttons from args, checkbox, button3)
-testNum++;
-startCallbackTimer();
-let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
-flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
-        b * Ci.nsIPromptService.BUTTON_POS_1 +
-        b * Ci.nsIPromptService.BUTTON_POS_0;
-flags ^= Ci.nsIPromptService.BUTTON_POS_2_DEFAULT;
-checkVal.value = false;
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx text.", flags,
-                                   "butt0", "butt1", "butt2", "Check me out!", checkVal);
-is(clickedButton, 2, "checked expected button num click");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
-
-// ===== test 29  =====
-// Alert, no window
-testNum++;
-startCallbackTimer();
-prompter.alert(null, "TestTitle", "This is the alert text.");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 15 =====
+    // Prompt (cancel, with checkbox)
+    testNum++;
+    startCallbackTimer();
+    textVal.value  = "tribbles";
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.prompt.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    is(textVal.value, "tribbles", "checking expected text value");
+    is(checkVal.value, false, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
 
-// ===== test 30 =====
-// ConfirmEx (delay, ok)
-testNum++;
-startCallbackTimer();
-flags = (Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS | Ci.nsIPromptService.BUTTON_DELAY_ENABLE);
-clickedButton = prompter.confirmEx(window, "TestTitle", "This is the confirmEx delay text.", flags, null, null, null, null, {});
-is(clickedButton, 0, "checked expected button num click");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 16 =====
+    // PromptUsernameAndPassword (ok)
+    // Just two tests for this, since password manager already tests this extensively.
+    testNum++;
+    startCallbackTimer();
+    textVal.value  = "usr";
+    passVal.value  = "ssh";
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the pUAP text.", textVal, passVal, "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.promptUsernameAndPassword.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(textVal.value, "newusr", "checking expected text value");
+    is(passVal.value, "newssh", "checking expected pass value");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
-// promptAuth already tested via password manager but do a few specific things here.
+    // ===== test 17 =====
+    // PromptUsernameAndPassword (cancel)
+    testNum++;
+    startCallbackTimer();
+    textVal.value  = "usr";
+    passVal.value  = "ssh";
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the pUAP text.", textVal, passVal, "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.promptUsernameAndPassword.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    is(textVal.value, "usr", "checking expected text value");
+    is(passVal.value, "ssh", "checking expected pass value");
+    is(checkVal.value, false, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
 
-var channel = ioService.newChannel("http://example.com", null, null);
-var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
-var authinfo = {
-    username : "",
-    password : "",
-    domain   : "",
+    // ===== test 18 =====
+    // PromptPassword (ok)
+    testNum++;
+    startCallbackTimer();
+    passVal.value  = "ssh";
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.promptPassword.apply(null, promptArgs);
+    is(isOK, true, "checked expected retval");
+    is(passVal.value, "newssh", "checking expected pass value");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
-    flags : Ci.nsIAuthInformation.AUTH_HOST,
-    authenticationScheme : "basic",
-    realm : ""
-};
+    // ===== test 19 =====
+    // PromptPassword (cancel)
+    testNum++;
+    startCallbackTimer();
+    passVal.value  = "ssh";
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    isOK = prompter.promptPassword.apply(null, promptArgs);
+    is(isOK, false, "checked expected retval");
+    is(passVal.value, "ssh", "checking expected pass value");
+    is(checkVal.value, false, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 100 =====
-// promptAuth with empty realm
-testNum = 100;
-startCallbackTimer();
-checkVal.value = false;
-isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-is(isOK, true, "checked expected retval");
-is(authinfo.username, "username", "checking filled username");
-is(authinfo.password, "password", "checking filled password");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 20 =====
+    // ConfirmEx (ok/cancel, ok)
+    testNum++;
+    startCallbackTimer();
+    flags = Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS;
+    promptArgs = ["TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    clickedButton = prompter.confirmEx.apply(null, promptArgs);
+    is(clickedButton, 0, "checked expected button num click");
+    ok(didDialog, "handleDialog was invoked");
 
-// ===== test 101 =====
-// promptAuth with long realm
-testNum++;
-startCallbackTimer();
-checkVal.value = false;
-var longString = "";
-for (var i = 0; i < 20; i++)
-    longString += "abcdefghi "; // 200 chars long
-authinfo.realm = longString;
-authinfo.username = "";
-authinfo.password = "";
-isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-is(isOK, true, "checked expected retval");
-is(authinfo.username, "username", "checking filled username");
-is(authinfo.password, "password", "checking filled password");
-is(checkVal.value, true, "expected checkbox setting");
-ok(didDialog, "handleDialog was invoked");
+    // ===== test 21 =====
+    // ConfirmEx (yes/no, cancel)
+    testNum++;
+    startCallbackTimer();
+    flags = Ci.nsIPromptService.STD_YES_NO_BUTTONS;
+    promptArgs = ["TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {}];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    clickedButton = prompter.confirmEx.apply(null, promptArgs);
+    is(clickedButton, 1, "checked expected button num click");
+    ok(didDialog, "handleDialog was invoked");
+
+    // ===== test 22 =====
+    // ConfirmEx (buttons from args, checkbox, ok)
+    testNum++;
+    startCallbackTimer();
+    let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+    flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
+            b * Ci.nsIPromptService.BUTTON_POS_1 +
+            b * Ci.nsIPromptService.BUTTON_POS_0;
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the confirmEx text.", flags,
+                  "butt0", "butt1", "butt2", "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    clickedButton = prompter.confirmEx.apply(null, promptArgs);
+    is(clickedButton, 0, "checked expected button num click");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
+
+    // ===== test 23 =====
+    // ConfirmEx (buttons from args, checkbox, cancel)
+    testNum++;
+    startCallbackTimer();
+    let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+    flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
+            b * Ci.nsIPromptService.BUTTON_POS_1 +
+            b * Ci.nsIPromptService.BUTTON_POS_0;
+    flags ^= Ci.nsIPromptService.BUTTON_POS_1_DEFAULT;
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the confirmEx text.", flags,
+                  "butt0", "butt1", "butt2", "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    clickedButton = prompter.confirmEx.apply(null, promptArgs);
+    is(clickedButton, 1, "checked expected button num click");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
+
+    // ===== test 24 =====
+    // ConfirmEx (buttons from args, checkbox, button3)
+    testNum++;
+    startCallbackTimer();
+    let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
+    flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
+            b * Ci.nsIPromptService.BUTTON_POS_1 +
+            b * Ci.nsIPromptService.BUTTON_POS_0;
+    flags ^= Ci.nsIPromptService.BUTTON_POS_2_DEFAULT;
+    checkVal.value = false;
+    promptArgs = ["TestTitle", "This is the confirmEx text.", flags,
+                  "butt0", "butt1", "butt2", "Check me out!", checkVal];
+    if (usePromptService)
+        promptArgs.unshift(window);
+    clickedButton = prompter.confirmEx.apply(null, promptArgs);
+    is(clickedButton, 2, "checked expected button num click");
+    is(checkVal.value, true, "expected checkbox setting");
+    ok(didDialog, "handleDialog was invoked");
+
+    // ===== test 25  =====
+    // Alert, no window
+    // (skipped for tabmodal tests: window is required)
+    testNum++;
+    if (!isTabModal) {
+        startCallbackTimer();
+    promptArgs = ["TestTitle", "This is the alert text."];
+    if (usePromptService)
+        promptArgs.unshift(null);
+        prompter.alert.apply(null, promptArgs);
+        ok(didDialog, "handleDialog was invoked");
+    }
+
+
+    // ===== test 26 =====
+    // ConfirmEx (delay, ok)
+    // (skipped for tabmodal tests: delay not supported)
+    testNum++;
+    if (!isTabModal) {
+        startCallbackTimer();
+        flags = (Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS | Ci.nsIPromptService.BUTTON_DELAY_ENABLE);
+        promptArgs = ["TestTitle", "This is the confirmEx delay text.", flags, null, null, null, null, {}];
+        if (usePromptService)
+            promptArgs.unshift(window);
+        clickedButton = prompter.confirmEx.apply(null, promptArgs);
+        is(clickedButton, 0, "checked expected button num click");
+        ok(didDialog, "handleDialog was invoked");
+    }
+
+    // promptAuth already tested via password manager but do a few specific things here.
+
+
+    var channel = ioService.newChannel("http://example.com", null, null);
+    var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
+    var authinfo = {
+        username : "",
+        password : "",
+        domain   : "",
+        flags : Ci.nsIAuthInformation.AUTH_HOST,
+        authenticationScheme : "basic",
+        realm : ""
+    };
+
+    // ===== test 100 =====
+    // promptAuth with empty realm
+    // (promptAuth is only accessible from the prompt service)
+    testNum = 100;
+    if (usePromptService) {
+        startCallbackTimer();
+        checkVal.value = false;
+        promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+        if (usePromptService)
+            promptArgs.unshift(window);
+        isOK = prompter.promptAuth.apply(null, promptArgs);
+        is(isOK, true, "checked expected retval");
+        is(authinfo.username, "username", "checking filled username");
+        is(authinfo.password, "password", "checking filled password");
+        is(checkVal.value, true, "expected checkbox setting");
+        ok(didDialog, "handleDialog was invoked");
+    }
+
+    // ===== test 101 =====
+    // promptAuth with long realm
+    // (promptAuth is only accessible from the prompt service)
+    testNum++;
+    if (usePromptService) {
+        startCallbackTimer();
+        checkVal.value = false;
+        var longString = "";
+        for (var i = 0; i < 20; i++)
+            longString += "abcdefghi "; // 200 chars long
+        authinfo.realm = longString;
+        authinfo.username = "";
+        authinfo.password = "";
+        promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
+        if (usePromptService)
+            promptArgs.unshift(window);
+        isOK = prompter.promptAuth.apply(null, promptArgs);
+        is(isOK, true, "checked expected retval");
+        is(authinfo.username, "username", "checking filled username");
+        is(authinfo.password, "password", "checking filled password");
+        is(checkVal.value, true, "expected checkbox setting");
+        ok(didDialog, "handleDialog was invoked");
+    }
+}
+
+let testNum;
+let pollTimer;
+
+/*
+ * Run the body of the 3 times:
+ * - 1st pass: with window-modal prompts, using nsIPromptService
+ * - 2nd pass: still window-modal, using nsIPrompt directly (via nsIPromptFactory)
+ * - 3rd pass: with tab-modal prompts. Can't opt into these via * nsIPromptService.
+ */
+
+isTabModal = false; usePromptService = true;
+runTests();
+
+isTabModal = false; usePromptService = false;
+runTests();
+
+if (getTabModalPromptBox(window)) {
+    isTabModal = true; usePromptService = false;
+    runTests();
+}
 
 </script>
 </pre>

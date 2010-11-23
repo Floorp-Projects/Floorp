@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>border</title>
+<style type="text/css">
+
+body {
+	filter: url('../filters.svg#NonWhiteToBlack');
+}
+
+body > div {
+	/* filter doesn't change alpha */
+	background: white;
+}
+
+div.test {
+	width: 144px;
+	height: 86px;
+	border-radius: 72px;
+	border-top: 28px solid;
+	border-bottom: 28px solid;
+	background: cyan;
+	margin-bottom: 20px;
+	border-color: blue;
+	border-left: 5px solid red;
+	border-right: 5px solid red;
+}
+
+</style>
+</head>
+<body>
+<div>
+<div class="test"></div>
+</div>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1">
+  <!-- use an empty g to force filters.svg to load before onload -->
+  <use xlink:href="../filters.svg#empty" />
+</svg>
+</body>
+</html>

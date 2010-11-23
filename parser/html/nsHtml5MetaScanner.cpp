@@ -59,6 +59,8 @@
 
 #include "nsHtml5MetaScanner.h"
 
+PRUnichar nsHtml5MetaScanner::CHARSET[] = { 'c', 'h', 'a', 'r', 's', 'e', 't' };
+PRUnichar nsHtml5MetaScanner::CONTENT[] = { 'c', 'o', 'n', 't', 'e', 'n', 't' };
 void 
 nsHtml5MetaScanner::stateLoop(PRInt32 state)
 {
@@ -671,9 +673,8 @@ void
 nsHtml5MetaScanner::addToBuffer(PRInt32 c)
 {
   if (strBufLen == strBuf.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(strBuf.length + (strBuf.length << 1));
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>::newJArray(strBuf.length + (strBuf.length << 1));
     nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
-    strBuf.release();
     strBuf = newBuf;
   }
   strBuf[strBufLen++] = (PRUnichar) c;

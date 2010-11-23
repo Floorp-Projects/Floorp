@@ -109,8 +109,11 @@ private:
     }
 
     static void             RemovePidLockFiles(PRBool aFatalSignal);
-    static void             FatalSignalHandler(int signo, siginfo_t *info,
-                                               void *context);
+    static void             FatalSignalHandler(int signo
+#ifdef SA_SIGINFO
+                                               , siginfo_t *info, void *context
+#endif
+                                               );
     static PRCList          mPidLockList;
 
     nsresult                LockWithFcntl(const nsACString& lockFilePath);

@@ -104,8 +104,7 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
   if (mSurface) {
     /* Verify the current buffer is valid for this purpose */
     if (mSize.width < aSize.width || mSize.height < aSize.height
-        || (mSurface->GetContentType() != aContentType
-            && mSurface->AreSimilarSurfacesSensitiveToContentType())) {
+        || mSurface->GetContentType() != aContentType) {
       mSurface = nsnull;
     } else {
       NS_ASSERTION(mType == aSimilarTo->GetType(),

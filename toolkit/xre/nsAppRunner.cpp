@@ -1250,9 +1250,9 @@ ScopedXPCOMStartup::Initialize()
 #ifndef _BUILD_STATIC_BIN
   XRE_AddStaticComponent(&kXREModule);
 #else
-  for (const mozilla::Module *const *staticModules = kPStaticModules;
+  for (const mozilla::Module *const *const *staticModules = kPStaticModules;
        *staticModules; ++staticModules)
-      XRE_AddStaticComponent(*staticModules);
+      XRE_AddStaticComponent(**staticModules);
 #endif
 #endif
 
@@ -3129,6 +3129,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   } else if (ar == ARG_FOUND) {
     gSafeMode = PR_TRUE;
   }
+
+#ifdef XP_WIN
+  // If the shift key is pressed during startup start in safe mode. GetKeyState
+  // returns a short and the high order bit will be 1 if the shift key is
+  // pressed. By masking the returned short with 0x8000 the result will be 0 if
+  // the key is not pressed and non-zero otherwise.
+  if (GetKeyState(VK_SHIFT) & 0x8000)
+    gSafeMode = PR_TRUE;
+#endif
 
 #ifdef XP_MACOSX
   if (GetCurrentEventKeyModifiers() & optionKey)

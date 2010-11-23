@@ -85,6 +85,8 @@
 # define NS_tchmod _wchmod
 # define NS_tmkdir(path, perms) _wmkdir(path)
 # define NS_tremove _wremove
+// _wrename is used instead of MoveFileW to avoid the link tracking service.
+# define NS_trename _wrename
 # define NS_tfopen _wfopen
 #ifndef WINCE
 # define stat _stat
@@ -92,6 +94,9 @@
 # define NS_tstat _wstat
 # define BACKUP_EXT L".moz-backup"
 # define CALLBACK_BACKUP_EXT L".moz-callback"
+#ifndef WINCE
+# define DELETE_DIR L"tobedeleted"
+#endif
 # define LOG_S "%S"
 #else
 # include <sys/wait.h>
@@ -108,6 +113,7 @@
 # define NS_tchmod chmod
 # define NS_tmkdir mkdir
 # define NS_tremove remove
+# define NS_trename rename
 # define NS_tfopen fopen
 # define NS_tstat stat
 # define BACKUP_EXT ".moz-backup"
@@ -197,9 +203,6 @@ void LaunchMacPostProcess(const char* aAppExe);
   }
 #endif
 #endif
-
-char *BigBuffer = NULL;
-int BigBufferSize = 262144;
 
 //-----------------------------------------------------------------------------
 
@@ -511,8 +514,8 @@ static int ensure_remove(const NS_tchar *path)
   ensure_write_permissions(path);
   int rv = NS_tremove(path);
   if (rv)
-    LOG(("ensure_remove: failed to remove file: " LOG_S ",%d,%d\n", path, rv,
-         errno));
+    LOG(("ensure_remove: failed to remove file: " LOG_S ", rv: %d, err: %d\n",
+         path, rv, errno));
   return rv;
 }
 
@@ -550,8 +553,8 @@ static int ensure_parent_dir(const NS_tchar *path)
       // If the directory already exists, then ignore the error. On WinCE rv
       // will equal 0 if the directory already exists.
       if (rv < 0 && errno != EEXIST) {
-        LOG(("ensure_parent_dir: failed to create directory: " LOG_S ",%d\n",
-             path, errno));
+        LOG(("ensure_parent_dir: failed to create directory: " LOG_S ", " \
+             "err: %d\n", path, errno));
         rv = WRITE_ERROR;
       } else {
         rv = OK;
@@ -562,44 +565,31 @@ static int ensure_parent_dir(const NS_tchar *path)
   return rv;
 }
 
-static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
+// Renames the specified file to the new file specified. If the destination file
+// exists it is removed.
+static int rename_file(const NS_tchar *spath, const NS_tchar *dpath)
 {
   int rv = ensure_parent_dir(dpath);
   if (rv)
     return rv;
 
-  struct stat ss;
-
-  AutoFile sfile = NS_tfopen(spath, NS_T("rb"));
-  if (sfile == NULL || fstat(fileno((FILE*)sfile), &ss)) {
-    LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile.get(),
-         spath, errno));
+  if (NS_taccess(spath, F_OK)) {
+    LOG(("rename_file: source file doesn't exist: " LOG_S "\n", spath));
     return READ_ERROR;
   }
 
-  AutoFile dfile = ensure_open(dpath, NS_T("wb+"), ss.st_mode); 
-  if (dfile == NULL) {
-    LOG(("copy_file: failed to open: " LOG_S ",%d\n", dpath, errno));
-    return WRITE_ERROR;
-  }
-
-  size_t sc;
-  while ((sc = fread(BigBuffer, 1, BigBufferSize, sfile)) > 0) {
-    size_t dc;
-    char *bp = BigBuffer;
-    while ((dc = fwrite(bp, 1, (unsigned int) sc, dfile)) > 0) {
-      if ((sc -= dc) == 0)
-        break;
-      bp += dc;
-    }
-    if (dc < 0) {
-      LOG(("copy_file: failed to write: %d\n", errno));
+  if (!NS_taccess(dpath, F_OK)) {
+    if (ensure_remove(dpath)) {
+      LOG(("rename_file: destination file exists and could not be " \
+           "removed: " LOG_S "\n", dpath));
       return WRITE_ERROR;
     }
   }
-  if (sc < 0) {
-    LOG(("copy_file: failed to read: %d\n", errno));
-    return READ_ERROR;
+
+  if (NS_trename(spath, dpath) != 0) {
+    LOG(("rename_file: failed to rename file - src: " LOG_S ", " \
+         "dst:" LOG_S ", err: %d\n", spath, dpath, errno));
+    return WRITE_ERROR;
   }
 
   return OK;
@@ -607,51 +597,73 @@ static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
 
 //-----------------------------------------------------------------------------
 
-// Create a backup copy of the specified file alongside it.
+// Create a backup of the specified file by renaming it.
 static int backup_create(const NS_tchar *path)
 {
   NS_tchar backup[MAXPATHLEN];
   NS_tsnprintf(backup, sizeof(backup)/sizeof(backup[0]),
                NS_T("%s" BACKUP_EXT), path);
 
-  return copy_file(path, backup);
+  return rename_file(path, backup);
 }
 
-// Copy the backup copy of the specified file back overtop
-// the specified file.
-// XXX should be a file move instead
+// Rename the backup of the specified file that was created by renaming it back
+// to the original file.
 static int backup_restore(const NS_tchar *path)
 {
   NS_tchar backup[MAXPATHLEN];
   NS_tsnprintf(backup, sizeof(backup)/sizeof(backup[0]),
                NS_T("%s" BACKUP_EXT), path);
 
-  int rv = copy_file(backup, path);
-  if (rv) {
-    ensure_remove(backup);
-    return rv;
+  if (NS_taccess(backup, F_OK)) {
+    LOG(("backup_restore: backup file doesn't exist: " LOG_S "\n", backup));
+    return OK;
   }
 
-  rv = ensure_remove(backup);
-  if (rv) {
-    LOG(("backup_restore: failed to remove backup file: " LOG_S ",%d\n", backup,
-         errno));
-    return WRITE_ERROR;
-  }
-
-  return OK;
+  return rename_file(backup, path);
 }
 
-// Discard the backup copy of the specified file.
+// Discard the backup of the specified file that was created by renaming it.
 static int backup_discard(const NS_tchar *path)
 {
   NS_tchar backup[MAXPATHLEN];
   NS_tsnprintf(backup, sizeof(backup)/sizeof(backup[0]),
                NS_T("%s" BACKUP_EXT), path);
 
+  // Nothing to discard
+  if (NS_taccess(backup, F_OK)) {
+    LOG(("backup_discard: backup file doesn't exist: " LOG_S "\n", backup));
+    return OK;
+  }
+
   int rv = ensure_remove(backup);
+#if defined(XP_WIN) && !defined(WINCE)
+  if (rv) {
+    LOG(("backup_discard: unable to remove: " LOG_S "\n", backup));
+    NS_tchar path[MAXPATHLEN];
+    GetTempFileNameW(DELETE_DIR, L"moz", 0, path);
+    if (rename_file(backup, path)) {
+      LOG(("backup_discard: failed to rename file:" LOG_S ", dst:" LOG_S "\n",
+           backup, path));
+      return WRITE_ERROR;
+    }
+    // The MoveFileEx call to remove the file on OS reboot will fail if the
+    // process doesn't have write access to the HKEY_LOCAL_MACHINE registry key
+    // but this is ok since the installer / uninstaller will delete the
+    // directory containing the file along with its contents after an update is
+    // applied, on reinstall, and on uninstall.
+    if (MoveFileEx(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT)) {
+      LOG(("backup_discard: file renamed and will be removed on OS " \
+           "reboot: " LOG_S "\n", path));
+    } else {
+      LOG(("backup_discard: failed to schedule OS reboot removal of " \
+           "file: " LOG_S "\n", path));
+    }
+  }
+#else
   if (rv)
     return WRITE_ERROR;
+#endif
 
   return OK;
 }
@@ -795,10 +807,6 @@ RemoveFile::Execute()
     return rv;
   }
 
-  rv = ensure_remove(mDestFile);
-  if (rv)
-    return WRITE_ERROR;
-
   return OK;
 }
 
@@ -869,10 +877,6 @@ AddFile::Execute()
     rv = backup_create(mDestFile);
     if (rv)
       return rv;
-
-    rv = ensure_remove(mDestFile);
-    if (rv)
-      return WRITE_ERROR;
   } else {
     rv = ensure_parent_dir(mDestFile);
     if (rv)
@@ -933,8 +937,8 @@ PatchFile::LoadSourceFile(FILE* ofile)
   struct stat os;
   int rv = fstat(fileno((FILE*)ofile), &os);
   if (rv) {
-    LOG(("LoadSourceFile: unable to stat destination file: " LOG_S ",%d\n",
-         mDestFile, errno));
+    LOG(("LoadSourceFile: unable to stat destination file: " LOG_S ", " \
+         "err: %d\n", mDestFile, errno));
     return READ_ERROR;
   }
 
@@ -1045,7 +1049,8 @@ PatchFile::Execute()
 
   FILE *origfile = NS_tfopen(mDestFile, NS_T("rb"));
   if (!origfile) {
-    LOG(("unable to open destination file: " LOG_S ",%d\n", mDestFile, errno));
+    LOG(("unable to open destination file: " LOG_S ", err: %d\n", mDestFile,
+         errno));
     return READ_ERROR;
   }
 
@@ -1056,8 +1061,8 @@ PatchFile::Execute()
     return rv;
   }
 
-  // Create backup copy of the destination file before proceeding.
-
+  // Rename the destination file if it exists before proceeding so it can be
+  // used to restore the file to its original state if there is an error.
   struct stat ss;
   if (NS_tstat(mDestFile, &ss))
     return READ_ERROR;
@@ -1066,15 +1071,10 @@ PatchFile::Execute()
   if (rv)
     return rv;
 
-  rv = ensure_remove(mDestFile);
-  if (rv) {
-    LOG(("unable to remove original file: " LOG_S ",%d\n", mDestFile, errno));
-    return WRITE_ERROR;
-  }
-
   AutoFile ofile = ensure_open(mDestFile, NS_T("wb+"), ss.st_mode);
   if (ofile == NULL) {
-    LOG(("unable to create new file: " LOG_S ",%d\n", mDestFile, errno));
+    LOG(("unable to create new file: " LOG_S ", err: %d\n", mDestFile,
+         errno));
     return WRITE_ERROR;
   }
 
@@ -1510,10 +1510,6 @@ int NS_main(int argc, NS_tchar **argv)
         if (result != WAIT_OBJECT_0)
           return 1;
       }
-
-      // The process may be signaled before it releases the executable image.
-      // This is a terrible hack, but it'll have to do for now :-(
-      Sleep(50);
 #else
       waitpid(pid, NULL, 0);
 #endif
@@ -1655,17 +1651,28 @@ int NS_main(int argc, NS_tchar **argv)
     NS_tremove(callbackBackupPath);
     CopyFileW(argv[callbackIndex], callbackBackupPath, FALSE);
 
-    // By opening a file handle to the callback executable, the OS will prevent
-    // launching the process while it is being updated. 
-    callbackFile = CreateFileW(argv[callbackIndex],
+    // Since the process may be signaled as exited by WaitForSingleObject before
+    // the release of the executable image try to lock the main executable file
+    // multiple times before giving up.
+    int retries = 5;
+    do {
+      // By opening a file handle to the callback executable, the OS will prevent
+      // launching the process while it is being updated. 
+      callbackFile = CreateFileW(argv[callbackIndex],
 #ifdef WINCE
-                               GENERIC_WRITE,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
 #else
-                               DELETE | GENERIC_WRITE,
-                               0, // no sharing!
+                                 DELETE | GENERIC_WRITE,
+                                 0, // no sharing!
 #endif
-                               NULL, OPEN_EXISTING, 0, NULL);
+                                 NULL, OPEN_EXISTING, 0, NULL);
+      if (callbackFile != INVALID_HANDLE_VALUE)
+        break;
+
+      Sleep(50);
+    } while (--retries);
+
     // CreateFileW will fail if the callback executable is already in use. Since
     // it isn't possible to update write the status file and return.
     if (callbackFile == INVALID_HANDLE_VALUE) {
@@ -1681,28 +1688,14 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif
 
-  BigBuffer = (char *)malloc(BigBufferSize);
-  if (!BigBuffer) {
-    LOG(("NS_main: failed to allocate default buffer of %i. Trying 1K " \
-         "buffer\n", BigBufferSize));
-
-    // Try again with a smaller size.
-    BigBufferSize = 1024;
-    BigBuffer = (char *)malloc(BigBufferSize);
-    if (!BigBuffer) {
-      LOG(("NS_main: failed to allocate 1K buffer - exiting\n"));
-      LogFinish();
-      WriteStatusFile(MEM_ERROR);
-#ifdef XP_WIN
-      CloseHandle(callbackFile);
-      NS_tremove(callbackBackupPath);
-      EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
-#endif
-      if (argc > callbackIndex)
-        LaunchCallbackApp(argv[4], argc - callbackIndex, argv + callbackIndex);
-      return 1;
-    }
+#if defined(XP_WIN) && !defined(WINCE)
+  // The directory to move files that are in use to on Windows. This directory
+  // will be deleted after the update is finished or on on OS reboot using
+  // MoveFileEx if it contains files that are in use.
+  if (NS_taccess(DELETE_DIR, F_OK)) {
+    NS_tmkdir(DELETE_DIR, 0755);
   }
+#endif
 
   // Run update process on a background thread.  ShowProgressUI may return
   // before QuitProgressUI has been called, so wait for UpdateThreadFunc to
@@ -1722,11 +1715,32 @@ int NS_main(int argc, NS_tchar **argv)
       NS_tremove(callbackBackupPath);
     }
   }
+
+#ifndef WINCE
+  if (_wrmdir(DELETE_DIR)) {
+    LOG(("NS_main: unable to remove directory: " LOG_S ", err: %d\n",
+         DELETE_DIR, errno));
+    // The directory probably couldn't be removed due to it containing files
+    // that are in use and will be removed on OS reboot. The call to remove the
+    // directory on OS reboot is done after the calls to remove the files so the
+    // files are removed first on OS reboot since the directory must be empty
+    // for the directory removal to be successful. The MoveFileEx call to remove
+    // the directory on OS reboot will fail if the process doesn't have write
+    // access to the HKEY_LOCAL_MACHINE registry key but this is ok since the
+    // installer / uninstaller will delete the directory along with its contents
+    // after an update is applied, on reinstall, and on uninstall.
+    if (MoveFileEx(DELETE_DIR, NULL, MOVEFILE_DELAY_UNTIL_REBOOT)) {
+      LOG(("NS_main: directory will be removed on OS reboot: " LOG_S "\n",
+           DELETE_DIR));
+    } else {
+      LOG(("NS_main: failed to schedule OS reboot removal of " \
+           "directory: " LOG_S "\n", DELETE_DIR));
+    }
+  }
 #endif
+#endif /* XP_WIN */
 
   LogFinish();
-  free(BigBuffer);
-  BigBuffer = NULL;
 
   if (argc > callbackIndex) {
 #if defined(XP_WIN) && !defined(WINCE)
