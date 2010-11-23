@@ -514,7 +514,25 @@ html[dir=rtl] .iq-resizable-se {
   height: 16px;
   -moz-margin-end: 7px;
   margin-top: 7px;
-  background: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 16, 16, 0) no-repeat scroll;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 80, 16, 64);
+  background-attachment: scroll;
+  background-repeat: no-repeat;
+}
+
+#exit-button[groups="0"] {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 16, 16, 0);
+}
+
+#exit-button[groups="1"] {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 32, 16, 16);
+}
+
+#exit-button[groups="2"] {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 48, 16, 32);
+}
+
+#exit-button[groups="3"] {
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 64, 16, 48);
 }
 
 html[dir=rtl] #exit-button {
