@@ -1766,13 +1766,12 @@ var FindHelperUI = {
   },
 
   search: function findHelperSearch(aValue) {
-    // Don't bother searching if the value is empty
-    if (aValue == "") {
-      this.status = null;
-      return;
-    }
-
     this.updateCommands(aValue);
+
+    // Don't bother searching if the value is empty
+    if (aValue == "")
+      return;
+
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: aValue });
   },
 
