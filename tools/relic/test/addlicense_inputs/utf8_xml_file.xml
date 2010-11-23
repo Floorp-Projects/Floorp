@@ -1,8 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?> 
-
-<panels xmlns="http://www.silverstone.net.nz/2001/manticore/uidl">
-  <panel label="Web Browser">
-    <panel label="Browser Display" id="browser-display"/>
-  </panel>
-</panels>
-
