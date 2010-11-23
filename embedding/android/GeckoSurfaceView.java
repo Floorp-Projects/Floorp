@@ -48,6 +48,7 @@ import java.nio.*;
 import android.os.*;
 import android.app.*;
 import android.text.*;
+import android.text.method.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
@@ -83,6 +84,8 @@ class GeckoSurfaceView
 
         mSurfaceLock = new ReentrantLock();
 
+        mEditableFactory = Editable.Factory.getInstance();
+        setupEditable("");
         mIMEState = IME_STATE_DISABLED;
         mIMEHint = "";
     }
@@ -289,6 +292,7 @@ class GeckoSurfaceView
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        mKeyListener = TextKeyListener.getInstance();
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
@@ -316,6 +320,13 @@ class GeckoSurfaceView
 
         inputConnection.reset();
         return inputConnection;
+    }
+
+    public void setupEditable(String contents)
+    {
+        mEditable = mEditableFactory.newEditable(contents);
+        mEditable.setSpan(inputConnection, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        Selection.setSelection(mEditable, contents.length());
     }
 
     // accelerometer
@@ -388,6 +399,9 @@ class GeckoSurfaceView
     public static final int IME_STATE_PASSWORD = 2;
 
     GeckoInputConnection inputConnection;
+    KeyListener mKeyListener;
+    Editable mEditable;
+    Editable.Factory mEditableFactory;
     boolean mIMEFocus;
     int mIMEState;
     String mIMEHint;
@@ -398,3 +412,4 @@ class GeckoSurfaceView
 
     final SynchronousQueue<ByteBuffer> mSyncBuf = new SynchronousQueue<ByteBuffer>();
 }
+
