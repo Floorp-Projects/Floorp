@@ -4075,8 +4075,8 @@ BEGIN_CASE(JSOP_UNBRANDTHIS)
     Value &thisv = regs.fp->thisValue();
     if (thisv.isObject()) {
         JSObject *obj = &thisv.toObject();
-        if (obj->isNative() && !obj->unbrand(cx))
-            goto error;
+        if (obj->isNative())
+            obj->unbrand(cx);
     }
 }
 END_CASE(JSOP_UNBRANDTHIS)
@@ -4290,8 +4290,7 @@ END_CASE(JSOP_CALLPROP)
 
 BEGIN_CASE(JSOP_UNBRAND)
     JS_ASSERT(regs.sp - regs.fp->slots() >= 1);
-    if (!regs.sp[-1].toObject().unbrand(cx))
-        goto error;
+    regs.sp[-1].toObject().unbrand(cx);
 END_CASE(JSOP_UNBRAND)
 
 BEGIN_CASE(JSOP_SETGNAME)

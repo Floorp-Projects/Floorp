@@ -2574,8 +2574,8 @@ stubs::Unbrand(VMFrame &f)
     if (!thisv.isObject())
         return;
     JSObject *obj = &thisv.toObject();
-    if (obj->isNative() && !obj->unbrand(f.cx))
-        THROW();
+    if (obj->isNative())
+        obj->unbrand(f.cx);
 }
 
 void JS_FASTCALL
