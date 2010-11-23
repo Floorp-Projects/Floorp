@@ -2140,6 +2140,12 @@ public:
         FIXME_INSN_PRINTING;
         setRel32(from, to);
     }
+
+    static bool canRelinkJump(void* from, void* to)
+    {
+        intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
+        return (offset == static_cast<int32_t>(offset));
+    }
     
     static void relinkCall(void* from, void* to)
     {

@@ -144,6 +144,9 @@ js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector);
 extern JSObject *
 js_NewSlowArrayObject(JSContext *cx);
 
+/* Minimum size at which a dense array can be made sparse. */
+const uint32 MIN_SPARSE_INDEX = 256;
+
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 

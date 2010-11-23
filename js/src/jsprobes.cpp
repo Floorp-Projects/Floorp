@@ -153,15 +153,17 @@ Probes::FunctionName(JSContext *cx, const JSFunction *fun, JSAutoByteString *byt
 void
 Probes::enterJSFunImpl(JSContext *cx, JSFunction *fun, JSScript *script)
 {
+    JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), FunctionClassname(fun),
-                              FunctionName(cx, fun));
+                              FunctionName(cx, fun, &funNameBytes));
 }
 
 void
 Probes::handleFunctionReturn(JSContext *cx, JSFunction *fun, JSScript *script)
 {
+    JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), FunctionClassname(fun),
-                               FunctionName(cx, fun));
+                               FunctionName(cx, fun, &funNameBytes));
 }
 
 #endif
