@@ -3316,11 +3316,14 @@ nsHTMLInputElement::IntrinsicState() const
       // Otherwise, NS_EVENT_STATE_MOZ_UI_INVALID applies if the element's value
       // has been modified.
       // For VALUE_MODE_DEFAULT case, value being modified has no sense.
-      if (valueMode == VALUE_MODE_DEFAULT ||
-          GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-          (valueMode == VALUE_MODE_DEFAULT_ON && GetCheckedChanged()) ||
-          ((valueMode == VALUE_MODE_FILENAME || valueMode == VALUE_MODE_VALUE) &&
-           GET_BOOLBIT(mBitField, BF_VALUE_CHANGED))) {
+      // NS_EVENT_STATE_MOZ_UI_INVALID always applies if the form submission has
+      // been tried while invalid.
+      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
+          (valueMode == VALUE_MODE_DEFAULT ||
+           GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+           (valueMode == VALUE_MODE_DEFAULT_ON && GetCheckedChanged()) ||
+           ((valueMode == VALUE_MODE_FILENAME || valueMode == VALUE_MODE_VALUE) &&
+            GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)))) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
