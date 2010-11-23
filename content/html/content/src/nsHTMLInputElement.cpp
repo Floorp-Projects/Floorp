@@ -1438,12 +1438,24 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
 {
+  PRBool valueChangedBefore = GET_BOOLBIT(mBitField, BF_VALUE_CHANGED);
+
   SET_BOOLBIT(mBitField, BF_VALUE_CHANGED, aValueChanged);
+
   if (!aValueChanged) {
     if (!IsSingleLineTextControl(PR_FALSE)) {
       FreeData();
     }
   }
+
+  if (valueChangedBefore != aValueChanged) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_UI_INVALID);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1472,19 +1484,31 @@ nsHTMLInputElement::DoSetCheckedChanged(PRBool aCheckedChanged,
       VisitGroup(visitor, aNotify);
     }
   } else {
-    SetCheckedChangedInternal(aCheckedChanged);
+    SetCheckedChangedInternal(aCheckedChanged, aNotify);
   }
 }
 
 void
-nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged)
+nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged,
+                                              PRBool aNotify)
 {
+  PRBool checkedChangedBefore = GetCheckedChanged();
+
   SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, aCheckedChanged);
+
+  if (aNotify && checkedChangedBefore != aCheckedChanged) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
+      document->ContentStatesChanged(this, nsnull,
+                                     NS_EVENT_STATE_MOZ_UI_INVALID);
+    }
+  }
 }
 
 
 PRBool
-nsHTMLInputElement::GetCheckedChanged()
+nsHTMLInputElement::GetCheckedChanged() const
 {
   return GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
 }
@@ -3282,8 +3306,24 @@ nsHTMLInputElement::IntrinsicState() const
   }
 
   if (IsCandidateForConstraintValidation()) {
-    state |= IsValid() ? NS_EVENT_STATE_VALID
-                       : NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+    if (IsValid()) {
+      state |= NS_EVENT_STATE_VALID;
+    } else {
+      state |= NS_EVENT_STATE_INVALID;
+      ValueModeType valueMode = GetValueMode();
+      // If the element is suffering from VALIDITY_STATE_CUSTOM_ERROR,
+      // NS_EVENT_STATE_MOZ_UI_INVALID always apply.
+      // Otherwise, NS_EVENT_STATE_MOZ_UI_INVALID applies if the element's value
+      // has been modified.
+      // For VALUE_MODE_DEFAULT case, value being modified has no sense.
+      if (valueMode == VALUE_MODE_DEFAULT ||
+          GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+          (valueMode == VALUE_MODE_DEFAULT_ON && GetCheckedChanged()) ||
+          ((valueMode == VALUE_MODE_FILENAME || valueMode == VALUE_MODE_VALUE) &&
+           GET_BOOLBIT(mBitField, BF_VALUE_CHANGED))) {
+        state |= NS_EVENT_STATE_MOZ_UI_INVALID;
+      }
+    }
   }
 
   if (PlaceholderApplies() && HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
@@ -3408,7 +3448,7 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
   if (NS_FAILED(rv)) { return; }
   
   VisitGroup(visitor, aNotify);
-  SetCheckedChangedInternal(checkedChanged);
+  SetCheckedChangedInternal(checkedChanged, aNotify);
   
   //
   // Add the radio to the radio group container.
@@ -4133,7 +4173,7 @@ public:
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aRadio);
     NS_ASSERTION(radio, "Visit() passed a null button!");
-    radio->SetCheckedChangedInternal(mCheckedChanged);
+    radio->SetCheckedChangedInternal(mCheckedChanged, PR_TRUE);
     return NS_OK;
   }
 

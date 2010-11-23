@@ -218,8 +218,8 @@ public:
   const nsCOMArray<nsIDOMFile>& GetFiles();
   void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
 
-  void SetCheckedChangedInternal(PRBool aCheckedChanged);
-  PRBool GetCheckedChanged();
+  void SetCheckedChangedInternal(PRBool aCheckedChanged, PRBool aNotify);
+  PRBool GetCheckedChanged() const;
   void AddedToRadioGroup(PRBool aNotify = PR_TRUE);
   void WillRemoveFromRadioGroup();
   /**
