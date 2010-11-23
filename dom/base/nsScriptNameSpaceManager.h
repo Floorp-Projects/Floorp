@@ -106,8 +106,8 @@ class nsICategoryManager;
 class GlobalNameMapEntry;
 
 
-class nsScriptNameSpaceManager : public nsIObserver
-                               , public nsSupportsWeakReference
+class nsScriptNameSpaceManager : public nsIObserver,
+                                 public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
