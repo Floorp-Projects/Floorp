@@ -197,7 +197,7 @@ function imageLoadHandler(event) {
 var imgfile = createFileWithData(testBinaryData + fileData + testBinaryData);
 is(imgfile.size, size + testBinaryData.length * 2, "correct file size");
 var img = new Image;
-img.src = createBlobURL(imgfile.slice(testBinaryData.length, size));
+img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, size));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -205,7 +205,7 @@ expectedTestCount++;
 var imgfile = createFileWithData(fileData + testBinaryData);
 is(imgfile.size, size + testBinaryData.length, "correct file size");
 var img = new Image;
-img.src = createBlobURL(imgfile.slice(0, size));
+img.src = URL.createObjectURL(imgfile.slice(0, size));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -213,7 +213,7 @@ expectedTestCount++;
 var imgfile = createFileWithData(testBinaryData + fileData);
 is(imgfile.size, size + testBinaryData.length, "correct file size");
 var img = new Image;
-img.src = createBlobURL(imgfile.slice(testBinaryData.length, size));
+img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, size));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -221,7 +221,7 @@ expectedTestCount++;
 var imgfile = createFileWithData(testBinaryData + fileData);
 is(imgfile.size, size + testBinaryData.length, "correct file size");
 var img = new Image;
-img.src = createBlobURL(imgfile.slice(testBinaryData.length, size + 1000));
+img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, size + 1000));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -234,9 +234,9 @@ function testFile(file, contents, test) {
   r.readAsBinaryString(file);
   expectedTestCount++;
 
-  // Load file using createBlobURL and XMLHttpRequest
+  // Load file using URL.createObjectURL and XMLHttpRequest
   var xhr = new XMLHttpRequest;
-  xhr.open("GET", createBlobURL(file));
+  xhr.open("GET", URL.createObjectURL(file));
   xhr.onload = getXHRLoadHandler(contents, contents.length, false,
                                  "XMLHttpRequest load of " + test);
   xhr.overrideMimeType('text/plain; charset=x-user-defined');
