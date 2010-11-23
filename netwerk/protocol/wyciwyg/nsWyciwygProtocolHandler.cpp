@@ -45,6 +45,7 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "plstr.h"
+#include "nsNetUtil.h"
 
 #ifdef MOZ_IPC
 #include "mozilla/net/NeckoChild.h"
