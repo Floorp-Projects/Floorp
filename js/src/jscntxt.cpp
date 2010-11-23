@@ -495,7 +495,10 @@ JSThreadData::init()
     if (!stackSpace.init())
         return false;
 #ifdef JS_TRACER
-    InitJIT(&traceMonitor);
+    if (!InitJIT(&traceMonitor)) {
+        finish();
+        return false;
+    }
 #endif
     dtoaState = js_NewDtoaState();
     if (!dtoaState) {

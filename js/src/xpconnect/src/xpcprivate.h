@@ -179,8 +179,8 @@ static FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName);
 
 #ifdef DEBUG
 #define XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
-#define XPC_CHECK_WRAPPER_THREADSAFETY
 #endif
+#define XPC_CHECK_WRAPPER_THREADSAFETY
 
 #if defined(DEBUG_xpc_hacker)
 #define XPC_DUMP_AT_SHUTDOWN

@@ -2229,6 +2229,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     trashSelf(false),
     whichTreesToTrash(&tempAlloc()),
     guardedShapeTable(cx),
+    initDepth(0),
+    hadNewInit(false),
     rval_ins(NULL),
     native_rval_ins(NULL),
     newobj_ins(NULL),
@@ -2750,6 +2752,7 @@ TraceMonitor::flush()
 
     PodArrayZero(vmfragments);
     reFragments = new (alloc) REHashMap(alloc);
+    tracedScripts.clear();
 
     needFlush = JS_FALSE;
 }
@@ -5631,7 +5634,11 @@ RecordTree(JSContext* cx, TreeFragment* first, JSScript* outerScript, jsbytecode
 
     AUDIT(recorderStarted);
 
-    if (tm->outOfMemory() || OverfullJITCache(tm)) {
+    if (tm->outOfMemory() ||
+        OverfullJITCache(tm) ||
+        !tm->tracedScripts.put(cx->fp()->script())) {
+        if (!OverfullJITCache(tm))
+            js_ReportOutOfMemory(cx);
         Backoff(cx, (jsbytecode*) f->root->ip);
         ResetJIT(cx, FR_OOM);
         debug_only_print0(LC_TMTracer,
@@ -7017,7 +7024,7 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
          * it will walk the peer list and find us a free slot or allocate a new
          * tree if needed.
          */
-        bool rv = RecordTree(cx, f->first, NULL, 0, NULL, globalSlots);
+        bool rv = RecordTree(cx, f->first, NULL, NULL, 0, globalSlots);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_RECORD_TREE;
@@ -7069,7 +7076,7 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
     bool rv;
     switch (lr->exitType) {
       case UNSTABLE_LOOP_EXIT:
-        rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL);
+        rv = AttemptToStabilizeTree(cx, globalObj, lr, NULL, NULL, 0);
 #ifdef MOZ_TRACEVIS
         if (!rv)
             tvso.r = R_FAIL_STABILIZE;
@@ -7516,7 +7523,7 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
     tm->maxCodeCacheBytes = bytes;
 }
 
-void
+bool
 InitJIT(TraceMonitor *tm)
 {
 #if defined JS_JIT_SPEW
@@ -7621,6 +7628,10 @@ InitJIT(TraceMonitor *tm)
     jitstats.archIsAMD64 = 1;
 #endif
 #endif
+
+    if (!tm->tracedScripts.init())
+        return false;
+    return true;
 }
 
 void
@@ -7731,16 +7742,19 @@ FinishJIT(TraceMonitor *tm)
 }
 
 JS_REQUIRES_STACK void
-PurgeScriptFragments(JSContext* cx, JSScript* script)
+PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 {
     debug_only_printf(LC_TMTracer,
                       "Purging fragments for JSScript %p.\n", (void*)script);
 
-    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
     /* A recorder script is being evaluated and can not be destroyed or GC-ed. */
     JS_ASSERT_IF(tm->recorder, 
                  JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
+
+    TracedScriptSet::Ptr found = tm->tracedScripts.lookup(script);
+    if (!found)
+        return;
+    tm->tracedScripts.remove(found);
 
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
         TreeFragment** fragp = &tm->vmfragments[i];
@@ -14060,18 +14074,20 @@ TraceRecorder::record_JSOP_UINT16()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_NEWINIT()
 {
-    JSProtoKey key = JSProtoKey(GET_UINT16(cx->regs->pc));
-    uint32 count = GET_UINT16(cx->regs->pc + UINT16_LEN);
+    initDepth++;
+    hadNewInit = true;
+
+    JSProtoKey key = JSProtoKey(cx->regs->pc[1]);
 
     LIns* proto_ins;
     CHECK_STATUS_A(getClassPrototype(key, proto_ins));
 
     LIns *v_ins;
     if (key == JSProto_Array) {
-        LIns *args[] = { w.immi(count), cx_ins };
-        v_ins = w.call(&js_InitializerArray_ci, args);
+        LIns *args[] = { w.immi(0), proto_ins, cx_ins };
+        v_ins = w.call(&js_NewPreallocatedArray_ci, args);
     } else {
-        LIns *args[] = { w.immi(count), cx_ins };
+        LIns *args[] = { w.immpNull(), proto_ins, cx_ins };
         v_ins = w.call(&js_InitializerObject_ci, args);
     }
     guard(false, w.eqp0(v_ins), OOM_EXIT);
@@ -14080,8 +14096,47 @@ TraceRecorder::record_JSOP_NEWINIT()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NEWARRAY()
+{
+    initDepth++;
+
+    LIns* proto_ins;
+    CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
+
+    unsigned count = GET_UINT24(cx->regs->pc);
+    LIns *args[] = { w.immi(count), proto_ins, cx_ins };
+    LIns *v_ins = w.call(&js_NewPreallocatedArray_ci, args);
+
+    guard(false, w.eqp0(v_ins), OOM_EXIT);
+    stack(0, v_ins);
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_NEWOBJECT()
+{
+    initDepth++;
+
+    LIns* proto_ins;
+    CHECK_STATUS_A(getClassPrototype(JSProto_Object, proto_ins));
+
+    JSObject* baseobj = cx->fp()->script()->getObject(getFullIndex(0));
+
+    LIns *args[] = { w.immpObjGC(baseobj), proto_ins, cx_ins };
+    LIns *v_ins = w.call(&js_InitializerObject_ci, args);
+
+    guard(false, w.eqp0(v_ins), OOM_EXIT);
+    stack(0, v_ins);
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENDINIT()
 {
+    initDepth--;
+    if (initDepth == 0)
+        hadNewInit = false;
+
 #ifdef DEBUG
     Value& v = stackval(-1);
     JS_ASSERT(!v.isPrimitive());
@@ -14099,7 +14154,30 @@ TraceRecorder::record_JSOP_INITPROP()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITELEM()
 {
-    return setElem(-3, -2, -1);
+    Value& v = stackval(-1);
+    Value& idx = stackval(-2);
+    Value& lval = stackval(-3);
+
+    // The object is either a dense Array or an Object.  Only handle the dense case here.
+    // Also skip array initializers which might be unoptimized NEWINIT initializers.
+    if (!lval.toObject().isDenseArray() || hadNewInit)
+        return setElem(-3, -2, -1);
+
+    // The index is always the same constant integer.
+    JS_ASSERT(idx.isInt32());
+
+    // Nothing to do for holes, the array's length has already been set.
+    if (v.isMagic(JS_ARRAY_HOLE))
+        return ARECORD_CONTINUE;
+
+    LIns* obj_ins = get(&lval);
+    LIns* v_ins = get(&v);
+
+    // Set the element.
+    LIns *slots_ins = w.ldpObjSlots(obj_ins);
+    box_value_into(v, v_ins, DSlotsAddress(slots_ins, idx.toInt32()));
+
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14379,13 +14457,20 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
 
             if (JSID_IS_STRING(id)) {
                 v_ins = unbox_string_id(id_ins);
-            } else {
+            } else if (JSID_IS_INT(id)) {
                 /* id is an integer, convert to a string. */
-                JS_ASSERT(JSID_IS_INT(id));
                 LIns *id_to_int_ins = unbox_int_id(id_ins);
                 LIns* args[] = { id_to_int_ins, cx_ins };
                 v_ins = w.call(&js_IntToString_ci, args);
                 guard(false, w.eqp0(v_ins), OOM_EXIT);
+            } else {
+#if JS_HAS_XML_SUPPORT
+                JS_ASSERT(JSID_IS_OBJECT(id));
+                JS_ASSERT(JSID_TO_OBJECT(id)->isXMLId());
+                RETURN_STOP_A("iterated over a property with an XML id");
+#else
+                JS_NEVER_REACHED("unboxNextValue");
+#endif
             }
 
             /* Increment the cursor by one jsid and store it back. */
@@ -15809,7 +15894,13 @@ TraceRecorder::record_JSOP_LENGTH()
             JS_ASSERT(obj->isSlowArray());
             guardClass(obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
         }
-        v_ins = w.i2d(w.lduiObjPrivate(obj_ins));
+        v_ins = w.lduiObjPrivate(obj_ins);
+        if (obj->getArrayLength() <= JSVAL_INT_MAX) {
+            guard(true, w.leui(v_ins, w.immi(JSVAL_INT_MAX)), BRANCH_EXIT);
+            v_ins = w.i2d(v_ins);
+        } else {
+            v_ins = w.ui2d(v_ins);
+        }
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), LOAD_NORMAL);
@@ -15820,32 +15911,6 @@ TraceRecorder::record_JSOP_LENGTH()
         return getProp(obj, obj_ins);
     }
     set(&l, v_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_NEWARRAY()
-{
-    LIns *proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
-
-    uint32 len = GET_UINT16(cx->regs->pc);
-    cx->assertValidStackDepth(len);
-
-    LIns* args[] = { w.immi(len), proto_ins, cx_ins };
-    LIns* v_ins = w.call(&js_NewPreallocatedArray_ci, args);
-    guard(false, w.eqp0(v_ins), OOM_EXIT);
-
-    LIns* slots_ins = NULL;
-    uint32 count = 0;
-    for (uint32 i = 0; i < len; i++) {
-        Value& v = stackval(int(i) - int(len));
-        if (!v.isMagic())
-            count++;
-        stobj_set_dslot(v_ins, i, slots_ins, v, get(&v));
-    }
-
-    stack(-int(len), v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -16251,7 +16316,7 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
 
             switch (lr->exitType) {
               case UNSTABLE_LOOP_EXIT:
-                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0, NULL))
+                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, NULL, 0))
                     return TPA_RanStuff;
                 break;
 
@@ -16295,7 +16360,7 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
         return TPA_Nothing;
     if (!ScopeChainCheck(cx, tree))
         return TPA_Nothing;
-    if (!RecordTree(cx, tree->first, NULL, 0, NULL, globalSlots))
+    if (!RecordTree(cx, tree->first, NULL, NULL, 0, globalSlots))
         return TPA_Nothing;
 
   interpret:
