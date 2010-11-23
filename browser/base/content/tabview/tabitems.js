@@ -187,9 +187,10 @@ function TabItem(tab, options) {
     if (!same)
       return;
 
-    if (iQ(e.target).hasClass("close"))
+    // press close button or middle mouse click
+    if (iQ(e.target).hasClass("close") || e.button == 1) {
       self.close();
-    else {
+    } else {
       if (!Items.item(this).isDragging)
         self.zoomIn();
     }
