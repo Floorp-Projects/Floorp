@@ -1,5 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 2; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Mozilla browser.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
+ *
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,53 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMIMEInfoAndroid_h
-#define nsMIMEInfoAndroid_h
+#include "nsIMIMEInfo.idl"
 
-#include "nsMIMEInfoImpl.h"
-#include "nsIMutableArray.h"
-#include "nsAndroidHandlerApp.h"
-class nsMIMEInfoAndroid : public nsIMIMEInfo
+/**
+ * The external URL handler service is used for finding
+ * platform-specific applications for handling particular URLs.
+ */
+
+[scriptable, uuid(56c5c7d3-6fd3-43f8-9429-4397e111453a)]
+interface nsIExternalURLHandlerService : nsISupports
 {
-public:
-  static PRBool
-  GetMimeInfoForMimeType(const nsACString& aMimeType, 
-                         nsMIMEInfoAndroid** aMimeInfo);
-  static PRBool
-  GetMimeInfoForFileExt(const nsACString& aFileExt, 
-                        nsMIMEInfoAndroid** aMimeInfo);
+  /**
+   * Given a URL, looks up the handler info from the OS. This should be
+   * overridden by each OS's implementation.
+   *
+   * @param aURL The URL we are looking for.
+   * @param aFound  Was an OS default handler for this URL found?
+   * @return  An nsIHanderInfo for the protocol.
+   */
+  nsIHandlerInfo getURLHandlerInfoFromOS(in nsIURI aURL,
+                                         out boolean aFound);
 
-  static nsresult 
-  GetMimeInfoForURL(const nsACString &aURL, PRBool *found,
-                    nsIHandlerInfo **info);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMIMEINFO
-  NS_DECL_NSIHANDLERINFO
-
-  nsMIMEInfoAndroid(const nsACString& aMIMEType);
-
-protected:
-  virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile);
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
-  nsCOMPtr<nsIMutableArray> mHandlerApps;
-  nsCString mMimeType;
-  nsTArray<nsCString> mExtensions;
-  PRBool mAlwaysAsk;
-  nsHandlerInfoAction mPrefAction;
-  nsString mDescription;
-  nsCOMPtr<nsIHandlerApp> mPrefApp;
-  
-  class SystemChooser : public nsIHandlerApp {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIHANDLERAPP
-    SystemChooser(nsMIMEInfoAndroid* aOuter): mOuter(aOuter) {};
-    
-  private:
-    nsMIMEInfoAndroid* mOuter;
-    
-  };
 };
-
-#endif /* nsMIMEInfoAndroid_h */

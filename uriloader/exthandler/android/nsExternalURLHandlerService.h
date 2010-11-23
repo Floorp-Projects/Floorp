@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 2; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Michael Wu <mwu@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,53 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMIMEInfoAndroid_h
-#define nsMIMEInfoAndroid_h
+#ifndef NSEXTERNALURLHANDLERSERVICE_H
+#define NSEXTERNALURLHANDLERSERVICE_H
 
-#include "nsMIMEInfoImpl.h"
-#include "nsIMutableArray.h"
-#include "nsAndroidHandlerApp.h"
-class nsMIMEInfoAndroid : public nsIMIMEInfo
+#include "nsIExternalURLHandlerService.h"
+
+// {4BF1F8EF-D947-4BA3-9CD3-8C9A54A63A1C}
+#define NS_EXTERNALURLHANDLERSERVICE_CID \
+    {0x4bf1f8ef, 0xd947, 0x4ba3, {0x9c, 0xd3, 0x8c, 0x9a, 0x54, 0xa6, 0x3a, 0x1c}}
+
+class nsExternalURLHandlerService : public nsIExternalURLHandlerService
 {
 public:
-  static PRBool
-  GetMimeInfoForMimeType(const nsACString& aMimeType, 
-                         nsMIMEInfoAndroid** aMimeInfo);
-  static PRBool
-  GetMimeInfoForFileExt(const nsACString& aFileExt, 
-                        nsMIMEInfoAndroid** aMimeInfo);
-
-  static nsresult 
-  GetMimeInfoForURL(const nsACString &aURL, PRBool *found,
-                    nsIHandlerInfo **info);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMIMEINFO
-  NS_DECL_NSIHANDLERINFO
-
-  nsMIMEInfoAndroid(const nsACString& aMIMEType);
-
-protected:
-  virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile);
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
-  nsCOMPtr<nsIMutableArray> mHandlerApps;
-  nsCString mMimeType;
-  nsTArray<nsCString> mExtensions;
-  PRBool mAlwaysAsk;
-  nsHandlerInfoAction mPrefAction;
-  nsString mDescription;
-  nsCOMPtr<nsIHandlerApp> mPrefApp;
-  
-  class SystemChooser : public nsIHandlerApp {
-  public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIHANDLERAPP
-    SystemChooser(nsMIMEInfoAndroid* aOuter): mOuter(aOuter) {};
-    
-  private:
-    nsMIMEInfoAndroid* mOuter;
-    
-  };
+    NS_DECL_NSIEXTERNALURLHANDLERSERVICE
+
+    nsExternalURLHandlerService();
+private:
+    ~nsExternalURLHandlerService();
 };
 
-#endif /* nsMIMEInfoAndroid_h */
+#endif // NSEXTERNALURLHANDLERSERVICE_H

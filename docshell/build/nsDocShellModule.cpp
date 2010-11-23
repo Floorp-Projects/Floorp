@@ -60,6 +60,9 @@
 #if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
 #include "nsExternalSharingAppService.h"
 #endif
+#if defined(ANDROID)
+#include "nsExternalURLHandlerService.h"
+#endif
 
 // session history
 #include "nsSHEntry.h"
@@ -116,6 +119,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDBusHandlerApp)
 #if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalSharingAppService)
 #endif
+#if defined(ANDROID)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalURLHandlerService)
+#endif
 
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
@@ -143,6 +149,9 @@ NS_DEFINE_NAMED_CID(NS_DBUSHANDLERAPP_CID);
 #if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
 NS_DEFINE_NAMED_CID(NS_EXTERNALSHARINGAPPSERVICE_CID);
 #endif
+#if defined(ANDROID)
+NS_DEFINE_NAMED_CID(NS_EXTERNALURLHANDLERSERVICE_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_SHENTRY_CID);
 NS_DEFINE_NAMED_CID(NS_HISTORYENTRY_CID);
 NS_DEFINE_NAMED_CID(NS_SHTRANSACTION_CID);
@@ -169,6 +178,9 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
 #endif
 #if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
   { &kNS_EXTERNALSHARINGAPPSERVICE_CID, false, NULL, nsExternalSharingAppServiceConstructor },
+#endif
+#if defined(ANDROID)
+  { &kNS_EXTERNALURLHANDLERSERVICE_CID, false, NULL, nsExternalURLHandlerServiceConstructor },
 #endif
   { &kNS_SHENTRY_CID, false, NULL, nsSHEntryConstructor },
   { &kNS_HISTORYENTRY_CID, false, NULL, nsSHEntryConstructor },
@@ -214,6 +226,9 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
 #endif
 #if defined(ANDROID) || defined(MOZ_ENABLE_MEEGOTOUCHSHARE)
   { NS_EXTERNALSHARINGAPPSERVICE_CONTRACTID, &kNS_EXTERNALSHARINGAPPSERVICE_CID },
+#endif
+#if defined(ANDROID)
+  { NS_EXTERNALURLHANDLERSERVICE_CONTRACTID, &kNS_EXTERNALURLHANDLERSERVICE_CID },
 #endif
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
   { NS_HISTORYENTRY_CONTRACTID, &kNS_HISTORYENTRY_CID },
