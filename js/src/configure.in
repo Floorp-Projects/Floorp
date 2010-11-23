@@ -915,6 +915,12 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
+if test "$cross_compiling"  = "yes"; then
+    CROSS_COMPILE=1
+else
+    CROSS_COMPILE=
+fi
+
 # Check to see if we are running in a broken QEMU scratchbox.
 # We know that anything below 1.0.16 is broken.
 AC_CHECK_PROGS(SBCONF, sb-conf ve, "")
