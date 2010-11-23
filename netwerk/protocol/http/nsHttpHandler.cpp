@@ -1486,12 +1486,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 #endif
         {
             // HACK: make sure PSM gets initialized on the main thread.
-            nsCOMPtr<nsISocketProviderService> spserv =
-                    do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID);
-            if (spserv) {
-                nsCOMPtr<nsISocketProvider> provider;
-                spserv->GetSocketProvider("ssl", getter_AddRefs(provider));
-            }
+            net_EnsurePSMInit();
         }
     }
 

@@ -105,6 +105,8 @@
 #include "nsIIDNService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIChannelPolicy.h"
+#include "nsISocketProviderService.h"
+#include "nsISocketProvider.h"
 #include "mozilla/Services.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -1853,6 +1855,20 @@ NS_CheckIsJavaCompatibleURLString(nsCString& urlString, PRBool *result)
   *result = compatible;
 
   return NS_OK;
+}
+
+/**
+ * Make sure Personal Security Manager is initialized
+ */
+inline void
+net_EnsurePSMInit()
+{
+    nsCOMPtr<nsISocketProviderService> spserv =
+            do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID);
+    if (spserv) {
+        nsCOMPtr<nsISocketProvider> provider;
+        spserv->GetSocketProvider("ssl", getter_AddRefs(provider));
+    }
 }
 
 #endif // !nsNetUtil_h__
