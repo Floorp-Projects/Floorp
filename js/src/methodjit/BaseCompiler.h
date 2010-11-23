@@ -90,14 +90,15 @@ class BaseCompiler : public MacroAssemblerTypedefs
   protected:
 
     JSC::ExecutablePool *
-    getExecPool(size_t size) {
-        return BaseCompiler::GetExecPool(cx, size);
+    getExecPool(JSScript *script, size_t size) {
+        return BaseCompiler::GetExecPool(cx, script, size);
     }
 
   public:
     static JSC::ExecutablePool *
-    GetExecPool(JSContext *cx, size_t size) {
-        JSC::ExecutablePool *pool = cx->jaegerCompartment()->poolForSize(size);
+    GetExecPool(JSContext *cx, JSScript *script, size_t size) {
+        JaegerCompartment *jc = script->compartment->jaegerCompartment;
+        JSC::ExecutablePool *pool = jc->poolForSize(size);
         if (!pool)
             js_ReportOutOfMemory(cx);
         return pool;
@@ -150,7 +151,8 @@ class LinkerHelper : public JSC::LinkBuffer
     JSC::ExecutablePool *init(JSContext *cx) {
         // The pool is incref'd after this call, so it's necessary to release()
         // on any failure.
-        JSC::ExecutablePool *ep = BaseCompiler::GetExecPool(cx, masm.size());
+        JSScript *script = cx->fp()->script();
+        JSC::ExecutablePool *ep = BaseCompiler::GetExecPool(cx, script, masm.size());
         if (!ep)
             return ep;
 
