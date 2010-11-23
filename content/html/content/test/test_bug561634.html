@@ -27,37 +27,24 @@ function checkEmptyForm()
   ok(document.forms[0].checkValidity(), "An empty form is valid");
 }
 
-function checkInvalidNonSubmittable()
-{
-  var f = document.forms[0];
-  var o = document.createElement('output');
-  var fs = document.createElement('fieldset');
-
-  f.appendChild(o);
-  f.appendChild(fs);
-
-  o.setCustomValidity("foo");
-  fs.setCustomValidity("foo");
-
-  ok(f.checkValidity(),
-     "A form with invalid non-submittable elements is valid");
-
-  f.removeChild(o);
-  f.removeChild(fs);
-}
-
 function checkBarredFromConstraintValidation()
 {
   var f = document.forms[0];
+  var fs = document.createElement('fieldset');
   var i = document.createElement('input');
+
+  f.appendChild(fs);
   i.type = 'hidden';
   f.appendChild(i);
 
+  fs.setCustomValidity("foo");
   i.setCustomValidity("foo");
+
   ok(f.checkValidity(),
-     "A form with invalid submittable element barred from constraint validation is valid");
+     "A form with invalid element barred from constraint validation should be valid");
 
   f.removeChild(i);
+  f.removeChild(fs);
 }
 
 function checkValid()
@@ -132,7 +119,6 @@ function checkInvalidEvent()
 }
 
 checkEmptyForm();
-checkInvalidNonSubmittable();
 checkBarredFromConstraintValidation();
 checkValid();
 checkInvalid();
