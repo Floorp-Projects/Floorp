@@ -65,9 +65,9 @@ function FormAssistant() {
   addMessageListener("FormAssist:ChoiceSelect", this);
   addMessageListener("FormAssist:ChoiceChange", this);
   addMessageListener("FormAssist:AutoComplete", this);
+  addMessageListener("Content:SetWindowSize", this);
 
   addEventListener("keyup", this, false);
-  addEventListener("resize", this, false);
   addEventListener("focus", this, true);
 
   this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
@@ -173,6 +173,12 @@ FormAssistant.prototype = {
         this.currentIndex++;
         break;
 
+      case "Content:SetWindowSize":
+        // If the CSS viewport change just show the current element to the new
+        // position
+        sendAsyncMessage("FormAssist:Show", this._getJSON());
+        break;
+
       case "FormAssist:ChoiceSelect": {
         this._selectWrapper = getWrapperForElement(currentElement);
         this._selectWrapper.select(json.index, json.selected, json.clearAll);
@@ -222,9 +228,6 @@ FormAssistant.prototype = {
       return;
 
     switch (aEvent.type) {
-      case "resize":
-        sendAsyncMessage("FormAssist:Resize");
-        break;
       case "focus":
         let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
 
@@ -260,6 +263,7 @@ FormAssistant.prototype = {
         if (focusedIndex != -1 && this.currentIndex != focusedIndex)
           this.currentIndex = focusedIndex;
         break;
+
       case "keyup":
         let currentElement = this.currentElement;
         switch (aEvent.keyCode) {
