@@ -625,9 +625,10 @@ input[type="file"] > input[type="text"] {
 /**
  * Set default style for invalid elements.
  */
-:not(output):invalid {
+/* TODO: uncomment this with bug 609017.
+:not(output):-moz-ui-invalid {
   box-shadow: 0 0 1.5px 1px red;
-}
+}*/
 
 output:invalid {
   color: red;
