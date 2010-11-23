@@ -100,6 +100,8 @@ inline size_t roundUpAllocationSize(size_t request, size_t granularity)
 
 #if ENABLE_ASSEMBLER
 
+//#define DEBUG_STRESS_JSC_ALLOCATOR
+
 namespace JSC {
 
   // These are reference-counted. A new one (from the constructor or create)
@@ -217,11 +219,13 @@ public:
 
     ExecutablePool* poolForSize(size_t n)
     {
+#ifndef DEBUG_STRESS_JSC_ALLOCATOR
         // Try to fit in the existing small allocator
         if (n < m_smallAllocationPool->available()) {
 	    m_smallAllocationPool->addRef();
             return m_smallAllocationPool;
 	}
+#endif
 
         // If the request is large, we just provide a unshared allocator
         if (n > JIT_ALLOCATOR_LARGE_ALLOC_SIZE)
@@ -364,7 +368,11 @@ inline ExecutablePool::ExecutablePool(size_t n) : m_refCount(1)
         m_freePtr = NULL;
         return;
     }
+#ifdef DEBUG_STRESS_JSC_ALLOCATOR
+    Allocation mem = systemAlloc(size_t(4294967291));
+#else
     Allocation mem = systemAlloc(allocSize);
+#endif
     if (!mem.pages) {
         m_freePtr = NULL;
         return;
@@ -384,7 +392,11 @@ inline void* ExecutablePool::poolAllocate(size_t n)
     if (allocSize == OVERSIZE_ALLOCATION)
         return NULL;
     
+#ifdef DEBUG_STRESS_JSC_ALLOCATOR
+    Allocation result = systemAlloc(size_t(4294967291));
+#else
     Allocation result = systemAlloc(allocSize);
+#endif
     if (!result.pages)
         return NULL;
     

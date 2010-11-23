@@ -49,6 +49,7 @@
 #include "BaseAssembler.h"
 #include "RematInfo.h"
 #include "BaseCompiler.h"
+#include "assembler/moco/MocoStubs.h"
 
 namespace js {
 namespace mjit {
@@ -191,15 +192,6 @@ struct BaseIC : public MacroAssemblerTypedefs {
     // Slow path stub call.
     CodeLocationCall slowPathCall;
 
-    // Address of the start of the last generated stub, if any.
-    CodeLocationLabel lastStubStart;
-
-    // Return the start address of the last path in this PIC, which is the
-    // inline path if no stubs have been generated yet.
-    CodeLocationLabel lastPathStart() {
-        return stubsGenerated > 0 ? lastStubStart : fastPathStart;
-    }
-
     // Whether or not the callsite has been hit at least once.
     bool hit : 1;
     bool slowCallPatched : 1;
@@ -306,7 +298,7 @@ struct GetElementIC : public BasePolyIC {
     int secondShapeGuard : 8;   // optional, non-zero if present
 
     bool hasLastStringStub : 1;
-    CodeLocationLabel lastStringStub;
+    JITCode lastStringStub;
 
     // A limited ValueRemat instance. It may contains either:
     //  1) A constant, or
@@ -334,7 +326,7 @@ struct GetElementIC : public BasePolyIC {
         typeRegHasBaseShape = false;
         hasLastStringStub = false;
     }
-    void purge();
+    void purge(Repatcher &repatcher);
     LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
     LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                Value *vp);
@@ -396,7 +388,7 @@ struct SetElementIC : public BaseIC {
         inlineClaspGuardPatched = false;
         inlineHoleGuardPatched = false;
     }
-    void purge();
+    void purge(Repatcher &repatcher);
     LookupStatus attachHoleStub(JSContext *cx, JSObject *obj, int32 key);
     LookupStatus update(JSContext *cx, const Value &objval, const Value &idval);
     LookupStatus disable(JSContext *cx, const char *reason);
@@ -431,6 +423,32 @@ struct PICInfo : public BasePolyIC {
         } get;
         ValueRemat vr;
     } u;
+
+    // Address of the start of the last generated stub, if any. Note that this
+    // does not correctly overlay with the allocated memory; it does however
+    // overlay the portion that may need to be patched, which is good enough.
+    JITCode lastStubStart;
+
+    // Return the start address of the last path in this PIC, which is the
+    // inline path if no stubs have been generated yet.
+    CodeLocationLabel lastPathStart() {
+        if (!stubsGenerated)
+            return fastPathStart;
+        return CodeLocationLabel(lastStubStart.start());
+    }
+
+    // Return a JITCode block corresponding to the code memory to attach a
+    // new stub to.
+    JITCode lastCodeBlock(JITScript *jit) {
+        if (!stubsGenerated)
+            return JITCode(jit->code.m_code.executableAddress(), jit->code.m_size);
+        return lastStubStart;
+    }
+
+    void updateLastPath(LinkerHelper &linker, Label label) {
+        CodeLocationLabel loc = linker.locationOf(label);
+        lastStubStart = JITCode(loc.executableAddress(), linker.size());
+    }
 
     Kind kind : 3;
 

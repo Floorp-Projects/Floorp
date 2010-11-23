@@ -1090,6 +1090,11 @@ namespace JSC {
             patchPointerInternal(reinterpret_cast<intptr_t>(from) - sizeof(ARMWord), to);
         }
 
+        static bool canRelinkJump(void* from, void* to)
+        {
+            return true;
+        }
+
         static void linkCall(void* code, JmpSrc from, void* to)
         {
             js::JaegerSpew(js::JSpew_Insns,
