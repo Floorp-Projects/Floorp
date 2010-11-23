@@ -1483,22 +1483,23 @@ nsHTMLInputElement::DoSetCheckedChanged(PRBool aCheckedChanged,
       VisitGroup(visitor, aNotify);
     }
   } else {
-    SetCheckedChangedInternal(aCheckedChanged, aNotify);
+    SetCheckedChangedInternal(aCheckedChanged);
   }
 }
 
 void
-nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged,
-                                              PRBool aNotify)
+nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged)
 {
   PRBool checkedChangedBefore = GetCheckedChanged();
 
   SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, aCheckedChanged);
 
-  if (aNotify && checkedChangedBefore != aCheckedChanged) {
+  // This method can't be called when we are not authorized to notify
+  // so we do not need a aNotify parameter.
+  if (checkedChangedBefore != aCheckedChanged) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
-      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
+      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
       document->ContentStatesChanged(this, nsnull,
                                      NS_EVENT_STATE_MOZ_UI_INVALID);
     }
@@ -3410,10 +3411,10 @@ nsHTMLInputElement::AllowDrop()
  */
 
 void
-nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
+nsHTMLInputElement::AddedToRadioGroup()
 {
   // Make sure not to notify if we're still being created by the parser
-  aNotify = aNotify && !GET_BOOLBIT(mBitField, BF_PARSER_CREATING);
+  PRBool notify = !GET_BOOLBIT(mBitField, BF_PARSER_CREATING);
 
   //
   //  If the input element is not in a form and
@@ -3435,7 +3436,7 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
     // should not be that common an occurrence, I think we can live with
     // that.
     //
-    RadioSetChecked(aNotify);
+    RadioSetChecked(notify);
   }
 
   //
@@ -3448,8 +3449,8 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
                                            getter_AddRefs(visitor));
   if (NS_FAILED(rv)) { return; }
   
-  VisitGroup(visitor, aNotify);
-  SetCheckedChangedInternal(checkedChanged, aNotify);
+  VisitGroup(visitor, notify);
+  SetCheckedChangedInternal(checkedChanged);
   
   //
   // Add the radio to the radio group container.
@@ -4174,7 +4175,7 @@ public:
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aRadio);
     NS_ASSERTION(radio, "Visit() passed a null button!");
-    radio->SetCheckedChangedInternal(mCheckedChanged, PR_TRUE);
+    radio->SetCheckedChangedInternal(mCheckedChanged);
     return NS_OK;
   }
 

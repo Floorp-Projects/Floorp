@@ -219,11 +219,11 @@ public:
   const nsCOMArray<nsIDOMFile>& GetFiles();
   void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
 
-  void SetCheckedChangedInternal(PRBool aCheckedChanged, PRBool aNotify);
+  void SetCheckedChangedInternal(PRBool aCheckedChanged);
   PRBool GetCheckedChanged() const {
     return GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
   }
-  void AddedToRadioGroup(PRBool aNotify = PR_TRUE);
+  void AddedToRadioGroup();
   void WillRemoveFromRadioGroup();
   /**
    * Get the radio group container for this button (form or document)
