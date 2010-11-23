@@ -107,7 +107,7 @@ public:
 
     // IME related nsIWidget methods.
     nsresult ResetInputState(nsWindow* aCaller);
-    nsresult SetIMEEnabled(nsWindow* aCaller, PRUint32 aState);
+    nsresult SetInputMode(nsWindow* aCaller, const IMEContext* aContext);
     nsresult GetIMEEnabled(PRUint32* aState);
     nsresult CancelIMEComposition(nsWindow* aCaller);
 

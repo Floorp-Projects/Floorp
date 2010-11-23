@@ -2958,11 +2958,11 @@ nsWindow::AreBoundsSane(void)
 }
 
 NS_IMETHODIMP
-nsWindow::SetIMEEnabled(PRUint32 aState)
+nsWindow::SetInputMode(const IMEContext& aContext)
 {
     NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
 
-    switch (aState) {
+    switch (aContext.mStatus) {
         case nsIWidget::IME_STATUS_ENABLED:
         case nsIWidget::IME_STATUS_PASSWORD:
             {

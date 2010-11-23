@@ -488,19 +488,26 @@ TabParent::RecvGetIMEEnabled(PRUint32* aValue)
 }
 
 bool
-TabParent::RecvSetIMEEnabled(const PRUint32& aValue)
+TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget && AllowContentIME()) {
-    widget->SetIMEEnabled(aValue);
+  if (!widget || !AllowContentIME())
+    return true;
 
-    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-    if (observerService) {
-      nsAutoString state;
-      state.AppendInt(aValue);
-      observerService->NotifyObservers(nsnull, "ime-enabled-state-changed", state.get());
-    }
-  }
+  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
+
+  IMEContext context;
+  context.mStatus = aValue;
+  context.mHTMLInputType.Assign(aType);
+  widget2->SetInputMode(context);
+
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+  if (!observerService)
+    return true;
+
+  nsAutoString state;
+  state.AppendInt(aValue);
+  observerService->NotifyObservers(nsnull, "ime-enabled-state-changed", state.get());
 
   return true;
 }

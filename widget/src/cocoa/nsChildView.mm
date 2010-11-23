@@ -1964,13 +1964,13 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
+NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
 {
 #ifdef DEBUG_IME
-  NSLog(@"**** SetIMEEnabled aState = %d", aState);
+  NSLog(@"**** SetInputMode mStatus = %d", aContext.mStatus);
 #endif
 
-  switch (aState) {
+  switch (aContext.mStatus) {
     case nsIWidget::IME_STATUS_ENABLED:
     case nsIWidget::IME_STATUS_PLUGIN:
       mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
