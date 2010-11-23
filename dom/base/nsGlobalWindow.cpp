@@ -737,7 +737,7 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mMayHaveAudioAvailableEventListener(PR_FALSE), mIsModalContentWindow(PR_FALSE),
   mIsActive(PR_FALSE), mInnerWindow(nsnull), mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
-  mWindowID(++gNextWindowID)
+  mWindowID(++gNextWindowID), mHasNotifiedGlobalCreated(PR_FALSE)
  {}
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
@@ -2205,9 +2205,23 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   mContext->GC();
   mContext->DidInitializeContext();
 
-  if (!aState && !reUseInnerWindow) {
-    nsContentUtils::AddScriptRunner(
-      NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+  if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
+    // We should probably notify. However if this is the, arguably bad,
+    // situation when we're creating a temporary non-chrome-about-blank
+    // document in a chrome docshell, don't notify just yet. Instead wait
+    // until we have a real chrome doc.
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
+    PRInt32 itemType = nsIDocShellTreeItem::typeContent;
+    if (treeItem) {
+      treeItem->GetItemType(&itemType);
+    }
+
+    if (itemType != nsIDocShellTreeItem::typeChrome ||
+        nsContentUtils::IsSystemPrincipal(mDoc->NodePrincipal())) {
+      newInnerWindow->mHasNotifiedGlobalCreated = PR_TRUE;
+      nsContentUtils::AddScriptRunner(
+        NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+    }
   }
 
   return NS_OK;
