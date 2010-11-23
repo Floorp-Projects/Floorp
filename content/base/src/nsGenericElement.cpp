@@ -2558,13 +2558,8 @@ nsresult
 nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
                                        nsIDOMNodeList** aReturn)
 {
-  nsAutoString lowercaseName;
-  nsContentUtils::ASCIIToLower(aTagname, lowercaseName);
-  nsCOMPtr<nsIAtom> XMLAtom = do_GetAtom(aTagname);
-  nsCOMPtr<nsIAtom> HTMLAtom = do_GetAtom(lowercaseName);
-
   nsContentList *list = NS_GetContentList(this, kNameSpaceID_Unknown, 
-                                          HTMLAtom, XMLAtom).get();
+                                          aTagname).get();
 
   // transfer ref to aReturn
   *aReturn = list;
@@ -2690,9 +2685,9 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+  NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
 
-  nsContentList *list = NS_GetContentList(this, nameSpaceId, nameAtom).get();
+  nsContentList *list = NS_GetContentList(this, nameSpaceId, aLocalName).get();
 
   // transfer ref to aReturn
   *aReturn = list;

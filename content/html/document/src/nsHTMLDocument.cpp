@@ -1537,7 +1537,7 @@ nsHTMLDocument::GetBody(nsresult *aResult)
   // The document is most likely a frameset document so look for the
   // outer most frameset element
   nsRefPtr<nsContentList> nodeList =
-    NS_GetContentList(this, kNameSpaceID_XHTML, nsGkAtoms::frameset);
+    NS_GetContentList(this, kNameSpaceID_XHTML, NS_LITERAL_STRING("frameset"));
 
   return nodeList->GetNodeAt(0);
 }
