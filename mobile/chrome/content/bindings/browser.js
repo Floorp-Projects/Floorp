@@ -362,7 +362,7 @@ let ContentScroll =  {
 
         sendAsyncMessage("MozScrolledAreaChanged", {
           width: width,
-          height: height,
+          height: height
         });
 
         break;

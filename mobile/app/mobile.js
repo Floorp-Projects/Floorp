@@ -379,6 +379,9 @@ pref("browser.ui.touch.top", 12);
 pref("browser.ui.touch.bottom", 4);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
+// Sync
+pref("browser.sync.enabled", true);
+
 // plugins
 pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", false);

@@ -94,6 +94,10 @@ textbox.search-bar {
   background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
 }
 
+textbox[disabled="true"] {
+  background-color: lightgray;
+}
+
 /* sidebars spacer --------------------------------------------------------- */
 .sidebar-spacer {
   background-color: #767973;
@@ -180,7 +184,8 @@ button:focus > .button-box {
   border: 1px solid transparent;
 }
 
-button:not([disabled]):hover:active {
+button:not([disabled]):hover:active,
+button:not([disabled])[checked="true"] {
   background-image: url("chrome://browser/skin/images/toggle-off.png");
 }
 

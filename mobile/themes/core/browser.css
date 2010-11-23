@@ -356,7 +356,7 @@ toolbarbutton.button-control:not([disabled="true"]):hover:active {
 
 %ifndef ANDROID
 /* MAEMO (and desktop) only */
-#tool-panel-close {
+.panel-close {
   min-width: 72px !important; /* 72, not 64 to make up for the negative margin */
   max-width: 72px !important; /* 72, not 64 to make up for the negative margin */
   min-height: 72px !important; /* 72, not 64 to make up for the negative margin */
@@ -365,19 +365,19 @@ toolbarbutton.button-control:not([disabled="true"]):hover:active {
   border: none !important;
 }
 
-#tool-panel-close:hover:active {
+.panel-close:hover:active {
   background-color: #8db8d8 !important;
 }
 
-#tool-panel-close:hover:active:-moz-locale-dir(ltr) {
+.panel-close:hover:active:-moz-locale-dir(ltr) {
   -moz-border-radius-bottomleft: 6px;
 }
 
-#tool-panel-close:-moz-locale-dir(rtl) {
+.panel-close:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/images/task-back-rtl-hdpi.png");
 }
 
-#tool-panel-close:hover:active:-moz-locale-dir(rtl) {
+.panel-close:hover:active:-moz-locale-dir(rtl) {
   -moz-border-radius-bottomright: 6px;
 }
 %endif
@@ -1174,6 +1174,19 @@ pageaction:not([image]) > hbox >.pageaction-image {
   -moz-box-align: center;
 }
 
+.setting-group > .prefbox {
+  border-bottom: none;
+}
+
+.setting-subgroup > .prefbox {
+  border-bottom: none;
+  -moz-margin-start: 16px;
+}
+
+.setting-subgroup + :not(.setting-subgroup) > .prefbox {
+  border-top: 1px solid rgb(207,207,207);
+}
+
 /* Put setting textboxes on a separate row in portrait */
 @media (max-width: 499px) {
   .setting-integer,
@@ -1545,4 +1558,36 @@ pageaction:not([image]) > hbox >.pageaction-image {
   #appmenu[count="6"] > .appmenu-button {
     width: 33.33%;
   }
+}
+
+/* Sync setup ------------------------------------------------------------- */
+.syncsetup-page {
+  padding: 8px;
+  background-color: #000;
+}
+
+.syncsetup-center {
+  text-align: center;
+}
+
+.syncsetup-title {
+  -moz-box-align: center;
+}
+
+.syncsetup-code {
+  color: #000;
+  background-color: #fff;
+  padding: 0.5em;
+  -moz-padding-end: 0.25em;
+  letter-spacing: 0.5em;
+  text-align: center;
+  min-width: 8em;
+}
+
+.syncsetup-link {
+  text-decoration: underline;
+}
+
+.syncsetup-label {
+  color: #fff;
 }
