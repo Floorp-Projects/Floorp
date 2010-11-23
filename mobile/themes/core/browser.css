@@ -244,6 +244,10 @@ toolbarbutton.urlbar-button {
   margin: 0;
 }
 
+:invalid {
+  box-shadow: none;
+}
+
 #urlbar-edit > hbox > hbox > .textbox-input {
   min-height: 60px;
   text-indent: 8px;

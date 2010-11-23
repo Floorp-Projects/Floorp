@@ -250,7 +250,7 @@
                            command="cmd_openLocation" onclick="this.doCommand();"
                            placeholder="&urlbar.emptytext;"/>
                     <textbox id="urlbar-edit"
-                             type="autocomplete"
+                             type="url"
                              class="uri-element"
                              autocompletesearch="history"
                              autocompletepopup="popup_autocomplete"
