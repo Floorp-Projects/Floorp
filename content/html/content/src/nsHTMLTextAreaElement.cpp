@@ -238,9 +238,12 @@ protected:
   PRPackedBool             mInhibitStateRestoration;
   /** Whether our disabled state has changed from the default **/
   PRPackedBool             mDisabledChanged;
+  /** Whether we should make :-moz-ui-invalid apply on the element. **/
+  PRPackedBool             mCanShowInvalidUI;
+
   /** The state of the text editor (selection controller and the editor) **/
   nsRefPtr<nsTextEditorState> mState;
-  
+
   NS_IMETHOD SelectAll(nsPresContext* aPresContext);
   /**
    * Get the value, whether it is from the content or the frame.
@@ -271,6 +274,29 @@ protected:
                                 const nsAString* aValue, PRBool aNotify);
 
   /**
+   * Return if an invalid element should have a specific UI for being invalid
+   * (with :-moz-ui-invalid pseudo-class.
+   *
+   * @return Whether the invalid elemnet should have a UI for being invalid.
+   * @note The caller has to be sure the element is invalid before calling.
+   */
+  bool ShouldShowInvalidUI() const {
+    NS_ASSERTION(!IsValid(), "You should not call ShouldShowInvalidUI if the "
+                             "element is valid!");
+
+    /**
+     * Always show the invalid UI if:
+     * - the form has already tried to be submitted but was invalid;
+     * - the element is suffering from a custom error;
+     *
+     * Otherwise, show the invalid UI if the element's value has been changed.
+     */
+
+    return (mForm && mForm->HasEverTriedInvalidSubmit()) ||
+           mValueChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR);
+  }
+
+  /**
    * Get the mutable state of the element.
    */
   PRBool IsMutable() const;
@@ -288,6 +314,7 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNode
     mDoneAddingChildren(!aFromParser),
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
     mDisabledChanged(PR_FALSE),
+    mCanShowInvalidUI(PR_TRUE),
     mState(new nsTextEditorState(this))
 {
   AddMutationObserver(this);
@@ -730,15 +757,31 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     mHandlingSelect = PR_FALSE;
   }
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
+  if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
+      aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+    nsEventStates states;
+
+    if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+      // If the invalid UI is shown, we should show it while focusing (and
+      // update). Otherwise, we should not.
+      mCanShowInvalidUI = !IsValid() && ShouldShowInvalidUI();
+      // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID given that
+      // the state should not change.
+    } else { // NS_BLUR_CONTENT
+      mCanShowInvalidUI = PR_TRUE;
+      states |= NS_EVENT_STATE_MOZ_UI_INVALID;
+    }
+
+    if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
       // TODO: checking if the value is empty could be a good idea but we do not
       // have a simple way to do that, see bug 585100
-      (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
-       aVisitor.mEvent->message == NS_BLUR_CONTENT)) {
+      states |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
+    }
+
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_PLACEHOLDER);
+      doc->ContentStatesChanged(this, nsnull, states);
     }
   }
 
@@ -1022,8 +1065,7 @@ nsHTMLTextAreaElement::IntrinsicState() const
       // Otherwise, it applies if the value has been modified.
       // NS_EVENT_STATE_MOZ_UI_INVALID always applies if the form submission has
       // been tried while invalid.
-      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
-          (mValueChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR))) {
+      if (mCanShowInvalidUI && ShouldShowInvalidUI()) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
