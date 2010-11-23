@@ -12906,13 +12906,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // This happens moderately often, eg. close to 10% of the time in
         // SunSpider, and for some benchmarks it's close to 100%.
         Address dslotAddr = DSlotsAddress(elemp_ins);
-        LIns* isHole_ins = w.name(w.eqi(
-#if JS_BITS_PER_WORD == 32
-                                        w.ldiValueTag(dslotAddr),
-#else
-                                        w.q2i(w.rshuqN(w.ldq(dslotAddr), JSVAL_TAG_SHIFT)),
-#endif
-                                        w.nameImmui(JSVAL_TAG_MAGIC)),
+        LIns* isHole_ins = w.name(is_boxed_magic(dslotAddr, JS_ARRAY_HOLE),
                                   "isHole");
         w.pauseAddingCSEValues();
         if (MaybeBranch mbr1 = w.jf(isHole_ins)) {
@@ -14781,10 +14775,44 @@ TraceRecorder::record_JSOP_IN()
     if (lval.isInt32()) {
         if (!js_Int32ToId(cx, lval.toInt32(), &id))
             RETURN_ERROR_A("OOM converting left operand of JSOP_IN to string");
-        LIns* num_ins;
-        CHECK_STATUS_A(makeNumberInt32(get(&lval), &num_ins));
-        LIns* args[] = { num_ins, obj_ins, cx_ins };
-        x = w.call(&js_HasNamedPropertyInt32_ci, args);
+
+        if (obj->isDenseArray()) {
+            // Fast path for dense arrays
+            VMSideExit* branchExit = snapshot(BRANCH_EXIT);
+            guardDenseArray(obj_ins, branchExit);
+
+            // If our proto has indexed props, all bets are off on our
+            // "false" values and out-of-bounds access.  Just guard on
+            // that.
+            CHECK_STATUS_A(guardPrototypeHasNoIndexedProperties(obj, obj_ins,
+                                                                snapshot(MISMATCH_EXIT)));
+
+            LIns* idx_ins;
+            CHECK_STATUS_A(makeNumberInt32(get(&lval), &idx_ins));
+            idx_ins = w.name(idx_ins, "index");
+            LIns* capacity_ins = w.ldiDenseArrayCapacity(obj_ins);
+            LIns* inRange = w.ltui(idx_ins, capacity_ins);
+
+            if (jsuint(lval.toInt32()) < obj->getDenseArrayCapacity()) {
+                guard(true, inRange, branchExit);
+
+                LIns *elem_ins = w.getDslotAddress(obj_ins, idx_ins);
+                // Need to make sure we don't have a hole
+                LIns *is_hole_ins =
+                    is_boxed_magic(DSlotsAddress(elem_ins), JS_ARRAY_HOLE);
+
+                // Set x to true (index in our array) if is_hole_ins == 0
+                x = w.eqi0(is_hole_ins);
+            } else {
+                guard(false, inRange, branchExit);
+                x = w.nameImmi(0);
+            }
+        } else {
+            LIns* num_ins;
+            CHECK_STATUS_A(makeNumberInt32(get(&lval), &num_ins));
+            LIns* args[] = { num_ins, obj_ins, cx_ins };
+            x = w.call(&js_HasNamedPropertyInt32_ci, args);
+        }
     } else if (lval.isString()) {
         if (!js_ValueToStringId(cx, lval, &id))
             RETURN_ERROR_A("left operand of JSOP_IN didn't convert to a string-id");
