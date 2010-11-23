@@ -240,6 +240,8 @@ protected:
   PRPackedBool             mDisabledChanged;
   /** Whether we should make :-moz-ui-invalid apply on the element. **/
   PRPackedBool             mCanShowInvalidUI;
+  /** Whether we should make :-moz-ui-valid apply on the element. **/
+  PRPackedBool             mCanShowValidUI;
 
   /** The state of the text editor (selection controller and the editor) **/
   nsRefPtr<nsTextEditorState> mState;
@@ -297,6 +299,16 @@ protected:
   }
 
   /**
+   * Return whether an element should show the valid UI.
+   *
+   * @return Whether the valid UI should be shown.
+   * @note This doesn't take into account the validity of the element.
+   */
+  bool ShouldShowValidUI() const {
+    return (mForm && mForm->HasEverTriedInvalidSubmit()) || mValueChanged;
+  }
+
+  /**
    * Get the mutable state of the element.
    */
   PRBool IsMutable() const;
@@ -315,6 +327,7 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNode
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
     mDisabledChanged(PR_FALSE),
     mCanShowInvalidUI(PR_TRUE),
+    mCanShowValidUI(PR_TRUE),
     mState(new nsTextEditorState(this))
 {
   AddMutationObserver(this);
@@ -766,11 +779,17 @@ nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // If the invalid UI is shown, we should show it while focusing (and
       // update). Otherwise, we should not.
       mCanShowInvalidUI = !IsValid() && ShouldShowInvalidUI();
-      // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID given that
-      // the state should not change.
+
+      // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
+      // UI while typing.
+      mCanShowValidUI = ShouldShowValidUI();
+
+      // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
+      // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
     } else { // NS_BLUR_CONTENT
       mCanShowInvalidUI = PR_TRUE;
-      states |= NS_EVENT_STATE_MOZ_UI_INVALID;
+      mCanShowValidUI = PR_TRUE;
+      states |= NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
@@ -1059,9 +1078,6 @@ nsHTMLTextAreaElement::IntrinsicState() const
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
-      if ((mForm && mForm->HasEverTriedInvalidSubmit()) || mValueChanged) {
-        state |= NS_EVENT_STATE_MOZ_UI_VALID;
-      }
     } else {
       state |= NS_EVENT_STATE_INVALID;
       // NS_EVENT_STATE_MOZ_UI_INVALID always apply if the element suffers from
@@ -1072,6 +1088,19 @@ nsHTMLTextAreaElement::IntrinsicState() const
       if (mCanShowInvalidUI && ShouldShowInvalidUI()) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
+    }
+
+    // :-moz-ui-valid applies if all the following are true:
+    // 1. The element is not focused, or had either :-moz-ui-valid or
+    //    :-moz-ui-invalid applying before it was focused ;
+    // 2. The element is either valid or isn't allowed to have
+    //    :-moz-ui-invalid applying ;
+    // 3. The rules to have :-moz-ui-valid applying are fulfilled
+    //    (see ShouldShowValidUI()).
+    if (mCanShowValidUI &&
+        (IsValid() || !mCanShowInvalidUI) &&
+        ShouldShowValidUI()) {
+      state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }
 
