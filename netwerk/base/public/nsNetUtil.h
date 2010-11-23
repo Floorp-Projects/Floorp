@@ -107,6 +107,7 @@
 #include "nsIChannelPolicy.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
+#include "nsIRedirectChannelRegistrar.h"
 #include "mozilla/Services.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -1778,6 +1779,22 @@ NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
 
   PRBool res;
   return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
+}
+
+inline nsresult
+NS_LinkRedirectChannels(PRUint32 channelId,
+                        nsIParentChannel *parentChannel,
+                        nsIChannel** _result)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+      do_GetService("@mozilla.org/redirectchannelregistrar;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return registrar->LinkChannels(channelId,
+                                 parentChannel,
+                                 _result);
 }
 
 /**
