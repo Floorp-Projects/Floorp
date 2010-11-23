@@ -216,7 +216,7 @@ public:
   // nsIFileControlElement
   void GetDisplayFileName(nsAString& aFileName) const;
   const nsCOMArray<nsIDOMFile>& GetFiles();
-  void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles);
+  void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
 
   void SetCheckedChangedInternal(PRBool aCheckedChanged);
   PRBool GetCheckedChanged();
@@ -367,9 +367,9 @@ protected:
                             PRBool aUserInput,
                             PRBool aSetValueChanged);
 
-  void ClearFiles() {
+  void ClearFiles(bool aSetValueChanged) {
     nsCOMArray<nsIDOMFile> files;
-    SetFiles(files);
+    SetFiles(files, aSetValueChanged);
   }
 
   nsresult SetIndeterminateInternal(PRBool aValue,
