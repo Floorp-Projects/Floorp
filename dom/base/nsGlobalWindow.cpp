@@ -591,6 +591,85 @@ nsDummyJavaPluginOwner::SendIdleEvent()
 }
 
 /**
+ * An object implementing the window.URL property.
+ */
+class nsDOMMozURLProperty : public nsIDOMMozURLProperty
+{
+public:
+  nsDOMMozURLProperty(nsGlobalWindow* aWindow)
+    : mWindow(aWindow)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMMOZURLPROPERTY
+
+  void ClearWindowReference() {
+    mWindow = nsnull;
+  }
+private:
+  nsGlobalWindow* mWindow;
+};
+
+DOMCI_DATA(MozURLProperty, nsDOMMozURLProperty)
+NS_IMPL_ADDREF(nsDOMMozURLProperty)
+NS_IMPL_RELEASE(nsDOMMozURLProperty)
+NS_INTERFACE_MAP_BEGIN(nsDOMMozURLProperty)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMMozURLProperty)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozURLProperty)
+    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozURLProperty)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsDOMMozURLProperty::CreateObjectURL(nsIDOMBlob* aBlob, nsAString& aURL)
+{
+  NS_PRECONDITION(!mWindow || mWindow->IsInnerWindow(),
+                  "Should be inner window");
+
+  NS_ENSURE_STATE(mWindow && mWindow->mDoc);
+  NS_ENSURE_ARG_POINTER(aBlob);
+
+  nsIDocument* doc = mWindow->mDoc;
+
+  nsresult rv = aBlob->GetInternalUrl(doc->NodePrincipal(), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  doc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
+{
+  NS_PRECONDITION(!mWindow || mWindow->IsInnerWindow(),
+                  "Should be inner window");
+
+  NS_ENSURE_STATE(mWindow);
+
+  NS_LossyConvertUTF16toASCII asciiurl(aURL);
+
+  nsIPrincipal* winPrincipal = mWindow->GetPrincipal();
+  if (!winPrincipal) {
+    return NS_OK;
+  }
+
+  nsIPrincipal* principal =
+    nsFileDataProtocolHandler::GetFileDataEntryPrincipal(asciiurl);
+  PRBool subsumes;
+  if (principal && winPrincipal &&
+      NS_SUCCEEDED(winPrincipal->Subsumes(principal, &subsumes)) &&
+      subsumes) {
+    if (mWindow->mDoc) {
+      mWindow->mDoc->UnregisterFileDataUri(asciiurl);
+    }
+    nsFileDataProtocolHandler::RemoveFileDataEntry(asciiurl);
+  }
+
+  return NS_OK;
+}
+
+/**
  * An indirect observer object that means we don't have to implement nsIObserver
  * on nsGlobalWindow, where any script could see it.
  */
@@ -921,6 +1000,10 @@ nsGlobalWindow::~nsGlobalWindow()
 
   delete mPendingStorageEventsObsolete;
 
+  if (mURLProperty) {
+    mURLProperty->ClearWindowReference();
+  }
+
   nsLayoutStatics::Release();
 }
 
@@ -1231,6 +1314,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
   OUTER_WINDOW_ONLY
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -3130,32 +3214,13 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
 NS_IMETHODIMP
 nsGlobalWindow::CreateBlobURL(nsIDOMBlob* aBlob, nsAString& aURL)
 {
-  FORWARD_TO_INNER(CreateBlobURL, (aBlob, aURL), NS_ERROR_UNEXPECTED);
-
-  NS_ENSURE_STATE(mDoc);
-
-  NS_ENSURE_ARG_POINTER(aBlob);
-
-  nsresult rv = aBlob->GetInternalUrl(mDoc->NodePrincipal(), aURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDoc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::RevokeBlobURL(const nsAString& aURL)
 {
-  FORWARD_TO_INNER(RevokeBlobURL, (aURL), NS_ERROR_UNEXPECTED);
-
-  NS_ENSURE_STATE(mDoc);
-
-  NS_LossyConvertUTF16toASCII asciiurl(aURL);
-  mDoc->UnregisterFileDataUri(asciiurl);
-  nsFileDataProtocolHandler::RemoveFileDataEntry(asciiurl);
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -9714,6 +9779,20 @@ nsGlobalWindow::SetHasOrientationEventListener()
     mHasAcceleration = PR_TRUE;
     ac->AddWindowListener(this);
   }
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
+{
+  FORWARD_TO_INNER(GetURL, (aURL), NS_ERROR_UNEXPECTED);
+
+  if (!mURLProperty) {
+    mURLProperty = new nsDOMMozURLProperty(this);
+  }
+
+  NS_ADDREF(*aURL = mURLProperty);
+
+  return NS_OK;
 }
 
 // nsGlobalChromeWindow implementation
