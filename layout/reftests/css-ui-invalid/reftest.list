@@ -1,0 +1,8 @@
+# :-moz-ui-invalid should apply on the following elements
+include button/reftest.list
+include input/reftest.list
+include select/reftest.list
+include textarea/reftest.list
+
+# default :-moz-ui-invalid style
+include default-style/reftest.list
