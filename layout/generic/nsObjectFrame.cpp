@@ -2912,7 +2912,13 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
 {
-  NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set once!");
+  NS_ASSERTION(!mInstance || !aInstance, "mInstance should only be set or unset!");
+
+  // If we're going to null out mInstance after use, be sure to call
+  // mInstance->InvalidateOwner() here, since it now won't be called
+  // from our destructor.  This fixes bug 613376.
+  if (mInstance && !aInstance)
+    mInstance->InvalidateOwner();
 
   mInstance = aInstance;
 
