@@ -313,7 +313,7 @@ var ExtensionsView = {
         listitem.setAttribute("appDisabled", addon.appDisabled);
         listitem.setAttribute("appManaged", appManaged);
         listitem.setAttribute("description", addon.description);
-        listitem.setAttribute("optionsURL", addon.optionsURL);
+        listitem.setAttribute("optionsURL", addon.optionsURL ? addon.optionsURL : "");
         listitem.setAttribute("opType", opType);
         listitem.setAttribute("updateable", updateable);
         listitem.setAttribute("isReadonly", !uninstallable);
@@ -366,6 +366,22 @@ var ExtensionsView = {
       aItem.setAttribute("isDisabled", false);
       aItem._engine.hidden = false;
       opType = "needs-enable";
+    } else if (aItem.getAttribute("type") == "theme") {
+      // we can have only one theme enabled, so disable the current one if any
+      let theme = null;
+      let item = this._localItem.nextSibling;
+      while (item != this._repoItem) {
+        if (item.addon && (item.addon.type == "theme") && (item.addon.isActive)) {
+          theme = item;
+          break;
+        }
+        item = item.nextSibling;
+      }
+      if (theme)
+        this.disable(theme);
+
+      aItem.addon.userDisabled = false;
+      aItem.setAttribute("isDisabled", false);
     } else {
       aItem.addon.userDisabled = false;
       opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
@@ -385,6 +401,9 @@ var ExtensionsView = {
       aItem.setAttribute("isDisabled", true);
       aItem._engine.hidden = true;
       opType = "needs-disable";
+    } else if (aItem.getAttribute("type") == "theme") {
+      aItem.addon.userDisabled = true;
+      aItem.setAttribute("isDisabled", true);
     } else {
       aItem.addon.userDisabled = true;
       opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
