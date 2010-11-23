@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,13 +13,11 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
  *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,49 +34,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_net_HttpChannelCallbackWrapper_h
-#define mozilla_net_HttpChannelCallbackWrapper_h
+#ifndef RedirectChannelRegistrar_h__
+#define RedirectChannelRegistrar_h__
 
-#include "nsHttp.h"
-#include "mozilla/net/NeckoCommon.h"
-#include "PHttpChannelParams.h"
+#include "nsIRedirectChannelRegistrar.h"
+
+#include "nsIChannel.h"
 #include "nsIParentChannel.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIChannelEventSink.h"
-#include "nsIRedirectResultListener.h"
-#include "nsIProgressEventSink.h"
-
-using namespace mozilla::dom;
-
-class nsICacheEntryDescriptor;
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 namespace net {
 
-class HttpChannelParent;
-
-class HttpChannelParentListener : public nsIInterfaceRequestor
-                                 , public nsIChannelEventSink
-                                 , public nsIRedirectResultListener
-                                 , public nsIStreamListener
+class RedirectChannelRegistrar : public nsIRedirectChannelRegistrar
 {
-public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIREDIRECTRESULTLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREDIRECTCHANNELREGISTRAR
 
-  HttpChannelParentListener(HttpChannelParent* aInitialChannel);
-  virtual ~HttpChannelParentListener();
+  RedirectChannelRegistrar();
 
-private:
-  nsCOMPtr<nsIParentChannel> mActiveChannel;
-  PRUint32 mRedirectChannelId;
+protected:
+  template<class KeyClass, class T>
+  class nsCOMPtrHashtable :
+    public nsBaseHashtable< KeyClass, nsCOMPtr<T>, T* >
+  {
+  public:
+    typedef typename KeyClass::KeyType KeyType;
+    typedef T* UserDataType;
+    typedef nsBaseHashtable< KeyClass, nsCOMPtr<T>, T* > base_type;
+
+    PRBool Get(KeyType aKey, UserDataType* pData) const;
+  };
+
+  typedef nsCOMPtrHashtable<nsUint32HashKey, nsIChannel>
+          ChannelHashtable;
+  typedef nsCOMPtrHashtable<nsUint32HashKey, nsIParentChannel>
+          ParentChannelHashtable;
+
+  ChannelHashtable mRealChannels;
+  ParentChannelHashtable mParentChannels;
+  PRUint32 mId;
 };
 
-} // namespace net
-} // namespace mozilla
+}
+}
 
-#endif // mozilla_net_HttpChannelParent_h
+#endif
