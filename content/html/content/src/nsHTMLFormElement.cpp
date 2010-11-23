@@ -1624,10 +1624,6 @@ nsHTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
   }
 
   for (PRUint32 i = 0; i < len; ++i) {
-    if (!sortedControls[i]->IsSubmittableControl()) {
-      continue;
-    }
-
     nsCOMPtr<nsIConstraintValidation> cvElmt =
       do_QueryInterface((nsGenericHTMLElement*)sortedControls[i]);
     if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
