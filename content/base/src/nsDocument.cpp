@@ -3176,7 +3176,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
-  NS_ENSURE_FALSE(mShellIsHidden, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(GetBFCacheEntry(), NS_ERROR_FAILURE);
 
   FillStyleSet(aStyleSet);
   
