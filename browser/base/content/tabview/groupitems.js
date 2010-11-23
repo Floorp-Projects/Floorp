@@ -140,7 +140,7 @@ function GroupItem(listOfEls, options) {
   // ___ Titlebar
   var html =
     "<div class='title-container'>" +
-      "<input class='name'/>" +
+      "<input class='name' />" +
       "<div class='title-shield' />" +
     "</div>";
 
