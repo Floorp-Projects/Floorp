@@ -102,7 +102,7 @@ public:
     virtual bool RecvEndIMEComposition(const PRBool& aCancel,
                                        nsString* aComposition);
     virtual bool RecvGetIMEEnabled(PRUint32* aValue);
-    virtual bool RecvSetIMEEnabled(const PRUint32& aValue);
+    virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType);
     virtual bool RecvGetIMEOpenState(PRBool* aValue);
     virtual bool RecvSetIMEOpenState(const PRBool& aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,

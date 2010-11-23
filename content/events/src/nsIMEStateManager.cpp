@@ -85,7 +85,7 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (widget) {
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, widget);
+    SetIMEState(newState, nsnull, widget);
   }
   sContent = nsnull;
   sPresContext = nsnull;
@@ -110,7 +110,7 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     if (NS_FAILED(rv))
       widget->ResetInputState();
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, widget);
+    SetIMEState(newState, nsnull, widget);
   }
 
   sContent = nsnull;
@@ -164,7 +164,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
 
   if (newState != nsIContent::IME_STATUS_NONE) {
     // Update IME state for new focus widget
-    SetIMEState(newState, widget);
+    SetIMEState(newState, aContent, widget);
   }
 
   sPresContext = aPresContext;
@@ -181,7 +181,7 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 }
 
 void
-nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState)
+nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
 {
   if (!sPresContext) {
     NS_WARNING("ISM doesn't know which editor has focus");
@@ -209,7 +209,7 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState)
   // commit current composition
   widget->ResetInputState();
 
-  SetIMEState(aNewIMEState, widget);
+  SetIMEState(aNewIMEState, aContent, widget);
 }
 
 PRUint32
@@ -261,12 +261,26 @@ private:
 
 void
 nsIMEStateManager::SetIMEState(PRUint32 aState,
+                               nsIContent* aContent,
                                nsIWidget* aWidget)
 {
   if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    PRUint32 state =
-      nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
-    aWidget->SetIMEEnabled(state);
+    nsresult rv;
+
+    nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(aWidget);
+    if (!widget2)
+      return;
+
+    PRUint32 state = nsContentUtils::GetWidgetStatusFromIMEStatus(aState);
+    IMEContext context;
+    context.mStatus = state;
+
+    if (aContent && aContent->Tag() == nsGkAtoms::input) {
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                        context.mHTMLInputType);
+    }
+
+    widget2->SetInputMode(context);
 
     nsContentUtils::AddScriptRunner(new IMEEnabledStateChangedEvent(state));
   }

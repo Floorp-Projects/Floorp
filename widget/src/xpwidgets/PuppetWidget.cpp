@@ -370,10 +370,10 @@ PuppetWidget::SetIMEOpenState(PRBool aState)
 }
 
 NS_IMETHODIMP
-PuppetWidget::SetIMEEnabled(PRUint32 aState)
+PuppetWidget::SetInputMode(const IMEContext& aContext)
 {
   if (mTabChild &&
-      mTabChild->SendSetIMEEnabled(aState))
+      mTabChild->SendSetInputMode(aContext.mStatus, aContext.mHTMLInputType))
     return NS_OK;
   return NS_ERROR_FAILURE;
 }

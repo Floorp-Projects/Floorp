@@ -6441,9 +6441,9 @@ nsWindow::ResetInputState()
 }
 
 NS_IMETHODIMP
-nsWindow::SetIMEEnabled(PRUint32 aState)
+nsWindow::SetInputMode(const IMEContext& aContext)
 {
-    return mIMModule ? mIMModule->SetIMEEnabled(this, aState) : NS_OK;
+    return mIMModule ? mIMModule->SetInputMode(this, &aContext) : NS_OK;
 }
 
 NS_IMETHODIMP
