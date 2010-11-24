@@ -88,6 +88,7 @@ function run_test() {
     "chrome://browser/content/browser.xul",
     "view-source:http://www.google.com/",
     "javascript:alert('hello world!');",
+    "resource://gre-resources/hiddenWindow.html",
   ];
 
   for each (var currentURL in urlsToIgnore) {
