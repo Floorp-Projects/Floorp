@@ -77,7 +77,7 @@
  * table changes.
  */
 #define CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
-  "CREATE TRIGGER moz_historyvisits_afterinsert_v2_trigger " \
+  "CREATE TEMP TRIGGER moz_historyvisits_afterinsert_v2_trigger " \
   "AFTER INSERT ON moz_historyvisits FOR EACH ROW " \
   "BEGIN " \
     "UPDATE moz_places SET " \
@@ -88,7 +88,7 @@
 )
 
 #define CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
-  "CREATE TRIGGER moz_historyvisits_afterdelete_v2_trigger " \
+  "CREATE TEMP TRIGGER moz_historyvisits_afterdelete_v2_trigger " \
   "AFTER DELETE ON moz_historyvisits FOR EACH ROW " \
   "BEGIN " \
     "UPDATE moz_places SET " \
