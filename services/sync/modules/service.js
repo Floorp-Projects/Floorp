@@ -1572,7 +1572,7 @@ WeaveSvc.prototype = {
       Status.engines = [engine.name, e.failureCode || ENGINE_UNKNOWN_FAIL];
 
       this._syncError = true;
-      this._log.debug(Utils.exceptionStr(e));
+      this._log.debug(engine.name + " failed: " + Utils.exceptionStr(e));
       return true;
     }
     finally {
