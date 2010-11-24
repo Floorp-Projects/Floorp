@@ -201,6 +201,9 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
 ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
+#ifdef ANDROID
+ : mScreenSize(0, 0)
+#endif
 {
 }
 
@@ -568,6 +571,17 @@ ContentChild::RecvAccelerationChanged(const double& x, const double& y,
     if (acu)
         acu->AccelerationChanged(x, y, z);
     return true;
+}
+
+bool
+ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
+{
+#ifdef ANDROID
+    mScreenSize = size;
+#else
+    NS_RUNTIMEABORT("Message currently only expected on android");
+#endif
+  return true;
 }
 
 } // namespace dom

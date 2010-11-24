@@ -59,6 +59,7 @@ using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
 using mozilla::null_t;
+using gfxIntSize;
 
 namespace mozilla {
 namespace dom {
@@ -112,6 +113,8 @@ child:
     AddPermission(Permission permission);
 
     AccelerationChanged(double x, double y, double z);
+
+    ScreenSizeChanged(gfxIntSize size);
 
 parent:
     PNecko();

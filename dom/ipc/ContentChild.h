@@ -130,6 +130,11 @@ public:
     virtual bool RecvAccelerationChanged(const double& x, const double& y,
                                          const double& z);
 
+    virtual bool RecvScreenSizeChanged(const gfxIntSize &size);
+#ifdef ANDROID
+    gfxIntSize GetScreenSize() { return mScreenSize; }
+#endif
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -145,6 +150,9 @@ private:
 
     InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsRefPtr<ConsoleListener> mConsoleListener;
+#ifdef ANDROID
+    gfxIntSize mScreenSize;
+#endif
 
     static ContentChild* sSingleton;
 
