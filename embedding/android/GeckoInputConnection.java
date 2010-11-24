@@ -539,14 +539,23 @@ public class GeckoInputConnection
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start, before));
 
-        if (count == 0)
+        if (count == 0) {
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
-        else
+        } else {
+            // Start and stop composition to force UI updates.
+            finishComposingText();
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_COMPOSITION_BEGIN, 0, 0));
+
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(0, count,
                                GeckoEvent.IME_RANGE_RAWINPUT, 0, 0, 0,
                                s.subSequence(start, start + count).toString()));
+
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_COMPOSITION_END, 0, 0));
+        }
     }
 
     public void afterTextChanged(Editable s)
