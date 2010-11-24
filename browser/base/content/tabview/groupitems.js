@@ -1878,7 +1878,7 @@ let GroupItems = {
         return false;
       });
 
-      if (otherTab && otherTab.tabItem) {
+      if (otherTab) {
         // the first visible tab belongs to a group, add the new tabItem into 
         // that group
         if (otherTab.tabItem.parent) {
