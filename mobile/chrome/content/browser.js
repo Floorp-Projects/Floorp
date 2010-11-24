@@ -2080,8 +2080,19 @@ var SessionHistoryObserver = {
 };
 
 var ContentCrashObserver = {
+  get CrashSubmit() {
+    delete this.CrashSubmit;
+    Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
+    return this.CrashSubmit;
+  },
+
   observe: function cco_observe(aSubject, aTopic, aData) {
-    if (aTopic != "ipc:content-shutdown" && aData != "abnormal")
+    if (aTopic != "ipc:content-shutdown") {
+      Cu.reportError("ContentCrashObserver unexpected topic: " + aTopic);
+      return;
+    }
+
+    if (!aSubject.QueryInterface(Ci.nsIPropertyBag2).hasKey("abnormal"))
       return;
 
     // Spin through the open tabs and resurrect the out-of-process tabs. Resurrection
@@ -2102,8 +2113,12 @@ var ContentCrashObserver = {
                   (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
                   (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
 
-    this._waitingToClose = true;
-    let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, submitText, { value: true });
+    // Only show the submit checkbox if we have a crash report we can submit
+    if (!aSubject.hasKey("dumpID"))
+      submitText = null;
+
+    let submit = { value: true };
+    let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, submitText, submit);
     if (reload) {
       // Fire a TabSelect event to kick start the restore process
       let event = document.createEvent("Events");
@@ -2119,6 +2134,12 @@ var ContentCrashObserver = {
       // Close this tab, it could be the reason we crashed. The undo-close-tab
       // system will pick it up.
       Browser.closeTab(Browser.selectedTab);
+    }
+
+    // Submit the report, if we have one and the user wants to submit it
+    if (submit.value && aSubject.hasKey("dumpID")) {
+      let dumpID = aSubject.getProperty("dumpID");
+      this.CrashSubmit.submit(dumpID, Elements.stack, null, null);
     }
   }
 };
