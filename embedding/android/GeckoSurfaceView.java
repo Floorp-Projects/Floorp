@@ -113,8 +113,8 @@ class GeckoSurfaceView
                      mSoftwareBuffer.capacity() < (width * height * 2) ||
                      mWidth != width || mHeight != height)
                 mSoftwareBuffer = ByteBuffer.allocateDirect(width * height * 2);
-            boolean doSyncDraw = GeckoAppShell.sGeckoRunning && m2DMode &&
-                                 mSoftwareBuffer != null;
+            boolean doSyncDraw = m2DMode && mSoftwareBuffer != null &&
+                GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning);
             mSyncDraw = doSyncDraw;
 
             mFormat = format;
