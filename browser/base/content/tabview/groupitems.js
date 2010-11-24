@@ -1459,32 +1459,34 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Reorders the tabs in the tab bar based on the arrangment of the tabs
   // shown in the groupItem.
   reorderTabsBasedOnTabItemOrder: function GroupItem_reorderTabsBasedOnTabItemOrder() {
-    var tabBarTabs = Array.slice(gBrowser.tabs);
-    var currentIndex;
+    let targetIndices = null;
 
-    // ToDo: optimisation is needed to further reduce the tab move.
-    // Bug 586553
-    this._children.forEach(function(tabItem) {
-      tabBarTabs.some(function(tab, i) {
-        if (tabItem.tab == tab) {
-          if (!currentIndex)
-            currentIndex = i;
-          else if (tab.pinned)
-            currentIndex++;
-          else {
-            var removed;
-            if (currentIndex < i)
-              currentIndex = i;
-            else if (currentIndex > i) {
-              removed = tabBarTabs.splice(i, 1);
-              tabBarTabs.splice(currentIndex, 0, removed);
-              gBrowser.moveTabTo(tabItem.tab, currentIndex);
-            }
-          }
+    let self = this;
+    this._children.some(function(tabItem, index) {
+      // if no targetIndices, or it was reset, recompute
+      if (!targetIndices) {
+        let currentIndices = [tabItem.tab._tPos for each (tabItem in self._children)];
+        targetIndices = currentIndices.concat().sort();
+        // if no resorting is required, we're done!
+        if (currentIndices == targetIndices)
           return true;
-        }
-        return false;
-      });
+      }
+    
+      // Compute a target range for this tab's index
+      let originalIndex = tabItem.tab._tPos;
+      let targetRange = new Range(index ? targetIndices[index - 1] : -1,
+                                  targetIndices[index + 1] || Infinity);
+
+      // If the originalIndex of this tab is not within its target,
+      // let's move it to the targetIndex.
+      if (!targetRange.contains(originalIndex)) {
+        let targetIndex = targetIndices[index];
+        gBrowser.moveTabTo(tabItem.tab, targetIndex);
+        // force recomputing targetIndices
+        targetIndices = null;
+      }
+      
+      return false;
     });
   },
 
