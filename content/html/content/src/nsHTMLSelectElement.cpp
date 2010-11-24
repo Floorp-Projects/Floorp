@@ -72,6 +72,7 @@
 #include "nsEventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
+#include "nsHTMLFormElement.h"
 
 using namespace mozilla::dom;
 
@@ -1573,13 +1574,15 @@ nsHTMLSelectElement::IntrinsicState() const
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
 
-      if (mSelectionHasChanged) {
+      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
+          mSelectionHasChanged) {
         state |= NS_EVENT_STATE_MOZ_UI_VALID;
       }
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
-      if (mSelectionHasChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
+      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
+          mSelectionHasChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
