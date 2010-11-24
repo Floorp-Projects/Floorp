@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007,2008,2009,2010  Red Hat, Inc.
+ * Copyright (C) 2010  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -22,6 +23,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
 #ifndef HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH
@@ -30,14 +32,23 @@
 #include "hb-buffer-private.hh"
 #include "hb-ot-layout-gdef-private.hh"
 
+HB_BEGIN_DECLS
+
+
+/* buffer var allocations */
+#define lig_id() var2.u16[0] /* unique ligature id */
+#define lig_comp() var2.u16[1] /* component number in the ligature (0 = base) */
+
 
 #ifndef HB_DEBUG_APPLY
-#define HB_DEBUG_APPLY HB_DEBUG+0
+#define HB_DEBUG_APPLY (HB_DEBUG+0)
 #endif
 
 #define TRACE_APPLY() \
 	hb_trace_t<HB_DEBUG_APPLY> trace (&c->debug_depth, "APPLY", HB_FUNC, this); \
 
+
+HB_BEGIN_DECLS
 
 struct hb_apply_context_t
 {
@@ -47,8 +58,35 @@ struct hb_apply_context_t
   hb_mask_t lookup_mask;
   unsigned int context_length;
   unsigned int nesting_level_left;
-  unsigned int lookup_flag;
-  unsigned int property; /* propety of first glyph (TODO remove) */
+  unsigned int lookup_props;
+  unsigned int property; /* propety of first glyph */
+
+
+  inline void replace_glyph (hb_codepoint_t glyph_index) const
+  {
+    clear_property ();
+    buffer->replace_glyph (glyph_index);
+  }
+  inline void replace_glyphs_be16 (unsigned int num_in,
+				   unsigned int num_out,
+				   const uint16_t *glyph_data_be) const
+  {
+    clear_property ();
+    buffer->replace_glyphs_be16 (num_in, num_out, glyph_data_be);
+  }
+
+  inline void guess_glyph_class (unsigned int klass)
+  {
+    /* XXX if ! has gdef */
+    buffer->info[buffer->i].props_cache() = klass;
+  }
+
+  private:
+  inline void clear_property (void) const
+  {
+    /* XXX if has gdef */
+    buffer->info[buffer->i].props_cache() = 0;
+  }
 };
 
 
@@ -95,7 +133,7 @@ static inline bool match_input (hb_apply_context_t *c,
 
   for (i = 1, j = c->buffer->i + 1; i < count; i++, j++)
   {
-    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_flag, NULL))
+    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_props, NULL))
     {
       if (unlikely (j + count - i == end))
 	return false;
@@ -122,7 +160,7 @@ static inline bool match_backtrack (hb_apply_context_t *c,
 
   for (unsigned int i = 0, j = c->buffer->out_len - 1; i < count; i++, j--)
   {
-    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->out_info[j], c->lookup_flag, NULL))
+    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->out_info[j], c->lookup_props, NULL))
     {
       if (unlikely (j + 1 == count - i))
 	return false;
@@ -150,7 +188,7 @@ static inline bool match_lookahead (hb_apply_context_t *c,
 
   for (i = 0, j = c->buffer->i + offset; i < count; i++, j++)
   {
-    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_flag, NULL))
+    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_props, NULL))
     {
       if (unlikely (j + count - i == end))
 	return false;
@@ -163,6 +201,8 @@ static inline bool match_lookahead (hb_apply_context_t *c,
 
   return true;
 }
+
+HB_END_DECLS
 
 
 struct LookupRecord
@@ -179,6 +219,9 @@ struct LookupRecord
   public:
   DEFINE_SIZE_STATIC (4);
 };
+
+
+HB_BEGIN_DECLS
 
 static inline bool apply_lookup (hb_apply_context_t *c,
 				 unsigned int count, /* Including the first glyph */
@@ -199,7 +242,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
    */
   for (unsigned int i = 0; i < count; /* NOP */)
   {
-    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[c->buffer->i], c->lookup_flag, NULL))
+    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[c->buffer->i], c->lookup_props, NULL))
     {
       if (unlikely (c->buffer->i == end))
 	return true;
@@ -235,6 +278,8 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 
   return true;
 }
+
+HB_END_DECLS
 
 
 /* Contextual lookups */
@@ -384,9 +429,6 @@ struct ContextFormat2
     const ClassDef &class_def = this+classDef;
     index = class_def (c->buffer->info[c->buffer->i].codepoint);
     const RuleSet &rule_set = this+ruleSet[index];
-    /* LONGTERMTODO: Old code fetches glyph classes at most once and caches
-     * them across subrule lookups.  Not sure it's worth it.
-     */
     struct ContextLookupContext lookup_context = {
       {match_class, apply_func},
       &class_def
@@ -560,7 +602,6 @@ struct ChainRule
 				 lookahead.len, lookahead.array,
 				 lookup.len, lookup.array,
 				 lookup_context);
-    return false;
   }
 
   public:
@@ -677,9 +718,6 @@ struct ChainContextFormat2
 
     index = input_class_def (c->buffer->info[c->buffer->i].codepoint);
     const ChainRuleSet &rule_set = this+ruleSet[index];
-    /* LONGTERMTODO: Old code fetches glyph classes at most once and caches
-     * them across subrule lookups.  Not sure it's worth it.
-     */
     struct ChainContextLookupContext lookup_context = {
       {match_class, apply_func},
       {&backtrack_class_def,
@@ -749,7 +787,6 @@ struct ChainContextFormat3
 				 lookahead.len, (const USHORT *) lookahead.array,
 				 lookup.len, lookup.array,
 				 lookup_context);
-    return false;
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
@@ -938,5 +975,7 @@ struct GSUBGPOS
   DEFINE_SIZE_STATIC (10);
 };
 
+
+HB_END_DECLS
 
 #endif /* HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH */

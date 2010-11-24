@@ -3,7 +3,7 @@
 %undef WINSTRIPE_AERO
 
 %define customToolbarColor hsl(214,44%,87%)
-%define glassToolbarBorderColor rgb(40%,40%,40%)
+%define glassToolbarBorderColor rgba(10%,10%,10%,.4)
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
@@ -130,6 +130,7 @@
   #navigator-toolbox,
   #navigator-toolbox > toolbar {
     border-color: @glassToolbarBorderColor@ !important;
+    background-clip: padding-box;
   }
 
   #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
@@ -189,7 +190,8 @@
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
     background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
-    text-shadow: 0 1px 0 rgba(255,255,255,.4);
+    text-shadow: none;
+    color: black;
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,

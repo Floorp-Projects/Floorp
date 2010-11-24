@@ -101,7 +101,13 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_601352_scroll.js \
 	browser_webconsole_bug_592442_closing_brackets.js \
 	browser_webconsole_bug_593003_iframe_wrong_hud.js \
+	browser_webconsole_bug_601909_remember_height.js \
 	browser_webconsole_bug_613013_console_api_iframe.js \
+	browser_webconsole_bug_597756_reopen_closed_tab.js \
+	browser_webconsole_bug_600183_charset.js \
+	browser_webconsole_bug_601177_log_levels.js \
+	browser_webconsole_bug_587615_lastTimestamp.js \
+	browser_webconsole_bug_597460_filter_scroll.js \
 	head.js \
 	$(NULL)
 
@@ -135,6 +141,11 @@ _BROWSER_TEST_PAGES = \
 	test-bug-597136-external-script-errors.html \
 	test-bug-597136-external-script-errors.js \
 	test-bug-613013-console-api-iframe.html \
+	test-bug-597756-reopen-closed-tab.html \
+	test-bug-600183-charset.html \
+	test-bug-600183-charset.html^headers^ \
+	test-bug-601177-log-levels.html \
+	test-bug-601177-log-levels.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

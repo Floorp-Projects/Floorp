@@ -1534,10 +1534,10 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
 
           }
           const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
-          if ((val[0] & 0xFC00) == 0xD800) {
-            emitOrAppendTwo(val, returnState);
-          } else {
+          if (!val[1]) {
             emitOrAppendOne(val, returnState);
+          } else {
+            emitOrAppendTwo(val, returnState);
           }
           if (strBufMark < strBufLen) {
             if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {
@@ -3617,10 +3617,10 @@ nsHtml5Tokenizer::eof()
 
           }
           const PRUnichar* val = nsHtml5NamedCharacters::VALUES[candidate];
-          if ((val[0] & 0xFC00) == 0xD800) {
-            emitOrAppendTwo(val, returnState);
-          } else {
+          if (!val[1]) {
             emitOrAppendOne(val, returnState);
+          } else {
+            emitOrAppendTwo(val, returnState);
           }
           if (strBufMark < strBufLen) {
             if ((returnState & NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK)) {

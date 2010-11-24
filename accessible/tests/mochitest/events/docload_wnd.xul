@@ -28,6 +28,13 @@
       gOpenerWnd.SimpleTest.is(aExpected, aActual, aMsg);
     }
 
+    function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
+                        aAbsentExtraState)
+    {
+      gOpenerWnd.testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
+                            aAbsentExtraState);
+    }
+
     var invokerChecker = gOpenerWnd.invokerChecker;
 
     const STATE_BUSY = gOpenerWnd.STATE_BUSY;
@@ -91,6 +98,9 @@
         is(event.state, STATE_BUSY, "Wrong state of statechange event.");
         is(event.isEnabled(), aIsEnabled,
            "Wrong value of state of statechange event");
+
+        testStates(event.accessible, (aIsEnabled ? STATE_BUSY : 0), 0,
+                   (aIsEnabled ? 0 : STATE_BUSY), 0);
       }
     }
 

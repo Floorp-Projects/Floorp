@@ -2231,3 +2231,7 @@ panel[dimmed="true"] {
   border-width: 0;
   -moz-appearance: none;
 }
+
+browser[tabmodalPromptShowing] {
+  filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
+}

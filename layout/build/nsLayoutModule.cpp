@@ -159,9 +159,16 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
 #include "nsINodeInfo.h"
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#include "nsHapticFeedback.h"
+#endif
 
 #define NS_EDITORCOMMANDTABLE_CID \
 { 0x4f5e62b8, 0xd659, 0x4156, { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 }}
+
+#define NS_HAPTICFEEDBACK_CID \
+{ 0x1f15dbc8, 0xbfaa, 0x45de, \
+{ 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
 
 static NS_DEFINE_CID(kEditorCommandTableCID, NS_EDITORCOMMANDTABLE_CID);
 
@@ -335,6 +342,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWorkerFactory)
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -898,6 +908,9 @@ NS_DEFINE_NAMED_CID(NS_WORKERFACTORY_CID);
     defined(android)
 NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
 #endif
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
+#endif
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
@@ -1048,6 +1061,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
     defined(android)
   { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
 #endif
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+  { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
+#endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_WORKERFACTORY_CID, false, NULL, nsWorkerFactoryConstructor },
   { NULL }
@@ -1195,6 +1211,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
     defined(machintosh) || \
     defined(android)
   { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
+#endif
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+  { "@mozilla.org/widget/hapticfeedback;1", &kNS_HAPTICFEEDBACK_CID },
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_WORKERFACTORY_CONTRACTID, &kNS_WORKERFACTORY_CID },

@@ -16,7 +16,7 @@ tabbrowser {
 #tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
-#navigator-toolbox[customizing="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+#TabsToolbar[customizing="true"] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
 }
 
@@ -145,9 +145,17 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#menuitem-iconic-tooltip");
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+%ifndef CAN_DRAW_IN_TITLEBAR
+#appmenu-toolbar-button > .toolbarbutton-text {
+  display: -moz-box;
+}
+%endif
+
 #appmenu_offlineModeRecovery:not([checked=true]) {
   display: none;
 }
+%endif
 
 /* ::::: location bar ::::: */
 #urlbar {

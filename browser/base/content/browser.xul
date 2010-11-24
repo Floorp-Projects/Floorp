@@ -764,6 +764,13 @@
       </toolbaritem>
     </toolbar>
 
+#ifdef MENUBAR_CAN_AUTOHIDE
+#ifndef CAN_DRAW_IN_TITLEBAR
+#define APPMENU_ON_TABBAR
+#endif
+#endif
+
+
     <toolbar id="TabsToolbar"
              fullscreentoolbar="true"
              customizable="true"
@@ -771,8 +778,22 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
+#ifdef APPMENU_ON_TABBAR
+             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+#else
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+#endif
              collapsed="true">
+
+#ifdef APPMENU_ON_TABBAR
+      <toolbarbutton id="appmenu-toolbar-button"
+                     class="chromeclass-toolbar-additional"
+                     type="menu"
+                     label="&brandShortName;"
+                     tooltiptext="&appMenuButton.tooltip;">
+#include browser-appmenu.inc
+      </toolbarbutton>
+#endif
 
       <tabs id="tabbrowser-tabs"
             class="tabbrowser-tabs"
