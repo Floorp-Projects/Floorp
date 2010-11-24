@@ -16,6 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605124
   <form>
     <textarea required></textarea>
     <input required>
+    <select required></select>
     <button type='submit'></button>
   </form>
 
@@ -24,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605124
     <tr>
       <textarea required></textarea>
       <input required>
+      <select required></select>
       <button type='submit'></button>
     </tr>
     </form>
@@ -49,32 +51,40 @@ if (observers.hasMoreElements()) {
   var content = document.getElementById('content');
   var textarea = document.getElementsByTagName('textarea')[0];
   var input = document.getElementsByTagName('input')[0];
+  var select = document.getElementsByTagName('select')[0];
   var button = document.getElementsByTagName('button')[0];
   var form = document.forms[0];
 
   checkPseudoClass(textarea, false);
   checkPseudoClass(input, false);
+  checkPseudoClass(select, false);
 
   // Try to submit.
   button.click();
   checkPseudoClass(textarea, true);
   checkPseudoClass(input, true);
+  checkPseudoClass(select, true);
 
   // No longer in the form.
   content.appendChild(textarea);
   content.appendChild(input);
+  content.appendChild(select);
   checkPseudoClass(textarea, false);
   checkPseudoClass(input, false);
+  checkPseudoClass(select, false);
 
   // Back in the form.
   form.appendChild(textarea);
   form.appendChild(input);
+  form.appendChild(select);
   checkPseudoClass(textarea, true);
   checkPseudoClass(input, true);
+  checkPseudoClass(select, true);
 
   /* Case when elements get orphaned. */
   var textarea = document.getElementsByTagName('textarea')[1];
   var input = document.getElementsByTagName('input')[1];
+  var select = document.getElementsByTagName('select')[1];
   var button = document.getElementsByTagName('button')[1];
   var form = document.forms[1];
 
@@ -82,11 +92,13 @@ if (observers.hasMoreElements()) {
   button.click();
   checkPseudoClass(textarea, true);
   checkPseudoClass(input, true);
+  checkPseudoClass(select, true);
 
   // Remove the form.
   document.getElementsByTagName('table')[0].removeChild(form);
   checkPseudoClass(textarea, false);
   checkPseudoClass(input, false);
+  checkPseudoClass(select, false);
 }
 
 </script>
