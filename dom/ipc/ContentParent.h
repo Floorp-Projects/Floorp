@@ -99,6 +99,7 @@ public:
     bool IsAlive();
 
 protected:
+    void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
