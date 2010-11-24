@@ -1,0 +1,18 @@
+/* Override default style */
+input:invalid {
+  box-shadow: none;
+}
+
+input.notvalid {
+  background-color: green;
+}
+input.notvalid:-moz-ui-valid {
+  background-color: red;
+}
+
+input.valid {
+  background-color: red;
+}
+input.valid:-moz-ui-valid {
+  background-color: green;
+}
