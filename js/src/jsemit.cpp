@@ -2273,7 +2273,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * JSOP_DEFFUN could introduce a shadowing definition, so if it
          * is present, we can't optimize to JSOP_GETGLOBAL.
          */
-        if (cg->hasDefFun())
+        if (cg->mightAliasLocals())
             return JS_TRUE;
 
         switch (op) {
