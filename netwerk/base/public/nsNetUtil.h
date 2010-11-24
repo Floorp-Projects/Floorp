@@ -107,8 +107,11 @@
 #include "nsIChannelPolicy.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
-#include "nsIRedirectChannelRegistrar.h"
 #include "mozilla/Services.h"
+
+#ifdef MOZ_IPC
+#include "nsIRedirectChannelRegistrar.h"
+#endif
 
 #ifdef MOZILLA_INTERNAL_API
 
@@ -1781,6 +1784,7 @@ NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
   return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
 
+#ifdef MOZ_IPC
 inline nsresult
 NS_LinkRedirectChannels(PRUint32 channelId,
                         nsIParentChannel *parentChannel,
@@ -1796,6 +1800,7 @@ NS_LinkRedirectChannels(PRUint32 channelId,
                                  parentChannel,
                                  _result);
 }
+#endif // MOZ_IPC
 
 /**
  * Helper function to create a random URL string that's properly formed
