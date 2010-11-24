@@ -87,7 +87,8 @@ class GeckoSurfaceView
         mEditableFactory = Editable.Factory.getInstance();
         setupEditable("");
         mIMEState = IME_STATE_DISABLED;
-        mIMEHint = "";
+        mIMETypeHint = "";
+        mIMEActionHint = "";
     }
 
     protected void finalize() throws Throwable {
@@ -296,28 +297,40 @@ class GeckoSurfaceView
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
-        else if (mIMEHint.equalsIgnoreCase("url"))
+        else if (mIMETypeHint.equalsIgnoreCase("url"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
-        else if (mIMEHint.equalsIgnoreCase("email"))
+        else if (mIMETypeHint.equalsIgnoreCase("email"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-        else if (mIMEHint.equalsIgnoreCase("search"))
+        else if (mIMETypeHint.equalsIgnoreCase("search"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
-        else if (mIMEHint.equalsIgnoreCase("tel"))
+        else if (mIMETypeHint.equalsIgnoreCase("tel"))
             outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
-        else if (mIMEHint.equalsIgnoreCase("number") ||
-                 mIMEHint.equalsIgnoreCase("range"))
+        else if (mIMETypeHint.equalsIgnoreCase("number") ||
+                 mIMETypeHint.equalsIgnoreCase("range"))
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
-        else if (mIMEHint.equalsIgnoreCase("datetime") ||
-                 mIMEHint.equalsIgnoreCase("datetime-local"))
+        else if (mIMETypeHint.equalsIgnoreCase("datetime") ||
+                 mIMETypeHint.equalsIgnoreCase("datetime-local"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_NORMAL;
-        else if (mIMEHint.equalsIgnoreCase("date"))
+        else if (mIMETypeHint.equalsIgnoreCase("date"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_DATE;
-        else if (mIMEHint.equalsIgnoreCase("time"))
+        else if (mIMETypeHint.equalsIgnoreCase("time"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_TIME;
 
+        if (mIMEActionHint.equalsIgnoreCase("go"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        else if (mIMEActionHint.equalsIgnoreCase("done"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
+        else if (mIMEActionHint.equalsIgnoreCase("next"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
+        else if (mIMEActionHint.equalsIgnoreCase("search"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
+        else if (mIMEActionHint.equalsIgnoreCase("send"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
+        else
+            outAttrs.actionLabel = mIMEActionHint;
         inputConnection.reset();
         return inputConnection;
     }
@@ -404,7 +417,8 @@ class GeckoSurfaceView
     Editable.Factory mEditableFactory;
     boolean mIMEFocus;
     int mIMEState;
-    String mIMEHint;
+    String mIMETypeHint;
+    String mIMEActionHint;
 
     // Software rendering
     ByteBuffer mSoftwareBuffer;

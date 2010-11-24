@@ -346,6 +346,11 @@ abstract public class GeckoApp
                     return true;
                 }
                 break;
+            case KeyEvent.KEYCODE_ENTER:
+                if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 &&
+                    surfaceView.mIMEActionHint.equalsIgnoreCase("next"))
+                    event = new KeyEvent(event.getAction(), KeyEvent.KEYCODE_TAB);
+                break;
             default:
                 break;
         }
