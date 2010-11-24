@@ -65,9 +65,25 @@ interface amIWebInstallInfo : nsISupports
  * dialog when add-ons are ready to install and uses the observer service to
  * notify when installations are blocked.
  */
-[scriptable, uuid(ea806f3a-1b27-4d3d-9aee-88dec4c29fda)]
+[scriptable, uuid(a5503979-89c8-441e-9e4a-321df379c172)]
 interface amIWebInstallListener : nsISupports
 {
+  /**
+   * Called when installation by websites is currently disabled.
+   *
+   * @param  aWindow
+   *         The window that triggered the installs
+   * @param  aUri
+   *         The URI of the site that triggered the installs
+   * @param  aInstalls
+   *         The AddonInstalls that were blocked
+   * @param  aCount
+   *         The number of AddonInstalls
+   */
+  void onWebInstallDisabled(in nsIDOMWindowInternal aWindow, in nsIURI aUri,
+                            [array, size_is(aCount)] in nsIVariant aInstalls,
+                            [optional] in PRUint32 aCount);
+
   /**
    * Called when the website is not allowed to directly prompt the user to
    * install add-ons.
