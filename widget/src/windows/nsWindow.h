@@ -380,9 +380,6 @@ protected:
   void                    OnSettingsChange(WPARAM wParam, LPARAM lParam);
   PRBool                  OnPaint(HDC aDC, PRUint32 aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
-#if defined(CAIRO_HAS_DDRAW_SURFACE)
-  PRBool                  OnPaintImageDDraw16();
-#endif // defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
                                        PRBool& result, PRBool& getWheelInfo,
                                        LRESULT *aRetValue);

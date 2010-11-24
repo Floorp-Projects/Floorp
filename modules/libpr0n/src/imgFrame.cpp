@@ -48,12 +48,7 @@
 
 static PRBool gDisableOptimize = PR_FALSE;
 
-/*XXX get CAIRO_HAS_DDRAW_SURFACE */
 #include "cairo.h"
-
-#ifdef CAIRO_HAS_DDRAW_SURFACE
-#include "gfxDDrawSurface.h"
-#endif
 
 #if defined(XP_WIN) || defined(WINCE)
 #include "gfxWindowsPlatform.h"
