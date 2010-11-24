@@ -1,5 +1,9 @@
-.invalid-ref {
+:not(output).invalid-ref {
   box-shadow: 0 0 1.5px 1px red;
+}
+
+output.invalid-ref {
+  color: red;
 }
 
 .barred-ref {

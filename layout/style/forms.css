@@ -629,7 +629,7 @@ input[type="file"] > input[type="text"] {
   box-shadow: 0 0 1.5px 1px red;
 }
 
-output:invalid {
+output:-moz-ui-invalid {
   color: red;
 }
 
