@@ -201,6 +201,13 @@ void GetReversedHostname(const nsString& aForward, nsString& aRevHost);
 void ReverseString(const nsString& aInput, nsString& aReversed);
 
 /**
+ * Generates an 12 character guid to be used by bookmark and history entries.
+ *
+ * @note This guid uses the characters a-z, A-Z, 0-9, '-', and '_'.
+ */
+nsresult GenerateGUID(nsCString& _guid);
+
+/**
  * Used to finalize a statementCache on a specified thread.
  */
 template<typename StatementType>

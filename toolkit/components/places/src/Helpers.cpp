@@ -38,8 +38,13 @@
 
 #include "Helpers.h"
 #include "mozIStorageError.h"
+#include "nsIRandomGenerator.h"
+#include "plbase64.h"
 #include "nsString.h"
 #include "nsNavHistory.h"
+
+// The length of guids that are used by history and bookmarks.
+#define GUID_LENGTH 12
 
 namespace mozilla {
 namespace places {
@@ -226,6 +231,55 @@ ReverseString(const nsString& aInput, nsString& aReversed)
   for (PRInt32 i = aInput.Length() - 1; i >= 0; i--) {
     aReversed.Append(aInput[i]);
   }
+}
+
+static
+nsresult
+Base64urlEncode(const PRUint8* aBytes,
+                PRUint32 aNumBytes,
+                nsCString& _result)
+{
+  // SetLength does not set aside space for NULL termination.  PL_Base64Encode
+  // will not NULL terminate, however, nsCStrings must be NULL terminated.  As a
+  // result, we set the capacity to be one greater than what we need, and the
+  // length to our desired length.
+  PRUint32 length = (aNumBytes + 2) / 3 * 4; // +2 due to integer math.
+  NS_ENSURE_TRUE(_result.SetCapacity(length + 1), NS_ERROR_OUT_OF_MEMORY);
+  _result.SetLength(length);
+  (void)PL_Base64Encode(reinterpret_cast<const char*>(aBytes), aNumBytes,
+                        _result.BeginWriting());
+
+  // base64url encoding is defined in RFC 4648.  It replaces the last two
+  // alphabet characters of base64 encoding with '-' and '_' respectively.
+  _result.ReplaceChar('+', '-');
+  _result.ReplaceChar('/', '_');
+  return NS_OK;
+}
+
+nsresult
+GenerateGUID(nsCString& _guid)
+{
+  _guid.Truncate();
+
+  // Request raw random bytes and base64url encode them.  For each set of three
+  // bytes, we get one character.
+  const PRUint32 kRequiredBytesLength =
+    static_cast<PRUint32>(GUID_LENGTH / 4 * 3);
+
+  nsCOMPtr<nsIRandomGenerator> rg =
+    do_GetService("@mozilla.org/security/random-generator;1");
+  NS_ENSURE_STATE(rg);
+
+  PRUint8* buffer;
+  nsresult rv = rg->GenerateRandomBytes(kRequiredBytesLength, &buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Base64urlEncode(buffer, kRequiredBytesLength, _guid);
+  NS_Free(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(_guid.Length() == GUID_LENGTH, "GUID is not the right size!");
+  return NS_OK;
 }
 
 } // namespace places
