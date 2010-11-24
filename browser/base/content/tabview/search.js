@@ -129,6 +129,16 @@ var TabUtils = {
   },
   
   // ---------
+  // Function: URLOf
+  // Given a <TabItem> or a <xul:tab> returns the URL of tab
+  URLOf: function TabUtils_URLOf(tab) {
+    // Convert a <TabItem> to <xul:tab>
+    if(tab.tab != undefined)
+      tab = tab.tab;
+    return tab.linkedBrowser.currentURI.spec;
+  },
+
+  // ---------
   // Function: favURLOf
   // Given a <TabItem> or a <xul:tab> returns the URL of tab's favicon.
   faviconURLOf: function TabUtils_faviconURLOf(tab) {
@@ -165,8 +175,9 @@ TabMatcher.prototype = {
   _filterAndSortForMatches: function TabMatcher__filterAndSortForMatches(tabs) {
     var self = this;
     tabs = tabs.filter(function(tab){
-      var name = TabUtils.nameOf(tab);
-      return name.match(self.term, "i");
+      let name = TabUtils.nameOf(tab);
+      let url = TabUtils.URLOf(tab);
+      return name.match(self.term, "i") || url.match(self.term, "i");
     });
 
     tabs.sort(function sorter(x, y){
@@ -186,7 +197,8 @@ TabMatcher.prototype = {
     var self = this;
     return tabs.filter(function(tab) {
       var name = tab.nameEl.innerHTML;
-      return !name.match(self.term, "i");
+      let url = TabUtils.URLOf(tab);
+      return !name.match(self.term, "i") && !url.match(self.term, "i");
     });
   },
   
