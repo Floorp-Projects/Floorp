@@ -58,8 +58,7 @@ var gTests = [
                          false,
                          0);
       }
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      this.continue_run, this);
+      waitForAsyncUpdates(this.continue_run, this);
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -87,9 +86,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      run_next_test, Components.utils.getGlobalForObject(this));
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -112,8 +113,7 @@ var gTests = [
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
 
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      this.continue_run, this);
+      waitForAsyncUpdates(this.continue_run, this);
     },
     continue_run: function () {
       print("Remove visits using timerange outside the URI's visits.");
@@ -141,9 +141,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      run_next_test, Components.utils.getGlobalForObject(this));
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -159,8 +161,7 @@ var gTests = [
                          false,
                          0);
       }
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      this.continue_run, this);
+      waitForAsyncUpdates(this.continue_run, this);
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -189,9 +190,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      run_next_test, Components.utils.getGlobalForObject(this));
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -213,8 +216,7 @@ var gTests = [
                            TEST_URI,
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      this.continue_run, this);
+      waitForAsyncUpdates(this.continue_run, this);
     },
     continue_run: function () {
       print("Remove the 5 most recent visits.");
@@ -243,9 +245,11 @@ var gTests = [
       do_check_true(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                     isVisited(TEST_URI));
 
-      print("Frecency should be unchanged.");
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency > 0,
-                      run_next_test, Components.utils.getGlobalForObject(this));
+      waitForAsyncUpdates(function () {
+        print("Frecency should be positive.")
+        do_check_true(frecencyForUrl(TEST_URI) > 0);
+        run_next_test();
+      });
     }
   },
 
@@ -320,9 +324,11 @@ var gTests = [
       do_check_false(histsvc.QueryInterface(Ci.nsIGlobalHistory2).
                        isVisited(PLACE_URI));
 
-      print("Frecency should be 0.");
-      waitForFrecency(PLACE_URL, function (aFrecency) aFrecency == 0,
-                      run_next_test, Components.utils.getGlobalForObject(this));
+      waitForAsyncUpdates(function () {
+        print("Frecency should be zero.")
+        do_check_eq(frecencyForUrl(PLACE_URL), 0);
+        run_next_test();
+      });
     }
   },
 
@@ -369,9 +375,11 @@ var gTests = [
       print("nsINavBookmarksService.isBookmarked should return true.");
       do_check_true(bmsvc.isBookmarked(TEST_URI));
 
-      print("Frecency should be -visit_count == -10.");
-      waitForFrecency(TEST_URL, function (aFrecency) aFrecency == -10,
-                      run_next_test, Components.utils.getGlobalForObject(this));
+      waitForAsyncUpdates(function () {
+        print("Frecency should be -visit_count.")
+        do_check_eq(frecencyForUrl(TEST_URI), -10);
+        run_next_test();
+      });
     }
   }
 ];
