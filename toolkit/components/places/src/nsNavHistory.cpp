@@ -946,12 +946,6 @@ nsNavHistory::InitDB()
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_PLACEDATE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Visits triggers.
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // This makes a big difference in startup time for large profiles because of
     // finding bookmark redirects using the referring page. 
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_FROMVISIT);
@@ -991,6 +985,9 @@ nsresult
 nsNavHistory::InitAdditionalDBItems()
 {
   nsresult rv = InitFunctions();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = InitTriggers();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // These statements are used by frecency calculation.  Since frecency runs in
@@ -1105,6 +1102,17 @@ nsNavHistory::InitFunctions()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = GenerateGUIDFunction::create(mDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::InitTriggers()
+{
+  nsresult rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1793,9 +1801,8 @@ nsNavHistory::MigrateV10Up(mozIStorageConnection *aDBConn)
 nsresult
 nsNavHistory::MigrateV11Up(mozIStorageConnection *aDBConn)
 {
-  // Temp tables are going away, so we need the visit_count triggers to return.
-
-  // Regardless triggers existance, every time we pass through this migration
+  // Temp tables are going away.
+  // For triggers correctness, every time we pass through this migration
   // step, we must ensure correctness of visit_count values.
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "UPDATE moz_places SET visit_count = "
@@ -1809,34 +1816,6 @@ nsNavHistory::MigrateV11Up(mozIStorageConnection *aDBConn)
       NS_LITERAL_CSTRING(")")
   );
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Now create triggers if needed.
-  nsCOMPtr<mozIStorageStatement> triggerDetection;
-  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name "
-      "FROM sqlite_master "
-      "WHERE type = 'trigger' "
-      "AND name = :trigger_name"),
-    getter_AddRefs(triggerDetection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Both visits triggers were removed in the past at the same time, so we can
-  // check just one of them.
-  PRBool triggerExists;
-  rv = triggerDetection->BindUTF8StringByName(
-    NS_LITERAL_CSTRING("trigger_name"),
-    NS_LITERAL_CSTRING("moz_historyvisits_afterinsert_v2_trigger")
-  );
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = triggerDetection->ExecuteStep(&triggerExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!triggerExists) {
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERINSERT_TRIGGER);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return NS_OK;
 }
