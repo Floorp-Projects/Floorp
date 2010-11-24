@@ -333,7 +333,9 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const gfx3DMatrix& aTransformT
     useIntermediateSurface = PR_TRUE;
   } else {
     useIntermediateSurface = PR_FALSE;
-    if (!mEffectiveTransform.IsIdentity()) {
+    gfxMatrix contTransform;
+    if (!mEffectiveTransform.Is2D(&contTransform) ||
+        !contTransform.PreservesAxisAlignedRectangles()) {
       for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
         const nsIntRect *clipRect = child->GetEffectiveClipRect();
         /* We can't (easily) forward our transform to children with a non-empty clip
