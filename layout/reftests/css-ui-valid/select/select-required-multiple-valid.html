@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
-  <!-- Test: if select is required and has a selected option which has value
-             different from the empty string, :-moz-ui-valid should apply. -->
+  <!-- Test: if select is required and has at least one option selected but the
+             selection didn't changed, :-moz-ui-valid should not apply. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <select class='valid' required multiple>
+    <select class='notvalid' required multiple>
       <option selected></option>
       <option selected>foo</option>
     </select>
