@@ -40,6 +40,7 @@
 #include "ContentParent.h"
 
 #include "TabParent.h"
+#include "CrashReporterParent.h"
 #include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
@@ -388,6 +389,19 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 {
   TabParent* parent = static_cast<TabParent*>(frame);
   NS_RELEASE(parent);
+  return true;
+}
+
+PCrashReporterParent*
+ContentParent::AllocPCrashReporter()
+{
+  return new CrashReporterParent();
+}
+
+bool
+ContentParent::DeallocPCrashReporter(PCrashReporterParent* crashreporter)
+{
+  delete crashreporter;
   return true;
 }
 
