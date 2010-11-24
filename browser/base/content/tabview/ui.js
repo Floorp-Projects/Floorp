@@ -931,8 +931,29 @@ let UI = {
         }
         event.stopPropagation();
         event.preventDefault();
+      } else if (event.keyCode == KeyEvent.DOM_VK_SLASH) {
+        // the / event handler for find bar is defined in the findbar.xml
+        // binding.  To keep things in its own module, we handle our slash here.
+        self.enableSearch(event);
       }
     });
+  },
+
+  // ----------
+  // Function: enableSearch
+  // Enables the search feature.
+  // Parameters:
+  //   event - the event triggers this action.
+  enableSearch: function UI_enableSearch(event) {
+    if (!isSearchEnabled()) {
+      ensureSearchShown(null);
+      SearchEventHandler.switchToInMode();
+      
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    }
   },
 
   // ----------
@@ -1156,17 +1177,31 @@ let UI = {
   // Exits TabView UI.
   exit: function UI_exit() {
     let self = this;
-    
-    // If there's an active TabItem, zoom into it. If not (for instance when the
-    // selected tab is an app tab), just go there. 
-    let activeTabItem = this.getActiveTab();
-    if (!activeTabItem)
-      activeTabItem = gBrowser.selectedTab.tabItem;
-      
-    if (activeTabItem)
-      activeTabItem.zoomIn(); 
-    else
-      self.goToTab(gBrowser.selectedTab);
+    let zoomedIn = false;
+
+    if (isSearchEnabled()) {
+      let matcher = createSearchTabMacher();
+      let matches = matcher.matched();
+
+      if (matches.length > 0) {
+        matches[0].zoomIn();
+        zoomedIn = true;
+      }
+      hideSearch(null);
+    }
+
+    if (!zoomedIn) {
+      // If there's an active TabItem, zoom into it. If not (for instance when the
+      // selected tab is an app tab), just go there.
+      let activeTabItem = this.getActiveTab();
+      if (!activeTabItem)
+        activeTabItem = gBrowser.selectedTab.tabItem;
+
+      if (activeTabItem)
+        activeTabItem.zoomIn();
+      else
+        self.goToTab(gBrowser.selectedTab);
+    }
   },
 
   // ----------
