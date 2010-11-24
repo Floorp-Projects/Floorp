@@ -124,6 +124,9 @@ ContentParent::GetSingleton(PRBool aForceNew)
                 threadInt->GetObserver(getter_AddRefs(parent->mOldObserver));
                 threadInt->SetObserver(parent);
             }
+            if (obs) {
+                obs->NotifyObservers(nsnull, "ipc:content-created", nsnull);
+            }
         }
     }
     return gSingleton;
