@@ -900,6 +900,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                 NS_EVENT_STATE_OPTIONAL |
                 NS_EVENT_STATE_VALID |
                 NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_MOZ_UI_VALID |
                 NS_EVENT_STATE_MOZ_UI_INVALID |
                 NS_EVENT_STATE_INDETERMINATE |
                 NS_EVENT_STATE_MOZ_PLACEHOLDER |
@@ -917,15 +918,15 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       states |= NS_EVENT_STATE_REQUIRED | NS_EVENT_STATE_OPTIONAL |
                 NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_INVALID;
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     } else if (MaxLengthApplies() && aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_INVALID;
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     } else if (aName == nsGkAtoms::pattern) {
       UpdatePatternMismatchValidityState();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_INVALID;
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
     if (aNotify) {
@@ -3317,7 +3318,7 @@ nsHTMLInputElement::IntrinsicState() const
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
-      state |= NS_EVENT_STATE_VALID;
+      state |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
@@ -3743,7 +3744,8 @@ nsHTMLInputElement::SetCustomValidity(const nsAString& aError)
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID |
-                                            NS_EVENT_STATE_MOZ_UI_INVALID);
+                                            NS_EVENT_STATE_MOZ_UI_INVALID |
+                                            NS_EVENT_STATE_MOZ_UI_VALID);
   }
 
   return NS_OK;
@@ -3915,7 +3917,7 @@ nsHTMLInputElement::UpdateAllValidityStates(PRBool aNotify)
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
       doc->ContentStatesChanged(this, nsnull,
                                 NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                                NS_EVENT_STATE_MOZ_UI_INVALID);
+                                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID);
     }
   }
 }
@@ -4455,7 +4457,7 @@ nsHTMLInputElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNotif
   UpdateBarredFromConstraintValidation();
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-             NS_EVENT_STATE_MOZ_UI_INVALID;
+             NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
 }
 

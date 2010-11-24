@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if select has a custom error, it should not be affected by :-moz-ui-valid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').setCustomValidity('foo'); document.documentElement.className='';">
+    <select class='notvalid' id='s'></select>
+  </body>
+</html>
