@@ -346,10 +346,19 @@ abstract public class GeckoApp
                     return true;
                 }
                 break;
+            case KeyEvent.KEYCODE_ENTER:
+                if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 &&
+                    surfaceView.mIMEActionHint.equalsIgnoreCase("next"))
+                    event = new KeyEvent(event.getAction(), KeyEvent.KEYCODE_TAB);
+                break;
             default:
                 break;
         }
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        // KeyListener returns true if it handled the event for us.
+        if (GeckoApp.surfaceView.mIMEState == GeckoSurfaceView.IME_STATE_DISABLED ||
+            keyCode == KeyEvent.KEYCODE_ENTER ||
+            !GeckoApp.surfaceView.mKeyListener.onKeyDown(GeckoApp.surfaceView, GeckoApp.surfaceView.mEditable, keyCode, event))
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
         return true;
     }
 
@@ -362,7 +371,10 @@ abstract public class GeckoApp
             default:
                 break;
         }
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        if (GeckoApp.surfaceView.mIMEState == GeckoSurfaceView.IME_STATE_DISABLED ||
+            keyCode == KeyEvent.KEYCODE_ENTER ||
+            !GeckoApp.surfaceView.mKeyListener.onKeyUp(GeckoApp.surfaceView, GeckoApp.surfaceView.mEditable, keyCode, event))
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
         return true;
     }
 
@@ -499,6 +511,10 @@ abstract public class GeckoApp
 
         String updateDir = Environment.getExternalStorageDirectory().getPath() + "/downloads/updates/0/";
         File updateFile = new File(updateDir + "update.apk");
+        File statusFile = new File(updateDir + "update.status");
+
+        if (!statusFile.exists() || !readUpdateStatus(statusFile).equals("pending"))
+            return;
 
         if (!updateFile.exists())
             return;
@@ -526,7 +542,6 @@ abstract public class GeckoApp
         // Update the status file
         String status = statusCode == 0 ? "succeeded\n" : "failed: "+ statusCode + "\n";
 
-        File statusFile = new File(updateDir + "update.status");
         OutputStream outStream;
         try {
             byte[] buf = status.getBytes("UTF-8");
@@ -539,6 +554,18 @@ abstract public class GeckoApp
 
         if (statusCode == 0)
             System.exit(0);
+    }
+
+    private String readUpdateStatus(File statusFile) {
+        String status = "";
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(statusFile));
+            status = reader.readLine();
+            reader.close();
+        } catch (Exception e) {
+            Log.i("GeckoAppJava", e.toString());
+        }
+        return status;
     }
 
     static final int FILE_PICKER_REQUEST = 1;

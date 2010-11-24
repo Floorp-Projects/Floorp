@@ -718,13 +718,15 @@
                     else
                         element.removeAttribute("immediate");
 
+                    // We must force style resolution (by accessing element.clientTop)
+                    // in order to ensure our size changes correctly when the status
+                    // overlay hides and shows.
                     if (fadeIn) {
                         element.setAttribute("hidden", false);
-                        // force style resolution, so that transition begins
-                        // when we remove the attribute.
-                        getComputedStyle(element, "").display;
+                        element.clientTop;
                         element.removeAttribute("fadeout");
                     } else {
+                        element.clientTop;
                         element.setAttribute("fadeout", true);
                     }
                 },

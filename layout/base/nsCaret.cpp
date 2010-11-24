@@ -365,7 +365,9 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
 {
   nsPoint framePos(0, 0);
   aFrame->GetPointFromOffset(aFrameOffset, &framePos);
-  nscoord baseline = aFrame->GetCaretBaseline();
+  nsIFrame *frame = aFrame->GetContentInsertionFrame();
+  NS_ASSERTION(frame, "We should not be in the middle of reflow");
+  nscoord baseline = frame->GetCaretBaseline();
   nscoord ascent = 0, descent = 0;
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));

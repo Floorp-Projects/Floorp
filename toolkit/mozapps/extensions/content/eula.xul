@@ -59,8 +59,10 @@
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
   </stringbundleset>
 
-  <label id="heading"/>
-
+  <hbox id="heading-container">
+    <image id="icon"/>
+    <label id="heading" flex="1"/>
+  </hbox>
+  
   <textbox id="eula" multiline="true" readonly="true" flex="1"/>
-
 </dialog>

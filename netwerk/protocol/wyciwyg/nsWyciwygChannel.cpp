@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Radha Kulkarni(radha@netscape.com)
+ *   Michal Novotny <michal.novotny@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,10 +50,75 @@
 #include "nsIParser.h"
 #include "nsThreadUtils.h"
 
+// Must delete nsWyciwygChannel on main thread (URI destructor not thread
+// safe), so Async IO events send event to Release channel on main thread
+class nsWyciwygAsyncEvent : public nsRunnable {
+public:
+  nsWyciwygAsyncEvent(nsWyciwygChannel *aChannel) : mChannel(aChannel) {}
+
+  ~nsWyciwygAsyncEvent() 
+  {
+    // NS_NewRunnableMethod addrefs channel and will release it on main
+    // thread--which is the goal here--so target method is a no-op
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(mChannel, &nsWyciwygChannel::MainReleaseNoOp);
+
+    // ensure we free our ref before event gets released on main thread
+    mChannel = 0;
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
+protected:
+  nsRefPtr<nsWyciwygChannel> mChannel;
+};
+
+class nsWyciwygSetCharsetandSourceEvent : public nsWyciwygAsyncEvent {
+public:
+  nsWyciwygSetCharsetandSourceEvent(nsWyciwygChannel *aChannel)
+    : nsWyciwygAsyncEvent(aChannel) {}
+
+  NS_IMETHOD Run()
+  {
+    mChannel->SetCharsetAndSourceInternal();
+    return NS_OK;
+  }
+};
+
+class nsWyciwygWriteEvent : public nsWyciwygAsyncEvent {
+public:
+  nsWyciwygWriteEvent(nsWyciwygChannel *aChannel, const nsAString &aData, 
+                      const nsACString &spec)
+    : nsWyciwygAsyncEvent(aChannel), mData(aData), mSpec(spec) {}
+
+  NS_IMETHOD Run()
+  {
+    mChannel->WriteToCacheEntryInternal(mData, mSpec);
+    return NS_OK;
+  }
+private:
+  nsString mData;
+  nsCString mSpec;
+};
+
+class nsWyciwygCloseEvent : public nsWyciwygAsyncEvent {
+public:
+  nsWyciwygCloseEvent(nsWyciwygChannel *aChannel, nsresult aReason)
+    : nsWyciwygAsyncEvent(aChannel), mReason(aReason) {}
+
+  NS_IMETHOD Run()
+  {
+    mChannel->CloseCacheEntryInternal(mReason);
+    return NS_OK;
+  }
+private:
+  nsresult mReason;
+};
+
+
 // nsWyciwygChannel methods 
 nsWyciwygChannel::nsWyciwygChannel()
   : mStatus(NS_OK),
     mIsPending(PR_FALSE),
+    mCharsetAndSourceSet(PR_FALSE),
     mNeedToWriteCharset(PR_FALSE),
     mCharsetSource(kCharsetUninitialized),
     mContentLength(-1),
@@ -64,20 +130,31 @@ nsWyciwygChannel::~nsWyciwygChannel()
 {
 }
 
-NS_IMPL_ISUPPORTS6(nsWyciwygChannel,
-                   nsIChannel,
-                   nsIRequest,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsICacheListener, 
-                   nsIWyciwygChannel)
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsWyciwygChannel,
+                              nsIChannel,
+                              nsIRequest,
+                              nsIStreamListener,
+                              nsIRequestObserver,
+                              nsICacheListener, 
+                              nsIWyciwygChannel)
 
 nsresult
 nsWyciwygChannel::Init(nsIURI* uri)
 {
   NS_ENSURE_ARG_POINTER(uri);
+
+  nsresult rv;
+
   mURI = uri;
   mOriginalURI = uri;
+
+  nsCOMPtr<nsICacheService> serv =
+    do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = serv->GetCacheIOTarget(getter_AddRefs(mCacheIOTarget));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -308,28 +385,17 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
   mURI->GetSpec(spec);
 
   // open a cache entry for this channel...
-  PRBool delayed = PR_FALSE;
-  nsresult rv = OpenCacheEntry(spec, nsICache::ACCESS_READ, &delayed);
+  nsresult rv = OpenCacheEntry(spec, nsICache::ACCESS_READ);
   if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
-    nsCOMPtr<nsIRunnable> ev =
-      NS_NewRunnableMethod(this, &nsWyciwygChannel::NotifyListener);
     // Overwrite rv on purpose; if event dispatch fails we'll bail, and
     // otherwise we'll wait until the event fires before calling back.
-    rv = NS_DispatchToCurrentThread(ev);
-    delayed = PR_TRUE;
+    rv = NS_DispatchToCurrentThread(
+            NS_NewRunnableMethod(this, &nsWyciwygChannel::NotifyListener));
   }
 
   if (NS_FAILED(rv)) {
     LOG(("nsWyciwygChannel::OpenCacheEntry failed [rv=%x]\n", rv));
     return rv;
-  }
-
-  if (!delayed) {
-    rv = ReadFromCache();
-    if (NS_FAILED(rv)) {
-      LOG(("nsWyciwygChannel::ReadFromCache failed [rv=%x]\n", rv));
-      return rv;
-    }
   }
 
   mIsPending = PR_TRUE;
@@ -349,12 +415,24 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 NS_IMETHODIMP
 nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
 {
+  // URIs not thread-safe, so get spec now in case we need it
+  nsCAutoString spec;
+  nsresult rv = mURI->GetAsciiSpec(spec);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  return mCacheIOTarget->Dispatch(new nsWyciwygWriteEvent(this, aData, spec),
+                                  NS_DISPATCH_NORMAL);
+}
+
+nsresult
+nsWyciwygChannel::WriteToCacheEntryInternal(const nsAString &aData, const nsACString& spec)
+{
+  NS_ASSERTION(IsOnCacheIOThread(), "wrong thread");
+
   nsresult rv;
 
   if (!mCacheEntry) {
-    nsCAutoString spec;
-    rv = mURI->GetAsciiSpec(spec);
-    if (NS_FAILED(rv)) return rv;
     rv = OpenCacheEntry(spec, nsICache::ACCESS_WRITE);
     if (NS_FAILED(rv)) return rv;
   }
@@ -389,8 +467,17 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
 NS_IMETHODIMP
 nsWyciwygChannel::CloseCacheEntry(nsresult reason)
 {
+  return mCacheIOTarget->Dispatch(new nsWyciwygCloseEvent(this, reason),
+                                  NS_DISPATCH_NORMAL);
+}
+
+nsresult
+nsWyciwygChannel::CloseCacheEntryInternal(nsresult reason)
+{
+  NS_ASSERTION(IsOnCacheIOThread(), "wrong thread");
+
   if (mCacheEntry) {
-    LOG(("nsWyciwygChannel::CloseCacheEntry [this=%x ]", this));
+    LOG(("nsWyciwygChannel::CloseCacheEntryInternal [this=%x ]", this));
     mCacheOutputStream = 0;
     mCacheInputStream = 0;
 
@@ -416,20 +503,35 @@ nsWyciwygChannel::SetCharsetAndSource(PRInt32 aSource,
 {
   NS_ENSURE_ARG(!aCharset.IsEmpty());
 
+  mCharsetAndSourceSet = PR_TRUE;
+  mCharset = aCharset;
+  mCharsetSource = aSource;
+
+  return mCacheIOTarget->Dispatch(new nsWyciwygSetCharsetandSourceEvent(this),
+                                  NS_DISPATCH_NORMAL);
+}
+
+void
+nsWyciwygChannel::SetCharsetAndSourceInternal()
+{
+  NS_ASSERTION(IsOnCacheIOThread(), "wrong thread");
+
   if (mCacheEntry) {
-    WriteCharsetAndSourceToCache(aSource, PromiseFlatCString(aCharset));
+    WriteCharsetAndSourceToCache(mCharsetSource, mCharset);
   } else {
     mNeedToWriteCharset = PR_TRUE;
-    mCharsetSource = aSource;
-    mCharset = aCharset;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWyciwygChannel::GetCharsetAndSource(PRInt32* aSource, nsACString& aCharset)
 {
+  if (mCharsetAndSourceSet) {
+    *aSource = mCharsetSource;
+    aCharset = mCharset;
+    return NS_OK;
+  }
+
   if (!mCacheEntry) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -567,8 +669,7 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
 
 nsresult
 nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
-                                 nsCacheAccessMode aAccessMode,
-                                 PRBool * aDelayFlag)
+                                 nsCacheAccessMode aAccessMode)
 {
   nsresult rv = NS_ERROR_FAILURE;
   // Get cache service
@@ -576,43 +677,25 @@ nsWyciwygChannel::OpenCacheEntry(const nsACString & aCacheKey,
     do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString spec;    
-  nsAutoString newURIString;    
-  nsCOMPtr<nsICacheSession> cacheSession;
-
   // honor security settings
   nsCacheStoragePolicy storagePolicy;
   if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
     storagePolicy = nsICache::STORE_IN_MEMORY;
   else
     storagePolicy = nsICache::STORE_ANYWHERE;
- 
+
+  nsCOMPtr<nsICacheSession> cacheSession;
   // Open a stream based cache session.
   rv = cacheService->CreateSession("wyciwyg", storagePolicy, PR_TRUE,
                                    getter_AddRefs(cacheSession));
   if (!cacheSession) 
     return NS_ERROR_FAILURE;
 
-  /* we'll try to synchronously open the cache entry... however, it
-   * may be in use and not yet validated, in which case we'll try
-   * asynchronously opening the cache entry.
-   */
-    
-  rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, PR_FALSE,
-                                    getter_AddRefs(mCacheEntry));
-
-  if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-    // access to the cache entry has been denied. Let's try opening it
-    // async.
+  if (aAccessMode == nsICache::ACCESS_WRITE)
+    rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, PR_FALSE,
+                                      getter_AddRefs(mCacheEntry));
+  else
     rv = cacheSession->AsyncOpenCacheEntry(aCacheKey, aAccessMode, this);
-    if (NS_FAILED(rv)) 
-      return rv;
-    if (aDelayFlag)
-      *aDelayFlag = PR_TRUE;
-  }
-  else if (rv == NS_OK) {
-    LOG(("nsWyciwygChannel::OpenCacheEntry got cache entry \n"));
-  }
 
   return rv;
 }
@@ -645,6 +728,7 @@ void
 nsWyciwygChannel::WriteCharsetAndSourceToCache(PRInt32 aSource,
                                                const nsCString& aCharset)
 {
+  NS_ASSERTION(IsOnCacheIOThread(), "wrong thread");
   NS_PRECONDITION(mCacheEntry, "Better have cache entry!");
   
   mCacheEntry->SetMetaDataElement("charset", aCharset.get());
@@ -670,6 +754,14 @@ nsWyciwygChannel::NotifyListener()
   if (mLoadGroup) {
     mLoadGroup->RemoveRequest(this, nsnull, mStatus);
   }
+}
+
+PRBool
+nsWyciwygChannel::IsOnCacheIOThread()
+{
+  PRBool correctThread;
+  mCacheIOTarget->IsOnCurrentThread(&correctThread);
+  return correctThread;
 }
 
 // vim: ts=2 sw=2

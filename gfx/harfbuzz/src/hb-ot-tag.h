@@ -32,6 +32,7 @@
 
 HB_BEGIN_DECLS
 
+
 #define HB_OT_TAG_DEFAULT_SCRIPT	HB_TAG ('D', 'F', 'L', 'T')
 #define HB_OT_TAG_DEFAULT_LANGUAGE	HB_TAG ('d', 'f', 'l', 't')
 
@@ -46,6 +47,7 @@ hb_ot_tag_from_language (hb_language_t language);
 
 hb_language_t
 hb_ot_tag_to_language (hb_tag_t tag);
+
 
 HB_END_DECLS
 

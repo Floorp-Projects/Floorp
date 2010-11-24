@@ -1,0 +1,7 @@
+<title>text-decoration quirk on tables (Bug 572713)</title>
+
+<div style="text-decoration: underline"><table><tbody><tr><td>text-decoration on container of table</td></tr></tbody></table></div>
+<div><table style="text-decoration: underline"><tbody><tr><td>text-decoration on table</td></tr></tbody></table></div>
+<div><table><tbody style="text-decoration: underline"><tr><td>text-decoration on tbody</td></tr></tbody></table></div>
+<div><table><tbody><tr style="text-decoration: underline"><td>text-decoration on tr</td></tr></tbody></table></div>
+<div><table><tbody><tr><td style="text-decoration: underline">text-decoration on td</td></tr></tbody></table></div>

@@ -48,6 +48,7 @@ import java.nio.*;
 import android.os.*;
 import android.app.*;
 import android.text.*;
+import android.text.method.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
@@ -83,7 +84,11 @@ class GeckoSurfaceView
 
         mSurfaceLock = new ReentrantLock();
 
+        mEditableFactory = Editable.Factory.getInstance();
+        setupEditable("");
         mIMEState = IME_STATE_DISABLED;
+        mIMETypeHint = "";
+        mIMEActionHint = "";
     }
 
     protected void finalize() throws Throwable {
@@ -286,17 +291,55 @@ class GeckoSurfaceView
 
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if (!mIMEFocus)
-            return null;
-
-        outAttrs.inputType = InputType.TYPE_CLASS_TEXT |
-                             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+        outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
+        outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        mKeyListener = TextKeyListener.getInstance();
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
+        else if (mIMETypeHint.equalsIgnoreCase("url"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
+        else if (mIMETypeHint.equalsIgnoreCase("email"))
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+        else if (mIMETypeHint.equalsIgnoreCase("search"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
+        else if (mIMETypeHint.equalsIgnoreCase("tel"))
+            outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
+        else if (mIMETypeHint.equalsIgnoreCase("number") ||
+                 mIMETypeHint.equalsIgnoreCase("range"))
+            outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
+        else if (mIMETypeHint.equalsIgnoreCase("datetime") ||
+                 mIMETypeHint.equalsIgnoreCase("datetime-local"))
+            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
+                                 InputType.TYPE_DATETIME_VARIATION_NORMAL;
+        else if (mIMETypeHint.equalsIgnoreCase("date"))
+            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
+                                 InputType.TYPE_DATETIME_VARIATION_DATE;
+        else if (mIMETypeHint.equalsIgnoreCase("time"))
+            outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
+                                 InputType.TYPE_DATETIME_VARIATION_TIME;
 
+        if (mIMEActionHint.equalsIgnoreCase("go"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        else if (mIMEActionHint.equalsIgnoreCase("done"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
+        else if (mIMEActionHint.equalsIgnoreCase("next"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
+        else if (mIMEActionHint.equalsIgnoreCase("search"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
+        else if (mIMEActionHint.equalsIgnoreCase("send"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
+        else
+            outAttrs.actionLabel = mIMEActionHint;
         inputConnection.reset();
         return inputConnection;
+    }
+
+    public void setupEditable(String contents)
+    {
+        mEditable = mEditableFactory.newEditable(contents);
+        mEditable.setSpan(inputConnection, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        Selection.setSelection(mEditable, contents.length());
     }
 
     // accelerometer
@@ -369,8 +412,13 @@ class GeckoSurfaceView
     public static final int IME_STATE_PASSWORD = 2;
 
     GeckoInputConnection inputConnection;
+    KeyListener mKeyListener;
+    Editable mEditable;
+    Editable.Factory mEditableFactory;
     boolean mIMEFocus;
     int mIMEState;
+    String mIMETypeHint;
+    String mIMEActionHint;
 
     // Software rendering
     ByteBuffer mSoftwareBuffer;
@@ -378,3 +426,4 @@ class GeckoSurfaceView
 
     final SynchronousQueue<ByteBuffer> mSyncBuf = new SynchronousQueue<ByteBuffer>();
 }
+

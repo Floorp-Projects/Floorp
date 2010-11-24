@@ -147,10 +147,6 @@ NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 
 #ifdef WINCE
 #include <shlwapi.h>
-
-#ifdef CAIRO_HAS_DDRAW_SURFACE
-#include "gfxDDrawSurface.h"
-#endif
 #endif
 
 #include "gfxUserFontSet.h"
@@ -447,11 +443,6 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                            gfxASurface::gfxContentType contentType)
 {
     gfxASurface *surf = nsnull;
-
-#ifdef CAIRO_HAS_DDRAW_SURFACE
-    if (mRenderMode == RENDER_DDRAW || mRenderMode == RENDER_DDRAW_GL)
-        surf = new gfxDDrawSurface(NULL, size, gfxASurface::FormatFromContent(contentType));
-#endif
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
     if (mRenderMode == RENDER_GDI)

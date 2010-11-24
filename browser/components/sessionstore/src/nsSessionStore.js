@@ -2443,7 +2443,7 @@ SessionStoreService.prototype = {
 
       // Determine if we can optimize & load visible tabs first
       let maxVisibleTabs = Math.ceil(tabbrowser.tabContainer.mTabstrip.scrollClientSize /
-                                     aTabs[unhiddenTabs - 1].clientWidth);
+                                     aTabs[unhiddenTabs - 1].getBoundingClientRect().width);
 
       // make sure we restore visible tabs first, if there are enough
       if (maxVisibleTabs < unhiddenTabs && aSelectTab > 1) {

@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+HB_BEGIN_DECLS
+
 
 /*
  * Complete list at:
@@ -123,21 +125,26 @@ static const hb_tag_t ot_scripts[][3] = {
   {HB_TAG('l','y','d','i')},	/* HB_SCRIPT_LYDIAN */
 
   /* Unicode-5.2 additions */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_AVESTAN */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_BAMUM */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_EGYPTIAN_HIEROGLYPHS */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_IMPERIAL_ARAMAIC */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_INSCRIPTIONAL_PAHLAVI */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_INSCRIPTIONAL_PARTHIAN */
+  {HB_TAG('a','v','s','t')},	/* HB_SCRIPT_AVESTAN */
+  {HB_TAG('b','a','m','u')},	/* HB_SCRIPT_BAMUM */
+  {HB_TAG('e','g','y','p')},	/* HB_SCRIPT_EGYPTIAN_HIEROGLYPHS */
+  {HB_TAG('a','r','m','i')},	/* HB_SCRIPT_IMPERIAL_ARAMAIC */
+  {HB_TAG('p','h','l','i')},	/* HB_SCRIPT_INSCRIPTIONAL_PAHLAVI */
+  {HB_TAG('p','r','t','i')},	/* HB_SCRIPT_INSCRIPTIONAL_PARTHIAN */
   {HB_TAG('j','a','v','a')},	/* HB_SCRIPT_JAVANESE */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_KAITHI */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_LISU */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_MEITEI_MAYEK */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_OLD_SOUTH_ARABIAN */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_OLD_TURKIC */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_SAMARITAN */
-  {HB_TAG('D','F','L','T')},	/* HB_SCRIPT_TAI_THAM */
-  {HB_TAG('D','F','L','T')} 	/* HB_SCRIPT_TAI_VIET */
+  {HB_TAG('k','t','h','i')},	/* HB_SCRIPT_KAITHI */
+  {HB_TAG('l','i','s','u')},	/* HB_SCRIPT_LISU */
+  {HB_TAG('m','y','e','i')},	/* HB_SCRIPT_MEETEI_MAYEK */
+  {HB_TAG('s','a','r','b')},	/* HB_SCRIPT_OLD_SOUTH_ARABIAN */
+  {HB_TAG('o','r','k','h')},	/* HB_SCRIPT_OLD_TURKIC */
+  {HB_TAG('s','a','m','r')},	/* HB_SCRIPT_SAMARITAN */
+  {HB_TAG('l','a','n','a')},	/* HB_SCRIPT_TAI_THAM */
+  {HB_TAG('t','a','v','t')},	/* HB_SCRIPT_TAI_VIET */
+
+  /* Unicode-6.0 additions */
+  {HB_TAG('b','a','t','k')},	/* HB_SCRIPT_BATAK */
+  {HB_TAG('b','r','a','h')},	/* HB_SCRIPT_BRAHMI */
+  {HB_TAG('m','a','n','d')} 	/* HB_SCRIPT_MANDAIC */
 };
 
 const hb_tag_t *
@@ -589,10 +596,9 @@ static const LangTag ot_languages[] = {
 };
 
 static int
-lang_compare_first_component (const void *pa,
-			      const void *pb)
+lang_compare_first_component (const char *a,
+			      const char *b)
 {
-  const char *a = pa, *b = pb;
   unsigned int da, db;
   const char *p;
 
@@ -629,13 +635,11 @@ hb_ot_tag_from_language (hb_language_t language)
     char tag[4];
     int i;
     lang_str += 6;
-    i = 0;
 #define IS_LETTER(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z'))
 #define TO_UPPER(c) (((c) >= 'a' && (c) <= 'z') ? (c) + 'A' - 'a' : (c))
-    while (i < 4 && IS_LETTER (lang_str[i])) {
+    for (i = 0; i < 4 && IS_LETTER (lang_str[i]); i++)
       tag[i] = TO_UPPER (lang_str[i]);
-    }
-    while (i < 4)
+    for (; i < 4; i++)
       tag[i] = ' ';
     return HB_TAG_STR (tag);
   }
@@ -643,7 +647,7 @@ hb_ot_tag_from_language (hb_language_t language)
   /* find a language matching in the first component */
   lang_tag = bsearch (lang_str, ot_languages,
 		      ARRAY_LENGTH (ot_languages), sizeof (LangTag),
-		      lang_compare_first_component);
+		      (hb_compare_func_t) lang_compare_first_component);
 
   /* we now need to find the best language matching */
   if (lang_tag)
@@ -652,12 +656,12 @@ hb_ot_tag_from_language (hb_language_t language)
 
     /* go to the final one matching in the first component */
     while (lang_tag + 1 < ot_languages + ARRAY_LENGTH (ot_languages) &&
-	   lang_compare_first_component (lang_str, lang_tag + 1) == 0)
+	   lang_compare_first_component (lang_str, (lang_tag + 1)->language) == 0)
       lang_tag++;
 
     /* go back, find which one matches completely */
     while (lang_tag >= ot_languages &&
-	   lang_compare_first_component (lang_str, lang_tag) == 0)
+	   lang_compare_first_component (lang_str, lang_tag->language) == 0)
     {
       if (lang_matches (lang_str, lang_tag->language)) {
 	found = TRUE;
@@ -694,3 +698,6 @@ hb_ot_tag_to_language (hb_tag_t tag)
   buf[10] = '\0';
   return hb_language_from_string ((char *) buf);
 }
+
+
+HB_END_DECLS

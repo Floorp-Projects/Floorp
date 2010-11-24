@@ -170,15 +170,7 @@ MayUseXULXBL(nsIChannel* aChannel)
   securityManager->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
   NS_ENSURE_TRUE(principal, PR_FALSE);
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    return PR_TRUE;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, PR_FALSE);
-
-  return nsContentUtils::IsSitePermAllow(uri, "allowXULXBL");
+  return nsContentUtils::AllowXULXBLForPrincipal(principal);
 }
 
 NS_IMETHODIMP
