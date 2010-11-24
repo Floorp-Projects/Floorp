@@ -67,6 +67,7 @@
 #include "nsSVGFilterElement.h"
 #include "nsSVGString.h"
 #include "nsSVGEffects.h"
+#include "gfxUtils.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -174,7 +175,7 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
   r.Scale(gfxFloat(scaledSize.width)/aTarget->mImage->Width(),
           gfxFloat(scaledSize.height)/aTarget->mImage->Height());
   r.RoundOut();
-  if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(r, &result.mDataRect)))
+  if (!gfxUtils::GfxRectToIntRect(r, &result.mDataRect))
     return result;
   
 #ifdef DEBUG_tor
@@ -2963,9 +2964,9 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance,
   // but nothing clips mFilterPrimitiveSubregion so this should be changed.
 
   nsIntRect tile;
-  nsresult res = nsLayoutUtils::GfxRectToIntRect(aSources[0]->mFilterPrimitiveSubregion, &tile);
+  PRBool res = gfxUtils::GfxRectToIntRect(aSources[0]->mFilterPrimitiveSubregion, &tile);
 
-  NS_ENSURE_SUCCESS(res, res); // asserts on failure (not 
+  NS_ENSURE_TRUE(res, NS_ERROR_FAILURE); // asserts on failure (not 
   if (tile.IsEmpty())
     return NS_OK;
 
