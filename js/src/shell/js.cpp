@@ -4198,8 +4198,10 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
         return false;
     }
 
-    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength, &v))
+    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength,
+                                JS_STRUCTURED_CLONE_VERSION, &v)) {
         return false;
+    }
     JS_SET_RVAL(cx, vp, v);
     return true;
 }
