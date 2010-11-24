@@ -717,7 +717,7 @@ protected:
    */
   nsresult InitAdditionalDBItems();
   nsresult InitFunctions();
-  nsresult InitStatements();
+  nsresult InitTriggers();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
