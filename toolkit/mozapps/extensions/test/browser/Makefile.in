@@ -73,6 +73,7 @@ _MAIN_TEST_FILES = \
   browser_manualupdates.js \
   browser_globalwarnings.js \
   browser_eula.js \
+  browser_updateid.js \
   $(NULL)
 
 _TEST_FILES = \
