@@ -6489,15 +6489,9 @@ if test "$MOZ_MATHML"; then
 fi
 
 dnl ========================================================
-dnl SVG
+dnl Keeping AC_DEFINE(MOZ_SVG) for the moment in case of something needs it.
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(svg,
-[  --disable-svg           Disable SVG support],
-    MOZ_SVG=,
-    MOZ_SVG=1 )
-if test -n "$MOZ_SVG"; then
-  AC_DEFINE(MOZ_SVG)
-fi
+AC_DEFINE(MOZ_SVG)
 
 dnl ========================================================
 dnl SMIL
@@ -6507,10 +6501,6 @@ MOZ_ARG_DISABLE_BOOL(smil,
 [  --disable-smil          Disable SMIL animation support],
     MOZ_SMIL=,
     MOZ_SMIL=1 )
-# Automatically disable SMIL if SVG is disabled
-if test -z "$MOZ_SVG"; then
-  MOZ_SMIL=
-fi
 if test -n "$MOZ_SMIL"; then
   AC_DEFINE(MOZ_SMIL)
 fi
