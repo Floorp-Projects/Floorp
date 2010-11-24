@@ -134,14 +134,6 @@ let UI = {
         self.exit();
         self.blurAll();
       });
-        
-      // ___ Dev Menu
-      // This dev menu is not meant for shipping, nor is it of general
-      // interest, but we still need it for the time being. Change the
-      // false below to enable; just remember to change back before
-      // committing. Bug 586721 will track the ultimate removal.
-      if (false)
-        this._addDevMenu();
 
       // When you click on the background/empty part of TabView,
       // we create a new groupItem.
@@ -1175,73 +1167,6 @@ let UI = {
       activeTabItem.zoomIn(); 
     else
       self.goToTab(gBrowser.selectedTab);
-  },
-
-  // ----------
-  // Function: _addDevMenu
-  // Fills out the "dev menu" in the TabView UI.
-  _addDevMenu: function UI__addDevMenu() {
-    try {
-      var self = this;
-
-      var $select = iQ("<select>")
-        .css({
-          position: "absolute",
-          bottom: 5,
-          right: 5,
-          zIndex: 99999,
-          opacity: .2
-        })
-        .appendTo("#content")
-        .change(function () {
-          var index = iQ(this).val();
-          try {
-            commands[index].code.apply(commands[index].element);
-          } catch(e) {
-            Utils.log("dev menu error", e);
-          }
-          iQ(this).val(0);
-        });
-
-      var commands = [{
-        name: "dev menu",
-        code: function() { }
-      }, {
-        name: "show trenches",
-        code: function() {
-          Trenches.toggleShown();
-          iQ(this).html((Trenches.showDebug ? "hide" : "show") + " trenches");
-        }
-      }, {
-/*
-        name: "refresh",
-        code: function() {
-          location.href = "tabview.html";
-        }
-      }, {
-        name: "reset",
-        code: function() {
-          self.reset();
-        }
-      }, {
-*/
-        name: "save",
-        code: function() {
-          self._saveAll();
-        }
-      }];
-
-      var count = commands.length;
-      var a;
-      for (a = 0; a < count; a++) {
-        commands[a].element = (iQ("<option>")
-          .val(a)
-          .html(commands[a].name)
-          .appendTo($select))[0];
-      }
-    } catch(e) {
-      Utils.log(e);
-    }
   },
 
   // ----------
