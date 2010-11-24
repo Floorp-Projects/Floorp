@@ -108,11 +108,7 @@ AutoCompleteInput.prototype = {
 
 function ensure_results(uris, searchTerm)
 {
-  waitForFrecency(uris[0].spec, function () {
-    return uris.every(function (aURI) {
-      return frecencyForUrl(aURI.spec) > 0;
-    });
-  }, ensure_results_internal, this, arguments);
+  waitForAsyncUpdates(ensure_results_internal, this, arguments);
 }
 
 function ensure_results_internal(uris, searchTerm)

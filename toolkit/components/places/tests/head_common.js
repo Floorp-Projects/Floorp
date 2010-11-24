@@ -552,7 +552,7 @@ function is_time_ordered(before, after) {
 function waitForAsyncUpdates(aCallback, aScope, aArguments)
 {
   let scope = aScope || this;
-  let argument = aArguments || [];
+  let args = aArguments || [];
   let db = DBConn();
   db.createAsyncStatement("BEGIN EXCLUSIVE").executeAsync();
   db.createAsyncStatement("COMMIT").executeAsync({
@@ -560,7 +560,7 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
     handleError: function() {},
     handleCompletion: function(aReason)
     {
-      aCallback.apply(scope, arguments);
+      aCallback.apply(scope, args);
     }
   });
 }
