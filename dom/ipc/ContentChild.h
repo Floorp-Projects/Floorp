@@ -80,6 +80,9 @@ public:
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
+    virtual PCrashReporterChild* AllocPCrashReporter();
+    virtual bool DeallocPCrashReporter(PCrashReporterChild*);
+
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
     virtual bool RecvPTestShellConstructor(PTestShellChild*);

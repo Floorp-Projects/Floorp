@@ -46,6 +46,7 @@
 #endif
 
 #include "ContentChild.h"
+#include "CrashReporterChild.h"
 #include "TabChild.h"
 #include "AudioChild.h"
 
@@ -55,6 +56,7 @@
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/StorageChild.h"
+#include "mozilla/dom/PCrashReporterChild.h"
 
 #include "nsAudioStream.h"
 
@@ -95,6 +97,10 @@ static const int kRelativeNiceness = 10;
 #endif
 
 #include "nsAccelerometer.h"
+
+#if defined(ANDROID)
+#include "APKOpen.h"
+#endif
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
@@ -239,6 +245,21 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
+#if defined(ANDROID)
+    PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
+    InfallibleTArray<Mapping> mappings;
+    const struct mapping_info *info = getLibraryMapping();
+    while (info->name) {
+        mappings.AppendElement(Mapping(nsDependentCString(info->name),
+                                       nsDependentCString(info->file_id),
+                                       info->base,
+                                       info->len,
+                                       info->offset));
+        info++;
+    }
+    crashreporter->SendAddLibraryMappings(mappings);
+#endif
+
     return true;
 }
 
@@ -268,6 +289,19 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 {
     TabChild* child = static_cast<TabChild*>(iframe);
     NS_RELEASE(child);
+    return true;
+}
+
+PCrashReporterChild*
+ContentChild::AllocPCrashReporter()
+{
+    return new CrashReporterChild();
+}
+
+bool
+ContentChild::DeallocPCrashReporter(PCrashReporterChild* crashreporter)
+{
+    delete crashreporter;
     return true;
 }
 
