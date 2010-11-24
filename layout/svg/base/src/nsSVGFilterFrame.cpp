@@ -47,6 +47,7 @@
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGRect.h"
 #include "nsSVGFilterInstance.h"
+#include "gfxUtils.h"
 
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -67,7 +68,7 @@ MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
                                                 aDeviceRect->width, aDeviceRect->height));
     r.RoundOut();
     nsIntRect intRect;
-    if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(r, &intRect))) {
+    if (gfxUtils::GfxRectToIntRect(r, &intRect)) {
       rect = intRect;
     }
   }
@@ -236,9 +237,8 @@ TransformFilterSpaceToDeviceSpace(nsSVGFilterInstance *aInstance, nsIntRect *aRe
   r = m.TransformBounds(r);
   r.RoundOut();
   nsIntRect deviceRect;
-  nsresult rv = nsLayoutUtils::GfxRectToIntRect(r, &deviceRect);
-  if (NS_FAILED(rv))
-    return rv;
+  if (!gfxUtils::GfxRectToIntRect(r, &deviceRect))
+    return NS_ERROR_FAILURE;
   *aRect = deviceRect;
   return NS_OK;
 }
