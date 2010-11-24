@@ -10,6 +10,9 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
 
   <notificationbox id="nb"/>
+  <menupopup id="menupopup" onpopupshown="this.hidePopup()" onpopuphidden="checkPopupClosed()">
+    <menuitem label="One"/>
+  </menupopup>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
@@ -26,7 +29,7 @@ var testtag_notificationbox_buttons = [
     label: "Button 1",
     accesskey: "u",
     callback: testtag_notificationbox_buttonpressed,
-    popup: null
+    popup: "menupopup"
   }
 ];
 
@@ -273,10 +276,14 @@ var appendPriorityTests = [
       return priority;
     },
     result: function(nb, priority) {
-      if (priority == nb.PRIORITY_CRITICAL_BLOCK)
-        SimpleTest.finish();
-      else
+      if (priority == nb.PRIORITY_CRITICAL_BLOCK) {
+        let ntf = nb.appendNotification("Notification", "note", "happy.png",
+                                        nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
+        setTimeout(checkPopupTest, 50, nb, ntf);
+      }
+      else {
         runTimedTests(appendPriorityTests, -1, nb, ++priority);
+      }
     }
   }
 ];
@@ -317,6 +324,23 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
   }
 
   ise(ntf.type, type, testid + " notification.type");
+}
+
+function checkPopupTest(nb, ntf)
+{
+  if (nb._animating)
+    setTimeout(checkPopupTest, ntf);
+  else {
+    var evt = { target:  ntf, originalTarget: ntf, stopPropagation: function() { } };
+    evt.target.buttonInfo = testtag_notificationbox_buttons[0];
+    ntf._doButtonCommand(evt);
+  }
+}
+
+function checkPopupClosed()
+{
+  is(document.popupNode, null, "popupNode null after popup is closed");
+  SimpleTest.finish();
 }
 
 /**

@@ -865,7 +865,6 @@
               }
             }
 
-            document.popupNode = null;
             this._autoScrollPopup.showPopup(document.documentElement,
                                             event.screenX,
                                             event.screenY,
