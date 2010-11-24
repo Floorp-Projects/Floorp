@@ -8249,7 +8249,22 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
         //
         // So if we are NOT supposed to be consuming events, let it go through
         if (consumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
-          *outResult = TRUE;
+          *outResult = MA_ACTIVATE;
+
+          // However, don't activate panels
+#ifndef WINCE
+          if (inMsg == WM_MOUSEACTIVATE) {
+            nsWindow* activateWindow = GetNSWindowPtr(inWnd);
+            if (activateWindow) {
+              nsWindowType wintype;
+              activateWindow->GetWindowType(wintype);
+              if (wintype == eWindowType_popup && activateWindow->PopupType() == ePopupTypePanel) {
+                *outResult = MA_NOACTIVATE;
+              }
+            }
+          }
+#endif
+
           return TRUE;
         }
 #ifndef WINCE

@@ -456,6 +456,8 @@ protected:
 #endif // ACCESSIBILITY
   void                    ClearCachedResources();
 
+  nsPopupType PopupType() { return mPopupType; }
+
 protected:
   nsCOMPtr<nsIWidget>   mParent;
   nsIntSize             mLastSize;
