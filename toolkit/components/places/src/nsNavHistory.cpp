@@ -1104,6 +1104,9 @@ nsNavHistory::InitFunctions()
   rv = CalculateFrecencyFunction::create(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = GenerateGUIDFunction::create(mDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 

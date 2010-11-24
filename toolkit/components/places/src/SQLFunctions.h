@@ -222,6 +222,27 @@ public:
   static nsresult create(mozIStorageConnection *aDBConn);
 };
 
+/**
+ * SQL function to generate a GUID for a place or bookmark item.  This is just
+ * a wrapper around GenerateGUID in Helpers.h.
+ *
+ * @return a guid for the item.
+ */
+class GenerateGUIDFunction : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+};
+
 } // namespace places
 } // namespace storage
 

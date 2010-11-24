@@ -215,8 +215,8 @@ namespace places {
   nsresult
   MatchAutoCompleteFunction::create(mozIStorageConnection *aDBConn)
   {
-    nsRefPtr<MatchAutoCompleteFunction> function(new MatchAutoCompleteFunction);
-    NS_ENSURE_TRUE(function, NS_ERROR_OUT_OF_MEMORY);
+    nsRefPtr<MatchAutoCompleteFunction> function =
+      new MatchAutoCompleteFunction();
 
     nsresult rv = aDBConn->CreateFunction(
       NS_LITERAL_CSTRING("autocomplete_match"), kArgIndexLength, function
@@ -353,8 +353,7 @@ namespace places {
     if (!HAS_BEHAVIOR(JAVASCRIPT) &&
         !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:")) &&
         StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:"))) {
-      NS_IF_ADDREF(*_result = new IntegerVariant(0));
-      NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(*_result = new IntegerVariant(0));
       return NS_OK;
     }
 
@@ -375,8 +374,7 @@ namespace places {
       (HAS_BEHAVIOR(OPENPAGE) && openPageCount == 0)
     );
     if (!matches) {
-      NS_IF_ADDREF(*_result = new IntegerVariant(0));
-      NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(*_result = new IntegerVariant(0));
       return NS_OK;
     }
 
@@ -414,8 +412,7 @@ namespace places {
         matches = matches || matchURL;
     }
 
-    NS_IF_ADDREF(*_result = new IntegerVariant(matches ? 1 : 0));
-    NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(*_result = new IntegerVariant(matches ? 1 : 0));
     return NS_OK;
     #undef HAS_BEHAVIOR
   }
@@ -433,7 +430,6 @@ namespace places {
   {
     nsCOMPtr<CalculateFrecencyFunction> function =
       new CalculateFrecencyFunction();
-    NS_ENSURE_TRUE(function, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = aDBConn->CreateFunction(
       NS_LITERAL_CSTRING("calculate_frecency"), 1, function
@@ -544,15 +540,13 @@ namespace places {
           // For URIs with zero points in the sampled recent visits
           // but "browsing" type visits outside the sampling range, set
           // frecency to -visit_count, so they're still shown in autocomplete.
-          NS_IF_ADDREF(*_result = new IntegerVariant(-visitCount));
-          NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+          NS_ADDREF(*_result = new IntegerVariant(-visitCount));
         }
         else {
           // Estimate frecency using the last few visits.
           // Use NS_ceilf() so that we don't round down to 0, which
           // would cause us to completely ignore the place during autocomplete.
-          NS_IF_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits) / numSampledVisits)));
-          NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+          NS_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits) / numSampledVisits)));
         }
 
         return NS_OK;
@@ -587,9 +581,47 @@ namespace places {
 
     // use NS_ceilf() so that we don't round down to 0, which
     // would cause us to completely ignore the place during autocomplete
-    NS_IF_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits))));
-    NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(*_result = new IntegerVariant((PRInt32) NS_ceilf(fullVisitCount * NS_ceilf(pointsForSampledVisits))));
 
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// GUID Creation Function
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// GenerateGUIDFunction
+
+  /* static */
+  nsresult
+  GenerateGUIDFunction::create(mozIStorageConnection *aDBConn)
+  {
+    nsCOMPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("generate_guid"), 0, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_THREADSAFE_ISUPPORTS1(
+    GenerateGUIDFunction,
+    mozIStorageFunction
+  )
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIStorageFunction
+
+  NS_IMETHODIMP
+  GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                                       nsIVariant **_result)
+  {
+    nsCAutoString guid;
+    nsresult rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(*_result = new UTF8TextVariant(guid));
     return NS_OK;
   }
 
