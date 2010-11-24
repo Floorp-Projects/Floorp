@@ -45,7 +45,7 @@
 
 
 /**
- * XXX to get CAIRO_HAS_DDRAW_SURFACE, CAIRO_HAS_D2D_SURFACE and
+ * XXX to get CAIRO_HAS_D2D_SURFACE and
  * CAIRO_HAS_DWRITE_FONT
  */
 #include "cairo.h"
