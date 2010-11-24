@@ -202,6 +202,13 @@ JS_GetEmptyStringValue(JSContext *cx)
     return STRING_TO_JSVAL(cx->runtime->emptyString);
 }
 
+JS_PUBLIC_API(JSString *)
+JS_GetEmptyString(JSRuntime *rt)
+{
+    JS_ASSERT(rt->state == JSRTS_UP);
+    return rt->emptyString;
+}
+
 static JSBool
 TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS, jsval **vpp, va_list *app)
 {
@@ -634,10 +641,6 @@ JSRuntime::init(uint32 maxbytes)
         return false;
 #endif
 
-    deflatedStringCache = new js::DeflatedStringCache();
-    if (!deflatedStringCache || !deflatedStringCache->init())
-        return false;
-
     wrapObjectCallback = js::TransparentObjectWrapper;
 
 #ifdef JS_THREADSAFE
@@ -683,11 +686,6 @@ JSRuntime::~JSRuntime()
     js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
-    /*
-     * Finish the deflated string cache after the last GC and after
-     * calling js_FinishAtomState, which finalizes strings.
-     */
-    delete deflatedStringCache;
 #if ENABLE_YARR_JIT
     delete regExpAllocator;
 #endif
@@ -4210,15 +4208,6 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
     return FUN_OBJECT(fun);
-}
-
-JS_PUBLIC_API(const char *)
-JS_GetFunctionName(JSFunction *fun)
-{
-    if (!fun->atom)
-        return js_anonymous_str;
-    const char *byte = js_GetStringBytes(fun->atom);
-    return byte ? byte : "";
 }
 
 JS_PUBLIC_API(JSString *)
