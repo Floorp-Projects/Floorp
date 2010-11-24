@@ -243,6 +243,9 @@ struct IMEContext {
 
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;
+
+  /* A hint for the action that is performed when the input is submitted */
+  nsString mActionHint;
 };
 
 

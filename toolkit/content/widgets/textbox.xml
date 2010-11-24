@@ -21,7 +21,7 @@
       <children/>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck">
         <html:input class="textbox-input" flex="1" anonid="input"
-                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,noinitialfocus"/>
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,noinitialfocus,mozactionhint"/>
       </xul:hbox>
     </content>
 
@@ -307,8 +307,8 @@
     <content>
       <children/>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck" align="center">
-        <html:input class="textbox-input" flex="1" anonid="input"
-                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+        <html:input class="textbox-input" flex="1" anonid="input" mozactionhint="search"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint"/>
         <xul:deck class="textbox-search-icons" anonid="search-icons">
           <xul:image class="textbox-search-icon"
                      onclick="document.getBindingParent(this)._iconClick();"
@@ -435,7 +435,7 @@
     <content>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck">
         <html:textarea class="textbox-textarea" flex="1" anonid="input"
-                       xbl:inherits="onfocus,onblur,xbl:text=value,disabled,tabindex,rows,cols,readonly,wrap,placeholder"><children/></html:textarea>
+                       xbl:inherits="onfocus,onblur,xbl:text=value,disabled,tabindex,rows,cols,readonly,wrap,placeholder,mozactionhint"><children/></html:textarea>
       </xul:hbox>
     </content>
   </binding>
