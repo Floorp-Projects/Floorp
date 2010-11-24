@@ -2474,6 +2474,7 @@ mjit::Compiler::canUseApplyTricks()
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
            IsLowerableFunCallOrApply(nextpc) &&
+           !analysis->jumpTarget(nextpc) &&
            !debugMode();
 }
 
