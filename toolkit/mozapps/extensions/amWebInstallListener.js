@@ -283,6 +283,20 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
+  onWebInstallDisabled: function(aWindow, aUri, aInstalls) {
+    let info = {
+      originatingWindow: aWindow,
+      originatingURI: aUri,
+      installs: aInstalls,
+
+      QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallInfo])
+    };
+    Services.obs.notifyObservers(info, "addon-install-disabled", null);
+  },
+
+  /**
+   * @see amIWebInstallListener.idl
+   */
   onWebInstallBlocked: function(aWindow, aUri, aInstalls) {
     let info = {
       originatingWindow: aWindow,
