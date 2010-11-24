@@ -101,7 +101,7 @@ nsSafeOptionListMutation::nsSafeOptionListMutation(nsIContent* aSelect,
       // option list must be up-to-date before inserting or removing options.
       // Fortunately this is called only if mutation event listener
       // adds or removes options.
-      select->RebuildOptionsArray();
+      select->RebuildOptionsArray(aNotify);
     }
     nsresult rv;
     if (aKid) {
@@ -119,7 +119,7 @@ nsSafeOptionListMutation::~nsSafeOptionListMutation()
     nsHTMLSelectElement* select =
       static_cast<nsHTMLSelectElement*>(mSelect.get());
     if (mNeedsRebuild || (mTopLevelMutation && mGuard.Mutated(1))) {
-      select->RebuildOptionsArray();
+      select->RebuildOptionsArray(PR_TRUE);
     }
     if (mTopLevelMutation) {
       select->mMutating = PR_FALSE;
@@ -148,6 +148,8 @@ nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo
     mDisabledChanged(PR_FALSE),
     mMutating(PR_FALSE),
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
+    mSelectionHasChanged(PR_FALSE),
+    mDefaultSelectionSet(PR_FALSE),
     mNonOptionChildren(0),
     mOptGroupCount(0),
     mSelectedIndex(-1)
@@ -267,6 +269,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // Fix the currently selected index
     if (aListIndex <= mSelectedIndex) {
       mSelectedIndex += (insertIndex - aListIndex);
+      SetSelectionChanged(PR_TRUE, aNotify);
     }
 
     // Get the frame stuff for notification. No need to flush here
@@ -342,11 +345,12 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
       if (mSelectedIndex < (aListIndex+numRemoved)) {
         // aListIndex <= mSelectedIndex < aListIndex+numRemoved
         // Find a new selected index if it was one of the ones removed.
-        FindSelectedIndex(aListIndex);
+        FindSelectedIndex(aListIndex, aNotify);
       } else {
         // Shift the selected index if something in front of it was removed
         // aListIndex+numRemoved <= mSelectedIndex
         mSelectedIndex -= numRemoved;
+        SetSelectionChanged(PR_TRUE, aNotify);
       }
     }
 
@@ -812,13 +816,13 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
+nsresult
+nsHTMLSelectElement::SetSelectedIndexInternal(PRInt32 aIndex, PRBool aNotify)
 {
   PRInt32 oldSelectedIndex = mSelectedIndex;
 
   nsresult rv = SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
-                                          PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
+                                          PR_TRUE, PR_TRUE, aNotify, nsnull);
 
   if (NS_SUCCEEDED(rv)) {
     nsISelectControlFrame* selectFrame = GetSelectFrame();
@@ -827,7 +831,15 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
     }
   }
 
+  SetSelectionChanged(PR_TRUE, aNotify);
+
   return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
+{
+  return SetSelectedIndexInternal(aIndex, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -860,8 +872,9 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
   // Set the selected index
   if (aSelected && (aIndex < mSelectedIndex || mSelectedIndex < 0)) {
     mSelectedIndex = aIndex;
+    SetSelectionChanged(PR_TRUE, aNotify);
   } else if (!aSelected && aIndex == mSelectedIndex) {
-    FindSelectedIndex(aIndex+1);
+    FindSelectedIndex(aIndex+1, aNotify);
   }
 
   if (aChangeOptionState) {
@@ -894,14 +907,16 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
 }
 
 void
-nsHTMLSelectElement::FindSelectedIndex(PRInt32 aStartIndex)
+nsHTMLSelectElement::FindSelectedIndex(PRInt32 aStartIndex, PRBool aNotify)
 {
   mSelectedIndex = -1;
+  SetSelectionChanged(PR_TRUE, aNotify);
   PRUint32 len;
   GetLength(&len);
   for (PRInt32 i=aStartIndex; i<(PRInt32)len; i++) {
     if (IsOptionSelectedByIndex(i)) {
       mSelectedIndex = i;
+      SetSelectionChanged(PR_TRUE, aNotify);
       break;
     }
   }
@@ -1235,7 +1250,7 @@ nsHTMLSelectElement::SetValue(const nsAString& aValue)
           option->GetValue(optionVal);
 
           if (optionVal.Equals(aValue)) {
-            SetSelectedIndex((PRInt32)i);
+            SetSelectedIndexInternal((PRInt32)i, PR_TRUE);
 
             break;
           }
@@ -1320,7 +1335,7 @@ nsHTMLSelectElement::SelectSomething(PRBool aNotify)
     nsresult rv = IsOptionDisabled(i, &disabled);
 
     if (NS_FAILED(rv) || !disabled) {
-      rv = SetSelectedIndex(i);
+      rv = SetSelectedIndexInternal(i, aNotify);
       NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
       UpdateValueMissingValidityState();
@@ -1415,7 +1430,7 @@ nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     // optimization for cases when the select is not multiple that
     // would lead to only a single option getting deselected.
     if (mSelectedIndex >= 0) {
-      SetSelectedIndex(mSelectedIndex);
+      SetSelectedIndexInternal(mSelectedIndex, aNotify);
     }
   }
 
@@ -1431,12 +1446,6 @@ nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 
   return rv;
-}
-
-PRBool
-nsHTMLSelectElement::IsDoneAddingChildren()
-{
-  return mIsDoneAddingChildren;
 }
 
 nsresult
@@ -1471,6 +1480,8 @@ nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
     // validity state to take this into account.
     UpdateValueMissingValidityState();
   }
+
+  mDefaultSelectionSet = PR_TRUE;
 
   return NS_OK;
 }
@@ -1559,8 +1570,19 @@ nsHTMLSelectElement::IntrinsicState() const
   nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
-    state |= IsValid() ? NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID
-                       : NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+    if (IsValid()) {
+      state |= NS_EVENT_STATE_VALID;
+
+      if (mSelectionHasChanged) {
+        state |= NS_EVENT_STATE_MOZ_UI_VALID;
+      }
+    } else {
+      state |= NS_EVENT_STATE_INVALID;
+
+      if (mSelectionHasChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
+        state |= NS_EVENT_STATE_MOZ_UI_INVALID;
+      }
+    }
   }
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::required)) {
@@ -1705,6 +1727,8 @@ nsHTMLSelectElement::Reset()
     SelectSomething(PR_TRUE);
   }
 
+  SetSelectionChanged(PR_FALSE, PR_TRUE);
+
   //
   // Let the frame know we were reset
   //
@@ -1832,11 +1856,11 @@ AddOptionsRecurse(nsIContent* aRoot, nsHTMLOptionCollection* aArray)
 }
 
 void
-nsHTMLSelectElement::RebuildOptionsArray()
+nsHTMLSelectElement::RebuildOptionsArray(PRBool aNotify)
 {
   mOptions->Clear();
   AddOptionsRecurse(this, mOptions);
-  FindSelectedIndex(0);
+  FindSelectedIndex(0, aNotify);
 }
 
 bool
@@ -2244,5 +2268,25 @@ nsHTMLSelectElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNoti
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
              NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
+}
+
+void
+nsHTMLSelectElement::SetSelectionChanged(PRBool aValue, PRBool aNotify)
+{
+  if (!mDefaultSelectionSet) {
+    return;
+  }
+
+  PRBool previousSelectionChangedValue = mSelectionHasChanged;
+  mSelectionHasChanged = aValue;
+
+  if (aNotify && mSelectionHasChanged != previousSelectionChangedValue) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_UI_INVALID |
+                                              NS_EVENT_STATE_MOZ_UI_VALID);
+    }
+  }
 }
 
