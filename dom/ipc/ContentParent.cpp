@@ -43,6 +43,7 @@
 #include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "nsHashPropertyBag.h"
 #include "nsIFilePicker.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
@@ -70,6 +71,10 @@
 
 #ifdef MOZ_PERMISSIONS
 #include "nsPermissionManager.h"
+#endif
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
 #endif
 
 #include "mozilla/dom/ExternalHelperAppParent.h"
@@ -124,6 +129,28 @@ ContentParent::GetSingleton(PRBool aForceNew)
 }
 
 void
+ContentParent::OnChannelConnected(int32 pid)
+{
+    ProcessHandle handle;
+    if (!base::OpenPrivilegedProcessHandle(pid, &handle)) {
+        NS_WARNING("Can't open handle to child process.");
+    }
+    else {
+        SetOtherProcess(handle);
+    }
+}
+
+namespace {
+void
+DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
+{
+    XRE_GetIOMessageLoop()
+        ->PostTask(FROM_HERE,
+                   new DeleteTask<GeckoChildProcessHost>(aSubprocess));
+}
+}
+
+void
 ContentParent::ActorDestroy(ActorDestroyReason why)
 {
     nsCOMPtr<nsIThreadObserver>
@@ -142,11 +169,32 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     mIsAlive = false;
 
     if (obs) {
-        nsString context = NS_LITERAL_STRING("");
-        if (AbnormalShutdown == why)
-            context.AssignLiteral("abnormal");
-        obs->NotifyObservers(nsnull, "ipc:content-shutdown", context.get());
+        nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+        props->Init();
+
+        if (AbnormalShutdown == why) {
+            props->SetPropertyAsBool(NS_LITERAL_STRING("abnormal"), PR_TRUE);
+
+#ifdef MOZ_CRASHREPORTER
+            nsAutoString dumpID;
+
+            nsCOMPtr<nsILocalFile> crashDump;
+            TakeMinidump(getter_AddRefs(crashDump)) &&
+                CrashReporter::GetIDFromMinidump(crashDump, dumpID);
+
+            if (!dumpID.IsEmpty())
+                props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"),
+                                            dumpID);
+#endif
+
+            obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nsnull);
+        }
     }
+
+    MessageLoop::current()->
+        PostTask(FROM_HERE,
+                 NewRunnableFunction(DelayedDeleteSubprocess, mSubprocess));
+    mSubprocess = NULL;
 }
 
 TabParent*
@@ -187,6 +235,9 @@ ContentParent::ContentParent()
 
 ContentParent::~ContentParent()
 {
+    if (OtherProcess())
+        base::CloseProcessHandle(OtherProcess());
+
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     //If the previous content process has died, a new one could have
     //been started since.
@@ -268,14 +319,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(ContentParent,
                               nsIThreadObserver,
                               nsIDOMGeoPositionCallback)
 
-namespace {
-void
-DeleteSubprocess(GeckoChildProcessHost* aSubprocess)
-{
-    delete aSubprocess;
-}
-}
-
 NS_IMETHODIMP
 ContentParent::Observe(nsISupports* aSubject,
                        const char* aTopic,
@@ -294,10 +337,7 @@ ContentParent::Observe(nsISupports* aSubject,
         RecvRemoveGeolocationListener();
             
         Close();
-        XRE_GetIOMessageLoop()->PostTask(
-            FROM_HERE,
-            NewRunnableFunction(DeleteSubprocess, mSubprocess));
-        mSubprocess = nsnull;
+        NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
 
     if (!mIsAlive || !mSubprocess)
