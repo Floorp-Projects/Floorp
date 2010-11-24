@@ -4945,12 +4945,9 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
     // A dataTransfer won't exist when a drag was started by some other
     // means, for instance calling the drag service directly, or a drag
     // from another application. In either case, a new dataTransfer should
-    // be created that reflects the data. Pass true to the constructor for
-    // the aIsExternal argument, so that only system access is allowed.
-    PRUint32 action = 0;
-    dragSession->GetDragAction(&action);
+    // be created that reflects the data.
     initialDataTransfer =
-      new nsDOMDataTransfer(aDragEvent->message, action);
+      new nsDOMDataTransfer(aDragEvent->message);
     NS_ENSURE_TRUE(initialDataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
     // now set it in the drag session so we don't need to create it again
