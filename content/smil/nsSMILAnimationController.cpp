@@ -72,7 +72,8 @@ GetRefreshDriverForDoc(nsIDocument* aDoc)
 // ctors, dtors, factory methods
 
 nsSMILAnimationController::nsSMILAnimationController()
-  : mResampleNeeded(PR_FALSE),
+  : mAvgTimeBetweenSamples(0),
+    mResampleNeeded(PR_FALSE),
     mDeferredStartSampling(PR_FALSE),
     mRunningSample(PR_FALSE),
     mDocument(nsnull)
@@ -142,6 +143,9 @@ void
 nsSMILAnimationController::Resume(PRUint32 aType)
 {
   PRBool wasPaused = (mPauseState != 0);
+  // Update mCurrentSampleTime so that calls to GetParentTime--used for
+  // calculating parent offsets--are accurate
+  mCurrentSampleTime = mozilla::TimeStamp::Now();
 
   nsSMILTimeContainer::Resume(aType);
 
@@ -176,7 +180,42 @@ nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
   // doing so we get sampled by a refresh driver whose most recent refresh time
   // predates when we were initialised, so to be safe we make sure to take the
   // most recent time here.
-  mCurrentSampleTime = NS_MAX(mCurrentSampleTime, aTime);
+  aTime = NS_MAX(mCurrentSampleTime, aTime);
+
+  // Sleep detection: If the time between samples is a whole lot greater than we
+  // were expecting then we assume the computer went to sleep or someone's
+  // messing with the clock. In that case, fiddle our parent offset and use our
+  // average time between samples to calculate the new sample time. This
+  // prevents us from hanging while trying to catch up on all the missed time.
+
+  // Smoothing of coefficient for the average function. 0.2 should let us track
+  // the sample rate reasonably tightly without being overly affected by
+  // occasional delays.
+  static const double SAMPLE_DUR_WEIGHTING = 0.2;
+  // If the elapsed time exceeds our expectation by this number of times we'll
+  // initiate special behaviour to basically ignore the intervening time.
+  static const double SAMPLE_DEV_THRESHOLD = 200.0;
+
+  nsSMILTime elapsedTime =
+    (nsSMILTime)(aTime - mCurrentSampleTime).ToMilliseconds();
+  // First sample:
+  if (mAvgTimeBetweenSamples == 0) {
+    mAvgTimeBetweenSamples = elapsedTime;
+  // Unexpectedly long delay between samples:
+  } else if (elapsedTime > SAMPLE_DEV_THRESHOLD * mAvgTimeBetweenSamples) {
+    NS_WARNING("Detected really long delay between samples, continuing from "
+               "previous sample");
+    mParentOffset += elapsedTime - mAvgTimeBetweenSamples;
+  // Usual case, update moving average:
+  } else {
+    // Due to truncation here the average will normally be a little less than
+    // it should be but that's probably ok
+    mAvgTimeBetweenSamples =
+      (nsSMILTime)(elapsedTime * SAMPLE_DUR_WEIGHTING +
+      mAvgTimeBetweenSamples * (1.0 - SAMPLE_DUR_WEIGHTING));
+  }
+  mCurrentSampleTime = aTime;
+
   Sample();
 }
 
@@ -287,6 +326,9 @@ nsSMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver)
     NS_ABORT_IF_FALSE(!GetRefreshDriverForDoc(mDocument) ||
                       aRefreshDriver == GetRefreshDriverForDoc(mDocument),
                       "Starting sampling with wrong refresh driver");
+    // We're effectively resuming from a pause so update our current sample time
+    // or else it will confuse our "average time between samples" calculations.
+    mCurrentSampleTime = mozilla::TimeStamp::Now();
     aRefreshDriver->AddRefreshObserver(this, Flush_Style);
   }
 }

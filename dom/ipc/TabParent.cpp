@@ -495,7 +495,7 @@ TabParent::RecvGetIMEEnabled(PRUint32* aValue)
 }
 
 bool
-TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType)
+TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget || !AllowContentIME())
@@ -506,6 +506,7 @@ TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType)
   IMEContext context;
   context.mStatus = aValue;
   context.mHTMLInputType.Assign(aType);
+  context.mActionHint.Assign(aAction);
   widget2->SetInputMode(context);
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();

@@ -246,6 +246,14 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
       mSimpleDuration.IsIndefinite() || mLastValue,
       "Unresolved simple duration for active or frozen animation");
 
+  // If we want to add but don't have a base value then just fail outright.
+  // This can happen when we skipped getting the base value because there's an
+  // animation function in the sandwich that should replace it but that function
+  // failed unexpectedly.
+  PRBool isAdditive = IsAdditive();
+  if (isAdditive && aResult.IsNull())
+    return;
+
   nsSMILValue result;
 
   if (mSimpleDuration.IsIndefinite() ||
@@ -286,7 +294,7 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   }
 
   // If additive animation isn't required or isn't supported, set the value.
-  if (!IsAdditive() || NS_FAILED(aResult.SandwichAdd(result))) {
+  if (!isAdditive || NS_FAILED(aResult.SandwichAdd(result))) {
     aResult.Swap(result);
     // Note: The old value of aResult is now in |result|, and it will get
     // cleaned up when |result| goes out of scope, when this function returns.
