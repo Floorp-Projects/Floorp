@@ -106,7 +106,8 @@ public:
     /* These are all implemented in Java */
     static void NotifyIME(int aType, int aState);
 
-    static void NotifyIMEEnabled(int aState, const nsAString& aHint);
+    static void NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
+                                 const nsAString& aActionHint);
 
     static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 

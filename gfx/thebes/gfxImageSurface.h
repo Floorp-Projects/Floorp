@@ -108,6 +108,8 @@ public:
 
     virtual already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
+    virtual PRBool SupportsSelfCopy() { return PR_FALSE; }
+
 protected:
     gfxImageSurface();
     void InitWithData(unsigned char *aData, const gfxIntSize& aSize,

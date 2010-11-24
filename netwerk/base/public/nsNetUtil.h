@@ -109,6 +109,10 @@
 #include "nsISocketProvider.h"
 #include "mozilla/Services.h"
 
+#ifdef MOZ_IPC
+#include "nsIRedirectChannelRegistrar.h"
+#endif
+
 #ifdef MOZILLA_INTERNAL_API
 
 inline already_AddRefed<nsIIOService>
@@ -1779,6 +1783,24 @@ NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
   PRBool res;
   return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
+
+#ifdef MOZ_IPC
+inline nsresult
+NS_LinkRedirectChannels(PRUint32 channelId,
+                        nsIParentChannel *parentChannel,
+                        nsIChannel** _result)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+      do_GetService("@mozilla.org/redirectchannelregistrar;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return registrar->LinkChannels(channelId,
+                                 parentChannel,
+                                 _result);
+}
+#endif // MOZ_IPC
 
 /**
  * Helper function to create a random URL string that's properly formed
