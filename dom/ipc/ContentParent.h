@@ -116,6 +116,9 @@ private:
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
+    virtual PCrashReporterParent* AllocPCrashReporter();
+    virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
+
     virtual PTestShellParent* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellParent* shell);
 

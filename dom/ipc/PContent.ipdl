@@ -38,6 +38,7 @@
 
 include protocol PAudio;
 include protocol PBrowser;
+include protocol PCrashReporter;
 include protocol PTestShell;
 include protocol PNecko;
 include protocol PExternalHelperApp;
@@ -83,6 +84,7 @@ rpc protocol PContent
 {
     manages PAudio;
     manages PBrowser;
+    manages PCrashReporter;
     manages PTestShell;
     manages PNecko;
     manages PExternalHelperApp;
@@ -113,6 +115,7 @@ child:
 
 parent:
     PNecko();
+    PCrashReporter();
     
     PStorage(StorageConstructData data);
 
