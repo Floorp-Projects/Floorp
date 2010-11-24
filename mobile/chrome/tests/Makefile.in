@@ -50,6 +50,7 @@ _BROWSER_FILES = \
   head.js \
   remote_head.js \
   remote_forms.js \
+  remote_vkb.js \
   browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
@@ -76,6 +77,7 @@ _BROWSER_FILES = \
   browser_tapping.js \
   browser_tap_content.html \
   browser_test.js \
+  browser_vkb.js \
   browser_viewport.js \
   browser_viewport.sjs \
   browser_no_title.html \

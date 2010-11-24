@@ -641,8 +641,7 @@ var BrowserUI = {
   },
 
   updateUIFocus: function _updateUIFocus() {
-    let state = (Elements.contentShowing.getAttribute("disabled") == "true") ? "Blur" : "Focus";
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:" + state, {});
+    Browser.selectedBrowser.active = !(Elements.contentShowing.getAttribute("disabled") == "true");
   },
 
   updateStar: function() {
