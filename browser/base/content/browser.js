@@ -4327,6 +4327,8 @@ var XULBrowserWindow = {
     var location = gBrowser.contentWindow.location;
     var locationObj = {};
     try {
+      // about:blank can be used by webpages so pretend it is http
+      locationObj.protocol = location == "about:blank" ? "http:" : location.protocol;
       locationObj.host = location.host;
       locationObj.hostname = location.hostname;
       locationObj.port = location.port;
@@ -6892,10 +6894,12 @@ var gIdentityHandler = {
   IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
   IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
   IDENTITY_MODE_MIXED_CONTENT    : "unknownIdentity mixedContent",  // SSL with unauthenticated content
+  IDENTITY_MODE_CHROMEUI         : "chromeUI",         // Part of the product's UI
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
   _lastLocation : null,
+  _mode : "unknownIdentity",
 
   // smart getters
   get _encryptionLabel () {
@@ -7035,7 +7039,9 @@ var gIdentityHandler = {
     this._lastLocation = location;
 
     let nsIWebProgressListener = Ci.nsIWebProgressListener;
-    if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+    if (location.protocol == "chrome:" || location.protocol == "about:")
+      this.setMode(this.IDENTITY_MODE_CHROMEUI);
+    else if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
     else if (state & nsIWebProgressListener.STATE_SECURE_HIGH)
       this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
@@ -7084,6 +7090,8 @@ var gIdentityHandler = {
     // Update the popup too, if it's open
     if (this._identityPopup.state == "open")
       this.setPopupMessages(newMode);
+
+    this._mode = newMode;
   },
 
   /**
@@ -7149,6 +7157,12 @@ var gIdentityHandler = {
       // Unicode Bidirectional Algorithm proper (at the paragraph level).
       icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
                         "rtl" : "ltr";
+    }
+    else if (newMode == this.IDENTITY_MODE_CHROMEUI) {
+      icon_label = "";
+      tooltip = "";
+      icon_country_label = "";
+      icon_labels_dir = "ltr";
     }
     else {
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
@@ -7243,6 +7257,9 @@ var gIdentityHandler = {
 
     // Revert the contents of the location bar, see bug 406779
     gURLBar.handleRevert();
+
+    if (this._mode == this.IDENTITY_MODE_CHROMEUI)
+      return;
 
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
