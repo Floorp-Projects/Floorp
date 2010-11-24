@@ -211,7 +211,8 @@ nsHTMLSelectElement::SetCustomValidity(const nsAString& aError)
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
                                             NS_EVENT_STATE_VALID |
-                                            NS_EVENT_STATE_MOZ_UI_INVALID);
+                                            NS_EVENT_STATE_MOZ_UI_INVALID |
+                                            NS_EVENT_STATE_MOZ_UI_VALID);
   }
 
   return NS_OK;
@@ -362,7 +363,8 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
           MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
           doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
                                                   NS_EVENT_STATE_INVALID |
-                                                  NS_EVENT_STATE_MOZ_UI_INVALID);
+                                                  NS_EVENT_STATE_MOZ_UI_INVALID |
+                                                  NS_EVENT_STATE_MOZ_UI_VALID);
         }
       }
     }
@@ -885,7 +887,8 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
       MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
       doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
                                               NS_EVENT_STATE_INVALID |
-                                              NS_EVENT_STATE_MOZ_UI_INVALID);
+                                              NS_EVENT_STATE_MOZ_UI_INVALID |
+                                              NS_EVENT_STATE_MOZ_UI_VALID);
     }
   }
 }
@@ -1327,7 +1330,8 @@ nsHTMLSelectElement::SelectSomething(PRBool aNotify)
           MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
           doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_VALID |
                                                   NS_EVENT_STATE_INVALID |
-                                                  NS_EVENT_STATE_MOZ_UI_INVALID);
+                                                  NS_EVENT_STATE_MOZ_UI_INVALID |
+                                                  NS_EVENT_STATE_MOZ_UI_VALID);
         }
       }
 
@@ -1378,11 +1382,11 @@ nsHTMLSelectElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::disabled) {
       UpdateBarredFromConstraintValidation();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_INVALID;
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     } else if (aName == nsGkAtoms::required) {
       UpdateValueMissingValidityState();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-                NS_EVENT_STATE_MOZ_UI_INVALID;
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
   }
 
@@ -1555,7 +1559,7 @@ nsHTMLSelectElement::IntrinsicState() const
   nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
-    state |= IsValid() ? NS_EVENT_STATE_VALID
+    state |= IsValid() ? NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID
                        : NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   }
 
@@ -2238,7 +2242,7 @@ nsHTMLSelectElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNoti
   UpdateBarredFromConstraintValidation();
 
   aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
-             NS_EVENT_STATE_MOZ_UI_INVALID;
+             NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
 }
 
