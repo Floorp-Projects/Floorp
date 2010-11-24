@@ -105,7 +105,13 @@
 #include "nsIIDNService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIChannelPolicy.h"
+#include "nsISocketProviderService.h"
+#include "nsISocketProvider.h"
 #include "mozilla/Services.h"
+
+#ifdef MOZ_IPC
+#include "nsIRedirectChannelRegistrar.h"
+#endif
 
 #ifdef MOZILLA_INTERNAL_API
 
@@ -1778,6 +1784,24 @@ NS_IsInternalSameURIRedirect(nsIChannel *aOldChannel,
   return NS_SUCCEEDED(oldURI->Equals(newURI, &res)) && res;
 }
 
+#ifdef MOZ_IPC
+inline nsresult
+NS_LinkRedirectChannels(PRUint32 channelId,
+                        nsIParentChannel *parentChannel,
+                        nsIChannel** _result)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+      do_GetService("@mozilla.org/redirectchannelregistrar;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return registrar->LinkChannels(channelId,
+                                 parentChannel,
+                                 _result);
+}
+#endif // MOZ_IPC
+
 /**
  * Helper function to create a random URL string that's properly formed
  * but guaranteed to be invalid.
@@ -1853,6 +1877,20 @@ NS_CheckIsJavaCompatibleURLString(nsCString& urlString, PRBool *result)
   *result = compatible;
 
   return NS_OK;
+}
+
+/**
+ * Make sure Personal Security Manager is initialized
+ */
+inline void
+net_EnsurePSMInit()
+{
+    nsCOMPtr<nsISocketProviderService> spserv =
+            do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID);
+    if (spserv) {
+        nsCOMPtr<nsISocketProvider> provider;
+        spserv->GetSocketProvider("ssl", getter_AddRefs(provider));
+    }
 }
 
 #endif // !nsNetUtil_h__

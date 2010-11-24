@@ -1,0 +1,99 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Content App.
+ *
+ * The Initial Developer of the Original Code is
+ *   The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Josh Matthews <josh@joshmatthews.net> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+include protocol PContent;
+
+using mozilla::null_t;
+
+namespace mozilla {
+namespace dom {
+
+struct ItemData
+{
+  nsString value;
+  PRBool secure;
+};
+
+// A cross-process GetValue result -- either null, or containing the parameters
+// with which to initialize an nsIDOMStorageItem.
+union StorageItem
+{
+  null_t;
+  ItemData;
+};
+
+// This protocol is little more than a thin wrapper around the DOMStorageBase
+// class in nsDOMStorage.h.  The child implementation simply forwards the
+// arguments for any given call to the parent, and returns the result.
+sync protocol PStorage
+{
+  manager PContent;
+
+parent:
+  __delete__();
+
+  Init(bool useDB, bool canUseChromePersist, nsCString domain,
+       nsCString scopeDBKey, nsCString quotaDomainDBKey,
+       nsCString quotaETLDplus1DomainDBKey, PRUint32 storageType);
+  
+  sync GetKeys(bool callerSecure)
+      returns (nsString[] keys);
+  sync GetLength(bool callerSecure)
+      returns (PRUint32 length, nsresult rv);
+  sync GetKey(bool callerSecure, PRUint32 index)
+      returns (nsString key, nsresult rv);
+  sync GetValue(bool callerSecure, nsString key)
+      returns (StorageItem item, nsresult rv);
+  sync SetValue(bool callerSecure, nsString key, nsString data)
+      returns (nsString oldValue, nsresult rv);
+  sync RemoveValue(bool callerSecure, nsString key)
+      returns (nsString oldValue, nsresult rv);
+  sync Clear(bool callerSecure)
+      returns (PRInt32 oldCount, nsresult rv);
+
+  sync GetDBValue(nsString key)
+      returns (nsString value, PRBool secure, nsresult rv);
+  sync SetDBValue(nsString key, nsString value, PRBool secure)
+      returns (nsresult rv);
+  sync SetSecure(nsString key, PRBool secure)
+      returns (nsresult rv);
+};
+
+}
+}

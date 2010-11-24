@@ -91,7 +91,9 @@ static nsIAtom** kRelationAttrs[] =
   &nsAccessibilityAtoms::aria_describedby,
   &nsAccessibilityAtoms::aria_owns,
   &nsAccessibilityAtoms::aria_controls,
-  &nsAccessibilityAtoms::aria_flowto
+  &nsAccessibilityAtoms::aria_flowto,
+  &nsAccessibilityAtoms::_for,
+  &nsAccessibilityAtoms::control
 };
 
 static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
@@ -317,7 +319,7 @@ nsDocAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
       *aState |= nsIAccessibleStates::STATE_FOCUSED;
   }
 
-  if (nsCoreUtils::IsDocumentBusy(mDocument)) {
+  if (!mIsLoaded) {
     *aState |= nsIAccessibleStates::STATE_BUSY;
     if (aExtraState) {
       *aExtraState |= nsIAccessibleStates::EXT_STATE_STALE;
@@ -942,7 +944,7 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, PRInt32 aModType)
 {
-  // XXX TODO: bugs 381599 (partially fixed by 573469), 467143, 472142, 472143.
+  // XXX TODO: bugs 467143, 472142, 472143.
   // Here we will want to cache whatever state we are potentially interested in,
   // such as the existence of aria-pressed for button (so we know if we need to
   // newly expose it as a toggle button) etc.
@@ -1401,20 +1403,22 @@ nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
 void
 nsDocAccessible::UnbindFromDocument(nsAccessible* aAccessible)
 {
+  NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
+               "Unbinding the unbound accessible!");
+
   // Remove an accessible from node-to-accessible map if it exists there.
   if (aAccessible->IsPrimaryForNode() &&
       mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
     mNodeToAccessibleMap.Remove(aAccessible->GetNode());
 
-  RemoveDependentIDsFor(aAccessible);
-
-#ifdef DEBUG
-  NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
-               "Unbinding the unbound accessible!");
-#endif
+  if (!aAccessible->IsDefunct())
+    RemoveDependentIDsFor(aAccessible);
 
   void* uniqueID = aAccessible->UniqueID();
+
+  NS_ASSERTION(!aAccessible->IsDefunct(), "Shutdown the shutdown accessible!");
   aAccessible->Shutdown();
+
   mAccessibleCache.Remove(uniqueID);
 }
 
@@ -1449,16 +1453,14 @@ nsDocAccessible::UpdateTree(nsIContent* aContainerNode,
 
     // The document children were changed; the root content might be affected.
     if (container == this) {
+      // If new root content has been inserted then update it.
       nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
-
-      // No root content (for example HTML document element was inserted but no
-      // body). Nothing to update.
-      if (!rootContent)
-        return;
-
-      // New root content has been inserted, update it and update the tree.
-      if (rootContent != mContent)
+      if (rootContent && rootContent != mContent)
         mContent = rootContent;
+
+      // Continue to update the tree even if we don't have root content.
+      // For example, elements may be inserted under the document element while
+      // there is no HTML body element.
     }
 
     // XXX: Invalidate parent-child relations for container accessible and its
@@ -1623,6 +1625,21 @@ nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsAccessible protected
+
+void
+nsDocAccessible::CacheChildren()
+{
+  // Search for accessible children starting from the document element since
+  // some web pages tend to insert elements under it rather than document body.
+  nsAccTreeWalker walker(mWeakShell, mDocument->GetRootElement(),
+                         GetAllowsAnonChildAccessibles());
+
+  nsRefPtr<nsAccessible> child;
+  while ((child = walker.GetNextChild()) && AppendChild(child));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Protected members
 
 void
@@ -1633,6 +1650,19 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
     nsIAtom* relAttr = *kRelationAttrs[idx];
     if (aRelAttr && aRelAttr != relAttr)
       continue;
+
+    if (relAttr == nsAccessibilityAtoms::_for) {
+      if (!aRelProvider->GetContent()->IsHTML() ||
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::label &&
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::output)
+        continue;
+
+    } else if (relAttr == nsAccessibilityAtoms::control) {
+      if (!aRelProvider->GetContent()->IsXUL() ||
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::label &&
+          aRelProvider->GetContent()->Tag() != nsAccessibilityAtoms::description)
+        continue;
+    }
 
     IDRefsIterator iter(aRelProvider->GetContent(), relAttr);
     while (true) {

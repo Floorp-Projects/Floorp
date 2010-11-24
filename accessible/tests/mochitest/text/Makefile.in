@@ -46,7 +46,10 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+		doc.html \
+		test_doc.html \
 		test_singleline.html \
+		test_whitespaces.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

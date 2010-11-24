@@ -161,12 +161,6 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
 nsBuiltinDecoderStateMachine::~nsBuiltinDecoderStateMachine()
 {
   MOZ_COUNT_DTOR(nsBuiltinDecoderStateMachine);
-
-  if (mAudioStream) {
-    MonitorAutoEnter mon(mDecoder->GetMonitor());
-    mAudioStream->Shutdown();
-    mAudioStream = nsnull;
-  }
 }
 
 PRBool nsBuiltinDecoderStateMachine::HasFutureAudio() const {

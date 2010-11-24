@@ -120,42 +120,6 @@ public:
                                           nsIContent *aContent, nsIAtom *aAttr);
 
   /**
-   * Create the relation if the given relation is null and add the target to it
-   * found in neighbour tree.
-   *
-   * @param  aRelationType      [in] relation type
-   * @param  aRelation          [in, out] relation object
-   * @param  aContent           [in] node defining neighbour tree
-   * @param  aNeighboutAttr     [in] IDRef attribute of the node in neighbour
-   *                            tree pointing to node defining neighbour tree
-   * @param  aNeighboutTagName  [in, optional] tag name of the node in neighbour
-   *                            tree having IDRef attribute pointed by previous
-   *                            argument
-   */
-  static nsresult AddTargetFromNeighbour(PRUint32 aRelationType,
-                                         nsIAccessibleRelation **aRelation,
-                                         nsIContent *aContent,
-                                         nsIAtom *aNeighboutAttr,
-                                         nsIAtom *aNeighboutTagName = nsnull);
-
-  /**
-   * Create the relation if the given relation is null and add the targets to it
-   * that have IDRefs attribute pointing to the given node.
-   *
-   * @param  aRelationType  [in] relation type
-   * @param  aRelation      [in, out] relation object
-   * @param  aRootContent   [in] root node we search inside of
-   * @param  aContent       [in] node having ID
-   * @param  aIDRefsAttr    [in] IDRefs attribute
-   */
-  static nsresult
-    AddTargetFromChildrenHavingIDRefsAttr(PRUint32 aRelationType,
-                                          nsIAccessibleRelation **aRelation,
-                                          nsIContent *aRootContent,
-                                          nsIContent *aContent,
-                                          nsIAtom *aIDRefsAttr);
-
-  /**
    * Query nsAccessibleRelation from the given nsIAccessibleRelation.
    */
   static already_AddRefed<nsAccessibleRelation>

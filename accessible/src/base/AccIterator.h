@@ -131,4 +131,100 @@ private:
   PRUint32 mIndex;
 };
 
+
+/**
+ * Used to iterate through HTML labels associated with the given element.
+ */
+class HTMLLabelIterator
+{
+public:
+  enum LabelFilter {
+    eAllLabels,
+    eSkipAncestorLabel
+  };
+
+  HTMLLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement,
+                    LabelFilter aFilter = eAllLabels);
+
+  /**
+   * Return next label accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  HTMLLabelIterator();
+  HTMLLabelIterator(const HTMLLabelIterator&);
+  HTMLLabelIterator& operator = (const HTMLLabelIterator&);
+
+  RelatedAccIterator mRelIter;
+  nsIContent* mElement;
+  LabelFilter mLabelFilter;
+};
+
+
+/**
+ * Used to iterate through HTML outputs associated with the given element.
+ */
+class HTMLOutputIterator
+{
+public:
+  HTMLOutputIterator(nsDocAccessible* aDocument, nsIContent* aElement);
+
+  /**
+   * Return next output accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  HTMLOutputIterator();
+  HTMLOutputIterator(const HTMLOutputIterator&);
+  HTMLOutputIterator& operator = (const HTMLOutputIterator&);
+
+  RelatedAccIterator mRelIter;
+};
+
+
+/**
+ * Used to iterate through XUL labels associated with the given element.
+ */
+class XULLabelIterator
+{
+public:
+  XULLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement);
+
+  /**
+   * Return next label accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  XULLabelIterator();
+  XULLabelIterator(const XULLabelIterator&);
+  XULLabelIterator& operator = (const XULLabelIterator&);
+
+  RelatedAccIterator mRelIter;
+};
+
+
+/**
+ * Used to iterate through XUL descriptions associated with the given element.
+ */
+class XULDescriptionIterator
+{
+public:
+  XULDescriptionIterator(nsDocAccessible* aDocument, nsIContent* aElement);
+
+  /**
+   * Return next description accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  XULDescriptionIterator();
+  XULDescriptionIterator(const XULDescriptionIterator&);
+  XULDescriptionIterator& operator = (const XULDescriptionIterator&);
+
+  RelatedAccIterator mRelIter;
+};
+
 #endif

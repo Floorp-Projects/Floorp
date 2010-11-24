@@ -63,6 +63,7 @@ function commonDialogOnLoad() {
     let dialog = document.documentElement;
 
     let ui = {
+        prompt             : window,
         loginContainer     : document.getElementById("loginContainer"),
         loginTextbox       : document.getElementById("loginTextbox"),
         loginLabel         : document.getElementById("loginLabel"),

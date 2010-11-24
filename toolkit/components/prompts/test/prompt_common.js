@@ -71,11 +71,11 @@ function getTabModalPromptBox(domWin) {
     }
 
     try {
-        // Get topmost window, in case we're in a frame.
-        var promptWin = domWin.top
+        // Get the topmost window, in case we're in a frame.
+        var promptWin = domWin.top;
 
         // Get the chrome window for the content window we're using.
-        // .wrappedJSObject needed here -- see bug 422974 comment 5.
+        // (Unwrap because we need a non-IDL property below.)
         var chromeWin = getChromeWindow(promptWin).wrappedJSObject;
 
         if (chromeWin.getTabModalPromptBox)

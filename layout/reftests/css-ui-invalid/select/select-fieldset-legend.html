@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if select has a disabled fieldset ancestor, but is in the first
+             legend, it is not barred from constraint validation and should be
+             affected by :-moz-ui-invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function onLoadHandler()
+    {
+      var e = document.getElementById('b');
+      e.setCustomValidity('foo');
+      document.documentElement.className='';
+    }
+  </script>
+  <body onload="onLoadHandler();">
+    <fieldset disabled>
+      <legend>
+        <select class='invalid' id='b'></select>
+      </legend>
+    </fieldset>
+  </body>
+</html>

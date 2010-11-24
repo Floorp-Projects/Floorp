@@ -62,7 +62,7 @@ namespace {
         JSContext* mContext;
         JSObject* mObj;
         uintN mOldFlags;
-        JS_DECL_USE_GUARD_OBJECT_NOTIFIER;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
         static uintN GetFlags(JSContext* cx, JSObject* obj) {
             jsval v;
@@ -118,7 +118,7 @@ namespace {
 
     class AutoCheckOperation : public ACOBase
     {
-        JS_DECL_USE_GUARD_OBJECT_NOTIFIER;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER
     public:
         AutoCheckOperation(JSContext* cx,
                            ObjectWrapperParent* owp

@@ -37,7 +37,6 @@ extern "C" {  // necessary for Leopard
   #include <fcntl.h>
   #include <mach-o/loader.h>
   #include <mach-o/swap.h>
-  #include <openssl/md5.h>
   #include <openssl/sha.h>
   #include <stdio.h>
   #include <stdlib.h>
@@ -47,6 +46,7 @@ extern "C" {  // necessary for Leopard
   #include <unistd.h>
 }
 
+#include "common/md5.h"
 #include "common/mac/macho_id.h"
 #include "common/mac/macho_walker.h"
 #include "common/mac/macho_utilities.h"
@@ -117,7 +117,7 @@ void MachoID::UpdateCRC(unsigned char *bytes, size_t size) {
 }
 
 void MachoID::UpdateMD5(unsigned char *bytes, size_t size) {
-  MD5_Update(&md5_context_, bytes, size);
+  MD5Update(&md5_context_, bytes, size);
 }
 
 void MachoID::UpdateSHA1(unsigned char *bytes, size_t size) {
@@ -225,15 +225,12 @@ bool MachoID::MD5(int cpu_type, unsigned char identifier[16]) {
   MachoWalker walker(path_, WalkerCB, this);
   update_function_ = &MachoID::UpdateMD5;
 
-  if (MD5_Init(&md5_context_)) {
-    if (!walker.WalkHeader(cpu_type))
-      return false;
+  MD5Init(&md5_context_);
+  if (!walker.WalkHeader(cpu_type))
+    return false;
 
-    MD5_Final(identifier, &md5_context_);
-    return true;
-  }
-
-  return false;
+  MD5Final(identifier, &md5_context_);
+  return true;
 }
 
 bool MachoID::SHA1(int cpu_type, unsigned char identifier[16]) {
