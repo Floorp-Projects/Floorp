@@ -211,7 +211,7 @@ let UI = {
       var observer = {
         observe : function(subject, topic, data) {
           if (topic == "quit-application-requested") {
-            if (self.isTabViewVisible()) {
+            if (self._isTabViewVisible()) {
               GroupItems.removeHiddenGroups();
               TabItems.saveAll(true);
             }
@@ -380,9 +380,9 @@ let UI = {
   },
 
   // ----------
-  // Function: isTabViewVisible
+  // Function: _isTabViewVisible
   // Returns true if the TabView UI is currently shown.
-  isTabViewVisible: function UI_isTabViewVisible() {
+  _isTabViewVisible: function UI__isTabViewVisible() {
     return gTabViewDeck.selectedIndex == 1;
   },
 
@@ -403,7 +403,7 @@ let UI = {
   // Parameters:
   //   zoomOut - true for zoom out animation, false for nothing.
   showTabView: function UI_showTabView(zoomOut) {
-    if (this.isTabViewVisible())
+    if (this._isTabViewVisible())
       return;
 
     // initialize the direction of the page
@@ -469,7 +469,7 @@ let UI = {
   // Function: hideTabView
   // Hides TabView and shows the main browser UI.
   hideTabView: function UI_hideTabView() {
-    if (!this.isTabViewVisible())
+    if (!this._isTabViewVisible())
       return;
 
     // another tab might be select if user decides to stay on a page when
@@ -568,8 +568,8 @@ let UI = {
         self._privateBrowsing.transitionStage = 3;
         if (aData == "enter") {
           // If we are in Tab View, exit. 
-          self._privateBrowsing.wasInTabView = self.isTabViewVisible();
-          if (self.isTabViewVisible())
+          self._privateBrowsing.wasInTabView = self._isTabViewVisible();
+          if (self._isTabViewVisible())
             self.goToTab(gBrowser.selectedTab);
         }
       } else if (aTopic == "private-browsing-change-granted") {
@@ -607,7 +607,7 @@ let UI = {
       if (tab.pinned)
         GroupItems.removeAppTab(tab);
         
-      if (self.isTabViewVisible()) {
+      if (self._isTabViewVisible()) {
         // just closed the selected tab in the TabView interface.
         if (self._currentTab == tab)
           self._closedSelectedTabInTabView = true;
@@ -720,7 +720,7 @@ let UI = {
     this._currentTab = tab;
 
     // if the last visible tab has just been closed, don't show the chrome UI.
-    if (this.isTabViewVisible() &&
+    if (this._isTabViewVisible() &&
         (this._closedLastVisibleTab || this._closedSelectedTabInTabView)) {
       this._closedLastVisibleTab = false;
       this._closedSelectedTabInTabView = false;
@@ -732,7 +732,7 @@ let UI = {
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
-    if (this.isTabViewVisible())
+    if (this._isTabViewVisible())
       this.hideTabView();
 
     // another tab might be selected when hideTabView() is invoked so a
@@ -790,7 +790,7 @@ let UI = {
   // Parameters:
   //   groupItem - the groupItem which would be used for re-ordering tabs.
   setReorderTabsOnHide: function UI_setReorderTabsOnHide(groupItem) {
-    if (this.isTabViewVisible()) {
+    if (this._isTabViewVisible()) {
       var index = this._reorderTabsOnHide.indexOf(groupItem);
       if (index == -1)
         this._reorderTabsOnHide.push(groupItem);
@@ -804,7 +804,7 @@ let UI = {
   // Parameters:
   //   groupItem - the groupItem which would be used for re-ordering tab items.
   setReorderTabItemsOnShow: function UI_setReorderTabItemsOnShow(groupItem) {
-    if (!this.isTabViewVisible()) {
+    if (!this._isTabViewVisible()) {
       var index = this._reorderTabItemsOnShow.indexOf(groupItem);
       if (index == -1)
         this._reorderTabItemsOnShow.push(groupItem);
@@ -1088,7 +1088,7 @@ let UI = {
 
     // If TabView isn't focused and is not showing, don't perform a resize.
     // This resize really slows things down.
-    if (!force && !this.isTabViewVisible())
+    if (!force && !this._isTabViewVisible())
       return;
 
     var oldPageBounds = new Rect(this._pageBounds);
