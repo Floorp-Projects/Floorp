@@ -52,4 +52,4 @@ PrefRec.prototype = {
   _logName: "Record.Pref",
 };
 
-Utils.deferGetSet(PrefRec, "cleartext", ["type", "value"]);
+Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
