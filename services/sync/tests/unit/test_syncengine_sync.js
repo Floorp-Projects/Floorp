@@ -191,7 +191,6 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     // Sync was reset and server data was wiped
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
@@ -252,7 +251,6 @@ function test_syncStartup_metaGet404() {
 
     _("Sync was reset and server data was wiped");
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
@@ -372,7 +370,6 @@ function test_syncStartup_syncIDMismatchResetsClient() {
 
     // Sync was reset
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.lastSyncLocal, 0);
 
   } finally {
     server.stop(do_test_finished);
@@ -438,7 +435,6 @@ function test_syncStartup_badKeyWipesServerData() {
 
     // Sync was reset and server data was wiped
     do_check_eq(engine.lastSync, 0);
-    do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
 
@@ -877,8 +873,8 @@ function test_uploadOutgoing_failed() {
     do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
-    engine._syncStartup();
-    engine._uploadOutgoing();
+    engine.enabled = true;
+    engine.sync();
 
     // Local timestamp has been set.
     do_check_true(engine.lastSyncLocal > 0);
@@ -1095,15 +1091,18 @@ function test_syncFinish_deleteLotsInBatches() {
   }
 }
 
-function test_sync_rollback() {
-  _("SyncEngine.sync() rolls back tracker's changedIDs when syncing fails.");
+
+function test_sync_partialUpload() {
+  _("SyncEngine.sync() keeps changedIDs that couldn't be uploaded.");
+
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
-  // Set up a server without a "steam" collection handler, so sync will fail.
   let crypto_steam = new ServerWBO('steam');
+  let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler()
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
+      "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
   createAndUploadKeypair();
@@ -1112,30 +1111,33 @@ function test_sync_rollback() {
   let engine = makeSteamEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
   engine.lastSyncLocal = 456;
-  engine._store.items = {flying: "LNER Class A3 4472",
-                         scotsman: "Flying Scotsman",
-                         peppercorn: "Peppercorn Class"};
 
-  // Mark these records as changed 
-  const FLYING_CHANGED = 12345;
-  const SCOTSMAN_CHANGED = 23456;
-  const PEPPERCORN_CHANGED = 34567;
-  engine._tracker.addChangedID('flying', FLYING_CHANGED);
-  engine._tracker.addChangedID('scotsman', SCOTSMAN_CHANGED);
-  engine._tracker.addChangedID('peppercorn', PEPPERCORN_CHANGED);
+  // Let the third upload fail completely
+  var noOfUploads = 0;
+  collection.post = (function(orig) {
+    return function() {
+      if (noOfUploads == 2)
+        throw "FAIL!";
+      noOfUploads++;
+      return orig.apply(this, arguments);
+    };
+  }(collection.post));
+
+  // Create a bunch of records (and server side handlers)
+  for (let i = 0; i < 234; i++) {
+    let id = 'record-no-' + i;
+    engine._store.items[id] = "Record No. " + i;
+    engine._tracker.addChangedID(id, i);
+    // Let two items in the first upload batch fail.
+    if ((i != 23) && (i != 42))
+      collection.wbos[id] = new ServerWBO(id);
+  }
 
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
 
-
   try {
-
-    // Confirm initial environment
-    do_check_eq(engine.lastSyncLocal, 456);
-    do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
-    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
-    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
     engine.enabled = true;
     let error;
@@ -1146,11 +1148,20 @@ function test_sync_rollback() {
     }
     do_check_true(!!error);
 
-    // Verify that the tracker state and local timestamp has been rolled back.
-    do_check_eq(engine.lastSyncLocal, 456);
-    do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
-    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
-    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+    // The timestamp has been updated.
+    do_check_true(engine.lastSyncLocal > 456);
+
+    for (let i = 0; i < 234; i++) {
+      let id = 'record-no-' + i;
+      // Ensure failed records are back in the tracker:
+      // * records no. 23 and 42 were rejected by the server,
+      // * records no. 200 and higher couldn't be uploaded because we failed
+      //   hard on the 3rd upload.
+      if ((i == 23) || (i == 42) || (i >= 200))
+        do_check_eq(engine._tracker.changedIDs[id], i);
+      else
+        do_check_false(id in engine._tracker.changedIDs);
+    }
 
   } finally {
     server.stop(do_test_finished);
@@ -1243,7 +1254,7 @@ function run_test() {
   test_syncFinish_noDelete();
   test_syncFinish_deleteByIds();
   test_syncFinish_deleteLotsInBatches();
-  test_sync_rollback();
+  test_sync_partialUpload();
   test_canDecrypt_noCryptoMeta();
   test_canDecrypt_true();
 }
