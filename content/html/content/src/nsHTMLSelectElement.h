@@ -301,7 +301,9 @@ public:
                              PRBool aNotify);
   
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-  virtual PRBool IsDoneAddingChildren();
+  virtual PRBool IsDoneAddingChildren() {
+    return mIsDoneAddingChildren;
+  }
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -348,7 +350,7 @@ protected:
    * and set mSelectedIndex to it.
    * @param aStartIndex the index to start with
    */
-  void FindSelectedIndex(PRInt32 aStartIndex);
+  void FindSelectedIndex(PRInt32 aStartIndex, PRBool aNotify);
   /**
    * Select some option if possible (generally the first non-disabled option).
    * @return true if something was selected, false otherwise
@@ -496,7 +498,7 @@ protected:
   /**
    * Rebuilds the options array from scratch as a fallback in error cases.
    */
-  void RebuildOptionsArray();
+  void RebuildOptionsArray(PRBool aNotify);
 
 #ifdef DEBUG
   void VerifyOptionsArray();
@@ -506,6 +508,10 @@ protected:
   {
     return PR_TRUE;
   }
+
+  nsresult SetSelectedIndexInternal(PRInt32 aIndex, PRBool aNotify);
+
+  void SetSelectionChanged(PRBool aValue, PRBool aNotify);
 
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
@@ -521,6 +527,15 @@ protected:
    * True if DoneAddingChildren will get called but shouldn't restore state.
    */
   PRPackedBool    mInhibitStateRestoration;
+  /**
+   * True if the selection has changed since the element's creation.
+   */
+  PRPackedBool    mSelectionHasChanged;
+  /**
+   * True if the default selected option has been set.
+   */
+  PRPackedBool    mDefaultSelectionSet;
+
   /** The number of non-options as children of the select */
   PRUint32  mNonOptionChildren;
   /** The number of optgroups anywhere under the select */
