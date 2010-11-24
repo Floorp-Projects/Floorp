@@ -14,7 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
@@ -37,6 +37,11 @@
 
 #include "nsISupports.idl"
 
+/**
+ * Interface used to generate random data.
+ *
+ * @threadsafe
+ */
 [scriptable, uuid(2362d97a-747a-4576-8863-697667309209)]
 interface nsIRandomGenerator : nsISupports {
   /**

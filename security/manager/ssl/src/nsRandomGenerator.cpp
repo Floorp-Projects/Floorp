@@ -14,7 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
@@ -41,7 +41,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// nsRandomGenerator
 
-NS_IMPL_ISUPPORTS1(nsRandomGenerator, nsIRandomGenerator)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRandomGenerator, nsIRandomGenerator)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIRandomGenerator
