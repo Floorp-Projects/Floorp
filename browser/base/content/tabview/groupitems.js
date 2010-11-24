@@ -1807,7 +1807,6 @@ let GroupItems = {
   // Arranges all of the groupItems into a grid.
   arrange: function GroupItems_arrange() {
     var bounds = Items.getPageBounds();
-    bounds.bottom -= 20; // for the dev menu
 
     var count = this.groupItems.length - 1;
     var columns = Math.ceil(Math.sqrt(count));
