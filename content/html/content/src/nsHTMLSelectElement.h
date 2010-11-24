@@ -61,6 +61,7 @@
 #include "nsCheapSets.h"
 #include "nsLayoutErrors.h"
 #include "nsHTMLOptionElement.h"
+#include "nsHTMLFormElement.h"
 
 class nsHTMLSelectElement;
 
@@ -267,6 +268,7 @@ public:
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -513,6 +515,39 @@ protected:
 
   void SetSelectionChanged(PRBool aValue, PRBool aNotify);
 
+  /**
+   * Return whether an invalid element should have a specific UI for being invalid
+   * (with :-moz-ui-invalid pseudo-class).
+   *
+   * @return Whether the invalid element should have a UI for being invalid.
+   * @note The caller has to be sure the element is invalid before calling.
+   */
+  bool ShouldShowInvalidUI() const {
+    NS_ASSERTION(!IsValid(), "You should not call ShouldShowInvalidUI if the "
+                             "element is valid!");
+
+    /**
+     * Always show the invalid UI if:
+     * - the form has already tried to be submitted but was invalid;
+     * - the element is suffering from a custom error;
+     *
+     * Otherwise, show the invalid UI if the selection has been changed.
+     */
+    return mSelectionHasChanged ||
+           (mForm && mForm->HasEverTriedInvalidSubmit()) ||
+           GetValidityState(VALIDITY_STATE_CUSTOM_ERROR);
+  }
+
+  /**
+   * Return whether an element should show the valid UI.
+   *
+   * @return Whether the valid UI should be shown.
+   * @note This doesn't take into account the validity of the element.
+   */
+  bool ShouldShowValidUI() const {
+    return mSelectionHasChanged ||
+           (mForm && mForm->HasEverTriedInvalidSubmit());
+  }
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
@@ -535,6 +570,14 @@ protected:
    * True if the default selected option has been set.
    */
   PRPackedBool    mDefaultSelectionSet;
+  /**
+   * True if :-moz-ui-invalid can be shown.
+   */
+  PRPackedBool    mCanShowInvalidUI;
+  /**
+   * True if :-moz-ui-valid can be shown.
+   */
+  PRPackedBool    mCanShowValidUI;
 
   /** The number of non-options as children of the select */
   PRUint32  mNonOptionChildren;

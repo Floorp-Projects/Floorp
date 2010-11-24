@@ -72,7 +72,6 @@
 #include "nsEventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
-#include "nsHTMLFormElement.h"
 
 using namespace mozilla::dom;
 
@@ -151,6 +150,8 @@ nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT)),
     mSelectionHasChanged(PR_FALSE),
     mDefaultSelectionSet(PR_FALSE),
+    mCanShowInvalidUI(PR_TRUE),
+    mCanShowValidUI(PR_TRUE),
     mNonOptionChildren(0),
     mOptGroupCount(0),
     mSelectedIndex(-1)
@@ -1565,6 +1566,35 @@ nsHTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
 }
 
+nsresult
+nsHTMLSelectElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+    // If the invalid UI is shown, we should show it while focused and
+    // update the invalid/valid UI.
+    mCanShowInvalidUI = !IsValid() && ShouldShowInvalidUI();
+
+    // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
+    // UI while focused.
+    mCanShowValidUI = ShouldShowValidUI();
+
+    // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
+    // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
+  } else if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+    mCanShowInvalidUI = PR_TRUE;
+    mCanShowValidUI = PR_TRUE;
+
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_MOZ_UI_VALID |
+                                              NS_EVENT_STATE_MOZ_UI_INVALID);
+    }
+  }
+
+  return nsGenericHTMLFormElement::PostHandleEvent(aVisitor);
+}
+
 nsEventStates
 nsHTMLSelectElement::IntrinsicState() const
 {
@@ -1573,18 +1603,25 @@ nsHTMLSelectElement::IntrinsicState() const
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
       state |= NS_EVENT_STATE_VALID;
-
-      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
-          mSelectionHasChanged) {
-        state |= NS_EVENT_STATE_MOZ_UI_VALID;
-      }
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
-      if ((mForm && mForm->HasEverTriedInvalidSubmit()) ||
-          mSelectionHasChanged || GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
+      if (mCanShowInvalidUI && ShouldShowInvalidUI()) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
+    }
+
+    // :-moz-ui-valid applies if all the following are true:
+    // 1. The element is not focused, or had either :-moz-ui-valid or
+    //    :-moz-ui-invalid applying before it was focused ;
+    // 2. The element is either valid or isn't allowed to have
+    //    :-moz-ui-invalid applying ;
+    // 3. The rules to have :-moz-ui-valid applying are fulfilled
+    //    (see ShouldShowValidUI()).
+    if (mCanShowValidUI &&
+        (IsValid() || !mCanShowInvalidUI) &&
+        ShouldShowValidUI()) {
+      state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }
 
