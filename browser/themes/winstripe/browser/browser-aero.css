@@ -192,10 +192,13 @@
     background-color: white;
   }
 
+  .tabbrowser-tab:not(:-moz-lwtheme) {
+    text-shadow: none;
+  }
+
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
     background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
-    text-shadow: none;
     color: black;
   }
 
