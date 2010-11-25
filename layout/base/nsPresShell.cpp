@@ -4338,22 +4338,6 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
       if (aFlags & nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY) {
         break;
       }
-
-      nsRect scrollPort = sf->GetScrollPortRect();
-      if (rect.XMost() < scrollPort.x ||
-          rect.x > scrollPort.XMost() ||
-          rect.YMost() < scrollPort.y ||
-          rect.y > scrollPort.YMost()) {
-        // We tried to show the rectangle, but none of it is visible,
-        // not even an edge.
-        // Stop trying to scroll ancestors into view.
-        break;
-      }
-
-      // Restrict rect to the area that is actually visible through
-      // the scrollport. We don't want to try to scroll some clipped-out
-      // part of 'rect' into view in some ancestor.
-      rect.IntersectRect(rect, sf->GetScrollPortRect());
     }
     rect += container->GetPosition();
     nsIFrame* parent = container->GetParent();
