@@ -70,6 +70,7 @@ _TEST_FILES =\
 		test_selection.html \
 		test_statechange.html \
 		test_text.html \
+		test_textattrchange.html \
 		test_tree.xul \
 		test_valuechange.html \
 		$(NULL)
