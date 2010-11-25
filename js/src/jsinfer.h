@@ -62,7 +62,6 @@ namespace types {
 
 /* Forward declarations. */
 struct TypeSet;
-struct VariableSet;
 struct TypeCallsite;
 struct TypeObject;
 struct TypeFunction;
@@ -364,17 +363,11 @@ struct TypeCallsite
     inline JSArenaPool & pool();
 };
 
-/* Type information about a variable or property. */
+/* Type information about a variable. */
 struct Variable
 {
-    /*
-     * Identifier for this variable.  Variables representing the aggregate index
-     * property of an object have JSID_VOID, other variables have strings.
-     */
+    /* Variable identifier. */
     jsid id;
-
-    /* Next variable in its declared scope. */
-    Variable *next;
 
     /*
      * Possible types for this variable.  This does not account for the initial
@@ -384,57 +377,31 @@ struct Variable
     TypeSet types;
 
     Variable(JSArenaPool *pool, jsid id)
-        : id(id), next(NULL), types(pool)
+        : id(id), types(pool)
     {}
+
+    static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
+    static jsid getKey(Variable *v) { return v->id; }
 };
 
-/* Type information about a set of variables or properties. */
-struct VariableSet
+/* Type information about a property. */
+struct Property
 {
-#ifdef DEBUG
-    jsid name_;
+    /* Identifier for this property, JSID_VOID for the aggregate integer index property. */
+    jsid id;
 
-    jsid name() const { return name_; }
-#else
-    jsid name() const { return JSID_VOID; }
-#endif
+    /* Possible types for this property, including types inherited from prototypes. */
+    TypeSet types;
 
-    /* List of variables in this set which have been accessed explicitly. */
-    Variable *variables;
+    /* Types for this property resulting from direct sets on the object. */
+    TypeSet ownTypes;
 
-    /*
-     * Other variable sets which should receive all variables added to this set.
-     * For handling prototypes.
-     */
-    VariableSet **propagateSet;
-    unsigned propagateCount;
+    Property(JSArenaPool *pool, jsid id)
+        : id(id), types(pool), ownTypes(pool)
+    {}
 
-    JSArenaPool *pool;
-
-    /* Whether the variables in this set are unknown. */
-    bool unknown;
-
-    VariableSet(JSArenaPool *pool)
-        : variables(NULL), propagateSet(NULL), propagateCount(NULL), pool(pool), unknown(false)
-    {
-        JS_ASSERT(pool);
-    }
-
-    /* Get or make the types for the specified id. */
-    inline TypeSet* getVariable(JSContext *cx, jsid id);
-
-    /*
-     * Mark target as receiving all variables and type information added to this
-     * set (whether it is currently there or will be added in the future).
-     * If excludePrototype is set the 'prototype' variable is omitted from the
-     * propagation.  Returns whether there was already a propagation to target.
-     */
-    bool addPropagate(JSContext *cx, VariableSet *target, bool excludePrototype);
-
-    /* Mark all existing and future properties of this set as unknown. */
-    void markUnknown(JSContext *cx);
-
-    void print(JSContext *cx);
+    static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
+    static jsid getKey(Property *p) { return p->id; }
 };
 
 /* Type information about an object accessed by a script. */
@@ -451,29 +418,36 @@ struct TypeObject
     bool isFunction;
 
     /*
-     * Properties of this object.  This is filled in lazily for function objects
-     * to avoid unnecessary property and prototype object creation.  Don't access
-     * this directly, use properties() below.
+     * Properties of this object. This is filled in lazily for function objects
+     * to avoid unnecessary prototype and new object creation.
      */
-    VariableSet propertySet;
-    bool propertiesFilled;
+    Property **propertySet;
+    unsigned propertyCount;
 
-    /* Link in the list of objects in the property set's pool. */
+    /*
+     * Prototype of this object. This is immutable; setting or changing the __proto__
+     * property of an object causes its properties to become unknown.
+     */
+    TypeObject *prototype;
+
+    /* List of objects using this one as their prototype. */
+    TypeObject *instanceList;
+
+    /* Chain for objects sharing the same prototype. */
+    TypeObject *instanceNext;
+
+    /* Object to use in ConstructThis with this as the prototype. :XXX: fuse with instance. */
+    TypeObject *newObject;
+
+    /*
+     * Pool in which this object was allocated, and link in the list of objects
+     * for that pool.
+     */
+    JSArenaPool *pool;
     TypeObject *next;
 
-    /*
-     * Whether all properties of the Object and/or Array prototype have been
-     * propagated into this object.
-     */
-    bool hasObjectPropagation;
-    bool hasArrayPropagation;
-
-    /*
-     * Whether this object is keyed to some allocation site.  If a type set only
-     * contains objects allocated at different sites, it is not considered
-     * to be polymorphic.
-     */
-    bool isInitObject;
+    /* Whether all the properties of this object are unknown. */
+    bool unknownProperties;
 
     /* Whether all objects this represents are dense arrays. */
     bool isDenseArray;
@@ -484,15 +458,12 @@ struct TypeObject
     /*
      * Whether this object is thought to be a possible packed array: either it came
      * from a [a,b,c] initializer, an Array(a,b,c) call, or is another array for
-     * which we've seen what looks like initialization code. This is pure heuristic.
+     * which we've seen what looks like initialization code. This is purely heuristic.
      */
     bool possiblePackedArray;
 
     /* Make an object with the specified name. */
-    TypeObject(JSContext *cx, JSArenaPool *pool, jsid id, bool isArray);
-
-    /* Propagate properties from this object to target. */
-    bool addPropagate(JSContext *cx, TypeObject *target, bool excludePrototype = true);
+    TypeObject(JSContext *cx, JSArenaPool *pool, jsid id, TypeObject *prototype);
 
     /* Coerce this object to a function. */
     TypeFunction* asFunction()
@@ -501,16 +472,24 @@ struct TypeObject
         return (TypeFunction *) this;
     }
 
-    JSArenaPool & pool() { return *propertySet.pool; }
+    /*
+     * Get or create a property of this object. Only call this for properties which
+     * a script accesses explicitly. 'assign' indicates whether this is for an
+     * assignment, and the own types of the property will be used instead of
+     * aggregate types.
+     */
+    inline TypeSet *getProperty(JSContext *cx, jsid id, bool assign);
 
-    /* Get the properties of this object, filled in lazily. */
-    inline VariableSet& properties(JSContext *cx);
+    /* Whether this type has Array.prototype in its prototype chain. */
+    inline bool isArray(JSContext *cx);
 
-    /* Whether the properties of this object are unknown. */
-    bool unknownProperties() { return propertySet.unknown; }
+    /* Helpers */
 
-    /* Get the type set for all integer index properties of this object. */
-    inline TypeSet* indexTypes(JSContext *cx);
+    void addPrototype(JSContext *cx, TypeObject *proto);
+    void addProperty(JSContext *cx, jsid id, Property *&prop);
+    void markUnknown(JSContext *cx);
+    void storeToInstances(JSContext *cx, Property *base);
+    TypeObject *getNewObject(JSContext *cx);
 
     void print(JSContext *cx);
 };
@@ -524,14 +503,8 @@ struct TypeFunction : public TypeObject
     /* If this function is interpreted, the corresponding script. */
     JSScript *script;
 
-    /*
-     * The default prototype object of this function.  This may be overridden
-     * for user-defined functions.  Created on demand through prototype().
-     */
+    /* Default prototype object of this function. */
     TypeObject *prototypeObject;
-
-    /* The object to use when this function is invoked using 'new'. */
-    TypeObject *newObject;
 
     /*
      * For interpreted functions and functions with dynamic handlers, the possible
@@ -552,32 +525,8 @@ struct TypeFunction : public TypeObject
      */
     bool isGeneric;
 
-    TypeFunction(JSContext *cx, JSArenaPool *pool, jsid id);
-
-    /* Get the object created when this function is invoked using 'new'. */
-    inline TypeObject* getNewObject(JSContext *cx);
-
-    /* Get the prototype object for this function. */
-    TypeObject* prototype(JSContext *cx)
-    {
-        /* The prototype is created when the properties are filled in. */
-        properties(cx);
-        return prototypeObject;
-    }
-
-    void fillProperties(JSContext *cx);
+    TypeFunction(JSContext *cx, JSArenaPool *pool, jsid id, TypeObject *prototype);
 };
-
-inline VariableSet&
-TypeObject::properties(JSContext *cx)
-{
-    if (!propertiesFilled) {
-        propertiesFilled = true;
-        if (isFunction)
-            asFunction()->fillProperties(cx);
-    }
-    return propertySet;
-}
 
 /*
  * Singleton type objects referred to at various points in the system.
@@ -586,75 +535,50 @@ TypeObject::properties(JSContext *cx)
  */
 enum FixedTypeObjectName
 {
-    /* Functions which no propagation is performed for. */
+    /* Functions. */
     TYPE_OBJECT_OBJECT,
     TYPE_OBJECT_FUNCTION,
     TYPE_OBJECT_ARRAY,
     TYPE_OBJECT_FUNCTION_PROTOTYPE,
-    TYPE_OBJECT_EMPTY_FUNCTION,  /* Propagated from Function.prototype */
+    TYPE_OBJECT_EMPTY_FUNCTION,
 
-    TYPE_OBJECT_FUNCTION_LAST = TYPE_OBJECT_EMPTY_FUNCTION,
-
-    /* Objects which no propagation is performed for. */
+    /* Builtin prototypes and 'new' objects. */
     TYPE_OBJECT_OBJECT_PROTOTYPE,
     TYPE_OBJECT_ARRAY_PROTOTYPE,
     TYPE_OBJECT_NEW_BOOLEAN,
-    TYPE_OBJECT_NEW_DATE,
-    TYPE_OBJECT_NEW_ERROR,
-    TYPE_OBJECT_NEW_ITERATOR,
     TYPE_OBJECT_NEW_NUMBER,
     TYPE_OBJECT_NEW_STRING,
-    TYPE_OBJECT_NEW_PROXY,
     TYPE_OBJECT_NEW_REGEXP,
+    TYPE_OBJECT_NEW_ITERATOR,
+    TYPE_OBJECT_NEW_GENERATOR,
     TYPE_OBJECT_NEW_ARRAYBUFFER,
-    TYPE_OBJECT_NEW_INT8ARRAY,
-    TYPE_OBJECT_NEW_UINT8ARRAY,
-    TYPE_OBJECT_NEW_INT16ARRAY,
-    TYPE_OBJECT_NEW_UINT16ARRAY,
-    TYPE_OBJECT_NEW_INT32ARRAY,
-    TYPE_OBJECT_NEW_UINT32ARRAY,
-    TYPE_OBJECT_NEW_FLOAT32ARRAY,
-    TYPE_OBJECT_NEW_FLOAT64ARRAY,
-    TYPE_OBJECT_NEW_UINT8CLAMPEDARRAY,
-    TYPE_OBJECT_MAGIC,   /* Placeholder for magic values. */
-    TYPE_OBJECT_GETSET,  /* Placeholder for properties with a scripted getter/setter. */
 
-    TYPE_OBJECT_BASE_LAST = TYPE_OBJECT_GETSET,
-
-    /* Objects which no propagation is performed for, and which are monitored. */
-    TYPE_OBJECT_NEW_XML,
-    TYPE_OBJECT_NEW_QNAME,
-    TYPE_OBJECT_NEW_NAMESPACE,
+    /* Builtin objects with unknown properties. */
+    TYPE_OBJECT_XML,
     TYPE_OBJECT_ARGUMENTS,
     TYPE_OBJECT_NOSUCHMETHOD,
     TYPE_OBJECT_NOSUCHMETHOD_ARGUMENTS,
     TYPE_OBJECT_PROPERTY_DESCRIPTOR,
     TYPE_OBJECT_KEY_VALUE_PAIR,
+    TYPE_OBJECT_JSON,
+    TYPE_OBJECT_PROXY,
 
-    TYPE_OBJECT_MONITOR_LAST = TYPE_OBJECT_KEY_VALUE_PAIR,
-
-    /* Objects which Array.prototype propagation is performed for. */
+    /* Builtin Array objects. */
     TYPE_OBJECT_REGEXP_MATCH_ARRAY,
     TYPE_OBJECT_STRING_SPLIT_ARRAY,
     TYPE_OBJECT_UNKNOWN_ARRAY,
     TYPE_OBJECT_CLONE_ARRAY,
     TYPE_OBJECT_PROPERTY_ARRAY,
-    TYPE_OBJECT_NAMESPACE_ARRAY,
-    TYPE_OBJECT_JSON_ARRAY,
     TYPE_OBJECT_REFLECT_ARRAY,
 
-    TYPE_OBJECT_ARRAY_LAST = TYPE_OBJECT_REFLECT_ARRAY,
-
-    /* Objects which Object.prototype propagation is performed for. */
+    /* Builtin Object objects. */
     TYPE_OBJECT_UNKNOWN_OBJECT,
     TYPE_OBJECT_CLONE_OBJECT,
-    TYPE_OBJECT_JSON_STRINGIFY,
-    TYPE_OBJECT_JSON_REVIVE,
-    TYPE_OBJECT_JSON_OBJECT,
     TYPE_OBJECT_REFLECT_OBJECT,
     TYPE_OBJECT_XML_SETTINGS,
 
     /* Objects which probably can't escape to scripts. Maybe condense these. */
+    TYPE_OBJECT_GETSET,  /* For properties with a scripted getter/setter. */
     TYPE_OBJECT_REGEXP_STATICS,
     TYPE_OBJECT_CALL,
     TYPE_OBJECT_DECLENV,
@@ -789,8 +713,8 @@ struct TypeCompartment
     void finish(JSContext *cx, JSCompartment *compartment);
 
     /* Get a function or non-function object associated with an optional script. */
-    TypeObject *getTypeObject(JSContext *cx, js::analyze::Script *script,
-                              const char *name, bool isArray, bool isFunction);
+    TypeObject *getTypeObject(JSContext *cx, analyze::Script *script,
+                              const char *name, bool isFunction, TypeObject *prototype);
 
     /*
      * Add the specified type to the specified set, do any necessary reanalysis

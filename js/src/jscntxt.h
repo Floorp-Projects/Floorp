@@ -2396,12 +2396,15 @@ public:
      */
 
     /* Get a function or non-function object. */
-    inline js::types::TypeObject *
-    getTypeObject(const char *name, bool isArray, bool isFunction);
+    inline js::types::TypeObject *getTypeFunction(const char *name,
+                                                  js::types::TypeObject *prototype = NULL);
+    inline js::types::TypeObject *getTypeObject(const char *name,
+                                                js::types::TypeObject *prototype);
 
     /* Get a function with the specified handler. */
     inline js::types::TypeFunction *
-    getTypeFunctionHandler(const char *name, JSTypeHandler handler);
+    getTypeFunctionHandler(const char *name, JSTypeHandler handler,
+                           js::types::TypeObject *prototype = NULL);
 
     /* Set the type information for fun to the specified script. */
     inline void
@@ -2425,8 +2428,8 @@ public:
      */
     inline void typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
                                 const js::CallArgs &args, bool constructing, bool force);
-    inline void typeMonitorEntry(JSScript *script, const js::Value &thisv,
-                                 bool constructing, bool force);
+    inline void typeMonitorEntry(JSScript *script);
+    inline void typeMonitorEntry(JSScript *script, const js::Value &thisv);
 
     /*
      * Mark a function as the constructor for a builtin class, whose 'prototype'
@@ -2434,16 +2437,9 @@ public:
      */
     inline void markTypeBuiltinFunction(js::types::TypeObject *fun);
 
-    /*
-     * Add proto as the 'prototype' field of a function.  inherit indicates that
-     * this function inherits properties from Function.prototype and the prototype
-     * inherits properties from Object.prototype.
-     */
+    /* Add proto as the 'prototype' field of a function. */
     inline void setTypeFunctionPrototype(js::types::TypeObject *fun,
-                                         js::types::TypeObject *proto, bool inherit);
-
-    /* Add proto as a possible prototype object of obj. */
-    inline void addTypePrototype(js::types::TypeObject *obj, js::types::TypeObject *proto);
+                                         js::types::TypeObject *proto);
 
     /* Add a possible value for the named property of obj. */
     inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);

@@ -2467,19 +2467,18 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
+    TypeObject *type = cx->getTypeCallerInitObject(false);
+    cx->markTypeObjectUnknownProperties(type);
+
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    TypeObject *type = cx->getTypeCallerInitObject(false);
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, v.toObjectOrNull(),
                                                      vp->toObject().getGlobal(), type);
     if (!obj)
         return JS_FALSE;
     vp->setObject(*obj); /* Root and prepare for eventual return. */
-
-    if (v.isObject())
-        cx->addTypePrototype(type, v.toObject().getTypeObject());
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -2807,7 +2806,17 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
-    TypeObject *type = callee->isFunction() ? callee->getTypeFunctionNewObject(cx) : callee->getTypeObject();
+
+    TypeObject *type = NULL;
+#ifdef JS_TYPE_INFERENCE
+    if (proto) {
+        type = proto->getTypePrototypeNewObject(cx);
+    } else {
+        JS_ASSERT(newclasp == &js_ObjectClass);
+        type = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE)->getNewObject(cx);
+    }
+#endif
+
     gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
     JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, type, kind);
     if (obj)
@@ -2818,7 +2827,7 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
-    TypeObject *type = callee->getTypeFunctionNewObject(cx);
+    TypeObject *type = proto ? proto->getTypePrototypeNewObject(cx) : NULL;
     gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
     return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), type, kind);
 }
@@ -2922,7 +2931,7 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
              * No ctor.prototype was set, so we inline-expand and optimize
              * fun_resolve's prototype creation code.
              */
-            TypeObject *typeProto = ctor->getTypeFunctionPrototype(cx);
+            TypeObject *typeProto = ctor->getTypePrototype(cx);
             proto = NewNativeClassInstance(cx, clasp, proto, parent, typeProto);
             if (!proto)
                 return NULL;
@@ -2940,7 +2949,8 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
      * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
      * from easily or unconditionally calling NewNativeClassInstance here.
      */
-    TypeObject *type = ctor->getTypeFunctionNewObject(cx);
+    JS_ASSERT(proto);
+    TypeObject *type = proto->getTypePrototypeNewObject(cx);
     gc::FinalizeKind kind = NewObjectGCKind(cx, clasp);
     return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type, kind);
 }
@@ -3646,10 +3656,15 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     size_t protoLen = strlen(clasp->name) + 15;
     char *protoName = (char*) alloca(protoLen);
     JS_snprintf(protoName, protoLen, "%s:prototype", clasp->name);
-    if (clasp == &js_FunctionClass)
-        protoType = cx->getTypeFunctionHandler(protoName, JS_TypeHandlerVoid);
-    else
-        protoType = cx->getTypeObject(protoName, false, false);
+    if (clasp == &js_FunctionClass) {
+        TypeObject *protoProto = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE);
+        protoType = cx->getTypeFunctionHandler(protoName, JS_TypeHandlerVoid, protoProto);
+    } else if (clasp == &js_ObjectClass) {
+        protoType = cx->compartment->types.getTypeObject(cx, NULL, protoName, false, NULL);
+    } else {
+        TypeObject *protoProto = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE);
+        protoType = cx->compartment->types.getTypeObject(cx, NULL, protoName, false, protoProto);
+    }
 #endif
 
     /*
@@ -3702,7 +3717,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         }
 
         ctor = proto;
-        cx->addTypePrototype(protoType, cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE));
     } else {
         if (!ctorHandler)
             ctorHandler = JS_TypeHandlerMissing;
@@ -3762,27 +3776,9 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
             proto->typeObject = protoType;
             cx->markTypeBuiltinFunction(proto->getTypeObject());
 
-            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, false);
-
-            /* Make the Function.prototype.prototype function. */
-            TypeFunction *protoProto = cx->getTypeFunctionHandler("Function:prototype:prototype",
-                                                                  JS_TypeHandlerVoid);
-            cx->setTypeFunctionPrototype(proto->getTypeObject(), protoProto, false);
-        } else if (clasp == &js_ObjectClass) {
-            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, false);
-
-            /* The global object has properties of Object.prototype. */
-            cx->addTypePrototype(cx->getGlobalTypeObject(), protoType);
+            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType);
         } else {
-            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType, true);
-
-            if (clasp != &js_ArrayClass) {
-                /*
-                 * Force construction of the 'new' type object for the class, to do the
-                 * correct propagation if it is accessed using getFixedTypeObject.
-                 */
-                fun->getTypeObject()->asFunction()->getNewObject(cx);
-            }
+            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType);
         }
 #endif
     }

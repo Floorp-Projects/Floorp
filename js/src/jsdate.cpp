@@ -2559,7 +2559,7 @@ static void type_NewDate(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *j
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
     if (site->isNew) {
-        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_DATE);
+        TypeObject *object = Valueify(jsfun)->prototypeObject->getNewObject(cx);
         site->returnTypes->addType(cx, (jstype) object);
     } else {
         JS_TypeHandlerString(cx, jsfun, jssite);
@@ -2604,8 +2604,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_NEW_DATE);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass, NULL);
     if (!obj || !obj->ensureSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
         return NULL;
     if (!SetUTCTime(cx, obj, msec_time))

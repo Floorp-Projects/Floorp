@@ -480,7 +480,11 @@ Script::analyze(JSContext *cx)
             types::TypeObject *object;
             if (initializerStack && initializerStack->initObject &&
                 initializerStack->initArray == newArray) {
-                object = code->initObject = initializerStack->initObject;
+                object = initializerStack->initObject;
+                if (newArray)
+                    code->initArray = object;
+                else
+                    code->initObject = object;
             } else {
                 object = code->getInitObject(cx, newArray);
 
@@ -527,25 +531,12 @@ Script::analyze(JSContext *cx)
             usesScope = true;
             break;
 
-          /* Watch for opcodes the method JIT doesn't compile. */
-          case JSOP_GOSUB:
-          case JSOP_GOSUBX:
-          case JSOP_IFPRIMTOP:
-          case JSOP_FILTER:
-          case JSOP_ENDFILTER:
-          case JSOP_TABLESWITCHX:
-          case JSOP_LOOKUPSWITCHX:
-            hadFailure = true;
-#ifdef JS_TYPE_INFERENCE
-            if (fun)
-                function()->returnTypes.addType(cx, types::TYPE_UNKNOWN);
-#endif
-            return;
-
-          case JSOP_TABLESWITCH: {
+          case JSOP_TABLESWITCH:
+          case JSOP_TABLESWITCHX: {
             jsbytecode *pc2 = pc;
+            unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += JUMP_OFFSET_LEN;
+            pc2 += jmplen;
             jsint low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
             jsint high = GET_JUMP_OFFSET(pc2);
@@ -564,15 +555,17 @@ Script::analyze(JSContext *cx)
                         return;
                     }
                 }
-                pc2 += JUMP_OFFSET_LEN;
+                pc2 += jmplen;
             }
             break;
           }
 
-          case JSOP_LOOKUPSWITCH: {
+          case JSOP_LOOKUPSWITCH:
+          case JSOP_LOOKUPSWITCHX: {
             jsbytecode *pc2 = pc;
+            unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += JUMP_OFFSET_LEN;
+            pc2 += jmplen;
             unsigned npairs = GET_UINT16(pc2);
             pc2 += UINT16_LEN;
 
@@ -588,7 +581,7 @@ Script::analyze(JSContext *cx)
                              stackDepth, stack, defineArray, defineCount)) {
                     return;
                 }
-                pc2 += JUMP_OFFSET_LEN;
+                pc2 += jmplen;
                 npairs--;
             }
             break;

@@ -1102,7 +1102,7 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
         clasp = &FunctionProxyClass;
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_PROXY);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_PROXY);
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type);
     if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))
@@ -1296,7 +1296,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
 
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_PROXY);
+        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_PROXY);
         JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent(), type);
         if (!newobj)
             return false;
@@ -1365,7 +1365,7 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
      * Make a blank object from the recipe fix provided to us.  This must have
      * number of fixed slots as the proxy so that we can swap their contents.
      */
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_PROXY);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_PROXY);
     gc::FinalizeKind kind = gc::FinalizeKind(proxy->arena()->header()->thingKind);
     JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type, kind);
     if (!newborn)
@@ -1410,7 +1410,7 @@ Class js_ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    TypeObject *type = cx->getTypeObject(js_ProxyClass.name, false, false);
+    TypeObject *type = cx->getTypeObject(js_ProxyClass.name, NULL);
     JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj, type);
     if (!module)
         return NULL;

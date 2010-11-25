@@ -77,8 +77,6 @@ GetValueType(JSContext *cx, const Value &val)
         JS_ASSERT(obj->typeObject);
         return (jstype) obj->typeObject;
       }
-      case JSVAL_TYPE_MAGIC:
-        return (jstype) cx->getFixedTypeObject(TYPE_OBJECT_MAGIC);
       default:
         JS_NOT_REACHED("Unknown value");
         return (jstype) 0;
@@ -138,7 +136,7 @@ TypeIdString(jsid id)
         return "(index)";
     return js_GetStringBytes(JSID_TO_ATOM(id));
 #else
-    return NULL;
+    return "(missing)";
 #endif
 }
 
@@ -151,10 +149,24 @@ TypeIdString(jsid id)
 /////////////////////////////////////////////////////////////////////
 
 inline js::types::TypeObject *
-JSContext::getTypeObject(const char *name, bool isArray, bool isFunction)
+JSContext::getTypeFunction(const char *name, js::types::TypeObject *prototype)
 {
 #ifdef JS_TYPE_INFERENCE
-    return compartment->types.getTypeObject(this, NULL, name, isArray, isFunction);
+    if (!prototype)
+        prototype = getFixedTypeObject(js::types::TYPE_OBJECT_FUNCTION_PROTOTYPE);
+    return compartment->types.getTypeObject(this, NULL, name, true, prototype);
+#else
+    return NULL;
+#endif
+}
+
+inline js::types::TypeObject *
+JSContext::getTypeObject(const char *name, js::types::TypeObject *prototype)
+{
+#ifdef JS_TYPE_INFERENCE
+    if (!prototype)
+        prototype = getFixedTypeObject(js::types::TYPE_OBJECT_OBJECT_PROTOTYPE);
+    return compartment->types.getTypeObject(this, NULL, name, false, prototype);
 #else
     return NULL;
 #endif
@@ -164,8 +176,10 @@ inline js::types::TypeObject *
 JSContext::getGlobalTypeObject()
 {
 #ifdef JS_TYPE_INFERENCE
-    if (!compartment->types.globalObject)
-        compartment->types.globalObject = getTypeObject("Global", false, false);
+    if (!compartment->types.globalObject) {
+        js::types::TypeObject *prototype = getFixedTypeObject(js::types::TYPE_OBJECT_OBJECT_PROTOTYPE);
+        compartment->types.globalObject = getTypeObject("Global", prototype);
+    }
     return compartment->types.globalObject;
 #else
     return NULL;
@@ -179,8 +193,9 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
     char name[8];
     JS_snprintf(name, 16, "#%u", script->analysis->id);
 
+    js::types::TypeObject *proto = getFixedTypeObject(js::types::TYPE_OBJECT_FUNCTION_PROTOTYPE);
     js::types::TypeFunction *typeFun =
-        compartment->types.getTypeObject(this, script->analysis, name, false, true)->asFunction();
+        compartment->types.getTypeObject(this, script->analysis, name, true, proto)->asFunction();
 
     /* We should not be attaching multiple scripts to the same function. */
     if (typeFun->script) {
@@ -197,11 +212,14 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
 }
 
 inline js::types::TypeFunction *
-JSContext::getTypeFunctionHandler(const char *name, JSTypeHandler handler)
+JSContext::getTypeFunctionHandler(const char *name, JSTypeHandler handler,
+                                  js::types::TypeObject *prototype)
 {
 #ifdef JS_TYPE_INFERENCE
+    if (!prototype)
+        prototype = getFixedTypeObject(js::types::TYPE_OBJECT_FUNCTION_PROTOTYPE);
     js::types::TypeFunction *typeFun =
-        compartment->types.getTypeObject(this, NULL, name, false, true)->asFunction();
+        compartment->types.getTypeObject(this, NULL, name, true, prototype)->asFunction();
 
     if (typeFun->handler) {
         /* Saw this function before, make sure it has the same behavior. */
@@ -272,38 +290,19 @@ JSContext::markTypeBuiltinFunction(js::types::TypeObject *fun)
 }
 
 inline void
-JSContext::setTypeFunctionPrototype(js::types::TypeObject *fun,
-                                    js::types::TypeObject *proto, bool inherit)
+JSContext::setTypeFunctionPrototype(js::types::TypeObject *fun, js::types::TypeObject *proto)
 {
 #ifdef JS_TYPE_INFERENCE
     js::types::TypeFunction *nfun = fun->asFunction();
     JS_ASSERT(nfun->isBuiltin);
 
     if (nfun->prototypeObject) {
-        /* Ignore duplicate updates from multiple copies of the base class. */
         JS_ASSERT(nfun->prototypeObject == proto);
         return;
     }
 
     nfun->prototypeObject = proto;
     addTypePropertyId(fun, ATOM_TO_JSID(runtime->atomState.classPrototypeAtom), (js::types::jstype) proto);
-
-    /* If the new object has been accessed already, propagate properties to it. */
-    if (nfun->newObject)
-        addTypePrototype(nfun->newObject, proto);
-
-    if (inherit) {
-        getFixedTypeObject(js::types::TYPE_OBJECT_FUNCTION_PROTOTYPE)->addPropagate(this, fun);
-        getFixedTypeObject(js::types::TYPE_OBJECT_OBJECT_PROTOTYPE)->addPropagate(this, proto);
-    }
-#endif
-}
-
-inline void
-JSContext::addTypePrototype(js::types::TypeObject *obj, js::types::TypeObject *proto)
-{
-#ifdef JS_TYPE_INFERENCE
-    proto->addPropagate(this, obj, true);
 #endif
 }
 
@@ -333,7 +332,7 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
     /* Convert string index properties into the common index property. */
     id = js::types::MakeTypeId(id);
 
-    js::types::TypeSet *types = obj->properties(this).getVariable(this, id);
+    js::types::TypeSet *types = obj->getProperty(this, id, true);
 
     if (types->hasType(type))
         return;
@@ -365,11 +364,11 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
     first = js::types::MakeTypeId(first);
     second = js::types::MakeTypeId(second);
 
-    js::types::TypeSet *firstTypes = obj->properties(this).getVariable(this, first);
-    js::types::TypeSet *secondTypes = obj->properties(this).getVariable(this, second);
+    js::types::TypeSet *firstTypes = obj->getProperty(this, first, true);
+    js::types::TypeSet *secondTypes = obj->getProperty(this, second, true);
 
-    firstTypes->addSubset(this, obj->pool(), secondTypes);
-    secondTypes->addSubset(this, obj->pool(), firstTypes);
+    firstTypes->addSubset(this, *obj->pool, secondTypes);
+    secondTypes->addSubset(this, *obj->pool, firstTypes);
 #endif
 }
 
@@ -393,7 +392,7 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense, boo
     }
 
     /* All constraints listening to changes in packed/dense status are on the element types. */
-    js::types::TypeSet *elementTypes = obj->properties(this).getVariable(this, JSID_VOID);
+    js::types::TypeSet *elementTypes = obj->getProperty(this, JSID_VOID, false);
     js::types::TypeConstraint *constraint = elementTypes->constraintList;
     while (constraint) {
         constraint->arrayNotPacked(this, notDense);
@@ -409,10 +408,9 @@ void
 JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (obj->unknownProperties())
+    if (obj->unknownProperties)
         return;
-
-    obj->properties(this).markUnknown(this);
+    obj->markUnknown(this);
 #endif
 }
 
@@ -424,13 +422,13 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
 #ifdef JS_TYPE_INFERENCE
     if (!args.callee().isObject() || !args.callee().toObject().isFunction())
         return;
-    js::types::TypeFunction *fun = args.callee().toObject().getTypeObject()->asFunction();
+    JSObject *callee = &args.callee().toObject();
+    js::types::TypeFunction *fun = callee->getTypeObject()->asFunction();
 
     /*
      * Don't do anything on calls to native functions.  If the call is monitored
-     * then the return value assignment will be monitored regardless, and when
-     * cx->isTypeCallerMonitored() natives should inform inference of any side
-     * effects not on the return value.
+     * then the return value is unknown, and when cx->isTypeCallerMonitored() natives
+     * should inform inference of any side effects not on the return value.
      */
     if (!fun->script)
         return;
@@ -441,11 +439,33 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
             force = true;
     }
 
-    typeMonitorEntry(fun->script, args.thisv(), constructing, force);
+    typeMonitorEntry(fun->script);
 
     /* Don't need to do anything if this is at a non-monitored callsite. */
     if (!force)
         return;
+
+    js::types::jstype type;
+    if (constructing) {
+        js::Value protov;
+        if (!callee->getProperty(this, ATOM_TO_JSID(runtime->atomState.classPrototypeAtom),
+                                 &protov)) {
+            JS_NOT_REACHED("FIXME");
+            return;
+        }
+        JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
+        js::types::TypeObject *protoType = proto
+            ? proto->getTypeObject()
+            : getFixedTypeObject(js::types::TYPE_OBJECT_OBJECT_PROTOTYPE);
+        type = (js::types::jstype) protoType->getNewObject(this);
+    } else {
+        type = js::types::GetValueType(this, args.thisv());
+    }
+    if (!script->thisTypes.hasType(type)) {
+        js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
+                             script->id, js::types::TypeString(type));
+        compartment->types.addDynamicType(this, &script->thisTypes, type);
+    }
 
     unsigned arg = 0;
     for (; arg < args.argc(); arg++) {
@@ -453,7 +473,7 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
 
         jsid id = script->getArgumentId(arg);
         if (!JSID_IS_VOID(id)) {
-            js::types::TypeSet *types = script->localTypes.getVariable(this, id);
+            js::types::TypeSet *types = script->getVariable(this, id);
             if (!types->hasType(type)) {
                 js::types::InferSpew(js::types::ISpewDynamic, "AddArg: #%u %u: %s",
                                      script->id, arg, js::types::TypeString(type));
@@ -473,7 +493,7 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
         jsid id = script->getArgumentId(arg);
         JS_ASSERT(!JSID_IS_VOID(id));
 
-        js::types::TypeSet *types = script->localTypes.getVariable(this, id);
+        js::types::TypeSet *types = script->getVariable(this, id);
         if (!types->hasType(js::types::TYPE_UNDEFINED)) {
             js::types::InferSpew(js::types::ISpewDynamic,
                                  "UndefinedArg: #%u %u:", script->id, arg);
@@ -484,25 +504,11 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
 }
 
 inline void
-JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
-                            bool constructing, bool force)
+JSContext::typeMonitorEntry(JSScript *script)
 {
 #ifdef JS_TYPE_INFERENCE
     js::analyze::Script *analysis = script->analysis;
     JS_ASSERT(analysis);
-
-    if (force) {
-        js::types::jstype type;
-        if (constructing)
-            type = (js::types::jstype) analysis->function()->getNewObject(this);
-        else
-            type = js::types::GetValueType(this, thisv);
-        if (!analysis->thisTypes.hasType(type)) {
-            js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
-                                 analysis->id, js::types::TypeString(type));
-            compartment->types.addDynamicType(this, &analysis->thisTypes, type);
-        }
-    }
 
     if (!analysis->hasAnalyzed()) {
         compartment->types.interpreting = false;
@@ -519,6 +525,24 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv,
         if (compartment->types.hasPendingRecompiles())
             compartment->types.processPendingRecompiles(this);
     }
+#endif
+}
+
+inline void
+JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv)
+{
+#ifdef JS_TYPE_INFERENCE
+    js::analyze::Script *analysis = script->analysis;
+    JS_ASSERT(analysis);
+
+    js::types::jstype type = js::types::GetValueType(this, thisv);
+    if (!analysis->thisTypes.hasType(type)) {
+        js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
+                             analysis->id, js::types::TypeString(type));
+        compartment->types.addDynamicType(this, &analysis->thisTypes, type);
+    }
+
+    typeMonitorEntry(script);
 #endif
 }
 
@@ -600,10 +624,8 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
             return;
     }
 
-    if (!obj->getTypeObject()->unknownProperties() ||
-        id == ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom)) {
+    if (!obj->getTypeObject()->unknownProperties)
         cx->compartment->types.dynamicAssign(cx, obj, id, rval);
-    }
 #endif
 }
 
@@ -613,7 +635,7 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
 #ifdef JS_TYPE_INFERENCE
     jsid id = analysis->getArgumentId(arg);
     if (!JSID_IS_VOID(id)) {
-        js::types::TypeSet *argTypes = analysis->localTypes.getVariable(cx, id);
+        js::types::TypeSet *argTypes = analysis->getVariable(cx, id);
         js::types::jstype type = js::types::GetValueType(cx, value);
         if (!argTypes->hasType(type)) {
             js::types::InferSpew(js::types::ISpewDynamic, "SetArgument: #%u %s: %s",
@@ -630,22 +652,24 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
 /////////////////////////////////////////////////////////////////////
 
 inline js::types::TypeObject *
-JSObject::getTypeFunctionPrototype(JSContext *cx)
+JSObject::getTypePrototypeNewObject(JSContext *cx)
 {
 #ifdef JS_TYPE_INFERENCE
-    js::types::TypeFunction *fun = getTypeObject()->asFunction();
-    return fun->prototype(cx);
+    if (typeObject->newObject)
+        return typeObject->newObject;
+    return typeObject->getNewObject(cx);
 #else
     return NULL;
 #endif
 }
 
 inline js::types::TypeObject *
-JSObject::getTypeFunctionNewObject(JSContext *cx)
+JSObject::getTypePrototype(JSContext *cx)
 {
 #ifdef JS_TYPE_INFERENCE
-    js::types::TypeFunction *fun = getTypeObject()->asFunction();
-    return fun->getNewObject(cx);
+    if (!typeObject->asFunction()->prototypeObject)
+        typeObject->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), false);
+    return typeObject->asFunction()->prototypeObject;
 #else
     return NULL;
 #endif
@@ -693,30 +717,21 @@ Bytecode::setFixed(JSContext *cx, unsigned num, types::jstype type)
 inline types::TypeObject *
 Bytecode::getInitObject(JSContext *cx, bool isArray)
 {
+    if (isArray) {
+        if (!initArray) {
+            char name[32];
+            JS_snprintf(name, 32, "#%u:%u:Array", script->id, offset);
+            types::TypeObject *proto = cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE);
+            initArray = cx->compartment->types.getTypeObject(cx, script, name, false, proto);
+        }
+        return initArray;
+    }
     if (!initObject) {
         char name[32];
-        JS_snprintf(name, 32, "#%u:%u", script->id, offset);
-        initObject = cx->compartment->types.getTypeObject(cx, script, name, isArray, false);
-        initObject->isInitObject = true;
+        JS_snprintf(name, 32, "#%u:%u:Object", script->id, offset);
+        types::TypeObject *proto = cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE);
+        initObject = cx->compartment->types.getTypeObject(cx, script, name, false, proto);
     }
-
-    /*
-     * Add the propagation even if there was already an object, as Object/Array
-     * could *both* be invoked for this value.
-     */
-
-    if (isArray) {
-        if (!initObject->hasArrayPropagation) {
-            types::TypeObject *arrayProto = cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE);
-            arrayProto->addPropagate(cx, initObject);
-        }
-    } else {
-        if (!initObject->hasObjectPropagation) {
-            types::TypeObject *objectProto = cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE);
-            objectProto->addPropagate(cx, initObject);
-        }
-    }
-
     return initObject;
 }
 
@@ -788,7 +803,7 @@ Script::knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg)
 {
     jsid id = getArgumentId(arg);
     if (!JSID_IS_VOID(id) && !argEscapes(arg)) {
-        types::TypeSet *types = localTypes.getVariable(cx, id);
+        types::TypeSet *types = getVariable(cx, id);
         return types->getKnownTypeTag(cx, script);
     }
     return JSVAL_TYPE_UNKNOWN;
@@ -800,7 +815,7 @@ Script::knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local)
     jsid id = getLocalId(local, NULL);
     if (!localHasUseBeforeDef(local) && !JSID_IS_VOID(id)) {
         JS_ASSERT(!localEscapes(local));
-        types::TypeSet *types = localTypes.getVariable(cx, id);
+        types::TypeSet *types = getVariable(cx, id);
         return types->getKnownTypeTag(cx, script);
     }
     return JSVAL_TYPE_UNKNOWN;
@@ -883,11 +898,11 @@ HashSetCapacity(unsigned count)
 }
 
 /* Compute the FNV hash for the low 32 bits of v. */
-template <class T>
+template <class T, class KEY>
 static inline uint32
-HashPointer(T *v)
+HashKey(T v)
 {
-    uint32 nv = (uint32)(uint64) v;
+    uint32 nv = KEY::keyBits(v);
 
     uint32 hash = 84696351 ^ (nv & 0xff);
     hash = (hash * 16777619) ^ ((nv >> 8) & 0xff);
@@ -896,132 +911,135 @@ HashPointer(T *v)
 }
 
 /*
- * Insert an element into the specified set and grow its capacity if needed.
- * contains indicates whether the set is already known to contain data.
+ * Insert space for an element into the specified set and grow its capacity if needed.
+ * returned value is an existing or new entry (NULL if new).
  */
-template <class T>
-static bool
-HashSetInsertTry(JSContext *cx, T **&values, unsigned &count, T *data, bool contains)
+template <class T, class U, class KEY>
+static U *&
+HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key)
 {
     unsigned capacity = HashSetCapacity(count);
+    unsigned insertpos = HashKey<T,KEY>(key) & (capacity - 1);
 
-    if (!contains) {
-        unsigned pos = HashPointer(data) & (capacity - 1);
+    /* Whether we are converting from a fixed array to hashtable. */
+    bool converting = (count == SET_ARRAY_SIZE);
 
-        while (values[pos] != NULL) {
-            if (values[pos] == data)
-                return false;
-            pos = (pos + 1) & (capacity - 1);
+    if (!converting) {
+        while (values[insertpos] != NULL) {
+            if (KEY::getKey(values[insertpos]) == key)
+                return values[insertpos];
+            insertpos = (insertpos + 1) & (capacity - 1);
         }
-
-        values[pos] = data;
     }
 
     count++;
     unsigned newCapacity = HashSetCapacity(count);
 
-    if (newCapacity > capacity) {
-        T **newValues = (T **) cx->calloc(newCapacity * sizeof(T*));
+    if (newCapacity == capacity) {
+        JS_ASSERT(!converting);
+        return values[insertpos];
+    }
 
-        for (unsigned i = 0; i < capacity; i++) {
-            if (values[i]) {
-                unsigned pos = HashPointer(values[i]) & (newCapacity - 1);
-                while (newValues[pos] != NULL)
-                    pos = (pos + 1) & (newCapacity - 1);
-                newValues[pos] = values[i];
-            }
+    U **newValues = (U **) cx->calloc(newCapacity * sizeof(U*));
+
+    for (unsigned i = 0; i < capacity; i++) {
+        if (values[i]) {
+            unsigned pos = HashKey<T,KEY>(KEY::getKey(values[i])) & (newCapacity - 1);
+            while (newValues[pos] != NULL)
+                pos = (pos + 1) & (newCapacity - 1);
+            newValues[pos] = values[i];
         }
-
-        if (values)
-            cx->free(values);
-        values = newValues;
     }
 
-    if (contains) {
-        unsigned pos = HashPointer(data) & (newCapacity - 1);
-        while (values[pos] != NULL)
-            pos = (pos + 1) & (newCapacity - 1);
-        values[pos] = data;
-    }
+    if (values)
+        cx->free(values);
+    values = newValues;
 
-    return true;
+    insertpos = HashKey<T,KEY>(key) & (newCapacity - 1);
+    while (values[insertpos] != NULL)
+        insertpos = (insertpos + 1) & (newCapacity - 1);
+    return values[insertpos];
 }
 
 /*
- * Insert an element into the specified set if it is not already there.  Return
- * whether the element was inserted (was not already in the set).
+ * Insert an element into the specified set if it is not already there, returning
+ * an entry which is NULL if the element was not there.
  */
-template <class T>
-static inline bool
-HashSetInsert(JSContext *cx, T **&values, unsigned &count, T *data)
+template <class T, class U, class KEY>
+static inline U *&
+HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key)
 {
     if (count == 0) {
-        values = (T**) data;
+        JS_ASSERT(values == NULL);
         count++;
-        return true;
+        U **pvalues = (U **) &values;
+        return *pvalues;
     }
 
     if (count == 1) {
-        T *oldData = (T*) values;
-        if (oldData == data)
-            return false;
+        U *oldData = (U*) values;
+        if (KEY::getKey(oldData) == key) {
+            U **pvalues = (U **) &values;
+            return *pvalues;
+        }
 
-        values = (T **) cx->calloc(SET_ARRAY_SIZE * sizeof(T*));
+        values = (U **) cx->calloc(SET_ARRAY_SIZE * sizeof(U*));
+        count++;
 
         values[0] = oldData;
-        values[1] = data;
-        count++;
-        return true;
+        return values[1];
     }
 
     if (count <= SET_ARRAY_SIZE) {
         for (unsigned i = 0; i < count; i++) {
-            if (values[i] == data)
-                return false;
+            if (KEY::getKey(values[i]) == key)
+                return values[i];
         }
 
         if (count < SET_ARRAY_SIZE) {
-            values[count++] = data;
-            return true;
+            count++;
+            return values[count - 1];
         }
-
-        HashSetInsertTry(cx, values, count, data, true);
-        return true;
     }
 
-    return HashSetInsertTry(cx, values, count, data, false);
+    return HashSetInsertTry<T,U,KEY>(cx, values, count, key);
 }
 
-/* Return whether the set contains the specified value. */
-template <class T>
-static inline bool
-HashSetContains(T **values, unsigned count, T *data)
+/* Lookup an entry in a hash set, return NULL if it does not exist. */
+template <class T, class U, class KEY>
+static inline U *
+HashSetLookup(U **values, unsigned count, T key)
 {
     if (count == 0)
-        return false;
+        return NULL;
 
     if (count == 1)
-        return (data == (T*) values);
+        return (KEY::getKey((U *) values) == key) ? (U *) values : NULL;
 
     if (count <= SET_ARRAY_SIZE) {
         for (unsigned i = 0; i < count; i++) {
-            if (values[i] == data)
-                return true;
+            if (KEY::getKey(values[i]) == key)
+                return values[i];
         }
-        return false;
+        return NULL;
     }
 
     unsigned capacity = HashSetCapacity(count);
-    unsigned pos = HashPointer(data) & (capacity - 1);
+    unsigned pos = HashKey<T,KEY>(key) & (capacity - 1);
 
     while (values[pos] != NULL) {
-        if (values[pos] == data)
-            return true;
+        if (KEY::getKey(values[pos]) == key)
+            return values[pos];
         pos = (pos + 1) & (capacity - 1);
     }
 
-    return false;
+    return NULL;
 }
+
+struct TypeObjectKey {
+    static uint32 keyBits(TypeObject *obj) { return (uint32) obj; }
+    static TypeObject *getKey(TypeObject *obj) { return obj; }
+};
 
 inline bool
 TypeSet::hasType(jstype type)
@@ -1029,27 +1047,13 @@ TypeSet::hasType(jstype type)
     if (typeFlags & TYPE_FLAG_UNKNOWN)
         return true;
 
-    if (TypeIsPrimitive(type))
+    if (TypeIsPrimitive(type)) {
         return ((1 << type) & typeFlags) != 0;
-    else
-        return HashSetContains(objectSet, objectCount, (TypeObject*) type);
+    } else {
+        return HashSetLookup<TypeObject*,TypeObject,TypeObjectKey>
+            (objectSet, objectCount, (TypeObject *) type) != NULL;
+    }
 }
-
-/*
- * Whether it is OK for object to be in a type set with other objects without
- * considering the type set polymorphic.
- */
-static inline bool
-UseDuplicateObjects(TypeObject *object)
-{
-    /* Allow this for scripted functions and for objects allocated at different sites. */
-    return object->isInitObject ||
-        (object->isFunction && object->asFunction()->script != NULL);
-}
-
-/* Points at which to revert a type set to unknown, based on the objects in the set. */
-const unsigned OBJECT_THRESHOLD = unsigned(-1);
-const unsigned TYPESET_THRESHOLD = unsigned(-1);
 
 inline void
 TypeSet::addType(JSContext *cx, jstype type)
@@ -1084,8 +1088,11 @@ TypeSet::addType(JSContext *cx, jstype type)
 #endif
     } else {
         TypeObject *object = (TypeObject*) type;
-        if (!HashSetInsert(cx, objectSet, objectCount, object))
+        TypeObject *&entry = HashSetInsert<TypeObject *,TypeObject,TypeObjectKey>
+                                 (cx, objectSet, objectCount, object);
+        if (entry)
             return;
+        entry = object;
 
         typeFlags |= TYPE_FLAG_OBJECT;
 
@@ -1188,95 +1195,50 @@ TypeCallsite::pool()
 }
 
 /////////////////////////////////////////////////////////////////////
-// VariableSet
-/////////////////////////////////////////////////////////////////////
-
-inline TypeSet *
-VariableSet::getVariable(JSContext *cx, jsid id)
-{
-    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_STRING(id));
-    JS_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id) != NULL);
-
-    Variable *res = variables;
-    while (res) {
-        if (res->id == id)
-            return &res->types;
-        res = res->next;
-    }
-
-    /* Make a new variable and thread it onto our list. */
-    res = ArenaNew<Variable>(*pool, pool, id);
-    res->next = variables;
-    variables = res;
-
-    InferSpew(ISpewOps, "addVariable: %s %s T%u",
-              TypeIdString(name()), TypeIdString(id), res->types.id());
-
-    if (unknown) {
-        /*
-         * Immediately mark the variable as unknown. Ideally we won't be doing this
-         * too often, but we don't assert !unknown to avoid extra complexity in
-         * other code accessing variable sets.
-         */
-        res->types.addType(cx, TYPE_UNKNOWN);
-    }
-
-    /* Propagate the variable to any other sets receiving our variables. */
-    if (propagateCount >= 2) {
-        unsigned capacity = HashSetCapacity(propagateCount);
-        for (unsigned i = 0; i < capacity; i++) {
-            VariableSet *target = propagateSet[i];
-            if (target) {
-                TypeSet *targetTypes = target->getVariable(cx, id);
-                res->types.addSubset(cx, *pool, targetTypes);
-            }
-        }
-    } else if (propagateCount == 1) {
-        TypeSet *targetTypes = ((VariableSet*)propagateSet)->getVariable(cx, id);
-        res->types.addSubset(cx, *pool, targetTypes);
-    }
-
-    return &res->types;
-}
-
-/////////////////////////////////////////////////////////////////////
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
 inline TypeSet *
-TypeObject::indexTypes(JSContext *cx)
+TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 {
-    return properties(cx).getVariable(cx, JSID_VOID);
+    JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_STRING(id));
+    JS_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id) != NULL);
+
+    Property *&prop = HashSetInsert<jsid,Property,Property>(cx, propertySet, propertyCount, id);
+    if (!prop)
+        addProperty(cx, id, prop);
+
+    return assign ? &prop->ownTypes : &prop->types;
 }
 
-inline TypeObject *
-TypeFunction::getNewObject(JSContext *cx)
+inline bool
+TypeObject::isArray(JSContext *cx)
 {
-    if (newObject)
-        return newObject;
-
-    const char *baseName = js_GetStringBytes(JSID_TO_ATOM(name));
-
-    unsigned len = strlen(baseName) + 10;
-    char *newName = (char *) alloca(len);
-    JS_snprintf(newName, len, "%s:new", baseName);
-    newObject = cx->compartment->types.getTypeObject(cx, script ? script->analysis : NULL,
-                                                     newName, false, false);
-
-    properties(cx);
-    JS_ASSERT_IF(!prototypeObject, isBuiltin);
-
-    /*
-     * Propagate properties from the prototype of this script to any objects
-     * to any objects created using 'new' on this script.
-     */
-    if (prototypeObject)
-        cx->addTypePrototype(newObject, prototypeObject);
-
-    return newObject;
+    TypeObject *array = cx->getFixedTypeObject(TYPE_OBJECT_ARRAY_PROTOTYPE);
+    TypeObject *obj = prototype;
+    while (obj) {
+        if (obj == array)
+            return true;
+        obj = obj->prototype;
+    }
+    return false;
 }
 
 } /* namespace types */
+
+inline types::TypeSet *
+analyze::Script::getVariable(JSContext *cx, jsid id)
+{
+    JS_ASSERT(JSID_IS_STRING(id) && JSID_TO_STRING(id) != NULL);
+
+    types::Variable *&var = types::HashSetInsert<jsid,types::Variable,types::Variable>
+        (cx, variableSet, variableCount, id);
+    if (!var)
+        addVariable(cx, id, var);
+
+    return &var->types;
+}
+
 } /* namespace js */
 
 #endif /* JS_TYPE_INFERENCE */
