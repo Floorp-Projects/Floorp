@@ -1803,40 +1803,6 @@ let GroupItems = {
   },
 
   // ----------
-  // Function: arrange
-  // Arranges all of the groupItems into a grid.
-  arrange: function GroupItems_arrange() {
-    var bounds = Items.getPageBounds();
-
-    var count = this.groupItems.length - 1;
-    var columns = Math.ceil(Math.sqrt(count));
-    var rows = ((columns * columns) - count >= columns ? columns - 1 : columns);
-    var padding = 12;
-    var startX = bounds.left + padding;
-    var startY = bounds.top + padding;
-    var totalWidth = bounds.width - padding;
-    var totalHeight = bounds.height - padding;
-    var box = new Rect(startX, startY,
-        (totalWidth / columns) - padding,
-        (totalHeight / rows) - padding);
-
-    var i = 0;
-    this.groupItems.forEach(function(groupItem) {
-      if (groupItem.locked.bounds)
-        return;
-
-      groupItem.setBounds(box, true);
-
-      box.left += box.width + padding;
-      i++;
-      if (i % columns == 0) {
-        box.left = startX;
-        box.top += box.height + padding;
-      }
-    });
-  },
-
-  // ----------
   // Function: removeAll
   // Removes all tabs from all groupItems (which automatically closes all unnamed groupItems).
   removeAll: function GroupItems_removeAll() {
