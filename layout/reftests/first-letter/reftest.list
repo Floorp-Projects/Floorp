@@ -18,7 +18,7 @@ fails == quote-1b.html quote-1-ref.html # bug 509685
 fails == quote-1c.html quote-1-ref.html # bug 509685
 == quote-1c.html quote-1b.html
 fails == quote-1d.html quote-1-ref.html
-random == quote-1d.html quote-1b.html
+== quote-1d.html quote-1b.html
 fails == quote-1e.html quote-1-ref.html # bug 509685
 == quote-1e.html quote-1b.html
 == quote-1f.html quote-1-ref.html
