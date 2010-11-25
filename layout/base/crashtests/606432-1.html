@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
 <script>
 
@@ -9,6 +9,12 @@ function boom()
   t.contentEditable = "true";
   t.focus();
   document.body.appendChild(t);
+  setTimeout(finish, 0);
+}
+
+function finish()
+{
+  document.documentElement.className = "";
 }
 
 </script>
