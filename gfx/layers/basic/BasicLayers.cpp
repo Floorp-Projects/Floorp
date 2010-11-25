@@ -1532,6 +1532,8 @@ public:
   }
   virtual ~BasicShadowableThebesLayer()
   {
+    NS_ABORT_IF_FALSE(!HasShadow() || !BasicManager()->InTransaction(),
+                      "Shadow layers can't be destroyed during txns!");
     if (IsSurfaceDescriptorValid(mBackBuffer))
       BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
     MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
@@ -2497,6 +2499,13 @@ BasicShadowLayerManager::SetRoot(Layer* aLayer)
 {
   if (mRoot != aLayer) {
     if (HasShadowManager()) {
+      // Have to hold the old root and its children in order to
+      // maintain the same view of the layer tree in this process as
+      // the parent sees.  Otherwise layers can be destroyed
+      // mid-transaction and bad things can happen (v. bug 612573)
+      if (mRoot) {
+        Hold(mRoot);
+      }
       ShadowLayerForwarder::SetRoot(Hold(aLayer));
     }
     BasicLayerManager::SetRoot(aLayer);
@@ -2576,13 +2585,13 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     NS_WARNING("failed to forward Layers transaction");
   }
 
-  // this may result in Layers being deleted, which results in
-  // PLayer::Send__delete__() and DeallocShmem()
-  mKeepAlive.Clear();
-
 #ifdef DEBUG
   mPhase = PHASE_NONE;
 #endif
+
+  // this may result in Layers being deleted, which results in
+  // PLayer::Send__delete__() and DeallocShmem()
+  mKeepAlive.Clear();
 }
 
 ShadowableLayer*
