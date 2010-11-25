@@ -1481,8 +1481,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS:
-        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE:
-        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
+        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
