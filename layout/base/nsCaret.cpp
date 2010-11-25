@@ -741,6 +741,10 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!presShell)
     return NS_ERROR_FAILURE;
 
+  if (!aContentNode || !aContentNode->IsInDoc() ||
+      presShell->GetDocument() != aContentNode->GetCurrentDoc())
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
@@ -893,6 +897,9 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
       }
     }
   }
+
+  NS_ASSERTION(!theFrame || theFrame->PresContext()->PresShell() == presShell,
+               "caret frame is in wrong document");
   *aReturnFrame = theFrame;
   *aReturnOffset = theFrameOffset;
   return NS_OK;
@@ -1059,7 +1066,8 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
       mDrawn = PR_FALSE;
       return;
     }
-    if (!mLastContent->IsInDoc())
+    if (!mLastContent->IsInDoc() ||
+        presShell->GetDocument() != mLastContent->GetCurrentDoc())
     {
       mLastContent = nsnull;
       mDrawn = PR_FALSE;
