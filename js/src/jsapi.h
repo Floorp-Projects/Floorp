@@ -2005,16 +2005,8 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
 extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
 
-/*
- * Make type information to use when creating a JS object. Calling this
- * multiple times with the same name will return the same type object.
- * If monitorNeeded is set then the object may have properties not set via
- * JS_DefineTypeProperty or JS_DefineFunction, and will have its accesses
- * monitored. isArray specifies whether to use Array.prototype
- * or Object.prototype as the type object's prototype.
- */
 extern JS_PUBLIC_API(JSTypeObject *)
-JS_MakeTypeObject(JSContext *cx, const char *name, JSBool monitorNeeded, JSBool isArray);
+JS_MakeTypeObject(JSContext *cx, const char *name, JSBool unknownProperties, JSTypeObject *proto);
 
 extern JS_PUBLIC_API(JSTypeObject *)
 JS_MakeTypeFunction(JSContext *cx, const char *name, JSTypeHandler handler);

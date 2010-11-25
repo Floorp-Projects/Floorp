@@ -117,8 +117,7 @@ ArrayBuffer::create(JSContext *cx, uintN argc, Value *argv, Value *rval)
 {
     /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
-    JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass, NULL);
     if (!obj)
         return false;
 
@@ -442,19 +441,6 @@ struct uint8_clamped {
 /* Make sure the compiler isn't doing some funky stuff */
 JS_STATIC_ASSERT(sizeof(uint8_clamped) == 1);
 
-static types::FixedTypeObjectName arrayTypeObjects[] = {
-    types::TYPE_OBJECT_NEW_INT8ARRAY,
-    types::TYPE_OBJECT_NEW_UINT8ARRAY,
-    types::TYPE_OBJECT_NEW_INT16ARRAY,
-    types::TYPE_OBJECT_NEW_UINT16ARRAY,
-    types::TYPE_OBJECT_NEW_INT32ARRAY,
-    types::TYPE_OBJECT_NEW_UINT32ARRAY,
-    types::TYPE_OBJECT_NEW_FLOAT32ARRAY,
-    types::TYPE_OBJECT_NEW_FLOAT64ARRAY,
-    types::TYPE_OBJECT_NEW_UINT8CLAMPEDARRAY
-};
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(arrayTypeObjects) == TypedArray::TYPE_MAX);
-
 template<typename NativeType> static inline const int TypeIDOfType();
 template<> inline const int TypeIDOfType<int8>() { return TypedArray::TYPE_INT8; }
 template<> inline const int TypeIDOfType<uint8>() { return TypedArray::TYPE_UINT8; }
@@ -740,8 +726,7 @@ class TypedArrayTemplate
     {
         /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-        TypeObject *type = cx->getFixedTypeObject(arrayTypeObjects[ArrayTypeID()]);
-        JSObject *obj = NewBuiltinClassInstance(cx, slowClass(), type);
+        JSObject *obj = NewBuiltinClassInstance(cx, slowClass(), NULL);
         if (!obj)
             return false;
 
@@ -886,8 +871,7 @@ class TypedArrayTemplate
         // note the usage of NewObject here -- we don't want the
         // constructor to be called!
         JS_ASSERT(slowClass() != &js_FunctionClass);
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER);
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL, type);
+        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL, NULL);
         if (!nobj) {
             delete ntarray;
             return false;
@@ -1558,11 +1542,11 @@ do {                                                                           \
         cx->addTypeProperty(proto->getTypeObject(), NULL, types::TYPE_DOUBLE); \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
-        !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
+        !JS_DefinePropertyWithType(cx, ctor, "BYTES_PER_ELEMENT",              \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
                            JS_PropertyStub, JS_PropertyStub,                   \
                            JSPROP_PERMANENT | JSPROP_READONLY) ||              \
-        !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",                     \
+        !JS_DefinePropertyWithType(cx, proto, "BYTES_PER_ELEMENT",             \
                            INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
                            JS_PropertyStub, JS_PropertyStub,                   \
                            JSPROP_PERMANENT | JSPROP_READONLY))                \

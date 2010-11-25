@@ -1204,8 +1204,8 @@ RebaseRegsFromTo(JSFrameRegs *regs, JSStackFrame *from, JSStackFrame *to)
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    TypeObject *objType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass, objType);
+    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_GENERATOR);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass, type);
     if (!obj)
         return NULL;
 
@@ -1533,9 +1533,6 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
-
-    TypeObject *iterType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
-    cx->addTypePrototype(iterType, proto->getTypeObject());
 
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */

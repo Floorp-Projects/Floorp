@@ -1407,17 +1407,6 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!obj->getProto())
         obj->setProto(cx, obj_proto);
 
-#ifdef JS_TYPE_INFERENCE
-    {
-        /* Do remaining propagation for the Function and Object type information. */
-        TypeObject *protoObject = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE);
-        TypeObject *protoFunction = cx->getFixedTypeObject(TYPE_OBJECT_FUNCTION_PROTOTYPE);
-        protoObject->addPropagate(cx, protoFunction);
-        protoFunction->addPropagate(cx, cx->getFixedTypeObject(TYPE_OBJECT_OBJECT));
-        protoFunction->addPropagate(cx, cx->getFixedTypeObject(TYPE_OBJECT_FUNCTION));
-    }
-#endif
-
     return fun_proto;
 }
 
@@ -3434,13 +3423,13 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
 
-    TypeObject *nobjType = cx->getTypeObject(name,
-                                             clasp == &js_ArrayClass,
-                                             clasp == &js_FunctionClass);
-    if (proto)
-        cx->addTypePrototype(nobjType, proto->getTypeObject());
+    TypeObject *type;
+    if (clasp == &js_FunctionClass)
+        type = cx->getTypeFunction(name);
+    else
+        type = cx->getTypeObject(name, /* :FIXME: wrong */ NULL);
 
-    JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj, nobjType);
+    JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj, type);
     if (!nobj)
         return NULL;
 
@@ -4372,7 +4361,7 @@ JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
     if (!site->returnTypes)
         return;
 
-    TypeObject *object = fun->getNewObject(cx);
+    TypeObject *object = fun->prototypeObject->getNewObject(cx);
     site->returnTypes->addType(cx, (jstype) object);
 #endif
 }
@@ -4866,15 +4855,12 @@ JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
 }
 
 JS_PUBLIC_API(JSTypeObject *)
-JS_MakeTypeObject(JSContext *cx, const char *name, JSBool monitorNeeded, JSBool isArray)
+JS_MakeTypeObject(JSContext *cx, const char *name, JSBool unknownProperties, JSTypeObject *proto)
 {
 #ifdef JS_TYPE_INFERENCE
-    TypeObject *type = cx->getTypeObject(name, isArray, false);
-    TypeObject *proto = cx->getFixedTypeObject(isArray ? TYPE_OBJECT_ARRAY_PROTOTYPE : TYPE_OBJECT_OBJECT_PROTOTYPE);
-    if (proto)
-        proto->addPropagate(cx, type);
+    TypeObject *type = cx->getTypeObject(name, Valueify(proto));
 
-    if (monitorNeeded)
+    if (unknownProperties)
         cx->markTypeObjectUnknownProperties(type);
 
     return (JSTypeObject*) type;

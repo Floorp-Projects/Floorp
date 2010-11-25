@@ -130,7 +130,8 @@ struct Bytecode
     /* Array of stack nodes pushed by this instruction. */
     types::TypeStack *pushedArray;
 
-    /* Any new object created at this bytecode. */
+    /* Any new Array or Object created at this bytecode. */
+    types::TypeObject *initArray;
     types::TypeObject *initObject;
 
     /*
@@ -319,10 +320,10 @@ class Script
 
     /*
      * Variables defined by this script.  This includes local variables defined
-     * with 'var' or 'let', formal arguments, unnamed arguments, and properties
-     * of the script itself (*not* properties of the script's prototype).
+     * with 'var' or 'let' and formal arguments.
      */
-    types::VariableSet localTypes;
+    types::Variable **variableSet;
+    unsigned variableCount;
 
     /* Types of the 'this' variable in this script. */
     types::TypeSet thisTypes;
@@ -356,8 +357,8 @@ class Script
         /* Whether this node is the iterator for a 'for each' loop. */
         bool isForEach;
 
-        /* Variable set for any scope name binding pushed on this stack node. */
-        types::VariableSet *scopeVars;
+        /* Scope for any name binding pushed on this stack node, per SearchScope. */
+        Script *scope;
 
         /* Any value pushed by a JSOP_DOUBLE. */
         bool hasDouble;
@@ -452,6 +453,9 @@ class Script
     /* Get the name to use for the argument with the specified index. */
     inline jsid getArgumentId(unsigned index);
 
+    /* Get or make type information for the specified local/argument variable. */
+    inline types::TypeSet *getVariable(JSContext *cx, jsid id);
+
     /* Get the type set to use for a stack slot at a fixed stack depth. */
     inline types::TypeSet *getStackTypes(unsigned index, Bytecode *code);
 
@@ -459,6 +463,9 @@ class Script
     inline JSValueType knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg);
     inline JSValueType knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local);
 
+    /* Helpers */
+
+    void addVariable(JSContext *cx, jsid id, types::Variable *&var);
     void trace(JSTracer *trc);
 
 #endif /* JS_TYPE_INFERENCE */
@@ -505,6 +512,8 @@ GetDefCount(JSScript *script, unsigned offset)
       case JSOP_AND:
       case JSOP_ANDX:
         return 1;
+      case JSOP_FILTER:
+        return 2;
       default:
         return js_CodeSpec[*pc].ndefs;
     }

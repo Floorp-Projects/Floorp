@@ -719,11 +719,11 @@ struct JSObject : js::gc::Cell {
 #endif
     }
 
-    /* Get the default, until-overridden 'prototype' field of this function. */
-    inline js::types::TypeObject* getTypeFunctionPrototype(JSContext *cx);
+    /* Get the type of objects which use this as their prototype. */
+    inline js::types::TypeObject *getTypePrototypeNewObject(JSContext *cx);
 
-    /* Get the object constructed when invoking 'new' on this function. */
-    inline js::types::TypeObject* getTypeFunctionNewObject(JSContext *cx);
+    /* Get the type of the default prototype of this function object. */
+    inline js::types::TypeObject *getTypePrototype(JSContext *cx);
 
     /*
      * ES5 meta-object properties and operations.

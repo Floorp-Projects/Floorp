@@ -1009,7 +1009,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, frame.fp(), JS_TRUE, 0, cx->debugHooks->executeHookData);
 
-    cx->typeMonitorEntry(script, frame.fp()->thisValue(), false, true);
+    cx->typeMonitorEntry(script, frame.fp()->thisValue());
 
     /* Run script until JSOP_STOP or error. */
     AutoPreserveEnumerators preserve(cx);

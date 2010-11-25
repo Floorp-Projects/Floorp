@@ -132,7 +132,7 @@ js_math_abs(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     z = fabs(x);
     vp->setNumber(z);
-    if (vp[2].isInt32() && !vp->isInt32())
+    if (!vp[2].isDouble() && vp->isDouble())
         cx->markTypeCallerOverflow();
     return JS_TRUE;
 }
@@ -403,6 +403,7 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             vp->setDouble(js_NaN);
+            cx->markTypeCallerOverflow();
             return JS_TRUE;
         }
         if (x == 0 && x == z) {
@@ -434,6 +435,7 @@ js_math_min(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
             vp->setDouble(js_NaN);
+            cx->markTypeCallerOverflow();
             return JS_TRUE;
         }
         if (x == 0 && x == z) {
@@ -523,7 +525,7 @@ math_pow(JSContext *cx, uintN argc, Value *vp)
         z = pow(x, y);
 
     vp->setNumber(z);
-    if (vp->isDouble() && vp[2].isInt32() && vp[3].isInt32())
+    if (vp->isDouble() && (!vp[2].isDouble() || !vp[3].isDouble()))
         cx->markTypeCallerOverflow();
 
     return JS_TRUE;
@@ -901,7 +903,7 @@ js_IsMathFunction(JSNative native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    types::TypeObject *type = cx->getTypeObject(js_Math_str, false, false);
+    types::TypeObject *type = cx->getTypeObject(js_Math_str, NULL);
     JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj, type);
     if (!Math)
         return NULL;
