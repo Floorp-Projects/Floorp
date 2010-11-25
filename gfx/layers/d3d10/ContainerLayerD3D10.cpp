@@ -37,8 +37,6 @@
 
 #include "ContainerLayerD3D10.h"
 #include "nsAlgorithm.h"
-#include "gfxUtils.h"
-#include "nsRect.h"
 
 namespace mozilla {
 namespace layers {
@@ -145,15 +143,6 @@ ContainerLayerD3D10::GetFirstChildD3D10()
   return static_cast<LayerD3D10*>(mFirstChild->ImplData());
 }
 
-static inline LayerD3D10*
-GetNextSiblingD3D10(LayerD3D10* aLayer)
-{
-   Layer* layer = aLayer->GetLayer()->GetNextSibling();
-   return layer ? static_cast<LayerD3D10*>(layer->
-                                           ImplData())
-                : nsnull;
-}
-
 void
 ContainerLayerD3D10::RenderLayer()
 {
@@ -171,7 +160,6 @@ ContainerLayerD3D10::RenderLayer()
 
   gfx3DMatrix oldViewMatrix;
 
-  gfxMatrix contTransform;
   if (useIntermediate) {
     device()->OMGetRenderTargets(1, getter_AddRefs(previousRTView), NULL);
  
@@ -204,26 +192,14 @@ ContainerLayerD3D10::RenderLayer()
 
     previousViewportSize = mD3DManager->GetViewport();
     mD3DManager->SetViewport(nsIntSize(visibleRect.Size()));
-  } else {
-#ifdef DEBUG
-    PRBool is2d =
-#endif
-    GetEffectiveTransform().Is2D(&contTransform);
-    NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
   /*
    * Render this container's contents.
    */
-  for (LayerD3D10* layerToRender = GetFirstChildD3D10();
-       layerToRender != nsnull;
-       layerToRender = GetNextSiblingD3D10(layerToRender)) {
-
-    const nsIntRect* clipRect = layerToRender->GetLayer()->GetClipRect();
-    if ((clipRect && clipRect->IsEmpty()) ||
-        layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
-      continue;
-    }
+  LayerD3D10 *layerToRender = GetFirstChildD3D10();
+  while (layerToRender) {
+    const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
 
     D3D10_RECT oldScissor;
     if (clipRect || useIntermediate) {
@@ -246,24 +222,6 @@ ContainerLayerD3D10::RenderLayer()
 
       D3D10_RECT d3drect;
       if (!useIntermediate) {
-        if (clipRect) {
-          gfxRect cliprect(r.left, r.top, r.left + r.right, r.top + r.bottom);
-          gfxRect trScissor = contTransform.TransformBounds(cliprect);
-          trScissor.Round();
-          nsIntRect trIntScissor;
-          if (gfxUtils::GfxRectToIntRect(trScissor, &trIntScissor)) {
-            r.left = trIntScissor.x;
-            r.top = trIntScissor.y;
-            r.right = trIntScissor.XMost();
-            r.bottom = trIntScissor.YMost();
-          } else {
-            r.left = 0;
-            r.top = 0;
-            r.right = visibleRect.width;
-            r.bottom = visibleRect.height;
-            clipRect = nsnull;
-          }
-        }
         // Scissor rect should be an intersection of the old and current scissor.
         r.left = NS_MAX<PRInt32>(oldScissor.left, r.left);
         r.right = NS_MIN<PRInt32>(oldScissor.right, r.right);
@@ -273,6 +231,10 @@ ContainerLayerD3D10::RenderLayer()
 
       if (r.left >= r.right || r.top >= r.bottom) {
         // Entire layer's clipped out, don't bother drawing.
+        Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
+        layerToRender = nextSibling ? static_cast<LayerD3D10*>(nextSibling->
+                                                              ImplData())
+                                    : nsnull;
         continue;
       }
 
@@ -290,6 +252,11 @@ ContainerLayerD3D10::RenderLayer()
     if (clipRect || useIntermediate) {
       device()->RSSetScissorRects(1, &oldScissor);
     }
+
+    Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
+    layerToRender = nextSibling ? static_cast<LayerD3D10*>(nextSibling->
+                                                          ImplData())
+                                : nsnull;
   }
 
   if (useIntermediate) {
