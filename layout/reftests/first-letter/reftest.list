@@ -36,6 +36,7 @@ random == dynamic-3b.html dynamic-3-ref.html
 == 229764-2.html 229764-ref.html
 == 329069-1.html 329069-1-ref.html
 fails-if(!gtk2Widget) == 329069-2.html 329069-2-ref.html # bug 553981
+fails-if(!gtk2Widget) == 329069-3.html 329069-3-ref.html # bug 614468
 == 342120-1.xhtml 342120-1-ref.xhtml
 == 379799-1.html 379799-1-ref.html
 == 399941-1.html 399941-1-ref.html
