@@ -2316,22 +2316,22 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
 
     /* Get the type object for the returned array. */
-    TypeObject *objType = obj ? obj->getTypeObject() : NULL;
+    TypeObject *type = obj ? obj->getTypeObject() : NULL;
 
 #ifdef JS_TYPE_INFERENCE
-    if (!objType || !objType->hasArrayPropagation) {
+    if (!type || !type->isArray(cx)) {
         /*
          * Make a new type object for the return value.  This is an unexpected
          * result of the call so mark it at the callsite.
          */
-        objType = cx->getTypeCallerInitObject(true);
-        cx->markTypeObjectUnknownProperties(objType);
-        cx->markTypeCallerUnexpected((jstype) objType);
+        type = cx->getTypeCallerInitObject(true);
+        cx->markTypeObjectUnknownProperties(type);
+        cx->markTypeCallerUnexpected((jstype) type);
     }
 #endif
 
     if (cx->isTypeCallerMonitored())
-        cx->markTypeObjectUnknownProperties(objType);
+        cx->markTypeObjectUnknownProperties(type);
 
     /*
      * Create a new array value to return.  Our ECMA v2 proposal specs
@@ -2339,7 +2339,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
      * arguments.  We think this is best because it eliminates the need
      * for callers to do an extra test to handle the empty splice case.
      */
-    JSObject *obj2 = js_NewArrayObject(cx, 0, NULL, objType);
+    JSObject *obj2 = js_NewArrayObject(cx, 0, NULL, type);
     if (!obj2)
         return JS_FALSE;
     vp->setObject(*obj2);
@@ -2614,26 +2614,26 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
         begin = end;
 
     /* Get the type object for the returned array. */
-    TypeObject *objType = obj->getTypeObject();
+    TypeObject *type = obj->getTypeObject();
 
 #ifdef JS_TYPE_INFERENCE
-    if (!objType->hasArrayPropagation) {
+    if (!type->isArray(cx)) {
         /*
          * Make a new type object for the return value.  This is an unexpected
          * result of the call so mark it at the callsite.
          */
-        objType = cx->getTypeCallerInitObject(true);
-        cx->markTypeObjectUnknownProperties(objType);
-        cx->markTypeCallerUnexpected((jstype) objType);
+        type = cx->getTypeCallerInitObject(true);
+        cx->markTypeObjectUnknownProperties(type);
+        cx->markTypeCallerUnexpected((jstype) type);
     }
 #endif
 
     if (cx->isTypeCallerMonitored())
-        cx->markTypeObjectUnknownProperties(objType);
+        cx->markTypeObjectUnknownProperties(type);
 
     if (obj->isDenseArray() && end <= obj->getDenseArrayCapacity() &&
         !js_PrototypeHasIndexedProperties(cx, obj)) {
-        nobj = js_NewArrayObject(cx, end - begin, obj->getDenseArrayElements() + begin, objType);
+        nobj = js_NewArrayObject(cx, end - begin, obj->getDenseArrayElements() + begin, type);
         if (!nobj)
             return JS_FALSE;
         vp->setObject(*nobj);
@@ -2641,7 +2641,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Create a new Array object and root it using *vp. */
-    nobj = js_NewArrayObject(cx, 0, NULL, objType);
+    nobj = js_NewArrayObject(cx, 0, NULL, type);
     if (!nobj)
         return JS_FALSE;
     vp->setObject(*nobj);
@@ -3071,8 +3071,7 @@ static void array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
 
-    // treat the returned array as a new allocation site.
-    // TODO: could use the 'this' array instead.
+    /* Treat the returned array as a new allocation site. */
     TypeObject *object = site->getInitObject(cx, true);
 
     site->forceThisTypes(cx);
@@ -3080,11 +3079,11 @@ static void array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
     if (site->returnTypes)
         site->returnTypes->addType(cx, (jstype) object);
 
-    // propagate elements of the 'this' array to the result.
-    TypeSet *indexTypes = object->indexTypes(cx);
+    /* Propagate elements of the 'this' array to the result. */
+    TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, false);
     site->thisTypes->addGetProperty(cx, site->code, indexTypes, JSID_VOID);
 
-    // ditto for all arguments to the call.
+    /* Ditto for all arguments to the call. */
     for (size_t ind = 0; ind < site->argumentCount; ind++)
         site->argumentTypes[ind]->addGetProperty(cx, site->code, indexTypes, JSID_VOID);
 #endif
@@ -3154,7 +3153,7 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
         // makes a new array whose element type is the return value of the
         // argument function.
         TypeObject *object = site->getInitObject(cx, true);
-        extraSite->returnTypes = object->indexTypes(cx);
+        extraSite->returnTypes = object->getProperty(cx, JSID_VOID, true);
 
         site->returnTypes->addType(cx, (jstype) object);
         break;
@@ -3166,7 +3165,7 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
         // as the 'this' array, but might run into problems when we're able
         // to handle receiver types other than arrays.
         TypeObject *object = site->getInitObject(cx, true);
-        elemTypes->addSubset(cx, pool, object->indexTypes(cx));
+        elemTypes->addSubset(cx, pool, object->getProperty(cx, JSID_VOID, true));
 
         site->returnTypes->addType(cx, (jstype) object);
         break;
@@ -3373,7 +3372,7 @@ static void array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *
     if (site->returnTypes)
         site->returnTypes->addType(cx, (jstype) object);
 
-    TypeSet *indexTypes = object->indexTypes(cx);
+    TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, true);
 
     // ignore the case where the call is passed a single argument. this is
     // expected to be the array length, but if it isn't we will catch it

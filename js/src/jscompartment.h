@@ -162,7 +162,9 @@ JSContext::getFixedTypeObject(js::types::FixedTypeObjectName which)
     js::types::TypeObject *type = compartment->types.fixedTypeObjects[which];
     if (type)
         return type;
-    return compartment->types.makeFixedTypeObject(this, which);
+    type = compartment->types.makeFixedTypeObject(this, which);
+    compartment->types.fixedTypeObjects[which] = type;
+    return type;
 #else
     return NULL;
 #endif

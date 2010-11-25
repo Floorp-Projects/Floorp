@@ -1720,7 +1720,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         JSObject *proto;
         if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
             return false;
-        TypeObject *typeProto = obj->getTypeFunctionPrototype(cx);
+        TypeObject *typeProto = obj->getTypePrototype(cx);
         proto = NewNativeClassInstance(cx, &js_ObjectClass, proto, parent, typeProto);
         if (!proto)
             return false;
@@ -2734,11 +2734,16 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 
     /*
      * Remember the prototype's type information as js_NewFunction will overwrite it.
-     * we also need to attach any lazy properties.
+     * we also need to attach any lazy properties. :TODO: these are also own properties
+     * of individual functions, but we don't add them to the ownTypes of those objects.
+     * This is OK as ownTypes vs. prototype types are used only when the property
+     * holds a singleton object, but needs to be cleaned up and clarified.
      */
     TypeObject *protoFunc = proto->getTypeObject();
     cx->addTypeProperty(protoFunc, "name", TYPE_STRING);
     cx->addTypeProperty(protoFunc, "length", TYPE_INT32);
+    cx->addTypeProperty(protoFunc, "arguments",
+                        (jstype) cx->getFixedTypeObject(TYPE_OBJECT_ARGUMENTS));
 
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL, NULL, NULL);
     if (!fun)

@@ -4853,7 +4853,7 @@ mjit::Compiler::jsop_newinit()
 
     prepareStubCall(Uses(0));
 
-    types::TypeObject *type = script->getTypeInitObject(cx, PC, true);
+    types::TypeObject *type = script->getTypeInitObject(cx, PC, isArray);
     masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
 
     if (isArray) {
@@ -5178,9 +5178,9 @@ mjit::Compiler::arrayPrototypeHasIndexedSetter()
 {
 #ifdef JS_TYPE_INFERENCE
     types::TypeSet *arrayTypes =
-        cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE)->indexTypes(cx);
+        cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE)->getProperty(cx, JSID_VOID, false);
     types::TypeSet *objectTypes =
-        cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE)->indexTypes(cx);
+        cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE)->getProperty(cx, JSID_VOID, false);
     return arrayTypes->hasGetterSetter(cx, script)
         || objectTypes->hasGetterSetter(cx, script);
 #endif

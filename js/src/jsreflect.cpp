@@ -2885,7 +2885,7 @@ static JSFunctionSpec static_methods[] = {
 JSObject *
 js_InitReflectClass(JSContext *cx, JSObject *obj)
 {
-    types::TypeObject *type = cx->getTypeObject(js_ReflectClass.name, false, false);
+    types::TypeObject *type = cx->getTypeObject(js_ReflectClass.name, NULL);
     JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ReflectClass, NULL, obj, type);
     if (!Reflect)
         return NULL;

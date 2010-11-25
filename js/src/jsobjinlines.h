@@ -945,6 +945,12 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, js::types::TypeObject *type
         if (!FindClassPrototype(cx, global, protoKey, &proto, clasp))
             return NULL;
     }
+#ifdef JS_TYPE_INFERENCE
+    if (!type) {
+        JS_ASSERT(proto);
+        type = proto->getTypePrototypeNewObject(cx);
+    }
+#endif
 
     return NewNativeClassInstance(cx, clasp, proto, global, type, kind);
 }
@@ -1015,6 +1021,12 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
         if (!proto && !js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
             return NULL;
     }
+#ifdef JS_TYPE_INFERENCE
+    if (!type) {
+        JS_ASSERT(proto);
+        type = proto->getTypePrototypeNewObject(cx);
+    }
+#endif
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
