@@ -199,6 +199,8 @@ private:
     PRUint16 mMaxRequestDelay; // in seconds
     PRUint16 mMaxPipelinedRequests;
 
+    PRPackedBool mIsShuttingDown;
+
     //-------------------------------------------------------------------------
     // NOTE: these members are only accessed on the socket transport thread
     //-------------------------------------------------------------------------
@@ -215,6 +217,7 @@ private:
                                  PRUint8 caps, nsHttpConnection *);
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
+    nsresult EnsureSocketThreadTargetIfOnline();
 
     // message handlers have this signature
     typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(PRInt32, void *);
