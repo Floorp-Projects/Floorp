@@ -561,7 +561,7 @@ fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
 == 368020-1.html 368020-1-ref.html
-random == 368020-2.html 368020-2-ref.html # bug 403181 comment 52 explains why this test is disabled.
+== 368020-2.html 368020-2-ref.html
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
 random-if(gtk2Widget) == 368020-5.html 368020-5-ref.html # bug 388591
