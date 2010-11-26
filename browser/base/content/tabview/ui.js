@@ -482,9 +482,6 @@ let UI = {
     gTabViewDeck.selectedIndex = 0;
     gBrowser.contentWindow.focus();
 
-    // set the close button on tab
-    gBrowser.tabContainer.adjustTabstrip();
-
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
     this._setActiveTitleColor(false);

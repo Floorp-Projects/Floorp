@@ -1894,6 +1894,7 @@
         <![CDATA[
           if (aTab.hidden) {
             aTab.removeAttribute("hidden");
+            this.tabContainer.adjustTabstrip();
             let event = document.createEvent("Events");
             event.initEvent("TabShow", true, false);
             aTab.dispatchEvent(event);
@@ -1909,6 +1910,7 @@
           if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
               this._removingTabs.indexOf(aTab) == -1) {
             aTab.setAttribute("hidden", "true");
+            this.tabContainer.adjustTabstrip();
             let event = document.createEvent("Events");
             event.initEvent("TabHide", true, false);
             aTab.dispatchEvent(event);
