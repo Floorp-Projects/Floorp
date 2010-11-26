@@ -42,9 +42,13 @@
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_THREADSAFE_ADDREF(AudioChild);
+NS_IMPL_THREADSAFE_RELEASE(AudioChild);
+
 AudioChild::AudioChild()
   : mLastSampleOffset(-1),
-    mLastSampleOffsetTime(0)
+    mLastSampleOffsetTime(0),
+    mIPCOpen(PR_TRUE)
 {
   MOZ_COUNT_CTOR(AudioChild);
 }
@@ -52,6 +56,12 @@ AudioChild::AudioChild()
 AudioChild::~AudioChild()
 {
   MOZ_COUNT_DTOR(AudioChild);
+}
+
+void
+AudioChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mIPCOpen = PR_FALSE;
 }
 
 bool
