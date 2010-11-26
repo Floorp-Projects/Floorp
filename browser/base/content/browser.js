@@ -5446,6 +5446,8 @@ function setStyleDisabled(disabled) {
 /* End of the Page Style functions */
 
 var BrowserOffline = {
+  _inited: false,
+
   /////////////////////////////////////////////////////////////////////////////
   // BrowserOffline Public Methods
   init: function ()
@@ -5456,13 +5458,14 @@ var BrowserOffline = {
     Services.obs.addObserver(this, "network:offline-status-changed", false);
 
     this._updateOfflineUI(Services.io.offline);
+
+    this._inited = true;
   },
 
   uninit: function ()
   {
-    try {
+    if (this._inited) {
       Services.obs.removeObserver(this, "network:offline-status-changed");
-    } catch (ex) {
     }
   },
 
@@ -7457,6 +7460,7 @@ let gPrivateBrowsingUI = {
   _privateBrowsingService: null,
   _searchBarValue: null,
   _findBarValue: null,
+  _inited: false,
 
   init: function PBUI_init() {
     Services.obs.addObserver(this, "private-browsing", false);
@@ -7467,9 +7471,14 @@ let gPrivateBrowsingUI = {
 
     if (this.privateBrowsingEnabled)
       this.onEnterPrivateBrowsing(true);
+
+    this._inited = true;
   },
 
   uninit: function PBUI_unint() {
+    if (!this._inited)
+      return;
+
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "private-browsing-transition-complete");
   },
