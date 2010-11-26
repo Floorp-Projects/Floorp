@@ -941,6 +941,15 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 #endif
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsInRequest(JSContext *cx)
+{
+#ifdef JS_THREADSAFE
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    return JS_THREAD_DATA(cx)->requestDepth != 0;
+#endif
+}
+
 JS_PUBLIC_API(void)
 JS_Lock(JSRuntime *rt)
 {
