@@ -579,9 +579,14 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
   PRInt32 cnt = 0;
   while (cnt < aEntries) {
     nsCOMPtr<nsISHTransaction> nextTxn;
-    if (mListRoot)
+    if (mListRoot) {
       mListRoot->GetNext(getter_AddRefs(nextTxn));
+      mListRoot->SetNext(nsnull);
+    }
     mListRoot = nextTxn;
+    if (mListRoot) {
+      mListRoot->SetPrev(nsnull);
+    }
     cnt++;        
   }
   mLength -= cnt;
