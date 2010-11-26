@@ -185,18 +185,11 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
       if (!(getter = ::JS_CloneFunctionObject(cx, mJSGetterObject, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv;
-    nsAutoGCRoot getterroot(&getter, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
     JSObject * setter = nsnull;
     if (mJSSetterObject)
       if (!(setter = ::JS_CloneFunctionObject(cx, mJSSetterObject, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsAutoGCRoot setterroot(&setter, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
     nsDependentString name(mName);
     if (!::JS_DefineUCProperty(cx, targetClassObject,
                                reinterpret_cast<const jschar*>(mName),
