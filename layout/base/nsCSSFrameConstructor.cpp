@@ -4748,8 +4748,8 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
   }
 
   static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
-  static const FrameConstructionData sGenericContainerData =
-    SIMPLE_SVG_FCDATA(NS_NewSVGGenericContainerFrame);
+  static const FrameConstructionData sContainerData =
+    SIMPLE_SVG_FCDATA(NS_NewSVGContainerFrame);
 
   PRBool parentIsSVG = PR_FALSE;
   nsIContent* parentContent =
@@ -4792,17 +4792,11 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sSuppressData;
   }
 
-  // Reduce the number of frames we create unnecessarily. Note that this is not
-  // where we select which frame in a <switch> to render! That happens in
-  // nsSVGSwitchFrame::PaintSVG.
+  // Elements with failing conditional processing attributes never get
+  // rendered.  Note that this is not where we select which frame in a
+  // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
   if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
-    // Note that just returning is probably not right.  According
-    // to the spec, <use> is allowed to use an element that fails its
-    // conditional, but because we never actually create the frame when
-    // a conditional fails and when we use GetReferencedFrame to find the
-    // references, things don't work right.
-    // XXX FIXME XXX
-    return &sSuppressData;
+    return &sContainerData;
   }
 
   // Special case for aTag == nsGkAtoms::svg because we don't want to
@@ -4860,6 +4854,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     SIMPLE_SVG_CREATE(rect, NS_NewSVGPathGeometryFrame),
     SIMPLE_SVG_CREATE(path, NS_NewSVGPathGeometryFrame),
     SIMPLE_SVG_CREATE(defs, NS_NewSVGContainerFrame),
+    SIMPLE_SVG_CREATE(generic, NS_NewSVGGenericContainerFrame),
     { &nsGkAtoms::foreignObject,
       FULL_CTOR_FCDATA(FCDATA_DISALLOW_OUT_OF_FLOW,
                        &nsCSSFrameConstructor::ConstructSVGForeignObjectFrame) },
@@ -4908,7 +4903,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
                   NS_ARRAY_LENGTH(sSVGData));
 
   if (!data) {
-    data = &sSuppressData;
+    data = &sContainerData;
   }
 
   return data;
