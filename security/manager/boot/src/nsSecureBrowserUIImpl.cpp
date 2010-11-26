@@ -173,7 +173,7 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   , mOnStateLocationChangeReentranceDetection(0)
 #endif
 {
-  mMonitor = PR_NewMonitor();
+  mMonitor = nsAutoMonitor::NewMonitor("security.secureBrowserUIImplMonitor");
   mTransferringRequests.ops = nsnull;
   ResetStateTracking();
   
@@ -190,7 +190,7 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
     mTransferringRequests.ops = nsnull;
   }
   if (mMonitor)
-    PR_DestroyMonitor(mMonitor);
+    nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsSecureBrowserUIImpl,
