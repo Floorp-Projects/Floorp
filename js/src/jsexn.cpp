@@ -1036,7 +1036,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         JSProtoKey protoKey = GetExceptionProtoKey(i);
         
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
-        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 3, JSFUN_CONSTRUCTOR);
+        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 1, JSFUN_CONSTRUCTOR);
         if (!fun)
             return NULL;
         roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));

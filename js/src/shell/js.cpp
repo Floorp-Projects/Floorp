@@ -2081,8 +2081,8 @@ Disassemble(JSContext *cx, uintN argc, jsval *vp)
     bool lines = false, recursive = false;
     while (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         JSString *str = JSVAL_TO_STRING(argv[0]);
-        lines |= JS_MatchStringAndAscii(str, "-l");
-        recursive |= JS_MatchStringAndAscii(str, "-r");
+        lines |= !!JS_MatchStringAndAscii(str, "-l");
+        recursive |= !!JS_MatchStringAndAscii(str, "-r");
         if (!lines && !recursive)
             break;
         argv++, argc--;
@@ -4198,8 +4198,10 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
         return false;
     }
 
-    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength, &v))
+    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength,
+                                JS_STRUCTURED_CLONE_VERSION, &v)) {
         return false;
+    }
     JS_SET_RVAL(cx, vp, v);
     return true;
 }

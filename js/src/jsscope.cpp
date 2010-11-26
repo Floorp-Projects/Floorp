@@ -203,26 +203,21 @@ Shape::maybeHash(JSContext *cx)
 # define LIVE_SCOPE_METER(cx,expr) /* nothing */
 #endif
 
+static inline bool
+InitField(JSContext *cx, EmptyShape *JSRuntime:: *field, Class *clasp, uint32 shape)
+{
+    if (EmptyShape *emptyShape = EmptyShape::create(cx, clasp)) {
+        cx->runtime->*field = emptyShape;
+        JS_ASSERT(emptyShape->shape == shape);
+        return true;
+    }
+    return false;
+}
+
 /* static */
 bool
 Shape::initRuntimeState(JSContext *cx)
 {
-    JSRuntime *rt = cx->runtime;
-
-#define SHAPE(Name) rt->empty##Name##Shape
-#define CLASP(Name) &js_##Name##Class
-
-#define INIT_EMPTY_SHAPE(Name,NAME)                                           \
-    INIT_EMPTY_SHAPE_WITH_CLASS(Name, NAME, CLASP(Name))
-
-#define INIT_EMPTY_SHAPE_WITH_CLASS(Name,NAME,clasp)                          \
-    JS_BEGIN_MACRO                                                            \
-        SHAPE(Name) = EmptyShape::create(cx, clasp);                          \
-        if (!SHAPE(Name))                                                     \
-            return false;                                                     \
-        JS_ASSERT(SHAPE(Name)->shape == Shape::EMPTY_##NAME##_SHAPE);         \
-    JS_END_MACRO
-
     /*
      * NewArguments allocates dslots to have enough room for the argc of the
      * particular arguments object being created.
@@ -233,30 +228,37 @@ Shape::initRuntimeState(JSContext *cx)
      * arguments objects. This helps ensure that any arguments object needing
      * its own mutable scope (with unique shape) is a rare event.
      */
-    INIT_EMPTY_SHAPE(Arguments, ARGUMENTS);
+    if (!InitField(cx, &JSRuntime::emptyArgumentsShape, &js_ArgumentsClass,
+                   Shape::EMPTY_ARGUMENTS_SHAPE)) {
+        return false;
+    }
 
-    INIT_EMPTY_SHAPE(Block, BLOCK);
+    if (!InitField(cx, &JSRuntime::emptyBlockShape, &js_BlockClass, Shape::EMPTY_BLOCK_SHAPE))
+        return false;
 
     /*
      * Initialize the shared scope for all empty Call objects so gets for args
      * and vars do not force the creation of a mutable scope for the particular
      * call object being accessed.
      */
-    INIT_EMPTY_SHAPE(Call, CALL);
+    if (!InitField(cx, &JSRuntime::emptyCallShape, &js_CallClass, Shape::EMPTY_CALL_SHAPE))
+        return false;
 
     /* A DeclEnv object holds the name binding for a named function expression. */
-    INIT_EMPTY_SHAPE(DeclEnv, DECL_ENV);
+    if (!InitField(cx, &JSRuntime::emptyDeclEnvShape, &js_DeclEnvClass,
+                   Shape::EMPTY_DECL_ENV_SHAPE)) {
+        return false;
+    }
 
     /* Non-escaping native enumerator objects share this empty scope. */
-    INIT_EMPTY_SHAPE_WITH_CLASS(Enumerator, ENUMERATOR, &js_IteratorClass);
+    if (!InitField(cx, &JSRuntime::emptyEnumeratorShape, &js_IteratorClass,
+                   Shape::EMPTY_ENUMERATOR_SHAPE)) {
+        return false;
+    }
 
     /* Same drill for With objects. */
-    INIT_EMPTY_SHAPE(With, WITH);
-
-#undef SHAPE
-#undef CLASP
-#undef INIT_EMPTY_SHAPE
-#undef INIT_EMPTY_SHAPE_WITH_CLASS
+    if (!InitField(cx, &JSRuntime::emptyWithShape, &js_WithClass, Shape::EMPTY_WITH_SHAPE))
+        return false;
 
     return true;
 }
@@ -973,9 +975,9 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
         shape->rawGetter = getter;
         shape->rawSetter = setter;
-        shape->attrs = attrs;
+        shape->attrs = uint8(attrs);
         shape->flags = flags | Shape::IN_DICTIONARY;
-        shape->shortid = shortid;
+        shape->shortid = int16(shortid);
 
         /*
          * We are done updating shape and lastProp. Now we may need to update

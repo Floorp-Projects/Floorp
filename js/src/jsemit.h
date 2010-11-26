@@ -252,9 +252,12 @@ struct JSStmtInfo {
 #define TCF_COMPILE_FOR_EVAL     0x2000000
 
 /*
- * The function contains a JSOP_DEFFUN bytecode.
+ * The function has broken or incorrect def-use information, and it cannot
+ * safely optimize free variables to global names. This can happen because
+ * of a named function statement not at the top level (emitting a DEFFUN),
+ * or a variable declaration inside a "with".
  */
-#define TCF_FUN_HAS_DEFFUN       0x4000000
+#define TCF_FUN_MIGHT_ALIAS_LOCALS  0x4000000
 
 /*
  * Flags to check for return; vs. return expr; in a function.
@@ -272,7 +275,7 @@ struct JSStmtInfo {
                                  TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS          |                    \
                                  TCF_FUN_CALLS_EVAL      |                    \
-                                 TCF_FUN_HAS_DEFFUN      |                    \
+                                 TCF_FUN_MIGHT_ALIAS_LOCALS |                 \
                                  TCF_FUN_MUTATES_PARAMETER |                  \
                                  TCF_STRICT_MODE_CODE)
 
@@ -403,12 +406,12 @@ struct JSTreeContext {              /* tree context for semantic checks */
         return flags & TCF_FUN_CALLS_EVAL;
     }
 
-    void noteHasDefFun() {
-        flags |= TCF_FUN_HAS_DEFFUN;
+    void noteMightAliasLocals() {
+        flags |= TCF_FUN_MIGHT_ALIAS_LOCALS;
     }
 
-    bool hasDefFun() const {
-        return flags & TCF_FUN_HAS_DEFFUN;
+    bool mightAliasLocals() const {
+        return flags & TCF_FUN_MIGHT_ALIAS_LOCALS;
     }
 
     void noteParameterMutation() {
