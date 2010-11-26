@@ -61,6 +61,8 @@ var gPrivacyPane = {
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingObserver();
+
+    window.addEventListener("unload", this.removeASPBObserver.bind(this), false);
   },
 
   // HISTORY MODE
@@ -245,13 +247,24 @@ var gPrivacyPane = {
                               .QueryInterface(Components.interfaces.nsIPrefBranch2);
     prefService.addObserver("browser.privatebrowsing.autostart",
                             this.autoStartPrivateBrowsingObserver,
-                            true);
+                            false);
+  },
+
+  /**
+   * Install the observer for the auto-start private browsing mode pref.
+   */
+  removeASPBObserver: function PPP_removeASPBObserver()
+  {
+    let prefService = document.getElementById("privacyPreferences")
+                              .service
+                              .QueryInterface(Components.interfaces.nsIPrefBranch2);
+    prefService.removeObserver("browser.privatebrowsing.autostart",
+                               this.autoStartPrivateBrowsingObserver);
   },
 
   autoStartPrivateBrowsingObserver:
   {
-    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIObserver,
-                                           Components.interfaces.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIObserver]),
 
     observe: function PPP_observe(aSubject, aTopic, aData)
     {
