@@ -427,7 +427,7 @@ ContentParent::AllocPAudio(const PRInt32& numChannels,
                            const PRInt32& format)
 {
     AudioParent *parent = new AudioParent(numChannels, rate, format);
-    parent->AddRef();
+    NS_ADDREF(parent);
     return parent;
 }
 
