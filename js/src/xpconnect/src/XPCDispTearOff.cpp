@@ -353,8 +353,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
 
         // We use js_Invoke so that the gcthings we use as args will be rooted
         // by the engine as we do conversions and prepare to do the function
-        // call. This adds a fair amount of complexity, but it's a good
-        // optimization compared to calling JS_AddRoot for each item.
+        // call.
 
         js::LeaveTrace(cx);
 

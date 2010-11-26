@@ -6740,9 +6740,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSObject *funObj = ::JS_GetFunctionObject(fun);
 
-    nsAutoGCRoot root(&funObj, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     if (!::JS_DefinePropertyById(cx, windowObj, id, JSVAL_VOID,
                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj),
                                  nsnull,
