@@ -61,9 +61,14 @@ import android.net.Uri;
 
 class GeckoAppShell
 {
+    static {
+        sGeckoRunning = false;
+    }
+
     // static members only
     private GeckoAppShell() { }
 
+    static boolean sGeckoRunning;
     static private GeckoEvent gPendingResize = null;
 
     static private boolean gRestartScheduled = false;
@@ -144,7 +149,7 @@ class GeckoAppShell
     private static GeckoEvent mLastDrawEvent;
 
     public static void sendEventToGecko(GeckoEvent e) {
-        if (GeckoApp.mAppContext.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
+        if (sGeckoRunning) {
             if (gPendingResize != null) {
                 notifyGeckoOfEvent(gPendingResize);
                 gPendingResize = null;
@@ -333,8 +338,7 @@ class GeckoAppShell
 
     static void onAppShellReady()
     {
-        // mLaunchState can only be Launched at this point
-        GeckoApp.mAppContext.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
+        sGeckoRunning = true;
         if (gPendingResize != null) {
             notifyGeckoOfEvent(gPendingResize);
             gPendingResize = null;
@@ -342,8 +346,7 @@ class GeckoAppShell
     }
 
     static void onXreExit() {
-        // mLaunchState can only be Launched or GeckoRunning at this point
-        GeckoApp.mAppContext.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
+        sGeckoRunning = false;
         Log.i("GeckoAppJava", "XRE exited");
         if (gRestartScheduled) {
             GeckoApp.mAppContext.doRestart();
