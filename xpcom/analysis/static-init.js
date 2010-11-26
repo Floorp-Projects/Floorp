@@ -50,5 +50,5 @@ function pretty_func(fn) {
 }
 
 function pretty_var(v) {
-  return type_string(TREE_TYPE(v)) + " " + decl_name_string(v);
+  return type_string(TREE_TYPE(v)) + " " + expr_display(v);
 }
