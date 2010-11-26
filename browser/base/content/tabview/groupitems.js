@@ -90,14 +90,6 @@ function GroupItem(listOfEls, options) {
   // The <TabItem> for the groupItem's active tab.
   this._activeTab = null;
 
-  // Variables: xDensity, yDensity
-  // "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
-  // = "not squishable". For example, if there is extra space in the vertical direction,
-  // yDensity will be < 1. These are set by <GroupItem.arrange>, as it is dependent on the tab items
-  // inside the groupItem.
-  this.xDensity = 0;
-  this.yDensity = 0;
-
   if (Utils.isPoint(options.userSize))
     this.userSize = new Point(options.userSize);
 
@@ -1100,16 +1092,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           options = {};
 
         this._children.forEach(function(child) {
-            child.removeClass("stacked")
+          child.removeClass("stacked")
         });
 
         this.topChild = null;
 
-        if (!this._children.length) {
-          this.xDensity = 0;
-          this.yDensity = 0;
+        if (!this._children.length)
           return;
-        }
 
         var arrangeOptions = Utils.copy(options);
         Utils.extend(arrangeOptions, {
@@ -1120,13 +1109,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         // of the Rect's used.
 
         var rects = Items.arrange(this._children, bb, arrangeOptions);
-
-        // yDensity = (the distance of the bottom of the last tab to the top of the content area)
-        // / (the total available content height)
-        this.yDensity = (rects[rects.length - 1].bottom - bb.top) / (bb.height);
-
-        // xDensity = (the distance from the left of the content area to the right of the rightmost
-        // tab) / (the total available content width)
 
         // first, find the right of the rightmost tab! luckily, they're in order.
         var rightMostRight = 0;
@@ -1140,7 +1122,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
               break;
           }
         }
-        this.xDensity = (rightMostRight - bb.left) / (bb.width);
 
         this._isStacked = false;
       } else
@@ -1191,13 +1172,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       w = bb.width * scale;
       h = w * itemAspect;
       // let's say one, because, even though there's more space, we're enforcing that with scale.
-      this.xDensity = 1;
-      this.yDensity = h / (bb.height * scale);
     } else { // Short, wide groupItem
       h = bb.height * scale;
       w = h * (1 / itemAspect);
-      this.yDensity = 1;
-      this.xDensity = h / (bb.width * scale);
     }
 
     // x is the left margin that the stack will have, within the content area (bb)
