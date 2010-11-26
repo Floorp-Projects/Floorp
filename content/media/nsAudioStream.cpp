@@ -138,7 +138,7 @@ class nsAudioStreamRemote : public nsAudioStream
   PRInt64 GetSampleOffset();
   PRBool IsPaused();
 
-  AudioChild* mAudioChild;
+  nsRefPtr<AudioChild> mAudioChild;
 
   SampleFormat mFormat;
   int mRate;
@@ -149,12 +149,6 @@ class nsAudioStreamRemote : public nsAudioStream
   PRInt32 mBytesPerSample;
 
   friend class AudioInitEvent;
-  friend class AudioShutdownEvent;
-  friend class AudioWriteEvent;
-  friend class AudioSetVolumeEvent;
-  friend class AudioPauseEvent;
-  friend class AudioDrainEvent;
-  friend class AudioGetSampleEvent;
 };
 
 class AudioInitEvent : public nsRunnable
@@ -181,27 +175,27 @@ class AudioInitEvent : public nsRunnable
 class AudioWriteEvent : public nsRunnable
 {
  public:
-  AudioWriteEvent(nsAudioStreamRemote* owner,
+  AudioWriteEvent(AudioChild* aChild,
                   const void* aBuf,
                   PRUint32 aNumberOfSamples,
                   PRUint32 aBytesPerSample)
   {    
-    mOwner = owner;
+    mAudioChild = aChild;
     mBytesPerSample = aBytesPerSample;
     mBuffer.Assign((const char*)aBuf, aNumberOfSamples*aBytesPerSample);
   }
 
   NS_IMETHOD Run()
   {
-    if (!mOwner->mAudioChild)
+    if (!mAudioChild->IsIPCOpen())
       return NS_OK;
 
-    mOwner->mAudioChild->SendWrite(mBuffer,
-                                   mBuffer.Length() / mBytesPerSample);
+    mAudioChild->SendWrite(mBuffer,
+                           mBuffer.Length() / mBytesPerSample);
     return NS_OK;
   }
 
-  nsRefPtr<nsAudioStreamRemote> mOwner;
+  nsRefPtr<AudioChild> mAudioChild;
   nsCString mBuffer;
   PRUint32 mBytesPerSample;
 };
@@ -209,73 +203,90 @@ class AudioWriteEvent : public nsRunnable
 class AudioSetVolumeEvent : public nsRunnable
 {
  public:
-  AudioSetVolumeEvent(nsAudioStreamRemote* owner, float volume)
+  AudioSetVolumeEvent(AudioChild* aChild, float volume)
   {
-    mOwner = owner;
+    mAudioChild = aChild;
     mVolume = volume;
   }
 
   NS_IMETHOD Run()
   {
-    if (!mOwner->mAudioChild)
+    if (!mAudioChild->IsIPCOpen())
       return NS_OK;
 
-    mOwner->mAudioChild->SendSetVolume(mVolume);
+    mAudioChild->SendSetVolume(mVolume);
     return NS_OK;
   }
   
-  nsRefPtr<nsAudioStreamRemote> mOwner;
+  nsRefPtr<AudioChild> mAudioChild;
   float mVolume;
 };
 
 class AudioDrainEvent : public nsRunnable
 {
  public:
-  AudioDrainEvent(nsAudioStreamRemote* owner)
+  AudioDrainEvent(AudioChild* aChild)
   {
-    mOwner = owner;
+    mAudioChild = aChild;
   }
 
   NS_IMETHOD Run()
   {
-    if (!mOwner->mAudioChild)
+    if (!mAudioChild->IsIPCOpen())
       return NS_OK;
 
-    mOwner->mAudioChild->SendDrain();
+    mAudioChild->SendDrain();
     return NS_OK;
   }
   
-  nsRefPtr<nsAudioStreamRemote> mOwner;
+  nsRefPtr<AudioChild> mAudioChild;
 };
 
 
 class AudioPauseEvent : public nsRunnable
 {
  public:
-  AudioPauseEvent(nsAudioStreamRemote* owner, PRBool pause)
+  AudioPauseEvent(AudioChild* aChild, PRBool pause)
   {
-    mOwner = owner;
+    mAudioChild = aChild;
     mPause = pause;
   }
 
   NS_IMETHOD Run()
   {
-    if (!mOwner->mAudioChild)
+    if (!mAudioChild->IsIPCOpen())
       return NS_OK;
 
     if (mPause)
-      mOwner->mAudioChild->SendPause();
+      mAudioChild->SendPause();
     else
-      mOwner->mAudioChild->SendResume();
+      mAudioChild->SendResume();
 
     return NS_OK;
   }
   
-  nsRefPtr<nsAudioStreamRemote> mOwner;
+  nsRefPtr<AudioChild> mAudioChild;
   PRBool mPause;
 };
 
 
+class AudioShutdownEvent : public nsRunnable
+{
+ public:
+  AudioShutdownEvent(AudioChild* aChild)
+  {
+    mAudioChild = aChild;
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (mAudioChild->IsIPCOpen())
+      PAudioChild::Send__delete__(mAudioChild);
+    return NS_OK;
+  }
+  
+  nsRefPtr<AudioChild> mAudioChild;
+};
 #endif // MOZ_IPC
 
 
@@ -602,14 +613,17 @@ nsAudioStreamRemote::Init(PRInt32 aNumChannels,
   }
 
   nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
-  NS_DispatchToMainThread(event);
+  NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
   return NS_OK;
 }
 
 void
 nsAudioStreamRemote::Shutdown()
 {
-  PAudioChild::Send__delete__(mAudioChild);
+  if (!mAudioChild)
+    return;
+  nsCOMPtr<nsIRunnable> event = new AudioShutdownEvent(mAudioChild);
+  NS_DispatchToMainThread(event);
   mAudioChild = nsnull;
 }
 
@@ -618,7 +632,9 @@ nsAudioStreamRemote::Write(const void* aBuf,
                            PRUint32 aCount,
                            PRBool aBlocking)
 {
-  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(this,
+  if (!mAudioChild)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mAudioChild,
                                                     aBuf,
                                                     aCount,
                                                     mBytesPerSample);
@@ -635,14 +651,18 @@ nsAudioStreamRemote::Available()
 void
 nsAudioStreamRemote::SetVolume(float aVolume)
 {
-  nsCOMPtr<nsIRunnable> event = new AudioSetVolumeEvent(this, aVolume);
+  if (!mAudioChild)
+    return;
+  nsCOMPtr<nsIRunnable> event = new AudioSetVolumeEvent(mAudioChild, aVolume);
   NS_DispatchToMainThread(event);
 }
 
 void
 nsAudioStreamRemote::Drain()
 {
-  nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(this);
+  if (!mAudioChild)
+    return;
+  nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(mAudioChild);
   NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
 }
  
@@ -650,7 +670,9 @@ void
 nsAudioStreamRemote::Pause()
 {
   mPaused = PR_TRUE;
-  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(this, PR_TRUE);
+  if (!mAudioChild)
+    return;
+  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mAudioChild, PR_TRUE);
   NS_DispatchToMainThread(event);
 }
 
@@ -658,7 +680,9 @@ void
 nsAudioStreamRemote::Resume()
 {
   mPaused = PR_FALSE;
-  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(this, PR_FALSE);
+  if (!mAudioChild)
+    return;
+  nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mAudioChild, PR_FALSE);
   NS_DispatchToMainThread(event);
 }
 
