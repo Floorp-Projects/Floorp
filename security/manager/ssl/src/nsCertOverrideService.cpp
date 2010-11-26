@@ -120,13 +120,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsCertOverrideService,
 
 nsCertOverrideService::nsCertOverrideService()
 {
-  monitor = PR_NewMonitor();
+  monitor = nsAutoMonitor::NewMonitor("security.certOverrideServiceMonitor");
 }
 
 nsCertOverrideService::~nsCertOverrideService()
 {
   if (monitor)
-    PR_DestroyMonitor(monitor);
+    nsAutoMonitor::DestroyMonitor(monitor);
 }
 
 nsresult
@@ -914,3 +914,4 @@ nsCertOverrideService::GetHostWithPort(const nsACString & aHostName, PRInt32 aPo
   }
   _retval.Assign(hostPort);
 }
+
