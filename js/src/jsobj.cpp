@@ -4486,7 +4486,9 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
         *propp = (JSProperty *) shape;
     return true;
 
+#ifdef JS_TRACER
 error: // TRACE_2 jumps here on error.
+#endif
     return false;
 }
 

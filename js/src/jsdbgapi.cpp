@@ -1523,10 +1523,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
               |  (!shape->writable()  ? JSPD_READONLY  : 0)
               |  (!shape->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (shape->getter() == js_GetCallArg) {
+    if (shape->getter() == GetCallArg) {
         pd->slot = shape->shortid;
         pd->flags |= JSPD_ARGUMENT;
-    } else if (shape->getter() == js_GetCallVar) {
+    } else if (shape->getter() == GetCallVar) {
         pd->slot = shape->shortid;
         pd->flags |= JSPD_VARIABLE;
     } else {

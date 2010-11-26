@@ -8053,12 +8053,12 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
     vp = NULL;
     JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
     if (cfp) {
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             JS_ASSERT(slot < cfp->numFormalArgs());
             vp = &cfp->formalArg(slot);
             nr.v = *vp;
-        } else if (shape->getterOp() == js_GetCallVar ||
-                   shape->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar ||
+                   shape->getterOp() == GetCallVarChecked) {
             JS_ASSERT(slot < cfp->numSlots());
             vp = &cfp->slots()[slot];
             nr.v = *vp;
@@ -8102,11 +8102,11 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
         // object loses its frame it never regains one, on trace we will also
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             JS_ASSERT(slot < ArgClosureTraits::slot_count(obj));
             slot += ArgClosureTraits::slot_offset(obj);
-        } else if (shape->getterOp() == js_GetCallVar ||
-                   shape->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar ||
+                   shape->getterOp() == GetCallVarChecked) {
             JS_ASSERT(slot < VarClosureTraits::slot_count(obj));
             slot += VarClosureTraits::slot_offset(obj);
         } else {
@@ -8139,10 +8139,10 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
             cx_ins
         };
         const CallInfo* ci;
-        if (shape->getterOp() == js_GetCallArg) {
+        if (shape->getterOp() == GetCallArg) {
             ci = &GetClosureArg_ci;
-        } else if (shape->getterOp() == js_GetCallVar ||
-                   shape->getterOp() == js_GetCallVarChecked) {
+        } else if (shape->getterOp() == GetCallVar ||
+                   shape->getterOp() == GetCallVarChecked) {
             ci = &GetClosureVar_ci;
         } else {
             RETURN_STOP("dynamic property of Call object");
@@ -8683,16 +8683,20 @@ TraceRecorder::inc(const Value &v, LIns*& v_ins, jsint incr, bool pre)
  * Do an increment operation without storing anything to the stack.
  */
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::incHelper(const Value &v, LIns* v_ins, LIns*& v_after, jsint incr)
+TraceRecorder::incHelper(const Value &v, LIns*& v_ins, LIns*& v_after, jsint incr)
 {
     // FIXME: Bug 606071 on making this work for objects.
     if (!v.isPrimitive())
         RETURN_STOP("can inc primitives only");
 
+    // We need to modify |v_ins| the same way relational() modifies
+    // its RHS and LHS.
     if (v.isUndefined()) {
         v_after = w.immd(js_NaN);
+        v_ins = w.immd(js_NaN);
     } else if (v.isNull()) {
         v_after = w.immd(incr);
+        v_ins = w.immd(0.0);
     } else {
         if (v.isBoolean()) {
             v_ins = w.i2d(v_ins);
@@ -12904,13 +12908,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // This happens moderately often, eg. close to 10% of the time in
         // SunSpider, and for some benchmarks it's close to 100%.
         Address dslotAddr = DSlotsAddress(elemp_ins);
-        LIns* isHole_ins = w.name(w.eqi(
-#if JS_BITS_PER_WORD == 32
-                                        w.ldiValueTag(dslotAddr),
-#else
-                                        w.q2i(w.rshuqN(w.ldq(dslotAddr), JSVAL_TAG_SHIFT)),
-#endif
-                                        w.nameImmui(JSVAL_TAG_MAGIC)),
+        LIns* isHole_ins = w.name(is_boxed_magic(dslotAddr, JS_ARRAY_HOLE),
                                   "isHole");
         w.pauseAddingCSEValues();
         if (MaybeBranch mbr1 = w.jf(isHole_ins)) {
@@ -14779,10 +14777,44 @@ TraceRecorder::record_JSOP_IN()
     if (lval.isInt32()) {
         if (!js_Int32ToId(cx, lval.toInt32(), &id))
             RETURN_ERROR_A("OOM converting left operand of JSOP_IN to string");
-        LIns* num_ins;
-        CHECK_STATUS_A(makeNumberInt32(get(&lval), &num_ins));
-        LIns* args[] = { num_ins, obj_ins, cx_ins };
-        x = w.call(&js_HasNamedPropertyInt32_ci, args);
+
+        if (obj->isDenseArray()) {
+            // Fast path for dense arrays
+            VMSideExit* branchExit = snapshot(BRANCH_EXIT);
+            guardDenseArray(obj_ins, branchExit);
+
+            // If our proto has indexed props, all bets are off on our
+            // "false" values and out-of-bounds access.  Just guard on
+            // that.
+            CHECK_STATUS_A(guardPrototypeHasNoIndexedProperties(obj, obj_ins,
+                                                                snapshot(MISMATCH_EXIT)));
+
+            LIns* idx_ins;
+            CHECK_STATUS_A(makeNumberInt32(get(&lval), &idx_ins));
+            idx_ins = w.name(idx_ins, "index");
+            LIns* capacity_ins = w.ldiDenseArrayCapacity(obj_ins);
+            LIns* inRange = w.ltui(idx_ins, capacity_ins);
+
+            if (jsuint(lval.toInt32()) < obj->getDenseArrayCapacity()) {
+                guard(true, inRange, branchExit);
+
+                LIns *elem_ins = w.getDslotAddress(obj_ins, idx_ins);
+                // Need to make sure we don't have a hole
+                LIns *is_hole_ins =
+                    is_boxed_magic(DSlotsAddress(elem_ins), JS_ARRAY_HOLE);
+
+                // Set x to true (index in our array) if is_hole_ins == 0
+                x = w.eqi0(is_hole_ins);
+            } else {
+                guard(false, inRange, branchExit);
+                x = w.nameImmi(0);
+            }
+        } else {
+            LIns* num_ins;
+            CHECK_STATUS_A(makeNumberInt32(get(&lval), &num_ins));
+            LIns* args[] = { num_ins, obj_ins, cx_ins };
+            x = w.call(&js_HasNamedPropertyInt32_ci, args);
+        }
     } else if (lval.isString()) {
         if (!js_ValueToStringId(cx, lval, &id))
             RETURN_ERROR_A("left operand of JSOP_IN didn't convert to a string-id");

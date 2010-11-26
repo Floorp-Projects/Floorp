@@ -885,7 +885,7 @@ InitRegExpClassCompile(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, regexp_construct, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, regexp_construct, 2,
                                    NULL, regexp_methods, regexp_static_props, NULL);
     if (!proto)
         return NULL;
