@@ -21,3 +21,5 @@ random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
+== 611574-1.html 611574-1-ref.html
+== 611574-2.html 611574-2-ref.html
