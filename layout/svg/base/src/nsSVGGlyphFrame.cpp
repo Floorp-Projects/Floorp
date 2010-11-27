@@ -381,7 +381,9 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
   iter.SetInitialMatrix(gfx);
 
   if (SetupCairoFill(gfx)) {
+    gfxMatrix matrix = gfx->CurrentMatrix();
     FillCharacters(&iter, gfx);
+    gfx->SetMatrix(matrix);
   }
 
   if (SetupCairoStroke(gfx)) {
