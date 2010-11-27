@@ -58,6 +58,10 @@ NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
+NS_QUERYFRAME_HEAD(nsFirstLetterFrame)
+  NS_QUERYFRAME_ENTRY(nsFirstLetterFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsFirstLetterFrameSuper)
+
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsFirstLetterFrame::GetFrameName(nsAString& aResult) const
