@@ -969,6 +969,7 @@
              context="toolbar-context-menu" toolboxid="navigator-toolbox"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
+             defaultset="status-bar"
              customizable="true" align="right">
       <statusbar id="status-bar"/>
     </toolbar>
