@@ -75,13 +75,10 @@ class AudioParent : public PAudioParent, public nsITimerCallback
 
     AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
     virtual ~AudioParent();
-    virtual void ActorDestroy(ActorDestroyReason);
 
     nsRefPtr<nsAudioStream> mStream;
     nsCOMPtr<nsITimer> mTimer;
 
-private:
-    PRPackedBool mIPCOpen;
 };
 } // namespace dom
 } // namespace mozilla
