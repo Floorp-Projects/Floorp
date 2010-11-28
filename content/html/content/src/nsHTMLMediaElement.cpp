@@ -2571,6 +2571,14 @@ void nsHTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel)
   // Send Accept header for video and audio types only (Bug 489071)
   SetAcceptHeader(aChannel);
 
+  // Apache doesn't send Content-Length when gzip transfer encoding is used,
+  // which prevents us from estimating the video length (if explicit Content-Duration
+  // and a length spec in the container are not present either) and from seeking.
+  // So, disable the standard "Accept-Encoding: gzip,deflate" that we usually send.
+  // See bug 614760.
+  aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
+                             NS_LITERAL_CSTRING(""), PR_FALSE);
+
   // Set the Referer header
   nsIDocument* doc = GetOwnerDoc();
   if (doc) {
