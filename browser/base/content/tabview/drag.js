@@ -43,9 +43,17 @@
 // The Drag that's currently in process.
 var drag = {
   info: null,
-  zIndex: 100
+  zIndex: 100,
+  lastMoveTime: 0
 };
 
+//----------
+//Variable: resize
+//The resize (actually a Drag) that is currently in process
+var resize = {
+  info: null,
+  lastMoveTime: 0
+};
 
 // ##########
 // Class: Drag (formerly DragInfo)

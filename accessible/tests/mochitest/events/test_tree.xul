@@ -38,10 +38,6 @@
     {
       this.type = "TreeViewChanged";
       this.target = gTree;
-      this.check = function check(aEvent)
-      {
-        ensureAccessibleTree(gTree);
-      }
       this.getID = function getID()
       {
         return "TreeViewChanged";
@@ -133,9 +129,17 @@
         gTreeBox.view = gView;
       }
 
-      this.getID = function setTreeView_getID() { return "TreeViewChanged"; }
+      this.finalCheck = function setTreeView_finalCheck(aEvent)
+      {
+        ensureAccessibleTree(gTree);
+      }
 
-      this.eventSeq = [ new treeViewChangedChecker() ];
+      this.getID = function setTreeView_getID() { return "set tree view"; }
+
+      this.eventSeq = [
+        new treeViewChangedChecker(),
+        new invokerChecker(EVENT_REORDER, gTree)
+      ];
     };
 
     /**

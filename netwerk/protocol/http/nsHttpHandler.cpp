@@ -178,16 +178,17 @@ nsHttpHandler::nsHttpHandler()
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
+    , mIdleSynTimeout(250)
     , mMaxConnections(24)
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
     , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
-    , mInPrivateBrowsingMode(PR_FALSE)
     , mPhishyUserPassLength(1)
     , mQoSBits(0x00)
     , mPipeliningOverSSL(PR_FALSE)
+    , mInPrivateBrowsingMode(PRIVATE_BROWSING_UNKNOWN)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mLegacyAppName("Mozilla")
@@ -250,12 +251,6 @@ nsHttpHandler::Init()
     if (IsNeckoChild())
         NeckoChild::InitNeckoChild();
 #endif // MOZ_IPC
-
-    // figure out if we're starting in private browsing mode
-    nsCOMPtr<nsIPrivateBrowsingService> pbs =
-      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-    if (pbs)
-      pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsingMode);
 
     InitUserAgentComponents();
 
@@ -476,6 +471,23 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
     NS_ADDREF(*result = cacheSession);
 
     return NS_OK;
+}
+
+PRBool
+nsHttpHandler::InPrivateBrowsingMode()
+{
+    if (PRIVATE_BROWSING_UNKNOWN == mInPrivateBrowsingMode) {
+        // figure out if we're starting in private browsing mode
+        nsCOMPtr<nsIPrivateBrowsingService> pbs =
+            do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+        if (!pbs)
+            return PRIVATE_BROWSING_OFF;
+
+        PRBool p = PR_FALSE;
+        pbs->GetPrivateBrowsingEnabled(&p);
+        mInPrivateBrowsingMode = p ? PRIVATE_BROWSING_ON : PRIVATE_BROWSING_OFF;
+    }
+    return PRIVATE_BROWSING_ON == mInPrivateBrowsingMode;
 }
 
 nsresult
@@ -905,6 +917,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("redirection-limit"), &val);
         if (NS_SUCCEEDED(rv))
             mRedirectionLimit = (PRUint8) NS_CLAMP(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("connection-retry-timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("connection-retry-timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mIdleSynTimeout = (PRUint16) NS_CLAMP(val, 0, 3000);
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
@@ -1479,12 +1497,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 #endif
         {
             // HACK: make sure PSM gets initialized on the main thread.
-            nsCOMPtr<nsISocketProviderService> spserv =
-                    do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID);
-            if (spserv) {
-                nsCOMPtr<nsISocketProvider> provider;
-                spserv->GetSocketProvider("ssl", getter_AddRefs(provider));
-            }
+            net_EnsurePSMInit();
         }
     }
 
@@ -1602,9 +1615,9 @@ nsHttpHandler::Observe(nsISupports *subject,
     }
     else if (strcmp(topic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
         if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(data))
-            mInPrivateBrowsingMode = PR_TRUE;
+            mInPrivateBrowsingMode = PRIVATE_BROWSING_ON;
         else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(data))
-            mInPrivateBrowsingMode = PR_FALSE;
+            mInPrivateBrowsingMode = PRIVATE_BROWSING_OFF;
     }
     else if (strcmp(topic, "net:prune-dead-connections") == 0) {
         if (mConnMgr) {

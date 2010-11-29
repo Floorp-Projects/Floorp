@@ -53,7 +53,7 @@ var changes = [
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.rdf"
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="rdf:null"
       ref="http://www.some-fictitious-zoo.com/mammals" sort="?specimens ?name" sortDirection="ascending" sorthints="integer">
 <template id="template">
 <query id="query">

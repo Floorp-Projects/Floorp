@@ -138,7 +138,6 @@ _TEST_FILES = \
 		test_source.html \
 		test_source_write.html \
 		test_standalone.html \
-		test_timeupdate_seek.html \
 		test_timeupdate_small_files.html \
 		test_volume.html \
 		test_video_to_canvas.html \

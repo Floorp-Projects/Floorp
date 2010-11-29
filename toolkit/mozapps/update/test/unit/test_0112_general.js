@@ -11,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Application Update Service.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Robert Strong <robert.bugzilla@gmail.com>.
- *
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
- * the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,36 +38,22 @@
 
 /* General Partial MAR File Patch Apply Failure Test */
 
-const APPLY_TO_DIR = "applyToDir_0112";
-const UPDATES_DIR  = "0112_mar";
-const AFTER_APPLY_DIR = "afterApplyDir";
-const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
-const AFTER_APPLY_BIN_FILE = "TestAUSHelper" + BIN_SUFFIX;
-const RELAUNCH_BIN_FILE = "relaunch_app" + BIN_SUFFIX;
-const RELAUNCH_ARGS = ["Test Arg 1", "Test Arg 2", "Test Arg 3"];
+const TEST_ID = "0112";
 
-var gTestFiles = [
+// The files are in the same order as they are applied from the mar
+const TEST_FILES = [
 {
-  fileName         : "1_exe1.exe",
-  destinationDir   : APPLY_TO_DIR + "/mar_test/1/",
-  originalContents : null,
-  compareContents  : null,
-  originalFile     : "data/aus-0111_general_ref_image.png",
-  compareFile      : "data/aus-0111_general_ref_image.png",
-  originalPerms    : 0755,
-  comparePerms     : null
-}, {
   fileName         : "1_1_image1.png",
-  destinationDir   : APPLY_TO_DIR + "/mar_test/1/1_1/",
+  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/1_1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/aus-0110_general_ref_image.png",
-  compareFile      : "data/aus-0110_general_ref_image.png",
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png",
   originalPerms    : 0644,
   comparePerms     : null
 }, {
   fileName         : "1_1_text1",
-  destinationDir   : APPLY_TO_DIR + "/mar_test/1/1_1/",
+  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/1_1/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
@@ -76,7 +62,7 @@ var gTestFiles = [
   comparePerms     : null
 }, {
   fileName         : "1_1_text2",
-  destinationDir   : APPLY_TO_DIR + "/mar_test/1/1_1/",
+  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/1_1/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
@@ -84,8 +70,17 @@ var gTestFiles = [
   originalPerms    : 0644,
   comparePerms     : null
 }, {
+  fileName         : "1_exe1.exe",
+  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png",
+  originalPerms    : 0755,
+  comparePerms     : null
+}, {
   fileName         : "2_1_text1",
-  destinationDir   : APPLY_TO_DIR + "/mar_test/2/2_1/",
+  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/2/2_1/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
@@ -103,125 +98,38 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
 
-  var testDir, testFile;
+  setupUpdaterTest(TEST_ID, MAR_PARTIAL_FILE, TEST_FILES);
 
-  // The directory the updates will be applied to is the directory name stored
-  // in the APPLY_TO_DIR constant located in the current working directory and
-  // not dist/bin.
-  var applyToDir = do_get_file(APPLY_TO_DIR, true);
+  // The testUpdate function is used for consistency with the tests that require
+  // a timeout before continuing the test.
+  testUpdate();
+}
 
-  // Remove the directory where the update will be applied if it exists.
-  try {
-    removeDirRecursive(applyToDir);
-  }
-  catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + applyToDir.path + "\n" +
-         "Exception: " + e + "\n");
-  }
-  logTestInfo("testing successful removal of the directory used to apply the " +
-              "mar file");
-  do_check_false(applyToDir.exists());
+function end_test() {
+  cleanupUpdaterTest(TEST_ID);
+}
 
-  // Use a directory outside of dist/bin to lessen the garbage in dist/bin
-  var updatesDir = do_get_file(UPDATES_DIR, true);
-  try {
-    // Mac OS X intermittently fails when removing the dir where the updater
-    // binary was launched.
-    removeDirRecursive(updatesDir);
-  }
-  catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updatesDir.path + "\n" +
-         "Exception: " + e + "\n");
-  }
-  if (!updatesDir.exists()) {
-    updatesDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-  }
-
-  // Create the files to test the partial mar's ability to rollback to the
-  // original files.
-  for (var i = 0; i < gTestFiles.length; i++) {
-    var f = gTestFiles[i];
-    if (f.originalFile || f.originalContents) {
-      testDir = do_get_file(f.destinationDir, true);
-      if (!testDir.exists())
-        testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
-      if (f.originalFile) {
-        testFile = do_get_file(f.originalFile);
-        testFile.copyTo(testDir, f.fileName);
-        testFile = do_get_file(f.destinationDir + f.fileName);
-      }
-      else {
-        testFile = do_get_file(f.destinationDir + f.fileName, true);
-        writeFile(testFile, f.originalContents);
-      }
-
-      // Skip these tests on Windows (includes WinCE) and OS/2 since their
-      // implementaions of chmod doesn't really set permissions.
-      if (!IS_WIN && !IS_OS2 && f.originalPerms) {
-        testFile.permissions = f.originalPerms;
-        // Store the actual permissions on the file for reference later after
-        // setting the permissions.
-        if (!f.comparePerms)
-          f.comparePerms = testFile.permissions;
-      }
-    }
-  }
-
-  var afterApplyBinDir = applyToDir.clone();
-  afterApplyBinDir.append(AFTER_APPLY_DIR);
-
-  var afterApplyBin = do_get_file(AFTER_APPLY_BIN_FILE);
-  afterApplyBin.copyTo(afterApplyBinDir, RELAUNCH_BIN_FILE);
-
-  var relaunchApp = afterApplyBinDir.clone();
-  relaunchApp.append(RELAUNCH_BIN_FILE);
-  relaunchApp.permissions = PERMS_DIRECTORY;
-
-  let updaterIniContents = "[Strings]\n" +
-                           "Title=Update Test\n" +
-                           "Info=Application Update XPCShell Test - " +
-                           "test_0112_general.js\n";
-  var updaterIni = updatesDir.clone();
-  updaterIni.append(FILE_UPDATER_INI);
-  writeFile(updaterIni, updaterIniContents);
-  updaterIni.copyTo(afterApplyBinDir, FILE_UPDATER_INI);
+function testUpdate() {
+  let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
+  let applyToDir = do_get_file(TEST_ID + APPLY_TO_DIR_SUFFIX);
 
   // For Mac OS X set the last modified time for a directory to a date in the
   // past to test that the last modified time on the directories in not updated
   // when an update fails (bug 600098).
+  let lastModTime;
   if (IS_MACOSX) {
     // All we care about is that the last modified time has not changed when an
     // update has failed.
-    var now = Date.now();
-    var lastModTime = now - (1000 * 60 * 60 * 24);
+    let now = Date.now();
+    lastModTime = now - (1000 * 60 * 60 * 24);
     applyToDir.lastModifiedTime = lastModTime;
     // Set lastModTime to the value the OS returns in case it is different than
     // the value stored by the OS.
     lastModTime = applyToDir.lastModifiedTime;
   }
 
-  var binDir = getGREDir();
-
-  // The updater binary file
-  var updater = binDir.clone();
-  updater.append("updater.app");
-  if (!updater.exists()) {
-    updater = binDir.clone();
-    updater.append(UPDATER_BIN_FILE);
-    if (!updater.exists()) {
-      do_throw("Unable to find updater binary!");
-    }
-  }
-
-  var mar = do_get_file("data/aus-0111_general.mar");
-  mar.copyTo(updatesDir, FILE_UPDATE_ARCHIVE);
-
-  // apply the partial mar and check the innards of the files
-  var exitValue = runUpdate(updater, updatesDir, applyToDir, relaunchApp,
-                            RELAUNCH_ARGS);
+  // apply the partial mar
+  let exitValue = runUpdate(TEST_ID);
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a partial mar");
   do_check_eq(exitValue, 0);
@@ -239,100 +147,12 @@ function run_test() {
     do_check_eq(applyToDir.lastModifiedTime, lastModTime);
   }
 
-  logTestInfo("testing files should not be modified or deleted when an " +
-              "update fails");
-  for (i = 0; i < gTestFiles.length; i++) {
-    f = gTestFiles[i];
-    testFile = do_get_file(f.destinationDir + f.fileName, true);
-    logTestInfo("testing file: " + testFile.path);
-    if (f.compareFile || f.compareContents) {
-      do_check_true(testFile.exists());
+  checkFilesAfterUpdateFailure(TEST_ID, TEST_FILES);
 
-      // Skip these tests on Windows (includes WinCE) and OS/2 since their
-      // implementaions of chmod doesn't really set permissions.
-      if (!IS_WIN && !IS_OS2 && f.comparePerms) {
-        // Check the original permssions are retained on the file.
-        let logPerms = "testing file permissions - ";
-        if (f.originalPerms) {
-          logPerms += "original permissions: " + f.originalPerms.toString(8) + ", ";
-        }
-        logPerms += "compare permissions : " + f.comparePerms.toString(8) + ", ";
-        logPerms += "updated permissions : " + testFile.permissions.toString(8);
-        logTestInfo(logPerms);
-        do_check_eq(testFile.permissions & 0xfff, f.comparePerms & 0xfff);
-      }
+  logTestInfo("testing tobedeleted directory doesn't exist");
+  let toBeDeletedDir = applyToDir.clone();
+  toBeDeletedDir.append("tobedeleted");
+  do_check_false(toBeDeletedDir.exists());
 
-      if (f.compareFile) {
-        do_check_eq(readFileBytes(testFile),
-                    readFileBytes(do_get_file(f.compareFile)));
-      }
-      else {
-        do_check_eq(readFileBytes(testFile), f.compareContents);
-      }
-    }
-    else {
-      do_check_false(testFile.exists());
-    }
-  }
-
-  logTestInfo("testing patch files should not be left behind");
-  var entries = updatesDir.QueryInterface(AUS_Ci.nsIFile).directoryEntries;
-  while (entries.hasMoreElements()) {
-    var entry = entries.getNext().QueryInterface(AUS_Ci.nsIFile);
-    do_check_neq(getFileExtension(entry), "patch");
-  }
-
-  check_app_launch_log();
-}
-
-function end_test() {
-  // Try to remove the updates and the apply to directories.
-  var applyToDir = do_get_file(APPLY_TO_DIR, true);
-  try {
-    removeDirRecursive(applyToDir);
-  }
-  catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + applyToDir.path + "\n" +
-         "Exception: " + e + "\n");
-  }
-
-  var updatesDir = do_get_file(UPDATES_DIR, true);
-  try {
-    removeDirRecursive(updatesDir);
-  }
-  catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updatesDir.path + "\n" +
-         "Exception: " + e + "\n");
-  }
-
-  cleanUp();
-}
-
-function check_app_launch_log() {
-  var appLaunchLog = do_get_file(APPLY_TO_DIR);
-  appLaunchLog.append(AFTER_APPLY_DIR);
-  appLaunchLog.append(RELAUNCH_BIN_FILE + ".log");
-  if (!appLaunchLog.exists()) {
-    do_timeout(0, check_app_launch_log);
-    return;
-  }
-
-  var expectedLogContents = "executed\n" + RELAUNCH_ARGS.join("\n") + "\n";
-  var logContents = readFile(appLaunchLog).replace(/\r\n/g, "\n");
-  // It is possible for the log file contents check to occur before the log file
-  // contents are completely written so wait until the contents are the expected
-  // value. If the contents are never the expected value then the test will
-  // fail by timing out.
-  if (logContents != expectedLogContents) {
-    do_timeout(0, check_app_launch_log);
-    return;
-  }
-
-  logTestInfo("testing that the callback application successfully launched " +
-              "and the expected command line arguments passed to it");
-  do_check_eq(logContents, expectedLogContents);
-
-  do_test_finished();
+  checkCallbackAppLog(TEST_ID);
 }

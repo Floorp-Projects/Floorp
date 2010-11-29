@@ -412,7 +412,7 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
       break;
     }
 
-    const NSString *pboardType = NSStringPboardType;
+    NSString *pboardType = NSStringPboardType;
 
     if (nsClipboard::IsStringType(flavorStr, &pboardType) ||
         flavorStr.EqualsLiteral(kURLMime) ||
@@ -514,7 +514,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
     }
   }
 
-  const NSString *pboardType;
+  NSString *pboardType = nil;
 
   if (dataFlavor.EqualsLiteral(kFileMime)) {
     NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObject:NSFilenamesPboardType]];

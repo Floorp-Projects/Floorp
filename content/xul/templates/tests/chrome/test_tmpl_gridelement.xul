@@ -93,7 +93,7 @@ var changes = [
 ]]>
 </script>
 
-<grid xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/birds">
+<grid xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/birds">
 <columns>
 <column/>
 <column/>

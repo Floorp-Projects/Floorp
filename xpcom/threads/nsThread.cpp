@@ -426,7 +426,7 @@ nsThread::Dispatch(nsIRunnable *event, PRUint32 flags)
 
     while (wrapper->IsPending())
       NS_ProcessNextEvent(thread);
-    return rv;
+    return wrapper->Result();
   }
 
   NS_ASSERTION(flags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
@@ -560,6 +560,19 @@ void canary_alarm_handler (int signum)
 
 #endif
 
+#define NOTIFY_EVENT_OBSERVERS(func_, params_)                                 \
+  PR_BEGIN_MACRO                                                               \
+    if (!mEventObservers.IsEmpty()) {                                          \
+      nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2>::ForwardIterator    \
+        iter_(mEventObservers);                                                \
+      nsCOMPtr<nsIThreadObserver> obs_;                                        \
+      while (iter_.HasMore()) {                                                \
+        obs_ = iter_.GetNext();                                                \
+        obs_ -> func_ params_ ;                                                \
+      }                                                                        \
+    }                                                                          \
+  PR_END_MACRO
+
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
 {
@@ -575,6 +588,9 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs)
     obs->OnProcessNextEvent(this, mayWait && !ShuttingDown(), mRunningEvent);
+
+  NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent,
+                         (this, mayWait && !ShuttingDown(), mRunningEvent));
 
   ++mRunningEvent;
 
@@ -616,6 +632,9 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
   }
 
   --mRunningEvent;
+
+  NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent, (this, mRunningEvent));
+
   if (obs)
     obs->AfterProcessNextEvent(this, mRunningEvent);
 
@@ -745,7 +764,38 @@ NS_IMETHODIMP
 nsThread::GetRecursionDepth(PRUint32 *depth)
 {
   NS_ENSURE_ARG_POINTER(depth);
+  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+
   *depth = mRunningEvent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::AddObserver(nsIThreadObserver *observer)
+{
+  NS_ENSURE_ARG_POINTER(observer);
+  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+
+  NS_WARN_IF_FALSE(!mEventObservers.Contains(observer),
+                   "Adding an observer twice!");
+
+  if (!mEventObservers.AppendElement(observer)) {
+    NS_WARNING("Out of memory!");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::RemoveObserver(nsIThreadObserver *observer)
+{
+  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+
+  if (observer && !mEventObservers.RemoveElement(observer)) {
+    NS_WARNING("Removing an observer that was never added!");
+  }
+
   return NS_OK;
 }
 
@@ -755,7 +805,7 @@ NS_IMETHODIMP
 nsThreadSyncDispatch::Run()
 {
   if (mSyncTask) {
-    mSyncTask->Run();
+    mResult = mSyncTask->Run();
     mSyncTask = nsnull;
     // unblock the origin thread
     mOrigin->Dispatch(this, NS_DISPATCH_NORMAL);

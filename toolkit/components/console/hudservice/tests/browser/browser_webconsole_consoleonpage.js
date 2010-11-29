@@ -26,7 +26,7 @@ function testOpenWebConsole()
   is(HUDService.displaysIndex().length, 1, "WebConsole was opened");
 
   hudId = HUDService.displaysIndex()[0];
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.hudReferences[hudId];
 
   testOwnConsole();
 }

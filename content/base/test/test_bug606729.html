@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=606729
+-->
+<head>
+  <title>Test for Bug 606729</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=606729">Mozilla Bug 606729</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script
+  src="data:"
+  onerror="ok(false, 'Script with src=data: should not fire onerror.');"
+  onload="ok(false, 'Script with src=data: should not fire onload.');"
+>
+ok(false, "Script with src=data: should not run textContent.");
+</script>
+<script
+  src="bogus:"
+  onerror="ok(false, 'Script with src=bogus: should not fire onerror.');"
+  onload="ok(false, 'Script with src=bogus: should not fire onload.');"
+>
+ok(false, "Script with src=bogus: should not run textContent.");
+</script>
+<script class="testbody" type="text/javascript">
+ok(true, "Obligatory succeeding test assertion.");
+</script>
+</pre>
+</body>
+</html>
+
+

@@ -12,28 +12,28 @@ BEGIN_TEST(testIntString_bug515273)
     EVAL("'1';", v.addr());
     JSString *str = JSVAL_TO_STRING(v.value());
     CHECK(JSString::isStatic(str));
-    CHECK(strcmp(JS_GetStringBytes(str), "1") == 0);
+    CHECK(JS_MatchStringAndAscii(str, "1"));
 
     EVAL("'42';", v.addr());
     str = JSVAL_TO_STRING(v.value());
     CHECK(JSString::isStatic(str));
-    CHECK(strcmp(JS_GetStringBytes(str), "42") == 0);
+    CHECK(JS_MatchStringAndAscii(str, "42"));
 
     EVAL("'111';", v.addr());
     str = JSVAL_TO_STRING(v.value());
     CHECK(JSString::isStatic(str));
-    CHECK(strcmp(JS_GetStringBytes(str), "111") == 0);
+    CHECK(JS_MatchStringAndAscii(str, "111"));
 
     /* Test other types of static strings. */
     EVAL("'a';", v.addr());
     str = JSVAL_TO_STRING(v.value());
     CHECK(JSString::isStatic(str));
-    CHECK(strcmp(JS_GetStringBytes(str), "a") == 0);
+    CHECK(JS_MatchStringAndAscii(str, "a"));
 
     EVAL("'bc';", v.addr());
     str = JSVAL_TO_STRING(v.value());
     CHECK(JSString::isStatic(str));
-    CHECK(strcmp(JS_GetStringBytes(str), "bc") == 0);
+    CHECK(JS_MatchStringAndAscii(str, "bc"));
 
     return true;
 }

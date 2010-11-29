@@ -14,7 +14,7 @@ function tabLoad(aEvent) {
   openConsole();
 
   let hudId = HUDService.getHudIdByWindow(content);
-  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let HUD = HUDService.hudReferences[hudId];
 
   let longMessage = "";
   for (let i = 0; i < 50; i++) {

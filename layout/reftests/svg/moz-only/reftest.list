@@ -2,6 +2,7 @@
 # XBL tests
 == xbl-basic-01.svg                             pass.svg
 == xbl-basic-02.svg                             pass.svg
+== xbl-basic-03.svg                             pass.svg
 == xbl-grad-ref--grad-in-binding-01.svg         pass.svg
 == xbl-grad-ref--grad-in-binding-02.svg         pass.svg
 == xbl-grad-ref--grad-in-bound-01.svg           pass.svg

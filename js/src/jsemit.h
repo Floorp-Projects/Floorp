@@ -252,6 +252,14 @@ struct JSStmtInfo {
 #define TCF_COMPILE_FOR_EVAL     0x2000000
 
 /*
+ * The function has broken or incorrect def-use information, and it cannot
+ * safely optimize free variables to global names. This can happen because
+ * of a named function statement not at the top level (emitting a DEFFUN),
+ * or a variable declaration inside a "with".
+ */
+#define TCF_FUN_MIGHT_ALIAS_LOCALS  0x4000000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
@@ -267,6 +275,7 @@ struct JSStmtInfo {
                                  TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS          |                    \
                                  TCF_FUN_CALLS_EVAL      |                    \
+                                 TCF_FUN_MIGHT_ALIAS_LOCALS |                 \
                                  TCF_FUN_MUTATES_PARAMETER |                  \
                                  TCF_STRICT_MODE_CODE)
 
@@ -284,11 +293,30 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSAtomList      decls;          /* function, const, and var declarations */
     js::Parser      *parser;        /* ptr to common parsing and lexing data */
 
+  private:
     union {
-        JSFunction  *fun;           /* function to store argument and variable
+        JSFunction  *fun_;          /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
-        JSObject    *scopeChain;    /* scope chain object for the script */
+        JSObject    *scopeChain_;   /* scope chain object for the script */
     };
+
+  public:
+    JSFunction *fun() const {
+        JS_ASSERT(inFunction());
+        return fun_;
+    }
+    void setFunction(JSFunction *fun) {
+        JS_ASSERT(inFunction());
+        fun_ = fun;
+    }
+    JSObject *scopeChain() const {
+        JS_ASSERT(!inFunction());
+        return scopeChain_;
+    }
+    void setScopeChain(JSObject *scopeChain) {
+        JS_ASSERT(!inFunction());
+        scopeChain_ = scopeChain;
+    }
 
     JSAtomList      lexdeps;        /* unresolved lexical name dependencies */
     JSTreeContext   *parent;        /* enclosing function or global context */
@@ -309,7 +337,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSTreeContext(js::Parser *prs)
       : flags(0), bodyid(0), blockidGen(0),
         topStmt(NULL), topScopeStmt(NULL), blockChainBox(NULL), blockNode(NULL),
-        parser(prs), scopeChain(NULL), parent(prs->tc), staticLevel(0),
+        parser(prs), scopeChain_(NULL), parent(prs->tc), staticLevel(0),
         funbox(NULL), functionList(NULL), innermostWith(NULL), sharpSlotBase(-1)
     {
         prs->tc = this;
@@ -376,6 +404,14 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     bool callsEval() const {
         return flags & TCF_FUN_CALLS_EVAL;
+    }
+
+    void noteMightAliasLocals() {
+        flags |= TCF_FUN_MIGHT_ALIAS_LOCALS;
+    }
+
+    bool mightAliasLocals() const {
+        return flags & TCF_FUN_MIGHT_ALIAS_LOCALS;
     }
 
     void noteParameterMutation() {

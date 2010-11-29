@@ -180,6 +180,12 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInProcessTabChildGlobal::PrivateNoteIntentionalCrash()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 nsInProcessTabChildGlobal::Disconnect()
 {

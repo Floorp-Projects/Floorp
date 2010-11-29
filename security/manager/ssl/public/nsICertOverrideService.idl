@@ -133,8 +133,10 @@ interface nsICertOverrideService : nsISupports {
    *  Remove a override for the given hostname:port.
    *
    *  @param aHostName The host (punycode) whose entry should be cleared.
-   *  @param aPort The port whose entry should be cleared, if it is -1 then it 
-   *          is internaly treated as 443
+   *  @param aPort The port whose entry should be cleared.
+   *               If it is -1, then it is internaly treated as 443.
+   *               If it is 0 and aHostName is "all:temporary-certificates",
+   *               then all temporary certificates should be cleared.
    */
   void clearValidityOverride(in ACString aHostName,
                              in PRInt32 aPort);

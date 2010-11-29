@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if select is required, has all selected option value set to the
+             empty string, and the selection did not changed,
+             :-moz-ui-invalid should not apply. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <select class='notinvalid' required multiple>
+      <option selected></option>
+      <option selected value="">foo</option>
+    </select>
+  </body>
+</html>

@@ -3,37 +3,41 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  **/
 
+var gTests = [
+  {
+    name: "normal search (search service)",
+    testText: "test search",
+    searchURL: Services.search.originalDefaultEngine.getSubmission("test search").uri.spec
+  },
+  {
+    name: "?-prefixed search (search service)",
+    testText: "?   foo  ",
+    searchURL: Services.search.originalDefaultEngine.getSubmission("foo").uri.spec
+  },
+  {
+    name: "normal search (keyword.url)",
+    testText: "test search",
+    keywordURLPref: "http://example.com/?q=",
+    searchURL: "http://example.com/?q=test+search"
+  },
+  {
+    name: "?-prefixed search (keyword.url)",
+    testText: "?   foo  ",
+    keywordURLPref: "http://example.com/?q=",
+    searchURL: "http://example.com/?q=foo"
+  },
+  {
+    name: "encoding test (keyword.url)",
+    testText: "test encoded+%/",
+    keywordURLPref: "http://example.com/?q=",
+    searchURL: "http://example.com/?q=test+encoded%2B%25%2F"
+  }
+];
+
 function test() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  let searchText = "test search";
-
-  let listener = {
-    onStateChange: function onLocationChange(webProgress, req, flags, status) {
-      ok(flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT, "only notified for document");
-
-      // Only care about starts
-      if (!(flags & Ci.nsIWebProgressListener.STATE_START))
-        return;
-
-      ok(req instanceof Ci.nsIChannel, "req is a channel");
-
-      let searchURL = Services.search.originalDefaultEngine.getSubmission(searchText).uri.spec;
-      is(req.originalURI.spec, searchURL, "search URL was loaded");
-      info("Actual URI: " + req.URI.spec);
-
-      Services.ww.unregisterNotification(observer);
-      gBrowser.removeProgressListener(this);
-      executeSoon(function () {
-        gBrowser.removeTab(tab);
-        finish();
-      });
-    }
-  }
-  gBrowser.addProgressListener(listener, Ci.nsIWebProgressListener.NOTIFY_STATE_DOCUMENT);
-
-  let observer = {
+  let windowObserver = {
     observe: function(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
         ok(false, "Alert window opened");
@@ -42,19 +46,67 @@ function test() {
           win.removeEventListener("load", arguments.callee, false);
           win.close();
         }, false);
-        gBrowser.removeProgressListener(listener);
-        executeSoon(function () {
-          gBrowser.removeTab(tab);
-          finish();
-        });
+        executeSoon(finish);
       }
-      Services.ww.unregisterNotification(this);
     }
   };
-  Services.ww.registerNotification(observer);
+
+  Services.ww.registerNotification(windowObserver);
+
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+
+  let listener = {
+    onStateChange: function onLocationChange(webProgress, req, flags, status) {
+      // Only care about document starts
+      let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
+                     Ci.nsIWebProgressListener.STATE_START;
+      if (!(flags & docStart))
+        return;
+
+      info("received document start");
+
+      ok(req instanceof Ci.nsIChannel, "req is a channel");
+      is(req.originalURI.spec, gCurrTest.searchURL, "search URL was loaded");
+      info("Actual URI: " + req.URI.spec);
+
+      executeSoon(nextTest);
+    }
+  }
+  gBrowser.addProgressListener(listener);
+
+  registerCleanupFunction(function () {
+    Services.ww.unregisterNotification(windowObserver);
+
+    gBrowser.removeProgressListener(listener);
+    gBrowser.removeTab(tab);
+  });
+
+  nextTest();
+}
+
+var gCurrTest;
+function nextTest() {
+  // Clear the pref before every test (and after the last)
+  try {
+    Services.prefs.clearUserPref("keyword.URL");
+  } catch(ex) {}
+
+  if (gTests.length) {
+    gCurrTest = gTests.shift();
+    doTest();
+  } else {
+    finish();
+  }
+}
+
+function doTest() {
+  info("Running test: " + gCurrTest.name);
+
+  if (gCurrTest.keywordURLPref)
+    Services.prefs.setCharPref("keyword.URL", gCurrTest.keywordURLPref);
 
   // Simulate a user entering search terms
-  gURLBar.value = searchText;
+  gURLBar.value = gCurrTest.testText;
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
 }

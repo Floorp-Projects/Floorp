@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613113
+-->
+<head>
+  <title>Test for Bug 613113</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613113">Mozilla Bug 613113</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name='f'></iframe>
+  <form target='f' action="data:text/html,">
+    <output></output>
+    <button></button>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 613113 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var invalidEvent = false;
+var submit = false;
+
+var form = document.forms[0];
+var button = document.getElementsByTagName('button')[0];
+var output = document.getElementsByTagName('output')[0];
+
+output.addEventListener("invalid", function() {
+  if (invalidEvent) {
+    ok(false, "invalid event has already been caught");
+  } else {
+    invalidEvent = true;
+    ok(true, "invalid event has been caught");
+  }
+}, false);
+
+form.addEventListener("submit", function() {
+  submit = true;
+}, false);
+
+output.setCustomValidity("foo");
+
+button.click();
+
+setTimeout(function() {
+  if (!invalidEvent) {
+    ok(false, "invalid event should have been caught");
+  }
+  ok(!submit, "submit event should not have been send");
+  SimpleTest.finish();
+}, 1000);
+
+</script>
+</pre>
+</body>
+</html>

@@ -151,18 +151,20 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     for (unsigned int i=0; i<argc; ++i) {
      JSString *str = JS_ValueToString(cx, argv[i]);
      if (!str) return JS_FALSE;
+     JSAutoByteString bytes(cx, str);
+     if (!bytes) return JS_FALSE;
      if (shell->mOutput) {
        if (shell->mEmitHeader) {
          char buf[80];
          sprintf(buf, "[%d]", JS_GetStringLength(str));
          shell->mOutput->Write(buf, strlen(buf), &bytesWritten);
        }
-       shell->mOutput->Write(JS_GetStringBytes(str), JS_GetStringLength(str), &bytesWritten);
+       shell->mOutput->Write(bytes.ptr(), strlen(bytes), &bytesWritten);
      }
      else
-       printf("%s", JS_GetStringBytes(str)); // use cout if no output stream given.
+       printf("%s", bytes.ptr()); // use cout if no output stream given.
 #ifdef DEBUG
-//        printf("%s", JS_GetStringBytes(str));
+//        printf("%s", bytes.ptr());
 #endif
    }
   return JS_TRUE;
@@ -196,7 +198,8 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str = JS_ValueToString(cx, argv[i]);
     if (!str) return JS_FALSE;
     //argv[i] = STRING_TO_JSVAL(str);
-    const char *url = JS_GetStringBytes(str);
+    JSAutoByteString url(cx, str);
+    if (!url) return JS_FALSE;
     if (!shell->LoadURL(url, rval))
       return JS_FALSE;
   }
@@ -275,21 +278,20 @@ SetProtocol(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   JSAutoRequest ar(cx);
 
-  JSString *str = JS_ValueToString(cx, argv[0]);
-  if (!str) return JS_FALSE;
-  char *protocol = JS_GetStringBytes(str);
+  JSString *protocol = JS_ValueToString(cx, argv[0]);
+  if (!protocol) return JS_FALSE;
   
-  if (!strcmp(protocol, "interactive")) {
+  if (JS_MatchStringAndAscii(protocol, "interactive")) {
     shell->mEmitHeader = PR_FALSE;
     shell->mPrompt = NS_LITERAL_CSTRING("\n> ");
     shell->mProtocol = protocol;
   }
-  else if (!strcmp(protocol, "synchronous")) {
+  else if (JS_MatchStringAndAscii(protocol, "synchronous")) {
     shell->mEmitHeader = PR_TRUE;
     shell->mPrompt = NS_LITERAL_CSTRING("\n> ");
     shell->mProtocol = protocol;
   }
-  else if (!strcmp(protocol, "plain")) {
+  else if (JS_MatchStringAndAscii(protocol, "plain")) {
     shell->mEmitHeader = PR_FALSE;
     shell->mPrompt = NS_LITERAL_CSTRING("\n");
     shell->mProtocol = protocol;

@@ -105,8 +105,9 @@ interface nsIWinTaskbar : nsISupports
    */
 
   /**
-   * Creates a taskbar preview. The docshell is used to find the toplevel window.
-   * See the documentation for nsITaskbarTabPreview for more information.
+   * Creates a taskbar preview. The docshell should be a toplevel docshell and
+   * is used to find the toplevel window. See the documentation for
+   * nsITaskbarTabPreview for more information.
    */
   nsITaskbarTabPreview createTaskbarTabPreview(in nsIDocShell shell,
                                                in nsITaskbarPreviewController controller);

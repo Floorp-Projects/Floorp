@@ -171,9 +171,6 @@ do_cmd $AUTOHEADER
 
 touch ChangeLog
 
-# We don't call gtkdocize right now.  When we do, we should then modify
-# the generated gtk-doc.make and move it to build/Makefile.am.gtk-doc.
-# See that file for details.
 #do_cmd $GTKDOCIZE $GTKDOCIZE_FLAGS
 
 do_cmd $AUTOMAKE $AUTOMAKE_FLAGS

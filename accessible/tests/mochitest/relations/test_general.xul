@@ -26,6 +26,12 @@
       testRelation("label1", RELATION_LABEL_FOR, "checkbox1");
       testRelation("checkbox1", RELATION_LABELLED_BY, "label1");
 
+      // xul:label@control, multiple
+      testRelation("label1_1", RELATION_LABEL_FOR, "checkbox1_1");
+      testRelation("label1_2", RELATION_LABEL_FOR, "checkbox1_1");
+      testRelation("checkbox1_1", RELATION_LABELLED_BY,
+                   [ "label1_1", "label1_2" ]);
+
       // aria-labelledby
       testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
       testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
@@ -48,6 +54,12 @@
       testRelation("descr4", RELATION_DESCRIPTION_FOR, "checkbox6");
       testRelation("checkbox6", RELATION_DESCRIBED_BY, "descr4");
 
+      // xul:description@control, multiple
+      testRelation("descr5", RELATION_DESCRIPTION_FOR, "checkbox7");
+      testRelation("descr6", RELATION_DESCRIPTION_FOR, "checkbox7");
+      testRelation("checkbox7", RELATION_DESCRIBED_BY,
+                   [ "descr5", "descr6" ]);
+
       // aria_owns, multiple relations
       testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
@@ -66,6 +78,9 @@
       testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
 
       // aria-controls
+      getAccessible("tab");
+      todo(false,
+           "Getting an accessible tab, otherwise relations for tabpanel aren't cached. Bug 606924 will fix that.");
       testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
       testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
 
@@ -142,6 +157,10 @@
     <label id="label1" control="checkbox1">label</label>
     <checkbox id="checkbox1"/>
 
+    <label id="label1_1" control="checkbox1_1">label</label>
+    <label id="label1_2" control="checkbox1_1">label</label>
+    <checkbox id="checkbox1_1"/>
+
     <description id="label2">label</description>
     <description role="checkbox" id="checkbox2" aria-labelledby="label2"/>
 
@@ -160,6 +179,10 @@
 
     <description id="descr4" control="checkbox6">description</description>
     <checkbox id="checkbox6"/>
+
+    <description id="descr5" control="checkbox7">description</description>
+    <description id="descr6" control="checkbox7">description</description>
+    <checkbox id="checkbox7"/>
 
     <description role="treeitem" id="treeitem1">Yellow</description>
     <description role="treeitem" id="treeitem2">Orange</description>

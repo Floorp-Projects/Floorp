@@ -143,8 +143,8 @@ class RegExpStatics
     }
 
     int getCrash(size_t pairNum, bool which) const {
-        JS_CRASH_UNLESS(pairNum < pairCountCrash());
-        return get(pairNum, which);
+         JS_CRASH_UNLESS(pairNum < pairCountCrash());
+         return get(pairNum, which);
     }
 
     /*

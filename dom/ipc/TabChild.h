@@ -108,6 +108,7 @@ public:
   {
     return mMessageManager ? mMessageManager->Dump(aStr) : NS_OK;
   }
+  NS_IMETHOD PrivateNoteIntentionalCrash();
 
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,

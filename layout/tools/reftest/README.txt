@@ -64,6 +64,16 @@ must be one of the following:
       random-if(condition) The results of the test are random if a given
                            condition is met.
 
+      silentfail This test may fail silently, and if that happens it should
+                 count as if the test passed. This is useful for cases where
+                 silent failure is the intended behavior (for example, in
+                 an out of memory situation in JavaScript, we stop running
+                 the script silently and immediately, in hopes of reclaiming
+                 enough memory to keep the browser functioning).
+
+      silentfail-if(condition) This test may fail silently if the condition
+                               is met.
+
       skip  This test should not be run. This is useful when a test fails in a
             catastrophic way, such as crashing or hanging the browser. Using
             'skip' is preferred to simply commenting out the test because we

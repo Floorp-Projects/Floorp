@@ -182,9 +182,19 @@ nsSVGTransformSMILType::SandwichAdd(nsSMILValue& aDest,
   const TransformArray& srcTransforms
     (*static_cast<const TransformArray*>(aValueToAdd.mU.mPtr));
 
-  // We're only expecting to be adding 1 src transform on to the list
-  NS_ASSERTION(srcTransforms.Length() == 1,
+  // We should have 0 or 1 transforms in the src list.
+  NS_ASSERTION(srcTransforms.Length() < 2,
     "Trying to do sandwich add of more than one value");
+
+  // The empty src transform list case only occurs in some limited circumstances
+  // where we create an empty 'from' value to interpolate from (e.g.
+  // by-animation) but then skip the interpolation step for some reason (e.g.
+  // because we have an indefinite duration which means we'll never get past the
+  // first value) and instead attempt to add that empty value to the underlying
+  // value.
+  // In any case, the expected result is that nothing is added.
+  if (srcTransforms.IsEmpty())
+    return NS_OK;
 
   // Stick the src on the end of the array
   const nsSVGSMILTransform& srcTransform = srcTransforms[0];

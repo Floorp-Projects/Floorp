@@ -613,9 +613,9 @@ FinishCreate(XPCCallContext& ccx,
 #if DEBUG_xpc_leaks
     {
         char* s = wrapper->ToString(ccx);
-        NS_ASSERTION(wrapper->GetFlatJSObject(), "eh?");
+        NS_ASSERTION(wrapper->IsValid(), "eh?");
         printf("Created wrapped native %s, flat JSObject is %p\n",
-               s, (void*)wrapper->GetFlatJSObject());
+               s, (void*)wrapper->GetFlatJSObjectNoMark());
         if(s)
             JS_smprintf_free(s);
     }
@@ -654,7 +654,7 @@ FinishCreate(XPCCallContext& ccx,
     }
     else if(wrapper)
     {
-        JSObject *flat = wrapper->GetFlatJSObject();
+        JSObject *flat = wrapper->GetFlatJSObjectAndMark();
         NS_ASSERTION(!cache || !cache->GetWrapper() ||
                      flat == cache->GetWrapper(),
                      "This object has a cached wrapper that's different from "
@@ -668,8 +668,7 @@ FinishCreate(XPCCallContext& ccx,
         XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
         if(si && si->GetFlags().WantPostCreate())
         {
-            nsresult rv = si->GetCallback()->
-                     PostCreate(wrapper, ccx, wrapper->GetFlatJSObject());
+            nsresult rv = si->GetCallback()->PostCreate(wrapper, ccx, flat);
             if(NS_FAILED(rv))
             {
                 // PostCreate failed and that's Very Bad. We'll remove it from
@@ -1203,8 +1202,11 @@ XPCWrappedNative::FinishInit(XPCCallContext &ccx)
     mThread = do_GetCurrentThread();
 
     if(HasProto() && GetProto()->ClassIsMainThreadOnly() && !NS_IsMainThread())
+    {
         DEBUG_ReportWrapperThreadSafetyError(ccx,
             "MainThread only wrapper created on the wrong thread", this);
+        return JS_FALSE;
+    }
 #endif
 
     // A hack for bug 517665, increase the probability for GC.
@@ -1497,7 +1499,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         if(NS_FAILED(rv))
             return rv;
 
-        flat = wrapper->GetFlatJSObject();
+        flat = wrapper->GetFlatJSObjectAndMark();
     }
 
     if(!flat)
@@ -1512,7 +1514,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     if (!XPCPerThreadData::IsMainThread(ccx) ||
         (wrapper &&
          wrapper->GetProto() &&
-         !wrapper->GetProto()->ClassIsMainThreadOnly())) {
+         !wrapper->GetProto()->ClassIsMainThreadOnly()))
+    {
         return NS_ERROR_FAILURE;
     }
 
@@ -1951,7 +1954,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
         {
             JSObject* jso = nsnull;
             if(NS_SUCCEEDED(wrappedJS->GetJSObject(&jso)) &&
-               jso == GetFlatJSObject())
+               jso == mFlatJSObject)
             {
                 // The implementing JSObject is the same as ours! Just say OK
                 // without actually extending the set.
@@ -2794,7 +2797,10 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     dp->SetValIsAllocated();
                     useAllocator = JS_TRUE;
                     break;
-
+                case nsXPTType::T_CHAR_STR:
+                    dp->SetValIsAllocated();
+                    useAllocator = JS_TRUE;
+                    break;
                 case nsXPTType::T_ASTRING:
                     // Fall through to the T_DOMSTRING case
 
@@ -2964,8 +2970,10 @@ CallMethodHelper::ConvertDependentParams()
                          "Expected either enough arguments or an optional argument");
             src = i < mArgc ? mArgv[i] : JSVAL_NULL;
 
-            if(datum_type.IsPointer() &&
-               datum_type.TagPart() == nsXPTType::T_IID)
+            if((datum_type.IsPointer() &&
+                (datum_type.TagPart() == nsXPTType::T_IID ||
+                 datum_type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS)) ||
+               (isArray && datum_type.TagPart() == nsXPTType::T_CHAR_STR))
             {
                 useAllocator = JS_TRUE;
                 dp->SetValIsAllocated();
@@ -3047,7 +3055,7 @@ CallMethodHelper::Invoke()
 /* readonly attribute JSObjectPtr JSObject; */
 NS_IMETHODIMP XPCWrappedNative::GetJSObject(JSObject * *aJSObject)
 {
-    *aJSObject = mFlatJSObject;
+    *aJSObject = GetFlatJSObjectAndMark();
     return NS_OK;
 }
 
@@ -3061,11 +3069,11 @@ NS_IMETHODIMP XPCWrappedNative::GetNative(nsISupports * *aNative)
     return NS_OK;
 }
 
-/* readonly attribute JSObjectPtr JSObjectPrototype; */
+/* reaonly attribute JSObjectPtr JSObjectPrototype; */
 NS_IMETHODIMP XPCWrappedNative::GetJSObjectPrototype(JSObject * *aJSObjectPrototype)
 {
     *aJSObjectPrototype = HasProto() ?
-                GetProto()->GetJSProtoObject() : GetFlatJSObject();
+                GetProto()->GetJSProtoObject() : GetFlatJSObjectAndMark();
     return NS_OK;
 }
 
@@ -3145,11 +3153,11 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     if(!HasProto())
         return NS_OK;
 
-    if(!GetFlatJSObject())
+    if(!mFlatJSObject)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     JSAutoEnterCompartment ac;
-    if(!ac.enter(ccx, GetFlatJSObject()))
+    if(!ac.enter(ccx, GetFlatJSObjectAndMark()))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     AutoMarkingWrappedNativeProtoPtr oldProto(ccx);
@@ -3173,7 +3181,8 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     if(newProto.get() == oldProto.get())
         return NS_OK;
 
-    if(!JS_SetPrototype(ccx, GetFlatJSObject(), newProto->GetJSProtoObject()))
+    if(!JS_SetPrototype(ccx, GetFlatJSObjectAndMark(),
+                        newProto->GetJSProtoObject()))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     SetProto(newProto);
@@ -3422,11 +3431,11 @@ static void DEBUG_PrintShadowObjectInfo(const char* header,
 static void ReportSingleMember(jsval ifaceName,
                                jsval memberName)
 {
-    if(JSVAL_IS_STRING(memberName))
-        printf("%s::%s", JS_GetStringBytes(JSVAL_TO_STRING(ifaceName)),
-                         JS_GetStringBytes(JSVAL_TO_STRING(memberName)));
-    else
-        printf("%s", JS_GetStringBytes(JSVAL_TO_STRING(ifaceName)));
+    JS_FileEscapedString(stdout, ifaceName, 0);
+    if(JSVAL_IS_STRING(memberName)) {
+        fputs("::", stdout);
+        JS_FileEscapedString(stdout, memberName, 0);
+    }
 }
 
 static void ShowHeader(JSBool* printedHeader,
@@ -3456,8 +3465,9 @@ static void ShowOneShadow(jsval ifaceName1,
 
 static void ShowDuplicateInterface(jsval ifaceName)
 {
-    printf(" ! %s appears twice in the nsIClassInfo interface set!\n",
-           JS_GetStringBytes(JSVAL_TO_STRING(ifaceName)));
+    fputs(" ! ", stdout);
+    JS_FileEscapedString(stdout, ifaceName, 0);
+    fputs(" appears twice in the nsIClassInfo interface set!\n", stdout);
 }
 
 static JSBool InterfacesAreRelated(XPCNativeInterface* iface1,
@@ -3760,7 +3770,7 @@ XPCJSObjectHolder::XPCJSObjectHolder(XPCCallContext& ccx, JSObject* obj)
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
 {
-    RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+    RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetMapLock());
 }
 
 void

@@ -1,3 +1,4 @@
 url-prefix ../../jsreftest.html?test=ecma_5/String/
 script 15.5.4.2.js
+script 15.5.4.7.js
 script 15.5.4.11-01.js

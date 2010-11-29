@@ -1628,6 +1628,11 @@ public:
 
         ExecutableAllocator::cacheFlush(reinterpret_cast<uint16_t*>(from) - 5, 5 * sizeof(uint16_t));
     }
+
+    static bool canRelinkJump(void* from, void* to)
+    {
+        return true;
+    }
     
     static void relinkCall(void* from, void* to)
     {

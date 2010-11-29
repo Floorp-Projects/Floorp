@@ -43,6 +43,9 @@
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "plstr.h"
+#include "nsNetUtil.h"
 
 #ifdef MOZ_IPC
 #include "mozilla/net/NeckoChild.h"
@@ -145,19 +148,28 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
   } else
 #endif
   {
+    // If original channel used https, make sure PSM is initialized
+    // (this may be first channel to load during a session restore)
+    nsCAutoString path;
+    rv = url->GetPath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRInt32 slashIndex = path.FindChar('/', 2);
+    if (slashIndex == kNotFound)
+      return NS_ERROR_FAILURE;
+    if (path.Length() < (PRUint32)slashIndex + 1 + 5)
+      return NS_ERROR_FAILURE;
+    if (!PL_strncasecmp(path.get() + slashIndex + 1, "https", 5))
+      net_EnsurePSMInit();
+
     nsWyciwygChannel *wc = new nsWyciwygChannel();
-    if (!wc)
-      return NS_ERROR_OUT_OF_MEMORY;
     channel = wc;
     rv = wc->Init(url);
   }
 
-  *result = channel.forget().get();
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(*result);
+  if (NS_FAILED(rv))
     return rv;
-  }
 
+  *result = channel.forget().get();
   return NS_OK;
 }
 

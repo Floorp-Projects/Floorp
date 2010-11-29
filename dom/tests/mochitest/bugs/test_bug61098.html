@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=61098
 
 SimpleTest.waitForExplicitFinish();
 
-var mockPromptServiceRegisterer;
+var mockPromptServiceRegisterer, mockPromptFactoryRegisterer;
 
 var promptState;
 
@@ -34,29 +34,46 @@ function registerMockPromptService()
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-  // Override the prompt service with our own so that we can test
-  // modal dialogs
-
-  function MockPromptService()
-  {
+  function MockPrompt(aDOMWindow) {
+    this.domWindow = aDOMWindow;
   }
 
-  MockPromptService.prototype = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
+  MockPrompt.prototype = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
 
-    alert: function(aParent, aDialogTitle, aText)
+    domWindow : null,
+
+    _toggleModalState: function()
     {
+      // The real prompt service puts the window into a modal state
+      // immediately before showing a modal prompt, and leaves the modal state
+      // when the prompt is dismissed by the user. This mock prompt doesn't
+      // show anything to the user, so we only need to enter and immediately
+      // leave the modal state -- this is done to trigger the necessary
+      // accounting for triggering the "stop showing more prompts" code for
+      // abusive pages.
+      var winUtils = this.domWindow
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+      winUtils.enterModalState();
+      winUtils.leaveModalState();
+    },
+
+    alert: function(aDialogTitle, aText)
+    {
+      this._toggleModalState();
       promptState = {method: "alert",
-                     parent: aParent,
+                     parent: this.domWindow,
                      title: aDialogTitle,
                      msg: aText
       };
     },
 
-    alertCheck: function(aParent, aDialogTitle, aText, aCheckMsg, aCheckState)
+    alertCheck: function(aDialogTitle, aText, aCheckMsg, aCheckState)
     {
+      this._toggleModalState();
       promptState = {method: "alertCheck",
-                     parent: aParent,
+                     parent: this.domWindow,
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -66,10 +83,11 @@ function registerMockPromptService()
       aCheckState.value = true;
     },
 
-    confirm: function(aParent, aDialogTitle, aText)
+    confirm: function(aDialogTitle, aText)
     {
+      this._toggleModalState();
       promptState = {method: "confirm",
-                     parent: aParent,
+                     parent: this.domWindow,
                      title: aDialogTitle,
                      msg: aText
       };
@@ -77,11 +95,11 @@ function registerMockPromptService()
       return true;
     },
 
-    confirmCheck: function(aParent, aDialogTitle, aText, aCheckMsg,
-                           aCheckState)
+    confirmCheck: function(aDialogTitle, aText, aCheckMsg, aCheckState)
     {
+      this._toggleModalState();
       promptState = {method: "confirmCheck",
-                     parent: aParent,
+                     parent: this.domWindow,
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -93,12 +111,13 @@ function registerMockPromptService()
       return true;
     },
 
-    confirmEx: function(aParent, aDialogTitle, aText, aButtonFlags,
+    confirmEx: function(aDialogTitle, aText, aButtonFlags,
                         aButton0Title, aButton1Title, aButton2Title,
                         aCheckMsg, aCheckState)
     {
+      this._toggleModalState();
       promptState = {method: "confirmCheck",
-                     parent: aParent,
+                     parent: this.domWindow,
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -111,11 +130,12 @@ function registerMockPromptService()
       return 0;
     },
 
-    prompt: function(aParent, aDialogTitle, aText, aValue, aCheckMsg,
+    prompt: function(aDialogTitle, aText, aValue, aCheckMsg,
                      aCheckState)
     {
+      this._toggleModalState();
       promptState = {method: "prompt",
-                     parent: aParent,
+                     parent: this.domWindow,
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -129,11 +149,75 @@ function registerMockPromptService()
     },
   };
 
+
+  // Override the prompt service with our own so that we can test
+  // modal dialogs
+
+  function MockPromptService()
+  {
+  }
+
+  MockPromptService.prototype = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService]),
+
+    getPrompt: function(aDOMWindow, aIID)
+    {
+        return new MockPrompt(aDOMWindow);
+    },
+
+    alert: function(aParent, aDialogTitle, aText)
+    {
+      var prompt = new MockPrompt(aParent);
+      return prompt.alert(aDialogTitle, aText);
+    },
+
+    alertCheck: function(aParent, aDialogTitle, aText, aCheckMsg, aCheckState)
+    {
+      var prompt = new MockPrompt(aParent);
+      return prompt.alertCheck(aDialogTitle, aText, aCheckMsg, aCheckState);
+    },
+
+    confirm: function(aParent, aDialogTitle, aText)
+    {
+      var prompt = new MockPrompt(aParent);
+      return prompt.confirm(aDialogTitle, aText);
+    },
+
+    confirmCheck: function(aParent, aDialogTitle, aText, aCheckMsg,
+                           aCheckState)
+    {
+      var prompt = new MockPrompt(aParent);
+      return prompt.confirmCheck(aDialogTitle, aText, aCheckMsg, aCheckState);
+    },
+
+    confirmEx: function(aParent, aDialogTitle, aText, aButtonFlags,
+                        aButton0Title, aButton1Title, aButton2Title,
+                        aCheckMsg, aCheckState)
+    {
+      var prompt = new MockPrompt(aParent);
+      return prompt.confirmEx(aDialogTitle, aText, aButtonFlags,
+                        aButton0Title, aButton1Title, aButton2Title,
+                        aCheckMsg, aCheckState);
+    },
+
+    prompt: function(aParent, aDialogTitle, aText, aValue, aCheckMsg,
+                     aCheckState)
+    {
+      var prompt = new MockPrompt(aParent);
+      return prompt.prompt(aDialogTitle, aText, aValue, aCheckMsg, aCheckState);
+    },
+
+  };
+
   mockPromptServiceRegisterer =
     new MockObjectRegisterer("@mozilla.org/embedcomp/prompt-service;1",
                              MockPromptService);
+  mockPromptFactoryRegisterer =
+    new MockObjectRegisterer("@mozilla.org/prompter;1",
+                             MockPromptService);
 
   mockPromptServiceRegisterer.register();
+  mockPromptFactoryRegisterer.register();
 };
 
 function enableDialogLoopBlocking()
@@ -260,6 +344,8 @@ function runtests()
   w.close();
 
   resetDialogLoopBlocking();
+
+  mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
 
   SimpleTest.finish();

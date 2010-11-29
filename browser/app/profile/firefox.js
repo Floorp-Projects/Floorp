@@ -1037,9 +1037,16 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", false);
 
+// The last Web Console height. This is initially 0 which means that the Web
+// Console will use the default height next time it shows.
+// Change to -1 if you do not want the Web Console to remember its last height.
+pref("devtools.hud.height", 0);
+
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
 
+// Allow using tab-modal prompts when possible.
+pref("prompts.tab_modal.enabled", true);
 // Whether the Panorama should animate going in/out of tabs
 pref("browser.panorama.animate_zoom", true);

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+var res = {};
+moz_indexedDB.open(parent.location).onsuccess = function(e) {
+  var db = e.result;
+  res.version = db.version;
+  res.storeCount = db.objectStoreNames.length;
+
+  req = db.setVersion("2.0");
+  req.onblocked = function() {
+    res.blockedFired = true;
+  }
+  req.onsuccess = function(e) {
+    var trans = e.transaction;
+    trans.objectStore("mystore").get(42).onsuccess = function(e) {
+      res.value = JSON.stringify(e.result);
+    }
+    trans.oncomplete = function() {
+      parent.postMessage(JSON.stringify(res), "http://mochi.test:8888");
+    }
+  }
+};
+
+  </script>
+</head>
+<body>
+  This is page two.
+</body>
+</html>

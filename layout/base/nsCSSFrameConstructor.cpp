@@ -4748,8 +4748,8 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
   }
 
   static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
-  static const FrameConstructionData sGenericContainerData =
-    SIMPLE_SVG_FCDATA(NS_NewSVGGenericContainerFrame);
+  static const FrameConstructionData sContainerData =
+    SIMPLE_SVG_FCDATA(NS_NewSVGContainerFrame);
 
   PRBool parentIsSVG = PR_FALSE;
   nsIContent* parentContent =
@@ -4792,17 +4792,11 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sSuppressData;
   }
 
-  // Reduce the number of frames we create unnecessarily. Note that this is not
-  // where we select which frame in a <switch> to render! That happens in
-  // nsSVGSwitchFrame::PaintSVG.
+  // Elements with failing conditional processing attributes never get
+  // rendered.  Note that this is not where we select which frame in a
+  // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
   if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
-    // Note that just returning is probably not right.  According
-    // to the spec, <use> is allowed to use an element that fails its
-    // conditional, but because we never actually create the frame when
-    // a conditional fails and when we use GetReferencedFrame to find the
-    // references, things don't work right.
-    // XXX FIXME XXX
-    return &sSuppressData;
+    return &sContainerData;
   }
 
   // Special case for aTag == nsGkAtoms::svg because we don't want to
@@ -4860,6 +4854,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     SIMPLE_SVG_CREATE(rect, NS_NewSVGPathGeometryFrame),
     SIMPLE_SVG_CREATE(path, NS_NewSVGPathGeometryFrame),
     SIMPLE_SVG_CREATE(defs, NS_NewSVGContainerFrame),
+    SIMPLE_SVG_CREATE(generic, NS_NewSVGGenericContainerFrame),
     { &nsGkAtoms::foreignObject,
       FULL_CTOR_FCDATA(FCDATA_DISALLOW_OUT_OF_FLOW,
                        &nsCSSFrameConstructor::ConstructSVGForeignObjectFrame) },
@@ -4908,7 +4903,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
                   NS_ARRAY_LENGTH(sSVGData));
 
   if (!data) {
-    data = &sSuppressData;
+    data = &sContainerData;
   }
 
   return data;
@@ -5039,6 +5034,16 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
     // processed and now no longer do).
     aContent->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS &
                          ~ELEMENT_PENDING_RESTYLE_FLAGS);
+  }
+
+  // XXX the GetContent() != aContent check is needed due to bug 135040.
+  // Remove it once that's fixed.  
+  if (aContent->GetPrimaryFrame() &&
+      aContent->GetPrimaryFrame()->GetContent() == aContent &&
+      !aState.mCreatingExtraFrames) {
+    NS_ERROR("asked to create frame construction item for a node that already "
+             "has a frame");
+    return;
   }
 
   // don't create a whitespace frame if aParent doesn't want it
@@ -6481,6 +6486,18 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 #endif
 
+#ifdef DEBUG
+  for (nsIContent* child = aFirstNewContent;
+       child;
+       child = child->GetNextSibling()) {
+    // XXX the GetContent() != child check is needed due to bug 135040.
+    // Remove it once that's fixed.  
+    NS_ASSERTION(!child->GetPrimaryFrame() ||
+                 child->GetPrimaryFrame()->GetContent() != child,
+                 "asked to construct a frame for a node that already has a frame");
+  }
+#endif
+
 #ifdef MOZ_XUL
   if (aContainer) {
     PRInt32 namespaceID;
@@ -6829,6 +6846,18 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
         aStartChild->List(stdout, 0);
       }
     }
+  }
+#endif
+
+#ifdef DEBUG
+  for (nsIContent* child = aStartChild;
+       child != aEndChild;
+       child = child->GetNextSibling()) {
+    // XXX the GetContent() != child check is needed due to bug 135040.
+    // Remove it once that's fixed.  
+    NS_ASSERTION(!child->GetPrimaryFrame() ||
+                 child->GetPrimaryFrame()->GetContent() != child,
+                 "asked to construct a frame for a node that already has a frame");
   }
 #endif
 

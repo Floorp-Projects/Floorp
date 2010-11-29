@@ -927,6 +927,18 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
     }
 
     case PARSE_BYPASS_ENTRIES: {
+        if (line[0] == '*' && (line.Length() == 1 || line[1] == ' ' || line[1] == '\t'))
+        {
+          // '*' indicates to make the online whitelist wildcard flag open,
+          // i.e. do allow load of resources not present in the offline cache
+          // or not conforming any namespace.
+          // We achive that simply by adding an 'empty' - i.e. universal
+          // namespace of BYPASS type into the cache.
+          AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_BYPASS,
+                       EmptyCString(), EmptyCString());
+          break;
+        }
+
         nsCOMPtr<nsIURI> bypassURI;
         rv = NS_NewURI(getter_AddRefs(bypassURI), line, nsnull, mURI);
         if (NS_FAILED(rv))

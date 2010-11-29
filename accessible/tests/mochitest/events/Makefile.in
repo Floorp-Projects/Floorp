@@ -51,6 +51,7 @@ _TEST_FILES =\
 		focus.html \
 		scroll.html \
 		test_aria_alert.html \
+		test_aria_menu.html \
 		test_aria_statechange.html \
 		test_attrs.html \
 		test_caretmove.html \
@@ -69,6 +70,7 @@ _TEST_FILES =\
 		test_selection.html \
 		test_statechange.html \
 		test_text.html \
+		test_textattrchange.html \
 		test_tree.xul \
 		test_valuechange.html \
 		$(NULL)
