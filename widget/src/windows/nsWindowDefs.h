@@ -64,7 +64,9 @@
 #define VISTA_VERSION                     0x600
 #define WIN7_VERSION                      0x601
 
-#define WM_XP_THEMECHANGED                0x031A
+#ifndef WM_THEMECHANGED
+#define WM_THEMECHANGED                   0x031A
+#endif
 
 #ifndef WM_GETOBJECT
 #define WM_GETOBJECT                      0x03d

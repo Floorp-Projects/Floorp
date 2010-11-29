@@ -4583,10 +4583,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_XP_THEMECHANGED:
+    case WM_THEMECHANGED:
     {
       // Update non-client margin offsets 
       UpdateNonClientMargins();
+      nsUXThemeData::InitTitlebarInfo();
       nsUXThemeData::UpdateNativeThemeInfo();
 
       DispatchStandardEvent(NS_THEMECHANGED);
