@@ -123,7 +123,13 @@
                0 1px 1.5px rgba(0,0,0,.5);
   font-weight: bold;
   padding: 0 1.5em .05em;
-  margin: 0;
+  margin: 0 0 2px;
+}
+
+@media all and (-moz-windows-classic) {
+  #appmenu-button {
+    margin-bottom: 1px;
+  }
 }
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
@@ -343,15 +349,8 @@
 }
 
 @media not all and (-moz-windows-classic) {
-  #titlebar-min,
-  #titlebar-max {
+  #titlebar-min {
     -moz-margin-end: 2px;
-  }
-}
-
-@media all and (-moz-windows-classic) {
-  #titlebar-close {
-    -moz-margin-start: 2px;
   }
 }
 
