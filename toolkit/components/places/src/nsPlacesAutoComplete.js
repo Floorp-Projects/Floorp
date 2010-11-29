@@ -129,22 +129,28 @@ function initTempTable(aDatabase)
 
   // Note: this should be kept up-to-date with the definition in
   //       nsPlacesTables.h.
-  let sql = "CREATE TEMP TABLE moz_openpages_temp ("
-          + "  url TEXT PRIMARY KEY"
-          + ", open_count INTEGER"
-          + ")";
-  aDatabase.executeSimpleSQL(sql);
+  let stmt = aDatabase.createAsyncStatement(
+    "CREATE TEMP TABLE moz_openpages_temp ( "
+  + "  url TEXT PRIMARY KEY "
+  + ", open_count INTEGER "
+  + ") "
+  );
+  stmt.executeAsync();
+  stmt.finalize();
 
   // Note: this should be kept up-to-date with the definition in
   //       nsPlacesTriggers.h.
-  sql = "CREATE TEMPORARY TRIGGER moz_openpages_temp_afterupdate_trigger "
-      + "AFTER UPDATE OF open_count ON moz_openpages_temp FOR EACH ROW "
-      + "WHEN NEW.open_count = 0 "
-      + "BEGIN "
-      +   "DELETE FROM moz_openpages_temp "
-      +   "WHERE url = NEW.url;"
-      + "END";
-  aDatabase.executeSimpleSQL(sql);
+  stmt = aDatabase.createAsyncStatement(
+    "CREATE TEMPORARY TRIGGER moz_openpages_temp_afterupdate_trigger "
+  + "AFTER UPDATE OF open_count ON moz_openpages_temp FOR EACH ROW "
+  + "WHEN NEW.open_count = 0 "
+  + "BEGIN "
+  +   "DELETE FROM moz_openpages_temp "
+  +   "WHERE url = NEW.url; "
+  + "END "
+  );
+  stmt.executeAsync();
+  stmt.finalize();
 }
 
 /**
@@ -642,10 +648,14 @@ nsPlacesAutoComplete.prototype = {
       ];
       for (let i = 0; i < stmts.length; i++) {
         // We do not want to create any query we haven't already created, so
-        // see if it is a getter first.  __lookupGetter__ returns null if it is
-        // actually a statement.
-        if (!this.__lookupGetter__(stmts[i]))
+        // see if it is a getter first.
+        if (Object.getOwnPropertyDescriptor(this, stmts[i]).value !== undefined) {
           this[stmts[i]].finalize();
+        }
+      }
+
+      if (Object.getOwnPropertyDescriptor(this, "_db").value !== undefined) {
+        this._db.asyncClose();
       }
     }
     else if (aTopic == kPrefChanged) {
