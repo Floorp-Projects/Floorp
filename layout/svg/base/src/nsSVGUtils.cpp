@@ -92,7 +92,6 @@
 #include "prdtoa.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDOMSVGNumberList.h"
-#include "gfxUtils.h"
 
 using namespace mozilla::dom;
 
@@ -638,7 +637,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
                          TransformBounds(gfxRect(x, y, width, height));
       bounds.RoundOut();
       nsIntRect r;
-      if (gfxUtils::GfxRectToIntRect(bounds, &r)) {
+      if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(bounds, &r))) {
         rect = r;
       } else {
         NS_NOTREACHED("Not going to invalidate the correct area");
@@ -957,7 +956,7 @@ public:
       gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(
         gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height));
       dirtyBounds.RoundOut();
-      if (gfxUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect)) {
+      if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect))) {
         dirtyRect = &tmpDirtyRect;
       }
     }
