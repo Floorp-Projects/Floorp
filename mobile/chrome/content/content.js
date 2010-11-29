@@ -290,6 +290,7 @@ ProgressController.prototype = {
 
 /** Can't think of a good description of this class.  It probably does too much? */
 function Content() {
+  addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseDown", this);
   addMessageListener("Browser:MouseUp", this);
@@ -373,6 +374,9 @@ Content.prototype = {
     let modifiers = json.modifiers;
 
     switch (aMessage.name) {
+      case "Browser:Blur":
+        gFocusManager.clearFocus(content);
+        break;
       case "Browser:KeyEvent":
         let utils = Util.getWindowUtils(content);
         let defaultAction;
