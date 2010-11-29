@@ -1197,9 +1197,19 @@ RENDER_AGAIN:
   }
 #endif
 
-  // For left edge and right edge tabs, we need to adjust the widget
-  // rects and clip rects so that the edges don't get drawn.
-  if (aWidgetType == NS_THEME_TAB) {
+  if (aWidgetType == NS_THEME_WINDOW_TITLEBAR) {
+    // Clip out the left and right corners of the frame, all we want in
+    // is the middle section.
+    widgetRect.left -= GetSystemMetrics(SM_CXFRAME);
+    widgetRect.right += GetSystemMetrics(SM_CXFRAME);
+  } else if (aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED) {
+    // The origin of the window is off screen when maximized and windows
+    // doesn't compensate for this in rendering the background. Push the
+    // top of the bitmap down by SM_CYFRAME so we get the full graphic.
+    widgetRect.top += GetSystemMetrics(SM_CYFRAME);
+  } else if (aWidgetType == NS_THEME_TAB) {
+    // For left edge and right edge tabs, we need to adjust the widget
+    // rects and clip rects so that the edges don't get drawn.
     PRBool isLeft = IsLeftToSelectedTab(aFrame);
     PRBool isRight = !isLeft && IsRightToSelectedTab(aFrame);
 
@@ -3294,8 +3304,6 @@ RENDER_AGAIN:
 
       // inset the caption area so it doesn't overflow.
       rect.top += offset;
-      rect.left += offset;
-      rect.right -= offset;
       // if enabled, draw a gradient titlebar background, otherwise
       // fill with a solid color.
       BOOL bFlag = TRUE;
@@ -3337,8 +3345,10 @@ RENDER_AGAIN:
         GradientFill(hdc, vertex, 2, &gRect, 1, GRADIENT_FILL_RECT_H);
       }
 
-      // frame things up with the left, top, and right raised borders.
-      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_TOP|BF_LEFT|BF_RIGHT);
+      if (aWidgetType == NS_THEME_WINDOW_TITLEBAR) {
+        // frame things up with a top raised border.
+        DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_TOP);
+      }
       break;
     }
 
