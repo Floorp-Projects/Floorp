@@ -53,7 +53,6 @@ DIRS	+= \
 	general \
 	whatwg \
 	geolocation \
-	globalstorage \
 	localstorage \
 	sessionstorage \
 	storageevent \
