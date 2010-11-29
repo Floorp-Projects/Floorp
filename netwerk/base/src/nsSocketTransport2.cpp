@@ -1431,9 +1431,6 @@ nsSocketTransport::OnSocketEvent(PRUint32 type, nsresult status, nsISupports *pa
         break;
 
     case MSG_DNS_LOOKUP_COMPLETE:
-        if (mDNSRequest)  // only send this if we actually resolved anything
-            SendStatus(STATUS_RESOLVED);
-
         SOCKET_LOG(("  MSG_DNS_LOOKUP_COMPLETE\n"));
         mDNSRequest = 0;
         if (param) {
