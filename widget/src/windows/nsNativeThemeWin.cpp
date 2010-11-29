@@ -322,6 +322,101 @@ static HRESULT DrawThemeBGRTLAware(HANDLE theme, HDC hdc, int part, int state,
   return nsUXThemeData::drawThemeBG(theme, hdc, part, state, widgetRect, clipRect);
 }
 
+/*
+  Caption button padding data - 'hot' button padding.
+  These areas are considered hot, in that they activate
+  a button when hovered or clicked. The button graphic
+  is drawn inside the padding border. Unrecognized themes
+  are treated as their recognized counterparts for now.
+                       left      top    right   bottom
+  classic min             1        2        0        1
+  classic max             0        2        1        1
+  classic close           1        2        2        1
+
+  aero basic min          1        2        0        2
+  aero basic max          0        2        1        2
+  aero basic close        1        2        1        2
+
+  xp theme min            0        2        0        2
+  xp theme max            0        2        1        2
+  xp theme close          1        2        2        2
+
+  'cold' button padding - generic button padding, should
+  be handled in css.
+                       left      top    right   bottom
+  classic min             0        0        0        0
+  classic max             0        0        0        0
+  classic close           0        0        0        0
+
+  aero basic min          0        0        1        0
+  aero basic max          1        0        0        0
+  aero basic close        0        0        0        0
+
+  xp theme min            0        0        1        0
+  xp theme max            1        0        0        0
+  xp theme close          0        0        0        0
+*/
+
+enum CaptionDesktopTheme {
+  CAPTION_CLASSIC = 0,
+  CAPTION_BASIC,
+  CAPTION_XPTHEME,
+};
+
+enum CaptionButton {
+  CAPTIONBUTTON_MINIMIZE = 0,
+  CAPTIONBUTTON_RESTORE,
+  CAPTIONBUTTON_CLOSE,
+};
+
+struct CaptionButtonPadding {
+  RECT hotPadding[3];
+};
+
+// RECT: left, top, right, bottom
+static CaptionButtonPadding buttonData[3] = {
+  { 
+    { { 1, 2, 0, 1 }, { 0, 2, 1, 1 }, { 1, 2, 2, 1 } }
+  },
+  { 
+    { { 1, 2, 0, 2 }, { 0, 2, 1, 2 }, { 1, 2, 2, 2 } }
+  },
+  { 
+    { { 0, 2, 0, 2 }, { 0, 2, 1, 2 }, { 1, 2, 2, 2 } }
+  }
+};
+
+// Adds "hot" caption button padding to minimum widget size.
+static void AddPaddingRect(nsIntSize* aSize, CaptionButton button) {
+  if (!aSize)
+    return;
+  RECT offset;
+  if (!nsUXThemeData::IsAppThemed())
+    offset = buttonData[CAPTION_CLASSIC].hotPadding[button];
+  else if (nsWindow::GetWindowsVersion() == WINXP_VERSION)
+    offset = buttonData[CAPTION_XPTHEME].hotPadding[button];
+  else
+    offset = buttonData[CAPTION_BASIC].hotPadding[button];
+  aSize->width += offset.left + offset.right;
+  aSize->height += offset.top + offset.bottom;
+}
+
+// If we've added padding to the minimum widget size, offset
+// the area we draw into to compensate.
+static void OffsetBackgroundRect(RECT& rect, CaptionButton button) {
+  RECT offset;
+  if (!nsUXThemeData::IsAppThemed())
+    offset = buttonData[CAPTION_CLASSIC].hotPadding[button];
+  else if (nsWindow::GetWindowsVersion() == WINXP_VERSION)
+    offset = buttonData[CAPTION_XPTHEME].hotPadding[button];
+  else
+    offset = buttonData[CAPTION_BASIC].hotPadding[button];
+  rect.left += offset.left;
+  rect.top += offset.top;
+  rect.right -= offset.right;
+  rect.bottom -= offset.bottom;
+}
+
 HANDLE
 nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
 { 
@@ -1230,6 +1325,16 @@ RENDER_AGAIN:
         widgetRect.left -= edgeSize;
     }
   }
+  else if (aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE) {
+    OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_MINIMIZE);
+  }
+  else if (aWidgetType == NS_THEME_WINDOW_BUTTON_MAXIMIZE ||
+           aWidgetType == NS_THEME_WINDOW_BUTTON_RESTORE) {
+    OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_RESTORE);
+  }
+  else if (aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE) {
+    OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_CLOSE);
+  }
 
   // widgetRect is the bounding box for a widget, yet the scale track is only
   // a small portion of this size, so the edges of the scale need to be
@@ -1506,6 +1611,8 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
       aWidgetType == NS_THEME_RADIOMENUITEM || aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_MENUIMAGE || aWidgetType == NS_THEME_MENUITEMTEXT ||
       aWidgetType == NS_THEME_TOOLBAR_SEPARATOR ||
+      aWidgetType == NS_THEME_WINDOW_TITLEBAR ||
+      aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED ||
       aWidgetType == NS_THEME_WIN_GLASS || aWidgetType == NS_THEME_WIN_BORDERLESS_GLASS)
     return NS_OK; // Don't worry about it.
 
@@ -1597,24 +1704,6 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
     // button padding for standard windows
     if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX) {
       aResult->top = GetSystemMetrics(SM_CXFRAME);
-      if (nsUXThemeData::sIsVistaOrLater) {
-        aResult->right += 2;
-      } else {
-        aResult->right += 1;
-      }
-    }
-
-    // Adjust horizontal button padding for maximized windows on XP
-    if (aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED &&
-        !nsUXThemeData::sIsVistaOrLater) {
-      aResult->right += 1;
-    }
-
-    // Push buttons down
-    if (theme) {
-      aResult->top += 1;
-    } else {
-      aResult->top += 2;
     }
     return PR_TRUE;
   }
@@ -1904,6 +1993,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         aResult->width -= 4;
         aResult->height -= 4;
       }
+      AddPaddingRect(aResult, CAPTIONBUTTON_RESTORE);
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
@@ -1915,6 +2005,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         aResult->width -= 4;
         aResult->height -= 4;
       }
+      AddPaddingRect(aResult, CAPTIONBUTTON_MINIMIZE);
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
@@ -1926,6 +2017,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         aResult->width -= 4;
         aResult->height -= 4;
       }
+      AddPaddingRect(aResult, CAPTIONBUTTON_CLOSE);
       *aIsOverridable = PR_FALSE;
       return NS_OK;
 
@@ -2485,6 +2577,16 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       // but they are.
       aResult->width -= 2;
       aResult->height -= 4;
+      if (aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE) {
+        AddPaddingRect(aResult, CAPTIONBUTTON_MINIMIZE);
+      }
+      else if (aWidgetType == NS_THEME_WINDOW_BUTTON_MAXIMIZE ||
+               aWidgetType == NS_THEME_WINDOW_BUTTON_RESTORE) {
+        AddPaddingRect(aResult, CAPTIONBUTTON_RESTORE);
+      }
+      else if (aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE) {
+        AddPaddingRect(aResult, CAPTIONBUTTON_CLOSE);
+      }
     break;
 
     default:
@@ -3369,6 +3471,16 @@ RENDER_AGAIN:
     case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
     case NS_THEME_WINDOW_BUTTON_RESTORE:
     {
+      if (aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE) {
+        OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_MINIMIZE);
+      }
+      else if (aWidgetType == NS_THEME_WINDOW_BUTTON_MAXIMIZE ||
+               aWidgetType == NS_THEME_WINDOW_BUTTON_RESTORE) {
+        OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_RESTORE);
+      }
+      else if (aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE) {
+        OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_CLOSE);
+      }
       PRInt32 oldTA = SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
       DrawFrameControl(hdc, &widgetRect, part, state);
       SetTextAlign(hdc, oldTA);
