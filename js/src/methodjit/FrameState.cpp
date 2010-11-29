@@ -1887,6 +1887,7 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
 
     alloc.lhsNeedsRemat = false;
     alloc.rhsNeedsRemat = false;
+    alloc.undoResult = false;
 
     if (!needsResult)
         goto skip;
@@ -1924,9 +1925,17 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
                          backingLeft->data.reg() == alloc.lhsData.reg());
             if (backingLeft->data.inRegister()) {
                 alloc.result = backingLeft->data.reg();
-                unpinReg(alloc.result);
-                takeReg(alloc.result);
-                alloc.lhsNeedsRemat = true;
+                if (op == JSOP_ADD && backingLeft == lhs) {
+                    /*
+                     * Leave the operand unsynced, and recover the original operands
+                     * in the OOL path by undoing the operation.
+                     */
+                    alloc.undoResult = true;
+                } else {
+                    unpinReg(alloc.result);
+                    takeReg(alloc.result);
+                    alloc.lhsNeedsRemat = true;
+                }
             } else {
                 /* For now, just spill... */
                 alloc.result = allocReg();
