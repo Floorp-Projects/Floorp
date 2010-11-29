@@ -29,6 +29,13 @@ function shortWait() {
   setTimeout(function() { gGen.next(); }, 0, false);
 }
 
+function onChildHashchange(e) {
+  // gGen might be undefined when we refresh the page, so we have to check here
+  dump("onChildHashchange() called.\n");
+  if(gGen)
+    gGen.next();
+}
+
 function onChildLoad(e) {
   if(gGen)
     gGen.next();
@@ -40,23 +47,30 @@ function runTest() {
   var popup = window.open("file_bug509055.html", "popup 0",
                            "height=200,width=200,location=yes," +
                            "menubar=yes,status=yes,toolbar=yes,dependent=yes");
+  popup.hashchangeCallback = onChildHashchange;
   popup.onload = onChildLoad;
-  yield; // wait for load
-
-  // Not sure why this wait is necessary, but without it, the change to
-  // location.hash below doesn't create a SHEntry or enable the back button.
-  shortWait();
+  dump('Waiting for initial load.\n');
   yield;
 
-  // Both setting location.hash and calling history.back() happen
-  // synchronously, so there's no need to yield here.
+  // Without this wait, the change to location.hash below doesn't create a
+  // SHEntry or enable the back button.
+  shortWait();
+  dump('Got initial load.  Spinning event loop.\n');
+  yield;
+
   popup.location.hash = "#1";
+  dump('Waiting for hashchange.\n');
+  yield;
+
   popup.history.back();
+  dump('Waiting for second hashchange.\n');
+  yield; // wait for hashchange
 
   popup.document.title = "Changed";
 
   // Wait for listeners to be notified of the title change.
   shortWait();
+  dump('Got second hashchange.  Spinning event loop.\n');
   yield;
 
   var sh = popup.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -70,6 +84,7 @@ function runTest() {
   popup.close();
 
   SimpleTest.finish();
+  dump('Final yield.\n');
   yield;
 }
 
