@@ -383,8 +383,6 @@ let ContentActive =  {
     let json = aMessage.json;
     switch (aMessage.name) {
       case "Content:Deactivate":
-        let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-        focusManager.clearFocus(content);
         docShell.isActive = false;
         let utils = Util.getWindowUtils(content);
         utils.setDisplayPort(0,0,0,0);

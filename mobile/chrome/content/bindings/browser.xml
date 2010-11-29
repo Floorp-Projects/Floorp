@@ -598,7 +598,7 @@
             this._active = val;
             this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), {});
             if (val)
-               this._updateCacheViewport();
+              this._updateCacheViewport();
          </setter>
       </property>
 

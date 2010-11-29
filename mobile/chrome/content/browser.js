@@ -2842,6 +2842,7 @@ Tab.prototype = {
       document.getElementById("tabs").selectedTab = this._chromeTab;
     }
     else {
+      browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");
       browser.active = false;
     }

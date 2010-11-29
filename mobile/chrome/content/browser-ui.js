@@ -641,7 +641,8 @@ var BrowserUI = {
   },
 
   updateUIFocus: function _updateUIFocus() {
-    Browser.selectedBrowser.active = !(Elements.contentShowing.getAttribute("disabled") == "true");
+    if (Elements.contentShowing.getAttribute("disabled") == "true")
+      Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:Blur", { });
   },
 
   updateStar: function() {
