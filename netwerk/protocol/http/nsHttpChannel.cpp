@@ -135,8 +135,13 @@ nsHttpChannel::nsHttpChannel()
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
     , mRequestTimeInitialized(PR_FALSE)
+    , mTimingEnabled(PR_FALSE)
+    , mAsyncOpenTime(0)
+    , mCacheReadStart(0)
+    , mCacheReadEnd(0)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
+    mChannelCreationTime = PR_Now();
 }
 
 nsHttpChannel::~nsHttpChannel()
@@ -2818,6 +2823,9 @@ nsHttpChannel::ReadFromCache()
     rv = mCachePump->AsyncRead(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
+    if (mTimingEnabled)
+        mCacheReadStart = PR_Now();
+
     PRUint32 suspendCount = mSuspendCount;
     while (suspendCount--)
         mCachePump->Suspend();
@@ -3603,6 +3611,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mCanceled)
         return mStatus;
 
+    if (mTimingEnabled)
+        mAsyncOpenTime = PR_Now();
+
     rv = NS_CheckPortSafety(mURI);
     if (NS_FAILED(rv))
         return rv;
@@ -3743,6 +3754,109 @@ nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
         *result = mConnectionInfo->ProxyInfo();
         NS_IF_ADDREF(*result);
     }
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsITimedChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::SetTimingEnabled(PRBool enabled) {
+    mTimingEnabled = enabled;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetTimingEnabled(PRBool* _retval) {
+    *_retval = mTimingEnabled;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetChannelCreationTime(PRUint64* _retval) {
+    *_retval = mChannelCreationTime;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetAsyncOpenTime(PRUint64* _retval) {
+    *_retval = mAsyncOpenTime;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetDomainLookupStart(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().domainLookupStart;
+    else
+        *_retval = mTransactionTimings.domainLookupStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetDomainLookupEnd(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().domainLookupEnd;
+    else
+        *_retval = mTransactionTimings.domainLookupEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetConnectStart(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().connectStart;
+    else
+        *_retval = mTransactionTimings.connectStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetConnectEnd(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().connectEnd;
+    else
+        *_retval = mTransactionTimings.connectEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRequestStart(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().requestStart;
+    else
+        *_retval = mTransactionTimings.requestStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetResponseStart(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().responseStart;
+    else
+        *_retval = mTransactionTimings.responseStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetResponseEnd(PRUint64* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->Timings().responseEnd;
+    else
+        *_retval = mTransactionTimings.responseEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheReadStart(PRUint64* _retval) {
+    *_retval = mCacheReadStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheReadEnd(PRUint64* _retval) {
+    *_retval = mCacheReadEnd;
     return NS_OK;
 }
 
@@ -3941,6 +4055,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     LOG(("nsHttpChannel::OnStopRequest [this=%p request=%p status=%x]\n",
         this, request, status));
 
+    if (mTimingEnabled && request == mCachePump) {
+        mCacheReadEnd = PR_Now();
+    }
+
     // honor the cancelation status even if the underlying transaction completed.
     if (mCanceled || NS_FAILED(mStatus))
         status = mStatus;
@@ -3991,6 +4109,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
 
         // at this point, we're done with the transaction
+        mTransactionTimings = mTransaction->Timings();
         mTransaction = nsnull;
         mTransactionPump = 0;
 
