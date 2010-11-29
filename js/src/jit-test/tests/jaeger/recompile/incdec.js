@@ -10,6 +10,17 @@ function local()
 }
 local();
 
+function olocal()
+{
+  var j = 0x7ffffff0;
+  for (var i = 0; i < 100; i++) {
+    if (j++ == 5000)
+      break;
+  }
+  assertEq(j, 2147483732);
+}
+olocal();
+
 function arg(j)
 {
   for (var i = 0; i < 100; i++)
@@ -17,6 +28,16 @@ function arg(j)
   assertEq(j, 2147483732);
 }
 arg(0x7ffffff0);
+
+function oarg(j)
+{
+  for (var i = 0; i < 100; i++) {
+    if (j++ == 5000)
+      break;
+  }
+  assertEq(j, 2147483732);
+}
+oarg(0x7ffffff0);
 
 var g = 0x7ffffff0;
 function glob()

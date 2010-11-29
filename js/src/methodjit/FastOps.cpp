@@ -979,12 +979,12 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         /* N? N 1 */
 
         if (amt == 1)
-            jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
+            jsop_binary(JSOP_ADD, stubs::Add, type);
         else
-            jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
+            jsop_binary(JSOP_SUB, stubs::Sub, type);
         /* N? N+1 */
 
-        frame.storeLocal(slot, post || popped);
+        frame.storeLocal(slot, post || popped, type);
         /* N? N+1 */
 
         /* Make a stub call too in case we are recompiling from an overflowing localinc. */
@@ -1040,12 +1040,14 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 void
 mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 {
+    JSValueType type = knownArgumentType(slot);
+
     if (popped || (op == JSOP_INCARG || op == JSOP_DECARG)) {
         int amt = (op == JSOP_ARGINC || op == JSOP_INCARG) ? -1 : 1;
 
         // Before: 
         // After:  V
-        frame.pushArg(slot, JSVAL_TYPE_UNKNOWN);
+        frame.pushArg(slot, type);
 
         // Before: V
         // After:  V 1
@@ -1054,11 +1056,11 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         // Note, SUB will perform integer conversion for us.
         // Before: V 1
         // After:  N+1
-        jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
+        jsop_binary(JSOP_SUB, stubs::Sub, type);
 
         // Before: N+1
         // After:  N+1
-        frame.storeArg(slot, popped);
+        frame.storeArg(slot, popped, type);
 
         if (popped)
             frame.pop();
@@ -1067,7 +1069,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before:
         // After: V
-        frame.pushArg(slot, JSVAL_TYPE_UNKNOWN);
+        frame.pushArg(slot, type);
 
         // Before: V
         // After:  N
@@ -1083,11 +1085,11 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: N N 1
         // After:  N N+1
-        jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
+        jsop_binary(JSOP_ADD, stubs::Add, type);
 
         // Before: N N+1
         // After:  N N+1
-        frame.storeArg(slot, true);
+        frame.storeArg(slot, true, type);
 
         // Before: N N+1
         // After:  N
