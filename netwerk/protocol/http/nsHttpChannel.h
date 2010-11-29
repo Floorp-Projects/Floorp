@@ -64,8 +64,6 @@
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICryptoHash.h"
-#include "nsITimedChannel.h"
-#include "TimingStruct.h"
 
 class nsAHttpConnection;
 class AutoRedirectVetoNotifier;
@@ -86,7 +84,6 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsITraceableChannel
                     , public nsIApplicationCacheChannel
                     , public nsIAsyncVerifyRedirectCallback
-                    , public nsITimedChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -102,7 +99,6 @@ public:
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
     NS_DECL_NSIAPPLICATIONCACHECHANNEL
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
-    NS_DECL_NSITIMEDCHANNEL
 
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
@@ -350,20 +346,10 @@ private:
     // True if mRequestTime has been set. In such a case it is safe to update
     // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
     PRUint32                          mRequestTimeInitialized : 1;
-    // True if timing collection is enabled
-    PRUint32                          mTimingEnabled : 1;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     nsCOMPtr<nsICryptoHash>        mHasher;
-
-    PRTime                            mChannelCreationTime;
-    PRTime                            mAsyncOpenTime;
-    PRTime                            mCacheReadStart;
-    PRTime                            mCacheReadEnd;
-    // copied from the transaction before we null out mTransaction
-    // so that the timing can still be queried from OnStopRequest
-    TimingStruct                      mTransactionTimings;
 
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
