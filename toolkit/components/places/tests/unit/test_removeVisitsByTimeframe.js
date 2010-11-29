@@ -265,7 +265,9 @@ var gTests = [
                          false,
                          0);
       }
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove all visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
@@ -302,7 +304,9 @@ var gTests = [
                          false,
                          0);
       }
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove all visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
@@ -350,7 +354,9 @@ var gTests = [
                            TEST_URI,
                            bmsvc.DEFAULT_INDEX,
                            "bookmark title");
-
+      waitForAsyncUpdates(this.continue_run, this);
+    },
+    continue_run: function () {
       print("Remove all visits.");
       histsvc.QueryInterface(Ci.nsIBrowserHistory).
         removeVisitsByTimeframe(NOW - 10, NOW);
