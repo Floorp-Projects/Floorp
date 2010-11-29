@@ -240,7 +240,15 @@ private:
 
   nsresult GetLastChildId(PRInt64 aFolder, PRInt64* aItemId);
 
+  /**
+   * This is the basic Places read-write connection, obtained from history.
+   */
   nsCOMPtr<mozIStorageConnection> mDBConn;
+  /**
+   * Cloned read-only connection.  Can be used to read from the database
+   * without being locked out by writers.
+   */
+  nsCOMPtr<mozIStorageConnection> mDBReadOnlyConn;
 
   nsString mGUIDBase;
   nsresult GetGUIDBase(nsAString& aGUIDBase);

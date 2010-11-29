@@ -921,20 +921,12 @@ var PlacesMenuDNDHandler = {
 
 
 var PlacesStarButton = {
-  init: function PSB_init()
-  {
-    try {
-      PlacesUtils.bookmarks.addObserver(this, false);
-    } catch(ex) {
-      Components.utils.reportError("PlacesStarButton.init(): error adding bookmark observer: " + ex);
-    }
-  },
-
+  _hasBookmarksObserver: false,
   uninit: function PSB_uninit()
   {
-    try {
+    if (this._hasBookmarksObserver) {
       PlacesUtils.bookmarks.removeObserver(this);
-    } catch(ex) {}
+    }
   },
 
   QueryInterface: XPCOMUtils.generateQI([
@@ -971,6 +963,17 @@ var PlacesStarButton = {
     PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds) {
       this._itemIds = aItemIds;
       this._updateStateInternal();
+
+      // Start observing bookmarks if needed.
+      if (!this._hasBookmarksObserver) {
+        try {
+          PlacesUtils.bookmarks.addObserver(this, false);
+          this._hasBookmarksObserver = true;
+        } catch(ex) {
+          Components.utils.reportError("PlacesStarButton failed adding a bookmarks observer: " + ex);
+        }
+      }
+
       // Finally show the star.
       this._starIcon.hidden = false;
     }, this);
