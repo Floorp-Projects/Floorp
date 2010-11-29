@@ -72,6 +72,13 @@
   }
 }
 
+@media not all and (-moz-windows-compositor) {
+  /* aero basic, which is a default windows theme */
+  #appmenu-button:-moz-system-metric(windows-theme-aero) {
+    margin-bottom: 1px;
+  }
+}
+
 @media all and (-moz-windows-compositor) {
   /* these should be hidden w/glass enabled. windows draws it's own buttons. */
   .titlebar-button {
