@@ -1388,8 +1388,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   UpdateUrlbarSearchSplitterState();
 
-  PlacesStarButton.init();
-
   if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
     gURLBar.focus();
   else

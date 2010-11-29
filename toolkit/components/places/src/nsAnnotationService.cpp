@@ -112,10 +112,6 @@ nsAnnotationService::Init()
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   mDBConn = history->GetStorageConnection();
 
-  // These statements should be responsive, so we init them immediately.
-  (void*)GetStatement(mDBCheckPageAnnotation);
-  (void*)GetStatement(mDBCheckItemAnnotation);
-
   return NS_OK;
 }
 

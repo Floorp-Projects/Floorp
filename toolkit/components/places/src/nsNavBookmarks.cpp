@@ -161,10 +161,14 @@ nsNavBookmarks::Init()
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   mDBConn = history->GetStorageConnection();
   NS_ENSURE_STATE(mDBConn);
-  PRUint16 dbStatus;
-  nsresult rv = history->GetDatabaseStatus(&dbStatus);
+
+  // Get our read-only cloned connection.
+  nsresult rv = mDBConn->Clone(PR_TRUE, getter_AddRefs(mDBReadOnlyConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRUint16 dbStatus;
+  rv = history->GetDatabaseStatus(&dbStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = InitRoots(dbStatus != nsINavHistoryService::DATABASE_STATUS_OK);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -465,6 +469,9 @@ nsNavBookmarks::FinalizeStatements() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Since we are shutting down, close the read-only connection.
+  (void)mDBReadOnlyConn->AsyncClose(nsnull);
+
   return NS_OK;
 }
 
@@ -473,7 +480,7 @@ nsresult
 nsNavBookmarks::InitRoots(bool aForceCreate)
 {
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = mDBReadOnlyConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT root_name, folder_id FROM moz_bookmarks_roots"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
