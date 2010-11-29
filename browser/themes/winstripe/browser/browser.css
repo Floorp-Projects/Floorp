@@ -211,16 +211,16 @@
     border: 1px solid rgba(0,0,0,.5);
   }
   #appmenuPrimaryPane {
-    -moz-margin-end: -1px;
     background-color: rgba(255,255,255,0.5);
-    -moz-border-end: 1px solid #c4c4c5;
-    -moz-padding-start: 2px;
+    padding: 2px;
   }
   #appmenuSecondaryPane {
     background-color: #f1f5fb;
     box-shadow: 1px 0 2px rgb(204,214,234) inset;
-    border: 0;
-    padding-top: 5px;
+    -moz-padding-start: 3px;
+    -moz-padding-end: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
     font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
   }
   #appmenuSecondaryPane:-moz-locale-dir(rtl) {
