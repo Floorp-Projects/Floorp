@@ -4752,6 +4752,13 @@
         ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
       !endif
 
+      ; Application update uses a directory named tobedeleted in the $INSTDIR to
+      ; delete files on OS reboot when they are in use. Try to delete this
+      ; directory if it exists.
+      ${If} ${FileExists} "$INSTDIR\tobedeleted"
+        RmDir /r "$INSTDIR\tobedeleted"
+      ${EndIf}
+
       ; Prevent all operations (e.g. set as default, postupdate, etc.) when a
       ; reboot is required and the executable launched is helper.exe
       IfFileExists "$INSTDIR\${FileMainEXE}.moz-upgrade" +1 +4
@@ -5177,6 +5184,13 @@
       ; installation create the directory if it doesn't already exist.
       IfFileExists "$INSTDIR\uninstall" +2 +1
       CreateDirectory "$INSTDIR\uninstall"
+
+      ; Application update uses a directory named tobedeleted in the $INSTDIR to
+      ; delete files on OS reboot when they are in use. Try to delete this
+      ; directory if it exists.
+      ${If} ${FileExists} "$INSTDIR\tobedeleted"
+        RmDir /r "$INSTDIR\tobedeleted"
+      ${EndIf}
 
       ; Remove files that may be left behind by the application in the
       ; VirtualStore directory.

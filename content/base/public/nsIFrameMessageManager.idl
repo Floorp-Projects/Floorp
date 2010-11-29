@@ -98,6 +98,12 @@ interface nsIContentFrameMessageManager : nsISyncMessageSender
    * Print a string to stdout.
    */
   void dump(in DOMString aStr);
+
+  /**
+   * If leak detection is enabled, print a note to the leak log that this
+   * process will intentionally crash.
+   */
+  void privateNoteIntentionalCrash();
 };
 
 [uuid(9c48d557-92fe-4edb-95fc-bfe97e77bdc3)]

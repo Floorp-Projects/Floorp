@@ -116,13 +116,6 @@
  *	all dtoa conversions in single-threaded executions with 8-byte
  *	pointers, PRIVATE_MEM >= 7400 appears to suffice; with 4-byte
  *	pointers, PRIVATE_MEM >= 7112 appears adequate.
- * #define NO_INFNAN_CHECK if you do not wish to have INFNAN_CHECK
- *	#defined automatically on IEEE systems.  On such systems,
- *	when INFNAN_CHECK is #defined, strtod checks
- *	for Infinity and NaN (case insensitively).  On some systems
- *	(e.g., some HP systems), it may be necessary to #define NAN_WORD0
- *	appropriately -- to the most significant word of a quiet NaN.
- *	(On HP Series 700/800 machines, -DNAN_WORD0=0x7ff40000 works.)
  * #define MULTIPLE_THREADS if the system offers preemptively scheduled
  *	multiple threads.  In this case, you must provide (or suitably
  *	#define) two locks, acquired by ACQUIRE_DTOA_LOCK(n) and freed
@@ -210,15 +203,6 @@ extern void *MALLOC(size_t);
 #endif
 #ifdef IEEE_8087
 #define IEEE_Arith
-#endif
-
-#ifdef IEEE_Arith
-#ifndef NO_INFNAN_CHECK
-#undef INFNAN_CHECK
-#define INFNAN_CHECK
-#endif
-#else
-#undef INFNAN_CHECK
 #endif
 
 #include "errno.h"
@@ -1490,39 +1474,6 @@ static CONST double tinytens[] = { 1e-16, 1e-32 };
 #endif
 #endif
 
-#ifdef INFNAN_CHECK
-
-#ifndef NAN_WORD0
-#define NAN_WORD0 0x7ff80000
-#endif
-
-#ifndef NAN_WORD1
-#define NAN_WORD1 0
-#endif
-
- static int
-match
-#ifdef KR_headers
-	(sp, t) char **sp, *t;
-#else
-	(CONST char **sp, CONST char *t)
-#endif
-{
-	int c, d;
-	CONST char *s = *sp;
-
-	while((d = *t++)) {
-		if ((c = *++s) >= 'A' && c <= 'Z')
-			c += 'a' - 'A';
-		if (c != d)
-			return 0;
-		}
-	*sp = s + 1;
-	return 1;
-	}
-
-#endif /* INFNAN_CHECK */
-
  static double
 _strtod
 #ifdef KR_headers
@@ -1683,29 +1634,6 @@ _strtod
 		}
 	if (!nd) {
 		if (!nz && !nz0) {
-#ifdef INFNAN_CHECK
-			/* Check for Nan and Infinity */
-			switch(c) {
-			  case 'i':
-			  case 'I':
-				if (match(&s,"nf")) {
-					--s;
-					if (!match(&s,"inity"))
-						++s;
-					word0(rv) = 0x7ff00000;
-					word1(rv) = 0;
-					goto ret;
-					}
-				break;
-			  case 'n':
-			  case 'N':
-				if (match(&s, "an")) {
-					word0(rv) = NAN_WORD0;
-					word1(rv) = NAN_WORD1;
-					goto ret;
-					}
-			  }
-#endif /* INFNAN_CHECK */
  ret0:
 			s = s00;
 			sign = 0;

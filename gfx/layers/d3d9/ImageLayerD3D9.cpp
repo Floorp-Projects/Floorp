@@ -104,7 +104,7 @@ ImageContainerD3D9::GetCurrentAsSurface(gfxIntSize *aSize)
   } else if (mActiveImage->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImageD3D9 *cairoImage =
       static_cast<CairoImageD3D9*>(mActiveImage.get());
-    *aSize = cairoImage->mSize;
+    *aSize = cairoImage->GetSize();
   }
 
   return static_cast<ImageD3D9*>(mActiveImage->GetImplData())->GetAsSurface();
@@ -128,7 +128,7 @@ ImageContainerD3D9::GetCurrentSize()
   } else if (mActiveImage->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImageD3D9 *cairoImage =
       static_cast<CairoImageD3D9*>(mActiveImage.get());
-    return cairoImage->mSize;
+    return cairoImage->GetSize();
   }
 
   return gfxIntSize(0,0);
@@ -208,15 +208,15 @@ ImageLayerD3D9::RenderLayer()
     device()->SetVertexShaderConstantF(CBvLayerQuad,
                                        ShaderConstantRect(0,
                                                           0,
-                                                          cairoImage->mSize.width,
-                                                          cairoImage->mSize.height),
+                                                          cairoImage->GetSize().width,
+                                                          cairoImage->GetSize().height),
                                        1);
 
     SetShaderTransformAndOpacity();
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
-    device()->SetTexture(0, cairoImage->mTexture);
+    device()->SetTexture(0, cairoImage->GetOrCreateTexture());
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
   }
 }
@@ -454,58 +454,87 @@ void
 CairoImageD3D9::SetData(const CairoImage::Data &aData)
 {
   mSize = aData.mSize;
+  mCachedSurface = aData.mSurface;
+  mTexture = NULL;
+
+  // Try to upload the surface immediately, so that we don't block the
+  // rendering pipeline at paint time.
+  (void) GetOrCreateTexture();
+}
+
+IDirect3DTexture9*
+CairoImageD3D9::GetOrCreateTexture()
+{
+  if (mTexture)
+    return mTexture;
 
   nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(aData.mSize, gfxASurface::ImageFormatARGB32);
+    new gfxImageSurface(mSize, gfxASurface::ImageFormatARGB32);
 
   nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
 
-  context->SetSource(aData.mSurface);
+  context->SetSource(mCachedSurface);
   context->Paint();
 
   if (mManager->deviceManager()->IsD3D9Ex()) {
     // D3D9Ex doesn't support managed textures. We could use dynamic textures
     // here but since Images are immutable that probably isn't such a great
     // idea.
-    mManager->device()->CreateTexture(aData.mSize.width, aData.mSize.height,
-                    1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
-                    getter_AddRefs(mTexture), NULL);
+    if (FAILED(mManager->device()->
+               CreateTexture(mSize.width, mSize.height,
+                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
+                             getter_AddRefs(mTexture), NULL)))
+      return NULL;
+
     nsRefPtr<IDirect3DSurface9> surface;
-    mManager->device()->CreateOffscreenPlainSurface(aData.mSize.width,
-                                                    aData.mSize.height,
-                                                    D3DFMT_A8R8G8B8,
-                                                    D3DPOOL_SYSTEMMEM,
-                                                    getter_AddRefs(surface),
-                                                    NULL);
+    if (FAILED(mManager->device()->
+               CreateOffscreenPlainSurface(mSize.width,
+                                           mSize.height,
+                                           D3DFMT_A8R8G8B8,
+                                           D3DPOOL_SYSTEMMEM,
+                                           getter_AddRefs(surface),
+                                           NULL))) {
+      mTexture = NULL;
+      return NULL;
+    }
+
     D3DLOCKED_RECT lockedRect;
     surface->LockRect(&lockedRect, NULL, 0);
-    for (int y = 0; y < aData.mSize.height; y++) {
+    for (int y = 0; y < mSize.height; y++) {
       memcpy((char*)lockedRect.pBits + lockedRect.Pitch * y,
              imageSurface->Data() + imageSurface->Stride() * y,
-             aData.mSize.width * 4);
+             mSize.width * 4);
     }
     surface->UnlockRect();
     nsRefPtr<IDirect3DSurface9> dstSurface;
     mTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
     mManager->device()->UpdateSurface(surface, NULL, dstSurface, NULL);
   } else {
-    mManager->device()->CreateTexture(aData.mSize.width, aData.mSize.height,
-                    1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
-                    getter_AddRefs(mTexture), NULL);
+    if (FAILED(mManager->device()->
+               CreateTexture(mSize.width, mSize.height,
+                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+                             getter_AddRefs(mTexture), NULL)))
+      return NULL;
+
     D3DLOCKED_RECT lockrect;
     /* lock the entire texture */
     mTexture->LockRect(0, &lockrect, NULL, 0);
 
     // copy over data. If we don't need to do any swaping we can
     // use memcpy
-    for (int y = 0; y < aData.mSize.height; y++) {
+    for (int y = 0; y < mSize.height; y++) {
       memcpy((char*)lockrect.pBits + lockrect.Pitch * y,
              imageSurface->Data() + imageSurface->Stride() * y,
-             aData.mSize.width * 4);
+             mSize.width * 4);
     }
 
     mTexture->UnlockRect(0);
   }
+
+  NS_ASSERTION(mTexture, "Should have succeeded by now.");
+  // Release our no-longer-needed mCachedSurface
+  mCachedSurface = NULL;
+  return mTexture;
 }
 
 already_AddRefed<gfxASurface>

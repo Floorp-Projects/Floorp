@@ -1,7 +1,9 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Global/
 script parseInt-01.js
+script parseFloat-01.js
 script eval-01.js
 script eval-02.js
 script eval-inside-with-is-direct.js
 script parenthesized-eval-is-direct.js
 script eval-native-callback-is-indirect.js
+script direct-eval-but-not.js

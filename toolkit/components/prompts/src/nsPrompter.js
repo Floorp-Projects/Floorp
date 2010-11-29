@@ -341,6 +341,35 @@ let PromptUtils = {
         for (let propName in obj)
             obj[propName] = propBag.getProperty(propName);
     },
+
+    getTabModalPrompt : function (domWin) {
+        var promptBox = null;
+
+        // Given a content DOM window, returns the chrome window it's in.
+        function getChromeWindow(aWindow) {
+            var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsIDocShell)
+                                   .chromeEventHandler.ownerDocument.defaultView;
+            return chromeWin;
+        }
+
+        try {
+            // Get the topmost window, in case we're in a frame.
+            var promptWin = domWin.top;
+
+            // Get the chrome window for the content window we're using.
+            // (Unwrap because we need a non-IDL property below.)
+            var chromeWin = getChromeWindow(promptWin).wrappedJSObject;
+
+            if (chromeWin.getTabModalPromptBox)
+                promptBox = chromeWin.getTabModalPromptBox(promptWin);
+        } catch (e) {
+            // If any errors happen, just assume no tabmodal prompter.
+        }
+
+        return promptBox;
+    },
 };
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function () {
@@ -363,11 +392,12 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "ellipsis", function () {
 
 
 function openModalWindow(domWin, uri, args) {
-    // XXX do we want to do modal state if we fall back to .activeWindow?
+    // XXX Investigate supressing modal state when we're called without a
+    // window? Seems odd to affect whatever window happens to be active.
     if (!domWin)
         domWin = Services.ww.activeWindow;
 
-    // XXX domWin may still be null here if there are _no_ windows open.
+    // domWin may still be null here if there are _no_ windows open.
 
     // Note that we don't need to fire DOMWillOpenModalDialog and
     // DOMModalDialogClosed events here, wwatcher's OpenWindowJSInternal
@@ -376,19 +406,89 @@ function openModalWindow(domWin, uri, args) {
     Services.ww.openWindow(domWin, uri, "_blank", "centerscreen,chrome,modal,titlebar", args);
 }
 
+function openTabPrompt(domWin, tabPrompt, args) {
+    let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+    winUtils.enterModalState();
+
+    // We provide a callback so the prompt can close itself. We don't want to
+    // wait for this event loop to return... Otherwise the presence of other
+    // prompts on the call stack would in this dialog appearing unresponsive
+    // until the other prompts had been closed.
+    let callbackInvoked = false;
+    function onPromptClose(forceCleanup) {
+        if (!newPrompt && !forceCleanup)
+            return;
+        callbackInvoked = true;
+        if (newPrompt)
+            tabPrompt.removePrompt(newPrompt);
+        winUtils.leaveModalState();
+    }
+
+    let newPrompt;
+    try {
+        // tab-modal prompts need to watch for navigation changes, give it the
+        // domWindow to watch for pagehide events.
+        args.domWindow = domWin;
+        args.promptActive = true;
+
+        newPrompt = tabPrompt.appendPrompt(args, onPromptClose);
+
+        // TODO since we don't actually open a window, need to check if
+        // there's other stuff in nsWindowWatcher::OpenWindowJSInternal
+        // that we might need to do here as well.
+
+        let thread = Services.tm.currentThread;
+        while (args.promptActive)
+            thread.processNextEvent(true);
+        delete args.promptActive;
+
+        if (args.promptAborted)
+            throw Components.Exception("prompt aborted by user", Cr.NS_ERROR_NOT_AVAILABLE);
+    } finally {
+        // If the prompt unexpectedly failed to invoke the callback, do so here.
+        if (!callbackInvoked)
+            onPromptClose(true);
+    }
+}
+
 function ModalPrompter(domWin) {
     this.domWin = domWin;
 }
 ModalPrompter.prototype = {
     domWin : null,
+    /*
+     * Default to not using a tab-modal prompt, unless the caller opts in by
+     * QIing to nsIWritablePropertyBag and setting the value of this property
+     * to true.
+     */
+    allowTabModal : false,
 
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt,
+Ci.nsIAuthPrompt2, Ci.nsIWritablePropertyBag2]),
 
 
     /* ---------- internal methods ---------- */
 
 
     openPrompt : function (args) {
+        // Check pref, if false/missing do not ever allow tab-modal prompts.
+        const prefName = "prompts.tab_modal.enabled";
+        let prefValue = false;
+        if (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL)
+            prefValue = Services.prefs.getBoolPref(prefName);
+
+        let allowTabModal = this.allowTabModal && prefValue;
+
+        if (allowTabModal && this.domWin) {
+            let tabPrompt = PromptUtils.getTabModalPrompt(this.domWin);
+            if (tabPrompt) {
+                openTabPrompt(this.domWin, tabPrompt, args);
+                return;
+            }
+        }
+
+        // If we can't do a tab modal prompt, fallback to using a window-modal dialog.
         const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
         const SELECT_DIALOG = "chrome://global/content/selectDialog.xul";
 
@@ -703,6 +803,17 @@ ModalPrompter.prototype = {
         //
         // Bug 565582 will change this.
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    /* ----------  nsIWritablePropertyBag2 ---------- */
+
+    // Only a partial implementation, for one specific use case...
+
+    setPropertyAsBool : function(name, value) {
+        if (name == "allowTabModal")
+            this.allowTabModal = value;
+        else
+            throw Cr.NS_ERROR_ILLEGAL_VALUE;
     },
 };
 

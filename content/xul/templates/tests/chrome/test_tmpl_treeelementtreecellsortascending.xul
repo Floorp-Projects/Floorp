@@ -114,7 +114,7 @@ var changes = [
 ]]>
 </script>
 
-<tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" hidevscroll="true" hidehscroll="true" datasources="animals.rdf" flags="" sort="rdf:http://www.some-fictitious-zoo.com/rdf#name" sortDirection="ascending" id="root" ref="http://www.some-fictitious-zoo.com/birds">
+<tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" hidevscroll="true" hidehscroll="true" datasources="rdf:null" flags="" sort="rdf:http://www.some-fictitious-zoo.com/rdf#name" sortDirection="ascending" id="root" ref="http://www.some-fictitious-zoo.com/birds">
 <treecols orient="horizontal" id="treecols">
 <treecol id="treecol" primary="true" label="Name" ordinal="1" sort="rdf:http://www.some-fictitious-zoo.com/rdf#name" sortDirection="ascending" sortActive="true"/>
 <treecol label="Species" ordinal="3"/>

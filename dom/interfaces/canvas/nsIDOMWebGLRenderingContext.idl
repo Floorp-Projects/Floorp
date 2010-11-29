@@ -324,7 +324,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long INT                            = 0x1404;
   const unsigned long UNSIGNED_INT                   = 0x1405;
   const unsigned long FLOAT                          = 0x1406;
-  const unsigned long FIXED                          = 0x140C;
 
   /* PixelFormat */
   const unsigned long DEPTH_COMPONENT                = 0x1902;
@@ -486,10 +485,6 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long VERTEX_ATTRIB_ARRAY_POINTER        = 0x8645;
   const unsigned long VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
 
-  /* Read Format */
-  const unsigned long IMPLEMENTATION_COLOR_READ_TYPE   = 0x8B9A;
-  const unsigned long IMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
-
   /* Shader Source */
   const unsigned long COMPILE_STATUS                 = 0x8B81;
   const unsigned long INFO_LOG_LENGTH                = 0x8B84;
@@ -553,6 +548,8 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long UNPACK_FLIP_Y_WEBGL            = 0x9240;
   const unsigned long UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
   const unsigned long CONTEXT_LOST_WEBGL             = 0x9242;
+  const unsigned long UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
+  const unsigned long BROWSER_DEFAULT_WEBGL          = 0x9244;
 
   //
   //  ATTRIBUTES

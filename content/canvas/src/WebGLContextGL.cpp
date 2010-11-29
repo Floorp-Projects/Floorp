@@ -1047,6 +1047,10 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (first < 0 || count < 0)
         return ErrorInvalidValue("DrawArrays: negative first or count");
 
+    // If count is 0, there's nothing to do.
+    if (count == 0)
+        return NS_OK;
+
     // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram)
@@ -1059,10 +1063,6 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 
     if (!ValidateBuffers(checked_firstPlusCount.value()))
         return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient size for given first and count");
-
-    // If count is 0, there's nothing to do.
-    if (count == 0)
-        return NS_OK;
 
     MakeContextCurrent();
 
@@ -1090,6 +1090,10 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
 
     if (count < 0 || byteOffset < 0)
         return ErrorInvalidValue("DrawElements: negative count or offset");
+
+    // If count is 0, there's nothing to do.
+    if (count == 0)
+        return NS_OK;
 
     CheckedUint32 checked_byteCount;
 
@@ -1142,10 +1146,6 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
         return ErrorInvalidOperation("DrawElements: bound vertex attribute buffers do not have sufficient "
                                      "size for given indices from the bound element array");
     }
-
-    // If count is 0, there's nothing to do.
-    if (count == 0)
-        return NS_OK;
 
     MakeContextCurrent();
 
@@ -1481,8 +1481,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS:
-        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE:
-        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
+        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);

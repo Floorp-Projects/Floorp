@@ -96,7 +96,6 @@ public:
         SurfaceTypeTee,
         SurfaceTypeXML,
         SurfaceTypeSkia,
-        SurfaceTypeDDraw,
         SurfaceTypeD2D,
         SurfaceTypeMax
     } gfxSurfaceType;
@@ -232,6 +231,8 @@ public:
     static PRInt32 BytePerPixelFromFormat(gfxImageFormat format);
 
     virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
+
+    virtual PRBool SupportsSelfCopy() { return PR_TRUE; }
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0), mSurfaceValid(PR_FALSE)

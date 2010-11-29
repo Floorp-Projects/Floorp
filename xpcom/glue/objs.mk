@@ -65,6 +65,7 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsThreadUtils.cpp              \
   nsTObserverArray.cpp           \
   nsCycleCollectionParticipant.cpp \
+  nsCycleCollectorUtils.cpp      \
   nsDeque.cpp \
   $(NULL)
 

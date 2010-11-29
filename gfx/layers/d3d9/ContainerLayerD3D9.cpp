@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ContainerLayerD3D9.h"
+#include "gfxUtils.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace layers {
@@ -142,6 +144,15 @@ ContainerLayerD3D9::GetFirstChildD3D9()
   return static_cast<LayerD3D9*>(mFirstChild->ImplData());
 }
 
+static inline LayerD3D9*
+GetNextSiblingD3D9(LayerD3D9* aLayer)
+{
+   Layer* layer = aLayer->GetLayer()->GetNextSibling();
+   return layer ? static_cast<LayerD3D9*>(layer->
+                                          ImplData())
+                 : nsnull;
+}
+
 void
 ContainerLayerD3D9::RenderLayer()
 {
@@ -155,6 +166,7 @@ ContainerLayerD3D9::RenderLayer()
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
   PRBool useIntermediate = UseIntermediateSurface();
 
+  gfxMatrix contTransform;
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
     device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
@@ -182,14 +194,27 @@ ContainerLayerD3D9::RenderLayer()
 
     device()->GetVertexShaderConstantF(CBmProjection, &oldViewMatrix[0][0], 4);
     device()->SetVertexShaderConstantF(CBmProjection, &viewMatrix._11, 4);
+  } else {
+#ifdef DEBUG
+    PRBool is2d =
+#endif
+    GetEffectiveTransform().Is2D(&contTransform);
+    NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
   /*
    * Render this container's contents.
    */
-  LayerD3D9 *layerToRender = GetFirstChildD3D9();
-  while (layerToRender) {
-    const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
+  for (LayerD3D9* layerToRender = GetFirstChildD3D9();
+       layerToRender != nsnull;
+       layerToRender = GetNextSiblingD3D9(layerToRender)) {
+
+    const nsIntRect* clipRect = layerToRender->GetLayer()->GetClipRect();
+    if ((clipRect && clipRect->IsEmpty()) ||
+        layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
+      continue;
+    }
+
     if (clipRect || useIntermediate) {
       RECT r;
       device()->GetScissorRect(&oldClipRect);
@@ -212,6 +237,25 @@ ContainerLayerD3D9::RenderLayer()
       renderSurface->GetDesc(&desc);
 
       if (!useIntermediate) {
+        // Transform clip rect
+        if (clipRect) {
+          gfxRect cliprect(r.left, r.top, r.left + r.right, r.top + r.bottom);
+          gfxRect trScissor = contTransform.TransformBounds(cliprect);
+          trScissor.Round();
+          nsIntRect trIntScissor;
+          if (gfxUtils::GfxRectToIntRect(trScissor, &trIntScissor)) {
+            r.left = trIntScissor.x;
+            r.top = trIntScissor.y;
+            r.right = trIntScissor.XMost();
+            r.bottom = trIntScissor.YMost();
+          } else {
+            r.left = 0;
+            r.top = 0;
+            r.right = visibleRect.width;
+            r.bottom = visibleRect.height;
+            clipRect = nsnull;
+          }
+        }
         // Intersect with current clip rect.
         r.left = NS_MAX<PRInt32>(oldClipRect.left, r.left);
         r.right = NS_MIN<PRInt32>(oldClipRect.right, r.right);
@@ -234,10 +278,7 @@ ContainerLayerD3D9::RenderLayer()
       device()->SetScissorRect(&oldClipRect);
     }
 
-    Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
-    layerToRender = nextSibling ? static_cast<LayerD3D9*>(nextSibling->
-                                                          ImplData())
-                                : nsnull;
+    continue;
   }
 
   if (useIntermediate) {

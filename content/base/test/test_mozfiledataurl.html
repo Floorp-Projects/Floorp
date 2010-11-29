@@ -22,7 +22,7 @@
 <script class="testbody" type="application/javascript;version=1.8">
 
 try {
-  createBlobURL(undefined);
+  URL.createObjectURL(undefined);
 } catch(e) { }
 
 window.addEventListener("message", function(e) {
@@ -44,7 +44,7 @@ function runTest() {
 
   // Attempt to load a image in this document
   var file = getFile("file_mozfiledataurl_img.jpg");
-  var fileurl = createBlobURL(file);
+  var fileurl = URL.createObjectURL(file);
   img.src = fileurl;
   var e = (yield);
   is(e.type, "load", "loaded successfully");
@@ -54,7 +54,7 @@ function runTest() {
   // Revoke url and attempt to load a image in this document
   img.src = "file_mozfiledataurl_img.jpg";
   is((yield).type, "load", "successfull reset image");
-  revokeBlobURL(fileurl);
+  URL.revokeObjectURL(fileurl);
   todo(false, "urls need to act like 404s, not fail to parse");
 /*  img.src = fileurl;
   var e = (yield);
@@ -64,8 +64,8 @@ function runTest() {
 */
   // Generate new fileurl and make sure it's different from the old
   var oldFileurl = fileurl;
-  var fileurl = createBlobURL(file);
-  isnot(fileurl, oldFileurl, "createBlobURL generated the same url twice");
+  var fileurl = URL.createObjectURL(file);
+  isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
 
   // Attempt to load an image in a different same-origin document
   inner.src = innerSameSiteURI;
@@ -87,7 +87,7 @@ function runTest() {
 
   // Attempt to load an audio in this document
   var file = getFile("file_mozfiledataurl_audio.ogg");
-  var fileurl = createBlobURL(file);
+  var fileurl = URL.createObjectURL(file);
   audio.src = fileurl;
   var e = (yield);
   is(e.type, "canplay", "loaded successfully");
@@ -95,7 +95,7 @@ function runTest() {
   // Revoke url and attempt to load a audio in this document
   audio.src = "file_mozfiledataurl_audio.ogg";
   is((yield).type, "canplay", "successfully reset audio");
-  revokeBlobURL(fileurl);
+  URL.revokeObjectURL(fileurl);
   todo(false, "urls need to act like 404s, not fail to parse");
 /*  img.src = fileurl;
   var e = (yield);
@@ -105,8 +105,8 @@ function runTest() {
 */
   // Generate new fileurl and make sure it's different from the old
   var oldFileurl = fileurl;
-  var fileurl = createBlobURL(file);
-  isnot(fileurl, oldFileurl, "createBlobURL generated the same url twice");
+  var fileurl = URL.createObjectURL(file);
+  isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
 
   // Attempt to load an audio in a different same-origin document
   inner.src = innerSameSiteURI;
@@ -136,7 +136,7 @@ function runTest() {
 
   // Attempt to load a HTML document in an iframe in this document, using file url
   file = getFile("file_mozfiledataurl_doc.html");
-  fileurl = createBlobURL(file);
+  fileurl = URL.createObjectURL(file);
   iframe.src = fileurl;
   yield;
   is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
@@ -172,7 +172,7 @@ function runTest() {
 
   // Attempt to load file url using XHR
   file = getFile("file_mozfiledataurl_text.txt");
-  fileurl = createBlobURL(file);
+  fileurl = URL.createObjectURL(file);
   xhr = new XMLHttpRequest;
   xhr.onload = function() { gen.send("XHR finished"); };
   xhr.open("GET", fileurl);

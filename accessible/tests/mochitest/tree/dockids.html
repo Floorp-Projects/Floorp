@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="next" href="http://www.mozilla.org">
+    <style>
+      head, link, a { display: block; }
+      link:after { content: "Link to " attr(href); }
+    </style>
+    <script>
+      window.onload = function() {
+        document.documentElement.appendChild(document.createElement("input"));
+
+        var l = document.createElement("link");
+        l.href = "http://www.mozilla.org";
+        l.textContent = "Another ";
+        document.documentElement.appendChild(l);
+
+        l = document.createElement("a");
+        l.href = "http://www.mozilla.org";
+        l.textContent = "Yet another link to mozilla";
+        document.documentElement.appendChild(l);
+      }
+    </script>
+  </head>
+  <body>
+    Hey, I'm a <body> with three links that are not inside me and an input
+    that's not inside me.
+  </body>
+</body>
+</html>

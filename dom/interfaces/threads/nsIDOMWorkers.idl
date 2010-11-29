@@ -144,7 +144,13 @@ interface nsIWorker : nsIAbstractWorker
   void terminate();
 };
 
-[scriptable, uuid(c40dfe2c-c9d4-4c48-8e5d-adc99f207dd2)]
-interface nsIChromeWorker : nsIWorker
+[scriptable, uuid(cfc4bb32-ca83-4d58-9b6f-66f8054a333a)]
+interface nsIWorkerFactory : nsISupports
 {
+    nsIWorker newChromeWorker(/* in DOMString aScriptURL */);
 };
+
+%{ C++
+#define NS_WORKERFACTORY_CONTRACTID \
+"@mozilla.org/threads/workerfactory;1"
+%}

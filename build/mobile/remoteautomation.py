@@ -42,7 +42,7 @@ import os
 import socket
 
 from automation import Automation
-from devicemanager import DeviceManager
+from devicemanager import DeviceManager, NetworkTools
 
 class RemoteAutomation(Automation):
     _devicemanager = None
@@ -99,31 +99,9 @@ class RemoteAutomation(Automation):
 #        return app, ['--environ:NO_EM_RESTART=1'] + args
         return app, args
 
-    # Utilities to get the local ip address
-    def getInterfaceIp(self, ifname):
-        if os.name != "nt":
-            import fcntl
-            import struct
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            return socket.inet_ntoa(fcntl.ioctl(
-                                    s.fileno(),
-                                    0x8915,  # SIOCGIFADDR
-                                    struct.pack('256s', ifname[:15])
-                                    )[20:24])
-        else:
-            return None
-
     def getLanIp(self):
-        ip = socket.gethostbyname(socket.gethostname())
-        if ip.startswith("127.") and os.name != "nt":
-            interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
-            for ifname in interfaces:
-                try:
-                    ip = self.getInterfaceIp(ifname)
-                    break;
-                except IOError:
-                    pass
-        return ip
+        nettools = NetworkTools()
+        return nettools.getLanIp()
 
     def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
         if stdout == None or stdout == -1:
@@ -176,4 +154,3 @@ class RemoteAutomation(Automation):
  
         def kill(self):
             self.dm.killProcess(self.procName)
-

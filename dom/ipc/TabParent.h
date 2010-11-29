@@ -50,7 +50,6 @@
 #include "nsWeakReference.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIAuthPromptProvider.h"
-#include "nsISSLStatusProvider.h"
 #include "nsISecureBrowserUI.h"
 
 class nsFrameLoader;
@@ -70,7 +69,6 @@ class TabParent : public PBrowserParent
                 , public nsITabParent 
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
-                , public nsISSLStatusProvider
 {
 public:
     TabParent();
@@ -104,7 +102,7 @@ public:
     virtual bool RecvEndIMEComposition(const PRBool& aCancel,
                                        nsString* aComposition);
     virtual bool RecvGetIMEEnabled(PRUint32* aValue);
-    virtual bool RecvSetIMEEnabled(const PRUint32& aValue);
+    virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction);
     virtual bool RecvGetIMEOpenState(PRBool* aValue);
     virtual bool RecvSetIMEOpenState(const PRBool& aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
@@ -154,7 +152,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHPROMPTPROVIDER
     NS_DECL_NSISECUREBROWSERUI
-    NS_DECL_NSISSLSTATUSPROVIDER
 
     void HandleDelayedDialogs();
 
@@ -198,10 +195,6 @@ protected:
     virtual PRenderFrameParent* AllocPRenderFrame();
     NS_OVERRIDE
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame);
-
-    PRUint32 mSecurityState;
-    nsString mSecurityTooltipText;
-    nsCOMPtr<nsISupports> mSecurityStatusObject;
 
     // IME
     static TabParent *mIMETabParent;

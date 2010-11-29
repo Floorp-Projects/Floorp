@@ -144,6 +144,9 @@ js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector);
 extern JSObject *
 js_NewSlowArrayObject(JSContext *cx);
 
+/* Minimum size at which a dense array can be made sparse. */
+const uint32 MIN_SPARSE_INDEX = 256;
+
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
@@ -155,6 +158,17 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 extern JSBool JS_FASTCALL
 js_IndexToId(JSContext *cx, jsuint index, jsid *idp);
+
+namespace js {
+
+/*
+ * This function assumes 'length' is effectively the result of calling
+ * js_GetLengthProperty on aobj.
+ */
+extern bool
+GetElements(JSContext *cx, JSObject *aobj, jsuint length, js::Value *vp);
+
+}
 
 /*
  * JS-specific merge sort function.

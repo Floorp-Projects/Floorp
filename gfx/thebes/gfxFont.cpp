@@ -189,26 +189,132 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
     return f;
 }
 
-gfxFontEntry::FontTableCacheEntry::FontTableCacheEntry
-        (nsTArray<PRUint8>& aBuffer,
-         PRUint32 aTag,
-         nsClassHashtable<nsUint32HashKey,FontTableCacheEntry>& aCache)
-    : mTag(aTag), mCache(aCache)
+/**
+ * FontTableBlobData
+ *
+ * See FontTableHashEntry for the general strategy.
+ */
+
+class gfxFontEntry::FontTableBlobData {
+public:
+    // Adopts the content of aBuffer.
+    // Pass a non-null aHashEntry only if it should be cleared if/when this
+    // FontTableBlobData is deleted.
+    FontTableBlobData(nsTArray<PRUint8>& aBuffer,
+                      FontTableHashEntry *aHashEntry)
+        : mHashEntry(aHashEntry), mHashtable()
+    {
+        MOZ_COUNT_CTOR(FontTableBlobData);
+        mTableData.SwapElements(aBuffer);
+    }
+
+    ~FontTableBlobData() {
+        MOZ_COUNT_DTOR(FontTableBlobData);
+        if (mHashEntry) {
+            if (mHashtable) {
+                mHashtable->RemoveEntry(mHashEntry->GetKey());
+            } else {
+                mHashEntry->Clear();
+            }
+        }
+    }
+
+    // Useful for creating blobs
+    const char *GetTable() const
+    {
+        return reinterpret_cast<const char*>(mTableData.Elements());
+    }
+    PRUint32 GetTableLength() const { return mTableData.Length(); }
+
+    // Tell this FontTableBlobData to remove the HashEntry when this is
+    // destroyed.
+    void ManageHashEntry(nsTHashtable<FontTableHashEntry> *aHashtable)
+    {
+        mHashtable = aHashtable;
+    }
+
+    // Disconnect from the HashEntry (because the blob has already been
+    // removed from the hashtable).
+    void ForgetHashEntry()
+    {
+        mHashEntry = nsnull;
+    }
+
+private:
+    // The font table data block, owned (via adoption)
+    nsTArray<PRUint8> mTableData;
+    // The blob destroy function needs to know the hashtable entry,
+    FontTableHashEntry *mHashEntry;
+    // and the owning hashtable, so that it can remove the entry.
+    nsTHashtable<FontTableHashEntry> *mHashtable;
+
+    // not implemented
+    FontTableBlobData(const FontTableBlobData&);
+};
+
+void
+gfxFontEntry::FontTableHashEntry::SaveTable(nsTArray<PRUint8>& aTable)
 {
-    MOZ_COUNT_CTOR(FontTableCacheEntry);
-    mData.SwapElements(aBuffer);
-    mBlob = hb_blob_create((const char*)mData.Elements(), mData.Length(),
+    Clear();
+    // adopts elements of aTable
+    FontTableBlobData *data = new FontTableBlobData(aTable, nsnull);
+    mBlob = hb_blob_create(data->GetTable(), data->GetTableLength(),
                            HB_MEMORY_MODE_READONLY,
-                           gfxFontEntry::FontTableCacheEntry::Destroy,
-                           this);
+                           DeleteFontTableBlobData, data);    
 }
 
-/* static */ void
-gfxFontEntry::FontTableCacheEntry::Destroy(void *aUserData)
+hb_blob_t *
+gfxFontEntry::FontTableHashEntry::
+ShareTableAndGetBlob(nsTArray<PRUint8>& aTable,
+                     nsTHashtable<FontTableHashEntry> *aHashtable)
 {
-    gfxFontEntry::FontTableCacheEntry *ftce =
-        static_cast<gfxFontEntry::FontTableCacheEntry*>(aUserData);
-    ftce->mCache.Remove(ftce->mTag);
+    Clear();
+    // adopts elements of aTable
+    mSharedBlobData = new FontTableBlobData(aTable, this);
+    mBlob = hb_blob_create(mSharedBlobData->GetTable(),
+                           mSharedBlobData->GetTableLength(),
+                           HB_MEMORY_MODE_READONLY,
+                           DeleteFontTableBlobData, mSharedBlobData);
+    if (!mSharedBlobData) {
+        // The FontTableBlobData was destroyed during hb_blob_create().
+        // The (empty) blob is still be held in the hashtable with a strong
+        // reference.
+        return hb_blob_reference(mBlob);
+    }
+
+    // Tell the FontTableBlobData to remove this hash entry when destroyed.
+    // The hashtable does not keep a strong reference.
+    mSharedBlobData->ManageHashEntry(aHashtable);
+    return mBlob;
+}
+
+void
+gfxFontEntry::FontTableHashEntry::Clear()
+{
+    // If the FontTableBlobData is managing the hash entry, then the blob is
+    // not owned by this HashEntry; otherwise there is strong reference to the
+    // blob that must be removed.
+    if (mSharedBlobData) {
+        mSharedBlobData->ForgetHashEntry();
+        mSharedBlobData = nsnull;
+    } else if (mBlob) {
+        hb_blob_destroy(mBlob);
+    }
+    mBlob = nsnull;
+}
+
+// a hb_destroy_func for hb_blob_create
+
+/* static */ void
+gfxFontEntry::FontTableHashEntry::DeleteFontTableBlobData(void *aBlobData)
+{
+    delete static_cast<FontTableBlobData*>(aBlobData);
+}
+
+hb_blob_t *
+gfxFontEntry::FontTableHashEntry::GetBlob() const
+{
+    return hb_blob_reference(mBlob);
 }
 
 hb_blob_t *
@@ -220,26 +326,22 @@ gfxFontEntry::GetFontTable(PRUint32 aTag)
         mFontTableCache.Init(10);
     }
 
-    FontTableCacheEntry *entry = nsnull;
-    if (!mFontTableCache.Get(aTag, &entry)) {
-        nsTArray<PRUint8> buffer;
-        if (NS_SUCCEEDED(GetFontTable(aTag, buffer))) {
-            entry = new FontTableCacheEntry(buffer, // adopts buffer elements
-                                            aTag, mFontTableCache);
-            if (mFontTableCache.Put(aTag, entry)) {
-                return entry->GetBlob();
-            }
-            hb_blob_destroy(entry->GetBlob());
-            delete entry; // we failed to cache it!
-            return nsnull;
-        }
-    }
-
+    FontTableHashEntry *entry = mFontTableCache.GetEntry(aTag);
     if (entry) {
-        return hb_blob_reference(entry->GetBlob());
+        return entry->GetBlob();
     }
 
-    return nsnull;
+    entry = mFontTableCache.PutEntry(aTag);
+    if (NS_UNLIKELY(!entry)) { // OOM
+        return nsnull;
+    }
+
+    nsTArray<PRUint8> buffer;
+    if (NS_FAILED(GetFontTable(aTag, buffer))) {
+        return nsnull; // leaves the null entry cached in the hashtable
+    }
+
+    return entry->ShareTableAndGetBlob(buffer, &mFontTableCache);
 }
 
 void
@@ -252,19 +354,13 @@ gfxFontEntry::PreloadFontTable(PRUint32 aTag, nsTArray<PRUint8>& aTable)
         mFontTableCache.Init(3);
     }
 
-    FontTableCacheEntry *entry = nsnull;
-    if (mFontTableCache.Get(aTag, &entry)) {
-        // this should never happen - it's a logic error in the calling code
-        // (so ignore the fact that we'll leak the elements of aTable here)
-        NS_NOTREACHED("can't preload table, already present in cache!");
+    FontTableHashEntry *entry = mFontTableCache.PutEntry(aTag);
+    if (NS_UNLIKELY(!entry)) { // OOM
         return;
     }
 
-    // this adopts the buffer elements of aTable
-    entry = new FontTableCacheEntry(aTable, aTag, mFontTableCache);
-    if (!mFontTableCache.Put(aTag, entry)) {
-        NS_WARNING("failed to cache font table!");
-    }
+    // adopts elements of aTable
+    entry->SaveTable(aTable);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -582,8 +678,9 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
             const gfxFontStyle *style = aMatchData->mFontToMatch->GetStyle();
             
             // italics
-            if (fe->IsItalic() && 
-                    (style->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0) {
+            PRBool wantItalic =
+                ((style->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0);
+            if (fe->IsItalic() == wantItalic) {
                 rank += 5;
             }
             
@@ -600,8 +697,12 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
             }
         } else {
             // if no font to match, prefer non-bold, non-italic fonts
-            if (!fe->IsItalic() && !fe->IsBold())
-                rank += 5;
+            if (!fe->IsItalic()) {
+                rank += 3;
+            }
+            if (!fe->IsBold()) {
+                rank += 2;
+            }
         }
         
         // xxx - add whether AAT font with morphing info for specific lang groups

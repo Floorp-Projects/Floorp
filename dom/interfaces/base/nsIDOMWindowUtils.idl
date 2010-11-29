@@ -65,7 +65,7 @@ interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
 
-[scriptable, uuid(def3fbe8-961b-4c8b-8cac-eb6a4e604bb5)]
+[scriptable, uuid(85fa978a-fc91-4513-9f11-8911e671577f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -820,4 +820,12 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in AString property,
                                   in AString value1,
                                   in AString value2);
+};
+
+[scriptable, uuid(3a0334aa-b9cc-4b32-9b6c-599cd4e40d5b)]
+interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
+  /**
+   * Get the type of the currently focused html input, if any.
+   */
+  readonly attribute string focusedInputType;
 };

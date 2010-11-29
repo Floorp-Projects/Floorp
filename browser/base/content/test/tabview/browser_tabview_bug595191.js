@@ -55,10 +55,10 @@ function onTabViewWindowLoaded() {
   ok(searchButton, "Search button exists");
   
   let onSearchEnabled = function() {
-    let search = contentWindow.document.getElementById("search");
-    ok(search.style.display != "none", "Search is enabled");
     contentWindow.removeEventListener(
       "tabviewsearchenabled", onSearchEnabled, false);
+    let search = contentWindow.document.getElementById("search");
+    ok(search.style.display != "none", "Search is enabled");
     escapeTest(contentWindow);
   }
   contentWindow.addEventListener("tabviewsearchenabled", onSearchEnabled, 
@@ -70,21 +70,16 @@ function onTabViewWindowLoaded() {
 
 function escapeTest(contentWindow) {  
   let onSearchDisabled = function() {
-    let search = contentWindow.document.getElementById("search");
-
-    ok(search.style.display == "none", "Search is disabled");
-
     contentWindow.removeEventListener(
       "tabviewsearchdisabled", onSearchDisabled, false);
+
+    let search = contentWindow.document.getElementById("search");
+    ok(search.style.display == "none", "Search is disabled");
     toggleTabViewTest(contentWindow);
   }
   contentWindow.addEventListener("tabviewsearchdisabled", onSearchDisabled, 
     false);
-  // the search box focus()es in a function on the timeout queue, so we just
-  // want to queue behind it.
-  setTimeout( function() {
-    EventUtils.synthesizeKey("VK_ESCAPE", {});
-  }, 0);
+  EventUtils.synthesizeKey("VK_ESCAPE", { type: "keypress" }, contentWindow);
 }
 
 function toggleTabViewTest(contentWindow) {
@@ -92,14 +87,9 @@ function toggleTabViewTest(contentWindow) {
     contentWindow.removeEventListener("tabviewhidden", onTabViewHidden, false);
 
     ok(!TabView.isVisible(), "Tab View is hidden");
-
     finish();
   }
   contentWindow.addEventListener("tabviewhidden", onTabViewHidden, false);
-  // When search is hidden, it focus()es on the background, so avert the 
-  // race condition by delaying ourselves on the timeout queue
-  setTimeout( function() {
-    // Use keyboard shortcut to toggle back to browser view
-    EventUtils.synthesizeKey("e", { accelKey: true });
-  }, 0);
+  // Use keyboard shortcut to toggle back to browser view
+  EventUtils.synthesizeKey("e", { accelKey: true });
 }

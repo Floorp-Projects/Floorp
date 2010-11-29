@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is tabview test for bug 587040.
+ * The Original Code is tabview test for bug 595930.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
@@ -71,15 +71,24 @@ function onTabViewWindowLoaded() {
     };
     window.addEventListener("tabviewhidden", onTabViewHidden, false);
 
-    EventUtils.synthesizeKey("e", {accelKey : true}, contentWindow);
+    // delay to give time for hidden group DOM element to be removed so
+    // the appropriate group would get selected when the key
+    // combination is pressed
+    executeSoon(function() { 
+      EventUtils.synthesizeKey("e", {accelKey : true}, contentWindow);
+    });
+  });
+
+  group1.addSubscriber(group1, "groupHidden", function() {
+    group1.removeSubscriber(group1, "groupHidden");
+
+    // close undo group
+    let closeButton = group1.$undoContainer.find(".close");
+    EventUtils.sendMouseEvent(
+      { type: "click" }, closeButton[0], contentWindow);
   });
 
   // Get rid of the group and its children
   group1.closeAll();
-  
-  // close undo group
-  let closeButton = group1.$undoContainer.find(".close");
-  EventUtils.sendMouseEvent(
-    { type: "click" }, closeButton[0], contentWindow);
 }
 

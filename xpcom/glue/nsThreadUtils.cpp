@@ -131,11 +131,11 @@ bool NS_IsMainThread()
   return bool(result);
 }
 #elif defined(XP_WIN)
-extern DWORD gTLSIsMainThreadIndex;
+extern DWORD gTLSThreadIDIndex;
 bool
 NS_IsMainThread()
 {
-  return !!TlsGetValue(gTLSIsMainThreadIndex);
+  return TlsGetValue(gTLSThreadIDIndex) == (void*) mozilla::threads::Main;
 }
 #elif !defined(NS_TLS)
 bool NS_IsMainThread()
@@ -147,7 +147,7 @@ bool NS_IsMainThread()
 #elif !defined(MOZ_ENABLE_LIBXUL)
 bool NS_IsMainThread()
 {
-  return gTLSIsMainThread;
+  return gTLSThreadID == mozilla::threads::Main;
 }
 #endif
 

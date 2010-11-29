@@ -25,85 +25,61 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
 var gPromptInput = null;
-var gPromptWindow = null;
 
 function runTest()
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  function WindowObserver()
-  {
-    Components.classes["@mozilla.org/observer-service;1"].
-               getService(Components.interfaces.nsIObserverService).
-               addObserver(this, "domwindowopened", false);
-  }
-  WindowObserver.prototype = {
-    QueryInterface: function (iid) {
-      if (iid.equals(Components.interfaces.nsIObserver) ||
-          iid.equals(Components.interfaces.nsISupports)) {
-        return this;
-      }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
+  var os = Components.classes["@mozilla.org/observer-service;1"].
+             getService(Components.interfaces.nsIObserverService);
 
-    observe: function (subject, topic, data) {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-      if (topic === "domwindowopened") {
-        ok(true, "prompt window is created");
-        gPromptWindow =
-          subject.QueryInterface(Components.interfaces.nsIDOMWindow);
-        gPromptWindow.addEventListener("load", onPromptLoad, false);
-      }
-    }
-  };
+  os.addObserver(onPromptLoad, "common-dialog-loaded", false);
+  os.addObserver(onPromptLoad, "tabmodal-dialog-loaded", false);
 
-  var observer = new WindowObserver();
-
+  ok(true, "opening prompt...");
   prompt("summary", "text");
   ok(true, "prompt is closed");
 
-  Components.classes["@mozilla.org/observer-service;1"].          
-             getService(Components.interfaces.nsIObserverService).
-             removeObserver(observer, "domwindowopened");
-  SimpleTest.finish();
+  os.removeObserver(onPromptLoad, "tabmodal-dialog-loaded");
+  os.removeObserver(onPromptLoad, "common-dialog-loaded");
 }
 
-function onPromptLoad()
+function onPromptLoad(subject, topic, data)
 {
   ok(true, "onPromptLoad is called");
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  gPromptWindow.removeEventListener("load", onPromptLoad, false);
-  gPromptInput = gPromptWindow.document.getElementById("loginTextbox");
+  gPromptInput = subject.Dialog.ui.loginTextbox;
   gPromptInput.addEventListener("focus", onPromptFocus, false);
+  // shift focus to ensure it fires.
+  subject.Dialog.ui.button0.focus();
+  gPromptInput.focus();
 }
 
-function onPromptFocus()
-{
+function onPromptFocus() {
   ok(true, "onPromptFocus is called");
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   gPromptInput.removeEventListener("focus", onPromptFocus, false);
+
   var systemGroup =
     Components.classes["@mozilla.org/eventlistenerservice;1"].
       getService(Components.interfaces.nsIEventListenerService).
       systemEventGroup;
   gPromptInput.QueryInterface(Components.interfaces.nsIDOM3EventTarget);
-  var isPrevented = false;
   var listener = {
     handleEvent: function _hv(aEvent)
     {
-      isPrevented = aEvent.getPreventDefault();
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      var isPrevented = aEvent.getPreventDefault();
+      ok(!isPrevented, "ESC key event is prevented by editor");
+      gPromptInput.removeGroupedEventListener("keypress", listener, false,
+                                              systemGroup);
+      SimpleTest.finish();
     }
   };
   gPromptInput.addGroupedEventListener("keypress", listener, false,
                                        systemGroup);
-  synthesizeKey("VK_ESCAPE", { }, gPromptWindow);
-  gPromptInput.removeGroupedEventListener("keypress", listener, false,
-                                          systemGroup);
-
-  ok(!isPrevented, "ESC key event is prevented by editor");
-  if (isPrevented) {
-    gPromptWindow.close();
-  }
+  ok(true, "sending key");
+  synthesizeKey("VK_ESCAPE", { }, gPromptInput.ownerDocument.defaultView);
 }
 
 </script>

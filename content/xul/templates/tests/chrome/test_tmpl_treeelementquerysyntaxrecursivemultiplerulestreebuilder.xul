@@ -187,7 +187,7 @@ var changes = [
 ]]>
 </script>
 
-<tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" hidevscroll="true" hidehscroll="true" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/marked" flags=" dont-build-content" id="root">
+<tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" hidevscroll="true" hidehscroll="true" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/marked" flags=" dont-build-content" id="root">
 <treecols orient="horizontal" id="treecols">
 <treecol id="treecol" primary="true" label="Name"/>
 <treecol label="Species"/>

@@ -49,6 +49,7 @@
 #include "BaseAssembler.h"
 #include "RematInfo.h"
 #include "BaseCompiler.h"
+#include "assembler/moco/MocoStubs.h"
 
 namespace js {
 namespace mjit {
@@ -177,6 +178,8 @@ enum LookupStatus {
 };
 
 struct BaseIC : public MacroAssemblerTypedefs {
+    BaseIC() { }
+
     // Address of inline fast-path.
     CodeLocationLabel fastPathStart;
 
@@ -188,20 +191,6 @@ struct BaseIC : public MacroAssemblerTypedefs {
 
     // Slow path stub call.
     CodeLocationCall slowPathCall;
-
-    // Address of the start of the last generated stub, if any.
-    CodeLocationLabel lastStubStart;
-
-    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
-
-    // ExecutablePools that IC stubs were generated into.
-    ExecPoolVector execPools;
-
-    // Return the start address of the last path in this PIC, which is the
-    // inline path if no stubs have been generated yet.
-    CodeLocationLabel lastPathStart() {
-        return stubsGenerated > 0 ? lastStubStart : fastPathStart;
-    }
 
     // Whether or not the callsite has been hit at least once.
     bool hit : 1;
@@ -218,6 +207,33 @@ struct BaseIC : public MacroAssemblerTypedefs {
     // Opcode this was compiled for.
     JSOp op : 9;
 
+    void reset() {
+        hit = false;
+        slowCallPatched = false;
+        stubsGenerated = 0;
+        secondShapeGuard = 0;
+    }
+    bool shouldUpdate(JSContext *cx);
+    void spew(JSContext *cx, const char *event, const char *reason);
+    LookupStatus disable(JSContext *cx, const char *reason, void *stub);
+    bool isCallOp();
+};
+
+struct BasePolyIC : public BaseIC {
+    BasePolyIC() : execPools(SystemAllocPolicy()) { }
+    ~BasePolyIC() { releasePools(); }
+
+    void reset() {
+        BaseIC::reset();
+        releasePools();
+        execPools.clear();
+    }
+
+    typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
+
+    // ExecutablePools that IC stubs were generated into.
+    ExecPoolVector execPools;
+
     // Release ExecutablePools referred to by this PIC.
     void releasePools() {
         for (JSC::ExecutablePool **pExecPool = execPools.begin();
@@ -226,30 +242,11 @@ struct BaseIC : public MacroAssemblerTypedefs {
             (*pExecPool)->release();
         }
     }
-
-    void init() {
-        new (&execPools) ExecPoolVector(SystemAllocPolicy());
-    }
-    void finish() {
-        releasePools();
-        this->~BaseIC();
-    }
-
-    void reset() {
-        hit = false;
-        slowCallPatched = false;
-        stubsGenerated = 0;
-        secondShapeGuard = 0;
-        releasePools();
-        execPools.clear();
-    }
-    bool shouldUpdate(JSContext *cx);
-    void spew(JSContext *cx, const char *event, const char *reason);
-    LookupStatus disable(JSContext *cx, const char *reason, void *stub);
-    bool isCallOp();
 };
 
-struct GetElementIC : public BaseIC {
+struct GetElementIC : public BasePolyIC {
+    GetElementIC() { reset(); }
+
     // On stub entry:
     //   If hasInlineTypeCheck() is true, and inlineTypeCheckPatched is false,
     //     - typeReg contains the type of the |id| parameter.
@@ -301,7 +298,7 @@ struct GetElementIC : public BaseIC {
     int secondShapeGuard : 8;   // optional, non-zero if present
 
     bool hasLastStringStub : 1;
-    CodeLocationLabel lastStringStub;
+    JITCode lastStringStub;
 
     // A limited ValueRemat instance. It may contains either:
     //  1) A constant, or
@@ -322,18 +319,14 @@ struct GetElementIC : public BaseIC {
         return !hasInlineTypeGuard() && !inlineClaspGuardPatched;
     }
 
-    void init() {
-        BaseIC::init();
-        reset();
-    }
     void reset() {
-        BaseIC::reset();
+        BasePolyIC::reset();
         inlineTypeGuardPatched = false;
         inlineClaspGuardPatched = false;
         typeRegHasBaseShape = false;
         hasLastStringStub = false;
     }
-    void purge();
+    void purge(Repatcher &repatcher);
     LookupStatus update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp);
     LookupStatus attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid id,
                                Value *vp);
@@ -342,7 +335,69 @@ struct GetElementIC : public BaseIC {
     bool shouldUpdate(JSContext *cx);
 };
 
-struct PICInfo : public BaseIC {
+struct SetElementIC : public BaseIC {
+    SetElementIC() : execPool(NULL) { reset(); }
+    ~SetElementIC() {
+        if (execPool)
+            execPool->release();
+    }
+
+    // On stub entry:
+    //   objReg contains the payload of the |obj| parameter.
+    // On stub exit:
+    //   objReg may be clobbered.
+    RegisterID objReg    : 5;
+
+    // Information on how to rematerialize |objReg|.
+    int32 objRemat       : MIN_STATE_REMAT_BITS;
+
+    // Offset from the start of the fast path to the inline clasp guard.
+    unsigned inlineClaspGuard : 6;
+
+    // True if the clasp guard has been patched; false otherwise.
+    bool inlineClaspGuardPatched : 1;
+
+    // Offset from the start of the fast path to the inline hole guard.
+    unsigned inlineHoleGuard : 8;
+
+    // True if the capacity guard has been patched; false otherwise.
+    bool inlineHoleGuardPatched : 1;
+
+    // True if this is from a strict-mode script.
+    bool strictMode : 1;
+
+    // If true, then keyValue contains a constant index value >= 0. Otherwise,
+    // keyReg contains a dynamic integer index in any range.
+    bool hasConstantKey : 1;
+    union {
+        RegisterID keyReg;
+        int32      keyValue;
+    };
+
+    // Rematerialize information about the value being stored.
+    ValueRemat vr;
+
+    // Optional executable pool for the out-of-line hole stub.
+    JSC::ExecutablePool *execPool;
+
+    void reset() {
+        BaseIC::reset();
+        if (execPool != NULL)
+            execPool->release();
+        execPool = NULL;
+        inlineClaspGuardPatched = false;
+        inlineHoleGuardPatched = false;
+    }
+    void purge(Repatcher &repatcher);
+    LookupStatus attachHoleStub(JSContext *cx, JSObject *obj, int32 key);
+    LookupStatus update(JSContext *cx, const Value &objval, const Value &idval);
+    LookupStatus disable(JSContext *cx, const char *reason);
+    LookupStatus error(JSContext *cx);
+};
+
+struct PICInfo : public BasePolyIC {
+    PICInfo() { reset(); }
+
     // Operation this is a PIC for.
     enum Kind
 #ifdef _MSC_VER
@@ -368,6 +423,32 @@ struct PICInfo : public BaseIC {
         } get;
         ValueRemat vr;
     } u;
+
+    // Address of the start of the last generated stub, if any. Note that this
+    // does not correctly overlay with the allocated memory; it does however
+    // overlay the portion that may need to be patched, which is good enough.
+    JITCode lastStubStart;
+
+    // Return the start address of the last path in this PIC, which is the
+    // inline path if no stubs have been generated yet.
+    CodeLocationLabel lastPathStart() {
+        if (!stubsGenerated)
+            return fastPathStart;
+        return CodeLocationLabel(lastStubStart.start());
+    }
+
+    // Return a JITCode block corresponding to the code memory to attach a
+    // new stub to.
+    JITCode lastCodeBlock(JITScript *jit) {
+        if (!stubsGenerated)
+            return JITCode(jit->code.m_code.executableAddress(), jit->code.m_size);
+        return lastStubStart;
+    }
+
+    void updateLastPath(LinkerHelper &linker, Label label) {
+        CodeLocationLabel loc = linker.locationOf(label);
+        lastStubStart = JITCode(loc.executableAddress(), linker.size());
+    }
 
     Kind kind : 3;
 
@@ -420,17 +501,12 @@ struct PICInfo : public BaseIC {
     // Index into the script's atom table.
     JSAtom *atom;
 
-    void init() {
-        BaseIC::init();
-        reset();
-    }
-
     // Reset the data members to the state of a fresh PIC before any patching
     // or stub generation was done.
     void reset() {
+        BasePolyIC::reset();
         inlinePathPatched = false;
         shapeRegHasBaseShape = true;
-        BaseIC::reset();
     }
 };
 
@@ -443,6 +519,8 @@ void JS_FASTCALL Name(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL XName(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL BindName(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL GetElement(VMFrame &f, ic::GetElementIC *);
+void JS_FASTCALL CallElement(VMFrame &f, ic::GetElementIC *);
+template <JSBool strict> void JS_FASTCALL SetElement(VMFrame &f, ic::SetElementIC *);
 #endif
 
 } /* namespace ic */

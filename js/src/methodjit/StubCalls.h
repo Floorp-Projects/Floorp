@@ -49,8 +49,7 @@ namespace stubs {
 
 void JS_FASTCALL This(VMFrame &f);
 JSObject * JS_FASTCALL NewInitArray(VMFrame &f, uint32 count);
-JSObject * JS_FASTCALL NewInitObject(VMFrame &f, uint32 count);
-JSObject * JS_FASTCALL NewArray(VMFrame &f, uint32 len);
+JSObject * JS_FASTCALL NewInitObject(VMFrame &f, JSObject *base);
 void JS_FASTCALL Trap(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Debugger(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL Interrupt(VMFrame &f, jsbytecode *pc);
@@ -120,7 +119,7 @@ JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetName(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetPropNoCache(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL SetGlobalName(VMFrame &f, JSAtom *atom);
-template<JSBool strict> void JS_FASTCALL SetGlobalNameDumb(VMFrame &f, JSAtom *atom);
+template<JSBool strict> void JS_FASTCALL SetGlobalNameNoCache(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL Name(VMFrame &f);
 void JS_FASTCALL GetProp(VMFrame &f);
 void JS_FASTCALL GetPropNoCache(VMFrame &f, JSAtom *atom);
@@ -154,7 +153,8 @@ template <JSBool strict> void JS_FASTCALL DelElem(VMFrame &f);
 void JS_FASTCALL DelName(VMFrame &f, JSAtom *atom);
 JSBool JS_FASTCALL In(VMFrame &f);
 
-void JS_FASTCALL DefVar(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL DefVarOrConst(VMFrame &f, JSAtom *atom);
+void JS_FASTCALL SetConst(VMFrame &f, JSAtom *atom);
 template<JSBool strict> void JS_FASTCALL DefFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL DefLocalFun_FC(VMFrame &f, JSFunction *fun);

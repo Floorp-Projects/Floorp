@@ -49,7 +49,6 @@
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
-#include "assembler/assembler/RepatchBuffer.h"
 #include "jsiter.h"
 #include "jstypes.h"
 #include "methodjit/StubCalls.h"
@@ -57,6 +56,7 @@
 #include "jspropertycache.h"
 #include "methodjit/MonoIC.h"
 #include "jsanalyze.h"
+#include "methodjit/BaseCompiler.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycacheinlines.h"
@@ -88,7 +88,7 @@ top:
         JSTryNoteArray *tnarray = script->trynotes();
         for (unsigned i = 0; i < tnarray->length; ++i) {
             JSTryNote *tn = &tnarray->vector[i];
-            JS_ASSERT(offset < script->length);
+
             // The following if condition actually tests two separate conditions:
             //   (1) offset - tn->start >= tn->length
             //       means the PC is not in the range of this try note, so we
@@ -274,10 +274,10 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
         THROWV(NULL);
 
     /* Reset the part of the stack frame set by the caller. */
-    newfp->initCallFrameCallerHalf(cx, nactual, flags);
+    newfp->initCallFrameCallerHalf(cx, flags, ncode);
 
     /* Reset the part of the stack frame set by the prologue up to now. */
-    newfp->initCallFrameEarlyPrologue(fun, ncode);
+    newfp->initCallFrameEarlyPrologue(fun, nactual);
 
     /* The caller takes care of assigning fp to regs. */
     return newfp;
@@ -306,7 +306,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
      * prologue. Pass the existing value for ncode, it has already been set
      * by the jit code calling into this stub.
      */
-    fp->initCallFrameEarlyPrologue(fun, fp->nativeReturnAddress());
+    fp->initCallFrameEarlyPrologue(fun, nactual);
 
     /* Empty script does nothing. */
     bool callingNew = fp->isConstructing();
@@ -453,11 +453,8 @@ stubs::Eval(VMFrame &f, uint32 argc)
     if (!IsFunctionObject(*vp, &callee) ||
         !IsBuiltinEvalFunction((fun = callee->getFunctionPrivate())))
     {
-        if (!ComputeThisFromVpInPlace(f.cx, vp) ||
-            !Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
-        {
+        if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
             THROW();
-        }
         return;
     }
 
@@ -611,12 +608,15 @@ stubs::EnterScript(VMFrame &f)
 {
     JSStackFrame *fp = f.fp();
     JSContext *cx = f.cx;
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame()) {
-        fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
+
+    if (fp->script()->debugMode) {
+        JSInterpreterHook hook = cx->debugHooks->callHook;
+        if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame()) {
+            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
+        }
     }
 
-    Probes::enterJSFun(cx, fp->maybeFun());
+    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
 }
 
 void JS_FASTCALL
@@ -624,14 +624,18 @@ stubs::LeaveScript(VMFrame &f)
 {
     JSStackFrame *fp = f.fp();
     JSContext *cx = f.cx;
-    Probes::exitJSFun(cx, fp->maybeFun());
-    JSInterpreterHook hook = cx->debugHooks->callHook;
+    Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
-    if (hook && fp->hasHookData() && !fp->isExecuteFrame()) {
-        JSBool ok = JS_TRUE;
-        hook(cx, fp, JS_FALSE, &ok, fp->hookData());
-        if (!ok)
-            THROW();
+    if (fp->script()->debugMode) {
+        JSInterpreterHook hook = cx->debugHooks->callHook;
+        void *hookData;
+
+        if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame()) {
+            JSBool ok = JS_TRUE;
+            hook(cx, fp, JS_FALSE, &ok, hookData);
+            if (!ok)
+                THROW();
+        }
     }
 }
 
@@ -757,7 +761,8 @@ AdvanceReturnPC(JSContext *cx)
     JS_ASSERT(*cx->regs->pc == JSOP_CALL ||
               *cx->regs->pc == JSOP_NEW ||
               *cx->regs->pc == JSOP_EVAL ||
-              *cx->regs->pc == JSOP_APPLY);
+              *cx->regs->pc == JSOP_FUNCALL ||
+              *cx->regs->pc == JSOP_FUNAPPLY);
     cx->regs->pc += JSOP_CALL_LENGTH;
 }
 
@@ -885,16 +890,14 @@ FinishExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
 
 #if JS_MONOIC
 static void
-UpdateTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
+UpdateTraceHintSingle(Repatcher &repatcher, JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
 {
     /*
      * Hack: The value that will be patched is before the executable address,
      * so to get protection right, just unprotect the general region around
      * the jump.
      */
-    uint8 *addr = (uint8 *)(jump.executableAddress());
-    JSC::RepatchBuffer repatch(addr - 64, 128);
-    repatch.relink(jump, target);
+    repatcher.relink(jump, target);
 
     JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
                jump.executableAddress(), target.executableAddress());
@@ -903,10 +906,11 @@ UpdateTraceHintSingle(JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
 static void
 DisableTraceHint(VMFrame &f, ic::TraceICInfo &tic)
 {
-    UpdateTraceHintSingle(tic.traceHint, tic.jumpTarget);
+    Repatcher repatcher(f.jit());
+    UpdateTraceHintSingle(repatcher, tic.traceHint, tic.jumpTarget);
 
     if (tic.hasSlowTraceHint)
-        UpdateTraceHintSingle(tic.slowTraceHint, tic.jumpTarget);
+        UpdateTraceHintSingle(repatcher, tic.slowTraceHint, tic.jumpTarget);
 }
 
 static void
@@ -919,10 +923,12 @@ EnableTraceHintAt(JSScript *script, js::mjit::JITScript *jit, jsbytecode *pc, ui
 
     JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index, script);
 
-    UpdateTraceHintSingle(tic.traceHint, tic.stubEntry);
+    Repatcher repatcher(jit);
+
+    UpdateTraceHintSingle(repatcher, tic.traceHint, tic.stubEntry);
 
     if (tic.hasSlowTraceHint)
-        UpdateTraceHintSingle(tic.slowTraceHint, tic.stubEntry);
+        UpdateTraceHintSingle(repatcher, tic.slowTraceHint, tic.stubEntry);
 }
 #endif
 

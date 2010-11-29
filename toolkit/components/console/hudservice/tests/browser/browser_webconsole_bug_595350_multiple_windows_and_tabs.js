@@ -58,7 +58,7 @@ function performTest() {
     HUDService.activateHUDForContext(tab);
     let hudId = HUDService.getHudIdByWindow(tab.linkedBrowser.contentWindow);
     ok(hudId, "HUD is open for tab " + i);
-    let HUD = HUDService.hudWeakReferences[hudId].get();
+    let HUD = HUDService.hudReferences[hudId];
     HUD.console.log("message for tab " + i);
   }
 
@@ -74,6 +74,8 @@ function performTest() {
     executeSoon(function() {
       displays = HUDService.displaysIndex();
       is(displays.length, 0, "no displays found");
+      ok(!HUDService.storage, "no storage found");
+      ok(!HUDService.httpObserver, "no httpObserver found");
 
       displays = openTabs = win1 = win2 = null;
 

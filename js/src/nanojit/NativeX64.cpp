@@ -495,6 +495,7 @@ namespace nanojit
     void Assembler::CVTSS2SD(R l, R r)  { emitprr(X64_cvtss2sd,l,r); asm_output("cvtss2sd %s, %s",RQ(l),RL(r)); }
     void Assembler::CVTSD2SS(R l, R r)  { emitprr(X64_cvtsd2ss,l,r); asm_output("cvtsd2ss %s, %s",RL(l),RQ(r)); }
     void Assembler::CVTSD2SI(R l, R r)  { emitprr(X64_cvtsd2si,l,r); asm_output("cvtsd2si %s, %s",RL(l),RQ(r)); }
+    void Assembler::CVTTSD2SI(R l, R r) { emitprr(X64_cvttsd2si,l,r);asm_output("cvttsd2si %s, %s",RL(l),RQ(r));}
     void Assembler::UCOMISD( R l, R r)  { emitprr(X64_ucomisd, l,r); asm_output("ucomisd %s, %s", RQ(l),RQ(r)); }
     void Assembler::MOVQRX(  R l, R r)  { emitprr(X64_movqrx,  r,l); asm_output("movq %s, %s",    RQ(l),RQ(r)); } // Nb: r and l are deliberately reversed within the emitprr() call.
     void Assembler::MOVQXR(  R l, R r)  { emitprr(X64_movqxr,  l,r); asm_output("movq %s, %s",    RQ(l),RQ(r)); }
@@ -1003,15 +1004,15 @@ namespace nanojit
         #ifdef _WIN64
             else if (ty == ARGTYPE_D && arg_index < NumArgRegs) {
                 // double goes in XMM reg # based on overall arg_index
-                Register rxi = { REGNUM(XMM0) + arg_index };
+                Register rxi = XMM0 + arg_index;
                 asm_regarg(ty, arg, rxi);
                 arg_index++;
             }
         #else
-            else if (ty == ARGTYPE_D && REGNUM(fr) < REGNUM(XMM8)) {
+            else if (ty == ARGTYPE_D && fr < XMM8) {
                 // double goes in next available XMM register
                 asm_regarg(ty, arg, fr);
-                fr = REGINC(fr);
+                fr = fr + 1;
             }
         #endif
             else {
@@ -1060,11 +1061,11 @@ namespace nanojit
             Register r = findRegFor(p, GpRegs);
             MOVQSPR(stk_off, r);    // movq [rsp+d8], r
             if (ty == ARGTYPE_I) {
-                // extend int32 to int64
+                // sign extend int32 to int64
                 NanoAssert(p->isI());
                 MOVSXDR(r, r);
             } else if (ty == ARGTYPE_UI) {
-                // extend uint32 to uint64
+                // zero extend uint32 to uint64
                 NanoAssert(p->isI());
                 MOVLR(r, r);
             } else {
@@ -1080,7 +1081,14 @@ namespace nanojit
         Register rr, ra;
         beginOp1Regs(ins, GpRegs, rr, ra);
         NanoAssert(IsGpReg(ra));
-        MOVLR(rr, ra);  // 32bit mov zeros the upper 32bits of the target
+        // If ra==rr we do nothing.  This is valid because we don't assume the
+        // upper 32-bits of a 64-bit GPR are zero when doing a 32-bit
+        // operation.  More specifically, we widen 32-bit to 64-bit in three
+        // places, all of which explicitly sign- or zero-extend: asm_ui2uq(),
+        // asm_regarg() and asm_stkarg().  For the first this is required, for
+        // the latter two it's unclear if this is required, but it can't hurt.
+        if (ra != rr)
+            MOVLR(rr, ra);
         endOpRegs(ins, rr, ra);
     }
 
@@ -1145,7 +1153,7 @@ namespace nanojit
 
         Register rr = prepareResultReg(ins, GpRegs);
         Register rb = findRegFor(a, FpRegs);
-        CVTSD2SI(rr, rb);
+        CVTTSD2SI(rr, rb); 
         freeResourcesOf(ins);
     }
 
@@ -2180,6 +2188,10 @@ namespace nanojit
         SWAP(NIns*, codeStart, exitStart);
         SWAP(NIns*, codeEnd, exitEnd);
         verbose_only( SWAP(size_t, codeBytes, exitBytes); )
+    }
+
+    void Assembler::asm_insert_random_nop() {
+        NanoAssert(0); // not supported
     }
 
 } // namespace nanojit

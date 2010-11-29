@@ -45,6 +45,8 @@ var validElementsDescription = [
   [ "textarea", null, null, null, null, null ],
   /* <textarea required>foo</textarea> */
   [ "textarea", null, "foo", true, null, null ],
+  /* <input maxlength='3' value='foo'> */
+  [ "input", null, "foobar", null, null, "3", "foo" ],
 ];
 
 var invalidElementsDescription = [
@@ -57,8 +59,6 @@ var invalidElementsDescription = [
   [ "input", "url", "foo", null, null, null, "http://mozilla.org" ],
   /* <input pattern='\\d\\d' value='foo'> */
   [ "input", null, "foo", null, "\\d\\d", null, "42" ],
-  /* <input maxlength='3' value='foo'> */
-  [ "input", null, "foobar", null, null, "3", "foo" ],
   /* <textarea required></textarea> */
   [ "textarea", null, null, true, null, null, "foo" ],
 ];

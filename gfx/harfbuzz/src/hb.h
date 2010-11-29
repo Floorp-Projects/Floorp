@@ -35,4 +35,7 @@
 #include "hb-shape.h"
 #include "hb-unicode.h"
 
+HB_BEGIN_DECLS
+HB_END_DECLS
+
 #endif /* HB_H */

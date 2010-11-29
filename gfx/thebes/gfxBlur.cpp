@@ -88,8 +88,9 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
         gfxRect skipRect = *aSkipRect;
         skipRect.RoundIn();
         skipRect.Inset(aBlurRadius + aSpreadRadius);
-        mSkipRect = gfxThebesUtils::GfxRectToIntRect(skipRect);
-        nsIntRect shadowIntRect = gfxThebesUtils::GfxRectToIntRect(rect);
+        gfxUtils::GfxRectToIntRect(skipRect, &mSkipRect);
+        nsIntRect shadowIntRect;
+        gfxUtils::GfxRectToIntRect(rect, &shadowIntRect);
         mSkipRect.IntersectRect(mSkipRect, shadowIntRect);
         if (mSkipRect == shadowIntRect)
           return nsnull;

@@ -265,7 +265,8 @@ nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     mDefaultSubmitElement(nsnull),
     mFirstSubmitInElements(nsnull),
     mFirstSubmitNotInElements(nsnull),
-    mInvalidElementsCount(0)
+    mInvalidElementsCount(0),
+    mEverTriedInvalidSubmit(false)
 {
 }
 
@@ -477,6 +478,10 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
 #endif
                )
 {
+  // Prepare document update batch.
+  nsIDocument* doc = aArray.IsEmpty() ? nsnull : aArray[0]->GetCurrentDoc();
+  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+
   // Walk backwards so that if we remove elements we can just keep iterating
   PRUint32 length = aArray.Length();
   for (PRUint32 i = length; i > 0; --i) {
@@ -495,14 +500,19 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsGenericHTMLFormElement*> aArray
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
         node->ClearForm(PR_TRUE);
 
-        // When submit controls have no more form, they need to be updated.
+        // When a form control loses its form owner, :-moz-ui-invalid and
+        // :-moz-ui-valid might not apply any more.
+        nsEventStates states = NS_EVENT_STATE_MOZ_UI_VALID |
+                               NS_EVENT_STATE_MOZ_UI_INVALID;
+
+        // In addition, submit controls shouldn't have
+        // NS_EVENT_STATE_MOZ_SUBMITINVALID applying if they do not have a form.
         if (node->IsSubmitControl()) {
-          nsIDocument* doc = node->GetCurrentDoc();
-          if (doc) {
-            MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-            doc->ContentStatesChanged(node, nsnull,
-                                      NS_EVENT_STATE_MOZ_SUBMITINVALID);
-          }
+          states |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
+        }
+
+        if (doc) {
+          doc->ContentStatesChanged(node, nsnull, states);
         }
 #ifdef DEBUG
         removed = PR_TRUE;
@@ -1624,10 +1634,6 @@ nsHTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
   }
 
   for (PRUint32 i = 0; i < len; ++i) {
-    if (!sortedControls[i]->IsSubmittableControl()) {
-      continue;
-    }
-
     nsCOMPtr<nsIConstraintValidation> cvElmt =
       do_QueryInterface((nsGenericHTMLElement*)sortedControls[i]);
     if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
@@ -1701,6 +1707,41 @@ nsHTMLFormElement::CheckValidFormSubmission()
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!CheckFormValidity(invalidElements.get())) {
+      // For the first invalid submission, we should update element states.
+      // We have to do that _before_ calling the observers so we are sure they
+      // will not interfere (like focusing the element).
+      if (!mEverTriedInvalidSubmit) {
+        mEverTriedInvalidSubmit = true;
+
+        nsIDocument* doc = GetCurrentDoc();
+        if (doc) {
+          /*
+           * We are going to call ContentStatesChanged assuming elements want to
+           * be notified because we can't know.
+           * Submissions shouldn't happen during parsing so it _should_ be safe.
+           */
+
+          MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+
+          for (PRUint32 i = 0, length = mControls->mElements.Length();
+               i < length; ++i) {
+            doc->ContentStatesChanged(mControls->mElements[i], nsnull,
+                                      NS_EVENT_STATE_MOZ_UI_VALID |
+                                      NS_EVENT_STATE_MOZ_UI_INVALID);
+          }
+
+          // Because of backward compatibility, <input type='image'> is not in
+          // elements but can be invalid.
+          // TODO: should probably be removed when bug 606491 will be fixed.
+          for (PRUint32 i = 0, length = mControls->mNotInElements.Length();
+               i < length; ++i) {
+            doc->ContentStatesChanged(mControls->mNotInElements[i], nsnull,
+                                      NS_EVENT_STATE_MOZ_UI_VALID |
+                                      NS_EVENT_STATE_MOZ_UI_INVALID);
+          }
+        }
+      }
+
       nsCOMPtr<nsISupports> inst;
       nsCOMPtr<nsIFormSubmitObserver> observer;
       PRBool more = PR_TRUE;
@@ -1709,10 +1750,8 @@ nsHTMLFormElement::CheckValidFormSubmission()
         observer = do_QueryInterface(inst);
 
         if (observer) {
-          rv = observer->
-            NotifyInvalidSubmit(this,
-                                static_cast<nsIArray*>(invalidElements));
-          NS_ENSURE_SUCCESS(rv, rv);
+          observer->NotifyInvalidSubmit(this,
+                                        static_cast<nsIArray*>(invalidElements));
         }
       }
 

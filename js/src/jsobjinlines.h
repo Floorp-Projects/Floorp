@@ -89,7 +89,7 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 }
 
 inline bool
-JSObject::brand(JSContext *cx, uint32 slot, js::Value v)
+JSObject::brand(JSContext *cx)
 {
     JS_ASSERT(!generic());
     JS_ASSERT(!branded());
@@ -111,11 +111,15 @@ JSObject::unbrand(JSContext *cx)
 }
 
 inline void
-JSObject::finalize(JSContext *cx, unsigned thingKind)
+JSObject::syncSpecialEquality()
 {
-    JS_ASSERT(thingKind >= js::gc::FINALIZE_OBJECT0 &&
-              thingKind <= js::gc::FINALIZE_FUNCTION);
+    if (clasp->ext.equality)
+        flags |= JSObject::HAS_EQUALITY;
+}
 
+inline void
+JSObject::finalize(JSContext *cx)
+{
     /* Cope with stillborn objects that have no map. */
     if (!map)
         return;
@@ -248,6 +252,12 @@ JSObject::setPrimitiveThis(const js::Value &pthis)
     setSlot(JSSLOT_PRIMITIVE_THIS, pthis);
 }
 
+inline js::gc::FinalizeKind
+GetObjectFinalizeKind(const JSObject *obj)
+{
+    return js::gc::FinalizeKind(obj->arena()->header()->thingKind);
+}
+
 inline size_t
 JSObject::numFixedSlots() const
 {
@@ -255,8 +265,7 @@ JSObject::numFixedSlots() const
         return JSObject::FUN_CLASS_RESERVED_SLOTS;
     if (!hasSlotsArray())
         return capacity;
-    js::gc::FinalizeKind kind = js::gc::FinalizeKind(arena()->header()->thingKind);
-    return js::gc::GetGCKindSlots(kind);
+    return js::gc::GetGCKindSlots(GetObjectFinalizeKind(this));
 }
 
 inline size_t
@@ -400,6 +409,13 @@ JSObject::getArgsElement(uint32 i) const
     JS_ASSERT(isArguments());
     JS_ASSERT(i < getArgsInitialLength());
     return getArgsData()->slots[i];
+}
+
+inline js::Value *
+JSObject::getArgsElements() const
+{
+    JS_ASSERT(isArguments());
+    return getArgsData()->slots;
 }
 
 inline js::Value *
@@ -1045,6 +1061,26 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
     if (clasp == &js_FunctionClass)
         return gc::FINALIZE_OBJECT2;
     return gc::FINALIZE_OBJECT4;
+}
+
+/* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
+static inline JSObject *
+CopyInitializerObject(JSContext *cx, JSObject *baseobj)
+{
+    JS_ASSERT(baseobj->getClass() == &js_ObjectClass);
+    JS_ASSERT(!baseobj->inDictionaryMode());
+
+    gc::FinalizeKind kind = GetObjectFinalizeKind(baseobj);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+
+    if (!obj || !obj->ensureSlots(cx, baseobj->numSlots()))
+        return NULL;
+
+    obj->flags = baseobj->flags;
+    obj->lastProp = baseobj->lastProp;
+    obj->objShape = baseobj->objShape;
+
+    return obj;
 }
 
 } /* namespace js */

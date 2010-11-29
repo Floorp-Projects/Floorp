@@ -106,12 +106,6 @@ nsIStringBundle *nsScriptSecurityManager::sStrBundle = nsnull;
 JSRuntime       *nsScriptSecurityManager::sRuntime   = 0;
 PRBool nsScriptSecurityManager::sStrictFileOriginPolicy = PR_TRUE;
 
-// Info we need about the JSClasses used by XPConnects wrapped
-// natives, to avoid having to QI to nsIXPConnectWrappedNative all the
-// time when doing security checks.
-static JSEqualityOp sXPCWrappedNativeEqualityOps;
-
-
 ///////////////////////////
 // Convenience Functions //
 ///////////////////////////
@@ -2414,11 +2408,8 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
     do {
         // Note: jsClass is set before this loop, and also at the
         // *end* of this loop.
-
-        // NOTE: These class and equality hook checks better match
-        // what IS_WRAPPER_CLASS() does in xpconnect!
         
-        if (jsClass->ext.equality == js::Valueify(sXPCWrappedNativeEqualityOps)) {
+        if (IS_WRAPPER_CLASS(jsClass)) {
             result = sXPConnect->GetPrincipal(aObj,
 #ifdef DEBUG
                                               aAllowShortCircuit
@@ -3423,7 +3414,6 @@ nsresult nsScriptSecurityManager::Init()
     JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
     NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
 
-    sXPConnect->GetXPCWrappedNativeJSClassInfo(&sXPCWrappedNativeEqualityOps);
     return NS_OK;
 }
 

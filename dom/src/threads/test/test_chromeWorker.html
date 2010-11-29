@@ -17,6 +17,16 @@
     ok(true, "ChromeWorker constructor wasn't blocked!");
   }
 
+  try {
+    var worker = Components.classes["@mozilla.org/threads/workerfactory;1"]
+      .createInstance(Components.interfaces.nsIWorkerFactory)
+      .newChromeWorker("simpleThread_worker.js");
+    ok(false, "nsIWorkerFactory should be blocked!");
+  }
+  catch (e) {
+    ok(true, "nsIWorkerFactory wasn't blocked!");
+  }
+
 </script>
 </pre>
 </body>

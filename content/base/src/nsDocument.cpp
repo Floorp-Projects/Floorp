@@ -3176,7 +3176,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
-  NS_ENSURE_FALSE(mShellIsHidden, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(GetBFCacheEntry(), NS_ERROR_FAILURE);
 
   FillStyleSet(aStyleSet);
   
@@ -3878,19 +3878,7 @@ nsDocument::ScriptLoader()
 PRBool
 nsDocument::InternalAllowXULXBL()
 {
-  if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
-    mAllowXULXBL = eTriTrue;
-    return PR_TRUE;
-  }
-  
-  nsCOMPtr<nsIURI> princURI;
-  NodePrincipal()->GetURI(getter_AddRefs(princURI));
-  if (!princURI) {
-    mAllowXULXBL = eTriFalse;
-    return PR_FALSE;
-  }
-
-  if (nsContentUtils::IsSitePermAllow(princURI, "allowXULXBL")) {
+  if (nsContentUtils::AllowXULXBLForPrincipal(NodePrincipal())) {
     mAllowXULXBL = eTriTrue;
     return PR_TRUE;
   }

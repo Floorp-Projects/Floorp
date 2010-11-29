@@ -444,7 +444,7 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
 }
 
 nsresult
-nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStorage)
+nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage)
 {
   if (!aStorage->WasTemporaryTableLoaded()) {
     nsresult rv;
@@ -475,7 +475,7 @@ nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStor
 }
 
 nsresult
-nsDOMStoragePersistentDB::FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* aStorage)
+nsDOMStoragePersistentDB::FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage)
 {
   if (!aStorage->WasTemporaryTableLoaded())
     return NS_OK;
@@ -530,7 +530,7 @@ nsDOMStoragePersistentDB::FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* a
 }
 
 nsresult
-nsDOMStoragePersistentDB::GetAllKeys(nsDOMStorage* aStorage,
+nsDOMStoragePersistentDB::GetAllKeys(DOMStorageImpl* aStorage,
                                      nsTHashtable<nsSessionStorageEntry>* aKeys)
 {
   nsresult rv;
@@ -583,7 +583,7 @@ nsDOMStoragePersistentDB::GetAllKeys(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStoragePersistentDB::GetKeyValue(nsDOMStorage* aStorage,
+nsDOMStoragePersistentDB::GetKeyValue(DOMStorageImpl* aStorage,
                                       const nsAString& aKey,
                                       nsAString& aValue,
                                       PRBool* aSecure)
@@ -633,7 +633,7 @@ nsDOMStoragePersistentDB::GetKeyValue(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStoragePersistentDB::SetKey(nsDOMStorage* aStorage,
+nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
                                  const nsAString& aKey,
                                  const nsAString& aValue,
                                  PRBool aSecure,
@@ -707,7 +707,7 @@ nsDOMStoragePersistentDB::SetKey(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStoragePersistentDB::SetSecure(nsDOMStorage* aStorage,
+nsDOMStoragePersistentDB::SetSecure(DOMStorageImpl* aStorage,
                                     const nsAString& aKey,
                                     const PRBool aSecure)
 {
@@ -741,7 +741,7 @@ nsDOMStoragePersistentDB::SetSecure(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStoragePersistentDB::RemoveKey(nsDOMStorage* aStorage,
+nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
                                     const nsAString& aKey,
                                     PRBool aExcludeOfflineFromUsage,
                                     PRInt32 aKeyUsage)
@@ -777,7 +777,7 @@ nsDOMStoragePersistentDB::RemoveKey(nsDOMStorage* aStorage,
 }
 
 nsresult
-nsDOMStoragePersistentDB::ClearStorage(nsDOMStorage* aStorage)
+nsDOMStoragePersistentDB::ClearStorage(DOMStorageImpl* aStorage)
 {
   nsresult rv;
 
@@ -938,7 +938,7 @@ nsDOMStoragePersistentDB::RemoveAll()
 }
 
 nsresult
-nsDOMStoragePersistentDB::GetUsage(nsDOMStorage* aStorage,
+nsDOMStoragePersistentDB::GetUsage(DOMStorageImpl* aStorage,
                                    PRBool aExcludeOfflineFromUsage,
                                    PRInt32 *aUsage)
 {

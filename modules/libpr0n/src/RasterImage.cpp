@@ -179,7 +179,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   Image(aStatusTracker), // invoke superclass's constructor
   mSize(0,0),
   mAnim(nsnull),
-  mAnimationMode(kNormalAnimMode),
   mLoopCount(-1),
   mObserver(nsnull),
   mLockCount(0),
@@ -1047,40 +1046,6 @@ RasterImage::DecodingComplete()
     rv = mFrames[0]->Optimize();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  return NS_OK;
-}
-
-//******************************************************************************
-/* attribute unsigned short animationMode; */
-NS_IMETHODIMP
-RasterImage::GetAnimationMode(PRUint16 *aAnimationMode)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(aAnimationMode);
-  
-  *aAnimationMode = mAnimationMode;
-  return NS_OK;
-}
-
-//******************************************************************************
-/* attribute unsigned short animationMode; */
-NS_IMETHODIMP
-RasterImage::SetAnimationMode(PRUint16 aAnimationMode)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ASSERTION(aAnimationMode == kNormalAnimMode ||
-               aAnimationMode == kDontAnimMode ||
-               aAnimationMode == kLoopOnceAnimMode,
-               "Wrong Animation Mode is being set!");
-  
-  mAnimationMode = aAnimationMode;
-
-  EvaluateAnimation();
 
   return NS_OK;
 }
@@ -2707,7 +2672,7 @@ PRBool
 RasterImage::ShouldAnimate()
 {
   return Image::ShouldAnimate() && mFrames.Length() >= 2 &&
-         mAnimationMode != kDontAnimMode && !mAnimationFinished;
+         !mAnimationFinished;
 }
 
 //******************************************************************************
