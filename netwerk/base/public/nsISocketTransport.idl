@@ -129,6 +129,7 @@ interface nsISocketTransport : nsITransport
      * of this interface may choose not to generate.
      */
     const unsigned long STATUS_RESOLVING      = 0x804b0003;
+    const unsigned long STATUS_RESOLVED       = 0x804b000b;
     const unsigned long STATUS_CONNECTING_TO  = 0x804b0007;
     const unsigned long STATUS_CONNECTED_TO   = 0x804b0004;
     const unsigned long STATUS_SENDING_TO     = 0x804b0005;

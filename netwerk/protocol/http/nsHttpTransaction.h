@@ -53,6 +53,7 @@
 #include "nsISocketTransportService.h"
 #include "nsITransport.h"
 #include "nsIEventTarget.h"
+#include "TimingStruct.h"
 
 //-----------------------------------------------------------------------------
 
@@ -137,6 +138,8 @@ public:
     void    SetPriority(PRInt32 priority) { mPriority = priority; }
     PRInt32    Priority()                 { return mPriority; }
 
+    const TimingStruct& Timings() const { return mTimings; }
+
 private:
     nsresult Restart();
     void     ParseLine(char *line);
@@ -151,6 +154,8 @@ private:
                                         PRUint32, PRUint32, PRUint32 *);
     static NS_METHOD WritePipeSegment(nsIOutputStream *, void *, char *,
                                       PRUint32, PRUint32, PRUint32 *);
+
+    PRBool TimingEnabled() const { return PR_TRUE; }
 
 private:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
@@ -181,6 +186,8 @@ private:
     nsInt64                         mContentRead;     // count of consumed content bytes
 
     nsHttpChunkedDecoder           *mChunkedDecoder;
+
+    TimingStruct                    mTimings;
 
     nsresult                        mStatus;
 

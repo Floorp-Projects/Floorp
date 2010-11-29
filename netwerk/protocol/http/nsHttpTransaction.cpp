@@ -357,6 +357,18 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
     LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%llu]\n",
         this, status, progress));
 
+    if (TimingEnabled()) {
+        if (status == nsISocketTransport::STATUS_RESOLVING) {
+            mTimings.domainLookupStart = PR_Now();
+        } else if (status == nsISocketTransport::STATUS_RESOLVED) {
+            mTimings.domainLookupEnd = PR_Now();
+        } else if (status == nsISocketTransport::STATUS_CONNECTING_TO) {
+            mTimings.connectStart = PR_Now();
+        } else if (status == nsISocketTransport::STATUS_CONNECTED_TO) {
+            mTimings.connectEnd = PR_Now();
+        }
+    }
+
     if (!mTransportSink)
         return;
     
@@ -447,6 +459,10 @@ nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
     nsresult rv = trans->mReader->OnReadSegment(buf, count, countRead);
     if (NS_FAILED(rv)) return rv;
 
+    if (trans->TimingEnabled() && !trans->mTimings.requestStart) {
+        // First data we're sending -> this is requestStart
+        trans->mTimings.requestStart = PR_Now();
+    }
     trans->mSentData = PR_TRUE;
     return NS_OK;
 }
@@ -505,6 +521,10 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
 
     if (trans->mTransactionDone)
         return NS_BASE_STREAM_CLOSED; // stop iterating
+
+    if (trans->TimingEnabled() && !trans->mTimings.responseStart) {
+        trans->mTimings.responseStart = PR_Now();
+    }
 
     nsresult rv;
     //
@@ -567,6 +587,8 @@ nsHttpTransaction::Close(nsresult reason)
         LOG(("  already closed\n"));
         return;
     }
+
+    mTimings.responseEnd = PR_Now();
 
     if (mActivityDistributor) {
         // report the reponse is complete if not already reported
