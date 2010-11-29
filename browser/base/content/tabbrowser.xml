@@ -105,7 +105,7 @@
         Components.classes["@mozilla.org/browser/favicon-service;1"]
                   .getService(Components.interfaces.nsIFaviconService);
       </field>
-      <field name="mPlacesAutocomplete" readonly="true">
+      <field name="_placesAutocomplete" readonly="true">
          Components.classes["@mozilla.org/autocomplete/search;1?name=history"]
                    .getService(Components.interfaces.mozIPlacesAutoComplete);
       </field>
@@ -519,7 +519,7 @@
                     !(this.mBrowser.docShell.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE))
                   this.mBrowser.mIconURL = null;
 
-                let autocomplete = this.mTabBrowser.mPlacesAutocomplete;
+                let autocomplete = this.mTabBrowser._placesAutocomplete;
                 if (this.mBrowser.registeredOpenURI) {
                   autocomplete.unregisterOpenPage(this.mBrowser.registeredOpenURI);
                   delete this.mBrowser.registeredOpenURI;
@@ -1468,7 +1468,7 @@
             this.mTabListeners[aTab._tPos].destroy();
 
             if (browser.registeredOpenURI && !aTabWillBeMoved) {
-              this.mPlacesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
+              this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
 
@@ -1673,7 +1673,7 @@
 
             // Restore current registered open URI.
             if (ourBrowser.registeredOpenURI) {
-              this.mPlacesAutocomplete.unregisterOpenPage(ourBrowser.registeredOpenURI);
+              this._placesAutocomplete.unregisterOpenPage(ourBrowser.registeredOpenURI);
               delete ourBrowser.registeredOpenURI;
             }
             if (otherBrowser.registeredOpenURI) {
@@ -2377,7 +2377,7 @@
           for (var i = 0; i < this.mTabListeners.length; ++i) {
             let browser = this.getBrowserAtIndex(i);
             if (browser.registeredOpenURI) {
-              this.mPlacesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
+              this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
             browser.webProgress.removeProgressListener(this.mTabFilters[i]);
