@@ -471,6 +471,7 @@ class FrameState
         bool resultHasRhs;  // whether the result has the RHS instead of the LHS
         bool lhsNeedsRemat; // whether LHS needs memory remat
         bool rhsNeedsRemat; // whether RHS needs memory remat
+        bool undoResult;    // whether to remat LHS/RHS by undoing operation
     };
 
     /*
