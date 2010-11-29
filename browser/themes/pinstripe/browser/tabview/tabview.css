@@ -529,7 +529,7 @@ html[dir=rtl] .iq-resizable-se {
 
 html[dir=rtl] #exit-button {
   right: auto;
-  left: 0;
+  left: 1px;
 }
 
 /* Search
