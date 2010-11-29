@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,34 +35,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH	= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-srcdir	= @srcdir@
-VPATH	= @srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/globalstorage
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS	+= \
-	dom-level0 \
-	dom-level1-core \
-	dom-level2-core \
-	dom-level2-html \
-	ajax \
-	bugs \
-	chrome \
-	general \
-	whatwg \
-	geolocation \
-	globalstorage \
-	localstorage \
-	sessionstorage \
-	storageevent \
-	$(NULL)
-
-#needs IPC support
-ifneq (mobile,$(MOZ_BUILD_APP))
-DIRS	+= notification
-endif
-
 include $(topsrcdir)/config/rules.mk
 
+_TEST_FILES	= \
+		test_bug614116.html \
+		iframe_bug614116-1.html \
+		iframe_bug614116-2.html \
+		$(NULL)
+
+libs:: 	$(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
