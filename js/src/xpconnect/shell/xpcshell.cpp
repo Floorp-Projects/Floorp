@@ -449,11 +449,7 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
-    JSAutoByteString bytes(cx, str);
-    if (!bytes)
-        return JS_FALSE;
-    
-    fputs(bytes.ptr(), gOutFile);
+    JS_FileEscapedString(gOutFile, str, 0);
     fflush(gOutFile);
     return JS_TRUE;
 }
