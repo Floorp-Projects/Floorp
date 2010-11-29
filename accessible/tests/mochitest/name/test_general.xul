@@ -1,0 +1,369 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="general.css"
+                 type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessibility Name Calculating Test.">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      // aria-label
+
+      // Simple label provided via ARIA
+      testName("btn_simple_aria_label", "I am a button");
+
+      // aria-label and aria-labelledby, expect aria-labelledby
+      testName("btn_both_aria_labels", "text I am a button, two");
+
+      //////////////////////////////////////////////////////////////////////////
+      // aria-labelledby
+      
+      // Single relation. The value of 'aria-labelledby' contains the ID of
+      // an element. Gets the name from text node of that element.
+      testName("btn_labelledby_text", "text");
+
+      // Multiple relations. The value of 'aria-labelledby' contains the IDs
+      // of elements. Gets the name from text nodes of those elements.
+      testName("btn_labelledby_texts", "text1 text2");
+
+      // Trick cases. Self and recursive referencing.
+      testName("rememberHistoryDays", "Remember 3 days");
+      testName("historyDays", "Remember 3 days");
+      testName("rememberAfter", null); // XUL labels doesn't allow name from subtree
+
+      // Anonymous content (see name.xbl#third)
+      var anonBtn = getAccessible("labelledby_box_anon").lastChild;
+      testName(anonBtn, "It's a cool button");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name from subtree (single relation labelled_by).
+      
+      // Gets the name from text nodes contained by nested elements.
+      testName("btn_labelledby_mixed", "nomore text");
+
+      // Gets the name from text nodes and selected item of menulist
+      // (other items are ignored).
+      testName("btn_labelledby_mixed_menulist",
+               "nomore text selected item more text");
+      
+      // Gets the name from text nodes contained by nested elements, ignores
+      // hidden elements (bug 443081).
+      testName("btn_labelledby_mixed_hidden_child", "nomore text2");
+
+      // Gets the name from hidden text nodes contained by nested elements, 
+      // (label element is hidden entirely), (bug 443081)
+      testName("btn_labelledby_mixed_hidden", "lala more hidden text");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name for nsIDOMXULLabeledControlElement.
+
+      // Gets the name from @label attribute.
+      testName("btn_nsIDOMXULLabeledControlElement", "labeled element");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name for nsIDOMXULSelectControlItemElement.
+
+      // Gets the name from @label attribute.
+      testName("li_nsIDOMXULSelectControlItemElement", "select control item");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name if the XUL element doesn't implement nsIDOMXULSelectControlElement
+      // and has @label attribute.
+
+      testName("box_not_nsIDOMXULSelectControlElement", "box");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name from the label element.
+
+      // The label and button are placed on 2nd level relative common parent.
+      testName("btn_label_1", "label1");
+
+      // The label is on 1st, the button is on 5th level relative common parent.
+      testName("btn_label_2", "label2");
+
+      // The label and button are siblings.
+      testName("btn_label_3", "label3");
+
+      // Multiple labels for single button: XUL button takes the last one.
+      testName("btn_label_4", "label5");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name from the label element in anonymous content (see bug 362365).
+
+      // Get the name from anonymous label element for anonymous textbox
+      // (@anonid is used).
+      var ID = "box_label_anon1";
+      var box1Acc = testName(ID, null);
+      if (box1Acc) {
+        var textboxAcc = box1Acc.firstChild;
+        is(textboxAcc.name, "Label",
+           "Wrong label for anonymous textbox of " + ID);
+      }
+
+      // Get the name from anonymous label element for anonymous textbox
+      // (@anonid is used). Nested bindings.
+      ID = "box_label_anon2";
+      var box2Acc = testName(ID, null);
+      if (box2Acc) {
+        var textboxAcc = box2Acc.firstChild;
+        is(textboxAcc.name, "Label",
+           "Wrong label for anonymous textbox of " + ID);
+
+        var topTextboxAcc = box2Acc.lastChild;
+        is(topTextboxAcc.name, "Top textbox",
+           "Wrong label for anonymous textbox of " + ID);
+      }
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // tooltiptext (if nothing above isn't presented then tooltiptext is used)
+      testName("box_tooltiptext", "tooltiptext label");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name from the @title attribute of <toolbaritem/> (original bug 237249).
+
+      // Direct child of toolbaritem.
+      var textboxAcc = testName("toolbaritem_textbox", "ooospspss");
+
+      // Element from anonymous content of direct child of toolbaritem.
+      var entryAcc = textboxAcc.firstChild;
+      testRole(entryAcc, ROLE_ENTRY);
+      is(entryAcc.name, "ooospspss",
+         "Wrong name for text entry of autocomplete textbox 'toolbaritem_textbox'.");
+
+      // Child from subtree of toolbaritem.
+      testName("toolbaritem_hboxbutton", "ooospspss");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name from children
+
+      // ARIA role button is presented allowing the name calculation from
+      // children.
+      testName("box_children", "14");
+
+      // ARIA role option is presented allowing the name calculation from
+      // the visible children (bug 443081)
+      testName("lb_opt1_children_hidden", "i am visible");
+
+
+      //////////////////////////////////////////////////////////////////////////
+      // Name from aria-labelledby: menuitem label+ listitem label
+      testName("li_labelledby", "Show an Alert The moment the event starts");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=444279"
+       title="mochitest for accessible name calculating">
+      Mozilla Bug 444279
+    </a>
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=441991"
+      title="nsXULListitemAccessible::GetName prefers label \
+      		   attribute over aria-labelledby and doesn't allow recursion">
+      Mozilla Bug 441991
+    </a>
+  <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox flex="1">
+
+  <!-- aria-label, simple label -->
+  <button id="btn_simple_aria_label" aria-label="I am a button"/>
+
+  <!-- aria-label plus aria-labelledby -->
+  <button id="btn_both_aria_labels" aria-label="I am a button, two"
+          aria-labelledby="labelledby_text btn_both_aria_labels"/>
+
+  <!-- aria-labelledby, single relation -->
+  <description id="labelledby_text">text</description>
+  <button id="btn_labelledby_text"
+          aria-labelledby="labelledby_text"/>
+
+  <!-- aria-labelledby, multiple relations -->
+  <description id="labelledby_text1">text1</description>
+  <description id="labelledby_text2">text2</description>
+  <button id="btn_labelledby_texts"
+          aria-labelledby="labelledby_text1 labelledby_text2"/>
+
+  <!-- aria-labelledby, multiple relations -->
+  <box class="third" id="labelledby_box_anon" role="group" />
+
+  <!-- trick aria-labelledby -->
+  <checkbox id="rememberHistoryDays"
+            label="Remember "
+            aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
+  <textbox id="historyDays" type="number" size="3" value="3"
+           aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
+  <label id="rememberAfter">days</label>
+
+  <!-- the name from subtree, mixed content -->
+  <description id="labelledby_mixed">
+    no<description>more text</description>
+  </description>
+  <button id="btn_labelledby_mixed"
+          aria-labelledby="labelledby_mixed"/>
+
+  <!-- the name from subtree, mixed/hidden content -->
+  <description id="labelledby_mixed_hidden_child">no<description>more <description hidden="true">hidden</description>text2</description></description>
+  <button id="btn_labelledby_mixed_hidden_child"
+          aria-labelledby="labelledby_mixed_hidden_child"/>
+
+  <!-- the name from subtree, mixed/completely hidden content -->
+  <description id="labelledby_mixed_hidden"
+               hidden="true">lala <description>more hidden </description>text</description>
+  <button id="btn_labelledby_mixed_hidden"
+          aria-labelledby="labelledby_mixed_hidden"/>
+  <br/>
+
+  <!-- the name from subtree, mixed content, ignore items of menulist -->
+  <description id="labelledby_mixed_menulist">
+    no<description>more text</description>
+    <menulist>
+      <menupopup>
+        <menuitem label="selected item"/>
+        <menuitem label="item"/>
+      </menupopup>
+    </menulist>
+    more text
+  </description>
+  <button id="btn_labelledby_mixed_menulist"
+          aria-labelledby="labelledby_mixed_menulist"/>
+
+  <!-- nsIDOMXULLabeledControlElement -->
+  <button id="btn_nsIDOMXULLabeledControlElement"
+          label="labeled element"/>
+
+  <!-- nsIDOMXULSelectControlItemElement -->
+  <listbox>
+    <listitem id="li_nsIDOMXULSelectControlItemElement"
+              label="select control item"/>
+  </listbox>
+
+  <!-- not nsIDOMXULSelectControlElement -->
+  <box id="box_not_nsIDOMXULSelectControlElement" role="group" label="box"/>
+
+  <!-- label element  -->
+  <hbox>
+    <box>
+      <label control="btn_label_1">label1</label>
+    </box>
+    <label control="btn_label_2">label2</label>
+    <box>
+      <button id="btn_label_1"/>
+      <box>
+        <box>
+          <box>
+            <button id="btn_label_2"/>
+          </box>
+        </box>
+      </box>
+    </box>
+    <label control="btn_label_3">label3</label>
+    <button id="btn_label_3"/>
+
+    <label control="btn_label_4">label4</label>
+    <label control="btn_label_4">label5</label>
+    <button id="btn_label_4"/>
+  </hbox>
+
+  <!-- label element, anonymous content -->
+  <box id="box_label_anon1"
+       class="first"
+       role="group"/>
+
+  <box id="box_label_anon2" 
+       class="second" 
+       role="group"/>
+
+  <!-- tooltiptext -->
+  <box id="box_tooltiptext"
+       role="group"
+       tooltiptext="tooltiptext label"/>
+
+  <!-- the name from @title of toolbaritem -->
+  <toolbar>
+    <toolbaritem title="ooospspss">
+      <textbox id="toolbaritem_textbox"
+               flex="1"
+               type="autocomplete"
+               enablehistory="true">
+        <hbox role="button" id="toolbaritem_hboxbutton">
+           <description value="button"/>
+        </hbox>
+      </textbox>
+    </toolbaritem>
+  </toolbar>
+
+  <!-- name from children -->
+  <box id="box_children" role="button">14</box>
+
+  <!-- name from children, hidden children -->
+  <vbox role="listbox" tabindex="0">
+    <hbox id="lb_opt1_children_hidden" role="option" tabindex="0">
+      <description>i am visible</description>
+      <description style="display:none">i am hidden</description>
+    </hbox>
+  </vbox>
+
+  <!-- bug 441991; create name from other menuitem label listitem's own label -->
+  <hbox>
+    <listbox>
+    <listitem id="li_labelledby"
+              label="The moment the event starts"
+              aria-labelledby="menuitem-DISPLAY li_labelledby"/>
+    </listbox>
+    <menulist>
+      <menupopup>
+        <menuitem id="menuitem-DISPLAY"
+                  value="DISPLAY"
+                  label="Show an Alert"/>
+        <menuitem id="menuitem-EMAIL"
+                  value="EMAIL"
+                  label="Send an E-mail"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+
+  </vbox> <!-- close tests area -->
+  </hbox> <!-- close main area -->
+</window>
+

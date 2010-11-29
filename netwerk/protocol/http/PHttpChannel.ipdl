@@ -81,6 +81,8 @@ parent:
             bool                chooseApplicationCache,
             nsCString           appCacheClientID);
 
+  ConnectChannel(PRUint32 channelId);
+
   SetPriority(PRUint16 priority);
 
   SetCacheTokenCachedCharset(nsCString charset);
@@ -145,7 +147,7 @@ child:
 
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
-  Redirect1Begin(PHttpChannel       newChannel,
+  Redirect1Begin(PRUint32           newChannelId,
                  URI                newUri,
                  PRUint32           redirectFlags,
                  nsHttpResponseHead responseHead);

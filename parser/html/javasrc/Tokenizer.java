@@ -3076,7 +3076,6 @@ public class Tokenizer implements Locator {
                         continue;
                     }
 
-                    // TODO warn about apos (IE) and TRADE (Opera)
                     if (candidate == -1) {
                         // reconsume deals with CR, LF or nul
                         /*
@@ -3151,11 +3150,15 @@ public class Tokenizer implements Locator {
                          * table).
                          */
                         @Const @NoLength char[] val = NamedCharacters.VALUES[candidate];
-                        // See if the first slot holds a high surrogate
-                        if ((val[0] & 0xFC00) == 0xD800) {
-                            emitOrAppendTwo(val, returnState);
-                        } else {
+                        if (
+                        // [NOCPP[
+                        val.length == 1
+                        // ]NOCPP]
+                        // CPPONLY: val[1] == 0
+                        ) {
                             emitOrAppendOne(val, returnState);
+                        } else {
+                            emitOrAppendTwo(val, returnState);
                         }
                         // this is so complicated!
                         if (strBufMark < strBufLen) {
@@ -6350,11 +6353,15 @@ public class Tokenizer implements Locator {
                          * table).
                          */
                         @Const @NoLength char[] val = NamedCharacters.VALUES[candidate];
-                        // See if the first slot holds a high surrogate
-                        if ((val[0] & 0xFC00) == 0xD800) {
-                            emitOrAppendTwo(val, returnState);
-                        } else {
+                        if (
+                        // [NOCPP[
+                        val.length == 1
+                        // ]NOCPP]
+                        // CPPONLY: val[1] == 0
+                        ) {
                             emitOrAppendOne(val, returnState);
+                        } else {
+                            emitOrAppendTwo(val, returnState);
                         }
                         // this is so complicated!
                         if (strBufMark < strBufLen) {

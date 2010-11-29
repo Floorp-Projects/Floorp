@@ -1962,7 +1962,6 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_TEE: The surface is of type 'tee' (a multiplexing surface), since 1.10
  * @CAIRO_SURFACE_TYPE_XML: The surface is of type XML (for debugging), since 1.10
  * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10
- * @CAIRO_SURFACE_TYPE_DDRAW: The surface is of type ddraw
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -2011,7 +2010,6 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_TEE,
     CAIRO_SURFACE_TYPE_XML,
     CAIRO_SURFACE_TYPE_SKIA,
-    CAIRO_SURFACE_TYPE_DDRAW,
     CAIRO_SURFACE_TYPE_D2D
 } cairo_surface_type_t;
 

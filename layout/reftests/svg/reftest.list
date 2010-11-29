@@ -32,6 +32,9 @@ include svg-integration/reftest.list
 == clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == conditions-01.svg pass.svg
+== conditions-02.svg pass.svg
+== conditions-03.svg pass.svg
+== conditions-04.svg pass.svg
 == currentColor-01.svg pass.svg
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
@@ -158,6 +161,7 @@ random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # b
 asserts(3) == symbol-01.svg symbol-01-ref.svg # see bug 563481
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
+random-if(winWidget) == text-gradient-03.svg pass.svg # bug 614324
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg

@@ -37,10 +37,12 @@
 
 #include "AccIterator.h"
 
+#include "nsAccessibilityService.h"
 #include "nsAccessible.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccIterator
+// AccIterator
+////////////////////////////////////////////////////////////////////////////////
 
 AccIterator::AccIterator(nsAccessible *aAccessible,
                          filters::FilterFuncPtr aFilterFunc,
@@ -92,4 +94,158 @@ AccIterator::IteratorState::IteratorState(nsAccessible *aParent,
                                           IteratorState *mParentState) :
   mParent(aParent), mIndex(0), mParentState(mParentState)
 {
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// RelatedAccIterator
+////////////////////////////////////////////////////////////////////////////////
+
+RelatedAccIterator::
+  RelatedAccIterator(nsDocAccessible* aDocument, nsIContent* aDependentContent,
+                     nsIAtom* aRelAttr) :
+  mRelAttr(aRelAttr), mProviders(nsnull), mBindingParent(nsnull), mIndex(0)
+{
+  mBindingParent = aDependentContent->GetBindingParent();
+  nsIAtom* IDAttr = mBindingParent ?
+    nsAccessibilityAtoms::anonid : aDependentContent->GetIDAttributeName();
+
+  nsAutoString id;
+  if (aDependentContent->GetAttr(kNameSpaceID_None, IDAttr, id))
+    mProviders = aDocument->mDependentIDsHash.Get(id);
+}
+
+nsAccessible*
+RelatedAccIterator::Next()
+{
+  if (!mProviders)
+    return nsnull;
+
+  while (mIndex < mProviders->Length()) {
+    nsDocAccessible::AttrRelProvider* provider = (*mProviders)[mIndex++];
+
+    // Return related accessible for the given attribute and if the provider
+    // content is in the same binding in the case of XBL usage.
+    if (provider->mRelAttr == mRelAttr &&
+        (!mBindingParent ||
+         mBindingParent == provider->mContent->GetBindingParent())) {
+      nsAccessible* related = GetAccService()->GetAccessible(provider->mContent);
+      if (related)
+        return related;
+    }
+  }
+
+  return nsnull;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// HTMLLabelIterator
+////////////////////////////////////////////////////////////////////////////////
+
+HTMLLabelIterator::
+  HTMLLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement,
+                    LabelFilter aFilter) :
+  mRelIter(aDocument, aElement, nsAccessibilityAtoms::_for),
+  mElement(aElement), mLabelFilter(aFilter)
+{
+}
+
+nsAccessible*
+HTMLLabelIterator::Next()
+{
+  // Get either <label for="[id]"> element which explicitly points to given
+  // element, or <label> ancestor which implicitly point to it.
+  nsAccessible* label = nsnull;
+  while ((label = mRelIter.Next())) {
+    if (label->GetContent()->Tag() == nsAccessibilityAtoms::label)
+      return label;
+  }
+
+  if (mLabelFilter == eSkipAncestorLabel)
+    return nsnull;
+
+  // Go up tree get name of ancestor label if there is one (an ancestor <label>
+  // implicitly points to us). Don't go up farther than form or body element.
+  nsIContent* walkUpContent = mElement;
+  while ((walkUpContent = walkUpContent->GetParent()) &&
+         walkUpContent->Tag() != nsAccessibilityAtoms::form &&
+         walkUpContent->Tag() != nsAccessibilityAtoms::body) {
+    if (walkUpContent->Tag() == nsAccessibilityAtoms::label) {
+      // Prevent infinite loop.
+      mLabelFilter = eSkipAncestorLabel;
+      return GetAccService()->GetAccessible(walkUpContent);
+    }
+  }
+
+  return nsnull;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// HTMLOutputIterator
+////////////////////////////////////////////////////////////////////////////////
+
+HTMLOutputIterator::
+HTMLOutputIterator(nsDocAccessible* aDocument, nsIContent* aElement) :
+  mRelIter(aDocument, aElement, nsAccessibilityAtoms::_for)
+{
+}
+
+nsAccessible*
+HTMLOutputIterator::Next()
+{
+  nsAccessible* output = nsnull;
+  while ((output = mRelIter.Next())) {
+    if (output->GetContent()->Tag() == nsAccessibilityAtoms::output)
+      return output;
+  }
+
+  return nsnull;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// XULLabelIterator
+////////////////////////////////////////////////////////////////////////////////
+
+XULLabelIterator::
+  XULLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement) :
+  mRelIter(aDocument, aElement, nsAccessibilityAtoms::control)
+{
+}
+
+nsAccessible*
+XULLabelIterator::Next()
+{
+  nsAccessible* label = nsnull;
+  while ((label = mRelIter.Next())) {
+    if (label->GetContent()->Tag() == nsAccessibilityAtoms::label)
+      return label;
+  }
+
+  return nsnull;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// XULDescriptionIterator
+////////////////////////////////////////////////////////////////////////////////
+
+XULDescriptionIterator::
+  XULDescriptionIterator(nsDocAccessible* aDocument, nsIContent* aElement) :
+  mRelIter(aDocument, aElement, nsAccessibilityAtoms::control)
+{
+}
+
+nsAccessible*
+XULDescriptionIterator::Next()
+{
+  nsAccessible* descr = nsnull;
+  while ((descr = mRelIter.Next())) {
+    if (descr->GetContent()->Tag() == nsAccessibilityAtoms::description)
+      return descr;
+  }
+
+  return nsnull;
 }

@@ -236,6 +236,9 @@ class nsHashKey;
 #define NS_OFFLINE                       (NS_WINDOW_START + 64)
 #define NS_ONLINE                        (NS_WINDOW_START + 65)
 
+// Indicates a resize will occur
+#define NS_BEFORERESIZE_EVENT            (NS_WINDOW_START + 66)
+
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
 #define NS_MOUSE_BUTTON_UP              (NS_MOUSE_MESSAGE_START + 1)

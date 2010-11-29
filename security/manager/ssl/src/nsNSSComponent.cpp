@@ -2363,12 +2363,10 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 {
   nsCOMPtr<nsICertOverrideService> icos = 
     do_GetService("@mozilla.org/security/certoverride;1");
-    
-  nsCertOverrideService *cos = 
-    reinterpret_cast<nsCertOverrideService*>(icos.get());
-
-  if (cos) {
-    cos->RemoveAllTemporaryOverrides();
+  if (icos) {
+    icos->ClearValidityOverride(
+            NS_LITERAL_CSTRING("all:temporary-certificates"),
+            0);
   }
 
   if (mClientAuthRememberService) {

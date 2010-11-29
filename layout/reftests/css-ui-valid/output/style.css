@@ -1,0 +1,22 @@
+/* Override default style */
+output {
+  color: black;
+}
+
+output.notvalid {
+  color: green;
+}
+output.notvalid:-moz-ui-valid {
+  color: red;
+}
+
+output.valid {
+  color: red;
+}
+output.valid:-moz-ui-valid {
+  color: green;
+}
+
+output.ref {
+  color: green;
+}

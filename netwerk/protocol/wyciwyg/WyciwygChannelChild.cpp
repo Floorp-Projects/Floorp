@@ -60,6 +60,7 @@ WyciwygChannelChild::WyciwygChannelChild()
   : ChannelEventQueue<WyciwygChannelChild>(this)
   , mStatus(NS_OK)
   , mIsPending(PR_FALSE)
+  , mCanceled(false)
   , mLoadFlags(LOAD_NORMAL)
   , mContentLength(-1)
   , mCharsetSource(kCharsetUninitialized)
@@ -169,12 +170,8 @@ WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
   AutoEventEnqueuer ensureSerialDispatch(this);
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
-  if (NS_FAILED(rv)) {
-    // TODO: Cancel request:
-    //  - Send Cancel msg to parent
-    //  - drop any in flight OnDataAvail msgs we receive
-    //  - make sure we do call OnStopRequest eventually
-  }
+  if (NS_FAILED(rv))
+    Cancel(rv);
 }
 
 class WyciwygDataAvailableEvent : public ChannelEvent
@@ -209,6 +206,9 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
 {
   LOG(("WyciwygChannelChild::RecvOnDataAvailable [this=%x]\n", this));
 
+  if (mCanceled)
+    return;
+
   mState = WCC_ONDATA;
 
   // NOTE: the OnDataAvailable contract requires the client to read all the data
@@ -222,16 +222,16 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
                                       data.Length(),
                                       NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
-    // TODO:  what to do here?  Cancel request?  Very unlikely to fail.
+    Cancel(rv);
+    return;
   }
 
   AutoEventEnqueuer ensureSerialDispatch(this);
   
   rv = mListener->OnDataAvailable(this, mListenerContext,
                                   stringStream, offset, data.Length());
-  if (NS_FAILED(rv)) {
-    // TODO: Cancel request: see notes in OnStartRequest
-  }
+  if (NS_FAILED(rv))
+    Cancel(rv);
 
   if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
     mProgressSink->OnProgress(this, nsnull, PRUint64(offset + data.Length()),
@@ -274,7 +274,9 @@ WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
     mState = WCC_ONSTOP;
 
     mIsPending = PR_FALSE;
-    mStatus = statusCode;
+
+    if (!mCanceled)
+      mStatus = statusCode;
 
     mListener->OnStopRequest(this, mListenerContext, statusCode);
 
@@ -292,6 +294,54 @@ WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
     PWyciwygChannelChild::Send__delete__(this);
 }
 
+class WyciwygCancelEvent : public ChannelEvent
+{
+ public:
+  WyciwygCancelEvent(WyciwygChannelChild* child, const nsresult& status)
+  : mChild(child)
+  , mStatus(status) {}
+
+  void Run() { mChild->CancelEarly(mStatus); }
+ private:
+  WyciwygChannelChild* mChild;
+  nsresult mStatus;
+};
+
+bool
+WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
+{
+  if (ShouldEnqueue()) {
+    EnqueueEvent(new WyciwygCancelEvent(this, statusCode));
+  } else {
+    CancelEarly(statusCode);
+  }
+  return true;
+}
+
+void WyciwygChannelChild::CancelEarly(const nsresult& statusCode)
+{
+  LOG(("WyciwygChannelChild::CancelEarly [this=%x]\n", this));
+  
+  if (mCanceled)
+    return;
+
+  mCanceled = true;
+  mStatus = statusCode;
+  
+  mIsPending = false;
+  if (mLoadGroup)
+    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+  if (mListener) {
+    mListener->OnStartRequest(this, mListenerContext);
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+  }
+  mListener = nsnull;
+  mListenerContext = nsnull;
+
+  if (mIPCOpen)
+    PWyciwygChannelChild::Send__delete__(this);
+}
 
 //-----------------------------------------------------------------------------
 // nsIRequest
@@ -324,7 +374,14 @@ WyciwygChannelChild::GetStatus(nsresult *aStatus)
 NS_IMETHODIMP
 WyciwygChannelChild::Cancel(nsresult aStatus)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mCanceled)
+    return NS_OK;
+
+  mCanceled = true;
+  mStatus = aStatus;
+  if (mIPCOpen)
+    SendCancel(aStatus);
+  return NS_OK;
 }
 
 /* void suspend (); */

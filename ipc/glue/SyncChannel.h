@@ -67,6 +67,7 @@ public:
         virtual bool OnReplyTimeout() = 0;
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
+        virtual void OnChannelConnected(int32 peer_pid) {};
     };
 
     SyncChannel(SyncListener* aListener);

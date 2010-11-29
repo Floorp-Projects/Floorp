@@ -657,45 +657,39 @@ const gXPInstallObserver = {
     };
 
     switch (aTopic) {
-    case "addon-install-blocked":
-      var enabled = true;
-      try {
-        enabled = gPrefService.getBoolPref("xpinstall.enabled");
-      }
-      catch (e) {
-      }
+    case "addon-install-disabled":
+      notificationID = "xpinstall-disabled"
 
-      if (!enabled) {
-        notificationID = "xpinstall-disabled"
-
-        if (gPrefService.prefIsLocked("xpinstall.enabled")) {
-          messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
-          buttons = [];
-        }
-        else {
-          messageString = gNavigatorBundle.getString("xpinstallDisabledMessage");
-
-          action = {
-            label: gNavigatorBundle.getString("xpinstallDisabledButton"),
-            accessKey: gNavigatorBundle.getString("xpinstallDisabledButton.accesskey"),
-            callback: function editPrefs() {
-              gPrefService.setBoolPref("xpinstall.enabled", true);
-            }
-          };
-        }
+      if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+        messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
+        buttons = [];
       }
       else {
-        messageString = gNavigatorBundle.getFormattedString("xpinstallPromptWarning",
-                          [brandShortName, installInfo.originatingURI.host]);
+        messageString = gNavigatorBundle.getString("xpinstallDisabledMessage");
 
         action = {
-          label: gNavigatorBundle.getString("xpinstallPromptAllowButton"),
-          accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
-          callback: function() {
-            installInfo.install();
+          label: gNavigatorBundle.getString("xpinstallDisabledButton"),
+          accessKey: gNavigatorBundle.getString("xpinstallDisabledButton.accesskey"),
+          callback: function editPrefs() {
+            gPrefService.setBoolPref("xpinstall.enabled", true);
           }
         };
       }
+
+      PopupNotifications.show(browser, notificationID, messageString, anchorID,
+                              action, null, options);
+      break;
+    case "addon-install-blocked":
+      messageString = gNavigatorBundle.getFormattedString("xpinstallPromptWarning",
+                        [brandShortName, installInfo.originatingURI.host]);
+
+      action = {
+        label: gNavigatorBundle.getString("xpinstallPromptAllowButton"),
+        accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
+        callback: function() {
+          installInfo.install();
+        }
+      };
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
                               action, null, options);
@@ -1369,6 +1363,7 @@ function prepareForStartup() {
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
+  Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
@@ -1618,6 +1613,7 @@ function BrowserShutdown()
   }
 
   Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+  Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
@@ -3434,12 +3430,6 @@ function BrowserCustomizeToolbar()
   PlacesToolbarHelper.customizeStart();
   BookmarksMenuButton.customizeStart();
 
-  let addonBar = document.getElementById("addon-bar");
-  if (addonBar.collapsed) {
-    addonBar.wasCollapsed = addonBar.collapsed;
-    addonBar.collapsed = false;
-  }
-
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
@@ -3497,12 +3487,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
   PlacesToolbarHelper.customizeDone();
   BookmarksMenuButton.customizeDone();
-
-  let addonBar = document.getElementById("addon-bar");
-  if (addonBar.wasCollapsed === true) {
-    addonBar.collapsed = true;
-    delete addonBar.wasCollapsed;
-  }
 
   // The url bar splitter state is dependent on whether stop/reload
   // and the location bar are combined, so we need this ordering
@@ -4339,6 +4323,8 @@ var XULBrowserWindow = {
     var location = gBrowser.contentWindow.location;
     var locationObj = {};
     try {
+      // about:blank can be used by webpages so pretend it is http
+      locationObj.protocol = location == "about:blank" ? "http:" : location.protocol;
       locationObj.host = location.host;
       locationObj.hostname = location.hostname;
       locationObj.port = location.port;
@@ -4750,6 +4736,9 @@ function updateAppButtonDisplay() {
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
+#else
+  document.getElementById("appmenu-toolbar-button").hidden =
+    !displayAppButton;
 #endif
 }
 #endif
@@ -5457,6 +5446,8 @@ function setStyleDisabled(disabled) {
 /* End of the Page Style functions */
 
 var BrowserOffline = {
+  _inited: false,
+
   /////////////////////////////////////////////////////////////////////////////
   // BrowserOffline Public Methods
   init: function ()
@@ -5467,13 +5458,14 @@ var BrowserOffline = {
     Services.obs.addObserver(this, "network:offline-status-changed", false);
 
     this._updateOfflineUI(Services.io.offline);
+
+    this._inited = true;
   },
 
   uninit: function ()
   {
-    try {
+    if (this._inited) {
       Services.obs.removeObserver(this, "network:offline-status-changed");
-    } catch (ex) {
     }
   },
 
@@ -6901,10 +6893,12 @@ var gIdentityHandler = {
   IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
   IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
   IDENTITY_MODE_MIXED_CONTENT    : "unknownIdentity mixedContent",  // SSL with unauthenticated content
+  IDENTITY_MODE_CHROMEUI         : "chromeUI",         // Part of the product's UI
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
   _lastStatus : null,
   _lastLocation : null,
+  _mode : "unknownIdentity",
 
   // smart getters
   get _encryptionLabel () {
@@ -7044,7 +7038,9 @@ var gIdentityHandler = {
     this._lastLocation = location;
 
     let nsIWebProgressListener = Ci.nsIWebProgressListener;
-    if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+    if (location.protocol == "chrome:" || location.protocol == "about:")
+      this.setMode(this.IDENTITY_MODE_CHROMEUI);
+    else if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
     else if (state & nsIWebProgressListener.STATE_SECURE_HIGH)
       this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
@@ -7093,6 +7089,8 @@ var gIdentityHandler = {
     // Update the popup too, if it's open
     if (this._identityPopup.state == "open")
       this.setPopupMessages(newMode);
+
+    this._mode = newMode;
   },
 
   /**
@@ -7158,6 +7156,12 @@ var gIdentityHandler = {
       // Unicode Bidirectional Algorithm proper (at the paragraph level).
       icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
                         "rtl" : "ltr";
+    }
+    else if (newMode == this.IDENTITY_MODE_CHROMEUI) {
+      icon_label = "";
+      tooltip = "";
+      icon_country_label = "";
+      icon_labels_dir = "ltr";
     }
     else {
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
@@ -7252,6 +7256,9 @@ var gIdentityHandler = {
 
     // Revert the contents of the location bar, see bug 406779
     gURLBar.handleRevert();
+
+    if (this._mode == this.IDENTITY_MODE_CHROMEUI)
+      return;
 
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
@@ -7438,6 +7445,13 @@ function getNotificationBox(aWindow) {
   return null;
 };
 
+function getTabModalPromptBox(aWindow) {
+  var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
+  if (foundBrowser)
+    return gBrowser.getTabModalPromptBox(foundBrowser);
+  return null;
+};
+
 /* DEPRECATED */
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
@@ -7446,6 +7460,7 @@ let gPrivateBrowsingUI = {
   _privateBrowsingService: null,
   _searchBarValue: null,
   _findBarValue: null,
+  _inited: false,
 
   init: function PBUI_init() {
     Services.obs.addObserver(this, "private-browsing", false);
@@ -7456,9 +7471,14 @@ let gPrivateBrowsingUI = {
 
     if (this.privateBrowsingEnabled)
       this.onEnterPrivateBrowsing(true);
+
+    this._inited = true;
   },
 
   uninit: function PBUI_unint() {
+    if (!this._inited)
+      return;
+
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "private-browsing-transition-complete");
   },

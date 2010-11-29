@@ -45,7 +45,7 @@ var changes = [
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/arachnids/tarantula">
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/arachnids/tarantula">
 <template id="template">
 <button uri="?" label="rdf:http://www.some-fictitious-zoo.com/rdf#name"/>
 </template>

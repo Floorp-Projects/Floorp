@@ -303,7 +303,7 @@ InitDialog(HWND hDlg)
   SetTimer(hDlg, TIMER_ID, TIMER_INTERVAL, NULL);
 }
 
-// Message handler for about box.
+// Message handler for update dialog.
 static LRESULT CALLBACK
 DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {

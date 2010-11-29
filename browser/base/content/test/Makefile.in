@@ -155,6 +155,7 @@ _BROWSER_FILES = \
                  browser_bug581947.js \
                  browser_bug585785.js \
                  browser_bug585830.js \
+                 browser_bug590206.js \
                  browser_bug592338.js \
                  browser_bug594131.js \
                  browser_bug595507.js \
@@ -198,6 +199,7 @@ _BROWSER_FILES = \
                  browser_tab_dragdrop2_frame1.xul \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
+                 browser_visibleFindSelection.js \
                  browser_visibleTabs.js \
                  browser_visibleTabs_contextMenu.js \
                  browser_visibleTabs_bookmarkAllPages.js \

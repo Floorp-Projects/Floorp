@@ -117,7 +117,7 @@
 
     function doTest()
     {
-      var gQueue = new eventQueue("TreeViewChanged");
+      var gQueue = new eventQueue(EVENT_REORDER);
 
       gQueue.push(new treeChecker("list", new nsTableTreeView(3), ROLE_LIST));
       gQueue.push(new treeChecker("tree", new nsTreeTreeView(), ROLE_OUTLINE));

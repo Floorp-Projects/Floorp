@@ -201,9 +201,10 @@ public:
   } else
 
 #define NS_IMPL_QUERY_CYCLE_COLLECTION_ISUPPORTS(_class)                       \
-  if ( aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)) )                   \
-    foundInterface = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);      \
-  else
+  if ( aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)) ) {                 \
+    *aInstancePtr = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);       \
+    return NS_OK;                                                              \
+  } else
 
 #define NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                        \
   NS_IMPL_QUERY_CYCLE_COLLECTION(_class)

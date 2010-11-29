@@ -484,7 +484,7 @@ nsEditor::SetFlags(PRUint32 aFlags)
     if (NS_SUCCEEDED(rv)) {
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
-      nsIMEStateManager::UpdateIMEState(newState);
+      nsIMEStateManager::UpdateIMEState(newState, focusedContent);
     }
   }
 

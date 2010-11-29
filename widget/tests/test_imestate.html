@@ -25,6 +25,13 @@
   <input type="button"   id="ibutton"/><br/>
   <input type="image"    id="image" alt="image"/><br/>
 
+  <!-- html5 input elements -->
+  <input type="url"      id="url"/><br/>
+  <input type="email"    id="email"/><br/>
+  <input type="search"   id="search"/><br/>
+  <input type="tel"      id="tel"/><br/>
+  <input type="number"   id="number"/><br/>
+
   <!-- form controls -->
   <button id="button">button</button><br/>
   <textarea id="textarea">textarea</textarea><br/>
@@ -46,6 +53,37 @@
   <input type="text" id="ime_mode_active"   style="ime-mode: active;"/><br/>
   <input type="text" id="ime_mode_inactive" style="ime-mode: inactive;"/><br/>
   <input type="text" id="ime_mode_disabled" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_url"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_url"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_url"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_url" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_url" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_email"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_email"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_email"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_email" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_email" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_search"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_search"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_search"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_search" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_search" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_tel"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_tel"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_tel"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_tel" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_tel" style="ime-mode: disabled;"/><br/>
+
+  <input type="text" id="ime_mode_auto_number"     style="ime-mode: auto;"/><br/>
+  <input type="text" id="ime_mode_normal_number"   style="ime-mode: normal;"/><br/>
+  <input type="text" id="ime_mode_active_number"   style="ime-mode: active;"/><br/>
+  <input type="text" id="ime_mode_inactive_number" style="ime-mode: inactive;"/><br/>
+  <input type="text" id="ime_mode_disabled_number" style="ime-mode: disabled;"/><br/>
+
   <input type="password" id="ime_mode_auto_p"     style="ime-mode: auto;"/><br/>
   <input type="password" id="ime_mode_normal_p"   style="ime-mode: normal;"/><br/>
   <input type="password" id="ime_mode_active_p"   style="ime-mode: active;"/><br/>
@@ -81,6 +119,12 @@ SimpleTest.waitForExplicitFinish();
 var gUtils = window.
       QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIDOMWindowUtils);
+var gUtils2 = gUtils.QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+/*
+var gUtils2 = window.
+      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+      getInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+*/
 var gFM = Components.classes["@mozilla.org/focus-manager;1"].
       getService(Components.interfaces.nsIFocusManager);
 const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
@@ -153,8 +197,16 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
         return;
       }
       enabled = gUtils.IMEStatus;
+      inputtype = gUtils2.focusedInputType;
       is(enabled, aTest.expectedEnabled,
          aDescription + ": " + aTest.description + ", wrong enabled state");
+      if (aTest.expectedType && !aInDesignMode) {
+        is(inputtype, aTest.expectedType,
+           aDescription + ": " + aTest.description + ", wrong input type");
+      } else if (aInDesignMode) {
+        is(inputtype, "",
+           aDescription + ": " + aTest.description + ", wrong input type")
+      }
     }
 
     if (!kIMEOpenSupported || enabled != gUtils.IME_STATUS_ENABLED ||
@@ -191,7 +243,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     { id: "text",
       description: "input[type=text]",
       focusable: !aInDesignMode,
-      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "text" },
     { id: "text_readonly",
       description: "input[type=text][readonly]",
       focusable: !aInDesignMode,
@@ -199,7 +252,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     { id: "password",
       description: "input[type=password]",
       focusable: !aInDesignMode,
-      expectedEnabled: kEnabledStateOnPasswordField },
+      expectedEnabled: kEnabledStateOnPasswordField,
+      expectedType: "password" },
     { id: "password_readonly",
       description: "input[type=password][readonly]",
       focusable: !aInDesignMode,
@@ -232,6 +286,31 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       description: "input[type=image]",
       focusable: !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "url",
+      description: "input[type=url]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "url" },
+    { id: "email",
+      description: "input[type=email]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "email" },
+    { id: "search",
+      description: "input[type=search]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "search" },
+    { id: "tel",
+      description: "input[type=tel]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "tel" },
+    { id: "number",
+      description: "input[type=number]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      expectedType: "number" },
 
     // form controls
     { id: "button",
@@ -284,6 +363,122 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       description: "input[type=text][style=\"ime-mode: disabled;\"]",
       focusable: !aInDesignMode,
       expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_url",
+      description: "input[type=url][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_url",
+      description: "input[type=url][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_url",
+      description: "input[type=url][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_url",
+      description: "input[type=url][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_url",
+      description: "input[type=url][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_email",
+      description: "input[type=email][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_email",
+      description: "input[type=email][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_email",
+      description: "input[type=email][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_email",
+      description: "input[type=email][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_email",
+      description: "input[type=email][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_search",
+      description: "input[type=search][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_search",
+      description: "input[type=search][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_search",
+      description: "input[type=search][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_search",
+      description: "input[type=search][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_search",
+      description: "input[type=search][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_tel",
+      description: "input[type=tel][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_tel",
+      description: "input[type=tel][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_tel",
+      description: "input[type=tel][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_tel",
+      description: "input[type=tel][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_tel",
+      description: "input[type=tel][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
+    { id: "ime_mode_auto_number",
+      description: "input[type=number][style=\"ime-mode: auto;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_normal_number",
+      description: "input[type=number][style=\"ime-mode: normal;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: gUtils.IME_STATUS_ENABLED },
+    { id: "ime_mode_active_number",
+      description: "input[type=number][style=\"ime-mode: active;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: true },
+    { id: "ime_mode_inactive_number",
+      description: "input[type=number][style=\"ime-mode: inactive;\"]",
+      expectedEnabled: gUtils.IME_STATUS_ENABLED,
+      focusable: !aInDesignMode,
+      changeOpened: true, expectedOpened: false },
+    { id: "ime_mode_disabled_number",
+      description: "input[type=number][style=\"ime-mode: disabled;\"]",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnPasswordField },
+
     { id: "ime_mode_auto_p",
       description: "input[type=password][style=\"ime-mode: auto;\"]",
       focusable: !aInDesignMode,
@@ -424,6 +619,21 @@ function runTypeChangingTest()
     { id: "image",
       type: "image",    expected: gUtils.IME_STATUS_DISABLED,
       description: "[type=\"image\"]" },
+    { id: "url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"url\"]" },
+    { id: "email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"email\"]" },
+    { id: "search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"search\"]" },
+    { id: "tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"tel\"]" },
+    { id: "number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,
+      description: "[type=\"number\"]" },
     { id: "ime_mode_auto",
       type: "text",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
       description: "[type=\"text\"][ime-mode: auto;]" },
@@ -439,6 +649,87 @@ function runTypeChangingTest()
     { id: "ime_mode_disabled",
       type: "text",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
       description: "[type=\"text\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_url",
+      type: "url",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"url\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_url",
+      type: "url",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"url\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_email",
+      type: "email",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"email\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_email",
+      type: "email",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"email\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_search",
+      type: "search",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"search\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_search",
+      type: "search",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"search\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_tel",
+      type: "tel",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"tel\"][ime-mode: disabled;]" },
+
+    { id: "ime_mode_auto_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: auto;]" },
+    { id: "ime_mode_normal_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: normal;]" },
+    { id: "ime_mode_active_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: active;]" },
+    { id: "ime_mode_inactive_number",
+      type: "number",     expected: gUtils.IME_STATUS_ENABLED,  imeMode:  true,
+      description: "[type=\"number\"][ime-mode: inactive;]" },
+    { id: "ime_mode_disabled_number",
+      type: "number",     expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
+      description: "[type=\"number\"][ime-mode: disabled;]" },
+
     { id: "ime_mode_auto_p",
       type: "password", expected: gUtils.IME_STATUS_PASSWORD,  imeMode:  true,
       description: "[type=\"password\"][ime-mode: auto;]" },
@@ -466,7 +757,12 @@ function runTypeChangingTest()
     { type: "reset",    expected: gUtils.IME_STATUS_DISABLED },
     { type: "file",     expected: gUtils.IME_STATUS_DISABLED },
     { type: "button",   expected: gUtils.IME_STATUS_DISABLED },
-    { type: "image",    expected: gUtils.IME_STATUS_DISABLED }
+    { type: "image",    expected: gUtils.IME_STATUS_DISABLED },
+    { type: "url",      expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "email",    expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
+    { type: "number",   expected: gUtils.IME_STATUS_ENABLED  }
   ];
 
   function getExpectedIMEEnabled(aNewType, aInputControl)
@@ -491,7 +787,10 @@ function runTypeChangingTest()
           "\"" + e.getAttribute("type") + "\" to \"" + kInput.type + "\"";
         e.setAttribute("type", kInput.type);
         is(gUtils.IMEStatus, kInput.expected,
-           "type attr changing test: " + typeChangingDescription +
+           "type attr changing test (IMEStatus): " + typeChangingDescription +
+             " (" +  kInput.description + ")");
+        is(gUtils2.focusedInputType, kInput.type,
+           "type attr changing test (type): " + typeChangingDescription +
              " (" +  kInput.description + ")");
 
         const kTestOpenState = kIMEOpenSupported &&
@@ -509,7 +808,10 @@ function runTypeChangingTest()
           e.removeAttribute("type");
 
         is(gUtils.IMEStatus, getExpectedIMEEnabled(kType, kInput),
-           "type attr changing test: " + typeChangingDescription +
+           "type attr changing test (IMEStatus): " + typeChangingDescription +
+             " (" +  kInput.description + ")");
+        is(gUtils2.focusedInputType, kType.type,
+           "type attr changing test (type): " + typeChangingDescription +
              " (" +  kInput.description + ")");
         if (kTestOpenState && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
           is(gUtils.IMEIsOpen, kOpened,
@@ -535,6 +837,16 @@ function runReadonlyChangingTest()
       type: "text",     expected: gUtils.IME_STATUS_ENABLED  },
     { id: "password",
       type: "password", expected: gUtils.IME_STATUS_PASSWORD },
+    { id: "url",
+      type: "url",      expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "email",
+      type: "email",    expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "search",
+      type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "tel",
+      type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
+    { id: "number",
+      type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
     { id: "textarea",
       type: "textarea", expected: gUtils.IME_STATUS_ENABLED  }
   ];

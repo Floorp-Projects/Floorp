@@ -29,13 +29,11 @@ NS_EXPORT nsresult
 NS_NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
                                        nsIStorageStream** stream)
 {
-  nsresult rv;
-  nsCOMPtr<nsIStorageStream> storageStream
-    = do_CreateInstance("@mozilla.org/storagestream;1");
-  
-  rv = storageStream->Init(256, PR_UINT32_MAX, nsnull);
+  nsCOMPtr<nsIStorageStream> storageStream;
+
+  nsresult rv = NS_NewStorageStream(256, PR_UINT32_MAX, getter_AddRefs(storageStream));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsCOMPtr<nsIObjectOutputStream> objectOutput
     = do_CreateInstance("@mozilla.org/binaryoutputstream;1");
   nsCOMPtr<nsIOutputStream> outputStream

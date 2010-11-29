@@ -110,7 +110,7 @@ InstallTrigger.prototype = {
       var item = aArgs[name];
       if (typeof item === 'string') {
         item = { URL: item };
-      } else if (!("URL" in item)) {
+      } else if (!("URL" in item) || item.URL === undefined) {
         throw new Error("Missing URL property for '" + name + "'");
       }
 
@@ -120,7 +120,7 @@ InstallTrigger.prototype = {
         throw new Error("insufficient permissions to install: " + url);
 
       var iconUrl = null;
-      if ("IconURL" in item) {
+      if ("IconURL" in item && item.IconURL !== undefined) {
         iconUrl = this.resolveURL(item.IconURL);
         if (!this.checkLoadURIFromScript(iconUrl)) {
           iconUrl = null; // If page can't load the icon, just ignore it

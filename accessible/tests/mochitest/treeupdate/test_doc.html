@@ -304,6 +304,41 @@
       }
     }
 
+    function insertElmUnderDocElmWhileBodyMissed(aID)
+    {
+      this.docNode = getDocNode(aID);
+      this.inputNode = getDocNode(aID).createElement("input");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.inputNode),
+        new invokerChecker(EVENT_REORDER, this.docNode)
+      ];
+
+      this.invoke = function invoke()
+      {
+        this.docNode.documentElement.appendChild(this.inputNode);
+      }
+
+      this.finalCheck = function finalCheck()
+      {
+        var tree =
+          { DOCUMENT: [
+            { ENTRY: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] };
+        testAccessibleTree(this.docNode, tree);
+
+        // Remove aftermath of this test before next test starts.
+        this.docNode.documentElement.removeChild(this.inputNode);
+      }
+
+      this.getID = function getID()
+      {
+        return "Insert element under document element while body is missed.";
+      }
+    }
+
     function insertBodyToIFrameDoc(aID)
     {
       this.__proto__ = new rootContentInserted(aID, "Yo ho ho i butylka roma!");
@@ -343,6 +378,7 @@
       gQueue.push(new removeHTMLFromIFrameDoc("iframe"));
       gQueue.push(new insertHTMLToIFrameDoc("iframe"));
       gQueue.push(new removeBodyFromIFrameDoc("iframe"));
+      gQueue.push(new insertElmUnderDocElmWhileBodyMissed("iframe"));
       gQueue.push(new insertBodyToIFrameDoc("iframe"));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
@@ -357,6 +393,9 @@
   <a target="_blank"
      title="Update accessible tree when root element is changed"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=606082">Mozilla Bug 606082</a>
+  <a target="_blank"
+     title="Elements inserted outside the body aren't accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=608887">Mozilla Bug 608887</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>

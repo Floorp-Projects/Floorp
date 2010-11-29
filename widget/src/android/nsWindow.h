@@ -153,8 +153,8 @@ public:
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD ResetInputState();
-    NS_IMETHOD SetIMEEnabled(PRUint32 aState);
-    NS_IMETHOD GetIMEEnabled(PRUint32* aState);
+    NS_IMETHOD SetInputMode(const IMEContext& aContext);
+    NS_IMETHOD GetInputMode(IMEContext& aContext);
     NS_IMETHOD CancelIMEComposition();
 
     NS_IMETHOD OnIMEFocusChange(PRBool aFocus);
@@ -186,12 +186,17 @@ protected:
     double mLastDist;
     nsAutoPtr<nsIntPoint> mStartPoint;
 
+    // Multitouch swipe thresholds in screen pixels
+    double mSwipeMaxPinchDelta;
+    double mSwipeMinDistance;
+
     nsCOMPtr<nsIdleService> mIdleService;
 
-    PRUint32 mIMEEnabled;
     PRBool mIMEComposing;
     nsString mIMEComposingText;
     nsAutoTArray<nsTextRange, 4> mIMERanges;
+
+    IMEContext mIMEContext;
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);

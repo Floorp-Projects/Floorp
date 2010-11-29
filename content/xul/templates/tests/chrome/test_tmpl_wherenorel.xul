@@ -22,9 +22,10 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-Components.classes["@mozilla.org/consoleservice;1"].
-           getService(Components.interfaces.nsIConsoleService).reset();
-expectedConsoleMessages.push("Error parsing template: <where> element is missing a rel attribute");
+expectLoggedMessages = function()
+{
+  expectedConsoleMessages.push("Error parsing template: <where> element is missing a rel attribute");
+}
 
 var testid ="where - no rel";
 var queryType = "rdf";
@@ -48,7 +49,7 @@ var changes = [];
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/mammals">
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/mammals">
 <template id="template">
 <query id="query">
 <content uri="?uri"/>

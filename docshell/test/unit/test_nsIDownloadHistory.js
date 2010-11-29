@@ -37,6 +37,13 @@
 
 const NS_DOWNLOADHISTORY_CID = "{2ee83680-2af0-4bcb-bfa0-c9705f6554f1}";
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Services", function() {
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services;
+});
+
 function testLinkVistedObserver()
 {
   const NS_LINK_VISITED_EVENT_TOPIC = "link-visited";
@@ -83,6 +90,8 @@ function run_test()
   catch (ex) {
     return;
   }
+
+  Services.prefs.setBoolPref("places.history.enabled", true);
 
   for (var i = 0; i < tests.length; i++)
     tests[i]();

@@ -653,10 +653,12 @@ nsHTMLButtonElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
       UpdateBarredFromConstraintValidation();
       states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID |
                 NS_EVENT_STATE_MOZ_SUBMITINVALID;
     } else if (aName == nsGkAtoms::disabled) {
       UpdateBarredFromConstraintValidation();
-      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+      states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+                NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
     if (aNotify && !states.IsEmpty()) {
@@ -706,7 +708,8 @@ nsHTMLButtonElement::IntrinsicState() const
   nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
-    state |= IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
+    state |= IsValid() ? NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID
+                       : NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   }
 
   if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
@@ -727,7 +730,9 @@ nsHTMLButtonElement::SetCustomValidity(const nsAString& aError)
   if (doc) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
     doc->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_INVALID |
-                                            NS_EVENT_STATE_VALID);
+                                            NS_EVENT_STATE_VALID |
+                                            NS_EVENT_STATE_MOZ_UI_INVALID |
+                                            NS_EVENT_STATE_MOZ_UI_VALID);
   }
 
   return NS_OK;
@@ -746,7 +751,8 @@ nsHTMLButtonElement::FieldSetDisabledChanged(nsEventStates aStates, PRBool aNoti
 {
   UpdateBarredFromConstraintValidation();
 
-  aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID;
+  aStates |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_INVALID |
+             NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
   nsGenericHTMLFormElement::FieldSetDisabledChanged(aStates, aNotify);
 }
 

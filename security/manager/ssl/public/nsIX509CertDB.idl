@@ -112,7 +112,7 @@ interface nsIX509CertDB : nsISupports {
                          [array, size_is(count)] out wstring certNameList);
 
   /**
-   *  Find the email encryption certificate by nickname.
+   *  Find user's own email encryption certificate by nickname.
    *
    *  @param aNickname The nickname to be used as the key
    *                   to find the certificate.
@@ -122,7 +122,7 @@ interface nsIX509CertDB : nsISupports {
   nsIX509Cert findEmailEncryptionCert(in AString aNickname);
 
   /**
-   *  Find the email signing certificate by nickname.
+   *  Find user's own email signing certificate by nickname.
    *
    *  @param aNickname The nickname to be used as the key
    *                   to find the certificate.

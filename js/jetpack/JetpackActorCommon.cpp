@@ -533,8 +533,7 @@ JetpackActorCommon::RegisterReceiver(JSContext* cx,
                                      const nsString& messageName,
                                      jsval receiver)
 {
-  if (!JSVAL_IS_OBJECT(receiver) ||
-      !JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(receiver)))
+  if (JS_TypeOfValue(cx, receiver) != JSTYPE_FUNCTION)
     return NS_ERROR_INVALID_ARG;
 
   RecList* list;

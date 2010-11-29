@@ -93,6 +93,7 @@ private:
 #ifdef JS_GC_ZEAL
   static JSBool GCZeal(JSContext* cx, uintN argc, jsval *vp);
 #endif
+  static JSBool NoteIntentionalCrash(JSContext* cx, uintN argc, jsval *vp);
 
   static void ReportError(JSContext* cx, const char* message,
                           JSErrorReport* report);

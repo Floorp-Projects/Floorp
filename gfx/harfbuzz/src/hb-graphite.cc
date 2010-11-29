@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2009, Martin Hosken
- * Copyright (C) 2009, SIL International
+ * Copyright (C) 2009  Martin Hosken
+ * Copyright (C) 2009  SIL International
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -29,9 +29,12 @@
 #include <graphite/GrConstants.h>
 #include <graphite/Segment.h>
 #include "hb-buffer-private.hh"
-#include "hb-font-private.hh"
+#include "hb-font-private.h"
 #include "hb-graphite.h"
 #include <map>
+
+HB_BEGIN_DECLS
+
 
 namespace TtfUtil
 {
@@ -302,3 +305,6 @@ hb_graphite_shape (hb_font_t    *font,
   delete[] firsts;
   delete[] flags;
 }
+
+
+HB_END_DECLS

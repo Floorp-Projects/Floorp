@@ -48,50 +48,46 @@ ConsoleAPI.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 
-  // The ID of our attached window
-  id: null,
-
   // nsIDOMGlobalPropertyInitializer
-  // Associates us with the window we're attached to.
   init: function CA_init(aWindow) {
+    let id;
     try {
-      this.id = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils)
-                       .outerWindowID;
+      id = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils)
+                  .outerWindowID;
     } catch (ex) {
       Cu.reportError(ex);
     }
 
-    return this;
-  },
-
-  // window.console API
-  log: function CA_log() {
-    this.notifyObservers("log", arguments);
-  },
-  info: function CA_info() {
-    this.notifyObservers("info", arguments);
-  },
-  warn: function CA_warn() {
-    this.notifyObservers("warn", arguments);
-  },
-  error: function CA_error() {
-    this.notifyObservers("error", arguments);
-  },
-
-  __exposedProps__: {
-    log: "r",
-    info: "r",
-    warn: "r",
-    error: "r"
+    let self = this;
+    return {
+      // window.console API
+      log: function CA_log() {
+        self.notifyObservers(id, "log", arguments);
+      },
+      info: function CA_info() {
+        self.notifyObservers(id, "info", arguments);
+      },
+      warn: function CA_warn() {
+        self.notifyObservers(id, "warn", arguments);
+      },
+      error: function CA_error() {
+        self.notifyObservers(id, "error", arguments);
+      },
+      // TODO: remove this once bug 612405 is fixed
+      classID: self.classID
+    };
   },
 
   /**
    * Notify all observers of any console API call
    **/
-  notifyObservers: function CA_notifyObservers(aLevel, aArguments) {
+  notifyObservers: function CA_notifyObservers(aID, aLevel, aArguments) {
+    if (!aID)
+      return;
+
     let consoleEvent = {
-      ID: this.id,
+      ID: aID,
       level: aLevel,
       arguments: aArguments
     };
@@ -99,7 +95,7 @@ ConsoleAPI.prototype = {
     consoleEvent.wrappedJSObject = consoleEvent;
 
     Services.obs.notifyObservers(consoleEvent,
-                                 "console-api-log-event", this.id);
+                                 "console-api-log-event", aID);
   }
 };
 

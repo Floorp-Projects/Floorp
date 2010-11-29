@@ -128,28 +128,20 @@ namespace nanojit
     }
 
     void CodeAlloc::alloc(NIns* &start, NIns* &end) {
-        //  Reuse a block if possible.
-        if (availblocks) {
-            markBlockWrite(availblocks);
-            CodeList* b = removeBlock(availblocks);
-            b->isFree = false;
-            start = b->start();
-            end = b->end;
-            if (verbose)
-                avmplus::AvmLog("alloc %p-%p %d\n", start, end, int(end-start));
-            return;
+        if (!availblocks) {
+            // no free mem, get more
+            addMem();
         }
-        // no suitable block found, get more memory
-        void *mem = allocCodeChunk(bytesPerAlloc); // allocations never fail
-        totalAllocated += bytesPerAlloc;
-        NanoAssert(mem != NULL); // see allocCodeChunk contract in CodeAlloc.h
-        _nvprof("alloc page", uintptr_t(mem)>>12);
-        CodeList* b = addMem(mem, bytesPerAlloc);
+
+        //  grab a block
+        markBlockWrite(availblocks);
+        CodeList* b = removeBlock(availblocks);
         b->isFree = false;
         start = b->start();
         end = b->end;
         if (verbose)
-            avmplus::AvmLog("alloc %p-%p %d\n", start, end, int(end-start));
+            avmplus::AvmLog("CodeAlloc(%p).alloc %p-%p %d\n", this, start, end, int(end-start));
+        debug_only(sanity_check();)
     }
 
     void CodeAlloc::free(NIns* start, NIns *end) {
@@ -349,11 +341,16 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         blocks = b;
     }
 
-    CodeList* CodeAlloc::addMem(void *mem, size_t bytes) {
+    void CodeAlloc::addMem() {
+        void *mem = allocCodeChunk(bytesPerAlloc); // allocations never fail
+        totalAllocated += bytesPerAlloc;
+        NanoAssert(mem != NULL); // see allocCodeChunk contract in CodeAlloc.h
+        _nvprof("alloc page", uintptr_t(mem)>>12);
+
         CodeList* b = (CodeList*)mem;
         b->lower = 0;
-        b->end = (NIns*) (uintptr_t(mem) + bytes - sizeofMinBlock);
         b->next = 0;
+        b->end = (NIns*) (uintptr_t(mem) + bytesPerAlloc - sizeofMinBlock);
         b->isFree = true;
 
         // create a tiny terminator block, add to fragmented list, this way
@@ -370,7 +367,8 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         // add terminator to heapblocks list so we can track whole blocks
         terminator->next = heapblocks;
         heapblocks = terminator;
-        return b;
+
+        addBlock(availblocks, b); // add to free list
     }
 
     CodeList* CodeAlloc::getBlock(NIns* start, NIns* end) {
@@ -508,6 +506,15 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         #endif /* CROSS_CHECK_FREE_LIST */
     }
     #endif
+
+    // Loop through a list of blocks marking the chunks executable.  If we encounter
+    // multiple blocks in the same chunk, only the first block will cause the
+    // chunk to become executable, the other calls will no-op (isExec flag checked)
+    void CodeAlloc::markExec(CodeList* &blocks) {
+        for (CodeList *b = blocks; b != 0; b = b->next) {
+            markChunkExec(b->terminator);
+        }
+    }
 
     // Variant of markExec(CodeList*) that walks all heapblocks (i.e. chunks) marking
     // each one executable.   On systems where bytesPerAlloc is low (i.e. have lots

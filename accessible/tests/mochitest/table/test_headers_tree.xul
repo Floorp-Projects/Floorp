@@ -17,6 +17,8 @@
   <script type="application/javascript"
           src="../common.js" />
   <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
           src="../table.js" />
 
   <script type="application/javascript">
@@ -37,14 +39,12 @@
       gTreeBox = gTree.treeBoxObject;
       gView = new nsTableTreeView(3);
 
-      gTree.addEventListener("TreeViewChanged", continueTest, false);
+      waitForEvent(EVENT_REORDER, gTree, continueTest);
       gTreeBox.view = gView;
     }
 
     function continueTest()
     {
-      gTree.removeEventListener("TreeViewChanged", continueTest, false);
-
       var treeAcc = getAccessible(gTree, [nsIAccessibleTable]);
 
       var headerInfoMap = [
