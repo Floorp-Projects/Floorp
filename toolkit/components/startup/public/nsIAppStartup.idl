@@ -41,7 +41,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(079594bc-fcfd-4da7-b46f-4dcaf4bd929e)]
+[scriptable, uuid(6799abed-4721-4f51-9304-d1a2ea1df5d5)]
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -114,7 +114,7 @@ interface nsIAppStartup : nsISupports
     void quit(in PRUint32 aMode);
 };
 
-[scriptable, uuid(e233d663-d014-43b0-8649-7145ecf0a0b1)]
+[scriptable, uuid(079594bc-fcfd-4da7-b46f-4dcaf4bd929e)]
 interface nsIAppStartup2 : nsIAppStartup
 {
     /**
