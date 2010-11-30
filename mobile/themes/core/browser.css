@@ -446,6 +446,11 @@ toolbarbutton.choice-remotetabs {
   pointer-events: none;
 }
 
+/* bug 597296 - The language.properties file is LTR and never translated */
+#prefs-languages .menulist-label {
+  direction: ltr !important;
+}
+
 /* addons panel UI   ------------------------------------------------------- */
 @media (min-width: 500px) {
   #addons-repo {
