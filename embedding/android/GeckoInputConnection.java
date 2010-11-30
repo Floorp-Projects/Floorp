@@ -494,6 +494,9 @@ public class GeckoInputConnection
             return;
 
         mUpdateExtract.flags = 0;
+
+        // We update from (0, oldEnd) to (0, newEnd) because some Android IMEs
+        // assume that updates start at zero, according to jchen.
         mUpdateExtract.partialStartOffset = 0;
         mUpdateExtract.partialEndOffset = oldEnd;
 
@@ -501,7 +504,7 @@ public class GeckoInputConnection
         mUpdateExtract.selectionStart = newEnd;
         mUpdateExtract.selectionEnd = newEnd;
 
-        mUpdateExtract.text = text;
+        mUpdateExtract.text = text.substring(0, newEnd);
         mUpdateExtract.startOffset = 0;
 
         imm.updateExtractedText(GeckoApp.surfaceView,
@@ -539,14 +542,23 @@ public class GeckoInputConnection
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start, before));
 
-        if (count == 0)
+        if (count == 0) {
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
-        else
+        } else {
+            // Start and stop composition to force UI updates.
+            finishComposingText();
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_COMPOSITION_BEGIN, 0, 0));
+
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(0, count,
                                GeckoEvent.IME_RANGE_RAWINPUT, 0, 0, 0,
                                s.subSequence(start, start + count).toString()));
+
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_COMPOSITION_END, 0, 0));
+        }
     }
 
     public void afterTextChanged(Editable s)

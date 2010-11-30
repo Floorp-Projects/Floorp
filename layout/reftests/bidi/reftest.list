@@ -18,12 +18,12 @@ random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == mixedChartype-00.html mixedChartype-00-ref.html
 == mixedChartype-00-j.html mixedChartype-00-ref.html
-random-if(gtk2Widget) == mixedChartype-01.html mixedChartype-01-ref.html
-random-if(gtk2Widget) == mixedChartype-01-j.html mixedChartype-01-ref.html
-random-if(gtk2Widget) random-if(winWidget) == mixedChartype-02.html mixedChartype-02-ref.html
-random-if(gtk2Widget) random-if(winWidget) == mixedChartype-02-j.html mixedChartype-02-ref.html
-random-if(gtk2Widget) == mixedChartype-03.html mixedChartype-03-ref.html
-random-if(gtk2Widget) == mixedChartype-03-j.html mixedChartype-03-ref.html
+== mixedChartype-01.html mixedChartype-01-ref.html
+== mixedChartype-01-j.html mixedChartype-01-ref.html
+random-if(winWidget) == mixedChartype-02.html mixedChartype-02-ref.html
+random-if(winWidget) == mixedChartype-02-j.html mixedChartype-02-ref.html
+== mixedChartype-03.html mixedChartype-03-ref.html
+== mixedChartype-03-j.html mixedChartype-03-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
 == with-first-letter-2a.html with-first-letter-2-ref.html
@@ -38,7 +38,7 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 332655-1.html 332655-1-ref.html
 == 332655-2.html 332655-2-ref.html
 == 381279-1.html 381279-1-ref.html
-random-if(gtk2Widget) == 386339.html 386339-ref.html
+== 386339.html 386339-ref.html
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
 == 413542-2.html 413542-2-ref.html

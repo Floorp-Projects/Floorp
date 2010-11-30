@@ -134,21 +134,14 @@ let UI = {
         self.exit();
         self.blurAll();
       });
-        
-      // ___ Dev Menu
-      // This dev menu is not meant for shipping, nor is it of general
-      // interest, but we still need it for the time being. Change the
-      // false below to enable; just remember to change back before
-      // committing. Bug 586721 will track the ultimate removal.
-      if (false)
-        this._addDevMenu();
 
       // When you click on the background/empty part of TabView,
       // we create a new groupItem.
       iQ(gTabViewFrame.contentDocument).mousedown(function(e) {
         if (iQ(":focus").length > 0) {
           iQ(":focus").each(function(element) {
-            if (element.nodeName == "INPUT")
+            // don't fire blur event if the same input element is clicked.
+            if (e.target != element && element.nodeName == "INPUT")
               element.blur();
           });
         }
@@ -490,9 +483,6 @@ let UI = {
     gTabViewDeck.selectedIndex = 0;
     gBrowser.contentWindow.focus();
 
-    // set the close button on tab
-    gBrowser.tabContainer.adjustTabstrip();
-
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
     this._setActiveTitleColor(false);
@@ -811,10 +801,13 @@ let UI = {
   },
   
   // ----------
-  updateTabButton: function UI__updateTabButton(){
+  updateTabButton: function UI__updateTabButton() {
     let groupsNumber = gWindow.document.getElementById("tabviewGroupsNumber");
+    let exitButton = document.getElementById("exit-button");
     let numberOfGroups = GroupItems.groupItems.length;
+
     groupsNumber.setAttribute("groups", numberOfGroups);
+    exitButton.setAttribute("groups", numberOfGroups);
   },
 
   // ----------
@@ -851,7 +844,8 @@ let UI = {
       if (event.metaKey) 
         Keys.meta = true;
 
-      if (isSearchEnabled())
+      if ((iQ(":focus").length > 0 && iQ(":focus")[0].nodeName == "INPUT") || 
+          isSearchEnabled())
         return;
 
       function getClosestTabBy(norm) {
@@ -939,8 +933,29 @@ let UI = {
         }
         event.stopPropagation();
         event.preventDefault();
+      } else if (event.keyCode == KeyEvent.DOM_VK_SLASH) {
+        // the / event handler for find bar is defined in the findbar.xml
+        // binding.  To keep things in its own module, we handle our slash here.
+        self.enableSearch(event);
       }
     });
+  },
+
+  // ----------
+  // Function: enableSearch
+  // Enables the search feature.
+  // Parameters:
+  //   event - the event triggers this action.
+  enableSearch: function UI_enableSearch(event) {
+    if (!isSearchEnabled()) {
+      ensureSearchShown(null);
+      SearchEventHandler.switchToInMode();
+      
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    }
   },
 
   // ----------
@@ -987,7 +1002,7 @@ let UI = {
     };
     item.setBounds(new Rect(startPos.y, startPos.x, 0, 0));
 
-    var dragOutInfo = new Drag(item, e, true); // true = isResizing
+    var dragOutInfo = new Drag(item, e);
 
     function updateSize(e) {
       var box = new Rect();
@@ -1164,83 +1179,30 @@ let UI = {
   // Exits TabView UI.
   exit: function UI_exit() {
     let self = this;
-    
-    // If there's an active TabItem, zoom into it. If not (for instance when the
-    // selected tab is an app tab), just go there. 
-    let activeTabItem = this.getActiveTab();
-    if (!activeTabItem)
-      activeTabItem = gBrowser.selectedTab.tabItem;
-      
-    if (activeTabItem)
-      activeTabItem.zoomIn(); 
-    else
-      self.goToTab(gBrowser.selectedTab);
-  },
+    let zoomedIn = false;
 
-  // ----------
-  // Function: _addDevMenu
-  // Fills out the "dev menu" in the TabView UI.
-  _addDevMenu: function UI__addDevMenu() {
-    try {
-      var self = this;
+    if (isSearchEnabled()) {
+      let matcher = createSearchTabMacher();
+      let matches = matcher.matched();
 
-      var $select = iQ("<select>")
-        .css({
-          position: "absolute",
-          bottom: 5,
-          right: 5,
-          zIndex: 99999,
-          opacity: .2
-        })
-        .appendTo("#content")
-        .change(function () {
-          var index = iQ(this).val();
-          try {
-            commands[index].code.apply(commands[index].element);
-          } catch(e) {
-            Utils.log("dev menu error", e);
-          }
-          iQ(this).val(0);
-        });
-
-      var commands = [{
-        name: "dev menu",
-        code: function() { }
-      }, {
-        name: "show trenches",
-        code: function() {
-          Trenches.toggleShown();
-          iQ(this).html((Trenches.showDebug ? "hide" : "show") + " trenches");
-        }
-      }, {
-/*
-        name: "refresh",
-        code: function() {
-          location.href = "tabview.html";
-        }
-      }, {
-        name: "reset",
-        code: function() {
-          self.reset();
-        }
-      }, {
-*/
-        name: "save",
-        code: function() {
-          self._saveAll();
-        }
-      }];
-
-      var count = commands.length;
-      var a;
-      for (a = 0; a < count; a++) {
-        commands[a].element = (iQ("<option>")
-          .val(a)
-          .html(commands[a].name)
-          .appendTo($select))[0];
+      if (matches.length > 0) {
+        matches[0].zoomIn();
+        zoomedIn = true;
       }
-    } catch(e) {
-      Utils.log(e);
+      hideSearch(null);
+    }
+
+    if (!zoomedIn) {
+      // If there's an active TabItem, zoom into it. If not (for instance when the
+      // selected tab is an app tab), just go there.
+      let activeTabItem = this.getActiveTab();
+      if (!activeTabItem)
+        activeTabItem = gBrowser.selectedTab.tabItem;
+
+      if (activeTabItem)
+        activeTabItem.zoomIn();
+      else
+        self.goToTab(gBrowser.selectedTab);
     }
   },
 

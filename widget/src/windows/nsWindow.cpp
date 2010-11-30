@@ -4583,10 +4583,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_XP_THEMECHANGED:
+    case WM_THEMECHANGED:
     {
       // Update non-client margin offsets 
       UpdateNonClientMargins();
+      nsUXThemeData::InitTitlebarInfo();
       nsUXThemeData::UpdateNativeThemeInfo();
 
       DispatchStandardEvent(NS_THEMECHANGED);
@@ -5276,22 +5277,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
 #ifndef WINCE
     case WM_SYSCOMMAND:
+    {
+      WPARAM filteredWParam = (wParam &0xFFF0);
       // prevent Windows from trimming the working set. bug 76831
-      if (!sTrimOnMinimize && wParam == SC_MINIMIZE) {
+      if (!sTrimOnMinimize && filteredWParam == SC_MINIMIZE) {
         ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
         result = PR_TRUE;
       }
 
       // Handle the system menu manually when we're in full screen mode
       // so we can set the appropriate options.
-      if (wParam == SC_KEYMENU && lParam == VK_SPACE &&
+      if (filteredWParam == SC_KEYMENU && lParam == VK_SPACE &&
           mSizeMode == nsSizeMode_Fullscreen) {
         DisplaySystemMenu(mWnd, mSizeMode, mIsRTL,
                           MOZ_SYSCONTEXT_X_POS,
                           MOZ_SYSCONTEXT_Y_POS);
         result = PR_TRUE;
       }
-      break;
+    }
+    break;
 #endif
 
 

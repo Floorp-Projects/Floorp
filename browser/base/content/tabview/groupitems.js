@@ -90,14 +90,6 @@ function GroupItem(listOfEls, options) {
   // The <TabItem> for the groupItem's active tab.
   this._activeTab = null;
 
-  // Variables: xDensity, yDensity
-  // "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
-  // = "not squishable". For example, if there is extra space in the vertical direction,
-  // yDensity will be < 1. These are set by <GroupItem.arrange>, as it is dependent on the tab items
-  // inside the groupItem.
-  this.xDensity = 0;
-  this.yDensity = 0;
-
   if (Utils.isPoint(options.userSize))
     this.userSize = new Point(options.userSize);
 
@@ -148,7 +140,7 @@ function GroupItem(listOfEls, options) {
   // ___ Titlebar
   var html =
     "<div class='title-container'>" +
-      "<input class='name'/>" +
+      "<input class='name' />" +
       "<div class='title-shield' />" +
     "</div>";
 
@@ -565,8 +557,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   close: function GroupItem_close() {
     this.removeAll();
     GroupItems.unregister(this);
-    this._sendToSubscribers("close");
-    this.removeTrenches();
 
     if (this.hidden) {
       iQ(this.container).remove();
@@ -574,8 +564,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this.$undoContainer.remove();
         this.$undoContainer = null;
        }
+      this.removeTrenches();
       Items.unsquish();
+      this._sendToSubscribers("close");
     } else {
+      let self = this;
       iQ(this.container).animate({
         opacity: 0,
         "-moz-transform": "scale(.3)",
@@ -583,7 +576,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         duration: 170,
         complete: function() {
           iQ(this).remove();
+          self.removeTrenches();
           Items.unsquish();
+          self._sendToSubscribers("close");
         }
       });
     }
@@ -986,17 +981,31 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.remove(child, {dontArrange: true});
     });
   },
+  
+  // ----------
+  // Handles error event for loading app tab's fav icon.
+  _onAppTabError : function(event) {
+    iQ(".appTabIcon", this.$appTabTray).each(function(icon) {
+      let $icon = iQ(icon);
+      if ($icon.data("xulTab") == event.target) {
+        $icon.attr("src", Utils.defaultFaviconURL);
+        return true;
+      }
+    });
+  },
 
   // ----------
   // Adds the given xul:tab as an app tab in this group's apptab tray
   addAppTab: function GroupItem_addAppTab(xulTab) {
     let self = this;
 
+    xulTab.addEventListener("error", this._onAppTabError, false);
+
     // add the icon
-    let icon = xulTab.image || Utils.defaultFaviconURL;
+    let iconUrl = xulTab.image || Utils.defaultFaviconURL;
     let $appTab = iQ("<img>")
       .addClass("appTabIcon")
-      .attr("src", icon)
+      .attr("src", iconUrl)
       .data("xulTab", xulTab)
       .appendTo(this.$appTabTray)
       .click(function(event) {
@@ -1032,6 +1041,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.$appTabTray.css({width: 0});
       this.arrange();
     }
+
+    xulTab.removeEventListener("error", this._onAppTabError, false);
   },
 
   // ----------
@@ -1100,16 +1111,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           options = {};
 
         this._children.forEach(function(child) {
-            child.removeClass("stacked")
+          child.removeClass("stacked")
         });
 
         this.topChild = null;
 
-        if (!this._children.length) {
-          this.xDensity = 0;
-          this.yDensity = 0;
+        if (!this._children.length)
           return;
-        }
 
         var arrangeOptions = Utils.copy(options);
         Utils.extend(arrangeOptions, {
@@ -1120,13 +1128,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         // of the Rect's used.
 
         var rects = Items.arrange(this._children, bb, arrangeOptions);
-
-        // yDensity = (the distance of the bottom of the last tab to the top of the content area)
-        // / (the total available content height)
-        this.yDensity = (rects[rects.length - 1].bottom - bb.top) / (bb.height);
-
-        // xDensity = (the distance from the left of the content area to the right of the rightmost
-        // tab) / (the total available content width)
 
         // first, find the right of the rightmost tab! luckily, they're in order.
         var rightMostRight = 0;
@@ -1140,7 +1141,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
               break;
           }
         }
-        this.xDensity = (rightMostRight - bb.left) / (bb.width);
 
         this._isStacked = false;
       } else
@@ -1191,13 +1191,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       w = bb.width * scale;
       h = w * itemAspect;
       // let's say one, because, even though there's more space, we're enforcing that with scale.
-      this.xDensity = 1;
-      this.yDensity = h / (bb.height * scale);
     } else { // Short, wide groupItem
       h = bb.height * scale;
       w = h * (1 / itemAspect);
-      this.yDensity = 1;
-      this.xDensity = h / (bb.width * scale);
     }
 
     // x is the left margin that the stack will have, within the content area (bb)
@@ -1459,32 +1455,34 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Reorders the tabs in the tab bar based on the arrangment of the tabs
   // shown in the groupItem.
   reorderTabsBasedOnTabItemOrder: function GroupItem_reorderTabsBasedOnTabItemOrder() {
-    var tabBarTabs = Array.slice(gBrowser.tabs);
-    var currentIndex;
+    let targetIndices = null;
 
-    // ToDo: optimisation is needed to further reduce the tab move.
-    // Bug 586553
-    this._children.forEach(function(tabItem) {
-      tabBarTabs.some(function(tab, i) {
-        if (tabItem.tab == tab) {
-          if (!currentIndex)
-            currentIndex = i;
-          else if (tab.pinned)
-            currentIndex++;
-          else {
-            var removed;
-            if (currentIndex < i)
-              currentIndex = i;
-            else if (currentIndex > i) {
-              removed = tabBarTabs.splice(i, 1);
-              tabBarTabs.splice(currentIndex, 0, removed);
-              gBrowser.moveTabTo(tabItem.tab, currentIndex);
-            }
-          }
+    let self = this;
+    this._children.some(function(tabItem, index) {
+      // if no targetIndices, or it was reset, recompute
+      if (!targetIndices) {
+        let currentIndices = [tabItem.tab._tPos for each (tabItem in self._children)];
+        targetIndices = currentIndices.concat().sort();
+        // if no resorting is required, we're done!
+        if (currentIndices == targetIndices)
           return true;
-        }
-        return false;
-      });
+      }
+    
+      // Compute a target range for this tab's index
+      let originalIndex = tabItem.tab._tPos;
+      let targetRange = new Range(index ? targetIndices[index - 1] : -1,
+                                  targetIndices[index + 1] || Infinity);
+
+      // If the originalIndex of this tab is not within its target,
+      // let's move it to the targetIndex.
+      if (!targetRange.contains(originalIndex)) {
+        let targetIndex = targetIndices[index];
+        gBrowser.moveTabTo(tabItem.tab, targetIndex);
+        // force recomputing targetIndices
+        targetIndices = null;
+      }
+      
+      return false;
     });
   },
 
@@ -1798,41 +1796,6 @@ let GroupItems = {
     });
 
     return result;
-  },
-
-  // ----------
-  // Function: arrange
-  // Arranges all of the groupItems into a grid.
-  arrange: function GroupItems_arrange() {
-    var bounds = Items.getPageBounds();
-    bounds.bottom -= 20; // for the dev menu
-
-    var count = this.groupItems.length - 1;
-    var columns = Math.ceil(Math.sqrt(count));
-    var rows = ((columns * columns) - count >= columns ? columns - 1 : columns);
-    var padding = 12;
-    var startX = bounds.left + padding;
-    var startY = bounds.top + padding;
-    var totalWidth = bounds.width - padding;
-    var totalHeight = bounds.height - padding;
-    var box = new Rect(startX, startY,
-        (totalWidth / columns) - padding,
-        (totalHeight / rows) - padding);
-
-    var i = 0;
-    this.groupItems.forEach(function(groupItem) {
-      if (groupItem.locked.bounds)
-        return;
-
-      groupItem.setBounds(box, true);
-
-      box.left += box.width + padding;
-      i++;
-      if (i % columns == 0) {
-        box.left = startX;
-        box.top += box.height + padding;
-      }
-    });
   },
 
   // ----------
