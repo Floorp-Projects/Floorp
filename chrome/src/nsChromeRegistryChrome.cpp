@@ -332,11 +332,10 @@ nsresult
 nsChromeRegistryChrome::SelectLocaleFromPref(nsIPrefBranch* prefs)
 {
   nsresult rv;
-  PRBool matchOSLocale = PR_FALSE, userLocaleOverride = PR_FALSE;
-  prefs->PrefHasUserValue(SELECTED_LOCALE_PREF, &userLocaleOverride);
+  PRBool matchOSLocale = PR_FALSE;
   rv = prefs->GetBoolPref(MATCH_OS_LOCALE_PREF, &matchOSLocale);
 
-  if (NS_SUCCEEDED(rv) && matchOSLocale && !userLocaleOverride) {
+  if (NS_SUCCEEDED(rv) && matchOSLocale) {
     // compute lang and region code only when needed!
     nsCAutoString uiLocale;
     rv = getUILangCountry(uiLocale);
