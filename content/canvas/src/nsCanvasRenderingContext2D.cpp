@@ -2799,9 +2799,11 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     gfxContextPathAutoSaveRestore pathSR(mThebes, PR_FALSE);
 
-    // back up path if stroking
-    if (aOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_STROKE)
+    // back up and clear path if stroking
+    if (aOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_STROKE) {
         pathSR.Save();
+        mThebes->NewPath();
+    }
     // doUseIntermediateSurface is mutually exclusive to op == STROKE
     else {
         if (doUseIntermediateSurface) {
