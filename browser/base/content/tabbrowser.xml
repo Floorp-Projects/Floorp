@@ -1446,7 +1446,7 @@
                 aTab.pinned ||
                 this._removingTabs.length > 3 /* don't want lots of concurrent animations */ ||
                 aTab.getAttribute("fadein") != "true" /* fade-in transition hasn't been triggered yet */ ||
-                window.getComputedStyle(aTab).maxWidth == "1px" /* fade-in transition hasn't moved yet */ ||
+                window.getComputedStyle(aTab).maxWidth == "0.1px" /* fade-in transition hasn't moved yet */ ||
                 !Services.prefs.getBoolPref("browser.tabs.animate")) {
               this._endRemoveTab(aTab);
               return;
@@ -1894,6 +1894,7 @@
         <![CDATA[
           if (aTab.hidden) {
             aTab.removeAttribute("hidden");
+            this.tabContainer.adjustTabstrip();
             let event = document.createEvent("Events");
             event.initEvent("TabShow", true, false);
             aTab.dispatchEvent(event);
@@ -1909,6 +1910,7 @@
           if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
               this._removingTabs.indexOf(aTab) == -1) {
             aTab.setAttribute("hidden", "true");
+            this.tabContainer.adjustTabstrip();
             let event = document.createEvent("Events");
             event.initEvent("TabHide", true, false);
             aTab.dispatchEvent(event);
@@ -3386,7 +3388,17 @@
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox class="tab-content" align="center">
+        <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+                  class="tab-background">
+          <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+                    class="tab-background-start"/>
+          <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+                    class="tab-background-middle"/>
+          <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+                    class="tab-background-end"/>
+        </xul:hbox>
+        <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+                  class="tab-content" align="center">
           <xul:image xbl:inherits="fadein,pinned,busy,progress,selected"
                      class="tab-throbber"
                      role="presentation"/>

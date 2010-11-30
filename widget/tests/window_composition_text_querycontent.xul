@@ -147,6 +147,435 @@ function checkRectContainsRect(aRect, aContainer, aMessage)
   return ret;
 }
 
+function runUndoRedoTest()
+{
+  textarea.value = "";
+  textarea.focus();
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input raw characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u306D",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u306D\u3053",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  // convert
+  synthesizeText(
+    { "composition":
+      { "string": "\u732B",
+        "clauses":
+        [
+          { "length": 1,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  // commit
+  synthesizeText(
+    { "composition":
+      { "string": "\u732B",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  // end composition
+  synthesizeComposition(false);
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input raw characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u307E",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  // cancel the composition
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  // end composition
+  synthesizeComposition(false);
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input raw characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u3080",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3080\u3059",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3080\u3059\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  // convert
+  synthesizeText(
+    { "composition":
+      { "string": "\u5A18",
+        "clauses":
+        [
+          { "length": 1,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  // commit
+  synthesizeText(
+    { "composition":
+      { "string": "\u5A18",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  // end composition
+  synthesizeComposition(false);
+
+  synthesizeKey(" ", {});
+  synthesizeKey("m", {});
+  synthesizeKey("e", {});
+  synthesizeKey("a", {});
+  synthesizeKey("n", {});
+  synthesizeKey("t", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("s", {});
+  synthesizeKey(" ", {});
+  synthesizeKey("\"", {});
+  synthesizeKey("c", {});
+  synthesizeKey("a", {});
+  synthesizeKey("t", {});
+  synthesizeKey("-", {});
+  synthesizeKey("g", {});
+  synthesizeKey("i", {});
+  synthesizeKey("r", {});
+  synthesizeKey("l", {});
+  synthesizeKey("\"", {});
+  synthesizeKey(".", {});
+  synthesizeKey(" ", {});
+  synthesizeKey("VK_SHIFT", { type: "keydown" });
+  synthesizeKey("S", { shiftKey: true });
+  synthesizeKey("VK_SHIFT", { type: "keyup" });
+  synthesizeKey("h", {});
+  synthesizeKey("e", {});
+  synthesizeKey(" ", {});
+  synthesizeKey("i", {});
+  synthesizeKey("s", {});
+  synthesizeKey(" ", {});
+  synthesizeKey("a", {});
+  synthesizeKey(" ", {});
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input raw characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u3088",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3088\u3046",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3088\u3046\u304b",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3088\u3046\u304b\u3044",
+        "clauses":
+        [
+          { "length": 4, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  // convert
+  synthesizeText(
+    { "composition":
+      { "string": "\u5996\u602a",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  // commit
+  synthesizeText(
+    { "composition":
+      { "string": "\u5996\u602a",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  // end composition
+  synthesizeComposition(false);
+
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+
+  var i = 0;
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\".",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(20, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\". She is a \u5996\u602A",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(32, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\". She is a ",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(30, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("\u732B\u5A18 mean",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(7, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("\u732B\u5A18 meant",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(8, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("\u732B\u5A18",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(2, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("\u732B",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(1, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  // XXX this is unexpected behavior, see bug 258291
+  if (!checkContent("\u732B",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(1, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(0, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true});
+
+  if (!checkContent("",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(0, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(1, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  // XXX this is unexpected behavior, see bug 258291
+  if (!checkContent("\u732B",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(1, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(2, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18 meant",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(8, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18 mean",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(7, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\". She is a ",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(30, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\". She is a \u5996\u602A",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(32, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\".",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(20, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+
+  if (!checkContent("\u732B\u5A18 means \"cat-girl\".",
+                    "runUndoRedoTest", "#" + ++i) ||
+      !checkSelection(20, "", "runUndoRedoTest", "#" + i)) {
+    return;
+  }
+}
+
 function runCompositionTest()
 {
   textarea.value = "";
@@ -994,6 +1423,7 @@ function runPanelTest()
 
 function runTest()
 {
+  runUndoRedoTest();
   runCompositionTest();
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();

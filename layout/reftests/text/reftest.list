@@ -1,5 +1,6 @@
 == fallback-01.xhtml fallback-01-ref.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
+fails-if(gtk2Widget) HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html # reviewed patch in bug 546315
 != font-size-adjust-01.html font-size-adjust-01-ref.html
 # The following test passes consistently only on Mac OS X;
 # both Windows and Linux give results that vary depending on the font size/zoom factor used,
@@ -47,8 +48,9 @@ random-if(winWidget) HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-m
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
-random == wordwrap-02.html wordwrap-02-ref.html # bad fonts on test boxes
-random-if(gtk2Widget) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
+# bad fonts on test boxes: Mac is not monospace, WINNT 5.2 combines some characters into a single cell.
+fails-if(!(gtk2Widget||d2d)) == wordwrap-02.html wordwrap-02-ref.html
+HTTP(..) == wordwrap-03.html wordwrap-03-ref.html
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html
@@ -62,12 +64,12 @@ random-if(gtk2Widget) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Bad fo
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
 random-if(cocoaWidget) HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml
 HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
-random-if(gtk2Widget) != zwnj-01.html zwnj-01-notref.html # Bad fonts on the tinderbox -- works locally
+!= zwnj-01.html zwnj-01-notref.html
 == cgj-01.html cgj-01-ref.html
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
-random HTTP(..) == 475092-sub.html 475092-ref.html # bug 482596
+HTTP(..) == 475092-sub.html 475092-ref.html
 random HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954

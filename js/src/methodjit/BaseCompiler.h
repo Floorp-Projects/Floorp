@@ -192,6 +192,50 @@ class Repatcher : public JSC::RepatchBuffer
     { }
 };
 
+/*
+ * On ARM, we periodically flush a constant pool into the instruction stream
+ * where constants are found using PC-relative addressing. This is necessary
+ * because the fixed-width instruction set doesn't support wide immediates.
+ *
+ * ICs perform repatching on the inline (fast) path by knowing small and
+ * generally fixed code location offset values where the patchable instructions
+ * live. Dumping a huge constant pool into the middle of an IC's inline path
+ * makes the distance between emitted instructions potentially variable and/or
+ * large, which makes the IC offsets invalid. We must reserve contiguous space
+ * up front to prevent this from happening.
+ */
+#ifdef JS_CPU_ARM
+class AutoReserveICSpace {
+    typedef Assembler::Label Label;
+    static const size_t reservedSpace = 64;
+
+    Assembler           &masm;
+#ifdef DEBUG
+    Label               startLabel;
+#endif
+
+  public:
+    AutoReserveICSpace(Assembler &masm) : masm(masm) {
+        masm.ensureSpace(reservedSpace);
+#ifdef DEBUG
+        startLabel = masm.label();
+#endif
+    }
+
+    ~AutoReserveICSpace() {
+#ifdef DEBUG
+        Label endLabel = masm.label();
+        int spaceUsed = masm.differenceBetween(startLabel, endLabel);
+        JS_ASSERT(spaceUsed >= 0);
+        JS_ASSERT(size_t(spaceUsed) <= reservedSpace);
+#endif
+    }
+};
+# define RESERVE_IC_SPACE(__masm) AutoReserveICSpace arics(__masm)
+#else
+# define RESERVE_IC_SPACE(__masm) /* Nothing. */
+#endif
+
 } /* namespace js */
 } /* namespace mjit */
 

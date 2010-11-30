@@ -123,7 +123,13 @@
                0 1px 1.5px rgba(0,0,0,.5);
   font-weight: bold;
   padding: 0 1.5em .05em;
-  margin: 0;
+  margin: 0 0 2px;
+}
+
+@media all and (-moz-windows-classic) {
+  #appmenu-button {
+    margin-bottom: 1px;
+  }
 }
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
@@ -205,16 +211,16 @@
     border: 1px solid rgba(0,0,0,.5);
   }
   #appmenuPrimaryPane {
-    -moz-margin-end: -1px;
     background-color: rgba(255,255,255,0.5);
-    -moz-border-end: 1px solid #c4c4c5;
-    -moz-padding-start: 2px;
+    padding: 2px;
   }
   #appmenuSecondaryPane {
     background-color: #f1f5fb;
     box-shadow: 1px 0 2px rgb(204,214,234) inset;
-    border: 0;
-    padding-top: 5px;
+    -moz-padding-start: 3px;
+    -moz-padding-end: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
     font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
   }
   #appmenuSecondaryPane:-moz-locale-dir(rtl) {
@@ -302,21 +308,12 @@
 
 /* ::::: titlebar ::::: */
 
-#titlebar {
+#main-window[sizemode="normal"] > #titlebar {
   -moz-appearance: -moz-window-titlebar;
-  /* we only need to the middle section, hide the edges of the
-  theme background beyond the window frame. */
-  margin-left: -15px;
-  margin-right: -15px;
 }
 
 #main-window[sizemode="maximized"] > #titlebar {
   -moz-appearance: -moz-window-titlebar-maximized;
-}
-
-#titlebar-content {
-  margin-left: 15px;
-  margin-right: 15px;
 }
 
 @media all and (-moz-windows-classic) {
@@ -352,15 +349,8 @@
 }
 
 @media not all and (-moz-windows-classic) {
-  #titlebar-min,
-  #titlebar-max {
+  #titlebar-min {
     -moz-margin-end: 2px;
-  }
-}
-
-@media all and (-moz-windows-classic) {
-  #titlebar-close {
-    -moz-margin-start: 2px;
   }
 }
 
@@ -607,13 +597,9 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
-#TabsToolbar > .toolbarbutton-1,
-#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
+#TabsToolbar .toolbarbutton-1,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: toolbarbutton;
 %ifdef WINSTRIPE_AERO
   margin: -2px 0 -1px;
@@ -640,8 +626,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 %endif
 
-#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none;
 }
 
@@ -1550,9 +1535,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 @media all and (-moz-touch-enabled) {
   .tabbrowser-arrowscrollbox > .scrollbutton-up,
   .tabbrowser-arrowscrollbox > .scrollbutton-down,
-  #TabsToolbar > toolbarbutton,
-  #TabsToolbar > toolbarpaletteitem > toolbarbutton,
-  #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
+  #TabsToolbar .toolbarbutton-1 {
     min-width: 8.1mozmm;
   }
 

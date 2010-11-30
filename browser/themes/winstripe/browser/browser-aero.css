@@ -72,6 +72,13 @@
   }
 }
 
+@media not all and (-moz-windows-compositor) {
+  /* aero basic, which is a default windows theme */
+  #appmenu-button:-moz-system-metric(windows-theme-aero) {
+    margin-bottom: 1px;
+  }
+}
+
 @media all and (-moz-windows-compositor) {
   /* these should be hidden w/glass enabled. windows draws it's own buttons. */
   .titlebar-button {
@@ -123,7 +130,7 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen="true"]):not(:-moz-lwtheme) {
     border-left: 1px solid @glassToolbarBorderColor@;
     border-right: 1px solid @glassToolbarBorderColor@;
   }
@@ -133,15 +140,20 @@
     background-clip: padding-box;
   }
 
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar:not(:-moz-lwtheme) {
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > #nav-bar:not([inFullscreen="true"]):not(:-moz-lwtheme),
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not([inFullscreen="true"]):not(:-moz-lwtheme),
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
+  #main-window[sizemode="normal"] #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar:not(:-moz-lwtheme) {
     border-top-left-radius: 3.5px;
     border-top-right-radius: 3.5px;
   }
 
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
+  #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar {
+    padding-top: 0 !important;
+    margin-top: 3px;
+  }
+
+  #main-window[sizemode="normal"] #TabsToolbar[tabsontop="true"]:not([inFullscreen="true"]):not(:-moz-lwtheme) {
     padding-left: 4px;
     padding-right: 4px;
   }
@@ -187,10 +199,13 @@
     background-color: white;
   }
 
+  .tabbrowser-tab:not(:-moz-lwtheme) {
+    text-shadow: none;
+  }
+
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
     background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
-    text-shadow: none;
     color: black;
   }
 

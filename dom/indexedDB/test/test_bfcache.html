@@ -1,0 +1,65 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript;version=1.7">
+    var gOrigMaxTotalViewers = undefined;
+    function setCachePref(enabled) {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch);
+      if (enabled) {
+        is(typeof gOrigMaxTotalViewers, "undefined", "don't double-enable bfcache");
+        prefBranch.setBoolPref("browser.sessionhistory.cache_subframes", true);
+        gOrigMaxTotalViewers = prefBranch.getIntPref("browser.sessionhistory.max_total_viewers");
+        prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", 10);
+      }
+      else {
+        is(typeof gOrigMaxTotalViewers, "number", "don't double-disable bfcache");
+        prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", gOrigMaxTotalViewers);
+        gOrigMaxTotalViewers = undefined;
+        try {
+          prefBranch.clearUserPref("browser.sessionhistory.cache_subframes");
+        } catch (e) { /* Pref didn't exist, meh */ }
+      }
+    }
+
+    function testSteps()
+    {
+      var iframe = $("iframe");
+      setCachePref(true);
+      window.onmessage = grabEventAndContinueHandler;
+
+      iframe.src = "bfcache_iframe1.html";
+      var event = yield;
+      is(event.data, "go", "set up database successfully");
+
+      iframe.src = "bfcache_iframe2.html";
+      res = JSON.parse((yield).data);
+      is(res.version, "1.0", "version was set correctly");
+      is(res.storeCount, 1, "correct set of stores");
+      ok(!("blockedFired" in res), "blocked shouldn't fire");
+      is(res.value, JSON.stringify({ hello: "world" }),
+         "correct value found in store");
+
+      setCachePref(false);
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();">
+  <iframe id="iframe"></iframe>
+</body>
+
+</html>

@@ -215,14 +215,16 @@ CommonDialog.prototype = {
             this.ui.focusTarget.addEventListener("focus", function(e) { self.onFocus(e); }, false);
         }
 
-        // play sound
+        // Play a sound (unless we're tab-modal -- don't want those to feel like OS prompts).
         try {
-            if (this.soundID) {
+            if (xulDialog && this.soundID) {
                 Cc["@mozilla.org/sound;1"].
                 createInstance(Ci.nsISound).
-                playEventSound(soundID);
+                playEventSound(this.soundID);
             }
-        } catch (e) { }
+        } catch (e) {
+            Cu.reportError("Couldn't play common dialog event sound: " + e);
+        }
 
         let topic = "common-dialog-loaded";
         if (!xulDialog)

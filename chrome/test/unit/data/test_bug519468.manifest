@@ -1,0 +1,2 @@
+locale testmatchos en-US jar:en-US.jar!/locale/en-US/global/
+locale testmatchos fr-FR jar:en-US.jar!/locale/en-US/global/
