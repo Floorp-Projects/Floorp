@@ -1132,8 +1132,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                     : NS_floor(hb2appUnits * x_offset + 0.5);
                 hb_position_t y_offset = posInfo[glyphStart].y_offset;
                 details->mYOffset = yPos -
-                    roundY ? dev2appUnits * FixedToIntRound(y_offset)
-                    : NS_floor(hb2appUnits * y_offset + 0.5);
+                    (roundY ? dev2appUnits * FixedToIntRound(y_offset)
+                     : NS_floor(hb2appUnits * y_offset + 0.5));
 
                 details->mAdvance = advance;
                 hb_position_t y_advance = posInfo[glyphStart].y_advance;
