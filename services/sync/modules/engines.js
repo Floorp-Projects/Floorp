@@ -21,6 +21,7 @@
  *  Dan Mills <thunder@mozilla.com>
  *  Myk Melez <myk@mozilla.org>
  *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +46,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://services-sync/base_records/collection.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
@@ -81,8 +81,11 @@ EngineManagerSvc.prototype = {
     }
 
     let engine = this._engines[name];
-    if (!engine)
+    if (!engine) {
       this._log.debug("Could not get engine: " + name);
+      if (Object.keys)
+        this._log.debug("Engines are: " + JSON.stringify(Object.keys(this._engines)));
+    }
     return engine;
   },
   getAll: function EngMgr_getAll() {
@@ -294,7 +297,7 @@ SyncEngine.prototype = {
 
   get engineURL() this.storageURL + this.name,
 
-  get cryptoMetaURL() this.storageURL + "crypto/" + this.name,
+  get cryptoKeysURL() this.storageURL + "crypto/keys",
 
   get metaURL() this.storageURL + "meta/global",
 
@@ -348,49 +351,28 @@ SyncEngine.prototype = {
 
   // Create a new record using the store and add in crypto fields
   _createRecord: function SyncEngine__createRecord(id) {
-    let record = this._store.createRecord(id, this.engineURL + "/" + id);
+    let record = this._store.createRecord(id, this.name);
     record.id = id;
-    record.encryption = this.cryptoMetaURL;
+    record.collection = this.name;
     return record;
   },
 
   // Any setup that needs to happen at the beginning of each sync.
-  // Makes sure crypto records and keys are all set-up
   _syncStartup: function SyncEngine__syncStartup() {
-    this._log.trace("Ensuring server crypto records are there");
-
-    // Try getting/unwrapping the crypto record
-    let meta = CryptoMetas.get(this.cryptoMetaURL);
-    if (meta) {
-      try {
-        let pubkey = PubKeys.getDefaultKey();
-        let privkey = PrivKeys.get(pubkey.privateKeyUri);
-        meta.getKey(privkey, ID.get("WeaveCryptoID"));
-      }
-      catch(ex) {
-        // Indicate that we don't have a cryptometa to delete and reupload
-        this._log.debug("Purging bad data after failed unwrap crypto: " + ex);
-        meta = null;
-      }
-    }
-    // Don't proceed if we failed to get the crypto meta for reasons not 404
-    else if (CryptoMetas.response.status != 404) {
-      let resp = CryptoMetas.response;
-      resp.failureCode = ENGINE_METARECORD_DOWNLOAD_FAIL;
-      throw resp;
-    }
 
     // Determine if we need to wipe on outdated versions
     let metaGlobal = Records.get(this.metaURL);
     let engines = metaGlobal.payload.engines || {};
     let engineData = engines[this.name] || {};
 
+    let needsWipe = false;
+
     // Assume missing versions are 0 and wipe the server
     if ((engineData.version || 0) < this.version) {
       this._log.debug("Old engine data: " + [engineData.version, this.version]);
 
       // Prepare to clear the server and upload everything
-      meta = null;
+      needsWipe = true;
       this.syncID = "";
 
       // Set the newer version and newly generated syncID
@@ -415,25 +397,10 @@ SyncEngine.prototype = {
       this._resetClient();
     };
 
-    // Delete any existing data and reupload on bad version or missing meta
-    if (meta == null) {
+    // Delete any existing data and reupload on bad version or missing meta.
+    // No crypto component here...? We could regenerate per-collection keys...
+    if (needsWipe) {
       this.wipeServer(true);
-
-      // Generate a new crypto record
-      let symkey = Svc.Crypto.generateRandomKey();
-      let pubkey = PubKeys.getDefaultKey();
-      meta = new CryptoMeta(this.cryptoMetaURL);
-      meta.addUnwrappedKey(pubkey, symkey);
-      let res = new Resource(meta.uri);
-      let resp = res.put(meta);
-      if (!resp.success) {
-        this._log.debug("Metarecord upload fail:" + resp);
-        resp.failureCode = ENGINE_METARECORD_UPLOAD_FAIL;
-        throw resp;
-      }
-
-      // Cache the cryto meta that we just put on the server
-      CryptoMetas.set(meta.uri, meta);
     }
 
     // Save objects that need to be uploaded in this._modified. We also save
@@ -487,17 +454,14 @@ SyncEngine.prototype = {
       if (this.lastModified == null || item.modified > this.lastModified)
         this.lastModified = item.modified;
 
+      // Track the collection for the WBO.
+      item.collection = this.name;
+      
       // Remember which records were processed
       handled.push(item.id);
 
       try {
-        // Short-circuit the key URI to the engine's one in case the WBO's
-        // might be wrong due to relative URI confusions (bug 600995).
-        try {
-          item.decrypt(ID.get("WeaveCryptoID"), this.cryptoMetaURL);
-        } catch (ex) {
-          item.decrypt(ID.get("WeaveCryptoID"), item.encryption);
-        }
+        item.decrypt();
         if (this._reconcile(item)) {
           count.applied++;
           this._tracker.ignoreAll = true;
@@ -706,7 +670,7 @@ SyncEngine.prototype = {
           if (this._log.level <= Log4Moz.Level.Trace)
             this._log.trace("Outgoing: " + out);
 
-          out.encrypt(ID.get("WeaveCryptoID"));
+          out.encrypt();
           up.pushData(out);
         }
         catch(ex) {
@@ -789,9 +753,8 @@ SyncEngine.prototype = {
     test.limit = 1;
     test.sort = "newest";
     test.full = true;
-    let self = this;
     test.recordHandler = function(record) {
-      record.decrypt(ID.get("WeaveCryptoID"), self.cryptoMetaURL);
+      record.decrypt();
       canDecrypt = true;
     };
 
@@ -811,10 +774,8 @@ SyncEngine.prototype = {
     this.resetLastSync();
   },
 
-  wipeServer: function wipeServer(ignoreCrypto) {
+  wipeServer: function wipeServer() {
     new Resource(this.engineURL).delete();
-    if (!ignoreCrypto)
-      new Resource(this.cryptoMetaURL).delete();
     this._resetClient();
   }
 };

@@ -44,8 +44,8 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 
-function FormRec(uri) {
-  CryptoWrapper.call(this, uri);
+function FormRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
 }
 FormRec.prototype = {
   __proto__: CryptoWrapper.prototype,

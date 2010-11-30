@@ -383,9 +383,9 @@ HistoryStore.prototype = {
     return url ? this._hsvc.isVisited(url) : false;
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let foo = this._findURLByGUID(guid);
-    let record = new HistoryRec(uri);
+  createRecord: function createRecord(id, collection) {
+    let foo = this._findURLByGUID(id);
+    let record = new HistoryRec(collection, id);
     if (foo) {
       record.histUri = foo.url;
       record.title = foo.title;

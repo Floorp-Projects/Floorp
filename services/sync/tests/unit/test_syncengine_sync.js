@@ -1,5 +1,4 @@
 Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
@@ -15,8 +14,8 @@ Cu.import("resource://services-sync/util.js");
  * Complete with record, store, and tracker implementations.
  */
 
-function SteamRecord(uri) {
-  CryptoWrapper.call(this, uri);
+function SteamRecord(collection, id) {
+  CryptoWrapper.call(this, collection, id);
 }
 SteamRecord.prototype = {
   __proto__: CryptoWrapper.prototype
@@ -46,8 +45,8 @@ SteamStore.prototype = {
     return (id in this.items);
   },
 
-  createRecord: function(id, uri) {
-    var record = new SteamRecord(uri);
+  createRecord: function(id, collection) {
+    var record = new SteamRecord(collection, id);
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
   },
@@ -111,10 +110,6 @@ var syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
 function sync_httpd_setup(handlers) {
   handlers["/1.0/foo/storage/meta/global"]
       = (new ServerWBO('global', {})).handler();
-  handlers["/1.0/foo/storage/keys/pubkey"]
-      = (new ServerWBO('pubkey')).handler();
-  handlers["/1.0/foo/storage/keys/privkey"]
-      = (new ServerWBO('privkey')).handler();
   return httpd_setup(handlers);
 }
 
@@ -146,11 +141,10 @@ function encryptPayload(cleartext) {
  */
 
 function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
-  _("SyncEngine._syncStartup resets sync and wipes server data if there's no or an oudated global record");
+  _("SyncEngine._syncStartup resets sync and wipes server data if there's no or an outdated global record");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
 
   // Some server side data that's going to be wiped
   let collection = new ServerCollection();
@@ -162,18 +156,15 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
                                   denomination: "Flying Scotsman"}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
 
   let engine = makeSteamEngine();
   engine._store.items = {rekolok: "Rekonstruktionslokomotive"};
   try {
 
     // Confirm initial environment
-    do_check_eq(crypto_steam.payload, undefined);
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
     let metaGlobal = Records.get(engine.metaURL);
     do_check_eq(metaGlobal.payload.engines, undefined);
@@ -182,6 +173,9 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
 
     engine.lastSync = Date.now() / 1000;
     engine.lastSyncLocal = Date.now();
+    
+    // Trying to prompt a wipe -- we no longer track CryptoMeta per engine,
+    // so it has nothing to check.
     engine._syncStartup();
 
     // The meta/global WBO has been filled with data about the engine
@@ -193,105 +187,6 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     do_check_eq(engine.lastSync, 0);
     do_check_eq(collection.wbos.flying.payload, undefined);
     do_check_eq(collection.wbos.scotsman.payload, undefined);
-
-    // Bulk key was uploaded
-    do_check_true(!!crypto_steam.payload);
-    do_check_true(!!crypto_steam.data.keyring);
-
-  } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
-    CryptoMetas.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-  }
-}
-
-function test_syncStartup_metaGet404() {
-  _("SyncEngine._syncStartup resets sync and wipes server data if the symmetric key is missing 404");
-
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
-  Svc.Prefs.set("username", "foo");
-
-  // A symmetric key with an incorrect HMAC
-  let crypto_steam = new ServerWBO("steam");
-
-  // A proper global record with matching version and syncID
-  let engine = makeSteamEngine();
-  let global = new ServerWBO("global",
-                             {engines: {steam: {version: engine.version,
-                                                syncID: engine.syncID}}});
-
-  // Some server side data that's going to be wiped
-  let collection = new ServerCollection();
-  collection.wbos.flying = new ServerWBO(
-      "flying", encryptPayload({id: "flying",
-                                denomination: "LNER Class A3 4472"}));
-  collection.wbos.scotsman = new ServerWBO(
-      "scotsman", encryptPayload({id: "scotsman",
-                                  denomination: "Flying Scotsman"}));
-
-  let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
-      "/1.0/foo/storage/steam": collection.handler()
-  });
-  do_test_pending();
-  createAndUploadKeypair();
-
-  try {
-
-    _("Confirm initial environment");
-    do_check_false(!!crypto_steam.payload);
-    do_check_true(!!collection.wbos.flying.payload);
-    do_check_true(!!collection.wbos.scotsman.payload);
-
-    engine.lastSync = Date.now() / 1000;
-    engine.lastSyncLocal = Date.now();
-    engine._syncStartup();
-
-    _("Sync was reset and server data was wiped");
-    do_check_eq(engine.lastSync, 0);
-    do_check_eq(collection.wbos.flying.payload, undefined);
-    do_check_eq(collection.wbos.scotsman.payload, undefined);
-
-    _("New bulk key was uploaded");
-    let key = crypto_steam.data.keyring["../keys/pubkey"];
-    do_check_eq(key.wrapped, "fake-symmetric-key-0");
-    do_check_eq(key.hmac, "fake-symmetric-key-0                                            ");
-
-  } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
-    CryptoMetas.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-  }
-}
-
-function test_syncStartup_failedMetaGet() {
-  _("SyncEngine._syncStartup non-404 failures for getting cryptometa should stop sync");
-
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
-  Svc.Prefs.set("username", "foo");
-  let server = httpd_setup({
-    "/1.0/foo/storage/crypto/steam": function(request, response) {
-      response.setStatusLine(request.httpVersion, 405, "Method Not Allowed");
-      response.bodyOutputStream.write("Fail!", 5);
-    }
-  });
-  do_test_pending();
-
-  let engine = makeSteamEngine();
-  try {
-
-    _("Getting the cryptometa will fail and should set the appropriate failure");
-    let error;
-    try {
-      engine._syncStartup();
-    } catch (ex) {
-      error = ex;
-    }
-    do_check_eq(error.failureCode, ENGINE_METARECORD_DOWNLOAD_FAIL);
 
   } finally {
     server.stop(do_test_finished);
@@ -339,10 +234,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
-  let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler()
-  });
+  let server = sync_httpd_setup({});
   do_test_pending();
 
   // global record with a different syncID than our engine has
@@ -352,13 +244,10 @@ function test_syncStartup_syncIDMismatchResetsClient() {
                                                 syncID: 'foobar'}}});
   server.registerPathHandler("/1.0/foo/storage/meta/global", global.handler());
 
-  createAndUploadKeypair();
-
   try {
 
     // Confirm initial environment
     do_check_eq(engine.syncID, 'fake-guid-0');
-    do_check_eq(crypto_steam.payload, undefined);
     do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
 
     engine.lastSync = Date.now() / 1000;
@@ -375,79 +264,6 @@ function test_syncStartup_syncIDMismatchResetsClient() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
-    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
-  }
-}
-
-
-function test_syncStartup_badKeyWipesServerData() {
-  _("SyncEngine._syncStartup resets sync and wipes server data if there's something wrong with the symmetric key");
-
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
-  Svc.Prefs.set("username", "foo");
-
-  // A symmetric key with an incorrect HMAC
-  let crypto_steam = new ServerWBO('steam');
-  crypto_steam.payload = JSON.stringify({
-    keyring: {
-      "http://localhost:8080/1.0/foo/storage/keys/pubkey": {
-        wrapped: Svc.Crypto.generateRandomKey(),
-        hmac: "this-hmac-is-incorrect"
-      }
-    }
-  });
-
-  // A proper global record with matching version and syncID
-  let engine = makeSteamEngine();
-  let global = new ServerWBO('global',
-                             {engines: {steam: {version: engine.version,
-                                                syncID: engine.syncID}}});
-
-  // Some server side data that's going to be wiped
-  let collection = new ServerCollection();
-  collection.wbos.flying = new ServerWBO(
-      'flying', encryptPayload({id: 'flying',
-                                denomination: "LNER Class A3 4472"}));
-  collection.wbos.scotsman = new ServerWBO(
-      'scotsman', encryptPayload({id: 'scotsman',
-                                  denomination: "Flying Scotsman"}));
-
-  let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
-      "/1.0/foo/storage/steam": collection.handler()
-  });
-  do_test_pending();
-  createAndUploadKeypair();
-
-  try {
-
-    // Confirm initial environment
-    let key = crypto_steam.data.keyring["http://localhost:8080/1.0/foo/storage/keys/pubkey"];
-    do_check_eq(key.wrapped, "fake-symmetric-key-0");
-    do_check_eq(key.hmac, "this-hmac-is-incorrect");
-    do_check_true(!!collection.wbos.flying.payload);
-    do_check_true(!!collection.wbos.scotsman.payload);
-
-    engine.lastSync = Date.now() / 1000;
-    engine.lastSyncLocal = Date.now();
-    engine._syncStartup();
-
-    // Sync was reset and server data was wiped
-    do_check_eq(engine.lastSync, 0);
-    do_check_eq(collection.wbos.flying.payload, undefined);
-    do_check_eq(collection.wbos.scotsman.payload, undefined);
-
-    // New bulk key was uploaded
-    key = crypto_steam.data.keyring["../keys/pubkey"];
-    do_check_eq(key.wrapped, "fake-symmetric-key-1");
-    do_check_eq(key.hmac, "fake-symmetric-key-1                                            ");
-
-  } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -458,15 +274,12 @@ function test_processIncoming_emptyServer() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
 
   let engine = makeSteamEngine();
   try {
@@ -479,7 +292,6 @@ function test_processIncoming_emptyServer() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -490,7 +302,8 @@ function test_processIncoming_createFromServer() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
+  
+  CollectionKeys.generateNewKeys();
 
   // Some server records that will be downloaded
   let collection = new ServerCollection();
@@ -505,20 +318,13 @@ function test_processIncoming_createFromServer() {
   collection.wbos['../pathological'] = new ServerWBO(
       '../pathological', encryptPayload({id: '../pathological',
                                          denomination: "Pathological Case"}));
-  let wrong_keyuri = encryptPayload({id: "wrong_keyuri",
-                                     denomination: "Wrong Key URI"});
-  wrong_keyuri.encryption = "../../crypto/steam";
-  collection.wbos["wrong_keyuri"] = new ServerWBO("wrong_keyuri", wrong_keyuri);
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler(),
       "/1.0/foo/storage/steam/flying": collection.wbos.flying.handler(),
       "/1.0/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -533,7 +339,6 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine._store.items.flying, undefined);
     do_check_eq(engine._store.items.scotsman, undefined);
     do_check_eq(engine._store.items['../pathological'], undefined);
-    do_check_eq(engine._store.items.wrong_keyuri, undefined);
 
     engine._syncStartup();
     engine._processIncoming();
@@ -546,13 +351,11 @@ function test_processIncoming_createFromServer() {
     do_check_eq(engine._store.items.flying, "LNER Class A3 4472");
     do_check_eq(engine._store.items.scotsman, "Flying Scotsman");
     do_check_eq(engine._store.items['../pathological'], "Pathological Case");
-    do_check_eq(engine._store.items.wrong_keyuri, "Wrong Key URI");
 
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -563,7 +366,6 @@ function test_processIncoming_reconcile() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
 
   // This server record is newer than the corresponding client one,
@@ -612,12 +414,9 @@ function test_processIncoming_reconcile() {
                                 deleted: true}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
   engine._store.items = {newerserver: "New data, but not as new as server!",
@@ -679,7 +478,6 @@ function test_processIncoming_reconcile() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -713,12 +511,9 @@ function test_processIncoming_mobile_batchSize() {
   }
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
@@ -757,7 +552,6 @@ function test_processIncoming_mobile_batchSize() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -768,20 +562,17 @@ function test_uploadOutgoing_toEmptyServer() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
   collection.wbos.flying = new ServerWBO('flying');
   collection.wbos.scotsman = new ServerWBO('scotsman');
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler(),
       "/1.0/foo/storage/steam/flying": collection.wbos.flying.handler(),
       "/1.0/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+  CollectionKeys.generateNewKeys();
 
   let engine = makeSteamEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -822,7 +613,6 @@ function test_uploadOutgoing_toEmptyServer() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -833,19 +623,15 @@ function test_uploadOutgoing_failed() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
   // We only define the "flying" WBO on the server, not the "scotsman"
   // and "peppercorn" ones.
   collection.wbos.flying = new ServerWBO('flying');
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -892,7 +678,6 @@ function test_uploadOutgoing_failed() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -903,7 +688,6 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
 
   // Let's count how many times the client posts to the server
@@ -929,12 +713,9 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
                                          syncID: engine.syncID}};
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   try {
 
@@ -956,7 +737,6 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
@@ -1105,8 +885,7 @@ function test_sync_partialUpload() {
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+  CollectionKeys.generateNewKeys();
 
   let engine = makeSteamEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1167,15 +946,17 @@ function test_sync_partialUpload() {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
-    CryptoMetas.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
 
-function test_canDecrypt_noCryptoMeta() {
-  _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key.");
+function test_canDecrypt_noCryptoKeys() {
+  _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key collection.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
+
+  // Wipe CollectionKeys so we can test the desired scenario.
+  CollectionKeys.setContents({"collections": {}, "default": null});
 
   let collection = new ServerCollection();
   collection.wbos.flying = new ServerWBO(
@@ -1186,7 +967,6 @@ function test_canDecrypt_noCryptoMeta() {
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
 
   let engine = makeSteamEngine();
   try {
@@ -1206,19 +986,18 @@ function test_canDecrypt_true() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
-  let crypto_steam = new ServerWBO('steam');
+  // Set up CollectionKeys, as service.js does.
+  CollectionKeys.generateNewKeys();
+  
   let collection = new ServerCollection();
   collection.wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
                                 denomination: "LNER Class A3 4472"}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
 
   let engine = makeSteamEngine();
   try {
@@ -1239,11 +1018,8 @@ function run_test() {
     return;
 
   test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
-  test_syncStartup_metaGet404();
-  test_syncStartup_failedMetaGet();
   test_syncStartup_serverHasNewerVersion();
   test_syncStartup_syncIDMismatchResetsClient();
-  test_syncStartup_badKeyWipesServerData();
   test_processIncoming_emptyServer();
   test_processIncoming_createFromServer();
   test_processIncoming_reconcile();
@@ -1255,6 +1031,6 @@ function run_test() {
   test_syncFinish_deleteByIds();
   test_syncFinish_deleteLotsInBatches();
   test_sync_partialUpload();
-  test_canDecrypt_noCryptoMeta();
+  test_canDecrypt_noCryptoKeys();
   test_canDecrypt_true();
 }
