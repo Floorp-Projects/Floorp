@@ -215,30 +215,33 @@ let Utils = {
     });
   },
 
-  // Generates a brand-new globally unique identifier (GUID).
+  byteArrayToString: function byteArrayToString(bytes) {
+    return [String.fromCharCode(byte) for each (byte in bytes)].join("");
+  },
+
+  /**
+   * Generate a string of random bytes.
+   */
+  generateRandomBytes: function generateRandomBytes(length) {
+    let rng = Cc["@mozilla.org/security/random-generator;1"]
+                .createInstance(Ci.nsIRandomGenerator);
+    let bytes = rng.generateRandomBytes(length);
+    return Utils.byteArrayToString(bytes);
+  },
+
+  /**
+   * Encode byte string as base64url (RFC 4648).
+   */
+  encodeBase64url: function encodeBase64url(bytes) {
+    return btoa(bytes).replace('+', '-', 'g').replace('/', '_', 'g');
+  },
+
+  /**
+   * GUIDs are 9 random bytes encoded with base64url (RFC 4648).
+   * That makes them 12 characters long with 72 bits of entropy.
+   */
   makeGUID: function makeGUID() {
-    // 70 characters that are not-escaped URL-friendly
-    const code =
-      "!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
-
-    let guid = "";
-    let num = 0;
-    let val;
-
-    // Generate ten 70-value characters for a 70^10 (~61.29-bit) GUID
-    for (let i = 0; i < 10; i++) {
-      // Refresh the number source after using it a few times
-      if (i == 0 || i == 5)
-        num = Math.random();
-
-      // Figure out which code to use for the next GUID character
-      num *= 70;
-      val = Math.floor(num);
-      guid += code[val];
-      num -= val;
-    }
-
-    return guid;
+    return Utils.encodeBase64url(Utils.generateRandomBytes(9));
   },
 
   anno: function anno(id, anno, val, expire) {
@@ -1210,10 +1213,7 @@ let Utils = {
     // Note that this is a different base32 alphabet to the one we use for
     // other tasks. It's lowercase, uses different letters, and needs to be
     // decoded with decodeKeyBase32, not just decodeBase32.
-    let rng = Cc["@mozilla.org/security/random-generator;1"]
-                .createInstance(Ci.nsIRandomGenerator);
-    let bytes = rng.generateRandomBytes(16);
-    return Utils.encodeKeyBase32(Utils.byteArrayToString(bytes));
+    return Utils.encodeKeyBase32(Utils.generateRandomBytes(16));
   },
 
   /**
