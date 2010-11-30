@@ -1,6 +1,13 @@
 _("Make sure lock prevents calling with a shared lock");
 Cu.import("resource://services-sync/util.js");
 
+// Utility that we only use here.
+
+function do_check_begins(thing, startsWith) {
+  if (!(thing && thing.indexOf && (thing.indexOf(startsWith) == 0)))
+    do_throw(thing + " doesn't begin with " + startsWith);
+}
+
 function run_test() {
   let ret, rightThis, didCall;
   let state, lockState, lockedState, unlockState;
@@ -20,13 +27,15 @@ function run_test() {
       this._locked = false;
     },
 
-    func: function() this._lock(function() {
+    func: function() this._lock("Test utils lock",
+    function() {
       rightThis = this == obj;
       didCall = true;
       return 5;
     })(),
 
-    throwy: function() this._lock(function() {
+    throwy: function() this._lock("Test utils lock throwy",
+    function() {
       rightThis = this == obj;
       didCall = true;
       this.throwy();
@@ -52,7 +61,8 @@ function run_test() {
     do_throw("throwy internal call should have thrown!");
   }
   catch(ex) {
-    do_check_eq(ex, "Could not acquire lock");
+    // Should throw an Error, not a string.
+    do_check_begins(ex, "Could not acquire lock");
   }
   do_check_eq(ret, null);
   do_check_true(rightThis);

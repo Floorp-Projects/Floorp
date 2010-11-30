@@ -189,10 +189,10 @@ PrefStore.prototype = {
     return (id === Svc.AppInfo.ID);
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let record = new PrefRec(uri);
+  createRecord: function createRecord(id, collection) {
+    let record = new PrefRec(collection, id);
 
-    if (guid == Svc.AppInfo.ID) {
+    if (id == Svc.AppInfo.ID) {
       record.value = this._getAllPrefs();
     } else {
       record.deleted = true;
