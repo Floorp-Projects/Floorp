@@ -428,6 +428,21 @@ nsChromeRegistryChrome::CheckForNewChrome()
   return NS_OK;
 }
 
+void nsChromeRegistryChrome::UpdateSelectedLocale()
+{
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    nsresult rv = SelectLocaleFromPref(prefs);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIObserverService> obsSvc =
+        mozilla::services::GetObserverService();
+      NS_ASSERTION(obsSvc, "Couldn't get observer service.");
+      obsSvc->NotifyObservers((nsIChromeRegistry*) this,
+                              "selected-locale-has-changed", nsnull);
+    }
+  }
+}
+
 #ifdef MOZ_IPC
 static void
 SerializeURI(nsIURI* aURI,
@@ -466,21 +481,6 @@ struct EnumerationArgs
   const nsCString& selectedLocale;
   const nsCString& selectedSkin;
 };
-
-void nsChromeRegistryChrome::UpdateSelectedLocale()
-{
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefs) {
-    nsresult rv = SelectLocaleFromPref(prefs);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIObserverService> obsSvc =
-        mozilla::services::GetObserverService();
-      NS_ASSERTION(obsSvc, "Couldn't get observer service.");
-      obsSvc->NotifyObservers((nsIChromeRegistry*) this,
-                              "selected-locale-has-changed", nsnull);
-    }
-  }
-}
 
 void
 nsChromeRegistryChrome::SendRegisteredChrome(
