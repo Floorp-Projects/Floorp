@@ -166,6 +166,7 @@ ContainerLayerD3D9::RenderLayer()
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
   PRBool useIntermediate = UseIntermediateSurface();
 
+  gfxMatrix contTransform;
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
     device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
@@ -193,6 +194,12 @@ ContainerLayerD3D9::RenderLayer()
 
     device()->GetVertexShaderConstantF(CBmProjection, &oldViewMatrix[0][0], 4);
     device()->SetVertexShaderConstantF(CBmProjection, &viewMatrix._11, 4);
+  } else {
+#ifdef DEBUG
+    PRBool is2d =
+#endif
+    GetEffectiveTransform().Is2D(&contTransform);
+    NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
   /*
@@ -230,6 +237,25 @@ ContainerLayerD3D9::RenderLayer()
       renderSurface->GetDesc(&desc);
 
       if (!useIntermediate) {
+        // Transform clip rect
+        if (clipRect) {
+          gfxRect cliprect(r.left, r.top, r.right - r.left, r.bottom - r.top);
+          gfxRect trScissor = contTransform.TransformBounds(cliprect);
+          trScissor.Round();
+          nsIntRect trIntScissor;
+          if (gfxUtils::GfxRectToIntRect(trScissor, &trIntScissor)) {
+            r.left = trIntScissor.x;
+            r.top = trIntScissor.y;
+            r.right = trIntScissor.XMost();
+            r.bottom = trIntScissor.YMost();
+          } else {
+            r.left = 0;
+            r.top = 0;
+            r.right = visibleRect.width;
+            r.bottom = visibleRect.height;
+            clipRect = nsnull;
+          }
+        }
         // Intersect with current clip rect.
         r.left = NS_MAX<PRInt32>(oldClipRect.left, r.left);
         r.right = NS_MIN<PRInt32>(oldClipRect.right, r.right);
