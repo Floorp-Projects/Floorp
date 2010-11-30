@@ -123,7 +123,37 @@ function test_collections_manager() {
   do_check_true(CollectionKeys.updateNeeded({}));
 }
 
+// Make sure that KeyBundles work when persisted through Identity.
+function test_key_persistence() {
+  _("Testing key persistence.");
+  
+  // Create our sync key bundle and persist it.
+  let k = new SyncKeyBundle(null, null, "abcdeabcdeabcdeabcdeabcdea");
+  k.username = "john@example.com";
+  ID.set("WeaveCryptoID", k);
+  let id = ID.get("WeaveCryptoID");
+  do_check_eq(k, id);
+  id.persist();
+  
+  // Now erase any memory of it.
+  ID.del("WeaveCryptoID");
+  k = id = null;
+  
+  // Now recreate via the persisted value.
+  id = new SyncKeyBundle();
+  id.username = "john@example.com";
+  
+  // The password should have been fetched from storage...
+  do_check_eq(id.password, "abcdeabcdeabcdeabcdeabcdea");
+  
+  // ... and we should be able to grab these by derivation.
+  do_check_true(!!id.hmacKeyObject);
+  do_check_true(!!id.hmacKey);
+  do_check_true(!!id.encryptionKey);
+}
+
 function run_test() {
   test_keymanager();
   test_collections_manager();
+  test_key_persistence();
 }
