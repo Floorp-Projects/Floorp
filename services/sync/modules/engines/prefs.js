@@ -50,6 +50,8 @@ Cu.import("resource://services-sync/type_records/prefs.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 
+const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+
 function PrefsEngine() {
   SyncEngine.call(this, "Prefs");
 }
@@ -64,7 +66,7 @@ PrefsEngine.prototype = {
     // No need for a proper timestamp (no conflict resolution needed).
     let changedIDs = {};
     if (this._tracker.modified)
-      changedIDs[Svc.AppInfo.ID] = 0;
+      changedIDs[PREFS_GUID] = 0;
     return changedIDs;
   },
 
@@ -177,7 +179,7 @@ PrefStore.prototype = {
   getAllIDs: function PrefStore_getAllIDs() {
     /* We store all prefs in just one WBO, with just one GUID */
     let allprefs = {};
-    allprefs[Svc.AppInfo.ID] = true;
+    allprefs[PREFS_GUID] = true;
     return allprefs;
   },
 
@@ -186,13 +188,13 @@ PrefStore.prototype = {
   },
 
   itemExists: function FormStore_itemExists(id) {
-    return (id === Svc.AppInfo.ID);
+    return (id === PREFS_GUID);
   },
 
   createRecord: function createRecord(id, collection) {
     let record = new PrefRec(collection, id);
 
-    if (id == Svc.AppInfo.ID) {
+    if (id == PREFS_GUID) {
       record.value = this._getAllPrefs();
     } else {
       record.deleted = true;
