@@ -212,6 +212,10 @@ PrefStore.prototype = {
   },
 
   update: function PrefStore_update(record) {
+    // Silently ignore pref updates that are for other apps.
+    if (record.id != PREFS_GUID)
+      return;
+
     this._log.trace("Received pref updates, applying...");
     this._setAllPrefs(record.value);
   },
