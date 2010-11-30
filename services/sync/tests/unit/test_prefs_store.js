@@ -3,6 +3,8 @@ Cu.import("resource://services-sync/type_records/prefs.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 
+const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+
 function run_test() {
   let store = new PrefsEngine()._store;
   let prefs = new Preferences();
@@ -27,18 +29,18 @@ function run_test() {
     let allIDs = store.getAllIDs();
     let ids = [id for (id in allIDs)];
     do_check_eq(ids.length, 1);
-    do_check_eq(ids[0], Svc.AppInfo.ID);
-    do_check_true(allIDs[Svc.AppInfo.ID], true);
+    do_check_eq(ids[0], PREFS_GUID);
+    do_check_true(allIDs[PREFS_GUID], true);
 
-    do_check_true(store.itemExists(Svc.AppInfo.ID));
+    do_check_true(store.itemExists(PREFS_GUID));
     do_check_false(store.itemExists("random-gibberish"));
 
     _("Unknown prefs record is created as deleted.");
-    let record = store.createRecord("random-gibberish", "http://fake/uri");
+    let record = store.createRecord("random-gibberish", "prefs");
     do_check_true(record.deleted);
 
     _("Prefs record contains only prefs that should be synced.");
-    record = store.createRecord(Svc.AppInfo.ID, "http://fake/uri");
+    record = store.createRecord(PREFS_GUID, "prefs");
     do_check_eq(record.value["testing.int"], 123);
     do_check_eq(record.value["testing.string"], "ohai");
     do_check_eq(record.value["testing.bool"], true);
