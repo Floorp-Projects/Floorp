@@ -45,8 +45,7 @@
 // Superclass for all visible objects (<TabItem>s and <GroupItem>s).
 //
 // If you subclass, in addition to the things Item provides, you need to also provide these methods:
-//   setBounds - function(rect, immediately, options)
-//   measureBounds - function(point)
+//   setBounds - function(rect, immediately)
 //   setZ - function(value)
 //   close - function()
 //   save - function()
@@ -65,7 +64,6 @@ function Item() {
 
   // Variable: bounds
   // The position and size of this Item, represented as a <Rect>.
-  // This should never be modified without using setBounds()
   this.bounds = null;
 
   // Variable: zIndex
@@ -153,7 +151,6 @@ Item.prototype = {
         typeof this._sendToSubscribers == 'function',
         'Subclass must implement the Subscribable interface');
     Utils.assert(Utils.isDOMElement(container), 'container must be a DOM element');
-    Utils.assert(typeof this.measureBounds == 'function', 'Subclass must provide measureBounds');
     Utils.assert(typeof this.setBounds == 'function', 'Subclass must provide setBounds');
     Utils.assert(typeof this.setZ == 'function', 'Subclass must provide setZ');
     Utils.assert(typeof this.close == 'function', 'Subclass must provide close');
@@ -244,7 +241,7 @@ Item.prototype = {
   // Function: getBounds
   // Returns a copy of the Item's bounds as a <Rect>.
   getBounds: function Item_getBounds() {
-    Utils.assert(Utils.isRect(this.bounds), 'this.bounds is a rect');
+    Utils.assert(Utils.isRect(this.bounds), 'this.bounds');
     return new Rect(this.bounds);
   },
 
@@ -438,13 +435,13 @@ Item.prototype = {
 
         if (!item.isAGroupItem) {
           if (sizeStep.y > sizeStep.x) {
-            let size = item.measureBounds(new Point(-1, bounds.height));            
-            bounds.left += (bounds.width - size.x) / 2;
-            bounds.width = size.x;
+            var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
+            bounds.left += (bounds.width - newWidth) / 2;
+            bounds.width = newWidth;
           } else {
-            let size = item.measureBounds(new Point(bounds.width, -1));            
-            bounds.top += (bounds.height - size.y) / 2;
-            bounds.height = size.y;
+            var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
+            bounds.top += (bounds.height - newHeight) / 2;
+            bounds.height = newHeight;
           }
         }
 
@@ -768,7 +765,6 @@ Item.prototype = {
         var self = this;
         var startMouse;
         var startSize;
-        var startAspect;
 
         // ___ mousemove
         var handleMouseMove = function(e) {
@@ -938,17 +934,10 @@ let Items = {
 
     var rects = [];
 
+    var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
     var count = options.count || (items ? items.length : 0);
     if (!count)
       return rects;
-
-    let proto=null;
-    if(typeof options.proto != "undefined") {
-      proto = options.proto;
-    } else {
-      proto = items[0];
-    }
-    Utils.assert(proto!=null, "valid prototype object in arrange");
 
     var columns = options.columns || 1;
     // We'll assume for the time being that all the items have the same styling
@@ -956,6 +945,7 @@ let Items = {
     var itemMargin = items && items.length ?
                        parseInt(iQ(items[0].container).css('margin-left')) : 0;
     var padding = itemMargin * 2;
+    var yScale = 1.1; // to allow for titles
     var rows;
     var tabWidth;
     var tabHeight;
@@ -963,12 +953,9 @@ let Items = {
 
     function figure() {
       rows = Math.ceil(count / columns);
-      let measuredSize = proto.measureBounds(
-        new Point((bounds.width - (padding * columns)) / columns, -1),
-        options);
-      tabWidth = measuredSize.x;
-      tabHeight = measuredSize.y;
-      totalHeight = (tabHeight * rows) + (padding * rows);
+      tabWidth = (bounds.width - (padding * columns)) / columns;
+      tabHeight = tabWidth * tabAspect;
+      totalHeight = (tabHeight * yScale * rows) + (padding * rows);
     }
 
     figure();
@@ -979,12 +966,10 @@ let Items = {
     }
 
     if (rows == 1) {
-      let measuredSize = proto.measureBounds(new Point(tabWidth,
-        bounds.height - 2 * itemMargin), options);
-      tabWidth = measuredSize.x;
-      tabHeight = measuredSize.y;    
+      tabWidth = Math.min(tabWidth, (bounds.height - 2 * itemMargin) / tabAspect);
+      tabHeight = tabWidth * tabAspect;
     }
-
+    
     if (options.return == 'widthAndColumns')
       return {childWidth: tabWidth, columns: columns};
 
@@ -1012,7 +997,7 @@ let Items = {
       column++;
       if (column == columns) {
         box.left = bounds.left + initialOffset;
-        box.top += box.height + padding;
+        box.top += (box.height * yScale) + padding;
         column = 0;
       }
     }

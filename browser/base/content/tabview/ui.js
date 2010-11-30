@@ -65,10 +65,6 @@ let UI = {
   // If true, a select tab has just been closed in TabView.
   _closedSelectedTabInTabView : false,
 
-  // Variable: restoredClosedTab
-  // If true, a closed tab has just been restored.
-  restoredClosedTab : false,
-
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
   // and re-orders the tab items when switching to TabView.
@@ -173,6 +169,7 @@ let UI = {
       this._addTabActionHandlers();
 
       // ___ Storage
+
       GroupItems.pauseArrange();
       GroupItems.init();
 
@@ -713,25 +710,14 @@ let UI = {
 
     // if the last visible tab has just been closed, don't show the chrome UI.
     if (this._isTabViewVisible() &&
-        (this._closedLastVisibleTab || this._closedSelectedTabInTabView ||
-         this.restoredClosedTab)) {
-      if (this.restoredClosedTab) {
-        // when the tab view UI is being displayed, update the thumb for the 
-        // restored closed tab after the page load
-        tab.linkedBrowser.addEventListener("load", function (event) {
-          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-          TabItems._update(tab);
-        }, true);
-      }
+        (this._closedLastVisibleTab || this._closedSelectedTabInTabView)) {
       this._closedLastVisibleTab = false;
       this._closedSelectedTabInTabView = false;
-      this.restoredClosedTab = false;
       return;
     }
     // reset these vars, just in case.
     this._closedLastVisibleTab = false;
     this._closedSelectedTabInTabView = false;
-    this.restoredClosedTab = false;
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
@@ -748,7 +734,7 @@ let UI = {
 
     if (currentTab && currentTab.tabItem)
       oldItem = currentTab.tabItem;
-
+      
     // update the tab bar for the new tab's group
     if (tab && tab.tabItem) {
       newItem = tab.tabItem;
@@ -1207,51 +1193,16 @@ let UI = {
     }
 
     if (!zoomedIn) {
-      let unhiddenGroups = GroupItems.groupItems.filter(function(groupItem) {
-        return (!groupItem.hidden && groupItem.getChildren().length > 0);
-      });
-      // no visible groups, no orphaned tabs and no apps tabs, open a new group
-      // with a blank tab
-      if (unhiddenGroups.length == 0 && GroupItems.getOrphanedTabs().length == 0 &&
-          gBrowser._numPinnedTabs == 0) {
-        let box = new Rect(20, 20, 250, 200);
-        let groupItem = new GroupItem([], { bounds: box, immediately: true });
-        groupItem.newTab();
-        return;
-      }
-
       // If there's an active TabItem, zoom into it. If not (for instance when the
       // selected tab is an app tab), just go there.
       let activeTabItem = this.getActiveTab();
-      if (!activeTabItem) {
-        let tabItem = gBrowser.selectedTab.tabItem;
-        if (tabItem) {
-          if (!tabItem.parent || !tabItem.parent.hidden) {
-            activeTabItem = tabItem;
-          } else { // set active tab item if there is at least one unhidden group
-            if (unhiddenGroups.length > 0)
-              activeTabItem = unhiddenGroups[0].getActiveTab();
-          }
-        }
-      }
+      if (!activeTabItem)
+        activeTabItem = gBrowser.selectedTab.tabItem;
 
-      if (activeTabItem) {
+      if (activeTabItem)
         activeTabItem.zoomIn();
-      } else {
-        if (gBrowser._numPinnedTabs > 0) {
-          if (gBrowser.selectedTab.pinned) {
-            self.goToTab(gBrowser.selectedTab);
-          } else {
-            Array.some(gBrowser.tabs, function(tab) {
-              if (tab.pinned) {
-                self.goToTab(tab);
-                return true;
-              }
-              return false
-            });
-          }
-        }
-      }
+      else
+        self.goToTab(gBrowser.selectedTab);
     }
   },
 
