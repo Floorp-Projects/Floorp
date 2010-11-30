@@ -1699,14 +1699,26 @@ WeaveSvc.prototype = {
    *
    * @param collections [optional]
    *        Array of collections to wipe. If not given, all collections are wiped.
+   *        
+   * @param includeKeys [optional]
+   *        If true, keys/pubkey and keys/privkey are deleted from the server.
+   *        This is false by default, which will cause the usual upgrade paths
+   *        to leave those keys on the server. This is to solve Bug 614737: old
+   *        clients check for keys *before* checking storage versions.
+   *        
+   *        Note that this parameter only has an effect if `collections` is not
+   *        passed. If you explicitly pass a list of collections, they will be
+   *        processed regardless of the value of `includeKeys`.
    */
-  wipeServer: function WeaveSvc_wipeServer(collections)
+  wipeServer: function wipeServer(collections, includeKeyPairs)
     this._notify("wipe-server", "", function() {
       if (!collections) {
         collections = [];
         let info = new Resource(this.infoURL).get();
-        for (let name in info.obj)
-          collections.push(name);
+        for (let name in info.obj) {
+          if (includeKeyPairs || (name != "keys"))
+            collections.push(name);
+        }
       }
       for each (let name in collections) {
         let url = this.storageURL + name;
