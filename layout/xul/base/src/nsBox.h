@@ -82,8 +82,6 @@ public:
 
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
 
-  virtual PRBool GetMouseThrough() const;
-
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
   NS_IMETHOD GetDebug(PRBool& aDebug);
