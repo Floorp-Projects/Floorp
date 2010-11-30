@@ -4573,10 +4573,10 @@ BEGIN_CASE(JSOP_GETELEM)
     regs.sp--;
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
-    if (copyFrom->isUndefined()) {
+    if (copyFrom->isUndefined() || !rref.isInt32()) {
         if (rref.isInt32())
             cx->addTypeProperty(obj->getTypeObject(), NULL, TYPE_UNDEFINED);
-        script->typeMonitorUndefined(cx, regs.pc, 0);
+        script->typeMonitorResult(cx, regs.pc, 0, *copyFrom);
     }
 }
 END_CASE(JSOP_GETELEM)
@@ -4609,8 +4609,8 @@ BEGIN_CASE(JSOP_CALLELEM)
     {
         regs.sp[-1] = thisv;
     }
-    if (regs.sp[-2].isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc, 0);
+    if (regs.sp[-2].isUndefined() || !JSID_IS_INT(id))
+        script->typeMonitorResult(cx, regs.pc, 0, regs.sp[-2]);
 }
 END_CASE(JSOP_CALLELEM)
 
