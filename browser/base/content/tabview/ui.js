@@ -65,6 +65,10 @@ let UI = {
   // If true, a select tab has just been closed in TabView.
   _closedSelectedTabInTabView : false,
 
+  // Variable: restoredClosedTab
+  // If true, a closed tab has just been restored.
+  restoredClosedTab : false,
+
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
   // and re-orders the tab items when switching to TabView.
@@ -718,14 +722,25 @@ let UI = {
 
     // if the last visible tab has just been closed, don't show the chrome UI.
     if (this.isTabViewVisible() &&
-        (this._closedLastVisibleTab || this._closedSelectedTabInTabView)) {
+        (this._closedLastVisibleTab || this._closedSelectedTabInTabView ||
+         this.restoredClosedTab)) {
+      if (this.restoredClosedTab) {
+        // when the tab view UI is being displayed, update the thumb for the 
+        // restored closed tab after the page load
+        tab.linkedBrowser.addEventListener("load", function (event) {
+          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+          TabItems._update(tab);
+        }, true);
+      }
       this._closedLastVisibleTab = false;
       this._closedSelectedTabInTabView = false;
+      this.restoredClosedTab = false;
       return;
     }
     // reset these vars, just in case.
     this._closedLastVisibleTab = false;
     this._closedSelectedTabInTabView = false;
+    this.restoredClosedTab = false;
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
