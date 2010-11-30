@@ -687,12 +687,14 @@ TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
 {
     switch (type) {
       case TYPE_UNDEFINED:
+      case TYPE_BOOLEAN:
+      case TYPE_NULL:
       case TYPE_INT32:
       case TYPE_DOUBLE:
         /*
          * Integer index access, these are all covered by the JSID_VOID property.
-         * We are optimistically treat undefined accesses as not actually occurring,
-         * and double accesses as getting an integer property. These need to be checked
+         * We are optimistically treating non-number accesses as not actually occurring,
+         * and double accesses as getting an integer property. This must be checked
          * at runtime.
          */
         if (assign)
@@ -702,7 +704,7 @@ TypeConstraintElem::newType(JSContext *cx, TypeSet *source, jstype type)
         break;
       default:
         /*
-         * Access to a potentially arbitrary element.  Monitor assignments to unknown
+         * Access to a potentially arbitrary element. Monitor assignments to unknown
          * elements, and treat reads of unknown elements as unknown.
          */
         if (assign)
