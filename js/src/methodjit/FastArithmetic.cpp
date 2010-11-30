@@ -54,7 +54,7 @@ typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
 bool
 mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
-                                      FrameEntry *lhs, FrameEntry *rhs)
+                                      FrameEntry *lhs, FrameEntry *rhs, JSValueType type)
 {
     if (!lhs->isConstant() || !rhs->isConstant())
         return false;
@@ -73,8 +73,12 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
       case JSOP_SUB:
       case JSOP_MUL:
       case JSOP_DIV:
-      case JSOP_MOD:
         needInt = false;
+        break;
+
+      case JSOP_MOD:
+        needInt = (L.isInt32() && R.isInt32() &&
+                   L.toInt32() >= 0 && R.toInt32() > 0);
         break;
 
       case JSOP_RSH:
@@ -129,10 +133,12 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         }
         break;
       case JSOP_MOD:
-        if (dL == 0)
+        if (needInt)
+            nL %= nR;
+        else if (dR == 0)
             dL = js_NaN;
         else
-            dL = js_fmod(dR, dL);
+            dL = js_fmod(dL, dR);
         break;
 
       case JSOP_RSH:
@@ -149,6 +155,17 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         v.setInt32(nL);
     else
         v.setNumber(dL);
+
+    if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
+        /*
+         * Triggered an overflow at compile time. Don't try to update the type
+         * inference data, we can't trigger recompilations during the middle
+         * of compilation. Instead, fall back to the regular path and generate
+         * the overflow when the code first runs.
+         */
+        return false;
+    }
+
     frame.popn(2);
     frame.push(v);
 
@@ -204,14 +221,19 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
-    if (tryBinaryConstantFold(cx, frame, op, lhs, rhs))
+    if (tryBinaryConstantFold(cx, frame, op, lhs, rhs, type)) {
+        if (recompiling) {
+            OOL_STUBCALL(stub);
+            stubcc.rejoin(Changes(1));
+        }
         return;
+    }
 
     /*
      * Bail out if there are unhandled types or ops.
      * This is temporary while ops are still being implemented.
      */
-    if ((op == JSOP_MOD) ||
+    if ((lhs->isConstant() && rhs->isConstant()) ||
         (lhs->isTypeKnown() && (lhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) ||
         (rhs->isTypeKnown() && (rhs->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)) 
 #if defined(JS_CPU_ARM)
@@ -867,7 +889,17 @@ mjit::Compiler::jsop_mod()
 
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
-    if ((lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32) ||
+
+    if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, type)) {
+        if (recompiling) {
+            OOL_STUBCALL(stubs::Mod);
+            stubcc.rejoin(Changes(1));
+        }
+        return;
+    }
+
+    if ((lhs->isConstant() && rhs->isConstant()) ||
+        (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32) ||
         (rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32) ||
         (type != JSVAL_TYPE_INT32 && type != JSVAL_TYPE_UNKNOWN))
 #endif

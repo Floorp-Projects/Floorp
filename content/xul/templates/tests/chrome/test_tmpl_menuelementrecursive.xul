@@ -97,7 +97,7 @@ var changes = [
 ]]>
 </script>
 
-<button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" type="menu" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/all-animals">
+<button xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" type="menu" id="root" datasources="rdf:null" ref="http://www.some-fictitious-zoo.com/all-animals">
 <template>
 <rule iscontainer="true" zoo:name="Birds" xmlns:zoo="http://www.some-fictitious-zoo.com/rdf#">
 <menupopup>

@@ -40,6 +40,13 @@ function init() {
   var addon = window.arguments[0];
   var extensionsStrings = document.getElementById("extensionsStrings");
 
+  document.documentElement.setAttribute("addontype", addon.type);
+
+  if (addon.iconURL) {
+    var extensionIcon = document.getElementById("extensionIcon");
+    extensionIcon.src = addon.iconURL;
+  }
+
   document.title = extensionsStrings.getFormattedString("aboutWindowTitle", [addon.name]);
   var extensionName = document.getElementById("extensionName");
   extensionName.setAttribute("value", addon.name);
@@ -56,21 +63,38 @@ function init() {
   else
     extensionDescription.hidden = true;
 
+  var numDetails = 0;
+
   var extensionCreator = document.getElementById("extensionCreator");
-  extensionCreator.setAttribute("value", addon.creator);
+  if (addon.creator) {
+    extensionCreator.setAttribute("value", addon.creator);
+    numDetails++;
+  } else {
+    extensionCreator.hidden = true;
+    var extensionCreatorLabel = document.getElementById("extensionCreatorLabel");
+    extensionCreatorLabel.hidden = true;
+  }
 
   var extensionHomepage = document.getElementById("extensionHomepage");
   var homepageURL = addon.homepageURL;
   if (homepageURL) {
     extensionHomepage.setAttribute("homepageURL", homepageURL);
     extensionHomepage.setAttribute("tooltiptext", homepageURL);
+    numDetails++;
   } else {
     extensionHomepage.hidden = true;
   }
 
-  appendToList("extensionDevelopers", "developersBox", addon.developers);
-  appendToList("extensionTranslators", "translatorsBox", addon.translators);
-  appendToList("extensionContributors", "contributorsBox", addon.contributors);
+  numDetails += appendToList("extensionDevelopers", "developersBox", addon.developers);
+  numDetails += appendToList("extensionTranslators", "translatorsBox", addon.translators);
+  numDetails += appendToList("extensionContributors", "contributorsBox", addon.contributors);
+
+  if (numDetails == 0) {
+    var groove = document.getElementById("groove");
+    groove.hidden = true;
+    var extensionDetailsBox = document.getElementById("extensionDetailsBox");
+    extensionDetailsBox.hidden = true;
+  }
 
   var acceptButton = document.documentElement.getButton("accept");
   acceptButton.label = extensionsStrings.getString("aboutWindowCloseButton");
@@ -82,7 +106,7 @@ function appendToList(aHeaderId, aNodeId, aItems) {
 
   if (!aItems || aItems.length == 0) {
     header.hidden = true;
-    return;
+    return 0;
   }
 
   for (let i = 0; i < aItems.length; i++) {
@@ -91,6 +115,8 @@ function appendToList(aHeaderId, aNodeId, aItems) {
     label.setAttribute("class", "contributor");
     node.appendChild(label);
   }
+
+  return aItems.length;
 }
 
 function loadHomepage(aEvent) {

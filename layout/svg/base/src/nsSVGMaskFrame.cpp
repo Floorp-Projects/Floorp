@@ -69,41 +69,25 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   }
   AutoMaskReferencer maskRef(this);
 
+  nsSVGMaskElement *mask = static_cast<nsSVGMaskElement*>(mContent);
+
+  PRUint16 units =
+    mask->mEnumAttributes[nsSVGMaskElement::MASKUNITS].GetAnimValue();
+  gfxRect bbox;
+  if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+    bbox = nsSVGUtils::GetBBox(aParent);
+  }
+
+  gfxRect maskArea = nsSVGUtils::GetRelativeRect(units,
+    &mask->mLengthAttributes[nsSVGMaskElement::X], bbox, aParent);
+  maskArea.RoundOut();
+
   gfxContext *gfx = aContext->GetGfxContext();
 
-  gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-
-  {
-    nsSVGMaskElement *mask = static_cast<nsSVGMaskElement*>(mContent);
-
-    PRUint16 units =
-      mask->mEnumAttributes[nsSVGMaskElement::MASKUNITS].GetAnimValue();
-    gfxRect bbox;
-    if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-      bbox = nsSVGUtils::GetBBox(aParent);
-    }
-
-    gfxRect maskArea = nsSVGUtils::GetRelativeRect(units,
-      &mask->mLengthAttributes[nsSVGMaskElement::X], bbox, aParent);
-
-    gfx->Save();
-    nsSVGUtils::SetClipRect(gfx, aMatrix, maskArea);
-  }
-
-  mMaskParent = aParent;
-  mMaskParentMatrix = NS_NewSVGMatrix(aMatrix);
-
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintFrameWithEffects(aContext, nsnull, kid);
-  }
-
+  gfx->Save();
+  nsSVGUtils::SetClipRect(gfx, aMatrix, maskArea);
   gfxRect clipExtents = gfx->GetClipExtents();
   gfx->Restore();
-
-  nsRefPtr<gfxPattern> pattern = gfx->PopGroup();
-  if (!pattern || pattern->CairoStatus())
-    return nsnull;
 
 #ifdef DEBUG_tor
   fprintf(stderr, "clip extent: %f,%f %fx%f\n",
@@ -130,10 +114,15 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     return nsnull;
   image->SetDeviceOffset(-clipExtents.pos);
 
-  gfxContext transferCtx(image);
-  transferCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-  transferCtx.SetPattern(pattern);
-  transferCtx.Paint();
+  nsSVGRenderState tmpState(image);
+
+  mMaskParent = aParent;
+  mMaskParentMatrix = NS_NewSVGMatrix(aMatrix);
+
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsSVGUtils::PaintFrameWithEffects(&tmpState, nsnull, kid);
+  }
 
   PRUint8 *data   = image->Data();
   PRInt32  stride = image->Stride();

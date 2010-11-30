@@ -44,6 +44,7 @@
 #include "xpcprivate.h"
 #include "nsAtomicRefcnt.h"
 #include "nsThreadUtils.h"
+#include "nsTextFormatter.h"
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
@@ -571,6 +572,17 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
     if(!IsValid())
         return NS_ERROR_UNEXPECTED;
     if (NS_IsMainThread() != mMainThread) {
+        NS_NAMED_LITERAL_STRING(kFmt, "Attempt to use JS function on a different thread calling %s.%s. JS objects may not be shared across threads.");
+        PRUnichar* msg =
+            nsTextFormatter::smprintf(kFmt.get(),
+                                      GetClass()->GetInterfaceName(),
+                                      info->name);
+        nsCOMPtr<nsIConsoleService> cs =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (cs)
+            cs->LogStringMessage(msg);
+        NS_Free(msg);
+        
         return NS_ERROR_NOT_SAME_THREAD;
     }
     return GetClass()->CallMethod(this, methodIndex, info, params);

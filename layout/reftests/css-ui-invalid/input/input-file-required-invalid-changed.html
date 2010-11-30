@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <!-- Test: if input isn't valid nor barred from constraint validation,
+             but its default value hasn't been changed,
+             it should not be affected by :-moz-ui-invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i').value='';
+                document.documentElement.className='';">
+    <input id='i' class='invalid' type='file' required>
+  </body>
+</html>

@@ -167,7 +167,6 @@ CPPSRCS +=	cairo-d2d-surface.cpp
 endif
 CSRCS	+=	cairo-win32-font.c
 else
-CSRCS	+=	cairo-ddraw-surface.c
 EXPORTS_cairo +=	cairo-ddraw.h
 endif
 
@@ -206,6 +205,11 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
 EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
+EXPORTS_cairo += $(PDF_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)

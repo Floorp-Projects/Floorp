@@ -69,10 +69,6 @@
 #include "gfxQPainterSurface.h"
 #endif
 
-#ifdef CAIRO_HAS_DDRAW_SURFACE
-#include "gfxDDrawSurface.h"
-#endif
-
 #include <stdio.h>
 #include <limits.h>
 
@@ -194,11 +190,6 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
 #if defined(CAIRO_HAS_QT_SURFACE) && defined(MOZ_WIDGET_QT)
     else if (stype == CAIRO_SURFACE_TYPE_QT) {
         result = new gfxQPainterSurface(csurf);
-    }
-#endif
-#ifdef CAIRO_HAS_DDRAW_SURFACE
-    else if (stype == CAIRO_SURFACE_TYPE_DDRAW) {
-        result = new gfxDDrawSurface(csurf);
     }
 #endif
     else {
@@ -481,7 +472,6 @@ static const char *sSurfaceNamesForSurfaceType[] = {
     "gfx/surface/tee",
     "gfx/surface/xml",
     "gfx/surface/skia",
-    "gfx/surface/ddraw",
     "gfx/surface/d2d"
 };
 

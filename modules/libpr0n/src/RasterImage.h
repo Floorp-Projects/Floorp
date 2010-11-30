@@ -158,12 +158,29 @@ class RasterImage : public mozilla::imagelib::Image
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGICONTAINER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIPROPERTIES
 #ifdef DEBUG
   NS_DECL_IMGICONTAINERDEBUG
 #endif
+
+  // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
+  // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth);
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight);
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType);
+  NS_SCRIPTABLE NS_IMETHOD GetAnimated(PRBool *aAnimated);
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(PRBool *aCurrentFrameIsOpaque);
+  NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval NS_OUTPARAM);
+  NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval NS_OUTPARAM);
+  NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval NS_OUTPARAM);
+  NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, PRUint32 aFlags);
+  NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
+  NS_SCRIPTABLE NS_IMETHOD RequestDecode(void);
+  NS_SCRIPTABLE NS_IMETHOD LockImage(void);
+  NS_SCRIPTABLE NS_IMETHOD UnlockImage(void);
+  NS_SCRIPTABLE NS_IMETHOD ResetAnimation(void);
+  // END NS_DECL_IMGICONTAINER
 
   RasterImage(imgStatusTracker* aStatusTracker = nsnull);
   virtual ~RasterImage();
@@ -448,9 +465,6 @@ private: // data
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
   RasterImage::Anim*        mAnim;
-  
-  //! See imgIContainer for mode constants
-  PRUint16                   mAnimationMode;
   
   //! # loops remaining before animation stops (-1 no stop)
   PRInt32                    mLoopCount;

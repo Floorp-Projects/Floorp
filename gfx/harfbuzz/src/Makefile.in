@@ -50,8 +50,10 @@ CSRCS =            \
 CPPSRCS	=          \
   hb-buffer.cc     \
   hb-font.cc       \
-  hb-ot-shape.cc   \
   hb-ot-layout.cc  \
+  hb-ot-map.cc     \
+  hb-ot-shape-complex-arabic.cc \
+  hb-ot-shape.cc   \
   hb-shape.cc      \
   $(NULL)
 

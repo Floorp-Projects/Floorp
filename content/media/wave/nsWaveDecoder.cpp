@@ -295,7 +295,7 @@ private:
   // Our audio stream.  Created on demand when entering playback state.  It
   // is destroyed when seeking begins and will not be reinitialized until
   // playback resumes, so it is possible for this to be null.
-  nsAutoPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<nsAudioStream> mAudioStream;
 
   // Maximum time to spend waiting for data during buffering.
   TimeDuration mBufferingWait;
@@ -906,7 +906,7 @@ nsWaveStateMachine::ChangeState(State aState)
 void
 nsWaveStateMachine::OpenAudioStream()
 {
-  mAudioStream = new nsAudioStream();
+  mAudioStream = nsAudioStream::AllocateStream();
   if (!mAudioStream) {
     LOG(PR_LOG_ERROR, ("Could not create audio stream"));
   } else {
@@ -1446,7 +1446,6 @@ nsWaveDecoder::MetadataLoaded()
   } else {
     StartProgress();
   }
-  StartTimeUpdate();
 }
 
 void
@@ -1564,7 +1563,6 @@ nsWaveDecoder::Shutdown()
     return;
 
   mShuttingDown = PR_TRUE;
-  StopTimeUpdate();
 
   nsMediaDecoder::Shutdown();
 

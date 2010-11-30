@@ -45,8 +45,8 @@ function test() {
   const HISTORY_SIDEBAR_TREE_ID = "historyTree";
 
   // Initialization.
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
   let bs = PlacesUtils.bookmarks;
   let hs = PlacesUtils.history;
   let sidebarBox = document.getElementById("sidebar-box");
@@ -125,22 +125,20 @@ function test() {
           preFunc();
 
         function observer(aSubject, aTopic, aData) {
-          if (aTopic != "domwindowopened")
-            return;
-          ww.unregisterNotification(observer);
-          let alertDialog = aSubject.QueryInterface(Ci.nsIDOMWindow);
-          alertDialog.addEventListener("load", function () {
-            alertDialog.removeEventListener("load", arguments.callee, false);
-            info("alert dialog observed as expected");
-            executeSoon(function () {
-              alertDialog.close();
+          info("alert dialog observed as expected");
+          os.removeObserver(observer, "common-dialog-loaded");
+          os.removeObserver(observer, "tabmodal-dialog-loaded");
+
+          aSubject.Dialog.ui.button0.click();
+
+          executeSoon(function () {
               toggleSidebar(currentTest.sidebarName);
               currentTest.cleanup();
               postFunc();
             });
-          }, false);
         }
-        ww.registerNotification(observer);
+        os.addObserver(observer, "common-dialog-loaded", false);
+        os.addObserver(observer, "tabmodal-dialog-loaded", false);
 
         // Select the inserted places item.
         currentTest.selectNode(tree);
@@ -160,7 +158,7 @@ function test() {
         y = y.value + height.value / 2;
         // Simulate the click.
         EventUtils.synthesizeMouse(tree.body, x, y, {}, doc.defaultView);
-        // Now, wait for the domwindowopened observer to catch the alert dialog.
+        // Now, wait for the observer to catch the alert dialog.
         // If something goes wrong, the test will time out at this stage.
         // Note that for the history sidebar, the URL itself is not opened,
         // and Places will show the load-js-data-url-error prompt as an alert

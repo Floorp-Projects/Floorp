@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Bugs with -moz-transform: rotate() and -moz-box-shadow</title>
+
+  <style>
+    body {
+        overflow: hidden;
+    }
+
+    .label {
+        position: absolute;
+        top: 200px;
+        left: 196px;
+        margin: 0;
+        height:16px;
+        width: 300px;
+        -moz-box-shadow: 0 0 .7em black;
+        border: 1px black solid;
+    }
+    .vlabel {
+        position: absolute;
+        top: 58px;
+        left: 42px;
+        margin: 0;
+        width: 16px;
+        height: 300px;
+        -moz-box-shadow: 0 0 .7em black;
+        border: 1px black solid;
+    }
+  </style>
+</head>
+
+<body>
+
+<p class="label"></p>
+<p class="label" style="top: 400px; -moz-box-shadow:none; outline: 3px dashed blue;"></p>
+<p class="vlabel" style="-moz-box-shadow:none; outline: 3px dashed blue;"></p>
+<p class="vlabel" style="left:102px; "></p>
+<p class="vlabel" style="top:454px; -moz-box-shadow:none; outline: 3px dashed blue; "></p>
+<p class="vlabel" style="top:454px; left:102px;"></p>
+
+<!-- cover a few shadow corners which are a bit different -->
+<div style="position:absolute; top:40px; left:85px; width:50px; height:50px; background:black; z-index:99;"></div>
+<div style="position:absolute; top:340px; left:85px; width:50px; height:50px; background:black; z-index:99;"></div>
+<div style="position:absolute; top:420px; left:85px; width:50px; height:50px; background:black; z-index:99;"></div>
+<div style="position:absolute; top:730px; left:85px; width:50px; height:50px; background:black; z-index:99;"></div>
+
+</body>
+
+</html>

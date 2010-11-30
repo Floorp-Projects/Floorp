@@ -48,6 +48,10 @@ namespace imagelib {
 class Image : public imgIContainer
 {
 public:
+  // From NS_DECL_IMGICONTAINER:
+  NS_SCRIPTABLE NS_IMETHOD GetAnimationMode(PRUint16 *aAnimationMode);
+  NS_SCRIPTABLE NS_IMETHOD SetAnimationMode(PRUint16 aAnimationMode);
+
   imgStatusTracker& GetStatusTracker() { return *mStatusTracker; }
 
   /**
@@ -134,15 +138,18 @@ protected:
   // Member data shared by all implementations of this abstract class
   nsAutoPtr<imgStatusTracker> mStatusTracker;
   PRUint32                    mAnimationConsumers;
-  PRPackedBool                mInitialized;   // Have we been initalized?
-  PRPackedBool                mAnimating;
-  PRPackedBool                mError;         // Error handling
+  PRUint16                    mAnimationMode;   // Enum values in imgIContainer
+  PRPackedBool                mInitialized:1;   // Have we been initalized?
+  PRPackedBool                mAnimating:1;     // Are we currently animating?
+  PRPackedBool                mError:1;         // Error handling
 
   /**
    * Extended by child classes, if they have additional
    * conditions for being able to animate
    */
-  virtual PRBool ShouldAnimate() { return mAnimationConsumers > 0; }
+  virtual PRBool ShouldAnimate() {
+    return mAnimationConsumers > 0 && mAnimationMode != kDontAnimMode;
+  }
 };
 
 } // namespace imagelib

@@ -1,6 +1,7 @@
 # Process this file with automake to produce Makefile.in
 
 NULL =
+EXTRA_DIST = 
 
 # The following warning options are useful for debugging: -Wpadded -Wcast-align
 #AM_CXXFLAGS =
@@ -14,8 +15,9 @@ HBSOURCES =  \
 	hb-blob-private.h \
 	hb-buffer.cc \
 	hb-buffer-private.hh \
+	hb-common.c \
 	hb-font.cc \
-	hb-font-private.hh \
+	hb-font-private.h \
 	hb-object-private.h \
 	hb-open-file-private.hh \
 	hb-open-type-private.hh \
@@ -45,13 +47,19 @@ HBSOURCES += \
 	hb-ot-layout-gsubgpos-private.hh \
 	hb-ot-layout-gsub-private.hh \
 	hb-ot-layout-private.hh \
+	hb-ot-map.cc \
+	hb-ot-map-private.hh \
 	hb-ot-shape.cc \
+	hb-ot-shape-complex-arabic.cc \
+	hb-ot-shape-complex-arabic-table.h \
+	hb-ot-shape-complex-private.hh \
 	hb-ot-shape-private.hh \
 	hb-ot-tag.c \
 	$(NULL)
 HBHEADERS += \
 	hb-ot.h \
 	hb-ot-layout.h \
+	hb-ot-shape.h \
 	hb-ot-tag.h \
 	$(NULL)
 
@@ -81,10 +89,21 @@ if HAVE_FREETYPE
 HBCFLAGS += $(FREETYPE_CFLAGS)
 HBLIBS   += $(FREETYPE_LIBS)
 HBSOURCES += \
-	hb-ft.cc \
+	hb-ft.c \
 	$(NULL)
 HBHEADERS += \
 	hb-ft.h \
+	$(NULL)
+endif
+
+if HAVE_GRAPHITE
+HBCFLAGS += $(GRAPHITE_CFLAGS)
+HBLIBS   += $(GRAPHITE_LIBS)
+HBSOURCES += \
+	hb-graphite.cc \
+	$(NULL)
+HBHEADERS += \
+	hb-graphite.h \
 	$(NULL)
 endif
 
@@ -94,18 +113,35 @@ libharfbuzz_la_CPPFLAGS = $(HBCFLAGS)
 libharfbuzz_la_LIBADD = $(HBLIBS)
 pkginclude_HEADERS = $(HBHEADERS)
 
-noinst_PROGRAMS = main
+
+GENERATORS = \
+	gen-arabic-joining-table.py \
+	$(NULL)
+
+EXTRA_DIST += $(GENERATORS)
+
+noinst_PROGRAMS = main test
 
 main_SOURCES = main.cc
 main_CPPFLAGS = $(HBCFLAGS)
 main_LDADD = libharfbuzz.la $(HBLIBS)
 
+test_SOURCES = test.c
+test_CPPFLAGS = $(HBCFLAGS)
+test_LDADD = libharfbuzz.la $(HBLIBS)
+
 TESTS = \
-	check-internal-symbols.sh
+	check-c-linkage-decls.sh \
+	check-header-guards.sh \
+	check-internal-symbols.sh \
+	$(NULL)
 
 if HAVE_ICU
 else
+if HAVE_GRAPHITE
+else
 TESTS += check-libstdc++.sh
+endif
 endif
 
 -include $(top_srcdir)/git.mk

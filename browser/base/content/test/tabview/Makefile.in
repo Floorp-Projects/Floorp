@@ -48,6 +48,7 @@ _BROWSER_FILES = \
                  browser_tabview_apptabs.js \
                  browser_tabview_bug580412.js \
                  browser_tabview_bug587043.js \
+                 browser_tabview_bug587231.js \
                  browser_tabview_bug587990.js \
                  browser_tabview_bug589324.js \
                  browser_tabview_bug590606.js \
@@ -59,7 +60,9 @@ _BROWSER_FILES = \
                  browser_tabview_bug595804.js \
                  browser_tabview_bug595930.js \
                  browser_tabview_bug595943.js \
+                 browser_tabview_bug597399.js \
                  browser_tabview_bug598600.js \
+                 browser_tabview_bug599626.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_group.js \
@@ -76,6 +79,7 @@ _BROWSER_FILES = \
                  head.js \
                  search1.html \
                  search2.html \
+                 test_bug599626.html \
                  $(NULL)
 
 # compartments: test disabled

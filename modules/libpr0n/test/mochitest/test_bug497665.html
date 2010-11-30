@@ -12,23 +12,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=497665
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=497665">Mozilla Bug 497665</a>
 <p id="display"></p>
-<div id="content"> <!-- style="display: none" -->
-<canvas id="canvas" width="100" height="100"> </canvas>
-<iframe id="test-iframe" src="bug497665-iframe.html" onload="checkFirst()"></iframe> 
-</div>
 <pre id="test">
 <script type="application/javascript">
 
 var image1first, image2first, image1second, image2second, image1third, image2third;
-var iframeelem = document.getElementById('test-iframe');
-var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
 
 SimpleTest.waitForExplicitFinish();
 
 function checkFirst()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+  var iframeelem = document.getElementById('test-iframe');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
 
   var firstimg = iframeelem.contentDocument.getElementById('image1');
   var secondimg = iframeelem.contentDocument.getElementById('image2');
@@ -45,6 +42,10 @@ function checkFirst()
 
 function checkForceReload()
 {
+  var iframeelem = document.getElementById('test-iframe');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
   var firstimg = iframeelem.contentDocument.getElementById('image1');
   var secondimg = iframeelem.contentDocument.getElementById('image2');
   ctx.drawImage(firstimg, 0, 0);
@@ -63,6 +64,10 @@ function checkForceReload()
 
 function checkReload()
 {
+  var iframeelem = document.getElementById('test-iframe');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
   var firstimg = iframeelem.contentDocument.getElementById('image1');
   var secondimg = iframeelem.contentDocument.getElementById('image2');
   ctx.drawImage(firstimg, 0, 0);
@@ -81,5 +86,9 @@ function checkReload()
 
 </script>
 </pre>
+<div id="content"> <!-- style="display: none" -->
+<canvas id="canvas" width="100" height="100"> </canvas>
+<iframe id="test-iframe" src="bug497665-iframe.html" onload="checkFirst()"></iframe>
+</div>
 </body>
 </html>

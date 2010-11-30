@@ -60,6 +60,7 @@
 #include "nsGUIEvent.h"
 #include "nsSVGUtils.h"
 #include "nsSVGSVGElement.h"
+#include "nsSVGEffects.h" // For nsSVGEffects::RemoveAllRenderingObservers
 
 #ifdef MOZ_SMIL
 #include "nsEventDispatcher.h"
@@ -1229,3 +1230,12 @@ nsSVGSVGElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;
 }
+
+#ifndef MOZ_ENABLE_LIBXUL
+// XXXdholbert HACK -- see comment w/ this method's declaration in header file.
+void
+nsSVGSVGElement::RemoveAllRenderingObservers()
+{
+  nsSVGEffects::RemoveAllRenderingObservers(this);
+}
+#endif // !MOZ_LIBXUL

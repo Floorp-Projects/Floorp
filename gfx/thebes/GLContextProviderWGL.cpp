@@ -568,6 +568,7 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
     A2(attrs, LOCAL_WGL_ALPHA_BITS_ARB, aFormat.alpha);
 
     A2(attrs, LOCAL_WGL_DEPTH_BITS_ARB, aFormat.depth);
+    A2(attrs, LOCAL_WGL_STENCIL_BITS_ARB, aFormat.stencil);
 
     if (aFormat.alpha > 0) {
         A2(attrs, LOCAL_WGL_BIND_TO_TEXTURE_RGBA_ARB, LOCAL_GL_TRUE);

@@ -62,6 +62,7 @@ class TestShellParent;
 namespace dom {
 
 class TabParent;
+class PStorageParent;
 
 class ContentParent : public PContentParent
                     , public nsIObserver
@@ -98,6 +99,7 @@ public:
     bool IsAlive();
 
 protected:
+    void OnChannelConnected(int32 pid);
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
@@ -114,8 +116,16 @@ private:
     virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
+    virtual PCrashReporterParent* AllocPCrashReporter();
+    virtual bool DeallocPCrashReporter(PCrashReporterParent* crashreporter);
+
     virtual PTestShellParent* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellParent* shell);
+
+    virtual PAudioParent* AllocPAudio(const PRInt32&,
+                                     const PRInt32&,
+                                     const PRInt32&);
+    virtual bool DeallocPAudio(PAudioParent*);
 
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
@@ -125,8 +135,12 @@ private:
             const nsCString& aMimeContentType,
             const nsCString& aContentDisposition,
             const bool& aForceSave,
-            const PRInt64& aContentLength);
+            const PRInt64& aContentLength,
+            const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppParent* aService);
+
+    virtual PStorageParent* AllocPStorage(const StorageConstructData& aData);
+    virtual bool DeallocPStorage(PStorageParent* aActor);
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefTuple> *retValue);
 

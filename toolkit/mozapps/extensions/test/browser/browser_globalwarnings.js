@@ -22,15 +22,15 @@ add_test(function() {
   Services.prefs.setBoolPref(pref, false);
 
   open_manager("addons://list/extension", function(aWindow) {
-    var label = aWindow.document.querySelector("#list-view label.global-warning-checkcompatibility");
-    is_element_visible(label, "Check Compatibility warning label should be visible");
+    var hbox = aWindow.document.querySelector("#list-view hbox.global-warning-checkcompatibility");
+    is_element_visible(hbox, "Check Compatibility warning hbox should be visible");
     var button = aWindow.document.querySelector("#list-view button.global-warning-checkcompatibility");
     is_element_visible(button, "Check Compatibility warning button should be visible");
 
     info("Clicking 'Enable' button");
     EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
     is(Services.prefs.prefHasUserValue(pref), false, "Check Compatability pref should be cleared");
-    is_element_hidden(label, "Check Compatibility warning label should be hidden");
+    is_element_hidden(hbox, "Check Compatibility warning hbox should be hidden");
     is_element_hidden(button, "Check Compatibility warning button should be hidden");
 
     close_manager(aWindow, function() {
@@ -47,15 +47,15 @@ add_test(function() {
   Services.prefs.setBoolPref(pref, false);
 
   open_manager(null, function(aWindow) {
-    var label = aWindow.document.querySelector("#list-view label.global-warning-updatesecurity");
-    is_element_visible(label, "Check Update Security warning label should be visible");
+    var hbox = aWindow.document.querySelector("#list-view hbox.global-warning-updatesecurity");
+    is_element_visible(hbox, "Check Update Security warning hbox should be visible");
     var button = aWindow.document.querySelector("#list-view button.global-warning-updatesecurity");
     is_element_visible(button, "Check Update Security warning button should be visible");
 
     info("Clicking 'Enable' button");
     EventUtils.synthesizeMouse(button, 2, 2, { }, aWindow);
     is(Services.prefs.prefHasUserValue(pref), false, "Check Update Security pref should be cleared");
-    is_element_hidden(label, "Check Update Security warning label should be hidden");
+    is_element_hidden(hbox, "Check Update Security warning hbox should be hidden");
     is_element_hidden(button, "Check Update Security warning button should be hidden");
 
     close_manager(aWindow, function() {
