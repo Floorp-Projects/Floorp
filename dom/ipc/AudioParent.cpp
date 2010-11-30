@@ -89,6 +89,46 @@ class AudioPauseEvent : public nsRunnable
     PRBool mPause;
 };
 
+class AudioDrainDoneEvent : public nsRunnable
+{
+ public:
+  AudioDrainDoneEvent(AudioParent* owner)
+  {
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    mOwner->SendDrainDone();
+    return NS_OK;
+  }
+
+ private:
+    nsRefPtr<AudioParent> mOwner;
+};
+
+class AudioDrainEvent : public nsRunnable
+{
+ public:
+  AudioDrainEvent(AudioParent* parent, nsAudioStream* owner)
+  {
+    mParent = parent;
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    mOwner->Drain();
+    nsCOMPtr<nsIRunnable> event = new AudioDrainDoneEvent(mParent);
+    NS_DispatchToMainThread(event);
+    return NS_OK;
+  }
+
+ private:
+    nsRefPtr<nsAudioStream> mOwner;
+    nsRefPtr<AudioParent> mParent;
+};
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(AudioParent, nsITimerCallback)
 
 nsresult
@@ -109,11 +149,11 @@ AudioParent::RecvWrite(
         const PRUint32& count)
 {
   nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mStream, data, count);
-  nsCOMPtr<nsIThread> thread = nsAudioStream::GetGlobalThread();
+  nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
 }
-    
+
 bool
 AudioParent::RecvSetVolume(const float& aVolume)
 {
@@ -125,8 +165,9 @@ AudioParent::RecvSetVolume(const float& aVolume)
 bool
 AudioParent::RecvDrain()
 {
-  if (mStream)
-    mStream->Drain();
+  nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(this, mStream);
+  nsCOMPtr<nsIThread> thread = mStream->GetThread();
+  thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
 }
 
@@ -134,7 +175,7 @@ bool
 AudioParent::RecvPause()
 {
   nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mStream, PR_TRUE);
-  nsCOMPtr<nsIThread> thread = nsAudioStream::GetGlobalThread();
+  nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
 }
@@ -143,7 +184,7 @@ bool
 AudioParent::RecvResume()
 {
   nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mStream, PR_FALSE);
-  nsCOMPtr<nsIThread> thread = nsAudioStream::GetGlobalThread();
+  nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   return true;
 }
