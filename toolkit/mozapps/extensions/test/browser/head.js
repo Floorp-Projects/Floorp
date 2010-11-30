@@ -540,11 +540,22 @@ MockProvider.prototype = {
    */
   addInstall: function MP_addInstall(aInstall) {
     this.installs.push(aInstall);
+    aInstall._provider = this;
 
     if (!this.started)
       return;
 
     aInstall.callListeners("onNewInstall");
+  },
+
+  removeInstall: function MP_removeInstall(aInstall) {
+    var pos = this.installs.indexOf(aInstall);
+    if (pos == -1) {
+      ok(false, "Tried to remove an install that wasn't registered with the mock provider");
+      return;
+    }
+
+    this.installs.splice(pos, 1);
   },
 
   /**
@@ -1023,6 +1034,7 @@ MockInstall.prototype = {
         AddonManagerPrivate.callAddonListeners("onInstalling", this.addon);
 
         this.state = AddonManager.STATE_INSTALLED;
+        this._provider.removeInstall(this);
         this.callListeners("onInstallEnded");
         break;
       case AddonManager.STATE_DOWNLOADING:
