@@ -511,10 +511,10 @@ stubs::GetElem(VMFrame &f)
 
   end_getelem:
     f.regs.sp[-2] = *copyFrom;
-    if (copyFrom->isUndefined()) {
+    if (copyFrom->isUndefined() || !rref.isInt32()) {
         if (rref.isInt32())
             cx->addTypeProperty(obj->getTypeObject(), NULL, TYPE_UNDEFINED);
-        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+        f.script()->typeMonitorResult(cx, regs.pc, 0, *copyFrom);
     }
 }
 
@@ -561,8 +561,8 @@ stubs::CallElem(VMFrame &f)
     {
         regs.sp[-1] = thisv;
     }
-    if (regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, regs.pc, 0);
+    if (regs.sp[-2].isUndefined() || !JSID_IS_INT(id))
+        f.script()->typeMonitorResult(cx, regs.pc, 0, regs.sp[-2]);
 }
 
 template<JSBool strict>
