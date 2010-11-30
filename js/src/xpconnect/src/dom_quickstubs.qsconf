@@ -103,6 +103,7 @@ members = [
     'nsIDOMDocument.getElementById',
     'nsIDOMDocument.createDocumentFragment',
     'nsIDOMDocument.createElement',
+    'nsIDOMDocument.createElementNS',
     'nsIDOMDocument.importNode',
     'nsIDOMDocument.createTextNode',
     'nsIDOMElement.removeAttributeNS',
@@ -906,6 +907,11 @@ customMethodCalls = {
         'thisType': 'nsDocument',
         'code': '    nsCOMPtr<nsIContent> result;\n'
                 '    rv = self->CreateElement(arg0, getter_AddRefs(result));'
+    },
+    'nsIDOMDocument_CreateElementNS': {
+        'thisType': 'nsDocument',
+        'code': '    nsCOMPtr<nsIContent> result;\n'
+                '    rv = self->CreateElementNS(arg0, arg1, getter_AddRefs(result));'
     },
     'nsIDOMDocument_CreateTextNode': {
         'thisType': 'nsDocument',
