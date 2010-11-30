@@ -769,9 +769,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     css::SerializeCalc(*this, ops);
   }
   else if (eCSSUnit_Integer == unit) {
-    nsAutoString tmpStr;
-    tmpStr.AppendInt(GetIntValue(), 10);
-    aResult.Append(tmpStr);
+    aResult.AppendInt(GetIntValue(), 10);
   }
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
@@ -832,28 +830,25 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       // round-tripping of all other rgba() values.
       aResult.AppendLiteral("transparent");
     } else {
-      nsAutoString tmpStr;
       PRUint8 a = NS_GET_A(color);
       if (a < 255) {
-        tmpStr.AppendLiteral("rgba(");
+        aResult.AppendLiteral("rgba(");
       } else {
-        tmpStr.AppendLiteral("rgb(");
+        aResult.AppendLiteral("rgb(");
       }
 
       NS_NAMED_LITERAL_STRING(comma, ", ");
 
-      tmpStr.AppendInt(NS_GET_R(color), 10);
-      tmpStr.Append(comma);
-      tmpStr.AppendInt(NS_GET_G(color), 10);
-      tmpStr.Append(comma);
-      tmpStr.AppendInt(NS_GET_B(color), 10);
+      aResult.AppendInt(NS_GET_R(color), 10);
+      aResult.Append(comma);
+      aResult.AppendInt(NS_GET_G(color), 10);
+      aResult.Append(comma);
+      aResult.AppendInt(NS_GET_B(color), 10);
       if (a < 255) {
-        tmpStr.Append(comma);
-        tmpStr.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
+        aResult.Append(comma);
+        aResult.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
       }
-      tmpStr.Append(PRUnichar(')'));
-
-      aResult.Append(tmpStr);
+      aResult.Append(PRUnichar(')'));
     }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
@@ -871,14 +866,10 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.Append(NS_LITERAL_STRING(")"));
   }
   else if (eCSSUnit_Percent == unit) {
-    nsAutoString tmpStr;
-    tmpStr.AppendFloat(GetPercentValue() * 100.0f);
-    aResult.Append(tmpStr);
+    aResult.AppendFloat(GetPercentValue() * 100.0f);
   }
   else if (eCSSUnit_Percent < unit) {  // length unit
-    nsAutoString tmpStr;
-    tmpStr.AppendFloat(GetFloatValue());
-    aResult.Append(tmpStr);
+    aResult.AppendFloat(GetFloatValue());
   }
   else if (eCSSUnit_Gradient == unit) {
     nsCSSValueGradient* gradient = GetGradientValue();
