@@ -40,6 +40,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PAudioChild.h"
 #include "mozilla/dom/AudioChild.h"
+#include "mozilla/Monitor.h"
 #include "nsXULAppAPI.h"
 using namespace mozilla::dom;
 #endif
@@ -65,10 +66,6 @@ using mozilla::TimeStamp;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gAudioStreamLog = nsnull;
-#endif
-
-#ifdef MOZ_IPC
-static nsIThread *gAudioPlaybackThread = nsnull;
 #endif
 
 #define FAKE_BUFFER_SIZE 176400
@@ -143,10 +140,11 @@ class nsAudioStreamRemote : public nsAudioStream
   SampleFormat mFormat;
   int mRate;
   int mChannels;
-  // PR_TRUE if this audio stream is paused.
-  PRPackedBool mPaused;
 
   PRInt32 mBytesPerSample;
+
+  // PR_TRUE if this audio stream is paused.
+  PRPackedBool mPaused;
 
   friend class AudioInitEvent;
 };
@@ -295,32 +293,17 @@ void nsAudioStream::InitLibrary()
 #ifdef PR_LOGGING
   gAudioStreamLog = PR_NewLogModule("nsAudioStream");
 #endif
-
-#ifdef MOZ_IPC
-  // We only need this thread in the main process.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      NS_NewThread(&gAudioPlaybackThread);
-  }
-#endif
 }
 
 void nsAudioStream::ShutdownLibrary()
 {
-#ifdef MOZ_IPC
-  NS_IF_RELEASE(gAudioPlaybackThread);
-#endif
 }
 
 
 nsIThread *
-nsAudioStream::GetGlobalThread()
+nsAudioStream::GetThread()
 {
-#ifdef MOZ_IPC
-  NS_IF_ADDREF(gAudioPlaybackThread);
-  return gAudioPlaybackThread;
-#else
-  return nsnull;
-#endif
+  return mAudioPlaybackThread;
 }
 
 nsAudioStream* nsAudioStream::AllocateStream()
@@ -342,6 +325,12 @@ nsAudioStreamLocal::nsAudioStreamLocal() :
   mPaused(PR_FALSE),
   mInError(PR_FALSE)
 {
+#ifdef MOZ_IPC
+  // We only need this thread in the main process.
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    NS_NewThread(getter_AddRefs(mAudioPlaybackThread));
+  }
+#endif
 }
 
 nsAudioStreamLocal::~nsAudioStreamLocal()
@@ -663,7 +652,8 @@ nsAudioStreamRemote::Drain()
   if (!mAudioChild)
     return;
   nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(mAudioChild);
-  NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+  NS_DispatchToMainThread(event);
+  mAudioChild->WaitForDrain();
 }
  
 void
