@@ -162,6 +162,8 @@ pixman-rename-and-endian.patch: include cairo-platform.h for renaming of externa
 
 NOTE: we previously supported ARM assembler on MSVC, this has been removed because of the maintenance burden
 
+pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symbols are not exported in libxul
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
