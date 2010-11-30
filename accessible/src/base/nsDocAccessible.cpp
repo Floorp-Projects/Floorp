@@ -1923,6 +1923,26 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
 
     updateFlags |= eAccessible;
 
+    if (!aIsInsert) {
+      // Fire menupopup end event before hide event if a menu goes away.
+
+      // XXX: We don't look into children of hidden subtree to find hiding
+      // menupopup (as we did prior bug 570275) because we don't do that when
+      // menu is showing (and that's impossible until bug 606924 is fixed).
+      // Nevertheless we should do this at least because layout coalesces
+      // the changes before our processing and we may miss some menupopup
+      // events. Now we just want to be consistent in content insertion/removal
+      // handling.
+      const nsRoleMapEntry* roleMapEntry = accessible->GetRoleMapEntry();
+      if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+        nsRefPtr<AccEvent> event =
+          new AccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END, accessible);
+
+        if (event)
+          FireDelayedAccessibleEvent(event);
+      }
+    }
+
     // Fire show/hide event.
     if (aFireAllEvents) {
       nsRefPtr<AccEvent> event;
