@@ -58,7 +58,7 @@ function run_test() {
 
     _("Update some prefs, including one that's to be reset/deleted.");
     Svc.Prefs.set("testing.deleteme", "I'm going to be deleted!"); 
-    record = new PrefRec("http://fake/uri");
+    record = new PrefRec("prefs", PREFS_GUID);
     record.value = {
       "testing.int": 42,
       "testing.string": "im in ur prefs",
@@ -73,6 +73,14 @@ function run_test() {
     do_check_eq(prefs.get("testing.deleteme"), undefined);
     do_check_eq(prefs.get("testing.dont.change"), "Please don't change me.");
     do_check_eq(Svc.Prefs.get("prefs.sync.testing.somepref"), true);
+
+    _("Only the current app's preferences are applied.");
+    record = new PrefRec("prefs", "some-fake-app");
+    record.value = {
+      "testing.int": 98
+    };
+    store.update(record);
+    do_check_eq(prefs.get("testing.int"), 42);
 
   } finally {
     prefs.resetBranch("");
