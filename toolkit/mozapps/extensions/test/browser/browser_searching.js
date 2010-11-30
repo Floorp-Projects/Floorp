@@ -101,12 +101,8 @@ function getAnonymousElementByAttribute(aElement, aName, aValue) {
  *         The expected isSearching state
  */
 function check_is_searching(aExpectedSearching) {
-  is(gManagerWindow.gHeader.isSearching, aExpectedSearching,
-     "Should get expected isSearching state");
-
-  var throbber = gManagerWindow.document.getElementById("header-searching");
-  var style = gManagerWindow.document.defaultView.getComputedStyle(throbber, "");
-  is(style.visibility, aExpectedSearching ? "visible" : "hidden",
+  var loading = gManagerWindow.document.getElementById("search-loading");
+  is(!is_hidden(loading), aExpectedSearching,
      "Search throbber should be showing iff currently searching");
 }
 
@@ -291,6 +287,26 @@ function check_results(aQuery, aSortBy, aReverseOrder, aShowLocal) {
   // Check actual vs. expected list of results
   var totalExpectedResults = expectedOrder.length + unknownOrder.length;
   is(actualOrder.length, totalExpectedResults, "Should get correct number of results");
+
+  // Check the "first" and "last" attributes are set correctly
+  for (let i = 0; i < actualResults.length; i++) {
+    if (i == 0) {
+      is(actualResults[0].item.hasAttribute("first"), true,
+         "First item should have 'first' attribute set");
+      is(actualResults[0].item.hasAttribute("last"), false,
+         "First item should not have 'last' attribute set");
+    } else if (i == (actualResults.length - 1)) {
+      is(actualResults[actualResults.length - 1].item.hasAttribute("first"), false,
+         "Last item should not have 'first' attribute set");
+      is(actualResults[actualResults.length - 1].item.hasAttribute("last"), true,
+         "Last item should have 'last' attribute set");
+    } else {
+      is(actualResults[i].item.hasAttribute("first"), false,
+         "Item " + i + " should not have 'first' attribute set");
+      is(actualResults[i].item.hasAttribute("last"), false,
+         "Item " + i + " should not have 'last' attribute set");
+    }
+  }
 
   var i = 0;
   for (; i < expectedOrder.length; i++)

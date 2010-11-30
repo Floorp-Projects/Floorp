@@ -23,6 +23,12 @@
       testRelation("label1", RELATION_LABEL_FOR, "checkbox1");
       testRelation("checkbox1", RELATION_LABELLED_BY, "label1");
 
+      // html:label@for, multiple
+      testRelation("label1_1", RELATION_LABEL_FOR, "checkbox1_1");
+      testRelation("label1_2", RELATION_LABEL_FOR, "checkbox1_1");
+      testRelation("checkbox1_1", RELATION_LABELLED_BY,
+                   [ "label1_1", "label1_2" ]);
+
       // aria-labelledby
       testRelation("label2", RELATION_LABEL_FOR, "checkbox2");
       testRelation("checkbox2", RELATION_LABELLED_BY, "label2");
@@ -65,6 +71,9 @@
       testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
 
       // aria-controls
+      getAccessible("tab");
+      todo(false,
+           "Getting an accessible tab, otherwise relations for tabpanel aren't cached. Bug 606924 will fix that.");
       testRelation("tabpanel", RELATION_CONTROLLED_BY, "tab");
       testRelation("tab", RELATION_CONTROLLER_FOR, "tabpanel");
 
@@ -87,8 +96,9 @@
 
       // output 'for' relations
       testRelation("output", RELATION_CONTROLLED_BY, ["input", "input2"]);
-      testRelation("input", RELATION_CONTROLLER_FOR, "output");
-      testRelation("input2", RELATION_CONTROLLER_FOR, "output");
+      testRelation("output2", RELATION_CONTROLLED_BY, ["input", "input2"]);
+      testRelation("input", RELATION_CONTROLLER_FOR, ["output", "output2"]);
+      testRelation("input2", RELATION_CONTROLLER_FOR, ["output", "output2"]);
 
       // 'described by'/'description for' relation for html:table and
       // html:caption
@@ -142,6 +152,10 @@
 
   <label id="label1" for="checkbox1">label</label>
   <input id="checkbox1" />
+
+  <label id="label1_1" for="checkbox1_1">label</label>
+  <label id="label1_2" for="checkbox1_1">label</label>
+  <input id="checkbox1_1" />
 
   <span id="label2">label</span>
   <span role="checkbox" id="checkbox2" aria-labelledby="label2"></span>
@@ -204,6 +218,7 @@
     <input id="input2" />
     <input type="submit" id="submit" />
     <output id="output" style="display:block" for="input input2"></output>
+    <output id="output2" for="input input2"></output>
   </form>
 
   <table id="table">

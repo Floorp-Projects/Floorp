@@ -458,7 +458,7 @@ class Compiler : public BaseCompiler
     void emitRightDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
                              MaybeJump &rhsNotNumber2);
     bool tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
-                               FrameEntry *lhs, FrameEntry *rhs);
+                               FrameEntry *lhs, FrameEntry *rhs, JSValueType type);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);

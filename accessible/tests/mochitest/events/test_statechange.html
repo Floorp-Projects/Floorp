@@ -60,7 +60,7 @@
 
       this.invoke = function invalidInput_invoke() {
         // Note: this should fire an EVENT_STATE_CHANGE
-        this.DOMNode.value = "I am too long";
+        this.DOMNode.value = "I am not an email";
       };
 
       this.check = function invalidInput_check() {
@@ -88,7 +88,7 @@
       gQueue.push(new makeEditableDoc(doc));
 
       // invalid state change
-      gQueue.push(new invalidInput("maxlength"));
+      gQueue.push(new invalidInput("email"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -120,7 +120,7 @@
     <iframe id="iframe"></iframe>
   </div>
 
-  <input id="maxlength" maxlength="1">
+  <input id="email" type='email'>
 
   <div id="eventdump"></div>
 </body>

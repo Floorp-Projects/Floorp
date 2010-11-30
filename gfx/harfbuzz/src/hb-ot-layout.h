@@ -35,6 +35,7 @@
 
 HB_BEGIN_DECLS
 
+
 #define HB_OT_TAG_GDEF HB_TAG('G','D','E','F')
 #define HB_OT_TAG_GSUB HB_TAG('G','S','U','B')
 #define HB_OT_TAG_GPOS HB_TAG('G','P','O','S')
@@ -43,34 +44,8 @@ HB_BEGIN_DECLS
  * GDEF
  */
 
-typedef enum {
-  HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED	= 0x0000,
-  HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH	= 0x0002,
-  HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE	= 0x0004,
-  HB_OT_LAYOUT_GLYPH_CLASS_MARK		= 0x0008,
-  HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT	= 0x0010
-} hb_ot_layout_glyph_class_t;
-
-/* XXX These should eventually be removed as we move synthesized glyph
- * classes in harfbuzz. */
-
 hb_bool_t
 hb_ot_layout_has_glyph_classes (hb_face_t *face);
-
-hb_ot_layout_glyph_class_t
-hb_ot_layout_get_glyph_class (hb_face_t      *face,
-			      hb_codepoint_t  glyph);
-
-void
-hb_ot_layout_set_glyph_class (hb_face_t                 *face,
-			      hb_codepoint_t             glyph,
-			      hb_ot_layout_glyph_class_t klass);
-
-void
-hb_ot_layout_build_glyph_classes (hb_face_t      *face,
-				  hb_codepoint_t *glyphs,
-				  unsigned char  *klasses,
-				  uint16_t        count);
 
 /* Not that useful.  Provides list of attach points for a glyph that a
  * client may want to cache */
@@ -83,12 +58,13 @@ hb_ot_layout_get_attach_points (hb_face_t      *face,
 
 /* Ligature caret positions */
 unsigned int
-hb_ot_layout_get_lig_carets (hb_font_t      *font,
-			     hb_face_t      *face,
-			     hb_codepoint_t  glyph,
-			     unsigned int    start_offset,
-			     unsigned int   *caret_count /* IN/OUT */,
-			     int            *caret_array /* OUT */);
+hb_ot_layout_get_ligature_carets (hb_font_t      *font,
+				  hb_face_t      *face,
+				  hb_direction_t  direction,
+				  hb_codepoint_t  glyph,
+				  unsigned int    start_offset,
+				  unsigned int   *caret_count /* IN/OUT */,
+				  int            *caret_array /* OUT */);
 
 
 /*
@@ -212,9 +188,7 @@ hb_ot_layout_position_lookup (hb_font_t    *font,
 
 /* Should be called after all the position_lookup's are done */
 void
-hb_ot_layout_position_finish (hb_font_t    *font,
-			      hb_face_t    *face,
-			      hb_buffer_t  *buffer);
+hb_ot_layout_position_finish (hb_buffer_t  *buffer);
 
 
 HB_END_DECLS

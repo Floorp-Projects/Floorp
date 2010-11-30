@@ -1,0 +1,33 @@
+/* Tab Modal Prompt boxes */
+tabmodalprompt {
+  background-color: hsla(0,0%,97%,.15);
+  background-image: -moz-radial-gradient(center 40%, circle closest-side, hsla(0,0%,90%,.5), hsla(0,0%,90%,0));
+}
+
+.mainContainer {
+  padding: 20px;
+  color: black;
+  background-image: -moz-linear-gradient(hsla(0,0%,97%,.9), hsla(0,0%,87%,.9));
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px hsla(0,0%,0%,.25) inset,
+              0 1px 1px hsla(0,0%,0%,.2) inset,
+              0 1px 2px hsla(0,0%,0%,.1) inset,
+              0 1px 0 hsla(0,0%,100%,.4);
+}
+
+.buttonContainer {
+  margin-top: 10px;
+}
+
+.info\.icon {
+  width: 64px !important;
+  height: 64px !important;
+}
+
+.alert-icon {
+  list-style-image: url("chrome://global/skin/icons/information-tabmodal-64.png") !important;
+}
+
+.question-icon {
+  list-style-image: url("chrome://global/skin/icons/question-tabmodal-64.png") !important;
+}

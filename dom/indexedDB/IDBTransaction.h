@@ -66,7 +66,8 @@ struct ObjectStoreInfo;
 class TransactionThreadPool;
 
 class IDBTransaction : public nsDOMEventTargetHelper,
-                       public nsIIDBTransaction
+                       public nsIIDBTransaction,
+                       public nsIThreadObserver
 {
   friend class AsyncConnectionHelper;
   friend class CommitHelper;
@@ -76,6 +77,7 @@ class IDBTransaction : public nsDOMEventTargetHelper,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBTRANSACTION
+  NS_DECL_NSITHREADOBSERVER
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction,
                                            nsDOMEventTargetHelper)
@@ -159,35 +161,6 @@ public:
   GetOrCreateObjectStore(const nsAString& aName,
                          ObjectStoreInfo* aObjectStoreInfo);
 
-  class ThreadObserver : public nsIThreadObserver
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSITHREADOBSERVER
-
-    static bool BeginObserving(IDBTransaction* aTransaction);
-
-  private:
-    ThreadObserver();
-    ~ThreadObserver();
-
-    void UpdateNewlyCreatedTransactions(PRUint32 aRecursionDepth);
-
-    struct TransactionInfo
-    {
-      PRUint32 recursionDepth;
-      nsTArray<nsRefPtr<IDBTransaction> > transactions;
-    };
-
-    nsAutoTArray<TransactionInfo, 1> mTransactions;
-
-    nsCOMPtr<nsIThreadObserver> mPreviousObserver;
-    nsRefPtr<ThreadObserver> mKungFuDeathGrip;
-
-    PRUint32 mBaseRecursionDepth;
-    bool mDone;
-  };
-
 private:
   IDBTransaction();
   ~IDBTransaction();
@@ -200,6 +173,7 @@ private:
   PRUint16 mMode;
   PRUint32 mTimeout;
   PRUint32 mPendingRequests;
+  PRUint32 mCreatedRecursionDepth;
 
   // Only touched on the main thread.
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;

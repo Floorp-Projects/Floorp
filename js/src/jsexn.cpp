@@ -1054,7 +1054,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         cx->markTypeBuiltinFunction(cx->getTypeFunction(fullName));
         
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
-        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 3, JSFUN_CONSTRUCTOR,
+        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 1, JSFUN_CONSTRUCTOR,
                                             JS_TypeHandlerNew, fullName);
         if (!fun)
             return NULL;

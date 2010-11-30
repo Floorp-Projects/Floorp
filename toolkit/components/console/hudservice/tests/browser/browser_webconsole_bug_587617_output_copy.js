@@ -22,7 +22,7 @@ function tabLoaded() {
   // See bugs 574036, 586386 and 587617.
 
   hudId = HUDService.displaysIndex()[0];
-  let HUD = HUDService.hudWeakReferences[hudId].get().HUDBox;
+  let HUD = HUDService.hudReferences[hudId].HUDBox;
   let filterBox = HUD.querySelector(".hud-filter-box");
   outputNode = HUD.querySelector(".hud-output-node");
   let selection = getSelection();

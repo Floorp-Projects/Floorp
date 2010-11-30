@@ -233,3 +233,16 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    */
   readonly attribute long long mozAnimationStartTime;
 };
+
+[scriptable, uuid(8fc58f56-f769-4368-a098-edd08550cf1a)]
+interface nsIDOMMozURLProperty : nsISupports
+{
+  DOMString createObjectURL(in nsIDOMBlob blob);
+  void revokeObjectURL(in DOMString URL);
+};
+
+[scriptable, uuid(05563c0c-b74c-41ad-91d1-bc22d580a581)]
+interface nsIDOMWindow_2_0_BRANCH : nsISupports
+{
+  readonly attribute nsIDOMMozURLProperty URL;
+};

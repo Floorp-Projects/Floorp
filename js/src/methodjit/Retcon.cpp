@@ -170,14 +170,14 @@ Recompiler::patchNative(JITScript *jit, PatchableNative &native)
     /* Patch the jump on object identity to go to the native stub. */
     {
         uint8 *start = (uint8 *)ic.funJump.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(JSC::JITCode(start - 32, 64));
         repatch.relink(ic.funJump, ic.nativeStart);
     }
 
     /* Patch the native function guard to go to the slow path. */
     {
         uint8 *start = (uint8 *)native.nativeFunGuard.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(JSC::JITCode(start - 32, 64));
         repatch.relink(native.nativeFunGuard, ic.slowPathStart);
     }
 
@@ -185,7 +185,7 @@ Recompiler::patchNative(JITScript *jit, PatchableNative &native)
     {
         JSC::CodeLocationLabel joinPoint = ic.slowPathStart.labelAtOffset(ic.slowJoinOffset);
         uint8 *start = (uint8 *)native.nativeJump.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(JSC::JITCode(start - 32, 64));
         repatch.relink(native.nativeJump, joinPoint);
     }
 }
@@ -396,7 +396,7 @@ Recompiler::cleanup(JITScript *jit, Vector<CallSite> *sites, uint32 *recompilati
         ic::CallICInfo *ic = (ic::CallICInfo *) jit->callers.next;
 
         uint8 *start = (uint8 *)ic->funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(JSC::JITCode(start - 32, 64));
 
         repatch.repatch(ic->funGuard, NULL);
         repatch.relink(ic->funJump, ic->slowPathStart);

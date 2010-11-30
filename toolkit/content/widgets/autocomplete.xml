@@ -69,7 +69,7 @@
           <children/>
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       flex="1" allowevents="true"
-                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint"/>
         </xul:hbox>
         <children includes="hbox"/>
       </xul:hbox>
@@ -714,8 +714,6 @@
             this.showCommentColumn = this.mInput.showCommentColumn;
             this.showImageColumn = this.mInput.showImageColumn;
 
-            document.popupNode = null;
-
             var rect = aElement.getBoundingClientRect();
             var nav = aElement.ownerDocument.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                               .getInterface(Components.interfaces.nsIWebNavigation);
@@ -809,7 +807,6 @@
           <![CDATA[
           if (this.mPopupOpen) {
             this.hidePopup();
-            document.popupNode = null;
             this.removeAttribute("width");
           }
         ]]>
@@ -963,7 +960,6 @@
             this.mInput = aInput;
             // clear any previous selection, see bugs 400671 and 488357
             this.selectedIndex = -1;
-            document.popupNode = null;
 
             var width = aElement.getBoundingClientRect().width;
             this.setAttribute("width", width > 100 ? width : 100);

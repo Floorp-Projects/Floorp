@@ -123,7 +123,7 @@ extern SIMD_ALIGNED(int16 kCoefficientsRgbY[768][4]);
 // x64 uses MMX2 (SSE) so emms is not required.
 // Warning C4799: function has no EMMS instruction.
 // EMMS() is slow and should be called by the calling function once per image.
-#if !defined(ARCH_CPU_X86_64)
+#if defined(ARCH_CPU_X86) && !defined(ARCH_CPU_X86_64)
 #if defined(_MSC_VER)
 #define EMMS() __asm emms
 #pragma warning(disable: 4799)

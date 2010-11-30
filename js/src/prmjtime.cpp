@@ -583,19 +583,6 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     int oldReportMode;
 #endif
 
-    /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int
-     * tm_gmtoff, char *tm_zone; when tm_zone is garbage, strftime gets
-     * confused and dumps core.  NSPR20 prtime.c attempts to fill these in by
-     * calling mktime on the partially filled struct, but this doesn't seem to
-     * work as well; the result string has "can't get timezone" for ECMA-valid
-     * years.  Might still make sense to use this, but find the range of years
-     * for which valid tz information exists, and map (per ECMA hint) from the
-     * given year into that range.
-
-     * N.B. This hasn't been tested with anything that actually _uses_
-     * tm_gmtoff; zero might be the wrong thing to set it to if you really need
-     * to format a time.  This fix is for jsdate.c, which only uses
-     * JS_FormatTime to get a string representing the time zone.  */
     memset(&a, 0, sizeof(struct tm));
 
     a.tm_sec = prtm->tm_sec;
@@ -605,11 +592,33 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
 
+    /*
+     * On systems where |struct tm| has members tm_gmtoff and tm_zone, we
+     * must fill in those values, or else strftime will return wrong results
+     * (e.g., bug 511726, bug 554338).
+     */
 #if defined(HAVE_LOCALTIME_R) && defined(HAVE_TM_ZONE_TM_GMTOFF)
     {
+        /*
+         * Fill out |td| to the time represented by |prtm|, leaving the
+         * timezone fields zeroed out. localtime_r will then fill in the
+         * timezone fields for that local time according to the system's
+         * timezone parameters.
+         */
         struct tm td;
-        time_t bogus = 0;
-        localtime_r(&bogus, &td);
+        memset(&td, 0, sizeof(td));
+        td.tm_sec = prtm->tm_sec;
+        td.tm_min = prtm->tm_min;
+        td.tm_hour = prtm->tm_hour;
+        td.tm_mday = prtm->tm_mday;
+        td.tm_mon = prtm->tm_mon;
+        td.tm_wday = prtm->tm_wday;
+        td.tm_year = prtm->tm_year - 1900;
+        td.tm_yday = prtm->tm_yday;
+        td.tm_isdst = prtm->tm_isdst;
+        time_t t = mktime(&td);
+        localtime_r(&t, &td);
+
         a.tm_gmtoff = td.tm_gmtoff;
         a.tm_zone = td.tm_zone;
     }

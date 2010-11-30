@@ -2301,6 +2301,23 @@ SearchScope(JSContext *cx, Script *script, TypeStack *stack, jsid id)
     return SCOPE_GLOBAL;
 }
 
+/* Mark the specified variable as undefined in any scope it could refer to. */
+void
+TrashScope(JSContext *cx, Script *script, jsid id)
+{
+    while (true) {
+        if (!script->isEval()) {
+            TypeSet *types = script->getVariable(cx, id);
+            types->addType(cx, TYPE_UNKNOWN);
+        }
+        if (!script->parent)
+            break;
+        script = script->parent->analysis;
+    }
+    TypeSet *types = cx->getGlobalTypeObject()->getProperty(cx, id, true);
+    types->addType(cx, TYPE_UNKNOWN);
+}
+
 static inline jsid
 GetAtomId(JSContext *cx, Script *script, const jsbytecode *pc, unsigned offset)
 {
@@ -3033,30 +3050,16 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
             jsid id = getLocalId(GET_SLOTNO(pc), code);
             res = evalParent()->getVariable(cx, id);
         } else {
-            /* Watch for functions defined at the top level of an eval, see DEFVAR below. */
             JSAtom *atom = obj->getFunctionPrivate()->atom;
             JS_ASSERT(atom);
             jsid id = ATOM_TO_JSID(atom);
-            if (parent) {
-                if (this->fun) {
-                    /*
-                     * Defined function as a script local variable.  TODO: Fix this case
-                     * once the frontend decides what the semantics are here.
-                     */
-                    res = getVariable(cx, id);
-                } else {
-                    /* Defined function in an eval. */
-                    Script *scope = SearchScope(cx, parent->analysis, parentCode()->inStack, id);
-                    if (scope == SCOPE_GLOBAL) {
-                        res = cx->getGlobalTypeObject()->getProperty(cx, id, true);
-                    } else if (scope) {
-                        res = scope->getVariable(cx, id);
-                        res->addType(cx, TYPE_UNKNOWN);
-                    }
-                }
-            } else {
+            if (isGlobal()) {
                 /* Defined function at global scope. */
                 res = cx->getGlobalTypeObject()->getProperty(cx, id, true);
+            } else {
+                /* Defined function in a function eval() or ambiguous function scope. */
+                TrashScope(cx, this, id);
+                break;
             }
         }
 
@@ -3227,8 +3230,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         jsid id = getLocalId(GET_SLOTNO(pc), code);
         JS_ASSERT(!JSID_IS_VOID(id));
 
-        SetForTypes(cx, state, code, evalParent()->getVariable(cx, id));
-        break;
+        SetForTypes(cx, state, code, evalParent()->getVariable(cx, id)); 
+       break;
       }
 
       case JSOP_FORARG: {
@@ -3264,18 +3267,17 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 
       case JSOP_DEFVAR:
         /*
-         * Watch for variable declarations within an 'eval'.  We will effectively
+         * Watch for variable declarations within an 'eval'. We will effectively
          * ignore this declaration, merging references to it into the innermost
          * containing scope which declares a variable with the same name.
-         * Get that scope and mark its type as unknown.
+         * Get that scope and mark its type as unknown. The same goes for variables
+         * defined in a function script using DEFVAR or DEFFUN. :FIXME: this approach
+         * needs monitoring if there is a DEFVAR is an ambiguous scope, and may be
+         * broken altogether.
          */
-        if (parent && !fun) {
+        if (!isGlobal()) {
             jsid id = GetAtomId(cx, this, pc, 0);
-            Script *scope = SearchScope(cx, parent->analysis, parentCode()->inStack, id);
-            if (scope && scope != SCOPE_GLOBAL) {
-                TypeSet *types = scope->getVariable(cx, id);
-                types->addType(cx, TYPE_UNKNOWN);
-            }
+            TrashScope(cx, this, id);
         }
         break;
 

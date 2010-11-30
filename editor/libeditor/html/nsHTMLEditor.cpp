@@ -144,9 +144,7 @@ nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
 nsHTMLEditor::nsHTMLEditor()
 : nsPlaintextEditor()
 , mIgnoreSpuriousDragEvent(PR_FALSE)
-, mTypeInState(nsnull)
 , mCRInParagraphCreatesParagraph(PR_FALSE)
-, mHTMLCSSUtils(nsnull)
 , mSelectedCellIndex(0)
 , mIsObjectResizingEnabled(PR_TRUE)
 , mIsResizing(PR_FALSE)
@@ -201,10 +199,8 @@ nsHTMLEditor::~nsHTMLEditor()
     }
   }
 
-  NS_IF_RELEASE(mTypeInState);
+  mTypeInState = nsnull;
   mSelectionListenerP = nsnull;
-
-  delete mHTMLCSSUtils;
 
   // free any default style propItems
   RemoveAllDefaultProperties();
@@ -288,9 +284,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     }
 
     // Init the HTML-CSS utils
-    if (mHTMLCSSUtils)
-      delete mHTMLCSSUtils;
-    result = NS_NewHTMLCSSUtils(&mHTMLCSSUtils);
+    result = NS_NewHTMLCSSUtils(getter_Transfers(mHTMLCSSUtils));
     if (NS_FAILED(result)) { return result; }
     mHTMLCSSUtils->Init(this);
 
@@ -306,7 +300,6 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     // init the type-in state
     mTypeInState = new TypeInState();
     if (!mTypeInState) {return NS_ERROR_NULL_POINTER;}
-    NS_ADDREF(mTypeInState);
 
     // init the selection listener for image resizing
     mSelectionListenerP = new ResizerSelectionListener(this);
@@ -434,7 +427,9 @@ nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
 nsresult
 nsHTMLEditor::CreateEventListeners()
 {
-  NS_ENSURE_TRUE(!mEventListener, NS_ERROR_ALREADY_INITIALIZED);
+  // Don't create the handler twice
+  if (mEventListener)
+    return NS_OK;
   mEventListener = do_QueryInterface(
     static_cast<nsIDOMKeyListener*>(new nsHTMLEditorEventListener()));
   NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
@@ -3860,11 +3855,18 @@ nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
     return;
   }
 
+  nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
+
   if (ShouldReplaceRootElement()) {
     ResetRootElementAndEventTarget();
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aChild);
+    if (node && IsMozEditorBogusNode(node)) {
+      // Ignore insertion of the bogus node
+      return;
+    }
     mRules->DocumentModified();
   }
 }
@@ -3874,11 +3876,18 @@ nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                              nsIContent* aChild, PRInt32 aIndexInContainer,
                              nsIContent* aPreviousSibling)
 {
+  nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
+
   if (SameCOMIdentity(aChild, mRootElement)) {
     ResetRootElementAndEventTarget();
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aChild);
+    if (node && IsMozEditorBogusNode(node)) {
+      // Ignore removal of the bogus node
+      return;
+    }
     mRules->DocumentModified();
   }
 }

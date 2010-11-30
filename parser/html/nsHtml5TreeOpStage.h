@@ -49,7 +49,7 @@ class nsHtml5TreeOpStage : public nsAHtml5TreeOpSink {
   
     nsHtml5TreeOpStage();
     
-    ~nsHtml5TreeOpStage();
+    virtual ~nsHtml5TreeOpStage();
   
     /**
      * Flush the operations from the tree operations from the argument

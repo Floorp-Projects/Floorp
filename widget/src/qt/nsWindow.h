@@ -199,8 +199,8 @@ public:
     NS_IMETHOD         GetAttention(PRInt32 aCycleCount);
     NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 
-    NS_IMETHODIMP      SetIMEEnabled(PRUint32 aState);
-    NS_IMETHODIMP      GetIMEEnabled(PRUint32* aState);
+    NS_IMETHODIMP      SetInputMode(const IMEContext& aContext);
+    NS_IMETHODIMP      GetInputMode(IMEContext& aContext);
 
     //
     // utility methods
@@ -252,6 +252,8 @@ protected:
     // leaving fullscreen
     nsSizeMode         mLastSizeMode;
 
+    IMEContext          mIMEContext;
+
     /**
      * Event handlers (proxied from the actual qwidget).
      * They follow normal Qt widget semantics.
@@ -277,9 +279,7 @@ protected:
     virtual nsEventStatus OnScrollEvent(QGraphicsSceneWheelEvent *);
 
     virtual nsEventStatus contextMenuEvent(QGraphicsSceneContextMenuEvent *);
-    virtual nsEventStatus imStartEvent(QEvent *);
-    virtual nsEventStatus imComposeEvent(QEvent *);
-    virtual nsEventStatus imEndEvent(QEvent *);
+    virtual nsEventStatus imComposeEvent(QInputMethodEvent *, PRBool &handled);
     virtual nsEventStatus OnDragEnter (QGraphicsSceneDragDropEvent *);
     virtual nsEventStatus OnDragMotionEvent(QGraphicsSceneDragDropEvent *);
     virtual nsEventStatus OnDragLeaveEvent(QGraphicsSceneDragDropEvent *);

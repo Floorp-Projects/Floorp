@@ -194,6 +194,10 @@
   opacity: .3;
 }
 
+#appmenuPrimaryPane {
+  -moz-border-end: 1px solid ThreeDShadow;
+}
+
 @media all and (-moz-windows-default-theme) {
   #appmenu-popup {
     -moz-appearance: none;
@@ -325,7 +329,7 @@
   -moz-appearance: -moz-window-button-box;
 }
 
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox {
+#main-window[sizemode="maximized"] #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box-maximized;
 }
 
@@ -339,7 +343,7 @@
   -moz-appearance: -moz-window-button-maximize;
 }
 
-#main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox > #titlebar-max {
+#main-window[sizemode="maximized"] #titlebar-max {
   -moz-appearance: -moz-window-button-restore;
 }
 
@@ -655,7 +659,8 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#forward-button:-moz-locale-dir(rtl) {
+#forward-button:-moz-locale-dir(rtl),
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-text {
   -moz-transform: scaleX(-1);
 }
 
@@ -1412,10 +1417,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding-bottom: 1px;
 }
 
-.tabbrowser-tabs:-moz-system-metric(touch-enabled) {
-  min-height: 7.3mozmm;
-}
-
 /* Tabs */
 .tabbrowser-tab,
 .tabs-newtab-button {
@@ -1557,6 +1558,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
   .tabs-newtab-button {
     min-width: 10mozmm;
+  }
+
+  .tab-content {
+    min-height: -moz-calc(6.8mozmm - 7px); /* subtract borders from the desired height */
   }
 }
 
@@ -2115,4 +2120,8 @@ panel[dimmed="true"] {
 #status-bar > statusbarpanel {
   border-width: 0;
   -moz-appearance: none;
+}
+
+browser[tabmodalPromptShowing] {
+  filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
 }

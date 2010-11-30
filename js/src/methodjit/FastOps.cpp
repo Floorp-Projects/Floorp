@@ -164,7 +164,7 @@ mjit::Compiler::jsop_rsh()
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
-    if (tryBinaryConstantFold(cx, frame, JSOP_RSH, lhs, rhs))
+    if (tryBinaryConstantFold(cx, frame, JSOP_RSH, lhs, rhs, knownPushedType(0)))
         return;
 
     if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
@@ -1746,12 +1746,12 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             return;
         }
 
-        RegisterID data = frame.tempRegForData(test);
-        frame.pinReg(data);
-        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
-        frame.unpinReg(data);
+        RegisterID data = frame.copyDataIntoReg(test);
+
+        RegisterID result = data;
+        if (!(Registers::maskReg(data) & Registers::SingleByteRegs))
+            result = frame.allocReg(Registers::SingleByteRegs);
         
-        /* Is the other side boolean? */
         Jump notBoolean;
         if (!test->isTypeKnown())
            notBoolean = frame.testBoolean(Assembler::NotEqual, test);
@@ -1766,6 +1766,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             masm.move(Imm32((op == JSOP_STRICTNE)), result);
             done.linkTo(masm.label(), &masm);
         }
+
+        if (data != result)
+            frame.freeReg(data);
 
         frame.popn(2);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
