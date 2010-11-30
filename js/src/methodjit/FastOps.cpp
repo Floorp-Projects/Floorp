@@ -914,6 +914,53 @@ mjit::Compiler::jsop_typeof()
         }
     }
 
+    JSOp fused = JSOp(PC[JSOP_TYPEOF_LENGTH]);
+    if (fused == JSOP_STRING && !fe->isTypeKnown()) {
+        JSOp op = JSOp(PC[JSOP_TYPEOF_LENGTH + JSOP_STRING_LENGTH]);
+
+        if (op == JSOP_STRICTEQ || op == JSOP_EQ || op == JSOP_STRICTNE || op == JSOP_NE) {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC + JSOP_TYPEOF_LENGTH));
+            JSRuntime *rt = cx->runtime;
+            JSValueType type = JSVAL_TYPE_UNINITIALIZED;
+            Assembler::Condition cond = (op == JSOP_STRICTEQ || op == JSOP_EQ)
+                                        ? Assembler::Equal
+                                        : Assembler::NotEqual;
+            
+            if (atom == rt->atomState.typeAtoms[JSTYPE_VOID]) {
+                type = JSVAL_TYPE_UNDEFINED;
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_STRING]) {
+                type = JSVAL_TYPE_STRING;
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_BOOLEAN]) {
+                type = JSVAL_TYPE_BOOLEAN;
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_NUMBER]) {
+                type = JSVAL_TYPE_INT32;
+
+                /* JSVAL_TYPE_DOUBLE is 0x0 and JSVAL_TYPE_INT32 is 0x1, use <= or > to match both */
+                cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
+            }
+
+            if (type != JSVAL_TYPE_UNINITIALIZED) {
+                PC += JSOP_STRING_LENGTH;;
+                PC += JSOP_EQ_LENGTH;
+
+                RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+
+#if defined JS_NUNBOX32
+                if (frame.shouldAvoidTypeRemat(fe))
+                    masm.set32(cond, masm.tagOf(frame.addressOf(fe)), ImmType(type), result);
+                else
+                    masm.set32(cond, frame.tempRegForType(fe), ImmType(type), result);
+#elif defined JS_PUNBOX64
+                masm.setPtr(cond, frame.tempRegForType(fe), ImmType(type), result);
+#endif
+
+                frame.pop();
+                frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+                return;
+            }
+        }
+    }
+
     prepareStubCall(Uses(1));
     INLINE_STUBCALL(stubs::TypeOf);
     frame.pop();
