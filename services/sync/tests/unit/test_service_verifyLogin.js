@@ -36,6 +36,9 @@ function run_test() {
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
+  // This test expects a clean slate -- no saved passphrase.
+  Weave.Svc.Login.removeAllLogins();
+  
   do_test_pending();
   let server = httpd_setup({
     "/api/1.0/johndoe/info/collections": login_handler,
