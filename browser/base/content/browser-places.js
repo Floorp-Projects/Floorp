@@ -949,7 +949,7 @@ var PlacesStarButton = {
   updateState: function PSB_updateState()
   {
     this._starIcon = document.getElementById("star-button");
-    if (!this._starIcon || gBrowser.currentURI.equals(this._uri)) {
+    if (!this._starIcon || (this._uri && gBrowser.currentURI.equals(this._uri))) {
       return;
     }
 
