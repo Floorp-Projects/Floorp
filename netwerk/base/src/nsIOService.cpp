@@ -174,7 +174,7 @@ PRUint32   nsIOService::gDefaultSegmentCount = 24;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
-    : mOffline(PR_TRUE)
+    : mOffline(PR_FALSE)
     , mOfflineForProfileChange(PR_FALSE)
     , mManageOfflineStatus(PR_TRUE)
     , mSettingOffline(PR_FALSE)
@@ -191,10 +191,20 @@ nsIOService::Init()
     NS_TIME_FUNCTION;
 
     nsresult rv;
-
-    // We need to get references to the DNS service so that we can shut it
+    
+    // We need to get references to these services so that we can shut them
     // down later. If we wait until the nsIOService is being shut down,
     // GetService will fail at that point.
+
+    // TODO(darin): Load the Socket and DNS services lazily.
+
+    mSocketTransportService = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("failed to get socket transport service");
+        return rv;
+    }
+
+    NS_TIME_FUNCTION_MARK("got SocketTransportService");
 
     mDNSService = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
@@ -283,29 +293,7 @@ nsIOService::Init()
 nsIOService::~nsIOService()
 {
     gIOService = nsnull;
-}
-
-nsresult
-nsIOService::InitializeSocketTransportService()
-{
-    NS_TIME_FUNCTION;
-
-    nsresult rv = NS_OK;
-
-    if (!mSocketTransportService) {
-        mSocketTransportService = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("failed to get socket transport service");
-        }
-    }
-
-    if (mSocketTransportService) {
-        rv = mSocketTransportService->Init();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service init failed");
-    }
-
-    return rv;
-}
+}   
 
 nsIOService*
 nsIOService::GetInstance() {
@@ -754,7 +742,10 @@ nsIOService::SetOffline(PRBool offline)
                 rv = mDNSService->Init();
                 NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
             }
-            InitializeSocketTransportService();
+            if (mSocketTransportService) {
+                rv = mSocketTransportService->Init();
+                NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service init failed");
+            }
             mOffline = PR_FALSE;    // indicate success only AFTER we've
                                     // brought up the services
 
