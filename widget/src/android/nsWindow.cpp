@@ -1764,6 +1764,12 @@ nsWindow::OnIMEFocusChange(PRBool aFocus)
 
     AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
                              int(aFocus));
+
+    if (aFocus) {
+        OnIMETextChange(0, 0, 0);
+        OnIMESelectionChange();
+    }
+
     return NS_OK;
 }
 
@@ -1773,25 +1779,22 @@ nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
     ALOGIME("IME: OnIMETextChange: s=%d, oe=%d, ne=%d",
             aStart, aOldEnd, aNewEnd);
 
-    // A quirk in Android makes it necessary to pass the whole text
-    // from index 0 to index aNewEnd. The more efficient way would
-    // have been passing the substring from index aStart to index aNewEnd
+    // A quirk in Android makes it necessary to pass the whole text.
+    // The more efficient way would have been passing the substring from index
+    // aStart to index aNewEnd
 
-    if (aNewEnd > 0) {
-        nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
-        InitEvent(event, nsnull);
-        event.InitForQueryTextContent(0, aNewEnd);
+    nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+    InitEvent(event, nsnull);
+    event.InitForQueryTextContent(0, PR_UINT32_MAX);
 
-        DispatchEvent(&event);
-        if (!event.mSucceeded)
-            return NS_OK;
+    DispatchEvent(&event);
+    if (!event.mSucceeded)
+        return NS_OK;
 
-        AndroidBridge::NotifyIMEChange(event.mReply.mString.get(),
-                                       event.mReply.mString.Length(),
-                                       aStart, aOldEnd, aNewEnd);
-    } else {
-        AndroidBridge::NotifyIMEChange(nsnull, 0, aStart, aOldEnd, aNewEnd);
-    }
+    AndroidBridge::NotifyIMEChange(event.mReply.mString.get(),
+                                   event.mReply.mString.Length(),
+                                   aStart, aOldEnd, aNewEnd);
+
     return NS_OK;
 }
 

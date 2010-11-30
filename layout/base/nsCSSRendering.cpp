@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *   Takeshi Ichimaru <ayakawa.m@gmail.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
@@ -1289,9 +1289,11 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     return;
   }
 
-  // Get any border radius, since box-shadow must also have rounded corners if the frame does
+  // Get any border radius, since box-shadow must also have rounded corners
+  // if the frame does.
   nscoord twipsRadii[8];
-  NS_ASSERTION(aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
+  NS_ASSERTION(aForFrame->GetType() == nsGkAtoms::fieldSetFrame ||
+               aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
   PRBool hasBorderRadius = aForFrame->GetBorderRadii(twipsRadii);
   nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 
@@ -1365,7 +1367,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     }
 
     // Set the "skip rect" to the area within the frame that we don't paint in,
-    // including after blurring. We also use this for clipping later on.
+    // including after blurring.
     nsRect skipRect = shadowClipRect;
     skipRect.Deflate(blurMargin);
     gfxRect skipGfxRect = nsLayoutUtils::RectToGfxRect(skipRect, twipsPerPixel);
@@ -1374,12 +1376,16 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                         PR_MAX(clipRectRadii[C_BL].height, clipRectRadii[C_BR].height), 0);
     }
 
+    // When there's a blur radius, gfxAlphaBoxBlur leaves the skiprect area
+    // unchanged. And by construction the gfxSkipRect is not touched by the
+    // rendered shadow (even after blurring), so those pixels must be completely
+    // transparent in the shadow, so drawing them changes nothing.
     gfxContext* renderContext = aRenderingContext.ThebesContext();
     nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
-
-    shadowContext = blurringArea.Init(shadowPaintRect, 0, blurRadius, twipsPerPixel, renderContext,
-                                      aDirtyRect, &skipGfxRect);
+    shadowContext =
+      blurringArea.Init(shadowPaintRect, 0, blurRadius, twipsPerPixel,
+                        renderContext, aDirtyRect, &skipGfxRect);
     if (!shadowContext)
       continue;
 
@@ -1404,12 +1410,10 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
       renderContext->RoundedRectangle(shadowGfxRect, innerRadii, PR_FALSE);
     else
       renderContext->Rectangle(shadowGfxRect);
-    renderContext->Rectangle(skipGfxRect);
-    renderContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
     renderContext->Clip();
 
-    // Fill the temporary surface minus the area within the frame that we should
-    // not paint in, and blur and apply it
+    // Fill the surface minus the area within the frame that we should
+    // not paint in, and blur and apply it.
     gfxRect shadowPaintGfxRect =
       nsLayoutUtils::RectToGfxRect(shadowPaintRect, twipsPerPixel);
     shadowPaintGfxRect.RoundOut();

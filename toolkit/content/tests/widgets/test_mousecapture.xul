@@ -155,8 +155,15 @@ function runTests()
                              image, "mousemove", "setCapture works on images");
   synthesizeMouse(image, 2, 2, { type: "mouseup" });
 
+  // save scroll
+  var scrollX = parent ? parent.scrollX : 0;
+  var scrollY = parent ? parent.scrollY : 0;
+
   var b = frames[0].document.getElementById("b");
   runCaptureTest(b, selectionCallback);
+
+  // restore scroll
+  if (parent) parent.scroll(scrollX, scrollY);
 
   frames[0].getSelection().collapseToStart();
 

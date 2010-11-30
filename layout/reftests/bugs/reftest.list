@@ -399,7 +399,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 332360-width-ltr.html 332360-ltr-ref.html
 == 332557-1.html 332557-1-ref.html
 == 332975-1.html 332975-1-ref.html
-random-if(gtk2Widget) == 333970-1.html 333970-1-ref.html # bug 333970
+== 333970-1.html 333970-1-ref.html
 == 334829-1a.xhtml 334829-1-ref.xhtml
 == 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
@@ -561,10 +561,10 @@ fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
 == 368020-1.html 368020-1-ref.html
-random == 368020-2.html 368020-2-ref.html # bug 403181 comment 52 explains why this test is disabled.
+== 368020-2.html 368020-2-ref.html
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
-random-if(gtk2Widget) == 368020-5.html 368020-5-ref.html # bug 388591
+== 368020-5.html 368020-5-ref.html
 == 368155-1.xhtml 368155-1-ref.xhtml
 asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html # bug 387205 / bug 457397
 # we can't test this because there's antialiasing involved, and our comparison
@@ -720,7 +720,7 @@ fails == 386147-1.html 386147-1-ref.html # bug 447460
 == 387227-2.html 387227-2-ref.html
 fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 387876-1.html 387876-1-ref.html
-random == 387876-2.html 387876-2-ref.html # bug 471630
+== 387876-2.html 387876-2-ref.html
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
@@ -1425,6 +1425,7 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 539323-3.html 539323-3-ref.html
 == 539880-1.html 539880-1-ref.html
 == 539880-1-dynamic.html 539880-1-ref.html
+== 539949-1.html#test2 539949-1-ref.html#test2
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 != 542116-1.html 542116-1-ref.html

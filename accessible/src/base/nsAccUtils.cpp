@@ -405,8 +405,7 @@ nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
 }
 
 already_AddRefed<nsHyperTextAccessible>
-nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
-                                           nsINode **aNode)
+nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
 {
   // Get accessible from selection's focus DOM point (the DOM point where
   // selection is ended).
@@ -435,12 +434,9 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection *aSelection,
   do {
     nsHyperTextAccessible* textAcc = nsnull;
     CallQueryInterface(accessible, &textAcc);
-    if (textAcc) {
-      if (aNode)
-        NS_ADDREF(*aNode = accessible->GetNode());
-
+    if (textAcc)
       return textAcc;
-    }
+
   } while (accessible = accessible->GetParent());
 
   NS_NOTREACHED("We must reach document accessible implementing nsIAccessibleText!");

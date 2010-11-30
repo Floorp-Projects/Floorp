@@ -969,6 +969,7 @@
              context="toolbar-context-menu" toolboxid="navigator-toolbox"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
+             defaultset="status-bar"
              customizable="true" align="right">
       <statusbar id="status-bar"/>
     </toolbar>
@@ -983,6 +984,42 @@
     <svg:mask id="winstripe-keyhole-forward-mask-hover" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
       <svg:circle cx="-0.35" cy="0.5" r="0.58"/>
+    </svg:mask>
+  </svg:svg>
+#endif
+#ifdef XP_MACOSX
+  <svg:svg height="0">
+    <svg:mask id="pinstripe-tab-ontop-left-curve-mask" maskContentUnits="userSpaceOnUse">
+      <svg:circle cx="9" cy="3" r="3" fill="white"/>
+      <svg:rect x="9" y="0" width="3" height="3" fill="white"/>
+      <svg:rect x="6" y="3" width="6" height="19" fill="white"/>
+      <svg:rect x="1" y="17" width="5" height="5" fill="white"/>
+      <svg:circle cx="1" cy="17" r="5"/>
+      <svg:rect x="0" y="22" width="12" height="1" fill="white"/>
+    </svg:mask>
+    <svg:mask id="pinstripe-tab-ontop-right-curve-mask" maskContentUnits="userSpaceOnUse">
+      <svg:circle cx="3" cy="3" r="3" fill="white"/>
+      <svg:rect x="0" y="0" width="3" height="3" fill="white"/>
+      <svg:rect x="0" y="3" width="6" height="19" fill="white"/>
+      <svg:rect x="6" y="17" width="5" height="5" fill="white"/>
+      <svg:circle cx="11" cy="17" r="5"/>
+      <svg:rect x="0" y="22" width="12" height="1" fill="white"/>
+    </svg:mask>
+    <svg:mask id="pinstripe-tab-onbottom-left-curve-mask" maskContentUnits="userSpaceOnUse">
+      <svg:circle cx="9" cy="20" r="3" fill="white"/>
+      <svg:rect x="9" y="20" width="3" height="3" fill="white"/>
+      <svg:rect x="6" y="1" width="6" height="19" fill="white"/>
+      <svg:rect x="1" y="1" width="5" height="5" fill="white"/>
+      <svg:circle cx="1" cy="6" r="5"/>
+      <svg:rect x="0" y="0" width="12" height="1" fill="white"/>
+    </svg:mask>
+    <svg:mask id="pinstripe-tab-onbottom-right-curve-mask" maskContentUnits="userSpaceOnUse">
+      <svg:circle cx="3" cy="20" r="3" fill="white"/>
+      <svg:rect x="0" y="20" width="3" height="3" fill="white"/>
+      <svg:rect x="0" y="1" width="6" height="19" fill="white"/>
+      <svg:rect x="6" y="1" width="5" height="5" fill="white"/>
+      <svg:circle cx="11" cy="6" r="5"/>
+      <svg:rect x="0" y="0" width="12" height="1" fill="white"/>
     </svg:mask>
   </svg:svg>
 #endif

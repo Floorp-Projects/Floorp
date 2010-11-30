@@ -21,19 +21,24 @@
       var docAcc = getAccessible(document, [nsIAccessibleDocument]);
       if (docAcc) {
         testStates(docAcc, STATE_READONLY);
+        testStates("aria_article", STATE_READONLY);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
         testStates("article", STATE_READONLY);
         testStates("editable_article", 0, EXT_STATE_EDITABLE);
 
         document.designMode = "on";
 
         testStates(docAcc, 0, EXT_STATE_EDITABLE);
-        testStates("article", 0, EXT_STATE_EDITABLE);
+        testStates("aria_article", 0, EXT_STATE_EDITABLE);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
         testStates("article", 0, EXT_STATE_EDITABLE);
         testStates("editable_article", 0, EXT_STATE_EDITABLE);
   
         document.designMode = "off";
 
         testStates(docAcc, STATE_READONLY);
+        testStates("aria_article", STATE_READONLY);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
         testStates("article", STATE_READONLY);
         testStates("editable_article", 0, EXT_STATE_EDITABLE);
       }
@@ -51,13 +56,24 @@
     href="https://bugzilla.mozilla.org/show_bug.cgi?id=467387"
     title="Expose non-editable documents as readonly, regardless of role">
      Mozilla Bug 467387
+  </a><br/>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=613502"
+    title="Map <article> like we do aria role article">
+     Mozilla Bug 613502
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <div id="article" role="article">article</div>
-  <div id="editable_article" role="article" contentEditable="true">editable article</doc>
+  <div id="aria_article" role="article">aria article</div>
+  <div id="editable_aria_article" role="article" contentEditable="true">
+    editable aria article</div>
+
+  <article id="article">article</article>
+  <article id="editable_article" contentEditable="true">
+    editable article</article>
+
 </body>
 </html>

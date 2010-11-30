@@ -367,10 +367,14 @@ SessionStoreService.prototype = {
 
   /**
    * Start tracking a window.
-   * Important note: despite its name, this function doesn't initialize
-   * the component!
+   * This function also initializes the component if it's not already
+   * initialized.
    */
   init: function sss_init(aWindow) {
+    // Initialize the service if needed.
+    if (!this._initialized)
+      this.initService();
+
     if (!aWindow || this._loadState == STATE_RUNNING) {
       // make sure that all browser windows which try to initialize
       // SessionStore are really tracked by it
@@ -385,10 +389,6 @@ SessionStoreService.prototype = {
         this._loadState = STATE_RUNNING;
       return;
     }
-
-    // Initialize the service if needed.
-    if (!this._initialized)
-      this.initService();
 
     // As this is called at delayedStartup, restoration must be initiated here
     this.onLoad(aWindow);

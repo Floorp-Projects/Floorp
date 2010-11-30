@@ -357,14 +357,17 @@ void nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
   mReadOnly = inMakeReadonly;
 }
 
-void
+nsresult
 nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
                              PRInt32   aFrameOffset,
                              nsRect*   aRect,
                              nscoord*  aBidiIndicatorSize)
 {
   nsPoint framePos(0, 0);
-  aFrame->GetPointFromOffset(aFrameOffset, &framePos);
+  nsresult rv = aFrame->GetPointFromOffset(aFrameOffset, &framePos);
+  if (NS_FAILED(rv))
+    return rv;
+
   nsIFrame *frame = aFrame->GetContentInsertionFrame();
   NS_ASSERTION(frame, "We should not be in the middle of reflow");
   nscoord baseline = frame->GetCaretBaseline();
@@ -401,6 +404,8 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
 
   if (aBidiIndicatorSize)
     *aBidiIndicatorSize = caretMetrics.mBidiIndicatorSize;
+
+  return NS_OK;
 }
 
 nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
@@ -741,6 +746,10 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!presShell)
     return NS_ERROR_FAILURE;
 
+  if (!aContentNode || !aContentNode->IsInDoc() ||
+      presShell->GetDocument() != aContentNode->GetCurrentDoc())
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
@@ -893,6 +902,9 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
       }
     }
   }
+
+  NS_ASSERTION(!theFrame || theFrame->PresContext()->PresShell() == presShell,
+               "caret frame is in wrong document");
   *aReturnFrame = theFrame;
   *aReturnOffset = theFrameOffset;
   return NS_OK;
@@ -1059,7 +1071,8 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
       mDrawn = PR_FALSE;
       return;
     }
-    if (!mLastContent->IsInDoc())
+    if (!mLastContent->IsInDoc() ||
+        presShell->GetDocument() != mLastContent->GetCurrentDoc())
     {
       mLastContent = nsnull;
       mDrawn = PR_FALSE;
@@ -1081,7 +1094,11 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   NS_ASSERTION(aFrame, "Should have a frame here");
 
   nscoord bidiIndicatorSize;
-  GetGeometryForFrame(aFrame, aFrameOffset, &mCaretRect, &bidiIndicatorSize);
+  nsresult rv =
+    GetGeometryForFrame(aFrame, aFrameOffset, &mCaretRect, &bidiIndicatorSize);
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
 
   // on RTL frames the right edge of mCaretRect must be equal to framePos
   const nsStyleVisibility* vis = aFrame->GetStyleVisibility();

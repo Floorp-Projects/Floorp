@@ -50,6 +50,7 @@ _TEST_FILES = \
 		test_doc.html \
 		test_singleline.html \
 		test_whitespaces.html \
+		test_words.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
