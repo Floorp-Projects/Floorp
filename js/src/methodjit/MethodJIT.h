@@ -87,7 +87,7 @@ struct VMFrame
 
 # ifdef JS_NO_FASTCALL
     inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(this) - 3;
+        return reinterpret_cast<void**>(this) - 5;
     }
 # else
     inline void** returnAddressLocation() {
