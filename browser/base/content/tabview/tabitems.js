@@ -68,8 +68,9 @@ function TabItem(tab, options) {
     )
     .appendTo('body');
 
+  this._cachedImageData = null;
+  this.shouldHideCachedData = false;
   this.canvasSizeForced = false;
-  this.isShowingCachedData = false;
   this.favEl = (iQ('.favicon', $div))[0];
   this.favImgEl = (iQ('.favicon>img', $div))[0];
   this.nameEl = (iQ('.tab-title', $div))[0];
@@ -243,15 +244,32 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: isShowingCachedData
+  // Returns a boolean indicates whether the cached data is being displayed or
+  // not. 
+  isShowingCachedData: function() {
+    return (this._cachedImageData != null);
+  },
+
+  // ----------
   // Function: showCachedData
   // Shows the cached data i.e. image and title.  Note: this method should only
   // be called at browser startup with the cached data avaliable.
+  //
+  // Parameters:
+  //   tabData - the tab data
   showCachedData: function TabItem_showCachedData(tabData) {
-    this.isShowingCachedData = true;
-    var $nameElement = iQ(this.nameEl);
-    var $canvasElement = iQ(this.canvasEl);
-    var $cachedThumbElement = iQ(this.cachedThumbEl);
-    $cachedThumbElement.attr("src", tabData.imageData).show();
+    if (!this._cachedImageData) {
+      TabItems.cachedDataCounter++;
+      this.tab.linkedBrowser._tabViewTabItemWithCachedData = this;
+      if (TabItems.cachedDataCounter == 1)
+        gBrowser.addTabsProgressListener(TabItems.tabsProgressListener);
+    }
+    this._cachedImageData = tabData.imageData;
+    let $nameElement = iQ(this.nameEl);
+    let $canvasElement = iQ(this.canvasEl);
+    let $cachedThumbElement = iQ(this.cachedThumbEl);
+    $cachedThumbElement.attr("src", this._cachedImageData).show();
     $canvasElement.css({opacity: 0.0});
     $nameElement.text(tabData.title ? tabData.title : "");
   },
@@ -260,11 +278,17 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: hideCachedData
   // Hides the cached data i.e. image and title and show the canvas.
   hideCachedData: function TabItem_hideCachedData() {
-    var $canvasElement = iQ(this.canvasEl);
-    var $cachedThumbElement = iQ(this.cachedThumbEl);
+    let $canvasElement = iQ(this.canvasEl);
+    let $cachedThumbElement = iQ(this.cachedThumbEl);
     $cachedThumbElement.hide();
     $canvasElement.css({opacity: 1.0});
-    this.isShowingCachedData = false;
+    if (this._cachedImageData) {
+      TabItems.cachedDataCounter--;
+      this._cachedImageData = null;
+      this.tab.linkedBrowser._tabViewTabItemWithCachedData = null;
+      if (TabItems.cachedDataCounter == 0)
+        gBrowser.removeTabsProgressListener(TabItems.tabsProgressListener);
+    }
   },
 
   // ----------
@@ -274,13 +298,21 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Parameters:
   //   getImageData - true to include thumbnail pixels (and page title as well); default false
   getStorageData: function TabItem_getStorageData(getImageData) {
+    let imageData = null;
+
+    if (getImageData) { 
+      if (this._cachedImageData)
+        imageData = this._cachedImageData;
+      else if (this.tabCanvas)
+        imageData = this.tabCanvas.toImageData();
+    }
+
     return {
       bounds: this.getBounds(),
       userSize: (Utils.isPoint(this.userSize) ? new Point(this.userSize) : null),
       url: this.tab.linkedBrowser.currentURI.spec,
       groupID: (this.parent ? this.parent.id : 0),
-      imageData: (getImageData && this.tabCanvas ?
-                  this.tabCanvas.toImageData() : null),
+      imageData: imageData,
       title: getImageData && this.tab.label || null
     };
   },
@@ -711,6 +743,8 @@ let TabItems = {
   fontSize: 9,
   items: [],
   paintingPaused: 0,
+  cachedDataCounter: 0,  // total number of cached data being displayed.
+  tabsProgressListener: null,
   _tabsWaitingForUpdate: [],
   _heartbeatOn: false, // see explanation at startHeartbeat() below
   _heartbeatTiming: 100, // milliseconds between _checkHeartbeat() calls
@@ -723,7 +757,7 @@ let TabItems = {
   // Set up the necessary tracking to maintain the <TabItems>s.
   init: function TabItems_init() {
     Utils.assert(window.AllTabs, "AllTabs must be initialized first");
-    var self = this;
+    let self = this;
 
     let $canvas = iQ("<canvas>");
     $canvas.appendTo(iQ("body"));
@@ -733,6 +767,18 @@ let TabItems = {
     // algorithm breaks down
     this.tempCanvas.width = 150;
     this.tempCanvas.height = 150;
+
+    this.tabsProgressListener = {
+      onStateChange: function(browser, webProgress, request, stateFlags, status) {
+        if ((stateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
+            (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {
+          // browser would only has _tabViewTabItemWithCachedData if 
+          // it's showing cached data.
+          if (browser._tabViewTabItemWithCachedData)
+            browser._tabViewTabItemWithCachedData.shouldHideCachedData = true;
+        }
+      }
+    };
 
     // When a tab is opened, create the TabItem
     this._eventListeners["open"] = function(tab) {
@@ -773,6 +819,9 @@ let TabItems = {
   // ----------
   // Function: uninit
   uninit: function TabItems_uninit() {
+    if (this.tabsProgressListener)
+      gBrowser.removeTabsProgressListener(this.tabsProgressListener);
+
     for (let name in this._eventListeners) {
       AllTabs.unregister(name, this._eventListeners[name]);
     }
@@ -805,7 +854,7 @@ let TabItems = {
       );
 
       let isCurrentTab = (
-        !UI._isTabViewVisible() &&
+        !UI.isTabViewVisible() &&
         tab == gBrowser.selectedTab
       );
 
@@ -859,7 +908,7 @@ let TabItems = {
       // ___ label
       let label = tab.label;
       let $name = iQ(tabItem.nameEl);
-      if (!tabItem.isShowingCachedData && $name.text() != label)
+      if (!tabItem.isShowingCachedData() && $name.text() != label)
         $name.text(label);
 
       // ___ thumbnail
@@ -879,8 +928,7 @@ let TabItems = {
       tabItem.tabCanvas.paint();
 
       // ___ cache
-      // TODO: this logic needs to be better; hiding too soon now
-      if (tabItem.isShowingCachedData && !tab.hasAttribute("busy"))
+      if (tabItem.isShowingCachedData() && tabItem.shouldHideCachedData)
         tabItem.hideCachedData();
     } catch(e) {
       Utils.log(e);
@@ -1099,16 +1147,8 @@ let TabItems = {
           }
         }
 
-        if (tabData.imageData) {
+        if (tabData.imageData)
           item.showCachedData(tabData);
-          // the code in the progress listener doesn't fire sometimes because
-          // tab is being restored so need to catch that.
-          setTimeout(function() {
-            if (item && item.isShowingCachedData) {
-              item.hideCachedData();
-            }
-          }, 15000);
-        }
 
         item.reconnected = true;
         found = {addedToGroup: tabData.groupID};
