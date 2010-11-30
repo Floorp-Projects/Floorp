@@ -1551,3 +1551,5 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 613433-3.html 613433-1-ref.html
 == 613433-3.html 613433-2-ref.html
 == 613433-3.html 613433-3-ref.html
+HTTP(..) == 615121-1.html 615121-1-ref.html
+HTTP(..) != 615121-2.html 615121-2-notref.html
