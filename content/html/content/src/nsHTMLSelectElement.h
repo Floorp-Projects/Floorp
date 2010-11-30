@@ -61,6 +61,7 @@
 #include "nsCheapSets.h"
 #include "nsLayoutErrors.h"
 #include "nsHTMLOptionElement.h"
+#include "nsHTMLFormElement.h"
 
 class nsHTMLSelectElement;
 
@@ -215,7 +216,7 @@ public:
    * @param aIndex  The index of the content object in the parent.
    */
   nsSafeOptionListMutation(nsIContent* aSelect, nsIContent* aParent,
-                           nsIContent* aKid, PRUint32 aIndex);
+                           nsIContent* aKid, PRUint32 aIndex, PRBool aNotify);
   ~nsSafeOptionListMutation();
   void MutationFailed() { mNeedsRebuild = PR_TRUE; }
 private:
@@ -236,7 +237,7 @@ private:
  * Implementation of &lt;select&gt;
  */
 class nsHTMLSelectElement : public nsGenericHTMLFormElement,
-                            public nsIDOMHTMLSelectElement,
+                            public nsIDOMHTMLSelectElement_Mozilla_2_0_Branch,
                             public nsISelectElement,
                             public nsIConstraintValidation
 {
@@ -262,8 +263,12 @@ public:
   // nsIDOMHTMLSelectElement
   NS_DECL_NSIDOMHTMLSELECTELEMENT
 
+  // nsIDOMHTMLSelectElement_Mozilla_2_0_Branch
+  NS_DECL_NSIDOMHTMLSELECTELEMENT_MOZILLA_2_0_BRANCH
+
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -298,7 +303,9 @@ public:
                              PRBool aNotify);
   
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
-  virtual PRBool IsDoneAddingChildren();
+  virtual PRBool IsDoneAddingChildren() {
+    return mIsDoneAddingChildren;
+  }
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -327,7 +334,8 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   // nsIConstraintValidation
-  void UpdateBarredFromConstraintValidation();
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                ValidityStateType aType);
 
 protected:
   friend class nsSafeOptionListMutation;
@@ -344,18 +352,18 @@ protected:
    * and set mSelectedIndex to it.
    * @param aStartIndex the index to start with
    */
-  void FindSelectedIndex(PRInt32 aStartIndex);
+  void FindSelectedIndex(PRInt32 aStartIndex, PRBool aNotify);
   /**
    * Select some option if possible (generally the first non-disabled option).
    * @return true if something was selected, false otherwise
    */
-  PRBool SelectSomething();
+  PRBool SelectSomething(PRBool aNotify);
   /**
    * Call SelectSomething(), but only if nothing is selected
    * @see SelectSomething()
    * @return true if something was selected, false otherwise
    */
-  PRBool CheckSelectSomething();
+  PRBool CheckSelectSomething(PRBool aNotify);
   /**
    * Called to trigger notifications of frames and fixing selected index
    *
@@ -387,7 +395,8 @@ protected:
    */
   nsresult InsertOptionsIntoList(nsIContent* aOptions,
                                  PRInt32 aListIndex,
-                                 PRInt32 aDepth);
+                                 PRInt32 aDepth,
+                                 PRBool aNotify);
   /**
    * Remove option(s) from the options[] array
    * @param aOptions the option or optgroup being added
@@ -396,7 +405,8 @@ protected:
    */
   nsresult RemoveOptionsFromList(nsIContent* aOptions,
                                  PRInt32 aListIndex,
-                                 PRInt32 aDepth);
+                                 PRInt32 aDepth,
+                                 PRBool aNotify);
   /**
    * Insert option(s) into the options[] array (called by InsertOptionsIntoList)
    * @param aOptions the option or optgroup being added
@@ -417,6 +427,12 @@ protected:
                                         PRInt32 aRemoveIndex,
                                         PRInt32* aNumRemoved,
                                         PRInt32 aDepth);
+
+  // nsIConstraintValidation
+  void UpdateBarredFromConstraintValidation();
+  bool IsValueMissing();
+  void UpdateValueMissingValidityState();
+
   /**
    * Find out how deep this content is from the select (1=direct child)
    * @param aContent the content to check
@@ -484,7 +500,7 @@ protected:
   /**
    * Rebuilds the options array from scratch as a fallback in error cases.
    */
-  void RebuildOptionsArray();
+  void RebuildOptionsArray(PRBool aNotify);
 
 #ifdef DEBUG
   void VerifyOptionsArray();
@@ -495,6 +511,43 @@ protected:
     return PR_TRUE;
   }
 
+  nsresult SetSelectedIndexInternal(PRInt32 aIndex, PRBool aNotify);
+
+  void SetSelectionChanged(PRBool aValue, PRBool aNotify);
+
+  /**
+   * Return whether an invalid element should have a specific UI for being invalid
+   * (with :-moz-ui-invalid pseudo-class).
+   *
+   * @return Whether the invalid element should have a UI for being invalid.
+   * @note The caller has to be sure the element is invalid before calling.
+   */
+  bool ShouldShowInvalidUI() const {
+    NS_ASSERTION(!IsValid(), "You should not call ShouldShowInvalidUI if the "
+                             "element is valid!");
+
+    /**
+     * Always show the invalid UI if:
+     * - the form has already tried to be submitted but was invalid;
+     * - the element is suffering from a custom error;
+     *
+     * Otherwise, show the invalid UI if the selection has been changed.
+     */
+    return mSelectionHasChanged ||
+           (mForm && mForm->HasEverTriedInvalidSubmit()) ||
+           GetValidityState(VALIDITY_STATE_CUSTOM_ERROR);
+  }
+
+  /**
+   * Return whether an element should show the valid UI.
+   *
+   * @return Whether the valid UI should be shown.
+   * @note This doesn't take into account the validity of the element.
+   */
+  bool ShouldShowValidUI() const {
+    return mSelectionHasChanged ||
+           (mForm && mForm->HasEverTriedInvalidSubmit());
+  }
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
@@ -509,6 +562,23 @@ protected:
    * True if DoneAddingChildren will get called but shouldn't restore state.
    */
   PRPackedBool    mInhibitStateRestoration;
+  /**
+   * True if the selection has changed since the element's creation.
+   */
+  PRPackedBool    mSelectionHasChanged;
+  /**
+   * True if the default selected option has been set.
+   */
+  PRPackedBool    mDefaultSelectionSet;
+  /**
+   * True if :-moz-ui-invalid can be shown.
+   */
+  PRPackedBool    mCanShowInvalidUI;
+  /**
+   * True if :-moz-ui-valid can be shown.
+   */
+  PRPackedBool    mCanShowValidUI;
+
   /** The number of non-options as children of the select */
   PRUint32  mNonOptionChildren;
   /** The number of optgroups anywhere under the select */

@@ -1415,7 +1415,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     JS_ASSERT_NOT_ON_TRACE(cx);
 
     if (!CheckDebugMode(cx))
-        return JS_FALSE;
+        return false;
 
     JSObject *scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
@@ -1423,7 +1423,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 
     js::AutoCompartment ac(cx, scobj);
     if (!ac.enter())
-        return NULL;
+        return false;
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
@@ -1526,10 +1526,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
               |  (!shape->writable()  ? JSPD_READONLY  : 0)
               |  (!shape->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (shape->getter() == js_GetCallArg) {
+    if (shape->getter() == GetCallArg) {
         pd->slot = shape->shortid;
         pd->flags |= JSPD_ARGUMENT;
-    } else if (shape->getter() == js_GetCallVar) {
+    } else if (shape->getter() == GetCallVar) {
         pd->slot = shape->shortid;
         pd->flags |= JSPD_VARIABLE;
     } else {

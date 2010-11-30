@@ -123,17 +123,16 @@ WebGLProgram::GetUniformLocationObject(GLint glLocation)
     return loc.forget();
 }
 
+static PRBool
+InternalFormatHasAlpha(WebGLenum aInternalFormat) {
+    return aInternalFormat == LOCAL_GL_RGBA4 ||
+        aInternalFormat == LOCAL_GL_RGB5_A1;
+}
+
 //
 //  WebGL API
 //
 
-
-/* void present (); */
-NS_IMETHODIMP
-WebGLContext::Present()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 /* void GlActiveTexture (in GLenum texture); */
 NS_IMETHODIMP
@@ -162,6 +161,12 @@ WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
     if (!GetConcreteObjectAndGLName("attachShader: program", pobj, &program, &progname) ||
         !GetConcreteObjectAndGLName("attachShader: shader", shobj, &shader, &shadername))
         return NS_OK;
+
+    // Per GLSL ES 2.0, we can only have one of each type of shader
+    // attached.  This renders the next test somewhat moot, but we'll
+    // leave it for when we support more than one shader of each type.
+    if (program->HasAttachedShaderOfType(shader->ShaderType()))
+        return ErrorInvalidOperation("AttachShader: only one of each type of shader may be attached to a program");
 
     if (!program->AttachShader(shader))
         return ErrorInvalidOperation("AttachShader: shader is already attached");
@@ -539,6 +544,11 @@ WebGLContext::Clear(PRUint32 mask)
 
     if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
         return NS_OK;
+
+    PRUint32 m = mask & (LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+    if (mask != m) {
+        return ErrorInvalidValue("clear: invalid mask bits");
+    }
 
     gl->fClear(mask);
     Invalidate();
@@ -1433,7 +1443,6 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_CULL_FACE_MODE:
         case LOCAL_GL_FRONT_FACE:
         case LOCAL_GL_ACTIVE_TEXTURE:
-        case LOCAL_GL_DEPTH_CLEAR_VALUE:
         case LOCAL_GL_STENCIL_CLEAR_VALUE:
         case LOCAL_GL_STENCIL_FUNC:
         case LOCAL_GL_STENCIL_REF:
@@ -1521,6 +1530,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
 
 // float
+        case LOCAL_GL_DEPTH_CLEAR_VALUE:
         case LOCAL_GL_LINE_WIDTH:
         case LOCAL_GL_POLYGON_OFFSET_FACTOR:
         case LOCAL_GL_POLYGON_OFFSET_UNITS:
@@ -2470,29 +2480,30 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     WebGLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
 
     PRUint32 size = 0;
+    bool badFormat = false, badType = false;
     switch (format) {
-      case LOCAL_GL_ALPHA:
-        size = 1;
-        break;
-      case LOCAL_GL_RGB:
-        size = 3;
-        break;
-      case LOCAL_GL_RGBA:
+    case LOCAL_GL_RGBA:
         size = 4;
         break;
-      default:
-        return ErrorInvalidEnumInfo("readPixels: format", format);
+    default:
+        badFormat = true;
+        break;
     }
 
     switch (type) {
-//         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-//         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-//         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-      case LOCAL_GL_UNSIGNED_BYTE:
+    case LOCAL_GL_UNSIGNED_BYTE:
         break;
-      default:
-        return ErrorInvalidEnumInfo("ReadPixels: type", type);
+    default:
+        badType = true;
+        break;
     }
+
+    if (badFormat && badType)
+        return ErrorInvalidOperation("readPixels: bad format and type");
+    if (badFormat)
+        return ErrorInvalidEnumInfo("readPixels: format", format);
+    if (badType)
+        return ErrorInvalidEnumInfo("ReadPixels: type", type);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * size;
 
@@ -2579,6 +2590,51 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         }
         delete [] subrect_data;
     }
+
+    // if we're reading alpha, we may need to do fixup
+    if (format == LOCAL_GL_ALPHA ||
+        format == LOCAL_GL_RGBA)
+    {
+        PRBool needAlphaFixup;
+        if (mBoundFramebuffer) {
+            needAlphaFixup = !mBoundFramebuffer->ColorAttachment0HasAlpha();
+        } else {
+            needAlphaFixup = gl->ActualFormat().alpha == 0;
+        }
+
+        if (needAlphaFixup) {
+            if (format == LOCAL_GL_ALPHA && type == LOCAL_GL_UNSIGNED_BYTE) {
+                // this is easy; it's an 0xff memset per row
+                PRUint8 *row = (PRUint8*)data;
+                for (GLint j = 0; j < height; ++j) {
+                    memset(row, 0xff, checked_plainRowSize.value());
+                    row += checked_alignedRowSize.value();
+                }
+            } else if (format == LOCAL_GL_RGBA && type == LOCAL_GL_UNSIGNED_BYTE) {
+                // this is harder, we need to just set the alpha byte here
+                PRUint8 *row = (PRUint8*)data;
+                for (GLint j = 0; j < height; ++j) {
+                    PRUint8 *rowp = row;
+#ifdef IS_LITTLE_ENDIAN
+                    // offset to get the alpha byte; we're always going to
+                    // move by 4 bytes
+                    rowp += 3;
+#endif
+                    PRUint8 *endrowp = rowp + 4 * width;
+                    while (rowp != endrowp) {
+                        *rowp = 0xff;
+                        rowp += 4;
+                    }
+
+                    row += checked_alignedRowSize.value();
+                }
+            } else {
+                NS_WARNING("Unhandled case, how'd we get here?");
+                return NS_ERROR_FAILURE;
+            }
+        }            
+    }
+
     return NS_OK;
 }
 
@@ -3767,7 +3823,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
     PRUint32 bytesNeeded = checked_neededByteLength.value();
  
     if (byteLength < bytesNeeded)
-        return ErrorInvalidValue("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
+        return ErrorInvalidOperation("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
 
@@ -3879,129 +3935,6 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                               isurf->Data(), byteLength,
                               srcFormat, PR_TRUE);
 }
-
-#if 0
-// ImageData getImageData (in float x, in float y, in float width, in float height);
-NS_IMETHODIMP
-WebGLContext::GetImageData(PRUint32 x, PRUint32 y, PRUint32 w, PRUint32 h)
-{
-    // disabled due to win32 linkage issues with thebes symbols and NS_RELEASE
-    return NS_ERROR_FAILURE;
-
-#if 0
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    if (js.argc != 4) return NS_ERROR_INVALID_ARG;
-    
-    if (!mGLPbuffer ||
-        !mGLPbuffer->ThebesSurface())
-        return NS_ERROR_FAILURE;
-
-    if (!mCanvasElement)
-        return NS_ERROR_FAILURE;
-
-    if (HTMLCanvasElement()->IsWriteOnly() && !IsCallerTrustedForRead()) {
-        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    JSContext *ctx = js.ctx;
-
-    if (!CanvasUtils::CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    nsAutoArrayPtr<PRUint8> surfaceData (new (std::nothrow) PRUint8[w * h * 4]);
-    int surfaceDataStride = w*4;
-    int surfaceDataOffset = 0;
-
-    if (!surfaceData)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsRefPtr<gfxImageSurface> tmpsurf = new gfxImageSurface(surfaceData,
-                                                            gfxIntSize(w, h),
-                                                            w * 4,
-                                                            gfxASurface::ImageFormatARGB32);
-    if (!tmpsurf || tmpsurf->CairoStatus())
-        return NS_ERROR_FAILURE;
-
-    nsRefPtr<gfxContext> tmpctx = new gfxContext(tmpsurf);
-
-    if (!tmpctx || tmpctx->HasError())
-        return NS_ERROR_FAILURE;
-
-    nsRefPtr<gfxASurface> surf = mGLPbuffer->ThebesSurface();
-    nsRefPtr<gfxPattern> pat = CanvasGLThebes::CreatePattern(surf);
-    gfxMatrix m;
-    m.Translate(gfxPoint(x, mGLPbuffer->Height()-y));
-    m.Scale(1.0, -1.0);
-    pat->SetMatrix(m);
-
-    // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
-    // pixel alignment for this stuff!
-    tmpctx->NewPath();
-    tmpctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, w, h), pat);
-    tmpctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpctx->Fill();
-
-    tmpctx = nsnull;
-    tmpsurf = nsnull;
-
-    PRUint32 len = w * h * 4;
-    if (len > (((PRUint32)0xfff00000)/sizeof(jsval)))
-        return NS_ERROR_INVALID_ARG;
-
-    nsAutoArrayPtr<jsval> jsvector(new (std::nothrow) jsval[w * h * 4]);
-    if (!jsvector)
-        return NS_ERROR_OUT_OF_MEMORY;
-    jsval *dest = jsvector.get();
-    PRUint8 *row;
-    for (PRUint32 j = 0; j < h; j++) {
-        row = surfaceData + surfaceDataOffset + (surfaceDataStride * j);
-        for (PRUint32 i = 0; i < w; i++) {
-            // XXX Is there some useful swizzle MMX we can use here?
-            // I guess we have to INT_TO_JSVAL still
-#ifdef IS_LITTLE_ENDIAN
-            PRUint8 b = *row++;
-            PRUint8 g = *row++;
-            PRUint8 r = *row++;
-            PRUint8 a = *row++;
-#else
-            PRUint8 a = *row++;
-            PRUint8 r = *row++;
-            PRUint8 g = *row++;
-            PRUint8 b = *row++;
-#endif
-            // Convert to non-premultiplied color
-            if (a != 0) {
-                r = (r * 255) / a;
-                g = (g * 255) / a;
-                b = (b * 255) / a;
-            }
-
-            *dest++ = INT_TO_JSVAL(r);
-            *dest++ = INT_TO_JSVAL(g);
-            *dest++ = INT_TO_JSVAL(b);
-            *dest++ = INT_TO_JSVAL(a);
-        }
-    }
-
-    JSObject *dataArray = JS_NewArrayObject(ctx, w*h*4, jsvector);
-    if (!dataArray)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    JSObjectHelper retobj(&js);
-    retobj.DefineProperty("width", w);
-    retobj.DefineProperty("height", h);
-    retobj.DefineProperty("data", dataArray);
-
-    js.SetRetVal(retobj);
-
-    return NS_OK;
-#endif
-}
-#endif
 
 PRBool
 BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize)

@@ -38,6 +38,8 @@
 #ifndef nsEventStates_h__
 #define nsEventStates_h__
 
+#include "nsDebug.h"
+
 /**
  * nsEventStates is the class used to represent the event states of nsIContent
  * instances. These states are calculated by IntrinsicState() and
@@ -257,6 +259,10 @@ private:
 #define NS_EVENT_STATE_MOZ_PLACEHOLDER NS_DEFINE_EVENT_STATE_MACRO(30)
 // Content is a submit control and the form isn't valid.
 #define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(31)
+// UI friendly version of :invalid pseudo-class.
+#define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(32)
+// UI friendly version of :valid pseudo-class.
+#define NS_EVENT_STATE_MOZ_UI_VALID NS_DEFINE_EVENT_STATE_MACRO(33)
 
 /**
  * NOTE: do not go over 63 without updating nsEventStates::InternalType!

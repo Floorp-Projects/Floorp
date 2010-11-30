@@ -539,7 +539,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool strict)
             if (idx < obj->getDenseArrayInitializedLength()) {
                 obj->setDenseArrayElement(idx, MagicValue(JS_ARRAY_HOLE));
                 obj->setDenseArrayNotPacked(cx);
-                return JS_TRUE;
+                return js_SuppressDeletedIndexProperties(cx, obj, idx, idx+1);
             }
         }
         return JS_TRUE;
@@ -2113,6 +2113,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, const Value &vp)
     return ArrayCompPushImpl(cx, obj, vp);
 }
 
+#ifdef JS_TRACER
 JSBool JS_FASTCALL
 js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
 {
@@ -2125,6 +2126,7 @@ js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_ArrayCompPush_tn, CONTEXT, OBJECT,
                      VALUE, 0, nanojit::ACCSET_STORE_ANY)
+#endif
 
 static JSBool
 array_push(JSContext *cx, uintN argc, Value *vp)
@@ -2298,9 +2300,9 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
 
         newlen += argc;
-        if (!js_SetLengthProperty(cx, obj, newlen))
-            return JS_FALSE;
     }
+    if (!js_SetLengthProperty(cx, obj, newlen))
+        return JS_FALSE;
 
     /* Follow Perl by returning the new array length. */
     vp->setNumber(newlen);

@@ -70,8 +70,10 @@ function TabItem(tab, options) {
 
   this.canvasSizeForced = false;
   this.isShowingCachedData = false;
-  this.favEl = (iQ('.favicon>img', $div))[0];
+  this.favEl = (iQ('.favicon', $div))[0];
+  this.favImgEl = (iQ('.favicon>img', $div))[0];
   this.nameEl = (iQ('.tab-title', $div))[0];
+  this.thumbEl = (iQ('.thumb', $div))[0];
   this.canvasEl = (iQ('.thumb canvas', $div))[0];
   this.cachedThumbEl = (iQ('img.cached-thumb', $div))[0];
 
@@ -95,6 +97,8 @@ function TabItem(tab, options) {
       + parseInt($div.css('padding-bottom'));
 
   this.bounds = $div.bounds();
+
+  this._lastTabUpdateTime = Date.now();
 
   // ___ superclass setup
   this._init($div[0]);
@@ -194,6 +198,7 @@ function TabItem(tab, options) {
   iQ("<div>")
     .addClass('close')
     .appendTo($div);
+  this.closeEl = (iQ(".close", $div))[0];
 
   iQ("<div>")
     .addClass('expander')
@@ -322,10 +327,10 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.bounds.copy(rect);
     else {
       var $container = iQ(this.container);
-      var $title = iQ('.tab-title', $container);
-      var $thumb = iQ('.thumb', $container);
-      var $close = iQ('.close', $container);
-      var $fav   = iQ('.favicon', $container);
+      var $title = iQ(this.nameEl);
+      var $thumb = iQ(this.thumbEl);
+      var $close = iQ(this.closeEl);
+      var $fav   = iQ(this.favEl);
       var css = {};
 
       const fontSizeRange = new Range(8,15);
@@ -461,12 +466,20 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: close
   // Closes this item (actually closes the tab associated with it, which automatically
   // closes the item.
+  // Returns true if this tab is removed.
   close: function TabItem_close() {
+    // when "TabClose" event is fired, the browser tab is about to close and our 
+    // item "close" is fired before the browser tab actually get closed. 
+    // Therefore, we need "tabRemoved" event below.
     gBrowser.removeTab(this.tab);
-    this._sendToSubscribers("tabRemoved");
+    let tabNotClosed = 
+      Array.some(gBrowser.tabs, function(tab) { return tab == this.tab; }, this);
+    if (!tabNotClosed)
+      this._sendToSubscribers("tabRemoved");
 
     // No need to explicitly delete the tab data, becasue sessionstore data
     // associated with the tab will automatically go away
+    return !tabNotClosed;
   },
 
   // ----------
@@ -544,9 +557,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       function onZoomDone() {
         UI.goToTab(tab);
 
-        if (isNewBlankTab)
-          gWindow.gURLBar.focus();
-
+        // tab might not be selected because hideTabView() is invoked after 
+        // UI.goToTab() so we need to setup everything for the gBrowser.selectedTab
+        if (tab != gBrowser.selectedTab) {
+          UI.onTabSelect(gBrowser.selectedTab);
+        } else { 
+          if (isNewBlankTab)
+            gWindow.gURLBar.focus();
+        }
         if (childHitResult.callback)
           childHitResult.callback();
       }
@@ -581,8 +599,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             onZoomDone();
           }
         });
-      } else
+      } else {
         setTimeout(onZoomDone, 0);
+      } 
     }
   },
 
@@ -684,10 +703,11 @@ let TabItems = {
   items: [],
   paintingPaused: 0,
   _tabsWaitingForUpdate: [],
-  _heartbeatOn: false,
-  _heartbeatTiming: 100, // milliseconds between beats
+  _heartbeatOn: false, // see explanation at startHeartbeat() below
+  _heartbeatTiming: 100, // milliseconds between _checkHeartbeat() calls
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
+  tempCanvas: null,
 
   // ----------
   // Function: init
@@ -695,6 +715,15 @@ let TabItems = {
   init: function TabItems_init() {
     Utils.assert(window.AllTabs, "AllTabs must be initialized first");
     var self = this;
+
+    let $canvas = iQ("<canvas>");
+    $canvas.appendTo(iQ("body"));
+    $canvas.hide();
+    this.tempCanvas = $canvas[0];
+    // 150 pixels is an empirical size, below which FF's drawWindow()
+    // algorithm breaks down
+    this.tempCanvas.width = 150;
+    this.tempCanvas.height = 150;
 
     // When a tab is opened, create the TabItem
     this._eventListeners["open"] = function(tab) {
@@ -774,6 +803,7 @@ let TabItems = {
       if (shouldDefer && !isCurrentTab) {
         if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
           this._tabsWaitingForUpdate.push(tab);
+        this.startHeartbeat();
       } else
         this._update(tab);
     } catch(e) {
@@ -802,8 +832,8 @@ let TabItems = {
       if (iconUrl == null)
         iconUrl = Utils.defaultFaviconURL;
 
-      if (iconUrl != tabItem.favEl.src)
-        tabItem.favEl.src = iconUrl;
+      if (iconUrl != tabItem.favImgEl.src)
+        tabItem.favImgEl.src = iconUrl;
 
       // ___ URL
       let tabUrl = tab.linkedBrowser.currentURI.spec;
@@ -834,6 +864,9 @@ let TabItems = {
         }
       }
 
+      this._lastUpdateTime = Date.now();
+      tabItem._lastTabUpdateTime = this._lastUpdateTime;
+
       tabItem.tabCanvas.paint();
 
       // ___ cache
@@ -843,8 +876,6 @@ let TabItems = {
     } catch(e) {
       Utils.log(e);
     }
-
-    this._lastUpdateTime = Date.now();
   },
 
   // ----------
@@ -901,54 +932,63 @@ let TabItems = {
   },
 
   // ----------
-  // Function: heartbeat
-  // Allows us to spreadout update calls over a period of time.
-  heartbeat: function TabItems_heartbeat() {
-    if (!this._heartbeatOn)
+  // Function: startHeartbeat
+  // Start a new heartbeat if there isn't one already started.
+  // The heartbeat is a chain of setTimeout calls that allows us to spread
+  // out update calls over a period of time.
+  // _heartbeatOn is used to make sure that we don't add multiple 
+  // setTimeout chains.
+  startHeartbeat: function TabItems_startHeartbeat() {
+    if (!this._heartbeatOn) {
+      this._heartbeatOn = true;
+      let self = this;
+      setTimeout(function() {
+        self._checkHeartbeat();
+      }, this._heartbeatTiming);
+    }
+  },
+  
+  // ----------
+  // Function: _checkHeartbeat
+  // This periodically checks for tabs waiting to be updated, and calls
+  // _update on them.
+  // Should only be called by startHeartbeat and resumePainting.
+  _checkHeartbeat: function TabItems__checkHeartbeat() {
+    this._heartbeatOn = false;
+    
+    if (this.isPaintingPaused())
       return;
 
-    if (this._tabsWaitingForUpdate.length) {
+    if (this._tabsWaitingForUpdate.length && UI.isIdle()) {
       this._update(this._tabsWaitingForUpdate[0]);
-      // _update will remove the tab from the waiting list
+      //_update will remove the tab from the waiting list
     }
 
-    let self = this;
     if (this._tabsWaitingForUpdate.length) {
-      setTimeout(function() {
-        self.heartbeat();
-      }, this._heartbeatTiming);
-    } else
-      this._hearbeatOn = false;
-  },
-
-  // ----------
-  // Function: pausePainting
-  // Tells TabItems to stop updating thumbnails (so you can do
-  // animations without thumbnail paints causing stutters).
-  // pausePainting can be called multiple times, but every call to
-  // pausePainting needs to be mirrored with a call to <resumePainting>.
-  pausePainting: function TabItems_pausePainting() {
-    this.paintingPaused++;
-
-    if (this.isPaintingPaused() && this._heartbeatOn)
-      this._heartbeatOn = false;
-  },
-
-  // ----------
-  // Function: resumePainting
-  // Undoes a call to <pausePainting>. For instance, if you called
-  // pausePainting three times in a row, you'll need to call resumePainting
-  // three times before TabItems will start updating thumbnails again.
-  resumePainting: function TabItems_resumePainting() {
-    this.paintingPaused--;
-
-    if (!this.isPaintingPaused() &&
-        this._tabsWaitingForUpdate.length &&
-        !this._heartbeatOn) {
-      this._heartbeatOn = true;
-      this.heartbeat();
+      this.startHeartbeat();
     }
   },
+
+   // ----------
+   // Function: pausePainting
+   // Tells TabItems to stop updating thumbnails (so you can do
+   // animations without thumbnail paints causing stutters).
+   // pausePainting can be called multiple times, but every call to
+   // pausePainting needs to be mirrored with a call to <resumePainting>.
+   pausePainting: function TabItems_pausePainting() {
+     this.paintingPaused++;
+   },
+ 
+   // ----------
+   // Function: resumePainting
+   // Undoes a call to <pausePainting>. For instance, if you called
+   // pausePainting three times in a row, you'll need to call resumePainting
+   // three times before TabItems will start updating thumbnails again.
+   resumePainting: function TabItems_resumePainting() {
+     this.paintingPaused--;
+     if (!this.isPaintingPaused())
+       this.startHeartbeat();
+   },
 
   // ----------
   // Function: isPaintingPaused
@@ -1106,8 +1146,6 @@ TabCanvas.prototype = {
   // ----------
   // Function: paint
   paint: function TabCanvas_paint(evt) {
-    var ctx = this.canvas.getContext("2d");
-
     var w = this.canvas.width;
     var h = this.canvas.height;
     if (!w || !h)
@@ -1119,19 +1157,59 @@ TabCanvas.prototype = {
       return;
     }
 
-    var scaler = w/fromWin.innerWidth;
-
-    // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
-
-    ctx.save();
-    ctx.scale(scaler, scaler);
-    try{
-      ctx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff");
-    } catch(e) {
-      Utils.error('paint', e);
+    let tempCanvas = TabItems.tempCanvas;
+    if (w < tempCanvas.width) {
+      // Small draw case where nearest-neighbor algorithm breaks down in Windows
+      // First draw to a larger canvas (150px wide), and then draw that image
+      // to the destination canvas.
+      
+      var tempCtx = tempCanvas.getContext("2d");
+      
+      let canvW = tempCanvas.width;
+      let canvH = (h/w) * canvW;
+      
+      var scaler = canvW/fromWin.innerWidth;
+  
+      tempCtx.save();
+      tempCtx.clearRect(0,0,tempCanvas.width,tempCanvas.height);
+      tempCtx.scale(scaler, scaler);
+      try{
+        tempCtx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, 
+          canvW/scaler, canvH/scaler, "#fff");
+      } catch(e) {
+        Utils.error('paint', e);
+      }  
+      tempCtx.restore();
+      
+      // Now copy to tabitem canvas. No save/restore necessary.      
+      var destCtx = this.canvas.getContext("2d");      
+      try{
+        // the tempcanvas is square, so draw it as a square.
+        destCtx.drawImage(tempCanvas, 0, 0, w, w);
+      } catch(e) {
+        Utils.error('paint', e);
+      }  
+      
+    } else {
+      // General case where nearest neighbor algorithm looks good
+      // Draw directly to the destination canvas
+      
+      var ctx = this.canvas.getContext("2d");
+      
+      var scaler = w/fromWin.innerWidth;
+  
+      // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
+  
+      ctx.save();
+      ctx.scale(scaler, scaler);
+      try{
+        ctx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff");
+      } catch(e) {
+        Utils.error('paint', e);
+      }
+  
+      ctx.restore();
     }
-
-    ctx.restore();
   },
 
   // ----------

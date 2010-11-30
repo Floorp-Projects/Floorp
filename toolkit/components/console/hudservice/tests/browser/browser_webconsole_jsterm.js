@@ -62,7 +62,7 @@ function testJSTerm()
 
   hudId = HUDService.displaysIndex()[0];
   let hudBox = HUDService.getHeadsUpDisplay(hudId);
-  hud = HUDService.hudWeakReferences[hudId].get();
+  hud = HUDService.hudReferences[hudId];
   jsterm = hud.jsterm;
   let outputNode = hudBox.querySelector(".hud-output-node");
 
@@ -91,6 +91,18 @@ function testJSTerm()
   jsterm.clearOutput();
   jsterm.execute("'valuesResult=' + (values({b:1})[0] == 1)");
   checkResult("valuesResult=true", "values() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("help()");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("help");
+  checkResult("undefined", "help() worked", 1);
+
+  jsterm.clearOutput();
+  jsterm.execute("?");
+  checkResult("undefined", "help() worked", 1);
 
   jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");

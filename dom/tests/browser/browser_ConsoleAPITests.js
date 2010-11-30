@@ -40,10 +40,6 @@ const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.
 var gWindow;
 
 function test() {
-  // FIXME
-  todo(false, "This test is disabled until bug 587734 lands");
-  return;
-
   waitForExplicitFinish();
 
   var tab = gBrowser.addTab(TEST_URI);

@@ -48,6 +48,7 @@ MODULE = test_prompter
 
 # Mochitest tests
 MOCHI_TESTS = \
+    test_modal_select.html \
     test_modal_prompts.html \
     $(NULL)
 

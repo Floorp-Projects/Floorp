@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007,2008,2009  Red Hat, Inc.
+ * Copyright (C) 2010  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -22,6 +23,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
 #ifndef HB_OT_LAYOUT_COMMON_PRIVATE_HH
@@ -35,6 +37,9 @@
 #define NO_CONTEXT		((unsigned int) 0x110000)
 #define NOT_COVERED		((unsigned int) 0x110000)
 #define MAX_NESTING_LEVEL	8
+
+HB_BEGIN_DECLS
+HB_END_DECLS
 
 
 /*
@@ -51,6 +56,10 @@
 template <typename Type>
 struct Record
 {
+  inline int cmp (hb_tag_t a) const {
+    return tag.cmp (a);
+  }
+
   inline bool sanitize (hb_sanitize_context_t *c, void *base) {
     TRACE_SANITIZE ();
     return c->check_struct (this)
@@ -66,9 +75,12 @@ struct Record
 };
 
 template <typename Type>
-struct RecordArrayOf : ArrayOf<Record<Type> > {
+struct RecordArrayOf : SortedArrayOf<Record<Type> > {
   inline const Tag& get_tag (unsigned int i) const
   {
+    /* We cheat slightly and don't define separate Null objects
+     * for Record types.  Instead, we return the correct Null(Tag)
+     * here. */
     if (unlikely (i >= this->len)) return Null(Tag);
     return (*this)[i].tag;
   }
@@ -86,21 +98,14 @@ struct RecordArrayOf : ArrayOf<Record<Type> > {
   }
   inline bool find_index (hb_tag_t tag, unsigned int *index) const
   {
-    Tag t;
-    t.set (tag);
-    /* TODO: bsearch (need to sort in sanitize) */
-    const Record<Type> *a = this->array;
-    unsigned int count = this->len;
-    for (unsigned int i = 0; i < count; i++)
-    {
-      if (t == a[i].tag)
-      {
+    int i = this->search (tag);
+    if (i != -1) {
         if (index) *index = i;
         return true;
-      }
+    } else {
+      if (index) *index = Index::NOT_FOUND_INDEX;
+      return false;
     }
-    if (index) *index = Index::NOT_FOUND_INDEX;
-    return false;
   }
 };
 
@@ -115,6 +120,27 @@ struct RecordListOf : RecordArrayOf<Type>
     return RecordArrayOf<Type>::sanitize (c, this);
   }
 };
+
+
+struct RangeRecord
+{
+  inline int cmp (hb_codepoint_t g) const {
+    hb_codepoint_t a = start, b = end;
+    return g < a ? -1 : g <= b ? 0 : +1 ;
+  }
+
+  inline bool sanitize (hb_sanitize_context_t *c) {
+    TRACE_SANITIZE ();
+    return c->check_struct (this);
+  }
+
+  GlyphID	start;		/* First GlyphID in the range */
+  GlyphID	end;		/* Last GlyphID in the range */
+  USHORT	value;		/* Value */
+  public:
+  DEFINE_SIZE_STATIC (6);
+};
+DEFINE_NULL_DATA (RangeRecord, "\000\001");
 
 
 struct IndexArray : ArrayOf<Index>
@@ -234,8 +260,6 @@ struct Feature
 	&& lookupIndex.sanitize (c);
   }
 
-  /* LONGTERMTODO: implement get_feature_parameters() */
-  /* LONGTERMTODO: implement FeatureSize and other special features? */
   Offset	featureParams;	/* Offset to Feature Parameters table (if one
 				 * has been defined for the feature), relative
 				 * to the beginning of the Feature Table; = Null
@@ -269,7 +293,11 @@ struct Lookup
   inline unsigned int get_subtable_count (void) const { return subTable.len; }
 
   inline unsigned int get_type (void) const { return lookupType; }
-  inline unsigned int get_flag (void) const
+
+  /* lookup_props is a 32-bit integer where the lower 16-bit is LookupFlag and
+   * higher 16-bit is mark-filtering-set if the lookup uses one.
+   * Not to be confused with glyph_props which is very similar. */
+  inline uint32_t get_props (void) const
   {
     unsigned int flag = lookupFlag;
     if (unlikely (flag & LookupFlag::UseMarkFilteringSet))
@@ -318,14 +346,8 @@ struct CoverageFormat1
   private:
   inline unsigned int get_coverage (hb_codepoint_t glyph_id) const
   {
-    if (unlikely (glyph_id > 0xFFFF))
-      return NOT_COVERED;
-    GlyphID gid;
-    gid.set (glyph_id);
-    /* TODO: bsearch (need to sort in sanitize) */
-    unsigned int num_glyphs = glyphArray.len;
-    for (unsigned int i = 0; i < num_glyphs; i++)
-      if (gid == glyphArray[i])
+    int i = glyphArray.search (glyph_id);
+    if (i != -1)
         return i;
     return NOT_COVERED;
   }
@@ -337,39 +359,11 @@ struct CoverageFormat1
 
   private:
   USHORT	coverageFormat;	/* Format identifier--format = 1 */
-  ArrayOf<GlyphID>
+  SortedArrayOf<GlyphID>
 		glyphArray;	/* Array of GlyphIDs--in numerical order */
   public:
   DEFINE_SIZE_ARRAY (4, glyphArray);
 };
-
-struct CoverageRangeRecord
-{
-  friend struct CoverageFormat2;
-
-  private:
-  inline unsigned int get_coverage (hb_codepoint_t glyph_id) const
-  {
-    if (glyph_id >= start && glyph_id <= end)
-      return (unsigned int) startCoverageIndex + (glyph_id - start);
-    return NOT_COVERED;
-  }
-
-  public:
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE ();
-    return c->check_struct (this);
-  }
-
-  private:
-  GlyphID	start;			/* First GlyphID in the range */
-  GlyphID	end;			/* Last GlyphID in the range */
-  USHORT	startCoverageIndex;	/* Coverage Index of first GlyphID in
-					 * range */
-  public:
-  DEFINE_SIZE_STATIC (6);
-};
-DEFINE_NULL_DATA (CoverageRangeRecord, "\000\001");
 
 struct CoverageFormat2
 {
@@ -378,13 +372,10 @@ struct CoverageFormat2
   private:
   inline unsigned int get_coverage (hb_codepoint_t glyph_id) const
   {
-    /* TODO: bsearch (need to sort in sanitize) */
-    unsigned int count = rangeRecord.len;
-    for (unsigned int i = 0; i < count; i++)
-    {
-      unsigned int coverage = rangeRecord[i].get_coverage (glyph_id);
-      if (coverage != NOT_COVERED)
-        return coverage;
+    int i = rangeRecord.search (glyph_id);
+    if (i != -1) {
+      const RangeRecord &range = rangeRecord[i];
+      return (unsigned int) range.value + (glyph_id - range.start);
     }
     return NOT_COVERED;
   }
@@ -396,7 +387,7 @@ struct CoverageFormat2
 
   private:
   USHORT	coverageFormat;	/* Format identifier--format = 2 */
-  ArrayOf<CoverageRangeRecord>
+  SortedArrayOf<RangeRecord>
 		rangeRecord;	/* Array of glyph ranges--ordered by
 				 * Start GlyphID. rangeCount entries
 				 * long */
@@ -447,7 +438,7 @@ struct ClassDefFormat1
   friend struct ClassDef;
 
   private:
-  inline hb_ot_layout_class_t get_class (hb_codepoint_t glyph_id) const
+  inline unsigned int get_class (hb_codepoint_t glyph_id) const
   {
     if ((unsigned int) (glyph_id - startGlyph) < classValue.len)
       return classValue[glyph_id - startGlyph];
@@ -468,48 +459,16 @@ struct ClassDefFormat1
   DEFINE_SIZE_ARRAY (6, classValue);
 };
 
-struct ClassRangeRecord
-{
-  friend struct ClassDefFormat2;
-
-  private:
-  inline hb_ot_layout_class_t get_class (hb_codepoint_t glyph_id) const
-  {
-    if (glyph_id >= start && glyph_id <= end)
-      return classValue;
-    return 0;
-  }
-
-  public:
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE ();
-    return c->check_struct (this);
-  }
-
-  private:
-  GlyphID	start;		/* First GlyphID in the range */
-  GlyphID	end;		/* Last GlyphID in the range */
-  USHORT	classValue;	/* Applied to all glyphs in the range */
-  public:
-  DEFINE_SIZE_STATIC (6);
-};
-DEFINE_NULL_DATA (ClassRangeRecord, "\000\001");
-
 struct ClassDefFormat2
 {
   friend struct ClassDef;
 
   private:
-  inline hb_ot_layout_class_t get_class (hb_codepoint_t glyph_id) const
+  inline unsigned int get_class (hb_codepoint_t glyph_id) const
   {
-    /* TODO: bsearch (need to sort in sanitize) */
-    unsigned int count = rangeRecord.len;
-    for (unsigned int i = 0; i < count; i++)
-    {
-      int classValue = rangeRecord[i].get_class (glyph_id);
-      if (classValue > 0)
-        return classValue;
-    }
+    int i = rangeRecord.search (glyph_id);
+    if (i != -1)
+      return rangeRecord[i].value;
     return 0;
   }
 
@@ -519,7 +478,7 @@ struct ClassDefFormat2
   }
 
   USHORT	classFormat;	/* Format identifier--format = 2 */
-  ArrayOf<ClassRangeRecord>
+  SortedArrayOf<RangeRecord>
 		rangeRecord;	/* Array of glyph ranges--ordered by
 				 * Start GlyphID */
   public:
@@ -528,9 +487,9 @@ struct ClassDefFormat2
 
 struct ClassDef
 {
-  inline hb_ot_layout_class_t operator () (hb_codepoint_t glyph_id) const { return get_class (glyph_id); }
+  inline unsigned int operator () (hb_codepoint_t glyph_id) const { return get_class (glyph_id); }
 
-  inline hb_ot_layout_class_t get_class (hb_codepoint_t glyph_id) const
+  inline unsigned int get_class (hb_codepoint_t glyph_id) const
   {
     switch (u.format) {
     case 1: return u.format1.get_class(glyph_id);
@@ -566,15 +525,30 @@ struct ClassDef
 
 struct Device
 {
-  /* XXX speed up */
 
   inline hb_position_t get_x_delta (hb_ot_layout_context_t *c) const
-  { return c->font->x_ppem ? get_delta (c->font->x_ppem) * (uint64_t) c->font->x_scale / c->font->x_ppem : 0; }
+  { return get_delta (c->font->x_ppem, c->font->x_scale); }
 
   inline hb_position_t get_y_delta (hb_ot_layout_context_t *c) const
-  { return c->font->y_ppem ? get_delta (c->font->y_ppem) * (uint64_t) c->font->y_scale / c->font->y_ppem : 0; }
+  { return get_delta (c->font->y_ppem, c->font->y_scale); }
 
-  inline int get_delta (unsigned int ppem_size) const
+  inline int get_delta (unsigned int ppem, unsigned int scale) const
+  {
+    if (!ppem) return 0;
+
+    int pixels = get_delta_pixels (ppem);
+
+    if (!pixels) return 0;
+
+    /* pixels is at most in the -8..7 range.  So 64-bit arithmetic is
+     * not really necessary here.  A simple cast to int may just work
+     * as well.  But since this code is not reached that often and
+     * for the sake of correctness, we do a 64bit operation. */
+    return pixels * (int64_t) scale / ppem;
+  }
+
+
+  inline int get_delta_pixels (unsigned int ppem_size) const
   {
     unsigned int f = deltaFormat;
     if (unlikely (f < 1 || f > 3))
@@ -597,7 +571,7 @@ struct Device
     return delta;
   }
 
-  inline unsigned int get_size () const
+  inline unsigned int get_size (void) const
   {
     unsigned int f = deltaFormat;
     if (unlikely (f < 1 || f > 3 || startSize > endSize)) return 3 * USHORT::static_size;
@@ -623,5 +597,8 @@ struct Device
   DEFINE_SIZE_ARRAY (6, deltaValue);
 };
 
+
+HB_BEGIN_DECLS
+HB_END_DECLS
 
 #endif /* HB_OT_LAYOUT_COMMON_PRIVATE_HH */

@@ -100,6 +100,8 @@ _TEST_FILES =	\
 		test_bug582176.xul \
 		bug582176_window.xul \
 		test_bug428288.html \
+		test_bug608669.xul \
+		bug608669.xul \
 		test_bug449778.xul \
 		bug449778_window.xul \
 		test_bug449780.xul \

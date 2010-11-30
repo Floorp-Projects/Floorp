@@ -296,6 +296,15 @@ public:
    */
   nsresult WalkFormElements(nsFormSubmission* aFormSubmission);
 
+  /**
+   * Whether the submission of this form has been ever prevented because of
+   * being invalid.
+   *
+   * @return Whether the submission of this form has been prevented because of
+   * being invalid.
+   */
+  bool HasEverTriedInvalidSubmit() const { return mEverTriedInvalidSubmit; }
+
 protected:
   class RemoveElementRunnable;
   friend class RemoveElementRunnable;
@@ -440,6 +449,12 @@ protected:
    * @note Should only be used by UpdateValidity() and GetValidity()!
    */
   PRInt32 mInvalidElementsCount;
+
+  /**
+   * Whether the submission of this form has been ever prevented because of
+   * being invalid.
+   */
+  bool mEverTriedInvalidSubmit;
 
 protected:
   /** Detection of first form to notify observers */

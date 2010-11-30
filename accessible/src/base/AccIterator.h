@@ -40,6 +40,7 @@
 
 #include "filters.h"
 #include "nscore.h"
+#include "nsDocAccessible.h"
 
 /**
  * Allows to iterate through accessible children or subtree complying with
@@ -91,6 +92,139 @@ private:
   filters::FilterFuncPtr mFilterFunc;
   PRBool mIsDeep;
   IteratorState *mState;
+};
+
+
+/**
+ * Allows to traverse through related accessibles that are pointing to the given
+ * dependent accessible by relation attribute.
+ */
+class RelatedAccIterator
+{
+public:
+  /**
+   * Constructor.
+   *
+   * @param aDocument         [in] the document accessible the related
+   * &                         accessibles belong to.
+   * @param aDependentContent [in] the content of dependent accessible that
+   *                           relations were requested for
+   * @param aRelAttr          [in] relation attribute that relations are
+   *                           pointed by
+   */
+  RelatedAccIterator(nsDocAccessible* aDocument, nsIContent* aDependentContent,
+                     nsIAtom* aRelAttr);
+
+  /**
+   * Return next related accessible for the given dependent accessible.
+   */
+  nsAccessible* Next();
+
+private:
+  RelatedAccIterator();
+  RelatedAccIterator(const RelatedAccIterator&);
+  RelatedAccIterator& operator = (const RelatedAccIterator&);
+
+  nsIAtom* mRelAttr;
+  nsDocAccessible::AttrRelProviderArray* mProviders;
+  nsIContent* mBindingParent;
+  PRUint32 mIndex;
+};
+
+
+/**
+ * Used to iterate through HTML labels associated with the given element.
+ */
+class HTMLLabelIterator
+{
+public:
+  enum LabelFilter {
+    eAllLabels,
+    eSkipAncestorLabel
+  };
+
+  HTMLLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement,
+                    LabelFilter aFilter = eAllLabels);
+
+  /**
+   * Return next label accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  HTMLLabelIterator();
+  HTMLLabelIterator(const HTMLLabelIterator&);
+  HTMLLabelIterator& operator = (const HTMLLabelIterator&);
+
+  RelatedAccIterator mRelIter;
+  nsIContent* mElement;
+  LabelFilter mLabelFilter;
+};
+
+
+/**
+ * Used to iterate through HTML outputs associated with the given element.
+ */
+class HTMLOutputIterator
+{
+public:
+  HTMLOutputIterator(nsDocAccessible* aDocument, nsIContent* aElement);
+
+  /**
+   * Return next output accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  HTMLOutputIterator();
+  HTMLOutputIterator(const HTMLOutputIterator&);
+  HTMLOutputIterator& operator = (const HTMLOutputIterator&);
+
+  RelatedAccIterator mRelIter;
+};
+
+
+/**
+ * Used to iterate through XUL labels associated with the given element.
+ */
+class XULLabelIterator
+{
+public:
+  XULLabelIterator(nsDocAccessible* aDocument, nsIContent* aElement);
+
+  /**
+   * Return next label accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  XULLabelIterator();
+  XULLabelIterator(const XULLabelIterator&);
+  XULLabelIterator& operator = (const XULLabelIterator&);
+
+  RelatedAccIterator mRelIter;
+};
+
+
+/**
+ * Used to iterate through XUL descriptions associated with the given element.
+ */
+class XULDescriptionIterator
+{
+public:
+  XULDescriptionIterator(nsDocAccessible* aDocument, nsIContent* aElement);
+
+  /**
+   * Return next description accessible associated with the given element.
+   */
+  nsAccessible* Next();
+
+private:
+  XULDescriptionIterator();
+  XULDescriptionIterator(const XULDescriptionIterator&);
+  XULDescriptionIterator& operator = (const XULDescriptionIterator&);
+
+  RelatedAccIterator mRelIter;
 };
 
 #endif

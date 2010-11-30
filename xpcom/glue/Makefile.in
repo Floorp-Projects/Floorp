@@ -129,12 +129,13 @@ EXPORTS_mozilla = \
   BlockingResourceBase.h \
   CondVar.h \
   DeadlockDetector.h \
+  FileUtils.h \
   GenericFactory.h \
+  IntentionalCrash.h \
   Monitor.h \
   Mutex.h \
   SSE.h \
   unused.h \
-  FileUtils.h \
   $(NULL)
 
 EXPORTS_mozilla/threads = \

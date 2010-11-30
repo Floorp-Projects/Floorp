@@ -45,10 +45,17 @@ const DIR_UPDATES         = "updates";
 const FILE_UPDATE_STATUS  = "update.status";
 
 const KEY_APPDIR          = "XCurProcD";
+
 #ifdef XP_WIN
 #ifndef WINCE
-const KEY_UPDROOT         = "UpdRootD";
+#define USE_UPDROOT
 #endif
+#elifdef ANDROID
+#define USE_UPDROOT
+#endif
+
+#ifdef USE_UPDROOT
+const KEY_UPDROOT         = "UpdRootD";
 #endif
 
 /**
@@ -60,14 +67,12 @@ const KEY_UPDROOT         = "UpdRootD";
 #  @return  nsIFile object for the location specified.
  */
 function getUpdateDirNoCreate(pathArray) {
-#ifdef XP_WIN
-#ifndef WINCE
+#ifdef USE_UPDROOT
   try {
     let dir = FileUtils.getDir(KEY_UPDROOT, pathArray, false);
     return dir;
   } catch (e) {
   }
-#endif
 #endif
   return FileUtils.getDir(KEY_APPDIR, pathArray, false);
 }

@@ -168,6 +168,9 @@ protected:
 
   // Make sure the docshell we use is safe
   nsWeakPtr       mDocShell;
+
+  // See if we can reuse an existing editor
+  nsWeakPtr       mExistingEditor;
 };
 
 

@@ -64,10 +64,11 @@ public:
     hb_codepoint_t GetGlyph(hb_codepoint_t unicode,
                             hb_codepoint_t variation_selector) const;
 
-    // get harfbuzz glyph metrics, in font design units
-    void GetGlyphMetrics(gfxContext *aContext,
+    // get harfbuzz glyph advance, in font design units
+    void GetGlyphAdvance(gfxContext *aContext,
                          hb_codepoint_t glyph,
-                         hb_glyph_metrics_t *metrics) const;
+                         hb_position_t *x_advance,
+                         hb_position_t *y_advance) const;
 
     hb_position_t GetKerning(PRUint16 aFirstGlyph,
                              PRUint16 aSecondGlyph) const;

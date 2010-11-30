@@ -896,7 +896,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_XMP:
           case NS_HTML5TREE_BUILDER_IFRAME:
           case NS_HTML5TREE_BUILDER_SELECT: {
-            if (mode == NS_HTML5TREE_BUILDER_FRAMESET_OK) {
+            if (mode == NS_HTML5TREE_BUILDER_FRAMESET_OK && !(group == NS_HTML5TREE_BUILDER_INPUT && nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("hidden", attributes->getValue(nsHtml5AttributeName::ATTR_TYPE)))) {
               framesetOk = PR_FALSE;
               mode = NS_HTML5TREE_BUILDER_IN_BODY;
             }

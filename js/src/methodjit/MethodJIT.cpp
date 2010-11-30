@@ -842,7 +842,7 @@ mjit::JITScript::~JITScript()
         ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
 
         uint8 *start = (uint8 *)ic->funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(start - 32, 64);
+        Repatcher repatch(JSC::JITCode(start - 32, 64));
 
         repatch.repatch(ic->funGuard, NULL);
         repatch.relink(ic->funJump, ic->slowPathStart);

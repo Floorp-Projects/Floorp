@@ -1014,14 +1014,8 @@ GetStr(SprintStack *ss, uintN i)
  */
 #define PAREN_SLOP      (2 + 1)
 
-/*
- * These pseudo-ops help js_DecompileValueGenerator decompile JSOP_SETNAME,
- * JSOP_SETPROP, and JSOP_SETELEM, respectively.  They are never stored in
- * bytecode, so they don't preempt valid opcodes.
- */
-#define JSOP_GETPROP2   JSOP_LIMIT
-#define JSOP_GETELEM2   JSOP_LIMIT + 1
-JS_STATIC_ASSERT(JSOP_GETELEM2 <= 255);
+/* Fake opcodes (see jsopcode.h) must not overflow unsigned 8-bit space. */
+JS_STATIC_ASSERT(JSOP_FAKE_LIMIT <= 255);
 
 static void
 AddParenSlop(SprintStack *ss)
@@ -2120,15 +2114,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
             saveop = op;
             if (op >= JSOP_LIMIT) {
-                switch (op) {
-                  case JSOP_GETPROP2:
+                if (op == JSOP_GETPROP2)
                     saveop = JSOP_GETPROP;
-                    break;
-                  case JSOP_GETELEM2:
+                else if (op == JSOP_GETELEM2)
                     saveop = JSOP_GETELEM;
-                    break;
-                  default:;
-                }
             }
             LOCAL_ASSERT(js_CodeSpec[saveop].length == oplen ||
                          JOF_TYPE(format) == JOF_SLOTATOM);

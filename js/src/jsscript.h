@@ -206,7 +206,7 @@ struct JSScript {
     static JSScript *NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                                uint32 nobjects, uint32 nupvars, uint32 nregexps,
                                uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                               uint32 nClosedArgs, uint32 nClosedVars);
+                               uint16 nClosedArgs, uint16 nClosedVars);
 
     static JSScript *NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
 

@@ -49,7 +49,6 @@
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
 #include "ImageLayers.h"
-
 #include "nsAudioStream.h"
 
 // Define to output information on decoding and painting framerate
@@ -64,6 +63,10 @@ class nsHTMLMediaElement : public nsGenericHTMLElement,
   typedef mozilla::layers::ImageContainer ImageContainer;
 
 public:
+
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+
   enum CanPlayStatus {
     CANPLAY_NO,
     CANPLAY_MAYBE,
@@ -339,6 +342,14 @@ public:
    */
   void SetRequestHeaders(nsIHttpChannel* aChannel);
 
+  /**
+   * Fires a timeupdate event. If aPeriodic is PR_TRUE, the event will only
+   * be fired if we've not fired a timeupdate event (for any reason) in the
+   * last 250ms, as required by the spec when the current time is periodically
+   * increasing during playback.
+   */
+  void FireTimeUpdate(PRBool aPeriodic);
+
 protected:
   class MediaLoadListener;
 
@@ -591,6 +602,14 @@ protected:
   // it changes. Defaults to a width and height of -1 inot set.
   nsIntSize mMediaSize;
 
+  // Time that the last timeupdate event was fired. Read/Write from the
+  // main thread only.
+  TimeStamp mTimeUpdateTime;
+
+  // Media 'currentTime' value when the last timeupdate event occurred.
+  // Read/Write from the main thread only.
+  float mLastCurrentTime;
+
   nsRefPtr<gfxASurface> mPrintSurface;
 
   // Reference to the source element last returned by GetNextSource().
@@ -598,7 +617,7 @@ protected:
   nsCOMPtr<nsIContent> mSourceLoadCandidate;
 
   // An audio stream for writing audio directly from JS.
-  nsAutoPtr<nsAudioStream> mAudioStream;
+  nsRefPtr<nsAudioStream> mAudioStream;
 
   // PR_TRUE if MozAudioAvailable events can be safely dispatched, based on
   // a media and element same-origin check.

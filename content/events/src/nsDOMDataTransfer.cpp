@@ -84,9 +84,10 @@ nsDOMDataTransfer::nsDOMDataTransfer()
 {
 }
 
-nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType, PRUint32 aAction)
+nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType)
   : mEventType(aEventType),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
+    mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
     mCursorState(PR_FALSE),
     mReadOnly(PR_TRUE),
     mIsExternal(PR_TRUE),
@@ -94,11 +95,6 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType, PRUint32 aAction)
     mDragImageX(0),
     mDragImageY(0)
 {
-  mEffectAllowed = aAction &
-                   (nsIDragService::DRAGDROP_ACTION_COPY |
-                    nsIDragService::DRAGDROP_ACTION_LINK |
-                    nsIDragService::DRAGDROP_ACTION_MOVE);
-
   CacheExternalFormats();
 }
 

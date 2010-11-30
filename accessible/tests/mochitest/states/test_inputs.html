@@ -38,17 +38,30 @@
     testStates("f_input", STATE_UNAVAILABLE);
     testStates("f_input_disabled", STATE_UNAVAILABLE);
 
+    /**
+     * maxlength doesn't make the element invalid until bug 613016 and bug 613019
+     * are fixed. Commenting out related lines and adding a todo to make sure
+     * it will be uncommented as soon as possible.
+     */
+    var todoInput = document.createElement("input");
+    todoInput.maxLength = '2';
+    todoInput.value = 'foo';
+    todo(!todoInput.validity.valid,
+         "input should be invalid because of maxlength");
+
     // invalid/valid state
-    var invalid = ["maxlength","pattern","email","url"];
-    document.getElementById("maxlength").value = "i am too long";
+    //var invalid = ["maxlength","pattern","email","url"];
+    //document.getElementById("maxlength").value = "i am too long";
+    var invalid = ["pattern","email","url"];
     for (i in invalid) {
       testStates(invalid[i], STATE_INVALID);
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
     }
 
     // invalid/valid state
-    var invalid = ["maxlength","pattern","email","url"];
-    document.getElementById("maxlength").value = "i am too long";
+    //var invalid = ["maxlength","pattern","email","url"];
+    //document.getElementById("maxlength").value = "i am too long";
+    var invalid = ["pattern","email","url"];
     for (i in invalid) {
       testStates(invalid[i], STATE_INVALID);
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);

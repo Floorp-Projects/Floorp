@@ -9,7 +9,7 @@
 == t1202-counter-07-b-test.html t1202-counter-07-b-reference.html
 == t1202-counter-08-b-test.html t1202-counter-08-b-reference.html
 == t1202-counter-09-b-test.html t1202-counter-09-b-reference.html
-fails == t1202-counter-10-b-test.html t1202-counter-10-b-reference.html # need to re-read bug 287166 to see if this is correct
+== t1202-counter-10-b-test.html t1202-counter-10-b-reference.html
 == t1202-counter-11-b-test.html t1202-counter-11-b-reference.html
 == t1202-counter-12-b-test.html t1202-counter-12-b-reference.html
 == t1202-counter-13-b-test.html t1202-counter-13-b-reference.html
@@ -26,7 +26,7 @@ fails == t1202-counter-10-b-test.html t1202-counter-10-b-reference.html # need t
 == t1202-counters-07-b-test.html t1202-counters-07-b-reference.html
 == t1202-counters-08-b-test.html t1202-counters-08-b-reference.html
 == t1202-counters-09-b-test.html t1202-counters-09-b-reference.html
-fails == t1202-counters-10-b-test.html t1202-counters-10-b-reference.html # need to re-read bug 287166 to see if this is correct
+== t1202-counters-10-b-test.html t1202-counters-10-b-reference.html
 == t1202-counters-11-b-test.html t1202-counters-11-b-reference.html
 == t1202-counters-12-b-test.html t1202-counters-12-b-reference.html
 == t1202-counters-13-b-test.html t1202-counters-13-b-reference.html
