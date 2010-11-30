@@ -687,7 +687,7 @@ function runTest() {
       is(res.didFail, true,
         "should have failed in test for " + test.toSource());
       is(res.status, 0, "wrong status in test for " + test.toSource());
-      is(res.statusText, "", "wrong status in test for " + test.toSource());
+      is(res.statusText, "", "wrong status text for " + test.toSource());
       is(res.responseXML, null,
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "",
@@ -829,7 +829,7 @@ function runTest() {
       is(res.didFail, true,
         "should have failed in test for " + test.toSource());
       is(res.status, 0, "wrong status in test for " + test.toSource());
-      is(res.statusText, "", "wrong status in test for " + test.toSource());
+      is(res.statusText, "", "wrong status text for " + test.toSource());
       is(res.responseXML, null,
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "",
@@ -1098,7 +1098,7 @@ function runTest() {
       is(res.didFail, true,
         "should have failed in test for " + test.toSource());
       is(res.status, 0, "wrong status in test for " + test.toSource());
-      is(res.statusText, "", "wrong status in test for " + test.toSource());
+      is(res.statusText, "", "wrong status text for " + test.toSource());
       is(res.responseXML, null,
          "wrong responseXML in test for " + test.toSource());
       is(res.responseText, "",
