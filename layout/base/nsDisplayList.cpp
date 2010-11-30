@@ -63,6 +63,7 @@
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "BasicLayers.h"
+#include "nsBoxFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -511,6 +512,24 @@ void nsDisplayList::DeleteAll() {
   }
 }
 
+static PRBool
+GetMouseThrough(const nsIFrame* aFrame)
+{
+  if (!aFrame->IsBoxFrame())
+    return PR_FALSE;
+
+  const nsIFrame* frame = aFrame;
+  while (frame) {
+    if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_ALWAYS) {
+      return PR_TRUE;
+    } else if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_NEVER) {
+      return PR_FALSE;
+    }
+    frame = frame->GetParentBox();
+  }
+  return PR_FALSE;
+}
+
 void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                             nsDisplayItem::HitTestState* aState,
                             nsTArray<nsIFrame*> *aOutFrames) const {
@@ -532,7 +551,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       for (PRUint32 j = 0; j < outFrames.Length(); j++) {
         nsIFrame *f = outFrames.ElementAt(j);
         // Handle the XUL 'mousethrough' feature and 'pointer-events'.
-        if (!f->GetMouseThrough() &&
+        if (!GetMouseThrough(f) &&
             f->GetStyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
           aOutFrames->AppendElement(f);
         }
