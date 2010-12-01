@@ -205,13 +205,13 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
+    background-image: -moz-linear-gradient(hsl(214,15%,80%), hsl(214,15%,65%) 50%);
     color: black;
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: -moz-linear-gradient(hsla(214,15%,90%,.8), hsla(214,15%,75%,.8) 50%);
+    background-image: -moz-linear-gradient(hsl(214,15%,90%), hsl(214,15%,75%) 50%);
   }
 
   #allTabs-panel,
