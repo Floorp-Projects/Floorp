@@ -423,7 +423,7 @@ Content.prototype = {
           let uri = Util.getHrefForElement(element);
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri,
-                                                  referrer: target.ownerDocument.documentURIObject.spec });
+                                                  referrer: element.ownerDocument.documentURIObject.spec });
         } else if (!this._formAssistant.open(element)) {
           sendAsyncMessage("FindAssist:Hide", { });
           this._sendMouseEvent("mousemove", element, x, y);
