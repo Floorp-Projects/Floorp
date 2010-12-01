@@ -41,6 +41,10 @@
 #ifndef nsIFrame_h___
 #define nsIFrame_h___
 
+#ifndef MOZILLA_INTERNAL_API
+#error This header/class should only be used within Mozilla code. It should not be used by extensions.
+#endif
+
 /* nsIFrame is in the process of being deCOMtaminated, i.e., this file is eventually
    going to be eliminated, and all callers will use nsFrame instead.  At the moment
    we're midway through this process, so you will see inlined functions and member
