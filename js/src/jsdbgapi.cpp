@@ -115,6 +115,28 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
     rt->debugMode = debug;
 }
 
+static void
+PurgeCallICs(JSContext *cx, JSScript *start)
+{
+#ifdef JS_METHODJIT
+    for (JSScript *script = start;
+         &script->links != &cx->compartment->scripts;
+         script = (JSScript *)script->links.next)
+    {
+        // Debug mode does not use call ICs.
+        if (script->debugMode)
+            continue;
+
+        JS_ASSERT(!IsScriptLive(cx, script));
+
+        if (script->jitNormal)
+            script->jitNormal->nukeScriptDependentICs();
+        if (script->jitCtor)
+            script->jitCtor->nukeScriptDependentICs();
+    }
+#endif
+}
+
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
 {
@@ -134,6 +156,12 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
              */
             js::mjit::Recompiler recompiler(cx, script);
             if (!recompiler.recompile()) {
+                /*
+                 * If recompilation failed, we could be in a state where
+                 * remaining compiled scripts hold call IC references that
+                 * have been destroyed by recompilation. Clear those ICs now.
+                 */
+                PurgeCallICs(cx, script);
                 cx->compartment->debugMode = JS_FALSE;
                 return JS_FALSE;
             }
