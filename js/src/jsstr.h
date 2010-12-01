@@ -317,43 +317,10 @@ struct JSString {
         return e.mCapacity;
     }
 
-    /*
-     * Methods to manipulate ATOMIZED and EXTENSIBLE flags of flat strings. It is
-     * safe to use these without extra locking due to the following properties:
-     *
-     *   * We do not have a flatClearAtomized method, as a string remains
-     *     atomized until the GC collects it.
-     *
-     *   * A thread may call flatSetExtensible only when it is the only
-     *     thread accessing the string until a later call to
-     *     flatClearExtensible.
-     *
-     *   * Multiple threads can call flatClearExtensible but the function actually
-     *     clears the EXTENSIBLE flag only when the flag is set -- in which case
-     *     only one thread can access the string (see previous property).
-     *
-     * Thus, when multiple threads access the string, JSString::flatSetAtomized
-     * is the only function that can update the mLengthAndFlags field of the
-     * string by changing the EXTENSIBLE bit from 0 to 1. We call the method only
-     * after the string has been hashed. When some threads in js_ValueToStringId
-     * see that the flag is set, it knows that the string was atomized.
-     *
-     * On the other hand, if the thread sees that the flag is unset, it could
-     * be seeing a stale value when another thread has just atomized the string
-     * and set the flag. But this can lead only to an extra call to
-     * js_AtomizeString. This function would find that the string was already
-     * hashed and return it with the atomized bit set.
-     */
     inline void flatSetAtomized() {
         JS_ASSERT(isFlat());
         JS_ASSERT(!isStatic(this));
-        JS_ATOMIC_SET_MASK((jsword *)&mLengthAndFlags, ATOMIZED);
-    }
-
-    inline void flatSetExtensible() {
-        JS_ASSERT(isFlat());
-        JS_ASSERT(!isAtomized());
-        mLengthAndFlags |= EXTENSIBLE;
+        mLengthAndFlags |= ATOMIZED;
     }
 
     inline void flatClearExtensible() {
