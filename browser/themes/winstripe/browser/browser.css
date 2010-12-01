@@ -208,7 +208,7 @@
   #appmenu-popup {
     -moz-appearance: none;
     background: white;
-    border: 1px solid rgba(0,0,0,.5);
+    border: 1px solid ThreeDShadow;
   }
   #appmenuPrimaryPane {
     background-color: rgba(255,255,255,0.5);
@@ -226,6 +226,51 @@
   #appmenuSecondaryPane:-moz-locale-dir(rtl) {
     box-shadow: -1px 0 2px rgb(204,214,234) inset;
   }
+
+%ifdef WINSTRIPE_AERO
+  #appmenuPrimaryPane menupopup {
+    -moz-appearance: none;
+    background-image: -moz-linear-gradient(left, white 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, white 28px);
+    border: 3px solid;
+    -moz-border-top-colors: ThreeDShadow white;
+    -moz-border-bottom-colors: ThreeDShadow white;
+    -moz-border-left-colors: ThreeDShadow white;
+    -moz-border-right-colors: ThreeDShadow white;
+  }
+%endif
+
+  #appmenuSecondaryPane menupopup {
+    -moz-appearance: none;
+%ifdef WINSTRIPE_AERO
+    background-image: -moz-linear-gradient(left, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, #f1f5fb 28px);
+    border: 3px solid;
+    -moz-border-top-colors: ThreeDShadow #f1f5fb;
+    -moz-border-bottom-colors: ThreeDShadow #f1f5fb;
+    -moz-border-left-colors: ThreeDShadow #f1f5fb;
+    -moz-border-right-colors: ThreeDShadow #f1f5fb;
+%else
+    background-color: #f1f5fb;
+    border: 1px solid ThreeDShadow;
+    padding: 2px;
+%endif
+  }
+
+%ifdef WINSTRIPE_AERO
+  #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
+    background-image: -moz-linear-gradient(right, white 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, white 28px);
+  }
+  #appmenuSecondaryPane menupopup:-moz-locale-dir(rtl) {
+    background-image: -moz-linear-gradient(right, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, #f1f5fb 28px);
+  }
+%endif
 
   .appmenu-menuseparator {
     -moz-appearance: none;
