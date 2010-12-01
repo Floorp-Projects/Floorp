@@ -462,7 +462,7 @@
                 command="Browser:BookmarkAllTabs"
                 key="bookmarkAllTabsKb"/>
       <menuitem id="bookmarksShowAll"
-                label="&showAllBookmarks.label;"
+                label="&showAllBookmarks2.label;"
                 command="Browser:ShowAllBookmarks"
                 key="manBookmarkKb"/>
       <menuseparator id="organizeBookmarksSeparator"/>
@@ -563,7 +563,7 @@
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
-                        label="&preferencesCmd.label;"
+                        label="&preferencesCmd2.label;"
                         accesskey="&preferencesCmd.accesskey;"
                         oncommand="openPreferences();"/>
 #endif

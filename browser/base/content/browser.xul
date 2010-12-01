@@ -644,7 +644,7 @@
                       label="&viewBookmarksToolbar.label;"/>
             <menuseparator/>
             <menuitem id="BMB_bookmarksShowAll"
-                      label="&showAllBookmarks.label;"
+                      label="&showAllBookmarks2.label;"
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>
