@@ -468,7 +468,10 @@ nsMediaQuery::AppendToString(nsAString& aString) const
           break;
         case nsMediaFeature::eResolution:
           {
-            aString.AppendFloat(expr.mValue.GetFloatValue());
+            nsAutoString buffer;
+            buffer.AppendFloat(expr.mValue.GetFloatValue());
+            aString.Append(buffer);
+            buffer.Truncate();
             if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
               aString.AppendLiteral("dpi");
             } else {
