@@ -61,7 +61,7 @@ struct JSFrameRegs
 /* Flags to toggle js::Interpret() execution. */
 enum JSInterpMode
 {
-    JSINTERP_NORMAL            =     0, /* Interpreter is running normally. */
+    JSINTERP_NORMAL            =     0, /* interpreter is running normally */
     JSINTERP_RECORD            =     1, /* interpreter has been started to record/run traces */
     JSINTERP_SAFEPOINT         =     2, /* interpreter should leave on a method JIT safe point */
     JSINTERP_PROFILE           =     3  /* interpreter should profile a loop */
@@ -76,8 +76,8 @@ enum JSFrameFlags
     JSFRAME_DUMMY              =     0x4, /* frame pushed for bookkeeping */
 
     /* Frame subtypes */
-    JSFRAME_EVAL               =     0x8, /* frame pushed by js::Execute */
-    JSFRAME_DEBUGGER           =    0x10, /* frame pushed by JS_EvaluateInStackFrame */
+    JSFRAME_EVAL               =     0x8, /* frame pushed for eval() or debugger eval */
+    JSFRAME_DEBUGGER           =    0x10, /* frame pushed for debugger eval */
     JSFRAME_GENERATOR          =    0x20, /* frame is associated with a generator */
     JSFRAME_FLOATING_GENERATOR =    0x40, /* frame is is in generator obj, not on stack */
     JSFRAME_CONSTRUCTING       =    0x80, /* frame is for a constructor invocation */
