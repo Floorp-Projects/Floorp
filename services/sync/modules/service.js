@@ -1129,7 +1129,7 @@ WeaveSvc.prototype = {
         return false;
       }
 
-        return true;
+      return true;
     }
     else {
       if (!this.upgradeSyncKey(meta.payload.syncID)) {
@@ -1142,7 +1142,7 @@ WeaveSvc.prototype = {
         return false;
       }
 
-          return true;
+      return true;
     }
   },
 
