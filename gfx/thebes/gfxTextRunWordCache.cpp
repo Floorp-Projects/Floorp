@@ -452,29 +452,22 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
         }
         // If the word starts inside a cluster we don't want this word
         // in the cache, so we'll remove the associated cache entry
-        PRBool wordStartsInsideCluster;
-        PRBool wordStartsInsideLigature;
-        if (aSuccessful) {
-            wordStartsInsideCluster =
-                !source->IsClusterStart(word->mSourceOffset);
-            wordStartsInsideLigature =
-                !source->IsLigatureGroupStart(word->mSourceOffset);
-        }
+        PRBool wordStartsInsideCluster =
+            !source->IsClusterStart(word->mSourceOffset);
+        PRBool wordStartsInsideLigature =
+            !source->IsLigatureGroupStart(word->mSourceOffset);
         if (source == aNewRun) {
             // We created a cache entry for this word based on the assumption
             // that the word matches GetFontAt(0). If this assumption is false,
             // we need to remove that cache entry and replace it with an entry
             // keyed off the fontgroup.
-            PRBool removeFontKey = !aSuccessful ||
-                wordStartsInsideCluster || wordStartsInsideLigature ||
-                (!useFontGroup && font != GetWordFontOrGroup(aNewRun,
-                                                             word->mSourceOffset,
-                                                             word->mLength));
-            if (removeFontKey) {
+            PRBool rekeyWithFontGroup =
+                GetWordFontOrGroup(aNewRun, word->mSourceOffset, word->mLength) != font && !useFontGroup;
+            if (!aSuccessful || rekeyWithFontGroup ||
+                wordStartsInsideCluster || wordStartsInsideLigature) {
                 // We need to remove the current placeholder cache entry
-                CacheHashKey key(aTextRun,
-                                 (useFontGroup ? (void*)fontGroup : (void*)font),
-                                 word->mDestOffset, word->mLength, word->mHash);
+                CacheHashKey key(aTextRun, (useFontGroup ? (void*)fontGroup : (void*)font), word->mDestOffset, word->mLength,
+                                 word->mHash);
                 NS_ASSERTION(mCache.GetEntry(key),
                              "This entry should have been added previously!");
                 mCache.RemoveEntry(key);
@@ -532,20 +525,9 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
                     tmpTextRun = aNewRun->GetFontGroup()->MakeTextRun(
                         source->GetTextUnicode() + sourceOffset, length, aParams,
                         aNewRun->GetFlags());
-                    if (tmpTextRun) {
-                        source = tmpTextRun;
-                        sourceOffset = 0;
-                        stealData = PR_TRUE;
-                    } else {
-                        // If we failed to create the temporary run (OOM),
-                        // skip the word, as if aSuccessful had been FALSE.
-                        // (In practice this is only likely to occur if
-                        // we're on the verge of an OOM crash anyhow.
-                        // But ignoring gfxFontGroup::MakeTextRun() failure
-                        // is bad because it means we'd be using an invalid
-                        // source pointer.)
-                        continue;
-                    }
+                    source = tmpTextRun;
+                    sourceOffset = 0;
+                    stealData = PR_TRUE;
                 }
             }
             aTextRun->CopyGlyphDataFrom(source, sourceOffset, length,
@@ -656,23 +638,11 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                     aFontGroup->MakeTextRun(numString.get(), length, aParams,
                                             aFlags & ~(gfxTextRunFactory::TEXT_IS_PERSISTENT |
                                                        gfxTextRunFactory::TEXT_IS_8BIT));
-                // If MakeTextRun failed, numRun will be null, which is bad...
-                // we'll just pretend there wasn't a digit to process.
-                // This means we won't have the correct numerals, but at least
-                // we're not trying to copy glyph data from an invalid source.
-                // In practice it's unlikely to happen unless we're very close
-                // to crashing due to OOM.
-                if (numRun) {
-                    DeferredWord word = { numRun, 0, wordStart, length, hash };
-                    deferredWords.AppendElement(word);
-                    transientRuns.AppendElement(numRun);
-                } else {
-                    seenDigitToModify = PR_FALSE;
-                }
-            }
-
-            if (!seenDigitToModify) {
-                // didn't need to modify digits (or failed to do so)
+                DeferredWord word = { numRun, 0, wordStart, length, hash };
+                deferredWords.AppendElement(word);
+                transientRuns.AppendElement(numRun);
+                seenDigitToModify = PR_FALSE;
+            } else {
                 PRBool hit = LookupWord(textRun, font, wordStart, i, hash,
                                         deferredWords.Length() == 0 ? nsnull : &deferredWords);
                 if (!hit) {
@@ -697,10 +667,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                     } // else we should set this character to be invisible missing,
                       // but it already is because the textrun is blank!
                 }
-            } else {
-                seenDigitToModify = PR_FALSE;
             }
-
             hash = 0;
             wordStart = i + 1;
         } else {
@@ -795,16 +762,11 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                     aFontGroup->MakeTextRun(numString.get(), length, aParams,
                                             aFlags & ~(gfxTextRunFactory::TEXT_IS_PERSISTENT |
                                                        gfxTextRunFactory::TEXT_IS_8BIT));
-                if (numRun) {
-                    DeferredWord word = { numRun, 0, wordStart, length, hash };
-                    deferredWords.AppendElement(word);
-                    transientRuns.AppendElement(numRun);
-                } else {
-                    seenDigitToModify = PR_FALSE;
-                }
-            }
-
-            if (!seenDigitToModify) {
+                DeferredWord word = { numRun, 0, wordStart, length, hash };
+                deferredWords.AppendElement(word);
+                transientRuns.AppendElement(numRun);
+                seenDigitToModify = PR_FALSE;
+            } else {
                 PRBool hit = LookupWord(textRun, font, wordStart, i, hash,
                                         deferredWords.Length() == 0 ? nsnull : &deferredWords);
                 if (!hit) {
@@ -829,10 +791,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                     } // else we should set this character to be invisible missing,
                       // but it already is because the textrun is blank!
                 }
-            } else {
-                seenDigitToModify = PR_FALSE;
             }
-
             hash = 0;
             wordStart = i + 1;
         } else {
