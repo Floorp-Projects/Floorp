@@ -123,12 +123,6 @@ WebGLProgram::GetUniformLocationObject(GLint glLocation)
     return loc.forget();
 }
 
-static PRBool
-InternalFormatHasAlpha(WebGLenum aInternalFormat) {
-    return aInternalFormat == LOCAL_GL_RGBA4 ||
-        aInternalFormat == LOCAL_GL_RGB5_A1;
-}
-
 //
 //  WebGL API
 //
