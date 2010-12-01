@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,8 @@ Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
   "auth.js":              ['Auth', 'BrokenBasicAuthenticator',
                            'BasicAuthenticator', 'NoOpAuthenticator'],
-  "base_records/keys.js": ['PubKey', 'PrivKey', 'PubKeys', 'PrivKeys'],
+  "base_records/crypto.js":
+                          ["CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"],
   "engines.js":           ['Engines', 'Engine', 'SyncEngine'],
   "engines/bookmarks.js": ['BookmarksEngine', 'BookmarksSharingManager'],
   "engines/clients.js":   ["Clients"],
