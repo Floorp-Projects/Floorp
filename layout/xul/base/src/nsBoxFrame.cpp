@@ -2212,11 +2212,6 @@ void nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
       topMostAdded = PR_TRUE;
       aOutFrames->AppendElement(mTargetFrame);
     }
-
-  }
-  // If no hits were found, treat it as a hit on the target frame itself.
-  if (localLength == 0) {
-    aOutFrames->AppendElement(mTargetFrame);
   }
 }
 
