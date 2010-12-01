@@ -453,7 +453,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: -moz-box;
 }
 
-#invalid-form-popup {
+#invalid-form-popup > description {
   max-width: 280px;
 }
 
