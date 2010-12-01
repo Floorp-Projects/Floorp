@@ -332,6 +332,7 @@ struct JITScript {
         return jcheck >= jitcode && jcheck < jitcode + code.m_size;
     }
 
+    void nukeScriptDependentICs();
     void sweepCallICs();
     void purgeMICs();
     void purgePICs();
