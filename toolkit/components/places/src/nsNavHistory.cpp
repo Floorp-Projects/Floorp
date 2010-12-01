@@ -493,6 +493,12 @@ nsNavHistory::Init()
   rv = InitAdditionalDBItems();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Since some of the APIs are styll synchronous, we need to synchronously get
+  // the sessionId from the database, for visits addition.  The first visit
+  // addition could lock with this synchronous read, thus we query the database
+  // now.  Next calls to GetNewSessionID() will get a incremented cached value.
+  (void)GetNewSessionID();
+
   // Notify we have finished database initialization.
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
