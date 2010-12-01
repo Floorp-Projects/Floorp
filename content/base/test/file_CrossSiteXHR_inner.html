@@ -19,7 +19,6 @@ window.addEventListener("message", function(e) {
     progressEvents: 0,
     status: 0,
     responseText: "",
-    statusText: "",
     responseXML: null,
     sendThrew: false
   };
@@ -56,7 +55,6 @@ window.addEventListener("message", function(e) {
     try {
       res.statusText = xhr.statusText;
     } catch (e) {
-      delete(res.statusText);
     }
     res.responseXML = xhr.responseXML ?
       (new XMLSerializer()).serializeToString(xhr.responseXML) :
