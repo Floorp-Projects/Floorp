@@ -4371,7 +4371,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 ns = nodeInfo->NamespaceID();
-  return NS_NewElement(aReturn, ns,
+  return NS_NewElement(aReturn, nodeInfo->NamespaceID(),
                        nodeInfo.forget(), NOT_FROM_PARSER);
 }
 
