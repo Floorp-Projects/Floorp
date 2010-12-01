@@ -48,7 +48,7 @@
 }
 
 %ifdef WINSTRIPE_AERO
-@media all and (-moz-windows-default) {
+@media all and (-moz-windows-default-theme) {
   #addons-page {
     color: #000;
     background-color: #CCD9EA;
