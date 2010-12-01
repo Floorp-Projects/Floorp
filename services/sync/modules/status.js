@@ -79,6 +79,7 @@ let Status = {
     try {
       username = prefs.getCharPref("username");
     } catch(ex) {}
+    
     if (!username) {
       Status.login = LOGIN_FAILED_NO_USERNAME;
       return Status.service;
@@ -86,6 +87,7 @@ let Status = {
 
     Cu.import("resource://services-sync/util.js");
     Cu.import("resource://services-sync/identity.js");
+    Cu.import("resource://services-sync/base_records/crypto.js");
     if (!Utils.mpLocked()) {
       let id = ID.get("WeaveID");
       if (!id)
@@ -99,9 +101,9 @@ let Status = {
       id = ID.get("WeaveCryptoID");
       if (!id)
         id = ID.set("WeaveCryptoID",
-                    new Identity(PWDMGR_PASSPHRASE_REALM, username));
+                    new SyncKeyBundle(PWDMGR_PASSPHRASE_REALM, username));
 
-      if (!id.password) {
+      if (!id.keyStr) {
         Status.login = LOGIN_FAILED_NO_PASSPHRASE;
         return Status.service;
       }

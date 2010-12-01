@@ -86,7 +86,7 @@ Store.prototype = {
     throw "override itemExists in a subclass";
   },
 
-  createRecord: function Store_createRecord(id, uri) {
+  createRecord: function Store_createRecord(id, collection) {
     throw "override createRecord in a subclass";
   },
 
