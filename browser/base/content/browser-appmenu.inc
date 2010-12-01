@@ -214,7 +214,7 @@
                      tooltip="bhTooltip"
                      popupsinherittooltip="true">
             <menuitem id="appmenu_showAllBookmarks"
-                      label="&showAllBookmarks.label;"
+                      label="&showAllBookmarks2.label;"
                       command="Browser:ShowAllBookmarks"
                       context=""
                       key="manBookmarkKb"/>
@@ -328,20 +328,20 @@
 #ifdef XP_UNIX
                   label="&preferencesCmdUnix.label;"
 #else
-                  label="&preferencesCmd.label;"
+                  label="&preferencesCmd2.label;"
 #endif
                   class="split-menuitem-item"
                   flex="1"
                   oncommand="openPreferences();"/>
         <menu class="split-menuitem-menu"
-              label="&preferencesCmd.label;">
+              label="&preferencesCmd2.label;">
           <menupopup id="appmenu_customizeMenu"
                      onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleTabsOnTop').previousSibling);">
             <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                       label="&preferencesCmdUnix.label;"
 #else
-                      label="&preferencesCmd.label;"
+                      label="&preferencesCmd2.label;"
 #endif
                       oncommand="openPreferences();"/>
             <menuseparator/>
