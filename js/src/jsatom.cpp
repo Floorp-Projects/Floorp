@@ -514,7 +514,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
                     /* Finish handing off chars to the GC'ed key string. */
                     JS_ASSERT(flags & ATOM_TMPSTR);
-                    str->mChars = NULL;
+                    str->u.chars = NULL;
                 } else {
                     key = js_NewStringCopyN(cx, chars, length);
                     if (!key)
