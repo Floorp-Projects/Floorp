@@ -1689,6 +1689,7 @@ var FindHelperUI = {
     close: "cmd_findClose"
   },
 
+  _open: false,
   _status: null,
 
   get status() {
@@ -1744,16 +1745,23 @@ var FindHelperUI = {
     this._container.show(this);
     this.search("");
     this._textbox.focus();
+    this._open = true;
 
     // Prevent the view to scroll automatically while searching
     Browser.selectedBrowser.scrollSync = false;
   },
 
   hide: function findHelperHide() {
+    if (!this._open)
+      return;
+
     this._textbox.value = "";
     this.status = null;
     this._textbox.blur();
     this._container.hide(this);
+    this._open = false;
+
+    // Restore the scroll synchronisation
     Browser.selectedBrowser.scrollSync = true;
   },
 
@@ -1899,6 +1907,9 @@ var FormHelperUI = {
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
+    if (!this._open)
+      return;
+
     switch (aEvent.type) {
       case "TabSelect":
       case "URLChanged":
