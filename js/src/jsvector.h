@@ -342,6 +342,8 @@ class Vector : AllocPolicy
 
     void popBack();
 
+    T popCopy();
+
     /*
      * Transfers ownership of the internal buffer used by Vector to the caller.
      * After this call, the Vector is empty. Since the returned buffer may need
@@ -688,6 +690,15 @@ Vector<T,N,AP>::popBack()
     JS_ASSERT(!empty());
     --mLength;
     endNoCheck()->~T();
+}
+
+template <class T, size_t N, class AP>
+JS_ALWAYS_INLINE T
+Vector<T,N,AP>::popCopy()
+{
+    T ret = back();
+    popBack();
+    return ret;
 }
 
 template <class T, size_t N, class AP>

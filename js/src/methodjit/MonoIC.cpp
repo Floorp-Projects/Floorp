@@ -292,13 +292,13 @@ class EqualityCompiler : public BaseCompiler
         /* Test if lhs/rhs are atomized. */
         Imm32 atomizedFlags(JSString::FLAT | JSString::ATOMIZED);
         
-        masm.load32(Address(lvr.dataReg(), offsetof(JSString, mLengthAndFlags)), tmp);
+        masm.load32(Address(lvr.dataReg(), JSString::offsetOfLengthAndFlags()), tmp);
         masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), tmp);
         Jump lhsNotAtomized = masm.branch32(Assembler::NotEqual, tmp, atomizedFlags);
         linkToStub(lhsNotAtomized);
 
         if (!rvr.isConstant()) {
-            masm.load32(Address(rvr.dataReg(), offsetof(JSString, mLengthAndFlags)), tmp);
+            masm.load32(Address(rvr.dataReg(), JSString::offsetOfLengthAndFlags()), tmp);
             masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), tmp);
             Jump rhsNotAtomized = masm.branch32(Assembler::NotEqual, tmp, atomizedFlags);
             linkToStub(rhsNotAtomized);
