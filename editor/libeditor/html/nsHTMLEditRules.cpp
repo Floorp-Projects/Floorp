@@ -86,6 +86,7 @@
 #include "nsIDOM3Node.h"
 #include "nsContentUtils.h"
 #include "nsTArray.h"
+#include "nsIHTMLDocument.h"
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -197,6 +198,7 @@ mDocChangeRange(nsnull)
 ,mReturnInEmptyLIKillsList(PR_TRUE)
 ,mDidDeleteSelection(PR_FALSE)
 ,mDidRangedDelete(PR_FALSE)
+,mRestoreContentEditableCount(PR_FALSE)
 ,mUtilRange(nsnull)
 ,mJoinOffset(0)
 {
@@ -377,7 +379,18 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       res = CacheInlineStyles(selNode);
       NS_ENSURE_SUCCESS(res, res);
     }
-    
+
+    // Stabilize the document against contenteditable count changes
+    nsCOMPtr<nsIDOMDocument> doc;
+    res = mHTMLEditor->GetDocument(getter_AddRefs(doc));
+    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
+    NS_ENSURE_TRUE(htmlDoc, NS_ERROR_FAILURE);
+    if (htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable) {
+      htmlDoc->ChangeContentEditableCount(nsnull, +1);
+      mRestoreContentEditableCount = PR_TRUE;
+    }
+
     // check that selection is in subtree defined by body node
     ConfirmSelectionInBody();
     // let rules remember the top level action
@@ -422,6 +435,19 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       if (frameSelection) {
         frameSelection->UndefineCaretBidiLevel();
       }
+    }
+
+    // Reset the contenteditable count to its previous value
+    if (mRestoreContentEditableCount) {
+      nsCOMPtr<nsIDOMDocument> doc;
+      res = mHTMLEditor->GetDocument(getter_AddRefs(doc));
+      NS_ENSURE_SUCCESS(res, res);
+      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
+      NS_ENSURE_TRUE(htmlDoc, NS_ERROR_FAILURE);
+      if (htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable) {
+        htmlDoc->ChangeContentEditableCount(nsnull, -1);
+      }
+      mRestoreContentEditableCount = PR_FALSE;
     }
   }
 
