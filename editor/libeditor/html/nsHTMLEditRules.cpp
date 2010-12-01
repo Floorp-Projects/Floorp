@@ -6055,10 +6055,15 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
     // selection spans multiple lists but with no common list parent.
     if (outArrayOfNodes.Count()) return NS_OK;
   }
-  
-  // contruct a list of nodes to act on.
-  res = GetNodesFromSelection(selection, kMakeList, outArrayOfNodes, aDontTouchContent);
-  NS_ENSURE_SUCCESS(res, res);                                 
+
+  {
+    // We don't like other people messing with our selection!
+    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+
+    // contruct a list of nodes to act on.
+    res = GetNodesFromSelection(selection, kMakeList, outArrayOfNodes, aDontTouchContent);
+    NS_ENSURE_SUCCESS(res, res);
+  }
                
   // pre process our list of nodes...                      
   PRInt32 listCount = outArrayOfNodes.Count();
