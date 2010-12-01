@@ -257,7 +257,8 @@ public class CrashReporter extends Activity
       sendPart(os, boundary, "Android_Device", Build.DEVICE);
       sendPart(os, boundary, "Android_Display", Build.DISPLAY);
       sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
-      sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+      if (Build.VERSION.SDK_INT >= 8)
+        sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
       sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
 
       sendFile(os, boundary, kMiniDumpPathKey, minidumpFile);
