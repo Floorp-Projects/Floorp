@@ -2128,7 +2128,7 @@ panel[dimmed="true"] {
 }
 
 browser[tabmodalPromptShowing] {
-  filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
+  filter: url("chrome://browser/skin/effects.svg#desaturate");
 }
 
 /* Add-on bar close button */
