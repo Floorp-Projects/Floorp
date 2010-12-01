@@ -122,8 +122,9 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
 void
 nsSVGNumber2::GetBaseValueString(nsAString & aValueAsString)
 {
-  aValueAsString.Truncate();
-  aValueAsString.AppendFloat(mBaseVal);
+  nsAutoString s;
+  s.AppendFloat(mBaseVal);
+  aValueAsString.Assign(s);
 }
 
 void

@@ -859,9 +859,6 @@ public:
 
   nsresult CreateElement(const nsAString& aTagName,
                          nsIContent** aReturn);
-  nsresult CreateElementNS(const nsAString& aNamespaceURI,
-                           const nsAString& aQualifiedName,
-                           nsIContent** aReturn);
 
   nsresult CreateTextNode(const nsAString& aData, nsIContent** aReturn);
 

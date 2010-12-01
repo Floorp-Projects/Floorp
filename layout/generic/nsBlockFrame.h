@@ -378,7 +378,7 @@ protected:
                    nsLineList::iterator* aEndIterator,
                    PRBool* aInOverflowLines);
 
-  void SetFlags(nsFrameState aFlags) {
+  void SetFlags(PRUint32 aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
     mState |= aFlags;
   }

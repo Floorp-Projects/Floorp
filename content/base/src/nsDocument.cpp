@@ -4351,18 +4351,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             nsIDOMElement** aReturn)
 {
   *aReturn = nsnull;
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = CreateElementNS(aNamespaceURI, aQualifiedName,
-                                getter_AddRefs(content));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return CallQueryInterface(content, aReturn);
-}
 
-nsresult
-nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
-                            const nsAString& aQualifiedName,
-                            nsIContent** aReturn)
-{
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
@@ -4370,9 +4359,13 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIContent> content;
   PRInt32 ns = nodeInfo->NamespaceID();
-  return NS_NewElement(aReturn, nodeInfo->NamespaceID(),
-                       nodeInfo.forget(), NOT_FROM_PARSER);
+  rv = NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(),
+                     NOT_FROM_PARSER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(content, aReturn);
 }
 
 NS_IMETHODIMP
