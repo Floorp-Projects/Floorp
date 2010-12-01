@@ -709,7 +709,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         if (!sHBFontFuncs) {
             // static function callback pointers, initialized by the first
             // harfbuzz shaper used
-            sHBFontFuncs = hb_font_funcs_copy(hb_font_funcs_create());
+            sHBFontFuncs = hb_font_funcs_create();
             hb_font_funcs_set_glyph_func(sHBFontFuncs, HBGetGlyph);
             hb_font_funcs_set_glyph_advance_func(sHBFontFuncs,
                                                  HBGetGlyphAdvance);
@@ -717,7 +717,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
                                                  HBGetContourPoint);
             hb_font_funcs_set_kerning_func(sHBFontFuncs, HBGetKerning);
 
-            sHBUnicodeFuncs = hb_unicode_funcs_copy(hb_unicode_funcs_create());
+            sHBUnicodeFuncs = hb_unicode_funcs_create();
             hb_unicode_funcs_set_mirroring_func(sHBUnicodeFuncs,
                                                 HBGetMirroring);
             hb_unicode_funcs_set_script_func(sHBUnicodeFuncs, HBGetScript);
