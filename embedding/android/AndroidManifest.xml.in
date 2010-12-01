@@ -64,14 +64,12 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="NotificationHandler"
-                  android:label="@MOZ_APP_DISPLAYNAME@ Notification"
-                  android:theme="@android:style/Theme.NoTitleBar">
+        <receiver android:name="NotificationHandler">
             <intent-filter>
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CLICK" />
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CLEAR" />
             </intent-filter>
-        </activity>
+        </receiver>
 
         <activity android:name="Restarter"
                   android:theme="@android:style/Theme.Light.NoTitleBar">
