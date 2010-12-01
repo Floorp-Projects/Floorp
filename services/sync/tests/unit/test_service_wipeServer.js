@@ -1,6 +1,5 @@
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/resource.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
@@ -30,119 +29,24 @@ function serviceUnavailable(request, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function createAndUploadKeypair() {
-  let keys = PubKeys.createKeypair(ID.get("WeaveCryptoID"),
-                                   PubKeys.defaultKeyUri,
-                                   PrivKeys.defaultKeyUri);
-  PubKeys.uploadKeypair(keys);
-}
-
-function createAndUploadSymKey(url) {
-  let symkey = Svc.Crypto.generateRandomKey();
-  let pubkey = PubKeys.getDefaultKey();
-  let meta = new CryptoMeta(url);
-  meta.addUnwrappedKey(pubkey, symkey);
-  let res = new Resource(meta.uri);
-  res.put(meta);
-  CryptoMetas.set(url, meta);
-}
-
 function setUpTestFixtures() {
   let cryptoService = new FakeCryptoService();
 
   Service.clusterURL = "http://localhost:8080/";
   Service.username = "johndoe";
-  Service.passphrase = "secret";
-
-  createAndUploadKeypair();
-  createAndUploadSymKey("http://localhost:8080/1.0/johndoe/storage/crypto/steam");
-  createAndUploadSymKey("http://localhost:8080/1.0/johndoe/storage/crypto/petrol");
-  createAndUploadSymKey("http://localhost:8080/1.0/johndoe/storage/crypto/diesel");
+  Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
 }
 
-function test_withCollectionList_failOnCrypto() {
-  _("Service.wipeServer() deletes collections given as argument and aborts if a collection delete fails.");
-
-  let steam_coll = new FakeCollection();
-  let petrol_coll = new FakeCollection();
-  let diesel_coll = new FakeCollection();
-  let crypto_steam = new ServerWBO('steam');
-  let crypto_diesel = new ServerWBO('diesel');
-
-  let server = httpd_setup({
-    "/1.0/johndoe/storage/keys/pubkey": (new ServerWBO('pubkey')).handler(),
-    "/1.0/johndoe/storage/keys/privkey": (new ServerWBO('privkey')).handler(),
-    "/1.0/johndoe/storage/steam": steam_coll.handler(),
-    "/1.0/johndoe/storage/petrol": petrol_coll.handler(),
-    "/1.0/johndoe/storage/diesel": diesel_coll.handler(),
-    "/1.0/johndoe/storage/crypto/steam": crypto_steam.handler(),
-    "/1.0/johndoe/storage/crypto/petrol": serviceUnavailable,
-    "/1.0/johndoe/storage/crypto/diesel": crypto_diesel.handler()
-  });
-  do_test_pending();
-
-  try {
-    setUpTestFixtures();
-
-    _("Confirm initial environment.");
-    do_check_false(steam_coll.deleted);
-    do_check_false(petrol_coll.deleted);
-    do_check_false(diesel_coll.deleted);
-
-    do_check_true(crypto_steam.payload != undefined);
-    do_check_true(crypto_diesel.payload != undefined);
-
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/steam"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/petrol"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/diesel"));
-
-    _("wipeServer() will happily ignore the non-existent collection, delete the 'steam' collection and abort after an receiving an error on the 'petrol' collection's symkey.");
-    let error;
-    try {
-      Service.wipeServer(["non-existent", "steam", "petrol", "diesel"]);
-    } catch(ex) {
-      error = ex;
-    }
-    _("wipeServer() threw this exception: " + error);
-    do_check_true(error != undefined);
-
-    _("wipeServer stopped deleting after encountering an error with the 'petrol' collection's symkey, thus only 'steam' and 'petrol' have been deleted.");
-    do_check_true(steam_coll.deleted);
-    do_check_true(petrol_coll.deleted);
-    do_check_false(diesel_coll.deleted);
-
-    do_check_true(crypto_steam.payload == undefined);
-    do_check_true(crypto_diesel.payload != undefined);
-
-    do_check_false(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/steam"));
-    do_check_false(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/petrol"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/diesel"));
-
-  } finally {
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    CryptoMetas.clearCache();
-  }
-}
-
-function test_withCollectionList_failOnCollection() {
+function test_withCollectionList_fail() {
   _("Service.wipeServer() deletes collections given as argument.");
 
   let steam_coll = new FakeCollection();
   let diesel_coll = new FakeCollection();
-  let crypto_steam = new ServerWBO('steam');
-  let crypto_petrol = new ServerWBO('petrol');
-  let crypto_diesel = new ServerWBO('diesel');
 
   let server = httpd_setup({
-    "/1.0/johndoe/storage/keys/pubkey": (new ServerWBO('pubkey')).handler(),
-    "/1.0/johndoe/storage/keys/privkey": (new ServerWBO('privkey')).handler(),
     "/1.0/johndoe/storage/steam": steam_coll.handler(),
     "/1.0/johndoe/storage/petrol": serviceUnavailable,
-    "/1.0/johndoe/storage/diesel": diesel_coll.handler(),
-    "/1.0/johndoe/storage/crypto/steam": crypto_steam.handler(),
-    "/1.0/johndoe/storage/crypto/petrol": crypto_petrol.handler(),
-    "/1.0/johndoe/storage/crypto/diesel": crypto_diesel.handler()
+    "/1.0/johndoe/storage/diesel": diesel_coll.handler()
   });
   do_test_pending();
 
@@ -152,14 +56,6 @@ function test_withCollectionList_failOnCollection() {
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
     do_check_false(diesel_coll.deleted);
-
-    do_check_true(crypto_steam.payload != undefined);
-    do_check_true(crypto_petrol.payload != undefined);
-    do_check_true(crypto_diesel.payload != undefined);
-
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/steam"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/petrol"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/diesel"));
 
     _("wipeServer() will happily ignore the non-existent collection, delete the 'steam' collection and abort after an receiving an error on the 'petrol' collection.");
     let error;
@@ -175,22 +71,74 @@ function test_withCollectionList_failOnCollection() {
     do_check_true(steam_coll.deleted);
     do_check_false(diesel_coll.deleted);
 
-    do_check_true(crypto_steam.payload == undefined);
-    do_check_true(crypto_petrol.payload != undefined);
-    do_check_true(crypto_diesel.payload != undefined);
-
-    do_check_false(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/steam"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/petrol"));
-    do_check_true(CryptoMetas.contains("http://localhost:8080/1.0/johndoe/storage/crypto/diesel"));
-
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
-    CryptoMetas.clearCache();
+  }
+}
+
+function test_wipeServer_leaves_collections() {
+  _("Service.wipeServer() deletes everything but keys.");
+  
+  let steam_coll = new FakeCollection();
+  let diesel_coll = new FakeCollection();
+  let keys_coll = new FakeCollection();
+
+  function info_collections(request, response) {
+    let collections = {};
+    let timestamp = Date.now() / 1000;
+    if (!steam_coll.deleted)
+      collections.steam = timestamp
+    if (!diesel_coll.deleted)
+      collections.diesel = timestamp;
+    if (!keys_coll.deleted)
+      collections.keys = timestamp;
+    let body = JSON.stringify(collections);
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  let server = httpd_setup({
+    "/1.0/johndoe/storage/steam": steam_coll.handler(),
+    "/1.0/johndoe/storage/diesel": diesel_coll.handler(),
+    "/1.0/johndoe/storage/keys": keys_coll.handler(),
+    "/1.0/johndoe/info/collections": info_collections
+  });
+  do_test_pending();
+
+  try {
+    setUpTestFixtures();
+    _("Info URL: " + Service.infoURL);
+
+    _("Confirm initial environment.");
+    do_check_false(steam_coll.deleted);
+    do_check_false(diesel_coll.deleted);
+    do_check_false(keys_coll.deleted);
+    
+    _("Collections: " + new Resource(Service.infoURL).get());
+    _("Try deletion.");
+    Service.wipeServer();
+    _("Collections: " + new Resource(Service.infoURL).get());
+    
+    _("Make sure keys is still present.");
+    do_check_true(steam_coll.deleted);
+    do_check_true(diesel_coll.deleted);
+    do_check_false(keys_coll.deleted);
+    
+    _("Delete everything.");
+    Service.wipeServer(null, true);
+    do_check_true(steam_coll.deleted);
+    do_check_true(diesel_coll.deleted);
+    do_check_true(keys_coll.deleted);
+    
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
   }
 }
 
 function run_test() {
-  test_withCollectionList_failOnCollection();
-  test_withCollectionList_failOnCrypto();
+  initTestLogging("Trace");
+  test_withCollectionList_fail();
+  test_wipeServer_leaves_collections();
 }
