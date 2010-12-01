@@ -564,7 +564,7 @@
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
                         label="&preferencesCmd2.label;"
-                        accesskey="&preferencesCmd.accesskey;"
+                        accesskey="&preferencesCmd2.accesskey;"
                         oncommand="openPreferences();"/>
 #endif
               </menupopup>
