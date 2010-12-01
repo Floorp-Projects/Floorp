@@ -12430,7 +12430,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
     }
 
     guard(true,
-          w.ltup(idx_ins, w.rshupN(lengthAndFlags_ins, JSString::FLAGS_LENGTH_SHIFT)),
+          w.ltup(idx_ins, w.rshupN(lengthAndFlags_ins, JSString::LENGTH_SHIFT)),
           snapshot(MISMATCH_EXIT));
     *out = w.i2d(w.getStringChar(str_ins, idx_ins));
     return RECORD_CONTINUE;
@@ -12461,7 +12461,7 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode,
         w.label(mbr);
     }
 
-    LIns* inRange = w.ltup(idx_ins, w.rshupN(lengthAndFlags_ins, JSString::FLAGS_LENGTH_SHIFT));
+    LIns* inRange = w.ltup(idx_ins, w.rshupN(lengthAndFlags_ins, JSString::LENGTH_SHIFT));
 
     if (mode == JSOP_GETELEM) {
         guard(true, inRange, MISMATCH_EXIT);

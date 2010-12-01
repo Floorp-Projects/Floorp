@@ -133,16 +133,14 @@ JSString::finalize(JSContext *cx) {
          * for a null pointer on its own.
          */
         cx->free(flatChars());
-    } else if (isTopNode()) {
-        cx->free(topNodeBuffer());
     }
 }
 
 inline void
 JSShortString::finalize(JSContext *cx)
 {
-    JS_ASSERT(!JSString::isStatic(header()));
-    JS_ASSERT(header()->isFlat());
+    JS_ASSERT(!JSString::isStatic(&mHeader));
+    JS_ASSERT(mHeader.isFlat());
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 }
 
@@ -177,8 +175,75 @@ JSExternalString::finalize()
     }
 }
 
-inline
-JSRopeBuilder::JSRopeBuilder(JSContext *cx)
-  : cx(cx), mStr(cx->runtime->emptyString) {}
+namespace js {
+
+class RopeBuilder {
+    JSContext *cx;
+    JSString *res;
+
+  public:
+    RopeBuilder(JSContext *cx)
+      : cx(cx), res(cx->runtime->emptyString)
+    {}
+
+    inline bool append(JSString *str) {
+        res = js_ConcatStrings(cx, res, str);
+        return !!res;
+    }
+
+    inline JSString *result() {
+        return res;
+    }
+};
+
+class StringSegmentRange
+{
+    /*
+     * If malloc() shows up in any profiles from this vector, we can add a new
+     * StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
+     */
+    Vector<JSString *, 32> stack;
+    JSString *cur;
+
+    bool settle(JSString *str) {
+        while (str->isRope()) {
+            if (!stack.append(str->ropeRight()))
+                return false;
+            str = str->ropeLeft();
+        }
+        cur = str;
+        return true;
+    }
+
+  public:
+    StringSegmentRange(JSContext *cx)
+      : stack(cx), cur(NULL)
+    {}
+
+    JS_WARN_UNUSED_RESULT bool init(JSString *str) {
+        JS_ASSERT(stack.empty());
+        return settle(str);
+    }
+
+    bool empty() const {
+        return cur == NULL;
+    }
+
+    JSString *front() const {
+        JS_ASSERT(!cur->isRope());
+        return cur;
+    }
+
+    JS_WARN_UNUSED_RESULT bool popFront() {
+        JS_ASSERT(!empty());
+        if (stack.empty()) {
+            cur = NULL;
+            return true;
+        }
+        return settle(stack.popCopy());
+    }
+};
+
+}  /* namespace js */
 
 #endif /* jsstrinlines_h___ */

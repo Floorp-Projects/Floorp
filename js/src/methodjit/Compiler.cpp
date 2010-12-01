@@ -2961,8 +2961,8 @@ mjit::Compiler::jsop_length()
             frame.push(v);
         } else {
             RegisterID str = frame.ownRegForData(top);
-            masm.loadPtr(Address(str, offsetof(JSString, mLengthAndFlags)), str);
-            masm.rshiftPtr(Imm32(JSString::FLAGS_LENGTH_SHIFT), str);
+            masm.loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), str);
+            masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), str);
             frame.pop();
             frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
         }
