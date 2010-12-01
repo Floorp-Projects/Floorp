@@ -1384,8 +1384,8 @@ RopeMatch(JSString *textstr, const jschar *pat, jsuint patlen)
      */
     size_t textstrlen = textstr->length();
     size_t threshold = textstrlen >> sRopeMatchThresholdRatioLog2;
-    JSRopeLeafIterator iter(textstr);
-    for (JSString *str = iter.init(); str; str = iter.next()) {
+    JSRopeLeafIterator iter;
+    for (JSString *str = iter.init(textstr); str; str = iter.next()) {
         if (threshold-- == 0 || !strs.append(str))
             return StringMatch(textstr->chars(), textstrlen, pat, patlen);
     }
@@ -2282,9 +2282,9 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
          * If we are replacing over a rope, avoid flattening it by iterating
          * through it, building a new rope.
          */
-        JSRopeLeafIterator iter(textstr);
+        JSRopeLeafIterator iter;
         size_t pos = 0;
-        for (JSString *str = iter.init(); str; str = iter.next()) {
+        for (JSString *str = iter.init(textstr); str; str = iter.next()) {
             size_t len = str->length();
             size_t strEnd = pos + len;
             if (pos < matchEnd && strEnd > match) {
