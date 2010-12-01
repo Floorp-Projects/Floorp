@@ -1231,13 +1231,20 @@ static inline PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
 static inline PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame,
                                                     const nsStyleDisplay* aDisp)
 {
-  // If we're paginated and aFrame is a block, and it has
-  // NS_BLOCK_CLIP_PAGINATED_OVERFLOW set, then we want to clip our
-  // overflow.
+  // These conditions on aDisp need to match the conditions for which in
+  // non-paginated contexts we'd create a scrollframe for a block but in a
+  // paginated context we don't.  See nsCSSFrameConstructor::FindDisplayData
+  // for the relevant conditions.  These conditions must also match those in
+  // nsCSSFrameConstructor::ConstructNonScrollableBlock for creating block
+  // formatting context roots for forced-to-be-no-longer scrollable blocks in
+  // paginated contexts.
   return
     aFrame->PresContext()->IsPaginated() &&
+    aDisp->IsBlockInside() &&
+    aDisp->IsScrollableOverflow() &&
+    aDisp->IsBlockOutside() &&
     aFrame->GetType() == nsGkAtoms::blockFrame &&
-    (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0;
+    !aFrame->GetContent()->IsInNativeAnonymousSubtree();
 }
 
 static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,

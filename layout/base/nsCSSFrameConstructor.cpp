@@ -2468,7 +2468,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       *aNewFrame = frameItems.FirstChild();
       NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     } else {
-      contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
+      contentFrame = NS_NewBlockFrame(mPresShell, styleContext,
+        NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
       if (!contentFrame)
         return NS_ERROR_OUT_OF_MEMORY;
       nsFrameItems frameItems;
@@ -3708,11 +3709,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_ALLOW_BLOCK_STYLES);
   CHECK_ONLY_ONE_BIT(FCDATA_MAY_NEED_SCROLLFRAME, FCDATA_FORCE_VIEW);
 #undef CHECK_ONLY_ONE_BIT
-  NS_ASSERTION(!(bits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) ||
-               ((bits & FCDATA_FUNC_IS_FULL_CTOR) &&
-                data->mFullConstructor ==
-                  &nsCSSFrameConstructor::ConstructNonScrollableBlock),
-               "Unexpected FCDATA_FORCED_NON_SCROLLABLE_BLOCK flag");
 
   // Don't create a subdocument frame for iframes if we're creating extra frames
   if (aState.mCreatingExtraFrames && aItem.mContent->IsHTML() &&
@@ -4369,25 +4365,20 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                "Shouldn't propagate scroll in paginated contexts");
 
   // If the frame is a block-level frame and is scrollable, then wrap it in a
-  // scroll frame.
+  // scroll frame.  Except we don't want to do that for paginated contexts for
+  // frames that are block-outside and aren't frames for native anonymous stuff.
+  // The condition on skipping scrollframe construction in the
+  // paginated case needs to match code in ConstructNonScrollableBlock
+  // and in nsFrame::ApplyPaginatedOverflowClipping.
   // XXX Ignore tables for the time being
   // XXXbz it would be nice to combine this with the other block
   // case... Think about how do do this?
   if (aDisplay->IsBlockInside() &&
       aDisplay->IsScrollableOverflow() &&
-      !propagatedScrollToViewport) {
-    // Except we don't want to do that for paginated contexts for
-    // frames that are block-outside and aren't frames for native
-    // anonymous stuff.
-    if (mPresShell->GetPresContext()->IsPaginated() &&
-        aDisplay->IsBlockOutside() &&
-        !aContent->IsInNativeAnonymousSubtree()) {
-      static const FrameConstructionData sForcedNonScrollableBlockData =
-        FULL_CTOR_FCDATA(FCDATA_FORCED_NON_SCROLLABLE_BLOCK,
-                         &nsCSSFrameConstructor::ConstructNonScrollableBlock);
-      return &sForcedNonScrollableBlockData;
-    }
-
+      !propagatedScrollToViewport &&
+      (!mPresShell->GetPresContext()->IsPaginated() ||
+       !aDisplay->IsBlockOutside() ||
+       aContent->IsInNativeAnonymousSubtree())) {
     static const FrameConstructionData sScrollableBlockData =
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructScrollableBlock);
     return &sScrollableBlockData;
@@ -4513,20 +4504,22 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
 {
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
-  // We want a block formatting context root in paginated contexts for
-  // every block that would be scrollable in a non-paginated context.
-  // We mark our blocks with a bit here if this condition is true, so
-  // we can check it later in nsFrame::ApplyPaginatedOverflowClipping.
-  PRBool clipPaginatedOverflow =
-    (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
   if (aDisplay->IsAbsolutelyPositioned() ||
       aDisplay->IsFloating() ||
       NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay ||
-      clipPaginatedOverflow) {
+      // This check just needs to be the same as the check for using scrollable
+      // blocks in FindDisplayData and the check for clipping in
+      // nsFrame::ApplyPaginatedOverflowClipping; we want a block formatting
+      // context root in paginated contexts for every block that would be
+      // scrollable in a non-paginated context.  Note that IsPaginated()
+      // implies that no propagation to viewport has taken place, so we don't
+      // need to check for propagation here.
+      (mPresShell->GetPresContext()->IsPaginated() &&
+       aDisplay->IsBlockInside() &&
+       aDisplay->IsScrollableOverflow() &&
+       aDisplay->IsBlockOutside() &&
+       !aItem.mContent->IsInNativeAnonymousSubtree())) {
     *aNewFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
-    if (clipPaginatedOverflow) {
-      (*aNewFrame)->AddStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW);
-    }
   } else {
     *aNewFrame = NS_NewBlockFrame(mPresShell, styleContext);
   }

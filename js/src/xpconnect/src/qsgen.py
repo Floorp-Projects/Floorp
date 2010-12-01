@@ -496,11 +496,6 @@ argumentUnboxingTemplates = {
         "    if (!${name}.IsValid())\n"
         "        return JS_FALSE;\n",
 
-    '[utf8string]':
-        "    xpc_qsAUTF8String ${name}(cx, ${argVal}, ${argPtr});\n"
-        "    if (!${name}.IsValid())\n"
-        "        return JS_FALSE;\n",
-
     '[jsval]':
         "    jsval ${name} = ${argVal};\n"
     }
@@ -585,7 +580,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
                     "    }\n")
             return True
 
-    warn("Unable to unbox argument of type %s (native type %s)" % (type.name, typeName))
+    warn("Unable to unbox argument of type %s" % type.name)
     if i is None:
         src = '*vp'
     else:
@@ -1136,7 +1131,7 @@ traceableArgumentConversionTemplates = {
           "    XPCReadableJSStringWrapper ${name}(${argVal});\n",
     '[domstring]':
           "    XPCReadableJSStringWrapper ${name}(${argVal});\n",
-    '[utf8string]':
+    '[cstring]':
           "    NS_ConvertUTF16toUTF8 ${name}("
           "(const PRUnichar *)JS_GetStringChars(${argVal}), "
           "JS_GetStringLength(${argVal}));\n",
