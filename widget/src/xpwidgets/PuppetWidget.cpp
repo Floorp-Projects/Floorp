@@ -111,8 +111,9 @@ PuppetWidget::Create(nsIWidget        *aParent,
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
   mIMEComposing = PR_FALSE;
-  mIMELastReceivedSeqno = 0;
-  mIMELastBlurSeqno = 0;
+  PRUint32 chromeSeqno;
+  mTabChild->SendNotifyIMEFocus(false, &mIMEPreference, &chromeSeqno);
+  mIMELastBlurSeqno = mIMELastReceivedSeqno = chromeSeqno;
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
