@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html style="overflow: hidden; height: 100%; margin: 0; padding: 0"
+      class="reftest-print">
+  <body style="overflow: hidden; height: 100%; margin: 0; padding:0">
+    <div></div>
+    <!-- Hidden overflow on the inline-block to put its baseline at its bottom
+         edge, as in the original issue in bug 609227 -->
+    <div style="height: 100%; display: inline-block; overflow: hidden">
+      Some text
+    </div>
+  </body>
+</html>
+    
