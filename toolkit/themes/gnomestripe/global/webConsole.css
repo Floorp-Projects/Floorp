@@ -43,7 +43,7 @@
 }
 
 .hud-box.animated {
-  -moz-transition: height 350ms;
+  -moz-transition: height 100ms;
 }
 
 .hud-outer-wrapper {
