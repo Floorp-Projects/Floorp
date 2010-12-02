@@ -325,6 +325,9 @@ if __name__ == '__main__':
         cmd = test_list[0].get_command(TestTask.js_cmd_prefix)
         if OPTIONS.show_cmd:
             print subprocess.list2cmdline(cmd)
+        manifest_dir = os.path.dirname(OPTIONS.manifest)
+        if manifest_dir not in ('', '.'):
+            os.chdir(os.path.dirname(OPTIONS.manifest))
         call(cmd)
         sys.exit()
 
