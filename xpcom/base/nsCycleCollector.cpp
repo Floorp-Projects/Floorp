@@ -1576,8 +1576,10 @@ GCGraphBuilder::DescribeNode(CCNodeType type, nsrefcnt refCount,
     }
 
     if (type == RefCounted) {
-        if (refCount == 0 || refCount == PR_UINT32_MAX)
-            Fault("zero or overflowing refcount", mCurrPi);
+        if (refCount == 0)
+            Fault("zero refcount", mCurrPi);
+        if (refCount == PR_UINT32_MAX)
+            Fault("overflowing refcount", mCurrPi);
 
         mCurrPi->mRefCount = refCount;
     }

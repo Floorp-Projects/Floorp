@@ -93,11 +93,7 @@ private:
 class txMozillaXMLOutput : public txAOutputXMLEventHandler
 {
 public:
-    txMozillaXMLOutput(const nsSubstring& aRootName,
-                       PRInt32 aRootNsID,
-                       txOutputFormat* aFormat,
-                       nsIDOMDocument* aSourceDocument,
-                       nsIDOMDocument* aResultDocument,
+    txMozillaXMLOutput(txOutputFormat* aFormat,
                        nsITransformObserver* aObserver);
     txMozillaXMLOutput(txOutputFormat* aFormat,
                        nsIDOMDocumentFragment* aFragment,
@@ -109,14 +105,15 @@ public:
 
     nsresult closePrevious(PRBool aFlushText);
 
+    nsresult createResultDocument(const nsSubstring& aName, PRInt32 aNsID,
+                                  nsIDOMDocument* aSourceDocument,
+                                  nsIDOMDocument* aResultDocument);
+
 private:
     nsresult createTxWrapper();
     nsresult startHTMLElement(nsIContent* aElement, PRBool aXHTML);
     nsresult endHTMLElement(nsIContent* aElement);
     void processHTTPEquiv(nsIAtom* aHeader, const nsString& aValue);
-    nsresult createResultDocument(const nsSubstring& aName, PRInt32 aNsID,
-                                  nsIDOMDocument* aSourceDocument,
-                                  nsIDOMDocument* aResultDocument);
     nsresult createHTMLElement(nsIAtom* aName,
                                nsIContent** aResult);
 
